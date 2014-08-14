@@ -1,0 +1,246 @@
+package com.xasecure.service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.persistence.Query;
+
+import com.xasecure.common.SearchCriteria;
+import com.xasecure.common.SearchField;
+import com.xasecure.common.SearchUtil;
+import com.xasecure.common.SortField;
+import com.xasecure.common.SearchField.DATA_TYPE;
+import com.xasecure.common.SearchField.SEARCH_TYPE;
+import com.xasecure.common.SortField.SORT_ORDER;
+import com.xasecure.common.view.VList;
+import com.xasecure.view.*;
+import com.xasecure.db.XADaoManager;
+import com.xasecure.entity.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
+@Service
+@Scope("singleton")
+public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, VXAccessAudit>{
+	public static final String NAME = "XAccessAudit";
+	public List<SortField> sortFields = new ArrayList<SortField>();
+	public List<SearchField> searchFields = new ArrayList<SearchField>();
+
+	@Autowired
+	protected SearchUtil searchUtil;
+	
+	@Autowired
+	XADaoManager appDaoMgr;
+
+	protected String queryStr;
+	protected final String distinctCountQueryStr;
+	protected final String distinctQueryStr;
+	protected String countQueryStr;
+
+
+	public XAccessAuditService() {
+		countQueryStr = "SELECT COUNT(obj) FROM XXAccessAudit  obj ";
+		queryStr = "SELECT obj FROM XXAccessAudit obj ";
+		distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM XXAccessAudit obj ";
+		distinctQueryStr = "SELECT distinct obj FROM XXAccessAudit obj ";
+		
+		searchFields.add(new SearchField("accessType", "obj.accessType",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("aclEnforcer", "obj.aclEnforcer",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("agentId", "obj.agentId",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("repoName", "obj.repoName",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("sessionId", "obj.sessionId",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("requestUser", "obj.requestUser",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("requestData", "obj.requestData",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("resourcePath", "obj.resourcePath",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("clientIP", "obj.clientIP",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+
+		searchFields.add(new SearchField("auditType", "obj.auditType",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("accessResult", "obj.accessResult",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("assetId", "obj.assetId",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("policyId", "obj.policyId",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("repoType", "obj.repoType",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+
+		searchFields.add(new SearchField("startDate", "obj.eventTime", 
+				DATA_TYPE.DATE, SEARCH_TYPE.GREATER_EQUAL_THAN));
+		searchFields.add(new SearchField("endDate", "obj.eventTime", 
+				DATA_TYPE.DATE, SEARCH_TYPE.LESS_EQUAL_THAN));
+		sortFields.add(new SortField("eventTime", "obj.eventTime", true, SORT_ORDER.DESC));
+}
+
+	protected XXAccessAudit mapViewToEntityBean(VXAccessAudit vObj, XXAccessAudit mObj, int OPERATION_CONTEXT) {
+		mObj.setId(vObj.getId());
+		mObj.setAuditType( vObj.getAuditType());
+		mObj.setAccessResult( vObj.getAccessResult());
+		mObj.setAccessType( vObj.getAccessType());
+		mObj.setAclEnforcer( vObj.getAclEnforcer());
+		mObj.setAgentId( vObj.getAgentId());
+		mObj.setPolicyId( vObj.getPolicyId());
+		mObj.setRepoName( vObj.getRepoName());
+		mObj.setRepoType( vObj.getRepoType());
+		mObj.setResultReason( vObj.getResultReason());
+		mObj.setSessionId( vObj.getSessionId());
+		mObj.setEventTime( vObj.getEventTime());
+		mObj.setRequestUser( vObj.getRequestUser());
+		mObj.setRequestData( vObj.getRequestData());
+		mObj.setResourcePath( vObj.getResourcePath());
+		mObj.setResourceType(vObj.getResourceType());
+		mObj.setClientIP(vObj.getClientIP());
+		mObj.setClientType(vObj.getClientType());
+		return mObj;
+	}
+
+	protected VXAccessAudit mapEntityToViewBean(VXAccessAudit vObj, XXAccessAudit mObj) {
+		vObj.setAuditType( mObj.getAuditType());
+		vObj.setAccessResult( mObj.getAccessResult());
+		vObj.setAccessType( mObj.getAccessType());
+		vObj.setAclEnforcer( mObj.getAclEnforcer());
+		vObj.setAgentId( mObj.getAgentId());
+		vObj.setPolicyId( mObj.getPolicyId());
+		vObj.setRepoName( mObj.getRepoName());
+		vObj.setRepoType( mObj.getRepoType());
+		vObj.setResultReason( mObj.getResultReason());
+		vObj.setSessionId( mObj.getSessionId());
+		vObj.setEventTime( mObj.getEventTime());
+		vObj.setRequestUser( mObj.getRequestUser());
+		vObj.setRequestData( mObj.getRequestData());
+		vObj.setResourcePath( mObj.getResourcePath());
+		vObj.setResourceType( mObj.getResourceType());
+		vObj.setClientIP( mObj.getClientIP());
+		vObj.setClientType( mObj.getClientType());
+		return vObj;
+	}
+
+	/**
+	 * @param searchCriteria
+	 * @return
+	 */
+	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
+		VXAccessAuditList returnList = new VXAccessAuditList();
+		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
+
+		List<XXAccessAudit> resultList = (List<XXAccessAudit>)searchResources(searchCriteria,
+				searchFields, sortFields, returnList);
+
+		// Iterate over the result list and create the return list
+		for (XXAccessAudit gjXAccessAudit : resultList) {
+			VXAccessAudit vXAccessAudit = populateViewBean(gjXAccessAudit);
+			xAccessAuditList.add(vXAccessAudit);
+		}
+
+		returnList.setVXAccessAudits(xAccessAuditList);
+		return returnList;
+	}
+	
+	public VXAccessAudit populateViewBean(XXAccessAudit gjXAccessAudit) {
+		VXAccessAudit vXAccessAudit = new VXAccessAudit();
+		return mapEntityToViewBean(vXAccessAudit, gjXAccessAudit);
+	}
+    /*
+	protected List<XXAccessAudit> searchResources(SearchCriteria searchCriteria,
+			List<SearchField> searchFieldList, List<SortField> sortFieldList,
+			VList vList) {
+
+		// Get total count of the rows which meet the search criteria
+		long count = -1;
+		if (searchCriteria.isGetCount()) {
+			count = getCountForSearchQuery(searchCriteria, searchFieldList);
+			if (count == 0) {
+				return Collections.emptyList();
+			}
+		}
+		// construct the sort clause
+		String sortClause = searchUtil.constructSortClause(searchCriteria,
+				sortFieldList);
+
+		String q=queryStr;
+		if(searchCriteria.isDistinct()){
+			q=distinctQueryStr;
+		}
+		// construct the query object for retrieving the data
+		Query query = createQuery(q, sortClause, searchCriteria,
+				searchFieldList, false);
+
+		List<XXAccessAudit> resultList = appDaoMgr.getXXAccessAudit().executeQueryInSecurityContext(
+				XXAccessAudit.class, query);
+
+		if (vList != null) {
+			// Set the meta values for the query result
+			vList.setPageSize(query.getMaxResults());
+			vList.setSortBy(searchCriteria.getSortBy());
+			vList.setSortType(searchCriteria.getSortType());
+			vList.setStartIndex(query.getFirstResult());
+			vList.setTotalCount(count);
+			vList.setResultSize(resultList.size());
+		}
+		return resultList;
+	}
+
+	public VXLong getSearchCount(SearchCriteria searchCriteria,
+			List<SearchField> searchFieldList) {
+		long count = getCountForSearchQuery(searchCriteria, searchFieldList);
+
+		VXLong vXLong = new VXLong();
+		vXLong.setValue(count);
+		return vXLong;
+	}
+
+	protected long getCountForSearchQuery(SearchCriteria searchCriteria,
+			List<SearchField> searchFieldList) {
+
+		String q = countQueryStr;
+		// Get total count of the rows which meet the search criteria
+		if( searchCriteria.isDistinct()) {
+			q = distinctCountQueryStr;
+		}
+		
+		// Get total count of the rows which meet the search criteria
+		Query query = createQuery(q, null, searchCriteria,
+				searchFieldList, true);
+
+		// Make the database call to get the total count
+		Long count = appDaoMgr.getXXAccessAudit().executeCountQueryInSecurityContext(XXAccessAudit.class,
+				query);
+		if (count == null) {
+			// If no data that meets the criteria, return 0
+			return 0;
+		}
+		return count.longValue();
+	}
+
+//	protected Query createQuery(String searchString, String sortString,
+//			SearchCriteria searchCriteria, List<SearchField> searchFieldList,
+//			boolean isCountQuery) {
+//		Query query = searchUtil.createSearchQuery(appDaoMgr.getXXAccessAudit().getEntityManager(), searchString, sortString,
+//				searchCriteria, searchFieldList, isCountQuery);
+//		return query;
+//	}
+*/
+	@Override
+	protected void validateForCreate(VXAccessAudit viewBaseBean) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void validateForUpdate(VXAccessAudit viewBaseBean, XXAccessAudit t) {
+		// TODO Auto-generated method stub
+		
+	}
+}

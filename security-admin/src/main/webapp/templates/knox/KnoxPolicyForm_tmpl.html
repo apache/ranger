@@ -1,0 +1,38 @@
+<form class="form-horizontal">
+	<fieldset>
+		<p class="formHeader">
+			<span>Policy Details :</span> 
+		</p>
+		<div class="" data-fields="policyName"></div>
+		<div class="" data-fields="topologies"></div>
+		<div class="" data-fields="services"></div>
+		
+		<!-- <div class="" data-fields="views" style="display:none"></div> -->
+		<!-- <div class="" data-editors="udfs" style="display:none;margin-left: 180px;margin-top: -29px;margin-bottom: 15px;"></div> -->
+		<div class="" data-fields="_vAuditListToggle"></div>
+	</fieldset>
+ 	<fieldset>
+		<p class="formHeader">
+			User and Group Permissions :
+		</p>
+		<div class="" data-customfields="groupPerms">
+			<div class="control-group">
+				<label class="control-label">{{tt 'lbl.groupPermissions'}}</label>
+				<div class="controls">
+					<img src="images/loading.gif" style=" margin-left: 4%; margin-top: 1%;" />
+				</div>
+			</div>		
+		</div>
+		<div class="" data-customfields="userPerms">
+			<div class="control-group">
+				<label class="control-label">{{tt 'lbl.userPermissions'}}</label>
+				<div class="controls">
+					<img src="images/loading.gif" style=" margin-left: 4%; margin-top: 1%;" />
+				</div>
+			</div>
+		</div>
+		<div class="" data-fields="description"></div>
+		<div class="" data-fields="resourceStatus" style="margin-top: 31px;"></div>
+	</fieldset> 
+</form>
+

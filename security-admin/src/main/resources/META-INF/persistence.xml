@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+	<persistence-unit name="defaultPU">
+		<mapping-file>META-INF/jpa_named_queries.xml</mapping-file>
+
+         <class>com.xasecure.entity.XXDBBase</class>
+         <class>com.xasecure.entity.XXAuthSession</class>
+         <class>com.xasecure.entity.XXPortalUser</class>
+         <class>com.xasecure.entity.XXPortalUserRole</class>
+         <class>com.xasecure.entity.XXAsset</class>
+         <class>com.xasecure.entity.XXResource</class>
+         <class>com.xasecure.entity.XXCredentialStore</class>
+         <class>com.xasecure.entity.XXGroup</class>
+         <class>com.xasecure.entity.XXUser</class>
+         <class>com.xasecure.entity.XXGroupUser</class>
+         <class>com.xasecure.entity.XXGroupGroup</class>
+         <class>com.xasecure.entity.XXPermMap</class>
+         <class>com.xasecure.entity.XXAuditMap</class>
+         <class>com.xasecure.entity.XXPolicyExportAudit</class>
+         <class>com.xasecure.entity.XXTrxLog</class>
+         <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+	</persistence-unit>
+	<persistence-unit name="loggingPU">
+        <class>com.xasecure.entity.XXAccessAudit</class>
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+	</persistence-unit>
+
+</persistence>

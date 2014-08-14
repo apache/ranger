@@ -1,0 +1,137 @@
+<h3 class="wrap-header bold"> Reports </h3>
+
+<div class="wrap non-collapsible ">
+	<h3 class="wrap-header reportSearchHeader">Search Criteria
+		<span class="label label-yellow pull-right" data-js="searchResult" ></span>
+	</h3>
+	<div class="wrap well ">
+		<div class="row-fluid">
+			<div class="span12">
+				<div class="form-horizontal">
+					<div class="span12">
+						<div class="control-group">
+							<label class="control-label">Policy Name</label>
+							<div class="controls">
+								<input type="text" name="policyName" data-js="policyName" class="input-xxlarge">
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">Resource</label>
+							<div class="controls">
+								<input type="text" name="resourceName" data-js="resourceName" class="input-xxlarge">
+							</div>
+						</div>
+
+						<div class="control-group search-by">
+							<label class="control-label">Search By</label>
+							<div class="controls" data-js="searchBy">
+								<div class="">
+									<div class="btn-group">
+										<button class="btn dropdown-toggle" data-toggle="dropdown">
+											<span>Group</span>
+											<span class="caret"> </span>
+										</button>
+										<ul class="dropdown-menu">
+											<li>
+												<a data-id="grpSel" class="autoText" href="javascript:;">Group</a>
+											</li>
+											<li>
+												<a data-id="userSel" class="autoText" href="javascript:;">Username</a>
+											</li>
+										</ul>
+									</div>
+									<input type="text" data-js="selectGroups">
+									<input type="text" style="display: none" data-js="userName">
+								</div>
+							</div>
+						</div>
+
+
+					</div>
+					<div >
+						<div class="control-group">
+							<div class="controls">
+								<button type="button" class="btn btn-primary btn-small" data-js="searchBtn" name="searchPolicy">
+									<i class="icon-search"></i>
+									Search
+								</button>
+							</div>
+						</div>
+
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<!-- <div class="alert alert-success">
+	<a href="#" class="close" data-dismiss="alert">×</a>
+	<label data-js="searchResult"></label>
+	</div> -->
+
+	<div class="clearfix">
+		<span class="pull-right">GOTO :&nbsp;&nbsp; 
+			<a href="javascript:;" class="link-tag gotoLink" data-js="gotoHive" style="margin-right: 5px;">
+				<i class=" icon-chevron-down" ></i>
+				Hive Table
+			</a>
+			<a href="javascript:;" class="link-tag gotoLink" data-js="gotoHbase">
+				<i class=" icon-chevron-down" ></i>
+				Hbase Table
+			</a>
+			<a href="javascript:;" class="link-tag gotoLink" data-js="gotoKnox">
+				<i class=" icon-chevron-down" ></i>
+				Knox Table
+			</a>
+			<a href="javascript:;" class="link-tag gotoLink" data-js="gotoStorm">
+				<i class=" icon-chevron-down" ></i>
+				Storm Table
+			</a>
+		</span>
+	</div>
+
+	<div class="row-fluid">
+		<h3 class="wrap-header bold reportSearchHeader" data-js="hdfsHeader"> {{tt 'lbl.listOfHDFSPolicies'}}
+			<span class="label label-yellow pull-right" data-js="hdfsSearchResult" ></span>
+		</h3>
+		<div class="wrap well position-relative">
+			<div  data-id="r_hdfsTable" class="hdfs-table showMoreLess"></div>
+			<div data-id="r_hdfsTableSpinner" class="" ></div>
+		</div>
+
+		<h3  class="wrap-header bold reportSearchHeader" data-js="hiveHeader"> {{tt 'lbl.listOfHIVEPolicies'}}
+			<span class="label label-yellow pull-right" data-js="hiveSearchResult" ></span>
+		</h3>
+		<div class="wrap well position-relative">
+			<div   data-id="r_hiveTable" class="showMoreLess"></div>
+			<div data-id="r_hiveTableSpinner" class="" ></div>
+		</div>
+		
+		<h3  class="wrap-header bold reportSearchHeader" data-js="hbaseHeader"> {{tt 'lbl.listOfHBASEPolicies'}}
+			<span class="label label-yellow pull-right" data-js="hbaseSearchResult" ></span>
+		</h3>
+		<div class="wrap well position-relative">
+			<div   data-id="r_hbaseTable" class="showMoreLess"></div>
+			<div data-id="r_hbaseTableSpinner" class="" ></div>
+		</div>
+		
+		<h3  class="wrap-header bold reportSearchHeader" data-js="knoxHeader"> {{tt 'lbl.listOfKNOXPolicies'}}
+			<span class="label label-yellow pull-right" data-js="knoxSearchResult" ></span>
+		</h3>
+		<div class="wrap well position-relative">
+			<div   data-id="r_knoxTable" class="showMoreLess"></div>
+			<div data-id="r_knoxTableSpinner" class="" ></div>
+		</div>
+		
+		<h3  class="wrap-header bold reportSearchHeader" data-js="stormHeader"> {{tt 'lbl.listOfSTORMPolicies'}}
+			<span class="label label-yellow pull-right" data-js="stormSearchResult" ></span>
+		</h3>
+		<div class="wrap well position-relative">
+			<div   data-id="r_stormTable" class="showMoreLess"></div>
+			<div data-id="r_stormTableSpinner" class="" ></div>
+		</div>
+	</div>
+
+</div>

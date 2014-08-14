@@ -1,0 +1,320 @@
+/**
+ * Never Delete any key without seraching it in all View and Template files
+ */
+/*(function( window, undefined ) {
+
+var Globalize;
+
+if ( typeof require !== "undefined" &&
+	typeof exports !== "undefined" &&
+	typeof module !== "undefined" ) {
+	// Assume CommonJS
+	Globalize = require( "../globalize.js" );
+} else {
+	// Global variable
+	Globalize = window.Globalize;
+}
+*/
+define(function(require) {
+	'use strict';
+	Globalize = require( "globalize" );
+
+	Globalize.addCultureInfo( "en", {
+        messages:                  {
+        	// Form labels, Table headers etc
+			lbl : {
+				// Common
+				// Accounts
+				// MSLinks
+				/*
+				 * Menu related
+				 */
+				home 						: 'Home',
+				name 						: 'Name',
+				password					: 'Password',
+				passwordConfirm				: 'Password Confirm',
+				listOfPolicies 				: 'List of Policies',
+				addNewPolicy 				: 'Add New Policy',
+				resource					: 'Resource',
+				action						: 'Action',
+				result						: 'Result',
+				enforcer					: 'Enforcer',
+				date						: 'Date',
+				resourcePath 				: 'Resource Path',
+				includesAllPathsRecursively : 'Recursive',
+				groups 						: 'Groups',
+				group 						: 'Groups',
+				auditLogging 				: 'Audit Logging',
+				encrypted 					: 'Encrypt',
+				resourceType 				: 'Resource Type',
+				description 				: 'Description',
+				groupPermissions			: 'Group Permissions',
+				userPermissions				: 'User Permissions',
+				selectGroup					: 'Select Group',
+				admin						: 'Admin',
+				execute						: 'Execute',
+				create 						: 'Create',
+				write						: 'Write',
+				deletes						: 'Delete',
+				read						: 'Read',
+				select						: 'Select',
+				update						: 'Update',
+				drop						: 'Drop',
+				alter						: 'Alter',
+				index						: 'Index',
+				lock						: 'Lock',
+				all							: 'All',
+				databaseName				: 'Database Name',
+				tableName					: 'Table Name',
+				columnName					: 'Column Name',
+				columnFamilies				: 'Column Families',
+				selectDatabaseName			: 'Select Database Name',
+				selectTableName				: 'Select Table Name',
+				selectColumnName			: 'Select Column Name',
+				enterColumnName				: 'Enter Column Name',
+				selectColumnFamilies		: 'Select Column Familes',
+				resourceInformation 		: 'Resource Information',
+				database					: 'Database'	,
+				table						: 'Table',
+				column						: 'Column',
+				policyInfo					: 'Policy Information',
+				createdBy 					: 'Created By',
+				createdOn					: 'Created On',
+				updatedBy					: 'Updated By',
+				updatedOn					: 'Updated On',
+				groupName					: 'Group Name',
+				permissions					: 'Permissions',
+				permissionGranted			: 'Permission Granted',
+				createAccount 				: 'Create Account',
+				editAccount 				: 'Edit Account ',
+				selectFolder 				: 'Select Folder',		
+				exports						: 'Export Policies',
+				userName					: 'User Name',
+				authToLocal					: 'authToLocal',
+				dataNode					:'dataNode',
+				nameNode					:'nameNode',
+				secNamenode					:'secNamenode',
+				userAccessReport				: 'User Access Report',
+				auditReport					: 'Audit Report',
+				createAsset					: 'Create Repository',
+				editAsset					: 'Edit Repository',
+				assetType					: 'Repository Type',
+				selectUser					: 'Select User',
+				listOfHDFSPolicies 			: 'List of HDFS Policies',
+				listOfHIVEPolicies 			: 'List of HIVE Policies',
+				listOfHBASEPolicies 		: 'List of HBASE Policies',
+				listOfKNOXPolicies 			: 'List of KNOX Policies',
+				listOfSTORMPolicies 		: 'List of STORM Policies',
+				users						: 'Users',
+				repository					: 'Repository',
+				repositoryDetails 			: 'Repository Details',
+				createRepository			: 'Create Repository',
+				
+				firstName					: 'First Name',
+				lastName					: 'Last Name',
+				email 						: 'Email',
+				emailAddress    			: 'Email Address',
+				newPassword     			: 'New Password',
+				reEnterPassword 			: 'Re-enter New Password',
+				oldPassword					: 'Old Password',
+				
+				customerName 				: 'Customer Name',
+				accountCode						: 'Account Code',
+				accountStatus					: 'Account Status',
+				ActiveStatus_STATUS_ENABLED 	: 'Enabled',
+				ActiveStatus_STATUS_DISABLED 	: 'Disabled',
+				commonNameForCertificate 		: 'Common Name For Certificate',
+				status							: 'Status',
+				userListing						: 'User List',
+				userInfo						: 'User Info',
+				userEdit						: 'User Edit',
+				userCreate						: 'User Create',
+				groupEdit						: 'Group Edit',
+				groupCreate						: 'Group Create',
+				addNewUser						: 'Add New User',
+				addNewGroup						: 'Add New Group',
+				selectUserDefinedFunction		: 'Select UDF',
+				selectView						: 'Select View',
+				udfName							: 'UDF Name',
+				viewName						: 'View Name',
+				permForTable					: 'Permission For Tables',
+				permForView					 	: 'Permission For Views',
+				permForUdf						: 'Permission For User Defined Function',
+				policyStatus					: 'Policy Status',
+				httpResponseCode				: 'Http Response Code',
+				repositoryName					: 'Repository Name',
+				agentId							: 'Agent Id',
+				agentIp							: 'Agent IP',
+				createDate						: 'Export Date',
+				attributeName 					: 'Attribute Name',
+				policyType						: 'Policy Type',
+				previousValue					: 'Previous Value',
+				newValue						: 'New Value',
+				udf								: 'UDF',
+				tableType						: 'Table Type',
+				columnType						: 'Column Type',
+				accountName						: 'Account Name',
+				createdDate						: 'Created Date',
+				sessionId						: 'Session Id',
+				operation						: 'Operation',
+				auditType						: 'Audit Type',
+				user							: 'User',
+				actions							: 'Actions',
+				loginId							: 'Login Id',
+				loginType						: 'Login Type',
+				ip								: 'IP',
+				userAgent						: 'User Agent',
+				loginTime						: 'Login Time',
+				sessionDetail					: 'Session Detail',
+				ok								: 'OK',
+				id								: 'ID',
+				type							: 'Type',
+				resourceId						: 'Resource ID',
+				eventTime						: 'Event Time',
+				resourceName					: 'Resource Name',
+				repoType						: 'Repository Type',
+				accessType						: 'Access Type',
+				aclEnforcer						: 'Access Enforcer',	
+				active							: 'Active',
+				selectRole						: 'Select Role',
+				role							: 'Role',
+				userSource						: 'User Source',
+				groupSource						: 'Group Source',
+				policyName						: 'Policy Name',
+				allow							: 'Allow',
+				selectTopologyName				: 'Select Topology Name',
+				selectServiceName				: 'Select Service Name',
+				topologyName					: 'Topology Name',
+				serivceName						: 'Service Name',
+				ipAddress						: 'IP Address',
+					
+			},
+			btn : {
+				add							: 'Add',
+				save						: 'Save',
+				cancel 						: 'Cancel',
+				addMore						: 'Add More..'
+				
+				
+			},
+			// h1, h2, h3, fieldset, title
+			h : {
+				welcome						: 'Welcome',
+				logout 						: 'Logout',
+				xaSecure					: 'XA Secure',
+				hortonWorksInc				: 'Hortonworks Inc.',
+				listOfPlugins				: 'See third-party tools/resources used and their respective authors.',
+				
+	
+				// Menu
+				dashboard					: 'Dashboard',
+				policyManager 				: 'Policy Manager',
+				usersOrGroups 				: 'Users/Groups',
+				reports 					: 'Reports',
+				config 						: 'Config',
+				accounts					: 'Accounts',
+				analytics					: 'Analytics',
+				audit						: 'Audit',
+				repositoryManager			: 'Manage Repository',
+				hdfs  						: 'HDFS',
+				hive  						: 'Hive',
+				createPolicy 				: 'Create Policy',
+				editPolicy	 				: 'Edit Policy',
+				managePolices 				: 'Manage Polices',
+				manageTables				: 'Manage Table',
+				userProfile					: 'User Profile',
+				users						: 'Users',
+				agents						: 'Agents',
+				repository					: 'Repository',
+				policy						: 'Policy',
+				groups						: 'Groups',
+				admin						: 'Admin',
+				bigData						: 'Big Data',
+				loginSession				: 'Login Sessions',
+				operationDiff				: 'Operation ',
+				searchForYourAccessAudit 	:"Search for your access audits...",
+				searchForYourAccessLog 		:"Search for your access logs...",
+				searchForYourLoginSession 	:"Search for your login sessions...",
+				searchForYourAgent 			:"Search for your agents...",
+				searchForPolicy				:"Search for your policy...",
+				searchForYourUser 			:"Search for your users...",
+				searchForYourGroup 			:"Search for your groups...",
+				access						: 'Access'
+				
+				
+			},
+			msg : {
+				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
+				areYouSureWantToDelete	  : 'Are you sure want to delete ?',
+				policyDeleteMsg 		  : 'Policy deleted successfully',
+				policyNotAddedMsg		  : 'Policy not added!',
+				addGroupPermission		  : 'Please add permission(s) for the selected Group, else group will not be added.',
+				addGroup		  		  : 'Please select group for the selected permission, else group will not be added.',
+				addUserPermission		  : 'Please add permission(s) for the selected User, else User will not be added.',
+				addUser		  		 	  : 'Please select User for the selected permission, else User will not be added.',
+				enterAlteastOneCharactere : 'Enter alteast one character.',
+				permsAlreadyExistForSelectedUser : 'Permission already exists for selected user.',
+				permsAlreadyExistForSelectedGroup : 'Permission already exists for selected group.',
+				youDontHavePermission 	  : 'You don\'t have permission for the resource !!',
+				myProfileError			  :'Your password does not match. Please try again with proper password',
+				myProfileSuccess		  :'Profile Edited successfully',
+				userNameAlreadyExist		  : 'User name already exists',
+				groupNameAlreadyExist		  : 'Group name already exists',
+				yourAuditLogginIsOff 	  :'You must have at least one or more user/group access defined for the policy.',
+				policyNotHavingPerm		  : 'The policy does not have any permissions so audit logging cannot be turned off',
+				areSureWantToLogout		  : 'Are you sure want to logout ?',
+				groupDoesNotExistAnymore  : 'Group does not exist anymore..',
+				userDoesNotExistAnymore   : 'User does not exist anymore..',
+				repoDoesNotExistAnymore   : 'Repository does not exist anymore..'
+				
+				
+				
+			},
+			plcHldr : {
+				search 						:'Search',
+				searchByResourcePath		:'Search by resource path'
+			},
+			dialogMsg :{
+				preventNavPolicyForm : 'HDFS policy form edit is in progress. Kindly save/cancel changes before navigating away!',
+				preventNavHivePolicyForm : 'HIVE policy form edit is in progress. Kindly save/cancel changes before navigating away!',
+				preventNavHbasePolicyForm : 'HBASE policy form edit is in progress. Kindly save/cancel changes before navigating away!',
+				preventNavKnoxPolicyForm : 'KNOX policy form edit is in progress. Kindly save/cancel changes before navigating away!',
+				preventNavStormPolicyForm : 'STORM policy form edit is in progress. Kindly save/cancel changes before navigating away!',
+				preventNavRepositoryForm : 'Repository form edit is in progress. Kindly save/cancel changes before navigating away!',
+				preventNavUserForm : 'User form edit is in progress. Kindly save/cancel changes before navigating away!',
+				preventNavGroupForm : 'Group form edit is in progress. Kindly save/cancel changes before navigating away!'
+				
+			},	
+			validationMessages : {
+				required 					: "* This field is required",
+				onlyLetterNumberUnderscore :'* Only Alpha Numeric and underscore characters are allowed',
+				alphaNumericUnderscoreDotComma :'* Only Alpha Numeric,underscore,comma,hypen,dot and space characters are allowed',
+				oldPasswordError :'Your password does not match. Please try again with proper password',
+				oldPasswordRepeatError :'You can not use old password.',
+				newPasswordError :'Invalid Password.Minimum 8 characters with min one alphabet and one numeric.',
+				emailIdError				: 'Please enter valid email address.',
+				enterValidName				: 'Please enter valid name.',
+				passwordError	            :'Invalid Password.Minimum 8 characters with min one alphabet and one numeric.'
+			},
+			serverMsg : {
+				
+				// UserMgr
+				userMgrPassword : 'The password you\'ve provided is incorrect. Please try again with correct password',
+				userMgrInvalidUser : 'Invalid user provided',
+				userMgrNewPassword : 'Invalid new password',
+				userMgrOldPassword : ' You can not use old password.',
+				userMgrEmailChange : 'Email address cannot be changed. Please send a request to change using feedback',
+				userMgrInvalidEmail : 'Invalid email address',
+				userMgrWrongPassword : 'Password doesnot match. Please try again with proper password',
+				userMgrWrongUser : 'User access denied. User not found.',
+				fsDefaultNameValidationError:"Please provide  fs.default.name in  format 'hdfs://hostname:portNumber' .",
+				fsDefaultNameEmptyError:'Please provide  fs.default.name.',
+				userAlreadyExistsError : 'User already exists',
+				repositoryNameAlreadyExistsError  : 'Repository name already exists'
+				
+			}
+			
+
+        }
+    });
+});

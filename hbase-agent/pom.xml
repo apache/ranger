@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>security_agents.hbase-agent</groupId>
+  <artifactId>hbase-agent</artifactId>
+  <name>HBaseSecurityAgents</name>
+  <description>HBase Security Agents</description>
+  <packaging>jar</packaging>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <parent>
+     <groupId>com.hortonworks.hadoop.security</groupId>
+     <artifactId>argus</artifactId>
+     <version>3.5.000</version>
+     <relativePath>..</relativePath>
+  </parent>
+  <dependencies>
+    <dependency>
+	<groupId>org.apache.hbase</groupId>
+	<artifactId>hbase-server</artifactId>
+	<version>${hbase.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>org.apache.hadoop</groupId>
+	<artifactId>hadoop-hdfs</artifactId>
+	<version>${hadoop.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>security_agents.agents-common</groupId>
+      <artifactId>agents-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>security_agents.agents-audit</groupId>
+      <artifactId>agents-audit</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>

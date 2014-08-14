@@ -1,0 +1,40 @@
+<!-- <ul class="nav nav-tabs">
+  <li class="active" data-js="users">
+    <a data-toggle="tab" href="#users">Users</a>
+  </li>
+  <li data="groups" data-js="groups">
+  	<a data-toggle="tab" href="#groups">Groups</a>
+  </li>
+</ul> -->
+  <ul class="nav nav-tabs tabs clearfix">
+    <li data="groups" data-js="groups"> 
+      <a data-toggle="tab" href="#groups">Groups</a> 
+    </li>
+    <li class="active" data-js="users">
+      <a data-toggle="tab" href="#users">Users</a> 
+    </li>
+  </ul>
+
+
+
+
+<h3 class="wrap-header bold"> {{tt 'lbl.userListing'}} </h3>
+
+<div class="wrap non-collapsible m-height ">
+
+	<div class="span9">
+		<div class="span9">
+			<div class="visual_search"></div>
+		</div>
+		<div class="clearfix">
+			<a href="#!/user/create" class="btn btn-primary btn-right" type="button" data-id="addNewUser"> {{tt 'lbl.addNewUser'}} </a>
+			<a href="#!/group/create" class="btn btn-primary btn-right" type="button" data-id="addNewGroup" style="display:none;"> {{tt 'lbl.addNewGroup'}} </a>
+		</div>
+		<div data-id="r_tableList" class="clickable">
+		</div>
+	</div>
+
+	<div class="span3">
+		<div id="userDetail"></div>
+	</div>
+</div>

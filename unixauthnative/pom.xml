@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <groupId>com.hortonworks.hadoop.security</groupId>
+      <artifactId>security-usergroup-sync</artifactId>
+      <version>3.5.000</version>
+      <relativePath>..</relativePath>
+    </parent>
+
+    <groupId>com.hortonworks.hadoop.security</groupId>
+    <artifactId>credValidator</artifactId>
+    <version>3.5.000</version>
+
+    <packaging>uexe</packaging>
+
+    <name>unixauth-native</name>
+    <description>HDP Advanced Security - Unix authentication service</description>
+    <url>http:/hortonworks.com/</url>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>native-maven-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <compilerStartOptions>
+            <compilerStartOption>${commonCompilerOptions}</compilerStartOption>
+          </compilerStartOptions>
+          
+          <sources>
+            <source>
+              <directory>src/main/c</directory>
+              <includes>
+                <include>**/*.c</include>
+              </includes>
+            </source>  
+          </sources>
+            
+          <linkerStartOptions>
+            <linkerStartOption>-lcrypt</linkerStartOption>
+          </linkerStartOptions>
+                    
+        </configuration>
+        
+      </plugin>
+
+    </plugins>    
+
+  </build>
+
+</project>
+

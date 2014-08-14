@@ -1,0 +1,90 @@
+<div class="well well-small ">
+	<!-- <label style="color: white;padding: 5px;font-weight: 700;background: -webkit-linear-gradient(#4C89D6, #b8892d);background: -o-linear-gradient(#f7ec13, #b8892d);background: linear-gradient(#94BBEB, #2D75B8);">Policy Information</label> -->
+	<div class="fancy title" style="margin-bottom: 16px;">
+	   <span>Policy Information</span>
+	</div>
+	<div class="datagrid-stretch-wrapper newScroll" style="overflow-y: auto; height:400px"><!-- height:400px;"> -->
+		<label class="labelInverse">{{tt 'lbl.resourceInformation'}} :</label>
+		<table class="table table-bordered">
+			<tbody>
+				{{#if topologies}}
+				<tr>
+					<td>{{tt 'lbl.topologyName'}}(s)</td>
+					<td>{{{customPermString topologies 'label label-info'}}}</td>
+				</tr>
+				{{/if}}
+				{{#if services}}
+				<tr>
+					<td>{{tt 'lbl.serivceName'}}(s)</td>
+					<td> {{{customPermString services 'label label-success'}}} </td>
+				</tr>
+				{{/if}}
+			</tbody>
+		</table>
+		
+		<!-- <label class="labelInverse" >{{tt 'lbl.policyInfo'}} :</label> -->
+		<table class="table table-bordered">
+			<tbody>
+				<tr>
+					<td>{{tt 'lbl.createdBy'}}</td>
+					<td> {{owner}} </td>
+				</tr>
+				<tr>
+					<td>{{tt 'lbl.createdOn'}}</td>
+					<td>{{dateFormat createDate format="MM/DD/YYYY HH:mm:ss A"}}</td>
+				</tr>
+				<tr>
+					<td>{{tt 'lbl.updatedBy'}}</td>
+					<td> {{updatedBy}} </td>
+				</tr>
+				<tr>
+					<td>{{tt 'lbl.updatedOn'}}</td>
+					<td>{{dateFormat updateDate format="MM/DD/YYYY HH:mm:ss A"}} </td>
+				</tr>
+			</tbody>
+		</table>
+	{{#if  groupPermListArr}}	
+		<label class="labelInverse"> {{tt 'lbl.permissionGranted'}} :</label>
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th >{{tt 'lbl.groupName'}}</th>
+					<th >{{tt 'lbl.ipAddress'}}</th>
+					<th >{{tt 'lbl.permissions'}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#each groupPermListArr}}
+				<tr>
+					<td>{{./this.name}}</td>
+					<td >{{{customPermString ./this.ipAddress}}}</td>
+					<td >{{{customPermString ./this.permType}}}</td>
+				</tr>
+				{{/each}}
+			</tbody>
+		</table>
+	{{/if}}	
+	{{#if  userPermListArr}}
+	<label class="labelInverse">{{tt 'lbl.userPermissions'}} :</label>
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th >{{tt 'lbl.userName'}}</th>
+					<th >{{tt 'lbl.ipAddress'}}</th>
+					<th >{{tt 'lbl.permissions'}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#each userPermListArr}}
+				<tr>
+					<td>{{./this.name}}</td>
+					<td >{{{customPermString ./this.ipAddress}}}</td>
+					<td style="word-break: break-word;">{{{customPermString ./this.permType}}}</td>
+				</tr>
+				{{/each}}
+			</tbody>
+		</table>
+	{{/if}}	
+		<!-- <a href="javascript:void(0);" class="btn btn-primary" disabled="disabled" onclick="alert('Coming Soon..')"> Manage Folder </a> -->
+	</div>
+</div>

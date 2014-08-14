@@ -1,0 +1,26 @@
+<div class="control-group">
+	<label class="control-label">{{tt 'lbl.userPermissions'}}</label>
+	<div class="controls">
+		<table class="table-permission table-condensed">
+			<thead>
+				<tr>
+					{{#each permHeaders}}
+					<th>{{./this}}</th>
+					{{/each}}
+
+				</tr>
+			</thead>
+			<tbody class="js-formInput">
+
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="control-group">
+	<div class="controls" style="margin-top:-14px">
+		<button type="button" class="btn btn-small" data-action="addUser" title="Add">
+			<!-- {{tt 'btn.add'}} -->
+			<i class="icon-plus"></i>
+		</button>
+	</div>
+</div>

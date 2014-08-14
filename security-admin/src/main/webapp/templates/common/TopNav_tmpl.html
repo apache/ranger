@@ -1,0 +1,27 @@
+<div class="nav-collapse collapse" >
+	<ul class="nav page-nav" >
+		<!-- <li class="active">
+			<a href="#" id="nav1"><i class="icon-dashboard"></i> {{tt 'h.dashboard'}} </a>
+		</li> -->
+		<li >
+			<a href="#!/policymanager" id="nav2"><i class="icon-shield"></i>{{tt 'h.policyManager'}} </a>
+		</li>
+		{{#isSystemAdmin .}}
+		<li>
+			<a href="#!/users/usertab" id="nav3"><i class="icon-group"></i> {{tt 'h.usersOrGroups'}} </a>
+		</li>
+		{{/isSystemAdmin}} 
+		<li>
+			<a href="#!/reports/userAccess" id="nav7"><i class="icon-beaker"></i> {{tt 'h.analytics'}} </a>
+		</li>
+		{{#isSystemAdmin .}}
+		<li>
+			<a href="#!/reports/audit/bigData" id="nav8"><i class=" icon-file-alt"></i> {{tt 'h.audit'}} </a>
+		</li>
+		{{/isSystemAdmin}}
+	 
+	<!--	<li>
+			<a href="#" id="nav4"><i class="icon-cog"></i> {{tt 'h.config'}} </a>
+		</li> -->
+	</ul>
+</div>

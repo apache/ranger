@@ -1,0 +1,35 @@
+<!-- <h3 class="wrap-header bold"><i class="icon-shield"></i> {{tt 'lbl.auditReport'}} </h3> -->
+<ul class="nav nav-tabs tabs clearfix">
+	<li data-js="agent" >
+     <a data-toggle="tab" href="#agent">{{tt 'h.agents'}}</a> 
+   </li>
+   <li data-js="users">
+     <a data-toggle="tab" href="#loginSession">{{tt 'h.loginSession'}} </a> 
+   </li> 
+   <li data-js="repository" > 
+     <a data-toggle="tab" href="#admin">{{tt 'h.admin'}} </a> 
+   </li> 
+   <li data-js="policy" class="active">
+     <a data-toggle="tab" href="#bigData">{{tt 'h.access'}} </a> 
+   </li> 
+</ul>
+<div class="wrap non-collapsible " style="margin-top:-6px;">
+	<div class="wrap well">
+		<div class="row-fluid">
+			<div class="span9">
+				<div class="visual_search"></div>
+			</div>
+		</div>
+	</div>
+	<div class="row-fluid">
+		<div class="clearfix" data-id="refreshTable">
+			<button class="btn-right link-tag" data-id="refresh" style="margin-top: -3px;" title="Refresh">
+				<i class="icon-refresh"></i>
+			</button>
+			<span class="pull-right" data-id="lastUpdateTime"> Last Updated Time : <label data-id="lastUpdateTimeLabel" class="label label-info">{{currentDate}}</label> </span>
+		</div>
+		<!-- <div  data-id="r_auditTable" class="hdfs-table"></div> -->
+		<div  data-id="r_tableLists" class=""></div>
+	</div>
+</div>
+

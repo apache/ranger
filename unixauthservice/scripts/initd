@@ -1,0 +1,20 @@
+#!/bin/bash
+
+MOD_NAME=uxugsync
+
+MOD_DIR=/etc/${MOD_NAME}
+
+if [ -L ${MOD_DIR} ]
+then
+	case $1 in
+	start)
+		cd ${MOD_DIR} ; ./start.sh
+		;;
+	stop)
+		cd ${MOD_DIR} ; ./stop.sh
+		;;
+	*)
+		echo "Invalid argument [$1]; Only start|stop are supported."
+		exit 1
+	esac
+fi

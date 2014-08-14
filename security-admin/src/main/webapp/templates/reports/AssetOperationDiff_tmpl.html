@@ -1,0 +1,117 @@
+<div class="diff-content">
+	<label class="no-margin label-size13-weightbold">Name : {{objectName}}</label>
+	<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
+{{#compare action 'eq' 'create'}}
+	<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{userName}}</label>
+	<h5>Repository Details :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+			{{#each collection}}
+				<li class="change-row">{{./this.attributes.attributeName}}</li>
+			{{/each}}	
+			</ol>
+		</div>
+		<div class="diff-right">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+			{{#each collection}}
+				{{#if ./this.attributes.newValue}}
+					{{#compare ./this.attributes.newValue "eq" ''}}
+  						<li>--</li>		
+					{{else}}
+  						<li class="change-row">{{./this.attributes.newValue}}</li>
+					{{/compare}}
+				{{else}}
+					<li>--</li>
+				{{/if}}		
+			{{/each}}	
+			</ol>
+		</div>
+	</div>
+
+	
+	<h5>Connection Configurations :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+				{{#eachProperty newConnConfig}}
+					<li class="change-row">{{property}}</li>
+				{{/eachProperty }}
+			</ol>
+		</div>
+		<div class="diff-right">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+				{{#eachProperty newConnConfig}}
+					{{#if value}}
+    					<li class="change-row">{{value}}</li>
+    				{{else}}
+    					<li >--</li>
+    				{{/if}}	
+				{{/eachProperty }}
+			</ol>
+		</div>
+	</div>
+
+{{else}}
+	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{userName}}</label>
+	<h4>Repository Details</h4>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+			{{#each collection}}
+				<li class="change-row">{{./this.attributes.attributeName}}</li>
+			{{/each}}	
+			</ol>
+		</div>
+		 <div class="diff-left">
+			<h3>Old Value</h3>
+			<ol class="unstyled data">
+			{{#each collection}}
+				{{#if ./this.attributes.previousValue}}
+					{{#compare ./this.attributes.previousValue "eq" ''}}
+		 					<li>--</li>		
+					{{else}}
+		 					<li class="change-row">{{./this.attributes.previousValue}}</li>
+					{{/compare}}
+				{{else}}
+						<li>--</li>
+				{{/if}}		
+			{{/each}}	
+				
+			</ol>
+		</div> 
+	
+	</div>
+
+	
+	<h4>Connection Configurations :</h4>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+				{{#eachProperty previousConnConfig}}
+					<li class="change-row">{{property}}</li>
+				{{/eachProperty }}
+			</ol>
+		</div>
+		<div class="diff-left">
+			<h3>Old Value</h3>
+			<ol class="unstyled data">
+				{{#eachProperty previousConnConfig}}
+					{{#if value}}
+    					<li class="change-row">{{value}}</li>
+    				{{else}}
+    					<li >--</li>
+    				{{/if}}	
+				{{/eachProperty }}
+			</ol>
+		</div>
+	</div>
+
+{{/compare}}
+</div>	

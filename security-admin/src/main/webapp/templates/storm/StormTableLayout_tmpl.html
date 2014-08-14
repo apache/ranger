@@ -1,0 +1,25 @@
+<h3 class="wrap-header bold"> {{tt 'lbl.listOfPolicies'}} : {{assetModel.attributes.name}} </h3>
+<div class="wrap non-collapsible m-height ">
+	<div class="span9">
+		<div class="span9">
+			<div class="visual_search"></div>
+		</div>
+		<div class="clearfix">
+			<a href="#!/storm/{{assetId}}/policy/create" class="btn btn-primary btn-right" type="button"> {{tt 'lbl.addNewPolicy'}} </a>
+		{{#if isSysAdmin}}	
+			{{#if version}}
+				<a href="javascript:void(0);" data-js="export" class="btn btn-black btn-right">{{tt 'lbl.exports'}}</a>
+			{{/if}} 
+		{{/if}}	
+			<div data-id="r_filter" class="wrap-filter pull-left"></div>
+		</div>
+		
+		<div data-id="r_tableList" class="clickable">
+		</div>
+	</div>
+
+	<div class="span3" style="margin-top:39px">
+		<div id="policyDetail"></div>
+	</div>
+</div>
+

@@ -1,0 +1,38 @@
+<div class="diff-content">
+	<label class="no-margin label-size13-weightbold">Name : {{objectName}}</label>
+			<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
+			<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{userName}}</label>
+{{#compare action 'eq' 'create'}}
+	{{#if collection.length}}
+		<h5>Group Detail :</h5>
+		<div class="diff">
+			<div class="diff-left">
+				<h3>Fields</h3>
+				<ol class="attr">
+				{{#each collection}}
+					<li class="change-row">{{./this.attributes.attributeName}}</li>
+				{{/each}}	
+				</ol>
+			</div>
+			<div class="diff-right">
+				<h3>New Value</h3>
+				<ol class="unstyled data">
+				{{#each collection}}
+					{{#if ./this.attributes.newValue}}
+						{{#compare ./this.attributes.newValue "eq" ''}}
+	  						<li>--</li>		
+						{{else}}
+	  						<li class="change-row">{{./this.attributes.newValue}}</li>
+						{{/compare}}
+					{{else}}
+						<li>--</li>
+					{{/if}}		
+				{{/each}}	
+				</ol>
+			</div>
+		</div>
+	{{/if}}	
+{{else}}
+	<h4>{{tt 'msg.groupDoesNotExistAnymore'}}</h4>
+{{/compare}}
+</div>

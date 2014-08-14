@@ -1,0 +1,21 @@
+#!/bin/bash
+
+POLICYMGR_HOME=/usr/lib/xapolicymgr
+export POLICYMGR_HOME
+
+case $1 in
+start)
+	/bin/su --login  xasecure "${POLICYMGR_HOME}/startpolicymgr.sh"
+	;;
+stop)
+	/bin/su --login  xasecure "${POLICYMGR_HOME}/stoppolicymgr.sh"
+    ;;
+restart)
+	/bin/su --login  xasecure "${POLICYMGR_HOME}/stoppolicymgr.sh"  && sleep 30
+	/bin/su --login  xasecure "${POLICYMGR_HOME}/startpolicymgr.sh"
+
+	;;
+*)
+	echo "Invalid argument [$1]; Only start|stop|restart are supported."
+    exit 1
+esac

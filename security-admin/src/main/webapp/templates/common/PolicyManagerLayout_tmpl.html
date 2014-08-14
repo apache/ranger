@@ -1,0 +1,234 @@
+<h3 class="wrap-header bold">{{tt 'h.repositoryManager'}}</h3>
+
+<div class="wrap non-collapsible policy-manager">
+	<div class="row-fluid">
+		<div class="span4">
+			<div class="position-relative">
+				<table class="table table-bordered table-striped">
+					<!-- table-policy -->
+					<thead>
+						<tr>
+							<th><img alt="HDFS" src="images/hdfs.jpg"> 
+								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{hdfsVal}}"
+								class="pull-right" title="Add"> <i class="icon-plus"></i>
+							</a> {{/if}}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{{#unless hdfsList}}
+						<tr>
+							<td>No Repositories!
+							</td>
+						</tr>
+						{{/unless}} 
+						{{#each hdfsList}}
+
+						<tr>
+							<td>
+								<div>
+									<a data-id="{{./this.id}}" href="#!/hdfs/{{./this.id}}/policies">{{./this.attributes.name}}</a>
+									{{#if ../isSysAdmin}}
+									<div class="pull-right">
+										<a data-id="{{./this.id}}" class="btn btn-mini"
+											href="#!/asset/{{./this.id}}" title="Edit"><i
+											class="icon-edit"></i></a> <a data-id="{{./this.id}}"
+											class="deleteRep btn btn-mini btn-danger"
+											href="javascript:void(0);" title="Delete"><i
+											class="icon-trash"></i></a>
+									</div>
+									{{/if}}
+								</div>
+							</td>
+						</tr>
+						{{/each}}
+					</tbody>
+				</table>
+
+				<div data-id="r_tableSpinner" class="loading">
+				</div>
+			</div>
+		</div>
+		<div class="span4">
+			<div class="position-relative">
+				<table class="table table-bordered table-striped">
+					<!-- table-policy -->
+					<thead>
+						<tr>
+							<th><img alt="Hive" src="images/hive.png" > 
+								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{hiveVal}}"
+								class="pull-right" title="Add"><i class="icon-plus"></i></a></th>
+							{{/if}}
+						</tr>
+					</thead>
+					<tbody>
+						{{#unless hiveList}}
+						<tr>
+							<td>No Repositories! 
+							</td>
+						</tr>
+						{{/unless}} 
+						{{#each hiveList}}
+						<tr>
+							<td>
+								<div>
+									<a data-id="{{./this.id}}" href="#!/hive/{{./this.id}}/policies">{{./this.attributes.name}}</a>
+									{{#if ../isSysAdmin}}
+									<div class="pull-right">
+										<a data-id="{{./this.id}}" class="btn btn-mini"
+											href="#!/asset/{{./this.id}}" title="Edit"><i
+											class="icon-edit"></i></a> <a data-id="{{./this.id}}"
+											class="deleteRep btn btn-mini btn-danger"
+											href="javascript:void(0);" title="Delete"><i
+											class="icon-trash"></i></a>
+									</div>
+									{{/if}}
+								</div>
+							</td>
+						</tr>
+						{{/each}}
+
+					</tbody>
+				</table>
+				<div data-id="r_tableSpinner" class="loading">
+				</div>
+			</div>
+		</div>
+		<div class="span4">
+			<div class="position-relative">
+				<table class="table table-bordered table-striped">
+					<!-- table-policy -->
+					<thead>
+						<tr>
+							<th><img alt="HBase" src="images/hbase.jpg" > 
+								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{hbaseVal}}"
+								class="pull-right" title="Add"><i class="icon-plus"></i></a></th>
+							{{/if}}
+						</tr>
+					</thead>
+					<tbody>
+						{{#unless hbaseList}}
+						<tr>
+							<td>No Repositories! 
+							</td>
+						</tr>
+						{{/unless}} 
+						{{#each hbaseList}}
+						<tr>
+							<td>
+								<div>
+
+									<a data-id="{{./this.id}}" href="#!/hbase/{{./this.id}}/policies">{{./this.attributes.name}}</a>
+									{{#if ../isSysAdmin}}
+									<div class="pull-right">
+										<a data-id="{{./this.id}}" class="btn btn-mini"
+											href="#!/asset/{{./this.id}}" title="Edit"><i
+											class="icon-edit"></i></a> <a data-id="{{./this.id}}"
+											class="deleteRep btn btn-mini btn-danger"
+											href="javascript:void(0);" title="Delete"><i
+											class="icon-trash"></i></a>
+									</div>
+									{{/if}}
+								</div>
+							</td>
+						</tr>
+						{{/each}}
+					</tbody>
+				</table>
+				<div data-id="r_tableSpinner" class="loading">
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row-fluid">
+		<div class="span4">
+			<div class="position-relative">
+				<table class="table table-bordered table-striped">
+					<!-- table-policy -->
+					<thead>
+						<tr>
+							<th><img alt="KNOX" src="images/knox.gif" > 
+								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{knoxVal}}"
+								class="pull-right" title="Add"> <i class="icon-plus"></i>
+							</a> {{/if}}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{{#unless knoxList}}
+						<tr>
+							<td>No Repositories!
+							</td>
+						</tr>
+						{{/unless}} 
+						{{#each knoxList}}
+
+						<tr>
+							<td>
+								<div>
+									<a data-id="{{./this.id}}" href="#!/knox/{{./this.id}}/policies">{{./this.attributes.name}}</a>
+									{{#if ../isSysAdmin}}
+									<div class="pull-right">
+										<a data-id="{{./this.id}}" class="btn btn-mini"
+											href="#!/asset/{{./this.id}}" title="Edit"><i
+											class="icon-edit"></i></a> <a data-id="{{./this.id}}"
+											class="deleteRep btn btn-mini btn-danger"
+											href="javascript:void(0);" title="Delete"><i
+											class="icon-trash"></i></a>
+									</div>
+									{{/if}}
+								</div>
+							</td>
+						</tr>
+						{{/each}}
+					</tbody>
+				</table>
+				<div data-id="r_tableSpinner" class="loading">
+				</div>
+			</div>
+		</div>
+		<div class="span4">
+			<div class="position-relative">
+				<table class="table table-bordered table-striped">
+					<!-- table-policy -->
+					<thead>
+						<tr>
+							<th><img alt="STORM" src="images/storm.png" > 
+								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{stormVal}}"
+								class="pull-right" title="Add"> <i class="icon-plus"></i>
+							</a> {{/if}}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{{#unless stormList}}
+						<tr>
+							<td>No Repositories!
+							</td>
+						</tr>
+						{{/unless}} 
+						{{#each stormList}}
+
+						<tr>
+							<td>
+								<div>
+									<a data-id="{{./this.id}}" href="#!/storm/{{./this.id}}/policies">{{./this.attributes.name}}</a>
+									{{#if ../isSysAdmin}}
+									<div class="pull-right">
+										<a data-id="{{./this.id}}" class="btn btn-mini"
+											href="#!/asset/{{./this.id}}" title="Edit"><i
+											class="icon-edit"></i></a> <a data-id="{{./this.id}}"
+											class="deleteRep btn btn-mini btn-danger"
+											href="javascript:void(0);" title="Delete"><i
+											class="icon-trash"></i></a>
+									</div>
+									{{/if}}
+								</div>
+							</td>
+						</tr>
+						{{/each}}
+					</tbody>
+				</table>
+				<div data-id="r_tableSpinner" class="loading">
+				</div>
+			</div>
+		</div>
+	</div>	
+																		</div>

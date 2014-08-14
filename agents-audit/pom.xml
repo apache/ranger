@@ -1,0 +1,49 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>security_agents.agents-audit</groupId>
+  <artifactId>agents-audit</artifactId>
+  <name>Audit Component</name>
+  <description>Auth Audit</description>
+  <packaging>jar</packaging>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <parent>
+     <groupId>com.hortonworks.hadoop.security</groupId>
+     <artifactId>argus</artifactId>
+     <version>3.5.000</version>
+     <relativePath>..</relativePath>
+  </parent>
+  <dependencies>
+    <dependency>
+	<groupId>security_agents.agents-cred</groupId>
+	<artifactId>agents-cred</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>commons-logging</groupId>
+	<artifactId>commons-logging</artifactId>
+	<version>${commons.logging.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>org.apache.hadoop</groupId>
+	<artifactId>hadoop-common</artifactId>
+	<version>${hadoop-common.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>org.eclipse.persistence</groupId>
+	<artifactId>eclipselink</artifactId>
+	<version>${eclipse.jpa.version}</version>
+     </dependency>
+	<dependency>
+	<groupId>org.eclipse.persistence</groupId>
+	<artifactId>javax.persistence</artifactId>
+	<version>${javax.persistence.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>log4j</groupId>
+	<artifactId>log4j</artifactId>
+	<version>${log4j.version}</version>
+    </dependency>
+  </dependencies>
+</project>

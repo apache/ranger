@@ -1,0 +1,87 @@
+<div class="diff-content">
+	<label class="no-margin label-size13-weightbold">ID : {{objectId}}</label>
+	<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
+	<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
+	<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{userName}}</label>
+
+{{#if collection.length}}
+	<h5>Policy Details :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+			{{#each collection}}
+				<li class="change-row">{{./this.attributes.attributeName}}</li>
+			{{/each}}	
+			</ol>
+		</div>
+		<div class="diff-right">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+			{{#each collection}}
+				{{#if ./this.attributes.newValue}}
+					{{#compare ./this.attributes.newValue "eq" ''}}
+  						<li>--</li>		
+					{{else}}
+  						<li class="change-row">{{./this.attributes.newValue}}</li>
+					{{/compare}}
+				{{else}}
+					<li>--</li>
+				{{/if}}		
+			{{/each}}	
+			</ol>
+		</div>
+	</div>
+{{/if}}	
+{{#if isGroupPerm}}	
+	<h5>Group Permissions :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Groups</h3>
+			<ol class="attr">
+			{{#eachProperty newGroupPermList}}
+					<li class="change-row">{{property}}</li>
+			{{/eachProperty }}	
+			</ol>
+		</div>
+		<div class="diff-right" data-id="diff">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+				{{#eachProperty newGroupPermList}}
+					<li class="change-row">
+						{{#each value}}
+							{{permType}} <span>,</span>
+						{{/each}}
+				</li>
+			{{/eachProperty }}
+			</ol>
+		</div>
+	</div>
+{{/if}}
+{{#if isUserPerm}}
+	<h5>User Permissions :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Users</h3>
+			<ol class="attr">
+				{{#eachProperty newUserPermList}}
+					<li class="change-row">{{property}}</li>
+				{{/eachProperty }}	
+			</ol>
+		</div>
+		<div class="diff-right" data-id="diff">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+				{{#eachProperty newUserPermList}}
+					<li class="change-row">
+						{{#each value}}
+							{{permType}} <span>,</span>
+						{{/each}}
+				</li>
+			{{/eachProperty }}
+			</ol>
+		</div>
+	</div> 
+{{/if}}	
+
+</div>

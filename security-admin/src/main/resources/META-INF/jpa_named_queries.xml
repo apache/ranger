@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings version="1.0"
+	xmlns="http://java.sun.com/xml/ns/persistence/orm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd ">
+
+	<named-query name="XXAuthSession.getUserLoggedIn">
+		<query>SELECT count(obj),function('DATE',obj.authTime) as dateAuth 
+			   FROM XXAuthSession obj 
+			   GROUP BY dateAuth
+		</query>
+	</named-query>
+	<named-query name="XXAuthSession.getAuthSessionBySessionId">
+		<query>SELECT obj FROM XXAuthSession obj 
+			   WHERE obj.extSessionId = :sessionId
+		</query>
+	</named-query>
+
+	<!-- XXPortalUser -->
+	<named-query name="XXPortalUser.findByEmailAddress">
+		<query>SELECT obj FROM XXPortalUser obj WHERE obj.emailAddress =
+			:emailAddress</query>
+	</named-query>
+	<named-query name="XXPortalUser.findByLoginId">
+		<query>SELECT obj FROM XXPortalUser obj WHERE obj.loginId = :loginId</query>
+	</named-query>
+	<named-query name="XXPortalUser.findByPublicScreenName">
+		<query>SELECT obj FROM XXPortalUser obj WHERE obj.publicScreenName =
+			:publicScreenName</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.findByRole">
+		<query>SELECT obj FROM XXPortalUser obj, XXPortalUserRole role WHERE obj.id = role.userId
+			and role.userRole = :userRole</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.getUserAddedReport">
+		<query>SELECT count(obj), function('DATE',obj.createTime) as createDate FROM XXPortalUser obj GROUP BY createDate
+		</query>
+	</named-query>
+
+	<!-- XXPortalUserRole -->
+	<named-query name="XXPortalUserRole.findByRoleUserId">
+		<query>SELECT obj FROM XXPortalUserRole obj WHERE obj.userId = :userId
+			and obj.userRole = :userRole</query>
+	</named-query>
+	<named-query name="XXPortalUserRole.findByUserId">
+		<query>SELECT obj FROM XXPortalUserRole obj WHERE obj.userId = :userId
+		</query>
+	</named-query>
+	<named-query name="XXPortalUserRole.findByParentId">
+		<query>SELECT obj FROM XXPortalUserRole obj WHERE obj.userId = :parentId
+		</query>
+	</named-query>
+
+
+	<!-- XXAsset -->
+	<named-query name="XXAsset.findByAssetName">
+		<query>SELECT obj FROM XXAsset obj WHERE obj.name = :name AND obj.activeStatus != :status
+		</query>
+	</named-query>
+
+	<!-- XXAuditMap -->
+	<named-query name="XXAuditMap.findByResourceId">
+		<query>SELECT obj FROM XXAuditMap obj WHERE obj.resourceId = :resourceId
+		</query>
+	</named-query>
+	
+	<!-- XXGroup -->
+	<named-query name="XXGroup.findByUserId">
+		<query>SELECT obj FROM XXGroup obj, XXGroupUser groupUser 
+			WHERE obj.id = groupUser.parentGroupId and groupUser.userId = :userId
+		</query>
+	</named-query>
+
+	<!-- XXPermMap -->
+	<named-query name="XXPermMap.findByResourceId">
+		<query>SELECT obj FROM XXPermMap obj WHERE obj.resourceId = :resourceId
+		</query>
+	</named-query>
+
+	<!-- XXResource -->
+	<named-query name="XXResource.findUpdatedResourcesByAssetId">
+		<query>SELECT obj FROM XXResource obj WHERE obj.assetId = :assetId
+		 AND obj.updateTime &gt; :lastUpdated 
+		</query>
+	</named-query>
+
+	<named-query name="XXResource.findUpdatedResourcesByAssetName">
+		<query>SELECT obj FROM XXResource obj, XXAsset xAsset 
+			   WHERE obj.assetId = xAsset.id
+			   AND xAsset.name = :assetName
+		 	   AND obj.updateTime &gt; :lastUpdated 
+		</query>
+	</named-query>
+
+	<named-query name="XXResource.findByAssetId">
+		<query>SELECT obj FROM XXResource obj WHERE obj.assetId = :assetId
+		</query>
+	</named-query>
+	
+	<named-query name="XXResource.findByAssetType">
+		<query>SELECT obj FROM XXResource obj, XXAsset xxAsset 
+				WHERE xxAsset.id = obj.assetId 
+				and xxAsset.assetType = :assetType	
+		</query>
+	</named-query>
+
+	<named-query name="XXResource.findByResourceName">
+		<query>SELECT obj FROM XXResource obj WHERE obj.name = :name
+		</query>
+	</named-query>
+	
+	<named-query name="XXResource.findByResourceNameAndAssetIdAndRecursiveFlag">
+		<query>SELECT obj FROM XXResource obj WHERE obj.name like :name and obj.assetId=:assetId
+		and obj.isRecursive=:isRecursive
+		</query>
+	</named-query>
+
+	<named-query name="XXResource.findByResourceNameAndAssetIdAndResourceType">
+		<query>SELECT obj FROM XXResource obj WHERE obj.name like :name and obj.assetId=:assetId
+		and obj.resourceType=:resourceType
+		</query>
+	</named-query>
+
+
+	<named-query name="XXResource.getMaxUpdateTimeForAssetName">
+		<query>SELECT MAX(obj.updateTime) FROM XXResource obj, XXAsset xAsset 
+			   WHERE obj.assetId = xAsset.id
+			   AND xAsset.name = :assetName
+		</query>
+	</named-query>
+	
+	
+	<named-query name="XXResource.findByAssetIdAndResourceStatus">
+		<query>SELECT obj FROM XXResource obj WHERE obj.assetId = :assetId and
+		 obj.resourceStatus = :resourceStatus
+		</query>
+	</named-query>
+
+	<named-query name="XXUser.findByUserName">
+		<query>SELECT Obj FROM XXUser obj
+			   WHERE LOWER(obj.name)=:name			   
+		</query>
+	</named-query>
+	
+	<named-query name="XXGroup.findByGroupName">
+		<query>SELECT Obj FROM XXGroup obj
+			   WHERE LOWER(obj.name)=:name			   
+		</query>
+	</named-query>
+	
+	<named-query name="XXGroupUser.deleteByGroupIdAndUserId">
+		<query>DELETE FROM  XXGroupUser  obj
+			   WHERE obj.parentGroupId=:parentGroupId 	
+			   AND obj.userId=:userId		   
+		</query>
+	</named-query>
+
+	<named-query name="XXGroupUser.findByUserId">
+		<query>SELECT obj FROM XXGroupUser obj
+			   WHERE obj.userId=:userId		   
+		</query>
+	</named-query>
+
+	<named-query name="XXTrxLog.findByTrxId">
+		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
+		</query>
+	</named-query>
+	
+</entity-mappings>

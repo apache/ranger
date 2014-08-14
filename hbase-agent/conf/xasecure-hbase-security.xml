@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration xmlns:xi="http://www.w3.org/2001/XInclude">
+
+	<!--  The following property is used to select appropriate XASecure 
+	      Authorizer Module (file-based, policy-manager based) -->
+	<property>
+		<name>hbase.authorization.verifier.classname</name>
+		<value>com.xasecure.pdp.hbase.XASecureAuthorizer</value>
+		<description>
+			Class Name of the authorization Module 
+		</description>
+	</property>
+
+	<!-- The following properties are used only when PolicyManager is used as 
+		main storage for all policy -->
+	<property>
+		<name>xasecure.hbase.policymgr.url</name>
+		<value>http://policymanagerhost:port/service/assets/dev-hbase</value>
+		<description>
+			Location where XASecure Role Based Authorization Info is
+			located.
+		</description>
+	</property>
+	<property>
+		<name>xasecure.hbase.policymgr.url.saveAsFile</name>
+		<value>/tmp/xasecure-hbase-policy.json</value>
+		<description>
+			Location where XASecure Role Based Authorization Info is
+			saved after successful retrieval from policymanager
+		</description>
+	</property>
+	<property>
+		<name>xasecure.hbase.policymgr.url.laststoredfile</name>
+		<value>/home/hbase/last_xasecure-hbase-policy.json</value>
+		<description>
+			Location and file where last XASecure Role Based Authorization Info
+		    is saved after successful retrieval from policymanager.
+		</description>
+	</property>
+	<property>
+		<name>xasecure.hbase.policymgr.url.reloadIntervalInMillis</name>
+		<value>30000</value>
+		<description>
+			How often do we need to verify the changes tothe
+			authorization url,
+			to reload to memory (reloaded only if there are
+			changes)
+		</description>
+	</property>
+
+
+	<!-- the following properties are used by PEP to show/hide audit information 
+		about each field being read and/or written -->
+	<property>
+		<name>xasecure.auditlog.fieldInfoVisible</name>
+		<value>false</value>
+		<description>
+			Flag to indicate if the read/written values to be written in the audit
+			log file
+		</description>
+	</property>
+
+</configuration>

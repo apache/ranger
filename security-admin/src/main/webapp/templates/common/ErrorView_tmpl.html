@@ -1,0 +1,29 @@
+{{#if pageNotFound}}
+<div data-id="pageNotFoundPage" class="error-page">
+<div class="error-box" style="margin-top: 0px;">
+		<div class="icon-box"><img src="images/error-404-icon.png"></div>
+
+		<h1>Page not found (404).</h1>
+		<p>Sorry, this page isn't here or has moved.</p>
+
+		<a href="#!/policymanager" class="btn btn-primary btn-small" data-id="goBack"><i class="icon-long-arrow-left"></i> Go back</a>&nbsp;&nbsp;
+		<!--   <a href="#!/policymanager" class="btn btn-small" data-id="home">Home</a> -->
+</div>
+</div>
+{{/if}}
+
+
+{{#if restrictedAccess}}
+<div data-id="restrictedAccessPage" class="error-page">
+<div class="error-box" style="margin-top: 0px;">
+		<div class="icon-box"><img src="images/error-404-icon.png"></div>
+
+
+		<h1>Restricted Access (403)</h1>
+		<p>Please try again later. Thank you.</p>
+
+		<!-- <a href="#!/policymanager" class="btn  btn-small" data-id="goBack"><i class="icon-long-arrow-left"></i> Go back</a>&nbsp;&nbsp;
+		<a href="#!/policymanager" class="btn btn-small" data-id="home">Home</a> -->
+</div>
+</div>
+{{/if}}

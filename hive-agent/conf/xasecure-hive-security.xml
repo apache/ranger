@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration xmlns:xi="http://www.w3.org/2001/XInclude">
+
+
+	<!--  The following property is used to select appropriate XASecure Authorizer Module (filebased, policymanager based) -->
+	<property>
+		<name>hive.authorization.verifier.classname</name>
+		<value>com.xasecure.pdp.hive.XASecureAuthorizer</value>
+		<description>
+			Class Name of the authorization Module 
+		</description>
+	</property>
+
+
+	<!-- The following properties are used only when PolicyManager is used as 
+		main storage for all policy -->
+	<property>
+		<name>xasecure.hive.policymgr.url</name>
+		<value>http://policymanagerhost:port/service/assets/dev-hive</value>
+		<description>
+			Location where XASecure Role Based Authorization Info is
+			located.
+		</description>
+	</property>
+	<property>
+		<name>xasecure.hive.policymgr.url.saveAsFile</name>
+		<value>/tmp/xasecure-hive-policy.json</value>
+		<description>
+			Location where XASecure Role Based Authorization Info is
+			saved after successful retrieval from policymanager
+		</description>
+	</property>
+	<property>
+		<name>xasecure.hive.policymgr.url.laststoredfile</name>
+		<value>/home/hive/last_xasecure-hive-policy.json</value>
+		<description>
+			Location and file where last XASecure Role Based Authorization Info
+		    is saved after successful retrieval from policymanager.
+		</description>
+	</property>
+	<property>
+		<name>xasecure.hive.policymgr.url.reloadIntervalInMillis</name>
+		<value>30000</value>
+		<description>
+			How often do we need to verify the changes tothe
+			authorization url,
+			to reload to memory (reloaded only if there are
+			changes)
+		</description>
+	</property>
+
+</configuration>

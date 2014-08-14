@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.hortonworks.hadoop.security</groupId>
+  <artifactId>embededwebserver</artifactId>
+  <version>3.5.000</version>
+  <name>Embeded Web Server Invoker</name>
+  <description>Embeded Web Server Invoker</description>
+  <packaging>jar</packaging>
+  <parent>
+     <groupId>com.hortonworks.hadoop.security</groupId>
+     <artifactId>argus</artifactId>
+     <version>3.5.000</version>
+     <relativePath>..</relativePath>
+  </parent>
+  <dependencies>
+    <dependency>
+	<groupId>org.apache.tomcat.embed</groupId>
+	<artifactId>tomcat-embed-core</artifactId>
+	<version>${tomcat.embed.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>org.apache.tomcat.embed</groupId>
+	<artifactId>tomcat-embed-el</artifactId>
+	<version>${tomcat.embed.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>org.apache.tomcat.embed</groupId>
+	<artifactId>tomcat-embed-jasper</artifactId>
+	<version>${tomcat.embed.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>org.apache.tomcat.embed</groupId>
+	<artifactId>tomcat-embed-logging-juli</artifactId>
+	<version>${tomcat.embed.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>org.apache.tomcat.embed</groupId>
+	<artifactId>tomcat-embed-logging-log4j</artifactId>
+	<version>${tomcat.embed.version}</version>
+    </dependency>
+    <dependency>
+	<groupId>org.apache.tomcat.embed</groupId>
+	<artifactId>tomcat-embed-websocket</artifactId>
+	<version>${tomcat.embed.version}</version>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,0 +1,98 @@
+<div class="diff-content">
+	<div class="row-fluid">
+		<div class="span6">
+			<label class="no-margin label-size13-weightbold">Name : {{objectName}}</label>
+			<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
+			<label class="no-margin label-size13-weightbold" > Updated By  &nbsp;&nbsp;:  {{userName}}</label>
+		</div>	
+		<div class="span6 text-right">
+			<div class="add-text legend"></div> Added
+			<div class="delete-text legend"></div> Deleted
+		</div>
+	</div> 
+{{#if collection.length}}	
+	<h5>User Details</h5>
+
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+			{{#each collection}}
+				<li class="change-row">{{./this.attributes.attributeName}}</li>
+			{{/each}}	
+			</ol>
+		</div>
+		<div class="diff-left">
+			<h3>Old Value</h3>
+			<ol class="unstyled data">
+			{{#each collection}}
+				{{#if ./this.attributes.previousValue}}
+					{{#compare ./this.attributes.previousValue "eq" 'null'}}
+		 					<li>--</li>		
+					{{else}}
+						{{#compare ./this.attributes.previousValue "eq" ''}}
+			 					<li>--</li>		
+						{{else}}
+			 					<li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'old'}}}</li>
+						{{/compare}}
+					{{/compare}}	
+				{{else}}
+						<li>--</li>
+				{{/if}}		
+			{{/each}}	
+			</ol>
+		</div>
+		<div class="diff-right">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+			{{#each collection}}
+				{{#if ./this.attributes.newValue}}
+					{{#compare ./this.attributes.newValue "eq" ''}}
+  						<li>--</li>		
+					{{else}}
+  						<li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'new'}}}</li>
+					{{/compare}}
+				{{else}}
+					<li>--</li>
+				{{/if}}		
+			{{/each}}	
+			</ol>
+		</div>
+	</div>
+{{/if}}
+{{#if isGroup}}
+	<h5>Group  :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+				<li class="change-row">Groups</li>
+			</ol>
+		</div>
+		<div class="diff-left" data-id="diff">
+			<h3>Old Value</h3>
+			<ol class="unstyled data">
+				<li class="change-row">
+					{{#each previousGroupList}}
+						<!-- {{this}} -->
+						{{{highlightUsersForArr ./this ../newGroupList 'old'}}}
+						<span>,</span>
+					{{/each}}
+				</li>
+			</ol>
+		</div>
+		<div class="diff-right" data-id="diff">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+				<li class="change-row">
+					{{#each newGroupList}}
+						<!-- {{this}} --> 
+						{{{highlightUsersForArr ./this ../previousGroupList 'new'}}}
+						<span>,</span>
+					{{/each}}
+				</li>
+			</ol>
+		</div>
+	</div>
+{{/if}}	
+</div>

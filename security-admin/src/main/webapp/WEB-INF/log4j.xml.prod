@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+	<appender name="xa_log_appender" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="file" value="${catalina.base}/logs/xa_portal.log" />
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %C{6} (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="sql_appender" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="file" value="${catalina.base}/logs/xa_portal_sql.log" />
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %C{6} (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+
+	<category name="org.springframework" additivity="false">
+		<priority value="warn" />
+		<appender-ref ref="xa_log_appender" />
+	</category>
+
+	<category name="org.hibernate.SQL" additivity="false">
+		<priority value="warn" />
+		<appender-ref ref="sql_appender" />
+	</category>
+	<category name="jdbc.sqlonly" additivity="false">
+		<priority value="fatal" />
+		<appender-ref ref="sql_appender" />
+	</category>
+
+	<category name="jdbc.sqltiming" additivity="false">
+		<priority value="warn" />
+		<appender-ref ref="sql_appender" />
+	</category>
+	<category name="jdbc.audit" additivity="false">
+		<priority value="fatal" />
+		<appender-ref ref="sql_appender" />
+	</category>
+	<category name="jdbc.resultset" additivity="false">
+		<priority value="fatal" />
+		<appender-ref ref="sql_appender" />
+	</category>
+
+	<category name="jdbc.connection" additivity="false">
+		<priority value="fatal" />
+		<appender-ref ref="sql_appender" />
+	</category>
+
+	<category name="com.xasecure" additivity="false">
+		<priority value="info" />
+		<appender-ref ref="xa_log_appender" />
+	</category>
+
+	<category name="xa" additivity="false">
+		<priority value="info" />
+		<appender-ref ref="xa_log_appender" />
+	</category>
+
+	<root>
+		<priority value="warn" />
+		<appender-ref ref="xa_log_appender" /> 
+	</root>
+
+</log4j:configuration>  
