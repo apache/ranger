@@ -1,0 +1,12 @@
+<root>
+  <facet id="jst.jaxrs">
+    <node name="libprov">
+      <attribute name="provider-id" value="jaxrs-no-op-library-provider"/>
+    </node>
+  </facet>
+  <facet id="jpt.jpa">
+    <node name="libprov">
+      <attribute name="provider-id" value="jpa-no-op-library-provider"/>
+    </node>
+  </facet>
+</root>

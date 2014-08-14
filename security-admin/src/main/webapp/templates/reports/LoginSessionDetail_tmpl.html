@@ -1,0 +1,41 @@
+<h3 class="wrap-header bold">Session Detail:</h3>
+<div class="wrap non-collapsible">
+	<!-- <label style="color: white;padding: 5px;font-weight: 700;background: -webkit-linear-gradient(#4C89D6, #b8892d);background: -o-linear-gradient(#f7ec13, #b8892d);background: linear-gradient(#94BBEB, #2D75B8);">Policy Information</label> -->
+	<div class="datagrid-stretch-wrapper "style="margin-left: 44px; margin-top: 35px;">
+		<table class="table table-bordered table-condensed">
+	<tbody>
+		<tr>
+			<th>{{tt 'lbl.sessionId'}}</th>
+			<td>{{extSessionId}}</td>
+		</tr>
+		<tr>
+			<th>{{tt 'lbl.loginId'}}</th>
+			<td>{{loginId}}</td>
+		</tr>
+		<tr>
+			<th>{{tt 'lbl.result'}}</th>
+			<td>{{{convertEnumValueToLabel 'AuthStatus' authStatus}}}</td>
+		</tr>
+		<tr>
+			<th>{{tt 'lbl.loginType'}}</th>
+			<td>{{{convertEnumValueToLabel 'AuthType' authType}}}</td>
+		</tr>
+		<tr>
+			<th>{{tt 'lbl.ip'}}</th>
+			<td>{{requestIP}}</td>
+		</tr>
+		<tr>
+			<th>{{tt 'lbl.userAgent'}}</th>
+			<td>{{requestUserAgent}}</td>
+		</tr>
+		<tr>
+			<th style="width: 10%;">{{tt 'lbl.loginTime'}}</th>
+			<td data-id="loginTime"></td>
+		</tr>
+	</tbody>
+</table>
+	</div>
+	<a href="#!/reports/audit/admin" class="link-tag">Show Actions</a>
+</div>
+
+

@@ -1,0 +1,32 @@
+<beans:bean id="jaasAuthProvider" class="org.springframework.security.authentication.jaas.DefaultJaasAuthenticationProvider">
+		<beans:property name="configuration">
+			<beans:bean
+				class="org.springframework.security.authentication.jaas.memory.InMemoryConfiguration">
+				<beans:constructor-arg>
+					<beans:map>
+						<beans:entry key="SPRINGSECURITY">
+							<beans:array>
+								<beans:bean class="javax.security.auth.login.AppConfigurationEntry">
+									<beans:constructor-arg
+										value="com.xasecure.authentication.unix.jaas.RemoteUnixLoginModule" />
+									<beans:constructor-arg>
+										<util:constant static-field="javax.security.auth.login.AppConfigurationEntry$LoginModuleControlFlag.REQUIRED" />
+									</beans:constructor-arg>
+									<beans:constructor-arg>
+										<beans:map>
+											<beans:entry key="configFile" value="unixauth.properties" />
+										</beans:map>
+									</beans:constructor-arg>
+								</beans:bean>
+							</beans:array>
+						</beans:entry>
+					</beans:map>
+				</beans:constructor-arg>
+			</beans:bean>
+		</beans:property>
+		<beans:property name="authorityGranters">
+			<beans:list>
+				<beans:bean class="com.xasecure.authentication.unix.jaas.RoleUserAuthorityGranter" />
+			</beans:list>
+		</beans:property>
+	</beans:bean>

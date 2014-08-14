@@ -1,0 +1,1 @@
+<security:ldap-server url="${xa_ldap_url}"/>
