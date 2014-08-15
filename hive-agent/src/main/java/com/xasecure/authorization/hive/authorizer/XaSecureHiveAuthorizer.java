@@ -142,8 +142,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		HiveObjectType objectType = getObjectType(hiveObj, hiveOpType);
 		HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, isInput);
 		String         operType   = hiveOpType.name();
-		
-		XaHiveAccessContext hiveContext = new XaHiveAccessContext(context.getIpAddress(), context.getClientType().name(), context.getCommandString(), context.getSessionString());
+
+		XaHiveAccessContext hiveContext = new XaHiveAccessContext(context);
 
 		switch(objectType) {
 			case DATABASE:
@@ -488,10 +488,12 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		sb.append("]");
 
 		sb.append(", 'context':{");
-		sb.append("'clientType':").append(context.getClientType());
-		sb.append(", 'commandString':").append(context.getCommandString());
-		sb.append(", 'ipAddress':").append(context.getIpAddress());
-		sb.append(", 'sessionString':").append(context.getSessionString());
+		if(context != null) {
+			sb.append("'clientType':").append(context.getClientType());
+			sb.append(", 'commandString':").append(context.getCommandString());
+			sb.append(", 'ipAddress':").append(context.getIpAddress());
+			sb.append(", 'sessionString':").append(context.getSessionString());
+		}
 		sb.append("}");
 
 		sb.append(", 'user':").append(this.getCurrentUserGroupInfo().getUserName());

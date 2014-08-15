@@ -1,16 +1,21 @@
 package com.xasecure.authorization.hive;
 
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
+
+
 public class XaHiveAccessContext {
 	private String mClientIpAddress;
 	private String mClientType;
 	private String mCommandString;
 	private String mSessionString;
 	
-	public XaHiveAccessContext(String clientIpAddress, String clientType, String commandString, String sessionString) {
-		mClientIpAddress = clientIpAddress;
-		mClientType      = clientType;
-		mCommandString   = commandString;
-		mSessionString   = sessionString;
+	public XaHiveAccessContext(HiveAuthzContext context) {
+		if(context != null) {
+			mClientIpAddress = context.getIpAddress();
+			mClientType      = context.getClientType().name();
+			mCommandString   = context.getCommandString();
+			mSessionString   = context.getSessionString();
+		}
 	}
 
 	public String getClientIpAddress() {
