@@ -1,9 +1,9 @@
 <assembly>
-  <id>hdfs</id> 
+  <id>hdfs-agent</id> 
   <formats>
      <format>tar</format>
   </formats>
-  <baseDirectory>security-agents-${project.version}-hdfs</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-hdfs-agent</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>

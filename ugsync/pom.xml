@@ -6,7 +6,7 @@
     <parent>
       <groupId>com.hortonworks.hadoop.security</groupId>
       <artifactId>argus</artifactId>
-      <version>3.5.000</version>
+      <version>3.6.000</version>
 	  <relativePath>..</relativePath>
     </parent>
 
@@ -23,7 +23,7 @@
     <repository>
         <id>usersync.local</id>
         <name>usersync</name>
-        <url>file:${project.basedir}/ugsync/repo</url>
+        <url>file:${project.basedir}/repo</url>
     </repository>
 	</repositories>
 

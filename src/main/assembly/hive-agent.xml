@@ -1,9 +1,9 @@
 <assembly>
-  <id>hive</id> 
+  <id>hive-agent</id> 
   <formats>
      <format>tar</format>
   </formats>
-  <baseDirectory>security-agents-${project.version}-hive</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-hive-agent</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>

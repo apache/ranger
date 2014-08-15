@@ -1,9 +1,9 @@
 <assembly>
-  <id>hbase</id> 
+  <id>hbase-agent</id> 
   <formats>
      <format>tar</format>
   </formats>
-  <baseDirectory>security-agents-${project.version}-hbase</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-hbase-agent</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>

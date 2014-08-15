@@ -6,13 +6,13 @@
     <parent>
       <groupId>com.hortonworks.hadoop.security</groupId>
       <artifactId>security-usergroup-sync</artifactId>
-      <version>3.5.000</version>
+      <version>3.6.000</version>
       <relativePath>..</relativePath>
     </parent>
 
     <groupId>com.hortonworks.hadoop.security</groupId>
     <artifactId>credValidator</artifactId>
-    <version>3.5.000</version>
+    <version>3.6.000</version>
 
     <packaging>uexe</packaging>
 

@@ -6,7 +6,7 @@
     <parent>
       <groupId>com.hortonworks.hadoop.security</groupId>
       <artifactId>argus</artifactId>
-      <version>3.5.000</version>
+      <version>3.6.000</version>
       <relativePath>..</relativePath>
     </parent>
 

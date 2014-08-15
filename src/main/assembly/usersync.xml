@@ -1,9 +1,9 @@
 <assembly>
-  <id>usync</id> 
+  <id>ugsync</id> 
   <formats>
      <format>tar</format>
   </formats>
-  <baseDirectory>security-usergroup-sync-${project.version}</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-ugsync</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>
