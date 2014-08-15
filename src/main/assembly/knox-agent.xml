@@ -1,9 +1,9 @@
 <assembly>
-  <id>knox</id> 
+  <id>knox-agent</id> 
   <formats>
      <format>tar</format>
   </formats>
-  <baseDirectory>security-agents-${project.version}-knox</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-knox-agent</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>

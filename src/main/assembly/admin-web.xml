@@ -1,10 +1,10 @@
 <assembly>
-  <id>bin</id> 
+  <id>admin</id> 
   <formats>
      <format>tar</format>
      <format>zip</format>
   </formats>
-  <baseDirectory>security-admin-${project.version}</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-admin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
 
