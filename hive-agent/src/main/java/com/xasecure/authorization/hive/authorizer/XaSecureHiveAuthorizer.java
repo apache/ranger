@@ -5,6 +5,11 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
@@ -66,7 +71,13 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		List<XaHiveObjectAccessInfo> objAccessList = getObjectAccessInfo(hiveOpType, inputHObjs, outputHObjs, context);
 
 		for(XaHiveObjectAccessInfo objAccessInfo : objAccessList) {
-			boolean ret = mHiveAccessVerifier.isAccessAllowed(ugi, objAccessInfo);
+            boolean ret = false;
+
+            if(objAccessInfo.getObjectType() == HiveObjectType.URI) {
+                ret = isURIAccessAllowed(ugi, objAccessInfo.getAccessType(), objAccessInfo.getUri(), getHiveConf());
+            } else {
+                ret = mHiveAccessVerifier.isAccessAllowed(ugi, objAccessInfo);
+            }
 
 			if(! ret) {
 				if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
@@ -163,7 +174,11 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 			case FUNCTION:
 				ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, hiveObj.getDbname(), HiveObjectType.FUNCTION, hiveObj.getObjectName());
 			break;
-	
+
+            case URI:
+                ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, HiveObjectType.URI, hiveObj.getObjectName());
+            break;
+
 			case NONE:
 			break;
 		}
@@ -202,6 +217,9 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 
 			case DFS_URI:
 			case LOCAL_URI:
+                objType = HiveObjectType.URI;
+            break;
+
 			case COMMAND_PARAMS:
 			case GLOBAL:
 			break;
@@ -297,8 +315,9 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				break;
 
 				case IMPORT:
+				case EXPORT:
 				case LOAD:
-					accessType = HiveAccessType.INSERT;
+					accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.INSERT;
 				break;
 
 				case LOCKDB:
@@ -308,7 +327,6 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 					accessType = HiveAccessType.LOCK;
 				break;
 
-				case EXPORT:
 				case QUERY:
 					accessType = HiveAccessType.SELECT;
 				break;
@@ -364,6 +382,53 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		return accessType;
 	}
 
+    private boolean isURIAccessAllowed(UserGroupInformation ugi, HiveAccessType accessType, String uri, HiveConf conf) {
+        boolean ret = false;
+
+        FsAction action = FsAction.NONE;
+
+        switch(accessType) {
+            case ALTER:
+            case CREATE:
+            case UPDATE:
+            case DROP:
+            case INDEX:
+            case INSERT:
+            case LOCK:
+                action = FsAction.WRITE;
+            break;
+
+            case SELECT:
+            case USE:
+                action = FsAction.READ;
+            break;
+
+            case NONE:
+            break;
+        }
+
+        if(action == FsAction.NONE) {
+            ret = true;
+        } else {
+            try {
+                Path       filePath   = new Path(uri);
+                FileSystem fs         = FileSystem.get(filePath.toUri(), conf);
+                Path       path       = FileUtils.getPathOrParentThatExists(fs, filePath);
+                FileStatus fileStatus = fs.getFileStatus(path);
+                String     userName   = ugi.getShortUserName();
+
+                if (FileUtils.isOwnerOfFileHierarchy(fs, fileStatus, userName)) {
+                    ret = true;
+                } else {
+                    ret = FileUtils.isActionPermittedForFileHierarchy(fs, fileStatus, userName, action);
+                }
+            } catch(Exception excp) {
+                LOG.error("Error getting permissions for " + uri, excp);
+            }
+        }
+
+        return ret;
+    }
 	private void logAuditEvent(UserGroupInformation ugi, XaHiveObjectAccessInfo objAccessInfo, boolean accessGranted) {
 		
 		HiveAuditEvent auditEvent = new HiveAuditEvent();

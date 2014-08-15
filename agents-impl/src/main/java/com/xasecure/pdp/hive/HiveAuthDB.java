@@ -107,6 +107,10 @@ public class HiveAuthDB {
 				ret = isUDFAccessAllowed(ugi, accessType, objAccessInfo.getDatabase(), objAccessInfo.getFunction());
 			break;
 
+			case URI:
+				// Handled in XaSecureHiveAuthorizer
+			break;
+
 			case NONE:
 			break;
 		}
@@ -117,7 +121,10 @@ public class HiveAuthDB {
 	public boolean isAudited(XaHiveObjectAccessInfo objAccessInfo) {
 		boolean ret = false;
 
-		if(objAccessInfo.getAccessType() == HiveAccessType.NONE || objAccessInfo.getObjectType() == HiveObjectType.NONE) {
+		if(   objAccessInfo.getAccessType() == HiveAccessType.NONE
+           || objAccessInfo.getObjectType() == HiveObjectType.NONE
+           || objAccessInfo.getObjectType() == HiveObjectType.URI
+           ) {
 			return false;
 		}
 		
@@ -156,6 +163,7 @@ public class HiveAuthDB {
 			break;
 
 			case NONE:
+			case URI:
 			break;
 		}
 		

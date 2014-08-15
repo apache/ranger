@@ -6,21 +6,22 @@ import java.util.List;
 import com.xasecure.authorization.utils.StringUtil;
 
 public class XaHiveObjectAccessInfo {
-	public enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION };
+	public enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI };
 	public enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, INSERT, SELECT, UPDATE, USE };
 
-	private String            mOperType;
-	private XaHiveAccessContext mContext;
-	private HiveAccessType    mAccessType;
-	private HiveObjectType    mObjectType;
-	private String            mDatabase;
-	private String            mTable;
-	private String            mView;
-	private String            mPartition;
-	private String            mIndex;
-	private List<String>      mColumns;
-	private String            mFunction;
-	private String            mDeniedObjectName;
+	private String              mOperType         = null;
+	private XaHiveAccessContext mContext          = null;
+	private HiveAccessType      mAccessType       = HiveAccessType.NONE;
+	private HiveObjectType      mObjectType       = HiveObjectType.NONE;
+	private String              mDatabase         = null;
+	private String              mTable            = null;
+	private String              mView             = null;
+	private String              mPartition        = null;
+	private String              mIndex            = null;
+	private List<String>        mColumns          = null;
+	private String              mFunction         = null;
+	private String              mUri              = null;
+	private String              mDeniedObjectName = null;
 
 	public XaHiveObjectAccessInfo(String operType, XaHiveAccessContext context, HiveAccessType accessType, String dbName) {
 		this(operType, context, accessType, dbName, null, HiveObjectType.DATABASE, dbName);
@@ -34,6 +35,10 @@ public class XaHiveObjectAccessInfo {
 		this(operType, context, accessType, dbName, null, objType, objName);
 	}
 
+	public XaHiveObjectAccessInfo(String operType, XaHiveAccessContext context, HiveAccessType accessType, HiveObjectType objType, String objName) {
+		this(operType, context, accessType, null, null, objType, objName);
+	}
+
 	public XaHiveObjectAccessInfo(String operType, XaHiveAccessContext context, HiveAccessType accessType, String dbName, String tblOrViewName, List<String> columns) {
 		mOperType    = operType;
 		mContext     = context;
@@ -42,8 +47,6 @@ public class XaHiveObjectAccessInfo {
 		mDatabase    = dbName;
 		mTable       = tblOrViewName;
 		mView        = tblOrViewName;
-		mPartition   = null;
-		mIndex       = null;
 		mColumns     = columns;
 	}
 
@@ -55,9 +58,6 @@ public class XaHiveObjectAccessInfo {
 		mDatabase    = dbName;
 		mTable       = tblName;
 		mView        = tblName;
-		mPartition   = null;
-		mIndex       = null;
-		mColumns     = null;
 
 		if(objName != null && ! objName.trim().isEmpty()) {
 			switch(objType) {
@@ -88,6 +88,10 @@ public class XaHiveObjectAccessInfo {
 
 				case FUNCTION:
 					mFunction = objName;
+				break;
+
+				case URI:
+					mUri = objName;
 				break;
 
 				case NONE:
@@ -140,6 +144,10 @@ public class XaHiveObjectAccessInfo {
 		return mFunction;
 	}
 
+	public String getUri() {
+		return mUri;
+	}
+
 	public void setDeinedObjectName(String deniedObjectName) {
 		mDeniedObjectName = deniedObjectName;
 	}
@@ -149,20 +157,29 @@ public class XaHiveObjectAccessInfo {
 	}
 
 	public String getObjectName() {
-		String objName = StringUtil.isEmpty(mDatabase) ? "" : mDatabase;
+        String objName = null;
 
-		if(! StringUtil.isEmpty(mTable))
-			objName += ("/" + mTable);
-		else if(! StringUtil.isEmpty(mView))
-			objName += ("/" + mView);
-		else if(! StringUtil.isEmpty(mFunction))
-			objName += ("/" + mFunction);
+        if(this.mObjectType == HiveObjectType.URI) {
+            objName = mUri;
+        } else {
+            String tblName = null;
+            String colName = null;
 
-		if(! StringUtil.isEmpty(mColumns))
-			objName += ("/" + StringUtil.toString(mColumns));
-		else if(! StringUtil.isEmpty(mIndex))
-			objName += ("/" + mIndex);
-		
+            if(! StringUtil.isEmpty(mTable))
+                tblName = mTable;
+            else if(! StringUtil.isEmpty(mView))
+                tblName = mView;
+            else if(! StringUtil.isEmpty(mFunction))
+                tblName = mFunction;
+
+            if(! StringUtil.isEmpty(mColumns))
+                colName = StringUtil.toString(mColumns);
+            else if(! StringUtil.isEmpty(mIndex))
+                colName = mIndex;
+
+            objName = getObjectName(mDatabase, tblName, colName);
+        }
+
 		return objName;
 	}
 	
