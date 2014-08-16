@@ -54,7 +54,6 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		mHiveAccessVerifier = XaHiveAccessVerifierFactory.getInstance() ;
 	}
 
-
 	@Override
 	public void checkPrivileges(HiveOperationType         hiveOpType,
 								List<HivePrivilegeObject> inputHObjs,
@@ -64,6 +63,12 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(toString(hiveOpType, inputHObjs, outputHObjs, context));
+		}
+		
+		if(hiveOpType == HiveOperationType.DFS) {
+			handleDfsCommand(hiveOpType, inputHObjs, outputHObjs, context);
+			
+			return;
 		}
 
 		UserGroupInformation ugi =  this.getCurrentUserGroupInfo();
@@ -429,8 +434,69 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 
         return ret;
     }
-	private void logAuditEvent(UserGroupInformation ugi, XaHiveObjectAccessInfo objAccessInfo, boolean accessGranted) {
+
+	private void handleDfsCommand(HiveOperationType         hiveOpType,
+								  List<HivePrivilegeObject> inputHObjs,
+							      List<HivePrivilegeObject> outputHObjs,
+							      HiveAuthzContext          context)
+	      throws HiveAuthzPluginException, HiveAccessControlException {
+
+		String dfsCommandParams = null;
+
+		if(inputHObjs != null) {
+			for(HivePrivilegeObject hiveObj : inputHObjs) {
+				if(hiveObj.getType() == HivePrivilegeObjectType.COMMAND_PARAMS) {
+					dfsCommandParams = StringUtil.toString(hiveObj.getCommandParams());
+
+					if(! StringUtil.isEmpty(dfsCommandParams)) {
+						break;
+					}
+				}
+			}
+		}
 		
+		UserGroupInformation ugi = this.getCurrentUserGroupInfo();
+
+		logAuditEventForDfs(ugi, dfsCommandParams, false);
+
+		throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have privilege for [%s] command",
+											 ugi.getShortUserName(), hiveOpType.name()));
+		
+	}
+   
+    private void logAuditEventForDfs(UserGroupInformation ugi, String dfsCommand, boolean accessGranted) {
+		HiveAuditEvent auditEvent = new HiveAuditEvent();
+
+		try {
+			auditEvent.setAclEnforcer(XaSecureModuleName);
+			auditEvent.setResourceType("@dfs"); // to be consistent with earlier release
+			auditEvent.setAccessType("DFS");
+			auditEvent.setAction("DFS");
+			auditEvent.setUser(ugi.getShortUserName());
+			auditEvent.setAccessResult((short)(accessGranted ? 1 : 0));
+			auditEvent.setEventTime(StringUtil.getUTCDate());
+			auditEvent.setRepositoryType(EnumRepositoryType.HIVE);
+			auditEvent.setRepositoryName(repositoryName) ;
+			auditEvent.setRequestData(dfsCommand);
+
+			auditEvent.setResourcePath(dfsCommand);
+		
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("logAuditEvent [" + auditEvent + "] - START");
+			}
+
+			AuditProviderFactory.getAuditProvider().log(auditEvent);
+
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("logAuditEvent [" + auditEvent + "] - END");
+			}
+		}
+		catch(Throwable t) {
+			LOG.error("ERROR logEvent [" + auditEvent + "]", t);
+		}
+    }
+
+	private void logAuditEvent(UserGroupInformation ugi, XaHiveObjectAccessInfo objAccessInfo, boolean accessGranted) {
 		HiveAuditEvent auditEvent = new HiveAuditEvent();
 
 		try {
@@ -467,7 +533,6 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		catch(Throwable t) {
 			LOG.error("ERROR logEvent [" + auditEvent + "]", t);
 		}
-		
 	}
 	
 	private String toString(HiveOperationType         hiveOpType,
