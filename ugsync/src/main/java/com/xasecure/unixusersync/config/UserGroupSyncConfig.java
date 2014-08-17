@@ -79,6 +79,16 @@ public class UserGroupSyncConfig  {
 	
 	private static final String DEFAULT_USER_NAME_ATTRIBUTE = "cn";
 	
+	public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none" ;
+	public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower" ;
+	public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE = "upper" ;
+	 
+	private static final String UGSYNC_USERNAME_CASE_CONVERSION_PARAM = "ldapGroupSync.username.caseConversion" ;
+	private static final String UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM = "ldapGroupSync.groupname.caseConversion" ;
+	 
+	private static final String DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE = UGSYNC_LOWER_CASE_CONVERSION_VALUE  ;
+	private static final String DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE = UGSYNC_LOWER_CASE_CONVERSION_VALUE ;
+	
 	private static final String DEFAULT_USER_GROUP_NAME_ATTRIBUTE = "memberof,ismemberof";
 
 	private Properties prop = new Properties() ;
@@ -349,5 +359,22 @@ public class UserGroupSyncConfig  {
 		return userGroupNameAttributeSet;
 	}
 	
+	public String getUserNameCaseConversion() {
+ 		String ret = prop.getProperty(UGSYNC_USERNAME_CASE_CONVERSION_PARAM, DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE) ;
+ 		return ret.trim().toLowerCase() ;
+ 	}
+ 
+ 	public String getGroupNameCaseConversion() {
+ 		String ret = prop.getProperty(UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM, DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE) ;
+ 		return ret.trim().toLowerCase() ;
+ 	}
+ 
+ 	public String getProperty(String aPropertyName) {
+ 		return prop.getProperty(aPropertyName) ;
+ 	}
+ 
+ 	public String getProperty(String aPropertyName, String aDefaultValue) {
+ 		return prop.getProperty(aPropertyName, aDefaultValue) ;
+ 	}
 	
 }

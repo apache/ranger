@@ -1,8 +1,10 @@
 #!/bin/bash
 
+INSTALL_BASE=/usr/lib
+
 MOD_NAME=uxugsync
 
-MOD_DIR=/etc/${MOD_NAME}
+MOD_DIR=${INSTALL_BASE}/${MOD_NAME}
 
 if [ -L ${MOD_DIR} ]
 then

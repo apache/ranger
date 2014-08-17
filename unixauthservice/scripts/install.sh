@@ -4,6 +4,8 @@
 # Ensure that the user is root
 #
 
+INSTALL_BASE=/usr/lib
+
 MOD_NAME="uxugsync"
 
 MY_ID=`id -u`
@@ -20,6 +22,7 @@ then
 	exit 1
 fi
 
+INSTALL_DIR=${INSTALL_BASE}/${MOD_NAME}
 
 #
 # Embed the configuration from install.properties to conf/unixauthservice.properties
@@ -52,7 +55,22 @@ SYNC_LDAP_USER_NAME_ATTRIBUTE=`grep '^[ \t]*SYNC_LDAP_USER_NAME_ATTRIBUTE[ \t]*=
 
 SYNC_LDAP_USER_GROUP_NAME_ATTRIBUTE=`grep '^[ \t]*SYNC_LDAP_USER_GROUP_NAME_ATTRIBUTE[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
 
+SYNC_LDAP_USERNAME_CASE_CONVERSION=`grep '^[ \t]*SYNC_LDAP_USERNAME_CASE_CONVERSION[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+
+SYNC_LDAP_GROUPNAME_CASE_CONVERSION=`grep '^[ \t]*SYNC_LDAP_GROUPNAME_CASE_CONVERSION[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+
+if [ "${SYNC_LDAP_USERNAME_CASE_CONVERSION}" == "" ]
+then
+    SYNC_LDAP_USERNAME_CASE_CONVERSION="none"
+fi
+
+if [ "${SYNC_LDAP_GROUPNAME_CASE_CONVERSION}" == "" ]
+then
+    SYNC_LDAP_GROUPNAME_CASE_CONVERSION="none"
+fi
+
 SYNC_LDAP_BIND_KEYSTOREPATH=`grep '^[ \t]*CRED_KEYSTORE_FILENAME[ \t]*=' ${cdir}/install.properties | sed -e 's:^[ \t]*CRED_KEYSTORE_FILENAME[ \t]*=[ \t]*::'`
+
 SYNC_LDAP_BIND_ALIAS=ldap.bind.password
 
 if [ "${SYNC_INTERVAL}" != "" ]
@@ -162,6 +180,8 @@ then
     -e "s|^\( *ldapGroupSync.userSearchFilter *=\).*-|1 ${SYNC_LDAP_USER_SEARCH_FILTER}|" \
     -e "s|^\( *ldapGroupSync.userNameAttribute *=\).*|\1 ${SYNC_LDAP_USER_NAME_ATTRIBUTE}|" \
     -e "s|^\( *ldapGroupSync.userGroupNameAttribute *=\).*|\1 ${SYNC_LDAP_USER_GROUP_NAME_ATTRIBUTE}|" \
+    -e "s|^\( *ldapGroupSync.username.caseConversion *=\).*|\1 ${SYNC_LDAP_USERNAME_CASE_CONVERSION}|" \
+    -e "s|^\( *ldapGroupSync.groupname.caseConversion *=\).*|\1 ${SYNC_LDAP_GROUPNAME_CASE_CONVERSION}|" \
     ${CFG_FILE} > ${NEW_CFG_FILE}
 	mv ${CFG_FILE}  ${CFG_FILE}_archive_`date '+%s'`
 	mv ${NEW_CFG_FILE}  ${CFG_FILE}
@@ -181,23 +201,24 @@ cdirname=`basename ${cdir}`
 if [ "${cdirname}" != "" ]
 then
 
-	dstdir=/etc/${cdirname}
+	dstdir=${INSTALL_BASE}/${cdirname}
 
 	if [ -d ${dstdir} ]
 	then
 		ctime=`date '+%s'`
-		mkdir -p /etc/xasecure/archive/${ctime}
-		mv ${dstdir} /etc/xasecure/archive/${ctime}/
+        archive_dir=${dstdir}-${ctime}
+        mkdir -p ${archive_dir}
+        mv ${dstdir} ${archive_dir}		
 	fi
 
 	mkdir ${dstdir}
 	
-	if [ -L /etc/${MOD_NAME} ]
+	if [ -L ${INSTALL_DIR} ]
     then
-        rm -f /etc/${MOD_NAME}
+        rm -f ${INSTALL_DIR}
     fi
 
-	ln -s  ${dstdir} /etc/${MOD_NAME}
+	ln -s  ${dstdir} ${INSTALL_DIR}
 
 	(cd ${cdir} ; find . -print | cpio -pdm ${dstdir}) 
 	(cd ${cdir} ; cat start.sh | sed -e "s|[ \t]*JAVA_HOME=| JAVA_HOME=${JAVA_HOME}|" > ${dstdir}/start.sh)
