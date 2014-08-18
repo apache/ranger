@@ -36,6 +36,12 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	private DirContext dirContext;
 	private SearchControls searchControls;
 	
+	private boolean userNameCaseConversionFlag = false ;
+	private boolean groupNameCaseConversionFlag = false ;
+	private boolean userNameLowerCaseFlag = false ;
+	private boolean groupNameLowerCaseFlag = false ;
+
+	
 	public static void main(String[] args) throws Throwable {
 		LdapUserGroupBuilder  ugBuilder = new LdapUserGroupBuilder();
 		ugBuilder.init();
@@ -43,6 +49,27 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	
 	public LdapUserGroupBuilder() {
 		LOG.info("LdapUserGroupBuilder created") ;
+		
+		String userNameCaseConversion = config.getUserNameCaseConversion() ;
+		
+		if (UserGroupSyncConfig.UGSYNC_NONE_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion)) {
+		    userNameCaseConversionFlag = false ;
+		}
+		else {
+		    userNameCaseConversionFlag = true ;
+		    userNameLowerCaseFlag = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion) ;
+		}
+		
+		String groupNameCaseConversion = config.getGroupNameCaseConversion() ;
+		
+		if (UserGroupSyncConfig.UGSYNC_NONE_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion)) {
+		    groupNameCaseConversionFlag = false ;
+		}
+		else {
+		    groupNameCaseConversionFlag = true ;
+		    groupNameLowerCaseFlag = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion) ;
+		}
+		
 	}
 
 	@Override
@@ -140,6 +167,17 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 				final SearchResult userEntry = searchResultEnum.next();
 				String userName = (String) userEntry.getAttributes()
 						.get(userNameAttribute).get();
+				
+				
+				if (userNameCaseConversionFlag) {
+					if (userNameLowerCaseFlag) {
+						userName = userName.toLowerCase() ;
+					}
+					else {
+						userName = userName.toUpperCase() ;
+					}
+				}
+				
 				Set<String> groups = new HashSet<String>();
 				Set<String> userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
 				for (String useGroupNameAttribute : userGroupNameAttributeSet) {
@@ -147,7 +185,16 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 					if(userGroupfAttribute != null) {
 						NamingEnumeration<?> groupEnum = userGroupfAttribute.getAll();
 						while (groupEnum.hasMore()) {
-							groups.add(getShortGroupName((String) groupEnum.next()));
+							String gName = getShortGroupName((String) groupEnum
+									.next());
+							if (groupNameCaseConversionFlag) {
+								if (groupNameLowerCaseFlag) {
+									gName = gName.toLowerCase();
+								} else {
+									gName = gName.toUpperCase();
+								}
+							}
+							groups.add(gName);
 						}
 					}
 				}
