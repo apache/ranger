@@ -2,14 +2,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.hortonworks.hadoop.security</groupId>
   <artifactId>security-admin-web</artifactId>
-  <version>3.6.000</version>
+  <version>0.1.0</version>
   <name>Security Admin Web Application</name>
   <description>security-admin-tool java web application</description>
   <packaging>war</packaging>
   <parent>
   	<groupId>com.hortonworks.hadoop.security</groupId>
   	<artifactId>argus</artifactId>
-  	<version>3.6.000</version>
+  	<version>0.1.0</version>
   </parent>
   <dependencies>
 		<dependency>

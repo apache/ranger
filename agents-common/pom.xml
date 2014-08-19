@@ -11,7 +11,7 @@
   <parent>
      <groupId>com.hortonworks.hadoop.security</groupId>
      <artifactId>argus</artifactId>
-     <version>3.6.000</version>
+     <version>0.1.0</version>
      <relativePath>..</relativePath>
   </parent>
   <dependencies>
