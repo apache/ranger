@@ -597,11 +597,12 @@ define(function(require) {
 			permArr = ['XA_PERM_TYPE_ALLOW','XA_PERM_TYPE_ADMIN'];
 			break;
 		case XAEnums.AssetType.ASSET_STORM.value :
-			permArr = ['XA_PERM_TYPE_SUBMIT_TOPOLOGY','XA_PERM_TYPE_FILE_UPLOAD','XA_PERM_TYPE_GET_NIMBUS',
+			permArr = ['XA_PERM_TYPE_ADMIN'];
+			/*permArr = ['XA_PERM_TYPE_SUBMIT_TOPOLOGY','XA_PERM_TYPE_FILE_UPLOAD','XA_PERM_TYPE_GET_NIMBUS',
 			           'XA_PERM_TYPE_GET_CLUSTER_INFO','XA_PERM_TYPE_FILE_DOWNLOAD','XA_PERM_TYPE_KILL_TOPOLOGY',
 			           'XA_PERM_TYPE_REBALANCE','XA_PERM_TYPE_ACTIVATE','XA_PERM_TYPE_DEACTIVATE','XA_PERM_TYPE_GET_TOPOLOGY_CONF',
 			           'XA_PERM_TYPE_GET_TOPOLOGY','XA_PERM_TYPE_GET_USER_TOPOLOGY','XA_PERM_TYPE_GET_TOPOLOGY_INFO','XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL'
-			           ];
+			           ];*/
 			break;	
 		}
 		return permArr;
@@ -624,10 +625,17 @@ define(function(require) {
 			permHeaders.push(localization.tt('lbl.ipAddress'),localization.tt('lbl.allow'),localization.tt('lbl.admin'),'');
 			break;
 		case XAEnums.AssetType.ASSET_STORM.value :
-			permHeaders.push(localization.tt('lbl.actions'),'');
+			permHeaders.push(localization.tt('lbl.actions'),localization.tt('lbl.admin'),'');
 			break;	
 		}
 		return permHeaders;
+	};
+	XAUtils.getStormActions = function(){
+		return ['XA_PERM_TYPE_SUBMIT_TOPOLOGY','XA_PERM_TYPE_FILE_UPLOAD','XA_PERM_TYPE_GET_NIMBUS',
+		           'XA_PERM_TYPE_GET_CLUSTER_INFO','XA_PERM_TYPE_FILE_DOWNLOAD','XA_PERM_TYPE_KILL_TOPOLOGY',
+		           'XA_PERM_TYPE_REBALANCE','XA_PERM_TYPE_ACTIVATE','XA_PERM_TYPE_DEACTIVATE','XA_PERM_TYPE_GET_TOPOLOGY_CONF',
+		           'XA_PERM_TYPE_GET_TOPOLOGY','XA_PERM_TYPE_GET_USER_TOPOLOGY','XA_PERM_TYPE_GET_TOPOLOGY_INFO','XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL'
+		           ];
 	};
     return XAUtils;
 });

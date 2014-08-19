@@ -108,6 +108,8 @@ define(function(require){
 			zookeeperZnodeParent	: 'zookeeper.znode.parent',
 			//knox
 			knoxUrl					:'knox.url',
+			//Storm
+			nimbusUrl				:'nimbus.url',
 			
 			commonnameforcertificate: 'commonNameForCertificate'
 		}

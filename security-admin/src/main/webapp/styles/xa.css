@@ -1548,6 +1548,8 @@ body.login {
   visibility: hidden;
   font-size: 20px;
   margin-top: 3px;
+  position:relative;
+  right:80px;
 }
 .login form .btn,
 .login input {

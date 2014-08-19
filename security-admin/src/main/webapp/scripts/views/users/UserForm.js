@@ -136,6 +136,15 @@ define(function(require){
 				if(this.model.get('name') == userProfileModel.get('loginId')){
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
 				}
+				if(userProfileModel.get('loginId') != "admin"){
+					if(_.contains(this.model.get('userRoleList'),'ROLE_SYS_ADMIN')){
+						this.fields.userRoleList.editor.$el.attr('disabled',true);
+					}else{
+						this.fields.userRoleList.editor.$el.attr('disabled',false);
+					}
+				}else{
+					this.fields.userRoleList.editor.$el.attr('disabled',false);
+				}
 			}
 			
 		},

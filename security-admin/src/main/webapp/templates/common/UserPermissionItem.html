@@ -20,13 +20,12 @@
        		{{/if}}
        	</a>
 </td>	
-{{else}}
-	{{#each permissions}}
+{{/if}}
+{{#each permissions}}
 		<td style="cursor:pointer;">
 			<input data-id="{{./this.value}}" type="checkbox">
 		</td>
-	{{/each}}
-{{/if}}	
+{{/each}}
 
 <td>
 	<button type="button" class="btn btn-small btn-danger " data-action="delete">
