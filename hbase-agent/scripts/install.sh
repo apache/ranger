@@ -8,14 +8,14 @@ alias=$1
 pass=$2
 jceksFile=$3
 
-ret=`hadoop credential create ${alias} --value ${pass} --provider jceks://file${jceksFile} 2>&1`
+ret=`hadoop credential create ${alias} -value ${pass} -provider jceks://file${jceksFile} 2>&1`
 res=`echo $ret | grep 'already exist'`
 
 if ! [ "${res}" == "" ]
 then
    echo "Credential file already exists,recreating the file..."
-   hadoop credential delete ${alias} --provider jceks://file${jceksFile}
-   hadoop credential create ${alias} --value ${pass} --provider jceks://file${jceksFile}
+   hadoop credential delete ${alias} -provider jceks://file${jceksFile}
+   hadoop credential create ${alias} -value ${pass} -provider jceks://file${jceksFile}
 fi
 }
 
@@ -160,19 +160,37 @@ then
 				mv ${hbase_lib_dir}/${fn} ${hbase_lib_dir}/.${fn}.${cdt}
 			fi
 			echo "+cp ${f} ${hbase_lib_dir}/${fn}"
-			cp ${f} ${hbase_lib_dir}/${fn}
+			cp ${f} ${hbase_lib_dir}/${fn}	
 		fi
 	done
 fi
 
 
 CredFile=`grep '^CREDENTIAL_PROVIDER_FILE' ${install_dir}/install.properties | awk -F= '{ print $2 }'`
-
+		
 if ! [ `echo ${CredFile} | grep '^/.*'` ]
 then
-  echo "Please enter the Credential File Store with proper file path"
+  echo "ERROR:Please enter the Credential File Store with proper file path"
   exit 1
 fi
+
+dirno=`echo ${CredFile}| awk -F"/" '{ print NF}'`
+
+if [ ${dirno} -gt 2 ];
+then
+ pardir=`echo ${CredFile} |  awk -F'/[^/]*$' '{ print $1 }'`
+ if [ ! -d  ${pardir} ];
+ then
+   mkdir -p ${pardir}
+   if [ $? -eq 0 ];
+   then
+     chmod go+rx ${pardir}
+   else
+     echo "ERROR: Unable to create credential store file path"
+   fi
+ fi
+fi
+
 
 #
 # Generate Credential Provider file and Credential for Audit DB access.
