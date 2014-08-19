@@ -19,11 +19,6 @@
 	</property>
 
 	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.password</name>
-		<value>xaaudit</value>
-	</property>
-
-	<property>
 		<name>xasecure.audit.jpa.javax.persistence.jdbc.driver</name>
 		<value>com.mysql.jdbc.Driver</value>
 	</property>

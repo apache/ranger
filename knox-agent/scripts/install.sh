@@ -2,6 +2,16 @@
 
 # TODO: change <name>AclsAuthz<name> to <name>XASecurePDPKnox</name> for provider <role>authorization<role>
 
+function create_jceks()
+{
+       alias=$1
+       pass=$2
+       jceksFile=$3
+       java -cp "${install_dir}/cred/lib/*" com.hortonworks.credentialapi.buildks create ${alias} -value ${pass} -provider jceks://file${jceksFile}
+}
+
+
+
 MY_ID=`id -u`
 
 if [ "${MY_ID}" -ne 0 ]
@@ -170,6 +180,55 @@ done
 
 chmod go-rwx ${KNOX_CONF}/xasecure-policymgr-ssl.xml
 chown ${CONFIG_FILE_OWNER} ${KNOX_CONF}/xasecure-policymgr-ssl.xml
+
+#
+# -- Cred Changes
+#
+
+CredFile=`grep '^CREDENTIAL_PROVIDER_FILE' ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+
+if ! [ `echo ${CredFile} | grep '^/.*'` ]
+then
+  echo "Please enter the Credential File Store with proper file path"
+  exit 1
+fi
+
+#
+# Generate Credential Provider file and Credential for Audit DB access.
+#
+
+
+auditDbPasswordAlias="auditDBCred"
+
+auditDbPassword=`grep '^XAAUDIT.DB.PASSWORD' ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+
+create_jceks ${auditDbPasswordAlias} ${auditDbPassword} ${CredFile}
+
+
+#
+# Generate Credential Provider file and Credential for SSL KEYSTORE AND TRUSTSTORE
+#
+
+
+sslKeystorePasswordAlias="sslKeyStorePassword"
+
+sslKeystorePassword=`grep '^SSL_KEYSTORE_PASSWORD' ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+
+create_jceks ${sslKeystorePasswordAlias} ${sslKeystorePassword} ${CredFile}
+
+
+sslTruststorePasswordAlias="sslTrustStorePassword"
+
+sslTruststorePassword=`grep '^SSL_TRUSTSTORE_PASSWORD' ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+
+create_jceks ${sslTruststorePasswordAlias} ${sslTruststorePassword} ${CredFile}
+
+chown ${CONFIG_FILE_OWNER} ${CredFile} 
+
+#
+# -- End - Cred Changes
+#
+
 
 # update topology files - replace <name>AclsAuthz</name> with <name>XASecurePDPKnox</name>
 # ${PRE_INSTALL_CONFIG}/topologies/topologies/*.xml

@@ -73,7 +73,9 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 	private static final String AGENT_NAME_PARAM = "agentId" ;
 
 	private static final int MAX_AGENT_NAME_LEN = 255 ;
-
+	
+	private static final String XASECURE_KNOX_CREDENTIAL_PROVIDER_FILE  
+		= "xasecure.knox.credential.provider.file";
 
 	private String url;
 
@@ -95,11 +97,11 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 	
 	private String keyStoreFile =  null ;
 	private String keyStoreFilepwd = null; 
-	private String keyStoreURL = null;
+	private String credentialProviderFile = null;
 	private String keyStoreAlias = null;
 	private String trustStoreFile = null ;
 	private String trustStoreFilepwd = null ;
-	private String trustStoreURL = null;
+	// private String trustStoreURL = null;
 	private String trustStoreAlias = null;
 	private String keyStoreType = null ;
 	private String trustStoreType = null ;
@@ -133,61 +135,73 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 	
 	public void init() {
 		if (sslConfigFileName != null) {
-			LOG.debug("Loading SSL Configuration from [" + sslConfigFileName + "]");
-			InputStream in =  null ;
+			LOG.debug("Loading SSL Configuration from [" + sslConfigFileName
+					+ "]");
+			InputStream in = null;
 			try {
-				Configuration conf = new Configuration() ;
-				in = getFileInputStream(sslConfigFileName) ;
+				Configuration conf = new Configuration();
+				in = getFileInputStream(sslConfigFileName);
 				if (in != null) {
 					conf.addResource(in);
 				}
-				
-				xasecurecp = XaSecureCredentialProvider.getInstance();
-				
-				keyStoreFile = conf.get(XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE);
-				
-				keyStoreURL=conf.get(XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
-				keyStoreAlias=XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
-				
-				char[] v_keyStoreFilePwd = getCredential(keyStoreURL,keyStoreAlias);
-				if (  v_keyStoreFilePwd == null ) {
-					keyStoreFilepwd = null;
-				} else {
-					keyStoreFilepwd = new String(v_keyStoreFilePwd);
+
+				if (url.startsWith("https")) { 
+					xasecurecp = XaSecureCredentialProvider.getInstance();
+
+					keyStoreFile = conf
+							.get(XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE);
+
+					credentialProviderFile = conf
+							.get(XASECURE_KNOX_CREDENTIAL_PROVIDER_FILE);
+					keyStoreAlias = XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
+
+					char[] v_keyStoreFilePwd = getCredential(credentialProviderFile,
+							keyStoreAlias);
+					if (v_keyStoreFilePwd == null) {
+						keyStoreFilepwd = null;
+					} else {
+						keyStoreFilepwd = new String(v_keyStoreFilePwd);
+					}
+
+					trustStoreFile = conf
+							.get(XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE);
+
+					//trustStoreURL = conf
+					//		.get(XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
+					trustStoreAlias = XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
+
+					char[] v_TrustStoreFilePwd = getCredential(credentialProviderFile,
+							trustStoreAlias);
+					if (v_TrustStoreFilePwd == null) {
+						trustStoreFilepwd = null;
+					} else {
+						trustStoreFilepwd = new String(v_TrustStoreFilePwd);
+					}
+
+					keyStoreType = conf
+							.get(XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_TYPE,
+									XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
+					trustStoreType = conf
+							.get(XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_TYPE,
+									XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
 				}
-				
-				trustStoreFile = conf.get(XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE);
-				
-				trustStoreURL=conf.get(XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
-				trustStoreAlias=XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
-				
-				char[] v_TrustStoreFilePwd = getCredential(trustStoreURL,trustStoreAlias);
-				if (  v_TrustStoreFilePwd == null ) {
-					trustStoreFilepwd = null;
-				} else {
-					trustStoreFilepwd = new String(v_TrustStoreFilePwd);
-				}
-			
-				
-				keyStoreType = conf.get(XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_TYPE, XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
-				trustStoreType = conf.get(XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_TYPE, XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
-			}
-			catch(IOException ioe) {
-				LOG.error("Unable to load SSL Config FileName: [" + sslConfigFileName + "]", ioe);
-			}
-			finally {
+			} catch (IOException ioe) {
+				LOG.error("Unable to load SSL Config FileName: ["
+						+ sslConfigFileName + "]", ioe);
+			} finally {
 				if (in != null) {
 					try {
-						in.close() ;
+						in.close();
 					} catch (IOException e) {
-						LOG.error("Unable to close SSL Config FileName: [" + sslConfigFileName + "]", e) ;
+						LOG.error("Unable to close SSL Config FileName: ["
+								+ sslConfigFileName + "]", e);
 					}
 				}
 			}
-			
+
 			LOG.debug("Keystore filename:[" + keyStoreFile + "]");
 			LOG.debug("TrustStore filename:[" + trustStoreFile + "]");
-			
+
 		}
 	}
 
