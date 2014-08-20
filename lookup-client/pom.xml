@@ -2,14 +2,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.hortonworks.hadoop.security</groupId>
   <artifactId>lookup-client</artifactId>
-  <version>3.6.000</version>
+  <version>0.1.0</version>
   <name>Resource Lookup API Implementation</name>
   <description>Resource Lookup API Implementation</description>
   <packaging>jar</packaging>
   <parent>
      <groupId>com.hortonworks.hadoop.security</groupId>
      <artifactId>argus</artifactId>
-     <version>3.6.000</version>
+     <version>0.1.0</version>
      <relativePath>..</relativePath>
   </parent>
   <dependencies>

@@ -21,13 +21,13 @@
        		{{/if}}
        	</a>
 </td>	
-{{else}}
-	{{#each permissions}}
-		<td style="cursor:pointer;">
-			<input data-id="{{./this.value}}" type="checkbox">
-		</td>
-	{{/each}}
-{{/if}}	
+{{/if}}
+{{#each permissions}}
+	<td style="cursor:pointer;">
+		<input data-id="{{./this.value}}" type="checkbox">
+	</td>
+{{/each}}
+	
 
 
 <td>

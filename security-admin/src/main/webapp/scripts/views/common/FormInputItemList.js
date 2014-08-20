@@ -45,7 +45,10 @@ define(function(require) {
 			this.stormPermsIds = [];
 			if(this.policyType == XAEnums.AssetType.ASSET_STORM.value){
 				if(this.model.has('editMode') && this.model.get('editMode')){
-					this.stormPermsIds = _.map(this.model.get('_vPermList'), function(p){return p.permType;});
+					this.stormPermsIds = _.map(this.model.get('_vPermList'), function(p){
+											if(XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value != p.permType)
+												return p.permType;
+										});
 				}
 			}
 		},
@@ -58,19 +61,15 @@ define(function(require) {
 			if(!_.isUndefined(this.model.get('ipAddress'))){
 				this.ui.inputIPAddress.val(this.model.get('ipAddress').toString());
 			}
-			
+			if(this.model.has('editMode') && this.model.get('editMode')){
+				_.each(this.model.get('_vPermList'), function(p){
+					this.$el.find('input[data-id="' + p.permType + '"]').attr('checked', 'checked');
+				},this);
+			}
 			this.createGroupDropDown();
 			this.groupDropDownChange();
 			if(this.policyType == XAEnums.AssetType.ASSET_STORM.value){
 				this.renderStormPerms();
-			}
-			else{
-				// TODO FIXME Remove
-				if(this.model.has('editMode') && this.model.get('editMode')){
-					_.each(this.model.get('_vPermList'), function(p){
-						this.$el.find('input[data-id="' + p.permType + '"]').attr('checked', 'checked');
-					},this);
-				}
 			}
 		},
 		groupDropDownChange : function(){
@@ -212,14 +211,15 @@ define(function(require) {
 				$checkbox.is(':checked') ? $checkbox.prop('checked',false) : $checkbox.prop('checked',true);
 			}
 			var curPerm = $el.find('input').data('id');
-			var perms = [];
-			if(this.model.has('_vPermList')){
-				if(_.isArray(this.model.get('_vPermList')))
-					perms = this.model.get('_vPermList');
-				else
-					perms.push(this.model.get('_vPermList'));
-			}
-			/* permMapList = [ {id: 18, groupId : 1, permType :5}, {id: 18, groupId : 1, permType :4}, {id: 18, groupId : 2, permType :5} ]
+			if(!_.isUndefined(curPerm)){
+				var perms = [];
+				if(this.model.has('_vPermList')){
+					if(_.isArray(this.model.get('_vPermList')))
+						perms = this.model.get('_vPermList');
+					else
+						perms.push(this.model.get('_vPermList'));
+				}
+				/* permMapList = [ {id: 18, groupId : 1, permType :5}, {id: 18, groupId : 1, permType :4}, {id: 18, groupId : 2, permType :5} ]
 			   [1] => [ {id: 18, groupId : 1, permType :5}, {id: 19, groupId : 1, permType :4} ]
 			   [2] => [ {id: 20, groupId : 2, permType :5} ]
 			{ 	groupId : 1,
@@ -229,27 +229,28 @@ define(function(require) {
 				_vPermList : [ { id: 20, permType : 5 }, { permType : 6 } ]
 			}
 			
-			*/
+				 */
 //			perms = this.model.has('_vPermList') ? this.model.get('_vPermList'): [];
-			
-			if($el.find('input[type="checkbox"]').is(':checked')){
-				perms.push({permType : curPerm});
-				if(curPerm == XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value){
-					$el.parent().find('input[type="checkbox"]:not(:checked)[data-id!="'+curPerm+'"]').map(function(){
+				
+				if($el.find('input[type="checkbox"]').is(':checked')){
+					perms.push({permType : curPerm});
+					if(curPerm == XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value){
+						$el.parent().find('input[type="checkbox"]:not(:checked)[data-id!="'+curPerm+'"]').map(function(){
 							perms.push({ permType :$(this).data('id')});
-					    //  return { permType :$(this).data('id')};
-					});
-					$el.parent().find('input[type="checkbox"]').prop('checked',true);
+							//  return { permType :$(this).data('id')};
+						});
+						$el.parent().find('input[type="checkbox"]').prop('checked',true);
+					}
+				} else {
+					perms = _.reject(perms,function(el) { return el.permType == curPerm; });
 				}
-			} else {
-				perms = _.reject(perms,function(el) { return el.permType == curPerm; });
+				
+				this.checkDirtyFieldForCheckBox(perms);
+				if(!_.isEmpty(perms))
+					this.model.set('_vPermList', perms);
+				else 
+					this.model.unset('_vPermList');
 			}
-			
-			this.checkDirtyFieldForCheckBox(perms);
-			if(!_.isEmpty(perms))
-				this.model.set('_vPermList', perms);
-			else 
-				this.model.unset('_vPermList');
 		},
 		checkDirtyFieldForCheckBox : function(perms){
 			var permList = [];
@@ -283,7 +284,7 @@ define(function(require) {
 		},
 		renderStormPerms :function(){
 			var that = this;
-			var permArr = _.pick(XAEnums.XAPermType,  XAUtil.getPerms(this.policyType));
+			var permArr = _.pick(XAEnums.XAPermType,  XAUtil.getStormActions(this.policyType));
 			this.stormPerms =  _.map(permArr,function(m){return {text:m.label, value:m.value};});
 			this.stormPerms.push({'value' : -1, 'text' : 'Select/Deselect All'});
 			this.ui.tags.editable({
@@ -300,13 +301,24 @@ define(function(require) {
 //			    	that.checkDirtyFieldForGroup(values);
 			    	var permTypeArr = [];
 		    		var valArr = _.map(idList, function(id){
-		    			if(!(parseInt(id) <= 0)){
+		    			if(!(parseInt(id) <= 0) && (!_.isNaN(parseInt(id)))){
 		    				var obj = _.findWhere(srcData,{'value' : parseInt(id)});
 		    				permTypeArr.push({permType : obj.value});
 		    				return "<span class='label label-inverse'>" + obj.text + "</span>";
 		    			}
 		    		});
-		    		that.model.set('_vPermList', permTypeArr);
+		    		
+		    		if(that.model.has('_vPermList')){
+		    			var adminPerm = [];
+		    			adminPerm = _.where(that.model.get('_vPermList'),{'permType': XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value });
+		    			if(_.isEmpty(adminPerm))
+		    				that.model.set('_vPermList', permTypeArr);
+		    			else
+		    				that.model.set('_vPermList', _.union(permTypeArr,adminPerm));
+					}
+//		    		if(!_.isEmpty(perms))
+//		    			that.model.set('_vPermList', perms);
+//		    		that.model.set('_vPermList', permTypeArr);
 		    		$(this).html(valArr.join(" "));
 			    },
 			});

@@ -169,6 +169,11 @@ define(function(require){
 					title : this.model.propertiesNameMap.knoxUrl,
 					editorAttrs :{'class':'stretchTextInput'}
 				},
+				nimbusUrl : {
+					fieldClass : "storm",
+					title : this.model.propertiesNameMap.nimbusUrl,
+					editorAttrs :{'class':'stretchTextInput'}
+				},
 				commonnameforcertificate : {
 					title : localization.tt('lbl.commonNameForCertificate'),
 					editorAttrs :{'class':'stretchTextInput'}
@@ -230,7 +235,7 @@ define(function(require){
 					attrs = ['userName','passwordKeytabfile','knoxUrl','commonnameforcertificate'];
 					break;
 				case XAEnums.AssetType.ASSET_STORM.value :
-					attrs = ['userName','passwordKeytabfile','commonnameforcertificate'];
+					attrs = ['userName','passwordKeytabfile','nimbusUrl','commonnameforcertificate'];
 			}
 			var obj = _.pick(this.model.attributes,attrs);
 			_.each(obj,function(val,prop){
@@ -245,7 +250,7 @@ define(function(require){
 		},
 		assetTypeChanged : function(val){
 			this.$('.hive').parents('fieldset').show();
-			this.$('.hdfs,.hive,.hbase,.knox').hide();
+			this.$('.hdfs,.hive,.hbase,.knox,.storm').hide();
 			switch(parseInt(val)){
 				case XAEnums.AssetType.ASSET_HDFS.value :
 					this.fields.fsDefaultName.$el.find('.control-label').html(this.model.propertiesNameMap.fsDefaultName+'*');
