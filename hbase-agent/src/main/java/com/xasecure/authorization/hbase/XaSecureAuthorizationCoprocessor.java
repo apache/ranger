@@ -52,6 +52,7 @@ import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Increment;
+import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
@@ -948,4 +949,36 @@ public class XaSecureAuthorizationCoprocessor extends BaseRegionObserver impleme
 	    utc.add(Calendar.MILLISECOND, -offset);
 	    return utc.getTime();
 	}
+	
+	//
+	//  Generated to support HBase 0.98.4-hadoop2 version
+	//
+	
+	@Override
+	public void postMerge(ObserverContext<RegionServerCoprocessorEnvironment> aRctx,HRegion reg1, HRegion reg2, HRegion reg3) throws IOException {
+	}
+	
+	@Override
+	public void postMergeCommit(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion reg1, HRegion reg2, HRegion reg3) throws IOException {
+	}
+	
+	@Override
+	public void postRollBackMerge(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion aReg1, HRegion aReg2) throws IOException {
+	}
+	
+	@Override
+	public void preMerge(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion reg1, HRegion aReg2) throws IOException {
+	}
+	
+	@Override
+	public void preMergeCommit(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion arg1, HRegion arg2, List<Mutation> arg3) throws IOException {
+	}
+	
+	@Override
+	public void preRollBackMerge(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion arg1, HRegion arg2) throws IOException {
+	}
+	
+	
+	
+	
 }
