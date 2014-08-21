@@ -17,6 +17,8 @@
                 <outputDirectory>/lib</outputDirectory>
                 <includes>
                     <include>commons-configuration:commons-configuration</include>
+                    <include>org.apache.hadoop:hadoop-common</include>
+                    <include>org.apache.hadoop:hadoop-common-plus</include>
                     <include>org.glassfish.jersey.core:jersey-client</include>
                     <include>com.google.code.gson:gson*</include>
                     <include>org.eclipse.persistence:eclipselink</include>

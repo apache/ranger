@@ -95,14 +95,11 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 	
 	public abstract void doOnChange();
 	
-	private String keyStoreFile =  null ;
-	private String keyStoreFilepwd = null; 
 	private String credentialProviderFile = null;
-	private String keyStoreAlias = null;
+	private String keyStoreFile =  null ;
+	private String keyStorePassword = null; 
 	private String trustStoreFile = null ;
-	private String trustStoreFilepwd = null ;
-	// private String trustStoreURL = null;
-	private String trustStoreAlias = null;
+	private String trustStorePassword = null ;
 	private String keyStoreType = null ;
 	private String trustStoreType = null ;
 	private SSLContext sslContext = null ;
@@ -153,14 +150,14 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 
 					credentialProviderFile = conf
 							.get(XASECURE_KNOX_CREDENTIAL_PROVIDER_FILE);
-					keyStoreAlias = XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
+					String keyStorePasswordAlias = XaSecureConstants.XASECURE_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
 
-					char[] v_keyStoreFilePwd = getCredential(credentialProviderFile,
-							keyStoreAlias);
-					if (v_keyStoreFilePwd == null) {
-						keyStoreFilepwd = null;
+					char[] v_keyStorePassword = getCredential(credentialProviderFile,
+							keyStorePasswordAlias);
+					if (v_keyStorePassword == null) {
+						keyStorePassword = null;
 					} else {
-						keyStoreFilepwd = new String(v_keyStoreFilePwd);
+						keyStorePassword = new String(v_keyStorePassword);
 					}
 
 					trustStoreFile = conf
@@ -168,14 +165,14 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 
 					//trustStoreURL = conf
 					//		.get(XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
-					trustStoreAlias = XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
+					String trustStorePasswordAlias = XaSecureConstants.XASECURE_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
 
-					char[] v_TrustStoreFilePwd = getCredential(credentialProviderFile,
-							trustStoreAlias);
-					if (v_TrustStoreFilePwd == null) {
-						trustStoreFilepwd = null;
+					char[] v_trustStorePassword = getCredential(credentialProviderFile,
+							trustStorePasswordAlias);
+					if (v_trustStorePassword == null) {
+						trustStorePassword = null;
 					} else {
-						trustStoreFilepwd = new String(v_TrustStoreFilePwd);
+						trustStorePassword = new String(v_trustStorePassword);
 					}
 
 					keyStoreType = conf
@@ -392,7 +389,7 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 				KeyManager[] kmList = null;
 				TrustManager[] tmList = null;
 	
-				if (keyStoreFile != null && keyStoreFilepwd != null) {
+				if (keyStoreFile != null && keyStorePassword != null) {
 	
 					KeyStore keyStore = KeyStore.getInstance(keyStoreType);
 					InputStream in = null ;
@@ -402,9 +399,9 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 							LOG.error("Unable to obtain keystore from file [" + keyStoreFile + "]");
 							return client ;
 						}
-						keyStore.load(in, keyStoreFilepwd.toCharArray());
+						keyStore.load(in, keyStorePassword.toCharArray());
 						KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(XaSecureConstants.XASECURE_SSL_KEYMANAGER_ALGO_TYPE);
-						keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
+						keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
 						kmList = keyManagerFactory.getKeyManagers();
 					}
 					finally {
@@ -415,7 +412,7 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 					 
 				}
 	
-				if (trustStoreFile != null && trustStoreFilepwd != null) {
+				if (trustStoreFile != null && trustStorePassword != null) {
 	
 					KeyStore trustStore = KeyStore.getInstance(trustStoreType);
 					InputStream in = null ;
@@ -425,7 +422,7 @@ public abstract class Jersey2ConfigWatcher extends Thread {
 							LOG.error("Unable to obtain keystore from file [" + trustStoreFile + "]");
 							return client ;
 						}
-						trustStore.load(in, trustStoreFilepwd.toCharArray());
+						trustStore.load(in, trustStorePassword.toCharArray());
 						TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(XaSecureConstants.XASECURE_SSL_TRUSTMANAGER_ALGO_TYPE);
 						trustManagerFactory.init(trustStore);
 						tmList = trustManagerFactory.getTrustManagers();

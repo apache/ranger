@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# TODO: change <name>AclsAuthz<name> to <name>XASecurePDPKnox</name> for provider <role>authorization<role>
-
 function create_jceks()
 {
        alias=$1
