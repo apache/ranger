@@ -15,6 +15,11 @@
      <relativePath>..</relativePath>
   </parent>
   <dependencies>
+   <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-bundle</artifactId>
+      <version>${jersey-bundle.version}</version>
+    </dependency>
     <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>

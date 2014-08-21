@@ -50,6 +50,7 @@ import com.xasecure.view.VXAssetList;
 import com.xasecure.view.VXCredentialStore;
 import com.xasecure.view.VXCredentialStoreList;
 import com.xasecure.view.VXLong;
+import com.xasecure.view.VXPolicy;
 import com.xasecure.view.VXPolicyExportAuditList;
 import com.xasecure.view.VXResource;
 import com.xasecure.view.VXResourceList;
@@ -548,5 +549,23 @@ public class AssetREST {
 		searchUtil.extractDate(request, searchCriteria, "endDate", "endDate",
 				"MM/dd/yyyy");
 		return assetMgr.getAccessLogs(searchCriteria);
-	}		
+	}
+	
+	@POST
+	@Path("/resources/grant")
+	@Produces({ "application/xml", "application/json" })	
+	public VXPolicy grantPermission(@Context HttpServletRequest request,VXPolicy vXPolicy) {
+		//TODO:https and certificate check
+		//TODO:grant permissions
+		return vXPolicy;
+	}
+	
+	@POST
+	@Path("/resources/revoke")
+	@Produces({ "application/xml", "application/json" })	
+	public VXPolicy revokePermission(@Context HttpServletRequest request,VXPolicy vXPolicy) {
+		//TODO:https and certificate check
+		//TODO:revoke permissions
+		return vXPolicy;
+	}
 }

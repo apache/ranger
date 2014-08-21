@@ -7,7 +7,7 @@ import com.xasecure.authorization.utils.StringUtil;
 
 public class XaHiveObjectAccessInfo {
 	public enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI };
-	public enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, INSERT, SELECT, UPDATE, USE };
+	public enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, INSERT, SELECT, UPDATE, USE, ALL, ADMIN };
 
 	private String              mOperType         = null;
 	private XaHiveAccessContext mContext          = null;

@@ -15,13 +15,18 @@ import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClientFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrincipal;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilege;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivObjectActionType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType;
 import org.apache.hadoop.security.UserGroupInformation;
 
+import com.xasecure.admin.client.XaAdminRESTClient;
+import com.xasecure.admin.client.datatype.GrantRevokeData;
 import com.xasecure.audit.model.EnumRepositoryType;
 import com.xasecure.audit.model.HiveAuditEvent;
 import com.xasecure.audit.provider.AuditProviderFactory;
@@ -46,14 +51,89 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 
 	public XaSecureHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
 								  HiveConf                   hiveConf,
-								  HiveAuthenticationProvider hiveAuthenticator) {
-		super(metastoreClientFactory, hiveConf, hiveAuthenticator);
+								  HiveAuthenticationProvider hiveAuthenticator,
+								  HiveAuthzSessionContext    sessionContext) {
+		super(metastoreClientFactory, hiveConf, hiveAuthenticator, sessionContext);
 
 		LOG.debug("XaSecureHiveAuthorizer.XaSecureHiveAuthorizer()");
 
 		mHiveAccessVerifier = XaHiveAccessVerifierFactory.getInstance() ;
 	}
 
+
+	/**
+	 * Grant privileges for principals on the object
+	 * @param hivePrincipals
+	 * @param hivePrivileges
+	 * @param hivePrivObject
+	 * @param grantorPrincipal
+	 * @param grantOption
+	 * @throws HiveAuthzPluginException
+	 * @throws HiveAccessControlException
+	 */
+	@Override
+	public void grantPrivileges(List<HivePrincipal> hivePrincipals,
+								List<HivePrivilege> hivePrivileges,
+								HivePrivilegeObject hivePrivObject,
+								HivePrincipal grantorPrincipal,
+								boolean       grantOption)
+										throws HiveAuthzPluginException, HiveAccessControlException {
+		XaHiveObjectAccessInfo objAccessInfo = getObjectAccessInfo(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject, new XaHiveAccessContext(null, getHiveAuthzSessionContext()), true);
+
+		try {
+			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
+
+			LOG.warn("grantPrivileges(): " + grData.toJson());
+
+			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
+
+		    xaAdmin.grantPrivilege(grData);
+		} catch(Exception excp) {
+			throw new HiveAccessControlException(excp);
+		}
+	}
+
+	/**
+	 * Revoke privileges for principals on the object
+	 * @param hivePrincipals
+	 * @param hivePrivileges
+	 * @param hivePrivObject
+	 * @param grantorPrincipal
+	 * @param grantOption
+	 * @throws HiveAuthzPluginException
+	 * @throws HiveAccessControlException
+	 */
+	@Override
+	public void revokePrivileges(List<HivePrincipal> hivePrincipals,
+								 List<HivePrivilege> hivePrivileges,
+								 HivePrivilegeObject hivePrivObject,
+								 HivePrincipal grantorPrincipal,
+								 boolean       grantOption)
+										 throws HiveAuthzPluginException, HiveAccessControlException {
+		XaHiveObjectAccessInfo objAccessInfo = getObjectAccessInfo(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject, new XaHiveAccessContext(null, getHiveAuthzSessionContext()), true);
+
+		try {
+			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
+
+			LOG.warn("revokePrivileges(): " + grData.toJson());
+
+			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
+
+		    xaAdmin.revokePrivilege(grData);
+		} catch(Exception excp) {
+			throw new HiveAccessControlException(excp);
+		}
+	}
+
+	/**
+	 * Check if user has privileges to do this action on these objects
+	 * @param hiveOpType
+	 * @param inputsHObjs
+	 * @param outputHObjs
+	 * @param context
+	 * @throws HiveAuthzPluginException
+	 * @throws HiveAccessControlException
+	 */
 	@Override
 	public void checkPrivileges(HiveOperationType         hiveOpType,
 								List<HivePrivilegeObject> inputHObjs,
@@ -61,19 +141,20 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 							    HiveAuthzContext          context)
 		      throws HiveAuthzPluginException, HiveAccessControlException {
 
+		UserGroupInformation ugi        =  this.getCurrentUserGroupInfo();
+		XaHiveAccessContext hiveContext = this.getAccessContext(context);
+
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(toString(hiveOpType, inputHObjs, outputHObjs, context));
+			LOG.debug(toString(hiveOpType, inputHObjs, outputHObjs, hiveContext));
 		}
 		
 		if(hiveOpType == HiveOperationType.DFS) {
-			handleDfsCommand(hiveOpType, inputHObjs, outputHObjs, context);
+			handleDfsCommand(hiveOpType, inputHObjs, outputHObjs, hiveContext);
 			
 			return;
 		}
 
-		UserGroupInformation ugi =  this.getCurrentUserGroupInfo();
-
-		List<XaHiveObjectAccessInfo> objAccessList = getObjectAccessInfo(hiveOpType, inputHObjs, outputHObjs, context);
+		List<XaHiveObjectAccessInfo> objAccessList = getObjectAccessInfo(hiveOpType, inputHObjs, outputHObjs, hiveContext);
 
 		for(XaHiveObjectAccessInfo objAccessInfo : objAccessList) {
             boolean ret = false;
@@ -108,17 +189,18 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		}
 	}
 	
-	private List<XaHiveObjectAccessInfo> getObjectAccessInfo(HiveOperationType         hiveOpType,
+	private List<XaHiveObjectAccessInfo> getObjectAccessInfo(HiveOperationType       hiveOpType,
 														   List<HivePrivilegeObject> inputsHObjs,
 														   List<HivePrivilegeObject> outputHObjs,
-														   HiveAuthzContext          context) {
+														   XaHiveAccessContext       context) {
 		List<XaHiveObjectAccessInfo> ret = new ArrayList<XaHiveObjectAccessInfo>();
 
 		if(inputsHObjs != null) {
 			for(HivePrivilegeObject hiveObj : inputsHObjs) {
 				XaHiveObjectAccessInfo hiveAccessObj = getObjectAccessInfo(hiveOpType, hiveObj, context, true);
 				
-				if(hiveAccessObj != null && !ret.contains(hiveAccessObj)) {
+				if(   hiveAccessObj != null
+				   && !ret.contains(hiveAccessObj)) {
 					ret.add(hiveAccessObj);
 				}
 			}
@@ -128,7 +210,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 			for(HivePrivilegeObject hiveObj : outputHObjs) {
 				XaHiveObjectAccessInfo hiveAccessObj = getObjectAccessInfo(hiveOpType, hiveObj, context, false);
 				
-				if(hiveAccessObj != null && !ret.contains(hiveAccessObj)) {
+				if(   hiveAccessObj != null
+				   && !ret.contains(hiveAccessObj)) {
 					ret.add(hiveAccessObj);
 				}
 			}
@@ -141,47 +224,45 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		return ret;
 	}
 
-	private XaHiveObjectAccessInfo getObjectAccessInfo(HiveOperationType hiveOpType, HivePrivilegeObject hiveObj, HiveAuthzContext context, boolean isInput) {
+	private XaHiveObjectAccessInfo getObjectAccessInfo(HiveOperationType hiveOpType, HivePrivilegeObject hiveObj, XaHiveAccessContext context, boolean isInput) {
 		XaHiveObjectAccessInfo ret = null;
 
 		HiveObjectType objectType = getObjectType(hiveObj, hiveOpType);
 		HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, isInput);
 		String         operType   = hiveOpType.name();
 
-		XaHiveAccessContext hiveContext = new XaHiveAccessContext(context);
-
 		switch(objectType) {
 			case DATABASE:
-				ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, hiveObj.getDbname());
+				ret = new XaHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname());
 			break;
 	
 			case TABLE:
-				ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, hiveObj.getDbname(), HiveObjectType.TABLE, hiveObj.getObjectName());
+				ret = new XaHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), HiveObjectType.TABLE, hiveObj.getObjectName());
 			break;
 	
 			case VIEW:
-				ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, hiveObj.getDbname(), HiveObjectType.VIEW, hiveObj.getObjectName());
+				ret = new XaHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), HiveObjectType.VIEW, hiveObj.getObjectName());
 			break;
 	
 			case PARTITION:
-				ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, hiveObj.getDbname(), HiveObjectType.PARTITION, hiveObj.getObjectName());
+				ret = new XaHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), HiveObjectType.PARTITION, hiveObj.getObjectName());
 			break;
 	
 			case INDEX:
 				String indexName = "?"; // TODO:
-				ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, hiveObj.getDbname(), hiveObj.getObjectName(), HiveObjectType.INDEX, indexName);
+				ret = new XaHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), hiveObj.getObjectName(), HiveObjectType.INDEX, indexName);
 			break;
 	
 			case COLUMN:
-				ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, hiveObj.getDbname(), hiveObj.getObjectName(), hiveObj.getColumns());
+				ret = new XaHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), hiveObj.getObjectName(), hiveObj.getColumns());
 			break;
 
 			case FUNCTION:
-				ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, hiveObj.getDbname(), HiveObjectType.FUNCTION, hiveObj.getObjectName());
+				ret = new XaHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), HiveObjectType.FUNCTION, hiveObj.getObjectName());
 			break;
 
             case URI:
-                ret = new XaHiveObjectAccessInfo(operType, hiveContext, accessType, HiveObjectType.URI, hiveObj.getObjectName());
+                ret = new XaHiveObjectAccessInfo(operType, context, accessType, HiveObjectType.URI, hiveObj.getObjectName());
             break;
 
 			case NONE:
@@ -299,6 +380,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				case ALTERTABLE_SKEWED:
 				case ALTERTABLE_TOUCH:
 				case ALTERTABLE_UNARCHIVE:
+				case ALTERTABLE_UPDATEPARTSTATS:
+				case ALTERTABLE_UPDATETABLESTATS:
 				case ALTERTBLPART_SKEWED_LOCATION:
 				case ALTERVIEW_PROPERTIES:
 				case ALTERVIEW_RENAME:
@@ -344,6 +427,11 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 					accessType = HiveAccessType.UPDATE;
 				break;
 
+				case GRANT_PRIVILEGE:
+				case REVOKE_PRIVILEGE:
+					accessType = HiveAccessType.ADMIN;
+				break;
+
 				case ADD:
 				case ANALYZE_TABLE:
 				case COMPILE:
@@ -356,10 +444,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				case DROPMACRO:
 				case DROPROLE:
 				case EXPLAIN:
-				case GRANT_PRIVILEGE:
 				case GRANT_ROLE:
 				case MSCK:
-				case REVOKE_PRIVILEGE:
 				case REVOKE_ROLE:
 				case RESET:
 				case SET:
@@ -400,6 +486,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
             case INDEX:
             case INSERT:
             case LOCK:
+            case ADMIN:
                 action = FsAction.WRITE;
             break;
 
@@ -438,7 +525,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 	private void handleDfsCommand(HiveOperationType         hiveOpType,
 								  List<HivePrivilegeObject> inputHObjs,
 							      List<HivePrivilegeObject> outputHObjs,
-							      HiveAuthzContext          context)
+							      XaHiveAccessContext       context)
 	      throws HiveAuthzPluginException, HiveAccessControlException {
 
 		String dfsCommandParams = null;
@@ -463,7 +550,93 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 											 ugi.getShortUserName(), hiveOpType.name()));
 		
 	}
-   
+	
+	private GrantRevokeData createGrantRevokeData(XaHiveObjectAccessInfo objAccessInfo,
+												  List<HivePrincipal>    hivePrincipals,
+												  List<HivePrivilege>    hivePrivileges,
+												  HivePrincipal          grantorPrincipal,
+												  boolean                grantOption)
+														  throws HiveAccessControlException {
+		if(objAccessInfo == null ||
+		  ! (   objAccessInfo.getObjectType() == HiveObjectType.DATABASE
+		     || objAccessInfo.getObjectType() == HiveObjectType.TABLE
+		     || objAccessInfo.getObjectType() == HiveObjectType.VIEW
+		     || objAccessInfo.getObjectType() == HiveObjectType.COLUMN
+		   )
+		  ) {
+			throw new HiveAccessControlException("grantPrivileges(): unexpected object type '" + objAccessInfo.getObjectType().name());
+		}
+		
+		String database = objAccessInfo.getDatabase();
+		String table    = objAccessInfo.getObjectType() == HiveObjectType.VIEW ? objAccessInfo.getView() : objAccessInfo.getTable();
+		String columns  = StringUtil.toString(objAccessInfo.getColumns());
+		
+		GrantRevokeData grData = new GrantRevokeData();
+		
+		List<String> permList  = new ArrayList<String>();
+		List<String> userList  = new ArrayList<String>();
+		List<String> groupList = new ArrayList<String>();
+		
+		for(HivePrivilege privilege : hivePrivileges) {
+			String privName = privilege.getName();
+			
+			if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.ALL.name())) {
+				permList.add(HiveAccessType.ALL.name());
+			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.ALTER.name())) {
+				permList.add(HiveAccessType.ALTER.name());
+			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.CREATE.name())) {
+				permList.add(HiveAccessType.CREATE.name());
+			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.DROP.name())) {
+				permList.add(HiveAccessType.DROP.name());
+			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.INDEX.name())) {
+				permList.add(HiveAccessType.INDEX.name());
+			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.INSERT.name())) {
+				permList.add(HiveAccessType.INSERT.name());
+			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.LOCK.name())) {
+				permList.add(HiveAccessType.LOCK.name());
+			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.SELECT.name())) {
+				permList.add(HiveAccessType.SELECT.name());
+			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.UPDATE.name())) {
+				permList.add(HiveAccessType.UPDATE.name());
+			}
+		}
+		
+		if(grantOption) {
+			permList.add(HiveAccessType.ADMIN.name());
+		}
+		
+		for(HivePrincipal principal : hivePrincipals) {
+			switch(principal.getType()) {
+				case USER:
+					userList.add(principal.getName());
+				break;
+
+				case GROUP:
+				case ROLE:
+					groupList.add(principal.getName());
+				break;
+
+				default:
+				break;
+			}
+		}
+
+		List<GrantRevokeData.UserPermList>  userPermList = new ArrayList<GrantRevokeData.UserPermList>();
+		List<GrantRevokeData.GroupPermList> groupPermList = new ArrayList<GrantRevokeData.GroupPermList>();
+		
+		if(! userList.isEmpty()) {
+			userPermList.add(new GrantRevokeData.UserPermList(userList, permList));
+		}
+
+		if(! groupPermList.isEmpty()) {
+			groupPermList.add(new GrantRevokeData.GroupPermList(groupList, permList));
+		}
+		
+		grData.setHiveData(grantorPrincipal.getName(), repositoryName, database, table, columns, userPermList, groupPermList);
+		
+		return grData;
+	}
+
     private void logAuditEventForDfs(UserGroupInformation ugi, String dfsCommand, boolean accessGranted) {
 		HiveAuditEvent auditEvent = new HiveAuditEvent();
 
@@ -538,7 +711,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 	private String toString(HiveOperationType         hiveOpType,
 							List<HivePrivilegeObject> inputHObjs,
 							List<HivePrivilegeObject> outputHObjs,
-							HiveAuthzContext          context) {
+							XaHiveAccessContext       context) {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("'checkPrivileges':{");
@@ -556,7 +729,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		if(context != null) {
 			sb.append("'clientType':").append(context.getClientType());
 			sb.append(", 'commandString':").append(context.getCommandString());
-			sb.append(", 'ipAddress':").append(context.getIpAddress());
+			sb.append(", 'ipAddress':").append(context.getClientIpAddress());
 			sb.append(", 'sessionString':").append(context.getSessionString());
 		}
 		sb.append("}");

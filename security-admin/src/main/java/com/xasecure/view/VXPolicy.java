@@ -125,6 +125,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 */
 	protected String version;
 
+	protected String grantor;
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -568,6 +569,15 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 */
 	public void setVersion(String version) {
 		this.version = version;
+	}
+
+	
+	public String getGrantor() {
+		return grantor;
+	}
+
+	public void setGrantor(String grantor) {
+		this.grantor = grantor;
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControl
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClientFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrincipal;
@@ -17,19 +18,24 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObje
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveRoleGrant;
 import org.apache.hadoop.security.UserGroupInformation;
 
+import com.xasecure.authorization.hive.XaHiveAccessContext;
+
 public class XaSecureHiveAuthorizerBase implements HiveAuthorizer {
 
 	private HiveMetastoreClientFactory mMetastoreClientFactory;
 	private HiveConf                   mHiveConf;
 	private HiveAuthenticationProvider mHiveAuthenticator;
+	private HiveAuthzSessionContext    mSessionContext;
 	private UserGroupInformation       mUgi;
 	  
 	public XaSecureHiveAuthorizerBase(HiveMetastoreClientFactory metastoreClientFactory,
 									  HiveConf                   hiveConf,
-									  HiveAuthenticationProvider hiveAuthenticator) {
+									  HiveAuthenticationProvider hiveAuthenticator,
+									  HiveAuthzSessionContext    context) {
 		mMetastoreClientFactory = metastoreClientFactory;
 		mHiveConf               = hiveConf;
 		mHiveAuthenticator      = hiveAuthenticator;
+		mSessionContext         = context;
 
 		String userName = mHiveAuthenticator == null ? null : mHiveAuthenticator.getUserName();
 
@@ -48,8 +54,16 @@ public class XaSecureHiveAuthorizerBase implements HiveAuthorizer {
 		return mHiveAuthenticator;
 	}
 
+	public HiveAuthzSessionContext getHiveAuthzSessionContext() {
+		return mSessionContext;
+	}
+
 	public UserGroupInformation getCurrentUserGroupInfo() {
 		return mUgi;
+	}
+	
+	public XaHiveAccessContext getAccessContext(HiveAuthzContext context) {
+		return new XaHiveAccessContext(context, mSessionContext);
 	}
 
 	@Override
@@ -57,6 +71,70 @@ public class XaSecureHiveAuthorizerBase implements HiveAuthorizer {
 		// TODO Auto-generated method stub
 	}
 
+	/**
+	 * Grant privileges for principals on the object
+	 * @param hivePrincipals
+	 * @param hivePrivileges
+	 * @param hivePrivObject
+	 * @param grantorPrincipal
+	 * @param grantOption
+	 * @throws HiveAuthzPluginException
+	 * @throws HiveAccessControlException
+	 */
+	@Override
+	public void grantPrivileges(List<HivePrincipal> hivePrincipals,
+								List<HivePrivilege> hivePrivileges,
+								HivePrivilegeObject hivePrivObject,
+								HivePrincipal grantorPrincipal,
+								boolean       grantOption)
+	    throws HiveAuthzPluginException, HiveAccessControlException {
+		// TODO Auto-generated method stub
+	}
+
+	/**
+	 * Revoke privileges for principals on the object
+	 * @param hivePrincipals
+	 * @param hivePrivileges
+	 * @param hivePrivObject
+	 * @param grantorPrincipal
+	 * @param grantOption
+	 * @throws HiveAuthzPluginException
+	 * @throws HiveAccessControlException
+	 */
+	@Override
+	public void revokePrivileges(List<HivePrincipal> hivePrincipals,
+								 List<HivePrivilege> hivePrivileges,
+								 HivePrivilegeObject hivePrivObject,
+								 HivePrincipal grantorPrincipal,
+								 boolean       grantOption)
+	    throws HiveAuthzPluginException, HiveAccessControlException {
+		// TODO Auto-generated method stub
+	}
+
+	/**
+	 * Show privileges for given principal on given object
+	 * @param principal
+	 * @param privObj
+	 * @return
+	 * @throws HiveAuthzPluginException
+	 * @throws HiveAccessControlException
+	 */
+	@Override
+	public List<HivePrivilegeInfo> showPrivileges(HivePrincipal principal, HivePrivilegeObject privObj)
+	    throws HiveAuthzPluginException, HiveAccessControlException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * Check if user has privileges to do this action on these objects
+	 * @param hiveOpType
+	 * @param inputsHObjs
+	 * @param outputHObjs
+	 * @param context
+	 * @throws HiveAuthzPluginException
+	 * @throws HiveAccessControlException
+	 */
 	@Override
 	public void checkPrivileges(HiveOperationType         hiveOpType,
 								List<HivePrivilegeObject> inputsHObjs,
@@ -114,26 +192,8 @@ public class XaSecureHiveAuthorizerBase implements HiveAuthorizer {
 	}
 
 	@Override
-	public void grantPrivileges(List<HivePrincipal> arg0,
-			List<HivePrivilege> arg1, HivePrivilegeObject arg2,
-			HivePrincipal arg3, boolean arg4) throws HiveAuthzPluginException,
-			HiveAccessControlException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void grantRole(List<HivePrincipal> arg0, List<String> arg1,
 			boolean arg2, HivePrincipal arg3) throws HiveAuthzPluginException,
-			HiveAccessControlException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void revokePrivileges(List<HivePrincipal> arg0,
-			List<HivePrivilege> arg1, HivePrivilegeObject arg2,
-			HivePrincipal arg3, boolean arg4) throws HiveAuthzPluginException,
 			HiveAccessControlException {
 		// TODO Auto-generated method stub
 		
@@ -153,13 +213,4 @@ public class XaSecureHiveAuthorizerBase implements HiveAuthorizer {
 		// TODO Auto-generated method stub
 		
 	}
-
-	@Override
-	public List<HivePrivilegeInfo> showPrivileges(HivePrincipal arg0,
-			HivePrivilegeObject arg1) throws HiveAuthzPluginException,
-			HiveAccessControlException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

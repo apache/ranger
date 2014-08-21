@@ -1,6 +1,7 @@
 package com.xasecure.authorization.hive;
 
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 
 
 public class XaHiveAccessContext {
@@ -9,12 +10,15 @@ public class XaHiveAccessContext {
 	private String mCommandString;
 	private String mSessionString;
 	
-	public XaHiveAccessContext(HiveAuthzContext context) {
+	public XaHiveAccessContext(HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
 		if(context != null) {
 			mClientIpAddress = context.getIpAddress();
-			mClientType      = context.getClientType().name();
 			mCommandString   = context.getCommandString();
-			mSessionString   = context.getSessionString();
+		}
+		
+		if(sessionContext != null) {
+			mClientType      = sessionContext.getClientType().name();
+			mSessionString   = sessionContext.getSessionString();
 		}
 	}
 

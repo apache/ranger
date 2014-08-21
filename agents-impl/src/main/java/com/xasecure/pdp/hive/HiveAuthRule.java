@@ -20,8 +20,8 @@ package com.xasecure.pdp.hive;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.ql.security.authorization.Privilege;
 
+import com.xasecure.authorization.hive.XaHiveObjectAccessInfo.HiveAccessType;
 import com.xasecure.authorization.hive.constants.XaSecureHiveConstants;
 import com.xasecure.authorization.utils.StringUtil;
 
@@ -61,7 +61,7 @@ public class HiveAuthRule {
 		this.tableExcluded  = tableExclusionFlag ;
 		this.columnExcluded = columnExclusionFlag ;
 
-		this.allGranted = StringUtil.equalsIgnoreCase(Privilege.ALL.toString(), accessType);
+		this.allGranted = StringUtil.equalsIgnoreCase(HiveAccessType.ALL.name(), accessType);
 
 		tableRule = StringUtil.isEmpty(columnName) || WILDCARD_OBJECT.matches(columnName) ;
 	}
@@ -97,7 +97,11 @@ public class HiveAuthRule {
 
 		if(ret) {
 			// does accessType match?
-			ret = this.isAllGranted() || StringUtil.equals(accessType, this.accessType) || StringUtil.equalsIgnoreCase(accessType, "USE");
+			ret = StringUtil.equalsIgnoreCase(accessType,  this.accessType);
+
+			if(! ret && !StringUtil.equalsIgnoreCase(accessType, HiveAccessType.ADMIN.name())) {
+				ret = this.isAllGranted() || StringUtil.equalsIgnoreCase(accessType, "USE");
+			}
 
 			if(ret) {
 				// does user/group match?
