@@ -130,6 +130,26 @@ public class StringUtil {
 	}
 	*/
 
+	public static boolean contains(String str, String strToFind) {
+		boolean ret = false;
+
+		if(str != null && strToFind != null) {
+			ret = str.contains(strToFind);
+		}
+
+		return ret;
+	}
+
+	public static boolean containsIgnoreCase(String str, String strToFind) {
+		boolean ret = false;
+
+		if(str != null && strToFind != null) {
+			ret = str.toLowerCase().contains(strToFind.toLowerCase());
+		}
+
+		return ret;
+	}
+
 	public static boolean contains(String[] strArr, String str) {
 		boolean ret = false;
 

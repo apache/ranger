@@ -13,6 +13,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.xasecure.authorization.utils.StringUtil;
+
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -20,20 +22,18 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class GrantRevokeData implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String              grantor;
-	private String              repositoryName;
-	private String              repositoryType;
-	private String              databases;
-	private String              tables;
-	private String              columns;
-	private String              columnFamilies;
-	private List<UserPermList>  userPermList  = new ArrayList<UserPermList>();
-	private List<GroupPermList> groupPermList = new ArrayList<GroupPermList>();
+	private String        grantor;
+	private String        repositoryName;
+	private String        repositoryType;
+	private String        databases;
+	private String        tables;
+	private String        columns;
+	private String        columnFamilies;
+	private List<PermMap> permMapList = new ArrayList<PermMap>();
 
 
 	public GrantRevokeData() {
 	}
-	
 
 	public String getGrantor() {
 		return grantor;
@@ -91,30 +91,21 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.columnFamilies = columnFamilies;
 	}
 
-	public List<UserPermList> getUserPermList() {
-		return userPermList;
+	public List<PermMap> getPermMapList() {
+		return permMapList;
 	}
 
-	public void setUserPermList(List<UserPermList> userPermList) {
-		this.userPermList = userPermList;
-	}
-
-	public List<GroupPermList> getGroupPermList() {
-		return groupPermList;
-	}
-
-	public void setGroupPermList(List<GroupPermList> groupPermList) {
-		this.groupPermList = groupPermList;
+	public void setPermMapList(List<PermMap> permMapList) {
+		this.permMapList = permMapList;
 	}
 
 
-	public void setHiveData(String              grantor,
-							String              repositoryName,
-							String              databases,
-							String              tables,
-							String              columns,
-							List<UserPermList>  userPermList,
-							List<GroupPermList> groupPermList) {
+	public void setHiveData(String        grantor,
+							String        repositoryName,
+							String        databases,
+							String        tables,
+							String        columns,
+							List<PermMap> permMapList) {
 		this.grantor         = grantor;
 		this.repositoryName = repositoryName;
 		this.repositoryType = "hive";
@@ -122,22 +113,17 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.tables         = tables;
 		this.columns        = columns;
 
-		for(UserPermList userPerm : userPermList) {
-			this.userPermList.add(userPerm);
-		}
-
-		for(GroupPermList groupPerm : groupPermList) {
-			this.groupPermList.add(groupPerm);
+		for(PermMap permMap : permMapList) {
+			this.permMapList.add(permMap);
 		}
 	}
 
-	public void setHBaseData(String              grantor,
-							 String              repositoryName,
-							 String              tables,
-							 String              columns,
-							 String              columnFamilies,
-							 List<UserPermList>  userPermList,
-							 List<GroupPermList> groupPermList) {
+	public void setHBaseData(String        grantor,
+							 String        repositoryName,
+							 String        tables,
+							 String        columns,
+							 String        columnFamilies,
+							 List<PermMap> permMapList) {
 		this.grantor         = grantor;
 		this.repositoryName = repositoryName;
 		this.repositoryType = "hbase";
@@ -145,12 +131,8 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.columns        = columns;
 		this.columnFamilies = columnFamilies;
 
-		for(UserPermList userPerm : userPermList) {
-			this.userPermList.add(userPerm);
-		}
-
-		for(GroupPermList groupPerm : groupPermList) {
-			this.groupPermList.add(groupPerm);
+		for(PermMap permMap : permMapList) {
+			this.permMapList.add(permMap);
 		}
 	}
 	
@@ -179,83 +161,28 @@ public class GrantRevokeData implements java.io.Serializable {
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class UserPermList {
-		private List<String> userList = new ArrayList<String>();
-		private List<String> permList = new ArrayList<String>();
+	public static class PermMap {
+		private List<String> userList  = new ArrayList<String>();
+		private List<String> groupList = new ArrayList<String>();
+		private List<String> permList  = new ArrayList<String>();
 
-		public UserPermList(String user, String perm) {
+		public PermMap() {
+		}
+
+		public PermMap(String user, String group, String perm) {
 			addUser(user);
-			addPerm(perm);
-		}
-
-		public UserPermList(List<String> userList, List<String> permList) {
-			for(String user : userList) {
-				addUser(user);
-			}
-
-			for(String perm : permList) {
-				addPerm(perm);
-			}
-		}
-
-		public List<String> getUserList() {
-			return userList;
-		}
-
-		public List<String> getPermList() {
-			return permList;
-		}
-
-		public void addUser(String user) {
-			userList.add(user);
-		}
-
-		public void addPerm(String perm) {
-			permList.add(perm);
-		}
-
-		public String toJson() {
-			try {
-				ObjectMapper om = new ObjectMapper();
-
-				return om.writeValueAsString(this);
-			} catch (JsonGenerationException e) {
-				e.printStackTrace();
-			} catch (JsonMappingException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-			return "";
-		}
-
-		@Override
-		public String toString() {
-			return toJson();
-		}
-	}
-	
-	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class GroupPermList {
-		List<String> groupList = new ArrayList<String>();
-		List<String> permList  = new ArrayList<String>();
-
-		public GroupPermList(String group, String perm) {
 			addGroup(group);
 			addPerm(perm);
 		}
 
-		public GroupPermList(List<String> groupList, List<String> permList) {
-			for(String group : groupList) {
-				addGroup(group);
-			}
+		public PermMap(List<String> userList, List<String> groupList, List<String> permList) {
+			copyList(userList, this.userList);
+			copyList(groupList, this.groupList);
+			copyList(permList, this.permList);
+		}
 
-			for(String perm : permList) {
-				addPerm(perm);
-			}
+		public List<String> getUserList() {
+			return userList;
 		}
 
 		public List<String> getGroupList() {
@@ -266,12 +193,30 @@ public class GrantRevokeData implements java.io.Serializable {
 			return permList;
 		}
 
+		public void addUser(String user) {
+			addToList(user, userList);
+		}
+
 		public void addGroup(String group) {
-			groupList.add(group);
+			addToList(group, groupList);
 		}
 
 		public void addPerm(String perm) {
-			permList.add(perm);
+			addToList(perm, permList);
+		}
+
+		private void addToList(String str, List<String> list) {
+			if(list != null && !StringUtil.isEmpty(str)) {
+				list.add(str);
+			}
+		}
+
+		private void copyList(List<String> fromList, List<String> toList) {
+			if(fromList != null && toList != null) {
+				for(String str : fromList) {
+					addToList(str, toList);
+				}
+			}
 		}
 
 		public String toJson() {

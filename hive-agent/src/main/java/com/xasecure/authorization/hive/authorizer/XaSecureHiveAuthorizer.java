@@ -45,6 +45,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 
 	private static final String XaSecureModuleName =  XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_XASECURE_MODULE_ACL_NAME_PROP , XaSecureHadoopConstants.DEFAULT_XASECURE_MODULE_ACL_NAME) ;
 	private static final String repositoryName     = XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
+	private static final boolean UpdateXaPoliciesOnGrantRevoke = XaSecureConfiguration.getInstance().getBoolean(XaSecureHadoopConstants.HIVE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_PROP, XaSecureHadoopConstants.HIVE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 
 	private XaHiveAccessVerifier mHiveAccessVerifier = null ;
 
@@ -78,6 +79,11 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 								HivePrincipal grantorPrincipal,
 								boolean       grantOption)
 										throws HiveAuthzPluginException, HiveAccessControlException {
+		if(! UpdateXaPoliciesOnGrantRevoke) {
+			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Argus HiveAuthorizer. Please use Argus Security Admin to setup access control.");
+		}
+
+		boolean                isSuccess     = false;
 		XaHiveObjectAccessInfo objAccessInfo = getObjectAccessInfo(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject, new XaHiveAccessContext(null, getHiveAuthzSessionContext()), true);
 
 		try {
@@ -88,8 +94,16 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
 
 		    xaAdmin.grantPrivilege(grData);
+
+		    isSuccess = true;
 		} catch(Exception excp) {
 			throw new HiveAccessControlException(excp);
+		} finally {
+			if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
+				UserGroupInformation ugi = this.getCurrentUserGroupInfo();
+	
+				logAuditEvent(ugi, objAccessInfo, isSuccess);
+			}
 		}
 	}
 
@@ -110,6 +124,11 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 								 HivePrincipal grantorPrincipal,
 								 boolean       grantOption)
 										 throws HiveAuthzPluginException, HiveAccessControlException {
+		if(! UpdateXaPoliciesOnGrantRevoke) {
+			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Argus HiveAuthorizer. Please use Argus Security Admin to setup access control.");
+		}
+
+		boolean                isSuccess     = false;
 		XaHiveObjectAccessInfo objAccessInfo = getObjectAccessInfo(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject, new XaHiveAccessContext(null, getHiveAuthzSessionContext()), true);
 
 		try {
@@ -120,8 +139,17 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
 
 		    xaAdmin.revokePrivilege(grData);
+
+		    isSuccess = true;
 		} catch(Exception excp) {
 			throw new HiveAccessControlException(excp);
+		} finally {
+			if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
+				UserGroupInformation ugi = this.getCurrentUserGroupInfo();
+	
+				// failed return from REST calls will be logged as 'DENIED'
+				logAuditEvent(ugi, objAccessInfo, isSuccess);
+			}
 		}
 	}
 
@@ -161,7 +189,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 
             if(objAccessInfo.getObjectType() == HiveObjectType.URI) {
                 ret = isURIAccessAllowed(ugi, objAccessInfo.getAccessType(), objAccessInfo.getUri(), getHiveConf());
-            } else {
+            } else if(objAccessInfo.getAccessType() != HiveAccessType.ADMIN) {
                 ret = mHiveAccessVerifier.isAccessAllowed(ugi, objAccessInfo);
             }
 
@@ -200,6 +228,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				XaHiveObjectAccessInfo hiveAccessObj = getObjectAccessInfo(hiveOpType, hiveObj, context, true);
 				
 				if(   hiveAccessObj != null
+				   && hiveAccessObj.getAccessType() != HiveAccessType.ADMIN // access check is performed at the Argus policy server, as a part of updating the permissions
 				   && !ret.contains(hiveAccessObj)) {
 					ret.add(hiveAccessObj);
 				}
@@ -211,6 +240,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				XaHiveObjectAccessInfo hiveAccessObj = getObjectAccessInfo(hiveOpType, hiveObj, context, false);
 				
 				if(   hiveAccessObj != null
+				   && hiveAccessObj.getAccessType() != HiveAccessType.ADMIN // access check is performed at the Argus policy server, as a part of updating the permissions
 				   && !ret.contains(hiveAccessObj)) {
 					ret.add(hiveAccessObj);
 				}
@@ -487,6 +517,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
             case INSERT:
             case LOCK:
             case ADMIN:
+    		case ALL:
                 action = FsAction.WRITE;
             break;
 
@@ -566,54 +597,50 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		  ) {
 			throw new HiveAccessControlException("grantPrivileges(): unexpected object type '" + objAccessInfo.getObjectType().name());
 		}
-		
+
 		String database = objAccessInfo.getDatabase();
 		String table    = objAccessInfo.getObjectType() == HiveObjectType.VIEW ? objAccessInfo.getView() : objAccessInfo.getTable();
 		String columns  = StringUtil.toString(objAccessInfo.getColumns());
-		
-		GrantRevokeData grData = new GrantRevokeData();
-		
-		List<String> permList  = new ArrayList<String>();
-		List<String> userList  = new ArrayList<String>();
-		List<String> groupList = new ArrayList<String>();
-		
+
+		GrantRevokeData.PermMap permMap = new GrantRevokeData.PermMap ();
+
 		for(HivePrivilege privilege : hivePrivileges) {
 			String privName = privilege.getName();
-			
+
 			if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.ALL.name())) {
-				permList.add(HiveAccessType.ALL.name());
+				permMap.addPerm(HiveAccessType.ALL.name());
 			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.ALTER.name())) {
-				permList.add(HiveAccessType.ALTER.name());
+				permMap.addPerm(HiveAccessType.ALTER.name());
 			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.CREATE.name())) {
-				permList.add(HiveAccessType.CREATE.name());
+				permMap.addPerm(HiveAccessType.CREATE.name());
 			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.DROP.name())) {
-				permList.add(HiveAccessType.DROP.name());
+				permMap.addPerm(HiveAccessType.DROP.name());
 			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.INDEX.name())) {
-				permList.add(HiveAccessType.INDEX.name());
+				permMap.addPerm(HiveAccessType.INDEX.name());
 			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.INSERT.name())) {
-				permList.add(HiveAccessType.INSERT.name());
+				permMap.addPerm(HiveAccessType.INSERT.name());
 			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.LOCK.name())) {
-				permList.add(HiveAccessType.LOCK.name());
+				permMap.addPerm(HiveAccessType.LOCK.name());
 			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.SELECT.name())) {
-				permList.add(HiveAccessType.SELECT.name());
+				permMap.addPerm(HiveAccessType.SELECT.name());
 			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.UPDATE.name())) {
-				permList.add(HiveAccessType.UPDATE.name());
+				permMap.addPerm(HiveAccessType.UPDATE.name());
 			}
 		}
 		
 		if(grantOption) {
-			permList.add(HiveAccessType.ADMIN.name());
+			permMap.addPerm(HiveAccessType.ADMIN.name());
 		}
 		
 		for(HivePrincipal principal : hivePrincipals) {
 			switch(principal.getType()) {
 				case USER:
-					userList.add(principal.getName());
+					permMap.addUser(principal.getName());
 				break;
 
 				case GROUP:
 				case ROLE:
-					groupList.add(principal.getName());
+					permMap.addGroup(principal.getName());
 				break;
 
 				default:
@@ -621,18 +648,12 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 			}
 		}
 
-		List<GrantRevokeData.UserPermList>  userPermList = new ArrayList<GrantRevokeData.UserPermList>();
-		List<GrantRevokeData.GroupPermList> groupPermList = new ArrayList<GrantRevokeData.GroupPermList>();
-		
-		if(! userList.isEmpty()) {
-			userPermList.add(new GrantRevokeData.UserPermList(userList, permList));
-		}
+		GrantRevokeData grData = new GrantRevokeData();
 
-		if(! groupPermList.isEmpty()) {
-			groupPermList.add(new GrantRevokeData.GroupPermList(groupList, permList));
-		}
-		
-		grData.setHiveData(grantorPrincipal.getName(), repositoryName, database, table, columns, userPermList, groupPermList);
+		List<GrantRevokeData.PermMap> permMapList = new ArrayList<GrantRevokeData.PermMap>();
+		permMapList.add(permMap);
+
+		grData.setHiveData(grantorPrincipal.getName(), repositoryName, database, table, columns, permMapList);
 		
 		return grData;
 	}

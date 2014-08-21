@@ -49,5 +49,20 @@
 			changes)
 		</description>
 	</property>
+	<property>
+		<name>xasecure.policymgr.url</name>
+		<value>http://policymanagerhost:port</value>
+		<description>Base URL for XASecure PolicyManager</description>
+	</property>
+	<property>
+		<name>xasecure.policymgr.sslconfig.filename</name>
+		<value>/etc/hive/conf/xasecure-policymgr-ssl.xml</value>
+		<description>Path to the file containing SSL details to contact XASecure PolicyManager</description>
+	</property>
+	<property>
+		<name>xasecure.hive.authorizer.update.xapolicies.on.grant.revoke</name>
+		<value>true</value>
+		<description>Should Hive agent update XASecure policies for updates to permissions done using GRANT/REVOKE?</description>
+	</property>
 
 </configuration>
