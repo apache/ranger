@@ -10,12 +10,17 @@
 	<!--  Properties whose name begin with "xasecure.audit." are used to configure JPA -->
 	<property>
 		<name>xasecure.audit.jpa.javax.persistence.jdbc.url</name>
-		<value>jdbc:mysql://localhost:3306/xa_db</value>
+		<value>jdbc:mysql://localhost:3306/xasecure_audit</value>
 	</property>
 
 	<property>
 		<name>xasecure.audit.jpa.javax.persistence.jdbc.user</name>
-		<value>xaaudit</value>
+		<value>xalogger</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.jpa.javax.persistence.jdbc.password</name>
+		<value>crypted</value>
 	</property>
 
 	<property>
@@ -60,7 +65,7 @@
 	
 	<property>
 		<name>xasecure.audit.db.is.async</name>
-		<value>true</value>
+		<value>false</value>
 	</property>	
 	
 	<property>
