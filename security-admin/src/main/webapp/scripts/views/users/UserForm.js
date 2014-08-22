@@ -136,11 +136,16 @@ define(function(require){
 				if(this.model.get('name') == userProfileModel.get('loginId')){
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
 				}
+				
 				if(userProfileModel.get('loginId') != "admin"){
-					if(_.contains(this.model.get('userRoleList'),'ROLE_SYS_ADMIN')){
-						this.fields.userRoleList.editor.$el.attr('disabled',true);
+					if(this.model.get('loginId') != "admin"){
+						if(_.contains(userProfileModel.get('userRoleList'),'ROLE_SYS_ADMIN')){
+							this.fields.userRoleList.editor.$el.attr('disabled',false);
+						}else{
+							this.fields.userRoleList.editor.$el.attr('disabled',true);
+						}
 					}else{
-						this.fields.userRoleList.editor.$el.attr('disabled',false);
+						this.fields.userRoleList.editor.$el.attr('disabled',true);
 					}
 				}else{
 					this.fields.userRoleList.editor.$el.attr('disabled',false);
@@ -188,6 +193,12 @@ define(function(require){
 				
 				this.fields.password.editor.validators = [];//this.removeElementFromArr(this.fields.password.editor.validators , 'required');
 				this.fields.passwordConfirm.editor.validators = [];//this.removeElementFromArr(this.fields.passwordConfirm.editor.validators , 'required');
+				//Remove validation checks for external users
+				if(this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
+					this.fields.firstName.editor.validators = [];
+					var labelStr = this.fields.firstName.$el.find('label').html().replace('*','');
+					this.fields.firstName.$el.find('label').html(labelStr);	
+				}
 			}
 		},
 		removeElementFromArr : function(arr ,elem){
@@ -196,20 +207,22 @@ define(function(require){
 			return arr;
 		},
 		beforeSaveUserDetail : function(){
-			var groupArr = this.$('[data-customfields="groupIdList"]').find('.tags').editable('getValue', true);
-			if(_.isNumber(groupArr))
-				groupArr = groupArr.toString().split(',');
-			if(_.isEmpty(groupArr) ){
-				this.$('[data-customfields="groupIdList"]').find('.control-group').addClass('error');
-				this.$('[data-customfields="groupIdList"]').find('[data-error="groupIdList"]').show();
-				return false;
-			}else{
-				this.$('[data-customfields="groupIdList"]').find('.control-group').removeClass('error');
-				this.$('[data-customfields="groupIdList"]').find('[data-error="groupIdList"]').hide();				
+			if(this.model.get('userSource') != XAEnums.UserSource.XA_USER.value){
+				var groupArr = this.$('[data-customfields="groupIdList"]').find('.tags').editable('getValue', true);
+				if(_.isNumber(groupArr))
+					groupArr = groupArr.toString().split(',');
+				if(_.isEmpty(groupArr) ){
+					this.$('[data-customfields="groupIdList"]').find('.control-group').addClass('error');
+					this.$('[data-customfields="groupIdList"]').find('[data-error="groupIdList"]').show();
+					return false;
+				}else{
+					this.$('[data-customfields="groupIdList"]').find('.control-group').removeClass('error');
+					this.$('[data-customfields="groupIdList"]').find('[data-error="groupIdList"]').hide();				
+				}
+				this.model.set('groupIdList',groupArr);
+				this.model.set('status',XAEnums.ActivationStatus.ACT_STATUS_ACTIVE.value);
+				this.model.unset('passwordConfirm');
 			}
-			this.model.set('groupIdList',groupArr);
-			this.model.set('status',XAEnums.ActivationStatus.ACT_STATUS_ACTIVE.value);
-			this.model.unset('passwordConfirm');
 			if(!this.model.isNew())
 				this.model.unset('password');
 			//FOR USER ROLE

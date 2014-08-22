@@ -230,7 +230,6 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 					}
 				}
 			}
-
 		}
 		return permMapList;
 	}
@@ -260,13 +259,9 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 
 			for (VXPermMap permMap : entry.getValue()) {
 				if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
-					// if (!userList.contains(permMap.getUserName())) {
 					userList.add(permMap.getUserName());
-					// }
 				} else if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_GROUP) {
-					// if (!groupList.contains(permMap.getGroupName())) {
 					groupList.add(permMap.getGroupName());
-					// }
 				}
 				permList.add(AppConstants.getLabelFor_XAPermType(permMap
 						.getPermType()));
