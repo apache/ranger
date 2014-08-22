@@ -89,7 +89,9 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		try {
 			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
 
-			LOG.warn("grantPrivileges(): " + grData.toJson());
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("grantPrivileges(): " + grData.toJson());
+			}
 
 			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
 
@@ -101,7 +103,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		} finally {
 			if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
 				UserGroupInformation ugi = this.getCurrentUserGroupInfo();
-	
+
+				// Note: failed return from REST call will be logged as 'DENIED'
 				logAuditEvent(ugi, objAccessInfo, isSuccess);
 			}
 		}
@@ -134,7 +137,9 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		try {
 			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
 
-			LOG.warn("revokePrivileges(): " + grData.toJson());
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("revokePrivileges(): " + grData.toJson());
+			}
 
 			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
 
@@ -146,8 +151,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		} finally {
 			if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
 				UserGroupInformation ugi = this.getCurrentUserGroupInfo();
-	
-				// failed return from REST calls will be logged as 'DENIED'
+
+				// Note: failed return from REST call will be logged as 'DENIED'
 				logAuditEvent(ugi, objAccessInfo, isSuccess);
 			}
 		}
