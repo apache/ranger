@@ -74,6 +74,8 @@ define(function(require){
 			
 			if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
 				this.$el.find('#tags-edit-1').hide();
+				var labelStr1 = this.$el.find('label').html().replace('*','');
+				this.$el.find('label').html(labelStr1);
 			}
 
 			this.$('.tags').editable({
