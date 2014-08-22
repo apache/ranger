@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -1186,6 +1187,27 @@ public class AssetMgr extends AssetMgrBase {
 			vXPermMap.setUserId(vXUser.getId());
 			vXPermMap.setResourceId(vXResource.getId());
 			xPermMapService.createResource(vXPermMap);
+			
+			if (assetType == AppConstants.ASSET_KNOX) {
+				Random rand = new Random();
+				String permGroup = new Date() + " : " + rand.nextInt(9999);
+
+				VXPermMap permAdmin = new VXPermMap();
+				permAdmin.setPermFor(AppConstants.XA_PERM_FOR_USER);
+				permAdmin.setPermType(AppConstants.XA_PERM_TYPE_ADMIN);
+				permAdmin.setUserId(vXUser.getId());
+				permAdmin.setPermGroup(permGroup);
+				permAdmin.setResourceId(vXResource.getId());
+				xPermMapService.createResource(permAdmin);
+
+				VXPermMap permAllow = new VXPermMap();
+				permAllow.setPermFor(AppConstants.XA_PERM_FOR_USER);
+				permAllow.setPermType(AppConstants.XA_PERM_TYPE_ALLOW);
+				permAllow.setUserId(vXUser.getId());
+				permAllow.setPermGroup(permGroup);
+				permAllow.setResourceId(vXResource.getId());
+				xPermMapService.createResource(permAllow);
+			}
 		}
 		
 		VXAuditMap vXAuditMap = new VXAuditMap();
