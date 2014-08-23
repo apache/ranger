@@ -18,15 +18,6 @@
     <description>HDP Advanced Security - User, Group sync from sources such as Unix and LDAP</description>
     <url>http:/hortonworks.com/</url>
 
-
-	<repositories>
-    <repository>
-        <id>usersync.local</id>
-        <name>usersync</name>
-        <url>file:${project.basedir}/repo</url>
-    </repository>
-	</repositories>
-
     <dependencies>
       <dependency>
         <groupId>log4j</groupId>
@@ -83,15 +74,10 @@
       	<artifactId>slf4j-api</artifactId>
       	<version>${slf4j-api.version}</version>
       </dependency>   
-       <dependency>
-    	<groupId>com.hortonworks</groupId>
-    	<artifactId>hadoop-common-plus</artifactId>
-    	<version>3.0.0-SNAPSHOT</version>   	 	
-	  </dependency>
 	  <dependency>
-    	<groupId>com.hortonworks</groupId>
-    	<artifactId>local-jks-builder</artifactId>
-    	<version>0.2</version>  	
+    	<groupId>com.hortonworks.hadoop.security</groupId>
+    	<artifactId>credentialbuilder</artifactId>
+    	<version>${project.version}</version>  	
 	  </dependency>  
     </dependencies>
 

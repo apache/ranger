@@ -152,8 +152,7 @@ then
    	if [[ "${SYNC_LDAP_BIND_ALIAS}" != ""  && "${SYNC_LDAP_BIND_KEYSTOREPATH}" != "" ]]
    	then
 		mkdir -p `dirname "${SYNC_LDAP_BIND_KEYSTOREPATH}"`
-		java -cp "lib/*" com.hortonworks.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
-    	#java -cp "lib/commons-cli-1.2.jar:lib/commons-collections-3.2.1.jar:lib/commons-configuration-1.6.jar:lib/commons-lang-2.6.jar:lib/commons-logging-1.1.1.jar:lib/guava-11.0.2.jar:lib/hadoop-auth-2.2.0.jar:lib/hadoop-common-plus-3.0.0-SNAPSHOT.jar:lib/slf4j-api-1.7.5.jar:lib/local-jks-builder.jar" com.hortonworks.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
+		java -cp "./lib/*" com.hortonworks.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
     	SYNC_LDAP_BIND_PASSWORD="_"
     fi
 #
