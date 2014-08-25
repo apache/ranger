@@ -119,7 +119,7 @@ define(function(require){
 			valid = (validateObj.groupSet && validateObj.permSet && validateObj.groupIPSet) || (validateObj.userSet && validateObj.userPerm && validateObj.userIPSet);
 			if(!valid){
 				if(this.validateGroupPermission(validateObj)) {
-					 if((!validateObj.auditLoggin) && (!validateObj.groupPermSet)){
+					if((!validateObj.auditLoggin) && !(validateObj.groupPermSet || validateObj.userSet)){
 						XAUtil.alertPopup({
 							msg :localization.tt('msg.yourAuditLogginIsOff'),
 							callback : function(){}

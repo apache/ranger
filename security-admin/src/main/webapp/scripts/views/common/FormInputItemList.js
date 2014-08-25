@@ -309,13 +309,10 @@ define(function(require) {
 		    		});
 		    		
 		    		if(that.model.has('_vPermList')){
-		    			var adminPerm = [];
-		    			adminPerm = _.where(that.model.get('_vPermList'),{'permType': XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value });
-		    			if(_.isEmpty(adminPerm))
-		    				that.model.set('_vPermList', permTypeArr);
-		    			else
-		    				that.model.set('_vPermList', _.union(permTypeArr,adminPerm));
-					}
+                        var adminPerm = _.where(that.model.get('_vPermList'),{'permType': XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value });
+                        permTypeArr = _.isEmpty(adminPerm) ? permTypeArr : _.union(permTypeArr,adminPerm);
+                    }
+                    that.model.set('_vPermList', permTypeArr);
 //		    		if(!_.isEmpty(perms))
 //		    			that.model.set('_vPermList', perms);
 //		    		that.model.set('_vPermList', permTypeArr);
