@@ -786,6 +786,33 @@ public class URLBasedAuthDBTest {
 
 	}
 	
+    @Test
+	public void testWildIP6AllowedMixedCase() {
+		
+		URLBasedAuthDB pdp = URLBasedAuthDB.getInstanceWithBackEndMocked();
+		
+		PolicyContainer policyContainer = buildPolicyContainer(
+				"xa", 
+				"WEBHDFS",
+				asList("allow"), 
+				asList("guest"), 
+				asList("sales"),
+				asList("132:133:Db8:*"));
+		pdp.setPolicyContainer(policyContainer);
+		
+		
+		boolean allowed = pdp.isAccessGranted(
+				"xa", 
+				"WEBHDFS", 
+				"allow",
+				"guest", 
+				asSet("sales"), 
+				"132:133:dB8:135");
+		System.out.println("testWildIP6AllowedMixedCase: " + allowed);
+		Assert.assertTrue("Access denied for a request ip matching wild IP6 with mixed case", allowed);
+
+	}
+	
 	@Test
 	public void testWildIP6Denied() {
 		
