@@ -168,7 +168,7 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 				XXTrxLog xTrxLog = new XXTrxLog();
 				xTrxLog.setAttributeName(vTrxLogAttr.getAttribUserFriendlyName());
 			
-				String value = null;
+				String value = null,prevValue = "";
 				boolean isEnum = vTrxLogAttr.isEnum();
 				if(isEnum){
 					String enumName = XXPermMap.getEnumName(fieldName);
@@ -178,7 +178,11 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 					value = ""+field.get(vObj);
 //					XXUser xUser = xADaoManager.getXXUser().getById(Long.parseLong(value));
 //					value = xUser.getName();
-					if(value == null || value.equalsIgnoreCase("null") || stringUtil.isEmpty(value)){
+					if(fieldName.equals("ipAddress") && action.equalsIgnoreCase("update")){
+						prevValue = ""+field.get(mObj);
+						value = value.equalsIgnoreCase("null") ? "" : value; 
+					}
+					else if(value == null || value.equalsIgnoreCase("null") || stringUtil.isEmpty(value)){
 						continue;
 					}
 				}
@@ -191,6 +195,9 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 					// Not Changed.
 					xTrxLog.setNewValue(value);
 					xTrxLog.setPreviousValue(value);
+					if(fieldName.equals("ipAddress")){
+						xTrxLog.setPreviousValue(prevValue);
+					}
 				}
 				
 				xTrxLog.setAction(action);

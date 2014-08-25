@@ -685,6 +685,9 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 		if( fieldName.equals("columnType") ) {
 			return "CommonEnums.PolicyType";
 		}
+		if( fieldName.equals("assetType") ) {
+			return "CommonEnums.AssetType";
+		}
 		//Later TODO
 		//return super.getEnumName(fieldName);
 		return null;

@@ -1,0 +1,189 @@
+<div class="diff-content">
+	<div class="row-fluid">
+		<div class="span6">
+			<label class="no-margin label-size13-weightbold">ID : {{objectId}}</label>
+			<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
+			<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
+			<label class="no-margin label-size13-weightbold" > Updated By  &nbsp;&nbsp;:  {{userName}}</label>
+		</div>	
+		<div class="span6 text-right">
+			<div class="add-text legend"></div> Added
+			<div class="delete-text legend"></div> Deleted
+		</div>
+	</div>
+{{#if collection.length}}
+	<h5>Policy Details :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+			{{#each collection}}
+				<li class="change-row">{{./this.attributes.attributeName}}</li>
+			{{/each}}	
+			</ol>
+		</div>
+	    <div class="diff-left">
+			<h3>Old Value</h3>
+			<ol class="unstyled data">
+			{{#each collection}}
+				{{#if ./this.attributes.previousValue}}
+					{{#compare ./this.attributes.previousValue "eq" ''}}
+		 					<li>--</li>		
+					{{else}}
+		 					<li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'old'}}}</li>
+					{{/compare}}
+				{{else}}
+						<li>--</li>
+				{{/if}}		
+			{{/each}}	
+			</ol>
+		</div> 
+		<div class="diff-right">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+			{{#each collection}}
+				{{#if ./this.attributes.newValue}}
+					{{#compare ./this.attributes.newValue "eq" ''}}
+  						<li>--</li>		
+					{{else}}
+  						<li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'new'}}}</li>
+					{{/compare}}
+				{{else}}
+					<li>--</li>
+				{{/if}}		
+			{{/each}}	
+			</ol>
+		</div>
+	</div>
+{{/if}}
+{{#if isGroupPerm}}	
+	<h5>Group Permissions :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Groups</h3>
+			<ol class="attr">
+			{{#each groupList}}
+					<li class="change-row">{{./this}}</li>
+			{{/each}}	
+			</ol>
+		</div>
+		<div class="diff-left" data-id="diff" data-name="policyDiff">
+			<h3>Old Value</h3>
+			<ol class="unstyled data">
+					{{#eachProperty previousGroupPermList}}
+						<li class="change-row">
+							{{#each value}}
+								{{#if permType}}
+							 		{{#compare permType "eq" ''}}
+									
+									{{else}}
+										{{{highlightPermissionsForGroup ../this ../../../property ../../../../newGroupPermList 'old'}}}
+										<span>,</span> 
+									{{/compare}}
+								{{/if}}	
+							{{/each}}
+							{{#each value}}
+								{{#if ipAddress}}
+							 		{{#compare ipAddress "eq" ''}}
+									
+									{{else}}
+										IP : {{{highlightPermissionsForGroup ../this ../../../property ../../../../newGroupPermList 'old'}}}
+										<span>,</span> 
+									{{/compare}}
+								{{/if}}	
+							{{/each}}
+						</li>
+					{{/eachProperty }}
+			</ol>
+		</div>
+		<div class="diff-right" data-id="diff" data-name="policyDiff">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+				{{#eachProperty newGroupPermList}}
+					<li class="change-row">
+						{{#each value}}
+							<!-- {{permType}}, -->
+							{{#if permType}}
+								{{{highlightPermissionsForGroup ./this ../property ../../../previousGroupPermList 'new'}}}
+								<span>,</span> 
+							{{/if}}
+						{{/each}}
+						{{#each value}}
+							<!-- {{permType}}, -->
+							{{#if ipAddress}}
+								IP : {{{highlightPermissionsForGroup ./this ../property ../../../previousGroupPermList 'new'}}}
+								<span>,</span> 
+							{{/if}}
+						{{/each}}
+				</li>
+			{{/eachProperty }}
+			</ol>
+		</div>
+	</div>
+{{/if}}
+{{#if isUserPerm}}
+	<h5>User Permissions :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Users</h3>
+			<ol class="attr">
+				{{#each userList}}
+					<li class="change-row">{{./this}}</li>
+				{{/each }}	
+			</ol>
+		</div>
+		<div class="diff-left" data-id="diff" data-name="policyDiff">
+			<h3>Old Value</h3>
+			<ol class="unstyled data">
+				{{#eachProperty previousUserPermList}}
+					<li class="change-row">
+						{{#each value}}
+							{{#if permType}}
+							 	{{#compare permType "eq" ''}}
+									
+								{{else}}
+									{{{highlightPermissionsForUser ../this ../../property ../../../../newUserPermList 'old'}}}
+									<span>,</span> 
+								{{/compare}}
+							{{/if}}	
+						{{/each}}
+						{{#each value}}
+							{{#if ipAddress}}
+							 	{{#compare permType "eq" ''}}
+									
+								{{else}}
+									IP : {{{highlightPermissionsForUser ../this ../../property ../../../../newUserPermList 'old'}}}
+									<span>,</span> 
+								{{/compare}}
+							{{/if}}	
+						{{/each}}
+					</li>
+				{{/eachProperty }}
+			</ol>
+		</div>
+		<div class="diff-right" data-id="diff" data-name="policyDiff">
+			<h3>New Value</h3>
+			<ol class="unstyled data">
+				{{#eachProperty newUserPermList}}
+					<li class="change-row">
+						{{#each value}}
+							{{#if permType}}
+								<!-- {{permType}}, -->
+								{{{highlightPermissionsForUser ./this ../property ../../../previousUserPermList 'new'}}}
+								<span>,</span>
+							{{/if}}
+						{{/each}}
+						{{#each value}}
+							{{#if ipAddress}}
+								<!-- {{permType}}, -->
+								 IP : {{{highlightPermissionsForUser ./this ../property ../../../previousUserPermList 'new'}}}
+								<span>,</span>
+							{{/if}}
+						{{/each}}
+				</li>
+				{{/eachProperty}}
+			</ol>
+		</div>
+	</div> 
+{{/if}}	
+</div>

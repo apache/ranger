@@ -390,67 +390,73 @@ define(function ( require ){
 	    return html;
 	});
 	Handlebars.registerHelper('highlightPermissionsForUser', function(perm, newValue, pemList, hightlightValue) {
-		var html=perm.permType;
+		var type = 'permType';
+		if(_.isUndefined(perm.permType))
+			type = 'ipAddress';
+		var html = perm[type];
 		if(hightlightValue == 'old'){
-			if(_.isNull(perm.permType) || perm.permType != ""){
+			if(_.isNull(perm[type]) || perm[type] != ""){
 				if(!_.isUndefined(pemList[perm.userName]) || _.isEmpty(pemList)){
 					var isRemoved = true;
 					_.each(pemList[perm.userName] ,function(m){
-						if(m.permType == perm.permType)
+						if(m[type] == perm[type])
 							isRemoved = false;
 					});
 					if(isRemoved)
-						return html = '<span class="delete-text">'+perm.permType+'</span>';
+						return html = '<span class="delete-text">'+perm[type]+'</span>';
 				}else{
-					return html = '<span class="delete-text">'+perm.permType+'</span>';
+					return html = '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
 		}else{
-			if(_.isNull(perm.permType) || perm.permType != ""){
+			if(_.isNull(perm[type]) || perm[type] != ""){
 				if(!_.isUndefined(pemList[perm.userName])){
 					var isNewAdd = true;
 					_.each(pemList[perm.userName] ,function(m){
-						if(m.permType == perm.permType)
+						if(m[type] == perm[type])
 							isNewAdd = false;
 					});
 					if(isNewAdd)
-						return html = '<span class="add-text">'+perm.permType+'</span>';
+						return html = '<span class="add-text">'+perm[type]+'</span>';
 				}else{
-					return html = '<span class="delete-text">'+perm.permType+'</span>';
+					return html = '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
 		}
 	    return html;
 	});
 	Handlebars.registerHelper('highlightPermissionsForGroup', function(perm, newValue, pemList, hightlightValue) {
-		var html = perm.permType;;
+		var type = 'permType';
+		if(_.isUndefined(perm.permType))
+			type = 'ipAddress';
+		var html = perm[type];
 		if(hightlightValue == 'old'){
-			if(_.isNull(perm.permType) || perm.permType != ""){
+			if(_.isNull(perm[type]) || perm[type] != ""){
 				if(!_.isUndefined(pemList[perm.groupName]) || _.isEmpty(pemList)){
 					var isRemoved = true;
 					_.each(pemList[perm.groupName] ,function(m){
-						if(m.permType == perm.permType)
+						if(m[type] == perm[type])
 							isRemoved = false;
 					});
 					if(isRemoved)
-						return html = '<span class="delete-text">'+perm.permType+'</span>';
+						return html = '<span class="delete-text">'+perm[type]+'</span>';
 				}else{
-					return html = '<span class="delete-text">'+perm.permType+'</span>';
+					return html = '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
 		}else{
-			if(_.isNull(perm.permType) || perm.permType != ""){
+			if(_.isNull(perm[type]) || perm[type] != ""){
 				if(!_.isUndefined(pemList[perm.groupName])){
 					var isNewAdd = true;
 					_.each(pemList[perm.groupName] ,function(m){
-						if(m.permType == perm.permType)
+						if(m[type] == perm[type])
 							isNewAdd = false;
 					});
 					if(isNewAdd)
-						return html = '<span class="add-text">'+perm.permType+'</span>';
+						return html = '<span class="add-text">'+perm[type]+'</span>';
 				}
 				else{
-					return html = '<span class="add-text">'+perm.permType+'</span>';
+					return html = '<span class="add-text">'+perm[type]+'</span>';
 				}
 			}
 		}

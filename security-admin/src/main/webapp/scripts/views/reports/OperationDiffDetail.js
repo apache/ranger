@@ -18,6 +18,9 @@ define(function(require){
 	var PolicyOperationDiff_tmpl 		= require('hbs!tmpl/reports/PolicyOperationDiff_tmpl');
 	var PolicyUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/PolicyUpdateOperationDiff_tmpl');
 	var PolicyDeleteUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/PolicyDeleteOperationDiff_tmpl');
+	var KnoxPolicyOperationDiff_tmpl 		= require('hbs!tmpl/reports/KnoxPolicyOperationDiff_tmpl');
+	var KnoxPolicyUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/KnoxPolicyUpdateOperationDiff_tmpl');
+	var KnoxPolicyDeleteUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/KnoxPolicyDeleteOperationDiff_tmpl');
 	var AssetOperationDiff_tmpl 		= require('hbs!tmpl/reports/AssetOperationDiff_tmpl');
 	var AssetUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/AssetUpdateOperationDiff_tmpl');
 	var UserOperationDiff_tmpl 			= require('hbs!tmpl/reports/UserOperationDiff_tmpl');
@@ -97,8 +100,8 @@ define(function(require){
 			_.extend(this, _.pick(options, 'classType','objectName','objectId','objectCreatedDate','action','userName'));
 			this.bindEvents();
 			//this.initializeDiffOperation();
-			
 			this.getTemplateForView();
+			
 		},
 
 		/** all events binding here */
@@ -120,7 +123,6 @@ define(function(require){
 				if(_.isEmpty($(m).text().trim()))
 					$(m).removeClass('change-row').text('--');
 			});
-			
 		},
 		getTemplateForView : function(){
 			if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value){
@@ -145,10 +147,12 @@ define(function(require){
 				}
 				this.resourceDiffOperation();
 			} 
-			if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value){
+			if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value
+					|| this.classType == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value
+					|| this.classType == XAEnums.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value){
 				if(this.action == 'create' || this.action == 'delete'){
 					this.template = UserOperationDiff_tmpl;	
-				}else if(this.action == 'update'){
+				}else if(this.action == 'update' || this.action == "password change"){
 					this.template = UserUpdateOperationDiff_tmpl;
 				}else{
 					this.template = UserOperationDiff_tmpl;
@@ -195,19 +199,25 @@ define(function(require){
 			this.userList = [],this.groupList = [];
 			this.collection.each(function(m){
 				var attrName = m.get('attributeName'), type = 'permType';
-//				if(attrName == "IP Address")
-//					type = 'ipAddress';
-//				if(m.get('attributeName') == 'Permission Type' || m.get('attributeName') == "IP Address"){
-				if(m.get('attributeName') == 'Permission Type'){
+				if(attrName == "IP Address")
+					type = 'ipAddress';
+				if(m.get('attributeName') == 'Permission Type' || m.get('attributeName') == "IP Address"){
+//				if(m.get('attributeName') == 'Permission Type'){
 					if(m.get('parentObjectClassType') == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value){
 						if(m.get('action') != 'delete'){
 							if(m.get('action') == 'create'){
-								that.previousGroupPermList.push({groupName : m.get('parentObjectName'), permType : ""});
+								var obj = {groupName : m.get('parentObjectName')};
+								obj[type] = ""; 
+								that.previousGroupPermList.push(obj);
 							}
-							that.newGroupPermList.push({groupName : m.get('parentObjectName'), permType : m.get('newValue')});
+							obj = {groupName : m.get('parentObjectName')};
+							obj[type] = m.get('newValue');
+							that.newGroupPermList.push(obj);
 						}
 						if(m.get('action') == 'delete' || m.get('action') == 'update'){
-							that.previousGroupPermList.push({groupName : m.get('parentObjectName'), permType : m.get('previousValue')});
+							obj = {groupName : m.get('parentObjectName')};
+							obj[type] = m.get('previousValue');
+							that.previousGroupPermList.push(obj);
 						}
 						if($.inArray(m.get('parentObjectName'),that.groupList) < 0)
 							that.groupList.push(m.get('parentObjectName'));
@@ -241,6 +251,12 @@ define(function(require){
 					else
 						that.repositoryType = m.get('previousValue');
 					modelColl.push(m);
+					if(that.repositoryType == XAEnums.AssetType.ASSET_KNOX.label && m.get('action') == "create")//XAEnums.AssetType.ASSET_KNOX.value)
+						that.template = KnoxPolicyOperationDiff_tmpl;
+					if(that.repositoryType == XAEnums.AssetType.ASSET_KNOX.label && m.get('action') == "update")
+						that.template = KnoxPolicyUpdateOperationDiff_tmpl;
+					if(that.repositoryType == XAEnums.AssetType.ASSET_KNOX.label && m.get('action') == "delete")
+						that.template = KnoxPolicyDeleteUpdateOperationDiff_tmpl;
 				}
 				
 				if(_.isUndefined(m.get('attributeName')))

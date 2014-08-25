@@ -961,22 +961,23 @@ public class XAEnumUtil {
 	vEnum.getElementList().add(vElement);
 
 	vElement = new VEnumElement();
-	vElement.setElementName("ASSET_KNOX");
+	vElement.setElementName("ASSET_AGENT");
 	vElement.setElementValue(4);
+	vElement.setElementLabel("Agent");
+	vElement.setRbKey("xa.enum.AssetType.ASSET_AGENT");
+	vElement.setEnumName(vEnum.getEnumName());
+	
+	vEnum.getElementList().add(vElement);
+	
+	vElement = new VEnumElement();
+	vElement.setElementName("ASSET_KNOX");
+	vElement.setElementValue(5);
 	vElement.setElementLabel("Knox");
 	vElement.setRbKey("xa.enum.AssetType.ASSET_KNOX");
 	vElement.setEnumName(vEnum.getEnumName());
 
 	vEnum.getElementList().add(vElement);
 	
-	vElement = new VEnumElement();
-	vElement.setElementName("ASSET_AGENT");
-	vElement.setElementValue(5);
-	vElement.setElementLabel("Agent");
-	vElement.setRbKey("xa.enum.AssetType.ASSET_AGENT");
-	vElement.setEnumName(vEnum.getEnumName());
-
-	vEnum.getElementList().add(vElement);
 	
 	vElement = new VEnumElement();
 	vElement.setElementName("ASSET_STORM");

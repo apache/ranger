@@ -498,11 +498,23 @@ public class XACommonEnums {
 	 * ASSET_HIVE is an element of enum AssetType. Its value is "ASSET_HIVE".
 	 */
 	public static final int ASSET_HIVE = 3;
+	/**
+	 * ASSET_HIVE is an element of enum AssetType. Its value is "ASSET_HIVE".
+	 */
+	public static final int ASSET_AGENT = 4;
+	/**
+	 * ASSET_HIVE is an element of enum AssetType. Its value is "ASSET_HIVE".
+	 */
+	public static final int ASSET_KNOX = 5;
+	/**
+	 * ASSET_HIVE is an element of enum AssetType. Its value is "ASSET_HIVE".
+	 */
+	public static final int ASSET_STORM = 6;
 
 	/**
 	 * Max value for enum AssetType_MAX
 	 */
-	public static final int AssetType_MAX = 3;
+	public static final int AssetType_MAX = 6;
 
 
 	/***************************************************************
@@ -1162,6 +1174,15 @@ public class XACommonEnums {
 		}
 		if( elementValue == 3 ) {
 			return "Hive"; //ASSET_HIVE
+		}
+		if( elementValue == 4 ) {
+			return "Agent"; //ASSET_HIVE
+		}
+		if( elementValue == 5 ) {
+			return "Knox"; //ASSET_HIVE
+		}
+		if( elementValue == 6 ) {
+			return "Storm"; //ASSET_HIVE
 		}
 		return null;
 	}
