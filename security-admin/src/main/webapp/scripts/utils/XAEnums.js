@@ -109,7 +109,7 @@ define(function(require) {
 		CLASS_TYPE_DATA_OBJECT:{value:4, label:'CLASS_TYPE_DATA_OBJECT', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_DATA_OBJECT', modelName:'VXDataObject', type:'vXDataObject', tt: 'lbl.ClassTypes_CLASS_TYPE_DATA_OBJECT'},
 		CLASS_TYPE_NAMEVALUE:{value:5, label:'CLASS_TYPE_NAMEVALUE', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_NAMEVALUE', tt: 'lbl.ClassTypes_CLASS_TYPE_NAMEVALUE'},
 		CLASS_TYPE_LONG:{value:6, label:'CLASS_TYPE_LONG', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_LONG', modelName:'VXLong', type:'vXLong', tt: 'lbl.ClassTypes_CLASS_TYPE_LONG'},
-		CLASS_TYPE_PASSWORD_CHANGE:{value:7, label:'CLASS_TYPE_PASSWORD_CHANGE', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE', modelName:'VXPasswordChange', type:'vXPasswordChange', tt: 'lbl.ClassTypes_CLASS_TYPE_PASSWORD_CHANGE'},
+		CLASS_TYPE_PASSWORD_CHANGE:{value:7, label:'Password Change', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE', modelName:'VXPasswordChange', type:'vXPasswordChange', tt: 'lbl.ClassTypes_CLASS_TYPE_PASSWORD_CHANGE'},
 		CLASS_TYPE_STRING:{value:8, label:'CLASS_TYPE_STRING', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_STRING', modelName:'VXString', type:'vXString', tt: 'lbl.ClassTypes_CLASS_TYPE_STRING'},
 		CLASS_TYPE_ENUM:{value:9, label:'CLASS_TYPE_ENUM', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_ENUM', tt: 'lbl.ClassTypes_CLASS_TYPE_ENUM'},
 		CLASS_TYPE_ENUM_ELEMENT:{value:10, label:'CLASS_TYPE_ENUM_ELEMENT', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_ENUM_ELEMENT', tt: 'lbl.ClassTypes_CLASS_TYPE_ENUM_ELEMENT'},

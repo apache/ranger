@@ -1628,3 +1628,6 @@ body.login {
 .label-inverse {
 background-color: #444444;
 }
+.alert {
+	border:none;
+}

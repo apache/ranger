@@ -424,7 +424,24 @@ define(function(require){
 						return false;
 					}
 					
-				}
+				},
+				beforeTagAdded: function(event, ui) {
+			        // do something special
+					that.fields.name.$el.removeClass('error');
+		        	that.fields.name.$el.find('.help-inline').html('');
+					var tags =  [];
+			        console.log(ui.tag);
+			        if(ui.tagLabel.lastIndexOf('/') == ui.tagLabel.length -1 ){
+			        	tags = ui.tagLabel.substr(0,ui.tagLabel.lastIndexOf('/'));
+			        	that.fields.name.$el.addClass('error');
+			        	that.fields.name.$el.find('.help-inline').html('Please enter valid resource path : ' + ui.tagLabel);
+			        	return false;
+			        }
+//			        this.value = tags;
+			        /*if(_.contains(ui.tagLabel,','))
+			        	tags = ui.tagLabel.split(',');
+			        	this.value = tags;*/
+					}
 			});
 			/*this.fields.name.editor.$el.tagit({
 				beforeTagAdded: function(event, ui) {

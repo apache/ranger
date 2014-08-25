@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.persistence.Query;
 
+import com.xasecure.common.AppConstants;
 import com.xasecure.common.XACommonEnums;
 import com.xasecure.common.XAConstants;
 import com.xasecure.common.ContextUtil;
@@ -22,6 +23,8 @@ import com.xasecure.common.XAConfigUtil;
 import com.xasecure.db.XADaoManager;
 import com.xasecure.entity.XXPortalUser;
 import com.xasecure.entity.XXPortalUserRole;
+import com.xasecure.entity.XXTrxLog;
+import com.xasecure.service.XPortalUserService;
 import com.xasecure.view.VXPasswordChange;
 import com.xasecure.view.VXResponse;
 import com.xasecure.view.VXString;
@@ -70,6 +73,9 @@ public class UserMgr {
 
 	@Autowired
 	XAConfigUtil configUtil;
+	
+	@Autowired
+	XPortalUserService xPortalUserService;
 
 	String publicRoles[] = new String[] { XAConstants.ROLE_USER,
 			XAConstants.ROLE_OTHER };
@@ -140,7 +146,9 @@ public class UserMgr {
 	 * @return
 	 */
 	public XXPortalUser updateUser(VXPortalUser userProfile) {
-		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userProfile.getId());
+		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(
+				userProfile.getId());
+
 		if (gjUser == null) {
 			logger.error("updateUser(). User not found. userProfile="
 					+ userProfile);
@@ -154,7 +162,6 @@ public class UserMgr {
 
 		// status
 		if (userProfile.getStatus() != gjUser.getStatus()) {
-			gjUser.setStatus(userProfile.getStatus());
 			updateUser = true;
 		}
 
@@ -163,12 +170,12 @@ public class UserMgr {
 		String emailAddress = userProfile.getEmailAddress();
 		if (stringUtil.isEmpty(emailAddress)) {
 			String randomString = GUIDUtil.genGUI();
-			gjUser.setEmailAddress(randomString);
+			userProfile.setEmailAddress(randomString);
 			updateUser = true;
 		} else {
 			if (stringUtil.validateEmail(emailAddress)) {
-				XXPortalUser checkUser = daoManager.getXXPortalUser().findByEmailAddress(
-						emailAddress);
+				XXPortalUser checkUser = daoManager.getXXPortalUser()
+						.findByEmailAddress(emailAddress);
 				if (checkUser != null) {
 					String loginId = userProfile.getLoginId();
 					if (loginId == null) {
@@ -183,11 +190,11 @@ public class UserMgr {
 												+ "you've provided already exists in system.",
 										MessageEnums.INVALID_INPUT_DATA);
 					} else {
-						gjUser.setEmailAddress(emailAddress);
+						userProfile.setEmailAddress(emailAddress);
 						updateUser = true;
 					}
 				} else {
-					gjUser.setEmailAddress(emailAddress);
+					userProfile.setEmailAddress(emailAddress);
 					updateUser = true;
 				}
 			} else {
@@ -207,7 +214,7 @@ public class UserMgr {
 		// firstName
 		if (!stringUtil.isEmpty(userProfile.getFirstName())
 				&& !userProfile.getFirstName().equals(gjUser.getFirstName())) {
-			gjUser.setFirstName(stringUtil.toCamelCaseAllWords(userProfile
+			userProfile.setFirstName(stringUtil.toCamelCaseAllWords(userProfile
 					.getFirstName()));
 			updateUser = true;
 		}
@@ -215,7 +222,7 @@ public class UserMgr {
 		// lastName allowed to be empty
 		if (userProfile.getLastName() != null
 				&& !userProfile.getLastName().equals(gjUser.getLastName())) {
-			gjUser.setLastName(stringUtil.toCamelCaseAllWords(userProfile
+			userProfile.setLastName(stringUtil.toCamelCaseAllWords(userProfile
 					.getLastName()));
 			updateUser = true;
 		}
@@ -224,26 +231,31 @@ public class UserMgr {
 		if (!stringUtil.isEmpty(userProfile.getPublicScreenName())
 				&& !userProfile.getPublicScreenName().equals(
 						gjUser.getPublicScreenName())) {
-			gjUser.setPublicScreenName(gjUser.getFirstName() + " "
-					+ gjUser.getLastName());
+			userProfile.setPublicScreenName(userProfile.getFirstName() + " "
+					+ userProfile.getLastName());
 			updateUser = true;
 		}
 
 		// notes
-		if (!stringUtil.isEmpty(userProfile.getNotes())
+		/*if (!stringUtil.isEmpty(userProfile.getNotes())
 				&& !userProfile.getNotes().equalsIgnoreCase(gjUser.getNotes())) {
-			gjUser.setNotes(userProfile.getNotes());
 			updateUser = true;
-		}
+		}*/
 
 		// userRoleList
-		updateRoles(userProfile.getId(),
-				userProfile.getUserRoleList());
+		updateRoles(userProfile.getId(), userProfile.getUserRoleList());
 
 		if (updateUser) {
-			gjUser = daoManager.getXXPortalUser().update(gjUser);
+
+			List<XXTrxLog> trxLogList = xPortalUserService.getTransactionLog(
+					userProfile, gjUser, "update");
+
+			userProfile.setPassword(gjUser.getPassword());
+			userProfile = xPortalUserService.updateResource(userProfile);
 			sessionMgr.resetUserSessionForProfiles(ContextUtil
 					.getCurrentUserSession());
+
+			msBizUtil.createTrxLog(trxLogList);
 		}
 
 		return gjUser;
@@ -311,8 +323,8 @@ public class UserMgr {
 	public VXResponse changePassword(VXPasswordChange pwdChange) {
 		// First let's get the XXPortalUser for the current logged in user
 		String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
-		XXPortalUser gjUserCurrent = daoManager.getXXPortalUser().findByLoginId(
-				currentUserLoginId);
+		XXPortalUser gjUserCurrent = daoManager.getXXPortalUser()
+				.findByLoginId(currentUserLoginId);
 
 		String encryptedOldPwd = encrypt(gjUserCurrent.getLoginId(),
 				pwdChange.getOldPassword());
@@ -330,7 +342,8 @@ public class UserMgr {
 		}
 
 		// Get the user for whom we want to change the password
-		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(pwdChange.getId());
+		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(
+				pwdChange.getId());
 		if (gjUser == null) {
 			logger.warn("SECURITY:changePassword(). User not found. userId="
 					+ pwdChange.getId());
@@ -363,6 +376,21 @@ public class UserMgr {
 		String currentPassword = gjUser.getPassword();
 
 		if (!encryptedNewPwd.equals(currentPassword)) {
+
+			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
+			XXTrxLog xTrxLog = new XXTrxLog();
+
+			xTrxLog.setAttributeName("Password");
+			xTrxLog.setPreviousValue(currentPassword);
+			xTrxLog.setNewValue(encryptedNewPwd);
+			xTrxLog.setAction("password change");
+			xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
+			xTrxLog.setObjectId(pwdChange.getId());
+			xTrxLog.setObjectName(pwdChange.getLoginId());
+			trxLogList.add(xTrxLog);
+
+			msBizUtil.createTrxLog(trxLogList);
+
 			gjUser.setPassword(encryptedNewPwd);
 			gjUser = daoManager.getXXPortalUser().update(gjUser);
 

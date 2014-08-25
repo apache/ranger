@@ -149,7 +149,7 @@ define(function(require){
 			var that = this;
 			var vPasswordChange = new VPasswordChange();
 			vPasswordChange.set({
-				loginId : this.model.get('id'),
+				loginId : this.model.get('loginId'),
 				emailAddress :this.model.get('emailAddress'), 
 				oldPassword : this.model.get('oldPassword'),
 				updPassword : this.model.get('newPassword')

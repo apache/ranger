@@ -320,8 +320,10 @@ public class AssetMgr extends AssetMgrBase {
 					if(vXResource.getId()!=newVXResource.getId() && vXResource.getPolicyName().trim().equalsIgnoreCase(newVXResource.getPolicyName().trim())){
 						logger.error("policy already exist with name "+vXResource.getPolicyName());
 						logger.info("A system generated policy name shall be assigned to "+vXResource.getPolicyName());
-						vXResource.setPolicyName(null);
-						break;
+//						vXResource.setPolicyName(null);
+//						break;
+						throw restErrorUtil.createRESTException("policy already exist with name "
+								+vXResource.getPolicyName(),MessageEnums.ERROR_DUPLICATE_OBJECT);
 					}
 				}
 			}
