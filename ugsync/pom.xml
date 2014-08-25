@@ -13,8 +13,7 @@
     <artifactId>unixusersync</artifactId>
 
     <packaging>jar</packaging>
-
-    <name>unixusersync</name>
+    <name>Unix User Group Synchronizer</name>
     <description>HDP Advanced Security - User, Group sync from sources such as Unix and LDAP</description>
     <url>http:/hortonworks.com/</url>
 

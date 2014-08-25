@@ -16,7 +16,7 @@
 
     <packaging>uexe</packaging>
 
-    <name>unixauth-native</name>
+    <name>Unix Native Authenticator</name>
     <description>HDP Advanced Security - Unix authentication service</description>
     <url>http:/hortonworks.com/</url>
 

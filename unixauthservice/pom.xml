@@ -14,7 +14,7 @@
 
     <packaging>jar</packaging>
 
-    <name>unixauthservice</name>
+    <name>Unix Authentication Service</name>
     <description>HDP Advanced Security - Unix authentication service</description>
     <url>http:/hortonworks.com/</url>
 
