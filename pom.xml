@@ -81,7 +81,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<security-agent-install-dir>hadoop-security/agents</security-agent-install-dir>
 		<slf4j-api.version>1.7.5</slf4j-api.version>
+<!--
 		<springframework.spring.version>2.5.6</springframework.spring.version>
+-->
+		<springframework.spring.version>3.1.3.RELEASE</springframework.spring.version>
 		<springframework.security.version>3.1.3.RELEASE</springframework.security.version>
 		<springframework.test.version>3.1.3.RELEASE</springframework.test.version>
 		<springframework.version>3.1.3.RELEASE</springframework.version>
