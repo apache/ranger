@@ -21,6 +21,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveRoleGrant;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import com.xasecure.authorization.hive.XaHiveAccessContext;
+import com.xasecure.authorization.utils.StringUtil;
 
 public abstract class XaSecureHiveAuthorizerBase implements HiveAuthorizer {
 
@@ -44,6 +45,14 @@ public abstract class XaSecureHiveAuthorizerBase implements HiveAuthorizer {
 		String userName = mHiveAuthenticator == null ? null : mHiveAuthenticator.getUserName();
 
 		mUgi = userName == null ? null : UserGroupInformation.createRemoteUser(userName);
+
+		if(mHiveAuthenticator == null) {
+			LOG.warn("XaSecureHiveAuthorizerBase.XaSecureHiveAuthorizerBase(): hiveAuthenticator is null");
+		} else if(StringUtil.isEmpty(userName)) {
+			LOG.warn("XaSecureHiveAuthorizerBase.XaSecureHiveAuthorizerBase(): hiveAuthenticator.getUserName() returned null/empty");
+		} else if(mUgi == null) {
+			LOG.warn(String.format("XaSecureHiveAuthorizerBase.XaSecureHiveAuthorizerBase(): UserGroupInformation.createRemoteUser(%s) returned null", userName));
+		}
 	}
 
 	public HiveMetastoreClientFactory getMetastoreClientFactory() {

@@ -385,6 +385,26 @@ public class XResourceService extends
 	protected XXResource mapViewToEntityBean(VXResource vObj, XXResource mObj, int OPERATION_CONTEXT) {
 		super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
 		mObj.setUdfs(vObj.getUdfs());
+		if(vObj!=null && mObj!=null){
+			XXPortalUser xXPortalUser= null;
+			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
+				if(!stringUtil.isEmpty(vObj.getOwner())){
+					xXPortalUser=xADaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
+					if(xXPortalUser!=null){
+						mObj.setAddedByUserId(xXPortalUser.getId());
+					}
+				}
+			}
+			if(mObj.getUpdatedByUserId()==null || mObj.getUpdatedByUserId()==0){
+				if(!stringUtil.isEmpty(vObj.getUpdatedBy())){
+					xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
+					if(xXPortalUser!=null){
+						mObj.setUpdatedByUserId(xXPortalUser.getId());
+					}		
+				}
+			}
+			
+		}
 		return mObj;
 	}
 
@@ -393,6 +413,21 @@ public class XResourceService extends
 		super.mapEntityToViewBean(vObj, mObj);
 		vObj.setUdfs(mObj.getUdfs());
 		populateAssetProperties(vObj);
+		if(mObj!=null && vObj!=null){			
+			XXPortalUser xXPortalUser= null;
+			if(stringUtil.isEmpty(vObj.getOwner())){
+				xXPortalUser=xADaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());		
+				if(xXPortalUser!=null){
+					vObj.setOwner(xXPortalUser.getLoginId());
+				}
+			}
+			if(stringUtil.isEmpty(vObj.getUpdatedBy())){
+				xXPortalUser= xADaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
+				if(xXPortalUser!=null){
+					vObj.setUpdatedBy(xXPortalUser.getLoginId());
+				}	
+			}
+		}
 		return vObj;
 	}
 
@@ -1021,5 +1056,15 @@ public class XResourceService extends
 		populatePermList(vXResource);
 		populateAuditList(vXResource);
 		return vXResource;
+	}
+	
+	public VXResourceList searchXResourcesWithoutLogin(SearchCriteria searchCriteria) {	
+		VXResourceList returnList = super.searchXResources(searchCriteria);		
+		if(returnList!=null && returnList.getResultSize()>0){
+			for (VXResource vXResource : returnList.getVXResources()) {
+				populateAuditList(vXResource);
+			}
+		}
+		return returnList;
 	}
 }

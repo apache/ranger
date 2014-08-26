@@ -586,10 +586,18 @@ public class XABizUtil {
 	 * @param permission
 	 * @return
 	 */
-	private boolean matchHbasePolicy(String resourceName,
+	public boolean matchHbasePolicy(String resourceName,
 			List<XXResource> xResourceList, VXResponse vXResponse, Long xUserId,
 			int permission) {
-
+		if(stringUtil.isEmpty(resourceName)){
+			return false;
+		}
+		if(xResourceList==null){
+			return false;
+		}
+		if(xUserId==null){
+			return false;
+		}		
 		String[] splittedResources = stringUtil.split(resourceName,
 				File.separator);
 		int numberOfResources = splittedResources.length;
@@ -670,7 +678,7 @@ public class XABizUtil {
 		return policyMatched;
 	}
 
-	private boolean matchHivePolicy(String resourceName,
+	public boolean matchHivePolicy(String resourceName,
 			List<XXResource> xResourceList, Long xUserId, int permission) {
 		return matchHivePolicy(resourceName, xResourceList, xUserId,
 				permission, 0, 0, true);
@@ -688,10 +696,18 @@ public class XABizUtil {
 	 * @param isUdfPolicy
 	 * @return
 	 */
-	private boolean matchHivePolicy(String resourceName,
+	public boolean matchHivePolicy(String resourceName,
 			List<XXResource> xResourceList, Long xUserId, int permission,
 			int reqTableType, int reqColumnType, boolean isUdfPolicy) {
-
+		if(stringUtil.isEmpty(resourceName)){
+			return false;
+		}
+		if(xResourceList==null){
+			return false;
+		}
+		if(xUserId==null){
+			return false;
+		}
 		String[] splittedResources = stringUtil.split(resourceName,
 				File.separator);// get list of resources
 		int numberOfResources = splittedResources.length;

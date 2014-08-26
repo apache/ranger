@@ -29,6 +29,8 @@ public class GrantRevokeData implements java.io.Serializable {
 	private String        tables;
 	private String        columns;
 	private String        columnFamilies;
+	private boolean       isEnabled;
+	private boolean       isAuditEnabled;
 	private List<PermMap> permMapList = new ArrayList<PermMap>();
 
 
@@ -112,6 +114,8 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.databases      = databases;
 		this.tables         = tables;
 		this.columns        = columns;
+		this.isAuditEnabled = true;
+		this.isEnabled      = true;
 
 		for(PermMap permMap : permMapList) {
 			this.permMapList.add(permMap);
@@ -130,6 +134,8 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.tables         = tables;
 		this.columns        = columns;
 		this.columnFamilies = columnFamilies;
+		this.isAuditEnabled = true;
+		this.isEnabled      = true;
 
 		for(PermMap permMap : permMapList) {
 			this.permMapList.add(permMap);

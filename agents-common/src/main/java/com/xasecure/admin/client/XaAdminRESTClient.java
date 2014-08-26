@@ -134,7 +134,7 @@ public class XaAdminRESTClient implements XaAdminClient {
 
 			WebResource webResource = client.resource(mUrl + REST_URL_PATH_GRANT);
 
-			ClientResponse response = webResource.accept(REST_EXPECTED_MIME_TYPE).type(REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, grData.toString());
+			ClientResponse response = webResource.accept(REST_EXPECTED_MIME_TYPE).type(REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, grData.toJson());
 
 			if(response == null) {
 				throw new Exception("grantPrivilege(): unknown failure");
@@ -157,7 +157,7 @@ public class XaAdminRESTClient implements XaAdminClient {
 
 			WebResource webResource = client.resource(mUrl + REST_URL_PATH_REVOKE);
 
-			ClientResponse response = webResource.accept(REST_EXPECTED_MIME_TYPE).type(REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, grData.toString());
+			ClientResponse response = webResource.accept(REST_EXPECTED_MIME_TYPE).type(REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, grData.toJson());
 
 			if(response == null) {
 				throw new Exception("revokePrivilege(): unknown failure");

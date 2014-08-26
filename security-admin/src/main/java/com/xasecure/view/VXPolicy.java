@@ -543,4 +543,17 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		str += "}";
 		return str;
 	}
+	
+	//function should be used from grant/revoke rest call only
+	public void syncResponseWithJsonRequest() {
+		this.setGrantor(this.getOwner());
+		this.setOwner(null);		
+		this.setId(null);		
+		this.setUpdatedBy(null);
+		this.setPolicyName(null);
+		this.setResourceName(null);		
+		this.setRepositoryType(null);		
+		this.setVersion(null);
+		this.setRecursive(new Boolean(null));
+	}	
 }

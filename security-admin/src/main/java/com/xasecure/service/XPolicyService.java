@@ -180,7 +180,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			vXResource.setPermMapList(permMapList);
 
 		} else if (operationContext == AbstractBaseResourceService.OPERATION_CREATE_CONTEXT) {
-
+		
 			if (vXPolicy.isAuditEnabled()) {
 				VXAuditMap vXAuditMap = new VXAuditMap();
 				vXAuditMap.setAuditType(AppConstants.XA_AUDIT_TYPE_ALL);
@@ -387,17 +387,14 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 
 			for (VXPermMap permMap : permListForGrp) {
 				if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
-					userList.add(permMap.getUserName());
-				} else if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_GROUP) {
-					groupList.add(permMap.getGroupName());
 					if (!userList.contains(permMap.getUserName())) {
 						userList.add(permMap.getUserName());
 					}
 				} else if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_GROUP) {
 					if (!groupList.contains(permMap.getGroupName())) {
 						groupList.add(permMap.getGroupName());
-					}
-				}
+					}					
+				} 
 				String perm = AppConstants.getLabelFor_XAPermType(permMap
 						.getPermType());
 				if (!permList.contains(perm)) {

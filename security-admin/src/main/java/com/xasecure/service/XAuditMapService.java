@@ -121,4 +121,49 @@ public class XAuditMapService extends
 		return trxLogList;
 	}
 
+	@Override
+	protected XXAuditMap mapViewToEntityBean(VXAuditMap vObj, XXAuditMap mObj, int OPERATION_CONTEXT) {
+		super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
+		if(vObj!=null && mObj!=null){
+			XXPortalUser xXPortalUser=null;
+			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
+				if(!stringUtil.isEmpty(vObj.getOwner())){
+					xXPortalUser=xADaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
+					if(xXPortalUser!=null){
+						mObj.setAddedByUserId(xXPortalUser.getId());
+					}
+				}
+			}
+			if(mObj.getUpdatedByUserId()==null || mObj.getUpdatedByUserId()==0){
+				if(!stringUtil.isEmpty(vObj.getUpdatedBy())){
+					xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
+					if(xXPortalUser!=null){
+						mObj.setUpdatedByUserId(xXPortalUser.getId());
+					}		
+				}
+			}
+		}
+		return mObj;
+	}
+
+	@Override
+	protected VXAuditMap mapEntityToViewBean(VXAuditMap vObj, XXAuditMap mObj) {
+		super.mapEntityToViewBean(vObj, mObj);
+		if(mObj!=null && vObj!=null){
+			XXPortalUser xXPortalUser=null;
+			if(stringUtil.isEmpty(vObj.getOwner())){
+				xXPortalUser= xADaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());	
+				if(xXPortalUser!=null){
+					vObj.setOwner(xXPortalUser.getLoginId());
+				}
+			}
+			if(stringUtil.isEmpty(vObj.getUpdatedBy())){
+				xXPortalUser= xADaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
+				if(xXPortalUser!=null){
+					vObj.setUpdatedBy(xXPortalUser.getLoginId());
+				}
+			}
+		}
+		return vObj;
+	}
 }

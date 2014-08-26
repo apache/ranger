@@ -55,6 +55,7 @@ import com.xasecure.entity.XXGroup;
 import com.xasecure.entity.XXPermMap;
 import com.xasecure.entity.XXPolicyExportAudit;
 import com.xasecure.entity.XXPortalUser;
+import com.xasecure.entity.XXPortalUserRole;
 import com.xasecure.entity.XXResource;
 import com.xasecure.entity.XXTrxLog;
 import com.xasecure.entity.XXUser;
@@ -220,7 +221,7 @@ public class AssetMgr extends AssetMgrBase {
 		if(vXResource.getPolicyName()!=null && !vXResource.getPolicyName().trim().isEmpty()){			
 			searchCriteria=new SearchCriteria();		
 			searchCriteria.getParamList().put("policyName", vXResource.getPolicyName());
-			vXResourceList=xResourceService.searchXResources(searchCriteria);
+			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);
 			//if policyname already exist then set null to generate from system
 			if(vXResourceList!=null && vXResourceList.getListSize()>0){
 				logger.error("policy already exist with name "+vXResource.getPolicyName());
@@ -237,7 +238,7 @@ public class AssetMgr extends AssetMgrBase {
 		if(vXResource.getPolicyName()==null ||vXResource.getPolicyName().trim().isEmpty()){
 			searchCriteria=new SearchCriteria();
 			searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
-			vXResourceList=xResourceService.searchXResources(searchCriteria);			
+			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);			
 			if(vXResourceList!=null && vXResourceList.getListSize()>0){
 				tempPoliciesCount=vXResourceList.getListSize();
 			}	
@@ -248,7 +249,7 @@ public class AssetMgr extends AssetMgrBase {
 				vXResource.setPolicyName(tempPolicyName);
 				searchCriteria=new SearchCriteria();		
 				searchCriteria.getParamList().put("policyName", vXResource.getPolicyName());
-				vXResourceList=xResourceService.searchXResources(searchCriteria);
+				vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);
 				//if policy name not exist then list will be empty and generated policyname will valid 
 				if(vXResourceList==null|| vXResourceList.getListSize()==0){
 					break;
@@ -329,7 +330,7 @@ public class AssetMgr extends AssetMgrBase {
 			searchCriteria.addParam("isRecursive", vXResource.getIsRecursive());
 		}
 		
-		VXResourceList vXResourceList=xResourceService.searchXResources(searchCriteria);		
+		VXResourceList vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);		
 		if(vXResourceList!=null && vXResourceList.getListSize()>0){
 			for(VXResource vXResourceTemp :vXResourceList.getList()){
 				if(vXResourceTemp.getId()!=vXResource.getId()){
@@ -355,7 +356,7 @@ public class AssetMgr extends AssetMgrBase {
 		if(vXResource.getPolicyName()!=null && !vXResource.getPolicyName().trim().isEmpty()){ 				
 			searchCriteria=new SearchCriteria();		
 			searchCriteria.getParamList().put("policyName", vXResource.getPolicyName());
-			vXResourceList=xResourceService.searchXResources(searchCriteria);	
+			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);	
 			if(vXResourceList!=null && vXResourceList.getListSize()>0){
 				for (VXResource newVXResource : vXResourceList.getList()) {
 					if(vXResource.getId()!=newVXResource.getId() && vXResource.getPolicyName().trim().equalsIgnoreCase(newVXResource.getPolicyName().trim())){
@@ -377,7 +378,7 @@ public class AssetMgr extends AssetMgrBase {
 		if(vXResource.getPolicyName()==null ||vXResource.getPolicyName().trim().isEmpty()){
 			searchCriteria=new SearchCriteria();
 			searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
-			vXResourceList=xResourceService.searchXResources(searchCriteria);
+			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);
 			if(vXResourceList!=null && vXResourceList.getListSize()>0){
 				totalPoliciesCount=vXResourceList.getListSize();
 				tempPoliciesCount++;
@@ -398,7 +399,7 @@ public class AssetMgr extends AssetMgrBase {
 			while(true){
 				searchCriteria=new SearchCriteria();		
 				searchCriteria.getParamList().put("policyName", vXResource.getPolicyName());
-				vXResourceList=xResourceService.searchXResources(searchCriteria);				
+				vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);				
 				if(vXResourceList==null || vXResourceList.getListSize()==0){
 					break;
 				}else{
@@ -2260,5 +2261,676 @@ public class AssetMgr extends AssetMgrBase {
 					"create"));
 		}
 		xaBizUtil.createTrxLog(trxLogList);
+	}
+	
+	public boolean isValidHttpsAuthentication(String repository,
+			X509Certificate[] certchain, boolean httpEnabled,
+			String ipAddress, boolean isSecure) {
+		boolean isValidAuthentication=false;
+		if (repository == null || repository.isEmpty()) {			
+			logger.error("Repository name not provided");
+			throw restErrorUtil.createRESTException("Unauthorized access.",
+					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+		}
+		XXAsset xAsset = xADaoManager.getXXAsset().findByAssetName(repository);
+		if(xAsset==null){
+			logger.error("Requested repository not found");
+			throw restErrorUtil.createRESTException("No Data Found.",
+					MessageEnums.DATA_NOT_FOUND);
+		}
+		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){
+			logger.error("Requested repository is disabled");
+			throw restErrorUtil.createRESTException("Unauthorized access.",
+					MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+		}		
+		if (!httpEnabled) {
+			if (!isSecure) {
+				throw restErrorUtil.createRESTException("Unauthorized access -"
+						+ " only https allowed",
+						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+			}
+			if (certchain == null || certchain.length == 0) {
+				throw restErrorUtil.createRESTException("Unauthorized access -"
+						+ " unable to get client certificate",
+						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+			}
+		}		
+		String commonName = null;
+		if (certchain != null) {
+			X509Certificate clientCert = certchain[0];
+			String dn = clientCert.getSubjectX500Principal().getName();
+			try {
+				LdapName ln = new LdapName(dn);
+				for (Rdn rdn : ln.getRdns()) {
+					if (rdn.getType().equalsIgnoreCase("CN")) {
+						commonName = rdn.getValue() + "";
+						break;
+					}
+				}
+				if (commonName == null) {
+					throw restErrorUtil.createRESTException(
+							"Unauthorized access - Unable to find Common Name from ["
+									+ dn + "]",
+							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+				}
+			} catch (InvalidNameException e) {
+				logger.error("Invalid Common Name.", e);
+				throw restErrorUtil.createRESTException(
+						"Unauthorized access - Invalid Common Name",
+						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+			}
+		}		
+		if (commonName != null) {
+			String config = xAsset.getConfig();
+			Map<String, String> configMap = jsonUtil.jsonToMap(config);
+			String cnFromConfig = configMap.get("commonNameForCertificate");
+			if (cnFromConfig == null
+					|| !commonName.equalsIgnoreCase(cnFromConfig)) {
+				throw restErrorUtil.createRESTException(
+						"Unauthorized access. expected [" + cnFromConfig
+								+ "], found [" + commonName + "]",
+						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+			}
+		}
+		isValidAuthentication=true;
+		return isValidAuthentication;
+	}
+	
+	public VXResource grantXResource(VXResource vXResource) {
+		if(vXResource==null){
+			return vXResource;
+		}
+		
+		//checks user exists or not
+		XXUser xUser = xADaoManager.getXXUser().findByUserName(vXResource.getOwner());		
+		if(xUser==null){
+			throw restErrorUtil.createRESTException("User " +vXResource.getOwner() + " is Not Found",
+					MessageEnums.DATA_NOT_FOUND);
+		}	
+		XXPortalUser xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(vXResource.getOwner());
+		if(xXPortalUser==null){
+			throw restErrorUtil.createRESTException("User " +vXResource.getOwner() + " is Not Found",
+					MessageEnums.DATA_NOT_FOUND);
+		}
+		//checks repository exists or not
+		XXAsset xAsset = xADaoManager.getXXAsset().findByAssetName(vXResource.getAssetName());
+		if (xAsset == null) {
+			logger.error("Repository not found for asset : " + vXResource.getAssetName());
+			throw restErrorUtil.createRESTException("Repository for which"
+					+ " the policy is created, doesn't exist.",MessageEnums.DATA_NOT_FOUND);
+		}	
+		//checks repository active or not
+		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){			
+				logger.error("Trying to create/update policy in disabled repository");
+				throw restErrorUtil.createRESTException("Resource "
+						+ "creation/updation not allowed in disabled repository",MessageEnums.OPER_NO_PERMISSION);
+			
+		}
+		vXResource.setAssetId(xAsset.getId());
+		vXResource.setAssetType(xAsset.getAssetType());
+		//create resource name/path for HIVE/Hbase policy.
+		if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+			createResourcePathForHive(vXResource);
+			vXResource.setIsRecursive(0);
+		} else if (xAsset.getAssetType() == AppConstants.ASSET_HBASE) {
+			createResourcePathForHbase(vXResource);
+			vXResource.setIsRecursive(0);
+		}else{
+			logger.error("Invalid repository for grant operation" );
+			throw restErrorUtil.createRESTException(vXResource.getAssetName() +" is not a " 
+					+ " valid repository for grant operation",MessageEnums.OPER_NO_PERMISSION);
+		}
+		
+		//check whether resource contains multiple path or not
+		if(!stringUtil.isEmpty(vXResource.getName())){
+			String[] resources=vXResource.getName().trim().split(",");
+			if(resources!=null && resources.length>1){
+				logger.error("More than one resource found for grant operation in policy : " + vXResource.getName());
+				throw restErrorUtil.createRESTException("We did not find exact match for this resource : " + vXResource.getName(),MessageEnums.INVALID_INPUT_DATA);
+			}
+		}else{
+			throw restErrorUtil.createRESTException("Invalid Resource Name : " + vXResource.getName(),MessageEnums.INVALID_INPUT_DATA);
+		}
+		
+		//checks user is admin in resource or not
+		List<XXResource> xResourceList=xADaoManager.getXXResource().findByAssetId(xAsset.getId());		
+		if(xResourceList!=null){
+			boolean isAdmin=false;
+			List<XXPortalUserRole> xXPortalUserRoleList = xADaoManager.getXXPortalUserRole().findByParentId(xXPortalUser.getId());
+			if(xXPortalUserRoleList!=null && xXPortalUserRoleList.size()>0){
+				for(XXPortalUserRole xXPortalUserRole: xXPortalUserRoleList){
+					if(xXPortalUserRole.getUserRole().equalsIgnoreCase(XAConstants.ROLE_SYS_ADMIN)){
+						isAdmin=true;
+						break;
+					}
+				}
+			}			
+
+			if(!isAdmin){
+				if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+					String[] requestResNameList = vXResource.getName().trim().split(",");
+					if (stringUtil.isEmpty(vXResource.getUdfs())) {
+						int reqTableType = vXResource.getTableType();
+						int reqColumnType = vXResource.getColumnType();
+						for (String resourceName : requestResNameList) {
+							isAdmin=xaBizUtil.matchHivePolicy(resourceName,xResourceList, xUser.getId(),AppConstants.XA_PERM_TYPE_ADMIN,reqTableType,reqColumnType, false);
+							if (isAdmin) {
+								break;
+							}
+						}
+					} else {
+						for (String resourceName : requestResNameList) {
+							isAdmin=xaBizUtil.matchHivePolicy(resourceName,xResourceList, xUser.getId(),AppConstants.XA_PERM_TYPE_ADMIN);
+							if (isAdmin) {
+								break;
+							}
+						}
+					}						
+				}else if (xAsset.getAssetType() == AppConstants.ASSET_HBASE) {
+					isAdmin=xaBizUtil.matchHbasePolicy(vXResource.getName(),xResourceList,null, xUser.getId(),AppConstants.XA_PERM_TYPE_ADMIN);
+				}
+			}
+			if (!isAdmin) {
+				throw restErrorUtil.createRESTException("You're not permitted to perform "
+							+ "grant operation for resource path : " + vXResource.getName(),MessageEnums.OPER_NO_PERMISSION);
+			}
+		}
+		xResourceList=null;//explicit
+		//check whether resource exist or not
+		SearchCriteria searchCriteria=new SearchCriteria();
+		if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+			searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
+			searchCriteria.getParamList().put("fullname", vXResource.getName());
+			searchCriteria.getParamList().put("udfs", vXResource.getUdfs());
+			searchCriteria.getParamList().put("tableType", vXResource.getTableType());
+			searchCriteria.getParamList().put("columnType", vXResource.getColumnType());
+		}else if (xAsset.getAssetType() == AppConstants.ASSET_HBASE) {
+			searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
+			searchCriteria.getParamList().put("fullname", vXResource.getName());
+		}
+		
+		VXResourceList vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);
+		searchCriteria=null;		
+		//generate policy name if resource does not exist
+		if(vXResourceList==null || vXResourceList.getListSize()==0){
+			int tempPoliciesCount=0;
+			String tempPolicyName=null;
+			VXResourceList vXResourceListTemp=null;
+			if(vXResource.getPolicyName()==null ||vXResource.getPolicyName().trim().isEmpty()){
+				searchCriteria=new SearchCriteria();
+				searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
+				vXResourceListTemp=xResourceService.searchXResourcesWithoutLogin(searchCriteria);			
+				if(vXResourceListTemp!=null && vXResourceListTemp.getListSize()>0){
+					tempPoliciesCount=vXResourceListTemp.getListSize();
+				}	
+				vXResourceListTemp=null;
+				while(true){
+					tempPoliciesCount++;
+					tempPolicyName=xAsset.getName()+"-"+tempPoliciesCount+"-"+DateUtil.dateToString(DateUtil.getUTCDate(),"yyyyMMddHHmmss");
+					vXResource.setPolicyName(tempPolicyName);
+					searchCriteria=new SearchCriteria();		
+					searchCriteria.getParamList().put("policyName", vXResource.getPolicyName());
+					vXResourceListTemp=xResourceService.searchXResourcesWithoutLogin(searchCriteria);
+					//if policy name not exist then list will be empty and generated policyname will valid 
+					if(vXResourceListTemp==null|| vXResourceListTemp.getListSize()==0){
+						break;
+					}
+				}
+			}			
+		}else{
+			for(VXResource vXResourceDB:vXResourceList.getVXResources()){
+				if(vXResourceDB!=null){
+					vXResource.setId(vXResourceDB.getId());
+					vXResource.setPolicyName(vXResourceDB.getPolicyName());
+					break;
+				}
+			}			
+		}		
+		
+		//update addedby and updated by in permmap and auditmap
+		List<VXPermMap> permMapList=vXResource.getPermMapList();
+		List<VXAuditMap> auditMapList = vXResource.getAuditList();
+		VXPermMap vXPermMapTemp=null;
+		VXAuditMap vXAuditMapTemp=null;
+		XXUser xxUser=null;
+		XXGroup xxGroup=null;
+		for (int i=0;i< permMapList.size();i++) {
+			vXPermMapTemp=permMapList.get(i);
+			if(vXPermMapTemp==null){
+				continue;
+			}
+			if(stringUtil.isEmpty(vXPermMapTemp.getOwner())){
+				vXPermMapTemp.setOwner(vXResource.getOwner());
+			}
+			if(stringUtil.isEmpty(vXPermMapTemp.getUpdatedBy())){ 
+				vXPermMapTemp.setUpdatedBy(vXResource.getUpdatedBy());
+			}
+			if(vXPermMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_USER){
+				if(vXPermMapTemp.getUserId()==null && !stringUtil.isEmpty(vXPermMapTemp.getUserName())){
+					xxUser = xADaoManager.getXXUser().findByUserName(vXPermMapTemp.getUserName());
+					if (xxUser != null) {
+						vXPermMapTemp.setUserId(xxUser.getId());
+					} else{
+						throw restErrorUtil.createRESTException("User : "+ vXPermMapTemp.getUserName() + " is Not Found",
+								MessageEnums.DATA_NOT_FOUND);
+					}
+				}
+			}
+			if(vXPermMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
+				if(vXPermMapTemp.getGroupId()==null && !stringUtil.isEmpty(vXPermMapTemp.getGroupName())){
+					xxGroup = xADaoManager.getXXGroup().findByGroupName(
+							vXPermMapTemp.getGroupName());
+					if (xxGroup != null) {
+						vXPermMapTemp.setGroupId(xxGroup.getId());
+					}else{
+						throw restErrorUtil.createRESTException("Group : "+ vXPermMapTemp.getGroupName() + " is Not Found",
+								MessageEnums.DATA_NOT_FOUND);
+					} 
+				}
+			}
+			permMapList.set(i, vXPermMapTemp);				
+		}			
+		for (int i=0;i< auditMapList.size();i++) {
+			vXAuditMapTemp=auditMapList.get(i);
+			if(vXAuditMapTemp!=null && stringUtil.isEmpty(vXAuditMapTemp.getOwner())){
+				vXAuditMapTemp.setOwner(vXResource.getOwner());
+			}
+			if(vXAuditMapTemp!=null && stringUtil.isEmpty(vXAuditMapTemp.getUpdatedBy())){ 
+				vXAuditMapTemp.setUpdatedBy(vXResource.getUpdatedBy());
+			}
+			auditMapList.set(i, vXAuditMapTemp);
+		}
+		vXResource.setPermMapList(permMapList);
+		vXResource.setAuditList(auditMapList);		
+		
+		//create 	
+		List<XXTrxLog> trxLogList=null ;
+		if(vXResourceList==null || vXResourceList.getListSize()==0){			
+			vXResource = xResourceService.createResource(vXResource);
+			List<VXPermMap> newPermMapList = vXResource.getPermMapList();
+			List<VXAuditMap> newAuditMapList = vXResource.getAuditList();
+			trxLogList= xResourceService.getTransactionLog(vXResource, "create");	
+			for (VXPermMap vXPermMap : newPermMapList) {
+				trxLogList.addAll(xPermMapService.getTransactionLog(vXPermMap,
+						"create"));
+			}
+			for (VXAuditMap vXAuditMap : newAuditMapList) {
+				trxLogList.addAll(xAuditMapService.getTransactionLog(vXAuditMap,
+						"create"));
+			}			
+		}
+		
+		//update case
+		if(vXResourceList!=null && vXResourceList.getListSize()>0){
+			XXResource xXResource = xADaoManager.getXXResource().getById(vXResource.getId());
+			vXResource.setCreateDate(xXResource.getCreateTime());
+			vXResource.setUpdateDate(xXResource.getUpdateTime());
+			trxLogList = xResourceService.getTransactionLog(vXResource, xXResource, "update");
+			//VXResource resource = super.updateXResource(vXResource);			
+			searchCriteria = new SearchCriteria();
+			searchCriteria.addParam("resourceId", vXResource.getId());
+			VXPermMapList prevPermMaps = xPermMapService.searchXPermMaps(searchCriteria);
+			List<VXPermMap> prevPermMapList = new ArrayList<VXPermMap>();
+			List<VXPermMap> newPermMapList = vXResource.getPermMapList();
+			List<VXPermMap> permMapsAdded = new ArrayList<VXPermMap>();
+			//List<VXAuditMap> prevAuditMapList = new ArrayList<VXAuditMap>();			
+			if (prevPermMaps != null) {
+				prevPermMapList = prevPermMaps.getVXPermMaps();
+			}
+			// permission deletion processing start
+			String newKey=null;
+			String oldKey=null;
+			boolean isFound=false;
+			VXPermMap newObj=null;
+			VXPermMap oldObj =null;
+			if (newPermMapList != null && prevPermMapList!=null) {
+				for (int i=0;i<newPermMapList.size();i++) {
+					newObj=newPermMapList.get(i);
+					newObj.setResourceId(vXResource.getId());
+					isFound=false;
+					if(newObj==null||newObj.getResourceId()==null||newObj.getPermFor()==0||newObj.getPermType()==0 || (newObj.getUserId()==null&&newObj.getGroupId()==null)){
+						continue;					
+					}
+					newKey=null;
+					if(newObj.getPermFor()==AppConstants.XA_PERM_FOR_USER){
+						newKey=newObj.getResourceId()+"_"+newObj.getPermFor()+"_"+newObj.getUserId()+"_"+newObj.getPermType();
+					}
+					if(newObj.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
+						newKey=newObj.getResourceId()+"_"+newObj.getPermFor()+"_"+newObj.getGroupId()+"_"+newObj.getPermType();
+					}	
+					isFound=false;
+					oldObj =null;
+					for (int j=0;j<prevPermMapList.size();j++) {
+						oldObj=prevPermMapList.get(j);
+						if(oldObj==null||oldObj.getResourceId()==null||oldObj.getPermFor()==0||oldObj.getPermType()==0|| (oldObj.getUserId()==null&&oldObj.getGroupId()==null)){
+							continue;					
+						}
+						oldKey=null;
+						if(oldObj.getPermFor()==AppConstants.XA_PERM_FOR_USER){
+							oldKey=oldObj.getResourceId()+"_"+oldObj.getPermFor()+"_"+oldObj.getUserId()+"_"+oldObj.getPermType();
+						}
+						if(oldObj.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
+							oldKey=oldObj.getResourceId()+"_"+oldObj.getPermFor()+"_"+oldObj.getGroupId()+"_"+oldObj.getPermType();
+						}
+						if(stringUtil.isEmpty(newKey)|| stringUtil.isEmpty(oldKey)){
+							continue;
+						}
+						if(newKey.equals(oldKey)){
+							isFound=true;	
+							break;
+						}
+					}//inner for
+					if(!isFound){
+						newObj = xPermMapService.createResource(newObj);
+						trxLogList.addAll(xPermMapService.getTransactionLog(newObj,"create"));
+						permMapsAdded.add(newObj);
+					}
+				}//outer for			
+			}// delete permissions list populate end
+			else{
+				throw restErrorUtil.createRESTException("No permission list received for with current grant request",MessageEnums.DATA_NOT_FOUND);
+			}
+			if(prevPermMapList!=null && permMapsAdded!=null){
+				for(VXPermMap vXPermMap:permMapsAdded){
+					prevPermMapList.add(vXPermMap);
+				}
+				if(permMapsAdded.size()>0){
+					vXResource.setUpdateDate(DateUtil.getUTCDate());
+				}
+			}			
+			vXResource.setPermMapList(prevPermMapList);			
+			//resource.setAuditList(prevAuditMapList);
+		}//update close
+		
+		//update addedby and updatedby for trx log
+		XXTrxLog xXTrxLog=null;
+		if(trxLogList!=null){
+			for (int i=0;i< trxLogList.size();i++) {
+				xXTrxLog=trxLogList.get(i);
+				if(xXTrxLog!=null){
+					if(xXTrxLog.getAddedByUserId()==null || xXTrxLog.getAddedByUserId()==0){
+						xXTrxLog.setAddedByUserId(xXPortalUser.getId());
+					}
+					if(xXTrxLog.getUpdatedByUserId()==null || xXTrxLog.getUpdatedByUserId()==0){
+						xXTrxLog.setUpdatedByUserId(xXPortalUser.getId());
+					}
+				}
+				trxLogList.set(i, xXTrxLog);				
+			}
+		}		
+		xaBizUtil.createTrxLog(trxLogList);	
+
+		return vXResource;
+	}
+	
+	public VXResource revokeXResource(VXResource vXResource) {
+		if(vXResource==null){
+			return vXResource;
+		}
+		//checks user exists or not
+		XXUser xUser = xADaoManager.getXXUser().findByUserName(vXResource.getOwner());		
+		if(xUser==null){
+			throw restErrorUtil.createRESTException("User " +vXResource.getOwner() + " is Not Found",
+					MessageEnums.DATA_NOT_FOUND);
+		}
+		XXPortalUser xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(vXResource.getOwner());		
+		if(xXPortalUser==null){
+			throw restErrorUtil.createRESTException("User " +vXResource.getOwner() + " is Not Found",
+					MessageEnums.DATA_NOT_FOUND);
+		}
+		
+		//checks repository exists or not
+		XXAsset xAsset = xADaoManager.getXXAsset().findByAssetName(vXResource.getAssetName());
+		if (xAsset == null) {
+			logger.error("Repository not found for asset : " + vXResource.getAssetName());
+			throw restErrorUtil.createRESTException("Repository for which"
+					+ " the policy is created, doesn't exist.",MessageEnums.DATA_NOT_FOUND);
+		}	
+		//checks repository active or not
+		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){			
+				logger.error("Trying to delete policy in disabled repository");
+				throw restErrorUtil.createRESTException("revoke "
+						+ " not allowed in disabled repository",MessageEnums.OPER_NO_PERMISSION);
+			
+		}
+		vXResource.setAssetId(xAsset.getId());
+		vXResource.setAssetType(xAsset.getAssetType());
+		//create resource name/path for HIVE/Hbase policy.
+		if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+			createResourcePathForHive(vXResource);
+		} else if (xAsset.getAssetType() == AppConstants.ASSET_HBASE) {
+			createResourcePathForHbase(vXResource);
+		}else{
+			logger.error("Invalid repository type for grant operation : ");
+			throw restErrorUtil.createRESTException(vXResource.getAssetName() +" is not a " 
+					+ " valid repository for revoke operation",MessageEnums.OPER_NO_PERMISSION);
+		}
+		
+		//check whether resource exist or not
+		SearchCriteria searchCriteria=new SearchCriteria();
+		if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+			searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
+			searchCriteria.getParamList().put("fullname", vXResource.getName());
+			searchCriteria.getParamList().put("udfs", vXResource.getUdfs());
+			searchCriteria.getParamList().put("tableType", vXResource.getTableType());
+			searchCriteria.getParamList().put("columnType", vXResource.getColumnType());
+		}else if (xAsset.getAssetType() == AppConstants.ASSET_HBASE) {
+			searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
+			searchCriteria.getParamList().put("fullname", vXResource.getName());
+		}
+		
+		VXResourceList vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);			
+		//throw error if resource does not exist
+		if(vXResourceList==null || vXResourceList.getListSize()==0){
+			logger.error("Resource path not found : " + vXResource.getName());
+			throw restErrorUtil.createRESTException("Resource for which"
+					+ " revoke is requested, doesn't exist.",MessageEnums.DATA_NOT_FOUND);
+		}else{
+			for(VXResource vXResourceDB:vXResourceList.getVXResources()){
+				if(vXResourceDB!=null){
+					vXResource.setId(vXResourceDB.getId());
+					vXResource.setPolicyName(vXResourceDB.getPolicyName());
+					break;
+				}
+			}			
+		}
+		//check whether resource contains multiple path or not
+		if(!stringUtil.isEmpty(vXResource.getName())){
+			String[] resources=vXResource.getName().trim().split(",");
+			if(resources!=null && resources.length>1){
+				logger.error("More than one resource found for revoke operation in policy : " + vXResource.getName());
+				throw restErrorUtil.createRESTException("We did not find exact match for this resource : " + vXResource.getName(),MessageEnums.INVALID_INPUT_DATA);
+			}
+		}else{
+			throw restErrorUtil.createRESTException("Invalid Resource Name : " + vXResource.getName(),MessageEnums.INVALID_INPUT_DATA);
+		}
+		
+		//checks grantor is admin in resource or not
+		List<XXPortalUserRole> xXPortalUserRoleList = xADaoManager.getXXPortalUserRole().findByParentId(xXPortalUser.getId());
+		List<XXResource> xResourceList=xADaoManager.getXXResource().findByAssetId(xAsset.getId());		
+		if(xResourceList!=null){
+			boolean isAdmin=false;
+			if(xXPortalUserRoleList!=null && xXPortalUserRoleList.size()>0){
+				for(XXPortalUserRole xXPortalUserRole: xXPortalUserRoleList){
+					if(xXPortalUserRole.getUserRole().equalsIgnoreCase(XAConstants.ROLE_SYS_ADMIN)){
+						isAdmin=true;
+						break;
+					}
+				}
+			}			
+			if(!isAdmin){
+				if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+					String[] requestResNameList = vXResource.getName().trim().split(",");
+					if (stringUtil.isEmpty(vXResource.getUdfs())) {
+						int reqTableType = vXResource.getTableType();
+						int reqColumnType = vXResource.getColumnType();
+						for (String resourceName : requestResNameList) {
+							isAdmin=xaBizUtil.matchHivePolicy(resourceName,xResourceList, xUser.getId(),AppConstants.XA_PERM_TYPE_ADMIN,reqTableType,reqColumnType, false);
+							if (isAdmin) {
+								break;
+							}
+						}
+					} else {
+						for (String resourceName : requestResNameList) {
+							isAdmin=xaBizUtil.matchHivePolicy(resourceName,xResourceList, xUser.getId(),AppConstants.XA_PERM_TYPE_ADMIN);
+							if (isAdmin) {
+								break;
+							}
+						}
+					}						
+				}else if (xAsset.getAssetType() == AppConstants.ASSET_HBASE) {
+					isAdmin=xaBizUtil.matchHbasePolicy(vXResource.getName(),xResourceList,null, xUser.getId(),AppConstants.XA_PERM_TYPE_ADMIN);
+				}
+			}
+			if (!isAdmin) {
+				throw restErrorUtil.createRESTException("You're not permitted to perform "
+							+ "revoke operation for resource path : " + vXResource.getName(),MessageEnums.OPER_NO_PERMISSION);
+			}
+		}				
+		
+		//update addedby and updated by in permmap and auditmap			
+		List<VXPermMap> permMapList = vXResource.getPermMapList();	
+		if(permMapList==null || permMapList.size()==0){
+			throw restErrorUtil.createRESTException("No permission list received for with current revoke request",MessageEnums.DATA_NOT_FOUND);
+		}
+		VXPermMap vXPermMapTemp=null;		
+		XXUser xxUser =null;
+		XXGroup xxGroup =null;
+		for (int i=0;i< permMapList.size();i++) {
+			vXPermMapTemp=permMapList.get(i);
+			if(vXPermMapTemp!=null){
+				vXPermMapTemp.setResourceId(vXResource.getId());			
+				if(stringUtil.isEmpty(vXPermMapTemp.getOwner())){
+					vXPermMapTemp.setOwner(vXResource.getOwner());
+				}
+				if(stringUtil.isEmpty(vXPermMapTemp.getUpdatedBy())){
+					vXPermMapTemp.setUpdatedBy(vXResource.getUpdatedBy());
+				}
+				if(vXPermMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_USER){
+					if(vXPermMapTemp.getUserId()==null && !stringUtil.isEmpty(vXPermMapTemp.getUserName())){
+						xxUser = xADaoManager.getXXUser().findByUserName(vXPermMapTemp.getUserName());
+						if (xxUser != null) {
+							vXPermMapTemp.setUserId(xxUser.getId());
+						} else{
+							throw restErrorUtil.createRESTException("User : "+ vXPermMapTemp.getUserName() + " is Not Found",
+									MessageEnums.DATA_NOT_FOUND);
+						}
+					}
+				}
+				if(vXPermMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
+					if(vXPermMapTemp.getGroupId()==null && !stringUtil.isEmpty(vXPermMapTemp.getGroupName())){
+						xxGroup = xADaoManager.getXXGroup().findByGroupName(
+								vXPermMapTemp.getGroupName());
+						if (xxGroup != null) {
+							vXPermMapTemp.setGroupId(xxGroup.getId());
+						}else{
+							throw restErrorUtil.createRESTException("Group : "+ vXPermMapTemp.getGroupName() + " is Not Found",
+									MessageEnums.DATA_NOT_FOUND);
+						} 
+					}
+				}		
+			}	
+			permMapList.set(i, vXPermMapTemp);	
+		}		
+		vXResource.setPermMapList(permMapList);
+		
+		//permission deletion preprocessing
+		XXResource xResource = xADaoManager.getXXResource().getById(
+				vXResource.getId());
+		vXResource.setCreateDate(xResource.getCreateTime());
+		vXResource.setUpdateDate(xResource.getUpdateTime());
+		List<XXTrxLog> trxLogList = xResourceService.getTransactionLog(
+				vXResource, xResource, "delete");
+
+		List<VXPermMap> newPermMapList = vXResource.getPermMapList();
+		List<VXPermMap> prevPermMapList = new ArrayList<VXPermMap>();
+		List<VXPermMap> permMapsToDelete = new ArrayList<VXPermMap>();
+		searchCriteria = new SearchCriteria();
+		searchCriteria.addParam("resourceId", vXResource.getId());
+		VXPermMapList prevPermMaps = xPermMapService.searchXPermMaps(searchCriteria);		
+		if (prevPermMaps != null) {
+			prevPermMapList = prevPermMaps.getVXPermMaps();
+		}		
+		// permission deletion processing start
+		String newKey=null;
+		String oldKey=null;
+		boolean isFound=false;
+		VXPermMap newObj=null;
+		VXPermMap oldObj=null;
+		if (newPermMapList != null && prevPermMapList!=null) {
+			for (int i=0;i<newPermMapList.size();i++) {
+				newObj=newPermMapList.get(i);				
+				if(newObj==null||newObj.getResourceId()==null||newObj.getPermFor()==0||newObj.getPermType()==0 || (newObj.getUserId()==null&&newObj.getGroupId()==null)){
+					continue;					
+				}
+				newKey=null;
+				if(newObj.getPermFor()==AppConstants.XA_PERM_FOR_USER){
+					newKey=newObj.getResourceId()+"_"+newObj.getPermFor()+"_"+newObj.getUserId()+"_"+newObj.getPermType();
+				}
+				if(newObj.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
+					newKey=newObj.getResourceId()+"_"+newObj.getPermFor()+"_"+newObj.getGroupId()+"_"+newObj.getPermType();
+				}	
+				isFound=false;
+				oldObj=null;
+				for (int j=0;j<prevPermMapList.size();j++) {
+					oldObj=prevPermMapList.get(j);
+					if(oldObj==null||oldObj.getResourceId()==null||oldObj.getPermFor()==0||oldObj.getPermType()==0|| (oldObj.getUserId()==null&&oldObj.getGroupId()==null)){
+						continue;					
+					}
+					oldKey=null;
+					if(oldObj.getPermFor()==AppConstants.XA_PERM_FOR_USER){
+						oldKey=oldObj.getResourceId()+"_"+oldObj.getPermFor()+"_"+oldObj.getUserId()+"_"+oldObj.getPermType();
+					}
+					if(oldObj.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
+						oldKey=oldObj.getResourceId()+"_"+oldObj.getPermFor()+"_"+oldObj.getGroupId()+"_"+oldObj.getPermType();
+					}
+					if(stringUtil.isEmpty(newKey)|| stringUtil.isEmpty(oldKey)){
+						continue;
+					}
+					if(newKey.equals(oldKey)){
+						isFound=true;
+						prevPermMapList.remove(j);
+						break;
+					}
+				}//inner for
+				if(oldObj!=null){
+					if(isFound){					
+						permMapsToDelete.add(oldObj);
+					}
+				}
+			}//outer for			
+		}// delete permissions list populate end		
+
+		for (VXPermMap permMap : permMapsToDelete) {
+			if(permMap!=null){
+				xPermMapService.deleteResource(permMap.getId());
+				trxLogList.addAll(xPermMapService.getTransactionLog(permMap,"delete"));
+			}
+		}//permission deletion processing end
+		
+		if(permMapsToDelete.size()>0){
+			vXResource.setUpdateDate(DateUtil.getUTCDate());
+		}
+		//update addedby and updatedby for trx log
+		XXTrxLog xXTrxLog=null;
+		if(trxLogList!=null){
+			for (int i=0;i< trxLogList.size();i++) {
+				xXTrxLog=trxLogList.get(i);
+				if(xXTrxLog!=null){
+					if(xXTrxLog.getAddedByUserId()==null || xXTrxLog.getAddedByUserId()==0){
+						xXTrxLog.setAddedByUserId(xXPortalUser.getId());
+					}
+					if(xXTrxLog.getUpdatedByUserId()==null || xXTrxLog.getUpdatedByUserId()==0){
+						xXTrxLog.setUpdatedByUserId(xXPortalUser.getId());
+					}
+				}
+				trxLogList.set(i, xXTrxLog);				
+			}
+		}
+		
+		xaBizUtil.createTrxLog(trxLogList);		
+		vXResource.setPermMapList(prevPermMapList);		
+		
+		return vXResource;
 	}
 }

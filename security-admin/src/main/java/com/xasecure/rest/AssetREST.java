@@ -37,11 +37,13 @@ import com.xasecure.common.XACommonEnums;
 import com.xasecure.common.XASearchUtil;
 import com.xasecure.common.annotation.XAAnnotationClassName;
 import com.xasecure.common.annotation.XAAnnotationJSMgrName;
+import com.xasecure.service.AbstractBaseResourceService;
 import com.xasecure.service.XAccessAuditService;
 import com.xasecure.service.XAgentService;
 import com.xasecure.service.XAssetService;
 import com.xasecure.service.XCredentialStoreService;
 import com.xasecure.service.XPolicyExportAuditService;
+import com.xasecure.service.XPolicyService;
 import com.xasecure.service.XResourceService;
 import com.xasecure.service.XTrxLogService;
 import com.xasecure.view.VXAccessAuditList;
@@ -50,6 +52,7 @@ import com.xasecure.view.VXAssetList;
 import com.xasecure.view.VXCredentialStore;
 import com.xasecure.view.VXCredentialStoreList;
 import com.xasecure.view.VXLong;
+import com.xasecure.view.VXPermMap;
 import com.xasecure.view.VXPolicy;
 import com.xasecure.view.VXPolicyExportAuditList;
 import com.xasecure.view.VXResource;
@@ -78,6 +81,9 @@ public class AssetREST {
 
 	@Autowired
 	XResourceService xResourceService;
+	
+	@Autowired
+	XPolicyService xPolicyService;
 
 	@Autowired
 	XCredentialStoreService xCredentialStoreService;
@@ -555,8 +561,27 @@ public class AssetREST {
 	@Path("/resources/grant")
 	@Produces({ "application/xml", "application/json" })	
 	public VXPolicy grantPermission(@Context HttpServletRequest request,VXPolicy vXPolicy) {
-		//TODO:https and certificate check
-		//TODO:grant permissions
+		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
+		X509Certificate[] certchain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+		String ipAddress = request.getHeader("X-FORWARDED-FOR");  
+		if (ipAddress == null) {  
+			ipAddress = request.getRemoteAddr();
+		}
+		boolean isSecure = request.isSecure();
+		String repository=null;
+		if(vXPolicy!=null){
+			repository=vXPolicy.getRepositoryName();
+			vXPolicy.setOwner(vXPolicy.getGrantor());	
+			vXPolicy.setUpdatedBy(vXPolicy.getGrantor());
+		}
+		boolean isValidAuthentication=assetMgr.isValidHttpsAuthentication(repository,certchain,httpEnabled,ipAddress,isSecure);
+		if(isValidAuthentication){			
+			VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
+			vXResource=assetMgr.grantXResource(vXResource);
+			vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
+			vXPolicy=xPolicyService.mapXAToPublicObject(vXResource);	
+			vXPolicy.syncResponseWithJsonRequest();			
+		}
 		return vXPolicy;
 	}
 	
@@ -564,8 +589,27 @@ public class AssetREST {
 	@Path("/resources/revoke")
 	@Produces({ "application/xml", "application/json" })	
 	public VXPolicy revokePermission(@Context HttpServletRequest request,VXPolicy vXPolicy) {
-		//TODO:https and certificate check
-		//TODO:revoke permissions
+		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
+		X509Certificate[] certchain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+		String ipAddress = request.getHeader("X-FORWARDED-FOR");  
+		if (ipAddress == null) {  
+			ipAddress = request.getRemoteAddr();
+		}
+		boolean isSecure = request.isSecure();
+		String repository=null;
+		if(vXPolicy!=null){
+			repository=vXPolicy.getRepositoryName();
+			vXPolicy.setOwner(vXPolicy.getGrantor());	
+			vXPolicy.setUpdatedBy(vXPolicy.getGrantor());
+		}
+		boolean isValidAuthentication=assetMgr.isValidHttpsAuthentication(repository,certchain,httpEnabled,ipAddress,isSecure);
+		if(isValidAuthentication){		
+			VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
+			vXResource=assetMgr.revokeXResource(vXResource);
+			vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
+			vXPolicy=xPolicyService.mapXAToPublicObject(vXResource);			
+			vXPolicy.syncResponseWithJsonRequest();		
+		}
 		return vXPolicy;
 	}
 }

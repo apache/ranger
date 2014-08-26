@@ -174,7 +174,12 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 							    HiveAuthzContext          context)
 		      throws HiveAuthzPluginException, HiveAccessControlException {
 
-		UserGroupInformation ugi        =  this.getCurrentUserGroupInfo();
+		UserGroupInformation ugi =  this.getCurrentUserGroupInfo();
+
+		if(ugi == null) {
+			throw new HiveAccessControlException("Permission denied: user information not available");
+		}
+
 		XaHiveAccessContext hiveContext = this.getAccessContext(context);
 
 		if(LOG.isDebugEnabled()) {
@@ -658,7 +663,13 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		List<GrantRevokeData.PermMap> permMapList = new ArrayList<GrantRevokeData.PermMap>();
 		permMapList.add(permMap);
 
-		grData.setHiveData(grantorPrincipal.getName(), repositoryName, database, table, columns, permMapList);
+		String grantor = grantorPrincipal != null ? grantorPrincipal.getName() : null;
+		
+		if(StringUtil.isEmpty(grantor)) {
+			LOG.warn("grantorPrincipal.getName() is null/empty!");
+		}
+		
+		grData.setHiveData(grantor, repositoryName, database, table, columns, permMapList);
 		
 		return grData;
 	}
