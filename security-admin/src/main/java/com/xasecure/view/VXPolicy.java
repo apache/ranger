@@ -43,17 +43,9 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 */
 	protected String resourceName;
 	/**
-	 * ResourceType : Label of EnumType : ResourceType
-	 */
-	protected String resourceType;
-	/**
 	 * Description
 	 */
 	protected String description;
-	/**
-	 * Id of the repository
-	 */
-	protected Long repositoryId;
 	/**
 	 * Repository Name
 	 */
@@ -116,24 +108,17 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 */
 	protected boolean isAuditEnabled;
 	/**
-	 * Check parent permission This attribute is of type enum
-	 * CommonEnums::BooleanValue
-	 */
-	protected boolean checkParentPermission;
-	/**
 	 * Version No of Project
 	 */
 	protected String version;
 
 	protected String grantor;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXPolicy() {
-		resourceType = AppConstants
-				.getLabelFor_ResourceType(AppConstants.RESOURCE_PATH);
 		isRecursive = false;
-		checkParentPermission = false;
 	}
 
 	/**
@@ -177,26 +162,6 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	}
 
 	/**
-	 * This method sets the value to the member attribute <b>resourceType</b>.
-	 * You cannot set null to the attribute.
-	 * 
-	 * @param resourceType
-	 *            Value to set member attribute <b>resourceType</b>
-	 */
-	public void setResourceType(String resourceType) {
-		this.resourceType = resourceType;
-	}
-
-	/**
-	 * Returns the value for the member attribute <b>resourceType</b>
-	 * 
-	 * @return String - value of member attribute <b>resourceType</b>.
-	 */
-	public String getResourceType() {
-		return this.resourceType;
-	}
-
-	/**
 	 * This method sets the value to the member attribute <b>description</b>.
 	 * You cannot set null to the attribute.
 	 * 
@@ -214,21 +179,6 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 */
 	public String getDescription() {
 		return this.description;
-	}
-
-	/**
-	 * @return the repositoryId
-	 */
-	public Long getRepositoryId() {
-		return repositoryId;
-	}
-
-	/**
-	 * @param repositoryId
-	 *            the repositoryId to set
-	 */
-	public void setRepositoryId(Long repositoryId) {
-		this.repositoryId = repositoryId;
 	}
 
 	/**
@@ -532,26 +482,6 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	}
 
 	/**
-	 * This method sets the value to the member attribute
-	 * <b>checkParentPermission</b>.
-	 * 
-	 * @param checkParentPermission
-	 *            Value to set member attribute <b>checkParentPermission</b>
-	 */
-	public void setCheckParentPermission(boolean checkParentPermission) {
-		this.checkParentPermission = checkParentPermission;
-	}
-
-	/**
-	 * Returns the value for the member attribute <b>checkParentPermission</b>
-	 * 
-	 * @return boolean - value of member attribute <b>checkParentPermission</b>.
-	 */
-	public boolean getCheckParentPermission() {
-		return this.checkParentPermission;
-	}
-
-	/**
 	 * Returns the value for the member attribute <b>version</b>
 	 * 
 	 * @return String - value of member attribute <b>version</b>.
@@ -571,7 +501,6 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		this.version = version;
 	}
 
-	
 	public String getGrantor() {
 		return grantor;
 	}
@@ -595,7 +524,6 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		str += super.toString();
 		str += "policyName={" + policyName + "} ";
 		str += "resourceName={" + resourceName + "} ";
-		str += "resourceType={" + resourceType + "} ";
 		str += "description={" + description + "} ";
 		str += "repositoryName={" + repositoryName + "} ";
 		str += "repositoryType={" + repositoryType + "} ";
@@ -611,7 +539,6 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		str += "isEnable={" + isEnabled + "} ";
 		str += "isRecursive={" + isRecursive + "} ";
 		str += "isAuditEnabled={" + isAuditEnabled + "} ";
-		str += "checkParentPermission={" + checkParentPermission + "} ";
 		str += "version={" + version + "} ";
 		str += "}";
 		return str;

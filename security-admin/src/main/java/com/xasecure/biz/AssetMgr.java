@@ -22,6 +22,7 @@ import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -167,9 +168,37 @@ public class AssetMgr extends AssetMgrBase {
 		}else if (xAsset.getAssetType() == AppConstants.ASSET_STORM) {
 			createResourcePathForStorm(vXResource);
 		}
+		
+		String resourceName = vXResource.getName();
+		String[] orgResNameList = stringUtil.split(resourceName, ",");
+		List<String> newResNameList = new ArrayList<String>();
+		for(String resName : orgResNameList) {
+			if(resName.length() > 0 && (resName.substring(resName.length()-1).equalsIgnoreCase("/"))) {
+				resName = resName.substring(0, resName.length()-1);
+				newResNameList.add(resName);
+				logger.info("Resource Name is not valid : " +resName + " Ignoring last /");
+			} else {
+				newResNameList.add(resName);
+			}
+		}
+		String updResName = StringUtils.join(newResNameList, ",");
+		vXResource.setName(updResName);
+		
 		SearchCriteria searchCriteria=new SearchCriteria();
 		searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
 		searchCriteria.getParamList().put("fullname", vXResource.getName());
+		
+		if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+			if(stringUtil.isEmpty(vXResource.getUdfs())) {
+				searchCriteria.addParam("tableType", vXResource.getTableType());
+				searchCriteria.addParam("columnType", vXResource.getColumnType());
+			} else {
+				searchCriteria.addParam("udfs", vXResource.getUdfs());
+			}
+		} else if (xAsset.getAssetType() == AppConstants.ASSET_HDFS) {
+			searchCriteria.addParam("isRecursive", vXResource.getIsRecursive());
+		}
+		
 		VXResourceList vXResourceList=xResourceService.searchXResources(searchCriteria);		
 		if(vXResourceList!=null && vXResourceList.getListSize()>0){
 			logger.error("policy already exist with resource "+vXResource.getName());
@@ -288,6 +317,18 @@ public class AssetMgr extends AssetMgrBase {
 		SearchCriteria searchCriteria = new SearchCriteria();
 		searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
 		searchCriteria.getParamList().put("fullname", vXResource.getName());
+		
+		if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+			if(stringUtil.isEmpty(vXResource.getUdfs())) {
+				searchCriteria.addParam("tableType", vXResource.getTableType());
+				searchCriteria.addParam("columnType", vXResource.getColumnType());
+			} else {
+				searchCriteria.addParam("udfs", vXResource.getUdfs());
+			}
+		} else if (xAsset.getAssetType() == AppConstants.ASSET_HDFS) {
+			searchCriteria.addParam("isRecursive", vXResource.getIsRecursive());
+		}
+		
 		VXResourceList vXResourceList=xResourceService.searchXResources(searchCriteria);		
 		if(vXResourceList!=null && vXResourceList.getListSize()>0){
 			for(VXResource vXResourceTemp :vXResourceList.getList()){
@@ -1185,13 +1226,17 @@ public class AssetMgr extends AssetMgrBase {
 				vXUser=xUserMgr.createXUser(vXUser);
 				//vXUser = xUserService.createResource(vXUser);
 			}
+			
+			Random rand = new Random();
+			String permGrp = new Date() + " : " + rand.nextInt(9999);
+			
 			VXPermMap vXPermMap = new VXPermMap();
 			vXPermMap.setUserId(vXUser.getId());
 			vXPermMap.setResourceId(vXResource.getId());
+			vXPermMap.setPermGroup(permGrp);
 			xPermMapService.createResource(vXPermMap);
 			
 			if (assetType == AppConstants.ASSET_KNOX) {
-				Random rand = new Random();
 				String permGroup = new Date() + " : " + rand.nextInt(9999);
 
 				VXPermMap permAdmin = new VXPermMap();
@@ -2188,9 +2233,13 @@ public class AssetMgr extends AssetMgrBase {
 				vXUser=xUserMgr.createXUser(vXUser);
 				//vXUser = xUserService.createResource(vXUser);
 			}
+			Random rand = new Random();
+			String permGrp = new Date() + " : " + rand.nextInt(9999);
+			
 			VXPermMap vXPermMap = new VXPermMap();
 			vXPermMap.setUserId(vXUser.getId());
 			vXPermMap.setResourceId(vXResource.getId());
+			vXPermMap.setPermGroup(permGrp);
 			xPermMapService.createResource(vXPermMap);
 		}
 		VXAuditMap vXAuditMap = new VXAuditMap();

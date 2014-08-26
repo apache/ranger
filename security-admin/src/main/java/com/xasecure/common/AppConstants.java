@@ -815,6 +815,51 @@ public class AppConstants extends XACommonEnums {
 		if (label.equalsIgnoreCase("All")) {
 			return AppConstants.XA_PERM_TYPE_ALL; // XA_PERM_TYPE_ALL
 		}
+		if(label.equalsIgnoreCase("Allow")) {
+			return AppConstants.XA_PERM_TYPE_ALLOW; //XA_PERM_TYPE_ALLOW
+		}
+		if(label.equalsIgnoreCase("Submit Topology")) {
+			return AppConstants.XA_PERM_TYPE_SUBMIT_TOPOLOGY; //XA_PERM_TYPE_SUBMIT_TOPOLOGY
+		}
+		if(label.equalsIgnoreCase("File Upload")) {
+			return AppConstants.XA_PERM_TYPE_FILE_UPLOAD; //XA_PERM_TYPE_FILE_UPLOAD
+		}
+		if(label.equalsIgnoreCase("Get Nimbus Conf")) {
+			return AppConstants.XA_PERM_TYPE_GET_NIMBUS; //XA_PERM_TYPE_GET_NIMBUS
+		}
+		if(label.equalsIgnoreCase("Get Cluster Info")) {
+			return AppConstants.XA_PERM_TYPE_GET_CLUSTER_INFO; //XA_PERM_TYPE_GET_CLUSTER_INFO
+		}
+		if(label.equalsIgnoreCase("File Download")) {
+			return AppConstants.XA_PERM_TYPE_FILE_DOWNLOAD; //XA_PERM_TYPE_FILE_DOWNLOAD
+		}
+		if(label.equalsIgnoreCase("Kill Topology")) {
+			return AppConstants.XA_PERM_TYPE_KILL_TOPOLOGY; //XA_PERM_TYPE_KILL_TOPOLOGY
+		}
+		if(label.equalsIgnoreCase("Rebalance")) {
+			return AppConstants.XA_PERM_TYPE_REBALANCE; //XA_PERM_TYPE_REBALANCE
+		}
+		if(label.equalsIgnoreCase("Activate")) {
+			return AppConstants.XA_PERM_TYPE_ACTIVATE; //XA_PERM_TYPE_ACTIVATE
+		}
+		if(label.equalsIgnoreCase("Deactivate")) {
+			return AppConstants.XA_PERM_TYPE_DEACTIVATE; //XA_PERM_TYPE_DEACTIVATE
+		}
+		if(label.equalsIgnoreCase("Get Topology Conf")) {
+			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY_CONF; //XA_PERM_TYPE_GET_TOPOLOGY_CONF
+		}
+		if(label.equalsIgnoreCase("Get Topology")) {
+			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY; //XA_PERM_TYPE_GET_TOPOLOGY
+		}
+		if(label.equalsIgnoreCase("Get User Topology")) {
+			return AppConstants.XA_PERM_TYPE_GET_USER_TOPOLOGY; //XA_PERM_TYPE_GET_USER_TOPOLOGY
+		}
+		if(label.equalsIgnoreCase("Get Topology Info")) {
+			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY_INFO; //XA_PERM_TYPE_GET_TOPOLOGY_INFO
+		}
+		if(label.equalsIgnoreCase("Upload New Credential")) {
+			return AppConstants.XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL; //XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL
+		}
 		return 0;
 	}
 

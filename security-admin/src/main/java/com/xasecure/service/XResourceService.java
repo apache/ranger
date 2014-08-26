@@ -12,6 +12,8 @@ import com.xasecure.common.ContextUtil;
 import com.xasecure.common.MessageEnums;
 import com.xasecure.common.SearchCriteria;
 import com.xasecure.common.SearchField;
+import com.xasecure.common.SearchField.DATA_TYPE;
+import com.xasecure.common.SearchField.SEARCH_TYPE;
 import com.xasecure.common.SortField;
 import com.xasecure.common.StringUtil;
 import com.xasecure.common.UserSessionBase;
@@ -19,6 +21,7 @@ import com.xasecure.common.XAConstants;
 import com.xasecure.view.VXResponse;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -127,15 +130,19 @@ public class XResourceService extends
 
 		searchFields.add(new SearchField("id", "obj.id", 
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("topologies", "obj.topologies",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("services", "obj.services",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("tableType", "obj.tableType",
+				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("columnType", "obj.columnType",
+				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 
 		sortFields.add(new SortField("name", "obj.name"));
 		sortFields.add(new SortField("isRecursive", "obj.isRecursive"));
 		sortFields.add(new SortField("isEncrypt", "obj.isEncrypt"));
 		
-		searchFields.add(new SearchField("topologies", "obj.topologies",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("services", "obj.services",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 	}
 
 	@Override
@@ -214,6 +221,8 @@ public class XResourceService extends
 //				}
 //			}
 //		}
+		
+//		if(vObj.getAssetType())
 		
 	}
 

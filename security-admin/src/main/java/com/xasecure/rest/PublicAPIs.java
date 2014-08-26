@@ -26,6 +26,7 @@ import com.xasecure.common.StringUtil;
 import com.xasecure.common.XASearchUtil;
 import com.xasecure.common.annotation.XAAnnotationClassName;
 import com.xasecure.common.annotation.XAAnnotationJSMgrName;
+import com.xasecure.db.XADaoManager;
 import com.xasecure.service.AbstractBaseResourceService;
 import com.xasecure.service.XPolicyService;
 import com.xasecure.service.XRepositoryService;
@@ -74,6 +75,9 @@ public class PublicAPIs {
 	@Autowired
 	StringUtil stringUtil;
 
+	@Autowired
+	XADaoManager xaDaoMgr;
+
 	@GET
 	@Path("/api/repository/{id}")
 	@Produces({ "application/xml", "application/json" })
@@ -92,9 +96,11 @@ public class PublicAPIs {
 	}
 
 	@PUT
-	@Path("/api/repository/")
+	@Path("/api/repository/{id}")
 	@Produces({ "application/xml", "application/json" })
-	public VXRepository updateRepository(VXRepository vXRepository) {
+	public VXRepository updateRepository(VXRepository vXRepository,
+			@PathParam("id") Long id) {
+		vXRepository.setId(id);
 		VXAsset vXAsset = xRepositoryService.mapPublicToXAObject(vXRepository);
 		vXAsset = assetMgr.updateXAsset(vXAsset);
 		return xRepositoryService.mapXAToPublicObject(vXAsset);
@@ -108,7 +114,7 @@ public class PublicAPIs {
 			@Context HttpServletRequest request) {
 
 		String forceStr = request.getParameter("force");
-		boolean force = false;
+		boolean force = true;
 		if (!stringUtil.isEmpty(forceStr)) {
 			force = Boolean.parseBoolean(forceStr.trim());
 		}
@@ -163,17 +169,20 @@ public class PublicAPIs {
 		VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,
 				AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
 		vXResource = assetMgr.createXResource(vXResource);
+		vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
 		return xPolicyService.mapXAToPublicObject(vXResource);
 
 	}
 
 	@PUT
-	@Path("/api/policy")
+	@Path("/api/policy/{id}")
 	@Produces({ "application/xml", "application/json" })
-	public VXPolicy updatePolicy(VXPolicy vXPolicy) {
+	public VXPolicy updatePolicy(VXPolicy vXPolicy, @PathParam("id") Long id) {
+		vXPolicy.setId(id);
 		VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,
 				AbstractBaseResourceService.OPERATION_UPDATE_CONTEXT);
 		vXResource = assetMgr.updateXResource(vXResource);
+		vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
 		return xPolicyService.mapXAToPublicObject(vXResource);
 	}
 
@@ -184,7 +193,7 @@ public class PublicAPIs {
 	public void deletePolicy(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		String forceStr = request.getParameter("force");
-		boolean force = false;
+		boolean force = true;
 		if (!stringUtil.isEmpty(forceStr)) {
 			force = Boolean.parseBoolean(forceStr.trim());
 		}

@@ -47,10 +47,14 @@ public class TestPublicAPIs extends BaseTest {
 	VXRepository vXRepoHDFS;
 	VXRepository vXRepoHBase;
 	VXRepository vXRepoHive;
+	VXRepository vXRepoKnox;
+	VXRepository vXRepoStorm;
 
 	VXPolicy vXPolicyHDFS;
 	VXPolicy vXPolicyHBase;
 	VXPolicy vXPolicyHive;
+	VXPolicy vXPolicyKnox;
+	VXPolicy vXPolicyStorm;
 
 	@Override
 	public void init() {
@@ -75,6 +79,8 @@ public class TestPublicAPIs extends BaseTest {
 		vXRepoHDFS = new VXRepository();
 		vXRepoHBase = new VXRepository();
 		vXRepoHive = new VXRepository();
+		vXRepoKnox = new VXRepository();
+		vXRepoStorm = new VXRepository();
 
 		// Create HDFS Repository
 		String configHdfs = "{"
@@ -146,6 +152,36 @@ public class TestPublicAPIs extends BaseTest {
 
 		assertNotNull("Error while creating Repo for HBase", vXRepoHBase);
 		logger.info("Create : Repo for HBase created Successfully");
+
+		String configKnox = "{" + "  \"username\": \"policymgr_hive\" ,"
+				+ "  \"password\": \"policymgr_hive\","
+				+ "  \"knox.url\": \"jdbc:hive2://127.0.0.1:10000/default\","
+				+ "  \"commonNameForCertificate\": \"\"}";
+
+		vXRepoKnox.setConfig(configKnox);
+		vXRepoKnox.setName("knoxdev_" + GUIDUtil.genGUI());
+		vXRepoKnox.setDescription("Knox Repo.. from JUnit");
+		vXRepoKnox.setActive(true);
+		vXRepoKnox.setRepositoryType("Knox");
+		vXRepoKnox = publicAPIs.createRepository(vXRepoKnox);
+
+		assertNotNull("Error while creating Repo for Knox", vXRepoKnox);
+		logger.info("Create : Repo for Knox created Successfully");
+
+		String configStorm = "{" + "  \"username\": \"policymgr_hive\" ,"
+				+ "  \"password\": \"policymgr_hive\","
+				+ "  \"commonNameForCertificate\": \"\"}";
+
+		vXRepoStorm.setConfig(configStorm);
+		vXRepoStorm.setName("stormdev_" + GUIDUtil.genGUI());
+		vXRepoStorm.setDescription("Storm Repo.. from JUnit");
+		vXRepoStorm.setActive(true);
+		vXRepoStorm.setRepositoryType("Storm");
+		vXRepoStorm = publicAPIs.createRepository(vXRepoStorm);
+
+		assertNotNull("Error while creating Repo for Knox", vXRepoStorm);
+		logger.info("Create : Repo for Storm created Successfully");
+
 	}
 
 	/**
@@ -157,21 +193,24 @@ public class TestPublicAPIs extends BaseTest {
 
 		// Update HDFS Repo
 		vXRepoHDFS.setName("HDFS Repo Updated_" + GUIDUtil.genGUI());
-		vXRepoHDFS = publicAPIs.updateRepository(vXRepoHDFS);
+		vXRepoHDFS = publicAPIs
+				.updateRepository(vXRepoHDFS, vXRepoHDFS.getId());
 
 		assertNotNull("Error While updating Repo", vXRepoHDFS);
 		logger.info("Update : Repo for HDFS updated Successfully");
 
 		// Update HBase Repo
 		vXRepoHBase.setName("HBase Repo Updated_" + GUIDUtil.genGUI());
-		vXRepoHBase = publicAPIs.updateRepository(vXRepoHBase);
+		vXRepoHBase = publicAPIs.updateRepository(vXRepoHBase,
+				vXRepoHBase.getId());
 
 		assertNotNull("Error While updating Repo", vXRepoHBase);
 		logger.info("Update : Repo for HBase updated Successfully");
 
 		// Update HIVE Repo
 		vXRepoHive.setName("Hive Repo Updated_" + GUIDUtil.genGUI());
-		vXRepoHive = publicAPIs.updateRepository(vXRepoHive);
+		vXRepoHive = publicAPIs
+				.updateRepository(vXRepoHive, vXRepoHive.getId());
 
 		assertNotNull("Error While updating Repo", vXRepoHive);
 		logger.info("Update : Repo for Hive updated Successfully");
@@ -282,6 +321,8 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHDFS = new VXPolicy();
 		vXPolicyHBase = new VXPolicy();
 		vXPolicyHive = new VXPolicy();
+		vXPolicyKnox = new VXPolicy();
+		vXPolicyStorm = new VXPolicy();
 
 		// Create Policy for HDFS
 		createHDFSPolicy();
@@ -289,7 +330,105 @@ public class TestPublicAPIs extends BaseTest {
 		createHBasePolicy();
 		// Create Policy for Hive
 		createHivePolicy();
+		// Create Policy for Knox
+		createKnoxPolicy();
+		// Create Policy for Storm
+		createStormPolicy();
 
+	}
+
+	private void createStormPolicy() {
+		vXPolicyStorm.setPolicyName("HomePolicy_" + GUIDUtil.genGUI());
+		vXPolicyStorm.setDescription("home policy for Storm");
+		vXPolicyStorm.setRepositoryName(vXRepoStorm.getName());
+		vXPolicyStorm.setRepositoryType("Storm");
+		vXPolicyStorm.setAuditEnabled(true);
+		vXPolicyStorm.setEnabled(true);
+		vXPolicyStorm.setTopologies("topo1, topo2, topo3");
+
+		VXPermObj vXPermObj = new VXPermObj();
+		List<String> userList = new ArrayList<String>();
+		userList.add("policymgr");
+		vXPermObj.setUserList(userList);
+
+		List<String> permList = new ArrayList<String>();
+		permList.add("Get Nimbus Conf");
+		permList.add("Get Cluster Info");
+		permList.add("Rebalance");
+		vXPermObj.setPermList(permList);
+
+		VXPermObj vXPermObj2 = new VXPermObj();
+		List<String> userList2 = new ArrayList<String>();
+		List<String> permList2 = new ArrayList<String>();
+
+		userList2.add("policymgr_hbase");
+		userList2.add("policymgr_hive");
+
+		permList2.add("File Download");
+		permList2.add("File Upload");
+		vXPermObj2.setUserList(userList2);
+		vXPermObj2.setPermList(permList2);
+
+		List<VXPermObj> permObjList = new ArrayList<VXPermObj>();
+		permObjList.add(vXPermObj);
+		permObjList.add(vXPermObj2);
+
+		vXPolicyStorm.setPermMapList(permObjList);
+
+		vXPolicyStorm = publicAPIs.createPolicy(vXPolicyStorm);
+	}
+
+	private void createKnoxPolicy() {
+		vXPolicyKnox.setPolicyName("HomePolicy_" + GUIDUtil.genGUI());
+		vXPolicyKnox.setDescription("home policy for Knox");
+		vXPolicyKnox.setRepositoryName(vXRepoKnox.getName());
+		vXPolicyKnox.setRepositoryType("Knox");
+		vXPolicyKnox.setAuditEnabled(true);
+		vXPolicyKnox.setEnabled(true);
+		vXPolicyKnox.setTopologies("topo1, topo2, topo3");
+		vXPolicyKnox.setServices("service1, service2, service3");
+
+		VXPermObj vXPermObj = new VXPermObj();
+		List<String> userList = new ArrayList<String>();
+		userList.add("policymgr");
+		vXPermObj.setUserList(userList);
+
+		List<String> permList = new ArrayList<String>();
+		permList.add("Allow");
+		permList.add("Admin");
+		vXPermObj.setPermList(permList);
+
+		VXPermObj vXPermObj2 = new VXPermObj();
+		List<String> userList2 = new ArrayList<String>();
+		List<String> permList2 = new ArrayList<String>();
+
+		userList2.add("policymgr_hbase");
+		userList2.add("policymgr_hive");
+
+		permList2.add("Allow");
+		vXPermObj2.setUserList(userList2);
+		vXPermObj2.setPermList(permList2);
+
+		VXPermObj vXPermObj3 = new VXPermObj();
+		List<String> grpList = new ArrayList<String>();
+		List<String> permList3 = new ArrayList<String>();
+
+		grpList.add("Grp1");
+		grpList.add("Grp2");
+		permList3.add("Allow");
+		permList3.add("Admin");
+		vXPermObj3.setGroupList(grpList);
+		vXPermObj3.setPermList(permList3);
+		vXPermObj3.setUserList(userList);
+
+		List<VXPermObj> permObjList = new ArrayList<VXPermObj>();
+		permObjList.add(vXPermObj);
+		permObjList.add(vXPermObj2);
+		permObjList.add(vXPermObj3);
+
+		vXPolicyKnox.setPermMapList(permObjList);
+
+		vXPolicyKnox = publicAPIs.createPolicy(vXPolicyKnox);
 	}
 
 	private void createHivePolicy() {
@@ -298,13 +437,11 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHive.setTables("finance,hr," + GUIDUtil.genGUI());
 		vXPolicyHive.setColumns("amt, emp_id, " + GUIDUtil.genGUI());
 		vXPolicyHive.setDescription("home policy for Hive");
-		// vXPolicyHive.setRepositoryName(vXRepoHive.getName());
+		vXPolicyHive.setRepositoryName(vXRepoHive.getName());
 		vXPolicyHive.setRepositoryType("Hive");
 		vXPolicyHive.setEnabled(true);
 		vXPolicyHive.setRecursive(true);
 		vXPolicyHive.setAuditEnabled(true);
-		vXPolicyHive.setRepositoryId(vXRepoHive.getId());
-		vXPolicyHive.setResourceType("Column");
 		vXPolicyHive.setColumnType("Exclusion");
 
 		VXPermObj vXPermObj = new VXPermObj();
@@ -348,13 +485,11 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHBase.setColumnFamilies("invoices,emps," + GUIDUtil.genGUI());
 		vXPolicyHBase.setColumns("amt, emp_id, " + GUIDUtil.genGUI());
 		vXPolicyHBase.setDescription("home policy for HBase");
-		// vXPolicyHBase.setRepositoryName("hadoopdev");
+		vXPolicyHBase.setRepositoryName(vXRepoHBase.getName());
 		vXPolicyHBase.setRepositoryType("HBase");
 		vXPolicyHBase.setEnabled(true);
 		vXPolicyHBase.setRecursive(true);
 		vXPolicyHBase.setAuditEnabled(true);
-		vXPolicyHBase.setRepositoryId(vXRepoHBase.getId());
-		vXPolicyHBase.setResourceType("Column");
 
 		VXPermObj vXPermObj = new VXPermObj();
 		List<String> userList = new ArrayList<String>();
@@ -395,12 +530,11 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHDFS.setPolicyName("HomePolicy_" + GUIDUtil.genGUI());
 		vXPolicyHDFS.setResourceName("/home,/apps,/" + GUIDUtil.genGUI());
 		vXPolicyHDFS.setDescription("home policy for HDFS");
-		// vXPolicyHDFS.setRepositoryName("hadoopdev");
+		vXPolicyHDFS.setRepositoryName(vXRepoHDFS.getName());
 		vXPolicyHDFS.setRepositoryType("hdfs");
 		vXPolicyHDFS.setEnabled(true);
 		vXPolicyHDFS.setRecursive(true);
 		vXPolicyHDFS.setAuditEnabled(true);
-		vXPolicyHDFS.setRepositoryId(vXRepoHDFS.getId());
 
 		VXPermObj vXPermObj = new VXPermObj();
 		List<String> userList = new ArrayList<String>();
@@ -448,7 +582,8 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHDFS.setPolicyName("HDFS Policy Updated_" + GUIDUtil.genGUI());
 		vXPolicyHDFS.setRecursive(false);
 		vXPolicyHDFS.setPermMapList(vXPolicyHive.getPermMapList());
-		vXPolicyHDFS = publicAPIs.updatePolicy(vXPolicyHDFS);
+		vXPolicyHDFS = publicAPIs.updatePolicy(vXPolicyHDFS,
+				vXPolicyHDFS.getId());
 
 		assertNotNull("Error While updating Policy", vXPolicyHDFS);
 		logger.info("Update : Policy for HDFS updated Successfully");
@@ -457,7 +592,8 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHBase
 				.setPolicyName("HBase Policy Updated_" + GUIDUtil.genGUI());
 		vXPolicyHBase.setEnabled(false);
-		vXPolicyHBase = publicAPIs.updatePolicy(vXPolicyHBase);
+		vXPolicyHBase = publicAPIs.updatePolicy(vXPolicyHBase,
+				vXPolicyHBase.getId());
 
 		assertNotNull("Error While updating Policy", vXPolicyHBase);
 		logger.info("Update : Policy for HBase updated Successfully");
@@ -466,9 +602,31 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHive.setPolicyName("Hive Policy Updated_" + GUIDUtil.genGUI());
 		vXPolicyHive.setAuditEnabled(false);
 		vXPolicyHive.setPermMapList(null);
-		vXPolicyHive = publicAPIs.updatePolicy(vXPolicyHive);
+		vXPolicyHive = publicAPIs.updatePolicy(vXPolicyHive,
+				vXPolicyHive.getId());
 
 		assertNotNull("Error While updating Policy", vXPolicyHive);
+		logger.info("Update : Policy for Hive updated Successfully");
+
+		// Update Knox Policy
+		vXPolicyKnox.setPolicyName("Knox Policy Updated_" + GUIDUtil.genGUI());
+		vXPolicyKnox.setAuditEnabled(false);
+		vXPolicyKnox.setPermMapList(null);
+		vXPolicyKnox = publicAPIs.updatePolicy(vXPolicyKnox,
+				vXPolicyKnox.getId());
+
+		assertNotNull("Error While updating Policy", vXPolicyStorm);
+		logger.info("Update : Policy for Hive updated Successfully");
+
+		// Update Storm Policy
+		vXPolicyStorm
+				.setPolicyName("Storm Policy Updated_" + GUIDUtil.genGUI());
+		vXPolicyStorm.setAuditEnabled(false);
+		vXPolicyStorm.setPermMapList(null);
+		vXPolicyStorm = publicAPIs.updatePolicy(vXPolicyStorm,
+				vXPolicyStorm.getId());
+
+		assertNotNull("Error While updating Policy", vXPolicyStorm);
 		logger.info("Update : Policy for Hive updated Successfully");
 	}
 
