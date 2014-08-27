@@ -1,18 +1,16 @@
 package com.xasecure.biz;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
-import java.util.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +36,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.xasecure.common.AppConstants;
 import com.xasecure.common.ContextUtil;
 import com.xasecure.common.DateUtil;
-import com.xasecure.common.GUIDUtil;
 import com.xasecure.common.JSONUtil;
 import com.xasecure.common.MessageEnums;
 import com.xasecure.common.PropertiesUtil;
@@ -74,7 +71,6 @@ import com.xasecure.view.VXAccessAuditList;
 import com.xasecure.view.VXAsset;
 import com.xasecure.view.VXAuditMap;
 import com.xasecure.view.VXAuditMapList;
-import com.xasecure.view.VXGroup;
 import com.xasecure.view.VXPermMap;
 import com.xasecure.view.VXPermMapList;
 import com.xasecure.view.VXPolicyExportAuditList;
@@ -2113,8 +2109,10 @@ public class AssetMgr extends AssetMgrBase {
 						if(tempPreviousArr[i].contains("{\"password")){
 							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "{\"password\":\"*****\"}"));
 							break;
-						}
-						if(tempPreviousArr[i].contains("\"password")){
+						}else if(tempPreviousArr[i].contains("\"password") && tempPreviousArr[i].contains("}")){
+							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "\"password\":\"******\"}"));
+							break;
+						}else if(tempPreviousArr[i].contains("\"password")){
 							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "\"password\":\"******\""));
 							break;
 						}
@@ -2127,8 +2125,10 @@ public class AssetMgr extends AssetMgrBase {
 						if(tempNewArr[i].contains("{\"password")){
 							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "{\"password\":\"*****\"}"));
 							break;
-						}
-						if(tempNewArr[i].contains("\"password")){
+						}else if(tempNewArr[i].contains("\"password") && tempNewArr[i].contains("}")){
+							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "\"password\":\"******\"}"));
+							break;
+						}else if(tempNewArr[i].contains("\"password")){
 							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "\"password\":\"******\""));
 							break;
 						}
