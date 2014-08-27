@@ -582,16 +582,15 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				}
 			}
 		}
-		
+
 		UserGroupInformation ugi = this.getCurrentUserGroupInfo();
 
 		logAuditEventForDfs(ugi, dfsCommandParams, false);
 
 		throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have privilege for [%s] command",
 											 ugi.getShortUserName(), hiveOpType.name()));
-		
 	}
-	
+
 	private GrantRevokeData createGrantRevokeData(XaHiveObjectAccessInfo objAccessInfo,
 												  List<HivePrincipal>    hivePrincipals,
 												  List<HivePrivilege>    hivePrivileges,
@@ -637,11 +636,11 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				permMap.addPerm(HiveAccessType.UPDATE.name());
 			}
 		}
-		
+
 		if(grantOption) {
 			permMap.addPerm(HiveAccessType.ADMIN.name());
 		}
-		
+
 		for(HivePrincipal principal : hivePrincipals) {
 			switch(principal.getType()) {
 				case USER:
@@ -664,13 +663,13 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		permMapList.add(permMap);
 
 		String grantor = grantorPrincipal != null ? grantorPrincipal.getName() : null;
-		
+
 		if(StringUtil.isEmpty(grantor)) {
 			LOG.warn("grantorPrincipal.getName() is null/empty!");
 		}
-		
+
 		grData.setHiveData(grantor, repositoryName, database, table, columns, permMapList);
-		
+
 		return grData;
 	}
 

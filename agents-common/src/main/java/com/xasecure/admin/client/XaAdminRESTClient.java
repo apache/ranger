@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 
 import com.xasecure.admin.client.datatype.GrantRevokeData;
+import com.xasecure.admin.client.datatype.RESTResponse;
 import com.xasecure.authorization.utils.StringUtil;
 import com.xasecure.authorization.hadoop.config.XaSecureConfiguration;
 import com.xasecure.authorization.hadoop.utils.XaSecureCredentialProvider;
@@ -136,12 +137,10 @@ public class XaAdminRESTClient implements XaAdminClient {
 
 			ClientResponse response = webResource.accept(REST_EXPECTED_MIME_TYPE).type(REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, grData.toJson());
 
-			if(response == null) {
-				throw new Exception("grantPrivilege(): unknown failure");
-			} else if(response.getStatus() != 200) {
-				String ret = response.getEntity(String.class);
+			if(response == null || response.getStatus() != 200) {
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
 
-				throw new Exception("grantPrivilege(): HTTPResponse status=" + response.getStatus() + "; HTTPResponse text=" + ret);
+				throw new Exception(resp.getMessage());
 			}
 		} finally {
 			destroy(client);
@@ -159,18 +158,15 @@ public class XaAdminRESTClient implements XaAdminClient {
 
 			ClientResponse response = webResource.accept(REST_EXPECTED_MIME_TYPE).type(REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, grData.toJson());
 
-			if(response == null) {
-				throw new Exception("revokePrivilege(): unknown failure");
-			} else if(response.getStatus() != 200) {
-				String ret = response.getEntity(String.class);
+			if(response == null || response.getStatus() != 200) {
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
 
-				throw new Exception("revokePrivilege(): HTTPResponse status=" + response.getStatus() + "; HTTPResponse text=" + ret);
+				throw new Exception(resp.getMessage());
 			}
 		} finally {
 			destroy(client);
 		}
 	}
-
 	private void init() {
 		mIsSSL = StringUtil.containsIgnoreCase(mUrl, "https");
 
