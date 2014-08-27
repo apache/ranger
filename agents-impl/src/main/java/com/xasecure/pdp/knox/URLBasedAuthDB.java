@@ -442,9 +442,9 @@ public class URLBasedAuthDB implements PolicyChangeListener {
 				policyIp = policyIp + ":";
 			}
 		}
-		if (wildEnd && requestIp.startsWith(policyIp)) {
+		if (wildEnd && requestIp.toLowerCase().startsWith(policyIp.toLowerCase())) {
 			ipMatched = true;
-		} else if (policyIp.equals(requestIp)) {
+		} else if (policyIp.equalsIgnoreCase(requestIp)) {
 			ipMatched = true;
 		}
 		return ipMatched;
