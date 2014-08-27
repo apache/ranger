@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "Starting UnixAuthenticationService"
 export JAVA_HOME=
 export PATH=$JAVA_HOME/bin:$PATH
 
