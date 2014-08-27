@@ -131,15 +131,10 @@ define(function(require){
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
 					
 				}
-				//User does not allowed to change his role (it's own role)
-				var userProfileModel = SessionMgr.getUserProfile();
-				if(this.model.get('name') == userProfileModel.get('loginId')){
-					this.fields.userRoleList.editor.$el.attr('disabled',true);
-				}
 				
-				if(userProfileModel.get('loginId') != "admin"){
-					if(this.model.get('loginId') != "admin"){
-						if(_.contains(userProfileModel.get('userRoleList'),'ROLE_SYS_ADMIN')){
+				if(SessionMgr.getUserProfile().get('loginId') != "admin"){
+					if(this.model.get('name') != "admin"){
+						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN')){
 							this.fields.userRoleList.editor.$el.attr('disabled',false);
 						}else{
 							this.fields.userRoleList.editor.$el.attr('disabled',true);
@@ -150,8 +145,11 @@ define(function(require){
 				}else{
 					this.fields.userRoleList.editor.$el.attr('disabled',false);
 				}
-			}
-			
+				//User does not allowed to change his role (it's own role)
+				if(this.model.get('name') == SessionMgr.getUserProfile().get('loginId')){
+					this.fields.userRoleList.editor.$el.attr('disabled',true);
+				}
+			}			
 		},
 		renderCustomFields: function(){
 			var that = this;

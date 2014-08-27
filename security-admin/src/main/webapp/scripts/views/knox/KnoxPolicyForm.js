@@ -113,8 +113,8 @@ define(function(require){
 				},
 				services : {
 					type		: 'Select2Remote',
-					title		: localization.tt("lbl.selectServiceName"),
-					//validators  : [{type:'regexp',regexp:/^[a-zA-Z*?][a-zA-Z0-9_'&-/\$]*[A-Za-z0-9]*$/i,message :localization.tt('validationMessages.enterValidName')}],
+					title		: localization.tt("lbl.selectServiceName")+' *',
+					validators  : ['required'],//[{type:'regexp',regexp:/^[a-zA-Z*?][a-zA-Z0-9_'&-/\$]*[A-Za-z0-9]*$/i,message :localization.tt('validationMessages.enterValidName')}],
 					editorAttrs :{'data-placeholder': 'Select Service'},//'disabled' :'disabled'},
 					//fieldAttrs :{'disabled' :'disabled',},
 					pluginAttr  : this.getPlugginAttr(true,this.type.SERVICE)
