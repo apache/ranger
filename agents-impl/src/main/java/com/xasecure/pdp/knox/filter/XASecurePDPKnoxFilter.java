@@ -21,7 +21,6 @@ package com.xasecure.pdp.knox.filter;
 import java.io.IOException;
 import java.security.AccessController;
 import java.security.Principal;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -49,6 +48,7 @@ import com.xasecure.authorization.hadoop.config.XaSecureConfiguration;
 import com.xasecure.authorization.hadoop.constants.XaSecureHadoopConstants;
 import com.xasecure.authorization.knox.KnoxAccessVerifier;
 import com.xasecure.authorization.knox.KnoxAccessVerifierFactory;
+import com.xasecure.authorization.utils.StringUtil;
 
 public class XASecurePDPKnoxFilter implements Filter {
 
@@ -188,7 +188,7 @@ public class XASecurePDPKnoxFilter implements Filter {
 		auditEvent.setResourceType("service");
 		auditEvent.setAccessType(accessType);
 		auditEvent.setClientIP(clientIp);
-		auditEvent.setEventTime(new Date());
+		auditEvent.setEventTime(StringUtil.getUTCDate());
 		auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
 		auditEvent.setResultReason(null);
 		auditEvent.setRepositoryType(EnumRepositoryType.KNOX);
