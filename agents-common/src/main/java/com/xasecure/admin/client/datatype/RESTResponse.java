@@ -1,16 +1,31 @@
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.xasecure.admin.client.datatype;
 
-import java.io.IOException;
 import java.util.List;
 
-import org.codehaus.jackson.JsonGenerationException;
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.mortbay.log.Log;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.xasecure.authorization.utils.StringUtil;
@@ -20,6 +35,8 @@ import com.xasecure.authorization.utils.StringUtil;
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RESTResponse {
+	private static Logger LOG = Logger.getLogger(RESTResponse.class);
+
 	private int           httpStatusCode;
 	private int           statusCode;
 	private String        msgDesc;
@@ -62,22 +79,6 @@ public class RESTResponse {
 		return StringUtil.isEmpty(msgDesc) ? ("HTTP " + httpStatusCode) : msgDesc;
 	}
 
-	public String toJson() {
-		try {
-			ObjectMapper om = new ObjectMapper();
-
-			return om.writeValueAsString(this);
-		} catch (JsonGenerationException e) {
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return "";
-	}
-
 	public static RESTResponse fromClientResponse(ClientResponse response) {
 		RESTResponse ret = null;
 
@@ -97,13 +98,29 @@ public class RESTResponse {
 		return ret;
 	}
 
+	public String toJson() {
+		try {
+			ObjectMapper om = new ObjectMapper();
+
+			return om.writeValueAsString(this);
+		} catch (Exception e) {
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("toJson() failed", e);
+			}
+		}
+
+		return "";
+	}
+
 	public static RESTResponse fromJson(String jsonString) {
 		try {
 			ObjectMapper om = new ObjectMapper();
 
 			return om.readValue(jsonString, RESTResponse.class);
 		} catch (Exception e) {
-			Log.warn("fromJson() failed!", e);
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("fromJson('" + jsonString + "') failed", e);
+			}
 		}
 
 		return null;
@@ -160,12 +177,10 @@ public class RESTResponse {
 				ObjectMapper om = new ObjectMapper();
 
 				return om.writeValueAsString(this);
-			} catch (JsonGenerationException e) {
-				e.printStackTrace();
-			} catch (JsonMappingException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("toJson() failed", e);
+				}
 			}
 			
 			return "";
@@ -177,7 +192,9 @@ public class RESTResponse {
 
 				return om.readValue(jsonString, RESTResponse.class);
 			} catch (Exception e) {
-				// ignore
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("fromJson('" + jsonString + "') failed", e);
+				}
 			}
 			
 			return null;
