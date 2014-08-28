@@ -485,7 +485,9 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	}
 	@Override
 	public void postStartMaster(ObserverContext<MasterCoprocessorEnvironment> ctx) throws IOException {
-		XaAccessControlLists.init(ctx.getEnvironment().getMasterServices());
+		if(UpdateXaPoliciesOnGrantRevoke) {
+			XaAccessControlLists.init(ctx.getEnvironment().getMasterServices());
+		}
 
 		auditEvent("startMaster", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
 	}
