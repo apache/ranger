@@ -102,15 +102,15 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 				|| vXResource.getResourceStatus() == AppConstants.STATUS_DELETED) {
 			enable = false;
 		}
-		vXPolicy.setEnabled(enable);
-		vXPolicy.setRecursive(AppConstants
+		vXPolicy.setIsEnabled(enable);
+		vXPolicy.setIsRecursive(AppConstants
 				.getBooleanFor_BooleanValue(vXResource.getIsRecursive()));
 
 		boolean auditEnable = true;
 		if (stringUtil.isEmpty(vXResource.getAuditList())) {
 			auditEnable = false;
 		}
-		vXPolicy.setAuditEnabled(auditEnable);
+		vXPolicy.setIsAuditEnabled(auditEnable);
 		vXPolicy.setVersion(version);
 
 		return vXPolicy;
@@ -163,10 +163,11 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 
 			List<VXAuditMap> auditList = new ArrayList<VXAuditMap>();
 
-			if (vXAuditMapList.getListSize() > 0 && vXPolicy.isAuditEnabled()) {
+			if (vXAuditMapList.getListSize() > 0
+					&& vXPolicy.getIsAuditEnabled()) {
 				auditList.addAll(vXAuditMapList.getVXAuditMaps());
 			} else if (vXAuditMapList.getListSize() == 0
-					&& vXPolicy.isAuditEnabled()) {
+					&& vXPolicy.getIsAuditEnabled()) {
 				VXAuditMap vXAuditMap = new VXAuditMap();
 				vXAuditMap.setAuditType(AppConstants.XA_AUDIT_TYPE_ALL);
 				auditList.add(vXAuditMap);
@@ -180,8 +181,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			vXResource.setPermMapList(permMapList);
 
 		} else if (operationContext == AbstractBaseResourceService.OPERATION_CREATE_CONTEXT) {
-		
-			if (vXPolicy.isAuditEnabled()) {
+			if (vXPolicy.getIsAuditEnabled()) {
 				VXAuditMap vXAuditMap = new VXAuditMap();
 				vXAuditMap.setAuditType(AppConstants.XA_AUDIT_TYPE_ALL);
 				List<VXAuditMap> auditList = new ArrayList<VXAuditMap>();
@@ -197,7 +197,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 
 		vXResource.setIsRecursive(AppConstants.getEnumFor_BooleanValue(vXPolicy
-				.isRecursive()));
+				.getIsRecursive()));
 		vXResource.setDatabases(vXPolicy.getDatabases());
 		vXResource.setTables(vXPolicy.getTables());
 		vXResource.setColumnFamilies(vXPolicy.getColumnFamilies());
@@ -208,7 +208,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 				.getRepositoryType()));
 
 		int resourceStatus = AppConstants.STATUS_ENABLED;
-		if (!vXPolicy.isEnabled()) {
+		if (!vXPolicy.getIsEnabled()) {
 			resourceStatus = AppConstants.STATUS_DISABLED;
 		}
 		vXResource.setResourceStatus(resourceStatus);

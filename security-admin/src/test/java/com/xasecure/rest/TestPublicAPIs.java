@@ -14,11 +14,14 @@ import org.springframework.test.annotation.Rollback;
 
 import com.xasecure.common.AppConstants;
 import com.xasecure.common.GUIDUtil;
+import com.xasecure.common.JSONUtil;
 import com.xasecure.db.XADaoManager;
 import com.xasecure.entity.XXAsset;
+import com.xasecure.entity.XXGroup;
 import com.xasecure.entity.XXResource;
 import com.xasecure.rest.PublicAPIs;
 import com.xasecure.util.BaseTest;
+import com.xasecure.view.VXGroup;
 import com.xasecure.view.VXLong;
 import com.xasecure.view.VXPermObj;
 import com.xasecure.view.VXPolicy;
@@ -43,6 +46,12 @@ public class TestPublicAPIs extends BaseTest {
 
 	@Autowired
 	XADaoManager daoManager;
+
+	@Autowired
+	JSONUtil jsonUtil;
+
+	@Autowired
+	XUserREST xUserREST;
 
 	VXRepository vXRepoHDFS;
 	VXRepository vXRepoHBase;
@@ -97,10 +106,15 @@ public class TestPublicAPIs extends BaseTest {
 
 		vXRepoHDFS.setName("HDFS Repo_" + GUIDUtil.genGUI());
 		vXRepoHDFS.setDescription("HDFS Repository, using JUnit");
-		vXRepoHDFS.setActive(true);
+		vXRepoHDFS.setIsActive(true);
 		vXRepoHDFS.setRepositoryType("hdfs");
 		vXRepoHDFS.setConfig(configHdfs);
+
+		String preCreatedHdfsRepo = jsonUtil.writeObjectAsString(vXRepoHDFS);
+		logger.info(preCreatedHdfsRepo);
 		vXRepoHDFS = publicAPIs.createRepository(vXRepoHDFS);
+		String postCreatedHdfsRepo = jsonUtil.writeObjectAsString(vXRepoHDFS);
+		logger.info(postCreatedHdfsRepo);
 
 		assertNotNull("Error while creating Repository for HDFS", vXRepoHDFS);
 		logger.info("Create : Repo for HDFS created Successfully");
@@ -115,10 +129,15 @@ public class TestPublicAPIs extends BaseTest {
 
 		vXRepoHive.setName("hivedev_" + GUIDUtil.genGUI());
 		vXRepoHive.setDescription("Hive Dev");
-		vXRepoHive.setActive(true);
+		vXRepoHive.setIsActive(true);
 		vXRepoHive.setRepositoryType("Hive");
 		vXRepoHive.setConfig(configHive);
+
+		String preCreatedHiveRepo = jsonUtil.writeObjectAsString(vXRepoHive);
+		logger.info(preCreatedHiveRepo);
 		vXRepoHive = publicAPIs.createRepository(vXRepoHive);
+		String postCreatedHiveRepo = jsonUtil.writeObjectAsString(vXRepoHive);
+		logger.info(postCreatedHiveRepo);
 
 		assertNotNull("Error while creating Repository for Hive", vXRepoHive);
 		logger.info("Create : Repo for Hive created Successfully");
@@ -145,10 +164,15 @@ public class TestPublicAPIs extends BaseTest {
 
 		vXRepoHBase.setName("hbasedev_" + GUIDUtil.genGUI());
 		vXRepoHBase.setDescription("HBase Dev");
-		vXRepoHBase.setActive(true);
+		vXRepoHBase.setIsActive(true);
 		vXRepoHBase.setRepositoryType("HBase");
 		vXRepoHBase.setConfig(configHbase);
+
+		String preCreatedHBaseRepo = jsonUtil.writeObjectAsString(vXRepoHBase);
+		logger.info(preCreatedHBaseRepo);
 		vXRepoHBase = publicAPIs.createRepository(vXRepoHBase);
+		String postCreatedHBaseRepo = jsonUtil.writeObjectAsString(vXRepoHBase);
+		logger.info(postCreatedHBaseRepo);
 
 		assertNotNull("Error while creating Repo for HBase", vXRepoHBase);
 		logger.info("Create : Repo for HBase created Successfully");
@@ -161,9 +185,14 @@ public class TestPublicAPIs extends BaseTest {
 		vXRepoKnox.setConfig(configKnox);
 		vXRepoKnox.setName("knoxdev_" + GUIDUtil.genGUI());
 		vXRepoKnox.setDescription("Knox Repo.. from JUnit");
-		vXRepoKnox.setActive(true);
+		vXRepoKnox.setIsActive(true);
 		vXRepoKnox.setRepositoryType("Knox");
+
+		String preCreatedKnoxRepo = jsonUtil.writeObjectAsString(vXRepoKnox);
+		logger.info(preCreatedKnoxRepo);
 		vXRepoKnox = publicAPIs.createRepository(vXRepoKnox);
+		String postCreatedKnoxRepo = jsonUtil.writeObjectAsString(vXRepoKnox);
+		logger.info(postCreatedKnoxRepo);
 
 		assertNotNull("Error while creating Repo for Knox", vXRepoKnox);
 		logger.info("Create : Repo for Knox created Successfully");
@@ -175,9 +204,14 @@ public class TestPublicAPIs extends BaseTest {
 		vXRepoStorm.setConfig(configStorm);
 		vXRepoStorm.setName("stormdev_" + GUIDUtil.genGUI());
 		vXRepoStorm.setDescription("Storm Repo.. from JUnit");
-		vXRepoStorm.setActive(true);
+		vXRepoStorm.setIsActive(true);
 		vXRepoStorm.setRepositoryType("Storm");
+
+		String preCreatedStormRepo = jsonUtil.writeObjectAsString(vXRepoStorm);
+		logger.info(preCreatedStormRepo);
 		vXRepoStorm = publicAPIs.createRepository(vXRepoStorm);
+		String postCreatedStormRepo = jsonUtil.writeObjectAsString(vXRepoStorm);
+		logger.info(postCreatedStormRepo);
 
 		assertNotNull("Error while creating Repo for Knox", vXRepoStorm);
 		logger.info("Create : Repo for Storm created Successfully");
@@ -223,6 +257,9 @@ public class TestPublicAPIs extends BaseTest {
 	public void testGetRepository() {
 		VXRepository vXRepositoryHDFS = publicAPIs.getRepository(vXRepoHDFS
 				.getId());
+
+		String vXRepoHDFSJson = jsonUtil.writeObjectAsString(vXRepositoryHDFS);
+		logger.info(vXRepoHDFSJson);
 		assertNotNull(
 				"No Repository found for this Id : " + vXRepoHDFS.getId(),
 				vXRepositoryHDFS);
@@ -258,7 +295,7 @@ public class TestPublicAPIs extends BaseTest {
 
 		VXRepository deletedRepo = publicAPIs.getRepository(xxAsset.getId());
 
-		if (deletedRepo != null && deletedRepo.isActive() == false) {
+		if (deletedRepo != null && deletedRepo.getIsActive() == false) {
 			logger.info("Repository has been deleted"
 					+ " successfully, and DB change has been rolled back");
 		} else {
@@ -342,8 +379,8 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyStorm.setDescription("home policy for Storm");
 		vXPolicyStorm.setRepositoryName(vXRepoStorm.getName());
 		vXPolicyStorm.setRepositoryType("Storm");
-		vXPolicyStorm.setAuditEnabled(true);
-		vXPolicyStorm.setEnabled(true);
+		vXPolicyStorm.setIsAuditEnabled(true);
+		vXPolicyStorm.setIsEnabled(true);
 		vXPolicyStorm.setTopologies("topo1, topo2, topo3");
 
 		VXPermObj vXPermObj = new VXPermObj();
@@ -375,7 +412,19 @@ public class TestPublicAPIs extends BaseTest {
 
 		vXPolicyStorm.setPermMapList(permObjList);
 
+		String preCreatedPolicyStorm = jsonUtil
+				.writeObjectAsString(vXPolicyStorm);
+		logger.info(preCreatedPolicyStorm);
+
 		vXPolicyStorm = publicAPIs.createPolicy(vXPolicyStorm);
+
+		String postCreatedPolicyStorm = jsonUtil
+				.writeObjectAsString(vXPolicyStorm);
+		logger.info(postCreatedPolicyStorm);
+
+		assertNotNull("Create Policy : Error while creating Policy for Storm",
+				vXPolicyStorm);
+		logger.info("Create Policy : Policy created successfully for Storm");
 	}
 
 	private void createKnoxPolicy() {
@@ -383,8 +432,8 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyKnox.setDescription("home policy for Knox");
 		vXPolicyKnox.setRepositoryName(vXRepoKnox.getName());
 		vXPolicyKnox.setRepositoryType("Knox");
-		vXPolicyKnox.setAuditEnabled(true);
-		vXPolicyKnox.setEnabled(true);
+		vXPolicyKnox.setIsAuditEnabled(true);
+		vXPolicyKnox.setIsEnabled(true);
 		vXPolicyKnox.setTopologies("topo1, topo2, topo3");
 		vXPolicyKnox.setServices("service1, service2, service3");
 
@@ -428,7 +477,19 @@ public class TestPublicAPIs extends BaseTest {
 
 		vXPolicyKnox.setPermMapList(permObjList);
 
+		String preCreatedPolicyKnox = jsonUtil
+				.writeObjectAsString(vXPolicyKnox);
+		logger.info(preCreatedPolicyKnox);
+
 		vXPolicyKnox = publicAPIs.createPolicy(vXPolicyKnox);
+
+		String postCreatedPolicyKnox = jsonUtil
+				.writeObjectAsString(vXPolicyKnox);
+		logger.info(postCreatedPolicyKnox);
+
+		assertNotNull("Create Policy : Error while creating Policy for Knox",
+				vXPolicyKnox);
+		logger.info("Create Policy : Policy created successfully for Knox");
 	}
 
 	private void createHivePolicy() {
@@ -439,9 +500,9 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHive.setDescription("home policy for Hive");
 		vXPolicyHive.setRepositoryName(vXRepoHive.getName());
 		vXPolicyHive.setRepositoryType("Hive");
-		vXPolicyHive.setEnabled(true);
-		vXPolicyHive.setRecursive(true);
-		vXPolicyHive.setAuditEnabled(true);
+		vXPolicyHive.setIsEnabled(true);
+		vXPolicyHive.setIsRecursive(true);
+		vXPolicyHive.setIsAuditEnabled(true);
 		vXPolicyHive.setColumnType("Exclusion");
 
 		VXPermObj vXPermObj = new VXPermObj();
@@ -473,7 +534,16 @@ public class TestPublicAPIs extends BaseTest {
 
 		vXPolicyHive.setPermMapList(permObjList);
 
+		String preCreatedPolicyHive = jsonUtil
+				.writeObjectAsString(vXPolicyHive);
+		logger.info(preCreatedPolicyHive);
+
 		vXPolicyHive = publicAPIs.createPolicy(vXPolicyHive);
+
+		String postCreatedPolicyHive = jsonUtil
+				.writeObjectAsString(vXPolicyHive);
+		logger.info(postCreatedPolicyHive);
+
 		assertNotNull("Create Policy : Error while creating Policy for Hive",
 				vXPolicyHive);
 		logger.info("Create Policy : Policy created successfully for Hive");
@@ -487,9 +557,9 @@ public class TestPublicAPIs extends BaseTest {
 		vXPolicyHBase.setDescription("home policy for HBase");
 		vXPolicyHBase.setRepositoryName(vXRepoHBase.getName());
 		vXPolicyHBase.setRepositoryType("HBase");
-		vXPolicyHBase.setEnabled(true);
-		vXPolicyHBase.setRecursive(true);
-		vXPolicyHBase.setAuditEnabled(true);
+		vXPolicyHBase.setIsEnabled(true);
+		vXPolicyHBase.setIsRecursive(true);
+		vXPolicyHBase.setIsAuditEnabled(true);
 
 		VXPermObj vXPermObj = new VXPermObj();
 		List<String> userList = new ArrayList<String>();
@@ -520,7 +590,16 @@ public class TestPublicAPIs extends BaseTest {
 
 		vXPolicyHBase.setPermMapList(permObjList);
 
+		String preCreatedPolicyHBase = jsonUtil
+				.writeObjectAsString(vXPolicyHBase);
+		logger.info(preCreatedPolicyHBase);
+
 		vXPolicyHBase = publicAPIs.createPolicy(vXPolicyHBase);
+
+		String postCreatedPolicyHBase = jsonUtil
+				.writeObjectAsString(vXPolicyHBase);
+		logger.info(postCreatedPolicyHBase);
+
 		assertNotNull("Create Policy : Error while creating Policy for HBase",
 				vXPolicyHBase);
 		logger.info("Create Policy : Policy created successfully for HBase");
@@ -528,13 +607,13 @@ public class TestPublicAPIs extends BaseTest {
 
 	private void createHDFSPolicy() {
 		vXPolicyHDFS.setPolicyName("HomePolicy_" + GUIDUtil.genGUI());
-		vXPolicyHDFS.setResourceName("/home,/apps,/" + GUIDUtil.genGUI());
+		vXPolicyHDFS.setResourceName("/user/, / ,/hr/," + GUIDUtil.genGUI());
 		vXPolicyHDFS.setDescription("home policy for HDFS");
 		vXPolicyHDFS.setRepositoryName(vXRepoHDFS.getName());
 		vXPolicyHDFS.setRepositoryType("hdfs");
-		vXPolicyHDFS.setEnabled(true);
-		vXPolicyHDFS.setRecursive(true);
-		vXPolicyHDFS.setAuditEnabled(true);
+		vXPolicyHDFS.setIsEnabled(true);
+		vXPolicyHDFS.setIsRecursive(true);
+		vXPolicyHDFS.setIsAuditEnabled(true);
 
 		VXPermObj vXPermObj = new VXPermObj();
 		List<String> userList = new ArrayList<String>();
@@ -565,7 +644,16 @@ public class TestPublicAPIs extends BaseTest {
 
 		vXPolicyHDFS.setPermMapList(permObjList);
 
+		String preCreatedPolicyHDFS = jsonUtil
+				.writeObjectAsString(vXPolicyHDFS);
+		logger.info(preCreatedPolicyHDFS);
+
 		vXPolicyHDFS = publicAPIs.createPolicy(vXPolicyHDFS);
+
+		String postCreatedPolicyHDFS = jsonUtil
+				.writeObjectAsString(vXPolicyHDFS);
+		logger.info(postCreatedPolicyHDFS);
+
 		assertNotNull("Create Policy : Error while creating Policy for HDFS",
 				vXPolicyHDFS);
 		logger.info("Create Policy : Policy created successfully for HDFS");
@@ -580,7 +668,7 @@ public class TestPublicAPIs extends BaseTest {
 
 		// Update HDFS Policy
 		vXPolicyHDFS.setPolicyName("HDFS Policy Updated_" + GUIDUtil.genGUI());
-		vXPolicyHDFS.setRecursive(false);
+		vXPolicyHDFS.setIsRecursive(false);
 		vXPolicyHDFS.setPermMapList(vXPolicyHive.getPermMapList());
 		vXPolicyHDFS = publicAPIs.updatePolicy(vXPolicyHDFS,
 				vXPolicyHDFS.getId());
@@ -591,7 +679,7 @@ public class TestPublicAPIs extends BaseTest {
 		// Update HBase Policy
 		vXPolicyHBase
 				.setPolicyName("HBase Policy Updated_" + GUIDUtil.genGUI());
-		vXPolicyHBase.setEnabled(false);
+		vXPolicyHBase.setIsEnabled(false);
 		vXPolicyHBase = publicAPIs.updatePolicy(vXPolicyHBase,
 				vXPolicyHBase.getId());
 
@@ -600,7 +688,7 @@ public class TestPublicAPIs extends BaseTest {
 
 		// Update HIVE Policy
 		vXPolicyHive.setPolicyName("Hive Policy Updated_" + GUIDUtil.genGUI());
-		vXPolicyHive.setAuditEnabled(false);
+		vXPolicyHive.setIsAuditEnabled(false);
 		vXPolicyHive.setPermMapList(null);
 		vXPolicyHive = publicAPIs.updatePolicy(vXPolicyHive,
 				vXPolicyHive.getId());
@@ -610,7 +698,7 @@ public class TestPublicAPIs extends BaseTest {
 
 		// Update Knox Policy
 		vXPolicyKnox.setPolicyName("Knox Policy Updated_" + GUIDUtil.genGUI());
-		vXPolicyKnox.setAuditEnabled(false);
+		vXPolicyKnox.setIsAuditEnabled(false);
 		vXPolicyKnox.setPermMapList(null);
 		vXPolicyKnox = publicAPIs.updatePolicy(vXPolicyKnox,
 				vXPolicyKnox.getId());
@@ -621,7 +709,7 @@ public class TestPublicAPIs extends BaseTest {
 		// Update Storm Policy
 		vXPolicyStorm
 				.setPolicyName("Storm Policy Updated_" + GUIDUtil.genGUI());
-		vXPolicyStorm.setAuditEnabled(false);
+		vXPolicyStorm.setIsAuditEnabled(false);
 		vXPolicyStorm.setPermMapList(null);
 		vXPolicyStorm = publicAPIs.updatePolicy(vXPolicyStorm,
 				vXPolicyStorm.getId());
@@ -637,6 +725,9 @@ public class TestPublicAPIs extends BaseTest {
 	public void testGetPolicy() {
 
 		VXPolicy vXPolHDFS = publicAPIs.getPolicy(vXPolicyHDFS.getId());
+		String policyHDFSString = jsonUtil.writeObjectAsString(vXPolHDFS);
+		logger.info(policyHDFSString);
+
 		assertNotNull("No Policy found for this Id : " + vXPolicyHDFS.getId(),
 				vXPolHDFS);
 		logger.info("Get : Policy found for this id : " + vXPolicyHDFS.getId());
@@ -700,6 +791,8 @@ public class TestPublicAPIs extends BaseTest {
 	@Rollback(false)
 	public void test() throws Exception {
 
+		createGroups();
+
 		testCreateRepository();
 		testUpdateRepository();
 		testGetRepository();
@@ -713,6 +806,31 @@ public class TestPublicAPIs extends BaseTest {
 		testCountPolicies();
 		testDeleteRepository();
 		testDeletePolicy();
+	}
+
+	private void createGroups() {
+
+		XXGroup xGrp1 = daoManager.getXXGroup().findByGroupName("Grp1");
+		XXGroup xGrp2 = daoManager.getXXGroup().findByGroupName("Grp2");
+
+		if (xGrp1 == null) {
+			VXGroup vXGrp1 = new VXGroup();
+			vXGrp1.setName("Grp1");
+			vXGrp1.setDescription("Group 1");
+			xUserREST.createXGroup(vXGrp1);
+
+			assertNotNull("Error while creating Group", vXGrp1);
+			logger.info("New Groups Created Grp Name : " + vXGrp1.getName());
+		}
+		if (xGrp2 == null) {
+			VXGroup vXGrp2 = new VXGroup();
+			vXGrp2.setName("Grp2");
+			vXGrp2.setDescription("Group 2");
+			xUserREST.createXGroup(vXGrp2);
+
+			assertNotNull("Error while creating Group", vXGrp2);
+			logger.info("New Groups Created. Grp Name : " + vXGrp2.getName());
+		}
 	}
 
 }

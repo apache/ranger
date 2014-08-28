@@ -431,7 +431,8 @@ define(function(require){
 		        	that.fields.name.$el.find('.help-inline').html('');
 					var tags =  [];
 			        console.log(ui.tag);
-			        if(ui.tagLabel.lastIndexOf('/') == ui.tagLabel.length -1 ){
+				if(ui.tagLabel.lastIndexOf('/') < 0 || 
+			        		ui.tagLabel.lastIndexOf('/') == ui.tagLabel.length -1 && ui.tagLabel.lastIndexOf('/') != 0){
 			        	tags = ui.tagLabel.substr(0,ui.tagLabel.lastIndexOf('/'));
 			        	that.fields.name.$el.addClass('error');
 			        	that.fields.name.$el.find('.help-inline').html('Please enter valid resource path : ' + ui.tagLabel);
