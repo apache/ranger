@@ -965,12 +965,12 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 
 	@Override
 	public void checkPermissions(RpcController controller, AccessControlProtos.CheckPermissionsRequest request, RpcCallback<AccessControlProtos.CheckPermissionsResponse> done) {
-		LOG.warn("checkPermissions(): ");
+		LOG.debug("checkPermissions(): ");
 	}
 
 	@Override
 	public void getUserPermissions(RpcController controller, AccessControlProtos.GetUserPermissionsRequest request, RpcCallback<AccessControlProtos.GetUserPermissionsResponse> done) {
-		LOG.warn("getUserPermissions(): ");
+		LOG.debug("getUserPermissions(): ");
 	}
 
 	@Override

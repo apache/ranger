@@ -76,8 +76,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 	public void grantPrivileges(List<HivePrincipal> hivePrincipals,
 								List<HivePrivilege> hivePrivileges,
 								HivePrivilegeObject hivePrivObject,
-								HivePrincipal grantorPrincipal,
-								boolean       grantOption)
+								HivePrincipal       grantorPrincipal,
+								boolean             grantOption)
 										throws HiveAuthzPluginException, HiveAccessControlException {
 		if(! UpdateXaPoliciesOnGrantRevoke) {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Argus HiveAuthorizer. Please use Argus Security Admin to setup access control.");
@@ -87,7 +87,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		XaHiveObjectAccessInfo objAccessInfo = getObjectAccessInfo(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject, new XaHiveAccessContext(null, getHiveAuthzSessionContext()), true);
 
 		try {
-			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
+			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, getGrantorUsername(grantorPrincipal), grantOption);
 
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("grantPrivileges(): " + grData.toJson());
@@ -124,8 +124,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 	public void revokePrivileges(List<HivePrincipal> hivePrincipals,
 								 List<HivePrivilege> hivePrivileges,
 								 HivePrivilegeObject hivePrivObject,
-								 HivePrincipal grantorPrincipal,
-								 boolean       grantOption)
+								 HivePrincipal       grantorPrincipal,
+								 boolean             grantOption)
 										 throws HiveAuthzPluginException, HiveAccessControlException {
 		if(! UpdateXaPoliciesOnGrantRevoke) {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Argus HiveAuthorizer. Please use Argus Security Admin to setup access control.");
@@ -135,7 +135,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		XaHiveObjectAccessInfo objAccessInfo = getObjectAccessInfo(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject, new XaHiveAccessContext(null, getHiveAuthzSessionContext()), true);
 
 		try {
-			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
+			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, getGrantorUsername(grantorPrincipal), grantOption);
 
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("revokePrivileges(): " + grData.toJson());
@@ -590,11 +590,23 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have privilege for [%s] command",
 											 ugi.getShortUserName(), hiveOpType.name()));
 	}
+	
+	private String getGrantorUsername(HivePrincipal grantorPrincipal) {
+		String grantor = grantorPrincipal != null ? grantorPrincipal.getName() : null;
+
+		if(StringUtil.isEmpty(grantor)) {
+			UserGroupInformation ugi = this.getCurrentUserGroupInfo();
+
+			grantor = ugi != null ? ugi.getShortUserName() : null;
+		}
+
+		return grantor;
+	}
 
 	private GrantRevokeData createGrantRevokeData(XaHiveObjectAccessInfo objAccessInfo,
 												  List<HivePrincipal>    hivePrincipals,
 												  List<HivePrivilege>    hivePrivileges,
-												  HivePrincipal          grantorPrincipal,
+												  String                 grantor,
 												  boolean                grantOption)
 														  throws HiveAccessControlException {
 		if(objAccessInfo == null ||
@@ -655,12 +667,6 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				default:
 				break;
 			}
-		}
-
-		String grantor = grantorPrincipal != null ? grantorPrincipal.getName() : null;
-
-		if(StringUtil.isEmpty(grantor)) {
-			LOG.warn("grantorPrincipal.getName() is null/empty!");
 		}
 
 		GrantRevokeData grData = new GrantRevokeData();
