@@ -577,7 +577,7 @@ public class AssetREST {
 		boolean isValidAuthentication=assetMgr.isValidHttpsAuthentication(repository,certchain,httpEnabled,ipAddress,isSecure);
 		if(isValidAuthentication){			
 			VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
-			vXResource=assetMgr.grantXResource(vXResource);
+			vXResource=assetMgr.grantXResource(vXResource,vXPolicy);
 			vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
 			vXPolicy=xPolicyService.mapXAToPublicObject(vXResource);	
 			vXPolicy.syncResponseWithJsonRequest();			

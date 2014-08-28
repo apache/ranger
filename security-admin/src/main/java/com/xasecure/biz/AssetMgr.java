@@ -73,6 +73,7 @@ import com.xasecure.view.VXAuditMap;
 import com.xasecure.view.VXAuditMapList;
 import com.xasecure.view.VXPermMap;
 import com.xasecure.view.VXPermMapList;
+import com.xasecure.view.VXPolicy;
 import com.xasecure.view.VXPolicyExportAuditList;
 import com.xasecure.view.VXResource;
 import com.xasecure.view.VXResourceList;
@@ -2336,7 +2337,7 @@ public class AssetMgr extends AssetMgrBase {
 		return isValidAuthentication;
 	}
 	
-	public VXResource grantXResource(VXResource vXResource) {
+	public VXResource grantXResource(VXResource vXResource,VXPolicy vXPolicy) {
 		if(vXResource==null){
 			return vXResource;
 		}
@@ -2558,6 +2559,53 @@ public class AssetMgr extends AssetMgrBase {
 				trxLogList.addAll(xAuditMapService.getTransactionLog(vXAuditMap,
 						"create"));
 			}			
+		}
+		
+		if(vXResourceList!=null && vXResourceList.getListSize()>0){					
+			//replace perm map if true
+			if(vXPolicy.isReplacePerm()){
+				XXResource xXResource = xADaoManager.getXXResource().getById(vXResource.getId());
+				VXResource vXResourceDBObj=xResourceService.populateViewBean(xXResource);
+				List<XXTrxLog> trxLogListDelete = xResourceService.getTransactionLog(
+						vXResourceDBObj, xXResource, "delete");
+				List<VXPermMap> permMapListtoDelete=vXResourceDBObj.getPermMapList();
+				List<String> permMapDeleteKeys=new ArrayList<String>();				
+				String userKey=null;				
+				for(VXPermMap permMapTemp :permMapList){					
+					if(permMapTemp==null||permMapTemp.getPermFor()==0||(permMapTemp.getUserId()==null && permMapTemp.getGroupId()==null)){
+						continue;					
+					}
+					userKey=null;
+					if(permMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_USER){
+						userKey=permMapTemp.getPermFor()+"_"+permMapTemp.getUserId();
+					}
+					if(permMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
+						userKey=permMapTemp.getPermFor()+"_"+permMapTemp.getGroupId();
+					}
+					if(!permMapDeleteKeys.contains(userKey) && !stringUtil.isEmpty(userKey)){
+						permMapDeleteKeys.add(userKey);
+					}
+				}
+				for (VXPermMap permMap : permMapListtoDelete) {
+					if(permMap!=null){
+						if(permMap==null||permMap.getPermFor()==0||(permMap.getUserId()==null && permMap.getGroupId()==null)){
+							continue;					
+						}
+						userKey=null;
+						if(permMap.getPermFor()==AppConstants.XA_PERM_FOR_USER){
+							userKey=permMap.getPermFor()+"_"+permMap.getUserId();
+						}
+						if(permMap.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
+							userKey=permMap.getPermFor()+"_"+permMap.getGroupId();
+						}
+						if(permMapDeleteKeys.contains(userKey)){
+							xPermMapService.deleteResource(permMap.getId());
+							trxLogListDelete.addAll(xPermMapService.getTransactionLog(permMap,"delete"));
+						}					
+					}
+				}//permission deletion processing end
+				xaBizUtil.createTrxLog(trxLogListDelete);	
+			}
 		}
 		
 		//update case

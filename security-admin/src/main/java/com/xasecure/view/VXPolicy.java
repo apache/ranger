@@ -113,12 +113,14 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	protected String version;
 
 	protected String grantor;
+	protected boolean replacePerm;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXPolicy() {
 		isRecursive = false;
+		replacePerm=false;
 	}
 
 	/**
@@ -509,6 +511,14 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		this.grantor = grantor;
 	}
 
+	public boolean isReplacePerm() {
+		return replacePerm;
+	}
+
+	public void setReplacePerm(boolean replacePerm) {
+		this.replacePerm = replacePerm;
+	}	
+
 	@Override
 	public int getMyClassType() {
 		return AppConstants.CLASS_TYPE_XA_RESOURCE;
@@ -555,5 +565,5 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		this.setRepositoryType(null);		
 		this.setVersion(null);
 		this.setIsRecursive(new Boolean(null));
-	}	
+	}
 }
