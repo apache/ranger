@@ -26,12 +26,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,12 +37,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
-import org.apache.hadoop.hbase.DoNotRetryIOException;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Append;
@@ -52,22 +48,24 @@ import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Increment;
-import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.coprocessor.BaseRegionObserver;
+import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
+import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
 import org.apache.hadoop.hbase.coprocessor.MasterCoprocessorEnvironment;
-import org.apache.hadoop.hbase.coprocessor.MasterObserver;
 import org.apache.hadoop.hbase.coprocessor.ObserverContext;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.coprocessor.RegionServerCoprocessorEnvironment;
-import org.apache.hadoop.hbase.coprocessor.RegionServerObserver;
 import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.ipc.RequestContext;
 import org.apache.hadoop.hbase.master.RegionPlan;
+import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
+import org.apache.hadoop.hbase.protobuf.ResponseConverter;
+import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
+import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.AccessControlService;
 import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos.SnapshotDescription;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
@@ -81,6 +79,8 @@ import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.access.Permission;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 import org.apache.hadoop.hbase.security.access.TablePermission;
+import org.apache.hadoop.hbase.security.access.UserPermission;
+import org.apache.hadoop.hbase.security.access.XaAccessControlLists;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 
@@ -88,19 +88,26 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.protobuf.RpcCallback;
+import com.google.protobuf.RpcController;
+import com.google.protobuf.Service;
+import com.xasecure.admin.client.XaAdminRESTClient;
+import com.xasecure.admin.client.datatype.GrantRevokeData;
+import com.xasecure.admin.client.datatype.GrantRevokeData.PermMap;
 import com.xasecure.audit.model.EnumRepositoryType;
 import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.provider.AuditProviderFactory;
 import com.xasecure.authorization.hadoop.config.XaSecureConfiguration;
 import com.xasecure.authorization.hadoop.constants.XaSecureHadoopConstants;
+import com.xasecure.authorization.utils.StringUtil;
 
-public class XaSecureAuthorizationCoprocessor extends BaseRegionObserver implements MasterObserver, RegionServerObserver {
-	private static final Log AUDIT = LogFactory.getLog("xaaudit." + XaSecureAuthorizationCoprocessor.class.getName());
+public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCoprocessorBase implements AccessControlService.Interface, CoprocessorService {
 	private static final Log LOG = LogFactory.getLog(XaSecureAuthorizationCoprocessor.class.getName());
 	private static final String XaSecureModuleName = XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_XASECURE_MODULE_ACL_NAME_PROP , XaSecureHadoopConstants.DEFAULT_XASECURE_MODULE_ACL_NAME) ;
 	private static final short  accessGrantedFlag  = 1;
 	private static final short  accessDeniedFlag   = 0;
 	private static final String repositoryName          = XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
+	private static final String GROUP_PREFIX = "@";
 
 		
 	private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
@@ -477,6 +484,8 @@ public class XaSecureAuthorizationCoprocessor extends BaseRegionObserver impleme
 	}
 	@Override
 	public void postStartMaster(ObserverContext<MasterCoprocessorEnvironment> ctx) throws IOException {
+		XaAccessControlLists.init(ctx.getEnvironment().getMasterServices());
+
 		auditEvent("startMaster", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
 	}
 	@Override
@@ -859,87 +868,6 @@ public class XaSecureAuthorizationCoprocessor extends BaseRegionObserver impleme
 			
 		}
 	}
-	@Override
-	public void postAddColumnHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName,HColumnDescriptor aHColDesc) throws IOException {
-	}
-	@Override
-	public void postCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> aMctx, NamespaceDescriptor aNamespaceDesc) throws IOException {
-	}
-	@Override
-	public void postCreateTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, HTableDescriptor arg1, HRegionInfo[] aRegionInfoList) throws IOException {
-	}
-	@Override
-	public void postDeleteColumnHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName, byte[] aColumnFamilyName) throws IOException {
-	}
-	@Override
-	public void postDeleteNamespace(ObserverContext<MasterCoprocessorEnvironment> aMctx, String arg1) throws IOException {
-	}
-	@Override
-	public void postDeleteTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName) throws IOException {
-	}
-	@Override
-	public void postDisableTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName) throws IOException {
-	}
-	@Override
-	public void postEnableTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName) throws IOException {
-	}
-	@Override
-	public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> aMctx, List<HTableDescriptor> aHTableDescList) throws IOException {
-	}
-	@Override
-	public void postModifyColumnHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName,HColumnDescriptor aHColDesc) throws IOException {
-	}
-	@Override
-	public void postModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> aMctx,NamespaceDescriptor aNamespaceDesc) throws IOException {
-	}
-	@Override
-	public void postModifyTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName,HTableDescriptor aHTableDesc) throws IOException {
-	}
-	@Override
-	public void postRegionOffline(ObserverContext<MasterCoprocessorEnvironment> aMctx, HRegionInfo aHRegInfo) throws IOException {
-	}
-	@Override
-	public void preAddColumnHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName,HColumnDescriptor aHColDesc) throws IOException {
-	}
-	@Override
-	public void preCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> aMctx,NamespaceDescriptor aNamespaceDesc) throws IOException {
-	}
-	@Override
-	public void preCreateTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx,HTableDescriptor aHTableDesc, HRegionInfo[] aHRegInfoList) throws IOException {
-	}
-	@Override
-	public void preDeleteColumnHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName,byte[] aColumnFamilyName) throws IOException {
-	}
-	@Override
-	public void preDeleteNamespace(ObserverContext<MasterCoprocessorEnvironment> aMctx, String aNamespaceName) throws IOException {
-	}
-	@Override
-	public void preDeleteTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName) throws IOException {
-	}
-	@Override
-	public void preDisableTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName) throws IOException {
-	}
-	@Override
-	public void preEnableTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName) throws IOException {
-	}
-	@Override
-	public void preGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> aMctx,List<TableName> aTableNameList, List<HTableDescriptor> aHTableDescList) throws IOException {
-	}
-	@Override
-	public void preMasterInitialization(ObserverContext<MasterCoprocessorEnvironment> aMctx) throws IOException {
-	}
-	@Override
-	public void preModifyColumnHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName, HColumnDescriptor aHColDesc) throws IOException {
-	}
-	@Override
-	public void preModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> aMctx, NamespaceDescriptor aNamespaceDesc) throws IOException {
-	}
-	@Override
-	public void preModifyTableHandler(ObserverContext<MasterCoprocessorEnvironment> aMctx, TableName aTableName, HTableDescriptor aHTableDesc) throws IOException {
-	}
-	@Override
-	public void preRegionOffline(ObserverContext<MasterCoprocessorEnvironment> aMctx, HRegionInfo aHRegInfo) throws IOException {
-	}
 	
 	public static Date getUTCDate() {
 		Calendar local=Calendar.getInstance();
@@ -950,35 +878,235 @@ public class XaSecureAuthorizationCoprocessor extends BaseRegionObserver impleme
 	    return utc.getTime();
 	}
 	
-	//
-	//  Generated to support HBase 0.98.4-hadoop2 version
-	//
-	
 	@Override
-	public void postMerge(ObserverContext<RegionServerCoprocessorEnvironment> aRctx,HRegion reg1, HRegion reg2, HRegion reg3) throws IOException {
+	public void grant(RpcController controller, AccessControlProtos.GrantRequest request, RpcCallback<AccessControlProtos.GrantResponse> done) {
+		boolean isSuccess = false;
+		
+		GrantRevokeData grData = null;
+
+		try {
+			grData = createGrantData(request);
+
+			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
+
+		    xaAdmin.grantPrivilege(grData);
+
+		    isSuccess = true;
+		} catch(IOException excp) {
+			LOG.warn("grant() failed", excp);
+
+			ResponseConverter.setControllerException(controller, excp);
+		} catch (Exception excp) {
+			LOG.warn("grant() failed", excp);
+
+			ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
+		} finally {
+			byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
+
+			if(accessController.isAudited(tableName)) {
+				byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
+				byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
+
+				// Note: failed return from REST call will be logged as 'DENIED'
+				auditEvent("grant", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
+			}
+		}
+
+		AccessControlProtos.GrantResponse response = isSuccess ? AccessControlProtos.GrantResponse.getDefaultInstance() : null;
+
+		done.run(response);
 	}
-	
+
 	@Override
-	public void postMergeCommit(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion reg1, HRegion reg2, HRegion reg3) throws IOException {
+	public void revoke(RpcController controller, AccessControlProtos.RevokeRequest request, RpcCallback<AccessControlProtos.RevokeResponse> done) {
+		boolean isSuccess = false;
+
+		GrantRevokeData grData = null;
+
+		try {
+			grData = createRevokeData(request);
+
+			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
+
+		    xaAdmin.revokePrivilege(grData);
+
+		    isSuccess = true;
+		} catch(IOException excp) {
+			LOG.warn("grant() failed", excp);
+
+			ResponseConverter.setControllerException(controller, excp);
+		} catch (Exception excp) {
+			LOG.warn("grant() failed", excp);
+
+			ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
+		} finally {
+			byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
+
+			if(accessController.isAudited(tableName)) {
+				byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
+				byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
+
+				// Note: failed return from REST call will be logged as 'DENIED'
+				auditEvent("revoke", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
+			}
+		}
+
+		AccessControlProtos.RevokeResponse response = isSuccess ? AccessControlProtos.RevokeResponse.getDefaultInstance() : null;
+
+		done.run(response);
 	}
-	
+
 	@Override
-	public void postRollBackMerge(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion aReg1, HRegion aReg2) throws IOException {
+	public void checkPermissions(RpcController controller, AccessControlProtos.CheckPermissionsRequest request, RpcCallback<AccessControlProtos.CheckPermissionsResponse> done) {
+		LOG.warn("checkPermissions(): ");
 	}
-	
+
 	@Override
-	public void preMerge(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion reg1, HRegion aReg2) throws IOException {
+	public void getUserPermissions(RpcController controller, AccessControlProtos.GetUserPermissionsRequest request, RpcCallback<AccessControlProtos.GetUserPermissionsResponse> done) {
+		LOG.warn("getUserPermissions(): ");
 	}
-	
+
 	@Override
-	public void preMergeCommit(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion arg1, HRegion arg2, List<Mutation> arg3) throws IOException {
+	public Service getService() {
+	    return AccessControlProtos.AccessControlService.newReflectiveService(this);
 	}
-	
-	@Override
-	public void preRollBackMerge(ObserverContext<RegionServerCoprocessorEnvironment> aRctx, HRegion arg1, HRegion arg2) throws IOException {
+
+	private GrantRevokeData createGrantData(AccessControlProtos.GrantRequest request) throws Exception {
+		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.UserPermission up   = request.getUserPermission();
+		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
+
+		UserPermission      userPerm  = up == null ? null : ProtobufUtil.toUserPermission(up);
+		Permission.Action[] actions   = userPerm == null ? null : userPerm.getActions();
+		String              userName  = userPerm == null ? null : Bytes.toString(userPerm.getUser());
+		String              tableName = null;
+		String              colFamily = null;
+		String              qualifier = null;
+
+		if(perm == null) {
+			throw new Exception("grant(): invalid data - permission is null");
+		}
+
+		if(StringUtil.isEmpty(userName)) {
+			throw new Exception("grant(): invalid data - username empty");
+		}
+
+		if ((actions == null) || (actions.length == 0)) {
+			throw new Exception("grant(): invalid data - no action specified");
+		}
+
+		switch(perm.getType()) {
+			case Global:
+				tableName = colFamily = qualifier = "*";
+			break;
+
+			case Table:
+				tableName = Bytes.toString(userPerm.getTableName().getName());
+				colFamily = Bytes.toString(userPerm.getFamily());
+				qualifier = Bytes.toString(userPerm.getQualifier());
+			break;
+
+			case Namespace:
+			default:
+				LOG.warn("grant(): ignoring type '" + perm.getType().name() + "'");
+			break;
+		}
+		
+		if(StringUtil.isEmpty(tableName) && StringUtil.isEmpty(colFamily) && StringUtil.isEmpty(qualifier)) {
+			throw new Exception("grant(): table/columnFamily/columnQualifier not specified");
+		}
+
+		PermMap permMap = new PermMap();
+
+		if(userName.startsWith(GROUP_PREFIX)) {
+			permMap.addGroup(userName.substring(GROUP_PREFIX.length()));
+		} else {
+			permMap.addUser(userName);
+		}
+
+		for (int i = 0; i < actions.length; i++) {
+			switch(actions[i].code()) {
+				case 'R':
+				case 'W':
+				case 'C':
+				case 'A':
+					permMap.addPerm(actions[i].name());
+				break;
+
+				default:
+					LOG.warn("grant(): ignoring action '" + actions[i].name() + "' for user '" + userName + "'");
+			}
+		}
+
+		User   activeUser = getActiveUser();
+		String grantor    = activeUser != null ? activeUser.getShortName() : null;
+
+		GrantRevokeData grData = new GrantRevokeData();
+
+		grData.setHBaseData(grantor, repositoryName,  tableName,  qualifier, colFamily, permMap);
+
+		return grData;
 	}
-	
-	
-	
-	
+
+	private GrantRevokeData createRevokeData(AccessControlProtos.RevokeRequest request) throws Exception {
+		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.UserPermission up   = request.getUserPermission();
+		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
+
+		UserPermission      userPerm  = up == null ? null : ProtobufUtil.toUserPermission(up);
+		String              userName  = userPerm == null ? null : Bytes.toString(userPerm.getUser());
+		String              tableName = null;
+		String              colFamily = null;
+		String              qualifier = null;
+
+		if(perm == null) {
+			throw new Exception("revoke(): invalid data - permission is null");
+		}
+
+		if(StringUtil.isEmpty(userName)) {
+			throw new Exception("revoke(): invalid data - username empty");
+		}
+
+		switch(perm.getType()) {
+			case Global :
+				tableName = colFamily = qualifier = "*";
+			break;
+
+			case Table :
+				tableName = Bytes.toString(userPerm.getTableName().getName());
+				colFamily = Bytes.toString(userPerm.getFamily());
+				qualifier = Bytes.toString(userPerm.getQualifier());
+			break;
+
+			case Namespace:
+			default:
+				LOG.warn("revoke(): ignoring type '" + perm.getType().name() + "'");
+			break;
+		}
+		
+		if(StringUtil.isEmpty(tableName) && StringUtil.isEmpty(colFamily) && StringUtil.isEmpty(qualifier)) {
+			throw new Exception("revoke(): table/columnFamily/columnQualifier not specified");
+		}
+
+		PermMap permMap = new PermMap();
+
+		if(userName.startsWith(GROUP_PREFIX)) {
+			permMap.addGroup(userName.substring(GROUP_PREFIX.length()));
+		} else {
+			permMap.addUser(userName);
+		}
+
+		// revoke removes all permissions
+		permMap.addPerm(Permission.Action.READ.name());
+		permMap.addPerm(Permission.Action.WRITE.name());
+		permMap.addPerm(Permission.Action.CREATE.name());
+		permMap.addPerm(Permission.Action.ADMIN.name());
+
+		User   activeUser = getActiveUser();
+		String grantor    = activeUser != null ? activeUser.getShortName() : null;
+
+		GrantRevokeData grData = new GrantRevokeData();
+
+		grData.setHBaseData(grantor, repositoryName,  tableName,  qualifier, colFamily, permMap);
+
+		return grData;
+	}
 }

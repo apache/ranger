@@ -657,18 +657,15 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 			}
 		}
 
-		GrantRevokeData grData = new GrantRevokeData();
-
-		List<GrantRevokeData.PermMap> permMapList = new ArrayList<GrantRevokeData.PermMap>();
-		permMapList.add(permMap);
-
 		String grantor = grantorPrincipal != null ? grantorPrincipal.getName() : null;
 
 		if(StringUtil.isEmpty(grantor)) {
 			LOG.warn("grantorPrincipal.getName() is null/empty!");
 		}
 
-		grData.setHiveData(grantor, repositoryName, database, table, columns, permMapList);
+		GrantRevokeData grData = new GrantRevokeData();
+
+		grData.setHiveData(grantor, repositoryName, database, table, columns, permMap);
 
 		return grData;
 	}

@@ -48,6 +48,16 @@
 			changes)
 		</description>
 	</property>
+	<property>
+		<name>xasecure.policymgr.url</name>
+		<value>http://policymanagerhost:port</value>
+		<description>Base URL for XASecure PolicyManager</description>
+	</property>
+	<property>
+		<name>xasecure.policymgr.sslconfig.filename</name>
+		<value>/etc/hive/conf/xasecure-policymgr-ssl.xml</value>
+		<description>Path to the file containing SSL details to contact XASecure PolicyManager</description>
+	</property>
 
 
 	<!-- the following properties are used by PEP to show/hide audit information 

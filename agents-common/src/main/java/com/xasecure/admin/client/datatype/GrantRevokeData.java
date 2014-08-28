@@ -102,12 +102,12 @@ public class GrantRevokeData implements java.io.Serializable {
 	}
 
 
-	public void setHiveData(String        grantor,
-							String        repositoryName,
-							String        databases,
-							String        tables,
-							String        columns,
-							List<PermMap> permMapList) {
+	public void setHiveData(String  grantor,
+							String  repositoryName,
+							String  databases,
+							String  tables,
+							String  columns,
+							PermMap permMap) {
 		this.grantor         = grantor;
 		this.repositoryName = repositoryName;
 		this.repositoryType = "hive";
@@ -116,18 +116,15 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.columns        = columns;
 		this.isAuditEnabled = true;
 		this.isEnabled      = true;
-
-		for(PermMap permMap : permMapList) {
-			this.permMapList.add(permMap);
-		}
+		this.permMapList.add(permMap);
 	}
 
-	public void setHBaseData(String        grantor,
-							 String        repositoryName,
-							 String        tables,
-							 String        columns,
-							 String        columnFamilies,
-							 List<PermMap> permMapList) {
+	public void setHBaseData(String  grantor,
+							 String  repositoryName,
+							 String  tables,
+							 String  columns,
+							 String  columnFamilies,
+							 PermMap permMap) {
 		this.grantor         = grantor;
 		this.repositoryName = repositoryName;
 		this.repositoryType = "hbase";
@@ -136,10 +133,7 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.columnFamilies = columnFamilies;
 		this.isAuditEnabled = true;
 		this.isEnabled      = true;
-
-		for(PermMap permMap : permMapList) {
-			this.permMapList.add(permMap);
-		}
+		this.permMapList.add(permMap);
 	}
 	
 	public String toJson() {

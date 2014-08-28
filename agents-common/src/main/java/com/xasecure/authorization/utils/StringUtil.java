@@ -237,6 +237,10 @@ public class StringUtil {
 		return str == null ? null : str.toLowerCase();
 	}
 
+	public static byte[] getBytes(String str) {
+		return str == null ? null : str.getBytes();
+	}
+
 	public static Date getUTCDate() {
 	    Calendar local  = Calendar.getInstance();
 	    int      offset = local.getTimeZone().getOffset(local.getTimeInMillis());
