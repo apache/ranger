@@ -428,7 +428,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * @param isEnabled
 	 *            Value to set member attribute <b>isEnable</b>
 	 */
-	public void setEnabled(boolean isEnabled) {
+	public void setIsEnabled(boolean isEnabled) {
 		this.isEnabled = isEnabled;
 	}
 
@@ -437,7 +437,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * 
 	 * @return boolean - value of member attribute <b>isEnable</b>.
 	 */
-	public boolean isEnabled() {
+	public boolean getIsEnabled() {
 		return this.isEnabled;
 	}
 
@@ -448,7 +448,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * @param isRecursive
 	 *            Value to set member attribute <b>isRecursive</b>
 	 */
-	public void setRecursive(boolean isRecursive) {
+	public void setIsRecursive(boolean isRecursive) {
 		this.isRecursive = isRecursive;
 	}
 
@@ -457,7 +457,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * 
 	 * @return boolean - value of member attribute <b>isRecursive</b>.
 	 */
-	public boolean isRecursive() {
+	public boolean getIsRecursive() {
 		return this.isRecursive;
 	}
 
@@ -468,7 +468,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * @param isAuditEnabled
 	 *            Value to set member attribute <b>isAuditEnabled</b>
 	 */
-	public void setAuditEnabled(boolean isAuditEnabled) {
+	public void setIsAuditEnabled(boolean isAuditEnabled) {
 		this.isAuditEnabled = isAuditEnabled;
 	}
 
@@ -477,7 +477,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * 
 	 * @return boolean - value of member attribute <b>isAuditEnabled</b>.
 	 */
-	public boolean isAuditEnabled() {
+	public boolean getIsAuditEnabled() {
 		return this.isAuditEnabled;
 	}
 
@@ -554,6 +554,6 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		this.setResourceName(null);		
 		this.setRepositoryType(null);		
 		this.setVersion(null);
-		this.setRecursive(new Boolean(null));
+		this.setIsRecursive(new Boolean(null));
 	}	
 }

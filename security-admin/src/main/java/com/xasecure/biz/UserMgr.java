@@ -1105,8 +1105,9 @@ public class UserMgr {
 	}
 
 	public XXPortalUser updateUserWithPass(VXPortalUser userProfile) {
-		XXPortalUser xXPortalUser = this.updateUser(userProfile);
 		String updatedPassword = userProfile.getPassword();
+		XXPortalUser xXPortalUser = this.updateUser(userProfile);
+
 		if (updatedPassword != null && !updatedPassword.isEmpty()) {
 			if (!stringUtil.validatePassword(updatedPassword,
 					new String[] { xXPortalUser.getFirstName(), xXPortalUser.getLastName(),

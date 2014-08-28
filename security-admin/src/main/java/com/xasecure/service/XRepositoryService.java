@@ -49,7 +49,7 @@ public class XRepositoryService extends
 		vRepo.setRepositoryType(AppConstants.getLabelFor_AssetType(vXAsset
 				.getAssetType()));
 		vRepo.setConfig(vXAsset.getConfig());
-		vRepo.setActive(AppConstants.getBooleanFor_BooleanValue(vXAsset
+		vRepo.setIsActive(AppConstants.getBooleanFor_BooleanValue(vXAsset
 				.getActiveStatus()));
 		vRepo.setVersion(version);
 
@@ -67,7 +67,7 @@ public class XRepositoryService extends
 				.getRepositoryType()));
 		vXAsset.setConfig(vXRepo.getConfig());
 		vXAsset.setActiveStatus(AppConstants.getEnumFor_BooleanValue(vXRepo
-				.isActive()));
+				.getIsActive()));
 
 		return vXAsset;
 	}

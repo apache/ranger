@@ -153,7 +153,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 	 * @param isActive
 	 *            Value to set member attribute <b>isActive</b>
 	 */
-	public void setActive(boolean isActive) {
+	public void setIsActive(boolean isActive) {
 		this.isActive = isActive;
 	}
 
@@ -162,7 +162,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 	 * 
 	 * @return boolean - value of member attribute <b>isActive</b>.
 	 */
-	public boolean isActive() {
+	public boolean getIsActive() {
 		return this.isActive;
 	}
 

@@ -170,7 +170,7 @@ public class AssetMgr extends AssetMgrBase {
 		String[] orgResNameList = stringUtil.split(resourceName, ",");
 		List<String> newResNameList = new ArrayList<String>();
 		for(String resName : orgResNameList) {
-			if(resName.length() > 0 && (resName.substring(resName.length()-1).equalsIgnoreCase("/"))) {
+			if(resName.length() > 1 && (resName.substring(resName.length()-1).equalsIgnoreCase("/"))) {
 				resName = resName.substring(0, resName.length()-1);
 				newResNameList.add(resName);
 				logger.info("Resource Name is not valid : " +resName + " Ignoring last /");
