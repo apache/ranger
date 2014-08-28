@@ -43,8 +43,11 @@ public class XaSecureHadoopConstants {
 	public static final String HIVE_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "hive.authorization.verifier.classname" ;
 	public static final String HIVE_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "com.xasecure.pdp.hive.XASecureAuthorizer" ;
 
-	public static final String  HIVE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_PROP 	     = "xasecure.hive.authorizer.update.xapolicies.on.grant.revoke" ;
+	public static final String  HIVE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_PROP 	     = "xasecure.hive.update.xapolicies.on.grant.revoke" ;
 	public static final boolean HIVE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE = true;
+
+	public static final String  HBASE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_PROP 	     = "xasecure.hbase.update.xapolicies.on.grant.revoke" ;
+	public static final boolean HBASE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE = true;
 	
 	public static final String KNOX_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "knox.authorization.verifier.classname" ;
 	public static final String KNOX_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "com.xasecure.pdp.knox.XASecureAuthorizer" ;

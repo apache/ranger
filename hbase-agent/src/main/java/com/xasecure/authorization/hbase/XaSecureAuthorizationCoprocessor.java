@@ -107,6 +107,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	private static final short  accessGrantedFlag  = 1;
 	private static final short  accessDeniedFlag   = 0;
 	private static final String repositoryName          = XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
+	private static final boolean UpdateXaPoliciesOnGrantRevoke = XaSecureConfiguration.getInstance().getBoolean(XaSecureHadoopConstants.HBASE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_PROP, XaSecureHadoopConstants.HBASE_UPDATE_XAPOLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 	private static final String GROUP_PREFIX = "@";
 
 		
@@ -881,34 +882,36 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	@Override
 	public void grant(RpcController controller, AccessControlProtos.GrantRequest request, RpcCallback<AccessControlProtos.GrantResponse> done) {
 		boolean isSuccess = false;
-		
-		GrantRevokeData grData = null;
 
-		try {
-			grData = createGrantData(request);
-
-			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
-
-		    xaAdmin.grantPrivilege(grData);
-
-		    isSuccess = true;
-		} catch(IOException excp) {
-			LOG.warn("grant() failed", excp);
-
-			ResponseConverter.setControllerException(controller, excp);
-		} catch (Exception excp) {
-			LOG.warn("grant() failed", excp);
-
-			ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
-		} finally {
-			byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
-
-			if(accessController.isAudited(tableName)) {
-				byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
-				byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
-
-				// Note: failed return from REST call will be logged as 'DENIED'
-				auditEvent("grant", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
+		if(UpdateXaPoliciesOnGrantRevoke) {
+			GrantRevokeData grData = null;
+	
+			try {
+				grData = createGrantData(request);
+	
+				XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
+	
+			    xaAdmin.grantPrivilege(grData);
+	
+			    isSuccess = true;
+			} catch(IOException excp) {
+				LOG.warn("grant() failed", excp);
+	
+				ResponseConverter.setControllerException(controller, excp);
+			} catch (Exception excp) {
+				LOG.warn("grant() failed", excp);
+	
+				ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
+			} finally {
+				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
+	
+				if(accessController.isAudited(tableName)) {
+					byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
+					byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
+	
+					// Note: failed return from REST call will be logged as 'DENIED'
+					auditEvent("grant", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
+				}
 			}
 		}
 
@@ -921,33 +924,35 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	public void revoke(RpcController controller, AccessControlProtos.RevokeRequest request, RpcCallback<AccessControlProtos.RevokeResponse> done) {
 		boolean isSuccess = false;
 
-		GrantRevokeData grData = null;
-
-		try {
-			grData = createRevokeData(request);
-
-			XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
-
-		    xaAdmin.revokePrivilege(grData);
-
-		    isSuccess = true;
-		} catch(IOException excp) {
-			LOG.warn("grant() failed", excp);
-
-			ResponseConverter.setControllerException(controller, excp);
-		} catch (Exception excp) {
-			LOG.warn("grant() failed", excp);
-
-			ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
-		} finally {
-			byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
-
-			if(accessController.isAudited(tableName)) {
-				byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
-				byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
-
-				// Note: failed return from REST call will be logged as 'DENIED'
-				auditEvent("revoke", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
+		if(UpdateXaPoliciesOnGrantRevoke) {
+			GrantRevokeData grData = null;
+	
+			try {
+				grData = createRevokeData(request);
+	
+				XaAdminRESTClient xaAdmin = new XaAdminRESTClient();
+	
+			    xaAdmin.revokePrivilege(grData);
+	
+			    isSuccess = true;
+			} catch(IOException excp) {
+				LOG.warn("revoke() failed", excp);
+	
+				ResponseConverter.setControllerException(controller, excp);
+			} catch (Exception excp) {
+				LOG.warn("revoke() failed", excp);
+	
+				ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
+			} finally {
+				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
+	
+				if(accessController.isAudited(tableName)) {
+					byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
+					byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
+	
+					// Note: failed return from REST call will be logged as 'DENIED'
+					auditEvent("revoke", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
+				}
 			}
 		}
 

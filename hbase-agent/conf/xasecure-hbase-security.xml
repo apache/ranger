@@ -55,7 +55,7 @@
 	</property>
 	<property>
 		<name>xasecure.policymgr.sslconfig.filename</name>
-		<value>/etc/hive/conf/xasecure-policymgr-ssl.xml</value>
+		<value>/etc/hbase/conf/xasecure-policymgr-ssl.xml</value>
 		<description>Path to the file containing SSL details to contact XASecure PolicyManager</description>
 	</property>
 
@@ -69,6 +69,11 @@
 			Flag to indicate if the read/written values to be written in the audit
 			log file
 		</description>
+	</property>
+	<property>
+		<name>xasecure.hbase.update.xapolicies.on.grant.revoke</name>
+		<value>true</value>
+		<description>Should Hbase agent update XASecure policies for updates to permissions done using GRANT/REVOKE?</description>
 	</property>
 
 </configuration>

@@ -60,7 +60,7 @@
 		<description>Path to the file containing SSL details to contact XASecure PolicyManager</description>
 	</property>
 	<property>
-		<name>xasecure.hive.authorizer.update.xapolicies.on.grant.revoke</name>
+		<name>xasecure.hive.update.xapolicies.on.grant.revoke</name>
 		<value>true</value>
 		<description>Should Hive agent update XASecure policies for updates to permissions done using GRANT/REVOKE?</description>
 	</property>
