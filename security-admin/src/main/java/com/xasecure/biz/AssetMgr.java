@@ -21,6 +21,7 @@ import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hive.com.esotericsoftware.minlog.Log;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -1521,14 +1522,9 @@ public class AssetMgr extends AssetMgrBase {
 				HBaseClient connectionObj = new HBaseClient(vXAsset.getName(),
 						configMap);
 				if (connectionObj != null) {
-					connectivityStatus = true;
-					// TODO: A getConnectionStatus() method should be
-					// implemented in HBaseClient class to avoid tables lookup
-					// in HBase
-					List<String> testResult = connectionObj.getTableList(".*");
-					if (testResult != null && testResult.size() != 0) {
-						connectivityStatus = true;
-					}
+					connectivityStatus = connectionObj.getHBaseStatus();
+				} else {
+					Log.error("testConfig: Not able to create HBaseClient");
 				}
 			} else if (assetType == AppConstants.ASSET_KNOX) { 
 				KnoxClient knoxClient = assetConnectionMgr.getKnoxClient(

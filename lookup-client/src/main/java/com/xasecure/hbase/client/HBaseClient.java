@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.security.auth.Subject;
 
@@ -39,7 +41,6 @@ public class HBaseClient extends BaseClient {
 	//TODO: temporary solution - to be added to the UI for HBase 
 	private static HashMap<String,String> addDefaultHBaseProp(HashMap<String,String> connectionProp) {
 		if (connectionProp != null) {
-			
 			String param = "zookeeper.znode.parent" ;
 			String unsecuredPath = "/hbase-unsecure" ;
 			String authParam = "hadoop.security.authorization" ;
@@ -58,27 +59,78 @@ public class HBaseClient extends BaseClient {
 		return connectionProp;
 	}
 
-	
 	public void initHBase() {
 		try {
 			if (UserGroupInformation.isSecurityEnabled()) {
+				LOG.info("initHBase:security enabled");
 				if (getConfigHolder().getKeyTabFile() == null) {
+					    LOG.info("initHBase: using username/password");
 						subj = SecureClientLogin.loginUserWithPassword(getConfigHolder().getUserName(), getConfigHolder().getPassword()) ;
 				}
 				else {
+				    LOG.info("initHBase: using username/keytab");
 					subj = SecureClientLogin.loginUserFromKeytab(getConfigHolder().getUserName() , getConfigHolder().getKeyTabFile()) ;
 				}
 			}
 			else {
+			    LOG.info("initHBase: security not enabled, using username");
 				subj = SecureClientLogin.login(getConfigHolder().getUserName()) ;
 			}
 		} catch (IOException e) {
-			LOG.error("Unable to perform secure login to Hive environment [" + getConfigHolder().getDatasourceName() + "]", e);
+			LOG.error("Unable to perform secure login to Hbase environment [" + getConfigHolder().getDatasourceName() + "]", e);
 		}
 	}
 	
+	public boolean getHBaseStatus() {
+		boolean hbaseStatus = false;
+		
+		if (subj != null) {
+			ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
+			try {
+				Thread.currentThread().setContextClassLoader(getConfigHolder().getClassLoader());
 	
+				hbaseStatus = Subject.doAs(subj, new PrivilegedAction<Boolean>() {
+					@Override
+					public Boolean run() {
+						Boolean hbaseStatus1 = false;
+						try {
+						    LOG.info("getHBaseStatus: creating default Hbase configuration");
+							Configuration conf = HBaseConfiguration.create() ;					
+							LOG.info("getHBaseStatus: setting config values from client");
+							setClientConfigValues(conf);						
+						    LOG.info("getHBaseStatus: checking HbaseAvailability with the new config");
+							HBaseAdmin.checkHBaseAvailable(conf);					
+						    LOG.info("getHBaseStatus: no exception: HbaseAvailability true");
+							hbaseStatus1 = true;
+						} catch (Throwable e) {
+							LOG.error("getHBaseStatus: Unable to check availability of Hbase environment [" + getConfigHolder().getDatasourceName() + "]", e);
+							hbaseStatus1 = false;
+						}
+						return hbaseStatus1;
+					}
+				}) ;
+			} finally {
+				Thread.currentThread().setContextClassLoader(prevCl);
+			}
+		} else {
+			LOG.error("getHBaseStatus: secure login not done, subject is null");
+		}
+		
+		return hbaseStatus;
+	}
 	
+	private void setClientConfigValues(Configuration conf) {
+		if (this.connectionProperties == null) return;
+		Iterator<Entry<String, String>> i =  this.connectionProperties.entrySet().iterator();
+		while (i.hasNext()) {
+			Entry<String, String> e = i.next();
+			String v = conf.get(e.getKey());
+			if (v != null && !v.equalsIgnoreCase(e.getValue())) {
+				conf.set(e.getKey(), e.getValue());
+			}
+		}		
+	}
+
 	public List<String> getTableList(final String tableNameMatching) {
 		List<String> ret = null ;
 		
