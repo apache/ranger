@@ -17,13 +17,14 @@
                 <outputDirectory>/lib</outputDirectory>
                 <unpack>false</unpack>
                 <includes>
-                    <include>commons-configuration:commons-configuration</include>
-                    <include>org.apache.hadoop:hadoop-common</include>
-                    <include>org.apache.hadoop:hadoop-common-plus</include>
-                    <include>org.glassfish.jersey.core:jersey-client</include>
+                    <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
+                    <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
+                    <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop-common.version}</include>
                     <include>com.google.code.gson:gson</include>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
+                    <include>commons-collections:commons-collections</include>
+					<include>com.sun.jersey:jersey-bundle</include>
                 </includes>
             </dependencySet>
             <dependencySet>
@@ -34,15 +35,15 @@
                     <includes>
                         <include>commons-cli:commons-cli</include>
                         <include>commons-collections:commons-collections</include>
-                        <include>commons-configuration:commons-configuration</include>
-                        <include>commons-lang:commons-lang</include>
+                        <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
+                        <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                         <include>commons-logging:commons-logging</include>
-                        <include>com.google.guava:guava</include>
+                        <include>com.google.guava:guava:jar:${guava.version}</include>
                         <include>org.hamcrest:hamcrest-all</include>
                         <include>junit:junit</include>
-                        <include>org.slf4j:slf4j-api</include>
-                        <include>org.apache.hadoop:hadoop-common</include>
-                        <include>org.apache.hadoop:hadoop-auth</include>
+                        <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
+                        <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
+                        <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
 						<include>security_agents.agents-cred:agents-cred</include>
 						<include>com.hortonworks.hadoop.security:credentialbuilder</include>
                     </includes>
