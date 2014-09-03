@@ -25,6 +25,7 @@ import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.model.HdfsAuditEvent;
 import com.xasecure.audit.model.HiveAuditEvent;
 import com.xasecure.audit.model.KnoxAuditEvent;
+import com.xasecure.audit.model.StormAuditEvent;
 
 
 public class Log4jAuditProvider implements AuditProvider {
@@ -68,7 +69,15 @@ public class Log4jAuditProvider implements AuditProvider {
 
 		AUDITLOG.info(event.toString());
 	}
-	
+
+	@Override
+	public void log(StormAuditEvent event) {
+		if(! AUDITLOG.isInfoEnabled())
+			return;
+
+		AUDITLOG.info(event.toString());
+	}
+
 	@Override
 	public void start() {
 		// intentionally left empty

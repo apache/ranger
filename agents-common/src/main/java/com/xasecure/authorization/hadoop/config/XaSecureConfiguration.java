@@ -58,7 +58,8 @@ public class XaSecureConfiguration extends Configuration {
 		addResource(XaSecureHadoopConstants.XASECURE_KNOX_SECURITY_FILE);
 		addResource(XaSecureHadoopConstants.XASECURE_HBASE_SECURITY_FILE) ;
 		addResource(XaSecureHadoopConstants.XASECURE_HIVE_SECURITY_FILE) ;
-		addResource(XaSecureHadoopConstants.XASECURE_KEYMGR_FILE) ;
+		addResource(XaSecureHadoopConstants.XASECURE_STORM_SECURITY_FILE);
+		
 	}
 
 	public static XaSecureConfiguration getInstance() {

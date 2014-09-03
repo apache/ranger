@@ -34,15 +34,18 @@ import com.xasecure.audit.dao.XAHBaseAuditEventDao;
 import com.xasecure.audit.dao.XAHdfsAuditEventDao;
 import com.xasecure.audit.dao.XAHiveAuditEventDao;
 import com.xasecure.audit.dao.XAKnoxAuditEventDao;
+import com.xasecure.audit.dao.XAStormAuditEventDao;
 import com.xasecure.audit.entity.XXHBaseAuditEvent;
 import com.xasecure.audit.entity.XXHdfsAuditEvent;
 import com.xasecure.audit.entity.XXHiveAuditEvent;
 import com.xasecure.audit.entity.XXKnoxAuditEvent;
+import com.xasecure.audit.entity.XXStormAuditEvent;
 import com.xasecure.audit.model.AuditEventBase;
 import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.model.HdfsAuditEvent;
 import com.xasecure.audit.model.HiveAuditEvent;
 import com.xasecure.audit.model.KnoxAuditEvent;
+import com.xasecure.audit.model.StormAuditEvent;
 
 
 /*
@@ -59,6 +62,7 @@ public class DbAuditProvider implements AuditProvider {
 	private XAHdfsAuditEventDao hdfsDao;
 	private XAHiveAuditEventDao hiveDao;
 	private XAKnoxAuditEventDao knoxDao;
+	private XAStormAuditEventDao stormDao ;
 	
 	private int                 mCommitBatchSize  = 1;
 	private long                mLastCommitTime   = 0;
@@ -108,6 +112,16 @@ public class DbAuditProvider implements AuditProvider {
 		
 		if(preCreate(event)) {
 			knoxDao.create(new XXKnoxAuditEvent(event));
+			postCreate(event);
+		}
+	}
+
+	@Override
+	public void log(StormAuditEvent event) {
+		LOG.debug("DbAuditProvider.log(StormAuditEvent)");
+		
+		if(preCreate(event)) {
+			stormDao.create(new XXStormAuditEvent(event));
 			postCreate(event);
 		}
 	}
@@ -168,6 +182,7 @@ public class DbAuditProvider implements AuditProvider {
 		hdfsDao = daoManager.getXAHdfsAuditEvent();
 		hiveDao = daoManager.getXAHiveAuditEvent();
 		knoxDao = daoManager.getXAKnoxAuditEvent();
+		stormDao = daoManager.getXAStormAuditEvent() ;
 
 		return true;
 	}

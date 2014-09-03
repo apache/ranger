@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>security_agents.storm-agent</groupId>
+  <artifactId>storm-agent</artifactId>
+  <name>Storm Security Agent</name>
+  <description>Storm Security Agents</description>
+  <packaging>jar</packaging>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <parent>
+     <groupId>com.hortonworks.hadoop.security</groupId>
+     <artifactId>argus</artifactId>
+     <version>0.1.0</version>
+     <relativePath>..</relativePath>
+  </parent>
+  <dependencies>
+	<dependency>
+		<groupId>org.apache.storm</groupId>
+		<artifactId>storm-core</artifactId>
+		<version>0.9.2-incubating</version>
+	</dependency>
+    <dependency>
+      <groupId>security_agents.agents-common</groupId>
+      <artifactId>agents-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>security_agents.agents-audit</groupId>
+      <artifactId>agents-audit</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.hortonworks.hadoop.security</groupId>
+      <artifactId>credentialbuilder</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>

@@ -56,5 +56,15 @@ public class XaSecureConstants {
 	public static final String XASECURE_SSL_KEYMANAGER_ALGO_TYPE						  = "SunX509" ;
 	public static final String XASECURE_SSL_TRUSTMANAGER_ALGO_TYPE						  = "SunX509" ;
 	public static final String XASECURE_SSL_CONTEXT_ALGO_TYPE						      = "SSL" ;
+	
+	
+	
+	public static final String XASECURE_STORM_POLICYMGR_URL_PROP 						  = "xasecure.storm.policymgr.url";
+	public static final String XASECURE_STORM_POLICYMGR_URL_SAVE_FILE_PROP 				  = "xasecure.storm.policymgr.url.saveAsFile";
+	public static final String XASECURE_STORM_POLICYMGR_URL_RELOAD_INTERVAL_IN_MILLIS_PROP = "xasecure.storm.policymgr.url.reloadIntervalInMillis";
+	public static final String XASECURE_STORM_POLICYMGR_SSL_CONFIG_FILE_PROP     				= "xasecure.storm.policymgr.ssl.config";
+	public static final long   XASECURE_STORM_POLICYMGR_URL_RELOAD_INTERVAL_IN_MILLIS_DEFAULT = 60000L ;
+	public static final String XASECURE_STORM_LAST_SAVED_POLICY_FILE_PROP 					 = "xasecure.storm.policymgr.url.laststoredfile";
+
 
 }

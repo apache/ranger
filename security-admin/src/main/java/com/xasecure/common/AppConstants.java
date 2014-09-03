@@ -593,46 +593,60 @@ public class AppConstants extends XACommonEnums {
 			return "Allow"; //XA_PERM_TYPE_ALLOW
 		}
 		if( elementValue == 18 ) {
-			return "Submit Topology"; //XA_PERM_TYPE_SUBMIT_TOPOLOGY
+			// return "Submit Topology"; //XA_PERM_TYPE_SUBMIT_TOPOLOGY
+			return "submitTopology" ;
 		}
 		if( elementValue == 19 ) {
-			return "File Upload"; //XA_PERM_TYPE_FILE_UPLOAD
+			// return "File Upload"; //XA_PERM_TYPE_FILE_UPLOAD
+			return "fileUpload" ;
 		}
 		if( elementValue == 20 ) {
-			return "Get Nimbus Conf"; //XA_PERM_TYPE_GET_NIMBUS
+			// return "Get Nimbus Conf"; //XA_PERM_TYPE_GET_NIMBUS
+			return "getNimbusConf" ;
 		}
 		if( elementValue == 21 ) {
-			return "Get Cluster Info"; //XA_PERM_TYPE_GET_CLUSTER_INFO
+			// return "Get Cluster Info"; //XA_PERM_TYPE_GET_CLUSTER_INFO
+			return "getClusterInfo" ;
 		}
 		if( elementValue == 22 ) {
-			return "File Download"; //XA_PERM_TYPE_FILE_DOWNLOAD
+			// return "File Download"; //XA_PERM_TYPE_FILE_DOWNLOAD
+			return "fileDownload" ;
 		}
 		if( elementValue == 23 ) {
-			return "Kill Topology"; //XA_PERM_TYPE_KILL_TOPOLOGY
+			// return "Kill Topology"; //XA_PERM_TYPE_KILL_TOPOLOGY
+			return "killTopology" ;
 		}
 		if( elementValue == 24 ) {
-			return "Rebalance"; //XA_PERM_TYPE_REBALANCE
+			// return "Rebalance"; //XA_PERM_TYPE_REBALANCE
+			return "rebalance" ;
 		}
 		if( elementValue == 25 ) {
-			return "Activate"; //XA_PERM_TYPE_ACTIVATE
+			// return "Activate"; //XA_PERM_TYPE_ACTIVATE
+			return "activate" ;
 		}
 		if( elementValue == 26 ) {
-			return "Deactivate"; //XA_PERM_TYPE_DEACTIVATE
+			// return "Deactivate"; //XA_PERM_TYPE_DEACTIVATE
+			return "deactivate" ;
 		}
 		if( elementValue == 27 ) {
-			return "Get Topology Conf"; //XA_PERM_TYPE_GET_TOPOLOGY_CONF
+			// return "Get Topology Conf"; //XA_PERM_TYPE_GET_TOPOLOGY_CONF
+			return "getTopologyConf" ;
 		}
 		if( elementValue == 28 ) {
-			return "Get Topology"; //XA_PERM_TYPE_GET_TOPOLOGY
+			// return "Get Topology"; //XA_PERM_TYPE_GET_TOPOLOGY
+			return "getTopology" ;
 		}
 		if( elementValue == 29 ) {
-			return "Get User Topology"; //XA_PERM_TYPE_GET_USER_TOPOLOGY
+			// return "Get User Topology"; //XA_PERM_TYPE_GET_USER_TOPOLOGY
+			return "getUserTopology" ;
 		}
 		if( elementValue == 30 ) {
-			return "Get Topology Info"; //XA_PERM_TYPE_GET_TOPOLOGY_INFO
+			// return "Get Topology Info"; //XA_PERM_TYPE_GET_TOPOLOGY_INFO
+			return "getTopologyInfo" ;
 		}
 		if( elementValue == 31 ) {
-			return "Upload New Credential"; //XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL
+			// return "Upload New Credential"; //XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL
+			return "uploadNewCredentials" ;
 		}
 		return null;
 	}

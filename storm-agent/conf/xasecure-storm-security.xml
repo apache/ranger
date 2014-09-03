@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration xmlns:xi="http://www.w3.org/2001/XInclude">
+
+
+	<!--  The following property is used to select appropriate XASecure Authorizer Module (filebased, policymanager based) -->
+	<property>
+		<name>storm.authorization.verifier.classname</name>
+		<value>com.xasecure.pdp.storm.XASecureAuthorizer</value>
+		<description>
+			Class Name of the authorization Module 
+		</description>
+	</property>
+
+
+	<!-- The following properties are used only when PolicyManager is used as 
+		main storage for all policy -->
+	<property>
+		<name>xasecure.storm.policymgr.url</name>
+		<value>http://policymanagerhost:port/service/assets/dev-storm</value>
+		<description>
+			Location where XASecure Role Based Authorization Info is
+			located.
+		</description>
+	</property>
+
+	<property>
+		<name>xasecure.storm.policymgr.url.saveAsFile</name>
+		<value>/tmp/xasecure-storm-policy.json</value>
+		<description>
+			Location where XASecure Role Based Authorization Info is
+			saved after successful retrieval from policymanager
+		</description>
+	</property>
+
+	<property>
+		<name>xasecure.storm.policymgr.url.laststoredfile</name>
+		<value>/home/storm/last_xasecure-storm-policy.json</value>
+		<description>
+			Location and file where last XASecure Role Based Authorization Info
+		    is saved after successful retrieval from policymanager.
+		</description>
+	</property>
+
+	<property>
+		<name>xasecure.storm.policymgr.url.reloadIntervalInMillis</name>
+		<value>30000</value>
+		<description>
+			How often do we need to verify the changes tothe
+			authorization url,
+			to reload to memory (reloaded only if there are
+			changes)
+		</description>
+	</property>
+
+	<property>
+		<name>xasecure.policymgr.url</name>
+		<value>http://policymanagerhost:port</value>
+		<description>Base URL for XASecure PolicyManager</description>
+	</property>
+
+	<property>
+		<name>xasecure.policymgr.sslconfig.filename</name>
+		<value>/etc/storm/conf/xasecure-policymgr-ssl.xml</value>
+		<description>Path to the file containing SSL details to contact XASecure PolicyManager</description>
+	</property>
+
+</configuration>

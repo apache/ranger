@@ -1041,6 +1041,32 @@ public class AssetMgr extends AssetMgrBase {
 					}
 					resourceList.add(resourceMap);
 				}
+				
+            }
+            else if (xAsset.getAssetType() == AppConstants.ASSET_STORM) {
+                    for (XXResource xResource : xResourceList) {
+                            HashMap<String, Object> resourceMap = new HashMap<String, Object>();
+
+                            resourceMap.put("id", xResource.getId());
+                            resourceMap.put("topology_name", xResource.getTopologies()) ;
+                            resourceMap.put("policyStatus", XACommonEnums
+                                            .getLabelFor_ActiveStatus(xResource
+                                                            .getResourceStatus()));
+                            if (xResource.getIsEncrypt() == 1) {
+                                    resourceMap.put("encrypt", 1);
+                            } else {
+                                    resourceMap.put("encrypt", 0);
+                            }
+                            populatePermMap(xResource, resourceMap, AppConstants.ASSET_STORM);
+                            List<XXAuditMap> xAuditMaps = xADaoManager.getXXAuditMap()
+                                            .findByResourceId(xResource.getId());
+                            if (xAuditMaps.size() != 0) {
+                                    resourceMap.put("audit", 1);
+                            } else {
+                                    resourceMap.put("audit", 0);
+                            }
+                            resourceList.add(resourceMap);
+                    }
 			} else {
 				policyExportAudit
 						.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
@@ -1751,13 +1777,17 @@ public class AssetMgr extends AssetMgrBase {
 		String[] topologies = (vXResource.getTopologies() == null || vXResource
 				.getTopologies().equalsIgnoreCase("")) ? null : stringUtil.split(
 				vXResource.getTopologies(), ",");
+		
+		String[] serviceNames = (vXResource.getServices() == null || vXResource
+		                 .getServices().equalsIgnoreCase("")) ? null : stringUtil
+		                .split(vXResource.getServices(), ",");
 
 		StringBuilder stringBuilder = new StringBuilder();
 
 		int resourceType = vXResource.getResourceType();
 
 		if (topologies == null) {
-			logger.error("Invalid resources for knox policy.");
+			logger.error("Invalid resources for Storm policy.");
 			throw restErrorUtil.createRESTException("Please provide the"
 					+ " valid resources.", MessageEnums.INVALID_INPUT_DATA);
 		}
@@ -1770,9 +1800,17 @@ public class AssetMgr extends AssetMgrBase {
 			}
 			break;
 
+		case AppConstants.RESOURCE_SERVICE_NAME:
+			for (String serviceName : serviceNames) {
+				for (String topology : topologies) {
+					stringBuilder.append("/" + topology + "/" + serviceName + ",");
+				}
+			}
+		break;
+
 		default:
 			logger.error("Invalid resource type : " + resourceType
-					+ " for hbase policy.");
+					+ " for Storm policy.");
 			throw restErrorUtil.createRESTException("Please provide the"
 					+ " valid resource type.", MessageEnums.INVALID_INPUT_DATA);
 		}

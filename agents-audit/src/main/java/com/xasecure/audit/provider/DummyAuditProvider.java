@@ -4,6 +4,7 @@ import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.model.HdfsAuditEvent;
 import com.xasecure.audit.model.HiveAuditEvent;
 import com.xasecure.audit.model.KnoxAuditEvent;
+import com.xasecure.audit.model.StormAuditEvent;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -44,7 +45,12 @@ public class DummyAuditProvider implements AuditProvider {
 	public void log(KnoxAuditEvent event) {
 		// intentionally left empty
 	}
-	
+
+	@Override
+	public void log(StormAuditEvent event) {
+		// intentionally left empty
+	}
+
 	@Override
 	public void start() {
 		// intentionally left empty

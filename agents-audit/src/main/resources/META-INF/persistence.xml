@@ -6,5 +6,6 @@
 		<class>com.xasecure.audit.entity.XXHdfsAuditEvent</class>
 		<class>com.xasecure.audit.entity.XXHiveAuditEvent</class>
 		<class>com.xasecure.audit.entity.XXKnoxAuditEvent</class>
+		<class>com.xasecure.audit.entity.XXStormAuditEvent</class>
 	</persistence-unit>
 </persistence>

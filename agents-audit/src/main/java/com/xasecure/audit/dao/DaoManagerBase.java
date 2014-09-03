@@ -40,6 +40,8 @@ public abstract class DaoManagerBase {
 			return getXAHiveAuditEvent();
 		} else if (className.equals("XAKnoxAuditEvent")) {
 			return getXAKnoxAuditEvent();
+		} else if (className.equals("XAStormAuditEvent")) {
+			return getXAStormAuditEvent();
 		}
 
 		logger.error("No DaoManager found for className=" + className, new Throwable());
@@ -60,6 +62,10 @@ public abstract class DaoManagerBase {
 	
 	public XAKnoxAuditEventDao getXAKnoxAuditEvent() {
 		return new XAKnoxAuditEventDao(this);
+	}
+	
+	public XAStormAuditEventDao getXAStormAuditEvent() {
+		return new XAStormAuditEventDao(this);
 	}
 	
 	

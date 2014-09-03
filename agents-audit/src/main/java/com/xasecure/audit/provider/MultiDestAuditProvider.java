@@ -12,6 +12,7 @@ import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.model.HdfsAuditEvent;
 import com.xasecure.audit.model.HiveAuditEvent;
 import com.xasecure.audit.model.KnoxAuditEvent;
+import com.xasecure.audit.model.StormAuditEvent;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -91,6 +92,14 @@ public class MultiDestAuditProvider implements AuditProvider {
 
 		logEvent(event);
 	}
+	
+	@Override
+	public void log(StormAuditEvent event) {
+		LOG.debug("MultiDestAuditProvider.log(StormAuditEvent)");
+
+		logEvent(event);
+	}
+
 
 	@Override
 	public void start() {

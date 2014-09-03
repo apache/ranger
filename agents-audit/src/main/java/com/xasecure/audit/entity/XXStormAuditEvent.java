@@ -24,15 +24,15 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import com.xasecure.audit.model.KnoxAuditEvent;
+import com.xasecure.audit.model.StormAuditEvent;
 
 /**
  * Entity implementation class for Entity: XXHiveAuditEvent
  *
  */
 @Entity
-@DiscriminatorValue("4")
-public class XXKnoxAuditEvent extends XXBaseAuditEvent implements Serializable {
+@DiscriminatorValue("5")
+public class XXStormAuditEvent extends XXBaseAuditEvent implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private String resourcePath;
@@ -40,11 +40,11 @@ public class XXKnoxAuditEvent extends XXBaseAuditEvent implements Serializable {
 	private String requestData;
 
 
-	public XXKnoxAuditEvent() {
+	public XXStormAuditEvent() {
 		super();
 	}   
 
-	public XXKnoxAuditEvent(KnoxAuditEvent event) {
+	public XXStormAuditEvent(StormAuditEvent event) {
 		super(event);
 
 		this.resourcePath = event.getResourcePath();

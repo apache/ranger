@@ -26,7 +26,7 @@ public class XaSecureHadoopConstants {
 	public static final String XASECURE_HBASE_SECURITY_FILE = "xasecure-hbase-security.xml" ; 
 	public static final String XASECURE_HIVE_SECURITY_FILE  = "xasecure-hive-security.xml" ; 
 	public static final String XASECURE_POLICYMGR_SSL_FILE  = "xasecure-policymgr-ssl.xml"  ;
-	public static final String XASECURE_KEYMGR_FILE = "xasecure-keymanager.xml" ;
+	public static final String XASECURE_STORM_SECURITY_FILE = "xasecure-storm-security.xml" ;
 	
 	public static final String XASECURE_ADD_HDFS_PERMISSION_PROP = "xasecure.add-hadoop-authorization" ;
 	public static final boolean XASECURE_ADD_HDFS_PERMISSION_DEFAULT = false ;
@@ -53,7 +53,10 @@ public class XaSecureHadoopConstants {
 	public static final String KNOX_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "com.xasecure.pdp.knox.XASecureAuthorizer" ;
 
 	public static final String HBASE_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "hbase.authorization.verifier.classname" ;
-	public static final String HBASE_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "com.xasecure.pdp.hbase.XASecureAuthorizer" ;	
+	public static final String HBASE_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "com.xasecure.pdp.hbase.XASecureAuthorizer" ;
+	
+	public static final String STORM_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "storm.authorization.verifier.classname" ;
+	public static final String STORM_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "com.xasecure.pdp.storm.XASecureAuthorizer" ;
 
 	//
 	// Loging constants 

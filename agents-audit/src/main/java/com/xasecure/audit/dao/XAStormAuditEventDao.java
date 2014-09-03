@@ -16,26 +16,14 @@
  * limitations under the License.
  */
 
-package com.xasecure.audit.provider;
+package com.xasecure.audit.dao;
 
-import com.xasecure.audit.model.HBaseAuditEvent;
-import com.xasecure.audit.model.HdfsAuditEvent;
-import com.xasecure.audit.model.HiveAuditEvent;
-import com.xasecure.audit.model.KnoxAuditEvent;
-import com.xasecure.audit.model.StormAuditEvent;
+import com.xasecure.audit.entity.XXStormAuditEvent;
 
-public interface AuditProvider {
-    public void log(HBaseAuditEvent event);
-    public void log(HdfsAuditEvent event);
-    public void log(HiveAuditEvent event);
-    public void log(KnoxAuditEvent event);
-    public void log(StormAuditEvent event);
-    
-    public void start();
-    public void stop();
-    public void waitToComplete();
+public class XAStormAuditEventDao extends BaseDao<XXStormAuditEvent> {
 
-	public boolean isFlushPending();
-	public long    getLastFlushTime();
-    public void    flush();
+	public XAStormAuditEventDao(DaoManagerBase daoManager) {
+		super(daoManager);
+	}
+	
 }

@@ -21,6 +21,7 @@
   <module>hdfs-agent</module>
   <module>hive-agent</module>
   <module>knox-agent</module>
+  <module>storm-agent</module>
   <module>lookup-client</module>
   <module>security-admin</module>
   <module>ugsync</module>
@@ -151,23 +152,6 @@
           <skipTests>true</skipTests>
         </configuration>
       </plugin>
-      <plugin>
-         <artifactId>maven-antrun-plugin</artifactId>
-         <version>1.7</version>
-         <executions>
-           <execution>
-             <phase>process-resources</phase>
-             <configuration>
-               <tasks>
-                  <echo message="${project.version}" file="${project.build.directory}/version" />
-               </tasks>
-             </configuration>
-             <goals>
-               <goal>run</goal>
-             </goals>
-           </execution>
-         </executions>
-      </plugin>
 <!--
       <plugin>
         <groupId>com.google.code.maven-replacer-plugin</groupId>
@@ -203,6 +187,7 @@
              <descriptor>src/main/assembly/hive-agent.xml</descriptor>
              <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
              <descriptor>src/main/assembly/knox-agent.xml</descriptor>
+             <descriptor>src/main/assembly/storm-agent.xml</descriptor>
              <descriptor>src/main/assembly/admin-web.xml</descriptor>
              <descriptor>src/main/assembly/usersync.xml</descriptor>
            </descriptors>
@@ -222,5 +207,25 @@
 	-->
     </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-antrun-plugin</artifactId>
+         <version>1.7</version>
+         <executions>
+           <execution>
+             <phase>process-resources</phase>
+             <configuration>
+               <tasks>
+                  <echo message="${project.version}" file="${project.build.directory}/version" />
+               </tasks>
+             </configuration>
+             <goals>
+               <goal>run</goal>
+             </goals>
+           </execution>
+         </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>

@@ -12,5 +12,7 @@ public final class EnumRepositoryType {
 	
 	public static final int KNOX = 5;
 	
+	public static final int STORM = 6 ;
+	
 	 
 }
