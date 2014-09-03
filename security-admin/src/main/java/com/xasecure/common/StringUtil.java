@@ -221,5 +221,18 @@ public class StringUtil implements Serializable {
 		}
 		return false;
 	}
+	
+	/**
+	 * Returns a valid user name from the passed string
+	 * @param str
+	 * @return
+	 */
+	public String getValidUserName(String str) {
+		return str.indexOf("/") >= 0 ? 
+				 str.substring(0,str.indexOf("/"))
+				:	str.indexOf("@") >= 0 ? 
+						str.substring(0,str.indexOf("@")) 
+						: str; 
+	}
 
 }

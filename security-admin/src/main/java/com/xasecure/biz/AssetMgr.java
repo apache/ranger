@@ -130,7 +130,7 @@ public class AssetMgr extends AssetMgrBase {
 	@Autowired
 	@Qualifier(value = "transactionManager")
 	PlatformTransactionManager txManager;
-
+	
 	static Logger logger = Logger.getLogger(AssetMgr.class);
 
 	@Override
@@ -1207,7 +1207,7 @@ public class AssetMgr extends AssetMgrBase {
 		int assetType = vXAsset.getAssetType();
 
 		Map<String, String> configMap = jsonUtil.jsonToMap(config);
-		String userName = configMap.get("username");
+		String userName = stringUtil.getValidUserName(configMap.get("username"));
 
 		VXResource vXResource = new VXResource();
 		vXResource.setAssetId(vXAsset.getId());
@@ -1939,7 +1939,7 @@ public class AssetMgr extends AssetMgrBase {
 	public void updateDefaultPolicy(VXAsset vXAsset, String config) {
 		int assetType = vXAsset.getAssetType();
 		Map<String, String> configMap = jsonUtil.jsonToMap(config);
-		String userName = configMap.get("username");
+		String userName = stringUtil.getValidUserName(configMap.get("username"));
 		VXResource vxResource = fetchDefaultPolicyForAsset(vXAsset.getId(),
 				assetType);
 		if (vxResource != null) {
@@ -2241,7 +2241,7 @@ public class AssetMgr extends AssetMgrBase {
 			return ;
 		}
 		Map<String, String> configMap = jsonUtil.jsonToMap(config);
-		String userName = configMap.get("username");
+		String userName = stringUtil.getValidUserName(configMap.get("username"));
 		VXResource vXResource = new VXResource();
 		vXResource.setAssetId(vXAsset.getId());
 		vXResource.setAssetName(vXAsset.getName());
