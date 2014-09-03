@@ -286,7 +286,8 @@ define(function(require) {
 								break;
 							case 'Repository Type':
 								var assetTypeList = _.filter(XAEnums.AssetType, function(obj){
-									if(obj.label != XAEnums.AssetType.ASSET_UNKNOWN.label)
+									if(obj.label != XAEnums.AssetType.ASSET_UNKNOWN.label 
+												&& obj.label != XAEnums.AssetType.ASSET_AGENT.label)
 										return obj;
 								});
 								callback(XAUtils.hackForVSLabelValuePairs(assetTypeList));
