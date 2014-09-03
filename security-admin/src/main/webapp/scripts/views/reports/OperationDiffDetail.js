@@ -58,7 +58,8 @@ define(function(require){
         							isUserPerm 					: this.isUserPerm,
         							groupList					: this.groupList,
         							userList					: this.userList,
-        							repositoryType				: this.repositoryType
+        							repositoryType				: this.repositoryType,
+        							policyName					: this.policyName
         			  });
         	}
         	if(this.templateType == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value){
@@ -257,6 +258,13 @@ define(function(require){
 						that.template = KnoxPolicyUpdateOperationDiff_tmpl;
 					if(that.repositoryType == XAEnums.AssetType.ASSET_KNOX.label && m.get('action') == "delete")
 						that.template = KnoxPolicyDeleteUpdateOperationDiff_tmpl;
+				}else if(m.get('attributeName') == 'Policy Name'){
+					if(m.get('action') != 'delete')
+						that.policyName = m.get('newValue');
+					else
+						that.policyName = m.get('previousValue');
+					if(m.get('newValue') == m.get('previousValue'))
+						modelColl.push(m);
 				}
 				
 				if(_.isUndefined(m.get('attributeName')))

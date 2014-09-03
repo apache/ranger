@@ -1006,7 +1006,7 @@ public class XResourceService extends
 							break;
 						}
 					}
-					if(value.equalsIgnoreCase(oldValue)){
+					if(value.equalsIgnoreCase(oldValue) && !fieldName.equals("policyName")){
 						continue;
 					}
 					xTrxLog.setPreviousValue(oldValue);

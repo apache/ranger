@@ -8,6 +8,7 @@ import java.util.List;
 import com.xasecure.common.SearchCriteria;
 import com.xasecure.common.SearchField;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -159,6 +160,13 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 				String fieldName = field.getName();
 				if(!trxLogAttrs.containsKey(fieldName)){
 					continue;
+//				int policyType = vObj.getIpAddress();
+				/*if(policyType == AppConstants.ASSET_HDFS){
+					String[] ignoredAttribs = {"ipAddress"};
+					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
+						continue;
+					}
+				}*/	
 //				} else {
 //					if(isGroupPolicy){
 //						if(fieldName.equalsIgnoreCase("userId")){
@@ -170,6 +178,12 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 //						}
 //					}
 				}
+				Long assetId = xADaoManager.getXXResource().getById(vObj.getResourceId()).getAssetId();
+				int policyType = xADaoManager.getXXAsset().getById(assetId).getAssetType();
+				if(policyType != AppConstants.ASSET_KNOX){
+					if(fieldName.equals("ipAddress"))
+						continue;
+				} 
 				
 				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
 				
