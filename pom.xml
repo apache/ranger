@@ -205,7 +205,37 @@
         <version>2.1-alpha-4</version>
       </plugin>
 	-->
+	    <!--This plugin's configuration is used to store Eclipse 
+            m2e settings only. It has no influence on the Maven build itself. 
+        -->
+        <plugin>
+            <groupId>org.eclipse.m2e</groupId>
+            <artifactId>lifecycle-mapping</artifactId>
+            <version>1.0.0</version>
+            <configuration>
+                <lifecycleMappingMetadata>
+                    <pluginExecutions>
+                        <pluginExecution>
+                            <pluginExecutionFilter>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-antrun-plugin</artifactId>
+                                <versionRange>[1.0,)</versionRange>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </pluginExecutionFilter>
+                            <action>
+                                <execute />
+                            </action>
+                        </pluginExecution>
+                    </pluginExecutions>
+                </lifecycleMappingMetadata>
+            </configuration>
+        </plugin>
+	
+	
     </plugins>
+    
     </pluginManagement>
     <plugins>
       <plugin>
@@ -216,9 +246,9 @@
            <execution>
              <phase>process-resources</phase>
              <configuration>
-               <tasks>
+               <target>
                   <echo message="${project.version}" file="${project.build.directory}/version" />
-               </tasks>
+               </target>
              </configuration>
              <goals>
                <goal>run</goal>
