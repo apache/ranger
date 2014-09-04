@@ -3,6 +3,10 @@ package com.xasecure.pdp.storm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
+
+import com.xasecure.authorization.utils.StringUtil;
+
 public class StormAuthRule {
 	private String topologyName ;
 	private List<String> accessTypeList ;
@@ -65,7 +69,7 @@ public class StormAuthRule {
 			ret = "*".equals(this.topologyName) ;
 		}
 		else {
-			ret = (aTopologyName.equals(this.topologyName) || aTopologyName.matches(this.topologyName)) ;
+			ret = (aTopologyName.equals(this.topologyName) ||  FilenameUtils.wildcardMatch(aTopologyName,this.topologyName)) ;
 		}
 		return ret ;
 	}
@@ -105,22 +109,10 @@ public class StormAuthRule {
 	@Override
 	public String toString() {
 		return "StormAuthRule: { topologyName: [" + topologyName + "]," +
-			    "userList: [" + toList(userList) + "]" + 
-			    "groupList: [" + toList(groupList) + "]" + 
-			    "accessTypeList: [" + toList(accessTypeList) + "]" + 
+			    "userList: [" + StringUtil.toString(userList) + "]" + 
+			    "groupList: [" + StringUtil.toString(groupList) + "]" + 
+			    "accessTypeList: [" + StringUtil.toString(accessTypeList) + "]" + 
 			    "auditEnabled: [" + auditEnabled  + "] }";
  	}
-	
-	private String toList(List<String> strList) {
-		StringBuilder sb = new StringBuilder() ;
-		if (strList != null) {
-			for(String s : strList) {
-				sb.append(s).append(",") ;
-			}
-		}
-		return sb.toString() ;
-	}
-	
-	
 	
 }

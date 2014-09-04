@@ -125,6 +125,7 @@ public class URLBasedAuthDB implements PolicyChangeListener, XaStormAccessVerifi
 					if (rule.isOperationAllowed(aOperationName)) {
 						if (rule.isUserAllowed(aUserName, aGroupName)) {
 							accessAllowed = true ;
+							break ;
 						}
 					}
 				}

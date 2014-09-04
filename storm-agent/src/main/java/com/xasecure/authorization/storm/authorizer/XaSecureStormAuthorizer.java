@@ -3,6 +3,7 @@ package com.xasecure.authorization.storm.authorizer;
 import java.security.Principal;
 import java.util.Map;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +27,6 @@ public class XaSecureStormAuthorizer implements IAuthorizer {
 	private static final String XaSecureModuleName =  XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_XASECURE_MODULE_ACL_NAME_PROP , XaSecureHadoopConstants.DEFAULT_XASECURE_MODULE_ACL_NAME) ;
 	
 	private static final String repositoryName     = XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
-
-	
 	
 	private XaStormAccessVerifier xaStormVerifier = XaStormAccessVerifierFactory.getInstance() ;
 	
@@ -47,51 +46,65 @@ public class XaSecureStormAuthorizer implements IAuthorizer {
 		String topologyName = null ;
 		
 		try {
-		topologyName = (aTopologyConfigMap == null ? "" : (String)aTopologyConfigMap.get(Config.TOPOLOGY_NAME)) ;
-
-		LOG.info("[req "+ aRequestContext.requestID()+ "] Access "
-                + " from: [" + aRequestContext.remoteAddress() + "]"
-                + " user: [" + aRequestContext.principal() + "],"  
-                + " op:   [" + aOperationName + "],"
-                + "topology: [" + topologyName + "]") ;
-		
-		if (aTopologyConfigMap != null) {
-			for(Object keyObj : aTopologyConfigMap.keySet()) {
-				Object valObj = aTopologyConfigMap.get(keyObj) ;
-				LOG.info("TOPOLOGY CONFIG MAP [" + keyObj + "] => [" + valObj + "]");
-			}
-		}
-		else {
-			LOG.info("TOPOLOGY CONFIG MAP is passed as null.") ;
-		}
-		
-		Principal user = aRequestContext.principal() ;
-		
-		if (user != null) {
-			
-			String userName = user.getName() ;
-			
-			if (userName != null) {
-				int foundAt = userName.indexOf("/") ;
-				if (foundAt > -1) {
-					userName = userName.substring(0,foundAt) ;
+			topologyName = (aTopologyConfigMap == null ? "" : (String)aTopologyConfigMap.get(Config.TOPOLOGY_NAME)) ;
+	
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("[req "+ aRequestContext.requestID()+ "] Access "
+		                + " from: [" + aRequestContext.remoteAddress() + "]"
+		                + " user: [" + aRequestContext.principal() + "],"  
+		                + " op:   [" + aOperationName + "],"
+		                + "topology: [" + topologyName + "]") ;
+				
+				if (aTopologyConfigMap != null) {
+					for(Object keyObj : aTopologyConfigMap.keySet()) {
+						Object valObj = aTopologyConfigMap.get(keyObj) ;
+						LOG.debug("TOPOLOGY CONFIG MAP [" + keyObj + "] => [" + valObj + "]");
+					}
+				}
+				else {
+					LOG.debug("TOPOLOGY CONFIG MAP is passed as null.") ;
 				}
 			}
-
+	
+			String userName = null ;
 			String[] groups = null ;
+	
+			Principal user = aRequestContext.principal() ;
 			
-			LOG.info("User found from principal [" + userName + "] and verifying using [" + xaStormVerifier.getClass().getName() + "]");
-			
-			accessAllowed = xaStormVerifier.isAccessAllowed(userName, groups, aOperationName, topologyName) ;
-			
+			if (user != null) {
+				userName = user.getName() ;
+				if (userName != null) {
+					UserGroupInformation ugi = UserGroupInformation.createRemoteUser(userName) ;
+					userName = ugi.getShortUserName() ;
+					groups = ugi.getGroupNames() ;
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("User found from principal [" + user.getName() + "] => user:[" + userName + "], groups:[" + StringUtil.toString(groups) + "]") ;
+					}
+
+				}
+			}
+				
+				
+			if (userName != null) {
+				accessAllowed = xaStormVerifier.isAccessAllowed(userName, groups, aOperationName, topologyName) ;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("User found from principal [" + userName + "], groups [" + StringUtil.toString(groups) + "]: verifying using [" + xaStormVerifier.getClass().getName() + "], allowedFlag => [" + accessAllowed + "]");
+				}
+			}
+			else {
+				LOG.info("NULL User found from principal [" + user + "]: Skipping authorization;  allowedFlag => [" + accessAllowed + "]");
+			}
+				
 			boolean isAuditEnabled = xaStormVerifier.isAudited(topologyName) ;
 			
-			LOG.info("User found from principal [" + userName + "] and verifying using [" + xaStormVerifier + "], Audit Enabled:" + isAuditEnabled);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("User found from principal [" + userName + "] and verifying using [" + xaStormVerifier + "], Audit Enabled:" + isAuditEnabled);
+			}
 			
 			if (isAuditEnabled) {
 				
 				StormAuditEvent auditEvent = new StormAuditEvent() ;
-
+	
 				String sessionId = null ;
 				String clientIp = null ;
 				
@@ -114,17 +127,15 @@ public class XaSecureStormAuthorizer implements IAuthorizer {
 					auditEvent.setRepositoryType(EnumRepositoryType.STORM);
 					auditEvent.setRepositoryName(repositoryName) ;
 					auditEvent.setRequestData("");
-
+	
 					auditEvent.setResourcePath(topologyName);
 				
-					LOG.info("logAuditEvent [" + auditEvent + "] - START");
-					
 					if(LOG.isDebugEnabled()) {
 						LOG.debug("logAuditEvent [" + auditEvent + "] - START");
 					}
-
+	
 					AuditProviderFactory.getAuditProvider().log(auditEvent);
-
+	
 					if(LOG.isDebugEnabled()) {
 						LOG.debug("logAuditEvent [" + auditEvent + "] - END");
 					}
@@ -132,10 +143,8 @@ public class XaSecureStormAuthorizer implements IAuthorizer {
 				catch(Throwable t) {
 					LOG.error("ERROR logEvent [" + auditEvent + "]", t);
 				}
-				
+					
 			}
-		}
-		
 		}
 		catch(Throwable t) {
 			LOG.error("XaSecureStormAuthorizer found this exception", t);
@@ -148,8 +157,6 @@ public class XaSecureStormAuthorizer implements IAuthorizer {
 	                + "topology: [" + topologyName + "] => returns [" + accessAllowed + "]") ;
 		}
 		
-		
-		
 		return accessAllowed ;
 	}
 	
@@ -161,5 +168,5 @@ public class XaSecureStormAuthorizer implements IAuthorizer {
 	@Override
 	public void prepare(Map aStormConfigMap) {
 	}
-
+	
 }

@@ -28,6 +28,18 @@ install_dir=`dirname $0`
 
 [ "${install_dir}" = "." ] && install_dir=`pwd`
 
+
+#verify mysql-connector path is valid
+MYSQL_CONNECTOR_JAR=`grep '^MYSQL_CONNECTOR_JAR'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+echo "[I] Checking MYSQL CONNECTOR FILE : $MYSQL_CONNECTOR_JAR"
+if test -f "$MYSQL_CONNECTOR_JAR"; then
+    echo "[I] MYSQL CONNECTOR FILE : $MYSQL_CONNECTOR_JAR file found"
+else
+    echo "[E] MYSQL CONNECTOR FILE : $MYSQL_CONNECTOR_JAR does not exists" ; exit 1;
+fi
+#copying mysql connector jar file to lib directory
+cp ${MYSQL_CONNECTOR_JAR} ${install_dir}/lib
+
 #echo "Current Install Directory: [${install_dir}]"
 
 
@@ -46,7 +58,7 @@ CUR_VERSION_FILE=${XASECURE_ROOT}/.current_version
 CUR_CFG_DIR_FILE=${XASECURE_ROOT}/.config_dir
 PRE_INSTALL_CONFIG=${XASECURE_ROOT}/${BACKUP_TYPE}-${XASECURE_VERSION}
 
-if [ -d ${XASECURE_ROOT} ]
+if [ ! -d ${XASECURE_ROOT} ]
 then
 	mkdir -p ${XASECURE_ROOT}
 fi
@@ -209,5 +221,73 @@ done
 
 chmod go-rwx ${storm_conf_dir}/xasecure-policymgr-ssl.xml
 chown ${CONFIG_FILE_OWNER} ${storm_conf_dir}/xasecure-policymgr-ssl.xml
+
+#
+# Adding authorizer to storm.yaml configuration file ...
+#
+STORM_DIR=/etc/storm
+STORM_CONFIG_FILE=storm.yaml
+STORM_BIN_FILE=/usr/bin/storm
+
+dt=`date '+%Y%m%d%H%M%S'`
+CONFIG_FILE=${STORM_DIR}/${STORM_CONFIG_FILE}
+ARCHIVE_FILE=${STORM_DIR}/.${STORM_CONFIG_FILE}.${dt}
+STORM_BIN_ARCHIVE_FILE=/usr/bin/.storm.${dt}
+
+cp ${CONFIG_FILE} ${ARCHIVE_FILE}
+
+awk -F: 'BEGIN {
+	configured = 0 ;
+}
+{ 
+	if ($1 == "nimbus.authorizer") {
+		if ($2 ~ /^[ \t]*"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer"[ \t]*$/) {
+			configured = 1 ;
+			printf("%s\n",$0) ;
+		}
+		else {
+			printf("#%s\n",$0);
+			printf("nimbus.authorizer: \"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer\"\n") ;
+			configured = 1 ;
+		}
+	}
+	else {
+		printf("%s\n",$0) ;
+	}
+}
+END {
+	if (configured == 0) {
+		printf("nimbus.authorizer: \"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer\"\n") ;
+	}
+}' ${ARCHIVE_FILE} > ${ARCHIVE_FILE}.new 
+
+if [ ! -z ${ARCHIVE_FILE}.new ] 
+then
+	cat ${ARCHIVE_FILE}.new > ${CONFIG_FILE}
+	rm -f ${ARCHIVE_FILE}.new
+else
+	echo "ERROR: ${ARCHIVE_FILE}.new file has not created successfully."
+	exit 1
+fi
+
+#
+# Modify the CLASSPATH of the Storm Servers (ui, nimbus) ....
+#
+grep 'ret.extend(\["/etc/storm/conf"' ${STORM_BIN_FILE} > /dev/null
+if [ $? -ne 0 ]
+then
+        temp=/tmp/storm.tmp.$$
+        cat ${STORM_BIN_FILE} | sed -e '/ret = get_jars_full(STORM_DIR)/ a\
+    ret.extend(["/etc/storm/conf","/usr/lib/storm/lib/*"])' > ${temp}
+        if [ ! -z ${temp} ]
+        then
+				cp ${STORM_BIN_FILE} ${STORM_BIN_ARCHIVE_FILE}
+                cat ${temp} > ${STORM_BIN_FILE}
+		else
+			echo "ERROR: ${temp} file has not been created successfully."
+			exit 1
+        fi
+fi
+
 
 exit 0
