@@ -75,7 +75,7 @@ public class StormAuditEvent extends AuditEventBase {
 
 	@Override
 	public void persist(DaoManager daoManager) {
-		daoManager.getXAStormAuditEvent().create(new XXStormAuditEvent(this));
+		daoManager.getXAStormAuditEventDao().create(new XXStormAuditEvent(this));
 	}
 
 	@Override

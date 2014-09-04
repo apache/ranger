@@ -30,22 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.xasecure.audit.dao.DaoManager;
-import com.xasecure.audit.dao.XAHBaseAuditEventDao;
-import com.xasecure.audit.dao.XAHdfsAuditEventDao;
-import com.xasecure.audit.dao.XAHiveAuditEventDao;
-import com.xasecure.audit.dao.XAKnoxAuditEventDao;
-import com.xasecure.audit.dao.XAStormAuditEventDao;
-import com.xasecure.audit.entity.XXHBaseAuditEvent;
-import com.xasecure.audit.entity.XXHdfsAuditEvent;
-import com.xasecure.audit.entity.XXHiveAuditEvent;
-import com.xasecure.audit.entity.XXKnoxAuditEvent;
-import com.xasecure.audit.entity.XXStormAuditEvent;
 import com.xasecure.audit.model.AuditEventBase;
-import com.xasecure.audit.model.HBaseAuditEvent;
-import com.xasecure.audit.model.HdfsAuditEvent;
-import com.xasecure.audit.model.HiveAuditEvent;
-import com.xasecure.audit.model.KnoxAuditEvent;
-import com.xasecure.audit.model.StormAuditEvent;
 
 
 /*
@@ -58,11 +43,6 @@ public class DbAuditProvider implements AuditProvider {
 
 	private EntityManagerFactory entityManagerFactory;
 	private DaoManager          daoManager;
-	private XAHBaseAuditEventDao hbaseDao;
-	private XAHdfsAuditEventDao hdfsDao;
-	private XAHiveAuditEventDao hiveDao;
-	private XAKnoxAuditEventDao knoxDao;
-	private XAStormAuditEventDao stormDao ;
 	
 	private int                 mCommitBatchSize  = 1;
 	private long                mLastCommitTime   = 0;
@@ -138,12 +118,6 @@ public class DbAuditProvider implements AuditProvider {
    	    daoManager = new DaoManager();
    	    daoManager.setEntityManagerFactory(entityManagerFactory);
 
-		hbaseDao = daoManager.getXAHBaseAuditEvent();
-		hdfsDao = daoManager.getXAHdfsAuditEvent();
-		hiveDao = daoManager.getXAHiveAuditEvent();
-		knoxDao = daoManager.getXAKnoxAuditEvent();
-		stormDao = daoManager.getXAStormAuditEvent() ;
-
 		return true;
 	}
 	
@@ -159,9 +133,6 @@ public class DbAuditProvider implements AuditProvider {
 		} finally {
 			entityManagerFactory = null;
 			daoManager    = null;
-			hbaseDao      = null;
-			hdfsDao       = null;
-			hiveDao       = null;
 		}
 	}
 	

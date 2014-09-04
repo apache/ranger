@@ -82,7 +82,7 @@ public class HiveAuditEvent extends AuditEventBase {
 
 	@Override
 	public void persist(DaoManager daoManager) {
-		daoManager.getXAHiveAuditEvent().create(new XXHiveAuditEvent(this));
+		daoManager.getXAHiveAuditEventDao().create(new XXHiveAuditEvent(this));
 	}
 
 	@Override

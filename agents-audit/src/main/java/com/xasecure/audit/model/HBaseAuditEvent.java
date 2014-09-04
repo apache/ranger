@@ -82,7 +82,7 @@ public class HBaseAuditEvent extends AuditEventBase {
 
 	@Override
 	public void persist(DaoManager daoManager) {
-		daoManager.getXAHBaseAuditEvent().create(new XXHBaseAuditEvent(this));
+		daoManager.getXAHBaseAuditEventDao().create(new XXHBaseAuditEvent(this));
 	}
 
 	@Override

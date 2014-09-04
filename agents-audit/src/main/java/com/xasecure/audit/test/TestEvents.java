@@ -68,19 +68,10 @@ public class TestEvents {
 
         	int eventCount = (strEventCount == null) ? 1024 : Integer.parseInt(strEventCount);
 
-        	AuditEventBase[] auditEvents = {
-	            new HBaseAuditEvent(),
-	            new HdfsAuditEvent(),
-	            new HiveAuditEvent(),
-	            new KnoxAuditEvent(),
-	            new StormAuditEvent(),
-        	};
-
         	for(int i = 0; i < eventCount; i++) {
-        		AuditEventBase event = auditEvents[i % auditEvents.length];
+        		AuditEventBase event = getTestEvent(i);
 
 	            LOG.info("==> TestEvents.main(" + (i+1) + "): adding " + event.getClass().getName());
-        		event.setEventTime(new Date());
         		provider.log(event);
 
                 if(i != 0 && ((i % 100) == 0))
@@ -92,5 +83,31 @@ public class TestEvents {
         }
 
         LOG.info("<== TestEvents.main()");
+    }
+    
+    private static AuditEventBase getTestEvent(int idx) {
+    	AuditEventBase event = null;
+ 
+		switch(idx % 5) {
+			case 0:
+				event = new HdfsAuditEvent();
+			break;
+			case 1:
+				event = new HBaseAuditEvent();
+			break;
+			case 2:
+				event = new HiveAuditEvent();
+			break;
+			case 3:
+				event = new KnoxAuditEvent();
+			break;
+			case 4:
+				event = new StormAuditEvent();
+			break;
+		}
+		event.setEventTime(new Date());
+		event.setResultReason(Integer.toString(idx));
+
+		return event;
     }
 }

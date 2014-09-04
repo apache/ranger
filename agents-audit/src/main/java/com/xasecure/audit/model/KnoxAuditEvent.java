@@ -75,7 +75,7 @@ public class KnoxAuditEvent extends AuditEventBase {
 
 	@Override
 	public void persist(DaoManager daoManager) {
-		daoManager.getXAKnoxAuditEvent().create(new XXKnoxAuditEvent(this));
+		daoManager.getXAKnoxAuditEventDao().create(new XXKnoxAuditEvent(this));
 	}
 
 	@Override

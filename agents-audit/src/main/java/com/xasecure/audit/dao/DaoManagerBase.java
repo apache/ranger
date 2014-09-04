@@ -37,7 +37,7 @@ public abstract class DaoManagerBase {
     public DaoManagerBase() {
 	}
 
-	public XAHBaseAuditEventDao getXAHBaseAuditEvent() {
+	public XAHBaseAuditEventDao getXAHBaseAuditEventDao() {
 		if(mHBaseDao == null) {
 			mHBaseDao = new XAHBaseAuditEventDao(this);
 		}
@@ -45,7 +45,7 @@ public abstract class DaoManagerBase {
 		return mHBaseDao;
 	}
 
-	public XAHdfsAuditEventDao getXAHdfsAuditEvent() {
+	public XAHdfsAuditEventDao getXAHdfsAuditEventDao() {
 		if(mHdfsDao == null) {
 			mHdfsDao = new XAHdfsAuditEventDao(this);
 		}
@@ -53,7 +53,7 @@ public abstract class DaoManagerBase {
 		return mHdfsDao;
 	}
 
-	public XAHiveAuditEventDao getXAHiveAuditEvent() {
+	public XAHiveAuditEventDao getXAHiveAuditEventDao() {
 		if(mHiveDao == null) {
 			mHiveDao = new XAHiveAuditEventDao(this);
 		}
@@ -61,7 +61,7 @@ public abstract class DaoManagerBase {
 		return mHiveDao;
 	}
 
-	public XAKnoxAuditEventDao getXAKnoxAuditEvent() {
+	public XAKnoxAuditEventDao getXAKnoxAuditEventDao() {
 		if(mKnoxDao == null) {
 			mKnoxDao = new XAKnoxAuditEventDao(this);
 		}
@@ -69,7 +69,7 @@ public abstract class DaoManagerBase {
 		return mKnoxDao;
 	}
 
-	public XAStormAuditEventDao getXAStormAuditEvent() {
+	public XAStormAuditEventDao getXAStormAuditEventDao() {
 		if(mStormDao == null) {
 			mStormDao = new XAStormAuditEventDao(this);
 		}

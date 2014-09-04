@@ -65,7 +65,7 @@ public class HdfsAuditEvent extends AuditEventBase {
 
 	@Override
 	public void persist(DaoManager daoManager) {
-		daoManager.getXAHdfsAuditEvent().create(new XXHdfsAuditEvent(this));
+		daoManager.getXAHdfsAuditEventDao().create(new XXHdfsAuditEvent(this));
 	}
 
 	@Override
