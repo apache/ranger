@@ -644,6 +644,9 @@ public class XABizUtil {
 							}
 						}
 						}
+						if(!matchFound) {
+							break;
+						}
 					} // check whether given column family resource matches with
 						// any existing column family resource
 					else if (index == 1) {
@@ -656,6 +659,9 @@ public class XABizUtil {
 							}
 						}
 						}
+						if(!matchFound) {
+							break;
+						}
 					}// check whether given column resource matches with any
 						// existing column resource
 					else if (index == 2) {
@@ -666,6 +672,9 @@ public class XABizUtil {
 								continue;
 							}
 						}
+						}
+						if(!matchFound) {
+							break;
 						}
 					}
 				}
@@ -1141,6 +1150,9 @@ public class XABizUtil {
 							}
 						}
 						}
+						if(!matchFound) {
+							break;
+						}
 					} // check whether given service resource matches with
 						// any existing service resource
 					else if (index == 1) {
@@ -1152,6 +1164,9 @@ public class XABizUtil {
 								continue;
 							}
 						}
+						}
+						if(!matchFound) {
+							break;
 						}
 					}
 				}
