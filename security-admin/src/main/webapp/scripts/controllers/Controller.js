@@ -81,7 +81,7 @@ define(function(require) {
 				   assetModel : assetModel
 			   }));
 			   resourceListForAsset.fetch({
-				   cache : true
+//				   cache : true
 			   });
 		   });   
 	   },
@@ -133,7 +133,9 @@ define(function(require) {
 		   });
 		   
 		   var assetModel = new VXAsset({id:assetId});
-		   resource.fetch({cache:true}).done(function(){
+		   resource.fetch({
+//			   cache:true
+			   }).done(function(){
 			   assetModel.fetch({cache : true}).done(function(){
 				   App.rContent.show(new view({
 					   model : resource,
@@ -160,7 +162,7 @@ define(function(require) {
 				   assetModel : assetModel
 			   }));
 			   resourceListForAsset.fetch({
-				   cache : true
+//				   cache : true
 			   });
 		   });   
 	   },
@@ -198,7 +200,9 @@ define(function(require) {
 			   }
 		   });
 		   var assetModel = new VXAsset({id:assetId});
-		   resource.fetch({cache:true}).done(function(){
+		   resource.fetch({
+//			   cache:true
+			   }).done(function(){
 			   assetModel.fetch({cache : true}).done(function(){
 				   App.rContent.show(new view({
 					   model : resource,
@@ -227,7 +231,7 @@ define(function(require) {
 				   assetModel : assetModel
 			   }));
 			   resourceListForAsset.fetch({
-				   cache : true
+//				   cache : true
 			   });
 		   });   
 	   },
@@ -265,7 +269,9 @@ define(function(require) {
 			   }
 		   });
 		   var assetModel = new VXAsset({id:assetId});
-		   resource.fetch({cache:true}).done(function(){
+		   resource.fetch({
+//			   cache:true
+			   }).done(function(){
 			   assetModel.fetch({cache : true}).done(function(){
 				   App.rContent.show(new view({
 					   model : resource,
@@ -293,7 +299,7 @@ define(function(require) {
 				   assetModel : assetModel
 			   }));
 			   resourceListForAsset.fetch({
-				   cache : true
+//				   cache : true
 			   });
 		   });   
 	   },
@@ -331,7 +337,9 @@ define(function(require) {
 			   }
 		   });
 		   var assetModel = new VXAsset({id:assetId});
-		   resource.fetch({cache:true}).done(function(){
+		   resource.fetch({
+//			   cache:true
+			   }).done(function(){
 			   assetModel.fetch({cache : true}).done(function(){
 				   App.rContent.show(new view({
 					   model : resource,
@@ -380,7 +388,7 @@ define(function(require) {
 				   assetModel : assetModel
 			   }));
 			   resourceListForAsset.fetch({
-				   cache : true
+//				   cache : true
 			   });
 		   });   
 		   
@@ -419,7 +427,9 @@ define(function(require) {
 				   'assetId' : assetId 
 			   }
 		   });
-		   resource.fetch({cache:true}).done(function(){
+		   resource.fetch({
+//			   cache:true
+			  }).done(function(){
 			   assetModel.fetch({cache:true}).done(function(){
 				   App.rContent.show(new view({
 					   model : resource,
