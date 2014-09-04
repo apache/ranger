@@ -428,9 +428,12 @@ public class AppConstants extends XACommonEnums {
 			return "Hive"; //ASSET_HIVE
 		}
 		if( elementValue == 4 ) {
-			return "Knox"; //ASSET_KNOX
+			return "XAAGENT"; // XAAGENT
 		}
 		if( elementValue == 5 ) {
+			return "Knox"; //ASSET_KNOX
+		}
+		if( elementValue == 6 ) {
 			return "Storm"; //ASSET_STORM
 		}
 		return null;

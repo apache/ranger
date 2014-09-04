@@ -90,10 +90,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXPolicy.setColumns(vXResource.getColumns());
 		vXPolicy.setDatabases(vXResource.getDatabases());
 		vXPolicy.setUdfs(vXResource.getUdfs());
-		vXPolicy.setTableType(AppConstants.getLabelFor_PolicyType(vXResource
-				.getTableType()));
-		vXPolicy.setColumnType(AppConstants.getLabelFor_PolicyType(vXResource
-				.getColumnType()));
+		
 		vXPolicy.setTopologies(vXResource.getTopologies());
 		vXPolicy.setServices(vXResource.getServices());
 
@@ -103,8 +100,6 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			enable = false;
 		}
 		vXPolicy.setIsEnabled(enable);
-		vXPolicy.setIsRecursive(AppConstants
-				.getBooleanFor_BooleanValue(vXResource.getIsRecursive()));
 
 		boolean auditEnable = true;
 		if (stringUtil.isEmpty(vXResource.getAuditList())) {
@@ -112,6 +107,23 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 		vXPolicy.setIsAuditEnabled(auditEnable);
 		vXPolicy.setVersion(version);
+		
+		/*
+		 * TODO : These parameters are specific for some components. Need to
+		 * take care while adding new component
+		 */
+		if (vXResource.getAssetType() == AppConstants.ASSET_HIVE) {
+			vXPolicy.setTableType(AppConstants
+					.getLabelFor_PolicyType(vXResource.getTableType()));
+			vXPolicy.setColumnType(AppConstants
+					.getLabelFor_PolicyType(vXResource.getColumnType()));
+		}
+		if (vXResource.getAssetType() == AppConstants.ASSET_HDFS) {
+			vXPolicy.setIsRecursive(AppConstants
+					.getBooleanFor_BooleanValue(vXResource.getIsRecursive()));
+		} else {
+			vXPolicy.setIsRecursive(null);
+		}
 
 		return vXPolicy;
 	}
@@ -196,8 +208,6 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			}
 		}
 
-		vXResource.setIsRecursive(AppConstants.getEnumFor_BooleanValue(vXPolicy
-				.getIsRecursive()));
 		vXResource.setDatabases(vXPolicy.getDatabases());
 		vXResource.setTables(vXPolicy.getTables());
 		vXResource.setColumnFamilies(vXPolicy.getColumnFamilies());
@@ -216,10 +226,23 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXResource.setCheckParentPermission(AppConstants.BOOL_FALSE);
 		vXResource.setTopologies(vXPolicy.getTopologies());
 		vXResource.setServices(vXPolicy.getServices());
-		vXResource.setTableType(AppConstants.getEnumFor_PolicyType(vXPolicy
-				.getTableType()));
-		vXResource.setColumnType(AppConstants.getEnumFor_PolicyType(vXPolicy
-				.getColumnType()));
+		
+		/*
+		 * TODO : These parameters are specific for some components. Need to
+		 * take care while adding new component
+		 */
+		if (vXPolicy.getRepositoryType().equalsIgnoreCase(
+				AppConstants.getLabelFor_AssetType(AppConstants.ASSET_HIVE))) {
+			vXResource.setTableType(AppConstants.getEnumFor_PolicyType(vXPolicy
+					.getTableType()));
+			vXResource.setColumnType(AppConstants
+					.getEnumFor_PolicyType(vXPolicy.getColumnType()));
+		}
+		if (vXPolicy.getRepositoryType().equalsIgnoreCase(
+				AppConstants.getLabelFor_AssetType(AppConstants.ASSET_HDFS))) {
+			vXResource.setIsRecursive(AppConstants
+					.getEnumFor_BooleanValue(vXPolicy.getIsRecursive()));
+		}
 
 		return vXResource;
 	}
@@ -286,7 +309,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						logger.error("No UserGroup found with this name : "
 								+ group);
 						throw restErrorUtil.createRESTException(
-								"No User found with name : " + group,
+								"No Group found with name : " + group,
 								MessageEnums.DATA_NOT_FOUND);
 					}
 					Long grpId = xxGroup.getId();

@@ -102,7 +102,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * Is recursive This attribute is of type enum CommonEnums::BooleanValue
 	 */
-	protected boolean isRecursive;
+	protected Boolean isRecursive;
 	/**
 	 * Audit is enable or not.
 	 */
@@ -450,7 +450,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * @param isRecursive
 	 *            Value to set member attribute <b>isRecursive</b>
 	 */
-	public void setIsRecursive(boolean isRecursive) {
+	public void setIsRecursive(Boolean isRecursive) {
 		this.isRecursive = isRecursive;
 	}
 
@@ -459,7 +459,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * 
 	 * @return boolean - value of member attribute <b>isRecursive</b>.
 	 */
-	public boolean getIsRecursive() {
+	public Boolean getIsRecursive() {
 		return this.isRecursive;
 	}
 
