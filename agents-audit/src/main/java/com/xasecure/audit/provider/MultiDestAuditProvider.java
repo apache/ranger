@@ -65,12 +65,11 @@ public class MultiDestAuditProvider implements AuditProvider {
 		}
 	}
 
-	
 	@Override
 	public void log(AuditEventBase event) {
 		try {
             for(AuditProvider provider : mProviders) {
-            	provider.log(event);
+                provider.log(event);
             }
 		} catch(Throwable excp) {
 			LOG.error("failed to log event { " + event.toString() + " }", excp);

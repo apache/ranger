@@ -61,13 +61,13 @@ public class TestEvents {
         	AuditProviderFactory.getInstance().init(auditProperties);
 
         	AuditProvider provider = AuditProviderFactory.getAuditProvider();
-        	
+
         	LOG.info("provider=" + provider.toString());
-        	
+
         	String strEventCount = args.length > 0 ? args[0] : auditProperties.getProperty("xasecure.audit.test.event.count");
-        	
+
         	int eventCount = (strEventCount == null) ? 1024 : Integer.parseInt(strEventCount);
-        	
+
         	AuditEventBase[] auditEvents = {
 	            new HBaseAuditEvent(),
 	            new HdfsAuditEvent(),
@@ -75,16 +75,16 @@ public class TestEvents {
 	            new KnoxAuditEvent(),
 	            new StormAuditEvent(),
         	};
-        	
+
         	for(int i = 0; i < eventCount; i++) {
         		AuditEventBase event = auditEvents[i % auditEvents.length];
 
 	            LOG.info("==> TestEvents.main(" + (i+1) + "): adding " + event.getClass().getName());
         		event.setEventTime(new Date());
         		provider.log(event);
-	            
-	            if(i != 0 && ((i % 100) == 0))
-	            	Thread.sleep(100);
+
+                if(i != 0 && ((i % 100) == 0))
+                    Thread.sleep(100);
         	}
         } catch(Exception excp) {
             LOG.info(excp.getLocalizedMessage());

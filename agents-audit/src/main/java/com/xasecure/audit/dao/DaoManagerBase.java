@@ -27,7 +27,7 @@ public abstract class DaoManagerBase {
 	final static Logger logger = Logger.getLogger(DaoManagerBase.class);
 
 	abstract public EntityManager getEntityManager();
-	
+
 	private XAHBaseAuditEventDao mHBaseDao = null;
 	private XAHdfsAuditEventDao  mHdfsDao  = null;
 	private XAHiveAuditEventDao  mHiveDao  = null;
@@ -60,7 +60,7 @@ public abstract class DaoManagerBase {
 
 		return mHiveDao;
 	}
-	
+
 	public XAKnoxAuditEventDao getXAKnoxAuditEvent() {
 		if(mKnoxDao == null) {
 			mKnoxDao = new XAKnoxAuditEventDao(this);
@@ -68,7 +68,7 @@ public abstract class DaoManagerBase {
 
 		return mKnoxDao;
 	}
-	
+
 	public XAStormAuditEventDao getXAStormAuditEvent() {
 		if(mStormDao == null) {
 			mStormDao = new XAStormAuditEventDao(this);
@@ -76,7 +76,5 @@ public abstract class DaoManagerBase {
 
 		return mStormDao;
 	}
-	
-	
 }
 

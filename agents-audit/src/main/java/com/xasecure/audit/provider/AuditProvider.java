@@ -22,7 +22,7 @@ import com.xasecure.audit.model.AuditEventBase;
 
 public interface AuditProvider {
 	public void log(AuditEventBase event);
-    
+
     public void start();
     public void stop();
     public void waitToComplete();

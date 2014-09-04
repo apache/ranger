@@ -258,7 +258,7 @@ public abstract class AuditEventBase {
 	}
 
 	public abstract void persist(DaoManager daoManager);
-	
+
 	@Override
 	public String toString() {
 		return toString(new StringBuilder()).toString();
