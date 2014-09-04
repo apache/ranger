@@ -263,7 +263,7 @@ define(function(require){
 					//placeholder : 'Select User',
 					tags:true,
 					multiple: true,
-				//	minimumInputLength: 1,
+					minimumInputLength: 1,
 					width :'220px',
 					tokenSeparators: [",", " "],
 					initSelection : function (element, callback) {
