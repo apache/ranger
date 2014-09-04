@@ -18,18 +18,10 @@
 
 package com.xasecure.audit.provider;
 
-import com.xasecure.audit.model.HBaseAuditEvent;
-import com.xasecure.audit.model.HdfsAuditEvent;
-import com.xasecure.audit.model.HiveAuditEvent;
-import com.xasecure.audit.model.KnoxAuditEvent;
-import com.xasecure.audit.model.StormAuditEvent;
+import com.xasecure.audit.model.AuditEventBase;
 
 public interface AuditProvider {
-    public void log(HBaseAuditEvent event);
-    public void log(HdfsAuditEvent event);
-    public void log(HiveAuditEvent event);
-    public void log(KnoxAuditEvent event);
-    public void log(StormAuditEvent event);
+	public void log(AuditEventBase event);
     
     public void start();
     public void stop();

@@ -1,8 +1,8 @@
 package com.xasecure.audit.model;
 
-import java.util.Date;
 
-import com.xasecure.audit.provider.AuditProvider;
+import com.xasecure.audit.dao.DaoManager;
+import com.xasecure.audit.entity.XXStormAuditEvent;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -27,6 +27,7 @@ public class StormAuditEvent extends AuditEventBase {
 	protected String requestData;
 
 	public StormAuditEvent() {
+		this.repositoryType = EnumRepositoryType.STORM;
 	}
 
 	/**
@@ -73,8 +74,8 @@ public class StormAuditEvent extends AuditEventBase {
 	}
 
 	@Override
-	public void logEvent(AuditProvider provider) {
-		provider.log(this);
+	public void persist(DaoManager daoManager) {
+		daoManager.getXAStormAuditEvent().create(new XXStormAuditEvent(this));
 	}
 
 	@Override

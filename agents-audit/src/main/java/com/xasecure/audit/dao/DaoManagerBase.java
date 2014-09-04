@@ -27,45 +27,54 @@ public abstract class DaoManagerBase {
 	final static Logger logger = Logger.getLogger(DaoManagerBase.class);
 
 	abstract public EntityManager getEntityManager();
+	
+	private XAHBaseAuditEventDao mHBaseDao = null;
+	private XAHdfsAuditEventDao  mHdfsDao  = null;
+	private XAHiveAuditEventDao  mHiveDao  = null;
+	private XAKnoxAuditEventDao  mKnoxDao  = null;
+	private XAStormAuditEventDao mStormDao = null;
 
     public DaoManagerBase() {
 	}
 
-	public BaseDao<?> getDaoForClassName(String className) {
-		if (className.equals("XAHBaseAuditEvent")) {
-			return getXAHBaseAuditEvent();
-		} else if (className.equals("XAHdfsAuditEvent")) {
-			return getXAHdfsAuditEvent();
-		} else if (className.equals("XAHiveAuditEvent")) {
-			return getXAHiveAuditEvent();
-		} else if (className.equals("XAKnoxAuditEvent")) {
-			return getXAKnoxAuditEvent();
-		} else if (className.equals("XAStormAuditEvent")) {
-			return getXAStormAuditEvent();
+	public XAHBaseAuditEventDao getXAHBaseAuditEvent() {
+		if(mHBaseDao == null) {
+			mHBaseDao = new XAHBaseAuditEventDao(this);
 		}
 
-		logger.error("No DaoManager found for className=" + className, new Throwable());
-		return null;
-	}
-
-	public XAHBaseAuditEventDao getXAHBaseAuditEvent() {
-		return new XAHBaseAuditEventDao(this);
+		return mHBaseDao;
 	}
 
 	public XAHdfsAuditEventDao getXAHdfsAuditEvent() {
-		return new XAHdfsAuditEventDao(this);
+		if(mHdfsDao == null) {
+			mHdfsDao = new XAHdfsAuditEventDao(this);
+		}
+
+		return mHdfsDao;
 	}
 
 	public XAHiveAuditEventDao getXAHiveAuditEvent() {
-		return new XAHiveAuditEventDao(this);
+		if(mHiveDao == null) {
+			mHiveDao = new XAHiveAuditEventDao(this);
+		}
+
+		return mHiveDao;
 	}
 	
 	public XAKnoxAuditEventDao getXAKnoxAuditEvent() {
-		return new XAKnoxAuditEventDao(this);
+		if(mKnoxDao == null) {
+			mKnoxDao = new XAKnoxAuditEventDao(this);
+		}
+
+		return mKnoxDao;
 	}
 	
 	public XAStormAuditEventDao getXAStormAuditEvent() {
-		return new XAStormAuditEventDao(this);
+		if(mStormDao == null) {
+			mStormDao = new XAStormAuditEventDao(this);
+		}
+
+		return mStormDao;
 	}
 	
 	

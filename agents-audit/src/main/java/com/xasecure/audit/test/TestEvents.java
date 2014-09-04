@@ -3,15 +3,18 @@ import org.apache.commons.logging.Log;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.apache.commons.logging.LogFactory;
 
-
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Date;
 import java.util.Properties;
 
+import com.xasecure.audit.model.AuditEventBase;
 import com.xasecure.audit.model.EnumRepositoryType;
 import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.model.HdfsAuditEvent;
 import com.xasecure.audit.model.HiveAuditEvent;
+import com.xasecure.audit.model.KnoxAuditEvent;
+import com.xasecure.audit.model.StormAuditEvent;
 import com.xasecure.audit.provider.AuditProvider;
 import com.xasecure.audit.provider.AuditProviderFactory;
 
@@ -63,27 +66,22 @@ public class TestEvents {
         	
         	String strEventCount = args.length > 0 ? args[0] : auditProperties.getProperty("xasecure.audit.test.event.count");
         	
-        	int eventCount = (strEventCount == null) ? 1024 : Integer.parseInt(strEventCount);        		
+        	int eventCount = (strEventCount == null) ? 1024 : Integer.parseInt(strEventCount);
         	
-        	int count = 0;
-        	for(int i = 0; i < eventCount / 3; i++) {
-	            HBaseAuditEvent hbaseEvent = new HBaseAuditEvent();
-	            hbaseEvent.setRepositoryType(EnumRepositoryType.HBASE);
+        	AuditEventBase[] auditEvents = {
+	            new HBaseAuditEvent(),
+	            new HdfsAuditEvent(),
+	            new HiveAuditEvent(),
+	            new KnoxAuditEvent(),
+	            new StormAuditEvent(),
+        	};
+        	
+        	for(int i = 0; i < eventCount; i++) {
+        		AuditEventBase event = auditEvents[i % auditEvents.length];
 
-	            HdfsAuditEvent hdfsEvent = new HdfsAuditEvent();
-	            hdfsEvent.setRepositoryType(EnumRepositoryType.HDFS);
-
-	            HiveAuditEvent hiveEvent = new HiveAuditEvent();
-	            hiveEvent.setRepositoryType(EnumRepositoryType.HIVE);
-
-	            LOG.info("==> TestEvents.main(" + (++count) + "): adding HBaseAuditEvent");
-	            provider.log(hbaseEvent);
-
-	            LOG.info("==> TestEvents.main(" + (++count) + "): adding HdfsAuditEvent");
-	            provider.log(hdfsEvent);
-	
-	            LOG.info("==> TestEvents.main(" + (++count) + "): adding HiveAuditEvent");
-	            provider.log(hiveEvent);
+	            LOG.info("==> TestEvents.main(" + (i+1) + "): adding " + event.getClass().getName());
+        		event.setEventTime(new Date());
+        		provider.log(event);
 	            
 	            if(i != 0 && ((i % 100) == 0))
 	            	Thread.sleep(100);

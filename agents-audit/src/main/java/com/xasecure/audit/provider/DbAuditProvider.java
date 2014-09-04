@@ -77,51 +77,11 @@ public class DbAuditProvider implements AuditProvider {
 	}
 
 	@Override
-	public void log(HBaseAuditEvent event) {
-		LOG.debug("DbAuditProvider.log(HBaseAuditEvent)");
+	public void log(AuditEventBase event) {
+		LOG.debug("DbAuditProvider.log()");
 
 		if(preCreate(event)) {
-			hbaseDao.create(new XXHBaseAuditEvent(event));
-			postCreate(event);
-		}
-	}
-
-	@Override
-	public void log(HdfsAuditEvent event) {
-		LOG.debug("DbAuditProvider.log(HdfsAuditEvent)");
-
-		if(preCreate(event)) {
-			hdfsDao.create(new XXHdfsAuditEvent(event));
-			postCreate(event);
-		}
-	}
-
-	@Override
-	public void log(HiveAuditEvent event) {
-		LOG.debug("DbAuditProvider.log(HiveAuditEvent)");
-		
-		if(preCreate(event)) {
-			hiveDao.create(new XXHiveAuditEvent(event));
-			postCreate(event);
-		}
-	}
-	
-	@Override
-	public void log(KnoxAuditEvent event) {
-		LOG.debug("DbAuditProvider.log(KnoxAuditEvent)");
-		
-		if(preCreate(event)) {
-			knoxDao.create(new XXKnoxAuditEvent(event));
-			postCreate(event);
-		}
-	}
-
-	@Override
-	public void log(StormAuditEvent event) {
-		LOG.debug("DbAuditProvider.log(StormAuditEvent)");
-		
-		if(preCreate(event)) {
-			stormDao.create(new XXStormAuditEvent(event));
+			event.persist(daoManager);
 			postCreate(event);
 		}
 	}

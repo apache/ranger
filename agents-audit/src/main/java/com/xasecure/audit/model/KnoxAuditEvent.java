@@ -1,8 +1,8 @@
 package com.xasecure.audit.model;
 
-import java.util.Date;
 
-import com.xasecure.audit.provider.AuditProvider;
+import com.xasecure.audit.dao.DaoManager;
+import com.xasecure.audit.entity.XXKnoxAuditEvent;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -27,6 +27,7 @@ public class KnoxAuditEvent extends AuditEventBase {
 	protected String requestData;
 
 	public KnoxAuditEvent() {
+		this.repositoryType = EnumRepositoryType.KNOX;
 	}
 
 	/**
@@ -73,8 +74,8 @@ public class KnoxAuditEvent extends AuditEventBase {
 	}
 
 	@Override
-	public void logEvent(AuditProvider provider) {
-		provider.log(this);
+	public void persist(DaoManager daoManager) {
+		daoManager.getXAKnoxAuditEvent().create(new XXKnoxAuditEvent(this));
 	}
 
 	@Override

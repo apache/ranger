@@ -2,13 +2,15 @@ package com.xasecure.audit.model;
 
 import java.util.Date;
 
-import com.xasecure.audit.provider.AuditProvider;
+import com.xasecure.audit.dao.DaoManager;
+import com.xasecure.audit.entity.XXHdfsAuditEvent;
 
 public class HdfsAuditEvent extends AuditEventBase {
 	protected String resourcePath;
 	protected String resourceType;
 
 	public HdfsAuditEvent() {
+		this.repositoryType = EnumRepositoryType.HDFS;
 	}
 
 	public HdfsAuditEvent(String agentId,
@@ -62,8 +64,8 @@ public class HdfsAuditEvent extends AuditEventBase {
 	}
 
 	@Override
-	public void logEvent(AuditProvider provider) {
-		provider.log(this);
+	public void persist(DaoManager daoManager) {
+		daoManager.getXAHdfsAuditEvent().create(new XXHdfsAuditEvent(this));
 	}
 
 	@Override

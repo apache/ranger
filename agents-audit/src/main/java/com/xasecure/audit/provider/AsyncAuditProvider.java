@@ -1,6 +1,5 @@
 package com.xasecure.audit.provider;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -8,9 +7,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.xasecure.audit.model.AuditEventBase;
-import com.xasecure.audit.model.HBaseAuditEvent;
-import com.xasecure.audit.model.HdfsAuditEvent;
-import com.xasecure.audit.model.HiveAuditEvent;
 
 public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		Runnable {
@@ -67,22 +63,8 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 	}
 
 	@Override
-	public void log(HBaseAuditEvent event) {
-		LOG.debug("AsyncAuditProvider.log(HBaseAuditEvent)");
-
-		queueEvent(event);
-	}
-
-	@Override
-	public void log(HdfsAuditEvent event) {
-		LOG.debug("AsyncAuditProvider.log(HdfsAuditEvent)");
-
-		queueEvent(event);
-	}
-
-	@Override
-	public void log(HiveAuditEvent event) {
-		LOG.debug("AsyncAuditProvider.log(HiveAuditEvent)");
+	public void log(AuditEventBase event) {
+		LOG.debug("AsyncAuditProvider.logEvent(AuditEventBase)");
 
 		queueEvent(event);
 	}
@@ -131,7 +113,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 				AuditEventBase event = dequeueEvent();
 
 				if (event != null) {
-					logEvent(event);
+					super.log(event);
 				} else {
 					flush();
 				}
