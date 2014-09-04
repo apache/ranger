@@ -69,8 +69,8 @@ define(function(require){
 					type : 'Text',
 //					fieldClass : "hdfs hive knox",
 					title : this.model.propertiesNameMap.userName+" *",//'xalogin.username'
-					validators  : ['required'],//{type:'regexp',regexp:/^[a-z][a-z0-9,._'-]+$/i,message :'Please enter valid username'}],
-					editorAttrs :{'class':'stretchTextInput'}//,'maxlength': 48}
+					validators  : ['required',{type:'regexp',regexp:/^[a-z][a-z0-9,._'-]+$/i,message :'Please enter valid username'}],
+					editorAttrs :{'class':'stretchTextInput','maxlength': 32}
 				},
 				passwordKeytabfile : {
 					type : 'Password',
