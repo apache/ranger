@@ -42,13 +42,9 @@ public class KnoxClient {
 	private String password;
 	
 	/*
+   Sample curl calls to Knox to discover topologies
 	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies
 	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies/admin
-	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies/sandbox
-	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies/hdp
-	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies/hdp1
-	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies/hdp2
-	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies/xa
 	*/
 	
 	public KnoxClient(String knoxUrl, String userName, String password) {
@@ -90,9 +86,11 @@ public class KnoxClient {
 						ObjectMapper objectMapper = new ObjectMapper();
 						
 						JsonNode rootNode = objectMapper.readTree(jsonString);
-						// JsonNode rootNode = objectMapper.readTree(getKnoxMockResponseTopologies());
-						
-						Iterator<JsonNode> elements = rootNode.getElements();
+						JsonNode topologyNode = rootNode.findValue("topology");
+						if (topologyNode == null) {
+							return topologyList;
+						}
+						Iterator<JsonNode> elements = topologyNode.getElements();
 						while (elements.hasNext()) {
 							JsonNode element = elements.next();
 							String topologyName = element.get("name").getValueAsText();
@@ -146,7 +144,6 @@ public class KnoxClient {
 				client.addFilter(new HTTPBasicAuthFilter(userName, password));
 				
 				WebResource webResource = client.resource(knoxUrl + "/" + topologyName);
-				// WebResource webResource = client.resource(knoxUrl);
 				
 				response = webResource.accept(EXPECTED_MIME_TYPE)
 					    .get(ClientResponse.class);
@@ -160,9 +157,8 @@ public class KnoxClient {
 						ObjectMapper objectMapper = new ObjectMapper();
 						
 						JsonNode rootNode = objectMapper.readTree(jsonString);
-						//JsonNode rootNode = objectMapper.readTree(getKnoxMockResponseTopology());
-						
-						JsonNode servicesNode = rootNode.get("services");
+						JsonNode topologyNode = rootNode.findValue("topology");
+						JsonNode servicesNode = topologyNode.get("services");
 						Iterator<JsonNode> services = servicesNode.getElements();
 						while (services.hasNext()) {
 							JsonNode service = services.next();
@@ -229,74 +225,6 @@ public class KnoxClient {
 			}
 		} finally {
 		}
-	}
-
-	String getKnoxMockResponseTopologies() {
-		
-		// See https://docs.google.com/a/hortonworks.com/document/d/1fSs1xAMP2IeE24TOtywRrFMl81BHG72LeWu-O6WTq78/edit
-		return 		
-				"[" +
-		 		    "{" +
-		 		    	"  \"name\": \"hdp1\", " +
-		 		    	"  \"timestamp\": 1405540981000, " +
-		 		    	" \"href\": \"https://hdp.example.com:8443/gateway/admin/api/v1/topologies/hdp1\",  " +
-		 		    	" \"url\": \"https://hdp.example.com:8443/gateway/hdp1\" " +
-		 		    	"}, " +
-				    "{ " +
-				    	"  \"name\": \"hdp2\", " +
-				    	"  \"timestamp\": 1405540981000, " +
-				    	" \"href\": \"https://hdp.example.com:8443/gateway/admin/api/v1/topologies/hdp2\",  " +
-				    	" \"url\": \"https://hdp.example.com:8443/gateway/hdp2\" " +
-				    	"}" + 
-				"]";
-	}
-	
-	String getKnoxMockResponseTopology() {
-		
-		// See https://docs.google.com/a/hortonworks.com/document/d/1fSs1xAMP2IeE24TOtywRrFMl81BHG72LeWu-O6WTq78/edit
-		return  
-		"{" +
-			"\"name\": \"hdp1\"," + 
-			"\"providers\": [" +
-				"{" + 
-					"\"enabled\": true, " +
-					"\"name\": null, " +
-					"\"params\": {" +
-						"\"main.ldapRealm\": \"org.apache.hadoop.gateway.shirorealm.KnoxLdapRealm\", " +
-						"\"main.ldapRealm.userDnTemplate\": \"uid={0},ou=people,dc=hadoop,dc=apache,dc=org\"," +
-         				"\"main.ldapRealm.contextFactory.url\": \"ldap://hdp.example.com:33389\"," +
-         				"\"main.ldapRealm.contextFactory.authenticationMechanism\": \"simple\"," +
-         				"\"urls./**\": \"authcBasic\"" +
-						"}, " +
-					"\"role\": \"authentication\"" +
-				"}, " +
-				 "{" +
-	                "\"enabled\": true," +
-	                "\"name\": \"Pseudo\"," +
-	               "\"params\": {" + "}," +
-	                "\"role\": \"identity-assertion\"" +
-	            "}, " +
-	            "{" +
-	                    "\"enabled\": false," +
-	                    "\"name\": null," +
-	                    "\"params\": {" + "}," +
-	                    "\"role\": null" +
-	              "}" +
-			"], " +
-			"\"services\": [" +
-				"{" +
-                 	"\"params\": {" + "}," +
-                 	"\"role\": \"KNOXADMIN\"," +
-                 	"\"url\": null" +
-                 	"}," +
-                 "{" +
-                 	"\"params\": {" + "}, " +
-                 	"\"role\": \"WEBHDFS\"," +
-                 	"\"url\": \"http://hdp.example.com:50070/webhdfs\"" +
-                 	"}" +
-                 	"]," +
-             "\"timestamp\": 1405541437000" +
-		"}";
 	}
 	
 }
