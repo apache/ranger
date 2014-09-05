@@ -1231,10 +1231,13 @@ public class AssetMgr extends AssetMgrBase {
 			vXResource.setColumns("*");
 			vXResource.setName("/*/*/*");
 			vXResource.setResourceType(AppConstants.RESOURCE_COLUMN);
-		} else if (assetType == AppConstants.ASSET_KNOX || assetType == AppConstants.ASSET_STORM) {
+		} else if (assetType == AppConstants.ASSET_KNOX) {
 			vXResource.setTopologies("*");
 			vXResource.setServices("*");
 			vXResource.setName("/*/*");
+		} else if (assetType == AppConstants.ASSET_STORM) {
+			vXResource.setTopologies("*");
+			vXResource.setName("/*");
 		}
 
 		vXResource = xResourceService.createResource(vXResource);

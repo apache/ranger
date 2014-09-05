@@ -444,20 +444,6 @@ public class XABizUtil {
 			}
 			vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
 			return vXResponse;
-		} else if (assetType == AppConstants.ASSET_KNOX) {
-				String[] requestResNameList = resourceNames.split(",");
-				for (String resourceName : requestResNameList) {
-					boolean matchFound = matchKnoxPolicy(resourceName,
-							xResourceList, vXResponse, xUserId, permission);
-					if (!matchFound) {
-						vXResponse.setMsgDesc("You're not permitted to perform "
-								+ "the action for resource path : " + resourceName);
-						vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
-						return vXResponse;
-					}
-				}
-				vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
-				return vXResponse;	
 		} else if (assetType == AppConstants.ASSET_HDFS) {
 			String[] requestResNameList = resourceNames.split(",");
 			for (String resourceName : requestResNameList) {
@@ -472,7 +458,35 @@ public class XABizUtil {
 			}
 			vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
 			return vXResponse;
-		}
+		} else if (assetType == AppConstants.ASSET_KNOX) {
+				String[] requestResNameList = resourceNames.split(",");
+				for (String resourceName : requestResNameList) {
+					boolean matchFound = matchKnoxPolicy(resourceName,
+							xResourceList, vXResponse, xUserId, permission);
+					if (!matchFound) {
+						vXResponse.setMsgDesc("You're not permitted to perform "
+								+ "the action for resource path : " + resourceName);
+						vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
+						return vXResponse;
+					}
+				}
+				vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
+				return vXResponse;	
+        } else if (assetType == AppConstants.ASSET_STORM) {
+            String[] requestResNameList = resourceNames.split(",");
+            for (String resourceName : requestResNameList) {
+                boolean matchFound = matchStormPolicy(resourceName,
+                        xResourceList, vXResponse, xUserId, permission);
+                if (!matchFound) {
+                    vXResponse.setMsgDesc("You're not permitted to perform "
+                            + "the action for resource path : " + resourceName);
+                    vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
+                    return vXResponse;
+                }
+            }
+            vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
+            return vXResponse;
+        }
 		return vXResponse;
 	}
 
@@ -1178,6 +1192,86 @@ public class XABizUtil {
 		}
 		return policyMatched;
 	}
+
+ 	/**
+ 	 * returns true if user is having required permission on given STORM
+ 	 * resource
+ 	 * 
+ 	 * @param resourceName
+ 	 * @param xResourceList
+ 	 * @param vXResponse
+ 	 * @param xUserId
+ 	 * @param permission
+ 	 * @return
+ 	 */
+ 	private boolean matchStormPolicy(String resourceName,
+ 			List<XXResource> xResourceList, VXResponse vXResponse, Long xUserId,
+ 			int permission) {
+ 
+ 		String[] splittedResources = stringUtil.split(resourceName,
+ 				File.separator);
+ 		int numberOfResources = splittedResources.length;
+ 		if (numberOfResources < 1 || numberOfResources > 3) {
+ 			logger.debug("Invalid policy name : " + resourceName);
+ 			return false;
+ 		}
+ 
+ 		boolean policyMatched = false;
+ 		// check all resources whether Knox policy is enabled in any resource
+ 		// of provided resource list
+ 		for (XXResource xResource : xResourceList) {
+ 			if (xResource.getResourceStatus() != AppConstants.STATUS_ENABLED) {
+ 				continue;
+ 			}
+ 			Long resourceId = xResource.getId();
+ 			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission,
+ 					resourceId);
+ 			// if permission is enabled then load Topologies,services list from resource
+ 			if (hasPermission) {
+ 				String[] xTopologies = (xResource.getTopologies() == null || xResource
+ 						.getTopologies().equalsIgnoreCase("")) ? null : stringUtil
+ 						.split(xResource.getTopologies(), ",");
+ 				/*String[] xServices = (xResource.getServices() == null || xResource
+ 						.getServices().equalsIgnoreCase("")) ? null
+ 						: stringUtil.split(xResource.getServices(), ",");*/
+ 
+ 				boolean matchFound = false;
+ 
+ 				for (int index = 0; index < numberOfResources; index++) {
+ 					matchFound = false;
+ 					// check whether given table resource matches with any
+ 					// existing topology resource
+ 					if (index == 0) {
+ 						if(xTopologies!=null){
+ 						for (String xTopology : xTopologies) {
+ 							if (matchPath(splittedResources[index], xTopology)) {
+ 								matchFound = true;
+ 								continue;
+ 							}
+ 						}
+ 						}
+ 					} // check whether given service resource matches with
+ 						// any existing service resource
+ 					/*else if (index == 1) {
+ 						if(xServices!=null){
+ 						for (String xService : xServices) {
+ 							if (matchPath(splittedResources[index],
+ 									xService)) {
+ 								matchFound = true;
+ 								continue;
+ 							}
+ 						}
+ 						}
+ 					}*/
+ 				}
+ 				if (matchFound) {
+ 					policyMatched = true;
+ 					break;
+ 				}
+ 			}
+ 		}
+ 		return policyMatched;
+ 	}
 
 	/**
 	 * returns path without meta characters
