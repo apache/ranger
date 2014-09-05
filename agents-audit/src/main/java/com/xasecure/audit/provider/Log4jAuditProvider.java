@@ -21,11 +21,7 @@ package com.xasecure.audit.provider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.xasecure.audit.model.HBaseAuditEvent;
-import com.xasecure.audit.model.HdfsAuditEvent;
-import com.xasecure.audit.model.HiveAuditEvent;
-import com.xasecure.audit.model.KnoxAuditEvent;
-import com.xasecure.audit.model.StormAuditEvent;
+import com.xasecure.audit.model.AuditEventBase;
 
 
 public class Log4jAuditProvider implements AuditProvider {
@@ -39,39 +35,7 @@ public class Log4jAuditProvider implements AuditProvider {
 	}
 
 	@Override
-	public void log(HBaseAuditEvent event) {
-		if(! AUDITLOG.isInfoEnabled())
-			return;
-
-		AUDITLOG.info(event.toString());
-	}
-
-	@Override
-	public void log(HdfsAuditEvent event) {
-		if(! AUDITLOG.isInfoEnabled())
-			return;
-
-		AUDITLOG.info(event.toString());
-	}
-
-	@Override
-	public void log(HiveAuditEvent event) {
-		if(! AUDITLOG.isInfoEnabled())
-			return;
-
-		AUDITLOG.info(event.toString());
-	}
-
-	@Override
-	public void log(KnoxAuditEvent event) {
-		if(! AUDITLOG.isInfoEnabled())
-			return;
-
-		AUDITLOG.info(event.toString());
-	}
-
-	@Override
-	public void log(StormAuditEvent event) {
+	public void log(AuditEventBase event) {
 		if(! AUDITLOG.isInfoEnabled())
 			return;
 

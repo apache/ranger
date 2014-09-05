@@ -1,5 +1,6 @@
 package com.xasecure.audit.provider;
 
+import com.xasecure.audit.model.AuditEventBase;
 import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.model.HdfsAuditEvent;
 import com.xasecure.audit.model.HiveAuditEvent;
@@ -27,27 +28,7 @@ import com.xasecure.audit.model.StormAuditEvent;
 public class DummyAuditProvider implements AuditProvider {
 
 	@Override
-	public void log(HBaseAuditEvent event) {
-		// intentionally left empty
-	}
-
-	@Override
-	public void log(HdfsAuditEvent event) {
-		// intentionally left empty
-	}
-
-	@Override
-	public void log(HiveAuditEvent event) {
-		// intentionally left empty
-	}
-
-	@Override
-	public void log(KnoxAuditEvent event) {
-		// intentionally left empty
-	}
-
-	@Override
-	public void log(StormAuditEvent event) {
+	public void log(AuditEventBase event) {
 		// intentionally left empty
 	}
 

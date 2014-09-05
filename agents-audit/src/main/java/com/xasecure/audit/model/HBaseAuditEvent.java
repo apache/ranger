@@ -2,7 +2,8 @@ package com.xasecure.audit.model;
 
 import java.util.Date;
 
-import com.xasecure.audit.provider.AuditProvider;
+import com.xasecure.audit.dao.DaoManager;
+import com.xasecure.audit.entity.XXHBaseAuditEvent;
 
 public class HBaseAuditEvent extends AuditEventBase {
 	protected String resourcePath;
@@ -10,6 +11,7 @@ public class HBaseAuditEvent extends AuditEventBase {
 	protected String requestData;
 
 	public HBaseAuditEvent() {
+		this.repositoryType = EnumRepositoryType.HBASE;
 	}
 
 	public HBaseAuditEvent(String agentId,
@@ -79,8 +81,8 @@ public class HBaseAuditEvent extends AuditEventBase {
 	}
 
 	@Override
-	public void logEvent(AuditProvider provider) {
-		provider.log(this);
+	public void persist(DaoManager daoManager) {
+		daoManager.getXAHBaseAuditEventDao().create(new XXHBaseAuditEvent(this));
 	}
 
 	@Override

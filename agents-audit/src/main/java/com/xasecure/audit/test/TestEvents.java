@@ -3,15 +3,18 @@ import org.apache.commons.logging.Log;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.apache.commons.logging.LogFactory;
 
-
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Date;
 import java.util.Properties;
 
+import com.xasecure.audit.model.AuditEventBase;
 import com.xasecure.audit.model.EnumRepositoryType;
 import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.model.HdfsAuditEvent;
 import com.xasecure.audit.model.HiveAuditEvent;
+import com.xasecure.audit.model.KnoxAuditEvent;
+import com.xasecure.audit.model.StormAuditEvent;
 import com.xasecure.audit.provider.AuditProvider;
 import com.xasecure.audit.provider.AuditProviderFactory;
 
@@ -58,35 +61,21 @@ public class TestEvents {
         	AuditProviderFactory.getInstance().init(auditProperties);
 
         	AuditProvider provider = AuditProviderFactory.getAuditProvider();
-        	
+
         	LOG.info("provider=" + provider.toString());
-        	
+
         	String strEventCount = args.length > 0 ? args[0] : auditProperties.getProperty("xasecure.audit.test.event.count");
-        	
-        	int eventCount = (strEventCount == null) ? 1024 : Integer.parseInt(strEventCount);        		
-        	
-        	int count = 0;
-        	for(int i = 0; i < eventCount / 3; i++) {
-	            HBaseAuditEvent hbaseEvent = new HBaseAuditEvent();
-	            hbaseEvent.setRepositoryType(EnumRepositoryType.HBASE);
 
-	            HdfsAuditEvent hdfsEvent = new HdfsAuditEvent();
-	            hdfsEvent.setRepositoryType(EnumRepositoryType.HDFS);
+        	int eventCount = (strEventCount == null) ? 1024 : Integer.parseInt(strEventCount);
 
-	            HiveAuditEvent hiveEvent = new HiveAuditEvent();
-	            hiveEvent.setRepositoryType(EnumRepositoryType.HIVE);
+        	for(int i = 0; i < eventCount; i++) {
+        		AuditEventBase event = getTestEvent(i);
 
-	            LOG.info("==> TestEvents.main(" + (++count) + "): adding HBaseAuditEvent");
-	            provider.log(hbaseEvent);
+	            LOG.info("==> TestEvents.main(" + (i+1) + "): adding " + event.getClass().getName());
+        		provider.log(event);
 
-	            LOG.info("==> TestEvents.main(" + (++count) + "): adding HdfsAuditEvent");
-	            provider.log(hdfsEvent);
-	
-	            LOG.info("==> TestEvents.main(" + (++count) + "): adding HiveAuditEvent");
-	            provider.log(hiveEvent);
-	            
-	            if(i != 0 && ((i % 100) == 0))
-	            	Thread.sleep(100);
+                if(i != 0 && ((i % 100) == 0))
+                    Thread.sleep(100);
         	}
         } catch(Exception excp) {
             LOG.info(excp.getLocalizedMessage());
@@ -94,5 +83,31 @@ public class TestEvents {
         }
 
         LOG.info("<== TestEvents.main()");
+    }
+    
+    private static AuditEventBase getTestEvent(int idx) {
+    	AuditEventBase event = null;
+ 
+		switch(idx % 5) {
+			case 0:
+				event = new HdfsAuditEvent();
+			break;
+			case 1:
+				event = new HBaseAuditEvent();
+			break;
+			case 2:
+				event = new HiveAuditEvent();
+			break;
+			case 3:
+				event = new KnoxAuditEvent();
+			break;
+			case 4:
+				event = new StormAuditEvent();
+			break;
+		}
+		event.setEventTime(new Date());
+		event.setResultReason(Integer.toString(idx));
+
+		return event;
     }
 }

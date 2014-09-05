@@ -2,7 +2,7 @@ package com.xasecure.audit.model;
 
 import java.util.Date;
 
-import com.xasecure.audit.provider.AuditProvider;
+import com.xasecure.audit.dao.DaoManager;
 
 
 
@@ -257,8 +257,8 @@ public abstract class AuditEventBase {
 		this.action = action;
 	}
 
-	public abstract void logEvent(AuditProvider provider);
-	
+	public abstract void persist(DaoManager daoManager);
+
 	@Override
 	public String toString() {
 		return toString(new StringBuilder()).toString();

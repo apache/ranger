@@ -66,40 +66,15 @@ public class MultiDestAuditProvider implements AuditProvider {
 	}
 
 	@Override
-	public void log(HBaseAuditEvent event) {
-		LOG.debug("MultiDestAuditProvider.log(HBaseAuditEvent)");
-
-		logEvent(event);
+	public void log(AuditEventBase event) {
+		try {
+            for(AuditProvider provider : mProviders) {
+                provider.log(event);
+            }
+		} catch(Throwable excp) {
+			LOG.error("failed to log event { " + event.toString() + " }", excp);
+		}
 	}
-
-	@Override
-	public void log(HdfsAuditEvent event) {
-		LOG.debug("MultiDestAuditProvider.log(HdfsAuditEvent)");
-
-		logEvent(event);
-	}
-
-	@Override
-	public void log(HiveAuditEvent event) {
-		LOG.debug("MultiDestAuditProvider.log(HiveAuditEvent)");
-
-		logEvent(event);
-	}
-	
-	@Override
-	public void log(KnoxAuditEvent event) {
-		LOG.debug("MultiDestAuditProvider.log(KnoxAuditEvent)");
-
-		logEvent(event);
-	}
-	
-	@Override
-	public void log(StormAuditEvent event) {
-		LOG.debug("MultiDestAuditProvider.log(StormAuditEvent)");
-
-		logEvent(event);
-	}
-
 
 	@Override
 	public void start() {
@@ -157,16 +132,6 @@ public class MultiDestAuditProvider implements AuditProvider {
 			}
 		} catch(Throwable excp) {
 			LOG.error("AsyncAuditProvider.flush(): failed to flush events", excp);
-		}
-	}
-	
-	protected void logEvent(AuditEventBase event) {
-		try {
-            for(AuditProvider provider : mProviders) {
-                event.logEvent(provider);
-            }
-		} catch(Throwable excp) {
-			LOG.error("failed to log event { " + event.toString() + " }", excp);
 		}
 	}
 }
