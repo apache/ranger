@@ -1212,6 +1212,24 @@ public class XAEnumUtil {
 	vElement.setElementLabel("View Column");
 	vElement.setRbKey("xa.enum.ResourceType.RESOURCE_VIEW_COL");
 	vElement.setEnumName(vEnum.getEnumName());
+	
+	vEnum.getElementList().add(vElement);
+	
+	vElement = new VEnumElement();
+	vElement.setElementName("RESOURCE_TOPOLOGY");
+	vElement.setElementValue(9);
+	vElement.setElementLabel("Topology");
+	vElement.setRbKey("xa.enum.ResourceType.RESOURCE_TOPOLOGY");
+	vElement.setEnumName(vEnum.getEnumName());
+	
+	vEnum.getElementList().add(vElement);
+	
+	vElement = new VEnumElement();
+	vElement.setElementName("RESOURCE_SERVICE");
+	vElement.setElementValue(10);
+	vElement.setElementLabel("Service");
+	vElement.setRbKey("xa.enum.ResourceType.RESOURCE_SERVICE");
+	vElement.setEnumName(vEnum.getEnumName());
 
 	vEnum.getElementList().add(vElement);
 
