@@ -783,6 +783,12 @@ public class AppConstants extends XACommonEnums {
 		if (label.equalsIgnoreCase("View Column")) {
 			return AppConstants.RESOURCE_VIEW_COL; // RESOURCE_VIEW_COL
 		}
+		if (label.equalsIgnoreCase("Topology")) {
+			return AppConstants.RESOURCE_TOPOLOGY; // RESOURCE_TOPOLOGY
+		}
+		if (label.equalsIgnoreCase("Service")) {
+			return AppConstants.RESOURCE_SERVICE_NAME; // RESOURCE_SERVICE_NAME
+		}
 		return 0;
 	}
 
