@@ -60,6 +60,13 @@
 		</includes>
 	</fileSet>
 	<fileSet>
+		<outputDirectory>/template</outputDirectory>
+		<directory>hive-agent/template</directory>
+		<includes>
+			<include>*</include>
+		</includes>
+	</fileSet>
+	<fileSet>
 		<outputDirectory>/</outputDirectory>
 		<directory>hive-agent/scripts</directory>
 		<excludes>

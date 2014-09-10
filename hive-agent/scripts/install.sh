@@ -208,6 +208,12 @@ do
                 fn=`basename $f`
                 orgfn=`echo $fn | sed -e 's:-changes.cfg:.xml:'`
                 fullpathorgfn="${hive_conf_dir}/${orgfn}"
+
+                if [ ! -f ${fullpathorgfn} -a -f ${install_dir}/template/configuration.xml ]
+                then
+                        cp ${install_dir}/template/configuration.xml ${fullpathorgfn}
+                fi
+
                 if [ ! -f ${fullpathorgfn} ]
                 then
                         echo "ERROR: Unable to find ${fullpathorgfn}"
