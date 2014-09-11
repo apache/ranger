@@ -260,7 +260,7 @@ public abstract class ConfigWatcher extends Thread {
              
 				if (response != null) {
 					
-					Boolean responsePresent = true;
+					boolean responsePresent = true;
 					int	responseStatus = response.getStatus();
 					
 					if ( fetchPolicyfromCahce(responsePresent,responseStatus,lastStoredFileName) ) {
@@ -277,6 +277,7 @@ public abstract class ConfigWatcher extends Thread {
 									policyContainer = newPolicyContainer;
 									lastModifiedTime = policyContainer.getLastUpdatedTimeInEpoc();
 									isChanged = true;
+									policyCacheLoadedOnce = false;
 									if (LOG.isDebugEnabled()) {
 										LOG.debug("Got response: 200 with {change in lastupdatedTime}\n" + gson.toJson(newPolicyContainer));
 									}
@@ -313,12 +314,14 @@ public abstract class ConfigWatcher extends Thread {
 			}
 		} catch (Throwable t) {
 			
-			Boolean responsePresent = false;
+			boolean responsePresent = false;
 			int	responseStatus = -1;
-			
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Policy Manager Failed",t);
+			}
 			if ( fetchPolicyfromCahce(responsePresent,responseStatus,lastStoredFileName) ) {
 	 	    /* Successfully found the Policy Cache file and loaded */
-		  	     isChanged = true;
+		  	     isChanged = false;
 		     } else {
 		    	 LOG.error("Unable to complete isFileChanged()  call for [" + url + "]", t);
 				 // force the policy update to get fresh copy
@@ -478,7 +481,7 @@ public abstract class ConfigWatcher extends Thread {
 		return agentName  ;
 	}
 	
-	private boolean fetchPolicyfromCahce( Boolean responsePresent, int responseStatus, String lastStoredFileName){
+	private boolean fetchPolicyfromCahce( boolean responsePresent, int responseStatus, String lastStoredFileName){
 	
 		boolean cacheFound = false;
 		
@@ -509,7 +512,7 @@ public abstract class ConfigWatcher extends Thread {
 					policyCacheLoadedOnce = true;
 	        	
 	    	 	} catch( FileNotFoundException fe ){
-	    		
+	    	 		
 		    		/* unable to get the last stored policy, raise warning for unavailability of policy cache file and continue...*/
 		    		if ( this.lastStoredFileName == null ) {
 		    			LOG.info("Policy cache file not found...XAagent authorization not enabled");
