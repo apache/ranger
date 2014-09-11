@@ -22,6 +22,7 @@ public class StringUtil implements Serializable {
 
 	static final public String VALIDATION_ALPHA = "[a-z,A-Z]*";
 	static final public String VALIDATION_IP_ADDRESS = "[\\d\\.\\%\\:]*";
+	static final public String WILDCARD_ASTERISK = "*";
 
 	static HashMap<String, Pattern> compiledRegEx = new HashMap<String, Pattern>();
 
@@ -48,6 +49,10 @@ public class StringUtil implements Serializable {
 			return true;
 		}
 		return false;
+	}
+
+	public boolean isEmptyOrWildcardAsterisk(String str) {
+		return isEmpty(str) || str.equals(WILDCARD_ASTERISK);
 	}
 
 	public boolean equals(String str1, String str2) {

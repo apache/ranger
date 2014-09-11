@@ -647,10 +647,10 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 		if (!stringUtil.isEmpty(vXPolicy.getDatabases())) {
 			resourceType = AppConstants.RESOURCE_DB;
-			if (!stringUtil.isEmpty(vXPolicy.getTables())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getTables())) {
 				resourceType = AppConstants.RESOURCE_TABLE;
 			}
-			if (!stringUtil.isEmpty(vXPolicy.getColumns())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumns())) {
 				resourceType = AppConstants.RESOURCE_COLUMN;
 			}
 			if (!stringUtil.isEmpty(vXPolicy.getUdfs())) {
@@ -658,15 +658,15 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			}
 		} else if (!stringUtil.isEmpty(vXPolicy.getTables())) {
 			resourceType = AppConstants.RESOURCE_TABLE;
-			if (!stringUtil.isEmpty(vXPolicy.getColumnFamilies())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumnFamilies())) {
 				resourceType = AppConstants.RESOURCE_COL_FAM;
 			}
-			if (!stringUtil.isEmpty(vXPolicy.getColumns())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumns())) {
 				resourceType = AppConstants.RESOURCE_COLUMN;
 			}
 		} else if (!stringUtil.isEmpty(vXPolicy.getTopologies())) {
 			resourceType = AppConstants.RESOURCE_TOPOLOGY;
-			if (!stringUtil.isEmpty(vXPolicy.getServices())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getServices())) {
 				resourceType = AppConstants.RESOURCE_SERVICE_NAME;
 			}
 		}

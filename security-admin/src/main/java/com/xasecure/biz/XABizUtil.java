@@ -603,22 +603,19 @@ public class XABizUtil {
 	public boolean matchHbasePolicy(String resourceName,
 			List<XXResource> xResourceList, VXResponse vXResponse, Long xUserId,
 			int permission) {
-		if(stringUtil.isEmpty(resourceName)){
+		if(stringUtil.isEmpty(resourceName) || xResourceList==null || xUserId==null){
 			return false;
 		}
-		if(xResourceList==null){
+
+		String[] splittedResources = stringUtil.split(resourceName, File.separator);
+		if (splittedResources.length < 1 || splittedResources.length > 3) {
+			logger.debug("Invalid resourceName name : " + resourceName);
 			return false;
 		}
-		if(xUserId==null){
-			return false;
-		}		
-		String[] splittedResources = stringUtil.split(resourceName,
-				File.separator);
-		int numberOfResources = splittedResources.length;
-		if (numberOfResources < 1 || numberOfResources > 3) {
-			logger.debug("Invalid policy name : " + resourceName);
-			return false;
-		}
+
+		String tblName    = splittedResources.length > 0 ? splittedResources[0] : StringUtil.WILDCARD_ASTERISK;
+		String colFamName = splittedResources.length > 1 ? splittedResources[1] : StringUtil.WILDCARD_ASTERISK;
+		String colName    = splittedResources.length > 2 ? splittedResources[2] : StringUtil.WILDCARD_ASTERISK;
 
 		boolean policyMatched = false;
 		// check all resources whether Hbase policy is enabled in any resource
@@ -628,74 +625,35 @@ public class XABizUtil {
 				continue;
 			}
 			Long resourceId = xResource.getId();
-			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission,
-					resourceId);
+			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission, resourceId);
 			// if permission is enabled then load Tables,column family and
 			// columns list from resource
-			if (hasPermission) {
-				String[] xTables = (xResource.getTables() == null || xResource
-						.getTables().equalsIgnoreCase("")) ? null : stringUtil
-						.split(xResource.getTables(), ",");
-				String[] xColumnFamilies = (xResource.getColumnFamilies() == null || xResource
-						.getColumnFamilies().equalsIgnoreCase("")) ? null
-						: stringUtil.split(xResource.getColumnFamilies(), ",");
-				String[] xColumns = (xResource.getColumns() == null || xResource
-						.getColumns().equalsIgnoreCase("")) ? null : stringUtil
-						.split(xResource.getColumns(), ",");
+			if (! hasPermission) {
+				continue;
+			}
 
-				boolean matchFound = false;
+			// 1. does the policy match the table?
+			String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null : stringUtil.split(xResource.getTables(), ",");
 
-				for (int index = 0; index < numberOfResources; index++) {
-					matchFound = false;
-					// check whether given table resource matches with any
-					// existing table resource
-					if (index == 0) {
-						if(xTables!=null){
-						for (String xTable : xTables) {
-							if (matchPath(splittedResources[index], xTable)) {
-								matchFound = true;
-								continue;
-							}
-						}
-						}
-						if(!matchFound) {
-							break;
-						}
-					} // check whether given column family resource matches with
-						// any existing column family resource
-					else if (index == 1) {
-						if(xColumnFamilies!=null){
-						for (String xColumnFamily : xColumnFamilies) {
-							if (matchPath(splittedResources[index],
-									xColumnFamily)) {
-								matchFound = true;
-								continue;
-							}
-						}
-						}
-						if(!matchFound) {
-							break;
-						}
-					}// check whether given column resource matches with any
-						// existing column resource
-					else if (index == 2) {
-						if(xColumns!=null){
-						for (String xColumn : xColumns) {
-							if (matchPath(splittedResources[index], xColumn)) {
-								matchFound = true;
-								continue;
-							}
-						}
-						}
-						if(!matchFound) {
-							break;
-						}
-					}
+			boolean matchFound = (xTables == null || xTables.length == 0) ? true : matchPath(tblName, xTables);
+
+			if(matchFound) {
+				// 2. does the policy match the column?
+				String[] xColumnFamilies = stringUtil.isEmpty(xResource.getColumnFamilies()) ? null : stringUtil.split(xResource.getColumnFamilies(), ",");
+
+				matchFound = (xColumnFamilies == null || xColumnFamilies.length == 0) ? true : matchPath(colFamName, xColumnFamilies);
+				
+				if(matchFound) {
+					// 3. does the policy match the columnFamily?
+					String[] xColumns = stringUtil.isEmpty(xResource.getColumns()) ? null : stringUtil.split(xResource.getColumns(), ",");
+
+					matchFound = (xColumns == null || xColumns.length == 0) ? true : matchPath(colName, xColumns);
 				}
-				if (matchFound) {
-					policyMatched = true;
-					break;
-				}
+			}
+
+			if (matchFound) {
+				policyMatched = true;
+				break;
 			}
 		}
 		return policyMatched;
@@ -722,387 +680,84 @@ public class XABizUtil {
 	public boolean matchHivePolicy(String resourceName,
 			List<XXResource> xResourceList, Long xUserId, int permission,
 			int reqTableType, int reqColumnType, boolean isUdfPolicy) {
-		if(stringUtil.isEmpty(resourceName)){
+
+		if(stringUtil.isEmpty(resourceName) || xResourceList==null || xUserId==null){
 			return false;
 		}
-		if(xResourceList==null){
+
+		String[] splittedResources = stringUtil.split(resourceName, File.separator);// get list of resources
+		if (splittedResources.length < 1 || splittedResources.length > 3) {
+			logger.debug("Invalid resource name : " + resourceName);
 			return false;
 		}
-		if(xUserId==null){
-			return false;
-		}
-		String[] splittedResources = stringUtil.split(resourceName,
-				File.separator);// get list of resources
-		int numberOfResources = splittedResources.length;
-		if (numberOfResources < 1 || numberOfResources > 3) {
-			logger.debug("Invalid policy name : " + resourceName);
-			return false;
-		}
+		
+		String dbName  = splittedResources.length > 0 ? splittedResources[0] : StringUtil.WILDCARD_ASTERISK;
+		String tblName = splittedResources.length > 1 ? splittedResources[1] : StringUtil.WILDCARD_ASTERISK;
+		String colName = splittedResources.length > 2 ? splittedResources[2] : StringUtil.WILDCARD_ASTERISK;
 
 		boolean policyMatched = false;
 		for (XXResource xResource : xResourceList) {
 			if (xResource.getResourceStatus() != AppConstants.STATUS_ENABLED) {
 				continue;
 			}
+
 			Long resourceId = xResource.getId();
-			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission,
-					resourceId);
+			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission, resourceId);
 
-			if (hasPermission) {
-				// get database list from resource list
-				String[] xDatabases = stringUtil.split(
-						xResource.getDatabases(), ",");
-				// get table list from resource list
-				String[] xTables = (xResource.getTables() == null || xResource
-						.getTables().equalsIgnoreCase("")) ? null : stringUtil
-						.split(xResource.getTables(), ",");
-				// get UDF list from resource list
-				String[] xUdfs = (xResource.getUdfs() == null || xResource
-						.getUdfs().equalsIgnoreCase("")) ? null : stringUtil
-						.split(xResource.getUdfs(), ",");
-				// get column list from resource list
-				String[] xColumns = (xResource.getColumns() == null || xResource
-						.getColumns().equalsIgnoreCase("")) ? null : stringUtil
-						.split(xResource.getColumns(), ",");
+			if (! hasPermission) {
+				continue;
+			}
 
-				boolean matchFound = false;
-				// check whether given database resource available in database
-				// list
-				for (String xDatabase : xDatabases) {
-					if (matchPath(splittedResources[0], xDatabase)) {
-						matchFound = true;
-					}
+			// 1. does the policy match the database?
+			String[] xDatabases = stringUtil.isEmpty(xResource.getDatabases()) ? null : stringUtil.split(xResource.getDatabases(), ",");
+
+			boolean matchFound = (xDatabases == null || xDatabases.length == 0) ? true : matchPath(dbName, xDatabases);
+
+			if (! matchFound) {
+				continue;
+			}
+
+			if (isUdfPolicy) {
+				// 2. does the policy match the UDF?
+				String[] xUdfs = stringUtil.isEmpty(xResource.getUdfs()) ? null : stringUtil.split(xResource.getUdfs(), ",");
+				
+				if(! matchPath(tblName, xUdfs)) {
+					continue;
+				} else {
+					policyMatched = true;
+					break;
 				}
+			} else {
+				// 2. does the policy match the table?
+				String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null : stringUtil.split(xResource.getTables(), ",");
+				
+				System.out.println("tblName=" + tblName + "; xTables=" + xTables);
+
+				matchFound = (xTables == null || xTables.length == 0) ? true : matchPath(tblName, xTables);
+
+				if(xResource.getTableType() == AppConstants.POLICY_EXCLUSION) {
+					matchFound = !matchFound;
+				}
+
 				if (!matchFound) {
 					continue;
 				}
-				// check whether given UDF resource available in UDF list
-				if (isUdfPolicy) {
-					if (xUdfs != null) {
-						for (String xUdf : xUdfs) {
-							if (matchPath(splittedResources[1], xUdf)) {
-								policyMatched = true;
-								break;
-							}
-						}
-					} else {
-						continue;
-					}
+
+				// 3. does current policy match the column?
+				String[] xColumns = stringUtil.isEmpty(xResource.getColumns()) ? null : stringUtil.split(xResource.getColumns(), ",");
+
+				matchFound = (xColumns == null || xColumns.length == 0) ? true : matchPath(colName, xColumns);
+
+				if(xResource.getColumnType() == AppConstants.POLICY_EXCLUSION) {
+					matchFound = !matchFound;
 				}
 
-				int dbTableType = xResource.getTableType();
-				int dbColumnType = xResource.getColumnType();
-				// true if database table type and column type is include
-				boolean isXResourceInc = XABizUtil.areAllEqual(
-						AppConstants.POLICY_INCLUSION, dbTableType,
-						dbColumnType);
-				// true if requested table type and requested column type is
-				// include
-				boolean isReqResourceInc = XABizUtil.areAllEqual(
-						AppConstants.POLICY_INCLUSION, reqTableType,
-						reqColumnType);
-
-				if (numberOfResources < 2) {
+				if (!matchFound) {
 					continue;
-				}
-
-				if (isReqResourceInc) {
-					if (isXResourceInc) { // True and True
-						matchFound = false;
-						if(xTables!=null){
-							for (String xTable : xTables) {
-								if (matchPath(splittedResources[1], xTable)) {
-									matchFound = true;
-								}
-							}
-						}
-						if (!matchFound) {
-							continue;
-						}
-
-						if (xColumns == null) {
-							policyMatched = true;
-							break;
-						} else {
-							if (numberOfResources < 3) {
-								continue;
-							}
-						}
-
-						matchFound = false;
-						for (String xColumn : xColumns) {
-							if (matchPath(splittedResources[2], xColumn)) {
-								policyMatched = true;
-								break;
-							}
-						}
-						if (!matchFound) {
-							continue;
-						}
-					} else { // only condition 2 is true
-
-						if (dbTableType == AppConstants.POLICY_EXCLUSION) {
-							for (String xTable : xTables) {
-								if (matchPath(splittedResources[1], xTable)) {
-									continue;
-								}
-							}
-						} else {
-							matchFound = false;
-							for (String xTable : xTables) {
-								if (matchPath(splittedResources[1], xTable)) {
-									matchFound = true;
-								}
-							}
-							if (!matchFound) {
-								continue;
-							}
-						}
-
-						if (xColumns == null) {
-							return true;
-						} else {
-							if (numberOfResources < 3) {
-								return false;
-							}
-						}
-
-						if (dbColumnType == AppConstants.POLICY_EXCLUSION) {
-							for (String xColumn : xColumns) {
-								if (matchPath(splittedResources[2], xColumn)) {
-									continue;
-								}
-							}
-						} else {
-							matchFound = false;
-							for (String xColumn : xColumns) {
-								if (matchPath(splittedResources[2], xColumn)) {
-									matchFound = true;
-								}
-							}
-							if (!matchFound) {
-								continue;
-							}
-						}
-					}
 				} else {
-					// Only admin is allowed to create exclude policies.
-					boolean isAdmin = ContextUtil.getCurrentUserSession()
-							.isUserAdmin();
-					return isAdmin;
+					policyMatched = true;
+					break;
 				}
-
-				// if (isXResourceInc && isReqResourceInc) { // True and True
-				// matchFound = false;
-				// for (String xTable : xTables) {
-				// if (matchPath(splittedResources[1], xTable)) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// continue;
-				// }
-				//
-				// if (xColumns == null) {
-				// policyMatched = true;
-				// break;
-				// } else {
-				// if (numberOfResources < 3) {
-				// continue;
-				// }
-				// }
-				//
-				// matchFound = false;
-				// for (String xColumn : xColumns) {
-				// if (matchPath(splittedResources[2], xColumn)) {
-				// policyMatched = true;
-				// break;
-				// }
-				// }
-				// if (!matchFound) {
-				// continue;
-				// }
-				// } else if (isXResourceInc) { // only condition 1 is true
-				//
-				// if (reqTableType == AppConstants.POLICY_EXCLUSION) {
-				// matchFound = false;
-				// for (String xTable : xTables) {
-				// if (xTable.equals("*")) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// continue;
-				// }
-				//
-				// } else {
-				// matchFound = false;
-				// for (String xTable : xTables) {
-				// if (matchPath(splittedResources[1], xTable)) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// continue;
-				// }
-				// }
-				//
-				// if (xColumns == null) {
-				// policyMatched = true;
-				// break;
-				// } else {
-				// if (numberOfResources < 3) {
-				// continue;
-				// }
-				// }
-				//
-				// if (reqColumnType == AppConstants.POLICY_EXCLUSION) {
-				// matchFound = false;
-				// for (String xColumn : xColumns) {
-				// if (xColumn.equals("*")) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// continue;
-				// }
-				//
-				// } else {
-				// matchFound = false;
-				// for (String xColumn : xColumns) {
-				// if (matchPath(splittedResources[2], xColumn)) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// continue;
-				// }
-				// }
-				//
-				// } else if (isReqResourceInc) { // only condition 2 is true
-				//
-				// if (dbTableType == AppConstants.POLICY_EXCLUSION) {
-				// for (String xTable : xTables) {
-				// if (matchPath(splittedResources[1], xTable)) {
-				// continue;
-				// }
-				// }
-				// } else {
-				// matchFound = false;
-				// for (String xTable : xTables) {
-				// if (matchPath(splittedResources[1], xTable)) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// continue;
-				// }
-				// }
-				//
-				// if (xColumns == null) {
-				// return true;
-				// } else {
-				// if (numberOfResources < 3) {
-				// return false;
-				// }
-				// }
-				//
-				// if (dbColumnType == AppConstants.POLICY_EXCLUSION) {
-				// for (String xColumn : xColumns) {
-				// if (matchPath(splittedResources[2], xColumn)) {
-				// continue;
-				// }
-				// }
-				// } else {
-				// matchFound = false;
-				// for (String xColumn : xColumns) {
-				// if (matchPath(splittedResources[2], xColumn)) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// continue;
-				// }
-				// }
-
-				// } else { //else cases
-				// if (dbTableType == AppConstants.POLICY_EXCLUSION) {
-				// if (reqTableType == AppConstants.POLICY_EXCLUSION) {
-				// for (String xTable : xTables) {
-				// if (matchPath(splittedResources[1], xTable)) {
-				// continue;
-				// }
-				// }
-				// } else {
-				// for (String xTable : xTables) {
-				// if (matchPath(splittedResources[1], xTable)) {
-				// continue;
-				// }
-				// }
-				// }
-				// } else {
-				// if (reqTableType == AppConstants.POLICY_EXCLUSION) {
-				// matchFound = false;
-				// for (String xTable : xTables) {
-				// if (xTable.equals("*")) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// return false;
-				// }
-				// } else {
-				// for (String xTable : xTables) {
-				// if (matchPath(splittedResources[1], xTable)) {
-				// continue;
-				// }
-				// }
-				// }
-				// }
-				//
-				// if (xColumns == null) {
-				// return true;
-				// } else {
-				// if (numberOfResources < 3) {
-				// return false;
-				// }
-				// }
-				//
-				// if (dbColumnType == AppConstants.POLICY_EXCLUSION) {
-				// if (reqColumnType == AppConstants.POLICY_EXCLUSION) {
-				// for (String xColumn : xColumns) {
-				// if (matchPath(splittedResources[2], xColumn)) {
-				// continue;
-				// }
-				// }
-				// } else {
-				// for (String xColumn : xColumns) {
-				// if (matchPath(splittedResources[2], xColumn)) {
-				// continue;
-				// }
-				// }
-				// }
-				// } else {
-				// if (reqColumnType == AppConstants.POLICY_EXCLUSION) {
-				// matchFound = false;
-				// for (String xColumn : xColumns) {
-				// if (xColumn.equals("*")) {
-				// matchFound = true;
-				// }
-				// }
-				// if (!matchFound) {
-				// return false;
-				// }
-				// } else {
-				// for (String xColumn : xColumns) {
-				// if (matchPath(splittedResources[2], xColumn)) {
-				// continue;
-				// }
-				// }
-				// }
-				// }
-				//
-				// }
 			}
 		}
 		return policyMatched;
@@ -1514,6 +1169,10 @@ public class XABizUtil {
 	 */
 	private boolean matchPath(String pathToCheckFragment,
 			String wildCardPathFragment) {
+		if(pathToCheckFragment == null || wildCardPathFragment == null) {
+			return false;
+		}
+
 		if (pathToCheckFragment.contains("*")
 				|| pathToCheckFragment.contains("?")) {
 			pathToCheckFragment = replaceMetaChars(pathToCheckFragment);
@@ -1535,6 +1194,18 @@ public class XABizUtil {
 						wildCardPathFragment.trim());
 			}
 		}
+	}
+	
+	private boolean matchPath(String pathToCheck, String[] wildCardPaths) {
+		if (pathToCheck != null && wildCardPaths != null) {
+			for (String wildCardPath : wildCardPaths) {
+				if (matchPath(pathToCheck, wildCardPath)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 
 	/**

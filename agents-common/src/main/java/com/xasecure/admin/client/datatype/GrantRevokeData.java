@@ -33,6 +33,8 @@ public class GrantRevokeData implements java.io.Serializable {
 	private boolean       isAuditEnabled;
 	private boolean       replacePerm;
 	private List<PermMap> permMapList = new ArrayList<PermMap>();
+	
+	private static String WILDCARD_ASTERISK = "*";
 
 
 	public GrantRevokeData() {
@@ -112,9 +114,9 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.grantor         = grantor;
 		this.repositoryName = repositoryName;
 		this.repositoryType = "hive";
-		this.databases      = databases;
-		this.tables         = tables;
-		this.columns        = columns;
+		this.databases      = StringUtil.isEmpty(databases) ? WILDCARD_ASTERISK : databases;
+		this.tables         = StringUtil.isEmpty(tables)    ? WILDCARD_ASTERISK : tables;
+		this.columns        = StringUtil.isEmpty(columns)   ? WILDCARD_ASTERISK : columns;
 		this.isAuditEnabled = true;
 		this.isEnabled      = true;
 		this.replacePerm    = false;
@@ -130,9 +132,9 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.grantor         = grantor;
 		this.repositoryName = repositoryName;
 		this.repositoryType = "hbase";
-		this.tables         = tables;
-		this.columns        = columns;
-		this.columnFamilies = columnFamilies;
+		this.tables         = StringUtil.isEmpty(tables)         ? WILDCARD_ASTERISK : tables;
+		this.columns        = StringUtil.isEmpty(columns)        ? WILDCARD_ASTERISK : columns;
+		this.columnFamilies = StringUtil.isEmpty(columnFamilies) ? WILDCARD_ASTERISK : columnFamilies;
 		this.isAuditEnabled = true;
 		this.isEnabled      = true;
 		this.replacePerm    = true;
