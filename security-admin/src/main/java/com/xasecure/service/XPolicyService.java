@@ -233,8 +233,14 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXResource.setColumns(vXPolicy.getColumns());
 		vXResource.setUdfs(vXPolicy.getUdfs());
 		vXResource.setAssetName(vXPolicy.getRepositoryName());
-		vXResource.setAssetType(AppConstants.getEnumFor_AssetType(vXPolicy
-				.getRepositoryType()));
+		
+		int assetType = AppConstants.getEnumFor_AssetType(vXPolicy
+				.getRepositoryType());
+		if (assetType == 0 || assetType == AppConstants.ASSET_UNKNOWN) {
+			assetType = xAsset.getAssetType();
+			vXPolicy.setRepositoryType(AppConstants.getLabelFor_AssetType(assetType));
+		}
+		vXResource.setAssetType(assetType);
 
 		int resourceStatus = AppConstants.STATUS_ENABLED;
 		if (!vXPolicy.getIsEnabled()) {
