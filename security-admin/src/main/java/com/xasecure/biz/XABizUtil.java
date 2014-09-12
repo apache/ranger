@@ -730,8 +730,6 @@ public class XABizUtil {
 			} else {
 				// 2. does the policy match the table?
 				String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null : stringUtil.split(xResource.getTables(), ",");
-				
-				System.out.println("tblName=" + tblName + "; xTables=" + xTables);
 
 				matchFound = (xTables == null || xTables.length == 0) ? true : matchPath(tblName, xTables);
 
