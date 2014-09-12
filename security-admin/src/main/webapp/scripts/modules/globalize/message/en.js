@@ -222,7 +222,8 @@ define(function(require) {
 				logout 						: 'Logout',
 				xaSecure					: 'XA Secure',
 				hortonWorksInc				: 'Hortonworks Inc.',
-				listOfPlugins				: 'See third-party tools/resources used and their respective authors.',
+				listOfPlugins				: 'See third-party tools/resources that Argus uses and their respective authors.',
+				licenceText                 : 'Licensed under the Apache Licence, Version 0.1.0',
 				
 	
 				// Menu
