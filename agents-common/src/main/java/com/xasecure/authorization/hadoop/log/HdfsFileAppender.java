@@ -952,8 +952,7 @@ class HdfsSink {
 
 	  private static final String DS_REPLICATION_VAL = "1";
 	  private static final String DS_REPLICATION_KEY = "dfs.replication";
-	  private static final String FS_DEFAULT_NAME_KEY = "ds.default.name";
-	  
+	  private static final String FS_DEFAULT_NAME_KEY = "fs.default.name";
 	  private Configuration conf = null;
 	  private FileSystem fs= null;
       private Path pt = null;
@@ -985,8 +984,8 @@ class HdfsSink {
 		return hdfssink.get();
 	 }
   
-	  public void init(String fileSystemName, String fileName, String fileCache,boolean append, boolean bufferedIO, int bufferSize, Layout layout, String encoding, String scheduledCacheFile, Writer cacheWriter, boolean hdfsUpdateAllowed, String processUser) throws IOException, InterruptedException{
-		   this.conf= new Configuration();
+	 public void init(String fileSystemName, String fileName, String fileCache,boolean append, boolean bufferedIO, int bufferSize, Layout layout, String encoding, String scheduledCacheFile, Writer cacheWriter, boolean hdfsUpdateAllowed, String processUser) throws Exception{
+		   
 		   this.fsName=fileSystemName;
 		   this.fileName=fileName;
 		   this.layout=layout;
@@ -996,20 +995,21 @@ class HdfsSink {
 		   this.fileCache=fileCache;
 		   this.hdfsUpdateAllowed=hdfsUpdateAllowed;
 		   this.processUser=processUser;
-		  
+		   
+		   final Configuration conf= new Configuration();
+      	   conf.set(DS_REPLICATION_KEY,DS_REPLICATION_VAL);
+      	   conf.set(FS_DEFAULT_NAME_KEY, fsName);
+      	   
            try {
-        	   
-        	   conf.set(DS_REPLICATION_KEY,DS_REPLICATION_VAL);
-        	   conf.set(FS_DEFAULT_NAME_KEY, this.fsName);
-        	   
-        	   if ( fs == null) {
+        	    if ( fs == null) {
         		 LogLog.debug("Opening Connection to hdfs Sytem" + this.fsName);
         		         		        		 
         		 UserGroupInformation ugi = UserGroupInformation.createProxyUser(this.processUser, UserGroupInformation.getLoginUser());
-    		     ugi.doAs( new PrivilegedExceptionAction<Void>() {
-    		    	 public Void run() throws IOException {
-    		    		 fs = FileSystem.get(conf);
-    		    		 return null;
+        		 fs = ugi.doAs( new PrivilegedExceptionAction<FileSystem>() {
+    		    	  public FileSystem run() throws Exception {
+    		    		 FileSystem filesystem = FileSystem.get(conf); 
+    		    		 LogLog.debug("Inside UGI.."  + fsName + " " + filesystem);
+    		    		 return filesystem;
     		    	 }
     		     });
         		 
@@ -1024,7 +1024,7 @@ class HdfsSink {
         	     
         	    }
         	   
-	           } catch(IOException ie) {
+	           } catch(Exception ie) {
 	        	 
             	 LogLog.error("Unable to Create hdfs logfile:" + ie.getMessage());  
             	 throw ie;
@@ -1054,14 +1054,14 @@ class HdfsSink {
 	    	  pt = new Path(this.fileName);
 	    	  // if file Exist append it
 	    	  if(fs.exists(pt)) {
-	        	  LogLog.debug("Appending File: "+ this.fsName+":"+this.fileName);  
+	        	  LogLog.debug("Appending File: "+ this.fsName+":"+this.fileName+fs);  
 		      	  if (hdfsostream !=null) {
 		      		  hdfsostream.close();
 		          }
 		      	  hdfsostream=fs.append(pt);	
 		      	  
 	           } else {
-	        	   LogLog.debug("Creating File directories in hdfs if not present.."+ this.fsName+":"+this.fileName);  
+	        	   LogLog.debug("Creating File directories in hdfs if not present.."+ this.fsName+":"+this.fileName + fs);  
 		           String parentName = new Path(this.fileName).getParent().toString();
 		           if(parentName != null) {
 		              Path parentDir = new Path(parentName);
