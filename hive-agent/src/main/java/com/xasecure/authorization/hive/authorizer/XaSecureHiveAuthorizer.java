@@ -456,10 +456,18 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				break;
 
 				case QUERY:
+				case SHOW_TABLESTATUS:
+				case SHOW_CREATETABLE:
+				case SHOWINDEXES:
+				case SHOWPARTITIONS:
+				case SHOW_TBLPROPERTIES:
+				case DESCTABLE:
+				case ANALYZE_TABLE:
 					accessType = HiveAccessType.SELECT;
 				break;
 
 				case SWITCHDATABASE:
+				case DESCDATABASE:
 					accessType = HiveAccessType.USE;
 				break;
 
@@ -473,13 +481,10 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				break;
 
 				case ADD:
-				case ANALYZE_TABLE:
 				case COMPILE:
 				case CREATEMACRO:
 				case CREATEROLE:
-				case DESCDATABASE:
 				case DESCFUNCTION:
-				case DESCTABLE:
 				case DFS:
 				case DROPMACRO:
 				case DROPROLE:
@@ -493,18 +498,13 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				case SHOWCONF:
 				case SHOWDATABASES:
 				case SHOWFUNCTIONS:
-				case SHOWINDEXES:
 				case SHOWLOCKS:
-				case SHOWPARTITIONS:
 				case SHOWTABLES:
 				case SHOW_COMPACTIONS:
-				case SHOW_CREATETABLE:
 				case SHOW_GRANT:
 				case SHOW_ROLES:
 				case SHOW_ROLE_GRANT:
 				case SHOW_ROLE_PRINCIPALS:
-				case SHOW_TABLESTATUS:
-				case SHOW_TBLPROPERTIES:
 				case SHOW_TRANSACTIONS:
 				break;
 			}
