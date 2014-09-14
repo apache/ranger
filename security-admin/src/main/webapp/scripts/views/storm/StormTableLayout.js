@@ -51,7 +51,7 @@ define(function(require){
     		};
     	},
     	breadCrumbs : function(){
-    		return [XALinks.get('RepositoryManager'),XALinks.get('ManageKnoxPolicies',{model : this.assetModel})];
+    		return [XALinks.get('RepositoryManager'),XALinks.get('ManageStormPolicies',{model : this.assetModel})];
    		},
 		/** Layout sub regions */
     	regions: {
@@ -170,7 +170,7 @@ define(function(require){
 				topologies : {
 					label	: localization.tt("lbl.topologyName")+'(s)',
 					/*href: function(model){
-						return '#!/knox/'+model.get('assetId')+'/policy/' + model.id;
+						return '#!/storm/'+model.get('assetId')+'/policy/' + model.id;
 					},*/
 					editable:false,
 //					cell :'uri',

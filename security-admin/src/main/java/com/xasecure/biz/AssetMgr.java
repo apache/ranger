@@ -86,6 +86,7 @@ import com.xasecure.service.XGroupService;
 import com.xasecure.service.XPermMapService;
 import com.xasecure.service.XTrxLogService;
 import com.xasecure.service.XUserService;
+import com.xasecure.storm.client.StormClient;
 import com.xasecure.util.RestUtil;
 import com.xasecure.view.VXAccessAuditList;
 import com.xasecure.view.VXAsset;
@@ -3037,4 +3038,28 @@ public class AssetMgr extends AssetMgrBase {
 		
 		return vXResource;
 	}
+	
+    public VXStringList getStormResources(final String dataSourceName,String topologyName) {
+        VXStringList ret = null ;
+        XXAsset asset = xADaoManager.getXXAsset().findByAssetName(dataSourceName);
+        String config = asset.getConfig() ;
+        if (config == null || config.trim().isEmpty()) {
+                logger.error("Connection Config is empty");
+
+        } else {
+                final HashMap<String, String> configMap = (HashMap<String, String>) jsonUtil.jsonToMap(config);
+                String url = configMap.get("nimbus.url");
+                String username = configMap.get("username");
+                String password = configMap.get("password");
+                ret = getStormResources(url, username, password,topologyName) ;
+        }
+        return ret ;
+    }
+
+    public VXStringList getStormResources(String url, String username, String password,String topologyName) {
+        final StormClient stormClient = AssetConnectionMgr.getStormClient(url, username, password);
+        List<String> toplogyList = stormClient.getTopologyList(topologyName) ;
+        return msBizUtil.mapStringListToVStringList(toplogyList) ;
+    }
+
 }

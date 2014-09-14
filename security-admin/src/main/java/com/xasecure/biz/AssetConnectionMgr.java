@@ -40,6 +40,7 @@ import com.xasecure.hadoop.client.HadoopFS;
 import com.xasecure.hbase.client.HBaseClient;
 import com.xasecure.hive.client.HiveClient;
 import com.xasecure.knox.client.KnoxClient;
+import com.xasecure.storm.client.StormClient;
 import com.xasecure.view.VXAsset;
 
 @Component
@@ -382,5 +383,19 @@ public class AssetConnectionMgr {
 		hadoopConnectionCache.remove(dataSourceName);
 		return getHadoopConnection(dataSourceName);
 	}
+	
+    public static StormClient getStormClient(final String stormUIURL, String userName, String password) {
+        StormClient stormClient = null;
+        if (stormUIURL == null || stormUIURL.isEmpty()) {
+            logger.error("Can not create KnoxClient: stormUIURL is empty");
+        } else if (userName == null || userName.isEmpty()) {
+            logger.error("Can not create KnoxClient: knoxAdminUser is empty");
+        } else if (password == null || password.isEmpty()) {
+            logger.error("Can not create KnoxClient: knoxAdminPassword is empty");
+        } else {
+            stormClient =  new StormClient(stormUIURL, userName, password);
+        }
+        return stormClient;
+    }
 
 }

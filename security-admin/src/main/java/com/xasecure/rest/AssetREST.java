@@ -371,6 +371,15 @@ public class AssetREST {
 		return assetMgr.getKnoxResources(dataSourceName, topologyName, serviceName);
 	}
 	
+    @GET
+    @Path("/storm/resources")
+    @Produces({ "application/xml", "application/json" })
+    public VXStringList pullStormResources(@Context HttpServletRequest request) {
+        String dataSourceName = request.getParameter("dataSourceName");
+        String topologyName = request.getParameter("topologyName");
+        return assetMgr.getStormResources(dataSourceName, topologyName);
+    }
+	
 	@GET
 	@Path("/resources/count")
 	@Produces({ "application/xml", "application/json" })

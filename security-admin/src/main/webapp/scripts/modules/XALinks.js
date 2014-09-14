@@ -225,6 +225,17 @@ define(function(require) {
 					text : options.model.get('name') +' Policies',
 					title: options.model.get('name') +' Policies'
 				};
+            },
+            ManageStormPolicies : function(options){
+                var href = "javascript:void(0);";
+                if(_.has(options,'model')){
+                    href =  '#!/storm/'+options.model.id+"/policies";
+                }
+                return {
+                    href : href,
+                    text : options.model.get('name') +' Policies',
+                    title: options.model.get('name') +' Policies'
+                };
 			}
 	};      
        

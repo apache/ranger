@@ -284,7 +284,7 @@ define(function(require){
 						}
 					},
 					ajax: { 
-						url: "service/assets/knox/resources",
+						url: "service/assets/storm/resources",
 						dataType: 'json',
 						params : {
 							timeout: 3000

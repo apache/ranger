@@ -46,9 +46,9 @@ define(function(require){
     	},
     	breadCrumbs :function(){
     		if(this.model.isNew())
-    			return [XALinks.get('RepositoryManager'),XALinks.get('ManageKnoxPolicies',{model : this.assetModel}),XALinks.get('PolicyCreate')];
+    			return [XALinks.get('RepositoryManager'),XALinks.get('ManageStormPolicies',{model : this.assetModel}),XALinks.get('PolicyCreate')];
     		else
-    			return [XALinks.get('RepositoryManager'),XALinks.get('ManageKnoxPolicies',{model : this.assetModel}),XALinks.get('PolicyEdit')];
+    			return [XALinks.get('RepositoryManager'),XALinks.get('ManageStormPolicies',{model : this.assetModel}),XALinks.get('PolicyEdit')];
     	} , 
 		/** Layout sub regions */
     	regions: {
