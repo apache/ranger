@@ -96,7 +96,6 @@ public class XABizUtil {
 	private static final String PATH_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst0123456789-_.";
 	private static char[] PATH_CHAR_SET = PATH_CHARS.toCharArray();
 	private static int PATH_CHAR_SET_LEN = PATH_CHAR_SET.length;
-	private static Long sGroupIdPublic = null;
 
 	public XABizUtil() {
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty(
@@ -1019,12 +1018,13 @@ public class XABizUtil {
 		List<XXPermMap> permMapList = new ArrayList<XXPermMap>();
 		userGroups = daoManager.getXXGroup().findByUserId(xUserId);
 		permMapList = daoManager.getXXPermMap().findByResourceId(resourceId);
+		Long publicGroupId = getPublicGroupId();
 		boolean matchFound = false;
 		for (XXPermMap permMap : permMapList) {
 			if (permMap.getPermType() == permission) {
 				if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_GROUP) {
 					// check whether permission is enabled for public group or a group to which user belongs
-					matchFound = isPublicGroupId(permMap.getGroupId()) || isGroupInList(permMap.getGroupId(), userGroups);
+					matchFound = (publicGroupId != null && publicGroupId == permMap.getGroupId()) || isGroupInList(permMap.getGroupId(), userGroups);
 				} else if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
 					// check whether permission is enabled to user
 					matchFound = permMap.getUserId().equals(xUserId);
@@ -1037,18 +1037,10 @@ public class XABizUtil {
 		return matchFound;
 	}
 	
-	public boolean isPublicGroupId(Long groupId) {
-		return groupId != null && groupId == getPublicGroupId();
-	}
-	
 	public Long getPublicGroupId() {
-		if(sGroupIdPublic == null) {
-			XXGroup xXGroupPublic = daoManager.getXXGroup().findByGroupName(XAConstants.GROUP_PUBLIC);
+		XXGroup xXGroupPublic = daoManager.getXXGroup().findByGroupName(XAConstants.GROUP_PUBLIC);
 
-			sGroupIdPublic = xXGroupPublic != null ? xXGroupPublic.getId() : null;
-		}
-
-		return sGroupIdPublic;
+		return xXGroupPublic != null ? xXGroupPublic.getId() : null;
 	}
 
 	/**
