@@ -134,12 +134,12 @@ define(function(require){
 					
 				},
 				columns : {
-					//type		: 'Select2Remote',
-					type		: 'Text',
+					type		: 'Select2Remote',
+//					type		: 'Text',
 					title		: localization.tt("lbl.enterColumnName"),
 		//			validators  : [{type:'regexp',regexp:/^[a-zA-Z*?][a-zA-Z0-9_'&-/\$]*[A-Za-z0-9]*$/i,message :localization.tt('validationMessages.enterValidName')}],
-					editorAttrs :{ 'placeholder': 'Enter Column Name'}
-					//pluginAttr  : this.getPlugginAttr(true,this.type.COLUMN),
+					editorAttrs :{ 'placeholder': 'Enter Column Name'},
+					pluginAttr  : this.getPlugginAttr(false,this.type.COLUMN),
 				},
 				_vAuditListToggle : {
 					type		: 'Switch',

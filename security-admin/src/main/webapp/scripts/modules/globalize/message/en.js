@@ -284,7 +284,8 @@ define(function(require) {
 				areSureWantToLogout		  : 'Are you sure want to logout ?',
 				groupDoesNotExistAnymore  : 'Group does not exist anymore..',
 				userDoesNotExistAnymore   : 'User does not exist anymore..',
-				repoDoesNotExistAnymore   : 'Repository does not exist anymore..'
+				repoDoesNotExistAnymore   : 'Repository does not exist anymore..',
+				policyDisabledMsg		  : 'This policy is currently in disabled state.',
 				
 				
 				

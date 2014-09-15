@@ -115,6 +115,7 @@ define(function(require){
 			this.initializePlugins();
 			this.addVisualSearch();
 			this.renderTable();
+			XAUtil.highlightDisabledPolicy(this);
 		},
 
 		/** all post render plugin initialization */
@@ -122,7 +123,7 @@ define(function(require){
 		},
 		renderTable : function(){
 			var that = this;
-			var TableRow = Backgrid.Row.extend({
+			/*var TableRow = Backgrid.Row.extend({
 				events: {
 					'click' : 'onClick'
 				},
@@ -151,14 +152,14 @@ define(function(require){
 						}).render().$el).slideDown();
 					}
 				}
-			});
+			});*/
 
 			this.rTableList.show(new XATableLayout({
 				columns: this.getColumns(),
 				collection: this.collection,
 				includeFilter : false,
 				gridOpts : {
-					row: TableRow,
+//					row: TableRow,
 					header : XABackgrid,
 					emptyText : 'No Policies found!'
 				},

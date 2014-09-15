@@ -140,9 +140,9 @@ public class PublicAPIs {
 		assetMgr.deleteXAsset(id, force);
 	}
 
-	@POST
-	@Path("/api/repository/testConfig")
-	@Produces({ "application/xml", "application/json" })
+	// @POST
+	// @Path("/api/repository/testConfig")
+	// @Produces({ "application/xml", "application/json" })
 	public VXResponse testConfig(VXRepository vXRepository) {
 		VXAsset vXAsset = xRepositoryService.mapPublicToXAObject(vXRepository);
 		return assetMgr.testConfig(vXAsset);
