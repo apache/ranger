@@ -2643,9 +2643,10 @@ public class AssetMgr extends AssetMgrBase {
 						permMapDeleteKeys.add(userKey);
 					}
 				}
-				for (VXPermMap permMap : permMapListtoDelete) {
-					if(permMap!=null){
-						if(permMap==null||permMap.getPermFor()==0||(permMap.getUserId()==null && permMap.getGroupId()==null)){
+				
+				if(permMapListtoDelete != null) {
+					for (VXPermMap permMap : permMapListtoDelete) {
+						if(permMap==null || permMap.getPermFor()==0 || (permMap.getUserId()==null && permMap.getGroupId()==null)){
 							continue;					
 						}
 						userKey=null;
@@ -2659,9 +2660,9 @@ public class AssetMgr extends AssetMgrBase {
 							xPermMapService.deleteResource(permMap.getId());
 							trxLogListDelete.addAll(xPermMapService.getTransactionLog(permMap,"delete"));
 						}					
-					}
-				}//permission deletion processing end
-				xaBizUtil.createTrxLog(trxLogListDelete);	
+					}//permission deletion processing end
+					xaBizUtil.createTrxLog(trxLogListDelete);	
+				}
 			}
 		}
 		
