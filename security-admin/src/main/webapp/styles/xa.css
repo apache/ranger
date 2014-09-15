@@ -636,7 +636,7 @@ table.backgrid thead tr:hover {
 }
 
 .hdfs-table table.backgrid thead th:nth-child(2) {
-  width: 50%;
+  width: 35%;
 }
 
 .m-height {
@@ -1630,4 +1630,14 @@ background-color: #444444;
 }
 .alert {
 	border:none;
+}
+tr.disable-policy td {
+	background-color: #F0F0F0;
+}
+
+.policy-disabled .formHeader,
+.policy-disabled .control-label {
+	color:#aaa;
+}td.html-cell.renderable:last-child {
+	text-align:center;
 }

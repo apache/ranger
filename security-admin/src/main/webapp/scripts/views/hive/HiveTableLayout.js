@@ -107,6 +107,7 @@ define(function(require){
 			this.initializePlugins();
 			this.addVisualSearch();
 			this.renderTable();
+			XAUtil.highlightDisabledPolicy(this);
 		},
 
 		/** all post render plugin initialization */
@@ -114,7 +115,7 @@ define(function(require){
 		},
 		renderTable : function(){
 			var that = this;
-			var tableRow = Backgrid.Row.extend({
+			/*var tableRow = Backgrid.Row.extend({
 				events: {
 					'click' : 'onClick'
 				},
@@ -143,13 +144,13 @@ define(function(require){
 					}	
 									
 				}
-			});
+			});*/
 			this.rTableList.show(new XATableLayout({
 				columns: this.getColumns(),
 				collection: this.collection,
 				includeFilter : false,
 				gridOpts : {
-					row: tableRow,
+//					row: tableRow,
 					header : XABackgrid,
 					emptyText : 'No Policies found!'
 				}

@@ -64,7 +64,8 @@ define(function(require){
     	ui: {
 			'btnSave'	: '[data-id="save"]',
 			'btnCancel' : '[data-id="cancel"]',
-			'btnDelete' : '[data-id="delete"]'
+			'btnDelete' : '[data-id="delete"]',
+			'policyDisabledAlert' : '[data-id="policyDisabledAlert"]' 
 		},
 
 		/** ui events hash */
@@ -106,6 +107,7 @@ define(function(require){
 
 		/** on render callback */
 		onRender: function() {
+			XAUtil.showAlerForDisabledPolicy(this);
 			this.rForm.show(this.form);
 			this.rForm.$el.dirtyFields();
 			XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavPolicyForm'),this.rForm.$el);

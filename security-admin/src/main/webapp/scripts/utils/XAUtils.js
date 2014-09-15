@@ -646,5 +646,29 @@ define(function(require) {
 		           'XA_PERM_TYPE_GET_TOPOLOGY','XA_PERM_TYPE_GET_USER_TOPOLOGY','XA_PERM_TYPE_GET_TOPOLOGY_INFO','XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL'
 		           ];
 	};
+
+	XAUtils.highlightDisabledPolicy = function(that){
+		var $el = that.rTableList.$el;
+		var timerId = setInterval(function(){
+			if($el.find('tr td:last').text() != "No Policies found!"){
+				_.each($el.find('tr td').find('.label-important'),function(a,b){
+					  if($(a).html() == "Disabled")
+					      console.log(that.$(a).parents('tr').addClass('disable-policy'))
+				},that);	
+				clearInterval(timerId);
+			}
+			console.log('highlight disabled policy..');
+		},5);
+	};
+	XAUtils.showAlerForDisabledPolicy = function(that){
+		if(!_.isUndefined(that.model.get('resourceStatus')) 
+			&& that.model.get('resourceStatus') == XAEnums.ActiveStatus.STATUS_DISABLED.value){
+			that.ui.policyDisabledAlert.show();
+			that.$(that.rForm.el).addClass("policy-disabled");
+		}else{
+			that.ui.policyDisabledAlert.hide();
+			that.$(that.rForm.el).removeClass("policy-disabled");
+		}
+	};
     return XAUtils;
 });
