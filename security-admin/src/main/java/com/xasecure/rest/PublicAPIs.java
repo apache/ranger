@@ -19,6 +19,7 @@
 
  package com.xasecure.rest;
 
+import java.util.ArrayList;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -177,6 +178,12 @@ public class PublicAPIs {
 	public VXLong countRepositories(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xAssetService.sortFields);
+
+        ArrayList<Integer> valueList = new ArrayList<Integer>();
+        valueList.add(XAConstants.STATUS_DISABLED);
+        valueList.add(XAConstants.STATUS_ENABLED);
+        searchCriteria.addParam("status", valueList);
+
 		return assetMgr.getXAssetSearchCount(searchCriteria);
 	}
 
@@ -285,6 +292,7 @@ public class PublicAPIs {
 	public VXLong countPolicies(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xResourceService.sortFields);
+
 
 		return assetMgr.getXResourceSearchCount(searchCriteria);
 	}
