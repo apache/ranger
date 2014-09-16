@@ -288,6 +288,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 		for (VXPermObj permObj : permObjList) {
 			String permGrp = new Date() + " : " + rand.nextInt(9999);
+			String ipAddress = permObj.getIpAddress();
 
 			if (!stringUtil.isEmpty(permObj.getUserList())) {
 				int permFor = AppConstants.XA_PERM_FOR_USER;
@@ -312,6 +313,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermType(permType);
 						vXPermMap.setUserId(xxUser.getId());
 						vXPermMap.setResourceId(resId);
+						vXPermMap.setIpAddress(ipAddress);
 						permMapList.add(vXPermMap);
 
 						StringBuilder uniqueKey = new StringBuilder();
@@ -348,6 +350,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermType(permType);
 						vXPermMap.setGroupId(xxGroup.getId());
 						vXPermMap.setResourceId(resId);
+						vXPermMap.setIpAddress(ipAddress);
 						permMapList.add(vXPermMap);
 
 						StringBuilder uniqueKey = new StringBuilder();
@@ -371,6 +374,8 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 				} else {
 					VXPermMap vPMap = xPermMapService
 							.populateViewBean(prevPermMap.get(entry.getKey()));
+					VXPermMap vPMapNew = entry.getValue();
+					vPMap.setIpAddress(vPMapNew.getIpAddress());
 					updPermMapList.add(vPMap);
 				}
 			}

@@ -39,9 +39,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.xasecure.biz.AssetMgr;
 import com.xasecure.common.AppConstants;
+import com.xasecure.common.MessageEnums;
 import com.xasecure.common.RESTErrorUtil;
 import com.xasecure.common.SearchCriteria;
 import com.xasecure.common.StringUtil;
+import com.xasecure.common.XAConstants;
 import com.xasecure.common.XASearchUtil;
 import com.xasecure.common.annotation.XAAnnotationClassName;
 import com.xasecure.common.annotation.XAAnnotationJSMgrName;
@@ -157,6 +159,11 @@ public class PublicAPIs {
 				request, xAssetService.sortFields);
 		searchUtil.extractString(request, searchCriteria, "name",
 				"Repository Name", null);
+		searchUtil.extractBoolean(request, searchCriteria, "status",
+				"Activation Status");
+		searchUtil.extractString(request, searchCriteria, "type",
+				"Repository Type", null);
+
 		searchCriteria = xRepositoryService.getMappedSearchParams(request,
 				searchCriteria);
 		VXAssetList vXAssetList = assetMgr.searchXAssets(searchCriteria);
@@ -251,8 +258,16 @@ public class PublicAPIs {
 					AppConstants.getEnumFor_AssetType(repositoryType));
 		}
 
-		searchUtil.extractInt(request, searchCriteria, "isRecursive",
-				"Is Recursive");
+		String isRec = request.getParameter("isRecursive");
+		if (isRec != null) {
+			boolean isRecursiveBool = restErrorUtil.parseBoolean(isRec,
+					"Invalid value for " + "isRecursive",
+					MessageEnums.INVALID_INPUT_DATA, null, "isRecursive");
+			int isRecursive = (isRecursiveBool == true) ? XAConstants.BOOL_TRUE
+					: XAConstants.BOOL_FALSE;
+			searchCriteria.getParamList().put("isRecursive", isRecursive);
+		}
+			
 		searchUtil.extractString(request, searchCriteria, "userName",
 				"User Name", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "repositoryName",
