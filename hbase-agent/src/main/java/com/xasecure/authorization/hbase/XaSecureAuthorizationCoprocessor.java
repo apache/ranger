@@ -31,6 +31,7 @@
   */
 package com.xasecure.authorization.hbase;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -173,7 +174,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		return isSpecialTable(Bytes.toString(tableName));
 	}
 	protected boolean isSpecialTable(String tableNameStr) {
-		return tableNameStr.equals("-ROOT-") || tableNameStr.equals(".META.");
+		return tableNameStr.equals("hbase:meta") ||  tableNameStr.equals("-ROOT-") || tableNameStr.equals(".META.");
 	}
 	@SuppressWarnings("unused")
 	private String getUser() {
@@ -198,6 +199,15 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		}
 		return user;
 	}
+	
+	private String getRemoteAddress() {
+		RequestContext reqContext = RequestContext.get();
+		InetAddress    remoteAddr = reqContext != null ? reqContext.getRemoteAddress() : null;
+		String         strAddr    = remoteAddr != null ? remoteAddr.getHostAddress() : null;
+
+		return strAddr;
+	}
+
 	// Methods that are used within the CoProcessor 
 	private void requireScannerOwner(InternalScanner s) throws AccessDeniedException {
 		if (RequestContext.isInRequestContext()) {
@@ -479,7 +489,11 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		try {
 			scannerOwners.remove(s);
 		} finally {
-			auditEvent("scannerClose", getTableName(c.getEnvironment()), null, null, null, null, getActiveUser(), accessGrantedFlag);
+			byte[] tableName = getTableName(c.getEnvironment());
+
+			if (!isSpecialTable(tableName)) {
+				auditEvent("scannerClose", tableName, null, null, null, null, getActiveUser(), accessGrantedFlag);
+			}
 		}
 	}
 	@Override
@@ -490,7 +504,11 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 				scannerOwners.put(s, user.getShortName());
 			}
 		} finally {
-			auditEvent("scannerOpen", getTableName(c.getEnvironment()), null, null, null, null, getActiveUser(), accessGrantedFlag);
+			byte[] tableName = getTableName(c.getEnvironment());
+
+			if (!isSpecialTable(tableName)) {
+				auditEvent("scannerOpen", tableName, null, null, null, null, getActiveUser(), accessGrantedFlag);
+			}
 		}
 		return s;
 	}
@@ -866,7 +884,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 			auditEvent.setAccessType(eventName);
 			auditEvent.setUser(user == null ? XaSecureHadoopConstants.AUDITLOG_EMPTY_STRING  : user.getShortName());
 			auditEvent.setAccessResult(accessFlag);
-			auditEvent.setClientIP(null); // TODO:
+			auditEvent.setClientIP(getRemoteAddress());
 			auditEvent.setEventTime(getUTCDate());
 			auditEvent.setRepositoryType(EnumRepositoryType.HBASE);
 			auditEvent.setRepositoryName(repositoryName);
