@@ -78,6 +78,8 @@ define(function(require){
 					if(!_.isUndefined(roleList) && roleList.length > 0){
 						if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_USER.value)
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_USER.value);
+						else
+							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_SYS_ADMIN.value);
 					}
 				}
 				if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
