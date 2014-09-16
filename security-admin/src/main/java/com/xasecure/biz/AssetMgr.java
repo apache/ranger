@@ -315,7 +315,7 @@ public class AssetMgr extends AssetMgrBase {
 					MessageEnums.INVALID_INPUT_DATA);
 		}
 		
-		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){
+		if(xAsset.getActiveStatus()==XACommonEnums.STATUS_DISABLED){
 			if(!currentUserSession.isUserAdmin()){
 				logger.error("Trying to update policy in disabled repository");
 				throw restErrorUtil.createRESTException("Resource "
@@ -624,8 +624,8 @@ public class AssetMgr extends AssetMgrBase {
 					+ "you're deleting policy, doesn't exist.",
 					MessageEnums.INVALID_INPUT_DATA);
 		}
-		
-		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){
+
+		if(xAsset.getActiveStatus()==XACommonEnums.STATUS_DISABLED){
 			if(!currentUserSession.isUserAdmin()){
 				logger.error("Trying to delete policy in disabled repository");
 				throw restErrorUtil.createRESTException("Resource "
@@ -1161,11 +1161,13 @@ public class AssetMgr extends AssetMgrBase {
 							finalTableName = tableName;
 							finalDbName = databaseName;
 							callableObj = new Callable<List<String>>() {
+
 								@Override
 								public List<String> call() {
 									return hiveClient.getTableList(finalDbName,
 											finalTableName);
 								}
+							
 							};
 						}
 					} else {
@@ -1335,6 +1337,15 @@ public class AssetMgr extends AssetMgrBase {
 		if (usb != null && usb.isUserAdmin()) {
 			XXAsset xAsset = xADaoManager.getXXAsset()
 					.getById(vXAsset.getId());
+			
+			if (xAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+				logger.error("Trying to update Asset which is soft deleted");
+				throw restErrorUtil.createRESTException(
+						"Repository that you want to update does not exist.",
+						MessageEnums.DATA_NOT_FOUND, xAsset.getId(), null,
+						"Repository not exist for this Id : " + xAsset.getId());
+			}
+			
 			List<XXTrxLog> trxLogList = xAssetService.getTransactionLog(
 					vXAsset, xAsset, "update");
 			vXAsset = (VXAsset) xAssetService.updateResource(vXAsset);
@@ -1357,6 +1368,15 @@ public class AssetMgr extends AssetMgrBase {
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
 		if (usb != null && usb.isUserAdmin() && force) {
 			VXAsset vxAsset = xAssetService.readResource(id);
+			
+			if (vxAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+				logger.error("Trying to delete Asset which is already soft deleted");
+				throw restErrorUtil.createRESTException(
+						"Repository not found or its already deleted, for Id : "
+								+ id, MessageEnums.DATA_NOT_FOUND, id, null,
+						"Repository not exist for this Id : " + id);
+			}
+			
 			SearchCriteria searchCriteria = new SearchCriteria();
 			searchCriteria.addParam("assetId", id);
 			VXResourceList resources = searchXResources(searchCriteria);
@@ -1518,6 +1538,15 @@ public class AssetMgr extends AssetMgrBase {
 	}
 
 	public VXResponse testConfig(VXAsset vXAsset) {
+		
+		if (vXAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+			logger.error("Trying to test Asset which is soft deleted");
+			throw restErrorUtil.createRESTException(
+					"Repository not found, Repository Name : " + vXAsset.getName(),
+					MessageEnums.DATA_NOT_FOUND, vXAsset.getId(), null,
+					"Repository not exist for this Id : " + vXAsset.getId());
+		}
+		
 		int assetType = vXAsset.getAssetType();
 		VXResponse testResponse = new VXResponse();
 		boolean connectivityStatus = false;
@@ -2239,9 +2268,25 @@ public class AssetMgr extends AssetMgrBase {
 				.getCurrentUserSession();
 		VXAsset vXAsset=null;
 		if (currentUserSession.isUserAdmin()) {
-			return (VXAsset)xAssetService.readResource(id);			
+			vXAsset = xAssetService.readResource(id);
+			if (vXAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+				logger.error("Trying to read Asset which is soft deleted");
+				throw restErrorUtil.createRESTException(
+						"Repository not found for this Id : " + id,
+						MessageEnums.DATA_NOT_FOUND, id, null,
+						"Repository does not exist for this Id : " + id);
+			}
 		}else{			
-			XXAsset  xXAsset=xADaoManager.getXXAsset().getById(id);		
+			XXAsset  xXAsset=xADaoManager.getXXAsset().getById(id);	
+			
+			if (xXAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+				logger.error("Trying to read Asset which is soft deleted");
+				throw restErrorUtil.createRESTException(
+						"Repository not found for this Id : " + id,
+						MessageEnums.DATA_NOT_FOUND, id, null,
+						"Repository does not exist for this Id : " + id);
+			}
+			
 			vXAsset=xAssetService.populateViewBean(xXAsset);
 			/*List<XXResource>  xXResourceList=xADaoManager
 					.getXXResource().findByAssetId(id);
@@ -3062,5 +3107,5 @@ public class AssetMgr extends AssetMgrBase {
         List<String> toplogyList = stormClient.getTopologyList(topologyName) ;
         return msBizUtil.mapStringListToVStringList(toplogyList) ;
     }
-
+    
 }

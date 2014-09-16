@@ -32,6 +32,8 @@ import com.xasecure.common.JSONUtil;
 import com.xasecure.common.MessageEnums;
 import com.xasecure.common.PropertiesUtil;
 import com.xasecure.common.SearchField;
+import com.xasecure.common.SearchField.DATA_TYPE;
+import com.xasecure.common.SearchField.SEARCH_TYPE;
 import com.xasecure.common.StringUtil;
 import com.xasecure.entity.*;
 
@@ -78,6 +80,10 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 		hiddenPasswordString = PropertiesUtil.getProperty("xa.password.hidden", "*****");
 		searchFields.add(new SearchField("status", "obj.activeStatus",
 				SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("name", "obj.name", DATA_TYPE.STRING,
+				SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("type", "obj.assetType",
+				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 	}
 
 	@Override

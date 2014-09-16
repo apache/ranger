@@ -132,7 +132,7 @@ public class XResourceService extends
 
 		searchFields.add(new SearchField("userName", "xUser.name",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL,
-				"XXPermMap xxPermMap, XUser xUser", "xxPermMap.resourceId "
+				"XXPermMap xxPermMap, XXUser xUser", "xxPermMap.resourceId "
 						+ "= obj.id and xxPermMap.userId = xUser.id"));
 
 		searchFields.add(new SearchField("userId", "xxPermMap.userId",
@@ -157,6 +157,9 @@ public class XResourceService extends
 				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("columnType", "obj.columnType",
 				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("repositoryName", "xxAsset.name",
+				DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL, "XXAsset xxAsset",
+				"xxAsset.id = obj.assetId"));
 
 		sortFields.add(new SortField("name", "obj.name"));
 		sortFields.add(new SortField("isRecursive", "obj.isRecursive"));

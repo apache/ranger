@@ -233,8 +233,14 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXResource.setColumns(vXPolicy.getColumns());
 		vXResource.setUdfs(vXPolicy.getUdfs());
 		vXResource.setAssetName(vXPolicy.getRepositoryName());
-		vXResource.setAssetType(AppConstants.getEnumFor_AssetType(vXPolicy
-				.getRepositoryType()));
+		
+		int assetType = AppConstants.getEnumFor_AssetType(vXPolicy
+				.getRepositoryType());
+		if (assetType == 0 || assetType == AppConstants.ASSET_UNKNOWN) {
+			assetType = xAsset.getAssetType();
+			vXPolicy.setRepositoryType(AppConstants.getLabelFor_AssetType(assetType));
+		}
+		vXResource.setAssetType(assetType);
 
 		int resourceStatus = AppConstants.STATUS_ENABLED;
 		if (!vXPolicy.getIsEnabled()) {
@@ -282,6 +288,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 		for (VXPermObj permObj : permObjList) {
 			String permGrp = new Date() + " : " + rand.nextInt(9999);
+			String ipAddress = permObj.getIpAddress();
 
 			if (!stringUtil.isEmpty(permObj.getUserList())) {
 				int permFor = AppConstants.XA_PERM_FOR_USER;
@@ -306,6 +313,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermType(permType);
 						vXPermMap.setUserId(xxUser.getId());
 						vXPermMap.setResourceId(resId);
+						vXPermMap.setIpAddress(ipAddress);
 						permMapList.add(vXPermMap);
 
 						StringBuilder uniqueKey = new StringBuilder();
@@ -342,6 +350,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermType(permType);
 						vXPermMap.setGroupId(xxGroup.getId());
 						vXPermMap.setResourceId(resId);
+						vXPermMap.setIpAddress(ipAddress);
 						permMapList.add(vXPermMap);
 
 						StringBuilder uniqueKey = new StringBuilder();
@@ -365,6 +374,8 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 				} else {
 					VXPermMap vPMap = xPermMapService
 							.populateViewBean(prevPermMap.get(entry.getKey()));
+					VXPermMap vPMapNew = entry.getValue();
+					vPMap.setIpAddress(vPMapNew.getIpAddress());
 					updPermMapList.add(vPMap);
 				}
 			}

@@ -191,6 +191,16 @@ public class AssetREST {
 	public VXLong countXAssets(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xAssetService.sortFields);
+		
+		searchUtil.extractIntList(request, searchCriteria, "status", "status",
+				"status");
+		Object status = searchCriteria.getParamValue("status");
+		if (status == null || ((Collection) status).size() == 0) {
+			ArrayList<Integer> valueList = new ArrayList<Integer>();
+			valueList.add(XACommonEnums.STATUS_DISABLED);
+			valueList.add(XACommonEnums.STATUS_ENABLED);
+			searchCriteria.addParam("status", valueList);
+		}
 		return assetMgr.getXAssetSearchCount(searchCriteria);
 	}
 
