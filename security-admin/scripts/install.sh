@@ -60,12 +60,13 @@ get_distro(){
 #Get Properties from File
 #$1 -> propertyName $2 -> fileName $3 -> variableName
 getPropertyFromFile(){
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation	
+	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
 	value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`	
-	validate=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-) # for validation
-	#echo 'V:'$validate
-	#if [ $validate := ''];then echo "'$propertyName' not found in $2 file while getting....!!"; exit 1; fi
-	if  test -z "$validate" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
-	eval "$3=$value"
+	#echo 'value:'$value
+	#validate=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-) # for validation
+	#if  test -z "$validate" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
+	eval $3="'$value'"
 }
 
 #Update Properties to File
@@ -102,6 +103,12 @@ init_variables(){
  	fi
 
 	WEBAPP_ROOT=${INSTALL_DIR}/ews/webapp
+	
+	getPropertyFromFile 'db_root_password' $PROPFILE db_user
+	getPropertyFromFile 'db_user' $PROPFILE db_user
+	getPropertyFromFile 'db_password' $PROPFILE db_password
+	getPropertyFromFile 'audit_db_user' $PROPFILE audit_db_user
+	getPropertyFromFile 'audit_db_password' $PROPFILE audit_db_password
 }
 
 wait_for_tomcat_shutdown() {
@@ -197,17 +204,17 @@ create_mysql_user(){
 	
 	for thost in '%' localhost
 	do
-		usercount=`$MYSQL_BIN -B -u root --password=$db_root_password -h $MYSQL_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$db_user' and host = '$thost';"`
+		usercount=`$MYSQL_BIN -B -u root --password="$db_root_password" -h $MYSQL_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$db_user' and host = '$thost';"`
 		if  [ ${usercount} -eq 0 ]
 		then
-			$MYSQL_BIN -B -u root --password=$db_root_password -h $MYSQL_HOST -e "create user '$db_user'@'$thost' identified by '$db_password';"
+			$MYSQL_BIN -B -u root --password="$db_root_password" -h $MYSQL_HOST -e "create user '$db_user'@'$thost' identified by '$db_password';"
 		fi
 		
 		mysqlquery="GRANT ALL ON *.* TO '$db_user'@'$thost' ; 
 		grant all privileges on *.* to '$db_user'@'$thost' with grant option;
 		FLUSH PRIVILEGES;"
 		
-		echo "${mysqlquery}" | $MYSQL_BIN -u root --password=$db_root_password -h $MYSQL_HOST
+		echo "${mysqlquery}" | $MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST
 		check_ret_status $? "MySQL create user failed"
 		
 	done
@@ -217,7 +224,7 @@ check_mysql_password () {
 	count=0
 	log "[I] Checking MYSQL root password"
 	
-	msg=`$MYSQL_BIN -u root --password=$db_root_password -h $MYSQL_HOST -s -e "select version();" 2>&1`
+	msg=`$MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST -s -e "select version();" 2>&1`
 	cmdStatus=$?
 	while :
 	do	
@@ -239,7 +246,7 @@ check_mysql_password () {
 			printf "\n"
 			trap '' 2 3 15
 			count=`expr ${count} + 1`
-			msg=`$MYSQL_BIN -u root --password=$db_root_password -h $MYSQL_HOST -s -e "select version();" 2>&1`
+			msg=`$MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST -s -e "select version();" 2>&1`
 			cmdStatus=$?
 	   	else
 			log "[I] Checking MYSQL root password DONE"
@@ -303,12 +310,12 @@ upgrade_db() {
 
 	DBVERSION_CATALOG_CREATION=db/create_dbversion_catalog.sql
 
-	mysqlexec="${MYSQL_BIN} -u ${db_user} --password=${db_password} -h ${MYSQL_HOST} ${db_name}"
+	#mysqlexec="${MYSQL_BIN} -u ${db_user} --password=${db_password} -h ${MYSQL_HOST} -D ${db_name}"
 	
 	if [ -f ${DBVERSION_CATALOG_CREATION} ]
 	then
-		log "[I] Verifying database version catalog table .... "
-		${mysqlexec} < ${DBVERSION_CATALOG_CREATION} 
+		`${MYSQL_BIN} -u "${db_user}" --password="${db_password}" -h ${MYSQL_HOST} -D ${db_name} < ${DBVERSION_CATALOG_CREATION}`
+		check_ret_status $? "Verifying database version catalog table Failed."
 	fi
 		
 	dt=`date '+%s'`
@@ -322,7 +329,7 @@ upgrade_db() {
 			version=`echo ${bn} | awk -F'-' '{ print $1 }'`
 			if [ "${version}" != "" ]
 			then
-				c=`${mysqlexec} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
+				c=`${MYSQL_BIN} -u "${db_user}" --password="${db_password}" -h ${MYSQL_HOST} -D ${db_name} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
 				check_ret_status $? "DBVerionCheck - ${version} Failed."
 				if [ ${c} -eq 0 ]
 				then
@@ -330,7 +337,7 @@ upgrade_db() {
 					echo >> ${tempFile}
 					echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
 					log "[I] - patch [${version}] is being applied."
-					${mysqlexec} < ${tempFile}
+					`${MYSQL_BIN} -u "${db_user}" --password="${db_password}" -h ${MYSQL_HOST} -D ${db_name} < ${tempFile}`
 					check_ret_status $? "Update patch - ${version} Failed. See sql file : [${tempFile}]"
 					rm -f ${tempFile}
 				else
@@ -345,24 +352,24 @@ upgrade_db() {
 import_db () {
 
 	log "[I] Verifying Database: $db_name";
-	existdb=`${MYSQL_BIN} -u ${db_user} --password=$db_password -h $MYSQL_HOST -B --skip-column-names -e  "show databases like '${db_name}' ;"`
+	existdb=`${MYSQL_BIN} -u "${db_user}" --password="${db_password}" -h $MYSQL_HOST -B --skip-column-names -e  "show databases like '${db_name}' ;"`
 
 	if [ "${existdb}" = "${db_name}" ]
 	then
 		log "[I] - database ${db_name} already exists. Ignoring import_db ..."
 	else
 		log "[I] Creating Database: $db_name";
-		$MYSQL_BIN -u $db_user --password=$db_password -h $MYSQL_HOST -e "create database $db_name"  
+		$MYSQL_BIN -u "$db_user" --password="$db_password" -h $MYSQL_HOST -e "create database $db_name"  
 		check_ret_status $? "Creating database Failed.."
 	
 	
 		log "[I] Importing Core Database file: $db_core_file "
-    	$MYSQL_BIN -u $db_user --password=$db_password -h $MYSQL_HOST $db_name < $db_core_file
+    	$MYSQL_BIN -u "$db_user" --password="$db_password" -h $MYSQL_HOST $db_name < $db_core_file
     	check_ret_status $? "Importing Database Failed.."
 	
 		if [ -f "${db_asset_file}" ] 
 		then
-			$MYSQL_BIN -u $db_user --password=$db_password -h $MYSQL_HOST ${db_name} < ${db_asset_file}
+			$MYSQL_BIN -u "$db_user" --password="$db_password" -h $MYSQL_HOST ${db_name} < ${db_asset_file}
 			check_ret_status $? "Reset of DB repositories failed"
 		fi
 
@@ -462,7 +469,7 @@ update_properties() {
    	then
 		mkdir -p `dirname "${keystore}"`
 
-   		java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create $db_password_alias -value $db_password -provider jceks://file$keystore
+   		java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
    		
    		propertyName=xaDB.jdbc.credential.alias
 		newPropertyValue="${db_password_alias}"
@@ -498,7 +505,7 @@ update_properties() {
 	
    	if [ "${keystore}" != "" ]
    	then
-	   	java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create $audit_db_password_alias -value $audit_db_password -provider jceks://file$keystore
+	   	java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
 	   	
 		propertyName=auditDB.jdbc.credential.alias
 		newPropertyValue="${audit_db_password_alias}"
@@ -538,24 +545,24 @@ create_audit_mysql_user(){
 	AUDIT_PASSWORD="${audit_db_password}"
 
 	log "[I] Verifying Database: $AUDIT_DB";
-	existdb=`${MYSQL_BIN} -u root --password=$db_root_password -h $MYSQL_HOST -B --skip-column-names -e  "show databases like '$AUDIT_DB' ;"`
+	existdb=`${MYSQL_BIN} -u root --password="$db_root_password" -h $MYSQL_HOST -B --skip-column-names -e  "show databases like '$AUDIT_DB' ;"`
 
 	if [ "${existdb}" = "$AUDIT_DB" ]
 	then
 		log "[I] - database $AUDIT_DB already exists."
 	else
 		log "[I] Creating Database: $audit_db_name";
-		$MYSQL_BIN -u root --password=$db_root_password -h $MYSQL_HOST -e "create database $AUDIT_DB"  
+		$MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST -e "create database $AUDIT_DB"  
 		check_ret_status $? "Creating database $AUDIT_DB Failed.."
 	fi	
 
 	for thost in '%' localhost
 	do
-		usercount=`$MYSQL_BIN -B -u root --password=$db_root_password -h $MYSQL_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$AUDIT_USER' and host = '$thost';"`
+		usercount=`$MYSQL_BIN -B -u root --password="$db_root_password" -h $MYSQL_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$AUDIT_USER' and host = '$thost';"`
 		if  [ ${usercount} -eq 0 ]
 		then
 		  log "[I] Creating MySQL user '$AUDIT_USER'@'$thost' (using root priviledges)"
-		  $MYSQL_BIN -B -u root --password=$db_root_password -h $MYSQL_HOST -e "create user '$AUDIT_USER'@'$thost' identified by '$AUDIT_PASSWORD';"
+		  $MYSQL_BIN -B -u root --password="$db_root_password" -h $MYSQL_HOST -e "create user '$AUDIT_USER'@'$thost' identified by '$AUDIT_PASSWORD';"
 		  check_ret_status $? "MySQL create user failed"
 		fi
 		
@@ -563,19 +570,19 @@ create_audit_mysql_user(){
 		grant all privileges on $AUDIT_DB.* to '$AUDIT_USER'@'$thost' with grant option;
 		FLUSH PRIVILEGES;"
 		
-		echo "${mysqlquery}" | $MYSQL_BIN -u root --password=$db_root_password -h $MYSQL_HOST
+		echo "${mysqlquery}" | $MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST
 		check_ret_status $? "MySQL query failed: $mysqlquery"
 	done
 	log "[I] Creating MySQL user '$AUDIT_USER' (using root priviledges) DONE"
 	
 	AUDIT_TABLE=xa_access_audit
 	log "[I] Verifying table $AUDIT_TABLE in audit database $AUDIT_DB";
-	existtbl=`${MYSQL_BIN} -u $AUDIT_USER --password=$AUDIT_PASSWORD -D $AUDIT_DB -h $MYSQL_HOST -B --skip-column-names -e  "show tables like '$AUDIT_TABLE' ;"`
+	existtbl=`${MYSQL_BIN} -u "$AUDIT_USER" --password="$AUDIT_PASSWORD" -D $AUDIT_DB -h $MYSQL_HOST -B --skip-column-names -e  "show tables like '$AUDIT_TABLE' ;"`
 
 	if [ "${existtbl}" != "$AUDIT_TABLE" ]
 	then
 		log "[I] Importing Audit Database file: $db_audit_file..."
-  	$MYSQL_BIN -u $AUDIT_USER --password=$AUDIT_PASSWORD -h $MYSQL_HOST $AUDIT_DB < $db_audit_file
+  	$MYSQL_BIN -u "$AUDIT_USER" --password="$AUDIT_PASSWORD" -h $MYSQL_HOST $AUDIT_DB < $db_audit_file
   	check_ret_status $? "Importing Audit Database Failed.."
 
 		log "[I] Importing Audit Database file : $db_audit_file DONE";
