@@ -102,7 +102,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/repository/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXRepository getRepository(@PathParam("id") Long id) {
 		VXAsset vXAsset = assetMgr.getXAsset(id);
 		return xRepositoryService.mapXAToPublicObject(vXAsset);
@@ -110,7 +110,7 @@ public class PublicAPIs {
 
 	@POST
 	@Path("/api/repository/")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXRepository createRepository(VXRepository vXRepository) {
 		VXAsset vXAsset = xRepositoryService.mapPublicToXAObject(vXRepository);
 		vXAsset = assetMgr.createXAsset(vXAsset);
@@ -119,7 +119,7 @@ public class PublicAPIs {
 
 	@PUT
 	@Path("/api/repository/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXRepository updateRepository(VXRepository vXRepository,
 			@PathParam("id") Long id) {
 		vXRepository.setId(id);
@@ -153,7 +153,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/repository/")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXRepositoryList searchRepositories(
 			@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -174,7 +174,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/repository/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXLong countRepositories(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xAssetService.sortFields);
@@ -189,7 +189,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/policy/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXPolicy getPolicy(@PathParam("id") Long id) {
 		VXResource vXResource = assetMgr.getXResource(id);
 		return xPolicyService.mapXAToPublicObject(vXResource);
@@ -197,7 +197,7 @@ public class PublicAPIs {
 
 	@POST
 	@Path("/api/policy")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXPolicy createPolicy(VXPolicy vXPolicy) {
 		VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,
 				AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
@@ -209,7 +209,7 @@ public class PublicAPIs {
 
 	@PUT
 	@Path("/api/policy/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXPolicy updatePolicy(VXPolicy vXPolicy, @PathParam("id") Long id) {
 		vXPolicy.setId(id);
 		VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,
@@ -235,7 +235,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/policy")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXPolicyList searchPolicies(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xResourceService.sortFields);
