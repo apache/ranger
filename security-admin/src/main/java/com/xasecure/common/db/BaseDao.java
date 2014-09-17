@@ -195,5 +195,22 @@ public abstract class BaseDao<T> {
 	public Long executeCountQueryInSecurityContext(Class<T> clazz, Query query) {
 		return executeCountQueryInSecurityContext(clazz, query, true);
 	}
+	
+	public List<T> getAll() {
+		List<T> ret = null;
+		TypedQuery<T> qry = em.createQuery(
+				"SELECT t FROM " + tClass.getSimpleName() + " t", tClass);
+		ret = qry.getResultList();
+		return ret;
+	}
+
+	public Long getAllCount() {
+		Long ret = null;
+		TypedQuery<Long> qry = em.createQuery(
+				"SELECT count(t) FROM " + tClass.getSimpleName() + " t",
+				Long.class);
+		ret = qry.getSingleResult();
+		return ret;
+	}
 
 }

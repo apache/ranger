@@ -1202,6 +1202,8 @@ public class AssetMgr extends AssetMgrBase {
 		if (usb != null && usb.isUserAdmin()) {
 
 			String defaultConfig = vXAsset.getConfig();
+			defaultConfig=xAssetService.getConfigWithEncryptedPassword(defaultConfig,false);
+			vXAsset.setConfig(defaultConfig);
 			VXAsset createdVXAsset = (VXAsset) xAssetService
 					.createResource(vXAsset);
 			String udpatedConfig = vXAsset.getConfig();
@@ -1335,6 +1337,17 @@ public class AssetMgr extends AssetMgrBase {
 	public VXAsset updateXAsset(VXAsset vXAsset) {
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
 		if (usb != null && usb.isUserAdmin()) {
+			String newConfig=vXAsset.getConfig();
+			HashMap<String, String> configMap = (HashMap<String, String>) jsonUtil
+					.jsonToMap(newConfig);
+			String password = configMap.get("password");
+			String hiddenPasswordString = PropertiesUtil.getProperty(
+					"xa.password.hidden", "*****");
+			if (password != null && !password.equals(hiddenPasswordString)) {
+				String defaultConfig = vXAsset.getConfig();
+				defaultConfig=xAssetService.getConfigWithEncryptedPassword(defaultConfig,true);
+				vXAsset.setConfig(defaultConfig);
+			}
 			XXAsset xAsset = xADaoManager.getXXAsset()
 					.getById(vXAsset.getId());
 			
@@ -1564,6 +1577,7 @@ public class AssetMgr extends AssetMgrBase {
 				if (existingVXAsset != null
 						&& existingVXAsset.getConfig() != null) {
 					String existingConfig = existingVXAsset.getConfig();
+					existingConfig=xAssetService.getConfigWithDecryptedPassword(existingConfig);
 					HashMap<String, String> existingConfigMap = (HashMap<String, String>) jsonUtil
 							.jsonToMap(existingConfig);
 					String existingPassword = existingConfigMap.get("password");

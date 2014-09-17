@@ -41,6 +41,7 @@ import com.xasecure.hbase.client.HBaseClient;
 import com.xasecure.hive.client.HiveClient;
 import com.xasecure.knox.client.KnoxClient;
 import com.xasecure.storm.client.StormClient;
+import com.xasecure.service.XAssetService;
 import com.xasecure.view.VXAsset;
 
 @Component
@@ -64,6 +65,9 @@ public class AssetConnectionMgr {
 	@Autowired
 	protected XADaoManager xADaoManager;
 	
+	@Autowired
+	XAssetService xAssetService;
+	
 	public AssetConnectionMgr(){
 		hadoopConnectionCache = new HashMap<String, HadoopFS>();
 		hiveConnectionCache = new HashMap<String, HiveClient>();
@@ -81,7 +85,9 @@ public class AssetConnectionMgr {
 				if (hadoopFS == null) {
 				// if it doesn't exist in cache then create the connection
 					String config = asset.getConfig();
-	
+					if(!stringUtil.isEmpty(config)){
+						config=xAssetService.getConfigWithDecryptedPassword(config);
+					}
 					// FIXME remove this once we start using putting config for
 					// default asset "hadoopdev" (should come from properties)
 					if (stringUtil.isEmpty(config)
@@ -150,7 +156,8 @@ public class AssetConnectionMgr {
 				hiveClient = hiveConnectionCache.get(asset.getName());
 				if (hiveClient == null) {
 					String config = asset.getConfig();
-						if (!stringUtil.isEmpty(config)) {
+					if (!stringUtil.isEmpty(config)) {
+						config=xAssetService.getConfigWithDecryptedPassword(config);
 						final HashMap<String, String> configMap = (HashMap<String, String>) jsonUtil
 								.jsonToMap(config);
 						
@@ -198,6 +205,9 @@ public class AssetConnectionMgr {
 			logger.error("Asset is null", new Throwable());
 		} else {
 			String config = asset.getConfig();
+			if(!stringUtil.isEmpty(config)){
+				config=xAssetService.getConfigWithDecryptedPassword(config);
+			}
 			knoxClient = getKnoxClientByConfig(config);
 		}
 		return knoxClient;
@@ -261,7 +271,9 @@ public class AssetConnectionMgr {
 				if (client == null) {
 					// if it doesn't exist in cache then create the connection
 					String config = asset.getConfig();
-
+					if(!stringUtil.isEmpty(config)){
+						config=xAssetService.getConfigWithDecryptedPassword(config);
+					}
 					// FIXME remove this once we start using putting config for
 					// default asset "dev-hive" (should come from properties)
 					if (stringUtil.isEmpty(config)

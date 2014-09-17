@@ -798,7 +798,39 @@ restart_policymgr(){
 	log "[I] Restarting xapolicymgr DONE";
 
 }
-
+execute_java_patches(){
+	dt=`date '+%s'`
+	tempFile=/tmp/sql_${dt}_$$.sql
+	mysqlexec="${MYSQL_BIN} -u ${db_user} --password="${db_password}" -h ${MYSQL_HOST} ${db_name}"
+	javaFiles=`ls -1 $app_home/WEB-INF/classes/com/xasecure/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
+	for javaPatch in ${javaFiles}
+	do
+		if test -f "$app_home/WEB-INF/classes/com/xasecure/patch/$javaPatch"; then
+			className=$(basename "$javaPatch" .class)
+			version=`echo ${className} | awk -F'_' '{ print $2 }'`
+			if [ "${version}" != "" ]
+			then
+				c=`${mysqlexec} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
+				check_ret_status $? "DBVerionCheck - ${version} Failed."
+				if [ ${c} -eq 0 ]
+				then
+					log "[I] patch ${javaPatch} is being applied..";
+					msg=`java -cp "$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+					check_ret_status $? "Unable to apply patch:$javaPatch"
+					touch ${tempFile}
+					echo >> ${tempFile}
+					echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
+					${mysqlexec} < ${tempFile}
+					check_ret_status $? "Update patch - ${javaPatch} has failed."
+					rm -f ${tempFile}
+					log "[I] patch ${javaPatch} has been applied!!";
+				else
+					log "[I] - patch [${javaPatch}] is already applied. Skipping ..."
+				fi
+			fi
+	 	fi
+	done
+}
 init_logfiles
 log " --------- Running XASecure PolicyManager Web Application Install Script --------- "
 log "[I] uname=`uname`"
@@ -821,4 +853,5 @@ update_properties
 do_authentication_setup
 copy_to_webapps
 restart_policymgr
+execute_java_patches
 echo "Installation of XASecure PolicyManager Web Application is completed."

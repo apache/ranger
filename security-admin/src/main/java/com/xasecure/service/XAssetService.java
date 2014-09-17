@@ -19,6 +19,7 @@
 
  package com.xasecure.service;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
 
 import com.xasecure.common.JSONUtil;
 import com.xasecure.common.MessageEnums;
+import com.xasecure.common.PasswordUtils;
 import com.xasecure.common.PropertiesUtil;
 import com.xasecure.common.SearchField;
 import com.xasecure.common.SearchField.DATA_TYPE;
@@ -174,6 +176,17 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 			}
 		}
 		
+		return entry;
+	}
+	
+	private Entry<String, String> getIsEncryptedEntry(Map<String, String> configMap){
+		Entry<String, String> entry = null;		
+		for(Entry<String, String> e : configMap.entrySet()) {
+			if(e.getKey().toLowerCase().contains("isencrypted")){
+				entry = e;
+				break;
+			}
+		}
 		return entry;
 	}
 	
@@ -328,5 +341,60 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 		}
 		
 		return trxLogList;
+	}
+	
+	public String getConfigWithEncryptedPassword(String config,boolean isForced){
+		try {
+			if (config != null && !config.isEmpty()) {
+				Map<String, String> configMap = jsonUtil.jsonToMap(config);
+				Entry<String, String> passwordEntry = getPasswordEntry(configMap);
+				Entry<String, String> isEncryptedEntry = getIsEncryptedEntry(configMap);
+				if (passwordEntry != null){
+					if(isEncryptedEntry==null || !isEncryptedEntry.getValue().equalsIgnoreCase("true")||isForced==true){
+						String password=passwordEntry.getValue();
+						String encryptPassword=PasswordUtils.encryptPassword(password);
+						String decryptPassword=PasswordUtils.decryptPassword(encryptPassword);
+						if(decryptPassword.equalsIgnoreCase(password)){
+							configMap.put(passwordEntry.getKey(),
+									encryptPassword);
+							configMap.put("isencrypted", "true");
+						}
+					}
+				}
+				config = jsonUtil.readMapToString(configMap);
+			}										
+		} catch (IOException e) {
+			String errorMessage = "Password encryption error";
+			throw restErrorUtil.createRESTException(errorMessage,
+					MessageEnums.INVALID_INPUT_DATA, null, null,
+					e.getMessage());	
+		}
+		return config;
+	}
+	public String getConfigWithDecryptedPassword(String config){
+		try {
+			if (config != null && !config.isEmpty()) {
+				Map<String, String> configMap = jsonUtil.jsonToMap(config);
+				Entry<String, String> passwordEntry = getPasswordEntry(configMap);
+				Entry<String, String> isEncryptedEntry = getIsEncryptedEntry(configMap);
+				if (isEncryptedEntry!=null && passwordEntry != null){					
+					if (!stringUtil.isEmpty(isEncryptedEntry.getValue())
+							&& isEncryptedEntry.getValue().equalsIgnoreCase(
+									"true")) {
+						String encryptPassword = passwordEntry.getValue();
+						String decryptPassword = PasswordUtils
+								.decryptPassword(encryptPassword);
+						configMap.put(passwordEntry.getKey(), decryptPassword);
+					}
+				}
+				config = jsonUtil.readMapToString(configMap);
+			}										
+		} catch (IOException e) {
+			String errorMessage = "Password decryption error";
+			throw restErrorUtil.createRESTException(errorMessage,
+					MessageEnums.INVALID_INPUT_DATA, null, null,
+					e.getMessage());	
+		}
+		return config;
 	}
 }
