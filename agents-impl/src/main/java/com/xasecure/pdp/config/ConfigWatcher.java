@@ -92,6 +92,7 @@ public abstract class ConfigWatcher extends Thread {
 
 	private static XaSecureCredentialProvider xasecurecp = null;
 	
+	
 	public abstract void doOnChange();
 	
 	private String keyStoreFile =  null ;
@@ -110,7 +111,9 @@ public abstract class ConfigWatcher extends Thread {
 	
 	private String sslConfigFileName = null ;
 	
-	boolean policyCacheLoadedOnce = false;
+	public boolean policyCacheLoadedOnce = false;
+	
+	public boolean cacheModfied = false;
 
 	public ConfigWatcher(String url, long aIntervalInMilliSeconds,String sslConfigFileName,String lastStoredFileName) {
 		super("XaSecureConfigURLWatcher");
@@ -227,11 +230,15 @@ public abstract class ConfigWatcher extends Thread {
 			LOG.debug("No Change found in the policy from " + url);
 		}
 	}
+	
+	public boolean iscacheModfied() {
+		   return cacheModfied;
+	}
 
 	private boolean isFileChanged() {
 		boolean isChanged = false;
 		
-		
+		cacheModfied = false;
 		try {	
 			
 			Client client = null;
@@ -278,6 +285,7 @@ public abstract class ConfigWatcher extends Thread {
 									lastModifiedTime = policyContainer.getLastUpdatedTimeInEpoc();
 									isChanged = true;
 									policyCacheLoadedOnce = false;
+									cacheModfied = true;
 									if (LOG.isDebugEnabled()) {
 										LOG.debug("Got response: 200 with {change in lastupdatedTime}\n" + gson.toJson(newPolicyContainer));
 									}
