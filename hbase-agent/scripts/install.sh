@@ -223,6 +223,8 @@ ssltruststoreCred=`grep '^SSL_TRUSTSTORE_PASSWORD' ${install_dir}/install.proper
 
 create_jceks ${ssltruststoreAlias} ${ssltruststoreCred} ${CredFile}
 
+chmod go+rx ${pardir}
+chmod go+r ${CredFile}
 chown ${CONFIG_FILE_OWNER} ${CredFile} 
 
 PROP_ARGS="-p  ${install_dir}/install.properties"
