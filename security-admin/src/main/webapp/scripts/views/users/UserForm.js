@@ -72,14 +72,14 @@ define(function(require){
 					title		: localization.tt("lbl.password") +' *',
 					validators  : ['required', {type: 'match', field: 'passwordConfirm', message: 'Passwords must match!'},
 					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :localization.tt('validationMessages.passwordError')}],
-					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;'}               
+					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;','autocomplete':'off'}               
 				},
 				passwordConfirm : {
 					type		: 'Password',
 					title		: localization.tt("lbl.passwordConfirm") +' *',
 					validators  : ['required',
 					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :localization.tt('validationMessages.passwordError')}],
-					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;'}
+					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;','autocomplete':'off'}
 				},
 				firstName : { 
 					type		: 'Text',

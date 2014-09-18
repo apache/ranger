@@ -52,7 +52,7 @@
 						<label><i class="icon-user"></i> Username:</label>
 						<input type="text" name="username" id="username" tabindex="1" autofocus>
 						<label><i class="icon-lock"></i> Password:</label>	
-						<input type="password" name="password" id="password" tabindex="2">
+						<input type="password" name="password" id="password" tabindex="2" autocomplete="off">
 					</div>
 					<span id="errorBox" class="help-inline" style="color:white;display:none;">The username or password you entered is incorrect..
 						<i class="icon-warning-sign" style="color:#ae2817;"></i>
