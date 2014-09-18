@@ -87,6 +87,8 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 	XResourceService xResourceService;
 
 	String version;
+	
+	private static String uniqueKeySeparator = "_";
 
 	public XPolicyService() {
 		version = PropertiesUtil.getProperty("maven.project.version", "");
@@ -103,7 +105,13 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXPolicy.setRepositoryName(vXResource.getAssetName());
 		vXPolicy.setRepositoryType(AppConstants
 				.getLabelFor_AssetType(vXResource.getAssetType()));
-		vXPolicy.setPermMapList(mapPermMapToPermObj(vXResource.getPermMapList()));
+		
+		
+		List<VXPermObj> permObjList = mapPermMapToPermObj(vXResource
+				.getPermMapList());
+		if (!stringUtil.isEmpty(permObjList)) {
+			vXPolicy.setPermMapList(permObjList);
+		}
 		vXPolicy.setTables(vXResource.getTables());
 		vXPolicy.setColumnFamilies(vXResource.getColumnFamilies());
 		vXPolicy.setColumns(vXResource.getColumns());
@@ -317,9 +325,9 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						permMapList.add(vXPermMap);
 
 						StringBuilder uniqueKey = new StringBuilder();
-						uniqueKey.append(resId + "_");
-						uniqueKey.append(permFor + "_");
-						uniqueKey.append(userId + "_");
+						uniqueKey.append(resId + uniqueKeySeparator);
+						uniqueKey.append(permFor + uniqueKeySeparator);
+						uniqueKey.append(userId + uniqueKeySeparator);
 						uniqueKey.append(permType);
 						newPermMap.put(uniqueKey.toString(), vXPermMap);
 					}
@@ -354,9 +362,9 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						permMapList.add(vXPermMap);
 
 						StringBuilder uniqueKey = new StringBuilder();
-						uniqueKey.append(resId + "_");
-						uniqueKey.append(permFor + "_");
-						uniqueKey.append(grpId + "_");
+						uniqueKey.append(resId + uniqueKeySeparator);
+						uniqueKey.append(permFor + uniqueKeySeparator);
+						uniqueKey.append(grpId + uniqueKeySeparator);
 						uniqueKey.append(permType);
 						newPermMap.put(uniqueKey.toString(), vXPermMap);
 					}
@@ -396,13 +404,13 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			int permType = xxPermMap.getPermType();
 
 			StringBuilder uniqueKey = new StringBuilder();
-			uniqueKey.append(resId + "_");
-			uniqueKey.append(permFor + "_");
+			uniqueKey.append(resId + uniqueKeySeparator);
+			uniqueKey.append(permFor + uniqueKeySeparator);
 
 			if (userId != null) {
-				uniqueKey.append(userId + "_");
+				uniqueKey.append(userId + uniqueKeySeparator);
 			} else if (grpId != null) {
-				uniqueKey.append(grpId + "_");
+				uniqueKey.append(grpId + uniqueKeySeparator);
 			}
 			uniqueKey.append(permType);
 			prevPermMap.put(uniqueKey.toString(), xxPermMap);
@@ -486,6 +494,8 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		Random rand = new Random();
 
 		for (VXPermObj permObj : permObjList) {
+			
+			String ipAddress = permObj.getIpAddress();
 
 			if (!stringUtil.isEmpty(permObj.getUserList())) {
 				String permGrp = new Date() + " : " + rand.nextInt(9999);
@@ -507,6 +517,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermGroup(permGrp);
 						vXPermMap.setPermType(permType);
 						vXPermMap.setUserId(xxUser.getId());
+						vXPermMap.setIpAddress(ipAddress);
 
 						permMapList.add(vXPermMap);
 					}
@@ -535,6 +546,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermGroup(permGrp);
 						vXPermMap.setPermType(permType);
 						vXPermMap.setGroupId(xxGroup.getId());
+						vXPermMap.setIpAddress(ipAddress);
 
 						permMapList.add(vXPermMap);
 					}
@@ -564,31 +576,38 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 				.searchXPermMaps(searchCriteria);
 
 		List<VXPermMap> currentPermMapList = currentPermMaps.getVXPermMaps();
-		HashMap<String, List<Integer>> userPermMap = new HashMap<String, List<Integer>>();
+		HashMap<String, List<String>> userPermMap = new HashMap<String, List<String>>();
 
 		for (VXPermMap currentPermMap : currentPermMapList) {
 			Long userId = currentPermMap.getUserId();
 			Long groupId = currentPermMap.getGroupId();
 			int permFor = currentPermMap.getPermFor();
 			int permType = currentPermMap.getPermType();
-			String uniKey = resId + "_" + permFor;
+			String ipAddress = currentPermMap.getIpAddress();
+			
+			String uniKey = resId + uniqueKeySeparator + permFor;
 			if (permFor == AppConstants.XA_PERM_FOR_GROUP) {
-				uniKey = uniKey + "_" + groupId;
+				uniKey = uniKey + uniqueKeySeparator + groupId;
 			} else if (permFor == AppConstants.XA_PERM_FOR_USER) {
-				uniKey = uniKey + "_" + userId;
+				uniKey = uniKey + uniqueKeySeparator + userId;
 			}
 
-			List<Integer> permList = userPermMap.get(uniKey);
+			List<String> permList = userPermMap.get(uniKey);
 			if (permList == null) {
-				permList = new ArrayList<Integer>();
+				permList = new ArrayList<String>();
 				userPermMap.put(uniKey, permList);
 			}
-			permList.add(permType);
+			permList.add(""+permType);
+			
+			if (stringUtil.isEmpty(ipAddress)) {
+				permList.add(ipAddress);
+			}
+			
 		}
 
 		List<List<String>> masterKeyList = new ArrayList<List<String>>();
 		List<String> proceedKeyList = new ArrayList<String>();
-		for (Entry<String, List<Integer>> upMap : userPermMap.entrySet()) {
+		for (Entry<String, List<String>> upMap : userPermMap.entrySet()) {
 
 			if (proceedKeyList.contains(upMap.getKey())) {
 				continue;
@@ -598,7 +617,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			keyList.add(upMap.getKey());
 			proceedKeyList.add(upMap.getKey());
 
-			for (Entry<String, List<Integer>> entry : userPermMap.entrySet()) {
+			for (Entry<String, List<String>> entry : userPermMap.entrySet()) {
 
 				if (proceedKeyList.contains(entry.getKey())) {
 					continue;
@@ -620,7 +639,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			for (String key : keyList) {
 
 				SearchCriteria scPermMap = new SearchCriteria();
-				String[] keyEle = StringUtils.split(key, "_");
+				String[] keyEle = StringUtils.split(key, uniqueKeySeparator);
 				if (keyEle != null && keyEle.length == 3) {
 
 					int permFor = Integer.parseInt(keyEle[1]);
