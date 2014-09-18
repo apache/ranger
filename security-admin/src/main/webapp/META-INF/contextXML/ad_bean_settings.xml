@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <beans:bean id="activeDirectoryAuthenticationProvider"
         class="org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider">
     <beans:constructor-arg value="${xa_ldap_ad_domain}" />
