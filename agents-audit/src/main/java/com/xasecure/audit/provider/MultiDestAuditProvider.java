@@ -67,33 +67,45 @@ public class MultiDestAuditProvider implements AuditProvider {
 
 	@Override
 	public void log(AuditEventBase event) {
-		try {
-            for(AuditProvider provider : mProviders) {
+        for(AuditProvider provider : mProviders) {
+    		try {
                 provider.log(event);
-            }
-		} catch(Throwable excp) {
-			LOG.error("failed to log event { " + event.toString() + " }", excp);
-		}
+    		} catch(Throwable excp) {
+    			LOG.error("AsyncAuditProvider.log(): failed for provider { " + provider.getClass().getName() + " }", excp);
+    		}
+        }
 	}
 
 	@Override
 	public void start() {
 		for(AuditProvider provider : mProviders) {
-			provider.start();
+    		try {
+				provider.start();
+    		} catch(Throwable excp) {
+    			LOG.error("AsyncAuditProvider.start(): failed for provider { " + provider.getClass().getName() + " }", excp);
+    		}
 		}
 	}
 
 	@Override
 	public void stop() {
 		for(AuditProvider provider : mProviders) {
-			provider.stop();
+			try {
+				provider.stop();
+			} catch(Throwable excp) {
+    			LOG.error("AsyncAuditProvider.stop(): failed for provider { " + provider.getClass().getName() + " }", excp);
+			}
 		}
 	}
 
 	@Override
     public void waitToComplete() {
 		for(AuditProvider provider : mProviders) {
-			provider.waitToComplete();
+			try {
+				provider.waitToComplete();
+			} catch(Throwable excp) {
+    			LOG.error("AsyncAuditProvider.waitToComplete(): failed for provider { " + provider.getClass().getName() + " }", excp);
+			}
 		}
 	}
 	
@@ -126,12 +138,12 @@ public class MultiDestAuditProvider implements AuditProvider {
 	
 	@Override
 	public void flush() {
-		try {
-			for(AuditProvider provider : mProviders) {
+		for(AuditProvider provider : mProviders) {
+			try {
 				provider.flush();
+			} catch(Throwable excp) {
+    			LOG.error("AsyncAuditProvider.flush(): failed for provider { " + provider.getClass().getName() + " }", excp);
 			}
-		} catch(Throwable excp) {
-			LOG.error("AsyncAuditProvider.flush(): failed to flush events", excp);
 		}
 	}
 }

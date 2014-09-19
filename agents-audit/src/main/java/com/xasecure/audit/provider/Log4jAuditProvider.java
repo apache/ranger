@@ -27,7 +27,7 @@ import com.xasecure.audit.model.AuditEventBase;
 public class Log4jAuditProvider implements AuditProvider {
 
 	private static final Log LOG      = LogFactory.getLog(Log4jAuditProvider.class);
-	private static final Log AUDITLOG = LogFactory.getLog("xaaudit." + Log4jAuditProvider.class);
+	private static final Log AUDITLOG = LogFactory.getLog("xaaudit." + Log4jAuditProvider.class.getName());
 
 
 	public Log4jAuditProvider() {
