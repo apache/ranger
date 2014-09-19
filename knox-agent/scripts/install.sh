@@ -189,8 +189,8 @@ do
 			echo "ERROR: Unable to find ${fullpathorgfn}"
 			exit 1
 		fi
-		archivefn="${NOX_CONF}/.${orgfn}.${dt}"
-		newfn="${NOX_CONF}/.${orgfn}-new.${dt}"
+		archivefn="${KNOX_CONF}/.${orgfn}.${dt}"
+		newfn="${KNOX_CONF}/.${orgfn}-new.${dt}"
 		cp ${fullpathorgfn} ${archivefn}
 		if [ $? -eq 0 ]
 		then
