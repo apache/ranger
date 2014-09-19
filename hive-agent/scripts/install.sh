@@ -18,6 +18,17 @@ then
 fi
 }
 
+#Update Properties to File
+#$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
+updatePropertyToFile(){
+	sed -i 's@^'$1'=[^ ]*$@'$1'='$2'@g' $3
+	#validate=`sed -i 's/^'$1'=[^ ]*$/'$1'='$2'/g' $3`	#for validation
+	validate=$(sed '/^\#/d' $3 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-) # for validation
+	#echo 'V1:'$validate
+	if test -z "$validate" ; then echo "[E] '$1' not found in $3 file while Updating....!!"; exit 1; fi
+	echo "[I] File $3 Updated successfully : {'$1'}"
+}
+
 hive_dir=/usr/lib/hive
 hive_lib_dir=${hive_dir}/lib
 hive_conf_dir=/etc/hive/conf
@@ -62,6 +73,16 @@ install_dir=`dirname $0`
 
 #echo "Current Install Directory: [${install_dir}]"
 
+#verify sql-connector path is valid
+SQL_CONNECTOR_JAR=`grep '^SQL_CONNECTOR_JAR'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+echo "[I] Checking SQL CONNECTOR FILE : $SQL_CONNECTOR_JAR"
+if test -f "$SQL_CONNECTOR_JAR"; then
+	echo "[I] SQL CONNECTOR FILE : $SQL_CONNECTOR_JAR file found"
+else
+	echo "[E] SQL CONNECTOR FILE : $SQL_CONNECTOR_JAR does not exists" ; exit 1;
+fi
+#copying sql connector jar file to lib directory
+cp $SQL_CONNECTOR_JAR ${install_dir}/lib
 
 #
 # --- Backup current configuration for backup - START
@@ -203,6 +224,39 @@ chown ${CONFIG_FILE_OWNER} ${CredFile}
 
 PROP_ARGS="-p  ${install_dir}/install.properties"
 
+to_file="${install_dir}/install.properties"
+DB_FLAVOR=`grep '^XAAUDIT.DB.FLAVOUR'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+DB_FLAVOR=`echo $DB_FLAVOR | tr '[:lower:]' '[:upper:]'`
+if [ "${DB_FLAVOR}" == "" ]
+then
+	$DB_FLAVOR="MYSQL"
+fi
+echo "[I] Updating install.properites setting for : $DB_FLAVOR"
+
+if [ "${DB_FLAVOR}" == "MYSQL" ]
+then
+	audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+	audit_db_name=`grep '^XAAUDIT.DB.DATABASE_NAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+	propertyName=XAAUDIT.DB.JDBC_URL
+	newPropertyValue="jdbc:mysql://${audit_db_hostname}/${audit_db_name}"
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+	propertyName=XAAUDIT.DB.JDBC_DRIVER
+	newPropertyValue="com.mysql.jdbc.Driver"
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+fi
+
+if [ "${DB_FLAVOR}" == "ORACLE" ]
+then
+	audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+	propertyName=XAAUDIT.DB.JDBC_URL
+	newPropertyValue="jdbc:oracle:thin:\@//${audit_db_hostname}"
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+	propertyName=XAAUDIT.DB.JDBC_DRIVER
+	newPropertyValue="oracle.jdbc.OracleDriver"
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+fi
 for f in ${install_dir}/installer/conf/*-changes.cfg
 do
         if [ -f ${f} ]

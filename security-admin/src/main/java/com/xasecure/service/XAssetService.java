@@ -1,5 +1,25 @@
-package com.xasecure.service;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
+ package com.xasecure.service;
+
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,8 +31,11 @@ import java.util.regex.Pattern;
 
 import com.xasecure.common.JSONUtil;
 import com.xasecure.common.MessageEnums;
+import com.xasecure.common.PasswordUtils;
 import com.xasecure.common.PropertiesUtil;
 import com.xasecure.common.SearchField;
+import com.xasecure.common.SearchField.DATA_TYPE;
+import com.xasecure.common.SearchField.SEARCH_TYPE;
 import com.xasecure.common.StringUtil;
 import com.xasecure.entity.*;
 
@@ -59,6 +82,10 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 		hiddenPasswordString = PropertiesUtil.getProperty("xa.password.hidden", "*****");
 		searchFields.add(new SearchField("status", "obj.activeStatus",
 				SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("name", "obj.name", DATA_TYPE.STRING,
+				SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("type", "obj.assetType",
+				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 	}
 
 	@Override
@@ -149,6 +176,17 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 			}
 		}
 		
+		return entry;
+	}
+	
+	private Entry<String, String> getIsEncryptedEntry(Map<String, String> configMap){
+		Entry<String, String> entry = null;		
+		for(Entry<String, String> e : configMap.entrySet()) {
+			if(e.getKey().toLowerCase().contains("isencrypted")){
+				entry = e;
+				break;
+			}
+		}
 		return entry;
 	}
 	
@@ -303,5 +341,60 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 		}
 		
 		return trxLogList;
+	}
+	
+	public String getConfigWithEncryptedPassword(String config,boolean isForced){
+		try {
+			if (config != null && !config.isEmpty()) {
+				Map<String, String> configMap = jsonUtil.jsonToMap(config);
+				Entry<String, String> passwordEntry = getPasswordEntry(configMap);
+				Entry<String, String> isEncryptedEntry = getIsEncryptedEntry(configMap);
+				if (passwordEntry != null){
+					if(isEncryptedEntry==null || !isEncryptedEntry.getValue().equalsIgnoreCase("true")||isForced==true){
+						String password=passwordEntry.getValue();
+						String encryptPassword=PasswordUtils.encryptPassword(password);
+						String decryptPassword=PasswordUtils.decryptPassword(encryptPassword);
+						if(decryptPassword.equalsIgnoreCase(password)){
+							configMap.put(passwordEntry.getKey(),
+									encryptPassword);
+							configMap.put("isencrypted", "true");
+						}
+					}
+				}
+				config = jsonUtil.readMapToString(configMap);
+			}										
+		} catch (IOException e) {
+			String errorMessage = "Password encryption error";
+			throw restErrorUtil.createRESTException(errorMessage,
+					MessageEnums.INVALID_INPUT_DATA, null, null,
+					e.getMessage());	
+		}
+		return config;
+	}
+	public String getConfigWithDecryptedPassword(String config){
+		try {
+			if (config != null && !config.isEmpty()) {
+				Map<String, String> configMap = jsonUtil.jsonToMap(config);
+				Entry<String, String> passwordEntry = getPasswordEntry(configMap);
+				Entry<String, String> isEncryptedEntry = getIsEncryptedEntry(configMap);
+				if (isEncryptedEntry!=null && passwordEntry != null){					
+					if (!stringUtil.isEmpty(isEncryptedEntry.getValue())
+							&& isEncryptedEntry.getValue().equalsIgnoreCase(
+									"true")) {
+						String encryptPassword = passwordEntry.getValue();
+						String decryptPassword = PasswordUtils
+								.decryptPassword(encryptPassword);
+						configMap.put(passwordEntry.getKey(), decryptPassword);
+					}
+				}
+				config = jsonUtil.readMapToString(configMap);
+			}										
+		} catch (IOException e) {
+			String errorMessage = "Password decryption error";
+			throw restErrorUtil.createRESTException(errorMessage,
+					MessageEnums.INVALID_INPUT_DATA, null, null,
+					e.getMessage());	
+		}
+		return config;
 	}
 }

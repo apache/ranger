@@ -1,14 +1,23 @@
-package com.xasecure.entity;
 /*
- * Copyright (c) 2014 XASecure
- * All rights reserved.
- *
- * This software is the confidential and proprietary information of
- * XASecure ("Confidential Information").  You shall not
- * disclose such Confidential Information and shall use it only in
- * accordance with the terms of the license agreement you entered into
- * with XASecure
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+
+ package com.xasecure.entity;
 
 /**
  * Base JPA class with id, versionNumber and other common attributes
@@ -24,7 +33,7 @@ import com.xasecure.entity.*;
 
 @MappedSuperclass @EntityListeners( com.xasecure.common.db.JPABeanCallbacks.class)
 @XmlRootElement
-public class XXDBBase extends Object implements java.io.Serializable {
+public abstract class XXDBBase extends Object implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
 
@@ -36,10 +45,6 @@ public class XXDBBase extends Object implements java.io.Serializable {
 	 * </ul>
 	 *
 	 */
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="ID"   )
-	protected Long id;
 
 	/**
 	 * Date/Time creation of this user.
@@ -100,17 +105,13 @@ public class XXDBBase extends Object implements java.io.Serializable {
 	 * You cannot set null to the attribute.
 	 * @param id Value to set member attribute <b>id</b>
 	 */
-	public void setId( Long id ) {
-		this.id = id;
-	}
+	public abstract void setId( Long id ) ;
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
 	 * @return Long - value of member attribute <b>id</b>.
 	 */
-	public Long getId( ) {
-		return this.id;
-	}
+	public abstract Long getId( );
 
 	/**
 	 * This method sets the value to the member attribute <b>createTime</b>.
@@ -189,7 +190,7 @@ public class XXDBBase extends Object implements java.io.Serializable {
 	@Override
 	public String toString( ) {
 		String str = "XXDBBase={";
-		str += "id={" + id + "} ";
+		//`str += "id={" + id + "} ";
 		str += "createTime={" + createTime + "} ";
 		str += "updateTime={" + updateTime + "} ";
 		str += "addedByUserId={" + addedByUserId + "} ";
@@ -205,9 +206,9 @@ public class XXDBBase extends Object implements java.io.Serializable {
 	@Override
 	public boolean equals( Object obj) {
 		XXDBBase other = (XXDBBase) obj;
-        	if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            		return false;
-        	}
+//        	if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+//            		return false;
+//        	}
         	if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
             		return false;
         	}

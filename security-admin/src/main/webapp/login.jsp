@@ -8,7 +8,7 @@
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<title> XA Secure - Sign In</title>
+		<title> Argus - Sign In</title>
 		<meta name="description" content="">
 		<meta name="viewport" content="width=device-width">
 		
@@ -44,7 +44,7 @@
 		================================================== -->
 		<section id="signin-container" style="margin-top: 4.5px;">
 			<div class="l-logo">
-				<img src="images/hortonworks_logo_w.png" alt="XA Secure logo">
+				<img src="images/logo.png" alt="Argus logo">
 			</div>
 			<form action="" method="get" accept-charset="utf-8">
 				<fieldset>
@@ -52,7 +52,7 @@
 						<label><i class="icon-user"></i> Username:</label>
 						<input type="text" name="username" id="username" tabindex="1" autofocus>
 						<label><i class="icon-lock"></i> Password:</label>	
-						<input type="password" name="password" id="password" tabindex="2">
+						<input type="password" name="password" id="password" tabindex="2" autocomplete="off">
 					</div>
 					<span id="errorBox" class="help-inline" style="color:white;display:none;">The username or password you entered is incorrect..
 						<i class="icon-warning-sign" style="color:#ae2817;"></i>

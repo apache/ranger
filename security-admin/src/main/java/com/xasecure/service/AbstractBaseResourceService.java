@@ -1,4 +1,23 @@
-package com.xasecure.service;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+ package com.xasecure.service;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
@@ -22,6 +41,7 @@ import javax.persistence.criteria.Root;
 import com.xasecure.biz.XABizUtil;
 import com.xasecure.common.ContextUtil;
 import com.xasecure.common.DateUtil;
+import com.xasecure.common.SortField.SORT_ORDER;
 import com.xasecure.common.UserSessionBase;
 import com.xasecure.common.XAConfigUtil;
 import com.xasecure.common.MessageEnums;
@@ -222,7 +242,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 		distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM "
 				+ tEntityClass.getName() + " obj ";
 		distinctQueryStr = "SELECT distinct obj FROM " + className + " obj ";
-
+		sortFields.add(new SortField("id", "obj.id",true,SORT_ORDER.ASC));
 		registerService(this);
 	}
 

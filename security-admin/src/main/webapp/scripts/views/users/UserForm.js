@@ -1,14 +1,23 @@
 /*
- * Copyright (c) 2014 XASecure
- * All rights reserved.
- *
- * This software is the confidential and proprietary information of
- * XASecure. ("Confidential Information").  You shall not
- * disclose such Confidential Information and shall use it only in
- * accordance with the terms of the license agreement you entered into
- * with XASecure.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
+ 
 define(function(require){
     'use strict';
 
@@ -63,14 +72,14 @@ define(function(require){
 					title		: localization.tt("lbl.password") +' *',
 					validators  : ['required', {type: 'match', field: 'passwordConfirm', message: 'Passwords must match!'},
 					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :localization.tt('validationMessages.passwordError')}],
-					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;'}               
+					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;','autocomplete':'off'}               
 				},
 				passwordConfirm : {
 					type		: 'Password',
 					title		: localization.tt("lbl.passwordConfirm") +' *',
 					validators  : ['required',
 					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :localization.tt('validationMessages.passwordError')}],
-					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;'}
+					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;','autocomplete':'off'}
 				},
 				firstName : { 
 					type		: 'Text',
@@ -120,6 +129,8 @@ define(function(require){
 					if(!_.isUndefined(roleList) && roleList.length > 0){
 						if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_USER.value)
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_USER.value);
+						else
+							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_SYS_ADMIN.value);
 					}
 				}
 				if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){

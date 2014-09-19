@@ -1,4 +1,23 @@
-package com.xasecure.admin.client.datatype;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+ package com.xasecure.admin.client.datatype;
 
 
 import java.io.IOException;
@@ -33,6 +52,8 @@ public class GrantRevokeData implements java.io.Serializable {
 	private boolean       isAuditEnabled;
 	private boolean       replacePerm;
 	private List<PermMap> permMapList = new ArrayList<PermMap>();
+	
+	private static String WILDCARD_ASTERISK = "*";
 
 
 	public GrantRevokeData() {
@@ -112,9 +133,9 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.grantor         = grantor;
 		this.repositoryName = repositoryName;
 		this.repositoryType = "hive";
-		this.databases      = databases;
-		this.tables         = tables;
-		this.columns        = columns;
+		this.databases      = StringUtil.isEmpty(databases) ? WILDCARD_ASTERISK : databases;
+		this.tables         = StringUtil.isEmpty(tables)    ? WILDCARD_ASTERISK : tables;
+		this.columns        = StringUtil.isEmpty(columns)   ? WILDCARD_ASTERISK : columns;
 		this.isAuditEnabled = true;
 		this.isEnabled      = true;
 		this.replacePerm    = false;
@@ -130,9 +151,9 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.grantor         = grantor;
 		this.repositoryName = repositoryName;
 		this.repositoryType = "hbase";
-		this.tables         = tables;
-		this.columns        = columns;
-		this.columnFamilies = columnFamilies;
+		this.tables         = StringUtil.isEmpty(tables)         ? WILDCARD_ASTERISK : tables;
+		this.columns        = StringUtil.isEmpty(columns)        ? WILDCARD_ASTERISK : columns;
+		this.columnFamilies = StringUtil.isEmpty(columnFamilies) ? WILDCARD_ASTERISK : columnFamilies;
 		this.isAuditEnabled = true;
 		this.isEnabled      = true;
 		this.replacePerm    = true;

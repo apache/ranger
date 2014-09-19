@@ -1,14 +1,29 @@
-/**************************************************************************
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+ /**************************************************************************
  *                                                                        *
  * The information in this document is proprietary to XASecure Inc.,      *
  * It may not be used, reproduced or disclosed without the written        *
  * approval from the XASecure Inc.,                                       *
  *                                                                        *
  * PRIVILEGED AND CONFIDENTIAL XASECURE PROPRIETARY INFORMATION           *
- *                                                                        *
- * Copyright (c) 2013 XASecure, Inc.  All rights reserved.                *
- *                                                                        *
- *************************************************************************/
  /**
   *
   *	@version: 1.0.004
@@ -16,6 +31,7 @@
   */
 package com.xasecure.authorization.hbase;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -158,7 +174,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		return isSpecialTable(Bytes.toString(tableName));
 	}
 	protected boolean isSpecialTable(String tableNameStr) {
-		return tableNameStr.equals("-ROOT-") || tableNameStr.equals(".META.");
+		return tableNameStr.equals("hbase:meta") ||  tableNameStr.equals("-ROOT-") || tableNameStr.equals(".META.");
 	}
 	@SuppressWarnings("unused")
 	private String getUser() {
@@ -183,6 +199,15 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		}
 		return user;
 	}
+	
+	private String getRemoteAddress() {
+		RequestContext reqContext = RequestContext.get();
+		InetAddress    remoteAddr = reqContext != null ? reqContext.getRemoteAddress() : null;
+		String         strAddr    = remoteAddr != null ? remoteAddr.getHostAddress() : null;
+
+		return strAddr;
+	}
+
 	// Methods that are used within the CoProcessor 
 	private void requireScannerOwner(InternalScanner s) throws AccessDeniedException {
 		if (RequestContext.isInRequestContext()) {
@@ -464,7 +489,11 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		try {
 			scannerOwners.remove(s);
 		} finally {
-			auditEvent("scannerClose", getTableName(c.getEnvironment()), null, null, null, null, getActiveUser(), accessGrantedFlag);
+			byte[] tableName = getTableName(c.getEnvironment());
+
+			if (!isSpecialTable(tableName)) {
+				auditEvent("scannerClose", tableName, null, null, null, null, getActiveUser(), accessGrantedFlag);
+			}
 		}
 	}
 	@Override
@@ -475,7 +504,11 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 				scannerOwners.put(s, user.getShortName());
 			}
 		} finally {
-			auditEvent("scannerOpen", getTableName(c.getEnvironment()), null, null, null, null, getActiveUser(), accessGrantedFlag);
+			byte[] tableName = getTableName(c.getEnvironment());
+
+			if (!isSpecialTable(tableName)) {
+				auditEvent("scannerOpen", tableName, null, null, null, null, getActiveUser(), accessGrantedFlag);
+			}
 		}
 		return s;
 	}
@@ -851,7 +884,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 			auditEvent.setAccessType(eventName);
 			auditEvent.setUser(user == null ? XaSecureHadoopConstants.AUDITLOG_EMPTY_STRING  : user.getShortName());
 			auditEvent.setAccessResult(accessFlag);
-			auditEvent.setClientIP(null); // TODO:
+			auditEvent.setClientIP(getRemoteAddress());
 			auditEvent.setEventTime(getUTCDate());
 			auditEvent.setRepositoryType(EnumRepositoryType.HBASE);
 			auditEvent.setRepositoryName(repositoryName);

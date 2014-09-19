@@ -45,7 +45,7 @@ public class DbAuditProvider implements AuditProvider {
 	private DaoManager          daoManager;
 	
 	private int                 mCommitBatchSize  = 1;
-	private long                mLastCommitTime   = 0;
+	private long                mLastCommitTime   = System.currentTimeMillis();
 	private ArrayList<AuditEventBase> mUncommitted = new ArrayList<AuditEventBase>();
 	private Map<String, String> mDbProperties;
 

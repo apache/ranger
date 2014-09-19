@@ -1,14 +1,23 @@
 /*
- * Copyright (c) 2014 XASecure
- * All rights reserved.
- *
- * This software is the confidential and proprietary information of
- * XASecure. ("Confidential Information").  You shall not
- * disclose such Confidential Information and shall use it only in
- * accordance with the terms of the license agreement you entered into
- * with XASecure.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
+ 
 
 define(function(require) {
     'use strict';
@@ -636,6 +645,30 @@ define(function(require) {
 		           'XA_PERM_TYPE_REBALANCE','XA_PERM_TYPE_ACTIVATE','XA_PERM_TYPE_DEACTIVATE','XA_PERM_TYPE_GET_TOPOLOGY_CONF',
 		           'XA_PERM_TYPE_GET_TOPOLOGY','XA_PERM_TYPE_GET_USER_TOPOLOGY','XA_PERM_TYPE_GET_TOPOLOGY_INFO','XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL'
 		           ];
+	};
+
+	XAUtils.highlightDisabledPolicy = function(that){
+		var $el = that.rTableList.$el;
+		var timerId = setInterval(function(){
+			if($el.find('tr td:last').text() != "No Policies found!"){
+				_.each($el.find('tr td').find('.label-important'),function(a,b){
+					  if($(a).html() == "Disabled")
+					      console.log(that.$(a).parents('tr').addClass('disable-policy'))
+				},that);	
+				clearInterval(timerId);
+			}
+			console.log('highlight disabled policy..');
+		},5);
+	};
+	XAUtils.showAlerForDisabledPolicy = function(that){
+		if(!_.isUndefined(that.model.get('resourceStatus')) 
+			&& that.model.get('resourceStatus') == XAEnums.ActiveStatus.STATUS_DISABLED.value){
+			that.ui.policyDisabledAlert.show();
+			that.$(that.rForm.el).addClass("policy-disabled");
+		}else{
+			that.ui.policyDisabledAlert.hide();
+			that.$(that.rForm.el).removeClass("policy-disabled");
+		}
 	};
     return XAUtils;
 });

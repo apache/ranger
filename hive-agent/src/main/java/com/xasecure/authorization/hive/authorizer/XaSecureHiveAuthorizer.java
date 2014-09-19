@@ -1,4 +1,23 @@
-package com.xasecure.authorization.hive.authorizer;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+ package com.xasecure.authorization.hive.authorizer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -456,10 +475,18 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				break;
 
 				case QUERY:
+				case SHOW_TABLESTATUS:
+				case SHOW_CREATETABLE:
+				case SHOWINDEXES:
+				case SHOWPARTITIONS:
+				case SHOW_TBLPROPERTIES:
+				case DESCTABLE:
+				case ANALYZE_TABLE:
 					accessType = HiveAccessType.SELECT;
 				break;
 
 				case SWITCHDATABASE:
+				case DESCDATABASE:
 					accessType = HiveAccessType.USE;
 				break;
 
@@ -473,13 +500,10 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				break;
 
 				case ADD:
-				case ANALYZE_TABLE:
 				case COMPILE:
 				case CREATEMACRO:
 				case CREATEROLE:
-				case DESCDATABASE:
 				case DESCFUNCTION:
-				case DESCTABLE:
 				case DFS:
 				case DROPMACRO:
 				case DROPROLE:
@@ -493,18 +517,13 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				case SHOWCONF:
 				case SHOWDATABASES:
 				case SHOWFUNCTIONS:
-				case SHOWINDEXES:
 				case SHOWLOCKS:
-				case SHOWPARTITIONS:
 				case SHOWTABLES:
 				case SHOW_COMPACTIONS:
-				case SHOW_CREATETABLE:
 				case SHOW_GRANT:
 				case SHOW_ROLES:
 				case SHOW_ROLE_GRANT:
 				case SHOW_ROLE_PRINCIPALS:
-				case SHOW_TABLESTATUS:
-				case SHOW_TBLPROPERTIES:
 				case SHOW_TRANSACTIONS:
 				break;
 			}

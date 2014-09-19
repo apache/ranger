@@ -1,4 +1,23 @@
-/**
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+ /**
  * 
  */
 package com.xasecure.service;
@@ -68,6 +87,8 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 	XResourceService xResourceService;
 
 	String version;
+	
+	private static String uniqueKeySeparator = "_";
 
 	public XPolicyService() {
 		version = PropertiesUtil.getProperty("maven.project.version", "");
@@ -84,7 +105,13 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXPolicy.setRepositoryName(vXResource.getAssetName());
 		vXPolicy.setRepositoryType(AppConstants
 				.getLabelFor_AssetType(vXResource.getAssetType()));
-		vXPolicy.setPermMapList(mapPermMapToPermObj(vXResource.getPermMapList()));
+		
+		
+		List<VXPermObj> permObjList = mapPermMapToPermObj(vXResource
+				.getPermMapList());
+		if (!stringUtil.isEmpty(permObjList)) {
+			vXPolicy.setPermMapList(permObjList);
+		}
 		vXPolicy.setTables(vXResource.getTables());
 		vXPolicy.setColumnFamilies(vXResource.getColumnFamilies());
 		vXPolicy.setColumns(vXResource.getColumns());
@@ -214,8 +241,14 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXResource.setColumns(vXPolicy.getColumns());
 		vXResource.setUdfs(vXPolicy.getUdfs());
 		vXResource.setAssetName(vXPolicy.getRepositoryName());
-		vXResource.setAssetType(AppConstants.getEnumFor_AssetType(vXPolicy
-				.getRepositoryType()));
+		
+		int assetType = AppConstants.getEnumFor_AssetType(vXPolicy
+				.getRepositoryType());
+		if (assetType == 0 || assetType == AppConstants.ASSET_UNKNOWN) {
+			assetType = xAsset.getAssetType();
+			vXPolicy.setRepositoryType(AppConstants.getLabelFor_AssetType(assetType));
+		}
+		vXResource.setAssetType(assetType);
 
 		int resourceStatus = AppConstants.STATUS_ENABLED;
 		if (!vXPolicy.getIsEnabled()) {
@@ -263,6 +296,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 		for (VXPermObj permObj : permObjList) {
 			String permGrp = new Date() + " : " + rand.nextInt(9999);
+			String ipAddress = permObj.getIpAddress();
 
 			if (!stringUtil.isEmpty(permObj.getUserList())) {
 				int permFor = AppConstants.XA_PERM_FOR_USER;
@@ -287,12 +321,13 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermType(permType);
 						vXPermMap.setUserId(xxUser.getId());
 						vXPermMap.setResourceId(resId);
+						vXPermMap.setIpAddress(ipAddress);
 						permMapList.add(vXPermMap);
 
 						StringBuilder uniqueKey = new StringBuilder();
-						uniqueKey.append(resId + "_");
-						uniqueKey.append(permFor + "_");
-						uniqueKey.append(userId + "_");
+						uniqueKey.append(resId + uniqueKeySeparator);
+						uniqueKey.append(permFor + uniqueKeySeparator);
+						uniqueKey.append(userId + uniqueKeySeparator);
 						uniqueKey.append(permType);
 						newPermMap.put(uniqueKey.toString(), vXPermMap);
 					}
@@ -323,12 +358,13 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermType(permType);
 						vXPermMap.setGroupId(xxGroup.getId());
 						vXPermMap.setResourceId(resId);
+						vXPermMap.setIpAddress(ipAddress);
 						permMapList.add(vXPermMap);
 
 						StringBuilder uniqueKey = new StringBuilder();
-						uniqueKey.append(resId + "_");
-						uniqueKey.append(permFor + "_");
-						uniqueKey.append(grpId + "_");
+						uniqueKey.append(resId + uniqueKeySeparator);
+						uniqueKey.append(permFor + uniqueKeySeparator);
+						uniqueKey.append(grpId + uniqueKeySeparator);
 						uniqueKey.append(permType);
 						newPermMap.put(uniqueKey.toString(), vXPermMap);
 					}
@@ -346,6 +382,8 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 				} else {
 					VXPermMap vPMap = xPermMapService
 							.populateViewBean(prevPermMap.get(entry.getKey()));
+					VXPermMap vPMapNew = entry.getValue();
+					vPMap.setIpAddress(vPMapNew.getIpAddress());
 					updPermMapList.add(vPMap);
 				}
 			}
@@ -366,13 +404,13 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			int permType = xxPermMap.getPermType();
 
 			StringBuilder uniqueKey = new StringBuilder();
-			uniqueKey.append(resId + "_");
-			uniqueKey.append(permFor + "_");
+			uniqueKey.append(resId + uniqueKeySeparator);
+			uniqueKey.append(permFor + uniqueKeySeparator);
 
 			if (userId != null) {
-				uniqueKey.append(userId + "_");
+				uniqueKey.append(userId + uniqueKeySeparator);
 			} else if (grpId != null) {
-				uniqueKey.append(grpId + "_");
+				uniqueKey.append(grpId + uniqueKeySeparator);
 			}
 			uniqueKey.append(permType);
 			prevPermMap.put(uniqueKey.toString(), xxPermMap);
@@ -456,6 +494,8 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		Random rand = new Random();
 
 		for (VXPermObj permObj : permObjList) {
+			
+			String ipAddress = permObj.getIpAddress();
 
 			if (!stringUtil.isEmpty(permObj.getUserList())) {
 				String permGrp = new Date() + " : " + rand.nextInt(9999);
@@ -477,6 +517,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermGroup(permGrp);
 						vXPermMap.setPermType(permType);
 						vXPermMap.setUserId(xxUser.getId());
+						vXPermMap.setIpAddress(ipAddress);
 
 						permMapList.add(vXPermMap);
 					}
@@ -505,6 +546,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 						vXPermMap.setPermGroup(permGrp);
 						vXPermMap.setPermType(permType);
 						vXPermMap.setGroupId(xxGroup.getId());
+						vXPermMap.setIpAddress(ipAddress);
 
 						permMapList.add(vXPermMap);
 					}
@@ -534,31 +576,38 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 				.searchXPermMaps(searchCriteria);
 
 		List<VXPermMap> currentPermMapList = currentPermMaps.getVXPermMaps();
-		HashMap<String, List<Integer>> userPermMap = new HashMap<String, List<Integer>>();
+		HashMap<String, List<String>> userPermMap = new HashMap<String, List<String>>();
 
 		for (VXPermMap currentPermMap : currentPermMapList) {
 			Long userId = currentPermMap.getUserId();
 			Long groupId = currentPermMap.getGroupId();
 			int permFor = currentPermMap.getPermFor();
 			int permType = currentPermMap.getPermType();
-			String uniKey = resId + "_" + permFor;
+			String ipAddress = currentPermMap.getIpAddress();
+			
+			String uniKey = resId + uniqueKeySeparator + permFor;
 			if (permFor == AppConstants.XA_PERM_FOR_GROUP) {
-				uniKey = uniKey + "_" + groupId;
+				uniKey = uniKey + uniqueKeySeparator + groupId;
 			} else if (permFor == AppConstants.XA_PERM_FOR_USER) {
-				uniKey = uniKey + "_" + userId;
+				uniKey = uniKey + uniqueKeySeparator + userId;
 			}
 
-			List<Integer> permList = userPermMap.get(uniKey);
+			List<String> permList = userPermMap.get(uniKey);
 			if (permList == null) {
-				permList = new ArrayList<Integer>();
+				permList = new ArrayList<String>();
 				userPermMap.put(uniKey, permList);
 			}
-			permList.add(permType);
+			permList.add(""+permType);
+			
+			if (stringUtil.isEmpty(ipAddress)) {
+				permList.add(ipAddress);
+			}
+			
 		}
 
 		List<List<String>> masterKeyList = new ArrayList<List<String>>();
 		List<String> proceedKeyList = new ArrayList<String>();
-		for (Entry<String, List<Integer>> upMap : userPermMap.entrySet()) {
+		for (Entry<String, List<String>> upMap : userPermMap.entrySet()) {
 
 			if (proceedKeyList.contains(upMap.getKey())) {
 				continue;
@@ -568,7 +617,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			keyList.add(upMap.getKey());
 			proceedKeyList.add(upMap.getKey());
 
-			for (Entry<String, List<Integer>> entry : userPermMap.entrySet()) {
+			for (Entry<String, List<String>> entry : userPermMap.entrySet()) {
 
 				if (proceedKeyList.contains(entry.getKey())) {
 					continue;
@@ -590,7 +639,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			for (String key : keyList) {
 
 				SearchCriteria scPermMap = new SearchCriteria();
-				String[] keyEle = StringUtils.split(key, "_");
+				String[] keyEle = StringUtils.split(key, uniqueKeySeparator);
 				if (keyEle != null && keyEle.length == 3) {
 
 					int permFor = Integer.parseInt(keyEle[1]);
@@ -647,10 +696,10 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 		if (!stringUtil.isEmpty(vXPolicy.getDatabases())) {
 			resourceType = AppConstants.RESOURCE_DB;
-			if (!stringUtil.isEmpty(vXPolicy.getTables())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getTables())) {
 				resourceType = AppConstants.RESOURCE_TABLE;
 			}
-			if (!stringUtil.isEmpty(vXPolicy.getColumns())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumns())) {
 				resourceType = AppConstants.RESOURCE_COLUMN;
 			}
 			if (!stringUtil.isEmpty(vXPolicy.getUdfs())) {
@@ -658,15 +707,15 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			}
 		} else if (!stringUtil.isEmpty(vXPolicy.getTables())) {
 			resourceType = AppConstants.RESOURCE_TABLE;
-			if (!stringUtil.isEmpty(vXPolicy.getColumnFamilies())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumnFamilies())) {
 				resourceType = AppConstants.RESOURCE_COL_FAM;
 			}
-			if (!stringUtil.isEmpty(vXPolicy.getColumns())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumns())) {
 				resourceType = AppConstants.RESOURCE_COLUMN;
 			}
 		} else if (!stringUtil.isEmpty(vXPolicy.getTopologies())) {
 			resourceType = AppConstants.RESOURCE_TOPOLOGY;
-			if (!stringUtil.isEmpty(vXPolicy.getServices())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getServices())) {
 				resourceType = AppConstants.RESOURCE_SERVICE_NAME;
 			}
 		}

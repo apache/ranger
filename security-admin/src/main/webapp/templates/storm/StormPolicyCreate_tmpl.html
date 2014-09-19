@@ -4,7 +4,10 @@
 	<h4> {{tt 'h.createPolicy'}} </h4>
 {{/if}}	
 <div class="wrap non-collapsible ">
-
+<div class="alert alert-danger" data-id="policyDisabledAlert" style="display:none;">
+  <button type="button" class="close" data-dismiss="alert">&times;</button>
+  <strong>Warning !</strong> {{tt 'msg.policyDisabledMsg'}}
+</div>
 	<div data-id="r_form"></div>
 	<div class="form-actions form-policy" class="row-fluid">
 		{{#if editPolicy}}
