@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -59,18 +60,23 @@ public class EmbededServer {
 	
 	
 	private void initConfig() {
+		
+		String cfgFile =  getResourceFileName(configFile) ;
+		
 		serverConfigProperties.clear() ;
+		
 		InputStream in = null ;
 		try {
-			in = new FileInputStream(configFile) ;
+			
+			in = new FileInputStream(cfgFile) ;
 			serverConfigProperties.load(in);
 		}
 		catch(FileNotFoundException fnf) {
-			LOG.severe("Unable to find config  file [" + configFile + "]");
+			LOG.severe("Unable to find config  file [" + cfgFile + "]");
 			fnf.printStackTrace(); 
 		}
 		catch(IOException ioe) {
-			LOG.severe("Unable to load config  file [" + configFile + "]");
+			LOG.severe("Unable to load config  file [" + cfgFile + "]");
 			ioe.printStackTrace(); 
 		}
 		serverConfigProperties.list(System.out);
@@ -174,6 +180,40 @@ public class EmbededServer {
 			ret = Integer.parseInt(retStr) ;
 		}
 		return ret;
+	}
+	
+	private String getResourceFileName(String aResourceName) {
+		
+		String ret = aResourceName ;
+		
+		ClassLoader cl = getClass().getClassLoader() ;
+		
+		for (String path : new String[] { aResourceName, "/" + aResourceName }) {
+			
+			try {
+				URL lurl = cl.getResource(path) ;
+		
+				if (lurl != null) {
+					ret = lurl.getFile() ;
+				}
+			}
+			catch(Throwable t) {
+				ret = null;
+			}
+			if (ret != null) {
+				break ;
+			}
+
+		}
+		
+		if (ret == null) {
+			ret = aResourceName ;
+		}
+		
+		return ret ;
+		
+		
+		
 	}
 
 }
