@@ -39,7 +39,7 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 		@SuppressWarnings("rawtypes")
 		List resultList = getEntityManager()
 				.createNamedQuery("XXPortalUser.findByLoginId")
-				.setParameter("loginId", loginId.toLowerCase()).getResultList();
+				.setParameter("loginId", loginId).getResultList();
 		if (resultList.size() != 0) {
 			return (XXPortalUser) resultList.get(0);
 		}
@@ -54,7 +54,7 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 		@SuppressWarnings("rawtypes")
 		List resultList = getEntityManager()
 				.createNamedQuery("XXPortalUser.findByEmailAddress")
-				.setParameter("emailAddress", emailAddress.toLowerCase())
+				.setParameter("emailAddress", emailAddress)
 				.getResultList();
 		if (resultList.size() != 0) {
 			return (XXPortalUser) resultList.get(0);

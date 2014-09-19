@@ -716,10 +716,10 @@ public class SearchUtil {
 				if (strFieldValue != null) {
 					if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
 						query.setParameter(searchField.getClientFieldName(),
-								strFieldValue);
+								strFieldValue.trim().toLowerCase());
 					} else {
 						query.setParameter(searchField.getClientFieldName(),
-								"%" + strFieldValue + "%");
+								"%" + strFieldValue.trim().toLowerCase() + "%");
 					}
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.BOOLEAN) {

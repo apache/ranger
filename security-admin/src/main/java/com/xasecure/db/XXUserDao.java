@@ -43,7 +43,7 @@ public class XXUserDao extends BaseDao<XXUser> {
 		try {
 			return getEntityManager()
 					.createNamedQuery("XXUser.findByUserName", XXUser.class)
-					.setParameter("name", name.trim().toLowerCase())
+					.setParameter("name", name.trim())
 					.getSingleResult();
 		} catch (NoResultException e) {
 			// ignore

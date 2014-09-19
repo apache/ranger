@@ -37,8 +37,20 @@ import com.xasecure.entity.*;
 public class XXAsset extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
+	@Id
+	@SequenceGenerator(name="X_ASSET_SEQ",sequenceName="X_ASSET_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_ASSET_SEQ")
+	@Column(name="ID")
+	protected Long id;
 
-
+	@Override
+	public void setId(Long id) {
+		this.id=id;
+	}
+	@Override
+	public Long getId() {
+		return id;
+	}
 	/**
 	 * Name
 	 * <ul>

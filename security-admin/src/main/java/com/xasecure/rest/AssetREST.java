@@ -334,7 +334,7 @@ public class AssetREST {
 		// searchUtil.addSearchGroup(searchCriteria, outerGroup);
 		//
 		// }
-		searchCriteria.setDistinct(true);
+		//searchCriteria.setDistinct(true);
 
 		return assetMgr.searchXResources(searchCriteria);
 	}

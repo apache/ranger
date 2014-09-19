@@ -63,7 +63,7 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 
 			return (XXGroup) getEntityManager()
 					.createNamedQuery("XXGroup.findByGroupName")
-					.setParameter("name", groupName.toLowerCase())
+					.setParameter("name", groupName)
 					.getSingleResult();
 		} catch (Exception e) {
 

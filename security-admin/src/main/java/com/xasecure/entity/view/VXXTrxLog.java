@@ -38,7 +38,8 @@ public class VXXTrxLog implements java.io.Serializable {
 	public static final int SHARE_PREF_DEFAULT = 0;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@SequenceGenerator(name="V_TRX_LOG_SEQ",sequenceName="V_TRX_LOG_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="V_TRX_LOG_SEQ")
 	@Column(name="ID")
 	protected Long id;
 

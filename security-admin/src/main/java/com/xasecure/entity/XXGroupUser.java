@@ -38,6 +38,20 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
 
+	@Id
+	@SequenceGenerator(name="X_GROUP_USERS_SEQ",sequenceName="X_GROUP_USERS_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_GROUP_USERS_SEQ")
+	@Column(name="ID")
+	protected Long id;
+	@Override
+	public void setId(Long id) {
+		this.id=id;
+	}
+
+	@Override
+	public Long getId() {
+		return id;
+	}
 
 	/**
 	 * Name

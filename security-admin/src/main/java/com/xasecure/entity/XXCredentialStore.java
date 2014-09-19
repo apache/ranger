@@ -37,8 +37,20 @@ import com.xasecure.entity.*;
 public class XXCredentialStore extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
+	@Id
+	@SequenceGenerator(name="X_CRED_STORE_SEQ",sequenceName="X_CRED_STORE_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_CRED_STORE_SEQ")
+	@Column(name="ID")
+	protected Long id;
 
-
+	@Override
+	public void setId(Long id) {
+		this.id=id;
+	}
+	@Override
+	public Long getId() {
+		return id;
+	}
 	/**
 	 * Name
 	 * <ul>

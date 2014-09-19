@@ -37,8 +37,19 @@ import com.xasecure.entity.*;
 public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-
-
+	@Id
+	@SequenceGenerator(name="X_TRX_LOG_SEQ",sequenceName="X_TRX_LOG_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_TRX_LOG_SEQ")
+	@Column(name="ID")
+	protected Long id;
+	@Override
+	public void setId(Long id) {
+		this.id=id;
+	}
+	@Override
+	public Long getId() {
+		return id;
+	}
 	/**
 	 * Name of the class to which the object id belongs to
 	 * <ul>

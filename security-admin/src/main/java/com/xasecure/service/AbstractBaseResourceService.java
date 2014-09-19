@@ -41,6 +41,7 @@ import javax.persistence.criteria.Root;
 import com.xasecure.biz.XABizUtil;
 import com.xasecure.common.ContextUtil;
 import com.xasecure.common.DateUtil;
+import com.xasecure.common.SortField.SORT_ORDER;
 import com.xasecure.common.UserSessionBase;
 import com.xasecure.common.XAConfigUtil;
 import com.xasecure.common.MessageEnums;
@@ -241,7 +242,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 		distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM "
 				+ tEntityClass.getName() + " obj ";
 		distinctQueryStr = "SELECT distinct obj FROM " + className + " obj ";
-
+		sortFields.add(new SortField("id", "obj.id",true,SORT_ORDER.ASC));
 		registerService(this);
 	}
 

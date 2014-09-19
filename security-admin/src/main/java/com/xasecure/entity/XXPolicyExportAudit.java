@@ -38,6 +38,20 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 	private static final long serialVersionUID = 1L;
 
 
+	@Id
+	@SequenceGenerator(name="X_POLICY_EXPORT_SEQ",sequenceName="X_POLICY_EXPORT_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_POLICY_EXPORT_SEQ")
+	@Column(name="ID")
+	protected Long id;
+	@Override
+	public void setId(Long id) {
+		this.id=id;
+	}
+
+	@Override
+	public Long getId() {
+		return id;
+	}
 
 	/**
 	 * XA Agent IP Address

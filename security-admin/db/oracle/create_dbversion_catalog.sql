@@ -1,0 +1,10 @@
+create table X_DB_VERSION_H  (
+	id NUMBER(20) NOT NULL,
+	version VARCHAR(64) NOT NULL,
+	inst_at DATE DEFAULT SYSDATE NOT NULL,
+	inst_by VARCHAR(256) NOT NULL,
+	updated_at DATE DEFAULT SYSDATE NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+	active VARCHAR(1) DEFAULT 'Y'
+);
+commit;

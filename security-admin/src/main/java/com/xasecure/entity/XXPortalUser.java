@@ -37,8 +37,21 @@ import com.xasecure.entity.*;
 public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-
-
+	@Id
+	@SequenceGenerator(name="X_PORTAL_USER_SEQ",sequenceName="X_PORTAL_USER_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_PORTAL_USER_SEQ")
+	@Column(name="ID")
+	protected Long id;
+		@Override
+	public void setId(Long id) {
+		// TODO Auto-generated method stub
+		this.id=id;
+	}
+	@Override
+	public Long getId() {
+		// TODO Auto-generated method stub
+		return id;
+	}
 	/**
 	 * First name of the user
 	 * <ul>

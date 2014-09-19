@@ -4,7 +4,7 @@
 #
 # XASecure PolicyManager Installation Script
 # 
-# This script will install policymanager webapplication under tomcat and also, initialize the mysql database with xasecure users/tables.
+# This script will install policymanager webapplication under tomcat and also, initialize the database with xasecure users/tables.
 #
 # (c) 2013,2014 XASecure
 #
@@ -19,7 +19,7 @@ if [ ! $? = "0" ];then
 	exit 1; 
 fi
 
-MYSQL_HOST="${db_host}"
+DB_HOST="${db_host}"
 
 usage() {
   [ "$*" ] && echo "$0: $*"
@@ -71,8 +71,8 @@ getPropertyFromFile(){
 
 #Update Properties to File
 #$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
-updatePropertyToFile(){		
-	sed -i 's@^'$1'=[^ ]*$@'$1'='$2'@g' $3	
+updatePropertyToFile(){
+	sed -i 's@^'$1'=[^ ]*$@'$1'='$2'@g' $3
 	#validate=`sed -i 's/^'$1'=[^ ]*$/'$1'='$2'/g' $3`	#for validation
 	validate=$(sed '/^\#/d' $3 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-) # for validation
 	#echo 'V1:'$validate
@@ -104,6 +104,14 @@ init_variables(){
 
 	WEBAPP_ROOT=${INSTALL_DIR}/ews/webapp
 	
+	DB_FLAVOR=`echo $DB_FLAVOR | tr '[:lower:]' '[:upper:]'`
+	if [ "${DB_FLAVOR}" == "" ]
+	then
+		DB_FLAVOR="MYSQL"
+	fi
+	log "[I] DB_FLAVOR=${DB_FLAVOR}"
+
+	getPropertyFromFile 'db_root_user' $PROPFILE db_root_user
 	getPropertyFromFile 'db_root_password' $PROPFILE db_user
 	getPropertyFromFile 'db_user' $PROPFILE db_user
 	getPropertyFromFile 'db_password' $PROPFILE db_password
@@ -128,23 +136,46 @@ wait_for_tomcat_shutdown() {
 	done
 }
 
-check_mysql_version() {
-	if is_command ${MYSQL_BIN} ; then
-		log "[I] '${MYSQL_BIN}' command found"
-	else
-		log "[E] '${MYSQL_BIN}' command not found"
+check_db_version() {
+    if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		if is_command ${SQL_COMMAND_INVOKER} ; then
+			log "[I] '${SQL_COMMAND_INVOKER}' command found"
+		else
+			log "[E] '${SQL_COMMAND_INVOKER}' command not found"
 		exit 1;
+		fi
 	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+        if is_command ${SQL_COMMAND_INVOKER} ; then
+            log "[I] '${SQL_COMMAND_INVOKER}' command found"
+        else
+            log "[E] '${SQL_COMMAND_INVOKER}' command not found"
+        exit 1;
+        fi
+    fi
 }
 
-check_mysql_connector() {
-	log "[I] Checking MYSQL CONNECTOR FILE : $MYSQL_CONNECTOR_JAR" 
-	if test -f "$MYSQL_CONNECTOR_JAR"; then
-		log "[I] MYSQL CONNECTOR FILE : $MYSQL_CONNECTOR_JAR file found" 
-	else
-		log "[E] MYSQL CONNECTOR FILE : $MYSQL_CONNECTOR_JAR does not exists" ; exit 1;
+check_db_connector() {
+    if [ "${DB_FLAVOR}" == "MYSQL" ]
+	then
+		log "[I] Checking MYSQL CONNECTOR FILE : ${SQL_CONNECTOR_JAR}"
+		if test -f "$SQL_CONNECTOR_JAR"; then
+			log "[I] MYSQL CONNECTOR FILE : $SQL_CONNECTOR_JAR file found"
+		else
+			log "[E] MYSQL CONNECTOR FILE : $SQL_CONNECTOR_JAR does not exists" ; exit 1;
+		fi
 	fi
-
+    if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+        log "[I] Checking ORACLE CONNECTOR FILE : ${SQL_CONNECTOR_JAR}"
+        if test -f "${SQL_CONNECTOR_JAR}"; then
+			log "[I] ORACLE CONNECTOR FILE : ${SQL_CONNECTOR_JAR} file found"
+        else
+			log "[E] ORACLE CONNECTOR FILE : ${SQL_CONNECTOR_JAR} does not exists" ; exit 1;
+		fi
+    fi
 }
 check_java_version() {
 	if is_command ${JAVA_BIN} ; then
@@ -180,13 +211,23 @@ sanity_check_files() {
 		log "[I] $war_file file found" 
 	else
 		log "[E] $war_file does not exists" ; exit 1;
+    fi
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		if test -f $mysql_core_file; then
+			log "[I] $mysql_core_file file found"
+		else
+			log "[E] $mysql_core_file does not exists" ; exit 1;
+		fi
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+        if test -f ${oracle_core_file}; then
+			log "[I] ${oracle_core_file} file found"
+        else
+            log "[E] ${oracle_core_file} does not exists" ; exit 1;
         fi
-
-	if test -f $db_core_file; then
-		log "[I] $db_core_file file found" 
-	else
-		log "[E] $db_core_file does not exists" ; exit 1;
-        fi
+    fi
 }
 
 create_rollback_point() {
@@ -196,69 +237,150 @@ create_rollback_point() {
     cp "$APP" "$BAK_FILE"
 }
 
-create_mysql_user(){
-	check_mysql_password
-	check_mysql_user_password
-
-	log "[I] Creating MySQL user '$db_user' (using root priviledges)"
-	
-	for thost in '%' localhost
-	do
-		usercount=`$MYSQL_BIN -B -u root --password="$db_root_password" -h $MYSQL_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$db_user' and host = '$thost';"`
-		if  [ ${usercount} -eq 0 ]
+create_db_user(){
+	check_db_user_password
+	strError="ERROR"
+    if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		log "[I] Creating ${DB_FLAVOR} user '${db_user}' (using root priviledges)"
+		for thost in '%' localhost
+		do
+			usercount=`$SQL_COMMAND_INVOKER -B -u "$db_root_user" --password="$db_root_password" -h $DB_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$db_user' and host = '$thost';"`
+			if  [ ${usercount} -eq 0 ]
+			then
+				$SQL_COMMAND_INVOKER -B -u "$db_root_user" --password="$db_root_password" -h $DB_HOST -e "create user '$db_user'@'$thost' identified by '$db_password';"
+				log "[I] Creating user '$db_user' for host $thost done"
+			fi
+			dbquery="GRANT ALL ON *.* TO '$db_user'@'$thost' ;
+			grant all privileges on *.* to '$db_user'@'$thost' with grant option;
+			FLUSH PRIVILEGES;"
+			echo "${dbquery}" | $SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST
+			check_ret_status $? "'$DB_FLAVOR' create user failed"
+		done
+		log "[I] Creating $DB_FLAVOR user '$db_user' (using root priviledges) DONE"
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+		#check user exist or not
+		result3=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(username) from all_users where UPPER(username)=UPPER('${db_user}');"`
+		username=`echo ${db_user} | tr '[:lower:]' '[:upper:]'`
+		#if does not contains username so create user
+		if test "${result3#*$username}" == "$result3"
 		then
-			$MYSQL_BIN -B -u root --password="$db_root_password" -h $MYSQL_HOST -e "create user '$db_user'@'$thost' identified by '$db_password';"
+			#create user
+			result4=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "create user ${db_user} identified by \"${db_password}"\;"`
+			result3=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(username) from all_users where UPPER(username)=UPPER('${db_user}');"`
+			username=`echo ${db_user} | tr '[:lower:]' '[:upper:]'`
+			#if user is not created print error message
+			if test "${result3#*$username}" == "$result3"
+			then
+				log "[E] Creating User: ${db_user} Failed";
+				log "[E] $result4"
+				exit 1
+			else
+				log "[I] Creating User: ${db_user} Success";
+			fi
+	    fi
+        result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT connect,resource,create view,sysdba TO ${db_user};"`
+        if test "${result5#*$strError}" == "$result5"
+		then
+			log "[I] Granting User: ${db_user} Success";
+		else
+			log "[E] Granting User: ${db_user} Failed";
+			log "[E] $result5"
+			exit 1
 		fi
-		
-		mysqlquery="GRANT ALL ON *.* TO '$db_user'@'$thost' ; 
-		grant all privileges on *.* to '$db_user'@'$thost' with grant option;
-		FLUSH PRIVILEGES;"
-		
-		echo "${mysqlquery}" | $MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST
-		check_ret_status $? "MySQL create user failed"
-		
-	done
-	log "[I] Creating MySQL user '$db_user' (using root priviledges) DONE"
+		log "[I] Creating $DB_FLAVOR user '${db_user}' (using sysdba priviledges) DONE"
+    fi
 }
-check_mysql_password () {
+
+check_db_admin_password () {
 	count=0
-	log "[I] Checking MYSQL root password"
-	
-	msg=`$MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST -s -e "select version();" 2>&1`
-	cmdStatus=$?
+	msg=''
+	cmdStatus=''
+	strError="ERROR"
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		log "[I] Checking ${DB_FLAVOR} $db_root_user password"
+		msg=`$SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h "$DB_HOST" -s -e "select version();" 2>&1`
+		cmdStatus=$?
+    fi
+
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+		log "[I] Checking ${DB_FLAVOR} $db_root_user password"
+		msg=`echo "select 1 from dual;" | $SQL_COMMAND_INVOKER  -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA>&1`
+		cmdStatus=$?
+    fi
+	if test "${msg#*$strError}" != "$msg"
+	then
+		cmdStatus=1
+	else
+		cmdStatus=0 # $substring is not in $string
+    fi
 	while :
 	do	
 		if  [  $cmdStatus != 0 ]; then
 			if [ $count != 0 ]
 			then
-				log "[I] COMMAND: mysql -u root --password=..... -h $MYSQL_HOST : FAILED with error message:			      						\n*******************************************\n${msg}\n*******************************************\n"
+				if [ "${DB_FLAVOR}" == "MYSQL" ]
+				then
+					log "[I] COMMAND: mysql -u $db_root_user --password=...... -h $DB_HOST : FAILED with error message:"
+			    fi
+				if [ "${DB_FLAVOR}" == "ORACLE" ]
+	            then
+	                log "[I] COMMAND: sqlplus  $db_root_user/...... @$DB_HOST AS SYSDBA : FAILED with error message:"
+	            fi
+				log "*******************************************${sg}*******************************************"
 			fi
 			if [ $count -gt 2 ]
 			then
-				log "[E] Unable to continue as mysql connectivity fails."
+				log "[E] Unable to continue as db connectivity fails."
 				exit 1
 			fi
 		    trap 'stty echo; exit 1' 2 3 15
-			printf "Please enter password for mysql user-id, root@${MYSQL_HOST} : "
+            if [ "${DB_FLAVOR}" == "MYSQL" ]
+		    then
+				printf "Please enter password for mysql user-id, $db_root_user@${DB_HOST} : "
+            fi
+			if [ "${DB_FLAVOR}" == "ORACLE" ]
+			then
+				log="[msg] ${msg}"
+				printf "Please enter password for oracle user-id, $db_root_user@${DB_HOST} AS SYSDBA: "
+			fi
 			stty -echo
 			read db_root_password
 			stty echo
 			printf "\n"
 			trap '' 2 3 15
 			count=`expr ${count} + 1`
-			msg=`$MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST -s -e "select version();" 2>&1`
-			cmdStatus=$?
+			if [ "${DB_FLAVOR}" == "MYSQL" ]
+			then
+				msg=`$SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h "$DB_HOST" -s -e "select version();" 2>&1`
+				cmdStatus=$?
+			fi
+			if [ "${DB_FLAVOR}" == "ORACLE" ]
+			then
+				msg=`echo "select 1 from dual;" | $SQL_COMMAND_INVOKER  -L -S "${db_root_user}"/"\"${db_root_password}\""@"{$DB_HOST}" AS SYSDBA >&1`
+				cmdStatus=$?
+			fi
+			if test "${msg#*$strError}" != "$msg"
+		    then
+				cmdStatus=1
+			else
+				cmdStatus=0 # $substring is not in $string
+		    fi
 	   	else
-			log "[I] Checking MYSQL root password DONE"
+			log "[I] Checking DB password DONE"
 			break;
 		fi
 	done
 	return 0;
 }
 
-check_mysql_user_password() {
+check_db_user_password() {
 	count=0
-	muser=${db_user}@${MYSQL_HOST}
+	muser=${db_user}@${DB_HOST}
 	while [ "${db_password}" = "" ]
 	do
 		if [ $count -gt 0 ]
@@ -281,9 +403,9 @@ check_mysql_user_password() {
 }
 
 
-check_mysql_audit_user_password() {
+check_audit_user_password() {
 	count=0
-	muser=${audit_db_user}@${MYSQL_HOST}
+	muser=${audit_db_user}@${DB_HOST}
 	while [ "${audit_db_password}" = "" ]
 	do
 		if [ $count -gt 0 ]
@@ -307,73 +429,237 @@ check_mysql_audit_user_password() {
 
 upgrade_db() {
 	log "[I] - starting upgradedb ... "
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		DBVERSION_CATALOG_CREATION=db/create_dbversion_catalog.sql
 
-	DBVERSION_CATALOG_CREATION=db/create_dbversion_catalog.sql
+		#mysqlexec="${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h ${DB_HOST} ${db_name}"
 
-	#mysqlexec="${MYSQL_BIN} -u ${db_user} --password=${db_password} -h ${MYSQL_HOST} -D ${db_name}"
-	
-	if [ -f ${DBVERSION_CATALOG_CREATION} ]
-	then
-		`${MYSQL_BIN} -u "${db_user}" --password="${db_password}" -h ${MYSQL_HOST} -D ${db_name} < ${DBVERSION_CATALOG_CREATION}`
-		check_ret_status $? "Verifying database version catalog table Failed."
-	fi
-		
-	dt=`date '+%s'`
-	tempFile=/tmp/sql_${dt}_$$.sql
-	sqlfiles=`ls -1 db/patches/*.sql 2> /dev/null | awk -F/ '{ print $NF }' | awk -F- '{ print $1, $0 }' | sort -k1 -n | awk '{ printf("db/patches/%s\n",$2) ; }'`
-	for sql in ${sqlfiles}
-	do
-		if [ -f ${sql} ]
+		if [ -f ${DBVERSION_CATALOG_CREATION} ]
 		then
-			bn=`basename ${sql}`
-			version=`echo ${bn} | awk -F'-' '{ print $1 }'`
-			if [ "${version}" != "" ]
+			log "[I] Verifying database version catalog table .... "
+			${mysqlexec} < ${DBVERSION_CATALOG_CREATION}
+			`${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h ${DB_HOST} -D ${db_name} < ${DBVERSION_CATALOG_CREATION}`
+			check_ret_status $? "Verifying database version catalog table Failed."
+		fi
+
+		dt=`date '+%s'`
+		tempFile=/tmp/sql_${dt}_$$.sql
+		sqlfiles=`ls -1 db/patches/*.sql 2> /dev/null | awk -F/ '{ print $NF }' | awk -F- '{ print $1, $0 }' | sort -k1 -n | awk '{ printf("db/patches/%s\n",$2) ; }'`
+		for sql in ${sqlfiles}
+		do
+			if [ -f ${sql} ]
 			then
-				c=`${MYSQL_BIN} -u "${db_user}" --password="${db_password}" -h ${MYSQL_HOST} -D ${db_name} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
-				check_ret_status $? "DBVerionCheck - ${version} Failed."
-				if [ ${c} -eq 0 ]
+				bn=`basename ${sql}`
+				version=`echo ${bn} | awk -F'-' '{ print $1 }'`
+				if [ "${version}" != "" ]
 				then
-					cat ${sql} > ${tempFile}
-					echo >> ${tempFile}
-					echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
-					log "[I] - patch [${version}] is being applied."
-					`${MYSQL_BIN} -u "${db_user}" --password="${db_password}" -h ${MYSQL_HOST} -D ${db_name} < ${tempFile}`
-					check_ret_status $? "Update patch - ${version} Failed. See sql file : [${tempFile}]"
-					rm -f ${tempFile}
-				else
-					log "[I] - patch [${version}] is already applied. Skipping ..."
+					c=`${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h ${DB_HOST} -D ${db_name} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
+					check_ret_status $? "DBVerionCheck - ${version} Failed."
+					if [ ${c} -eq 0 ]
+					then
+						cat ${sql} > ${tempFile}
+						echo >> ${tempFile}
+						echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
+						log "[I] - patch [${version}] is being applied."
+						`${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h ${DB_HOST} -D ${db_name} < ${tempFile}`
+						check_ret_status $? "Update patch - ${version} Failed. See sql file : [${tempFile}]"
+						rm -f ${tempFile}
+					else
+						log "[I] - patch [${version}] is already applied. Skipping ..."
+					fi
 				fi
 			fi
+		done
+	fi
+	####
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+		strError="ERROR"
+		DBVERSION_CATALOG_CREATION=db/oracle/create_dbversion_catalog.sql
+		VERSION_TABLE=x_db_version_h
+		log "[I] Verifying table $VERSION_TABLE in database $db_name";
+		if [ -f ${DBVERSION_CATALOG_CREATION} ]
+		then
+			result1=`${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}" <<< "select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('${db_name}') and UPPER(table_name)=UPPER('${VERSION_TABLE}');"`
+			tablename=`echo $VERSION_TABLE | tr '[:lower:]' '[:upper:]'`
+			if test "${result1#*$tablename}" == "$result1"	#does not contains tablename so create table
+			then
+				log "[I] Importing Version Catalog file: $DBVERSION_CATALOG_CREATION..."
+				result2=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}" @$DBVERSION_CATALOG_CREATION`
+				if test "${result2#*$strError}" == "$result2"
+				then
+					log "[I] Importing Version Catalog file : $DBVERSION_CATALOG_CREATION DONE";
+				else
+					log "[E] Importing Version Catalog file : $DBVERSION_CATALOG_CREATION Failed";
+					log "[E] $result2"
+				fi
+			else
+				log "[I] Table $VERSION_TABLE already exists in database ${db_name}"
+			fi
 		fi
-	done
+
+		dt=`date '+%s'`
+		tempFile=/tmp/sql_${dt}_$$.sql
+		sqlfiles=`ls -1 db/oracle/patches/*.sql 2> /dev/null | awk -F/ '{ print $NF }' | awk -F- '{ print $1, $0 }' | sort -k1 -n | awk '{ printf("db/oracle/patches/%s\n",$2) ; }'`
+		for sql in ${sqlfiles}
+		do
+			if [ -f ${sql} ]
+			then
+				bn=`basename ${sql}`
+				version=`echo ${bn} | awk -F'-' '{ print $1 }'`
+				if [ "${version}" != "" ]
+				then
+					result2=`${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}" <<< "select version from x_db_version_h where version = '${version}' and active = 'Y';"`
+					#does not contains record so insert
+					if test "${result2#*$version}" == "$result2"
+					then
+						cat ${sql} > ${tempFile}
+						echo >> ${tempFile}
+						echo "insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by) values ( X_DB_VERSION_H_SEQ.nextval,'${version}', sysdate, '${db_user}', sysdate, '${db_user}') ;" >> ${tempFile}
+						log "[I] - patch [${version}] is being applied. $tempFile"
+						result3=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}"  @$tempFile`
+						log "[+]$result3"
+						if test "${result3#*$strError}" == "$result3"
+						then
+							log "[I] Update patch - ${version} applied. See sql file : [${tempFile}]"
+						else
+							log "[E] Update patch - ${version} Failed. See sql file : [${tempFile}]"
+						fi
+						rm -f ${tempFile}
+					elif test "${result2#*$strError}" != "$result2"
+					then
+						log "[E] - patch [${version}] could not applied. Skipping ..."
+						exit 1
+					else
+						log "[I] - patch [${version}] is already applied. Skipping ..."
+					fi
+				fi
+			fi
+		done
+	fi
 	log "[I] - upgradedb completed."
 }
 
-import_db () {
-
-	log "[I] Verifying Database: $db_name";
-	existdb=`${MYSQL_BIN} -u "${db_user}" --password="${db_password}" -h $MYSQL_HOST -B --skip-column-names -e  "show databases like '${db_name}' ;"`
-
-	if [ "${existdb}" = "${db_name}" ]
-	then
-		log "[I] - database ${db_name} already exists. Ignoring import_db ..."
-	else
-		log "[I] Creating Database: $db_name";
-		$MYSQL_BIN -u "$db_user" --password="$db_password" -h $MYSQL_HOST -e "create database $db_name"  
-		check_ret_status $? "Creating database Failed.."
-	
-	
-		log "[I] Importing Core Database file: $db_core_file "
-    	$MYSQL_BIN -u "$db_user" --password="$db_password" -h $MYSQL_HOST $db_name < $db_core_file
-    	check_ret_status $? "Importing Database Failed.."
-	
-		if [ -f "${db_asset_file}" ] 
+import_db(){
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		log "[I] Verifying Database: ${db_name}";
+		existdb=`${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h $DB_HOST -B --skip-column-names -e  "show databases like '${db_name}' ;"`
+		if [ "${existdb}" = "${db_name}" ]
 		then
-			$MYSQL_BIN -u "$db_user" --password="$db_password" -h $MYSQL_HOST ${db_name} < ${db_asset_file}
-			check_ret_status $? "Reset of DB repositories failed"
+			log "[I] - database ${db_name} already exists. Ignoring import_db ..."
+		else
+			log "[I] Creating Database: $db_name";
+			$SQL_COMMAND_INVOKER -u "$db_user" --password="$db_password" -h $DB_HOST -e "create database $db_name"
+			check_ret_status $? "Creating database Failed.."
+			log "[I] Importing Core Database file: $mysql_core_file "
+			$SQL_COMMAND_INVOKER -u "$db_user" --password="$db_password" -h $DB_HOST $db_name < $mysql_core_file
+			check_ret_status $? "Importing Database Failed.."
+			if [ -f "${mysql_asset_file}" ]
+			then
+				$SQL_COMMAND_INVOKER -u "$db_user" --password="$db_password" -h $DB_HOST ${db_name} < ${mysql_asset_file}
+				check_ret_status $? "Reset of DB repositories failed"
+			fi
+			log "[I] Importing Database file : $mysql_core_file DONE";
+		fi
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+		log "[I] Importing TABLESPACE: ${db_name}";
+		strError="ERROR"
+		existdb="false"
+
+		#Verifying Users
+		log "[I] Verifying DB User: ${db_user}";
+		result3=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(username) from all_users where UPPER(username)=UPPER('${db_user}');"`
+		username=`echo ${db_user} | tr '[:lower:]' '[:upper:]'`
+		if test "${result3#*$username}" == "$result3"	#does not contains username so create user
+		then
+			#create user
+			result4=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA  <<< "create user ${db_user} identified by \"${db_password}\";"`
+			result3=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(username) from all_users where UPPER(username)=UPPER('${db_user}');"`
+			username=`echo ${db_user} | tr '[:lower:]' '[:upper:]'`
+			if test "${result3#*$username}" == "$result3"	#does not contains username so create user
+			then
+				log "[E] Creating User: ${db_user} Failed";
+				log "[E] ${result4}";
+				exit 1
+			else
+				log "[I] Creating User: ${db_user} Success";
+			fi
+		else
+			log "[I] User: ${db_user} exist";
 		fi
 
-		log "[I] Importing Database file : $db_core_file DONE";
+		#creating db/tablespace
+		result1=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "SELECT DISTINCT UPPER(TABLESPACE_NAME) FROM USER_TABLESPACES where UPPER(TABLESPACE_NAME)=UPPER('${db_name}');"`
+		tablespace=`echo ${db_name} | tr '[:lower:]' '[:upper:]'`
+		if test "${result1#*$tablespace}" == "$result1" #does not contains tablespace so create tablespace
+		then
+			log "[I] Creating TABLESPACE: ${db_name}";
+			result2=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "create tablespace ${db_name} datafile '${db_name}.dat' size 10M autoextend on;"`
+			if test "${result2#*$strError}" == "$result2"
+			then
+				log "[I] TABLESPACE ${db_name} created.";
+				existdb="true"
+			else
+				log "[E] Creating TABLESPACE: ${db_name} Failed";
+				log "[E] $result2";
+				exit 1
+			fi
+		else
+			log "[I] TABLESPACE ${db_name} already exists.";
+		fi
+
+		#verify table space
+		result1a=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "SELECT DISTINCT UPPER(TABLESPACE_NAME) FROM USER_TABLESPACES where UPPER(TABLESPACE_NAME)=UPPER('${db_name}');"`
+		tablespace1a=`echo ${db_name} | tr '[:lower:]' '[:upper:]'`
+		if test "${result1a#*$tablespace1a}" == "$result1a" #does not contains tablespace so exit
+		then
+			log "[E] TABLESPACE: ${db_name} Does not exist!!";
+			exit 1
+		fi
+
+		#verify user
+		result3=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(username) from all_users where UPPER(username)=UPPER('${db_user}');"`
+		username=`echo ${db_user} | tr '[:lower:]' '[:upper:]'`
+		if test "${result3#*$username}" == "$result3"	#does not contains username so exit
+		then
+			log "[E] User: ${db_user} Does not exist!!";
+			exit 1
+		fi
+
+		# ASSIGN DEFAULT TABLESPACE ${db_name}
+		result8=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA  <<< "alter user ${db_user} identified by \"${db_password}\" DEFAULT TABLESPACE ${db_name};"`
+
+	    #grant user
+        result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT connect,resource,create view,sysdba TO ${db_user};"`
+        if test "${result5#*$strError}" == "$result5"
+		then
+			log "[I] Granting User: ${db_user} Success";
+		else
+			log "[E] Granting User: ${db_user} Failed";
+			log "[E] $result5";
+			exit 1
+		fi
+
+		#if does not contains tables create tables
+		if [ "${existdb}" == "true" ]
+		then
+			log "[I] Importing XA Database file: ${oracle_core_file}..."
+			result7=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}" @${oracle_core_file}`
+			if test "${result7#*$strError}" == "$result7"
+			then
+				log "[I] Importing XA Database file : ${oracle_core_file} DONE";
+			else
+				log "[E] Importing XA Database file : ${oracle_core_file} Failed";
+				log "[E] $result7";
+				exit 1
+			fi
+		else
+			log "[I] - database ${db_name} already exists. Ignoring import_db ..."	;
+		fi
 	fi	
 }
 
@@ -417,37 +703,89 @@ copy_to_webapps (){
 	log "[I] Copying to ${WEBAPP_ROOT} DONE";
 }
 
-copy_mysql_connector(){
-	log "[I] Copying MYSQL Connector to $app_home/WEB-INF/lib ";
-    cp -f $MYSQL_CONNECTOR_JAR $app_home/WEB-INF/lib
-	check_ret_status $? "Copying MYSQL Connector to $app_home/WEB-INF/lib failed"
-	log "[I] Copying MYSQL Connector to $app_home/WEB-INF/lib DONE";
+copy_db_connector(){
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+	then
+		log "[I] Copying MYSQL Connector to $app_home/WEB-INF/lib ";
+	    cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/lib
+		check_ret_status $? "Copying MYSQL Connector to $app_home/WEB-INF/lib failed"
+		log "[I] Copying MYSQL Connector to $app_home/WEB-INF/lib DONE";
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+        log "[I] Copying ORACLE Connector to $app_home/WEB-INF/lib ";
+        cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/lib
+        check_ret_status $? "Copying ORACLE Connector to $app_home/WEB-INF/lib failed"
+        log "[I] Copying ORACLE Connector to $app_home/WEB-INF/lib DONE";
+    fi
 }
 
 update_properties() {
 	newPropertyValue=''
 	to_file=$app_home/WEB-INF/classes/xa_system.properties
-
 	if test -f $to_file; then
 		log "[I] $to_file file found" 
 	else
 		log "[E] $to_file does not exists" ; exit 1;
     fi
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+	then
+		propertyName=jdbc.url
+		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${db_name}"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
 
-	propertyName=jdbc.url
-	newPropertyValue="jdbc:log4jdbc:mysql://${MYSQL_HOST}:3306/${db_name}"
-	updatePropertyToFile $propertyName $newPropertyValue $to_file	
+		propertyName=auditDB.jdbc.url
+		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${audit_db_name}"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
 
+		propertyName=jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=jdbc.driver
+		newPropertyValue="net.sf.log4jdbc.DriverSpy"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.driver
+		newPropertyValue="net.sf.log4jdbc.DriverSpy"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+	then
+		propertyName=jdbc.url
+		newPropertyValue="jdbc:oracle:thin:\@//${DB_HOST}"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.url
+		newPropertyValue="jdbc:oracle:thin:\@//${DB_HOST}"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=jdbc.driver
+		newPropertyValue="oracle.jdbc.OracleDriver"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.driver
+		newPropertyValue="oracle.jdbc.OracleDriver"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+	fi
 	propertyName=xa.webapp.url.root
 	newPropertyValue="${policymgr_external_url}"
 	updatePropertyToFile $propertyName $newPropertyValue $to_file
 
 	propertyName=http.enabled
 	newPropertyValue="${policymgr_http_enabled}"
-	updatePropertyToFile $propertyName $newPropertyValue $to_file
-
-	propertyName=auditDB.jdbc.url
-	newPropertyValue="jdbc:log4jdbc:mysql://${MYSQL_HOST}:3306/${audit_db_name}"
 	updatePropertyToFile $propertyName $newPropertyValue $to_file	
 	
 	propertyName=jdbc.user
@@ -536,59 +874,138 @@ update_properties() {
 	
 }
 
-create_audit_mysql_user(){
-
-	check_mysql_audit_user_password
-
+create_audit_db_user(){
+	check_audit_user_password
 	AUDIT_DB="${audit_db_name}"
 	AUDIT_USER="${audit_db_user}"
 	AUDIT_PASSWORD="${audit_db_password}"
-
-	log "[I] Verifying Database: $AUDIT_DB";
-	existdb=`${MYSQL_BIN} -u root --password="$db_root_password" -h $MYSQL_HOST -B --skip-column-names -e  "show databases like '$AUDIT_DB' ;"`
-
-	if [ "${existdb}" = "$AUDIT_DB" ]
-	then
-		log "[I] - database $AUDIT_DB already exists."
-	else
-		log "[I] Creating Database: $audit_db_name";
-		$MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST -e "create database $AUDIT_DB"  
-		check_ret_status $? "Creating database $AUDIT_DB Failed.."
-	fi	
-
-	for thost in '%' localhost
-	do
-		usercount=`$MYSQL_BIN -B -u root --password="$db_root_password" -h $MYSQL_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$AUDIT_USER' and host = '$thost';"`
-		if  [ ${usercount} -eq 0 ]
+	strError="ERROR"
+	#Verifying Database
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		log "[I] Verifying Database: $AUDIT_DB";
+		existdb=`${SQL_COMMAND_INVOKER} -u "$db_root_user" --password="$db_root_password" -h $DB_HOST -B --skip-column-names -e  "show databases like '$AUDIT_DB' ;"`
+		if [ "${existdb}" = "$AUDIT_DB" ]
 		then
-		  log "[I] Creating MySQL user '$AUDIT_USER'@'$thost' (using root priviledges)"
-		  $MYSQL_BIN -B -u root --password="$db_root_password" -h $MYSQL_HOST -e "create user '$AUDIT_USER'@'$thost' identified by '$AUDIT_PASSWORD';"
-		  check_ret_status $? "MySQL create user failed"
+			log "[I] Database $AUDIT_DB already exists."
+		else
+			log "[I] Creating Database: $audit_db_name";
+			$SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST -e "create database $AUDIT_DB"
+			check_ret_status $? "Creating database $AUDIT_DB Failed.."
 		fi
-		
-		mysqlquery="GRANT ALL ON $AUDIT_DB.* TO '$AUDIT_USER'@'$thost' ; 
-		grant all privileges on $AUDIT_DB.* to '$AUDIT_USER'@'$thost' with grant option;
-		FLUSH PRIVILEGES;"
-		
-		echo "${mysqlquery}" | $MYSQL_BIN -u root --password="$db_root_password" -h $MYSQL_HOST
-		check_ret_status $? "MySQL query failed: $mysqlquery"
-	done
-	log "[I] Creating MySQL user '$AUDIT_USER' (using root priviledges) DONE"
-	
-	AUDIT_TABLE=xa_access_audit
-	log "[I] Verifying table $AUDIT_TABLE in audit database $AUDIT_DB";
-	existtbl=`${MYSQL_BIN} -u "$AUDIT_USER" --password="$AUDIT_PASSWORD" -D $AUDIT_DB -h $MYSQL_HOST -B --skip-column-names -e  "show tables like '$AUDIT_TABLE' ;"`
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
+		log "[I] Verifying TABLESPACE: $AUDIT_DB";
+		result1=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA  <<< "SELECT distinct UPPER(TABLESPACE_NAME) FROM USER_TABLESPACES where UPPER(TABLESPACE_NAME)=UPPER('${AUDIT_DB}');"`
+		tablespace=`echo $AUDIT_DB | tr '[:lower:]' '[:upper:]'`
+		if test "${result1#*$tablespace}" == "$result1" #does not contains tablespace so create tablespace
+		then
+			log "[I] Creating TABLESPACE: $AUDIT_DB";
+			result2=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "create tablespace $AUDIT_DB datafile '$AUDIT_DB.dat' size 10M autoextend on;"`
+			if test "${result2#*$strError}" == "$result2"
+			then
+				log "[I] TABLESPACE $AUDIT_DB created."
+			else
+				log "[E] Creating TABLESPACE: $AUDIT_DB Failed";
+				log "[E] $result2"
+				exit 1
+			fi
+		else
+			log "[I] TABLESPACE $AUDIT_DB already exists."
+		fi
+	fi
+	#Verifying Users
+	log "[I] Verifying Audit User: $AUDIT_USER";
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		for thost in '%' localhost
+		do
+			usercount=`$SQL_COMMAND_INVOKER -B -u "$db_root_user" --password="$db_root_password" -h $DB_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$AUDIT_USER' and host = '$thost';"`
 
-	if [ "${existtbl}" != "$AUDIT_TABLE" ]
-	then
-		log "[I] Importing Audit Database file: $db_audit_file..."
-  	$MYSQL_BIN -u "$AUDIT_USER" --password="$AUDIT_PASSWORD" -h $MYSQL_HOST $AUDIT_DB < $db_audit_file
-  	check_ret_status $? "Importing Audit Database Failed.."
+			if  [ ${usercount} -eq 0 ]
+			then
+				log "[I] Creating MYSQL user '$AUDIT_USER'@'$thost' (using root priviledges)"
+				$SQL_COMMAND_INVOKER -B -u "$db_root_user" --password="$db_root_password" -h $DB_HOST -e "create user '$AUDIT_USER'@'$thost' identified by '$AUDIT_PASSWORD';"
+				check_ret_status $? "MYSQL create user failed"
+			fi
+			mysqlquery="GRANT ALL ON *.* TO '$AUDIT_USER'@'$thost' ;
+			grant all privileges on *.* to '$AUDIT_USER'@'$thost' with grant option;
+			FLUSH PRIVILEGES;"
+		
+			echo "${mysqlquery}" | $SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST
+			check_ret_status $? "'$DB_FLAVOR' create user failed"
+			log "[I] Creating MYSQL user '$AUDIT_USER' for host $thost(using root priviledges) DONE"
+		done
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+    then
 
-		log "[I] Importing Audit Database file : $db_audit_file DONE";
-	else
-		log "[I] - table $AUDIT_TABLE already exists in audit database $AUDIT_DB"
-	fi	
+		result3=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(username) from all_users where UPPER(username)=UPPER('${AUDIT_USER}');"`
+		username=`echo $AUDIT_USER | tr '[:lower:]' '[:upper:]'`
+		if test "${result3#*$username}" == "$result3"	#does not contains username so create user
+		then
+			#create user
+			result4=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "create user ${AUDIT_USER} identified by \"${AUDIT_PASSWORD}\" DEFAULT TABLESPACE ${AUDIT_DB};"`
+			if test "${result4#*$strError}" == "$result4"
+		    then
+				log "[I] Creating User: ${AUDIT_USER} Success";
+			else
+				log "[E] Creating User: ${AUDIT_USER} Failed";
+				log "[E] $result4"
+				exit 1
+		    fi
+			else
+				log "[I] User: ${AUDIT_USER} exist";
+		    fi
+            result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT connect,resource,create view TO ${AUDIT_USER};"`
+            if test "${result5#*$strError}" == "$result5"
+			then
+				log "[I] Granting User: $AUDIT_USER Success";
+			else
+				log "[E] Granting User: $AUDIT_USER Failed";
+				log "[E] $result5"
+				exit 1
+			fi
+        fi
+
+		AUDIT_TABLE=xa_access_audit
+		log "[I] Verifying table $AUDIT_TABLE in audit database $AUDIT_DB";
+		if [ "${DB_FLAVOR}" == "MYSQL" ]
+		then
+			existtbl=`${SQL_COMMAND_INVOKER} -u "$AUDIT_USER" --password="$AUDIT_PASSWORD" -D $AUDIT_DB -h $DB_HOST -B --skip-column-names -e  "show tables like '$AUDIT_TABLE' ;"`
+
+			if [ "${existtbl}" != "$AUDIT_TABLE" ]
+			then
+				log "[I] Importing Audit Database file: $mysql_audit_file..."
+				$SQL_COMMAND_INVOKER -u "$AUDIT_USER" --password="$AUDIT_PASSWORD" -h $DB_HOST $AUDIT_DB < $mysql_audit_file
+				check_ret_status $? "Importing Audit Database Failed.."
+				log "[I] Importing Audit Database file : $mysql_audit_file DONE";
+			else
+				log "[I] Table $AUDIT_TABLE already exists in audit database $AUDIT_DB"
+			fi
+		fi
+		if [ "${DB_FLAVOR}" == "ORACLE" ]
+		then
+			# ASSIGN DEFAULT TABLESPACE ${db_name}
+			result8=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA  <<< "alter user ${AUDIT_USER} identified by \"${AUDIT_PASSWORD}\" DEFAULT TABLESPACE ${AUDIT_DB};"`
+			result6=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(table_name) from all_tables where tablespace_name='$AUDIT_DB' and UPPER(table_name)=UPPER('${AUDIT_TABLE}');"`
+			tablename=`echo $AUDIT_TABLE | tr '[:lower:]' '[:upper:]'`
+			if test "${result6#*$tablename}" == "$result6"	#does not contains tablename so create table
+			then
+				log "[I] Importing Audit Database file: $oracle_audit_file..."
+				result7=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${AUDIT_USER}"/"\"${AUDIT_PASSWORD}\""@"${DB_HOST}" @$oracle_audit_file`
+				if test "${result7#*$strError}" == "$result7"
+				then
+					log "[I] Importing Audit Database file : $oracle_audit_file DONE";
+				else
+					log "[E] Importing Audit Database file : $oracle_audit_file failed";
+					log "[E] $result7"
+				fi
+			else
+				log "[I] Table $AUDIT_TABLE already exists in audit database $AUDIT_DB"
+			fi
+		fi
 }
 
 do_unixauth_setup() {
@@ -617,9 +1034,6 @@ do_unixauth_setup() {
 	group=xasecure
 	chown -R ${owner}:${group} ${XASECURE_JAAS_DIR}
 	chmod -R go-rwx ${XASECURE_JAAS_DIR}
-
-	
-
 }
 do_authentication_setup(){
 	log "[I] Starting setup based on user authentication method=$authentication_method";     
@@ -799,37 +1213,40 @@ restart_policymgr(){
 
 }
 execute_java_patches(){
-	dt=`date '+%s'`
-	tempFile=/tmp/sql_${dt}_$$.sql
-	mysqlexec="${MYSQL_BIN} -u ${db_user} --password="${db_password}" -h ${MYSQL_HOST} ${db_name}"
-	javaFiles=`ls -1 $app_home/WEB-INF/classes/com/xasecure/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
-	for javaPatch in ${javaFiles}
-	do
-		if test -f "$app_home/WEB-INF/classes/com/xasecure/patch/$javaPatch"; then
-			className=$(basename "$javaPatch" .class)
-			version=`echo ${className} | awk -F'_' '{ print $2 }'`
-			if [ "${version}" != "" ]
-			then
-				c=`${mysqlexec} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
-				check_ret_status $? "DBVerionCheck - ${version} Failed."
-				if [ ${c} -eq 0 ]
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+	then
+		dt=`date '+%s'`
+		tempFile=/tmp/sql_${dt}_$$.sql
+		mysqlexec="${SQL_COMMAND_INVOKER} -u ${db_user} --password="${db_password}" -h ${DB_HOST} ${db_name}"
+		javaFiles=`ls -1 $app_home/WEB-INF/classes/com/xasecure/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
+		for javaPatch in ${javaFiles}
+		do
+			if test -f "$app_home/WEB-INF/classes/com/xasecure/patch/$javaPatch"; then
+				className=$(basename "$javaPatch" .class)
+				version=`echo ${className} | awk -F'_' '{ print $2 }'`
+				if [ "${version}" != "" ]
 				then
-					log "[I] patch ${javaPatch} is being applied..";
-					msg=`java -cp "$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
-					check_ret_status $? "Unable to apply patch:$javaPatch"
-					touch ${tempFile}
-					echo >> ${tempFile}
-					echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
-					${mysqlexec} < ${tempFile}
-					check_ret_status $? "Update patch - ${javaPatch} has failed."
-					rm -f ${tempFile}
-					log "[I] patch ${javaPatch} has been applied!!";
-				else
-					log "[I] - patch [${javaPatch}] is already applied. Skipping ..."
+					c=`${mysqlexec} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
+					check_ret_status $? "DBVerionCheck - ${version} Failed."
+					if [ ${c} -eq 0 ]
+					then
+						log "[I] patch ${javaPatch} is being applied..";
+						msg=`java -cp "$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+						check_ret_status $? "Unable to apply patch:$javaPatch"
+						touch ${tempFile}
+						echo >> ${tempFile}
+						echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
+						${mysqlexec} < ${tempFile}
+						check_ret_status $? "Update patch - ${javaPatch} has failed."
+						rm -f ${tempFile}
+						log "[I] patch ${javaPatch} has been applied!!";
+					else
+						log "[I] - patch [${javaPatch}] is already applied. Skipping ..."
+					fi
 				fi
 			fi
-	 	fi
-	done
+		done
+	fi
 }
 init_logfiles
 log " --------- Running XASecure PolicyManager Web Application Install Script --------- "
@@ -838,17 +1255,18 @@ log "[I] hostname=`hostname`"
 init_variables
 get_distro
 check_java_version
-check_mysql_version
-check_mysql_connector
+check_db_version
+check_db_connector
 setup_unix_user_group
 setup_install_files
 sanity_check_files
-create_mysql_user
+check_db_admin_password
+create_db_user
 extract_war
-copy_mysql_connector
+copy_db_connector
 import_db
 upgrade_db
-create_audit_mysql_user
+create_audit_db_user
 update_properties
 do_authentication_setup
 copy_to_webapps
