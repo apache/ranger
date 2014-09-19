@@ -207,7 +207,7 @@ public class LocalFileLogBuffer implements LogBuffer<String> {
 
 			updateNextRolloverTime();
 		} else {
-			LogLog.warn("LocalFileLogBuffer.openFile(): failed to open file for write" + mCurrentFilename);
+			LogLog.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mCurrentFilename);
 
 			mCurrentFilename = null;
 		}
@@ -224,6 +224,7 @@ public class LocalFileLogBuffer implements LogBuffer<String> {
 
 		if(writer != null) {
 			try {
+				writer.flush();
 				writer.close();
 			} catch(IOException excp) {
 				LogLog.warn("LocalFileLogBuffer: failed to close file " + mCurrentFilename, excp);

@@ -119,7 +119,6 @@ public class HdfsLogDestination implements LogDestination<String> {
 		if(writer != null) {
 			try {
 				writer.write(log + LINE_SEPARATOR);
-				writer.flush();
 
 				ret = true;
 			} catch (IOException excp) {
@@ -217,6 +216,7 @@ public class HdfsLogDestination implements LogDestination<String> {
 
 		if(writer != null) {
 			try {
+				writer.flush();
 				writer.close();
 			} catch(IOException excp) {
 				LogLog.warn("HdfsLogDestination: failed to close file " + mCurrentFilename, excp);
