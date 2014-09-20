@@ -21,6 +21,8 @@ package com.xasecure.audit.provider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.xasecure.audit.model.AuditEventBase;
 
 
@@ -38,8 +40,9 @@ public class Log4jAuditProvider implements AuditProvider {
 	public void log(AuditEventBase event) {
 		if(! AUDITLOG.isInfoEnabled())
 			return;
-
-		AUDITLOG.info(event.toString());
+		Gson gson= new GsonBuilder().setPrettyPrinting().create();
+		String eventAsJson = gson.toJson(event.toString()) ;
+		AUDITLOG.info(eventAsJson);
 	}
 
 	@Override

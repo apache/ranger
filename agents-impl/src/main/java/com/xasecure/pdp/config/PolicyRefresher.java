@@ -91,6 +91,7 @@ public class PolicyRefresher  {
 		this.policyChangeListener = policyChangeListener;
 		if (this.policyContainer != null) {
 			savePolicyToFile() ;
+			savePolicyToCacheFile();
 			notifyPolicyChange() ;
 		}
 	}
@@ -139,6 +140,7 @@ public class PolicyRefresher  {
 						PolicyContainer newPolicyContainer = getPolicyContainer() ;
 						setPolicyContainer(newPolicyContainer) ;
 						savePolicyToFile() ;
+						savePolicyToCacheFile();
 						notifyPolicyChange(); 
 					};
 				};
@@ -168,7 +170,10 @@ public class PolicyRefresher  {
 	
 	
 	private void savePolicyToFile() {
-		
+		if (watcherDaemon != null && !watcherDaemon.iscacheModfied()) {
+			// Do not Save the file if the policy is not modified.
+			return;
+		}
 		LOG.debug("savePolicyToFile() is called with [" + saveAsFileName + "] - START") ;
 		String fileName = null;
 		if (saveAsFileName != null) {
@@ -190,31 +195,48 @@ public class PolicyRefresher  {
 					writer.close();
 				}
 			}
-			
-			if (lastStoredFileName != null) {
-				File lastSaveFileName = new File(lastStoredFileName);
-								
-				try {
-					writer = new PrintWriter(new FileWriter(lastSaveFileName));
-					writer.println(policyAsJson);
-					
-				}
-				catch(IOException ioe){
-					LOG.error("Unable to save the policy into Last Stored Policy File [" + lastSaveFileName.getAbsolutePath() + "]", ioe );
-				}
-			    finally {
-			    	 //make the policy file cache to be 600 permission when it gets created and updated
-			    	 lastSaveFileName.setReadable(false,false);
-					 lastSaveFileName.setReadable(true,true);
-			    	 if (writer != null) {
-					 writer.close();
-			    	}
-			    }
-			
-		     }
+			LOG.debug("savePolicyToFile() is called with [" + fileName + "] - END") ;
 		}
+	}	
+	
+	 private void savePolicyToCacheFile() {
+		 
+		 if (watcherDaemon != null && !watcherDaemon.iscacheModfied()) {
+			    // Don't Save the file if the policy is not modified.
+				return;
+		  }
+		 
+		 LOG.debug("savePolicyToCacheFile() is called with [" + lastStoredFileName + "] - START") ;
 		
-		LOG.debug("savePolicyToFile() is called with [" + fileName + "] - END") ;
+   		 if (lastStoredFileName != null) {
+   		
+			File lastSaveFile = new File(lastStoredFileName) ;
+			Gson gson = new GsonBuilder().setPrettyPrinting().setExclusionStrategies(policyExclusionStrategy).create() ;
+			String policyAsJson = gson.toJson(policyContainer) ;
+			PrintWriter writer = null ;
+										
+			try {
+				writer = new PrintWriter(new FileWriter(lastSaveFile));
+				writer.println(policyAsJson);
+				
+			}
+			catch(IOException ioe){
+				LOG.error("Unable to save the policy into Last Stored Policy File [" + lastSaveFile.getAbsolutePath() + "]", ioe );
+			}
+		    finally {
+		    	 //make the policy file cache to be 600 permission when it gets created and updated
+		    	 lastSaveFile.setReadable(false,false);
+		    	 lastSaveFile.setWritable(false,false);
+		    	 lastSaveFile.setReadable(true,true);
+		    	 lastSaveFile.setWritable(true,true);
+		    	 if (writer != null) {
+				 writer.close();
+		    	}
+		    }
+			
+		  }
+
+		LOG.debug("savePolicyToCacheFile() is called with [" + lastStoredFileName + "] - END") ;
 
 	}	
 
