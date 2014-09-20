@@ -40,6 +40,7 @@ import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.serde2.lazybinary.LazyBinaryUtils.VLong;
 import org.apache.hive.com.esotericsoftware.minlog.Log;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerationException;
@@ -92,6 +93,7 @@ import com.xasecure.view.VXAccessAuditList;
 import com.xasecure.view.VXAsset;
 import com.xasecure.view.VXAuditMap;
 import com.xasecure.view.VXAuditMapList;
+import com.xasecure.view.VXLong;
 import com.xasecure.view.VXPermMap;
 import com.xasecure.view.VXPermMapList;
 import com.xasecure.view.VXPolicy;
@@ -3121,5 +3123,16 @@ public class AssetMgr extends AssetMgrBase {
         List<String> toplogyList = stormClient.getTopologyList(topologyName) ;
         return msBizUtil.mapStringListToVStringList(toplogyList) ;
     }
+    
+	@Override
+	public VXLong getXResourceSearchCount(SearchCriteria searchCriteria) {
+
+		VXResourceList resList = super.searchXResources(searchCriteria);
+
+		int count = resList.getListSize();
+		VXLong vXLong = new VXLong();
+		vXLong.setValue(count);
+		return vXLong;
+	}
     
 }

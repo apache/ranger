@@ -736,6 +736,12 @@ public class XABizUtil {
 			if (! matchFound) {
 				continue;
 			}
+			
+			// Type(either UDFs policy or non-UDFs policy) of current policy
+			// should be of same as type of policy being iterated
+			if (!stringUtil.isEmpty(xResource.getUdfs()) && !isUdfPolicy) {
+				continue;
+			}
 
 			if (isUdfPolicy) {
 				// 2. does the policy match the UDF?

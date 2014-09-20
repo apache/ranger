@@ -1074,6 +1074,16 @@ public class XResourceService extends
 	@Override
 	public VXResource readResource(Long id){
 		VXResource vXResource = super.readResource(id);
+		
+		VXResponse vXResponse = xaBizUtil.hasPermission(vXResource,
+				AppConstants.XA_PERM_TYPE_ADMIN);
+		if (vXResponse.getStatusCode() == VXResponse.STATUS_ERROR) {
+			throw restErrorUtil.createRESTException(
+					"You don't have permission to perform this action",
+					MessageEnums.OPER_NO_PERMISSION, id, "Resource",
+					"Trying to read unauthorized resource.");
+		}
+		
 		populateAssetProperties(vXResource);
 		populatePermList(vXResource);
 		populateAuditList(vXResource);
