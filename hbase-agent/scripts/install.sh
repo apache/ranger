@@ -30,12 +30,12 @@ updatePropertyToFile(){
 	echo "[I] File $3 Updated successfully : {'$1'}"
 }
 
-hbase_dir=/usr/lib/hbase
+hbase_dir=/usr/hdp/current/hbase
 hbase_lib_dir=${hbase_dir}/lib
 hbase_conf_dir=/etc/hbase/conf
 
-hdp_dir=/usr/lib/hadoop
-hdp_lib_dir=/usr/lib/hadoop/lib
+hdp_dir=/usr/hdp/current/hadoop
+hdp_lib_dir=${hdp_dir}/lib
 hdp_conf_dir=/etc/hadoop/conf
 
 export CONFIG_FILE_OWNER="hbase:hadoop"
@@ -291,7 +291,7 @@ do
 		cp ${fullpathorgfn} ${archivefn}
 		if [ $? -eq 0 ]
 		then
-			cp="${install_dir}/installer/lib/*:/usr/lib/hadoop/*:/usr/lib/hadoop/lib/*"
+			cp="${install_dir}/installer/lib/*:${hdp_dir}/*:${hdp_lib_dir}/*"
 			java -cp "${cp}" com.xasecure.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} ${PROP_ARGS}
 			if [ $? -eq 0 ]
 			then
