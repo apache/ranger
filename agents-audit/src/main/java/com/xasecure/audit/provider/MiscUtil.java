@@ -42,7 +42,7 @@ public class MiscUtil {
 		try {
 			hostName = InetAddress.getLocalHost().getHostName();
 		} catch (UnknownHostException excp) {
-			LogLog.warn("LocalFileLogBuffer", excp);
+			LogLog.warn("replaceHostname()", excp);
 		}
 
 		if(hostName == null) {

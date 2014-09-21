@@ -50,16 +50,16 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private String  mArchiveDirectory        = null;
 	private int     mArchiveFileCount        = 10;
 
-	private Writer mWriter                  = null;
-	private String mCurrentFilename         = null;
-	private long   mNextRolloverTime        = 0;
+	private Writer mWriter           = null;
+	private String mBufferFilename   = null;
+	private long   mNextRolloverTime = 0;
 
 	private Gson mGsonBuilder = null;
 
 	private DestinationDispatcherThread<T> mDispatcherThread = null;
 	
 	public LocalFileLogBuffer() {
-		mGsonBuilder = new GsonBuilder().setPrettyPrinting().create();
+		mGsonBuilder = new GsonBuilder().create();
 	}
 
 	public String getDirectory() {
@@ -161,11 +161,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	public synchronized boolean add(T log) {
 		boolean ret = false;
 
-		long now = System.currentTimeMillis();
-
-		if(now > mNextRolloverTime) {
-			rollover();
-		}
+		rolloverIfNeeded();
 
 		Writer writer = mWriter;
 
@@ -195,16 +191,16 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 		closeFile();
 
-		mCurrentFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile);
+		mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile);
 
 		FileOutputStream ostream = null;
 		try {
-			ostream = new FileOutputStream(mCurrentFilename, mIsAppend);
+			ostream = new FileOutputStream(mBufferFilename, mIsAppend);
 		} catch(Exception excp) {
-			MiscUtil.createParents(new File(mCurrentFilename));
+			MiscUtil.createParents(new File(mBufferFilename));
 
 			try {
-				ostream = new FileOutputStream(mCurrentFilename, mIsAppend);
+				ostream = new FileOutputStream(mBufferFilename, mIsAppend);
 			} catch(Exception ex) {
 				// ignore; error printed down
 			}
@@ -213,13 +209,13 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 		mWriter = createWriter(ostream);
 
 		if(mWriter != null) {
-			LogLog.debug("LocalFileLogBuffer.openFile(): opened file " + mCurrentFilename);
+			LogLog.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
 
 			mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
 		} else {
-			LogLog.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mCurrentFilename);
+			LogLog.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
 
-			mCurrentFilename = null;
+			mBufferFilename = null;
 		}
 
 		LogLog.debug("<== LocalFileLogBuffer.openFile()");
@@ -237,11 +233,11 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 				writer.flush();
 				writer.close();
 			} catch(IOException excp) {
-				LogLog.warn("LocalFileLogBuffer: failed to close file " + mCurrentFilename, excp);
+				LogLog.warn("LocalFileLogBuffer: failed to close file " + mBufferFilename, excp);
 			}
 
 			if(mDispatcherThread != null) {
-				mDispatcherThread.addLogfile(mCurrentFilename);
+				mDispatcherThread.addLogfile(mBufferFilename);
 			}
 		}
 
@@ -256,6 +252,14 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 		openFile();
 
 		LogLog.debug("<== LocalFileLogBuffer.rollover()");
+	}
+
+	private void rolloverIfNeeded() {
+		long now = System.currentTimeMillis();
+
+		if(now > mNextRolloverTime) {
+			rollover();
+		}
 	}
 
 	public OutputStreamWriter createWriter(OutputStream os ) {
@@ -279,7 +283,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	}
 
 	boolean isCurrentFilename(String filename) {
-		return mCurrentFilename != null && filename != null && filename.equals(mCurrentFilename);
+		return mBufferFilename != null && filename != null && filename.equals(mBufferFilename);
 	}
 	
 	private String toJson(T log) {
@@ -395,6 +399,8 @@ class DestinationDispatcherThread<T> extends Thread {
 	}
 	
 	private boolean sendCurrentFile() {
+		LogLog.debug("==> DestinationDispatcherThread.sendCurrentFile()");
+
 		boolean ret = false;
 
 		int destinationPollIntervalInMs = 1000;
@@ -417,6 +423,12 @@ class DestinationDispatcherThread<T> extends Thread {
 		}
 
 		closeCurrentFile();
+
+		if(!mStopThread) {
+			archiveCurrentFile();
+		}
+
+		LogLog.debug("<== DestinationDispatcherThread.sendCurrentFile()");
 
 		return ret;
 	}
@@ -452,12 +464,7 @@ class DestinationDispatcherThread<T> extends Thread {
 			} catch (IOException excp) {
 				LogLog.warn("getNextStringifiedLog.getNextLog(): failed to read from file " + mCurrentLogfile, excp);
 			}
-
-			if(log == null) {
-				closeCurrentFile();
-			}
 		}
-		LogLog.warn("READ: " + log);
 
 		return log;
 	}
@@ -465,21 +472,17 @@ class DestinationDispatcherThread<T> extends Thread {
 	private void openCurrentFile() {
 		LogLog.debug("==> openCurrentFile(" + mCurrentLogfile + ")");
 
-		closeCurrentFile();
-
-		while(mReader == null) {
-			if(mCurrentLogfile != null) {
-				try {
-					FileInputStream inStr = new FileInputStream(mCurrentLogfile);
-					
-					InputStreamReader strReader = createReader(inStr);
-					
-					if(strReader != null) {
-						mReader = new BufferedReader(strReader);
-					}
-				} catch(FileNotFoundException excp) {
-					LogLog.warn("openNextFile(): error while opening file " + mCurrentLogfile, excp);
+		if(mCurrentLogfile != null) {
+			try {
+				FileInputStream inStr = new FileInputStream(mCurrentLogfile);
+				
+				InputStreamReader strReader = createReader(inStr);
+				
+				if(strReader != null) {
+					mReader = new BufferedReader(strReader);
 				}
+			} catch(FileNotFoundException excp) {
+				LogLog.warn("openNextFile(): error while opening file " + mCurrentLogfile, excp);
 			}
 		}
 
@@ -497,10 +500,6 @@ class DestinationDispatcherThread<T> extends Thread {
 			}
 		}
 		mReader = null;
-
-		if(!mStopThread) {
-			archiveCurrentFile();
-		}
 
 		LogLog.debug("<== closeCurrentFile(" + mCurrentLogfile + ")");
 	}

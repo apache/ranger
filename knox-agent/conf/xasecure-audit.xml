@@ -131,6 +131,11 @@
 	</property>	
 
 	<property>
+		<name>xasecure.audit.hdfs.config.destination.open.retry.interval.seconds</name>
+		<value>60</value>
+	</property>
+
+	<property>
 		<name>xasecure.audit.hdfs.config.local.buffer.directroy</name>
 		<value>/tmp/logs/knox</value>
 	</property>	

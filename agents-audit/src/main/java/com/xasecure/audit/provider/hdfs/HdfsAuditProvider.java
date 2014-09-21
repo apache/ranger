@@ -15,9 +15,10 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 	public void init(Map<String, String> properties) {
 		String encoding                               = properties.get("encoding");
 
-		String hdfsDestinationDirectory               = properties.get("destination.directroy");
-		String hdfsDestinationFile                    = properties.get("destination.file");
-		int    hdfsDestinationRolloverIntervalSeconds = MiscUtil.parseInteger(properties.get("destination.rollover.interval.seconds"), 24 * 60 * 60);
+		String hdfsDestinationDirectory                = properties.get("destination.directroy");
+		String hdfsDestinationFile                     = properties.get("destination.file");
+		int    hdfsDestinationRolloverIntervalSeconds  = MiscUtil.parseInteger(properties.get("destination.rollover.interval.seconds"), 24 * 60 * 60);
+		int    hdfsDestinationOpenRetryIntervalSeconds = MiscUtil.parseInteger(properties.get("destination.open.retry.interval.seconds"), 60);
 
 		String localFileBufferDirectory               = properties.get("local.buffer.directroy");
 		String localFileBufferFile                    = properties.get("local.buffer.file");
@@ -31,6 +32,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		mHdfsDestination.setFile(hdfsDestinationFile);
 		mHdfsDestination.setEncoding(encoding);
 		mHdfsDestination.setRolloverIntervalSeconds(hdfsDestinationRolloverIntervalSeconds);
+		mHdfsDestination.setOpenRetryIntervalSeconds(hdfsDestinationOpenRetryIntervalSeconds);
 
 		LocalFileLogBuffer<AuditEventBase> mLocalFileBuffer = new LocalFileLogBuffer<AuditEventBase>();
 
