@@ -19,34 +19,35 @@ package com.xasecure.audit.provider;
 
 import com.xasecure.audit.model.AuditEventBase;
 
+public abstract class BufferedAuditProvider implements AuditProvider {
+	private LogBuffer<AuditEventBase>      mBuffer      = null;
+	private LogDestination<AuditEventBase> mDestination = null;
 
-public class DummyAuditProvider implements AuditProvider {
 
 	@Override
 	public void log(AuditEventBase event) {
-		// intentionally left empty
+		mBuffer.add(event);
 	}
 
 	@Override
 	public void start() {
-		// intentionally left empty
+		mBuffer.start(mDestination);
 	}
 
 	@Override
 	public void stop() {
-		// intentionally left empty
+		mBuffer.stop();
 	}
 
 	@Override
 	public void waitToComplete() {
-		// intentionally left empty
 	}
 
 	@Override
 	public boolean isFlushPending() {
 		return false;
 	}
-	
+
 	@Override
 	public long getLastFlushTime() {
 		return 0;
@@ -54,6 +55,11 @@ public class DummyAuditProvider implements AuditProvider {
 
 	@Override
 	public void flush() {
-		// intentionally left empty
+	}
+
+	protected void setBufferAndDestination(LogBuffer<AuditEventBase>      buffer,
+										   LogDestination<AuditEventBase> destination) {
+		mBuffer      = buffer;
+		mDestination = destination;
 	}
 }

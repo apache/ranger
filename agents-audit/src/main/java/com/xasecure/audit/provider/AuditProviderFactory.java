@@ -27,6 +27,7 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.xasecure.audit.provider.hdfs.HdfsAuditProvider;
 import com.xasecure.authorization.hadoop.utils.XaSecureCredentialProvider;
 
 
@@ -41,21 +42,31 @@ public class AuditProviderFactory {
 
 	private static final Log LOG = LogFactory.getLog(AuditProviderFactory.class);
 
-	private static final String AUDIT_JPA_CONFIG_PROP_PREFIX        = "xasecure.audit.jpa.";
 	private static final String AUDIT_IS_ENABLED_PROP               = "xasecure.audit.is.enabled" ;
-	private static final String AUDIT_LOG4J_IS_ENABLED_PROP         = "xasecure.audit.log4j.is.enabled" ;
-	private static final String AUDIT_LOG4J_IS_ASYNC_PROP           = "xasecure.audit.log4j.is.async" ;
-	private static final String AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.log4j.async.max.queue.size" ;
-	private static final String AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.log4j.async.max.flush.interval.ms";
+
 	private static final String AUDIT_DB_IS_ENABLED_PROP            = "xasecure.audit.db.is.enabled" ;
-	private static final String AUDIT_DB_IS_ASYNC_PROP              = "xasecure.audit.db.is.async" ;
+	private static final String AUDIT_DB_IS_ASYNC_PROP              = "xasecure.audit.db.is.async";
 	private static final String AUDIT_DB_MAX_QUEUE_SIZE_PROP        = "xasecure.audit.db.async.max.queue.size" ;
-	private static final String AUDIT_DB_MAX_FLUSH_INTERVAL_PROP    = "xasecure.audit.db.async.max.flush.interval.ms";
 	private static final String AUDIT_DB_RESUME_QUEUE_SIZE__PROP    = "xasecure.audit.db.async.resume.queue.size" ;
+	private static final String AUDIT_DB_MAX_FLUSH_INTERVAL_PROP    = "xasecure.audit.db.async.max.flush.interval.ms";
 	private static final String AUDIT_DB_BATCH_SIZE_PROP            = "xasecure.audit.db.batch.size" ;
+	private static final String AUDIT_JPA_CONFIG_PROP_PREFIX        = "xasecure.audit.jpa.";
 	private static final String AUDIT_DB_CREDENTIAL_PROVIDER_FILE   = "xasecure.audit.credential.provider.file";
 	private static final String AUDIT_DB_CREDENTIAL_PROVIDER_ALIAS	= "auditDBCred";
 	private static final String AUDIT_JPA_JDBC_PASSWORD  			= "javax.persistence.jdbc.password";
+
+	private static final String AUDIT_HDFS_IS_ENABLED_PROP          = "xasecure.audit.hdfs.is.enabled";
+	private static final String AUDIT_HDFS_IS_ASYNC_PROP            = "xasecure.audit.hdfs.is.async";
+	private static final String AUDIT_HDFS_MAX_QUEUE_SIZE_PROP      = "xasecure.audit.hdfs.async.max.queue.size" ;
+	private static final String AUDIT_HDFS_RESUME_QUEUE_SIZE__PROP  = "xasecure.audit.hdfs.async.resume.queue.size" ;
+	private static final String AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP  = "xasecure.audit.hdfs.async.max.flush.interval.ms";
+	private static final String AUDIT_HDFS_CONFIG_PREFIX_PROP       = "xasecure.audit.hdfs.config.";
+
+	private static final String AUDIT_LOG4J_IS_ENABLED_PROP         = "xasecure.audit.log4j.is.enabled" ;
+	private static final String AUDIT_LOG4J_IS_ASYNC_PROP           = "xasecure.audit.log4j.is.async";
+	private static final String AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.log4j.async.max.queue.size" ;
+	private static final String AUDIT_LOG4J_RESUME_QUEUE_SIZE__PROP = "xasecure.audit.log4j.async.resume.queue.size" ;
+	private static final String AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.log4j.async.max.flush.interval.ms";
 
 	private static AuditProviderFactory sFactory;
 
@@ -89,32 +100,35 @@ public class AuditProviderFactory {
 
 	public void init(Properties props) {
 		LOG.info("AuditProviderFactory: initializing..");
-		
+
 		boolean isEnabled             = getBooleanProperty(props, AUDIT_IS_ENABLED_PROP, false);
-		boolean isAuditToLog4jEnabled = getBooleanProperty(props, AUDIT_LOG4J_IS_ENABLED_PROP, false);
-		boolean isAuditToLog4jAsync   = getBooleanProperty(props, AUDIT_LOG4J_IS_ASYNC_PROP, false);
 		boolean isAuditToDbEnabled    = getBooleanProperty(props, AUDIT_DB_IS_ENABLED_PROP, false);
-		boolean isAuditToDbAsync      = getBooleanProperty(props, AUDIT_DB_IS_ASYNC_PROP, false);
-		
-		List<AuditProvider> providers = new ArrayList<AuditProvider>();
+		boolean isAuditToHdfsEnabled  = getBooleanProperty(props, AUDIT_HDFS_IS_ENABLED_PROP, false);
+		boolean isAuditToLog4jEnabled = getBooleanProperty(props, AUDIT_LOG4J_IS_ENABLED_PROP, false);
 
-
-		if(!isEnabled || (!isAuditToDbEnabled && !isAuditToLog4jEnabled)) {
+		if(!isEnabled || !(isAuditToDbEnabled || isAuditToHdfsEnabled || isAuditToLog4jEnabled)) {
 			LOG.info("AuditProviderFactory: Audit not enabled..");
-			
+
 			mProvider = getDefaultProvider();
 
 			return;
 		}
-		
+
+		List<AuditProvider> providers = new ArrayList<AuditProvider>();
+
 		if(isAuditToDbEnabled) {
-			
-						
-			Map<String, String> jpaInitProperties = getJpaProperties(props);
-	
+			Map<String, String> jpaInitProperties = getPropertiesWithPrefix(props, AUDIT_JPA_CONFIG_PROP_PREFIX);
+
+			String jdbcPassword = getCredentialString(getStringProperty(props, AUDIT_DB_CREDENTIAL_PROVIDER_FILE), AUDIT_DB_CREDENTIAL_PROVIDER_ALIAS);
+
+			if(jdbcPassword != null && !jdbcPassword.isEmpty()) {
+				jpaInitProperties.put(AUDIT_JPA_JDBC_PASSWORD, jdbcPassword);
+			}
+
 			LOG.info("AuditProviderFactory: found " + jpaInitProperties.size() + " Audit JPA properties");
 	
-			int dbBatchSize = getIntProperty(props, AUDIT_DB_BATCH_SIZE_PROP, 1000);
+			int dbBatchSize          = getIntProperty(props, AUDIT_DB_BATCH_SIZE_PROP, 1000);
+			boolean isAuditToDbAsync = getBooleanProperty(props, AUDIT_DB_IS_ASYNC_PROP, false);
 			
 			if(! isAuditToDbAsync) {
 				dbBatchSize = 1; // Batching not supported in sync mode; need to address multiple threads making audit calls
@@ -142,17 +156,51 @@ public class AuditProviderFactory {
 			}
 		}
 
+		if(isAuditToHdfsEnabled) {
+			Map<String, String> hdfsInitProperties = getPropertiesWithPrefix(props, AUDIT_HDFS_CONFIG_PREFIX_PROP);
+
+			LOG.info("AuditProviderFactory: found " + hdfsInitProperties.size() + " Audit HDFS properties");
+			
+			HdfsAuditProvider hdfsProvider = new HdfsAuditProvider();
+			
+			hdfsProvider.init(hdfsInitProperties);
+
+			boolean isAuditToHdfsAsync = getBooleanProperty(props, AUDIT_HDFS_IS_ASYNC_PROP, false);
+
+			if(isAuditToHdfsAsync) {
+				AsyncAuditProvider asyncProvider = new AsyncAuditProvider();
+
+				int maxQueueSize     = getIntProperty(props, AUDIT_HDFS_MAX_QUEUE_SIZE_PROP, -1);
+				int maxFlushInterval = getIntProperty(props, AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP, -1);
+				int resumeQueueSize  = getIntProperty(props, AUDIT_HDFS_RESUME_QUEUE_SIZE__PROP, 0);
+
+				asyncProvider.setMaxQueueSize(maxQueueSize);
+				asyncProvider.setMaxFlushInterval(maxFlushInterval);
+				asyncProvider.setResumeQueueSize(resumeQueueSize);
+				
+				asyncProvider.addAuditProvider(hdfsProvider);
+				
+				providers.add(asyncProvider);
+			} else {
+				providers.add(hdfsProvider);
+			}
+		}
+
 		if(isAuditToLog4jEnabled) {
 			Log4jAuditProvider log4jProvider = new Log4jAuditProvider();
+
+			boolean isAuditToLog4jAsync = getBooleanProperty(props, AUDIT_LOG4J_IS_ASYNC_PROP, false);
 			
 			if(isAuditToLog4jAsync) {
 				AsyncAuditProvider asyncProvider = new AsyncAuditProvider();
 
 				int maxQueueSize     = getIntProperty(props, AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP, -1);
 				int maxFlushInterval = getIntProperty(props, AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP, -1);
+				int resumeQueueSize  = getIntProperty(props, AUDIT_LOG4J_RESUME_QUEUE_SIZE__PROP, 0);
 
 				asyncProvider.setMaxQueueSize(maxQueueSize);
 				asyncProvider.setMaxFlushInterval(maxFlushInterval);
+				asyncProvider.setResumeQueueSize(resumeQueueSize);
 				
 				asyncProvider.addAuditProvider(log4jProvider);
 				
@@ -181,8 +229,8 @@ public class AuditProviderFactory {
 	    Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
 	}
 	
-	private Map<String, String> getJpaProperties(Properties props) {
-		Map<String, String> jpaInitProperties = new HashMap<String, String>();
+	private Map<String, String> getPropertiesWithPrefix(Properties props, String prefix) {
+		Map<String, String> prefixedProperties = new HashMap<String, String>();
 		
 		for(String key : props.stringPropertyNames()) {
 			if(key == null) {
@@ -191,25 +239,19 @@ public class AuditProviderFactory {
 			
 			String val = props.getProperty(key);
 			
-			if(key.startsWith(AuditProviderFactory.AUDIT_JPA_CONFIG_PROP_PREFIX)) {
-				key = key.substring(AuditProviderFactory.AUDIT_JPA_CONFIG_PROP_PREFIX.length());
+			if(key.startsWith(prefix)) {
+				key = key.substring(prefix.length());
 
 				if(key == null) {
 					continue;
 				}
 				
-				jpaInitProperties.put(key, val);
+				prefixedProperties.put(key, val);
 			}
 		}
 
-		String jdbcPassword = getCredentialString(getStringProperty(props,AUDIT_DB_CREDENTIAL_PROVIDER_FILE), AUDIT_DB_CREDENTIAL_PROVIDER_ALIAS);
-
-		if(jdbcPassword != null && !jdbcPassword.isEmpty()) {
-			jpaInitProperties.put(AUDIT_JPA_JDBC_PASSWORD, jdbcPassword);
-		}
-
             
-		return jpaInitProperties;
+		return prefixedProperties;
 	}
 	
 	private boolean getBooleanProperty(Properties props, String propName, boolean defValue) {

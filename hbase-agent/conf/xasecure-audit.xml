@@ -87,4 +87,76 @@
 		<name>xasecure.audit.db.batch.size</name>
 		<value>100</value>
 	</property>	
+
+
+	<!-- HDFS audit provider configuration -->
+	<property>
+		<name>xasecure.audit.hdfs.is.enabled</name>
+		<value>false</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.is.async</name>
+		<value>false</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.async.max.queue.size</name>
+		<value>10240</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.async.resume.queue.size</name>
+		<value>8192</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.async.max.flush.interval.ms</name>
+		<value>30000</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.encoding</name>
+		<value></value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.directroy</name>
+		<value>hdfs://namenodehost:8020/audit/hbase/%create-time:yyyyMMdd%</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.file</name>
+		<value>%hostname%-audit.log</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.rollover.interval.seconds</name>
+		<value>86400</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.buffer.directroy</name>
+		<value>/tmp/logs/hbase</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.buffer.file</name>
+		<value>%create-time:yyyyMMdd-HHmm.ss%.log</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.buffer.rollover.interval.seconds</name>
+		<value>600</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.archive.directroy</name>
+		<value>/tmp/logs/archive/hbase</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.archive.max.file.count</name>
+		<value>10</value>
+	</property>	
 </configuration>

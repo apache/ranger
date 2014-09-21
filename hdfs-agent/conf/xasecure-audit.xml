@@ -1,13 +1,49 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration xmlns:xi="http://www.w3.org/2001/XInclude">
+	<property>
+		<name>xasecure.audit.is.enabled</name>
+		<value>true</value>
+	</property>	
 
 	<property>
-		<name>xasecure.audit.provider.factory</name>
-		<value>com.xasecure.audit.provider.AuditProviderFactory</value>
-	</property>
+		<name>xasecure.audit.repository.name</name>
+		<value>hadoopdev</value>
+	</property>	
 
-	<!--  Properties whose name begin with "xasecure.audit." are used to configure JPA -->
+
+	<!-- DB audit provider configuration -->
+	<property>
+		<name>xasecure.audit.db.is.enabled</name>
+		<value>true</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.db.is.async</name>
+		<value>false</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.db.async.max.queue.size</name>
+		<value>10240</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.db.async.resume.queue.size</name>
+		<value>8192</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.db.async.max.flush.interval.ms</name>
+		<value>30000</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.db.batch.size</name>
+		<value>100</value>
+	</property>	
+
+	<!--  Properties whose name begin with "xasecure.audit.jpa." are used to configure JPA -->
 	<property>
 		<name>xasecure.audit.jpa.javax.persistence.jdbc.url</name>
 		<value>jdbc:mysql://localhost:3306/xa_db</value>
@@ -32,17 +68,80 @@
 		<name>xasecure.audit.credential.provider.file</name>
 		<value>jceks://file/etc/xasecure/conf/auditcred.jceks</value>
 	</property>
-	
+
+
+	<!-- HDFS audit provider configuration -->
 	<property>
-		<name>xasecure.audit.repository.name</name>
-		<value>hadoopdev</value>
-	</property>	
-	
-	<property>
-		<name>xasecure.audit.is.enabled</name>
-		<value>true</value>
+		<name>xasecure.audit.hdfs.is.enabled</name>
+		<value>false</value>
 	</property>	
 
+	<property>
+		<name>xasecure.audit.hdfs.is.async</name>
+		<value>false</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.async.max.queue.size</name>
+		<value>10240</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.async.resume.queue.size</name>
+		<value>8192</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.async.max.flush.interval.ms</name>
+		<value>30000</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.encoding</name>
+		<value></value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.directroy</name>
+		<value>hdfs://namenodehost:8020/audit/hdfs/%create-time:yyyyMMdd%</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.file</name>
+		<value>%hostname%-audit.log</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.rollover.interval.seconds</name>
+		<value>86400</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.buffer.directroy</name>
+		<value>/tmp/logs/hdfs</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.buffer.file</name>
+		<value>%create-time:yyyyMMdd-HHmm.ss%.log</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.buffer.rollover.interval.seconds</name>
+		<value>600</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.archive.directroy</name>
+		<value>/tmp/logs/archive/hdfs</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.archive.max.file.count</name>
+		<value>10</value>
+	</property>	
+
+	<!-- Log4j audit provider configuration -->
 	<property>
 		<name>xasecure.audit.log4j.is.enabled</name>
 		<value>false</value>
@@ -52,40 +151,20 @@
 		<name>xasecure.audit.log4j.is.async</name>
 		<value>false</value>
 	</property>	
-	
+
 	<property>
 		<name>xasecure.audit.log4j.async.max.queue.size</name>
 		<value>10240</value>
 	</property>	
 
 	<property>
+		<name>xasecure.audit.log4j.async.resume.queue.size</name>
+		<value>8192</value>
+	</property>	
+
+	<property>
 		<name>xasecure.audit.log4j.async.max.flush.interval.ms</name>
 		<value>30000</value>
-	</property>	
-	
-	<property>
-		<name>xasecure.audit.db.is.enabled</name>
-		<value>true</value>
-	</property>	
-	
-	<property>
-		<name>xasecure.audit.db.is.async</name>
-		<value>false</value>
-	</property>	
-	
-	<property>
-		<name>xasecure.audit.db.async.max.queue.size</name>
-		<value>10240</value>
-	</property>	
-
-	<property>
-		<name>xasecure.audit.db.async.max.flush.interval.ms</name>
-		<value>30000</value>
-	</property>	
-
-	<property>
-		<name>xasecure.audit.db.batch.size</name>
-		<value>100</value>
 	</property>	
 	
 </configuration>
