@@ -240,7 +240,7 @@ public class AssetMgr extends AssetMgrBase {
 		vXResourceList=null;
 		if(vXResource.getPolicyName()!=null && !vXResource.getPolicyName().trim().isEmpty()){			
 			searchCriteria=new SearchCriteria();		
-			searchCriteria.getParamList().put("policyName", vXResource.getPolicyName());
+			searchCriteria.getParamList().put("fullPolicyName", vXResource.getPolicyName());
 			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);
 			//if policyname already exist then set null to generate from system
 			if(vXResourceList!=null && vXResourceList.getListSize()>0){
@@ -375,7 +375,7 @@ public class AssetMgr extends AssetMgrBase {
 		//policyName creation and validation logic start here
 		if(vXResource.getPolicyName()!=null && !vXResource.getPolicyName().trim().isEmpty()){ 				
 			searchCriteria=new SearchCriteria();		
-			searchCriteria.getParamList().put("policyName", vXResource.getPolicyName());
+			searchCriteria.getParamList().put("fullPolicyName", vXResource.getPolicyName());
 			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);	
 			if(vXResourceList!=null && vXResourceList.getListSize()>0){
 				for (VXResource newVXResource : vXResourceList.getList()) {

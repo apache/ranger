@@ -110,6 +110,8 @@ public class XResourceService extends
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("policyName", "obj.policyName",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("fullPolicyName", "obj.policyName",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("columns", "obj.columns", 
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("columnFamilies",
