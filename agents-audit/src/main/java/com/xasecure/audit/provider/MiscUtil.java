@@ -28,6 +28,7 @@ public class MiscUtil {
 		try {
 			sGsonBuilder = new GsonBuilder().create();
 		} catch(Throwable excp) {
+			LogLog.warn("failed to create GsonBuilder object. stringigy() will return obj.toString(), instead of Json", excp);
 		}
 	}
 
