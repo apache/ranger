@@ -183,9 +183,11 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private synchronized void openFile() {
 		LogLog.debug("==> LocalFileLogBuffer.openFile()");
 
+		long currentRolloverStartTime = MiscUtil.getCurrentRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+
 		closeFile();
 
-		mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile);
+		mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, currentRolloverStartTime);
 
 		FileOutputStream ostream = null;
 		try {
@@ -365,7 +367,7 @@ class DestinationDispatcherThread<T> extends Thread {
 	private void init() {
 		LogLog.debug("==> DestinationDispatcherThread.init()");
 
-		String dirName   = MiscUtil.replaceTokens(mFileLogBuffer.getDirectory());
+		String dirName   = MiscUtil.replaceTokens(mFileLogBuffer.getDirectory(), 0);
 		File   directory = new File(dirName);
 
 		if(directory.exists() && directory.isDirectory()) {
@@ -495,8 +497,8 @@ class DestinationDispatcherThread<T> extends Thread {
 	private void archiveCurrentFile() {
 		if(mCurrentLogfile != null) {
 			File   logFile         = new File(mCurrentLogfile);
-			String archiveDirName  = MiscUtil.replaceTokens(mFileLogBuffer.getArchiveDirectory());
-			String archiveFilename = archiveDirName + File.separator + MiscUtil.replaceTokens(logFile.getName());
+			String archiveDirName  = MiscUtil.replaceTokens(mFileLogBuffer.getArchiveDirectory(), 0);
+			String archiveFilename = archiveDirName + File.separator +logFile.getName();
 
 			try {
 				if(logFile.exists()) {

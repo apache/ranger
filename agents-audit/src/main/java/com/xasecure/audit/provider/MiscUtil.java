@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.dgc.VMID;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.apache.log4j.helpers.LogLog;
 
@@ -13,11 +12,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class MiscUtil {
-	public static final String TOKEN_HOSTNAME          = "%hostname%";
-	public static final String TOKEN_APP_INSTANCE      = "%app-instance%";
-	public static final String TOKEN_CREATE_TIME_START = "%create-time:";
-	public static final String TOKEN_CREATE_TIME_END   = "%";
-	public static final String ESCAPE_STR = "\\";
+	public static final String TOKEN_HOSTNAME     = "%hostname%";
+	public static final String TOKEN_JVM_INSTANCE = "%jvm-instance%";
+	public static final String TOKEN_TIME_START   = "%time:";
+	public static final String TOKEN_TIME_END     = "%";
+	public static final String ESCAPE_STR         = "\\";
 
 	static VMID sJvmID = new VMID();
 
@@ -32,14 +31,14 @@ public class MiscUtil {
 		}
 	}
 
-	public static String replaceTokens(String str) {
+	public static String replaceTokens(String str, long time) {
 		if(str == null) {
 			return str;
 		}
 
 		str = replaceHostname(str);
-		str = replaceAppInstance(str);
-		str = replaceCreateTime(str);
+		str = replaceJvmInstance(str);
+		str = replaceTime(str, time);
 
 		return str;
 	}
@@ -64,36 +63,38 @@ public class MiscUtil {
 		return str.replace(TOKEN_HOSTNAME, hostName);
 	}
 	
-	public static String replaceAppInstance(String str) {
-		if(!str.contains(TOKEN_APP_INSTANCE)) {
+	public static String replaceJvmInstance(String str) {
+		if(!str.contains(TOKEN_JVM_INSTANCE)) {
 			return str;
 		}
 
-		String appInstance = Integer.toString(Math.abs(sJvmID.hashCode()));
+		String jvmInstance = Integer.toString(Math.abs(sJvmID.hashCode()));
 
-		return str.replace(TOKEN_APP_INSTANCE, appInstance);
+		return str.replace(TOKEN_JVM_INSTANCE, jvmInstance);
 	}
 
-	public static String replaceCreateTime(String str) {
-		Date now = new Date();
+	public static String replaceTime(String str, long time) {
+		if(time <= 0) {
+			time = System.currentTimeMillis();
+		}
 
-        while(str.contains(TOKEN_CREATE_TIME_START)) {
-            int tagStartPos = str.indexOf(TOKEN_CREATE_TIME_START);
-            int tagEndPos   = str.indexOf(TOKEN_CREATE_TIME_END, tagStartPos + TOKEN_CREATE_TIME_START.length());
+        while(str.contains(TOKEN_TIME_START)) {
+            int tagStartPos = str.indexOf(TOKEN_TIME_START);
+            int tagEndPos   = str.indexOf(TOKEN_TIME_END, tagStartPos + TOKEN_TIME_START.length());
 
             if(tagEndPos <= tagStartPos) {
             	break;
             }
 
             String tag      = str.substring(tagStartPos, tagEndPos+1);
-            String dtFormat = tag.substring(TOKEN_CREATE_TIME_START.length(), tag.lastIndexOf(TOKEN_CREATE_TIME_END));
+            String dtFormat = tag.substring(TOKEN_TIME_START.length(), tag.lastIndexOf(TOKEN_TIME_END));
 
             String replaceStr = "";
 
             if(dtFormat != null) {
                 SimpleDateFormat sdf = new SimpleDateFormat(dtFormat);
 
-                replaceStr = sdf.format(now);
+                replaceStr = sdf.format(time);
             }
 
             str = str.replace(tag, replaceStr);
@@ -134,6 +135,10 @@ public class MiscUtil {
 		}
 	}
 
+	public static long getCurrentRolloverStartTime(long nextRolloverTime, long interval) {
+		return (nextRolloverTime <= interval) ? System.currentTimeMillis() : nextRolloverTime - interval;
+	}
+
 	public static int parseInteger(String str, int defValue) {
 		int ret = defValue;
 
@@ -152,7 +157,9 @@ public class MiscUtil {
 		String ret = null;
 
 		if(log != null) {
-			if(MiscUtil.sGsonBuilder != null) {
+			if(log instanceof String) {
+				ret = (String)log;
+			} else if(MiscUtil.sGsonBuilder != null) {
 				ret = MiscUtil.sGsonBuilder.toJson(log);
 			} else {
 				ret = log.toString();

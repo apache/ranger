@@ -158,9 +158,11 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private void openFile() {
 		LogLog.debug("==> HdfsLogDestination.openFile()");
 
+		long currentRolloverStartTime = MiscUtil.getCurrentRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+
 		closeFile();
 
-		mHdfsFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile);
+		mHdfsFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, currentRolloverStartTime);
 
 		FSDataOutputStream ostream     = null;
 		FileSystem         fileSystem  = null;
@@ -184,7 +186,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 						ostream = fileSystem.append(pathLogfile);
 					} catch(IOException excp) {
 						// append may not be supported by the filesystem. rename existing file and create a new one
-						String fileSuffix    = MiscUtil.replaceTokens("-" + MiscUtil.TOKEN_CREATE_TIME_START + "yyyyMMdd-HHmm.ss" + MiscUtil.TOKEN_CREATE_TIME_END);
+						String fileSuffix    = MiscUtil.replaceTokens("-" + MiscUtil.TOKEN_TIME_START + "yyyyMMdd-HHmm.ss" + MiscUtil.TOKEN_TIME_END, currentRolloverStartTime);
 						String movedFilename = appendToFilename(mHdfsFilename, fileSuffix);
 						Path   movedFilePath = new Path(movedFilename);
 

@@ -117,7 +117,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.destination.directroy</name>
-		<value>hdfs://namenodehost:8020/audit/knox/%create-time:yyyyMMdd%</value>
+		<value>hdfs://namenodehost:8020/audit/knox/%time:yyyyMMdd%</value>
 	</property>	
 
 	<property>
@@ -142,7 +142,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.local.buffer.file</name>
-		<value>%create-time:yyyyMMdd-HHmm.ss%.log</value>
+		<value>%time:yyyyMMdd-HHmm.ss%.log</value>
 	</property>	
 
 	<property>
