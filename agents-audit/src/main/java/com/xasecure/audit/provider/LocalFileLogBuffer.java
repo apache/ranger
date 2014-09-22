@@ -37,9 +37,6 @@ import java.util.TreeSet;
 
 import org.apache.log4j.helpers.LogLog;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 
 public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private String  mDirectory               = null;
@@ -54,12 +51,9 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private String mBufferFilename   = null;
 	private long   mNextRolloverTime = 0;
 
-	private Gson mGsonBuilder = null;
-
 	private DestinationDispatcherThread<T> mDispatcherThread = null;
 	
 	public LocalFileLogBuffer() {
-		mGsonBuilder = new GsonBuilder().create();
 	}
 
 	public String getDirectory() {
@@ -167,8 +161,8 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 		if(writer != null) {
 			try {
-				String msg = toJson(log);
-				
+				String msg = MiscUtil.stringify(log);
+
 				if(msg.contains(MiscUtil.LINE_SEPARATOR)) {
 					msg = msg.replace(MiscUtil.LINE_SEPARATOR, MiscUtil.ESCAPE_STR + MiscUtil.LINE_SEPARATOR);
 				}
@@ -284,12 +278,6 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 	boolean isCurrentFilename(String filename) {
 		return mBufferFilename != null && filename != null && filename.equals(mBufferFilename);
-	}
-	
-	private String toJson(T log) {
-		String jsonString = mGsonBuilder.toJson(log) ;
-		
-		return jsonString;
 	}
 
 	@Override

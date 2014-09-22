@@ -9,16 +9,28 @@ import java.util.Date;
 
 import org.apache.log4j.helpers.LogLog;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public class MiscUtil {
 	public static final String TOKEN_HOSTNAME          = "%hostname%";
 	public static final String TOKEN_APP_INSTANCE      = "%app-instance%";
 	public static final String TOKEN_CREATE_TIME_START = "%create-time:";
 	public static final String TOKEN_CREATE_TIME_END   = "%";
 	public static final String ESCAPE_STR = "\\";
-	
+
 	static VMID sJvmID = new VMID();
-	
+
 	public static String LINE_SEPARATOR = System.getProperty("line.separator");
+
+	private static Gson sGsonBuilder = null;
+
+	static {
+		try {
+			sGsonBuilder = new GsonBuilder().create();
+		} catch(Throwable excp) {
+		}
+	}
 
 	public static String replaceTokens(String str) {
 		if(str == null) {
@@ -121,10 +133,10 @@ public class MiscUtil {
 			return lastRolloverTime;
 		}
 	}
-	
+
 	public static int parseInteger(String str, int defValue) {
 		int ret = defValue;
-		
+
 		if(str != null) {
 			try {
 				ret = Integer.parseInt(str);
@@ -132,8 +144,21 @@ public class MiscUtil {
 				// ignore
 			}
 		}
-		
+
+		return ret;
+	}
+
+	public static <T> String stringify(T log) {
+		String ret = null;
+
+		if(log != null) {
+			if(MiscUtil.sGsonBuilder != null) {
+				ret = MiscUtil.sGsonBuilder.toJson(log);
+			} else {
+				ret = log.toString();
+			}
+		}
+
 		return ret;
 	}
 }
-

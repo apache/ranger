@@ -142,7 +142,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 		if(writer != null) {
 			try {
-				writer.write(log);
+				writer.write(log + MiscUtil.LINE_SEPARATOR);
 
 				ret = true;
 			} catch (IOException excp) {
