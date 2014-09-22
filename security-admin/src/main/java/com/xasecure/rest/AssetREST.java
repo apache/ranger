@@ -617,6 +617,7 @@ public class AssetREST {
 			VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
 			vXResource=assetMgr.grantXResource(vXResource,vXPolicy);
 			vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
+			xResourceService.updateResource(vXResource);
 			vXPolicy=xPolicyService.mapXAToPublicObject(vXResource);	
 			vXPolicy.syncResponseWithJsonRequest();			
 		}
@@ -645,6 +646,7 @@ public class AssetREST {
 			VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
 			vXResource=assetMgr.revokeXResource(vXResource);
 			vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
+			xResourceService.updateResource(vXResource);
 			vXPolicy=xPolicyService.mapXAToPublicObject(vXResource);			
 			vXPolicy.syncResponseWithJsonRequest();		
 		}
