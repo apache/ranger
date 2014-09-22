@@ -96,6 +96,9 @@ public class XABizUtil {
 	private static final String PATH_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst0123456789-_.";
 	private static char[] PATH_CHAR_SET = PATH_CHARS.toCharArray();
 	private static int PATH_CHAR_SET_LEN = PATH_CHAR_SET.length;
+	
+	static String fileSeparator = PropertiesUtil.getProperty(
+			"xa.file.separator", "/");
 
 	public XABizUtil() {
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty(
@@ -627,7 +630,7 @@ public class XABizUtil {
 			return false;
 		}
 
-		String[] splittedResources = stringUtil.split(resourceName, File.separator);
+		String[] splittedResources = stringUtil.split(resourceName, fileSeparator);
 		if (splittedResources.length < 1 || splittedResources.length > 3) {
 			logger.debug("Invalid resourceName name : " + resourceName);
 			return false;
@@ -705,7 +708,7 @@ public class XABizUtil {
 			return false;
 		}
 
-		String[] splittedResources = stringUtil.split(resourceName, File.separator);// get list of resources
+		String[] splittedResources = stringUtil.split(resourceName, fileSeparator);// get list of resources
 		if (splittedResources.length < 1 || splittedResources.length > 3) {
 			logger.debug("Invalid resource name : " + resourceName);
 			return false;
@@ -802,7 +805,7 @@ public class XABizUtil {
 			int permission) {
 
 		String[] splittedResources = stringUtil.split(resourceName,
-				File.separator);
+				fileSeparator);
 		int numberOfResources = splittedResources.length;
 		if (numberOfResources < 1 || numberOfResources > 3) {
 			logger.debug("Invalid policy name : " + resourceName);
@@ -888,7 +891,7 @@ public class XABizUtil {
  			int permission) {
  
  		String[] splittedResources = stringUtil.split(resourceName,
- 				File.separator);
+ 				fileSeparator);
  		int numberOfResources = splittedResources.length;
  		if (numberOfResources < 1 || numberOfResources > 3) {
  			logger.debug("Invalid policy name : " + resourceName);
@@ -1076,18 +1079,18 @@ public class XABizUtil {
 	public boolean isRecursiveWildCardMatch(String pathToCheck,
 			String wildcardPath) {
 		if (pathToCheck != null) {
-			if (wildcardPath != null && wildcardPath.equals(File.separator)) {
+			if (wildcardPath != null && wildcardPath.equals(fileSeparator)) {
 				return true;
 			}
 			StringBuilder sb = new StringBuilder();
-			for (String p : pathToCheck.split(File.separator)) {
+			for (String p : pathToCheck.split(fileSeparator)) {
 				sb.append(p);
 				boolean matchFound = FilenameUtils.wildcardMatch(sb.toString(),
 						wildcardPath);
 				if (matchFound) {
 					return true;
 				}
-				sb.append(File.separator);
+				sb.append(fileSeparator);
 			}
 			sb = null;
 		}
@@ -1141,7 +1144,7 @@ public class XABizUtil {
 	 * @return
 	 */
 	public boolean comparePathsForExactMatch(String path1, String path2) {
-		String pathSeparator = File.separator;
+		String pathSeparator = fileSeparator;
 		if (!path1.endsWith(pathSeparator)) {
 			path1 = path1.concat(pathSeparator);
 		}
@@ -1166,10 +1169,10 @@ public class XABizUtil {
 			List<String> pathToCheckArray = new ArrayList<String>();
 			List<String> wildcardPathArray = new ArrayList<String>();
 
-			for (String p : pathToCheck.split(File.separator)) {
+			for (String p : pathToCheck.split(fileSeparator)) {
 				pathToCheckArray.add(p);
 			}
-			for (String w : wildcardPath.split(File.separator)) {
+			for (String w : wildcardPath.split(fileSeparator)) {
 				wildcardPathArray.add(w);
 			}
 
