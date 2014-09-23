@@ -194,7 +194,7 @@ do
 		cp ${fullpathorgfn} ${archivefn}
 		if [ $? -eq 0 ]
 		then
-			cp="${install_dir}/installer/lib/*:/usr/lib/hadoop/*:/usr/lib/hadoop/lib/*"
+			cp="${install_dir}/cred/lib/*:${install_dir}/installer/lib/*:/usr/lib/hadoop/*:/usr/lib/hadoop/lib/*"
 			java -cp "${cp}" com.xasecure.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} ${PROP_ARGS}
 			if [ $? -eq 0 ]
 			then
