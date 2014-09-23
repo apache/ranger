@@ -34,7 +34,6 @@ import java.io.Writer;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.TreeSet;
 
 import org.apache.hadoop.security.UserGroupInformation;
@@ -193,6 +192,11 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 		return ret;
 	}
 
+	@Override
+	public boolean isEmpty() {
+		return mDispatcherThread == null || mDispatcherThread.isIdle();
+	}
+
 	private synchronized void openFile() {
 		LogLog.debug("==> LocalFileLogBuffer.openFile()");
 
@@ -283,7 +287,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 		}
 	}
 
-	public OutputStreamWriter createWriter(OutputStream os ) {
+	private OutputStreamWriter createWriter(OutputStream os ) {
 	    OutputStreamWriter writer = null;
 
 	    if(os != null) {
@@ -357,6 +361,12 @@ class DestinationDispatcherThread<T> extends Thread {
 
 	public void stopThread() {
 		mStopThread = true;
+	}
+
+	public boolean isIdle() {
+		synchronized(mCompletedLogfiles) {
+			return mCompletedLogfiles.isEmpty() && mCurrentLogfile == null;
+		}
 	}
 
 	@Override

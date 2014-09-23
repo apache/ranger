@@ -57,6 +57,14 @@ public abstract class BufferedAuditProvider implements AuditProvider {
 	public void flush() {
 	}
 
+	protected LogBuffer<AuditEventBase> getBuffer() {
+		return mBuffer;
+	}
+
+	protected LogDestination<AuditEventBase> getDestination() {
+		return mDestination;
+	}
+
 	protected void setBufferAndDestination(LogBuffer<AuditEventBase>      buffer,
 										   LogDestination<AuditEventBase> destination) {
 		mBuffer      = buffer;

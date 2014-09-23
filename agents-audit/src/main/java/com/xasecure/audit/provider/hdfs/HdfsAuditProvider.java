@@ -13,7 +13,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 	}
 
 	public void init(Map<String, String> properties) {
-		String encoding                               = properties.get("encoding");
+		String encoding                                = properties.get("encoding");
 
 		String hdfsDestinationDirectory                = properties.get("destination.directroy");
 		String hdfsDestinationFile                     = properties.get("destination.file");
@@ -48,6 +48,21 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		mLocalFileBuffer.setArchiveFileCount(localFileBufferArchiveFileCount);
 		
 		setBufferAndDestination(mLocalFileBuffer, mHdfsDestination);
+	}
+
+	@Override
+	public void waitToComplete() {
+		while(getBuffer() != null && !getBuffer().isEmpty()) {
+			sleep(1000);
+		}
+	}
+	
+	private static void sleep(int timeInMs) {
+		try {
+			Thread.sleep(timeInMs);
+		} catch(InterruptedException excp) {
+			
+		}
 	}
 
 

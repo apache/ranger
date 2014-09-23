@@ -96,6 +96,10 @@ public class TestEvents {
                 if(i != 0 && ((i % 100) == 0))
                     Thread.sleep(100);
         	}
+
+            provider.waitToComplete();
+
+            provider.stop();
         } catch(Exception excp) {
             LOG.info(excp.getLocalizedMessage());
         	excp.printStackTrace();
