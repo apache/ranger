@@ -34,6 +34,7 @@ import java.io.Writer;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.TreeSet;
 
 import org.apache.hadoop.security.UserGroupInformation;
@@ -43,15 +44,17 @@ import org.apache.log4j.helpers.LogLog;
 public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private String  mDirectory               = null;
 	private String  mFile                    = null;
+	private int     mFlushIntervalSeconds    = 1 * 60;
 	private String  mEncoding                = null;
 	private boolean mIsAppend                = true;
-	private int     mRolloverIntervalSeconds = 600;
+	private int     mRolloverIntervalSeconds = 10 * 60;
 	private String  mArchiveDirectory        = null;
 	private int     mArchiveFileCount        = 10;
 
 	private Writer mWriter           = null;
 	private String mBufferFilename   = null;
 	private long   mNextRolloverTime = 0;
+	private long   mNextFlushTime    = 0;
 
 	private DestinationDispatcherThread<T> mDispatcherThread = null;
 	
@@ -72,6 +75,14 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 	public void setFile(String file) {
 		mFile = file;
+	}
+
+	public int getFlushIntervalSeconds() {
+		return mFlushIntervalSeconds;
+	}
+
+	public void setFlushIntervalSeconds(int flushIntervalSeconds) {
+		mFlushIntervalSeconds = flushIntervalSeconds;
 	}
 
 	public String getEncoding() {
@@ -210,6 +221,8 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 		if(mWriter != null) {
 			LogLog.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
+
+			mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000);
 		} else {
 			LogLog.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
 
@@ -259,6 +272,14 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 			rollover();
 		} else  if(mWriter == null) {
 			openFile();
+		} else if(now > mNextFlushTime) {
+			try {
+				mWriter.flush();
+
+				mNextFlushTime = now + (mFlushIntervalSeconds * 1000);
+			} catch (IOException excp) {
+				LogLog.warn("LocalFileLogBuffer: failed to flush", excp);
+			}
 		}
 	}
 
