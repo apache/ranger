@@ -1270,6 +1270,6 @@ create_audit_db_user
 update_properties
 do_authentication_setup
 copy_to_webapps
-restart_policymgr
 execute_java_patches
+restart_policymgr
 echo "Installation of XASecure PolicyManager Web Application is completed."
