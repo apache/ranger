@@ -31,10 +31,12 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.TreeSet;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.helpers.LogLog;
 
 
@@ -155,7 +157,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	public synchronized boolean add(T log) {
 		boolean ret = false;
 
-		rolloverIfNeeded();
+		checkFileStatus();
 
 		Writer writer = mWriter;
 
@@ -183,11 +185,13 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private synchronized void openFile() {
 		LogLog.debug("==> LocalFileLogBuffer.openFile()");
 
-		long currentRolloverStartTime = MiscUtil.getCurrentRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
-
 		closeFile();
 
-		mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, currentRolloverStartTime);
+		mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+
+		long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+
+		mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
 
 		FileOutputStream ostream = null;
 		try {
@@ -206,8 +210,6 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 		if(mWriter != null) {
 			LogLog.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
-
-			mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
 		} else {
 			LogLog.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
 
@@ -250,11 +252,13 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 		LogLog.debug("<== LocalFileLogBuffer.rollover()");
 	}
 
-	private void rolloverIfNeeded() {
+	private void checkFileStatus() {
 		long now = System.currentTimeMillis();
 
 		if(now > mNextRolloverTime) {
 			rollover();
+		} else  if(mWriter == null) {
+			openFile();
 		}
 	}
 
@@ -336,9 +340,33 @@ class DestinationDispatcherThread<T> extends Thread {
 
 	@Override
 	public void run() {
+		UserGroupInformation loginUser = null;
+
+		try {
+			loginUser = UserGroupInformation.getLoginUser();
+		} catch (IOException excp) {
+			LogLog.error("DestinationDispatcherThread.run(): failed to get login user details. Audit files will not be sent to HDFS destination", excp);
+		}
+
+		if(loginUser == null) {
+			LogLog.error("DestinationDispatcherThread.run(): failed to get login user. Audit files will not be sent to HDFS destination");
+
+			return;
+		}
+
+		loginUser.doAs(new PrivilegedAction<Integer>() {
+			@Override
+			public Integer run() {
+				doRun();
+
+				return 0;
+			}
+		});
+	}
+
+	private void doRun() {
 		init();
-		
-		// destination start() should be from the dispatcher thread
+
 		mDestination.start();
 
 		int pollIntervalInMs = 1000;
@@ -422,7 +450,7 @@ class DestinationDispatcherThread<T> extends Thread {
 
 		return ret;
 	}
-	
+
 	private String getNextStringifiedLog() {
 		String log = null;
 
@@ -430,25 +458,29 @@ class DestinationDispatcherThread<T> extends Thread {
 			try {
 				while(true) {
 					String line = mReader.readLine();
-					
-					if(line == null) {
-						break;
-					} else {
-						if(log == null) {
-							log = "";
-						}
 
-						if(line.endsWith(MiscUtil.ESCAPE_STR)) {
-							line = line.substring(0, line.length() - MiscUtil.ESCAPE_STR.length());
-	
+					if(line == null) { // reached end-of-file
+						break;
+					}
+
+					if(line.endsWith(MiscUtil.ESCAPE_STR)) {
+						line = line.substring(0, line.length() - MiscUtil.ESCAPE_STR.length());
+
+						if(log == null) {
+							log = line;
+						} else {
 							log += MiscUtil.LINE_SEPARATOR;
 							log += line;
-							
-							continue;
+						}
+
+						continue;
+					} else {
+						if(log == null) {
+							log = line;
 						} else {
 							log += line;
-							break;
 						}
+						break;
 					}
 				}
 			} catch (IOException excp) {
@@ -508,6 +540,7 @@ class DestinationDispatcherThread<T> extends Thread {
 
 					if(! logFile.renameTo(archiveFile)) {
 						// TODO: renameTo() does not work in all cases. in case of failure, copy the file contents to the destination and delete the file
+						LogLog.warn("archiving failed to move file: " + mCurrentLogfile + " ==> " + archiveFilename);
 					}
 
 					File   archiveDir = new File(archiveDirName);
@@ -522,17 +555,16 @@ class DestinationDispatcherThread<T> extends Thread {
 
 					if(numOfFilesToDelete > 0) {
 						Arrays.sort(files, new Comparator<File>() {
-
-							@Override
-							public int compare(File f1, File f2) {
-								return (int)(f1.lastModified() - f2.lastModified());
-							}
-						});
+												@Override
+												public int compare(File f1, File f2) {
+													return (int)(f1.lastModified() - f2.lastModified());
+												}
+											});
 
 						for(int i = 0; i < numOfFilesToDelete; i++) {
-							LogLog.debug("DELETE: " + files[i].getAbsolutePath());
-
-							files[i].delete();
+							if(! files[i].delete()) {
+								LogLog.warn("archiving failed to delete file: " + files[i].getAbsolutePath());
+							}
 						}
 					}
 				}

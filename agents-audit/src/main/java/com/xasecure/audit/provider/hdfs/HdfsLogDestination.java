@@ -136,7 +136,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	public boolean sendStringified(String log) {
 		boolean ret = false;
 
-		checkDestinationFileStatus();
+		checkFileStatus();
 
 		OutputStreamWriter writer = mWriter;
 
@@ -158,11 +158,13 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private void openFile() {
 		LogLog.debug("==> HdfsLogDestination.openFile()");
 
-		long currentRolloverStartTime = MiscUtil.getCurrentRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
-
 		closeFile();
 
-		mHdfsFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, currentRolloverStartTime);
+		mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+
+		long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+
+		mHdfsFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
 
 		FSDataOutputStream ostream     = null;
 		FileSystem         fileSystem  = null;
@@ -186,7 +188,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 						ostream = fileSystem.append(pathLogfile);
 					} catch(IOException excp) {
 						// append may not be supported by the filesystem. rename existing file and create a new one
-						String fileSuffix    = MiscUtil.replaceTokens("-" + MiscUtil.TOKEN_TIME_START + "yyyyMMdd-HHmm.ss" + MiscUtil.TOKEN_TIME_END, currentRolloverStartTime);
+						String fileSuffix    = MiscUtil.replaceTokens("-" + MiscUtil.TOKEN_TIME_START + "yyyyMMdd-HHmm.ss" + MiscUtil.TOKEN_TIME_END, startTime);
 						String movedFilename = appendToFilename(mHdfsFilename, fileSuffix);
 						Path   movedFilePath = new Path(movedFilename);
 
@@ -222,7 +224,6 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		if(mWriter != null) {
 			LogLog.debug("HdfsLogDestination.openFile(): opened file " + mHdfsFilename);
 
-			mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
 			mLastOpenFailedTime = 0;
 		} else {
 			LogLog.warn("HdfsLogDestination.openFile(): failed to open file for write " + mHdfsFilename);
@@ -265,7 +266,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		LogLog.debug("<== HdfsLogDestination.rollover()");
 	}
 
-	private void checkDestinationFileStatus() {
+	private void checkFileStatus() {
 		long now = System.currentTimeMillis();
 
 		if(mWriter == null) {
