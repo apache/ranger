@@ -20,6 +20,8 @@
  package com.xasecure.rest;
 
 import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -44,6 +46,7 @@ import com.xasecure.common.MessageEnums;
 import com.xasecure.common.RESTErrorUtil;
 import com.xasecure.common.SearchCriteria;
 import com.xasecure.common.StringUtil;
+import com.xasecure.common.XACommonEnums;
 import com.xasecure.common.XAConstants;
 import com.xasecure.common.XASearchUtil;
 import com.xasecure.common.annotation.XAAnnotationClassName;
@@ -279,6 +282,22 @@ public class PublicAPIs {
 				"User Name", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "repositoryName",
 				"Repository Name", StringUtil.VALIDATION_TEXT);
+		
+		String resStatus = request.getParameter("isEnabled");
+		List<Integer> resList = new ArrayList<Integer>();
+		if (stringUtil.isEmpty(resStatus)) {
+			resList.add(XACommonEnums.STATUS_ENABLED);
+			resList.add(XACommonEnums.STATUS_DISABLED);
+		} else {
+			boolean policyStatus = restErrorUtil.parseBoolean(resStatus,
+					"Invalid value for " + "isEnabled",
+					MessageEnums.INVALID_INPUT_DATA, null, "isEnabled");
+			int policyStat = (policyStatus) ? XACommonEnums.STATUS_ENABLED
+					: XACommonEnums.STATUS_DISABLED;
+			resList.add(policyStat);
+		}
+		searchCriteria.getParamList().put("resourceStatus", resList);
+		
 		searchCriteria.setDistinct(true);
 
 		VXResourceList vXResourceList = assetMgr
