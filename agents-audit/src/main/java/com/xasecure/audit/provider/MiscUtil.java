@@ -136,7 +136,7 @@ public class MiscUtil {
 		}
 	}
 
-	public static long getCurrentRolloverStartTime(long nextRolloverTime, long interval) {
+	public static long getRolloverStartTime(long nextRolloverTime, long interval) {
 		return (nextRolloverTime <= interval) ? System.currentTimeMillis() : nextRolloverTime - interval;
 	}
 

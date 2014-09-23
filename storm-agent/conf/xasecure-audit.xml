@@ -131,6 +131,11 @@
 	</property>	
 
 	<property>
+		<name>xasecure.audit.hdfs.config.destination.flush.interval.seconds</name>
+		<value>900</value>
+	</property>	
+
+	<property>
 		<name>xasecure.audit.hdfs.config.destination.rollover.interval.seconds</name>
 		<value>86400</value>
 	</property>	
@@ -148,6 +153,11 @@
 	<property>
 		<name>xasecure.audit.hdfs.config.local.buffer.file</name>
 		<value>%time:yyyyMMdd-HHmm.ss%.log</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.hdfs.config.local.buffer.flush.interval.seconds</name>
+		<value>60</value>
 	</property>	
 
 	<property>

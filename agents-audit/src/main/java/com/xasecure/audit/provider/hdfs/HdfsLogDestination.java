@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.Date;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -38,6 +39,7 @@ import com.xasecure.audit.provider.MiscUtil;
 public class HdfsLogDestination<T> implements LogDestination<T> {
 	private String  mDirectory                = null;
 	private String  mFile                     = null;
+	private int     mFlushIntervalSeconds     = 1 * 60;
 	private String  mEncoding                 = null;
 	private boolean mIsAppend                 = true;
 	private int     mRolloverIntervalSeconds  = 24 * 60 * 60;
@@ -46,6 +48,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private OutputStreamWriter mWriter             = null; 
 	private String             mHdfsFilename       = null;
 	private long               mNextRolloverTime   = 0;
+	private long               mNextFlushTime      = 0;
 	private long               mLastOpenFailedTime = 0;
 	private boolean            mIsStopInProgress   = false;
 
@@ -66,6 +69,14 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 	public void setFile(String file) {
 		this.mFile = file;
+	}
+
+	public int getFlushIntervalSeconds() {
+		return mFlushIntervalSeconds;
+	}
+
+	public void setFlushIntervalSeconds(int flushIntervalSeconds) {
+		mFlushIntervalSeconds = flushIntervalSeconds;
 	}
 
 	public String getEncoding() {
@@ -136,7 +147,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	public boolean sendStringified(String log) {
 		boolean ret = false;
 
-		checkDestinationFileStatus();
+		checkFileStatus();
 
 		OutputStreamWriter writer = mWriter;
 
@@ -158,11 +169,13 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private void openFile() {
 		LogLog.debug("==> HdfsLogDestination.openFile()");
 
-		long currentRolloverStartTime = MiscUtil.getCurrentRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
-
 		closeFile();
 
-		mHdfsFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, currentRolloverStartTime);
+		mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
+
+		long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
+
+		mHdfsFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
 
 		FSDataOutputStream ostream     = null;
 		FileSystem         fileSystem  = null;
@@ -186,7 +199,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 						ostream = fileSystem.append(pathLogfile);
 					} catch(IOException excp) {
 						// append may not be supported by the filesystem. rename existing file and create a new one
-						String fileSuffix    = MiscUtil.replaceTokens("-" + MiscUtil.TOKEN_TIME_START + "yyyyMMdd-HHmm.ss" + MiscUtil.TOKEN_TIME_END, currentRolloverStartTime);
+						String fileSuffix    = MiscUtil.replaceTokens("-" + MiscUtil.TOKEN_TIME_START + "yyyyMMdd-HHmm.ss" + MiscUtil.TOKEN_TIME_END, startTime);
 						String movedFilename = appendToFilename(mHdfsFilename, fileSuffix);
 						Path   movedFilePath = new Path(movedFilename);
 
@@ -222,7 +235,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		if(mWriter != null) {
 			LogLog.debug("HdfsLogDestination.openFile(): opened file " + mHdfsFilename);
 
-			mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+			mNextFlushTime      = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
 			mLastOpenFailedTime = 0;
 		} else {
 			LogLog.warn("HdfsLogDestination.openFile(): failed to open file for write " + mHdfsFilename);
@@ -265,15 +278,23 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		LogLog.debug("<== HdfsLogDestination.rollover()");
 	}
 
-	private void checkDestinationFileStatus() {
+	private void checkFileStatus() {
 		long now = System.currentTimeMillis();
 
 		if(mWriter == null) {
-			if(now > (mLastOpenFailedTime + (mOpenRetryIntervalSeconds * 1000))) {
+			if(now > (mLastOpenFailedTime + (mOpenRetryIntervalSeconds * 1000L))) {
 				openFile();
 			}
 		} else  if(now > mNextRolloverTime) {
 			rollover();
+		} else if(now > mNextFlushTime) {
+			try {
+				mWriter.flush();
+
+				mNextFlushTime = now + (mFlushIntervalSeconds * 1000L);
+			} catch (IOException excp) {
+				LogLog.warn("HdfsLogDestination: failed to flush", excp);
+			}
 		}
 	}
 

@@ -26,5 +26,7 @@ public interface LogBuffer<T> {
 
 	boolean isAvailable();
 
+	public boolean isEmpty();
+
 	public boolean add(T log);
 }
