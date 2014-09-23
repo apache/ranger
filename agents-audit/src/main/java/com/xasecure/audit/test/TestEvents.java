@@ -28,7 +28,6 @@ import java.util.Date;
 import java.util.Properties;
 
 import com.xasecure.audit.model.AuditEventBase;
-import com.xasecure.audit.model.EnumRepositoryType;
 import com.xasecure.audit.model.HBaseAuditEvent;
 import com.xasecure.audit.model.HdfsAuditEvent;
 import com.xasecure.audit.model.HiveAuditEvent;
@@ -83,9 +82,13 @@ public class TestEvents {
 
         	LOG.info("provider=" + provider.toString());
 
-        	String strEventCount = args.length > 0 ? args[0] : auditProperties.getProperty("xasecure.audit.test.event.count");
+        	String strEventCount          = args.length > 0 ? args[0] : auditProperties.getProperty("xasecure.audit.test.event.count");
+        	String strEventPauseTimeInMs  = args.length > 1 ? args[1] : auditProperties.getProperty("xasecure.audit.test.event.pause.time.ms");
+        	String strSleepTimeBeforeExit = args.length > 2 ? args[2] : auditProperties.getProperty("xasecure.audit.test.sleep.time.before.exit.seconds");
 
-        	int eventCount = (strEventCount == null) ? 1024 : Integer.parseInt(strEventCount);
+        	int eventCount          = (strEventCount == null) ? 1024 : Integer.parseInt(strEventCount);
+        	int eventPauseTime      = (strEventPauseTimeInMs == null) ? 0 : Integer.parseInt(strEventPauseTimeInMs);
+        	int sleepTimeBeforeExit = ((strSleepTimeBeforeExit == null) ? 0 : Integer.parseInt(strSleepTimeBeforeExit)) * 1000;
 
         	for(int i = 0; i < eventCount; i++) {
         		AuditEventBase event = getTestEvent(i);
@@ -93,11 +96,24 @@ public class TestEvents {
 	            LOG.info("==> TestEvents.main(" + (i+1) + "): adding " + event.getClass().getName());
         		provider.log(event);
 
-                if(i != 0 && ((i % 100) == 0))
-                    Thread.sleep(100);
+        		if(eventPauseTime > 0) {
+        			Thread.sleep(eventPauseTime);
+        		}
         	}
 
             provider.waitToComplete();
+            
+            // incase of HdfsAuditProvider, logs are saved to local file system which gets sent to HDFS asynchronusly in a separate thread.
+            // So, at this point it is possible that few local log files haven't made to HDFS.
+            if(sleepTimeBeforeExit > 0) {
+            	LOG.info("waiting for " + sleepTimeBeforeExit + "ms before exiting..");
+
+            	try {
+	                Thread.sleep(sleepTimeBeforeExit);
+            	} catch(Exception excp) {
+                	LOG.info("error while waiting before exiting..");
+            	}
+            }
 
             provider.stop();
         } catch(Exception excp) {

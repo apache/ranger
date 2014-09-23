@@ -49,21 +49,4 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		
 		setBufferAndDestination(mLocalFileBuffer, mHdfsDestination);
 	}
-
-	@Override
-	public void waitToComplete() {
-		while(getBuffer() != null && !getBuffer().isEmpty()) {
-			sleep(1000);
-		}
-	}
-	
-	private static void sleep(int timeInMs) {
-		try {
-			Thread.sleep(timeInMs);
-		} catch(InterruptedException excp) {
-			
-		}
-	}
-
-
 }
