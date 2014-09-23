@@ -268,7 +268,7 @@ create_db_user(){
 		if test "${result3#*$username}" == "$result3"
 		then
 			#create user
-			result4=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "create user ${db_user} identified by \"${db_password}"\;"`
+			result4=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "create user ${db_user} identified by \"${db_password}\";"`
 			result3=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(username) from all_users where UPPER(username)=UPPER('${db_user}');"`
 			username=`echo ${db_user} | tr '[:lower:]' '[:upper:]'`
 			#if user is not created print error message
