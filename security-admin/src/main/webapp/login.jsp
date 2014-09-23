@@ -46,7 +46,7 @@
 			<div class="l-logo">
 				<img src="images/logo.png" alt="Argus logo">
 			</div>
-			<form action="" method="get" accept-charset="utf-8">
+			<form action="" method="post" accept-charset="utf-8">
 				<fieldset>
 					<div class="fields">
 						<label><i class="icon-user"></i> Username:</label>
