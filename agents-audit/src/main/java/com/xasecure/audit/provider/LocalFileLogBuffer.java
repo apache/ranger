@@ -202,9 +202,9 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 		closeFile();
 
-		mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+		mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
 
-		long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+		long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
 
 		mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
 
@@ -226,7 +226,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 		if(mWriter != null) {
 			LogLog.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
 
-			mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000);
+			mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
 		} else {
 			LogLog.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
 
@@ -280,7 +280,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 			try {
 				mWriter.flush();
 
-				mNextFlushTime = now + (mFlushIntervalSeconds * 1000);
+				mNextFlushTime = now + (mFlushIntervalSeconds * 1000L);
 			} catch (IOException excp) {
 				LogLog.warn("LocalFileLogBuffer: failed to flush", excp);
 			}
@@ -400,7 +400,7 @@ class DestinationDispatcherThread<T> extends Thread {
 
 		mDestination.start();
 
-		int pollIntervalInMs = 1000;
+		long pollIntervalInMs = 1000L;
 
 		while(! mStopThread) {
 			synchronized(mCompletedLogfiles) {
@@ -452,7 +452,7 @@ class DestinationDispatcherThread<T> extends Thread {
 
 		boolean ret = false;
 
-		int destinationPollIntervalInMs = 1000;
+		long destinationPollIntervalInMs = 1000L;
 
 		openCurrentFile();
 
@@ -628,7 +628,7 @@ class DestinationDispatcherThread<T> extends Thread {
 	    return reader;
 	}
 
-	private void sleep(int sleepTimeInMs, String onFailMsg) {
+	private void sleep(long sleepTimeInMs, String onFailMsg) {
 		try {
 			Thread.sleep(sleepTimeInMs);
 		} catch(InterruptedException excp) {

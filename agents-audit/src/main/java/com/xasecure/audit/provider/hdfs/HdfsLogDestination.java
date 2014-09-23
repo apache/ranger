@@ -171,9 +171,9 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 		closeFile();
 
-		mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+		mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
 
-		long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000));
+		long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
 
 		mHdfsFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
 
@@ -235,7 +235,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		if(mWriter != null) {
 			LogLog.debug("HdfsLogDestination.openFile(): opened file " + mHdfsFilename);
 
-			mNextFlushTime      = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000);
+			mNextFlushTime      = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
 			mLastOpenFailedTime = 0;
 		} else {
 			LogLog.warn("HdfsLogDestination.openFile(): failed to open file for write " + mHdfsFilename);
@@ -282,7 +282,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		long now = System.currentTimeMillis();
 
 		if(mWriter == null) {
-			if(now > (mLastOpenFailedTime + (mOpenRetryIntervalSeconds * 1000))) {
+			if(now > (mLastOpenFailedTime + (mOpenRetryIntervalSeconds * 1000L))) {
 				openFile();
 			}
 		} else  if(now > mNextRolloverTime) {
@@ -291,7 +291,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 			try {
 				mWriter.flush();
 
-				mNextFlushTime = now + (mFlushIntervalSeconds * 1000);
+				mNextFlushTime = now + (mFlushIntervalSeconds * 1000L);
 			} catch (IOException excp) {
 				LogLog.warn("HdfsLogDestination: failed to flush", excp);
 			}
