@@ -167,6 +167,8 @@ public class XResourceService extends
 		searchFields.add(new SearchField("repositoryName", "xxAsset.name",
 				DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL, "XXAsset xxAsset",
 				"xxAsset.id = obj.assetId"));
+		searchFields.add(new SearchField("resourceStatus",
+				"obj.resourceStatus", DATA_TYPE.INT_LIST, SEARCH_TYPE.FULL));
 
 		sortFields.add(new SortField("name", "obj.name"));
 		sortFields.add(new SortField("isRecursive", "obj.isRecursive"));

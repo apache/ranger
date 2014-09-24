@@ -40,7 +40,7 @@ public class Log4jAuditProvider implements AuditProvider {
 	public void log(AuditEventBase event) {
 		if(! AUDITLOG.isInfoEnabled())
 			return;
-		Gson gson= new GsonBuilder().setPrettyPrinting().create();
+		Gson gson= new GsonBuilder().create();
 		String eventAsJson = gson.toJson(event.toString()) ;
 		AUDITLOG.info(eventAsJson);
 	}

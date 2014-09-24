@@ -1922,15 +1922,19 @@ public class AssetMgr extends AssetMgrBase {
 									.get("groups");
 							XXGroup xGroup = xADaoManager.getXXGroup()
 									.getById(groupId);
-							groups.add(xGroup.getName());
-							sortedPermMap.put("groups", groups);
+							if(xGroup!=null && groups != null){
+								groups.add(xGroup.getName());
+								sortedPermMap.put("groups", groups);
+							}
 						} else if (userId != null) {
 							Set<String> users = (Set<String>) sortedPermMap
 									.get("users");
 							XXUser xUser = xADaoManager.getXXUser().getById(
 									userId);
-							users.add(xUser.getName());
-							sortedPermMap.put("users", users);
+							if (users != null && xUser != null) {
+								users.add(xUser.getName());
+								sortedPermMap.put("users", users);								
+							}
 						}
 
 						Set<String> access = (Set<String>) sortedPermMap
