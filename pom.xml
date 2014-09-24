@@ -239,6 +239,39 @@
     
     </pluginManagement>
     <plugins>
+
+    <plugin>
+      <groupId>org.apache.rat</groupId>
+      <artifactId>apache-rat-plugin</artifactId>
+      <version>0.8</version>
+      <configuration>
+        <excludeSubProjects>false</excludeSubProjects>
+        <excludes>
+          <exclude>.git/**</exclude>
+          <exclude>.pc/**</exclude>
+          <exclude>debian/**</exclude>
+          <exclude>.gitignore/**</exclude>
+          <exclude>.svn/**</exclude>
+          <exclude>.idea/**</exclude>
+          <exclude>dev-support/**</exclude>
+          <exclude>**/.gitignore/**</exclude>
+          <exclude>**/.project/**</exclude>
+          <exclude>**/.settings/**</exclude>
+          <exclude>**/.classpath/**</exclude>
+          <exclude>**/*.iml</exclude>
+          <exclude>**/target/**</exclude>
+          <exclude>**/CHANGES</exclude>
+          <exclude>**/ISSUES</exclude>
+          <exclude>**/patchprocess/**</exclude>
+          <exclude>**/test/resources/**</exclude>
+          <exclude>**/main/resources/**/*.json</exclude>
+          <exclude>**/.externalToolBuilders/*</exclude>
+          <exclude>*.patch</exclude>
+          <exclude>atlassian-ide-plugin.xml</exclude>
+        </excludes>
+      </configuration>
+    </plugin>
+
       <plugin>
          <groupId>org.apache.maven.plugins</groupId>
          <artifactId>maven-antrun-plugin</artifactId>
