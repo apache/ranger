@@ -104,8 +104,8 @@ public class XaSecureFSPermissionChecker {
 				excludeUsers.add(excludeUser) ;
  			}
 		}
-		
-		
+
+		XaSecureConfiguration.getInstance().initAudit(AuditProviderFactory.ApplicationType.Hdfs);		
 	}
 
 	public static boolean check(UserGroupInformation ugi, INode inode, FsAction access) throws XaSecureAccessControlException {

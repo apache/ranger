@@ -733,14 +733,22 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	private static final String REGIONAL_SERVER_COPROCESSOR_TYPE = "regionalServer";
 	@Override
 	public void start(CoprocessorEnvironment env) throws IOException {
+		AuditProviderFactory.ApplicationType appType = AuditProviderFactory.ApplicationType.Unknown;
+
 		if (env instanceof MasterCoprocessorEnvironment) {
 			coprocessorType = MASTER_COPROCESSOR_TYPE;
+			appType = AuditProviderFactory.ApplicationType.HBaseMaster;
 		} else if (env instanceof RegionServerCoprocessorEnvironment) {
 			coprocessorType = REGIONAL_SERVER_COPROCESSOR_TYPE;
+			appType = AuditProviderFactory.ApplicationType.HBaseRegionalServer;
 		} else if (env instanceof RegionCoprocessorEnvironment) {
 			regionEnv = (RegionCoprocessorEnvironment) env;
 			coprocessorType = REGIONAL_COPROCESSOR_TYPE;
+			appType = AuditProviderFactory.ApplicationType.HBaseRegionalServer;
 		}
+
+		XaSecureConfiguration.getInstance().initAudit(appType);
+
 		if (superUserList == null) {
 			superUserList = new ArrayList<String>();
 			Configuration conf = env.getConfiguration();

@@ -61,6 +61,10 @@ public class XASecurePDPKnoxFilter implements Filter {
 
 	AuditProvider auditProvider = AuditProviderFactory.getAuditProvider();
 	private final String REPOSITORY_NAME = XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
+	
+	static {
+		XaSecureConfiguration.getInstance().initAudit(AuditProviderFactory.ApplicationType.Knox);
+	}
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {

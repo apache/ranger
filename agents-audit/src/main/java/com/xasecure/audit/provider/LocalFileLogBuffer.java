@@ -408,7 +408,7 @@ class DestinationDispatcherThread<T> extends Thread {
 					try {
 						mCompletedLogfiles.wait(pollIntervalInMs);
 					} catch(InterruptedException excp) {
-						LogLog.warn("LocalFileLogBuffer.run(): failed to wait for log file", excp);
+						LogLog.warn("DestinationDispatcherThread.run(): failed to wait for log file", excp);
 					}
 				}
 				

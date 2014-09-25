@@ -12,17 +12,22 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class MiscUtil {
-	public static final String TOKEN_HOSTNAME     = "%hostname%";
-	public static final String TOKEN_JVM_INSTANCE = "%jvm-instance%";
-	public static final String TOKEN_TIME_START   = "%time:";
-	public static final String TOKEN_TIME_END     = "%";
-	public static final String ESCAPE_STR         = "\\";
+	public static final String TOKEN_START        = "%";
+	public static final String TOKEN_END          = "%";
+	public static final String TOKEN_HOSTNAME     = "hostname";
+	public static final String TOKEN_APP_TYPE     = "app-type";
+	public static final String TOKEN_JVM_INSTANCE = "jvm-instance";
+	public static final String TOKEN_TIME         = "time:";
+	public static final String TOKEN_PROPERTY     = "property:";
+	public static final String TOKEN_ENV          = "env:";
+	public static final String ESCAPE_STR           = "\\";
 
 	static VMID sJvmID = new VMID();
 
 	public static String LINE_SEPARATOR = System.getProperty("line.separator");
 
-	private static Gson sGsonBuilder = null;
+	private static Gson   sGsonBuilder = null;
+	private static String sApplicationType = null;
 
 	static {
 		try {
@@ -37,71 +42,122 @@ public class MiscUtil {
 			return str;
 		}
 
-		str = replaceHostname(str);
-		str = replaceJvmInstance(str);
-		str = replaceTime(str, time);
-
-		return str;
-	}
-
-	public static String replaceHostname(String str) {
-		if(!str.contains(TOKEN_HOSTNAME)) {
-			return str;
-		}
-
-		String hostName = null;
-
-		try {
-			hostName = InetAddress.getLocalHost().getHostName();
-		} catch (UnknownHostException excp) {
-			LogLog.warn("replaceHostname()", excp);
-		}
-
-		if(hostName == null) {
-			hostName = "Unknown";
-		}
-
-		return str.replace(TOKEN_HOSTNAME, hostName);
-	}
-	
-	public static String replaceJvmInstance(String str) {
-		if(!str.contains(TOKEN_JVM_INSTANCE)) {
-			return str;
-		}
-
-		String jvmInstance = Integer.toString(Math.abs(sJvmID.hashCode()));
-
-		return str.replace(TOKEN_JVM_INSTANCE, jvmInstance);
-	}
-
-	public static String replaceTime(String str, long time) {
 		if(time <= 0) {
 			time = System.currentTimeMillis();
 		}
 
-        while(str.contains(TOKEN_TIME_START)) {
-            int tagStartPos = str.indexOf(TOKEN_TIME_START);
-            int tagEndPos   = str.indexOf(TOKEN_TIME_END, tagStartPos + TOKEN_TIME_START.length());
-
-            if(tagEndPos <= tagStartPos) {
+        for(int startPos = 0; startPos < str.length(); ) {
+            int tagStartPos = str.indexOf(TOKEN_START, startPos);
+            
+            if(tagStartPos == -1) {
             	break;
             }
 
-            String tag      = str.substring(tagStartPos, tagEndPos+1);
-            String dtFormat = tag.substring(TOKEN_TIME_START.length(), tag.lastIndexOf(TOKEN_TIME_END));
+            int tagEndPos = str.indexOf(TOKEN_END, tagStartPos + TOKEN_START.length());
 
-            String replaceStr = "";
-
-            if(dtFormat != null) {
-                SimpleDateFormat sdf = new SimpleDateFormat(dtFormat);
-
-                replaceStr = sdf.format(time);
+            if(tagEndPos == -1) {
+            	break;
             }
 
-            str = str.replace(tag, replaceStr);
+            String tag   = str.substring(tagStartPos, tagEndPos+TOKEN_END.length());
+            String token = tag.substring(TOKEN_START.length(), tag.lastIndexOf(TOKEN_END));
+            String val   = "";
+
+            if(token != null) {
+	            if(token.equals(TOKEN_HOSTNAME)) {
+	            	val = getHostname();
+	            } else if(token.equals(TOKEN_APP_TYPE)) {
+	            	val = getApplicationType();
+	            } else if(token.equals(TOKEN_JVM_INSTANCE)) {
+	            	val = getJvmInstanceId();
+	            } else if(token.startsWith(TOKEN_PROPERTY)) {
+	            	String propertyName = token.substring(TOKEN_PROPERTY.length());
+	
+	                val = getSystemProperty(propertyName);
+	            } else if(token.startsWith(TOKEN_ENV)) {
+	            	String envName = token.substring(TOKEN_ENV.length());
+	
+	                val = getEnv(envName);
+	            } else if(token.startsWith(TOKEN_TIME)) {
+	                String dtFormat = token.substring(TOKEN_TIME.length());
+	                
+	                val = getFormattedTime(time, dtFormat);
+	            }
+            }
+
+            if(val == null) {
+            	val = "";
+            }
+
+            str = str.substring(0, tagStartPos) + val + str.substring(tagEndPos + TOKEN_END.length());
+            startPos = tagStartPos + val.length();
         }
 
         return str;
+	}
+
+	public static String getHostname() {
+		String ret = null;
+
+		try {
+			ret = InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException excp) {
+			LogLog.warn("getHostname()", excp);
+		}
+
+		return ret;
+	}
+
+	public static void setApplicationType(String applicationType) {
+		sApplicationType = applicationType;
+	}
+
+	public static String getApplicationType() {
+		return sApplicationType;
+	}
+
+	public static String getJvmInstanceId() {
+		String ret = Integer.toString(Math.abs(sJvmID.toString().hashCode()));
+
+		return ret;
+	}
+
+	public static String getSystemProperty(String propertyName) {
+		String ret = null;
+
+		try {
+			ret = propertyName != null ? System.getProperty(propertyName) : null;
+		} catch (Exception excp) {
+			LogLog.warn("getSystemProperty(" + propertyName + ") failed", excp);
+		}
+
+		return ret;
+	}
+
+	public static String getEnv(String envName) {
+		String ret = null;
+
+		try {
+			ret = envName != null ? System.getenv(envName) : null;
+		} catch (Exception excp) {
+			LogLog.warn("getenv(" + envName + ") failed", excp);
+		}
+
+		return ret;
+	}
+
+	public static String getFormattedTime(long time, String format) {
+		String ret = null;
+
+		try {
+            SimpleDateFormat sdf = new SimpleDateFormat(format);
+
+            ret = sdf.format(time);
+		} catch (Exception excp) {
+			LogLog.warn("SimpleDateFormat.format() failed: " + format, excp);
+		}
+
+		return ret;
 	}
 
 	public static void createParents(File file) {

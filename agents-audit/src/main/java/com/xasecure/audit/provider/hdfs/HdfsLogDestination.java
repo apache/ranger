@@ -199,7 +199,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 						ostream = fileSystem.append(pathLogfile);
 					} catch(IOException excp) {
 						// append may not be supported by the filesystem. rename existing file and create a new one
-						String fileSuffix    = MiscUtil.replaceTokens("-" + MiscUtil.TOKEN_TIME_START + "yyyyMMdd-HHmm.ss" + MiscUtil.TOKEN_TIME_END, startTime);
+						String fileSuffix    = MiscUtil.replaceTokens("-" + MiscUtil.TOKEN_START + MiscUtil.TOKEN_TIME + "yyyyMMdd-HHmm.ss" + MiscUtil.TOKEN_END, startTime);
 						String movedFilename = appendToFilename(mHdfsFilename, fileSuffix);
 						Path   movedFilePath = new Path(movedFilename);
 

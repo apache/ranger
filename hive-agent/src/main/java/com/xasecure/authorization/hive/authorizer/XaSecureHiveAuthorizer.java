@@ -78,6 +78,24 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 		LOG.debug("XaSecureHiveAuthorizer.XaSecureHiveAuthorizer()");
 
 		mHiveAccessVerifier = XaHiveAccessVerifierFactory.getInstance() ;
+		
+		if(!XaSecureConfiguration.getInstance().isAuditInitDone()) {
+			if(sessionContext != null) {
+				AuditProviderFactory.ApplicationType appType = AuditProviderFactory.ApplicationType.Unknown;
+
+				switch(sessionContext.getClientType()) {
+					case HIVECLI:
+						appType = AuditProviderFactory.ApplicationType.HiveCLI;
+					break;
+
+					case HIVESERVER2:
+						appType = AuditProviderFactory.ApplicationType.HiveServer2;
+					break;
+				}
+
+				XaSecureConfiguration.getInstance().initAudit(appType);
+			}
+		}
 	}
 
 

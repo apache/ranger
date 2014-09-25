@@ -83,35 +83,37 @@ public class XaSecureConfiguration extends Configuration {
 				XaSecureConfiguration temp = config;
 				if (temp == null) {
 					config = new XaSecureConfiguration();
-					
-					onConfigInstantiation(config);
 				}
 			}
 		}
 		return config;
 	}
-	
-	private static void onConfigInstantiation(XaSecureConfiguration config) {
-		initAudit(config);
-	}
 
-	private static void initAudit(XaSecureConfiguration config) {
+	public void initAudit(AuditProviderFactory.ApplicationType appType) {
 		AuditProviderFactory auditFactory = AuditProviderFactory.getInstance();
-		
+
 		if(auditFactory == null) {
 			LOG.error("Unable to find the AuditProviderFactory. (null) found") ;
 			return;
 		}
-		
-		Properties props = config.getProps();
-		
+
+		Properties props = getProps();
+
 		if(props == null) {
 			return;
 		}
-		
-		auditFactory.init(props);
+
+		if(! auditFactory.isInitDone()) {
+			auditFactory.init(props, appType);
+		}
 	}
-	
+
+	public boolean isAuditInitDone() {
+		AuditProviderFactory auditFactory = AuditProviderFactory.getInstance();
+
+		return auditFactory != null && auditFactory.isInitDone();
+	}
+
 	
 	@SuppressWarnings("deprecation")
 	public  URL getXAAuditXMLFileLocation() {

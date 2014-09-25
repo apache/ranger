@@ -48,7 +48,12 @@ public class XaSecureStormAuthorizer implements IAuthorizer {
 	private static final String repositoryName     = XaSecureConfiguration.getInstance().get(XaSecureHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
 	
 	private XaStormAccessVerifier xaStormVerifier = XaStormAccessVerifierFactory.getInstance() ;
-	
+
+	static {
+		XaSecureConfiguration.getInstance().initAudit(AuditProviderFactory.ApplicationType.Storm);
+	}
+
+
 	/**
      * permit() method is invoked for each incoming Thrift request.
      * @param context request context includes info about 

@@ -35,6 +35,7 @@ import com.xasecure.audit.model.KnoxAuditEvent;
 import com.xasecure.audit.model.StormAuditEvent;
 import com.xasecure.audit.provider.AuditProvider;
 import com.xasecure.audit.provider.AuditProviderFactory;
+import com.xasecure.audit.provider.AuditProviderFactory.ApplicationType;
 
 public class TestEvents {
 
@@ -76,7 +77,7 @@ public class TestEvents {
 	        	auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
         	}
         	
-        	AuditProviderFactory.getInstance().init(auditProperties);
+        	AuditProviderFactory.getInstance().init(auditProperties, ApplicationType.Hdfs);
 
         	AuditProvider provider = AuditProviderFactory.getAuditProvider();
 
