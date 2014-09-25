@@ -289,9 +289,9 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 			rollover();
 		} else if(now > mNextFlushTime) {
 			try {
-				mWriter.flush();
-
 				mNextFlushTime = now + (mFlushIntervalSeconds * 1000L);
+
+				mWriter.flush();
 			} catch (IOException excp) {
 				LogLog.warn("HdfsLogDestination: failed to flush", excp);
 			}

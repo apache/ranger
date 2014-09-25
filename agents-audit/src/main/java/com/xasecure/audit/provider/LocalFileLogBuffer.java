@@ -278,11 +278,11 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 			openFile();
 		} else if(now > mNextFlushTime) {
 			try {
-				mWriter.flush();
-
 				mNextFlushTime = now + (mFlushIntervalSeconds * 1000L);
+
+				mWriter.flush();
 			} catch (IOException excp) {
-				LogLog.warn("LocalFileLogBuffer: failed to flush", excp);
+				LogLog.warn("LocalFileLogBuffer: failed to flush to file " + mBufferFilename, excp);
 			}
 		}
 	}
@@ -295,7 +295,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 				try {
 					writer = new OutputStreamWriter(os, mEncoding);
 				} catch(UnsupportedEncodingException excp) {
-					LogLog.warn("LocalFileLogBuffer: failed to create output writer.", excp);
+					LogLog.warn("LocalFileLogBuffer: failed to create output writer for file " + mBufferFilename, excp);
 				}
 			}
 	
