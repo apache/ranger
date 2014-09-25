@@ -244,6 +244,26 @@ public class XmlConfigChanger {
 						}
 					}
 				}
+				else if ("delval".equals(actionType)) {
+					String curVal =  getProperty(propName) ;
+					if (curVal != null) {
+						String appendDelimitor = (tokens.length > 4 ? tokens[4] : " ") ;
+						if (curVal.contains(propValue)) {
+							String[] valTokens = curVal.split(appendDelimitor) ;
+							StringBuilder sb = new StringBuilder() ;
+							for(String v : valTokens) {
+								if (! v.equals(propValue)) {
+									if (sb.length() > 0) {
+										sb.append(appendDelimitor) ;
+									}
+									sb.append(v);
+								}
+							}
+							String newVal = sb.toString() ;
+							modProperty(propName, newVal,createIfNotExists) ;
+						}
+					}
+				}
 				else {
 					throw new RuntimeException("Unknown Command Found: [" + actionType + "], Supported Types:  add modify del append") ;
 				}

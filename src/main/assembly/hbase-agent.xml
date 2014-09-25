@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <assembly>
   <id>hbase-agent</id> 
   <formats>
      <format>tar</format>
+	 <format>zip</format>
   </formats>
   <baseDirectory>${project.name}-${project.version}-hbase-agent</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
@@ -23,7 +23,7 @@
                 <unpack>false</unpack>
             </dependencySet>
         </dependencySets>
-        <outputDirectory>/dist</outputDirectory>
+        <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
 	<include>security_agents.agents-audit:agents-audit</include>
@@ -36,52 +36,84 @@
     <moduleSet>
      <binaries>
         <includeDependencies>false</includeDependencies>
-        <outputDirectory>/installer/lib</outputDirectory>
+        <dependencySets>
+                <dependencySet>
+                    <outputDirectory>/install/lib</outputDirectory>
+                    <unpack>false</unpack>
+                    <includes>
+                        <include>commons-cli:commons-cli</include>
+                        <include>commons-collections:commons-collections</include>
+                        <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
+                        <include>commons-lang:commons-lang</include>
+                        <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+                        <include>com.google.guava:guava:jar:${guava.version}</include>
+                        <include>org.hamcrest:hamcrest-all</include>
+                        <include>junit:junit</include>
+                        <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
+                        <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
+                        <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
+                    </includes>
+                </dependencySet>
+        </dependencySets>
+        <outputDirectory>/install/lib</outputDirectory>
         <unpack>false</unpack>
      </binaries>
      <includes>
-	<include>security_agents.agents-installer:agents-installer</include>
+		<include>security_agents.agents-installer:agents-installer</include>
+		<include>com.hortonworks.hadoop.security:credentialbuilder</include>
      </includes>
     </moduleSet>
   </moduleSets> 	
+
   <fileSets>
-	<fileSet>
-		<outputDirectory>/conf</outputDirectory>
-		<directory>hbase-agent/conf</directory>
-		<excludes>
-			<exclude>*.cfg</exclude>
-		</excludes>
-	</fileSet>
-	<fileSet>
-		<outputDirectory>/installer/conf</outputDirectory>
-		<directory>hbase-agent/conf</directory>
-		<includes>
-			<include>*.cfg</include>
-		</includes>
-	</fileSet>
-	<fileSet>
-		<outputDirectory>/</outputDirectory>
-		<directory>hbase-agent/scripts</directory>
-		<excludes>
-			<exclude>*.sh</exclude>
-		</excludes>
-		<fileMode>700</fileMode>
-	</fileSet>
-	<fileSet>
-		<outputDirectory>/</outputDirectory>
-		<directory>hbase-agent/scripts</directory>
-		<includes>
-			<include>*.sh</include>
-		</includes>
-		<fileMode>544</fileMode>
-	</fileSet>
-	<fileSet>
-		<outputDirectory>/</outputDirectory>
-		<directory>${project.build.directory}</directory>
-		<includes>
-			<include>version</include>
-		</includes>
-		<fileMode>444</fileMode>
-	</fileSet>
+    <!-- conf.templates for enable -->
+    <fileSet>
+        <outputDirectory>/install/conf.templates/enable</outputDirectory>
+        <directory>hbase-agent/conf</directory>
+        <excludes>
+            <exclude>*.sh</exclude>
+        </excludes>
+        <fileMode>700</fileMode>
+    </fileSet>
+    <fileSet>
+        <outputDirectory>/install/conf.templates/disable</outputDirectory>
+        <directory>hbase-agent/disable-conf</directory>
+        <fileMode>700</fileMode>
+    </fileSet>
+    <fileSet>
+        <outputDirectory>/install/conf.templates/default</outputDirectory>
+        <directory>hive-agent/template</directory>
+        <fileMode>700</fileMode>
+    </fileSet>
+    <!-- version file -->
+    <fileSet>
+        <outputDirectory>/</outputDirectory>
+        <directory>${project.build.outputDirectory}</directory>
+        <includes>
+            <include>version</include>
+        </includes>
+        <fileMode>444</fileMode>
+    </fileSet>
   </fileSets>
+  <!-- enable/disable script for agent -->
+  <files>
+    <file>
+		<source>agents-common/scripts/enable-agent.sh</source>
+        <outputDirectory>/</outputDirectory>
+        <destName>enable-hbase-agent.sh</destName>
+        <fileMode>755</fileMode>
+    </file>
+    <file>
+		<source>agents-common/scripts/enable-agent.sh</source>
+        <outputDirectory>/</outputDirectory>
+        <destName>disable-hbase-agent.sh</destName>
+        <fileMode>755</fileMode>
+    </file>
+    <file>
+        <source>hbase-agent/scripts/install.properties</source>
+        <outputDirectory>/</outputDirectory>
+        <destName>install.properties</destName>
+        <fileMode>755</fileMode>
+    </file>
+  </files>
 </assembly>
