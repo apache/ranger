@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.hortonworks.hadoop.security</groupId>
   <artifactId>security-admin-web</artifactId>
-  <version>0.1.0</version>
+  <version>0.4.0</version>
   <name>Security Admin Web Application</name>
   <description>security-admin-tool java web application</description>
   <packaging>war</packaging>
   <parent>
-  	<groupId>com.hortonworks.hadoop.security</groupId>
+  	<groupId>org.apache.argus</groupId>
   	<artifactId>argus</artifactId>
-  	<version>0.1.0</version>
+  	<version>0.4.0</version>
   </parent>
   <dependencies>
 		<dependency>
@@ -309,7 +308,7 @@
     		<version>${codehaus.jackson.version}</version>
 		</dependency>
 		<dependency>
-    		<groupId>com.hortonworks.hadoop.security</groupId>
+    		<groupId>org.apache.argus</groupId>
     		<artifactId>lookup-client</artifactId>
     		<version>${project.version}</version>
            <exclusions>
@@ -383,7 +382,7 @@
         	</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>com.hortonworks.hadoop.security</groupId>
+			<groupId>org.apache.argus</groupId>
 			<artifactId>unixauthclient</artifactId>
 			<version>${project.version}</version>
 		</dependency>

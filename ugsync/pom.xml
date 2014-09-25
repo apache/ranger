@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>com.hortonworks.hadoop.security</groupId>
+      <groupId>org.apache.argus</groupId>
       <artifactId>argus</artifactId>
-      <version>0.1.0</version>
+      <version>0.4.0</version>
 	  <relativePath>..</relativePath>
     </parent>
 
@@ -15,8 +15,7 @@
 
     <packaging>jar</packaging>
     <name>Unix User Group Synchronizer</name>
-    <description>HDP Advanced Security - User, Group sync from sources such as Unix and LDAP</description>
-    <url>http:/hortonworks.com/</url>
+    <description>User, Group sync from sources such as Unix and LDAP</description>
 
     <dependencies>
       <dependency>
@@ -75,7 +74,7 @@
       	<version>${slf4j-api.version}</version>
       </dependency>   
 	  <dependency>
-    	<groupId>com.hortonworks.hadoop.security</groupId>
+    	<groupId>org.apache.argus</groupId>
     	<artifactId>credentialbuilder</artifactId>
     	<version>${project.version}</version>  	
 	  </dependency>  

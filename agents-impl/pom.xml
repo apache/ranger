@@ -7,9 +7,9 @@
   <description>Security Agents Implementation</description>
   <packaging>jar</packaging>
   <parent>
-     <groupId>com.hortonworks.hadoop.security</groupId>
+     <groupId>org.apache.argus</groupId>
      <artifactId>argus</artifactId>
-     <version>0.1.0</version>
+     <version>0.4.0</version>
      <relativePath>..</relativePath>
   </parent>
   <dependencies>
