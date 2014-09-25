@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <assembly>
   <id>storm-agent</id> 
   <formats>
      <format>tar</format>
+	 <format>zip</format>
   </formats>
   <baseDirectory>${project.name}-${project.version}-storm-agent</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
@@ -29,7 +29,7 @@
                 </includes>
             </dependencySet>
             <dependencySet>
-                    <outputDirectory>/cred/lib</outputDirectory>
+                    <outputDirectory>/install/lib</outputDirectory>
                     <unpack>false</unpack>
             		<directoryMode>755</directoryMode>
             		<fileMode>644</fileMode>
@@ -50,7 +50,7 @@
                     </includes>
             </dependencySet>
         </dependencySets>
-        <outputDirectory>/dist</outputDirectory>
+        <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
 		<include>security_agents.agents-audit:agents-audit</include>
@@ -63,52 +63,64 @@
     <moduleSet>
      <binaries>
         <includeDependencies>false</includeDependencies>
-        <outputDirectory>/installer/lib</outputDirectory>
+        <outputDirectory>/install/lib</outputDirectory>
         <unpack>false</unpack>
      </binaries>
      <includes>
 	<include>security_agents.agents-installer:agents-installer</include>
+	<include>com.hortonworks.hadoop.security:credentialbuilder</include>
      </includes>
     </moduleSet>
    </moduleSets>
-  <fileSets>
-	<fileSet>
-		<outputDirectory>/conf</outputDirectory>
-		<directory>storm-agent/conf</directory>
-		<excludes>
-			<exclude>*.cfg</exclude>
-		</excludes>
-	</fileSet>
-	<fileSet>
-		<outputDirectory>/installer/conf</outputDirectory>
-		<directory>storm-agent/conf</directory>
-		<includes>
-			<include>*.cfg</include>
-		</includes>
-	</fileSet>
-	<fileSet>
-		<outputDirectory>/</outputDirectory>
-		<directory>storm-agent/scripts</directory>
-		<excludes>
-			<exclude>*.sh</exclude>
-		</excludes>
-		<fileMode>700</fileMode>
-	</fileSet>
-	<fileSet>
-		<outputDirectory>/</outputDirectory>
-		<directory>storm-agent/scripts</directory>
-		<includes>
-			<include>*.sh</include>
-		</includes>
-		<fileMode>544</fileMode>
-	</fileSet>
-        <fileSet>
-                <outputDirectory>/</outputDirectory>
-                <directory>${project.build.directory}</directory>
-                <includes>
-                        <include>version</include>
-                </includes>
-				<fileMode>444</fileMode>
-        </fileSet>
+   <fileSets>
+   <!-- conf.templates for enable -->
+    <fileSet>
+        <outputDirectory>/install/conf.templates/enable</outputDirectory>
+        <directory>storm-agent/conf</directory>
+        <excludes>
+            <exclude>*.sh</exclude>
+        </excludes>
+        <fileMode>700</fileMode>
+    </fileSet>
+    <fileSet>
+        <outputDirectory>/install/conf.templates/disable</outputDirectory>
+        <directory>storm-agent/disable-conf</directory>
+        <fileMode>700</fileMode>
+    </fileSet>
+    <fileSet>
+        <outputDirectory>/install/conf.templates/default</outputDirectory>
+        <directory>storm-agent/template</directory>
+        <fileMode>700</fileMode>
+    </fileSet>
+    <!-- version file -->
+    <fileSet>
+        <outputDirectory>/</outputDirectory>
+        <directory>${project.build.outputDirectory}</directory>
+        <includes>
+            <include>version</include>
+        </includes>
+        <fileMode>444</fileMode>
+    </fileSet>
   </fileSets>
+  <!-- enable/disable script for agent -->
+ <files>
+    <file>
+		<source>agents-common/scripts/enable-agent.sh</source>
+        <outputDirectory>/</outputDirectory>
+        <destName>enable-storm-agent.sh</destName>
+        <fileMode>755</fileMode>
+    </file>
+    <file>
+		<source>agents-common/scripts/enable-agent.sh</source>
+        <outputDirectory>/</outputDirectory>
+        <destName>disable-storm-agent.sh</destName>
+        <fileMode>755</fileMode>
+    </file>
+    <file>
+        <source>storm-agent/scripts/install.properties</source>
+        <outputDirectory>/</outputDirectory>
+        <destName>install.properties</destName>
+        <fileMode>755</fileMode>
+    </file>
+  </files>
 </assembly>

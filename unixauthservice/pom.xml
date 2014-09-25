@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>com.hortonworks.hadoop.security</groupId>
+      <groupId>org.apache.argus</groupId>
       <artifactId>argus</artifactId>
-      <version>0.1.0</version>
+      <version>0.4.0</version>
       <relativePath>..</relativePath>
     </parent>
 
@@ -16,14 +16,13 @@
     <packaging>jar</packaging>
 
     <name>Unix Authentication Service</name>
-    <description>HDP Advanced Security - Unix authentication service</description>
-    <url>http:/hortonworks.com/</url>
+    <description>Unix authentication service</description>
 
     <dependencies>
         <dependency>
-          <groupId>com.hortonworks.hadoop.security</groupId>
+          <groupId>org.apache.argus</groupId>
           <artifactId>unixusersync</artifactId>
-          <version>0.1.0</version>
+          <version>${project.version}</version>
         </dependency>
 
       <dependency>

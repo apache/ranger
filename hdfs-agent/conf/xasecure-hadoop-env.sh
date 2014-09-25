@@ -3,7 +3,7 @@
 echo "$0" | grep -q beeswax_server.sh > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
-	XASECURE_AGENT_PATH="`ls -1 /usr/hdp/current/hadoop/lib/hdfs-agent-*.jar | head -1`"
+	XASECURE_AGENT_PATH="`ls -1 ${HADOOP_HOME}/lib/hdfs-agent-*.jar | head -1`"
 	if [ -f "${XASECURE_AGENT_PATH}" ]
 	then
 	    if [ "${XASECURE_INIT}" != "0" ]
