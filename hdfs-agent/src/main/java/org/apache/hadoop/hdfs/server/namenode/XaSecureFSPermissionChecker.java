@@ -276,10 +276,7 @@ public class XaSecureFSPermissionChecker {
 		String ret = null ;
 		InetAddress ip = Server.getRemoteIp() ;
 		if (ip != null) {
-			ret = ip.toString() ;
-		}
-		else {
-			ret = "" ;
+			ret = ip.getHostAddress();
 		}
 		return ret ;
 	}
