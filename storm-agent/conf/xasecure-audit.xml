@@ -127,7 +127,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.local.buffer.directroy</name>
-		<value>/var/log/xasecure/audit/%app-type%</value>
+		<value>/var/log/storm/audit/%app-type%</value>
 	</property>	
 
 	<property>
@@ -147,7 +147,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.local.archive.directroy</name>
-		<value>/var/log/xasecure/audit/archive/%app-type%</value>
+		<value>/var/log/storm/audit/archive/%app-type%</value>
 	</property>	
 
 	<property>
