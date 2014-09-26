@@ -176,35 +176,45 @@ then
 	
 	if [ "${action}" = "enable" ]
 	then
+
 		cp ${SET_ENV_SCRIPT_TEMPLATE} ${SET_ENV_SCRIPT}
-		if [ -f ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh ]
+
+		DEST_SCRIPT_FILE=${HCOMPONENT_INSTALL_DIR}/libexec/${HCOMPONENT_NAME}-config.sh
+
+		DEST_SCRIPT_ARCHIVE_FILE=${HCOMPONENT_INSTALL_DIR}/libexec/.${HCOMPONENT_NAME}-config.sh.${dt}
+
+		if [ -f "${DEST_SCRIPT_FILE}" ]
 		then
 
-			grep 'xasecure-.*-env.sh' ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh > /dev/null 2>&1
+			log "Saving current ${DEST_SCRIPT_FILE} to ${DEST_SCRIPT_ARCHIVE_FILE} ..."
+
+			cp ${DEST_SCRIPT_FILE} ${DEST_SCRIPT_ARCHIVE_FILE}
+
+			grep 'xasecure-.*-env.sh' ${DEST_SCRIPT_FILE} > /dev/null 2>&1
 			if [ $? -eq 0 ]
 			then
 				ts=`date '+%Y%m%d%H%M%S'`
-				grep -v 'xasecure-.*-env.sh' ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh > ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh.${ts} 
+				grep -v 'xasecure-.*-env.sh' ${DEST_SCRIPT_FILE} > ${DEST_SCRIPT_FILE}.${ts} 
 				if [ $? -eq 0 ]
 				then
 					log "Removing old reference to xasecure setenv source ..."
-					cat ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh.${ts} > ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh
-					rm -f ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh.${ts}
+					cat ${DEST_SCRIPT_FILE}.${ts} > ${DEST_SCRIPT_FILE}
+					rm -f ${DEST_SCRIPT_FILE}.${ts}
 				fi
 			fi
 
-			grep "[ \t]*.[ \t]*${SET_ENV_SCRIPT}" ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh  > /dev/null
+			grep "[ \t]*.[ \t]*${SET_ENV_SCRIPT}" ${DEST_SCRIPT_FILE} > /dev/null
 			if [ $? -ne 0 ]
 			then
-				log "Appending sourcing script, ${SET_ENV_SCRIPT_NAME} in the file: ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh "
-				cat >> ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh <<!
+				log "Appending sourcing script, ${SET_ENV_SCRIPT_NAME} in the file: ${DEST_SCRIPT_FILE} "
+				cat >> ${DEST_SCRIPT_FILE} <<!
 if [ -f ${SET_ENV_SCRIPT} ]
 then
 	.  ${SET_ENV_SCRIPT}
 fi
 !
 			else
-				log "INFO: ${SET_ENV_SCRIPT_NAME} is being sourced from file: ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh "
+				log "INFO: ${DEST_SCRIPT_FILE} is being sourced from file: ${HCOMPONENT_CONF_DIR}/${HCOMPONENT_NAME}-env.sh "
 			fi
 		fi
 	fi
@@ -216,11 +226,10 @@ fi
 
 if [ -d "${PROJ_INSTALL_DIR}/install/conf.templates/${action}" ]
 then
-
-
 	INSTALL_CP="${PROJ_INSTALL_LIB_DIR}/*" 
 	if [ "${action}" = "enable" ]
 	then
+		echo "<argus>\n<enabled>`date`</enabled>\n</argus>" > ${HCOMPONENT_CONF_DIR}/argus-security.xml
 		for cf in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.xml
 		do
 			cfb=`basename ${cf}`
@@ -232,6 +241,11 @@ then
 			cp ${cf} ${HCOMPONENT_CONF_DIR}/
 			chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/${cfb}
 		done
+    else
+		if [ -f ${HCOMPONENT_CONF_DIR}/argus-security.xml ]
+		then
+			mv ${HCOMPONENT_CONF_DIR}/argus-security.xml ${HCOMPONENT_CONF_DIR}/.argus-security.xml.`date '+%Y%m%d%H%M%S'`
+		fi
 	fi
 
 	for f in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.cfg

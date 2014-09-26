@@ -16,7 +16,7 @@
         <outputDirectory>/war</outputDirectory>
      </binaries>
      <includes>
-		<include>com.hortonworks.hadoop.security:security-admin-web</include>
+		<include>org.apache.argus:security-admin-web</include>
      </includes>
     </moduleSet>
 
@@ -38,7 +38,7 @@
         </dependencySets>
      </binaries>
      <includes>
-	    <include>com.hortonworks.hadoop.security:embededwebserver</include>
+	    <include>org.apache.argus:embededwebserver</include>
      </includes>
     </moduleSet>
 
@@ -71,7 +71,7 @@
         </dependencySets>
      </binaries>
      <includes>
-	    <include>com.hortonworks.hadoop.security:credentialbuilder</include>
+	    <include>org.apache.argus:credentialbuilder</include>
      </includes>
     </moduleSet>
 

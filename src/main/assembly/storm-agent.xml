@@ -46,7 +46,7 @@
                         <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
                         <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
 						<include>security_agents.agents-cred:agents-cred</include>
-						<include>com.hortonworks.hadoop.security:credentialbuilder</include>
+						<include>org.apache.argus:credentialbuilder</include>
                     </includes>
             </dependencySet>
         </dependencySets>
@@ -67,8 +67,8 @@
         <unpack>false</unpack>
      </binaries>
      <includes>
-	<include>security_agents.agents-installer:agents-installer</include>
-	<include>com.hortonworks.hadoop.security:credentialbuilder</include>
+		<include>security_agents.agents-installer:agents-installer</include>
+		<include>org.apache.argus:credentialbuilder</include>
      </includes>
     </moduleSet>
    </moduleSets>

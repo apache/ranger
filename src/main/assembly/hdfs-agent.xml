@@ -61,7 +61,7 @@
      </binaries>
      <includes>
 		<include>security_agents.agents-installer:agents-installer</include>
-        <include>com.hortonworks.hadoop.security:credentialbuilder</include>
+        <include>org.apache.argus:credentialbuilder</include>
      </includes>
     </moduleSet>
   </moduleSets> 	

@@ -29,7 +29,7 @@
 					<include>org.apache.hadoop:hadoop-auth</include>
 					<include>org.slf4j:slf4j-api</include>
 					<include>org.apache.hadoop:hadoop-common</include>
-					<include>com.hortonworks.hadoop.security:credentialbuilder</include>
+					<include>org.apache.argus:credentialbuilder</include>
 				</includes>
 				<unpack>false</unpack>
   			</dependencySet>
@@ -37,8 +37,8 @@
         <outputDirectory>/dist</outputDirectory>
      </binaries>
      <includes>
-	<include>com.hortonworks.hadoop.security:unixauthservice</include>
-	<include>com.hortonworks.hadoop.security:unixusersync</include>
+	<include>org.apache.argus:unixauthservice</include>
+	<include>org.apache.argus:unixusersync</include>
      </includes>
     </moduleSet>
     <moduleSet>
