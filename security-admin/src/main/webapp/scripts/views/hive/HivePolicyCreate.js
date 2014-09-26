@@ -82,10 +82,7 @@ define(function(require){
 
 			_.extend(this, _.pick(options,'assetModel'));
 			this.bindEvents();
-			
-			if(this.model.get('resourceType') == XAEnums.ResourceType.RESOURCE_COLUMN.value)
-				this.model.set('resourceType',XAEnums.ResourceType.RESOURCE_TABLE.value);
-
+			this.checkResourceTypeWithWildCard();
 			that.form = new HivePolicyForm({
 					template : require('hbs!tmpl/hive/HivePolicyForm_tmpl'),
 					model : this.model,
@@ -99,6 +96,25 @@ define(function(require){
 		bindEvents : function(){
 			/*this.listenTo(this.model, "change:foo", this.modelChanged, this);*/
 			/*this.listenTo(communicator.vent,'someView:someEvent', this.someEventHandler, this)'*/
+		},
+		checkResourceTypeWithWildCard : function(){
+			var type = this.model.get('resourceType');
+			switch(this.model.get('resourceType')){
+				case XAEnums.ResourceType.RESOURCE_DB.value :
+					if(!_.isEmpty(this.model.get("tables"))){
+						if(_.isEqual(this.model.get("tables"),"*"))
+							type = XAEnums.ResourceType.RESOURCE_TABLE.value;
+					}
+					if(!_.isEmpty(this.model.get("udfs"))){
+						if(_.isEqual(this.model.get("udfs"),"*"))
+							type = XAEnums.ResourceType.RESOURCE_UDF.value;
+					}
+					break;
+				case XAEnums.ResourceType.RESOURCE_COLUMN.value :
+					type = XAEnums.ResourceType.RESOURCE_TABLE.value;
+					break;
+			}
+			this.model.set('resourceType',type);
 		},
 
 		/** on render callback */

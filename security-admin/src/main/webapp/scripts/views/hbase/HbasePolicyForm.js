@@ -515,6 +515,7 @@ define(function(require){
 			else
 				this.model.set('resourceType',XAEnums.ResourceType.RESOURCE_TABLE.value);
 			
+			this.setResourceTypeAsPerWildCard();
 			//TODO Already handled by server side so we need to remove following line 
 			if(_.isEmpty(this.model.get('columnFamilies')))	{
 				this.model.unset('columnFamilies');
@@ -539,6 +540,27 @@ define(function(require){
 			if(!_.isEqual(e.currentTarget.value, ""))
 				newNameList = e.currentTarget.value.split(',');
 			XAUtil.checkDirtyField(nameList, newNameList, elem);
+		},
+		setResourceTypeAsPerWildCard :function(){
+			var type = this.model.get('resourceType');
+			//Set resourceType as per WildCard operator '*'
+			switch(this.model.get('resourceType')){
+				case XAEnums.ResourceType.RESOURCE_COLUMN.value :
+					if(_.isEqual(this.model.get('columns'),"*")){
+						if(_.isEqual(this.model.get('columnFamilies'),"*"))
+							type = XAEnums.ResourceType.RESOURCE_TABLE.value;
+						else
+							type = XAEnums.ResourceType.RESOURCE_COL_FAM.value;
+						
+					}
+					break;
+				case XAEnums.ResourceType.RESOURCE_COL_FAM.value :
+					if(_.isEqual(this.model.get('columnFamilies'),"*")){
+							type = XAEnums.ResourceType.RESOURCE_TABLE.value;
+					}
+					break;
+			}
+			this.model.set('resourceType',type);
 		},
 		/* all post render plugin initialization */
 		initializePlugins: function(){

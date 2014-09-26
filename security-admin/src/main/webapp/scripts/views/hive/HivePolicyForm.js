@@ -170,13 +170,14 @@ define(function(require){
 					//fieldAttrs : {style : 'display:none;'}
 				},
 				udfs : {
-					type		: 'Text',
+//					type		: 'Text',
+					type		: 'Select2Remote',
 					title		: localization.tt("lbl.permForUdf"),
-					editorAttrs :{'placeholder': 'Enter UDF Name'}
+					editorAttrs :{'placeholder': 'Enter UDF Name'},
 			//		fieldAttrs :{'style' :'visibility:hidden'},
 					//validators  : [{type:'regexp',regexp:/^[a-zA-Z*?][a-zA-Z0-9_'&-/\$]*[A-Za-z0-9]*$/i,message :localization.tt('validationMessages.enterValidName')}],
-					/*pluginAttr  : this.getPlugginAttr(true,this.type.UDF),
-	                options    : function(callback, editor){
+					pluginAttr  : this.getPlugginAttr(false,this.type.UDF),
+	                /*options    : function(callback, editor){
 	                    callback();
 	                },*/
 				},
@@ -673,8 +674,9 @@ define(function(require){
 			var perm1 = resourceTypeTable && _.isEmpty(this.model.get('tables')) && columns;
 			var perm3 = resourceTypeUdf   && _.isEmpty(this.model.get('udfs')) ;
 			
-			if(_.isEmpty(this.model.get('resourceType')))
+			if(_.isEmpty(this.model.get('resourceType'))){
 				this.model.set('resourceType',XAEnums.ResourceType.RESOURCE_DB.value);
+			}
 			else{
 				
 				if(perm1 || perm3){ //if(perm1 || perm2 || perm3){
@@ -698,6 +700,8 @@ define(function(require){
 					}
 				}
 			}
+			//Set resourceType as per WildCard operator '*'
+			this.setResourceTypeAsPerWildCard();
 			
 			if(this.fields.resourceType.getValue() != XAEnums.ResourceType.RESOURCE_UDF.value){
 				if(!_.isEmpty(this.model.get('tables'))){
@@ -733,6 +737,31 @@ define(function(require){
 				newNameList = e.currentTarget.value.split(',');
 			XAUtil.checkDirtyField(nameList, newNameList, elem);
 		},
+		setResourceTypeAsPerWildCard :function(){
+			//Set resourceType as per WildCard operator '*'
+			var type = this.model.get('resourceType');
+			switch(this.model.get('resourceType')){
+				case XAEnums.ResourceType.RESOURCE_COLUMN.value :
+					if(_.isEqual(this.model.get('columns'),"*")){
+						if(_.isEqual(this.model.get('tables'),"*"))
+							type = XAEnums.ResourceType.RESOURCE_DB.value;
+						else
+							type = XAEnums.ResourceType.RESOURCE_TABLE.value;
+						
+					}
+					break;
+				case XAEnums.ResourceType.RESOURCE_TABLE.value :
+					if(_.isEqual(this.model.get('tables'),"*"))
+						type = XAEnums.ResourceType.RESOURCE_DB.value;
+					break;
+				case XAEnums.ResourceType.RESOURCE_UDF.value :
+					if(_.isEqual(this.model.get('udfs'),"*"))
+						type = XAEnums.ResourceType.RESOURCE_DB.value;
+					break;
+			}
+			this.model.set('resourceType',type);
+		},
+		
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		}

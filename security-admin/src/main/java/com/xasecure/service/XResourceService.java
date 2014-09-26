@@ -77,6 +77,9 @@ public class XResourceService extends
 	
 	@Autowired
 	XAEnumUtil xaEnumUtil;
+	
+	@Autowired
+	XPolicyService xPolicyService;
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	
@@ -259,7 +262,7 @@ public class XResourceService extends
 
 	@Override
 	protected void validateForUpdate(VXResource vObj, XXResource mObj) {
-		if (vObj != null && vObj.getResourceType() == AppConstants.ASSET_HDFS) {
+		if (vObj != null && vObj.getAssetType() == AppConstants.ASSET_HDFS) {
 			if (!(vObj.getName() != null) || vObj.getName().isEmpty()) {
 				throw restErrorUtil.createRESTException("Please provide the "
 						+ "resource path.", MessageEnums.INVALID_INPUT_DATA);
@@ -480,7 +483,8 @@ public class XResourceService extends
 
 		if(assetType==AppConstants.ASSET_HDFS){
 		
-		int resourceType = vXResource.getResourceType();
+//		int resourceType = vXResource.getResourceType();
+		int resourceType = xPolicyService.getResourceType(vXResource);
 		List<Integer> resourceTypeList = xaBizUtil
 				.getResorceTypeParentHirearchy(resourceType, assetType);
 		

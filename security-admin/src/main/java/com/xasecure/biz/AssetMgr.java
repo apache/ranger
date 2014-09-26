@@ -85,6 +85,7 @@ import com.xasecure.service.XAccessAuditService;
 import com.xasecure.service.XAuditMapService;
 import com.xasecure.service.XGroupService;
 import com.xasecure.service.XPermMapService;
+import com.xasecure.service.XPolicyService;
 import com.xasecure.service.XTrxLogService;
 import com.xasecure.service.XUserService;
 import com.xasecure.storm.client.StormClient;
@@ -152,6 +153,9 @@ public class AssetMgr extends AssetMgrBase {
 	@Autowired
 	@Qualifier(value = "transactionManager")
 	PlatformTransactionManager txManager;
+	
+	@Autowired
+	XPolicyService xPolicyService;
 	
 	static Logger logger = Logger.getLogger(AssetMgr.class);
 
@@ -1261,9 +1265,11 @@ public class AssetMgr extends AssetMgrBase {
 			vXResource.setTopologies("*");
 			vXResource.setServices("*");
 			vXResource.setName("/*/*");
+			vXResource.setResourceType(AppConstants.RESOURCE_SERVICE_NAME);
 		} else if (assetType == AppConstants.ASSET_STORM) {
 			vXResource.setTopologies("*");
 			vXResource.setName("/*");
+			vXResource.setResourceType(AppConstants.RESOURCE_TOPOLOGY);
 		}
 
 		vXResource = xResourceService.createResource(vXResource);
@@ -1662,7 +1668,8 @@ public class AssetMgr extends AssetMgrBase {
 
 		StringBuilder stringBuilder = new StringBuilder();
 
-		int resourceType = vXResource.getResourceType();
+//		int resourceType = vXResource.getResourceType();
+		int resourceType = xPolicyService.getResourceType(vXResource);
 
 		if (databases == null) {
 			logger.error("Invalid resources for hive policy.");
@@ -1736,7 +1743,8 @@ public class AssetMgr extends AssetMgrBase {
 
 		StringBuilder stringBuilder = new StringBuilder();
 
-		int resourceType = vXResource.getResourceType();
+//		int resourceType = vXResource.getResourceType();
+		int resourceType = xPolicyService.getResourceType(vXResource);
 
 		if (tables == null) {
 			logger.error("Invalid resources for hbase policy.");
@@ -1799,7 +1807,8 @@ public class AssetMgr extends AssetMgrBase {
 
 		StringBuilder stringBuilder = new StringBuilder();
 
-		int resourceType = vXResource.getResourceType();
+//		int resourceType = vXResource.getResourceType();
+		int resourceType = xPolicyService.getResourceType(vXResource);
 
 		if (topologies == null) {
 			logger.error("Invalid resources for knox policy.");
@@ -1852,7 +1861,8 @@ public class AssetMgr extends AssetMgrBase {
 
 		StringBuilder stringBuilder = new StringBuilder();
 
-		int resourceType = vXResource.getResourceType();
+//		int resourceType = vXResource.getResourceType();
+		int resourceType = xPolicyService.getResourceType(vXResource);
 
 		if (topologies == null) {
 			logger.error("Invalid resources for Storm policy.");

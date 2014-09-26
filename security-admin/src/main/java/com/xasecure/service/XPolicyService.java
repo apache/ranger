@@ -51,6 +51,7 @@ import com.xasecure.entity.XXResource;
 import com.xasecure.entity.XXUser;
 import com.xasecure.view.VXAuditMap;
 import com.xasecure.view.VXAuditMapList;
+import com.xasecure.view.VXDataObject;
 import com.xasecure.view.VXPermMap;
 import com.xasecure.view.VXPermMapList;
 import com.xasecure.view.VXPermObj;
@@ -689,33 +690,70 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		return true;
 	}
 
-	public int getResourceType(VXPolicy vXPolicy) {
+	public int getResourceType(VXDataObject vObj) {
 		int resourceType = AppConstants.RESOURCE_PATH;
-		if (vXPolicy == null) {
+		if (vObj == null) {
 			return resourceType;
 		}
-		if (!stringUtil.isEmpty(vXPolicy.getDatabases())) {
+
+		VXPolicy vXPolicy = null;
+		VXResource vXResource = null;
+		if (vObj instanceof VXPolicy) {
+			vXPolicy = (VXPolicy) vObj;
+		} else if (vObj instanceof VXResource) {
+			vXResource = (VXResource) vObj;
+		} else {
+			return resourceType;
+		}
+
+		String databases = null;
+		String tables = null;
+		String columns = null;
+		String udfs = null;
+		String columnFamilies = null;
+		String topologies = null;
+		String services = null;
+
+		if (vXPolicy != null) {
+			databases = vXPolicy.getDatabases();
+			tables = vXPolicy.getTables();
+			columns = vXPolicy.getColumns();
+			udfs = vXPolicy.getUdfs();
+			columnFamilies = vXPolicy.getColumnFamilies();
+			topologies = vXPolicy.getTopologies();
+			services = vXPolicy.getServices();
+		} else if (vXResource != null) {
+			databases = vXResource.getDatabases();
+			tables = vXResource.getTables();
+			columns = vXResource.getColumns();
+			udfs = vXResource.getUdfs();
+			columnFamilies = vXResource.getColumnFamilies();
+			topologies = vXResource.getTopologies();
+			services = vXResource.getServices();
+		}
+
+		if (!stringUtil.isEmpty(databases)) {
 			resourceType = AppConstants.RESOURCE_DB;
-			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getTables())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(tables)) {
 				resourceType = AppConstants.RESOURCE_TABLE;
 			}
-			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumns())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(columns)) {
 				resourceType = AppConstants.RESOURCE_COLUMN;
 			}
-			if (!stringUtil.isEmpty(vXPolicy.getUdfs())) {
+			if (!stringUtil.isEmpty(udfs)) {
 				resourceType = AppConstants.RESOURCE_UDF;
 			}
-		} else if (!stringUtil.isEmpty(vXPolicy.getTables())) {
+		} else if (!stringUtil.isEmpty(tables)) {
 			resourceType = AppConstants.RESOURCE_TABLE;
-			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumnFamilies())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(columnFamilies)) {
 				resourceType = AppConstants.RESOURCE_COL_FAM;
 			}
-			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getColumns())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(columns)) {
 				resourceType = AppConstants.RESOURCE_COLUMN;
 			}
-		} else if (!stringUtil.isEmpty(vXPolicy.getTopologies())) {
+		} else if (!stringUtil.isEmpty(topologies)) {
 			resourceType = AppConstants.RESOURCE_TOPOLOGY;
-			if (!stringUtil.isEmptyOrWildcardAsterisk(vXPolicy.getServices())) {
+			if (!stringUtil.isEmptyOrWildcardAsterisk(services)) {
 				resourceType = AppConstants.RESOURCE_SERVICE_NAME;
 			}
 		}

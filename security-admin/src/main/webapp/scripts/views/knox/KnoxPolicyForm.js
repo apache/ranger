@@ -484,6 +484,7 @@ define(function(require){
 			
 			var resourceType = _.isEmpty(this.model.get('services')) ? XAEnums.ResourceType.RESOURCE_TOPOLOGY.value : XAEnums.ResourceType.RESOURCE_SERVICE.value ;
 			this.model.set('resourceType',resourceType);
+			this.setResourceTypeAsPerWildCard();
 		},
 		checkMultiselectDirtyField : function(e, type){
 			var elem = $(e.currentTarget),columnName='',nameList = [], newNameList = [];
@@ -497,6 +498,19 @@ define(function(require){
 			if(!_.isEqual(e.currentTarget.value, ""))
 				newNameList = e.currentTarget.value.split(',');
 			XAUtil.checkDirtyField(nameList, newNameList, elem);
+		},
+		setResourceTypeAsPerWildCard :function(){
+			var type = this.model.get('resourceType');
+			//Set resourceType as per WildCard operator '*'
+			switch(this.model.get('resourceType')){
+				case XAEnums.ResourceType.RESOURCE_SERVICE.value :
+					if(_.isEqual(this.model.get('services'),"*")){
+						type = XAEnums.ResourceType.RESOURCE_TOPOLOGY.value;
+						
+					}
+					break;
+			}
+			this.model.set('resourceType',type);
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){
