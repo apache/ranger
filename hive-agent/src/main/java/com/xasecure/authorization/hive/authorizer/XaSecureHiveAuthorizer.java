@@ -430,6 +430,8 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 
 				case ALTERDATABASE:
 				case ALTERDATABASE_OWNER:
+				case ALTERINDEX_PROPS:
+				case ALTERINDEX_REBUILD:
 				case ALTERPARTITION_BUCKETNUM:
 				case ALTERPARTITION_FILEFORMAT:
 				case ALTERPARTITION_LOCATION:
@@ -438,10 +440,12 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				case ALTERPARTITION_SERDEPROPERTIES:
 				case ALTERPARTITION_SERIALIZER:
 				case ALTERTABLE_ADDCOLS:
+				case ALTERTABLE_ADDPARTS:
 				case ALTERTABLE_ARCHIVE:
 				case ALTERTABLE_BUCKETNUM:
 				case ALTERTABLE_CLUSTER_SORT:
 				case ALTERTABLE_COMPACT:
+				case ALTERTABLE_DROPPARTS:
 				case ALTERTABLE_FILEFORMAT:
 				case ALTERTABLE_LOCATION:
 				case ALTERTABLE_MERGEFILES:
@@ -468,6 +472,7 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				break;
 
 				case DROPFUNCTION:
+				case DROPINDEX:
 				case DROPTABLE:
 				case DROPVIEW:
 				case DROPDATABASE:
@@ -475,9 +480,6 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				break;
 
 				case CREATEINDEX:
-				case ALTERINDEX_PROPS:
-				case ALTERINDEX_REBUILD:
-				case DROPINDEX:
 					accessType = HiveAccessType.INDEX;
 				break;
 
@@ -511,8 +513,6 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 					accessType = HiveAccessType.USE;
 				break;
 
-				case ALTERTABLE_ADDPARTS:
-				case ALTERTABLE_DROPPARTS:
 				case TRUNCATETABLE:
 					accessType = HiveAccessType.UPDATE;
 				break;
@@ -526,10 +526,10 @@ public class XaSecureHiveAuthorizer extends XaSecureHiveAuthorizerBase {
 				case DELETE:
 				case COMPILE:
 				case CREATEMACRO:
-				case DROPMACRO:
 				case CREATEROLE:
 				case DESCFUNCTION:
 				case DFS:
+				case DROPMACRO:
 				case DROPROLE:
 				case EXPLAIN:
 				case GRANT_ROLE:
