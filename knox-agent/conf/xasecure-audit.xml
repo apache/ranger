@@ -122,7 +122,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.local.buffer.directroy</name>
-		<value>/var/log/knox/audit/%app-type%</value>
+		<value>/var/log/knox/audit</value>
 	</property>	
 
 	<property>
@@ -142,7 +142,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.local.archive.directroy</name>
-		<value>/var/log/knox/audit/archive/%app-type%</value>
+		<value>/var/log/knox/audit/archive</value>
 	</property>	
 
 	<property>

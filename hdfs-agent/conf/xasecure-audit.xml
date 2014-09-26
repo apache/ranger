@@ -108,7 +108,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.local.buffer.directroy</name>
-		<value>/var/log/hadoop/audit/%app-type%</value>
+		<value>/var/log/hadoop/%app-type%/audit</value>
 	</property>	
 
 	<property>
@@ -128,7 +128,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.local.archive.directroy</name>
-		<value>/var/log/hadoop/audit/archive/%app-type%</value>
+		<value>/var/log/hadoop/%app-type%/audit/archive</value>
 	</property>	
 
 	<property>
