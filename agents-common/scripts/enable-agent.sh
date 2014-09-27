@@ -8,9 +8,18 @@ PROJ_NAME=argus
 BASE_CONF_DIR=/etc/${PROJ_NAME}
 
 #
-# Identify the component, action from the script file
+# The script should be run by "root" user
 #
 
+if [ ! -w /etc/passwd ]
+then
+    echo "ERROR: $0 script should be run as root."
+    exit 1
+fi
+
+#
+# Identify the component, action from the script file
+#
 
 basedir=`dirname $0`
 if [ "${basedir}" = "." ]
@@ -240,6 +249,13 @@ then
 			fi
 			cp ${cf} ${HCOMPONENT_CONF_DIR}/
 			chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/${cfb}
+			#
+			# To support Hive and HBase Client to be able to read the configuration ...
+			#
+			if [ "${HCOMPONENT_NAME}" = "hive" -o "${HCOMPONENT_NAME}" = "hbase" ]
+			then
+				chmod a+r ${HCOMPONENT_CONF_DIR}/${cfb}
+			fi
 		done
     else
 		if [ -f ${HCOMPONENT_CONF_DIR}/argus-security.xml ]
@@ -247,6 +263,43 @@ then
 			mv ${HCOMPONENT_CONF_DIR}/argus-security.xml ${HCOMPONENT_CONF_DIR}/.argus-security.xml.`date '+%Y%m%d%H%M%S'`
 		fi
 	fi
+
+	#
+	# Ensure that POLICY_CACHE_FILE_PATH is accessible
+	#
+	REPO_NAME=`grep '^REPOSITORY_NAME' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+	export POLICY_CACHE_FILE_PATH=/etc/${PROJ_NAME}/${REPO_NAME}/policycache
+	export CREDENTIAL_PROVIDER_FILE=/etc/${PROJ_NAME}/${REPO_NAME}/cred.jceks
+	if [ ! -d ${POLICY_CACHE_FILE_PATH} ]
+	then
+		mkdir -p ${POLICY_CACHE_FILE_PATH}
+	fi
+	chmod a+rx /etc/${PROJ_NAME}
+	chmod a+rx /etc/${PROJ_NAME}/${REPO_NAME}
+	chmod a+rx ${POLICY_CACHE_FILE_PATH}
+	chown -R ${CFG_OWNER_INF} /etc/${PROJ_NAME}/${REPO_NAME}
+	
+
+	#
+	# We need to do the AUDIT JDBC url 
+	#
+
+	db_flavor=`grep '^XAAUDIT.DB.FLAVOUR' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+    audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${INSTALL_ARGS}  | awk -F= '{ print $2 }'`
+    audit_db_name=`grep '^XAAUDIT.DB.DATABASE_NAME'  ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+
+	if [ "${db_flavor}" = "MYSQL" ]
+	then
+    	export XAAUDIT_DB_JDBC_URL="jdbc:mysql://${audit_db_hostname}/${audit_db_name}"
+    	export XAAUDIT_DB_JDBC_DRIVER="com.mysql.jdbc.Driver"
+	fi
+	
+	if [ "${db_flavor}" = "ORACLE" ]
+	then
+    	export XAAUDIT_DB_JDBC_URL="jdbc:oracle:thin:\@//${audit_db_hostname}"
+    	export XAAUDIT_DB_JDBC_DRIVER="oracle.jdbc.OracleDriver"
+	fi
+
 
 	for f in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.cfg
 	do
@@ -278,7 +331,7 @@ then
                 	diff -w ${newfn} ${fullpathorgfn} > /dev/null 2>&1
                     if [ $? -ne 0 ]
                     then
-                    	cp ${newfn} ${fullpathorgfn}
+                    	cat ${newfn} > ${fullpathorgfn}
                     fi
                	else
 				    echo "ERROR: Unable to make changes to config. file: ${fullpathorgfn}"
@@ -327,8 +380,8 @@ then
 	# Encrypt the password and keep it secure in Credential Provider API
 	#
 	
-	CredFile=`grep '^CREDENTIAL_PROVIDER_FILE' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
-	
+	CredFile=${CREDENTIAL_PROVIDER_FILE}
+
 	if ! [ `echo ${CredFile} | grep '^/.*'` ]
 	then
   	echo "ERROR:Please enter the Credential File Store with proper file path"
@@ -346,7 +399,7 @@ then
     		echo "ERROR: Unable to create credential store file path"
 			exit 1
 		fi
-		chmod go+rx "${pardir}"
+		chmod a+rx "${pardir}"
 	fi
 
 	#
@@ -380,6 +433,11 @@ then
 	create_jceks "${ssltruststoreAlias}" "${ssltruststoreCred}" "${CredFile}"
 	
 	chown ${CFG_OWNER_INF} ${CredFile}
+	#
+	# To allow all users in the server (where Hive CLI and HBase CLI is used),
+	# user needs to have read access for the credential file.
+	#
+	chmod a+r ${CredFile} 
 	
 fi
 

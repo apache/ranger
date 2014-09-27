@@ -175,6 +175,7 @@ public class XmlConfigChanger {
 			
 			String line = null ;
 			
+			@SuppressWarnings("unused")
 			int lineNo = 0 ;
 			
 			while ((line = reader.readLine()) != null) {
@@ -426,6 +427,8 @@ public class XmlConfigChanger {
 			FileInputStream in = new FileInputStream(propFile) ;
 			installProperties.load(in);
 		}
+		// To support environment variable, we will add all environment variables to the Properties
+		installProperties.putAll(System.getenv());
 	}
 	
 		

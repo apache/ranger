@@ -34,6 +34,7 @@
 package com.xasecure.authorization.hadoop.config;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
@@ -67,15 +68,33 @@ public class XaSecureConfiguration extends Configuration {
 			addResource(auditFileLocation) ;
 		}
 		else {
-			addResource(XaSecureHadoopConstants.XASECURE_AUDIT_FILE) ;
+			addResourceIfReadable(XaSecureHadoopConstants.XASECURE_AUDIT_FILE) ;
 		}
-		addResource(XaSecureHadoopConstants.XASECURE_HDFS_SECURITY_FILE);
-		addResource(XaSecureHadoopConstants.XASECURE_KNOX_SECURITY_FILE);
-		addResource(XaSecureHadoopConstants.XASECURE_HBASE_SECURITY_FILE) ;
-		addResource(XaSecureHadoopConstants.XASECURE_HIVE_SECURITY_FILE) ;
-		addResource(XaSecureHadoopConstants.XASECURE_STORM_SECURITY_FILE);
+		addResourceIfReadable(XaSecureHadoopConstants.XASECURE_HDFS_SECURITY_FILE);
+		addResourceIfReadable(XaSecureHadoopConstants.XASECURE_KNOX_SECURITY_FILE);
+		addResourceIfReadable(XaSecureHadoopConstants.XASECURE_HBASE_SECURITY_FILE) ;
+		addResourceIfReadable(XaSecureHadoopConstants.XASECURE_HIVE_SECURITY_FILE) ;
+		addResourceIfReadable(XaSecureHadoopConstants.XASECURE_STORM_SECURITY_FILE);
 		
 	}
+	
+	@SuppressWarnings("deprecation")
+	private void addResourceIfReadable(String aResourceName) {
+		String fName = getFileLocation(aResourceName) ;
+		if (fName != null) {
+			File f = new File(fName) ;
+			if (f.exists() && f.canRead()) {
+				URL fUrl = null ;
+				try {
+					fUrl = f.toURL() ;
+					addResource(fUrl) ;
+				} catch (MalformedURLException e) {
+					LOG.debug("Unable to find URL for the resource name [" + aResourceName +"]. Ignoring the resource:" + aResourceName);
+				}
+			}
+		}
+	}
+	
 
 	public static XaSecureConfiguration getInstance() {
 		if (config == null) {
@@ -123,9 +142,11 @@ public class XaSecureConfiguration extends Configuration {
 			for(String  cfgFile : 	new String[] {  "hive-site.xml",  "hbase-site.xml",  "hdfs-site.xml" } ) {
 				String loc = getFileLocation(cfgFile) ;
 				if (loc != null) {
-					File parentFile = new File(loc).getParentFile() ;
-					ret = new File(parentFile, XaSecureHadoopConstants.XASECURE_AUDIT_FILE).toURL() ;
-					break ;
+					if (new File(loc).canRead()) {
+						File parentFile = new File(loc).getParentFile() ;
+						ret = new File(parentFile, XaSecureHadoopConstants.XASECURE_AUDIT_FILE).toURL() ;
+						break ;
+					}
 				}
 			}
 		}
@@ -153,5 +174,5 @@ public class XaSecureConfiguration extends Configuration {
 		
 		return ret ;
 	}
-	
+
 }
