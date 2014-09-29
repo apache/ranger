@@ -6,14 +6,12 @@
 
     <parent>
       <groupId>org.apache.argus</groupId>
-      <artifactId>security-usergroup-sync</artifactId>
-      <version>3.6.000</version>
+      <artifactId>argus</artifactId>
+      <version>0.4.0</version>
       <relativePath>..</relativePath>
     </parent>
 
     <artifactId>credValidator</artifactId>
-    <version>3.6.000</version>
-
     <packaging>uexe</packaging>
 
     <name>Unix Native Authenticator</name>

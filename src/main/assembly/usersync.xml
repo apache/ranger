@@ -88,9 +88,12 @@
 	</fileSet>
 	<fileSet>
 	    	<directoryMode>755</directoryMode>
-	    	<fileMode>500</fileMode>
+	    	<fileMode>755</fileMode>
 		<outputDirectory>/native</outputDirectory>
-		<directory>unixauthnative/native</directory>
+		<directory>unixauthnative/target</directory>
+		               <includes>
+		                        <include>credValidator.*</include>
+		               </includes>
 	</fileSet>
         <fileSet>
 	    	<directoryMode>755</directoryMode>
