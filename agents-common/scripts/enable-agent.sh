@@ -46,7 +46,7 @@ fi
 
 HCOMPONENT_NAME=`echo ${COMPONENT_NAME} | sed -e 's:-agent::'`
 
-CFG_OWNER_INF="${HCOMPONENT_NAME}:hadoop"
+CFG_OWNER_INF="${HCOMPONENT_NAME}:${HCOMPONENT_NAME}"
 
 if [ "${HCOMPONENT_NAME}" = "hdfs" ]
 then
@@ -239,6 +239,8 @@ then
 	if [ "${action}" = "enable" ]
 	then
 		echo "<argus>\n<enabled>`date`</enabled>\n</argus>" > ${HCOMPONENT_CONF_DIR}/argus-security.xml
+		chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/argus-security.xml
+		chmod a+r ${HCOMPONENT_CONF_DIR}/argus-security.xml
 		for cf in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.xml
 		do
 			cfb=`basename ${cf}`
@@ -249,13 +251,7 @@ then
 			fi
 			cp ${cf} ${HCOMPONENT_CONF_DIR}/
 			chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/${cfb}
-			#
-			# To support Hive and HBase Client to be able to read the configuration ...
-			#
-			if [ "${HCOMPONENT_NAME}" = "hive" -o "${HCOMPONENT_NAME}" = "hbase" ]
-			then
-				chmod a+r ${HCOMPONENT_CONF_DIR}/${cfb}
-			fi
+			chmod a+r ${HCOMPONENT_CONF_DIR}/${cfb}
 		done
     else
 		if [ -f ${HCOMPONENT_CONF_DIR}/argus-security.xml ]
