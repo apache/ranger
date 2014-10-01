@@ -8,10 +8,15 @@
 					<!-- table-policy -->
 					<thead>
 						<tr>
-							<th><img alt="HDFS" src="images/hdfs.jpg"> 
-								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{hdfsVal}}"
-								class="pull-right" title="Add"> <i class="icon-plus"></i>
-							</a> {{/if}}</th>
+							<th>
+								<span class="policy-title">
+									<img alt="HDFS" src="images/folder-grey.png">
+									HDFS 
+									{{#if isSysAdmin}} 
+										<a href="{{assetCreateHref}}/{{hdfsVal}}"class="pull-right" title="Add"> <i class="icon-plus"></i></a> 
+									{{/if}}
+								</span>	
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -54,10 +59,15 @@
 					<!-- table-policy -->
 					<thead>
 						<tr>
-							<th><img alt="Hive" src="images/hive.png" > 
-								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{hiveVal}}"
-								class="pull-right" title="Add"><i class="icon-plus"></i></a></th>
-							{{/if}}
+							<th>
+								<span class="policy-title">
+									<img alt="Hive" src="images/data-grey.png" >
+									 Hive
+									{{#if isSysAdmin}} 
+									<a href="{{assetCreateHref}}/{{hiveVal}}" class="pull-right" title="Add"><i class="icon-plus"></i></a>
+									{{/if}}
+								</span>									
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -99,10 +109,15 @@
 					<!-- table-policy -->
 					<thead>
 						<tr>
-							<th><img alt="HBase" src="images/hbase.jpg" > 
-								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{hbaseVal}}"
-								class="pull-right" title="Add"><i class="icon-plus"></i></a></th>
-							{{/if}}
+							<th>
+								<span class="policy-title">
+									<img alt="HBase" src="images/data-grey.png" >
+									Hbase 
+									{{#if isSysAdmin}} 
+										<a href="{{assetCreateHref}}/{{hbaseVal}}" class="pull-right" title="Add"><i class="icon-plus"></i></a>
+									{{/if}}
+								</span>									
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -146,10 +161,15 @@
 					<!-- table-policy -->
 					<thead>
 						<tr>
-							<th><img alt="KNOX" src="images/knox.gif" > 
-								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{knoxVal}}"
-								class="pull-right" title="Add"> <i class="icon-plus"></i>
-							</a> {{/if}}</th>
+							<th>
+								<span class="policy-title">
+									<img alt="KNOX" src="images/router-grey.png" >
+									Knox 
+									{{#if isSysAdmin}} 
+										<a href="{{assetCreateHref}}/{{knoxVal}}" class="pull-right" title="Add"> <i class="icon-plus"></i></a>
+									{{/if}}
+								</span>		
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -191,10 +211,14 @@
 					<!-- table-policy -->
 					<thead>
 						<tr>
-							<th><img alt="STORM" src="images/storm.png" > 
-								{{#if isSysAdmin}} <a href="{{assetCreateHref}}/{{stormVal}}"
-								class="pull-right" title="Add"> <i class="icon-plus"></i>
-							</a> {{/if}}</th>
+							<th>
+								<span class="policy-title">
+									<img alt="STORM" src="images/task-grey.png" >
+									Storm 
+									{{#if isSysAdmin}} 
+										<a href="{{assetCreateHref}}/{{stormVal}}" class="pull-right" title="Add"> <i class="icon-plus"></i></a> 
+									{{/if}}
+							</th>
 						</tr>
 					</thead>
 					<tbody>
