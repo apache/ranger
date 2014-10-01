@@ -37,9 +37,9 @@
             </source>  
           </sources>
             
-          <linkerStartOptions>
-            <linkerStartOption>-lcrypt</linkerStartOption>
-          </linkerStartOptions>
+          <linkerEndOptions>
+            <linkerEndOption>-lcrypt</linkerEndOption>
+          </linkerEndOptions>
                     
         </configuration>
         
