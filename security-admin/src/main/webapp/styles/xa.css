@@ -1524,9 +1524,6 @@ table.table.backgrid thead th.repoName {
     display: block;
     margin-top: 6%;
 }
-.policy-manager img {
-    max-height: 40px;
-}
 
 /* Login Page */
 body.login {
@@ -1638,6 +1635,21 @@ tr.disable-policy td {
 .policy-disabled .formHeader,
 .policy-disabled .control-label {
 	color:#aaa;
-}td.html-cell.renderable:last-child {
+}
+
+td.html-cell.renderable:last-child {
 	text-align:center;
+}
+
+.policy-manager span.policy-title {
+	font-size: 20px;
+	line-height: 32px;
+	text-transform: uppercase;
+	color: #707070;
+}
+.policy-manager table thead tr th:first-child {
+	background-color: #d8d8d8;
+}
+.policy-manager table thead tr th:first-child a {
+	color: #707070;
 }
