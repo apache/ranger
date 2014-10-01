@@ -20,6 +20,7 @@
  package com.xasecure.audit.model;
 
 import java.util.Date;
+import java.util.UUID;
 
 import com.xasecure.audit.dao.DaoManager;
 
@@ -32,20 +33,23 @@ public abstract class AuditEventBase {
 	protected static final int MAX_REQUEST_DATA_FIELD_SIZE = 1800 ;
 
 	
-	protected String agentId;
-	protected String user;
-	protected Date   eventTime = new Date();
-	protected long   policyId;
-	protected String accessType;
-	protected short  accessResult; // 0 - DENIED; 1 - ALLOWED; HTTP return code 
-	protected String resultReason;
-	protected String aclEnforcer;
-	protected int repositoryType;
-	protected String repositoryName;
-	protected String sessionId;
-	protected String clientType;
-	protected String clientIP;
-	protected String action;
+	protected String agentId        = null;
+	protected String user           = null;
+	protected Date   eventTime      = new Date();
+	protected long   policyId       = 0;
+	protected String accessType     = null;
+	protected short  accessResult   = 0; // 0 - DENIED; 1 - ALLOWED; HTTP return code 
+	protected String resultReason   = null;
+	protected String aclEnforcer    = null;
+	protected int    repositoryType = 0;
+	protected String repositoryName = null;
+	protected String sessionId      = null;
+	protected String clientType     = null;
+	protected String clientIP       = null;
+	protected String action         = null;
+	protected String agentHostname  = null;
+	protected String logType        = null;
+	protected String eventId        = null;
 
 	protected AuditEventBase() {
 	}
@@ -276,6 +280,30 @@ public abstract class AuditEventBase {
 		this.action = action;
 	}
 
+	public String getAgentHostname() {
+		return agentHostname;
+	}
+
+	public void setAgentHostname(String agentHostname) {
+		this.agentHostname = agentHostname;
+	}
+
+	public String getLogType() {
+		return logType;
+	}
+
+	public void setLogType(String logType) {
+		this.logType = logType;
+	}
+
+	public String getEventId() {
+		return eventId;
+	}
+
+	public void setEventId(String eventId) {
+		this.eventId = eventId;
+	}
+
 	public abstract void persist(DaoManager daoManager);
 
 	@Override
@@ -297,8 +325,11 @@ public abstract class AuditEventBase {
 		  .append("sessionId=").append(sessionId).append(FIELD_SEPARATOR)
 		  .append("clientType=").append(clientType).append(FIELD_SEPARATOR)
 		  .append("clientIP=").append(clientIP).append(FIELD_SEPARATOR)
-		  .append("action=").append(action).append(FIELD_SEPARATOR);
-		
+		  .append("action=").append(action).append(FIELD_SEPARATOR)
+		  .append("agentHostname=").append(agentHostname).append(FIELD_SEPARATOR)
+		  .append("logType=").append(logType).append(FIELD_SEPARATOR)
+		  .append("eventId=").append(eventId).append(FIELD_SEPARATOR)
+		;
 		return sb;
 	}
 	

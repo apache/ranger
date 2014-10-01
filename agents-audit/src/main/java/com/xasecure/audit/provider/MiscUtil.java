@@ -2,9 +2,9 @@ package com.xasecure.audit.provider;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.rmi.dgc.VMID;
 import java.text.SimpleDateFormat;
+import java.util.UUID;
 
 import org.apache.log4j.helpers.LogLog;
 
@@ -31,7 +31,7 @@ public class MiscUtil {
 
 	static {
 		try {
-			sGsonBuilder = new GsonBuilder().create();
+			sGsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 		} catch(Throwable excp) {
 			LogLog.warn("failed to create GsonBuilder object. stringigy() will return obj.toString(), instead of Json", excp);
 		}
@@ -101,7 +101,7 @@ public class MiscUtil {
 
 		try {
 			ret = InetAddress.getLocalHost().getHostName();
-		} catch (UnknownHostException excp) {
+		} catch (Exception excp) {
 			LogLog.warn("getHostname()", excp);
 		}
 
@@ -208,6 +208,10 @@ public class MiscUtil {
 		}
 
 		return ret;
+	}
+	
+	public static String generateUniqueId() {
+		return UUID.randomUUID().toString();
 	}
 
 	public static <T> String stringify(T log) {

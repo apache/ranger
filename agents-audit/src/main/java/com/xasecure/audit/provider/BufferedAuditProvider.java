@@ -26,6 +26,18 @@ public abstract class BufferedAuditProvider implements AuditProvider {
 
 	@Override
 	public void log(AuditEventBase event) {
+		if(event.getAgentHostname() == null) {
+			event.setAgentHostname(MiscUtil.getHostname());
+		}
+
+		if(event.getLogType() == null) {
+			event.setLogType("ArgusAudit");
+		}
+
+		if(event.getEventId() == null) {
+			event.setEventId(MiscUtil.generateUniqueId());
+		}
+
 		mBuffer.add(event);
 	}
 
