@@ -52,6 +52,7 @@ public class AuditProviderFactory {
 	private static final String AUDIT_DB_RESUME_QUEUE_SIZE__PROP    = "xasecure.audit.db.async.resume.queue.size" ;
 	private static final String AUDIT_DB_MAX_FLUSH_INTERVAL_PROP    = "xasecure.audit.db.async.max.flush.interval.ms";
 	private static final String AUDIT_DB_BATCH_SIZE_PROP            = "xasecure.audit.db.batch.size" ;
+	private static final String AUDIT_DB_RETRY_MIN_INTERVAL_PROP    = "xasecure.audit.db.config.retry.min.interval.ms";
 	private static final String AUDIT_JPA_CONFIG_PROP_PREFIX        = "xasecure.audit.jpa.";
 	private static final String AUDIT_DB_CREDENTIAL_PROVIDER_FILE   = "xasecure.audit.credential.provider.file";
 	private static final String AUDIT_DB_CREDENTIAL_PROVIDER_ALIAS	= "auditDBCred";
@@ -144,13 +145,14 @@ public class AuditProviderFactory {
 			LOG.info("AuditProviderFactory: found " + jpaInitProperties.size() + " Audit JPA properties");
 	
 			int dbBatchSize          = getIntProperty(props, AUDIT_DB_BATCH_SIZE_PROP, 1000);
+			int dbRetryMinIntervalMs = getIntProperty(props, AUDIT_DB_RETRY_MIN_INTERVAL_PROP, 15 * 1000);
 			boolean isAuditToDbAsync = getBooleanProperty(props, AUDIT_DB_IS_ASYNC_PROP, false);
 			
 			if(! isAuditToDbAsync) {
 				dbBatchSize = 1; // Batching not supported in sync mode; need to address multiple threads making audit calls
 			}
 
-			DbAuditProvider dbProvider = new DbAuditProvider(jpaInitProperties, dbBatchSize);
+			DbAuditProvider dbProvider = new DbAuditProvider(jpaInitProperties, dbBatchSize, dbRetryMinIntervalMs);
 			
 			if(isAuditToDbAsync) {
 				AsyncAuditProvider asyncProvider = new AsyncAuditProvider();

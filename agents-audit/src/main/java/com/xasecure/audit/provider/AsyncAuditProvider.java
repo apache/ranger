@@ -127,8 +127,8 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 	public void run() {
 		LOG.info("==> AsyncAuditProvider.run()");
 
-		try {
-			while (!mStopThread) {
+		while (!mStopThread) {
+			try {
 				AuditEventBase event = dequeueEvent();
 
 				if (event != null) {
@@ -136,8 +136,12 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 				} else {
 					flush();
 				}
+			} catch (Exception excp) {
+				LOG.error("AsyncAuditProvider.run()", excp);
 			}
+		}
 
+		try {
 			flush();
 		} catch (Exception excp) {
 			LOG.error("AsyncAuditProvider.run()", excp);

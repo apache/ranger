@@ -33,9 +33,7 @@ import org.apache.commons.logging.LogFactory;
 public class XaSecureCredentialProvider {
 
   private static Log LOG = LogFactory.getLog(XaSecureCredentialProvider.class);
-  private static Configuration conf = null;
 
-  private static List<CredentialProvider> providers = null;
   private static XaSecureCredentialProvider  me = null;
 
   
@@ -45,49 +43,42 @@ public class XaSecureCredentialProvider {
 			  XaSecureCredentialProvider temp = me;
 			  if ( temp == null){
 				  me = new XaSecureCredentialProvider();
-				  me.init();
 			  }
 		  }
 	  }
 	return me;
   }
   
-  
-  private void init() {
-	  conf  = new Configuration();
-  }
-  
   public char[] getCredentialString(String url, String alias)  {
-  
-   char[] pass = null;
- 
-   conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, url);
-   providers =  getCredentialProviders(); 
+   List<CredentialProvider> providers =  getCredentialProviders(url); 
    
-   CredentialProvider.CredentialEntry credEntry = null;
-   
-   for(  CredentialProvider provider: providers) {
-	   try {
-         credEntry = provider.getCredentialEntry(alias);
-         if (credEntry != null) {
-            pass = credEntry.getCredential();
-         } else {
-        	return pass;
-         }
-        } catch(IOException ie) {
-        	LOG.error("Unable to get the Credential Provider from the Configuration", ie);	 
-       }
-    }
-   return pass;
+   if(providers != null) {
+	   for(  CredentialProvider provider: providers) {
+		   try {
+			 CredentialProvider.CredentialEntry credEntry = provider.getCredentialEntry(alias);
+
+	         if (credEntry != null) {
+	            return credEntry.getCredential();
+	         }
+	        } catch(Exception ie) {
+	        	LOG.error("Unable to get the Credential Provider from the Configuration", ie);	 
+	       }
+	   }
+   }
+   return null;
   }
   
-  public  List<CredentialProvider>  getCredentialProviders(){
+  private List<CredentialProvider>  getCredentialProviders(String url){
    try {
-       providers = CredentialProviderFactory.getProviders(conf);   
-      } catch( IOException ie) {
+	   Configuration conf = new Configuration();
+
+	   conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, url);
+
+	   return CredentialProviderFactory.getProviders(conf);   
+      } catch(Exception ie) {
     	  LOG.error("Unable to get the Credential Provider from the Configuration", ie);
       }     
-   return providers;
+   return null;
   }
 
 }

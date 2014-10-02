@@ -44,25 +44,43 @@ public class DbAuditProvider implements AuditProvider {
 	private EntityManagerFactory entityManagerFactory;
 	private DaoManager          daoManager;
 	
-	private int                 mCommitBatchSize  = 1;
-	private long                mLastCommitTime   = System.currentTimeMillis();
-	private ArrayList<AuditEventBase> mUncommitted = new ArrayList<AuditEventBase>();
-	private Map<String, String> mDbProperties;
+	private int                 mCommitBatchSize      = 1;
+	private int                 mDbRetryMinIntervalMs = 60 * 1000;
+	private long                mLastCommitTime       = System.currentTimeMillis();
+	private ArrayList<AuditEventBase> mUncommitted    = new ArrayList<AuditEventBase>();
+	private Map<String, String> mDbProperties         = null;
+	private long                mLastDbFailedTime     = 0;
 
-	public DbAuditProvider(Map<String, String> properties, int dbBatchSize) {
+	public DbAuditProvider(Map<String, String> properties, int dbBatchSize, int dbRetryMinIntervalMs) {
 		LOG.info("DbAuditProvider: creating..");
 		
-		mDbProperties    = properties;
-		mCommitBatchSize = dbBatchSize < 1 ? 1 : dbBatchSize;
+		mDbProperties         = properties;
+		mCommitBatchSize      = dbBatchSize < 1 ? 1 : dbBatchSize;
+		mDbRetryMinIntervalMs = dbRetryMinIntervalMs;
 	}
 
 	@Override
 	public void log(AuditEventBase event) {
 		LOG.debug("DbAuditProvider.log()");
 
-		if(preCreate(event)) {
-			event.persist(daoManager);
-			postCreate(event);
+		boolean isSuccess = false;
+
+		try {
+			if(preCreate(event)) {
+				DaoManager daoMgr = daoManager;
+	
+				if(daoMgr != null) {
+					event.persist(daoMgr);
+	
+					isSuccess = postCreate(event);
+				}
+			}
+		} catch(Exception excp) {
+			logDbError("DbAuditProvider.log(): failed", excp);
+		} finally {
+			if(! isSuccess) {
+				logFailedEvent(event);
+			}
 		}
 	}
 
@@ -98,38 +116,54 @@ public class DbAuditProvider implements AuditProvider {
 	@Override
 	public void flush() {
 		if(mUncommitted.size() > 0) {
-			commitTransaction();
+			boolean isSuccess = commitTransaction();
+
+			if(! isSuccess) {
+				for(AuditEventBase evt : mUncommitted) {
+					logFailedEvent(evt);
+				}
+			}
+
+			mUncommitted.clear();
 		}
 	}
 
-	private boolean init() {
+	private synchronized boolean init() {
+		long now = System.currentTimeMillis();
+
+		if((now - mLastDbFailedTime) < mDbRetryMinIntervalMs) {
+			return false;
+		}
+
 		LOG.info("DbAuditProvider: init()");
 
 		try {
 			entityManagerFactory = Persistence.createEntityManagerFactory("xa_server", mDbProperties);
-		} catch(Exception excp) {
-			LOG.error("DbAuditProvider: DB initalization failed", excp);
 
-			entityManagerFactory = null;
+	   	    daoManager = new DaoManager();
+	   	    daoManager.setEntityManagerFactory(entityManagerFactory);
+
+	   	    daoManager.getEntityManager(); // this forces the connection to be made to DB
+		} catch(Exception excp) {
+			logDbError("DbAuditProvider: DB initalization failed", excp);
+
+			cleanUp();
 
 			return false;
 		}
 
-   	    daoManager = new DaoManager();
-   	    daoManager.setEntityManagerFactory(entityManagerFactory);
-
 		return true;
 	}
 	
-	private void cleanUp() {
+	private synchronized void cleanUp() {
 		LOG.info("DbAuditProvider: cleanUp()");
 
 		try {
-			clearEntityManager();
-
 			if(entityManagerFactory != null && entityManagerFactory.isOpen()) {
 				entityManagerFactory.close();
 			}
+		} catch(Exception excp) {
+			LOG.error("DbAuditProvider.cleanUp(): failed", excp);
 		} finally {
 			entityManagerFactory = null;
 			daoManager    = null;
@@ -143,24 +177,35 @@ public class DbAuditProvider implements AuditProvider {
 	}
 	
 	private EntityManager getEntityManager() {
-		return daoManager != null ? daoManager.getEntityManager() : null;
+		DaoManager daoMgr = daoManager;
+
+		if(daoMgr != null) {
+			try {
+				return daoMgr.getEntityManager();
+			} catch(Exception excp) {
+				logDbError("DbAuditProvider.getEntityManager(): failed", excp);
+
+				cleanUp();
+			}
+		}
+
+		return null;
 	}
 	
 	private void clearEntityManager() {
-		EntityManager em = getEntityManager();
-		
-		if(em == null) {
-			LOG.info("clearEntityManager(): em is null");
-		} else {
-			em.clear();
+		try {
+			EntityManager em = getEntityManager();
+			
+			if(em != null) {
+				em.clear();
+			}
+		} catch(Exception excp) {
+			LOG.warn("DbAuditProvider.clearEntityManager(): failed", excp);
 		}
 	}
 	
 	private EntityTransaction getTransaction() {
 		EntityManager em = getEntityManager();
-
-		if(em == null)
-			LOG.info("getTransaction(): em is null");
 
 		return em != null ? em.getTransaction() : null;
 	}
@@ -179,49 +224,43 @@ public class DbAuditProvider implements AuditProvider {
 		}
 
 		if(trx == null) {
-			LOG.error("beginTransaction(): trx is null");
+			LOG.warn("DbAuditProvider.beginTransaction(): trx is null");
 		}
 		
 		return trx != null;
 	}
 
-	private void commitTransaction() {
-		EntityTransaction trx = getTransaction();
+	private boolean commitTransaction() {
+		boolean           ret = false;
+		EntityTransaction trx = null;
 
 		try {
+			trx = getTransaction();
+
 			if(trx != null && trx.isActive()) {
 				trx.commit();
-			} else {
-				if(trx == null) {
-					LOG.error("commitTransaction(): trx is null. Clearing " + mUncommitted.size() + " uncommitted logs");
-				}
-				else {
-					LOG.error("commitTransaction(): trx is not active. Clearing " + mUncommitted.size() + " uncommitted logs");
-				}
 
-				cleanUp(); // so that next insert will try to init()
+				ret =true;
+			} else {
+				throw new Exception("trx is null or not active");
 			}
 		} catch(Exception excp) {
-			LOG.error("commitTransaction(): error while committing " + mUncommitted.size() + " log(s)", excp);
-			for(AuditEventBase event : mUncommitted) {
-				LOG.error("failed to log event { " + event.toString() + " }");
-			}
+			logDbError("DbAuditProvider.commitTransaction(): failed", excp);
 
 			cleanUp(); // so that next insert will try to init()
 		} finally {
 			mLastCommitTime = System.currentTimeMillis();
-			mUncommitted.clear();
 
 			clearEntityManager();
 		}
+
+		return ret;
 	}
 	
 	private boolean preCreate(AuditEventBase event) {
 		boolean ret = true;
 
 		if(!isDbConnected()) {
-			LOG.error("DbAuditProvider: not connected to DB. Retrying..");
-
 			ret = init();
 		}
 
@@ -231,18 +270,45 @@ public class DbAuditProvider implements AuditProvider {
 			}
 		}
 		
-		if(!ret) {
-			LOG.error("failed to log event { " + event.toString() + " }");
-		}
-		
 		return ret;
 	}
 	
-	private void postCreate(AuditEventBase event) {
-		mUncommitted.add(event);
+	private boolean postCreate(AuditEventBase event) {
+		boolean ret = true;
 
-		if((mCommitBatchSize == 1) || ((mUncommitted.size() % mCommitBatchSize) == 0)) {
-			flush();
-		}
+		if(mCommitBatchSize <= 1) {
+			ret = commitTransaction();
+		} else {
+			mUncommitted.add(event);
+
+			if((mUncommitted.size() % mCommitBatchSize) == 0) {
+				ret = commitTransaction();
+
+				if(! ret) {
+					for(AuditEventBase evt : mUncommitted) {
+						if(evt != event) {
+							logFailedEvent(evt);
+						}
+					}
+				}
+
+				mUncommitted.clear();
+			}
+ 		}
+ 		return ret;
 	}
+
+	private void logDbError(String msg, Exception excp) {
+		long now = System.currentTimeMillis();
+
+		if((now - mLastDbFailedTime) > mDbRetryMinIntervalMs) {
+			mLastDbFailedTime = now;
+ 		}
+
+		LOG.warn(msg, excp);
+	}
+
+	private void logFailedEvent(AuditEventBase event) {
+		LOG.warn("failed to log audit event: " + MiscUtil.stringify(event) + " }");
+ 	}
 }

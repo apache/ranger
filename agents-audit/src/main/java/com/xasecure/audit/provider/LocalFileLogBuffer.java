@@ -426,18 +426,21 @@ class DestinationDispatcherThread<T> extends Thread {
 	private void init() {
 		LogLog.debug("==> DestinationDispatcherThread.init()");
 
-		String dirName   = MiscUtil.replaceTokens(mFileLogBuffer.getDirectory(), 0);
-		File   directory = new File(dirName);
-
-		if(directory.exists() && directory.isDirectory()) {
-			File[] files = directory.listFiles();
-
-			if(files != null) {
-				for(File file : files) {
-					if(file.exists() && file.canRead()) {
-						String filename = file.getAbsolutePath();
-						if(! mFileLogBuffer.isCurrentFilename(filename)) {
-							addLogfile(filename);
+		String dirName = MiscUtil.replaceTokens(mFileLogBuffer.getDirectory(), 0);
+		
+		if(dirName != null) {
+			File directory = new File(dirName);
+		
+			if(directory.exists() && directory.isDirectory()) {
+				File[] files = directory.listFiles();
+		
+				if(files != null) {
+					for(File file : files) {
+						if(file.exists() && file.canRead()) {
+							String filename = file.getAbsolutePath();
+							if(! mFileLogBuffer.isCurrentFilename(filename)) {
+								addLogfile(filename);
+							}
 						}
 					}
 				}
