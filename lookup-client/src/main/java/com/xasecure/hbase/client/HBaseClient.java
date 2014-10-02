@@ -37,7 +37,6 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.hadoop.security.UserGroupInformation;
 
 import com.xasecure.hadoop.client.config.BaseClient;
 
@@ -48,13 +47,11 @@ public class HBaseClient extends BaseClient {
 	private Subject subj = null ;
 
 	public HBaseClient(String dataSource) {
-		super(dataSource) ;
-		initHBase() ;
+		super(dataSource) ;		
 	}
 
 	public HBaseClient(String dataSource,HashMap<String,String> connectionProp) {
-		super(dataSource, addDefaultHBaseProp(connectionProp)) ;
-		initHBase() ;
+		super(dataSource, addDefaultHBaseProp(connectionProp)) ;		
 	}
 	
 	//TODO: temporary solution - to be added to the UI for HBase 
@@ -77,32 +74,10 @@ public class HBaseClient extends BaseClient {
 		}
 		return connectionProp;
 	}
-
-	public void initHBase() {
-		try {
-			if (UserGroupInformation.isSecurityEnabled()) {
-				LOG.info("initHBase:security enabled");
-				if (getConfigHolder().getKeyTabFile() == null) {
-					    LOG.info("initHBase: using username/password");
-						subj = SecureClientLogin.loginUserWithPassword(getConfigHolder().getUserName(), getConfigHolder().getPassword()) ;
-				}
-				else {
-				    LOG.info("initHBase: using username/keytab");
-					subj = SecureClientLogin.loginUserFromKeytab(getConfigHolder().getUserName() , getConfigHolder().getKeyTabFile()) ;
-				}
-			}
-			else {
-			    LOG.info("initHBase: security not enabled, using username");
-				subj = SecureClientLogin.login(getConfigHolder().getUserName()) ;
-			}
-		} catch (IOException e) {
-			LOG.error("Unable to perform secure login to Hbase environment [" + getConfigHolder().getDatasourceName() + "]", e);
-		}
-	}
 	
 	public boolean getHBaseStatus() {
 		boolean hbaseStatus = false;
-		
+		subj = getLoginSubject();
 		if (subj != null) {
 			ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
 			try {

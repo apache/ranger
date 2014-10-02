@@ -24,12 +24,15 @@ import java.util.HashMap;
 
 import javax.security.auth.Subject;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.hadoop.security.UserGroupInformation;
 
+import com.xasecure.hadoop.client.HadoopFS;
 import com.xasecure.hadoop.client.exceptions.HadoopException;
 
 public abstract class BaseClient {
+	private static final Log LOG = LogFactory.getLog(HadoopFS.class) ;
 	
 	private String dataSource ;
 	private Subject loginSubject ;
@@ -71,19 +74,23 @@ public abstract class BaseClient {
 			}
 			String keyTabFile = configHolder.getKeyTabFile() ;
 			if (keyTabFile != null) {
-				if ( UserGroupInformation.isSecurityEnabled() ) {
+				if ( configHolder.isKerberosAuthentication() ) {
+					LOG.info("Init Login: security enabled, using username/keytab");
 					loginSubject = SecureClientLogin.loginUserFromKeytab(userName, keyTabFile) ;
 				}
 				else {
+					LOG.info("Init Login: using username");
 					loginSubject = SecureClientLogin.login(userName) ;
 				}
 			}
 			else {
 				String password = configHolder.getPassword() ;
-				if ( UserGroupInformation.isSecurityEnabled() ) {
+				if ( configHolder.isKerberosAuthentication() ) {
+					LOG.info("Init Login: using username/password");
 					loginSubject = SecureClientLogin.loginUserWithPassword(userName, password) ;
 				}
 				else {
+					LOG.info("Init Login: security not enabled, using username");
 					loginSubject = SecureClientLogin.login(userName) ;
 				}
 			}

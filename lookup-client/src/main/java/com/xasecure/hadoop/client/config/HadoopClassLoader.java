@@ -66,11 +66,10 @@ public class HadoopClassLoader extends ClassLoader {
 		String suffix = ".txt" ;
 
 		Properties prop = confHolder.getProperties(aResourceName) ;
-		
+		LOG.debug("Building XML for: " + prop.toString());
 		if (prop != null && prop.size() > 0) {
-
 			if (aResourceName.contains(".")) {
-				int lastDotFound = aResourceName.indexOf(".") ; 
+				int lastDotFound = aResourceName.indexOf(".") ;
 				prefix = aResourceName.substring(0,lastDotFound) + "-" ;
 				suffix = aResourceName.substring(lastDotFound) ;
 			}

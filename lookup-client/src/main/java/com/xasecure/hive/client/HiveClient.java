@@ -20,7 +20,6 @@
  package com.xasecure.hive.client;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -38,7 +37,6 @@ import javax.security.auth.Subject;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.security.SecureClientLogin;
 
 import com.xasecure.hadoop.client.config.BaseClient;
 import com.xasecure.hadoop.client.exceptions.HadoopException;
@@ -48,6 +46,8 @@ public class HiveClient extends BaseClient implements Closeable {
 	private static final Log LOG = LogFactory.getLog(HiveClient.class) ;
 	
 	Connection con = null ;
+	boolean isKerberosAuth=false;
+	
 
 	public HiveClient(String dataSource) {
 		super(dataSource) ;
@@ -58,42 +58,26 @@ public class HiveClient extends BaseClient implements Closeable {
 		super(dataSource,connectionProp) ;
 		initHive() ;
 	}
-
 	
 	public void initHive() {
-		try {
-			Subject subj = null ;
-			
-			if (getConfigHolder().isKerberosAuthentication()) {
-				if (getConfigHolder().getKeyTabFile() != null) {
-					LOG.info("Since KeyTab is provided, Trying to use SecureClientLogin with KeyTab based login");
-					subj = SecureClientLogin.loginUserFromKeytab(getConfigHolder().getUserName() , getConfigHolder().getKeyTabFile()) ;
+		
+		isKerberosAuth = getConfigHolder().isKerberosAuthentication();
+		if (isKerberosAuth) {
+			Subject.doAs(getLoginSubject(), new PrivilegedAction<Object>() {
+				public Object run() {
+					initConnection();
+					return null;
 				}
-				else {
-					LOG.info("Since Password is provided, Trying to use SecureClientLogin with Password");
-					subj = SecureClientLogin.loginUserWithPassword(getConfigHolder().getUserName() , getConfigHolder().getPassword()) ;
-				}
-				
-				Subject.doAs(subj,  new PrivilegedAction<Object>() {
-					public Object run() {
-						initConnection();
-						return null;
-					}
-				}) ;
-				
-			}
-			else {
-				LOG.info("Since Password is NOT provided, Trying to use UnSecure client with username and password");
-				String userName = getConfigHolder().getUserName() ;
-				String password = getConfigHolder().getPassword() ;
-				initConnection(userName,password);
-			}
-		} catch (IOException e) {
-			LOG.error("Unable to perform secure login to Hive environment [" + getConfigHolder().getDatasourceName() + "]", e);
+			}) ;				
 		}
+		else {
+			LOG.info("Since Password is NOT provided, Trying to use UnSecure client with username and password");
+			String userName = getConfigHolder().getUserName() ;
+			String password = getConfigHolder().getPassword() ;
+			initConnection(userName,password);
+		}
+		
 	}
-	
-	
 	
 	public List<String> getDatabaseList(String databaseMatching) {
 		List<String> ret = new ArrayList<String>() ;
@@ -266,11 +250,11 @@ public class HiveClient extends BaseClient implements Closeable {
 
 	
 	private void initConnection(String userName, String password) {
+	
 		Properties prop = getConfigHolder().getXASecureSection() ;
-		
 		String driverClassName = prop.getProperty("jdbc.driverClassName") ;
-		String url =  prop.getProperty("jdbc.url") ;
-		
+		String url =  prop.getProperty("jdbc.url") ;	
+	
 		if (driverClassName != null) {
 			try {
 				Driver driver = (Driver)Class.forName(driverClassName).newInstance() ;
@@ -280,20 +264,23 @@ public class HiveClient extends BaseClient implements Closeable {
 			}
 		}
 		
+	
 		try {
+			
 			if (userName == null && password == null) {
 				con = DriverManager.getConnection(url) ;
 			}
 			else {
+				
 				con = DriverManager.getConnection(url, userName, password) ;
+			
 			}
+		
 		} catch (SQLException e) {
 			throw new HadoopException("Unable to connect to Hive Thrift Server instance", e) ;
 		}
-		
 	}
-	
-	
+
 	
 	public static void main(String[] args) {
 		
