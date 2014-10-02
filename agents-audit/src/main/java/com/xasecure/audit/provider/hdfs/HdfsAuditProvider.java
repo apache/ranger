@@ -15,17 +15,17 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 	public void init(Map<String, String> properties) {
 		String encoding                                = properties.get("encoding");
 
-		String hdfsDestinationDirectory                = properties.get("destination.directroy");
+		String hdfsDestinationDirectory                = properties.get("destination.directory");
 		String hdfsDestinationFile                     = properties.get("destination.file");
 		int    hdfsDestinationFlushIntervalSeconds     = MiscUtil.parseInteger(properties.get("destination.flush.interval.seconds"), 15 * 60);
 		int    hdfsDestinationRolloverIntervalSeconds  = MiscUtil.parseInteger(properties.get("destination.rollover.interval.seconds"), 24 * 60 * 60);
 		int    hdfsDestinationOpenRetryIntervalSeconds = MiscUtil.parseInteger(properties.get("destination.open.retry.interval.seconds"), 60);
 
-		String localFileBufferDirectory               = properties.get("local.buffer.directroy");
+		String localFileBufferDirectory               = properties.get("local.buffer.directory");
 		String localFileBufferFile                    = properties.get("local.buffer.file");
 		int    localFileBufferFlushIntervalSeconds    = MiscUtil.parseInteger(properties.get("local.buffer.flush.interval.seconds"), 1 * 60);
 		int    localFileBufferRolloverIntervalSeconds = MiscUtil.parseInteger(properties.get("local.buffer.rollover.interval.seconds"), 10 * 60);
-		String localFileBufferArchiveDirectory        = properties.get("local.archive.directroy");
+		String localFileBufferArchiveDirectory        = properties.get("local.archive.directory");
 		int    localFileBufferArchiveFileCount        = MiscUtil.parseInteger(properties.get("local.archive.max.file.count"), 10);
 
 		HdfsLogDestination<AuditEventBase> mHdfsDestination = new HdfsLogDestination<AuditEventBase>();

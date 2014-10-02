@@ -96,7 +96,7 @@
 	</property>	
 
 	<property>
-		<name>xasecure.audit.hdfs.config.destination.directroy</name>
+		<name>xasecure.audit.hdfs.config.destination.directory</name>
 		<value>hdfs://%hostname%:8020/xasecure/audit/%app-type%/%time:yyyyMMdd%</value>
 	</property>	
 
@@ -121,7 +121,7 @@
 	</property>
 
 	<property>
-		<name>xasecure.audit.hdfs.config.local.buffer.directroy</name>
+		<name>xasecure.audit.hdfs.config.local.buffer.directory</name>
 		<value>/var/log/knox/audit</value>
 	</property>	
 
@@ -141,7 +141,7 @@
 	</property>	
 
 	<property>
-		<name>xasecure.audit.hdfs.config.local.archive.directroy</name>
+		<name>xasecure.audit.hdfs.config.local.archive.directory</name>
 		<value>/var/log/knox/audit/archive</value>
 	</property>	
 
