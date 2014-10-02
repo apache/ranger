@@ -534,7 +534,7 @@ X_PORTAL_USER_ROLE_SEQ.NEXTVAL, SYSDATE, SYSDATE,
 );
 
 insert into x_user (id,CREATE_TIME, UPDATE_TIME,user_name, status,descr) values (
-X_USER_SEQ.NEXTVAL, SYSDATE, SYSDATE,'Admin', 0,'Administrator');
+X_USER_SEQ.NEXTVAL, SYSDATE, SYSDATE,'admin', 0,'Administrator');
 
 INSERT INTO x_group (ID,ADDED_BY_ID, CREATE_TIME, DESCR, GROUP_TYPE, GROUP_NAME, STATUS, UPDATE_TIME, UPD_BY_ID) VALUES (X_GROUP_SEQ.nextval,1, sys_extract_utc(systimestamp), 'public group', 0, 'public', 0, sys_extract_utc(systimestamp), 1);
 commit;
