@@ -36,13 +36,19 @@ public class Testbuildks {
     int rc2=buildksOBJ.listCredential(argsListCommand);
     assertEquals(0, rc2);
     assertTrue(rc2==0);
-
+    
+    String[] argsGetCommand = {"get", "TestCredential1", "-provider", "jceks://file" +keystoreFile };
+    String pw=buildksOBJ.getCredential(argsGetCommand);
+    assertEquals("PassworD123", pw);
+    assertTrue(pw.equals("PassworD123"));
+    boolean getCredentialPassed = pw.equals("PassworD123");
+    
     String[] argsDeleteCommand = {"delete", "TestCredential1", "-provider", "jceks://file" +keystoreFile };
     int rc3=buildksOBJ.deleteCredential(argsDeleteCommand);
     assertEquals(0, rc3);
     assertTrue(rc3==0);
    
-    if(rc1==rc2 && rc2==rc3 && rc3==0){
+    if(rc1==rc2 && rc2==rc3 && rc3==0 && getCredentialPassed){
     	System.out.println("Test Case has been completed successfully..");    	
     }
   }
