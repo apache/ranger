@@ -29,7 +29,34 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class buildks {
 	public static void main(String[] args) {
 		buildks buildksOBJ=new buildks();
-		buildksOBJ.createCredential(args);
+		String command=null;
+		try{
+			if(args!=null && args.length>=3){
+				command=args[0];
+				if(command!=null && !command.trim().isEmpty()){
+					if(command.equalsIgnoreCase("create")){
+						buildksOBJ.createCredential(args);
+					}else if(command.equalsIgnoreCase("list")){
+						buildksOBJ.listCredential(args);
+					}else if(command.equalsIgnoreCase("get")){
+						String credential=buildksOBJ.getCredential(args);
+						if(credential!=null){
+							System.out.println(credential);
+							System.exit(0);
+						}
+					}else{
+						System.out.println(command +" is not supported in current version of CredentialBuilder API.");
+						System.exit(1);
+					}
+				}
+			}else{
+				System.out.println("Invalid Command line argument.");
+				System.exit(1);
+			}
+		}catch(Exception ex){
+			ex.printStackTrace();
+			System.exit(1);
+		}
 	}
 	
 	public int createCredential(String args[]){
@@ -50,7 +77,7 @@ public class buildks {
 	    		credential=args[3];
 	    		providerOption=args[4];
 	    		providerPath=args[5];
-	    		if(!isValidInput(command,alias,valueOption,credential,providerOption,providerPath)){
+				if(!isValidCreateCommand(command,alias,valueOption,credential,providerOption,providerPath)){
 	    			return returnCode;
 	    		}	    		
 	    		tempCredential=CredentialReader.getDecryptedString(providerPath, alias);
@@ -99,7 +126,7 @@ public class buildks {
 	    		credential=args[3];
 	    		providerOption=args[4];
 	    		providerPath=args[5];
-	    		if(!isValidInput(command,alias,valueOption,credential,providerOption,providerPath)){
+				if(!isValidCreateCommand(command,alias,valueOption,credential,providerOption,providerPath)){
 	    			return returnCode;
 	    		}	    		
 		    	displayCommand(args);
@@ -160,7 +187,7 @@ public class buildks {
     		command="create";
     		valueOption="-value";
     		providerOption="-provider";
-    		if(!isValidInput(command,alias,valueOption,credential,providerOption,providerPath)){
+			if(!isValidCreateCommand(command,alias,valueOption,credential,providerOption,providerPath)){
     			return returnCode;
     		}
     		args=new String[6];
@@ -250,7 +277,7 @@ public class buildks {
 		return returnCode;
 	}	
 	
-	public static boolean isValidInput(String command,String alias,String valueOption,String credential,String providerOption,String providerPath)
+	public static boolean isValidCreateCommand(String command,String alias,String valueOption,String credential,String providerOption,String providerPath)
     {
 		boolean isValid=true;
 		try{
@@ -258,55 +285,55 @@ public class buildks {
         	{
         		System.out.println("Invalid create phrase in credential creation command!!");
         		System.out.println("Expected:'create' Found:'"+command+"'");
-        		displaySyntax();
+				displaySyntax("create");
         		return false;
         	}
         	if(alias==null || "".equalsIgnoreCase(alias.trim()))
         	{
         		System.out.println("Invalid alias name phrase in credential creation command!!");
         		System.out.println("Found:'"+alias+"'");
-        		displaySyntax();
+				displaySyntax("create");
         		return false;
         	}
         	if(valueOption==null || !"-value".equalsIgnoreCase(valueOption.trim()))
         	{
         		System.out.println("Invalid value option switch in credential creation command!!");
         		System.out.println("Expected:'-value' Found:'"+valueOption+"'");
-        		displaySyntax();
+				displaySyntax("create");
         		return false;
         	}
         	if(valueOption==null || !"-value".equalsIgnoreCase(valueOption.trim()))
         	{
         		System.out.println("Invalid value option in credential creation command!!");
         		System.out.println("Expected:'-value' Found:'"+valueOption+"'");
-        		displaySyntax();
+				displaySyntax("create");
         		return false;
         	}
         	if(credential==null)
         	{
         		System.out.println("Invalid credential value in credential creation command!!");
         		System.out.println("Found:"+credential);
-        		displaySyntax();
+				displaySyntax("create");
         		return false;
         	}
         	if(providerOption==null || !"-provider".equalsIgnoreCase(providerOption.trim()))
         	{
         		System.out.println("Invalid provider option in credential creation command!!");
         		System.out.println("Expected:'-provider' Found:'"+providerOption+"'");
-        		displaySyntax();
+				displaySyntax("create");
         		return false;
         	}
         	if(providerPath==null || "".equalsIgnoreCase(providerPath.trim()) || !providerPath.startsWith("jceks://"))
         	{
         		System.out.println("Invalid provider option in credential creation command!!");
         		System.out.println("Found:'"+providerPath+"'");
-        		displaySyntax();
+				displaySyntax("create");
         		return false;
         	}
     	}catch(Exception ex){    	
     		System.out.println("Invalid input or runtime error! Please try again.");
     		System.out.println("Input:"+command+" "+alias+" "+valueOption+" "+credential+" "+providerOption+" "+providerPath);
-    		displaySyntax();
+			displaySyntax("create");
     		ex.printStackTrace();
     		return false;
     	}            	
@@ -327,10 +354,78 @@ public class buildks {
 		}
     }
 	
-	public static void displaySyntax()
-    {
-		System.out.println("Correct syntax is:create <aliasname> -value <password> -provider <jceks://file/filepath>");
-		System.out.println("sample command is:create myalias -value password123 -provider jceks://file/tmp/ks/myks.jceks");	            		 
+	public static void displaySyntax(String command){
+		if(command!=null && command.trim().equalsIgnoreCase("create")){
+			System.out.println("Correct syntax is:create <aliasname> -value <password> -provider <jceks://file/filepath>");
+			System.out.println("sample command is:create myalias -value password123 -provider jceks://file/tmp/ks/myks.jceks");
+		}
+	}
+	public String getCredential(String args[]){
+		String command=null;
+		String alias=null;
+		String providerOption=null;
+		String providerPath=null;
+		String tempCredential=null;
+		try{
+			if(args!=null && args.length==4){
+				command=args[0];
+				alias=args[1];
+				providerOption=args[2];
+				providerPath=args[3];
+				if(!isValidGetCommand(command,alias,providerOption,providerPath)){
+					displaySyntax("get");
+				}else{
+					tempCredential=CredentialReader.getDecryptedString(providerPath, alias);
+				}
+			}else{
+				displaySyntax("get");
+			}
+			if(tempCredential==null){
+				System.out.println("Alias"+ alias +" does not exist!!");
+			}
+			}catch(Exception ex){
+				ex.printStackTrace();
+			}
+			return tempCredential;
 	}
 
+	public static boolean isValidGetCommand(String command,String alias,String providerOption,String providerPath){
+		boolean isValid=true;
+		try{
+			if(command==null || !"get".equalsIgnoreCase(command.trim())){
+				System.out.println("Invalid get phrase in credential get command!!");
+				System.out.println("Expected:'get' Found:'"+command+"'");
+				displaySyntax("get");
+				return false;
+			}
+			if(alias==null || "".equalsIgnoreCase(alias.trim()))
+			{
+				System.out.println("Invalid alias name phrase in credential get command!!");
+				System.out.println("Found:'"+alias+"'");
+				displaySyntax("get");
+				return false;
+			}
+			if(providerOption==null || !"-provider".equalsIgnoreCase(providerOption.trim()))
+			{
+				System.out.println("Invalid provider option in credential get command!!");
+				System.out.println("Expected:'-provider' Found:'"+providerOption+"'");
+				displaySyntax("get");
+				return false;
+			}
+			if(providerPath==null || "".equalsIgnoreCase(providerPath.trim()) || !providerPath.startsWith("jceks://"))
+			{
+				System.out.println("Invalid provider option in credential get command!!");
+				System.out.println("Found:'"+providerPath+"'");
+				displaySyntax("get");
+				return false;
+			}
+		}catch(Exception ex){
+			System.out.println("Invalid input or runtime error! Please try again.");
+			System.out.println("Input:"+command+" "+alias+" "+providerOption+" "+providerPath);
+			displaySyntax("get");
+			ex.printStackTrace();
+			return false;
+		}
+		return isValid;
+	}
 }
