@@ -475,6 +475,70 @@ then
 	done
 fi
 
+if [ "${HCOMPONENT_NAME}" = "storm" ]
+then
+	CFG_FILE=${HCOMPONENT_CONF_DIR}/storm.yaml
+	ARCHIVE_FILE=${HCOMPONENT_CONF_DIR}/.storm.yaml.`date '+%Y%m%d%H%M%S'`
+
+	if [ -f "${CFG_FILE}" ]
+	then
+		cp ${CFG_FILE}  ${ARCHIVE_FILE}
+
+    	if [ "${action}" = "enable" ]
+    	then
+			awk -F: 'BEGIN {
+    			configured = 0 ;
+			}
+			{
+    			if ($1 == "nimbus.authorizer") {
+        			if ($2 ~ /^[ \t]*"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer"[ \t]*$/) {
+            			configured = 1 ;
+            			printf("%s\n",$0) ;
+        			}
+        			else {
+            			printf("#%s\n",$0);
+            			printf("nimbus.authorizer: \"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer\"\n") ;
+            			configured = 1 ;
+        			}
+    			}
+    			else {
+        			printf("%s\n",$0) ;
+    			}
+			}
+			END {
+    			if (configured == 0) {
+        			printf("nimbus.authorizer: \"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer\"\n") ;
+    			}
+			}' ${CFG_FILE} > ${CFG_FILE}.new &&  cat ${CFG_FILE}.new > ${CFG_FILE} && rm -f ${CFG_FILE}.new
+
+		else
+			awk -F: 'BEGIN {
+                configured = 0 ;
+            }
+            {
+                if ($1 == "nimbus.authorizer") {
+                    if ($2 ~ /^[ \t]*"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer"[ \t]*$/) {
+                        configured = 1 ;
+                        printf("%s\n",$0) ;
+                    }
+                    else {
+                        printf("#%s\n",$0);
+                        printf("nimbus.authorizer: \"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
+                        configured = 1 ;
+                    }
+                }
+                else {
+                    printf("%s\n",$0) ;
+                }
+            }
+            END {
+                if (configured == 0) {
+                    printf("nimbus.authorizer: \"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
+                }
+            }' ${CFG_FILE} > ${CFG_FILE}.new &&  cat ${CFG_FILE}.new > ${CFG_FILE} && rm -f ${CFG_FILE}.new	
+		fi
+	fi
+fi
 
 #
 # Set notice to restart the ${HCOMPONENT_NAME}

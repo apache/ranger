@@ -26,6 +26,8 @@
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>commons-collections:commons-collections</include>
 					<include>com.sun.jersey:jersey-bundle</include>
+                    <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+                    <include>com.google.guava:guava:jar:${guava.version}</include>
                 </includes>
             </dependencySet>
             <dependencySet>
