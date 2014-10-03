@@ -24,11 +24,13 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.xasecure.hadoop.client.exceptions.HadoopException;
 
-
 public class HadoopConfigHolder  {
-		
+	private static final Log LOG = LogFactory.getLog(HadoopConfigHolder.class) ;
 	public static final String GLOBAL_LOGIN_PARAM_PROP_FILE = "hadoop-login.properties" ;
 	public static final String DEFAULT_DATASOURCE_PARAM_PROP_FILE = "datasource.properties" ;
 	public static final String RESOURCEMAP_PROP_FILE = "resourcenamemap.properties" ;
@@ -37,6 +39,9 @@ public class HadoopConfigHolder  {
 	public static final String XASECURE_LOGIN_USER_NAME_PROP = "username" ;
 	public static final String XASECURE_LOGIN_KEYTAB_FILE_PROP = "keytabfile" ;
 	public static final String XASECURE_LOGIN_PASSWORD = "password" ;
+	public static final String HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";
+	public static final String HADOOP_SECURITY_AUTHENTICATION_METHOD = "kerberos";
+	
 
 	private static boolean initialized = false ;
 	private static HashMap<String,HashMap<String,Properties>> dataSource2ResourceListMap = new HashMap<String,HashMap<String,Properties>>() ;
@@ -110,7 +115,9 @@ public class HadoopConfigHolder  {
 	
 	private void initConnectionProp() {
 		for(String key : connectionProperties.keySet()) {
+			
 			String resourceName = getResourceName(key) ;
+			
 			if (resourceName == null) {
 				resourceName = XASECURE_SECTION_NAME ;
 			}
@@ -231,9 +238,15 @@ public class HadoopConfigHolder  {
 			userName = prop.getProperty(XASECURE_LOGIN_USER_NAME_PROP) ;
 			keyTabFile = prop.getProperty(XASECURE_LOGIN_KEYTAB_FILE_PROP) ;
 			password = prop.getProperty(XASECURE_LOGIN_PASSWORD) ;
-			isKerberosAuth = (userName != null) && (userName.indexOf("@") > -1) ;
-		}
 		
+			if ( getHadoopSecurityAuthentication() != null) {
+				isKerberosAuth = ( getHadoopSecurityAuthentication().equalsIgnoreCase(HADOOP_SECURITY_AUTHENTICATION_METHOD));
+			}
+			else {
+				isKerberosAuth = (userName != null) && (userName.indexOf("@") > -1) ;
+			}
+					
+		}
 	}
 	
 	private void initClassLoader() {
@@ -305,6 +318,22 @@ public class HadoopConfigHolder  {
 		return ret ;
  	}
 	
+	public String getHadoopSecurityAuthentication() {
+		Properties repoParam = null ;
+		String ret = null;
+		
+		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(this.getDatasourceName()) ;
+		
+		if ( resourceName2PropertiesMap != null) {
+			repoParam=resourceName2PropertiesMap.get(DEFAULT_RESOURCE_NAME);
+		}
+		
+		if ( repoParam != null ) {
+			ret = (String)repoParam.get(HADOOP_SECURITY_AUTHENTICATION);
+		}
+		return ret;
+ 	}
+	
 	public String getUserName() {
 		return userName;
 	}
@@ -325,7 +354,7 @@ public class HadoopConfigHolder  {
 		return isKerberosAuth;
 	}
 
-
+  
 	
 
 }

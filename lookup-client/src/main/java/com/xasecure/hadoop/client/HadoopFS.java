@@ -24,10 +24,11 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import javax.security.auth.Subject;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,7 +38,9 @@ import com.xasecure.hadoop.client.config.BaseClient;
 import com.xasecure.hadoop.client.exceptions.HadoopException;
 
 public class HadoopFS extends BaseClient {
-	
+
+	private static final Log LOG = LogFactory.getLog(HadoopFS.class) ;
+
 	public HadoopFS(String dataSource) {
 		super(dataSource) ;
 	}
@@ -57,10 +60,13 @@ public class HadoopFS extends BaseClient {
 			if (fileMatching != null && fileMatching.trim().length() > 0) {
 				filterRegEx = fileMatching.trim() ;
 			}
+			
 			Configuration conf = new Configuration() ;
+			
 			FileSystem fs = null ;
 			try {
 				fs = FileSystem.get(conf) ;
+				
 				FileStatus[] fileStats = fs.listStatus(new Path(baseDir)) ;
 				if (fileStats != null) {
 					for(FileStatus stat : fileStats) {
@@ -89,6 +95,7 @@ public class HadoopFS extends BaseClient {
 
 	
 	public List<String> listFiles(final String baseDir, final String fileMatching) {
+
 		PrivilegedAction<List<String>> action = new PrivilegedAction<List<String>>() {
 			@Override
 			public List<String> run() {
@@ -98,7 +105,6 @@ public class HadoopFS extends BaseClient {
 		};
 		return Subject.doAs(getLoginSubject(),action) ;
 	}
-	
 	
 	public static final void main(String[] args) {
 		

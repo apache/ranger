@@ -109,10 +109,10 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<beans:bean id="userContextFormationFilter" class="com.xasecure.security.web.filter.XASecurityContextFormationFilter"/>
 
 	<security:jdbc-user-service id="userService" data-source-ref="defaultDataSource"
-			users-by-username-query="select LOGIN_ID,PASSWORD,STATUS from x_portal_user where LOWER(LOGIN_ID)=LOWER(?) and STATUS = 1"
+			users-by-username-query="select LOGIN_ID,PASSWORD,STATUS from x_portal_user where LOGIN_ID=? and STATUS = 1"
 			group-authorities-by-username-query=""
 			authorities-by-username-query="SELECT usr.LOGIN_ID,usr_role.USER_ROLE FROM x_portal_user usr,x_portal_user_role usr_role
-			WHERE LOWER(usr.LOGIN_ID)=LOWER(?)
+			WHERE usr.LOGIN_ID=?
 			AND usr_role.USER_ID = usr.ID"
 			/>
 

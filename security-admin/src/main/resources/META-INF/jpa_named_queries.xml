@@ -139,13 +139,13 @@
 
 	<named-query name="XXUser.findByUserName">
 		<query>SELECT Obj FROM XXUser obj
-			   WHERE LOWER(obj.name)=:name			   
+			   WHERE obj.name=:name
 		</query>
 	</named-query>
 	
 	<named-query name="XXGroup.findByGroupName">
 		<query>SELECT Obj FROM XXGroup obj
-			   WHERE LOWER(obj.name)=:name			   
+			   WHERE obj.name=:name
 		</query>
 	</named-query>
 	
