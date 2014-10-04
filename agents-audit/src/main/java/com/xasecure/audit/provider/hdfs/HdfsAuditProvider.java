@@ -2,12 +2,18 @@ package com.xasecure.audit.provider.hdfs;
 
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.xasecure.audit.model.AuditEventBase;
 import com.xasecure.audit.provider.BufferedAuditProvider;
+import com.xasecure.audit.provider.DebugTracer;
 import com.xasecure.audit.provider.LocalFileLogBuffer;
+import com.xasecure.audit.provider.Log4jTracer;
 import com.xasecure.audit.provider.MiscUtil;
 
 public class HdfsAuditProvider extends BufferedAuditProvider {
+	private static final Log LOG = LogFactory.getLog(HdfsAuditProvider.class);
 	
 	public HdfsAuditProvider() {
 	}
@@ -28,7 +34,9 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		String localFileBufferArchiveDirectory        = properties.get("local.archive.directory");
 		int    localFileBufferArchiveFileCount        = MiscUtil.parseInteger(properties.get("local.archive.max.file.count"), 10);
 
-		HdfsLogDestination<AuditEventBase> mHdfsDestination = new HdfsLogDestination<AuditEventBase>();
+		DebugTracer tracer = new Log4jTracer(LOG);
+
+		HdfsLogDestination<AuditEventBase> mHdfsDestination = new HdfsLogDestination<AuditEventBase>(tracer);
 
 		mHdfsDestination.setDirectory(hdfsDestinationDirectory);
 		mHdfsDestination.setFile(hdfsDestinationFile);
@@ -37,7 +45,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		mHdfsDestination.setRolloverIntervalSeconds(hdfsDestinationRolloverIntervalSeconds);
 		mHdfsDestination.setOpenRetryIntervalSeconds(hdfsDestinationOpenRetryIntervalSeconds);
 
-		LocalFileLogBuffer<AuditEventBase> mLocalFileBuffer = new LocalFileLogBuffer<AuditEventBase>();
+		LocalFileLogBuffer<AuditEventBase> mLocalFileBuffer = new LocalFileLogBuffer<AuditEventBase>(tracer);
 
 		mLocalFileBuffer.setDirectory(localFileBufferDirectory);
 		mLocalFileBuffer.setFile(localFileBufferFile);
@@ -50,3 +58,6 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		setBufferAndDestination(mLocalFileBuffer, mHdfsDestination);
 	}
 }
+
+
+
