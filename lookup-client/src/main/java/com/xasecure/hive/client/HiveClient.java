@@ -26,6 +26,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		super(dataSource) ;
 		initHive() ;
 	}
-
+	
 	public HiveClient(String dataSource,HashMap<String,String> connectionProp) {
 		super(dataSource,connectionProp) ;
 		initHive() ;
@@ -81,6 +82,9 @@ public class HiveClient extends BaseClient implements Closeable {
 	
 	public List<String> getDatabaseList(String databaseMatching) {
 		List<String> ret = new ArrayList<String>() ;
+		String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 		if (con != null) {
 			Statement stat =  null ;
 			ResultSet rs = null ;
@@ -94,11 +98,22 @@ public class HiveClient extends BaseClient implements Closeable {
 				while (rs.next()) {
 					ret.add(rs.getString(1)) ;
 				}
- 			}
-			catch(SQLException sqle) {
-				throw new HadoopException("Unable to execute SQL [" + sql + "]", sqle);
-			}
-			finally {
+			} catch (SQLTimeoutException sqlt) {
+				String msgDesc = "Time Out, Unable to execute SQL [" + sql
+						+ "].";
+				HadoopException hdpException = new HadoopException(msgDesc,
+						sqlt);
+				hdpException.generateResponseDataMap(false, getMessage(sqlt),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} catch (SQLException sqle) {
+				String msgDesc = "Unable to execute SQL [" + sql + "].";
+				HadoopException hdpException = new HadoopException(msgDesc,
+						sqle);
+				hdpException.generateResponseDataMap(false, getMessage(sqle),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} finally {
 				close(rs) ;
 				close(stat) ;
 			}
@@ -109,6 +124,9 @@ public class HiveClient extends BaseClient implements Closeable {
 
 	public List<String> getTableList(String database, String tableNameMatching) {
 		List<String> ret = new ArrayList<String>() ;
+		String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 		if (con != null) {
 			Statement stat =  null ;
 			ResultSet rs = null ;
@@ -135,11 +153,22 @@ public class HiveClient extends BaseClient implements Closeable {
 				while (rs.next()) {
 					ret.add(rs.getString(1)) ;
 				}
- 			}
-			catch(SQLException sqle) {
-				throw new HadoopException("Unable to execute SQL [" + sql + "]", sqle);
-			}
-			finally {
+			} catch (SQLTimeoutException sqlt) {
+				String msgDesc = "Time Out, Unable to execute SQL [" + sql
+						+ "].";
+				HadoopException hdpException = new HadoopException(msgDesc,
+						sqlt);
+				hdpException.generateResponseDataMap(false, getMessage(sqlt),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} catch (SQLException sqle) {
+				String msgDesc = "Unable to execute SQL [" + sql + "].";
+				HadoopException hdpException = new HadoopException(msgDesc,
+						sqle);
+				hdpException.generateResponseDataMap(false, getMessage(sqle),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} finally {
 				close(rs) ;
 				close(stat) ;
 			}
@@ -160,6 +189,9 @@ public class HiveClient extends BaseClient implements Closeable {
 
 	public List<String> getColumnList(String database, String tableName, String columnNameMatching) {
 		List<String> ret = new ArrayList<String>() ;
+		String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 		if (con != null) {
 			
 			String columnNameMatchingRegEx = null ;
@@ -196,11 +228,22 @@ public class HiveClient extends BaseClient implements Closeable {
 						ret.add(columnName) ;
 					}
 				}
- 			}
-			catch(SQLException sqle) {
-				throw new HadoopException("Unable to execute SQL [" + sql + "]", sqle);
-			}
-			finally {
+			} catch (SQLTimeoutException sqlt) {
+				String msgDesc = "Time Out, Unable to execute SQL [" + sql
+						+ "].";
+				HadoopException hdpException = new HadoopException(msgDesc,
+						sqlt);
+				hdpException.generateResponseDataMap(false, getMessage(sqlt),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} catch (SQLException sqle) {
+				String msgDesc = "Unable to execute SQL [" + sql + "].";
+				HadoopException hdpException = new HadoopException(msgDesc,
+						sqle);
+				hdpException.generateResponseDataMap(false, getMessage(sqle),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} finally {
 				close(rs) ;
 				close(stat) ;
 			}
@@ -254,30 +297,85 @@ public class HiveClient extends BaseClient implements Closeable {
 		Properties prop = getConfigHolder().getXASecureSection() ;
 		String driverClassName = prop.getProperty("jdbc.driverClassName") ;
 		String url =  prop.getProperty("jdbc.url") ;	
+		String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 	
 		if (driverClassName != null) {
 			try {
 				Driver driver = (Driver)Class.forName(driverClassName).newInstance() ;
 				DriverManager.registerDriver(driver);
+			} catch (SQLException e) {
+				String msgDesc = "initConnection: Caught SQLException while registering "
+						+ "Hive driver, so Unable to connect to Hive Thrift Server instance.";
+				HadoopException hdpException = new HadoopException(msgDesc, e);
+				hdpException.generateResponseDataMap(false, getMessage(e),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} catch (IllegalAccessException ilae) {
+				String msgDesc = "initConnection: Class or its nullary constructor might not accessible."
+						+ "So unable to initiate connection to hive thrift server instance.";
+				HadoopException hdpException = new HadoopException(msgDesc, ilae);
+				hdpException.generateResponseDataMap(false, getMessage(ilae),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} catch (InstantiationException ie) {
+				String msgDesc = "initConnection: Class may not have its nullary constructor or "
+						+ "may be the instantiation fails for some other reason."
+						+ "So unable to initiate connection to hive thrift server instance.";
+				HadoopException hdpException = new HadoopException(msgDesc, ie);
+				hdpException.generateResponseDataMap(false, getMessage(ie),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+				
+			} catch (ExceptionInInitializerError eie) {
+				String msgDesc = "initConnection: Got ExceptionInInitializerError, "
+						+ "The initialization provoked by this method fails."
+						+ "So unable to initiate connection to hive thrift server instance.";
+				HadoopException hdpException = new HadoopException(msgDesc, eie);
+				hdpException.generateResponseDataMap(false, getMessage(eie),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} catch (SecurityException se) {
+				String msgDesc = "initConnection: unable to initiate connection to hive thrift server instance,"
+						+ " The caller's class loader is not the same as or an ancestor "
+						+ "of the class loader for the current class and invocation of "
+						+ "s.checkPackageAccess() denies access to the package of this class.";
+				HadoopException hdpException = new HadoopException(msgDesc, se);
+				hdpException.generateResponseDataMap(false, getMessage(se),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
 			} catch (Throwable t) {
-				throw new HadoopException("Unable to connect to Hive Thrift Server instance", t) ;
+				String msgDesc = "initConnection: Unable to connect to Hive Thrift Server instance, "
+						+ "please provide valid value of field : {jdbc.driverClassName}.";
+				HadoopException hdpException = new HadoopException(msgDesc, t);
+				hdpException.generateResponseDataMap(false, getMessage(t),
+						msgDesc + errMsg, null, "jdbc.driverClassName");
+				throw hdpException;
 			}
 		}
 		
-	
 		try {
 			
 			if (userName == null && password == null) {
 				con = DriverManager.getConnection(url) ;
 			}
-			else {
-				
+			else {			
 				con = DriverManager.getConnection(url, userName, password) ;
-			
 			}
 		
 		} catch (SQLException e) {
-			throw new HadoopException("Unable to connect to Hive Thrift Server instance", e) ;
+			String msgDesc = "Unable to connect to Hive Thrift Server instance.";
+			HadoopException hdpException = new HadoopException(msgDesc, e);
+			hdpException.generateResponseDataMap(false, getMessage(e), msgDesc
+					+ errMsg, null, null);
+			throw hdpException;
+		} catch (SecurityException se) {
+			String msgDesc = "Unable to connect to Hive Thrift Server instance.";
+			HadoopException hdpException = new HadoopException(msgDesc, se);
+			hdpException.generateResponseDataMap(false, getMessage(se), msgDesc
+					+ errMsg, null, null);
+			throw hdpException;
 		}
 	}
 
@@ -335,5 +433,37 @@ public class HiveClient extends BaseClient implements Closeable {
 				hc.close();
 			}
 		}	
-	}	
+	}
+
+	public static HashMap<String, Object> testConnection(String dataSource,
+			HashMap<String, String> connectionProperties) {
+
+		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		boolean connectivityStatus = false;
+		String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
+
+		HiveClient connectionObj = new HiveClient(dataSource,
+				connectionProperties);
+		if (connectionObj != null) {
+			List<String> testResult = connectionObj.getDatabaseList("*");
+			if (testResult != null && testResult.size() != 0) {
+				connectivityStatus = true;
+			}
+		}
+		if (connectivityStatus) {
+			String successMsg = "TestConnection Successful";
+			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
+					null, null, responseData);
+		} else {
+			String failureMsg = "Unable to retrive any databases using given parameters.";
+			generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + errMsg,
+					null, null, responseData);
+		}
+		
+		connectionObj.close();
+		return responseData;
+	}
+	
 }

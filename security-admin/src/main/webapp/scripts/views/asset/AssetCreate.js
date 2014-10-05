@@ -225,8 +225,36 @@ define(function(require){
 			this.model.testConfig(this.model,{
 					//wait: true,
 					success: function (msResponse, options) {
-						if(msResponse.statusCode)
-							bootbox.alert("Connection Problem.");
+						if(msResponse.statusCode){
+							if(!_.isUndefined(msResponse) && _.isArray(msResponse.messageList) 
+														  && !_.isUndefined(msResponse.messageList[0].message)){
+								if(!_.isEmpty(msResponse.messageList[0].message) && msResponse.messageList[0].message != "\n"){
+									bootbox.dialog('<b>'+msResponse.messageList[0].message+'</b>',	[{
+										label: "Show More..",
+										callback:function(e){
+											console.log(e)
+											if($(e.currentTarget).text() == 'Show More..'){
+												var div = '<div class="showMore">'+msResponse.msgDesc+'</div>';
+												$(e.delegateTarget).find('.modal-body').append(div)
+												$(e.currentTarget).html('Show Less..')
+											}else{
+												$(e.delegateTarget).find('.showMore').remove();
+												$(e.currentTarget).html('Show More..')
+											}
+											return false;
+										}
+									}, {
+										label: "OK",
+										callback:function(){}
+									}]
+									);
+								}else{
+									bootbox.alert(msResponse.msgDesc);	
+								}
+							}else{
+								bootbox.alert("Connection Problem.");
+							}
+						}
 						else
 							bootbox.alert("Connected Successfully.");
 					},

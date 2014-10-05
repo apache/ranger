@@ -66,11 +66,20 @@ public abstract class BaseClient {
 	
 	protected void login() {
 		ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
+		String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 		try {
 			Thread.currentThread().setContextClassLoader(configHolder.getClassLoader());
 			String userName = configHolder.getUserName() ;
 			if (userName == null) {
-				throw new HadoopException("Unable to find login username for hadoop environment, [" + dataSource + "]") ;
+				String msgDesc = "Unable to find login username for hadoop environment, ["
+						+ dataSource + "]";
+				HadoopException hdpException = new HadoopException(msgDesc);
+				hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg,
+						null, null);
+
+				throw hdpException;
 			}
 			String keyTabFile = configHolder.getKeyTabFile() ;
 			if (keyTabFile != null) {
@@ -94,11 +103,22 @@ public abstract class BaseClient {
 					loginSubject = SecureClientLogin.login(userName) ;
 				}
 			}
-		}
-		catch(IOException ioe) {
-			throw new HadoopException("Unable to login to Hadoop environment [" + dataSource + "]", ioe) ;
-		}
-		finally {
+		} catch (IOException ioe) {
+			String msgDesc = "Unable to login to Hadoop environment ["
+					+ dataSource + "]";
+
+			HadoopException hdpException = new HadoopException(msgDesc, ioe);
+			hdpException.generateResponseDataMap(false, getMessage(ioe),
+					msgDesc + errMsg, null, null);
+			throw hdpException;
+		} catch (SecurityException se) {
+			String msgDesc = "Unable to login to Hadoop environment ["
+					+ dataSource + "]";
+			HadoopException hdpException = new HadoopException(msgDesc, se);
+			hdpException.generateResponseDataMap(false, getMessage(se),
+					msgDesc + errMsg, null, null);
+			throw hdpException;
+		} finally {
 			Thread.currentThread().setContextClassLoader(prevCl);
 		}
 	}
@@ -115,6 +135,24 @@ public abstract class BaseClient {
 		return configHolder;
 	}
 	
-	
+	public static void generateResponseDataMap(boolean connectivityStatus,
+			String message, String description, Long objectId,
+			String fieldName, HashMap<String, Object> responseData) {
+		responseData.put("connectivityStatus", connectivityStatus);
+		responseData.put("message", message);
+		responseData.put("description", description);
+		responseData.put("objectId", objectId);
+		responseData.put("fieldName", fieldName);
+	}
 
+	public static String getMessage(Throwable excp) {
+		StringBuilder sb = new StringBuilder();
+		while (excp != null) {
+			sb.append(excp.getMessage()).append("\n");
+			excp = excp.getCause();
+		}
+
+		return sb.toString();
+	}
+	
 }
