@@ -19,7 +19,9 @@
 
  package com.xasecure.hadoop.client;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,10 +51,12 @@ public class HadoopFS extends BaseClient {
 		super(dataSource,connectionProperties) ;
 	}
 	
-	
 	private List<String> listFilesInternal(String baseDir, String fileMatching) {
 		List<String> fileList = new ArrayList<String>() ;
 		ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
+		String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 		try {
 			Thread.currentThread().setContextClassLoader(getConfigHolder().getClassLoader());
 			String dirPrefix = (baseDir.endsWith("/") ? baseDir : (baseDir + "/")) ;
@@ -80,12 +84,42 @@ public class HadoopFS extends BaseClient {
 						}
 					}
 				}
+			} catch (UnknownHostException uhe) {
+				String msgDesc = "listFilesInternal: Unable to connect using given config parameters"
+						+ " of Hadoop environment [" + getDataSource() + "].";
+				HadoopException hdpException = new HadoopException(msgDesc, uhe);
+				hdpException.generateResponseDataMap(false, getMessage(uhe),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} catch (FileNotFoundException fne) {
+				String msgDesc = "listFilesInternal: Unable to locate files using given config parameters "
+						+ "of Hadoop environment [" + getDataSource() + "].";
+				HadoopException hdpException = new HadoopException(msgDesc, fne);
+				hdpException.generateResponseDataMap(false, getMessage(fne),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
 			}
 			finally {
 			}
-		}
-		catch(IOException ioe) {
-			throw new HadoopException("Unable to get listing of files for directory [" + baseDir + "] from Hadoop environment [" + getDataSource() + "]", ioe) ;
+		} catch (IOException ioe) {
+			String msgDesc = "listFilesInternal: Unable to get listing of files for directory "
+					+ baseDir
+					+ "] from Hadoop environment ["
+					+ getDataSource()
+					+ "].";
+			HadoopException hdpException = new HadoopException(msgDesc, ioe);
+			hdpException.generateResponseDataMap(false, getMessage(ioe),
+					msgDesc + errMsg, null, null);
+			throw hdpException;
+
+		} catch (IllegalArgumentException iae) {
+			String msgDesc = "Unable to get listing of files for directory ["
+					+ baseDir + "] from Hadoop environment [" + getDataSource()
+					+ "].";
+			HadoopException hdpException = new HadoopException(msgDesc, iae);
+			hdpException.generateResponseDataMap(false, getMessage(iae),
+					msgDesc + errMsg, null, null);
+			throw hdpException;
 		}
 		finally {
 			Thread.currentThread().setContextClassLoader(prevCl);
@@ -127,6 +161,33 @@ public class HadoopFS extends BaseClient {
 		else {
 			System.err.println("Unable to get file listing for [" + baseDir + (baseDir.endsWith("/") ? "" : "/") + fileNameToMatch + "]  in repository [" + repositoryName + "]") ;
 		}
+	}
+
+	public static HashMap<String, Object> testConnection(String dataSource,
+			HashMap<String, String> connectionProperties) {
+
+		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		boolean connectivityStatus = false;
+		HadoopFS connectionObj = new HadoopFS(dataSource, connectionProperties);
+		if (connectionObj != null) {
+			List<String> testResult = connectionObj.listFiles("/", null);
+			if (testResult != null && testResult.size() != 0) {
+				connectivityStatus = true;
+			}
+		}
+		if (connectivityStatus) {
+			String successMsg = "TestConnection Successful";
+			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
+					null, null, responseData);
+		} else {
+			String failureMsg = "Unable to retrive any files using given parameters, "
+					+ "You can still save the repository and start creating policies, "
+					+ "but you would not be able to use autocomplete for resource names. "
+					+ "Check xa_portal.log for more info.";
+			generateResponseDataMap(connectivityStatus, failureMsg, failureMsg,
+					null, null, responseData);
+		}
+		return responseData;
 	}
 
 }
