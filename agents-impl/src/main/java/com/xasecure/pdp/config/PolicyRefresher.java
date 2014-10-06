@@ -188,7 +188,7 @@ public class PolicyRefresher  {
 				writer.println(policyAsJson) ;
 			}
 			catch(IOException ioe) {
-				LOG.error("Unable to save policy into file: [" + saveFile.getAbsolutePath() + "]", ioe);
+				LOG.warn("Unable to save policy into file: [" + saveFile.getAbsolutePath() + "]");
 			}
 			finally {
 				if (writer != null) {
@@ -221,7 +221,7 @@ public class PolicyRefresher  {
 				
 			}
 			catch(IOException ioe){
-				LOG.error("Unable to save the policy into Last Stored Policy File [" + lastSaveFile.getAbsolutePath() + "]", ioe );
+				LOG.warn("Unable to save the policy into Last Stored Policy File [" + lastSaveFile.getAbsolutePath() + "]");
 			}
 		    finally {
 		    	 //make the policy file cache to be 600 permission when it gets created and updated
