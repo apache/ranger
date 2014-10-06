@@ -35,10 +35,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.MasterNotRunningException;
+import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.security.SecureClientLogin;
 
+import com.google.protobuf.ServiceException;
 import com.xasecure.hadoop.client.config.BaseClient;
+import com.xasecure.hadoop.client.exceptions.HadoopException;
 
 public class HBaseClient extends BaseClient {
 
@@ -75,9 +78,39 @@ public class HBaseClient extends BaseClient {
 		return connectionProp;
 	}
 	
+	public static HashMap<String, Object> testConnection(String dataSource,
+			HashMap<String, String> connectionProperties) {
+
+		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		final String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
+		boolean connectivityStatus = false;
+
+		HBaseClient connectionObj = new HBaseClient(dataSource,
+				connectionProperties);
+		if (connectionObj != null) {
+			connectivityStatus = connectionObj.getHBaseStatus();
+		}
+
+		if (connectivityStatus) {
+			String successMsg = "TestConnection Successful";
+			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
+					null, null, responseData);
+		} else {
+			String failureMsg = "Unable to retrive any databases using given parameters.";
+			generateResponseDataMap(connectivityStatus, failureMsg, failureMsg
+					+ errMsg, null, null, responseData);
+		}
+		return responseData;
+	}
+	
 	public boolean getHBaseStatus() {
 		boolean hbaseStatus = false;
 		subj = getLoginSubject();
+		final String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 		if (subj != null) {
 			ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
 			try {
@@ -96,13 +129,61 @@ public class HBaseClient extends BaseClient {
 							HBaseAdmin.checkHBaseAvailable(conf);					
 						    LOG.info("getHBaseStatus: no exception: HbaseAvailability true");
 							hbaseStatus1 = true;
-						} catch (Throwable e) {
-							LOG.error("getHBaseStatus: Unable to check availability of Hbase environment [" + getConfigHolder().getDatasourceName() + "]", e);
+						} catch (ZooKeeperConnectionException zce) {
+							String msgDesc = "getHBaseStatus: Unable to connect to `ZooKeeper` "
+									+ "using given config parameters.";
+							HadoopException hdpException = new HadoopException(msgDesc, zce);
+							hdpException.generateResponseDataMap(false, getMessage(zce),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
+							
+						} catch (MasterNotRunningException mnre) {
+							String msgDesc = "getHBaseStatus: Looks like `Master` is not running, "
+									+ "so couldn't check that running HBase is available or not, "
+									+ "Please try again later.";
+							HadoopException hdpException = new HadoopException(
+									msgDesc, mnre);
+							hdpException.generateResponseDataMap(false,
+									getMessage(mnre), msgDesc + errMsg,
+									null, null);
+							throw hdpException;
+
+						} catch (ServiceException se) {
+							String msgDesc = "getHBaseStatus: Unable to check availability of "
+									+ "Hbase environment [" + getConfigHolder().getDatasourceName() + "].";
+							HadoopException hdpException = new HadoopException(msgDesc, se);
+							hdpException.generateResponseDataMap(false, getMessage(se),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
+							
+						} catch(IOException io) {
+							String msgDesc = "getHBaseStatus: Unable to check availability of"
+									+ " Hbase environment [" + getConfigHolder().getDatasourceName() + "].";
+							HadoopException hdpException = new HadoopException(msgDesc, io);
+							hdpException.generateResponseDataMap(false, getMessage(io),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
+							
+						}  catch (Throwable e) {
+							String msgDesc = "getHBaseStatus: Unable to check availability of"
+									+ " Hbase environment [" + getConfigHolder().getDatasourceName() + "].";
+							LOG.error(msgDesc);
 							hbaseStatus1 = false;
+							HadoopException hdpException = new HadoopException(msgDesc, e);
+							hdpException.generateResponseDataMap(false, getMessage(e),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
 						}
 						return hbaseStatus1;
 					}
 				}) ;
+			} catch (SecurityException se) {
+				String msgDesc = "getHBaseStatus: Unable to connect to HBase Server instance, "
+						+ "current thread might not be able set the context ClassLoader.";
+				HadoopException hdpException = new HadoopException(msgDesc, se);
+				hdpException.generateResponseDataMap(false, getMessage(se),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
 			} finally {
 				Thread.currentThread().setContextClassLoader(prevCl);
 			}
@@ -127,6 +208,9 @@ public class HBaseClient extends BaseClient {
 
 	public List<String> getTableList(final String tableNameMatching) {
 		List<String> ret = null ;
+		final String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 		
 		if (subj != null) {
 			ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
@@ -147,9 +231,42 @@ public class HBaseClient extends BaseClient {
 							for (HTableDescriptor htd : admin.listTables(tableNameMatching)) {
 								tableList.add(htd.getNameAsString()) ;
 							}
-						}
-						catch(Throwable t) {
-							LOG.error("Unable to get HBase table List for [repository:" + getConfigHolder().getDatasourceName() + ",table-match:" + tableNameMatching + "]", t);
+						} catch (ZooKeeperConnectionException zce) {
+							String msgDesc = "getTableList: Unable to connect to `ZooKeeper` "
+									+ "using given config parameters.";
+							HadoopException hdpException = new HadoopException(msgDesc, zce);
+							hdpException.generateResponseDataMap(false, getMessage(zce),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
+							
+						} catch (MasterNotRunningException mnre) {
+							String msgDesc = "getTableList: Looks like `Master` is not running, "
+									+ "so couldn't check that running HBase is available or not, "
+									+ "Please try again later.";
+							HadoopException hdpException = new HadoopException(
+									msgDesc, mnre);
+							hdpException.generateResponseDataMap(false,
+									getMessage(mnre), msgDesc + errMsg,
+									null, null);
+							throw hdpException;
+
+						}  catch(IOException io) {
+							String msgDesc = "Unable to get HBase table List for [repository:"
+									+ getConfigHolder().getDatasourceName() + ",table-match:" 
+									+ tableNameMatching + "].";
+							HadoopException hdpException = new HadoopException(msgDesc, io);
+							hdpException.generateResponseDataMap(false, getMessage(io),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
+						}   catch (Throwable e) {
+							String msgDesc = "Unable to get HBase table List for [repository:"
+									+ getConfigHolder().getDatasourceName() + ",table-match:" 
+									+ tableNameMatching + "].";
+							LOG.error(msgDesc);
+							HadoopException hdpException = new HadoopException(msgDesc, e);
+							hdpException.generateResponseDataMap(false, getMessage(e),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
 						}
 						finally {
 							if (admin != null) {
@@ -174,7 +291,10 @@ public class HBaseClient extends BaseClient {
 	
 	
 	public List<String> getColumnFamilyList(final String tableName, final String columnFamilyMatching) {
-		List<String> ret = null ;		
+		List<String> ret = null ;
+		final String errMsg = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check xa_portal.log for more info.";
 		if (subj != null) {
 			ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
 			try {
@@ -201,9 +321,54 @@ public class HBaseClient extends BaseClient {
 									}
 								}
 							}
-						}
-						catch(Throwable t) {
-							LOG.error("Unable to get HBase table List for [repository:" + getConfigHolder().getDatasourceName() + ",table:" + tableName + ", table-match:" + columnFamilyMatching + "]", t);
+						}  catch (ZooKeeperConnectionException zce) {
+							String msgDesc = "getColumnFamilyList: Unable to connect to `ZooKeeper` "
+									+ "using given config parameters.";
+							HadoopException hdpException = new HadoopException(msgDesc, zce);
+							hdpException.generateResponseDataMap(false, getMessage(zce),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
+							
+						} catch (MasterNotRunningException mnre) {
+							String msgDesc = "getColumnFamilyList: Looks like `Master` is not running, "
+									+ "so couldn't check that running HBase is available or not, "
+									+ "Please try again later.";
+							HadoopException hdpException = new HadoopException(
+									msgDesc, mnre);
+							hdpException.generateResponseDataMap(false,
+									getMessage(mnre), msgDesc + errMsg,
+									null, null);
+							throw hdpException;
+
+						}  catch(IOException io) {
+							String msgDesc = "getColumnFamilyList: Unable to get HBase ColumnFamilyList for "
+									+ "[repository:" +getConfigHolder().getDatasourceName() + ",table:" + tableName
+									+ ", table-match:" + columnFamilyMatching + "], "
+									+ "current thread might not be able set the context ClassLoader.";
+							HadoopException hdpException = new HadoopException(msgDesc, io);
+							hdpException.generateResponseDataMap(false, getMessage(io),
+									msgDesc + errMsg, null, null);
+							throw hdpException; 
+						} catch (SecurityException se) {
+								String msgDesc = "getColumnFamilyList: Unable to get HBase ColumnFamilyList for "
+										+ "[repository:" +getConfigHolder().getDatasourceName() + ",table:" + tableName
+										+ ", table-match:" + columnFamilyMatching + "], "
+										+ "current thread might not be able set the context ClassLoader.";
+								HadoopException hdpException = new HadoopException(msgDesc, se);
+								hdpException.generateResponseDataMap(false, getMessage(se),
+										msgDesc + errMsg, null, null);
+								throw hdpException;							
+							
+						}  catch (Throwable e) {
+							String msgDesc = "getColumnFamilyList: Unable to get HBase ColumnFamilyList for "
+									+ "[repository:" +getConfigHolder().getDatasourceName() + ",table:" + tableName
+									+ ", table-match:" + columnFamilyMatching + "], "
+									+ "current thread might not be able set the context ClassLoader.";
+							LOG.error(msgDesc);
+							HadoopException hdpException = new HadoopException(msgDesc, e);
+							hdpException.generateResponseDataMap(false, getMessage(e),
+									msgDesc + errMsg, null, null);
+							throw hdpException;
 						}
 						finally {
 							if (admin != null) {
@@ -218,8 +383,14 @@ public class HBaseClient extends BaseClient {
 					}
 					
 				}) ;
-			}
-			finally {
+			} catch (SecurityException se) {
+				String msgDesc = "getTableList: Unable to connect to HBase Server instance, "
+						+ "current thread might not be able set the context ClassLoader.";
+				HadoopException hdpException = new HadoopException(msgDesc, se);
+				hdpException.generateResponseDataMap(false, getMessage(se),
+						msgDesc + errMsg, null, null);
+				throw hdpException;
+			} finally {
 				Thread.currentThread().setContextClassLoader(prevCl);
 			}
 		}

@@ -37,7 +37,6 @@ import java.util.Comparator;
 import java.util.TreeSet;
 
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.helpers.LogLog;
 
 
 public class LocalFileLogBuffer<T> implements LogBuffer<T> {
@@ -49,6 +48,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private int     mRolloverIntervalSeconds = 10 * 60;
 	private String  mArchiveDirectory        = null;
 	private int     mArchiveFileCount        = 10;
+	private DebugTracer mLogger              = null;
 
 	private Writer mWriter           = null;
 	private String mBufferFilename   = null;
@@ -57,7 +57,8 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 	private DestinationDispatcherThread<T> mDispatcherThread = null;
 	
-	public LocalFileLogBuffer() {
+	public LocalFileLogBuffer(DebugTracer tracer) {
+		mLogger = tracer;
 	}
 
 	public String getDirectory() {
@@ -127,18 +128,18 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 	@Override
 	public void start(LogDestination<T> destination) {
-		LogLog.debug("==> LocalFileLogBuffer.start()");
+		mLogger.debug("==> LocalFileLogBuffer.start()");
 
-		mDispatcherThread = new DestinationDispatcherThread<T>(this, destination);
+		mDispatcherThread = new DestinationDispatcherThread<T>(this, destination, mLogger);
 
 		mDispatcherThread.start();
 
-		LogLog.debug("<== LocalFileLogBuffer.start()");
+		mLogger.debug("<== LocalFileLogBuffer.start()");
 	}
 
 	@Override
 	public void stop() {
-		LogLog.debug("==> LocalFileLogBuffer.stop()");
+		mLogger.debug("==> LocalFileLogBuffer.stop()");
 		
 		DestinationDispatcherThread<T> dispatcherThread = mDispatcherThread;
 		mDispatcherThread = null;
@@ -149,13 +150,13 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 			try {
 				dispatcherThread.join();
 			} catch (InterruptedException e) {
-				LogLog.warn("LocalFileLogBuffer.stop(): failed in waiting for DispatcherThread", e);
+				mLogger.warn("LocalFileLogBuffer.stop(): failed in waiting for DispatcherThread", e);
 			}
 		}
 
 		closeFile();
 
-		LogLog.debug("<== LocalFileLogBuffer.stop()");
+		mLogger.debug("<== LocalFileLogBuffer.stop()");
 	}
 
 	@Override
@@ -183,10 +184,10 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 				ret = true;
 			} catch(IOException excp) {
-				LogLog.warn("LocalFileLogBuffer.add(): write failed", excp);
+				mLogger.warn("LocalFileLogBuffer.add(): write failed", excp);
 			}
 		} else {
-			LogLog.warn("LocalFileLogBuffer.add(): writer is null");
+			mLogger.warn("LocalFileLogBuffer.add(): writer is null");
 		}
 
 		return ret;
@@ -198,7 +199,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	}
 
 	private synchronized void openFile() {
-		LogLog.debug("==> LocalFileLogBuffer.openFile()");
+		mLogger.debug("==> LocalFileLogBuffer.openFile()");
 
 		closeFile();
 
@@ -224,20 +225,20 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 		mWriter = createWriter(ostream);
 
 		if(mWriter != null) {
-			LogLog.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
+			mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
 
 			mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
 		} else {
-			LogLog.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
+			mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
 
 			mBufferFilename = null;
 		}
 
-		LogLog.debug("<== LocalFileLogBuffer.openFile()");
+		mLogger.debug("<== LocalFileLogBuffer.openFile()");
 	}
 
 	private synchronized void closeFile() {
-		LogLog.debug("==> LocalFileLogBuffer.closeFile()");
+		mLogger.debug("==> LocalFileLogBuffer.closeFile()");
 
 		Writer writer = mWriter;
 
@@ -248,7 +249,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 				writer.flush();
 				writer.close();
 			} catch(IOException excp) {
-				LogLog.warn("LocalFileLogBuffer: failed to close file " + mBufferFilename, excp);
+				mLogger.warn("LocalFileLogBuffer: failed to close file " + mBufferFilename, excp);
 			}
 
 			if(mDispatcherThread != null) {
@@ -256,17 +257,17 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 			}
 		}
 
-		LogLog.debug("<== LocalFileLogBuffer.closeFile()");
+		mLogger.debug("<== LocalFileLogBuffer.closeFile()");
 	}
 
 	private void rollover() {
-		LogLog.debug("==> LocalFileLogBuffer.rollover()");
+		mLogger.debug("==> LocalFileLogBuffer.rollover()");
 
 		closeFile();
 
 		openFile();
 
-		LogLog.debug("<== LocalFileLogBuffer.rollover()");
+		mLogger.debug("<== LocalFileLogBuffer.rollover()");
 	}
 
 	private void checkFileStatus() {
@@ -282,7 +283,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 				mWriter.flush();
 			} catch (IOException excp) {
-				LogLog.warn("LocalFileLogBuffer: failed to flush to file " + mBufferFilename, excp);
+				mLogger.warn("LocalFileLogBuffer: failed to flush to file " + mBufferFilename, excp);
 			}
 		}
 	}
@@ -295,7 +296,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 				try {
 					writer = new OutputStreamWriter(os, mEncoding);
 				} catch(UnsupportedEncodingException excp) {
-					LogLog.warn("LocalFileLogBuffer: failed to create output writer for file " + mBufferFilename, excp);
+					mLogger.warn("LocalFileLogBuffer: failed to create output writer for file " + mBufferFilename, excp);
 				}
 			}
 	
@@ -333,12 +334,15 @@ class DestinationDispatcherThread<T> extends Thread {
 	private boolean                mStopThread        = false;
 	private LocalFileLogBuffer<T>  mFileLogBuffer     = null;
 	private LogDestination<T>      mDestination       = null;
+	private DebugTracer            mLogger            = null;
 
 	private String         mCurrentLogfile = null;
 	private BufferedReader mReader         = null;
 
-	public DestinationDispatcherThread(LocalFileLogBuffer<T> fileLogBuffer, LogDestination<T> destination) {
+	public DestinationDispatcherThread(LocalFileLogBuffer<T> fileLogBuffer, LogDestination<T> destination, DebugTracer tracer) {
 		super(DestinationDispatcherThread.class.getSimpleName() + "-" + System.currentTimeMillis());
+
+		mLogger = tracer;
 
 		mFileLogBuffer = fileLogBuffer;
 		mDestination   = destination;
@@ -347,7 +351,7 @@ class DestinationDispatcherThread<T> extends Thread {
 	}
 
 	public void addLogfile(String filename) {
-		LogLog.debug("==> DestinationDispatcherThread.addLogfile(" + filename + ")");
+		mLogger.debug("==> DestinationDispatcherThread.addLogfile(" + filename + ")");
 
 		if(filename != null) {
 			synchronized(mCompletedLogfiles) {
@@ -356,7 +360,7 @@ class DestinationDispatcherThread<T> extends Thread {
 			}
 		}
 
-		LogLog.debug("<== DestinationDispatcherThread.addLogfile(" + filename + ")");
+		mLogger.debug("<== DestinationDispatcherThread.addLogfile(" + filename + ")");
 	}
 
 	public void stopThread() {
@@ -376,11 +380,11 @@ class DestinationDispatcherThread<T> extends Thread {
 		try {
 			loginUser = UserGroupInformation.getLoginUser();
 		} catch (IOException excp) {
-			LogLog.error("DestinationDispatcherThread.run(): failed to get login user details. Audit files will not be sent to HDFS destination", excp);
+			mLogger.error("DestinationDispatcherThread.run(): failed to get login user details. Audit files will not be sent to HDFS destination", excp);
 		}
 
 		if(loginUser == null) {
-			LogLog.error("DestinationDispatcherThread.run(): failed to get login user. Audit files will not be sent to HDFS destination");
+			mLogger.error("DestinationDispatcherThread.run(): failed to get login user. Audit files will not be sent to HDFS destination");
 
 			return;
 		}
@@ -408,7 +412,7 @@ class DestinationDispatcherThread<T> extends Thread {
 					try {
 						mCompletedLogfiles.wait(pollIntervalInMs);
 					} catch(InterruptedException excp) {
-						LogLog.warn("DestinationDispatcherThread.run(): failed to wait for log file", excp);
+						mLogger.warn("DestinationDispatcherThread.run(): failed to wait for log file", excp);
 					}
 				}
 				
@@ -424,7 +428,7 @@ class DestinationDispatcherThread<T> extends Thread {
 	}
 
 	private void init() {
-		LogLog.debug("==> DestinationDispatcherThread.init()");
+		mLogger.debug("==> DestinationDispatcherThread.init()");
 
 		String dirName = MiscUtil.replaceTokens(mFileLogBuffer.getDirectory(), 0);
 		
@@ -447,11 +451,11 @@ class DestinationDispatcherThread<T> extends Thread {
 			}
 		}
 
-		LogLog.debug("<== DestinationDispatcherThread.init()");
+		mLogger.debug("<== DestinationDispatcherThread.init()");
 	}
 	
 	private boolean sendCurrentFile() {
-		LogLog.debug("==> DestinationDispatcherThread.sendCurrentFile()");
+		mLogger.debug("==> DestinationDispatcherThread.sendCurrentFile()");
 
 		boolean ret = false;
 
@@ -480,7 +484,7 @@ class DestinationDispatcherThread<T> extends Thread {
 			archiveCurrentFile();
 		}
 
-		LogLog.debug("<== DestinationDispatcherThread.sendCurrentFile()");
+		mLogger.debug("<== DestinationDispatcherThread.sendCurrentFile()");
 
 		return ret;
 	}
@@ -518,7 +522,7 @@ class DestinationDispatcherThread<T> extends Thread {
 					}
 				}
 			} catch (IOException excp) {
-				LogLog.warn("getNextStringifiedLog.getNextLog(): failed to read from file " + mCurrentLogfile, excp);
+				mLogger.warn("getNextStringifiedLog.getNextLog(): failed to read from file " + mCurrentLogfile, excp);
 			}
 		}
 
@@ -526,7 +530,7 @@ class DestinationDispatcherThread<T> extends Thread {
 	}
 
 	private void openCurrentFile() {
-		LogLog.debug("==> openCurrentFile(" + mCurrentLogfile + ")");
+		mLogger.debug("==> openCurrentFile(" + mCurrentLogfile + ")");
 
 		if(mCurrentLogfile != null) {
 			try {
@@ -538,15 +542,15 @@ class DestinationDispatcherThread<T> extends Thread {
 					mReader = new BufferedReader(strReader);
 				}
 			} catch(FileNotFoundException excp) {
-				LogLog.warn("openNextFile(): error while opening file " + mCurrentLogfile, excp);
+				mLogger.warn("openNextFile(): error while opening file " + mCurrentLogfile, excp);
 			}
 		}
 
-		LogLog.debug("<== openCurrentFile(" + mCurrentLogfile + ")");
+		mLogger.debug("<== openCurrentFile(" + mCurrentLogfile + ")");
 	}
 	
 	private void closeCurrentFile() {
-		LogLog.debug("==> closeCurrentFile(" + mCurrentLogfile + ")");
+		mLogger.debug("==> closeCurrentFile(" + mCurrentLogfile + ")");
 
 		if(mReader != null) {
 			try {
@@ -557,7 +561,7 @@ class DestinationDispatcherThread<T> extends Thread {
 		}
 		mReader = null;
 
-		LogLog.debug("<== closeCurrentFile(" + mCurrentLogfile + ")");
+		mLogger.debug("<== closeCurrentFile(" + mCurrentLogfile + ")");
 	}
 
 	private void archiveCurrentFile() {
@@ -574,7 +578,7 @@ class DestinationDispatcherThread<T> extends Thread {
 
 					if(! logFile.renameTo(archiveFile)) {
 						// TODO: renameTo() does not work in all cases. in case of failure, copy the file contents to the destination and delete the file
-						LogLog.warn("archiving failed to move file: " + mCurrentLogfile + " ==> " + archiveFilename);
+						mLogger.warn("archiving failed to move file: " + mCurrentLogfile + " ==> " + archiveFilename);
 					}
 
 					File   archiveDir = new File(archiveDirName);
@@ -597,13 +601,13 @@ class DestinationDispatcherThread<T> extends Thread {
 
 						for(int i = 0; i < numOfFilesToDelete; i++) {
 							if(! files[i].delete()) {
-								LogLog.warn("archiving failed to delete file: " + files[i].getAbsolutePath());
+								mLogger.warn("archiving failed to delete file: " + files[i].getAbsolutePath());
 							}
 						}
 					}
 				}
 			} catch(Exception excp) {
-				LogLog.warn("archiveCurrentFile(): faile to move " + mCurrentLogfile + " to archive location " + archiveFilename, excp);
+				mLogger.warn("archiveCurrentFile(): faile to move " + mCurrentLogfile + " to archive location " + archiveFilename, excp);
 			}
 		}
 		mCurrentLogfile = null;
@@ -619,7 +623,7 @@ class DestinationDispatcherThread<T> extends Thread {
 				try {
 					reader = new InputStreamReader(iStr, encoding);
 				} catch(UnsupportedEncodingException excp) {
-					LogLog.warn("createReader(): failed to create input reader.", excp);
+					mLogger.warn("createReader(): failed to create input reader.", excp);
 				}
 			}
 
@@ -635,7 +639,7 @@ class DestinationDispatcherThread<T> extends Thread {
 		try {
 			Thread.sleep(sleepTimeInMs);
 		} catch(InterruptedException excp) {
-			LogLog.warn(onFailMsg, excp);
+			mLogger.warn(onFailMsg, excp);
 		}
 	}
 

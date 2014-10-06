@@ -21,6 +21,7 @@
 
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -78,6 +79,7 @@ import com.xasecure.entity.XXResource;
 import com.xasecure.entity.XXTrxLog;
 import com.xasecure.entity.XXUser;
 import com.xasecure.hadoop.client.HadoopFS;
+import com.xasecure.hadoop.client.exceptions.HadoopException;
 import com.xasecure.hbase.client.HBaseClient;
 import com.xasecure.hive.client.HiveClient;
 import com.xasecure.knox.client.KnoxClient;
@@ -95,6 +97,7 @@ import com.xasecure.view.VXAsset;
 import com.xasecure.view.VXAuditMap;
 import com.xasecure.view.VXAuditMapList;
 import com.xasecure.view.VXLong;
+import com.xasecure.view.VXMessage;
 import com.xasecure.view.VXPermMap;
 import com.xasecure.view.VXPermMapList;
 import com.xasecure.view.VXPolicy;
@@ -1569,8 +1572,10 @@ public class AssetMgr extends AssetMgrBase {
 		}
 		
 		int assetType = vXAsset.getAssetType();
+		
 		VXResponse testResponse = new VXResponse();
-		boolean connectivityStatus = false;
+		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		
 		HashMap<String, String> configMap = (HashMap<String, String>) jsonUtil
 				.jsonToMap(vXAsset.getConfig());
 		String password = configMap.get("password");
@@ -1597,58 +1602,104 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
 		try {
+			String dataSource = vXAsset.getName();
 			if (assetType == AppConstants.ASSET_HDFS) {
-				HadoopFS connectionObj = new HadoopFS(vXAsset.getName(),
-						configMap);
-				if (connectionObj != null) {
-					List<String> testResult = connectionObj
-							.listFiles("/", null);
-					if (testResult != null && testResult.size() != 0) {
-						connectivityStatus = true;
-					}
-				}
+				// HadoopFS connectionObj = new HadoopFS(vXAsset.getName(),
+				// configMap);
+				// if (connectionObj != null) {
+				// List<String> testResult = connectionObj
+				// .listFiles("/", null);
+				// if (testResult != null && testResult.size() != 0) {
+				// connectivityStatus = true;
+				// }
+				// }
+				responseData = HadoopFS.testConnection(dataSource, configMap);
 			} else if (assetType == AppConstants.ASSET_HIVE) {
-				HiveClient connectionObj = new HiveClient(vXAsset.getName(),
-						configMap);
-				if (connectionObj != null) {
-					List<String> testResult = connectionObj
-							.getDatabaseList("*");
-					if (testResult != null && testResult.size() != 0) {
-						connectivityStatus = true;
-					}
-				}
-				connectionObj.close();
+				// HiveClient connectionObj = new HiveClient(vXAsset.getName(),
+				// configMap);
+				// if (connectionObj != null) {
+				// List<String> testResult = connectionObj
+				// .getDatabaseList("*");
+				// if (testResult != null && testResult.size() != 0) {
+				// connectivityStatus = true;
+				// }
+				// }
+				// connectionObj.close();
+				responseData = HiveClient.testConnection(dataSource, configMap);
 			} else if (assetType == AppConstants.ASSET_HBASE) {
-				HBaseClient connectionObj = new HBaseClient(vXAsset.getName(),
-						configMap);
-				if (connectionObj != null) {
-					connectivityStatus = connectionObj.getHBaseStatus();
-				} else {
-					Log.error("testConfig: Not able to create HBaseClient");
-				}
-			} else if (assetType == AppConstants.ASSET_KNOX) { 
-				KnoxClient knoxClient = assetConnectionMgr.getKnoxClient(
-						vXAsset.getName(), configMap);
-				VXStringList vxStringList = getKnoxResources(knoxClient, "", null);
-				if (vxStringList != null && (vxStringList.getListSize() != 0)) {
-					connectivityStatus = true;
-				}
+				// HBaseClient connectionObj = new
+				// HBaseClient(vXAsset.getName(),
+				// configMap);
+				// if (connectionObj != null) {
+				// connectivityStatus = connectionObj.getHBaseStatus();
+				// } else {
+				// Log.error("testConfig: Not able to create HBaseClient");
+				// }
+				responseData = HBaseClient
+						.testConnection(dataSource, configMap);
+			} else if (assetType == AppConstants.ASSET_KNOX) {
+				// KnoxClient knoxClient = assetConnectionMgr.getKnoxClient(
+				// vXAsset.getName(), configMap);
+				// VXStringList vxStringList = getKnoxResources(knoxClient, "",
+				// null);
+				// if (vxStringList != null && (vxStringList.getListSize() !=
+				// 0)) {
+				// connectivityStatus = true;
+				// }
+				responseData = KnoxClient.testConnection(dataSource, configMap);
 			} else {
 				throw restErrorUtil.createRESTException(
 						"Invalid repository type.",
 						MessageEnums.INVALID_INPUT_DATA);
 			}
-			if (connectivityStatus) {
-				testResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
-			} else {
-				testResponse.setStatusCode(VXResponse.STATUS_ERROR);
-			}
+			testResponse = generateResponseForTestConn(responseData, "");
+
 		} catch (Exception e) {
-			testResponse.setStatusCode(VXResponse.STATUS_ERROR);
-			logger.error("Unable to connect repository with given config for "
-					+ vXAsset.getName(), e);
+
+			String msg = "Unable to connect repository with given config for "
+					+ vXAsset.getName();
+			HashMap<String, Object> respData = new HashMap<String, Object>();
+			String message = "";
+			if (e instanceof HadoopException) {
+				respData = ((HadoopException) e).responseData;
+				message = (respData != null && respData.get("message") != null) ? respData.get(
+						"message").toString() : msg;
+			}
+			testResponse = generateResponseForTestConn(respData, message);
+			logger.error(msg, e);
 		}
 		return testResponse;
+	}
+
+	private VXResponse generateResponseForTestConn(
+			HashMap<String, Object> responseData, String msg) {
+		VXResponse vXResponse = new VXResponse();
+
+		Long objId = (responseData.get("objectId") != null) ? Long
+				.parseLong(responseData.get("objectId").toString()) : null;
+		boolean connectivityStatus = (responseData.get("connectivityStatus") != null) ? Boolean
+				.parseBoolean(responseData.get("connectivityStatus").toString())
+				: false;
+		int statusCode = (connectivityStatus) ? VXResponse.STATUS_SUCCESS
+				: VXResponse.STATUS_ERROR;
+		String message = (responseData.get("message") != null) ? responseData
+				.get("message").toString() : msg;
+		String description = (responseData.get("description") != null) ? responseData
+				.get("description").toString() : msg;
+		String fieldName = (responseData.get("fieldName") != null) ? responseData
+				.get("fieldName").toString() : null;
+
+		VXMessage vXMsg = new VXMessage();
+		List<VXMessage> vXMsgList = new ArrayList<VXMessage>();
+		vXMsg.setFieldName(fieldName);
+		vXMsg.setMessage(message);
+		vXMsg.setObjectId(objId);
+		vXMsgList.add(vXMsg);
+
+		vXResponse.setMessageList(vXMsgList);
+		vXResponse.setMsgDesc(description);
+		vXResponse.setStatusCode(statusCode);
+		return vXResponse;
 	}
 
 	private void createResourcePathForHive(VXResource vXResource) {

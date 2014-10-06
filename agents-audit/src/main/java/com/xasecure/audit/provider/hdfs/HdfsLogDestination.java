@@ -19,20 +19,18 @@
 package com.xasecure.audit.provider.hdfs;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.util.Date;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.helpers.LogLog;
 
+import com.xasecure.audit.provider.DebugTracer;
 import com.xasecure.audit.provider.LogDestination;
 import com.xasecure.audit.provider.MiscUtil;
 
@@ -44,6 +42,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private boolean mIsAppend                 = true;
 	private int     mRolloverIntervalSeconds  = 24 * 60 * 60;
 	private int     mOpenRetryIntervalSeconds = 60;
+	private DebugTracer mLogger               = null;
 
 	private OutputStreamWriter mWriter             = null; 
 	private String             mHdfsFilename       = null;
@@ -52,7 +51,8 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private long               mLastOpenFailedTime = 0;
 	private boolean            mIsStopInProgress   = false;
 
-	public HdfsLogDestination() {
+	public HdfsLogDestination(DebugTracer tracer) {
+		mLogger = tracer;
 	}
 
 	public String getDirectory() {
@@ -105,16 +105,16 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 	@Override
 	public void start() {
-		LogLog.debug("==> HdfsLogDestination.start()");
+		mLogger.debug("==> HdfsLogDestination.start()");
 
 		openFile();
 
-		LogLog.debug("<== HdfsLogDestination.start()");
+		mLogger.debug("<== HdfsLogDestination.start()");
 	}
 
 	@Override
 	public void stop() {
-		LogLog.debug("==> HdfsLogDestination.stop()");
+		mLogger.debug("==> HdfsLogDestination.stop()");
 
 		mIsStopInProgress = true;
 
@@ -122,7 +122,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 		mIsStopInProgress = false;
 
-		LogLog.debug("<== HdfsLogDestination.stop()");
+		mLogger.debug("<== HdfsLogDestination.stop()");
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 				ret = true;
 			} catch (IOException excp) {
-				LogLog.warn("HdfsLogDestination.sendStringified(): write failed", excp);
+				mLogger.warn("HdfsLogDestination.sendStringified(): write failed", excp);
 
 				closeFile();
 			}
@@ -167,7 +167,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	}
 
 	private void openFile() {
-		LogLog.debug("==> HdfsLogDestination.openFile()");
+		mLogger.debug("==> HdfsLogDestination.openFile()");
 
 		closeFile();
 
@@ -183,7 +183,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		Configuration      conf        = null;
 
 		try {
-			LogLog.debug("HdfsLogDestination.openFile(): opening file " + mHdfsFilename);
+			mLogger.debug("HdfsLogDestination.openFile(): opening file " + mHdfsFilename);
 
 			URI uri = URI.create(mHdfsFilename);
 
@@ -217,14 +217,16 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 			try {
 				if(parentPath != null&& fileSystem != null && !fileSystem.exists(parentPath) && fileSystem.mkdirs(parentPath)) {
 					ostream = fileSystem.create(pathLogfile);
+				} else {
+					logException("HdfsLogDestination.openFile() failed", ex);
 				}
 			} catch (IOException e) {
-				LogLog.warn("HdfsLogDestination.openFile() failed", e);
+				logException("HdfsLogDestination.openFile() failed", e);
 			} catch (Throwable e) {
-				LogLog.warn("HdfsLogDestination.openFile() failed", e);
+				mLogger.warn("HdfsLogDestination.openFile() failed", e);
 			}
 		} catch(Throwable ex) {
-			LogLog.warn("HdfsLogDestination.openFile() failed", ex);
+			mLogger.warn("HdfsLogDestination.openFile() failed", ex);
 		} finally {
 			// TODO: unset the property set above to exclude auditing of logfile opening
 			//        System.setProperty(hdfsCurrentFilenameProperty, null);
@@ -233,22 +235,22 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		mWriter = createWriter(ostream);
 
 		if(mWriter != null) {
-			LogLog.debug("HdfsLogDestination.openFile(): opened file " + mHdfsFilename);
+			mLogger.debug("HdfsLogDestination.openFile(): opened file " + mHdfsFilename);
 
 			mNextFlushTime      = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
 			mLastOpenFailedTime = 0;
 		} else {
-			LogLog.warn("HdfsLogDestination.openFile(): failed to open file for write " + mHdfsFilename);
+			mLogger.warn("HdfsLogDestination.openFile(): failed to open file for write " + mHdfsFilename);
 
 			mHdfsFilename = null;
 			mLastOpenFailedTime = System.currentTimeMillis();
 		}
 
-		LogLog.debug("<== HdfsLogDestination.openFile(" + mHdfsFilename + ")");
+		mLogger.debug("<== HdfsLogDestination.openFile(" + mHdfsFilename + ")");
 	}
 
 	private void closeFile() {
-		LogLog.debug("==> HdfsLogDestination.closeFile()");
+		mLogger.debug("==> HdfsLogDestination.closeFile()");
 
 		OutputStreamWriter writer = mWriter;
 
@@ -259,23 +261,21 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 				writer.flush();
 				writer.close();
 			} catch(IOException excp) {
-				if(! mIsStopInProgress) { // during shutdown, the underlying FileSystem might already be closed; so don't print error details
-					LogLog.warn("HdfsLogDestination: failed to close file " + mHdfsFilename, excp);
-				}
+				logException("HdfsLogDestination: failed to close file " + mHdfsFilename, excp);
 			}
 		}
 
-		LogLog.debug("<== HdfsLogDestination.closeFile()");
+		mLogger.debug("<== HdfsLogDestination.closeFile()");
 	}
 
 	private void rollover() {
-		LogLog.debug("==> HdfsLogDestination.rollover()");
+		mLogger.debug("==> HdfsLogDestination.rollover()");
 
 		closeFile();
 
 		openFile();
 
-		LogLog.debug("<== HdfsLogDestination.rollover()");
+		mLogger.debug("<== HdfsLogDestination.rollover()");
 	}
 
 	private void checkFileStatus() {
@@ -293,7 +293,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 				mWriter.flush();
 			} catch (IOException excp) {
-				LogLog.warn("HdfsLogDestination: failed to flush", excp);
+				logException("HdfsLogDestination: failed to flush", excp);
 			}
 		}
 	}
@@ -306,7 +306,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 				try {
 					writer = new OutputStreamWriter(os, mEncoding);
 				} catch(UnsupportedEncodingException excp) {
-					LogLog.warn("HdfsLogDestination.createWriter(): failed to create output writer.", excp);
+					mLogger.warn("HdfsLogDestination.createWriter(): failed to create output writer.", excp);
 				}
 			}
 	
@@ -338,6 +338,20 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		}
 
 		return ret;
+	}
+	
+	private void logException(String msg, IOException excp) {
+		if(mIsStopInProgress) { // during shutdown, the underlying FileSystem might already be closed; so don't print error details
+			return;
+		}
+
+		String  excpMsgToExclude   = "Filesystem closed";
+		String  excpMsg            = excp != null ? excp.getMessage() : null;
+		boolean excpExcludeLogging = (excpMsg != null && excpMsg.contains(excpMsgToExclude));
+		
+		if(! excpExcludeLogging) {
+			mLogger.warn(msg, excp);
+		}
 	}
 
 	@Override

@@ -19,9 +19,13 @@
 
  package com.xasecure.hadoop.client.exceptions;
 
+import java.util.HashMap;
+
 public class HadoopException extends RuntimeException {
 
 	private static final long serialVersionUID = 8872734935128535649L;
+	
+	public HashMap<String, Object> responseData;
 
 	public HadoopException() {
 		super();
@@ -43,5 +47,14 @@ public class HadoopException extends RuntimeException {
 		// TODO Auto-generated constructor stub
 	}
 
+	public void generateResponseDataMap(boolean connectivityStatus,
+			String message, String description, Long objectId, String fieldName) {
+		responseData = new HashMap<String, Object>();
+		responseData.put("connectivityStatus", connectivityStatus);
+		responseData.put("message", message);
+		responseData.put("description", description);
+		responseData.put("objectId", objectId);
+		responseData.put("fieldName", fieldName);
+	}
 
 }
