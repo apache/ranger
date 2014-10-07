@@ -4,7 +4,7 @@
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="true">
 
    <appender name="logFile" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="file" value="/var/log/uxugsync/unix-auth-sync.log" />
+        <param name="file" value="${logdir}/unix-auth-sync.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd" />
         <layout class="org.apache.log4j.PatternLayout">
 		<param name="ConversionPattern" value="%d{dd MMM yyyy HH:mm:ss} %5p %c{1} [%t] - %m%n"/>
