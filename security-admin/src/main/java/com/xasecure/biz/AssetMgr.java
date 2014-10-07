@@ -359,11 +359,13 @@ public class AssetMgr extends AssetMgrBase {
 		
 		VXResourceList vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);		
 		if(vXResourceList!=null && vXResourceList.getListSize()>0){
-			for(VXResource vXResourceTemp :vXResourceList.getList()){
-				if(vXResourceTemp.getId()!=vXResource.getId()){
-					logger.error("policy already exist with name "+vXResource.getName());
-					throw restErrorUtil.createRESTException("policy already exist with name "
-							+vXResource.getName(),MessageEnums.ERROR_DUPLICATE_OBJECT);					
+			if(vXResource!=null && vXResource.getId()!=null){
+				for(VXResource vXResourceTemp :vXResourceList.getList()){
+					if(vXResourceTemp!=null && !(vXResource.getId().equals(vXResourceTemp.getId()))){
+							logger.error("policy already exists with name "+vXResource.getName());
+							throw restErrorUtil.createRESTException("policy already exists with name "
+									+vXResource.getName(),MessageEnums.ERROR_DUPLICATE_OBJECT);					
+						}
 				}
 			}
 		}	
@@ -385,14 +387,18 @@ public class AssetMgr extends AssetMgrBase {
 			searchCriteria.getParamList().put("fullPolicyName", vXResource.getPolicyName());
 			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);	
 			if(vXResourceList!=null && vXResourceList.getListSize()>0){
-				for (VXResource newVXResource : vXResourceList.getList()) {
-					if(vXResource.getId()!=newVXResource.getId() && vXResource.getPolicyName().trim().equalsIgnoreCase(newVXResource.getPolicyName().trim())){
-						logger.error("policy already exist with name "+vXResource.getPolicyName());
-						logger.info("A system generated policy name shall be assigned to "+vXResource.getPolicyName());
-//						vXResource.setPolicyName(null);
-//						break;
-						throw restErrorUtil.createRESTException("policy already exist with name "
-								+vXResource.getPolicyName(),MessageEnums.ERROR_DUPLICATE_OBJECT);
+				if(vXResource!=null && vXResource.getId()!=null){
+					for (VXResource newVXResource : vXResourceList.getList()) {
+						if(newVXResource!=null && newVXResource.getId()!=null){
+							if(!vXResource.getId().equals(newVXResource.getId()) && vXResource.getPolicyName().trim().equalsIgnoreCase((newVXResource.getPolicyName()!=null?newVXResource.getPolicyName().trim():newVXResource.getPolicyName()))){
+								logger.error("policy already exists with name "+vXResource.getPolicyName());
+//								logger.info("A system generated policy name shall be assigned to "+vXResource.getPolicyName());
+//								vXResource.setPolicyName(null);
+//								break;
+								throw restErrorUtil.createRESTException("policy already exists with name "
+										+vXResource.getPolicyName(),MessageEnums.ERROR_DUPLICATE_OBJECT);
+							}
+						}
 					}
 				}
 			}
@@ -402,16 +408,18 @@ public class AssetMgr extends AssetMgrBase {
 		int totalPoliciesCount=1;
 		String tempPolicyName=null;
 		vXResourceList=null;
-		if(vXResource.getPolicyName()==null ||vXResource.getPolicyName().trim().isEmpty()){
+		if(vXResource!=null && (vXResource.getPolicyName()==null ||vXResource.getPolicyName().trim().isEmpty())){
 			searchCriteria=new SearchCriteria();
 			searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
 			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);
 			if(vXResourceList!=null && vXResourceList.getListSize()>0){
 				totalPoliciesCount=vXResourceList.getListSize();
 				tempPoliciesCount++;
-				for(VXResource newVXResource : vXResourceList.getList()) {					
-					if(vXResource.getId()==newVXResource.getId()){					
-						break;
+				for(VXResource newVXResource : vXResourceList.getList()) {	
+					if(newVXResource!=null && newVXResource.getId()!=null){
+						if(vXResource.getId().equals(newVXResource.getId())){					
+							break;
+						}
 					}
 					tempPoliciesCount++;
 				}
