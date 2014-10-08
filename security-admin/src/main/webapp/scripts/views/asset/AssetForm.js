@@ -140,7 +140,7 @@ define(function(require){
 				},
 				masterKerberos : {
 					fieldClass : "hbase",
-					title : this.model.propertiesNameMap.masterKerberos,
+					title : this.model.propertiesNameMap.masterKerberos+" *",
 					editorAttrs :{'class':'stretchTextInput'}
 				},
 				rpcEngine : {
@@ -155,22 +155,22 @@ define(function(require){
 				},
 				securityAuthentication : {
 					fieldClass : "hbase",
-					title : this.model.propertiesNameMap.securityAuthentication,
+					title : this.model.propertiesNameMap.securityAuthentication+" *",
 					editorAttrs :{'class':'stretchTextInput'}
 				},
 				zookeeperProperty : {
 					fieldClass : "hbase",
-					title : this.model.propertiesNameMap.zookeeperProperty,
+					title : this.model.propertiesNameMap.zookeeperProperty+" *",
 					editorAttrs :{'class':'stretchTextInput'}
 				},
 				zookeeperQuorum : {
 					fieldClass : "hbase",
-					title : this.model.propertiesNameMap.zookeeperQuorum,
+					title : this.model.propertiesNameMap.zookeeperQuorum+" *",
 					editorAttrs :{'class':'stretchTextInput'}
 				},
 				zookeeperZnodeParent : {
 					fieldClass : "hbase",
-					title : this.model.propertiesNameMap.zookeeperZnodeParent,
+					title : this.model.propertiesNameMap.zookeeperZnodeParent+" *",
 					editorAttrs :{'class':'stretchTextInput'}
 				},
 				knoxUrl : {
@@ -237,8 +237,10 @@ define(function(require){
 					attrs = ['userName','passwordKeytabfile','driverClassName', 'url','commonnameforcertificate'];
 					break;
 				case XAEnums.AssetType.ASSET_HBASE.value :
-					attrs = ['userName','passwordKeytabfile','fsDefaultName' ,'authorization', 'authentication', 'auth_to_local', 'datanode', 'namenode', 'secNamenode',
-								'masterKerberos','rpcEngine','rpcProtection','securityAuthentication','zookeeperProperty','zookeeperQuorum','zookeeperZnodeParent','commonnameforcertificate'];
+//					attrs = ['userName','passwordKeytabfile','authorization', 'authentication', 'auth_to_local', 'datanode', 'namenode', 'secNamenode',
+//								'masterKerberos','rpcEngine','rpcProtection','securityAuthentication','zookeeperProperty','zookeeperQuorum','zookeeperZnodeParent','commonnameforcertificate'];
+					attrs = ['userName','passwordKeytabfile', 'authentication', 'masterKerberos',
+					         'securityAuthentication','zookeeperProperty','zookeeperQuorum','zookeeperZnodeParent'];
 					break;
 				case XAEnums.AssetType.ASSET_KNOX.value :
 					attrs = ['userName','passwordKeytabfile','knoxUrl','commonnameforcertificate'];
@@ -272,19 +274,39 @@ define(function(require){
 					break;
 				case XAEnums.AssetType.ASSET_HBASE.value :
 					//	this.$('.hive').parents('fieldset').hide();
-					this.fields.fsDefaultName.$el.find('.control-label').html(this.model.propertiesNameMap.fsDefaultName);
-					this.fields.fsDefaultName.$el.removeClass('error');
-					this.fields.fsDefaultName.$el.find('.help-inline').html('');
+//					this.fields.fsDefaultName.$el.find('.control-label').html(this.model.propertiesNameMap.fsDefaultName);
+//					this.fields.fsDefaultName.$el.removeClass('error');
+//					this.fields.fsDefaultName.$el.find('.help-inline').html('');
 //					this.fields.fsDefaultName.editor.$el.val('');
+					this.fields.authentication.editor.validators = ['required'];
+//					this.fields.authentication.schema.title = this.fields.authentication.schema.title+" *"
+					this.fields.authentication.$el.find('label').html(this.schema.authentication.title+" *")
+//					this.schema.authentication.title = this.schema.authentication.title+" *"
+					
+					this.fields.masterKerberos.editor.validators = ['required'];
+					this.fields.securityAuthentication.editor.validators = ['required'];
+					this.fields.zookeeperProperty.editor.validators = ['required'];
+					this.fields.zookeeperQuorum.editor.validators = ['required'];
+					this.fields.zookeeperZnodeParent.editor.validators = ['required'];
+					
 					this.fields.fsDefaultName.editor.validators = this.removeElementFromArr(this.fields.fsDefaultName.editor.validators , 'required');
 					//Set default value to zookeeperZnodeParent
 					if(this.model.isNew())
 						this.fields.zookeeperZnodeParent.editor.$el.val('/hbase');
 					this.$('.hdfs').show();
 					this.$('.hive').show();//parents('fieldset').show();
+					this.$('.hbase').show();
 					this.fields.driverClassName.$el.hide();
 					this.fields.url.$el.hide();
-					this.$('.hbase').show();
+					this.fields.fsDefaultName.$el.hide();
+					this.fields.authorization.$el.hide();
+					this.fields.auth_to_local.$el.hide();
+					this.fields.datanode.$el.hide();
+					this.fields.namenode.$el.hide();
+					this.fields.secNamenode.$el.hide();
+					this.fields.rpcEngine.$el.hide();
+					this.fields.rpcProtection.$el.hide();
+					this.fields.commonnameforcertificate.$el.hide();
 					break;
 				case XAEnums.AssetType.ASSET_KNOX.value :
 					this.fields.fsDefaultName.editor.validators = this.removeElementFromArr(this.fields.fsDefaultName.editor.validators , 'required');
