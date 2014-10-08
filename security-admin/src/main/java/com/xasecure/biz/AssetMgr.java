@@ -1655,6 +1655,8 @@ public class AssetMgr extends AssetMgrBase {
 				// connectivityStatus = true;
 				// }
 				responseData = KnoxClient.testConnection(dataSource, configMap);
+			} else if (assetType == AppConstants.ASSET_STORM) {
+				responseData = StormClient.testConnection(dataSource, configMap);
 			} else {
 				throw restErrorUtil.createRESTException(
 						"Invalid repository type.",

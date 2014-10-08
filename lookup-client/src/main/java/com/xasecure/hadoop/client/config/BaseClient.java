@@ -20,10 +20,13 @@
  package com.xasecure.hadoop.client.config;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.security.auth.Subject;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
@@ -146,13 +149,14 @@ public abstract class BaseClient {
 	}
 
 	public static String getMessage(Throwable excp) {
-		StringBuilder sb = new StringBuilder();
+		List<String> errList = new ArrayList<String>();
 		while (excp != null) {
-			sb.append(excp.getMessage()).append("\n");
+			if (!errList.contains(excp.getMessage() + "\n")) {
+				errList.add(excp.getMessage() + "\n");
+			}
 			excp = excp.getCause();
 		}
-
-		return sb.toString();
+		return StringUtils.join(errList, ". ");
 	}
 	
 }

@@ -249,7 +249,10 @@ define(function(require){
 									}]
 									);
 								}else{
-									bootbox.alert(msResponse.msgDesc);	
+									if(!_.isEmpty(msResponse.msgDesc))
+										bootbox.alert(msResponse.msgDesc);
+									else
+										bootbox.alert("Connection Problem.");
 								}
 							}else{
 								bootbox.alert("Connection Problem.");
