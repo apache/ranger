@@ -67,7 +67,7 @@ public class StormClient {
 		this.password = aPassword;
 		
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Storm Client is build with url [" + aStormUIUrl + "] user: [" + aUserName + "], password: [" + aPassword + "]");
+			LOG.debug("Storm Client is build with url [" + aStormUIUrl + "] user: [" + aUserName + "], password: [" + "" + "]");
 		}
 
 	}
@@ -242,7 +242,7 @@ public class StormClient {
 
 		try {
 		    subject = new Subject();
-			LOG.info("executeUnderKerberos():user=" + userName + ",pass=" + password);
+			LOG.info("executeUnderKerberos():user=" + userName + ",pass=");
 			LOG.info("executeUnderKerberos():Creating config..");
 			MySecureClientLoginConfiguration loginConf = new MySecureClientLoginConfiguration(
 					userName, password);
