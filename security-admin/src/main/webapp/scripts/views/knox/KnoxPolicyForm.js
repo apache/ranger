@@ -296,9 +296,11 @@ define(function(require){
 						},
 						results: function (data, page) { 
 							var results = [];
-							if(data.resultSize != "0"){
-								results = data.vXStrings.map(function(m, i){	return {id : m.value, text: m.value};	});
-							}
+							if(!_.isUndefined(data)){
+								if(data.resultSize != "0"){
+									results = data.vXStrings.map(function(m, i){	return {id : m.value, text: m.value};	});
+								}
+							}	
 							return { 
 								results : results
 							};
