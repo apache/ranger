@@ -43,6 +43,8 @@ public class buildks {
 						if(credential!=null){
 							System.out.println(credential);
 							System.exit(0);
+						}else{
+							System.exit(1);
 						}
 					}else{
 						System.out.println(command +" is not supported in current version of CredentialBuilder API.");
@@ -381,7 +383,7 @@ public class buildks {
 				displaySyntax("get");
 			}
 			if(tempCredential==null){
-				System.out.println("Alias"+ alias +" does not exist!!");
+				System.out.println("Alias "+ alias +" does not exist!!");
 			}
 			}catch(Exception ex){
 				ex.printStackTrace();
