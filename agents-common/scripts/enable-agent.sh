@@ -280,7 +280,7 @@ then
 	# We need to do the AUDIT JDBC url 
 	#
 
-	db_flavor=`grep '^XAAUDIT.DB.FLAVOUR' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+	db_flavor=`grep '^XAAUDIT.DB.FLAVOUR' ${INSTALL_ARGS} | awk -F= '{ print $2 }' |  tr '[:lower:]' '[:upper:]'`
     audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${INSTALL_ARGS}  | awk -F= '{ print $2 }'`
     audit_db_name=`grep '^XAAUDIT.DB.DATABASE_NAME'  ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
 
@@ -288,12 +288,14 @@ then
 	then
     	export XAAUDIT_DB_JDBC_URL="jdbc:mysql://${audit_db_hostname}/${audit_db_name}"
     	export XAAUDIT_DB_JDBC_DRIVER="com.mysql.jdbc.Driver"
-	fi
-	
-	if [ "${db_flavor}" = "ORACLE" ]
+	elif [ "${db_flavor}" = "ORACLE" ]
 	then
     	export XAAUDIT_DB_JDBC_URL="jdbc:oracle:thin:\@//${audit_db_hostname}"
     	export XAAUDIT_DB_JDBC_DRIVER="oracle.jdbc.OracleDriver"
+    else
+        echo "Audit is not specified with a valid db_flavor: [${db_flavor}]. Ignoring audit ..."
+        export XAAUDIT_DB_JDBC_URL="jdbc:${db_flavor}://${audit_db_hostname}/${audit_db_name}"
+        export XAAUDIT_DB_JDBC_DRIVER="com.unknown.driver.${db_flavor}"
 	fi
 
 
