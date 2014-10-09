@@ -314,7 +314,7 @@ public class StormClient {
 			BaseClient.generateResponseDataMap(connectivityStatus, successMsg,
 					successMsg, null, null, responseData);
 		} else {
-			String failureMsg = "Unable to retrive any topologies using given parameters.";
+			String failureMsg = "Unable to retrieve any topologies using given parameters.";
 			BaseClient.generateResponseDataMap(connectivityStatus, failureMsg,
 					failureMsg + errMsg, null, null, responseData);
 		}

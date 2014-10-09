@@ -229,7 +229,9 @@ define(function(require){
 							if(!_.isUndefined(msResponse) && _.isArray(msResponse.messageList) 
 														  && !_.isUndefined(msResponse.messageList[0].message)){
 								if(!_.isEmpty(msResponse.messageList[0].message) && msResponse.messageList[0].message != "\n"){
-									bootbox.dialog('<b>'+msResponse.messageList[0].message+'</b>',	[{
+									var msg = '<div class="connection-error-font">'+msResponse.messageList[0].message.split('\n').join('<br>')+'</div>'
+									var msgHtml = '<b>Connection Failed.</b></br>'+msg;
+									bootbox.dialog(msgHtml,	[{
 										label: "Show More..",
 										callback:function(e){
 											console.log(e)

@@ -457,7 +457,7 @@ public class HiveClient extends BaseClient implements Closeable {
 			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
 					null, null, responseData);
 		} else {
-			String failureMsg = "Unable to retrive any databases using given parameters.";
+			String failureMsg = "Unable to retrieve any databases using given parameters.";
 			generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + errMsg,
 					null, null, responseData);
 		}

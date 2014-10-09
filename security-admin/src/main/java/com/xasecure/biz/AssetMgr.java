@@ -1675,6 +1675,9 @@ public class AssetMgr extends AssetMgrBase {
 				message = (respData != null && respData.get("message") != null) ? respData.get(
 						"message").toString() : msg;
 			}
+			if(respData == null) {
+				respData = new HashMap<String, Object>();
+			}
 			testResponse = generateResponseForTestConn(respData, message);
 			logger.error(msg, e);
 		}

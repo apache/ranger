@@ -151,12 +151,12 @@ public abstract class BaseClient {
 	public static String getMessage(Throwable excp) {
 		List<String> errList = new ArrayList<String>();
 		while (excp != null) {
-			if (!errList.contains(excp.getMessage() + "\n")) {
-				errList.add(excp.getMessage() + "\n");
+			if (!errList.contains(excp.getMessage() + ". \n")) {
+				errList.add(excp.getMessage() + ". \n");
 			}
 			excp = excp.getCause();
 		}
-		return StringUtils.join(errList, ". ");
+		return StringUtils.join(errList, "");
 	}
 	
 }

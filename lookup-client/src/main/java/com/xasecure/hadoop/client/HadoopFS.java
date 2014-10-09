@@ -180,7 +180,7 @@ public class HadoopFS extends BaseClient {
 			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
 					null, null, responseData);
 		} else {
-			String failureMsg = "Unable to retrive any files using given parameters, "
+			String failureMsg = "Unable to retrieve any files using given parameters, "
 					+ "You can still save the repository and start creating policies, "
 					+ "but you would not be able to use autocomplete for resource names. "
 					+ "Check xa_portal.log for more info.";

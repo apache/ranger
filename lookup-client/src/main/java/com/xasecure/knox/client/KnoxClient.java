@@ -113,8 +113,6 @@ public class KnoxClient {
 					}
 
 				} else {
-					// LOG.error("Unable to get a valid response for isFileChanged()  call for ["
-					// + knoxUrl + "] - got null response.");
 					String msgDesc = "Unable to get a valid response for "
 							+ "isFileChanged() call for KnoxUrl : [" + knoxUrl
 							+ "] - got null response.";
@@ -133,18 +131,15 @@ public class KnoxClient {
 					client.destroy();
 				}
 			}
+		} catch (HadoopException he) {
+			throw he;
 		} catch (Throwable t) {
-			// LOG.error("Exception on REST call to: " + knoxUrl, t);
-			// t.printStackTrace();
-
 			String msgDesc = "Exception on REST call to KnoxUrl : " + knoxUrl + ".";
 			HadoopException hdpException = new HadoopException(msgDesc, t);
 			LOG.error(msgDesc, t);
 
-			if (!(t instanceof HadoopException)) {
-				hdpException.generateResponseDataMap(false,
-						BaseClient.getMessage(t), msgDesc + errMsg, null, null);
-			}
+			hdpException.generateResponseDataMap(false,
+					BaseClient.getMessage(t), msgDesc + errMsg, null, null);
 			throw hdpException;
 		} finally {
 		}
@@ -203,8 +198,6 @@ public class KnoxClient {
 					}
 
 				} else {
-					// LOG.error("Unable to get a valid response for isFileChanged()  call for ["
-					// + knoxUrl + "] - got null response.");
 					String msgDesc = "Unable to get a valid response for "
 							+ "isFileChanged() call for KnoxUrl : [" + knoxUrl
 							+ "] - got null response.";
@@ -223,26 +216,21 @@ public class KnoxClient {
 					client.destroy();
 				}
 			}
+		} catch (HadoopException he) {
+			throw he;
 		} catch (Throwable t) {
-			// LOG.error("Exception on REST call to: " + knoxUrl, t);
-			// t.printStackTrace();
-
 			String msgDesc = "Exception on REST call to KnoxUrl : " + knoxUrl + ".";
 			HadoopException hdpException = new HadoopException(msgDesc, t);
 			LOG.error(msgDesc, t);
 
-			if (!(t instanceof HadoopException)) {
-				hdpException.generateResponseDataMap(false,
-						BaseClient.getMessage(t), msgDesc + errMsg, null, null);
-			}
+			hdpException.generateResponseDataMap(false,
+					BaseClient.getMessage(t), msgDesc + errMsg, null, null);
 			throw hdpException;
 
 		} finally {
 		}
 		return serviceList;
 	}
-
-	
 
 	public static void main(String[] args) {
 
@@ -298,7 +286,7 @@ public class KnoxClient {
 			BaseClient.generateResponseDataMap(connectivityStatus, successMsg, successMsg,
 					null, null, responseData);
 		} else {
-			String failureMsg = "Unable to retrive any topologies/services using given parameters.";
+			String failureMsg = "Unable to retrieve any topologies/services using given parameters.";
 			BaseClient.generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + errMsg,
 					null, null, responseData);
 		}
@@ -376,16 +364,15 @@ public class KnoxClient {
 			}
 			resultList = timedTask(callableObj, 5, TimeUnit.SECONDS);
 
+		} catch (HadoopException he) {
+			throw he;
 		} catch (Exception e) {
 			String msgDesc = "Unable to get knox resources.";
 			LOG.error(msgDesc, e);
 			HadoopException hdpException = new HadoopException(msgDesc);
 
-			if (!(e instanceof HadoopException)) {
-				hdpException.generateResponseDataMap(false,
-						BaseClient.getMessage(e), msgDesc + errMsg, null, null);
-			}
-
+			hdpException.generateResponseDataMap(false,
+					BaseClient.getMessage(e), msgDesc + errMsg, null, null);
 			throw hdpException;
 		}
 
