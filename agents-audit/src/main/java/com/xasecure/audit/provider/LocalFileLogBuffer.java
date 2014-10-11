@@ -19,6 +19,7 @@
 package com.xasecure.audit.provider;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -43,6 +44,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private String  mDirectory               = null;
 	private String  mFile                    = null;
 	private int     mFlushIntervalSeconds    = 1 * 60;
+	private int     mFileBufferSizeBytes     = 8 * 1024;
 	private String  mEncoding                = null;
 	private boolean mIsAppend                = true;
 	private int     mRolloverIntervalSeconds = 10 * 60;
@@ -75,6 +77,14 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 	public void setFile(String file) {
 		mFile = file;
+	}
+
+	public int getFileBufferSizeBytes() {
+		return mFileBufferSizeBytes;
+	}
+
+	public void setFileBufferSizeBytes(int fileBufferSizeBytes) {
+		mFileBufferSizeBytes = fileBufferSizeBytes;
 	}
 
 	public int getFlushIntervalSeconds() {
@@ -165,29 +175,31 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	}
 
 	@Override
-	public synchronized boolean add(T log) {
+	public boolean add(T log) {
 		boolean ret = false;
 
-		checkFileStatus();
+		String msg = MiscUtil.stringify(log);
 
-		Writer writer = mWriter;
+		if(msg.contains(MiscUtil.LINE_SEPARATOR)) {
+			msg = msg.replace(MiscUtil.LINE_SEPARATOR, MiscUtil.ESCAPE_STR + MiscUtil.LINE_SEPARATOR);
+		}
 
-		if(writer != null) {
-			try {
-				String msg = MiscUtil.stringify(log);
-
-				if(msg.contains(MiscUtil.LINE_SEPARATOR)) {
-					msg = msg.replace(MiscUtil.LINE_SEPARATOR, MiscUtil.ESCAPE_STR + MiscUtil.LINE_SEPARATOR);
+		synchronized(this) {
+			checkFileStatus();
+	
+			Writer writer = mWriter;
+	
+			if(writer != null) {
+				try {
+					writer.write(msg + MiscUtil.LINE_SEPARATOR);
+	
+					ret = true;
+				} catch(IOException excp) {
+					mLogger.warn("LocalFileLogBuffer.add(): write failed", excp);
 				}
-
-				writer.write(msg + MiscUtil.LINE_SEPARATOR);
-
-				ret = true;
-			} catch(IOException excp) {
-				mLogger.warn("LocalFileLogBuffer.add(): write failed", excp);
+			} else {
+				mLogger.warn("LocalFileLogBuffer.add(): writer is null");
 			}
-		} else {
-			mLogger.warn("LocalFileLogBuffer.add(): writer is null");
 		}
 
 		return ret;
@@ -288,8 +300,8 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 		}
 	}
 
-	private OutputStreamWriter createWriter(OutputStream os ) {
-	    OutputStreamWriter writer = null;
+	private Writer createWriter(OutputStream os ) {
+	    Writer writer = null;
 
 	    if(os != null) {
 			if(mEncoding != null) {
@@ -303,6 +315,10 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 			if(writer == null) {
 				writer = new OutputStreamWriter(os);
 			}
+
+			if(mFileBufferSizeBytes > 0 && writer != null) {
+	    		writer = new BufferedWriter(writer, mFileBufferSizeBytes);
+	    	}
 	    }
 
 	    return writer;
@@ -440,7 +456,7 @@ class DestinationDispatcherThread<T> extends Thread {
 		
 				if(files != null) {
 					for(File file : files) {
-						if(file.exists() && file.canRead()) {
+						if(file.exists() && file.isFile() && file.canRead()) {
 							String filename = file.getAbsolutePath();
 							if(! mFileLogBuffer.isCurrentFilename(filename)) {
 								addLogfile(filename);

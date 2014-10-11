@@ -30,6 +30,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		String localFileBufferDirectory               = properties.get("local.buffer.directory");
 		String localFileBufferFile                    = properties.get("local.buffer.file");
 		int    localFileBufferFlushIntervalSeconds    = MiscUtil.parseInteger(properties.get("local.buffer.flush.interval.seconds"), 1 * 60);
+		int    localFileBufferFileBufferSizeBytes     = MiscUtil.parseInteger(properties.get("local.buffer.file.buffer.size.bytes"), 8 * 1024);
 		int    localFileBufferRolloverIntervalSeconds = MiscUtil.parseInteger(properties.get("local.buffer.rollover.interval.seconds"), 10 * 60);
 		String localFileBufferArchiveDirectory        = properties.get("local.archive.directory");
 		int    localFileBufferArchiveFileCount        = MiscUtil.parseInteger(properties.get("local.archive.max.file.count"), 10);
@@ -50,6 +51,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		mLocalFileBuffer.setDirectory(localFileBufferDirectory);
 		mLocalFileBuffer.setFile(localFileBufferFile);
 		mLocalFileBuffer.setFlushIntervalSeconds(localFileBufferFlushIntervalSeconds);
+		mLocalFileBuffer.setFileBufferSizeBytes(localFileBufferFileBufferSizeBytes);
 		mLocalFileBuffer.setEncoding(encoding);
 		mLocalFileBuffer.setRolloverIntervalSeconds(localFileBufferRolloverIntervalSeconds);
 		mLocalFileBuffer.setArchiveDirectory(localFileBufferArchiveDirectory);

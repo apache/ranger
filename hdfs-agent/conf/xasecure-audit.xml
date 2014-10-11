@@ -117,6 +117,11 @@
 	</property>	
 
 	<property>
+		<name>xasecure.audit.hdfs.config.local.buffer.file.buffer.size.bytes</name>
+		<value>8192</value>
+	</property>	
+
+	<property>
 		<name>xasecure.audit.hdfs.config.local.buffer.flush.interval.seconds</name>
 		<value>60</value>
 	</property>	
