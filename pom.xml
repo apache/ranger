@@ -80,6 +80,7 @@
 		<jericho.html.version>3.3</jericho.html.version>
 		<jersey-bundle.version>1.17.1</jersey-bundle.version>
 		<junit.version>4.11</junit.version>
+		<mockito.version>1.8.4</mockito.version>
 		<knox.gateway.version>0.5.0-SNAPSHOT</knox.gateway.version>
 		<local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
 		<log4j.version>1.2.17</log4j.version>
@@ -105,6 +106,7 @@
 		<distMgmtStagingId>apache.staging.https</distMgmtStagingId>
     	<distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
     	<distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>
+        <skipTests>true</skipTests>
   </properties>
   <profiles>
      <profile>
@@ -168,7 +170,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.17</version>
         <configuration>
-          <skipTests>true</skipTests>
+          <skipTests>${skipTests}</skipTests>
         </configuration>
       </plugin>
 <!--

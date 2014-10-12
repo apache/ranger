@@ -152,7 +152,9 @@ public abstract class BaseClient {
 		List<String> errList = new ArrayList<String>();
 		while (excp != null) {
 			if (!errList.contains(excp.getMessage() + ". \n")) {
-				errList.add(excp.getMessage() + ". \n");
+				if (excp.getMessage() != null && !(excp.getMessage().equalsIgnoreCase(""))) {
+					errList.add(excp.getMessage() + ". \n");
+				}
 			}
 			excp = excp.getCause();
 		}

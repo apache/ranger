@@ -226,38 +226,41 @@ define(function(require){
 					//wait: true,
 					success: function (msResponse, options) {
 						if(msResponse.statusCode){
-							if(!_.isUndefined(msResponse) && _.isArray(msResponse.messageList) 
-														  && !_.isUndefined(msResponse.messageList[0].message)){
-								if(!_.isEmpty(msResponse.messageList[0].message) && msResponse.messageList[0].message != "\n"){
-									var msg = '<div class="connection-error-font">'+msResponse.messageList[0].message.split('\n').join('<br>')+'</div>'
-									var msgHtml = '<b>Connection Failed.</b></br>'+msg;
-									bootbox.dialog(msgHtml,	[{
-										label: "Show More..",
-										callback:function(e){
-											console.log(e)
-											if($(e.currentTarget).text() == 'Show More..'){
-												var div = '<div class="showMore">'+msResponse.msgDesc+'</div>';
-												$(e.delegateTarget).find('.modal-body').append(div)
-												$(e.currentTarget).html('Show Less..')
-											}else{
-												$(e.delegateTarget).find('.showMore').remove();
-												$(e.currentTarget).html('Show More..')
-											}
-											return false;
-										}
-									}, {
-										label: "OK",
-										callback:function(){}
-									}]
-									);
+							if(!_.isUndefined(msResponse) && !_.isUndefined(msResponse.msgDesc)){ 
+								var popupBtnOpts;
+                               if(!_.isEmpty(msResponse.msgDesc)){
+                            	   if(_.isArray(msResponse.messageList) && !_.isUndefined(msResponse.messageList[0].message)
+                            			   && !_.isEmpty(msResponse.messageList[0].message)){
+	                            		   popupBtnOpts = [{
+	                            			   label: "Show More..",
+	                            			   callback:function(e){
+	                            				   console.log(e)
+	                            				   if($(e.currentTarget).text() == 'Show More..'){
+                        							   var div = '<div class="showMore connection-error-font"><br>'+msResponse.messageList[0].message.split('\n').join('<br>')+'</div>'
+                        							   $(e.delegateTarget).find('.modal-body').append(div)
+                        							   $(e.currentTarget).html('Show Less..')
+	                            				   }else{
+	                            					   $(e.delegateTarget).find('.showMore').remove();
+	                            					   $(e.currentTarget).html('Show More..')
+	                            				   }
+	                            				   return false;
+	                            			   }
+	                            		   }, {
+	                            			   label: "OK",
+	                            			   callback:function(){}
+	                            		   }];
+                            	   }else{
+                            		   		popupBtnOpts = [{label: "OK",
+                            		   			callback:function(){}
+                            		   		}];
+                            	   }
+                                   var msgHtml = '<b>Connection Failed.</b></br>'+msResponse.msgDesc;
+                                   bootbox.dialog(msgHtml, popupBtnOpts);
 								}else{
-									if(!_.isEmpty(msResponse.msgDesc))
-										bootbox.alert(msResponse.msgDesc);
-									else
-										bootbox.alert("Connection Problem.");
+										bootbox.alert("Connection Failed.");
 								}
 							}else{
-								bootbox.alert("Connection Problem.");
+								bootbox.alert("Connection Failed.");
 							}
 						}
 						else

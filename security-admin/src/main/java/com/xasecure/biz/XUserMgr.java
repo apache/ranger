@@ -203,7 +203,7 @@ public class XUserMgr extends XUserMgrBase {
 		vXPortalUser.setUserRoleList(vXUser.getUserRoleList());
 		vXPortalUser.setPublicScreenName(vXUser.getFirstName() + " "
 				+ vXUser.getLastName());
-		
+		vXPortalUser.setUserSource(vXUser.getUserSource());
 		String hiddenPasswordString = PropertiesUtil.getProperty(
 				"xa.password.hidden", "*****");
 		String password = vXUser.getPassword();
