@@ -200,7 +200,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 					if(mIsAppend) {
 						ostream = fileSystem.append(pathLogfile);
 					} else {
-						mHdfsFilename =  MiscUtil.replaceTokens(mDirectory + org.apache.hadoop.fs.Path.SEPARATOR + mFile, System.currentTimeMillis());
+						mHdfsFilename =  getNewFilename(mHdfsFilename, fileSystem);
 						pathLogfile   = new Path(mHdfsFilename);
 					}
 				}
@@ -211,7 +211,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 				}
 			} catch(IOException excp) {
 				// append may not be supported by the filesystem; or the file might already be open by another application. Try a different filename - with current timestamp
-				mHdfsFilename =  MiscUtil.replaceTokens(mDirectory + org.apache.hadoop.fs.Path.SEPARATOR + mFile, System.currentTimeMillis());
+				mHdfsFilename =  getNewFilename(mHdfsFilename, fileSystem);
 				pathLogfile   = new Path(mHdfsFilename);
 			}
 
@@ -324,8 +324,52 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 	    return writer;
 	}
+
+    private String getNewFilename(String fileName, FileSystem fileSystem) {
+    	if(fileName == null) {
+    		return "";
+    	}
+
+        for(int i = 1; ; i++) {
+        	String ret = fileName;
+
+	        String strToAppend = "-" + Integer.toString(i);
 	
-	private void logException(String msg, IOException excp) {
+	        int extnPos = ret.lastIndexOf(".");
+	
+	        if(extnPos < 0) {
+	            ret += strToAppend;
+	        } else {
+	            String extn = ret.substring(extnPos);
+	
+	            ret = ret.substring(0, extnPos) + strToAppend + extn;
+	        }
+	        
+	        if(fileSystem != null && fileExists(ret, fileSystem)) {
+        		continue;
+	        } else {
+	        	return ret;
+	        }
+    	}
+    }
+    
+    private boolean fileExists(String fileName, FileSystem fileSystem) {
+    	boolean ret = false;
+
+    	if(fileName != null && fileSystem != null) {
+    		Path path = new Path(fileName);
+
+    		try {
+    			ret = fileSystem.exists(path);
+    		} catch(IOException excp) {
+    			// ignore
+    		}
+    	}
+ 
+    	return ret;
+    }
+
+    private void logException(String msg, IOException excp) {
 		// during shutdown, the underlying FileSystem might already be closed; so don't print error details
 
 		if(mIsStopInProgress) {
