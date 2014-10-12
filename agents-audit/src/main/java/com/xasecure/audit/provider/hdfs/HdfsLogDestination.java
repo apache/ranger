@@ -183,6 +183,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		FileSystem         fileSystem  = null;
 		Path               pathLogfile = null;
 		Configuration      conf        = null;
+		boolean            bOverwrite  = false;
 
 		try {
 			mLogger.debug("HdfsLogDestination.openFile(): opening file " + mHdfsFilename);
@@ -207,7 +208,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 				// if file does not exist or if mIsAppend==false, create the file
 				if(ostream == null) {
-					ostream = fileSystem.create(pathLogfile);
+					ostream = fileSystem.create(pathLogfile, bOverwrite);
 				}
 			} catch(IOException excp) {
 				// append may not be supported by the filesystem; or the file might already be open by another application. Try a different filename - with current timestamp
@@ -216,14 +217,14 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 			}
 
 			if(ostream == null){
-				ostream = fileSystem.create(pathLogfile);
+				ostream = fileSystem.create(pathLogfile, bOverwrite);
 			}
 		} catch(IOException ex) {
 			Path parentPath = pathLogfile.getParent();
 
 			try {
 				if(parentPath != null&& fileSystem != null && !fileSystem.exists(parentPath) && fileSystem.mkdirs(parentPath)) {
-					ostream = fileSystem.create(pathLogfile);
+					ostream = fileSystem.create(pathLogfile, bOverwrite);
 				} else {
 					logException("HdfsLogDestination.openFile() failed", ex);
 				}
