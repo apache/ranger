@@ -19,10 +19,18 @@
          <class>com.xasecure.entity.XXPolicyExportAudit</class>
          <class>com.xasecure.entity.XXTrxLog</class>
          <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+
+		<properties>
+			<property name="eclipselink.logging.level" value="WARNING"/>
+		</properties>
 	</persistence-unit>
 	<persistence-unit name="loggingPU">
         <class>com.xasecure.entity.XXAccessAudit</class>
         <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+
+		<properties>
+			<property name="eclipselink.logging.level" value="WARNING"/>
+		</properties>
 	</persistence-unit>
 
 </persistence>
