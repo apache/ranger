@@ -7,5 +7,9 @@
 		<class>com.xasecure.audit.entity.XXHiveAuditEvent</class>
 		<class>com.xasecure.audit.entity.XXKnoxAuditEvent</class>
 		<class>com.xasecure.audit.entity.XXStormAuditEvent</class>
+
+		<properties>
+			<property name="eclipselink.logging.level" value="SEVERE"/>
+		</properties>
 	</persistence-unit>
 </persistence>
