@@ -33,7 +33,7 @@ pidf=${cdir}/.mypid
 logdir=`grep -P '^[ \t]*logdir[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | tr '\t' ' ' | sed -e 's:[ ]::g'`
 if [ ! -d ${logdir} ]
 then
-	logdir=/var/log/uxugsync
+	logdir=/var/log/argus-usersync
 fi
 cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf"
 [ ! -d ${logdir} ] && mkdir -p ${logdir}

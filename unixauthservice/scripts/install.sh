@@ -18,7 +18,7 @@
 
 INSTALL_BASE=/usr/lib
 
-MOD_NAME="uxugsync"
+MOD_NAME="argus-usersync"
 
 INSTALL_DIR=${INSTALL_BASE}/${MOD_NAME}
 
@@ -182,7 +182,16 @@ cdirname=`basename ${cdir}`
 if [ "${cdirname}" != "" ]
 then
 
-  dstdir=${INSTALL_BASE}/${cdirname}
+  #dstdir=${INSTALL_BASE}/${cdirname}
+
+  VERSION=`cat ${PWD}/version`
+
+  if [ "${VERSION}" != "" ]
+  then
+    dstdir=${INSTALL_BASE}/${MOD_NAME}-${VERSION}
+  else
+    dstdir=${INSTALL_BASE}/${MOD_NAME}-`date '+%Y%m%d%H%M%S'`
+  fi
 
   if [ -d ${dstdir} ]
   then

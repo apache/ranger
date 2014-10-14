@@ -2,7 +2,7 @@
 
 INSTALL_BASE=/usr/lib
 
-MOD_NAME=uxugsync
+MOD_NAME=argus-usersync
 
 MOD_DIR=${INSTALL_BASE}/${MOD_NAME}
 

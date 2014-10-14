@@ -16,11 +16,11 @@
   limitations under the License.
 -->
 <assembly>
-  <id>ugsync</id> 
+  <id>usersync</id>
   <formats>
      <format>tar</format>
   </formats>
-  <baseDirectory>${project.name}-${project.version}-ugsync</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-usersync</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>
