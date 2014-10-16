@@ -267,6 +267,7 @@ define(function(require){
 							bootbox.alert("Connected Successfully.");
 					},
 					error: function (msResponse, options) {
+						bootbox.alert("Connection Failed.");
 					}	
 				});
 		},
