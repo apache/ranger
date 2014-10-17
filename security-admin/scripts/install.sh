@@ -40,6 +40,14 @@ check_ret_status(){
 	fi
 }
 
+check_ret_status_for_groupadd(){
+# 9 is the response if the group exists
+    if [ $1 -ne 0 ] && [ $1 -ne 9 ]; then
+        log "[E] $2";
+        exit 1;
+    fi
+}
+
 is_command () {
     log "[I] check if command $1 exists"
     type "$1" >/dev/null 
@@ -1107,20 +1115,19 @@ setup_unix_user_group(){
 
 	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group}";
 
-	id -g ${unix_group} > /dev/null 2>&1
-
-	if [ $? -ne 0 ]
-	then
-		groupadd ${unix_group}
-		check_ret_status $? "Creating group ${unix_group} failed"
-	fi
+    groupadd ${unix_group}
+    check_ret_status_for_groupadd $? "Creating group ${unix_group} failed"
 
 	id -u ${unix_user} > /dev/null 2>&1
 
 	if [ $? -ne 0 ]
 	then
+	    log "[I] Creating new user and adding to group";
         useradd ${unix_user} -g ${unix_group} -m
 		check_ret_status $? "useradd ${unix_user} failed"
+	else
+	    log "[I] User already exists, adding it to group";
+	    usermod -g ${unix_group} ${unix_user}
 	fi
 
 	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group} DONE";
