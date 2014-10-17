@@ -244,6 +244,7 @@ define(function(require) {
 				this.policyExportAuditList = new VXPolicyExportAuditList();	
 				var params = { priAcctId : 1 };
 				that.renderAgentTable();
+				this.policyExportAuditList.setSorting('createDate',1);
 				this.policyExportAuditList.fetch({
 					cache : false,
 					data :params
@@ -658,6 +659,8 @@ define(function(require) {
 					drag : false,
 					//sortable:false,
 					editable:false,
+                                        sortType: 'toggle',
+                                        direction: 'descending',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							return Globalize.format(new Date(model.get('createDate')),  "MM/dd/yyyy hh:mm:ss tt");
@@ -726,6 +729,8 @@ define(function(require) {
 						click : false,
 						drag : false,
 						editable:false,
+                                                sortType: 'toggle',
+                                                direction: 'descending',
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
 								return Globalize.format(new Date(rawValue),  "MM/dd/yyyy hh:mm:ss tt");
@@ -1152,7 +1157,9 @@ define(function(require) {
 							}
 						}),
 						label : localization.tt('lbl.createDate')+ '   ( '+this.timezone+' )',
-						editable : false
+						editable:false,
+						sortType: 'toggle',
+						direction: 'descending'
 					},
 					repositoryName : {
 						cell : 'html',
