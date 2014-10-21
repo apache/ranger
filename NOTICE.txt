@@ -1,0 +1,36 @@
+Apache Argus
+Copyright 2011-2013 The Apache Software Foundation
+
+This product includes software developed at The Apache Software
+Foundation (http://www.apache.org/).
+
+
+This product includes jQuery (http://jquery.org - MIT license), Copyright © 2014, John Resig.  
+This product includes jQuery UI (http://jqueryui.com - MIT license), Copyright © 2013 jQuery Foundation.  
+This product includes Backbone (http://backbonejs.org - MIT license), Copyright © 2010-2014 Jeremy Ashkenas, DocumentCloud.
+This product includes underscore (http:underscorejs.org - MIT license), Copyright © 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors.  
+This product includes Backbone.Marionette (http://marionettejs.com/ - MIT license).  
+This product includes Backbone.Wreqr (http://marionettejs.com/ - MIT license) Copyright ©,2012 Derick Bailey, Muted Solutions, LLC.
+This product includes Backbone.BabySitter (http://marionettejs.com/ - MIT license), Copyright ©2013 Derick Bailey, Muted Solutions, LLC.  
+This product includes Backbone fetch cache (https://github.com/mrappleton/backbone-fetch-cache - MIT license), Copyright © 2012-2013 Andrew Appleton.  
+This product includes Backbone-forms (https://github.com/powmedia/backbone-forms - MIT license), Copyright © 2013 Charles Davison.
+This product includes Backbone localStorage Adapter v1.1.7 (http://documentup.com/jeromegn/backbone.localStorage - MIT license), Copyright © 2010 Jerome Gravel-Niquet.
+This product includes Backbone.BootstrapModal (https://github.com/powmedia/backbone.bootstrap-modal - MIT license), Copyright © 2013 Charles Davison.  
+This product includes X-editable - v1.5.0 (http://vitalets.github.io/x-editable/ - MIT license), Copyright © 2013 Vitaliy Potapov;
+This product includes Bootstrap Datepicker (http://www.eyecon.ro/bootstrap-datepicker - Apache License - 2.0), Copyright 2012 Stefan Petre.  
+This product includes bootstrap-transition.js v2.3.2 (http://twbs.github.com/bootstrap/javascript.html#transitions - Apache License - 2.0), Copyright 2013 Twitter, Inc.  
+This product includes backgrid 0.3.5 (http://backgridjs.com/ - MIT license), Copyright © 2014 Jimmy Yuen Ho Wong and contributors.
+This product includes backgrid-paginator (http://github.com/wyuenho/backgrid - MIT license), Copyright © 2013 Jimmy Yuen Ho Wong and contributors.  This product includes backgrid-filter (http://github.com/wyuenho/backgrid - MIT license), Copyright © 2013 Jimmy Yuen Ho Wong and contributors.  
+This product includes backbone-pageable 1.3.2 (http://github.com/wyuenho/backbone-pageable - MIT license), Copyright © 2013 Jimmy Yuen Ho Wong.
+This product includes jQuery Cookie Plugin v1.4.0 (https://github.com/carhartl/jquery-cookie - MIT license), Copyright 2013 Klaus Hartl  
+This product includes jQuery Toggles v2.0.4 (http://simontabor.com/labs/toggles - MIT license), Copyright 2013 Simon Tabor.  
+This product includes jQuery UI Tag-it! (http://aehlke.github.com/tag-it/ - MIT license), Copyright 2011, Levy Carneiro Jr.
+This product includes Select2 3.4.3 (http://ivaynberg.github.io/select2/ - Apache License - 2.0), Copyright 2012 Igor Vaynberg.  
+This product includes bootbox.js v3.3.0 (http://bootboxjs.com/ - MIT license), Copyright © 2011-2014 by Nick Payne.  
+This product includes jQuery Pines Notify (pnotify) Plugin 1.2.0 (http://pinesframework.org/pnotify/ - MPL), Copyright © 2009-2012 Hunter Perrin.
+This product includes moment.js (http://moment.js - MIT license), Copyright © 2011-2014 Tim Wood, Iskren Chernev, Moment.js contributors.  
+This product includes VisualSearch.js 0.4.0 (http://documentcloud.github.com/visualsearch - MIT license), © 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.  
+This product includes Globalize (http://github.com/jquery/globalize - MIT license), Copyright Software Freedom Conservancy, Inc.
+This product includes RequireJS 2.1.8 (http://github.com/jrburke/requirejs - New BSD or MIT licensed), Copyright © 2010-2012, The Dojo Foundation All Rights Reserved. 
+This product includes Handlebars.js (http://handlebarsjs.com/ - MIT license), Copyright © 2011-2014 by Yehuda Katz.  
+This product includes Require.js Handlebars Plugin (https://github.com/SlexAxton/require-handlebars-plugin - WTFPL + requirejs + handlebars), Copyright © 2011-2014 by Yehuda Katz.
