@@ -31,10 +31,13 @@ import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.NamingEnumeration;
 import javax.naming.directory.Attribute;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.Control;
+import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.PagedResultsControl;
+import javax.naming.ldap.PagedResultsResponseControl;
 
 import org.apache.log4j.Logger;
 
@@ -46,13 +49,15 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	
 	private static final Logger LOG = Logger.getLogger(LdapUserGroupBuilder.class);
 	
+	private static final int PAGE_SIZE = 100;
+	
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 	
 	private String userSearchBase;
 	private String extendedSearchFilter;
 	private String userNameAttribute;
 	
-	private DirContext dirContext;
+	private LdapContext ldapContext;
 	private SearchControls searchControls;
 	
 	private boolean userNameCaseConversionFlag = false ;
@@ -96,7 +101,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		// do nothing
 	}
 	
-	private void createDirContext() throws Throwable {
+	private void createLdapContext() throws Throwable {
 		LOG.info("LdapUserGroupBuilder initialization started");
 		String ldapUrl = config.getLdapUrl();
 		String ldapBindDn = config.getLdapBindDn();
@@ -113,7 +118,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		env.put(Context.SECURITY_AUTHENTICATION, ldapAuthenticationMechanism);
 		env.put(Context.REFERRAL, "follow") ;
 
-		dirContext = new InitialDirContext(env);
+		ldapContext = new InitialLdapContext(env, null);
 		
 		userSearchBase = config.getUserSearchBase();
 		int  userSearchScope = config.getUserSearchScope();
@@ -160,9 +165,9 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		
 	}
 	
-	private void closeDirContext() throws Throwable {
-		if (dirContext != null) {
-			dirContext.close();
+	private void closeLdapContext() throws Throwable {
+		if (ldapContext != null) {
+			ldapContext.close();
 		}
 	}
 	
@@ -176,75 +181,107 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		LOG.info("LDAPUserGroupBuilder updateSink started");
 		try {
-			createDirContext();
+			createLdapContext();
+			
+			// Activate paged results
+		    byte[] cookie = null;
+		    ldapContext.setRequestControls(new Control[]{
+		        new PagedResultsControl(PAGE_SIZE, Control.NONCRITICAL) });
+		    int total;
+		    
 			int counter = 0;
-			NamingEnumeration<SearchResult> searchResultEnum = dirContext
+			do {
+				NamingEnumeration<SearchResult> searchResultEnum = ldapContext
 					.search(userSearchBase, extendedSearchFilter,
 							searchControls);
-			while (searchResultEnum.hasMore()) { 
-				// searchResults contains all the user entries
-				final SearchResult userEntry = searchResultEnum.next();
-				String userName = (String) userEntry.getAttributes()
+				while (searchResultEnum.hasMore()) { 
+					// searchResults contains all the user entries
+					final SearchResult userEntry = searchResultEnum.next();
+					String userName = (String) userEntry.getAttributes()
 						.get(userNameAttribute).get();
 				
 				
-				if (userNameCaseConversionFlag) {
-					if (userNameLowerCaseFlag) {
-						userName = userName.toLowerCase() ;
+					if (userNameCaseConversionFlag) {
+						if (userNameLowerCaseFlag) {
+							userName = userName.toLowerCase() ;
+						}
+						else {
+							userName = userName.toUpperCase() ;
+						}
 					}
-					else {
-						userName = userName.toUpperCase() ;
+				
+					Set<String> groups = new HashSet<String>();
+					Set<String> userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
+					for (String useGroupNameAttribute : userGroupNameAttributeSet) {
+						Attribute userGroupfAttribute = userEntry.getAttributes().get(useGroupNameAttribute);
+						if(userGroupfAttribute != null) {
+							NamingEnumeration<?> groupEnum = userGroupfAttribute.getAll();
+							while (groupEnum.hasMore()) {
+								String gName = getShortGroupName((String) groupEnum
+									.next());
+								if (groupNameCaseConversionFlag) {
+									if (groupNameLowerCaseFlag) {
+										gName = gName.toLowerCase();
+									} else {
+										gName = gName.toUpperCase();
+									}
+								}
+								groups.add(gName);
+							}
+						}
+					}
+
+					List<String> groupList = new ArrayList<String>(groups);
+					counter++;
+					if (counter <= 2000) { 
+						if (LOG.isInfoEnabled()) {
+							LOG.info("Updating user count: " + counter
+								+ ", userName: " + userName + ", groupList: "
+								+ groupList);
+						}
+					} else {
+						if (LOG.isTraceEnabled()) {
+							LOG.trace("Updating user count: " + counter
+								+ ", userName: " + userName + ", groupList: "
+								+ groupList);
+						}
+					}
+					try {
+						sink.addOrUpdateUser(userName, groupList);
+					} catch (Throwable t) {
+						LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
+							+ ", for user: " + userName
+							+ ", groups: " + groupList);
 					}
 				}
 				
-				Set<String> groups = new HashSet<String>();
-				Set<String> userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
-				for (String useGroupNameAttribute : userGroupNameAttributeSet) {
-					Attribute userGroupfAttribute = userEntry.getAttributes().get(useGroupNameAttribute);
-					if(userGroupfAttribute != null) {
-						NamingEnumeration<?> groupEnum = userGroupfAttribute.getAll();
-						while (groupEnum.hasMore()) {
-							String gName = getShortGroupName((String) groupEnum
-									.next());
-							if (groupNameCaseConversionFlag) {
-								if (groupNameLowerCaseFlag) {
-									gName = gName.toLowerCase();
-								} else {
-									gName = gName.toUpperCase();
-								}
-							}
-							groups.add(gName);
-						}
-					}
-				}
-
-				List<String> groupList = new ArrayList<String>(groups);
-				counter++;
-				if (counter <= 1000) { 
-					if (LOG.isInfoEnabled()) {
-						LOG.info("Updating user count: " + counter
-								+ ", userName: " + userName + ", groupList: "
-								+ groupList);
-					}
-				} else {
-					if (LOG.isTraceEnabled()) {
-						LOG.trace("Updating user count: " + counter
-								+ ", userName: " + userName + ", groupList: "
-								+ groupList);
-					}
-				}
-				try {
-					sink.addOrUpdateUser(userName, groupList);
-				} catch (Throwable t) {
-					LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
-							+ ", for user: " + userName
-							+ ", groups: " + groupList);
-				}
-			}
+				// Examine the paged results control response
+		        Control[] controls = ldapContext.getResponseControls();
+		        if (controls != null) {
+		        	for (int i = 0; i < controls.length; i++) {
+		        		if (controls[i] instanceof PagedResultsResponseControl) {
+		        			PagedResultsResponseControl prrc =
+		                             (PagedResultsResponseControl)controls[i];
+		        			total = prrc.getResultSize();
+		        			if (total != 0) {
+		        				LOG.debug("END-OF-PAGE total : " + total);
+		        			} else {
+		        				LOG.debug("END-OF-PAGE total : unknown");
+		        			}
+		        			cookie = prrc.getCookie();
+		        		}
+		        	}
+		        } else {
+		        	LOG.debug("No controls were sent from the server");
+		        }
+		        // Re-activate paged results
+		        ldapContext.setRequestControls(new Control[]{
+		        		new PagedResultsControl(PAGE_SIZE, cookie, Control.CRITICAL) });
+			} while (cookie != null);
 			LOG.info("LDAPUserGroupBuilder.updateSink() completed with user count: "
 					+ counter);
 		} finally {
-			closeDirContext();
+			closeLdapContext();
 		}
 	}
 	
