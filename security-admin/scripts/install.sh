@@ -250,7 +250,7 @@ create_db_user(){
 	strError="ERROR"
     if [ "${DB_FLAVOR}" == "MYSQL" ]
     then
-		log "[I] Creating ${DB_FLAVOR} user '${db_user}' (using root priviledges)"
+		log "[I] Creating ${DB_FLAVOR} user '${db_user}'"
 		for thost in '%' localhost
 		do
 			usercount=`$SQL_COMMAND_INVOKER -B -u "$db_root_user" --password="$db_root_password" -h $DB_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$db_user' and host = '$thost';"`
@@ -259,13 +259,11 @@ create_db_user(){
 				$SQL_COMMAND_INVOKER -B -u "$db_root_user" --password="$db_root_password" -h $DB_HOST -e "create user '$db_user'@'$thost' identified by '$db_password';"
 				log "[I] Creating user '$db_user' for host $thost done"
 			fi
-			dbquery="GRANT ALL ON *.* TO '$db_user'@'$thost' ;
-			grant all privileges on *.* to '$db_user'@'$thost' with grant option;
-			FLUSH PRIVILEGES;"
+			dbquery="REVOKE ALL PRIVILEGES,GRANT OPTION FROM  '$db_user'@'$thost';FLUSH PRIVILEGES;"
 			echo "${dbquery}" | $SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST
-			check_ret_status $? "'$DB_FLAVOR' create user failed"
+			check_ret_status $? "'$DB_FLAVOR' revoke *.* privileges from user '$db_user'@'$thost' failed"
 		done
-		log "[I] Creating $DB_FLAVOR user '$db_user' (using root priviledges) DONE"
+		log "[I] Creating ${DB_FLAVOR} user '${db_user}' DONE"
 	fi
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
     then
@@ -289,7 +287,7 @@ create_db_user(){
 				log "[I] Creating User: ${db_user} Success";
 			fi
 	    fi
-        result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT connect,resource,create view,sysdba TO ${db_user};"`
+        result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO ${db_user} WITH ADMIN OPTION;"`
         if test "${result5#*$strError}" == "$result5"
 		then
 			log "[I] Granting User: ${db_user} Success";
@@ -298,7 +296,7 @@ create_db_user(){
 			log "[E] $result5"
 			exit 1
 		fi
-		log "[I] Creating $DB_FLAVOR user '${db_user}' (using sysdba priviledges) DONE"
+		log "[I] Creating $DB_FLAVOR user '${db_user}' DONE"
     fi
 }
 
@@ -440,14 +438,11 @@ upgrade_db() {
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
     then
 		DBVERSION_CATALOG_CREATION=db/create_dbversion_catalog.sql
-
-		#mysqlexec="${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h ${DB_HOST} ${db_name}"
-
 		if [ -f ${DBVERSION_CATALOG_CREATION} ]
 		then
 			log "[I] Verifying database version catalog table .... "
 			${mysqlexec} < ${DBVERSION_CATALOG_CREATION}
-			`${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h ${DB_HOST} -D ${db_name} < ${DBVERSION_CATALOG_CREATION}`
+			`${SQL_COMMAND_INVOKER} -u "${db_root_user}" --password="${db_root_password}" -h ${DB_HOST} -D ${db_name} < ${DBVERSION_CATALOG_CREATION}`
 			check_ret_status $? "Verifying database version catalog table Failed."
 		fi
 
@@ -462,7 +457,7 @@ upgrade_db() {
 				version=`echo ${bn} | awk -F'-' '{ print $1 }'`
 				if [ "${version}" != "" ]
 				then
-					c=`${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h ${DB_HOST} -D ${db_name} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
+					c=`${SQL_COMMAND_INVOKER} -u "${db_root_user}" --password="${db_root_password}" -h ${DB_HOST} -D ${db_name} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
 					check_ret_status $? "DBVerionCheck - ${version} Failed."
 					if [ ${c} -eq 0 ]
 					then
@@ -470,7 +465,7 @@ upgrade_db() {
 						echo >> ${tempFile}
 						echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
 						log "[I] - patch [${version}] is being applied."
-						`${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h ${DB_HOST} -D ${db_name} < ${tempFile}`
+						`${SQL_COMMAND_INVOKER} -u "${db_root_user}" --password="${db_root_password}" -h ${DB_HOST} -D ${db_name} < ${tempFile}`
 						check_ret_status $? "Update patch - ${version} Failed. See sql file : [${tempFile}]"
 						rm -f ${tempFile}
 					else
@@ -553,24 +548,33 @@ import_db(){
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
     then
 		log "[I] Verifying Database: ${db_name}";
-		existdb=`${SQL_COMMAND_INVOKER} -u "${db_user}" --password="${db_password}" -h $DB_HOST -B --skip-column-names -e  "show databases like '${db_name}' ;"`
+		existdb=`${SQL_COMMAND_INVOKER} -u "${db_root_user}" --password="${db_root_password}" -h $DB_HOST -B --skip-column-names -e  "show databases like '${db_name}' ;"`
 		if [ "${existdb}" = "${db_name}" ]
 		then
 			log "[I] - database ${db_name} already exists. Ignoring import_db ..."
 		else
 			log "[I] Creating Database: $db_name";
-			$SQL_COMMAND_INVOKER -u "$db_user" --password="$db_password" -h $DB_HOST -e "create database $db_name"
+			$SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST -e "create database $db_name"
 			check_ret_status $? "Creating database Failed.."
 			log "[I] Importing Core Database file: $mysql_core_file "
-			$SQL_COMMAND_INVOKER -u "$db_user" --password="$db_password" -h $DB_HOST $db_name < $mysql_core_file
+			$SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST $db_name < $mysql_core_file
 			check_ret_status $? "Importing Database Failed.."
 			if [ -f "${mysql_asset_file}" ]
 			then
-				$SQL_COMMAND_INVOKER -u "$db_user" --password="$db_password" -h $DB_HOST ${db_name} < ${mysql_asset_file}
+				$SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST ${db_name} < ${mysql_asset_file}
 				check_ret_status $? "Reset of DB repositories failed"
 			fi
 			log "[I] Importing Database file : $mysql_core_file DONE";
 		fi
+		for thost in '%' localhost
+		do
+			mysqlquery="GRANT ALL ON $db_name.* TO '$db_user'@'$thost' ;
+			GRANT ALL PRIVILEGES ON $db_name.* to '$db_user'@'$thost' WITH GRANT OPTION;
+			FLUSH PRIVILEGES;"
+			echo "${mysqlquery}" | $SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST
+			check_ret_status $? "'$db_user' grant privileges on '$db_name' failed"
+			log "[I] Granting MYSQL user '$db_user' for host $thost DONE"
+		done
 	fi
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
     then
@@ -642,7 +646,7 @@ import_db(){
 		result8=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA  <<< "alter user ${db_user} identified by \"${db_password}\" DEFAULT TABLESPACE ${db_name};"`
 
 	    #grant user
-        result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT connect,resource,create view,sysdba TO ${db_user};"`
+        result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO ${db_user} WITH ADMIN OPTION;"`
         if test "${result5#*$strError}" == "$result5"
 		then
 			log "[I] Granting User: ${db_user} Success";
@@ -668,7 +672,7 @@ import_db(){
 		else
 			log "[I] - database ${db_name} already exists. Ignoring import_db ..."	;
 		fi
-	fi	
+	fi
 }
 
 extract_war () {
@@ -923,6 +927,7 @@ create_audit_db_user(){
 			log "[I] TABLESPACE $AUDIT_DB already exists."
 		fi
 	fi
+
 	#Verifying Users
 	log "[I] Verifying Audit User: $AUDIT_USER";
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
@@ -930,25 +935,24 @@ create_audit_db_user(){
 		for thost in '%' localhost
 		do
 			usercount=`$SQL_COMMAND_INVOKER -B -u "$db_root_user" --password="$db_root_password" -h $DB_HOST --skip-column-names -e "select count(*) from mysql.user where user = '$AUDIT_USER' and host = '$thost';"`
-
 			if  [ ${usercount} -eq 0 ]
 			then
-				log "[I] Creating MYSQL user '$AUDIT_USER'@'$thost' (using root priviledges)"
+				log "[I] Creating ${DB_FLAVOR} user '$AUDIT_USER'@'$thost'"
 				$SQL_COMMAND_INVOKER -B -u "$db_root_user" --password="$db_root_password" -h $DB_HOST -e "create user '$AUDIT_USER'@'$thost' identified by '$AUDIT_PASSWORD';"
-				check_ret_status $? "MYSQL create user failed"
+				check_ret_status $? "${DB_FLAVOR} create user failed"
 			fi
-			mysqlquery="GRANT ALL ON *.* TO '$AUDIT_USER'@'$thost' ;
-			grant all privileges on *.* to '$AUDIT_USER'@'$thost' with grant option;
-			FLUSH PRIVILEGES;"
-		
-			echo "${mysqlquery}" | $SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST
-			check_ret_status $? "'$DB_FLAVOR' create user failed"
-			log "[I] Creating MYSQL user '$AUDIT_USER' for host $thost(using root priviledges) DONE"
+			if [ "${AUDIT_USER}" != "${db_user}" ]
+			then
+				mysqlquery="REVOKE ALL PRIVILEGES,GRANT OPTION FROM '$AUDIT_USER'@'$thost' ;
+				FLUSH PRIVILEGES;"
+				echo "${mysqlquery}" | $SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST
+				check_ret_status $? "'$DB_FLAVOR' revoke privileges from user '$AUDIT_USER'@'$thost' failed"
+				log "[I] '$DB_FLAVOR' revoke all privileges from user '$AUDIT_USER'@'$thost' DONE"
+			fi
 		done
 	fi
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
     then
-
 		result3=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(username) from all_users where UPPER(username)=UPPER('${AUDIT_USER}');"`
 		username=`echo $AUDIT_USER | tr '[:lower:]' '[:upper:]'`
 		if test "${result3#*$username}" == "$result3"	#does not contains username so create user
@@ -963,57 +967,100 @@ create_audit_db_user(){
 				log "[E] $result4"
 				exit 1
 		    fi
-			else
-				log "[I] User: ${AUDIT_USER} exist";
-		    fi
-            result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT connect,resource,create view TO ${AUDIT_USER};"`
-            if test "${result5#*$strError}" == "$result5"
-			then
-				log "[I] Granting User: $AUDIT_USER Success";
-			else
-				log "[E] Granting User: $AUDIT_USER Failed";
-				log "[E] $result5"
-				exit 1
-			fi
-        fi
+		else
+			log "[I] User: ${AUDIT_USER} exist";
+		fi
+        result5=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT CREATE SESSION TO ${AUDIT_USER};"`
+        if test "${result5#*$strError}" == "$result5"
+		then
+			log "[I] Granting User: $AUDIT_USER Success";
+		else
+			log "[E] Granting User: $AUDIT_USER Failed";
+			log "[E] $result5"
+			exit 1
+		fi
+    fi
 
-		AUDIT_TABLE=xa_access_audit
+	#Verifying audit table
+	AUDIT_TABLE=xa_access_audit
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+	then
 		log "[I] Verifying table $AUDIT_TABLE in audit database $AUDIT_DB";
-		if [ "${DB_FLAVOR}" == "MYSQL" ]
+		existtbl=`${SQL_COMMAND_INVOKER} -u "$db_root_user" --password="$db_root_password" -D $AUDIT_DB -h $DB_HOST -B --skip-column-names -e  "show tables like '$AUDIT_TABLE' ;"`
+		if [ "${existtbl}" != "$AUDIT_TABLE" ]
 		then
-			existtbl=`${SQL_COMMAND_INVOKER} -u "$AUDIT_USER" --password="$AUDIT_PASSWORD" -D $AUDIT_DB -h $DB_HOST -B --skip-column-names -e  "show tables like '$AUDIT_TABLE' ;"`
+			log "[I] Importing Audit Database file: $mysql_audit_file..."
+			$SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST $AUDIT_DB < $mysql_audit_file
+			check_ret_status $? "Importing Audit Database Failed.."
+			log "[I] Importing Audit Database file : $mysql_audit_file DONE";
+		else
+			log "[I] Table $AUDIT_TABLE already exists in audit database $AUDIT_DB"
+		fi
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+	then
+		log "[I] Verifying table $AUDIT_TABLE in TABLESPACE $db_name";
+		# ASSIGN DEFAULT TABLESPACE ${db_name}
+		result8=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA  <<< "alter user ${AUDIT_USER} identified by \"${AUDIT_PASSWORD}\" DEFAULT TABLESPACE ${AUDIT_DB};"`
+		result6=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('$db_name') and UPPER(table_name)=UPPER('${AUDIT_TABLE}');"`
+		tablename=`echo $AUDIT_TABLE | tr '[:lower:]' '[:upper:]'`
+		if test "${result6#*$tablename}" == "$result6"	#does not contains tablename so create table
+		then
+			log "[I] Importing Audit Database file: $oracle_audit_file..."
+			result7=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}" @$oracle_audit_file`
+			if test "${result7#*$strError}" == "$result7"
+			then
+				log "[I] Importing Audit Database file : $oracle_audit_file DONE";
+			else
+				log "[E] Importing Audit Database file : $oracle_audit_file failed";
+				log "[E] $result7"
+			fi
+		else
+			log "[I] Table $AUDIT_TABLE already exists in TABLESPACE $db_name"
+		fi
+	fi
 
-			if [ "${existtbl}" != "$AUDIT_TABLE" ]
-			then
-				log "[I] Importing Audit Database file: $mysql_audit_file..."
-				$SQL_COMMAND_INVOKER -u "$AUDIT_USER" --password="$AUDIT_PASSWORD" -h $DB_HOST $AUDIT_DB < $mysql_audit_file
-				check_ret_status $? "Importing Audit Database Failed.."
-				log "[I] Importing Audit Database file : $mysql_audit_file DONE";
-			else
-				log "[I] Table $AUDIT_TABLE already exists in audit database $AUDIT_DB"
-			fi
-		fi
-		if [ "${DB_FLAVOR}" == "ORACLE" ]
+	#Granting Users
+	log "[I] Granting Privileges to User: $AUDIT_USER";
+	if [ "${DB_FLAVOR}" == "MYSQL" ]
+    then
+		for thost in '%' localhost
+		do
+			mysqlquery="GRANT ALL ON $AUDIT_DB.* TO '$db_user'@'$thost' ;
+			GRANT ALL PRIVILEGES ON $AUDIT_DB.* to '$db_user'@'$thost' WITH GRANT OPTION;
+			FLUSH PRIVILEGES;"
+			echo "${mysqlquery}" | $SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST
+			check_ret_status $? "'$db_user' grant privileges on '$AUDIT_DB' failed"
+			log "[I] Creating MYSQL user '$AUDIT_USER' for host $thost DONE"
+
+			mysqlquery="GRANT INSERT ON $AUDIT_DB.$AUDIT_TABLE TO '$AUDIT_USER'@'$thost' ;
+			FLUSH PRIVILEGES;"
+			echo "${mysqlquery}" | $SQL_COMMAND_INVOKER -u "$db_root_user" --password="$db_root_password" -h $DB_HOST
+			check_ret_status $? "'$DB_FLAVOR' grant INSERT privileges to user '$AUDIT_USER'@'$thost' on $AUDIT_TABLE failed"
+			log "[I] '$DB_FLAVOR' grant INSERT privileges to user '$AUDIT_USER'@'$thost' on $AUDIT_TABLE DONE"
+		done
+	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+	then
+		if [ "${AUDIT_USER}" != "${db_user}" ]
 		then
-			# ASSIGN DEFAULT TABLESPACE ${db_name}
-			result8=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA  <<< "alter user ${AUDIT_USER} identified by \"${AUDIT_PASSWORD}\" DEFAULT TABLESPACE ${AUDIT_DB};"`
-			result6=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "select UPPER(table_name) from all_tables where tablespace_name='$AUDIT_DB' and UPPER(table_name)=UPPER('${AUDIT_TABLE}');"`
-			tablename=`echo $AUDIT_TABLE | tr '[:lower:]' '[:upper:]'`
-			if test "${result6#*$tablename}" == "$result6"	#does not contains tablename so create table
+			result11=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT SELECT ON ${db_user}.XA_ACCESS_AUDIT_SEQ TO ${AUDIT_USER};"`
+			result12=`${SQL_COMMAND_INVOKER} -L -S "${db_root_user}"/"\"${db_root_password}\""@"${DB_HOST}" AS SYSDBA <<< "GRANT INSERT ON ${db_user}.${AUDIT_TABLE} TO ${AUDIT_USER};"`
+			if test "${result11#*$strError}" != "$result11"
 			then
-				log "[I] Importing Audit Database file: $oracle_audit_file..."
-				result7=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${AUDIT_USER}"/"\"${AUDIT_PASSWORD}\""@"${DB_HOST}" @$oracle_audit_file`
-				if test "${result7#*$strError}" == "$result7"
-				then
-					log "[I] Importing Audit Database file : $oracle_audit_file DONE";
-				else
-					log "[E] Importing Audit Database file : $oracle_audit_file failed";
-					log "[E] $result7"
-				fi
+				log "[E] Granting User: $AUDIT_USER Failed";
+				log "[E] $result11";
+				exit1
+			elif test "${result12#*$strError}" != "$result12"
+			then
+				log "[E] Granting User: $AUDIT_USER Failed";
+				log "[E] $result12";
+				exit 1
 			else
-				log "[I] Table $AUDIT_TABLE already exists in audit database $AUDIT_DB"
+				log "[I] Granting User: $AUDIT_USER Success";
 			fi
 		fi
+	fi
 }
 
 do_unixauth_setup() {
@@ -1224,7 +1271,7 @@ execute_java_patches(){
 	then
 		dt=`date '+%s'`
 		tempFile=/tmp/sql_${dt}_$$.sql
-		mysqlexec="${SQL_COMMAND_INVOKER} -u ${db_user} --password="${db_password}" -h ${DB_HOST} ${db_name}"
+		mysqlexec="${SQL_COMMAND_INVOKER} -u ${db_root_user} --password="${db_root_password}" -h ${DB_HOST} ${db_name}"
 		javaFiles=`ls -1 $app_home/WEB-INF/classes/com/xasecure/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
 		for javaPatch in ${javaFiles}
 		do

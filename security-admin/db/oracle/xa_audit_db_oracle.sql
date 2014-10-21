@@ -63,8 +63,8 @@ END;
 /
 call sp_dropobject('XA_ACCESS_AUDIT','TABLE');
 call sp_dropobject('XA_ACCESS_AUDIT_SEQ','SEQUENCE');
-call sp_dropobject('xa_access_audit_FK_added_by_id','INDEX');
-call sp_dropobject('xa_access_audit_FK_upd_by_id','INDEX');
+call sp_dropobject('xa_access_audit_added_by_id','INDEX');
+call sp_dropobject('xa_access_audit_upd_by_id','INDEX');
 call sp_dropobject('xa_access_audit_cr_time','INDEX');
 call sp_dropobject('xa_access_audit_up_time','INDEX');
 call sp_dropobject('xa_access_audit_event_time','INDEX');
@@ -95,9 +95,11 @@ CREATE TABLE xa_access_audit (
 	resource_type VARCHAR(255) DEFAULT NULL NULL ,
 	PRIMARY KEY (id)
 );
-CREATE INDEX xa_access_audit_FK_added_by_id ON  xa_access_audit(added_by_id);
-CREATE INDEX xa_access_audit_FK_upd_by_id ON  xa_access_audit(upd_by_id);
+CREATE INDEX xa_access_audit_added_by_id ON  xa_access_audit(added_by_id);
+CREATE INDEX xa_access_audit_upd_by_id ON  xa_access_audit(upd_by_id);
 CREATE INDEX xa_access_audit_cr_time ON  xa_access_audit(create_time);
 CREATE INDEX xa_access_audit_up_time ON  xa_access_audit(update_time);
 CREATE INDEX xa_access_audit_event_time ON  xa_access_audit(event_time);
+CREATE OR REPLACE PUBLIC SYNONYM xa_access_audit FOR xa_access_audit;
+CREATE OR REPLACE PUBLIC SYNONYM XA_ACCESS_AUDIT_SEQ FOR XA_ACCESS_AUDIT_SEQ;
 commit;

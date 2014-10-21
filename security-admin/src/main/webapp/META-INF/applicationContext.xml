@@ -168,10 +168,10 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 			<value>${auditDB.jdbc.url}</value>
 		</property>
 		<property name="user">
-			<value>${auditDB.jdbc.user}</value>
+			<value>${jdbc.user}</value>
 		</property>
 		<property name="password">
-			<value>${auditDB.jdbc.password}</value>
+			<value>${jdbc.password}</value>
 		</property>
 		<property name="maxPoolSize">
 			<value>20</value>

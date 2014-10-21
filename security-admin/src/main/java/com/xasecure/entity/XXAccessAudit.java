@@ -38,8 +38,8 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name="X_ACCESS_AUDIT_SEQ",sequenceName="X_ACCESS_AUDIT_SEQ",allocationSize=1)
-	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_ACCESS_AUDIT_SEQ")
+	@SequenceGenerator(name="XA_ACCESS_AUDIT_SEQ",sequenceName="XA_ACCESS_AUDIT_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="XA_ACCESS_AUDIT_SEQ")
 	@Column(name="ID")
 	protected Long id;
 

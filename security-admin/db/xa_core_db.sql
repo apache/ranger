@@ -707,13 +707,11 @@ CREATE TABLE `xa_access_audit` (
   `resource_path` varchar(2000) DEFAULT NULL,
   `resource_type` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `xa_access_audit_FK_added_by_id` (`added_by_id`),
-  KEY `xa_access_audit_FK_upd_by_id` (`upd_by_id`),
+  KEY `xa_access_audit_added_by_id` (`added_by_id`),
+  KEY `xa_access_audit_upd_by_id` (`upd_by_id`),
   KEY `xa_access_audit_cr_time` (`create_time`),
   KEY `xa_access_audit_up_time` (`update_time`),
-  KEY `xa_access_audit_event_time` (`event_time`),
-  CONSTRAINT `xa_access_audit_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
-  CONSTRAINT `xa_access_audit_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+  KEY `xa_access_audit_event_time` (`event_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
