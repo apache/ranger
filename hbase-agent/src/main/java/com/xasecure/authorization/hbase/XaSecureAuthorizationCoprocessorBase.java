@@ -37,6 +37,8 @@ import org.apache.hadoop.hbase.coprocessor.RegionServerObserver;
 import org.apache.hadoop.hbase.master.RegionPlan;
 import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos.SnapshotDescription;
 import org.apache.hadoop.hbase.regionserver.HRegion;
+import org.apache.hadoop.hbase.security.access.Permission;
+import org.apache.hadoop.hbase.security.access.Permission.Action;
 
 public class XaSecureAuthorizationCoprocessorBase extends BaseRegionObserver
 		implements MasterObserver, RegionServerObserver {
@@ -612,4 +614,51 @@ public class XaSecureAuthorizationCoprocessorBase extends BaseRegionObserver
 
 	}
 
+	@Override
+	public void preRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void postRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
+	
+	@Override
+	public void preTableFlush(final ObserverContext<MasterCoprocessorEnvironment> ctx, final TableName tableName) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void postTableFlush(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void preTruncateTableHandler(final ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void postTruncateTableHandler(final ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void preTruncateTable(final ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void postTruncateTable(final ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
 }

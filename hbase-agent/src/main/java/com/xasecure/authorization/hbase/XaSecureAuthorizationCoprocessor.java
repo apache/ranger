@@ -57,6 +57,7 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Append;
@@ -128,6 +129,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 
 		
 	private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
+	private static final String WILDCARD = "*";
 	private static final byte[] WILDCARD_MATCH = "*".getBytes();
 	
 	private RegionCoprocessorEnvironment regionEnv;
@@ -321,6 +323,15 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		throw new AccessDeniedException("Insufficient permissions for user '" + user + "',action: " + action + ", tableName:" + tableNameStr);
 	}
 	// Check if the user has global permission ...
+	protected void requireGlobalPermission(String request, String objName, Permission.Action action) throws AccessDeniedException {
+		User user = getActiveUser();
+		if (!isPermissionGranted(user, action)) {
+			if (accessController.isAudited(WILDCARD_MATCH)) {
+				auditEvent(request, objName, null, null, null, null, user, accessDeniedFlag);
+			}
+			throw new AccessDeniedException("Insufficient permissions for user '" + getActiveUser() + "' (global, action=" + action + ")");
+		}
+	}
 	protected void requirePermission(String request, byte[] tableName, Permission.Action action) throws AccessDeniedException {
 		User user = getActiveUser();
 		if (!isPermissionGranted(user, tableName, action)) {
@@ -332,13 +343,23 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	}
 	protected void requirePermission(String request, byte[] aTableName, byte[] aColumnFamily, byte[] aQualifier, Permission.Action... actions) throws AccessDeniedException {
 		User user = getActiveUser();
+		boolean isAllowed = false;
+
 		for (Action action : actions) {
-			if (!isPermissionGranted(user, aTableName, aColumnFamily, aQualifier, action)) {
-				if (accessController.isAudited(aTableName)) {
-					auditEvent(request, aTableName, aColumnFamily, aQualifier, null, null, user, accessDeniedFlag);
-				}
-				throw new AccessDeniedException("Insufficient permissions for user '" + user + "',action: " + action + ", tableName:" + Bytes.toString(aTableName) + ", family:" + Bytes.toString(aColumnFamily) + ",column: " + Bytes.toString(aQualifier));
+			isAllowed = isPermissionGranted(user, aTableName, aColumnFamily, aQualifier, action);
+
+			if(isAllowed) {
+				break;
 			}
+		}
+		
+		if (!isAllowed) {
+			if (accessController.isAudited(aTableName)) {
+				auditEvent(request, aTableName, aColumnFamily, aQualifier, null, null, user, accessDeniedFlag);
+			}
+			Permission.Action deniedAction = actions.length > 0 ? actions[0] : null;
+
+			throw new AccessDeniedException("Insufficient permissions for user '" + user + "',action: " + deniedAction + ", tableName:" + Bytes.toString(aTableName) + ", family:" + Bytes.toString(aColumnFamily) + ",column: " + Bytes.toString(aQualifier));
 		}
 	}
 	protected void requirePermission(String request, Permission.Action perm, RegionCoprocessorEnvironment env, Collection<byte[]> families) throws IOException {
@@ -582,13 +603,14 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	}
 	@Override
 	public InternalScanner preCompact(ObserverContext<RegionCoprocessorEnvironment> e, Store store, InternalScanner scanner,ScanType scanType) throws IOException {
-		requirePermission("compact", getTableName(e.getEnvironment()), null, null, Action.ADMIN);
+		requirePermission("compact", getTableName(e.getEnvironment()), null, null, Action.ADMIN, Action.CREATE);
 		return scanner;
 	}
 	@Override
 	public void preCompactSelection(ObserverContext<RegionCoprocessorEnvironment> e, Store store, List<StoreFile> candidates) throws IOException {
-		requirePermission("compactSelection", getTableName(e.getEnvironment()), null, null, Action.ADMIN);
+		requirePermission("compactSelection", getTableName(e.getEnvironment()), null, null, Action.ADMIN, Action.CREATE);
 	}
+
 	@Override
 	public void preCreateTable(ObserverContext<MasterCoprocessorEnvironment> c, HTableDescriptor desc, HRegionInfo[] regions) throws IOException {
 		requirePermission("createTable", desc.getName(), Permission.Action.CREATE);
@@ -624,7 +646,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	}
 	@Override
 	public void preFlush(ObserverContext<RegionCoprocessorEnvironment> e) throws IOException {
-		requirePermission("flush", getTableName(e.getEnvironment()), null, null, Action.ADMIN);
+		requirePermission("flush", getTableName(e.getEnvironment()), null, null, Action.ADMIN, Action.CREATE);
 	}
 	@Override
 	public void preGetClosestRowBefore(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, Result result) throws IOException {
@@ -638,6 +660,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	}
 	@Override
 	public long preIncrementColumnValue(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, long amount, boolean writeToWAL) throws IOException {
+		requirePermission("incrementColumnValue", TablePermission.Action.READ, c.getEnvironment(), Arrays.asList(new byte[][] { family }));
 		requirePermission("incrementColumnValue", TablePermission.Action.WRITE, c.getEnvironment(), Arrays.asList(new byte[][] { family }));
 		return -1;
 	}
@@ -673,6 +696,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	public void preRestoreSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
 		requirePermission("restoreSnapshot", hTableDescriptor.getName(), Permission.Action.ADMIN);
 	}
+
 	@Override
 	public void preScannerClose(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s) throws IOException {
 		requireScannerOwner(s);
@@ -792,8 +816,9 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 			}
 		}
 	}
+
 	@Override
-	public void preGet(ObserverContext<RegionCoprocessorEnvironment> rEnv, Get get, List<KeyValue> keyValList) throws IOException {
+	public void preGetOp(final ObserverContext<RegionCoprocessorEnvironment> rEnv, final Get get, final List<Cell> result) throws IOException {
 		RegionCoprocessorEnvironment e = rEnv.getEnvironment();
 		User requestUser = getActiveUser();
 
@@ -847,7 +872,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		}
 	}
 	@Override
-	public void postGet(final ObserverContext<RegionCoprocessorEnvironment> env, final Get get, final List<KeyValue> result) throws IOException {
+	public void postGetOp(final ObserverContext<RegionCoprocessorEnvironment> env, final Get get, final List<Cell> results) throws IOException {
 		HRegionInfo hri = env.getEnvironment().getRegion().getRegionInfo();
 		
 		byte[] tableName = hri.getTable().getName() ;
@@ -855,13 +880,105 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		if (!isSpecialTable(tableName)) {
 			try {
 				if (accessController.isAudited(tableName)) {
-					for (KeyValue kv : result) {
-						auditEvent("Get", tableName, kv.getFamily(), kv.getQualifier(), kv.getKey(), kv.getValue(), getActiveUser(), accessGrantedFlag);
+					for (Cell cell : results) {
+						auditEvent("Get", tableName, cell.getFamily(), cell.getQualifier(), cell.getRow(), cell.getValue(), getActiveUser(), accessGrantedFlag);
 					}
 				}
 			} catch (Throwable t) {
 			}
 		}
+	}
+
+	@Override
+	public void preRegionOffline(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo) throws IOException {
+	    requirePermission("regionOffline", regionInfo.getTable().getName(), null, null, Action.ADMIN);
+	}
+	@Override
+	public void postRegionOffline(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo) throws IOException {
+		auditEvent("regionOffline", regionInfo.getTable().getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
+	}
+	@Override
+	public void preRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
+		requirePermission("preRollLogWriterRequest", null, Permission.Action.ADMIN);
+	}
+	@Override
+	public void postRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
+		auditEvent("preRollLogWriterRequest", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
+	}
+	@Override
+	public void preTableFlush(final ObserverContext<MasterCoprocessorEnvironment> ctx, final TableName tableName) throws IOException {
+	    requirePermission("flushTable", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+	}
+	@Override
+	public void postTableFlush(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+        auditEvent("tableFlush", tableName.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
+	}
+    @Override
+    public void preTruncateTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
+        requirePermission("truncateTable", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+    }
+    @Override
+    public void postTruncateTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+        auditEvent("truncateTable", tableName.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
+    }
+	@Override
+	public void preCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
+		requireGlobalPermission("createNamespace", ns.getName(), Action.ADMIN);
+	}
+	@Override
+	public void postCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
+		if (accessController.isAudited(WILDCARD_MATCH)) {
+			auditEvent("createNamespace", ns.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
+		}
+	}
+	@Override
+	public void preDeleteNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace) throws IOException {
+		requireGlobalPermission("deleteNamespace", namespace, Action.ADMIN);
+	}
+	@Override
+	public void postDeleteNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace) throws IOException {
+		if (accessController.isAudited(WILDCARD_MATCH)) {
+			auditEvent("deleteNamespace", namespace, null, null, null, null, getActiveUser(), accessGrantedFlag);
+		}
+	}
+	@Override
+	public void preModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
+		requireGlobalPermission("modifyNamespace", ns.getName(), Action.ADMIN);
+	}
+	@Override
+	public void postModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
+		if (accessController.isAudited(WILDCARD_MATCH)) {
+			auditEvent("modifyNamespace", ns.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
+		}
+	}
+	@Override
+	public void preGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList,  List<HTableDescriptor> descriptors) throws IOException {
+		if (tableNamesList == null || tableNamesList.isEmpty()) { // If the list is empty, this is a request for all table descriptors and requires GLOBAL ADMIN privs.
+			requireGlobalPermission("getTableDescriptors", WILDCARD, Action.ADMIN);
+		} else { // Otherwise, if the requestor has ADMIN or CREATE privs for all listed tables, the request can be granted.
+			for (TableName tableName: tableNamesList) {
+				requirePermission("getTableDescriptors", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+			}
+		}
+	}
+	@Override
+	public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<HTableDescriptor> descriptors) throws IOException {
+		if (descriptors == null || descriptors.isEmpty()) { // If the list is empty, this is a request for all table descriptors and requires GLOBAL ADMIN privs.
+			auditEvent("getTableDescriptors", WILDCARD, null, null, null, null, getActiveUser(), accessGrantedFlag);
+		} else { // Otherwise, if the requestor has ADMIN or CREATE privs for all listed tables, the request can be granted.
+			for (HTableDescriptor descriptor : descriptors) {
+				auditEvent("getTableDescriptors", descriptor.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
+			}
+		}
+	}
+	@Override
+	public void preMerge(ObserverContext<RegionServerCoprocessorEnvironment> ctx, HRegion regionA, HRegion regionB) throws IOException {
+		requirePermission("mergeRegions", regionA.getTableDesc().getTableName().getName(), null, null, Action.ADMIN);
+	}
+
+	@Override
+	public void postMerge(ObserverContext<RegionServerCoprocessorEnvironment> c, HRegion regionA, HRegion regionB, HRegion mergedRegion) throws IOException {
+		auditEvent("mergeRegions", regionA.getTableDesc().getTableName().getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
 	}
 	
 	private void auditEvent(String eventName, byte[] tableName, byte[] columnFamilyName, byte[] qualifierName, byte[] row, byte[] value, User user, short accessFlag) {
