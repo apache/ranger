@@ -1669,6 +1669,9 @@ td.html-cell.renderable:last-child {
 .policy-manager table thead tr th:first-child a {
 	color: #707070;
 }
+.label-green{
+	background-color: #3ea211;
+}
 .connection-error-font {
 	font-size: 11px;
 	font-family: monospace;

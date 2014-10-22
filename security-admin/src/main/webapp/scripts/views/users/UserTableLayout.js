@@ -238,7 +238,7 @@ define(function(require){
 								if(rawValue == XAEnums.UserSource.XA_PORTAL_USER.value)
 									return '<span class="label label-success">'+XAEnums.UserTypes.USER_INTERNAL.label+'</span>';
 								else
-									return '<span class="label label-important">'+XAEnums.UserTypes.USER_EXTERNAL.label+'</span>';
+									return '<span class="label label-green">'+XAEnums.UserTypes.USER_EXTERNAL.label+'</span>';
 							}else
 								return '--';
 						}
@@ -369,7 +369,7 @@ define(function(require){
 								if(rawValue == XAEnums.GroupSource.XA_PORTAL_GROUP.value)
 									return '<span class="label label-success">'+XAEnums.GroupTypes.GROUP_INTERNAL.label+'</span>';
 								else
-									return '<span class="label label-important">'+XAEnums.GroupTypes.GROUP_EXTERNAL.label+'</span>';
+									return '<span class="label label-green">'+XAEnums.GroupTypes.GROUP_EXTERNAL.label+'</span>';
 							}else
 								return '--';
 						}
