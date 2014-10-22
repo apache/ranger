@@ -140,7 +140,7 @@ define(function(require){
 				},
 				masterKerberos : {
 					fieldClass : "hbase",
-					title : this.model.propertiesNameMap.masterKerberos+" *",
+					title : this.model.propertiesNameMap.masterKerberos,
 					editorAttrs :{'class':'stretchTextInput'}
 				},
 				rpcEngine : {
@@ -283,7 +283,7 @@ define(function(require){
 					this.fields.authentication.$el.find('label').html(this.schema.authentication.title+" *")
 //					this.schema.authentication.title = this.schema.authentication.title+" *"
 					
-					this.fields.masterKerberos.editor.validators = ['required'];
+//					this.fields.masterKerberos.editor.validators = ['required'];
 					this.fields.securityAuthentication.editor.validators = ['required'];
 					this.fields.zookeeperProperty.editor.validators = ['required'];
 					this.fields.zookeeperQuorum.editor.validators = ['required'];
