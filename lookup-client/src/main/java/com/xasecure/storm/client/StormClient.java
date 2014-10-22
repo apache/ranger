@@ -101,10 +101,10 @@ public class StormClient {
 					response = webResource.accept(EXPECTED_MIME_TYPE)
 						    .get(ClientResponse.class);
 					
-					LOG.info("getTopologyList():calling " + url);
+					LOG.debug("getTopologyList():calling " + url);
 					
 					if (response != null) {
-						LOG.info("getTopologyList():response.getStatus()= " + response.getStatus());	
+						LOG.debug("getTopologyList():response.getStatus()= " + response.getStatus());	
 						if (response.getStatus() == 200) {
 							String jsonString = response.getEntity(String.class);
 							Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -113,8 +113,11 @@ public class StormClient {
 								if (topologyListResponse.getTopologyList() != null) {
 									for(Topology topology : topologyListResponse.getTopologyList()) {
 										String toplogyName = topology.getName() ;
+										LOG.debug("getTopologyList():Found topology " + toplogyName);
+										LOG.debug("getTopologyList():topology Name=[" + topology.getName() + "], topologyNameMatching=[" + topologyNameMatching + "]");
 										if (toplogyName != null) {
-											if (topologyNameMatching == null || topologyNameMatching.isEmpty() || FilenameUtils.wildcardMatch(topology.getName(), topologyNameMatching)) {
+											if (topologyNameMatching == null || topologyNameMatching.isEmpty() || FilenameUtils.wildcardMatch(topology.getName(), topologyNameMatching + "*")) {
+												LOG.debug("getTopologyList():Adding topology " + toplogyName);
 												lret.add(toplogyName) ;
 											}
 										}
@@ -122,9 +125,10 @@ public class StormClient {
 								}
 							}
 						} else{
-							LOG.info("getTopologyList():response.getStatus()= " + response.getStatus() + " for URL " + url);	
+							LOG.info("getTopologyList():response.getStatus()= " + response.getStatus() + " for URL " + url + ", so returning null list");	
 							String jsonString = response.getEntity(String.class);
 							LOG.info(jsonString);
+							lret = null;
 						}
 					} else {
 						String msgDesc = "Unable to get a valid response for "
@@ -228,7 +232,7 @@ public class StormClient {
 					throw hdpException;
 				}
                 
-				LOG.info("getAppConfigurationEntry():" + kerberosOptions.get("principal"));
+				LOG.debug("getAppConfigurationEntry():" + kerberosOptions.get("principal"));
 				
                 return new AppConfigurationEntry[] { KERBEROS_PWD_SAVER, KEYTAB_KERBEROS_LOGIN };
 			}
@@ -242,15 +246,15 @@ public class StormClient {
 
 		try {
 		    subject = new Subject();
-			LOG.info("executeUnderKerberos():user=" + userName + ",pass=");
-			LOG.info("executeUnderKerberos():Creating config..");
+			LOG.debug("executeUnderKerberos():user=" + userName + ",pass=");
+			LOG.debug("executeUnderKerberos():Creating config..");
 			MySecureClientLoginConfiguration loginConf = new MySecureClientLoginConfiguration(
 					userName, password);
-			LOG.info("executeUnderKerberos():Creating Context..");
+			LOG.debug("executeUnderKerberos():Creating Context..");
 			loginContext = new LoginContext("hadoop-keytab-kerberos", subject,
 					null, loginConf);
 			
-			LOG.info("executeUnderKerberos():Logging in..");
+			LOG.debug("executeUnderKerberos():Logging in..");
 			loginContext.login();
 
 			Subject loginSubj = loginContext.getSubject();
@@ -305,7 +309,7 @@ public class StormClient {
 				connectionProperties);
 		strList = getStormResources(stormClient, "");
 
-		if (strList != null && (strList.size() != 0)) {
+		if (strList != null) {
 			connectivityStatus = true;
 		}
 
@@ -370,6 +374,9 @@ public class StormClient {
 						: topologyName.trim();
 				resultList = stormClient
 						.getTopologyList(finalTopologyNameMatching);
+				if (resultList != null) {
+					LOG.debug("Returning list of " + resultList.size() + " topologies");
+				}
 			}
 		} catch (HadoopException he) {
 			throw he;

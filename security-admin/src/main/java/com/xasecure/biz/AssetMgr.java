@@ -3183,6 +3183,9 @@ public class AssetMgr extends AssetMgrBase {
         VXStringList ret = null ;
         XXAsset asset = xADaoManager.getXXAsset().findByAssetName(dataSourceName);
         String config = asset.getConfig() ;
+        if(!stringUtil.isEmpty(config)){
+			config=xAssetService.getConfigWithDecryptedPassword(config);
+		}
         if (config == null || config.trim().isEmpty()) {
                 logger.error("Connection Config is empty");
 
