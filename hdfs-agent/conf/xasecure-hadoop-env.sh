@@ -20,8 +20,8 @@ if [ -f ${HADOOP_HOME}/conf/argus-security.xml ]
 then
 	echo "$0" | grep -q beeswax_server.sh > /dev/null 2>&1
 	if [ $? -ne 0 ]
-	then
-		XASECURE_AGENT_PATH="`ls -1 ${HADOOP_HOME}/lib/hdfs-agent-*.jar | head -1`"
+	then 
+		XASECURE_AGENT_PATH="`ls -1 ${HADOOP_HOME}/lib/hdfs-agent-*.jar > /dev/null | head -1`"
 		if [ -f "${XASECURE_AGENT_PATH}" ]
 		then
 	    	if [ "${XASECURE_INIT}" != "0" ]
@@ -35,8 +35,6 @@ then
 	                	export HADOOP_SECONDARYNAMENODE_OPTS=" ${XASECURE_AGENT_OPTS} ${HADOOP_SECONDARYNAMENODE_OPTS}"
 	        	fi
 	    	fi
-		else
-	    	echo "ERROR: XASecure Agent is not located at [${XASECURE_AGENT_PATH}]. Exiting ..."
-		fi
+	    fi
 	fi
 fi
