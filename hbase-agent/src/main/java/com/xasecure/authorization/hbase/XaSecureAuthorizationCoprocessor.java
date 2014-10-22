@@ -898,30 +898,6 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 		auditEvent("regionOffline", regionInfo.getTable().getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
 	}
 	@Override
-	public void preRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
-		requirePermission("preRollLogWriterRequest", null, Permission.Action.ADMIN);
-	}
-	@Override
-	public void postRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
-		auditEvent("preRollLogWriterRequest", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void preTableFlush(final ObserverContext<MasterCoprocessorEnvironment> ctx, final TableName tableName) throws IOException {
-	    requirePermission("flushTable", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
-	}
-	@Override
-	public void postTableFlush(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        auditEvent("tableFlush", tableName.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-    @Override
-    public void preTruncateTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-        requirePermission("truncateTable", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
-    }
-    @Override
-    public void postTruncateTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        auditEvent("truncateTable", tableName.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-    }
-	@Override
 	public void preCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
 		requireGlobalPermission("createNamespace", ns.getName(), Action.ADMIN);
 	}
