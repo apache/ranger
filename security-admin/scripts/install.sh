@@ -1301,6 +1301,47 @@ execute_java_patches(){
 			fi
 		done
 	fi
+	if [ "${DB_FLAVOR}" == "ORACLE" ]
+	then
+		dt=`date '+%s'`
+		tempFile=/tmp/sql_${dt}_$$.sql
+		javaFiles=`ls -1 $app_home/WEB-INF/classes/com/xasecure/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
+		for javaPatch in ${javaFiles}
+		do
+			if test -f "$app_home/WEB-INF/classes/com/xasecure/patch/$javaPatch"; then
+				className=$(basename "$javaPatch" .class)
+				version=`echo ${className} | awk -F'_' '{ print $2 }'`
+				if [ "${version}" != "" ]
+				then
+					result2=`${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}" <<< "select version from x_db_version_h where version = '${version}' and active = 'Y';"`
+					#does not contains record so insert
+					if test "${result2#*$version}" == "$result2"
+					then
+						log "[I] patch ${javaPatch} is being applied..";
+						msg=`java -cp "$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+						check_ret_status $? "Unable to apply patch:$javaPatch"
+						touch ${tempFile}
+						echo >> ${tempFile}
+						echo "insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by) values ( X_DB_VERSION_H_SEQ.nextval,'${version}', sysdate, '${db_user}', sysdate, '${db_user}') ;" >> ${tempFile}
+						result3=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}"  @$tempFile`
+						if test "${result3#*$strError}" == "$result3"
+						then
+							log "[I] patch ${javaPatch} has been applied!!";
+						else
+							log "[E] patch ${javaPatch} has failed."
+						fi
+						rm -f ${tempFile}
+					elif test "${result2#*$strError}" != "$result2"
+					then
+						log "[E] - patch [${javaPatch}] could not applied. Skipping ..."
+						exit 1
+					else
+						log "[I] - patch [${javaPatch}] is already applied. Skipping ..."
+					fi
+				fi
+			fi
+		done
+	fi
 }
 init_logfiles
 log " --------- Running XASecure PolicyManager Web Application Install Script --------- "
