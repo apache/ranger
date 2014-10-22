@@ -850,46 +850,46 @@ public class AppConstants extends XACommonEnums {
 		if(label.equalsIgnoreCase("Allow")) {
 			return AppConstants.XA_PERM_TYPE_ALLOW; //XA_PERM_TYPE_ALLOW
 		}
-		if(label.equalsIgnoreCase("Submit Topology")) {
+		if(label.equalsIgnoreCase("submitTopology")) {
 			return AppConstants.XA_PERM_TYPE_SUBMIT_TOPOLOGY; //XA_PERM_TYPE_SUBMIT_TOPOLOGY
 		}
-		if(label.equalsIgnoreCase("File Upload")) {
+		if(label.equalsIgnoreCase("fileUpload")) {
 			return AppConstants.XA_PERM_TYPE_FILE_UPLOAD; //XA_PERM_TYPE_FILE_UPLOAD
 		}
-		if(label.equalsIgnoreCase("Get Nimbus Conf")) {
+		if(label.equalsIgnoreCase("getNimbusConf")) {
 			return AppConstants.XA_PERM_TYPE_GET_NIMBUS; //XA_PERM_TYPE_GET_NIMBUS
 		}
-		if(label.equalsIgnoreCase("Get Cluster Info")) {
+		if(label.equalsIgnoreCase("getClusterInfo")) {
 			return AppConstants.XA_PERM_TYPE_GET_CLUSTER_INFO; //XA_PERM_TYPE_GET_CLUSTER_INFO
 		}
-		if(label.equalsIgnoreCase("File Download")) {
+		if(label.equalsIgnoreCase("fileDownload")) {
 			return AppConstants.XA_PERM_TYPE_FILE_DOWNLOAD; //XA_PERM_TYPE_FILE_DOWNLOAD
 		}
-		if(label.equalsIgnoreCase("Kill Topology")) {
+		if(label.equalsIgnoreCase("killTopology")) {
 			return AppConstants.XA_PERM_TYPE_KILL_TOPOLOGY; //XA_PERM_TYPE_KILL_TOPOLOGY
 		}
-		if(label.equalsIgnoreCase("Rebalance")) {
+		if(label.equalsIgnoreCase("rebalance")) {
 			return AppConstants.XA_PERM_TYPE_REBALANCE; //XA_PERM_TYPE_REBALANCE
 		}
-		if(label.equalsIgnoreCase("Activate")) {
+		if(label.equalsIgnoreCase("activate")) {
 			return AppConstants.XA_PERM_TYPE_ACTIVATE; //XA_PERM_TYPE_ACTIVATE
 		}
-		if(label.equalsIgnoreCase("Deactivate")) {
+		if(label.equalsIgnoreCase("deactivate")) {
 			return AppConstants.XA_PERM_TYPE_DEACTIVATE; //XA_PERM_TYPE_DEACTIVATE
 		}
-		if(label.equalsIgnoreCase("Get Topology Conf")) {
+		if(label.equalsIgnoreCase("getTopologyConf")) {
 			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY_CONF; //XA_PERM_TYPE_GET_TOPOLOGY_CONF
 		}
-		if(label.equalsIgnoreCase("Get Topology")) {
+		if(label.equalsIgnoreCase("getTopology")) {
 			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY; //XA_PERM_TYPE_GET_TOPOLOGY
 		}
-		if(label.equalsIgnoreCase("Get User Topology")) {
+		if(label.equalsIgnoreCase("getUserTopology")) {
 			return AppConstants.XA_PERM_TYPE_GET_USER_TOPOLOGY; //XA_PERM_TYPE_GET_USER_TOPOLOGY
 		}
-		if(label.equalsIgnoreCase("Get Topology Info")) {
+		if(label.equalsIgnoreCase("getTopologyInfo")) {
 			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY_INFO; //XA_PERM_TYPE_GET_TOPOLOGY_INFO
 		}
-		if(label.equalsIgnoreCase("Upload New Credential")) {
+		if(label.equalsIgnoreCase("uploadNewCredentials")) {
 			return AppConstants.XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL; //XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL
 		}
 		return 0;
