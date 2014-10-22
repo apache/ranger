@@ -212,6 +212,8 @@ public class HBaseClient extends BaseClient {
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check xa_portal.log for more info.";
 		
+		subj = getLoginSubject();
+		
 		if (subj != null) {
 			ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
 			try {
@@ -295,6 +297,8 @@ public class HBaseClient extends BaseClient {
 		final String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check xa_portal.log for more info.";
+		
+		subj = getLoginSubject();
 		if (subj != null) {
 			ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
 			try {
@@ -384,7 +388,7 @@ public class HBaseClient extends BaseClient {
 					
 				}) ;
 			} catch (SecurityException se) {
-				String msgDesc = "getTableList: Unable to connect to HBase Server instance, "
+				String msgDesc = "getColumnFamilyList: Unable to connect to HBase Server instance, "
 						+ "current thread might not be able set the context ClassLoader.";
 				HadoopException hdpException = new HadoopException(msgDesc, se);
 				hdpException.generateResponseDataMap(false, getMessage(se),
