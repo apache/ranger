@@ -174,11 +174,13 @@ public class XaSecureStormAuthorizer implements IAuthorizer {
 			LOG.error("XaSecureStormAuthorizer found this exception", t);
 		}
 		finally {
-			LOG.info("[req "+ aRequestContext.requestID()+ "] Access "
-	                + " from: [" + aRequestContext.remoteAddress() + "]"
-	                + " user: [" + aRequestContext.principal() + "],"  
-	                + " op:   [" + aOperationName + "],"
-	                + "topology: [" + topologyName + "] => returns [" + accessAllowed + "]") ;
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("[req "+ aRequestContext.requestID()+ "] Access "
+		                + " from: [" + aRequestContext.remoteAddress() + "]"
+		                + " user: [" + aRequestContext.principal() + "],"  
+		                + " op:   [" + aOperationName + "],"
+		                + "topology: [" + topologyName + "] => returns [" + accessAllowed + "]") ;
+			}
 		}
 		
 		return accessAllowed ;
