@@ -1,6 +1,1 @@
-	<security:ldap-authentication-provider 
-   		user-dn-pattern="${xa_ldap_userDNpattern}" 
-    		group-search-base="${xa_ldap_groupSearchBase}" 
-    		group-search-filter="${xa_ldap_groupSearchFilter}"  
-    		group-role-attribute="${xa_ldap_groupRoleAttribute}"    		
-    	/>  
+<security:authentication-provider ref="ldapAuthProvider" />
