@@ -4,6 +4,7 @@
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
         <dependent-module archiveName="lookup-client-0.4.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/lookup-client/lookup-client">
             <dependency-type>uses</dependency-type>
         </dependent-module>
@@ -12,5 +13,6 @@
         </dependent-module>
         <property name="context-root" value="security-admin-web"/>
         <property name="java-output-path" value="/security-admin-web/target/classes"/>
+        <property name="component.exclusion.patterns" value="WEB-INF/lib/spring-*.SEC03.jar,WEB-INF/lib/spring-*.RC3.jar,WEB-INF/lib/spring-2.*.jar"/>
     </wb-module>
 </project-modules>

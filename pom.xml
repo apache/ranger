@@ -270,7 +270,6 @@
             </configuration>
         </plugin>
 	
-	
     </plugins>
     
     </pluginManagement>
@@ -279,10 +278,32 @@
     <plugin>
       <groupId>org.apache.rat</groupId>
       <artifactId>apache-rat-plugin</artifactId>
-      <version>0.8</version>
+      <version>0.11</version>
+      <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+      </executions>
       <configuration>
         <excludeSubProjects>false</excludeSubProjects>
         <excludes>
+
+		  <exclude>**/dependency-reduced-pom.xml</exclude>
+          <exclude>**/infinispan-cache-config.xml</exclude>
+          <exclude>**/.htaccess</exclude>
+          <exclude>**/robots.txt</exclude>
+          <exclude>**/MANIFEST.MF</exclude>
+          <exclude>**/bootstrap.min.js</exclude>
+          <exclude>**/server.crt</exclude>
+          <exclude>**/jaas.conf</exclude>
+
+          <exclude>**/src/main/webapp/fonts/**</exclude>
+          <exclude>**/src/main/webapp/libs/**</exclude>
+          <exclude>**/contextXML/*</exclude>
+
           <exclude>.git/**</exclude>
           <exclude>.pc/**</exclude>
           <exclude>debian/**</exclude>
@@ -296,6 +317,7 @@
           <exclude>**/.classpath/**</exclude>
           <exclude>**/*.iml</exclude>
           <exclude>**/target/**</exclude>
+          <exclude>**/bin/**</exclude>
           <exclude>**/CHANGES</exclude>
           <exclude>**/ISSUES</exclude>
           <exclude>**/patchprocess/**</exclude>
@@ -305,6 +327,7 @@
           <exclude>*.patch</exclude>
           <exclude>atlassian-ide-plugin.xml</exclude>
         </excludes>
+
       </configuration>
     </plugin>
 
