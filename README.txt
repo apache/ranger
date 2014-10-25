@@ -5,7 +5,8 @@ Build Process
 
 2. On the root folder, please execute the following Maven command:
 
-	$ mvn clean compile package assembly:assembly
+	$ mvn clean compile package install assembly:assembly
+    $ mvn eclipse:eclipse
 
 3. After the above build command execution, you should see the following TAR files in the target folder:
 
@@ -16,6 +17,13 @@ Build Process
 	argus-<version-number>-hbase-agent.tar
 	argus-<version-number>-knox-agent.tar
 	argus-<version-number>-storm-agent.tar
+
+Importing Argus Project into Eclipse
+====================================
+
+1. Create a Eclipse workspace called 'argus'
+
+2. Import maven project from the root directory where argus source code is downloaded (and build)
 
 
 Deployment Process
