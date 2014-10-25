@@ -291,64 +291,18 @@
         <excludeSubProjects>false</excludeSubProjects>
         <excludes>
 
-          <exclude>**/src/main/java/com/xasecure/utils/install/PasswordGenerator.java</exclude>
-
-          <exclude>**/scripts/install.sh</exclude>
-          <exclude>**/src/main/resources/META-INF/infinispan-cache-config.xml</exclude>
-          <exclude>**/src/main/webapp/.htaccess</exclude>
-          <exclude>**/src/main/webapp/robots.txt</exclude>
-
-          <exclude>**/dependency-reduced-pom.xml</exclude>
-          <exclude>**/src/main/resources/META-INF/MANIFEST.MF</exclude>
-
-          <exclude>**/src/main/webapp/META-INF/MANIFEST.MF</exclude>
-          <exclude>**/src/main/webapp/META-INF/robots.txt</exclude>
-
-          <exclude>**/src/main/webapp/themejs/1.3.0/bootstrap.min.js</exclude>
-
-          <exclude>**/src/main/webapp/WEB-INF/log4j.xml.prod</exclude>
-
-          <exclude>**/unixauth-config/server.crt</exclude>
-          <exclude>src/main/assembly/hbase-agent.xml</exclude>
-          <exclude>src/main/assembly/hdfs-agent.xml</exclude>
-          <exclude>src/main/assembly/hive-agent.xml</exclude>
-          <exclude>src/main/assembly/knox-agent.xml</exclude>
-          <exclude>src/main/assembly/storm-agent.xml</exclude>
-
-          <exclude>**/conf/xasecure-audit-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-policymgr-ssl-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-storm-security-changes.cfg</exclude>
-
-          <exclude>**/conf/jaas.conf</exclude>
-
-          <exclude>**/scripts/initd</exclude>
-          <exclude>**/scripts/xapolicymgr</exclude>
-
-          <exclude>**/conf/hbase-site-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-audit-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-hbase-security-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-policymgr-ssl-changes.cfg</exclude>
-          <exclude>**/disable-conf/hbase-site-changes.cfg</exclude>
-          <exclude>**/conf/hdfs-site-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-audit-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-hdfs-security-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-policymgr-ssl-changes.cfg</exclude>
-
-          <exclude>**/dependency-reduced-pom.xml</exclude>
-          <exclude>**/src/main/resources/META-INF/MANIFEST.MF</exclude>
-
-          <exclude>**/conf/hiveserver2-site-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-audit-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-hive-security-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-policymgr-ssl-changes.cfg</exclude>
-          <exclude>**/disable-conf/hiveserver2-site-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-audit-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-knox-security-changes.cfg</exclude>
-          <exclude>**/conf/xasecure-policymgr-ssl-changes.cfg</exclude>
+		  <exclude>**/dependency-reduced-pom.xml</exclude>
+          <exclude>**/infinispan-cache-config.xml</exclude>
+          <exclude>**/.htaccess</exclude>
+          <exclude>**/robots.txt</exclude>
+          <exclude>**/MANIFEST.MF</exclude>
+          <exclude>**/bootstrap.min.js</exclude>
+          <exclude>**/server.crt</exclude>
+          <exclude>**/jaas.conf</exclude>
 
           <exclude>**/src/main/webapp/fonts/**</exclude>
           <exclude>**/src/main/webapp/libs/**</exclude>
-          <exclude>**/src/main/webapp/META-INF/contextXML/*</exclude>
+          <exclude>**/contextXML/*</exclude>
 
           <exclude>.git/**</exclude>
           <exclude>.pc/**</exclude>
@@ -363,6 +317,7 @@
           <exclude>**/.classpath/**</exclude>
           <exclude>**/*.iml</exclude>
           <exclude>**/target/**</exclude>
+          <exclude>**/bin/**</exclude>
           <exclude>**/CHANGES</exclude>
           <exclude>**/ISSUES</exclude>
           <exclude>**/patchprocess/**</exclude>
