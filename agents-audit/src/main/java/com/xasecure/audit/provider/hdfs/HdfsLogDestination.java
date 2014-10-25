@@ -199,39 +199,37 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 			try {
 				if(fileSystem.exists(pathLogfile)) { // file already exists. either append to the file or write to a new file
 					if(mIsAppend) {
+						mLogger.info("HdfsLogDestination.openFile(): opening file for append " + mHdfsFilename);
+
 						ostream = fileSystem.append(pathLogfile);
 					} else {
-						mHdfsFilename =  getNewFilename(mHdfsFilename, fileSystem);
+						mHdfsFilename = getNewFilename(mHdfsFilename, fileSystem);
 						pathLogfile   = new Path(mHdfsFilename);
 					}
 				}
 
 				// if file does not exist or if mIsAppend==false, create the file
 				if(ostream == null) {
+					mLogger.info("HdfsLogDestination.openFile(): opening file for write " + mHdfsFilename);
+
+					createParents(pathLogfile, fileSystem);
 					ostream = fileSystem.create(pathLogfile, bOverwrite);
 				}
 			} catch(IOException excp) {
-				// append may not be supported by the filesystem; or the file might already be open by another application. Try a different filename - with current timestamp
-				mHdfsFilename =  getNewFilename(mHdfsFilename, fileSystem);
+				// append may not be supported by the filesystem; or the file might already be open by another application. Try a different filename
+				String failedFilename = mHdfsFilename;
+
+				mHdfsFilename = getNewFilename(mHdfsFilename, fileSystem);
 				pathLogfile   = new Path(mHdfsFilename);
+
+				mLogger.info("HdfsLogDestination.openFile(): failed in opening file " + failedFilename + ". Will try opening " + mHdfsFilename);
 			}
 
 			if(ostream == null){
-				ostream = fileSystem.create(pathLogfile, bOverwrite);
-			}
-		} catch(IOException ex) {
-			Path parentPath = pathLogfile.getParent();
+				mLogger.info("HdfsLogDestination.openFile(): opening file for write " + mHdfsFilename);
 
-			try {
-				if(parentPath != null&& fileSystem != null && !fileSystem.exists(parentPath) && fileSystem.mkdirs(parentPath)) {
-					ostream = fileSystem.create(pathLogfile, bOverwrite);
-				} else {
-					logException("HdfsLogDestination.openFile() failed", ex);
-				}
-			} catch (IOException e) {
-				logException("HdfsLogDestination.openFile() failed", e);
-			} catch (Throwable e) {
-				mLogger.warn("HdfsLogDestination.openFile() failed", e);
+				createParents(pathLogfile, fileSystem);
+				ostream = fileSystem.create(pathLogfile, bOverwrite);
 			}
 		} catch(Throwable ex) {
 			mLogger.warn("HdfsLogDestination.openFile() failed", ex);
@@ -266,6 +264,8 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 		if(writer != null) {
 			try {
+				mLogger.info("HdfsLogDestination.closeFile(): closing file " + mHdfsFilename);
+
 				writer.flush();
 				writer.close();
 			} catch(IOException excp) {
@@ -324,6 +324,20 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	    }
 
 	    return writer;
+	}
+	
+	private void createParents(Path pathLogfile, FileSystem fileSystem) {
+		try {
+			Path parentPath = pathLogfile != null ? pathLogfile.getParent() : null;
+
+			if(parentPath != null && fileSystem != null && !fileSystem.exists(parentPath)) {
+				 fileSystem.mkdirs(parentPath);
+			}
+		} catch (IOException e) {
+			logException("HdfsLogDestination.createParents() failed", e);
+		} catch (Throwable e) {
+			mLogger.warn("HdfsLogDestination.createParents() failed", e);
+		}
 	}
 
     private String getNewFilename(String fileName, FileSystem fileSystem) {

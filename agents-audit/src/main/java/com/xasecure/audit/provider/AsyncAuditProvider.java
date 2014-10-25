@@ -19,8 +19,10 @@
 
  package com.xasecure.audit.provider;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,29 +36,35 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 
 	private static int sThreadCount = 0;
 
-	private Queue<AuditEventBase> mQueue = new LinkedList<AuditEventBase>();
-	private Thread mThread = null;
-	private boolean mStopThread = false;
-	private int mMaxQueueSize = -1;
-	private int mResumeQueueSize = 0;
-	private int mMaxFlushInterval = -1;
-	private long mFirstDropTime = 0;
-	private int mDropCount = 0;
+	private BlockingQueue<AuditEventBase> mQueue = null;
+	private Thread  mThread           = null;
+	private boolean mStopThread       = false;
+	private String  mName             = null;
+	private int     mMaxQueueSize     = -1;
+	private int     mMaxFlushInterval = -1;
 
 	// Summary of logs handled
-	private long lifeTimeLogCount = 0; // Total count, including drop count
-	private long lifeTimeDropCount = 0;
-	private long intervalLogCount = 0;
-	private long intervalDropCount = 0;
-	private long lastIntervalLogTime = System.currentTimeMillis();
-	private int intervalLogDurationMS = 60000;
+	private AtomicLong lifeTimeInLogCount  = new AtomicLong(0); // Total count, including drop count
+	private AtomicLong lifeTimeOutLogCount = new AtomicLong(0);
+	private AtomicLong lifeTimeDropCount   = new AtomicLong(0);
+	private AtomicLong intervalInLogCount  = new AtomicLong(0);
+	private AtomicLong intervalOutLogCount = new AtomicLong(0);
+	private AtomicLong intervalDropCount   = new AtomicLong(0);
+	private long lastIntervalLogTime   = System.currentTimeMillis();
+	private int  intervalLogDurationMS = 60000;
 
-	public AsyncAuditProvider() {
-		LOG.info("AsyncAuditProvider: creating..");
+	public AsyncAuditProvider(String name, int maxQueueSize, int maxFlushInterval) {
+		LOG.info("AsyncAuditProvider(" + name + "): creating..");
+
+		mName             = name;
+		mMaxQueueSize     = maxQueueSize;
+		mMaxFlushInterval = maxFlushInterval;
+
+		mQueue = new ArrayBlockingQueue<AuditEventBase>(mMaxQueueSize);
 	}
 
-	public AsyncAuditProvider(AuditProvider provider) {
-		LOG.info("AsyncAuditProvider: creating..");
+	public AsyncAuditProvider(String name, int maxQueueSize, int maxFlushInterval, AuditProvider provider) {
+		this(name, maxQueueSize, maxFlushInterval);
 
 		addAuditProvider(provider);
 	}
@@ -67,18 +75,6 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 
 	public void setIntervalLogDurationMS(int intervalLogDurationMS) {
 		this.intervalLogDurationMS = intervalLogDurationMS;
-	}
-
-	public void setMaxQueueSize(int maxQueueSize) {
-		mMaxQueueSize = maxQueueSize > 0 ? maxQueueSize : Integer.MAX_VALUE;
-	}
-
-	public void setMaxFlushInterval(int maxFlushInterval) {
-		mMaxFlushInterval = maxFlushInterval;
-	}
-
-	public void setResumeQueueSize(int resumeQueueSize) {
-		mResumeQueueSize = resumeQueueSize > 0 ? resumeQueueSize : 0;
 	}
 
 	@Override
@@ -101,10 +97,6 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 	@Override
 	public void stop() {
 		mStopThread = true;
-
-		synchronized (mQueue) {
-			mQueue.notify();
-		}
 
 		try {
 			mThread.join();
@@ -151,120 +143,81 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 	}
 
 	private void queueEvent(AuditEventBase event) {
-		synchronized (mQueue) {
+		// Increase counts
+		lifeTimeInLogCount.incrementAndGet();
+		intervalInLogCount.incrementAndGet();
 
-			// Running this within synchronized block to avoid multiple
-			// logs from different threads
-			// Running this upfront so the log interval is fixed
-
-			// Log summary if required
-			logSummaryIfRequired();
-
-			// Increase counts
-			lifeTimeLogCount++;
-			intervalLogCount++;
-
-			int maxQueueSize = mMaxQueueSize;
-
-			// if we are currently dropping, don't resume until the queue size
-			// goes to mResumeQueueSize
-			if (mDropCount > 0) {
-				maxQueueSize = (mResumeQueueSize < maxQueueSize ? mResumeQueueSize
-						: (int) (maxQueueSize / 100.0 * 80)) + 1;
-			}
-
-			if (mQueue.size() < maxQueueSize) {
-				mQueue.add(event);
-				mQueue.notify();
-
-				if (mDropCount > 0) {
-					String pauseDuration = getTimeDiffStr(System.currentTimeMillis(),
-							mFirstDropTime);
-
-					LOG.warn("AsyncAuditProvider: resumes after dropping "
-							+ mDropCount + " audit logs in past "
-							+ pauseDuration);
-
-					mDropCount = 0;
-					mFirstDropTime = 0;
-				}
-			} else {
-				if (mDropCount == 0) {
-					mFirstDropTime = System.currentTimeMillis();
-	
-					LOG.warn("AsyncAuditProvider: queue size is at max ("
-							+ mMaxQueueSize
-							+ "); further audit logs will be dropped until queue clears up");
-				}
-
-				mDropCount++;
-				lifeTimeDropCount++;
-				intervalDropCount++;
-			}
-
+		if(! mQueue.offer(event)) {
+			lifeTimeDropCount.incrementAndGet();
+			intervalDropCount.incrementAndGet();
 		}
 	}
 
 	private AuditEventBase dequeueEvent() {
-		synchronized (mQueue) {
-			while (mQueue.isEmpty()) {
-				if (mStopThread) {
-					return null;
-				}
-				try {
-					// Log summary if required
-					logSummaryIfRequired();
+		AuditEventBase ret = mQueue.poll();
 
-					if (mMaxFlushInterval > 0 && isFlushPending()) {
-						long timeTillNextFlush = getTimeTillNextFlush();
+		try {
+			while(ret == null && !mStopThread) {
+				logSummaryIfRequired();
 
-						if (timeTillNextFlush <= 0) {
-							return null; // force flush
-						}
+				if (mMaxFlushInterval > 0 && isFlushPending()) {
+					long timeTillNextFlush = getTimeTillNextFlush();
 
-						mQueue.wait(timeTillNextFlush);
-					} else {
-						// Let's wake up for summary logging
-						long waitTime = intervalLogDurationMS
-								- (System.currentTimeMillis() - lastIntervalLogTime);
-						waitTime = waitTime <= 0 ? intervalLogDurationMS
-								: waitTime;
-						mQueue.wait(waitTime);
+					if (timeTillNextFlush <= 0) {
+						break; // force flush
 					}
-				} catch (InterruptedException excp) {
-					LOG.error("AsyncAuditProvider.dequeueEvent()", excp);
 
-					return null;
+					ret = mQueue.poll(timeTillNextFlush, TimeUnit.MILLISECONDS);
+				} else {
+					// Let's wake up for summary logging
+					long waitTime = intervalLogDurationMS - (System.currentTimeMillis() - lastIntervalLogTime);
+					waitTime = waitTime <= 0 ? intervalLogDurationMS : waitTime;
+
+					ret = mQueue.poll(waitTime, TimeUnit.MILLISECONDS);
 				}
 			}
-
-			AuditEventBase ret = mQueue.remove();
-
-			return ret;
+		} catch(InterruptedException excp) {
+			LOG.error("AsyncAuditProvider.dequeueEvent()", excp);
 		}
+
+		if(ret != null) {
+			lifeTimeOutLogCount.incrementAndGet();
+			intervalOutLogCount.incrementAndGet();
+		}
+
+		logSummaryIfRequired();
+
+		return ret;
 	}
 
 	private void logSummaryIfRequired() {
-		if (System.currentTimeMillis() - lastIntervalLogTime > intervalLogDurationMS) {
-			// Log interval and life time summary
+		long intervalSinceLastLog = System.currentTimeMillis() - lastIntervalLogTime;
 
-			if (intervalLogCount > 0) {
-				LOG.info("AsyncAuditProvider: Interval="
-						+ formatTimeForLog(intervalLogDurationMS) + ", logs="
-						+ intervalLogCount + ", dropped=" + intervalDropCount);
-				LOG.info("AsyncAuditProvider: Process Lifetime, logs="
-						+ lifeTimeLogCount + ", dropped=" + lifeTimeDropCount);
+		if (intervalSinceLastLog > intervalLogDurationMS) {
+			if (intervalInLogCount.get() > 0 || intervalOutLogCount.get() > 0 ) {
+				long queueSize = mQueue.size();
+
+				LOG.info("AsyncAuditProvider-stats:" + mName + ": past " + formatTimeForLog(intervalSinceLastLog)
+						+ ": inLogs=" + intervalInLogCount.get()
+						+ ", outLogs=" + intervalOutLogCount.get()
+						+ ", dropped=" + intervalDropCount.get()
+						+ ", currentQueueSize=" + queueSize);
+
+				LOG.info("AsyncAuditProvider-stats:" + mName + ": process lifetime"
+						+ ": inLogs=" + lifeTimeInLogCount.get()
+						+ ", outLogs=" + lifeTimeOutLogCount.get()
+						+ ", dropped=" + lifeTimeDropCount.get());
 			}
+
 			lastIntervalLogTime = System.currentTimeMillis();
-			intervalLogCount = 0;
-			intervalDropCount = 0;
+			intervalInLogCount.set(0);
+			intervalOutLogCount.set(0);
+			intervalDropCount.set(0);
 		}
 	}
 
 	private boolean isEmpty() {
-		synchronized (mQueue) {
-			return mQueue.isEmpty();
-		}
+		return mQueue.isEmpty();
 	}
 
 	private void waitToComplete(long maxWaitSeconds) {

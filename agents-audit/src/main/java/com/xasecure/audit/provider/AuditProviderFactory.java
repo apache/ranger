@@ -49,7 +49,6 @@ public class AuditProviderFactory {
 	private static final String AUDIT_DB_IS_ENABLED_PROP            = "xasecure.audit.db.is.enabled" ;
 	private static final String AUDIT_DB_IS_ASYNC_PROP              = "xasecure.audit.db.is.async";
 	private static final String AUDIT_DB_MAX_QUEUE_SIZE_PROP        = "xasecure.audit.db.async.max.queue.size" ;
-	private static final String AUDIT_DB_RESUME_QUEUE_SIZE__PROP    = "xasecure.audit.db.async.resume.queue.size" ;
 	private static final String AUDIT_DB_MAX_FLUSH_INTERVAL_PROP    = "xasecure.audit.db.async.max.flush.interval.ms";
 	private static final String AUDIT_DB_BATCH_SIZE_PROP            = "xasecure.audit.db.batch.size" ;
 	private static final String AUDIT_DB_RETRY_MIN_INTERVAL_PROP    = "xasecure.audit.db.config.retry.min.interval.ms";
@@ -61,14 +60,12 @@ public class AuditProviderFactory {
 	private static final String AUDIT_HDFS_IS_ENABLED_PROP          = "xasecure.audit.hdfs.is.enabled";
 	private static final String AUDIT_HDFS_IS_ASYNC_PROP            = "xasecure.audit.hdfs.is.async";
 	private static final String AUDIT_HDFS_MAX_QUEUE_SIZE_PROP      = "xasecure.audit.hdfs.async.max.queue.size" ;
-	private static final String AUDIT_HDFS_RESUME_QUEUE_SIZE__PROP  = "xasecure.audit.hdfs.async.resume.queue.size" ;
 	private static final String AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP  = "xasecure.audit.hdfs.async.max.flush.interval.ms";
 	private static final String AUDIT_HDFS_CONFIG_PREFIX_PROP       = "xasecure.audit.hdfs.config.";
 
 	private static final String AUDIT_LOG4J_IS_ENABLED_PROP         = "xasecure.audit.log4j.is.enabled" ;
 	private static final String AUDIT_LOG4J_IS_ASYNC_PROP           = "xasecure.audit.log4j.is.async";
 	private static final String AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.log4j.async.max.queue.size" ;
-	private static final String AUDIT_LOG4J_RESUME_QUEUE_SIZE__PROP = "xasecure.audit.log4j.async.resume.queue.size" ;
 	private static final String AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.log4j.async.max.flush.interval.ms";
 
 	private static AuditProviderFactory sFactory;
@@ -155,18 +152,10 @@ public class AuditProviderFactory {
 			DbAuditProvider dbProvider = new DbAuditProvider(jpaInitProperties, dbBatchSize, dbRetryMinIntervalMs);
 			
 			if(isAuditToDbAsync) {
-				AsyncAuditProvider asyncProvider = new AsyncAuditProvider();
-
 				int maxQueueSize     = getIntProperty(props, AUDIT_DB_MAX_QUEUE_SIZE_PROP, -1);
 				int maxFlushInterval = getIntProperty(props, AUDIT_DB_MAX_FLUSH_INTERVAL_PROP, -1);
-				int resumeQueueSize  = getIntProperty(props, AUDIT_DB_RESUME_QUEUE_SIZE__PROP, 0);
 
-
-				asyncProvider.setMaxQueueSize(maxQueueSize);
-				asyncProvider.setMaxFlushInterval(maxFlushInterval);
-				asyncProvider.setResumeQueueSize(resumeQueueSize);
-				
-				asyncProvider.addAuditProvider(dbProvider);
+				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("DbAuditProvider", maxQueueSize, maxFlushInterval, dbProvider);
 				
 				providers.add(asyncProvider);
 			} else {
@@ -186,17 +175,10 @@ public class AuditProviderFactory {
 			boolean isAuditToHdfsAsync = getBooleanProperty(props, AUDIT_HDFS_IS_ASYNC_PROP, false);
 
 			if(isAuditToHdfsAsync) {
-				AsyncAuditProvider asyncProvider = new AsyncAuditProvider();
-
 				int maxQueueSize     = getIntProperty(props, AUDIT_HDFS_MAX_QUEUE_SIZE_PROP, -1);
 				int maxFlushInterval = getIntProperty(props, AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP, -1);
-				int resumeQueueSize  = getIntProperty(props, AUDIT_HDFS_RESUME_QUEUE_SIZE__PROP, 0);
 
-				asyncProvider.setMaxQueueSize(maxQueueSize);
-				asyncProvider.setMaxFlushInterval(maxFlushInterval);
-				asyncProvider.setResumeQueueSize(resumeQueueSize);
-				
-				asyncProvider.addAuditProvider(hdfsProvider);
+				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("HdfsAuditProvider", maxQueueSize, maxFlushInterval, hdfsProvider);
 				
 				providers.add(asyncProvider);
 			} else {
@@ -210,17 +192,10 @@ public class AuditProviderFactory {
 			boolean isAuditToLog4jAsync = getBooleanProperty(props, AUDIT_LOG4J_IS_ASYNC_PROP, false);
 			
 			if(isAuditToLog4jAsync) {
-				AsyncAuditProvider asyncProvider = new AsyncAuditProvider();
-
 				int maxQueueSize     = getIntProperty(props, AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP, -1);
 				int maxFlushInterval = getIntProperty(props, AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP, -1);
-				int resumeQueueSize  = getIntProperty(props, AUDIT_LOG4J_RESUME_QUEUE_SIZE__PROP, 0);
 
-				asyncProvider.setMaxQueueSize(maxQueueSize);
-				asyncProvider.setMaxFlushInterval(maxFlushInterval);
-				asyncProvider.setResumeQueueSize(resumeQueueSize);
-				
-				asyncProvider.addAuditProvider(log4jProvider);
+				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("Log4jAuditProvider", maxQueueSize, maxFlushInterval, log4jProvider);
 				
 				providers.add(asyncProvider);
 			} else {

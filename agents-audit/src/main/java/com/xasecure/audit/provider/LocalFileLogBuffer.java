@@ -193,7 +193,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 				try {
 					writer.write(msg + MiscUtil.LINE_SEPARATOR);
 					
-					if(mFileBufferSizeBytes <= 0) {
+					if(mFileBufferSizeBytes == 0) {
 						writer.flush();
 					}
 	

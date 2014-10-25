@@ -33,6 +33,14 @@ public class Log4jTracer implements DebugTracer {
 		mLogger.debug(msg, excp);
 	}
 
+	public void info(String msg) {
+		mLogger.info(msg);
+	}
+
+	public void info(String msg, Throwable excp) {
+		mLogger.info(msg, excp);
+	}
+
 	public void warn(String msg) {
 		mLogger.warn(msg);
 	}
