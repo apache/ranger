@@ -32,6 +32,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class DateUtil {    
 
+    private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
+
     public Date getDateFromNow(int days) {
     	return getDateFromNow(days, 0, 0);
     }   
@@ -78,7 +80,7 @@ public class DateUtil {
 		try{
 			Calendar local=Calendar.getInstance();
 		    int offset = local.getTimeZone().getOffset(local.getTimeInMillis());
-		    GregorianCalendar utc = new GregorianCalendar(TimeZone.getTimeZone("GMT+0"));
+		    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
 		    utc.setTimeInMillis(local.getTimeInMillis());
 		    utc.add(Calendar.MILLISECOND, -offset);
 		    return utc.getTime();
@@ -94,7 +96,7 @@ public class DateUtil {
 		try{
 			Calendar local=Calendar.getInstance();
 		    int offset = local.getTimeZone().getOffset(epoh);
-		    GregorianCalendar utc = new GregorianCalendar(TimeZone.getTimeZone("GMT+0"));
+		    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
 		    utc.setTimeInMillis(epoh);
 		    utc.add(Calendar.MILLISECOND, -offset);	   
 		    return utc.getTime();
