@@ -132,7 +132,9 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	private static final String WILDCARD = "*";
 	private static final byte[] WILDCARD_MATCH = "*".getBytes();
 	
-	private RegionCoprocessorEnvironment regionEnv;
+    private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
+
+    private RegionCoprocessorEnvironment regionEnv;
 	private Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
 	
 	private HBaseAccessController accessController = HBaseAccessControllerFactory.getInstance();
@@ -1009,7 +1011,7 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	public static Date getUTCDate() {
 		Calendar local=Calendar.getInstance();
 	    int offset = local.getTimeZone().getOffset(local.getTimeInMillis());
-	    GregorianCalendar utc = new GregorianCalendar(TimeZone.getTimeZone("GMT+0"));
+	    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
 	    utc.setTimeInMillis(local.getTimeInMillis());
 	    utc.add(Calendar.MILLISECOND, -offset);
 	    return utc.getTime();

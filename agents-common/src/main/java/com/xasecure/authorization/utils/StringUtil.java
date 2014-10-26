@@ -28,7 +28,9 @@ import java.util.TimeZone;
 
 public class StringUtil {
 
-	public static boolean equals(String str1, String str2) {
+    private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
+
+    public static boolean equals(String str1, String str2) {
 		boolean ret = false;
 
 		if(str1 == null) {
@@ -264,7 +266,7 @@ public class StringUtil {
 	    Calendar local  = Calendar.getInstance();
 	    int      offset = local.getTimeZone().getOffset(local.getTimeInMillis());
 
-	    GregorianCalendar utc = new GregorianCalendar(TimeZone.getTimeZone("GMT+0"));
+	    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
 
 	    utc.setTimeInMillis(local.getTimeInMillis());
 	    utc.add(Calendar.MILLISECOND, -offset);

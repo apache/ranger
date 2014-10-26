@@ -150,7 +150,7 @@ public class HdfsFileAppender extends FileAppender {
      /**
      * The gmtTimeZone is used only in computeCheckPeriod() method.
      */
-    private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT");
+    private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
     
 	private static final String DEFAULT_HDFSCHECKINTERVAL = "2min";
 
