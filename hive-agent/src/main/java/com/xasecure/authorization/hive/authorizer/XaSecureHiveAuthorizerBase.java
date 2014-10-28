@@ -24,17 +24,21 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.DisallowTransformHook;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext.CLIENT_TYPE;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClientFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrincipal;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeInfo;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveRoleGrant;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.SettableConfigUpdater;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import com.xasecure.authorization.hive.XaHiveAccessContext;
@@ -97,10 +101,23 @@ public abstract class XaSecureHiveAuthorizerBase implements HiveAuthorizer {
 	}
 
 	@Override
-	public void applyAuthorizationConfigPolicy(HiveConf conf) {
+	public void applyAuthorizationConfigPolicy(HiveConf hiveConf) throws HiveAuthzPluginException {
 		LOG.debug("XaSecureHiveAuthorizerBase.applyAuthorizationConfigPolicy()");
 
-		// Nothing to do here for Argus Hive authorizer
+		// from SQLStdHiveAccessController.applyAuthorizationConfigPolicy()
+		if (mSessionContext != null && mSessionContext.getClientType() == CLIENT_TYPE.HIVESERVER2) {
+			// Configure PREEXECHOOKS with DisallowTransformHook to disallow transform queries
+			String hooks = hiveConf.getVar(ConfVars.PREEXECHOOKS).trim();
+			if (hooks.isEmpty()) {
+				hooks = DisallowTransformHook.class.getName();
+			} else {
+				hooks = hooks + "," + DisallowTransformHook.class.getName();
+			}
+
+			hiveConf.setVar(ConfVars.PREEXECHOOKS, hooks);
+
+			SettableConfigUpdater.setHiveConfWhiteList(hiveConf);
+		}
 	}
 
 	/**
