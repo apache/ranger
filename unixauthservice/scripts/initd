@@ -14,23 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-INSTALL_BASE=/usr/bin
+START_SCRIPT=/usr/bin/ranger-usersync-start
+STOP_SCRIPT=/usr/bin/ranger-usersync-stop
 
-MOD_NAME=ranger-usersync
-
-MOD_DIR=${INSTALL_BASE}/${MOD_NAME}
-
-if [ -L ${MOD_DIR} ]
-then
-	case $1 in
+case $1 in
 	start)
-		cd ${MOD_DIR} ; ./start.sh
+		${START_SCRIPT}
 		;;
 	stop)
-		cd ${MOD_DIR} ; ./stop.sh
+		${STOP_SCRIPT}
 		;;
 	*)
 		echo "Invalid argument [$1]; Only start|stop are supported."
 		exit 1
 	esac
-fi
