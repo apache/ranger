@@ -65,7 +65,7 @@
         <unpack>false</unpack>
      </binaries>
      <includes>
-	<include>security_plugins.plugins-installer:plugins-installer</include>
+	<include>security_plugins.ranger-plugins-installer:ranger-plugins-installer</include>
      </includes>
     </moduleSet>
   </moduleSets> 	
