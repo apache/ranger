@@ -32,7 +32,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 
 	<!-- TEMP ADD START-->
 	<security:http pattern="/test/social_login.jsp" security="none" />
-	<!-- TEMP ADD END -->	
+	<!-- TEMP ADD END -->
 	<security:http pattern="/login.jsp" security="none" />
 	<security:http pattern="/ms_version.jsp" security="none" />
 	<security:http pattern="/userRegistration.jsp" security="none" />
@@ -46,7 +46,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<security:http pattern="/images/**" security="none" />
 	<security:http pattern="/service/registration" security="none" />
 	<security:http pattern="/service/users/firstnames" security="none" />
-	<security:http pattern="/components/globalize/**" security="none" />	
+	<security:http pattern="/components/globalize/**" security="none" />
 	<security:http pattern="/resetPassword.jsp" security="none" />
 	<security:http pattern="/captcha/**" security="none" />
 	<security:http pattern="/service/registration/**" security="none" />
@@ -54,41 +54,41 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<security:http pattern="/test/**" security="none" />
 	<security:http pattern="/test.html" security="none" />
 	<security:http pattern="/loadInit.html" security="none" />
-	<security:http pattern="/service/documents/result/**" security="none" />	
+	<security:http pattern="/service/documents/result/**" security="none" />
 	<security:http pattern="/service/assets/policyList/*" security="none"/>
 	<security:http pattern="/service/assets/resources/grant" security="none"/>
 	<security:http pattern="/service/assets/resources/revoke" security="none"/>
 	<security:http pattern="/service/users/default" security="none"/>
 	<security:http pattern="/service/xusers/groups/**" security="none"/>
 	<security:http pattern="/service/xusers/users/*" security="none"/>
-	<security:http pattern="/service/xusers/groupusers/*" security="none"/>	
+	<security:http pattern="/service/xusers/groupusers/*" security="none"/>
 
 	<security:http auto-config="false" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
 		<security:session-management session-fixation-protection="newSession" />
 		<!--   security:remember-me user-service-ref="userService" key="REMEMBER_ME_PASSWORD"/ -->
-		
+
 		<!-- Restricted URLs to admin-->
 		<security:intercept-url pattern="/service/crud/**" access="ROLE_SYS_ADMIN" />
 		<security:intercept-url pattern="/service/users/activations/**" access="ROLE_SYS_ADMIN" />
-		
+
 		<!-- Allow annoymous access -->
 		<security:intercept-url pattern="/service/general/feedbacks" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 
 		<!-- give read access to lesson api -->
 		<security:intercept-url pattern="/service/lesson/**" access="IS_AUTHENTICATED_ANONYMOUSLY" method="GET"/>
-		
+
 		<!-- Restricted URLs to only authenticated users-->
-		<security:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY, IS_AUTHENTICATED_REMEMBERED" />		
-	
+		<security:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY, IS_AUTHENTICATED_REMEMBERED" />
+
 		<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
 		<!--  security:custom-filter before="ANONYMOUS_FILTER" ref="rememberMeFilter" / -->
-		<security:custom-filter position="LAST" ref="userContextFormationFilter"/>		
-		
+		<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
+
 		<security:access-denied-handler error-page="/public/failedLogin.jsp?access_denied=1"/>
 		<security:logout delete-cookies="JSESSIONID, xa_rmc" logout-url="/logout.html" success-handler-ref="customLogoutSuccessHandler" />
 		<http-basic entry-point-ref="authenticationProcessingFilterEntryPoint"/>
 	</security:http>
-	
+
 	<beans:bean id="customAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<beans:property name="allowIfAllAbstainDecisions" value="false"/>
 		<beans:property name="decisionVoters">
@@ -98,14 +98,14 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 			</beans:list>
 		</beans:property>
 	</beans:bean>
-	
+
 	<beans:bean id="customUsernamePasswordAuthenticationFilter" class="com.xasecure.security.web.filter.XAUsernamePasswordAuthenticationFilter">
 		<beans:property name="authenticationManager" ref="authenticationManager"/>
 		<beans:property name="authenticationSuccessHandler" ref="ajaxAuthSuccessHandler"/>
 		<beans:property name="authenticationFailureHandler"	ref="ajaxAuthFailureHandler"/>
-  		<!--  beans:property name="rememberMeServices" ref="rememberMeServices"/ -->
+		<!--  beans:property name="rememberMeServices" ref="rememberMeServices"/ -->
 	</beans:bean>
-	
+
 	<beans:bean id="authenticationProcessingFilterEntryPoint" class="com.xasecure.security.web.authentication.XAAuthenticationEntryPoint">
 		<beans:property name="loginFormUrl" value="/login.jsp"/>
 		<beans:property name="forceHttps" value="false"/>
@@ -114,14 +114,14 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<beans:bean id="ajaxAuthSuccessHandler" class="com.xasecure.security.web.authentication.XAAuthSuccessHandler">
 		<beans:property name="defaultTargetUrl" value="/dashboard.jsp"/>
 	</beans:bean>
-	
+
 	<beans:bean id="ajaxAuthFailureHandler" class="com.xasecure.security.web.authentication.XAAuthFailureHandler">
 		<beans:property name="defaultFailureUrl" value="/public/failedLogin.jsp?login_error=1"/>
 	</beans:bean>
-	
+
 	<beans:bean id="customLogoutSuccessHandler" class="com.xasecure.security.web.authentication.CustomLogoutSuccessHandler">
 	</beans:bean>
-	
+
 	<beans:bean id="userContextFormationFilter" class="com.xasecure.security.web.filter.XASecurityContextFormationFilter"/>
 
 	<security:jdbc-user-service id="userService" data-source-ref="defaultDataSource"
@@ -136,17 +136,17 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 		<!-- AD_SEC_SETTINGS_START -->
 		<!-- AD_SEC_SETTINGS_END-->
 		<!-- LDAP_SEC_SETTINGS_START -->
-		<!-- LDAP_SEC_SETTINGS_END -->	
+		<!-- LDAP_SEC_SETTINGS_END -->
 		<!-- UNIX_SEC_SETTINGS_START -->
 		<!-- UNIX_SEC_SETTINGS_END -->
 		<security:authentication-provider user-service-ref="userService">
-		 	<security:password-encoder hash="md5">
-		 		<security:salt-source user-property="username"/>
-		 	</security:password-encoder>
+			<security:password-encoder hash="md5">
+				<security:salt-source user-property="username"/>
+			</security:password-encoder>
 		</security:authentication-provider>
 		<!--   security:authentication-provider ref="rememberMeAuthenticationProvider"/ -->
 	</security:authentication-manager>
-		
+
 	<!-- UNIX_BEAN_SETTINGS_START -->
 	<!-- UNIX_BEAN_SETTINGS_END -->
 	<!-- AD_BEAN_SETTINGS_START -->
@@ -154,20 +154,20 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<!-- LDAP_BEAN_SETTINGS_START -->
 	<!-- LDAP_BEAN_SETTINGS_END -->
 	<!--  beans:bean id="rememberMeFilter" class="com.xasecure.security.web.filter.MyRememberMeFilter">
-  		<beans:property name="rememberMeServices" ref="rememberMeServices"/>
-  		<beans:property name="authenticationManager" ref="authenticationManager" />
+		<beans:property name="rememberMeServices" ref="rememberMeServices"/>
+		<beans:property name="authenticationManager" ref="authenticationManager" />
 	</beans:bean>
 	<beans:bean id="rememberMeServices" class=
         "org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices">
-    	<beans:property name="userDetailsService" ref="userService"/>
-    	<beans:property name="cookieName" value="xa_rmc" />
-    	<beans:property name="key" value="REMEMBER_ME_PASSWORD"/>
-    	<beans:property name="alwaysRemember" value="true"/>
+	<beans:property name="userDetailsService" ref="userService"/>
+	<beans:property name="cookieName" value="xa_rmc" />
+	<beans:property name="key" value="REMEMBER_ME_PASSWORD"/>
+	<beans:property name="alwaysRemember" value="true"/>
 	</beans:bean>
 
 	<beans:bean id="rememberMeAuthenticationProvider" class=
         "org.springframework.security.authentication.RememberMeAuthenticationProvider">
-    	<beans:property name="key" value="REMEMBER_ME_PASSWORD"/>
+	<beans:property name="key" value="REMEMBER_ME_PASSWORD"/>
 	</beans:bean -->
 	<beans:bean id="securityEventListener" class ="com.xasecure.security.listener.SpringEventListener"/>
 </beans:beans>

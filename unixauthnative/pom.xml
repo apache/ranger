@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>org.apache.argus</groupId>
-      <artifactId>argus</artifactId>
+      <groupId>org.apache.ranger</groupId>
+      <artifactId>ranger</artifactId>
       <version>0.4.0</version>
       <relativePath>..</relativePath>
     </parent>

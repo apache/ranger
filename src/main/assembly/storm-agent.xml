@@ -16,12 +16,12 @@
   limitations under the License.
 -->
 <assembly>
-  <id>storm-agent</id> 
+  <id>storm-plugin</id>
   <formats>
-     <format>tar</format>
+     <format>tar.gz</format>
 	 <format>zip</format>
   </formats>
-  <baseDirectory>${project.name}-${project.version}-storm-agent</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-storm-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>
@@ -64,19 +64,19 @@
                         <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                         <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
                         <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
-						<include>security_agents.agents-cred:agents-cred</include>
-						<include>org.apache.argus:credentialbuilder</include>
+						<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
+						<include>org.apache.ranger:credentialbuilder</include>
                     </includes>
             </dependencySet>
         </dependencySets>
         <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
-		<include>security_agents.agents-audit:agents-audit</include>
-		<include>security_agents.agents-cred:agents-cred</include>
-		<include>security_agents.agents-impl:agents-impl</include>
-		<include>security_agents.agents-common:agents-common</include>
-		<include>security_agents.storm-agent:storm-agent</include>
+		<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
+		<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
+		<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl</include>
+		<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
+		<include>security_plugins.ranger-storm-plugin:ranger-storm-plugin</include>
      </includes>
     </moduleSet>
     <moduleSet>
@@ -86,8 +86,8 @@
         <unpack>false</unpack>
      </binaries>
      <includes>
-		<include>security_agents.agents-installer:agents-installer</include>
-		<include>org.apache.argus:credentialbuilder</include>
+		<include>security_plugins.ranger-plugins-installer:ranger-plugins-installer</include>
+		<include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
    </moduleSets>
@@ -121,18 +121,18 @@
         <fileMode>444</fileMode>
     </fileSet>
   </fileSets>
-  <!-- enable/disable script for agent -->
+  <!-- enable/disable script for Plugin -->
  <files>
     <file>
 		<source>agents-common/scripts/enable-agent.sh</source>
         <outputDirectory>/</outputDirectory>
-        <destName>enable-storm-agent.sh</destName>
+        <destName>enable-storm-plugin.sh</destName>
         <fileMode>755</fileMode>
     </file>
     <file>
 		<source>agents-common/scripts/enable-agent.sh</source>
         <outputDirectory>/</outputDirectory>
-        <destName>disable-storm-agent.sh</destName>
+        <destName>disable-storm-plugin.sh</destName>
         <fileMode>755</fileMode>
     </file>
     <file>

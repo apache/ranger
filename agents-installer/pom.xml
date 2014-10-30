@@ -17,14 +17,14 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>security_agents.agents-installer</groupId>
-  <artifactId>agents-installer</artifactId>
+  <groupId>security_plugins.ranger-plugins-installer</groupId>
+  <artifactId>ranger-plugins-installer</artifactId>
   <name>Installer Support Component</name>
-  <description>Security Agents Installer</description>
+  <description>Security Plugins Installer</description>
   <packaging>jar</packaging>
   <parent>
-     <groupId>org.apache.argus</groupId>
-     <artifactId>argus</artifactId>
+     <groupId>org.apache.ranger</groupId>
+     <artifactId>ranger</artifactId>
      <version>0.4.0</version>
      <relativePath>..</relativePath>
   </parent>

@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-INSTALL_BASE=/usr/lib
+INSTALL_BASE=/usr/bin
 
-MOD_NAME=argus-usersync
+MOD_NAME=ranger-usersync
 
 MOD_DIR=${INSTALL_BASE}/${MOD_NAME}
 

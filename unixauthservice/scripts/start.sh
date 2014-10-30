@@ -15,16 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-echo "Starting UnixAuthenticationService"
-export JAVA_HOME=
-export PATH=$JAVA_HOME/bin:$PATH
-
 cdir=`dirname $0`
 
 if [ "${cdir}" = "." ]
 then
 	cdir=`pwd`
+fi
+
+echo "Starting UnixAuthenticationService"
+#export JAVA_HOME=
+. ${cdir}/conf/java_home.sh
+
+if [ "$JAVA_HOME" != "" ]; then
+	export PATH=$JAVA_HOME/bin:$PATH
 fi
 
 pidf=${cdir}/.mypid
@@ -33,14 +36,14 @@ pidf=${cdir}/.mypid
 logdir=`grep -P '^[ \t]*logdir[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | tr '\t' ' ' | sed -e 's:[ ]::g'`
 if [ ! -d ${logdir} ]
 then
-	logdir=/var/log/argus-usersync
+	logdir=/var/log/ranger-usersync
 fi
 cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf"
 [ ! -d ${logdir} ] && mkdir -p ${logdir}
 ${cdir}/stop.sh
 cd ${cdir}
 umask 0077
-nohup java -Dlogdir="${logdir}" -cp "${cp}" com.xasecure.authentication.UnixAuthenticationService > ${logdir}/auth.log 2>&1 &
+nohup java -Dproc_rangerusersync -Dlogdir="${logdir}" -cp "${cp}" com.xasecure.authentication.UnixAuthenticationService > ${logdir}/auth.log 2>&1 &
 echo $! >  ${pidf}
 sleep 5
 port=`grep  '^[ ]*authServicePort' ${cdir}/conf/unixauthservice.properties | awk -F= '{ print $2 }' | awk '{ print $1 }'`

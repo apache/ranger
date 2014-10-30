@@ -18,7 +18,7 @@
 <assembly>
   <id>admin</id> 
   <formats>
-     <format>tar</format>
+     <format>tar.gz</format>
      <format>zip</format>
   </formats>
   <baseDirectory>${project.name}-${project.version}-admin</baseDirectory>
@@ -28,11 +28,22 @@
     <moduleSet>
      <binaries>
         <includeDependencies>false</includeDependencies>
-        <unpack>false</unpack>
-        <outputDirectory>/war</outputDirectory>
+        <unpack>true</unpack>
+        <outputDirectory>/ews/webapp</outputDirectory>
      </binaries>
      <includes>
-		<include>org.apache.argus:security-admin-web</include>
+		<include>org.apache.ranger:security-admin-web</include>
+     </includes>
+    </moduleSet>
+
+    <moduleSet>
+     <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>/ews/ranger_jaas</outputDirectory>
+     </binaries>
+     <includes>
+		<include>org.apache.ranger:unixauthclient</include>
      </includes>
     </moduleSet>
 
@@ -54,7 +65,7 @@
         </dependencySets>
      </binaries>
      <includes>
-	    <include>org.apache.argus:embededwebserver</include>
+	    <include>org.apache.ranger:embededwebserver</include>
      </includes>
     </moduleSet>
 
@@ -87,7 +98,7 @@
         </dependencySets>
      </binaries>
      <includes>
-	    <include>org.apache.argus:credentialbuilder</include>
+	    <include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
 
@@ -100,7 +111,7 @@
 		<fileMode>544</fileMode>
 	</fileSet>
 	<fileSet>
-		<outputDirectory>/ews</outputDirectory>
+		<outputDirectory>/ews/webapp/WEB-INF/classes/conf.dist</outputDirectory>
 		<directory>embededwebserver/conf</directory>
 		<fileMode>700</fileMode>
 	</fileSet>
@@ -113,6 +124,7 @@
 		<directory>security-admin/unixauth-config</directory>
 		<fileMode>544</fileMode>
 	</fileSet>
+
 	<fileSet>
 		<outputDirectory>/db</outputDirectory>
 		<directory>security-admin/db</directory>
@@ -130,8 +142,9 @@
 		<outputDirectory>/</outputDirectory>
 		<directory>security-admin/scripts</directory>
 		<includes>
-			<include>install.sh</include>
+			<include>setup.sh</include>
 			<include>setup_authentication.sh</include>
+			<include>set_globals.sh</include>
 		</includes>
 		<fileMode>544</fileMode>
 	</fileSet>
@@ -152,5 +165,11 @@
 		</includes>
 		<fileMode>444</fileMode>
 	</fileSet>
+   <fileSet>
+        <directory>security-admin/src/bin</directory>
+        <outputDirectory>bin</outputDirectory>
+        <fileMode>0755</fileMode>
+        <directoryMode>0755</directoryMode>
+    </fileSet>
   </fileSets>
 </assembly>

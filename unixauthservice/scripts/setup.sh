@@ -16,11 +16,22 @@
 # limitations under the License.
 
 
-INSTALL_BASE=/usr/lib
+INSTALL_BASE=$PWD
 
-MOD_NAME="argus-usersync"
+MOD_NAME="ranger-usersync"
+unix_user=ranger
+unix_group=ranger
 
-INSTALL_DIR=${INSTALL_BASE}/${MOD_NAME}
+INSTALL_DIR=${INSTALL_BASE}
+
+curDt=`date '+%Y%m%d%H%M%S'`
+LOGFILE=setup.log.$curDt
+
+log() {
+   local prefix="[$(date +%Y/%m/%d\ %H:%M:%S)]: "
+   echo "${prefix} $@" >> $LOGFILE
+   echo "${prefix} $@"
+}
 
 # Ensure that the user is root
 MY_ID=`id -u`
@@ -41,8 +52,49 @@ fi
 # Grep configuration properties from install.properties
 cdir=`dirname $0`
 
+check_ret_status(){
+	if [ $1 -ne 0 ]; then
+		log "[E] $2";
+		exit 1;
+	fi
+}
+
+check_ret_status_for_groupadd(){
+# 9 is the response if the group exists
+    if [ $1 -ne 0 ] && [ $1 -ne 9 ]; then
+        log "[E] $2";
+        exit 1;
+    fi
+}
+
+setup_unix_user_group(){
+
+	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group}";
+
+	groupadd ${unix_group}
+	check_ret_status_for_groupadd $? "Creating group ${unix_group} failed"
+
+	id -u ${unix_user} > /dev/null 2>&1
+
+	if [ $? -ne 0 ]
+	then
+	    log "[I] Creating new user and adding to group";
+        useradd ${unix_user} -g ${unix_group} -m
+		check_ret_status $? "useradd ${unix_user} failed"
+	else
+	    log "[I] User already exists, adding it to group";
+	    usermod -g ${unix_group} ${unix_user}
+	fi
+
+	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group} DONE";
+}
+
+setup_unix_user_group
+
 POLICY_MGR_URL=`grep '^[ \t]*POLICY_MGR_URL[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
 MIN_UNIX_USER_ID_TO_SYNC=`grep '^[ \t]*MIN_UNIX_USER_ID_TO_SYNC[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+
+logdir=`grep '^[ \t]*logdir[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
 
 SYNC_SOURCE=`grep '^[ \t]*SYNC_SOURCE[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
 
@@ -85,7 +137,7 @@ SYNC_LDAP_BIND_KEYSTOREPATH=`grep '^[ \t]*CRED_KEYSTORE_FILENAME[ \t]*=' ${cdir}
 SYNC_LDAP_BIND_ALIAS=ldap.bind.password
 
 if [ "${SYNC_INTERVAL}" != "" ]
-then 
+then
     SYNC_INTERVAL=$((${SYNC_INTERVAL}*60*1000))
 else
     SYNC_INTERVAL=$((5*60*1000))
@@ -162,8 +214,9 @@ then
   if [[ "${SYNC_LDAP_BIND_ALIAS}" != ""  && "${SYNC_LDAP_BIND_KEYSTOREPATH}" != "" ]]
   then
     echo "Storing ldap bind password in credential store"
-   	mkdir -p `dirname "${SYNC_LDAP_BIND_KEYSTOREPATH}"`
-		java -cp "./lib/*" com.hortonworks.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
+	mkdir -p `dirname "${SYNC_LDAP_BIND_KEYSTOREPATH}"`
+	chown ${unix_user}:${unix_group} `dirname "${SYNC_LDAP_BIND_KEYSTOREPATH}"`
+	java -cp "./lib/*" com.hortonworks.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
     SYNC_LDAP_BIND_PASSWORD="_"
   fi
 
@@ -171,89 +224,81 @@ fi
 # END Grep configuration properties from install.properties
 
 
-# Back up previously installed service folder and copy new service folder
-if [ "${cdir}" = "." ]
-then
-  cdir=`pwd`
-fi
-
-cdirname=`basename ${cdir}`
-
-if [ "${cdirname}" != "" ]
-then
-
-  #dstdir=${INSTALL_BASE}/${cdirname}
-
-  VERSION=`cat ${PWD}/version`
-
-  if [ "${VERSION}" != "" ]
-  then
-    dstdir=${INSTALL_BASE}/${MOD_NAME}-${VERSION}
-  else
-    dstdir=${INSTALL_BASE}/${MOD_NAME}-`date '+%Y%m%d%H%M%S'`
-  fi
-
-  if [ -d ${dstdir} ]
-  then
-    ctime=`date '+%s'`
-    archive_dir=${dstdir}-${ctime}
-    mkdir -p ${archive_dir}
-    mv ${dstdir} ${archive_dir}    
-  fi
-
-  mkdir ${dstdir}
-  
-  if [ -L ${INSTALL_DIR} ]
-    then
-        rm -f ${INSTALL_DIR}
-    fi
-
-  ln -s  ${dstdir} ${INSTALL_DIR}
-
-  (cd ${cdir} ; find . -print | cpio -pdm ${dstdir}) 
-  (cd ${cdir} ; cat start.sh | sed -e "s|[ \t]*JAVA_HOME=| JAVA_HOME=${JAVA_HOME}|" > ${dstdir}/start.sh)
-
-fi
-# END Back up previously installed service folder and copy new service folder
-
 # Create $INSTALL_DIR/conf/unixauthservice.properties
+
+if [ ! -d conf ]; then
+    #Manual install
+    log "[I] Copying conf.dist conf"
+    mkdir conf
+    cp conf.dist/* conf
+	chown ${unix_user}:${unix_group} conf
+	chmod 750 conf
+fi
+
+echo "export JAVA_HOME=${JAVA_HOME}" > conf/java_home.sh
+chmod a+rx conf/java_home.sh
+
+if [ ! -d logs ]; then
+    #Manual install
+    log "[I] Creating logs folder"
+    mkdir logs
+    chown ${unix_user}:${unix_group} logs
+fi
+
+
 CFG_FILE="${cdir}/conf/unixauthservice.properties"
-NEW_CFG_FILE=${dstdir}/conf/unixauthservice.properties
+NEW_CFG_FILE=${cdir}/conf/unixauthservice.properties.tmp
 
 if [ -f  ${CFG_FILE}  ]
 then
-  sed \
-    -e "s|^\( *usergroupSync.policymanager.baseURL *=\).*|\1 ${POLICY_MGR_URL}|" \
-    -e "s|^\( *usergroupSync.unix.minUserId *=\).*|\1 ${MIN_UNIX_USER_ID_TO_SYNC}|" \
-    -e "s|^\( *usergroupSync.sleepTimeInMillisBetweenSyncCycle *=\).*|\1 ${SYNC_INTERVAL}|" \
-    -e "s|^\( *usergroupSync.source.impl.class *=\).*|\1 ${SYNC_SOURCE}|" \
-    -e "s|^\( *ldapGroupSync.ldapUrl *=\).*|\1 ${SYNC_LDAP_URL}|" \
-    -e "s|^\( *ldapGroupSync.ldapBindDn *=\).*|\1 ${SYNC_LDAP_BIND_DN}|" \
-    -e "s|^\( *ldapGroupSync.ldapBindPassword *=\).*|\1 ${SYNC_LDAP_BIND_PASSWORD}|" \
-    -e "s|^\( *ldapGroupSync.ldapBindKeystore *=\).*|\1 ${SYNC_LDAP_BIND_KEYSTOREPATH}|" \
-    -e "s|^\( *ldapGroupSync.ldapBindAlias *=\).*|\1 ${SYNC_LDAP_BIND_ALIAS}|" \
-    -e "s|^\( *ldapGroupSync.userSearchBase *=\).*|\1 ${SYNC_LDAP_USER_SEARCH_BASE}|" \
-    -e "s|^\( *ldapGroupSync.userSearchScope *=\).*|\1 ${SYNC_LDAP_USER_SEARCH_SCOPE}|" \
-    -e "s|^\( *ldapGroupSync.userObjectClass *=\).*|\1 ${SYNC_LDAP_USER_OBJECT_CLASS}|" \
-    -e "s%^\( *ldapGroupSync.userSearchFilter *=\).*%\1 ${SYNC_LDAP_USER_SEARCH_FILTER}%" \
-    -e "s|^\( *ldapGroupSync.userNameAttribute *=\).*|\1 ${SYNC_LDAP_USER_NAME_ATTRIBUTE}|" \
-    -e "s|^\( *ldapGroupSync.userGroupNameAttribute *=\).*|\1 ${SYNC_LDAP_USER_GROUP_NAME_ATTRIBUTE}|" \
-    -e "s|^\( *ldapGroupSync.username.caseConversion *=\).*|\1 ${SYNC_LDAP_USERNAME_CASE_CONVERSION}|" \
-    -e "s|^\( *ldapGroupSync.groupname.caseConversion *=\).*|\1 ${SYNC_LDAP_GROUPNAME_CASE_CONVERSION}|" \
-    ${CFG_FILE} > ${NEW_CFG_FILE}
+    sed \
+	-e "s|^\( *usergroupSync.policymanager.baseURL *=\).*|\1 ${POLICY_MGR_URL}|" \
+	-e "s|^\( *usergroupSync.unix.minUserId *=\).*|\1 ${MIN_UNIX_USER_ID_TO_SYNC}|" \
+	-e "s|^\( *usergroupSync.sleepTimeInMillisBetweenSyncCycle *=\).*|\1 ${SYNC_INTERVAL}|" \
+	-e "s|^\( *usergroupSync.source.impl.class *=\).*|\1 ${SYNC_SOURCE}|" \
+	-e "s|^\( *ldapGroupSync.ldapUrl *=\).*|\1 ${SYNC_LDAP_URL}|" \
+	-e "s|^\( *ldapGroupSync.ldapBindDn *=\).*|\1 ${SYNC_LDAP_BIND_DN}|" \
+	-e "s|^\( *ldapGroupSync.ldapBindPassword *=\).*|\1 ${SYNC_LDAP_BIND_PASSWORD}|" \
+	-e "s|^\( *ldapGroupSync.ldapBindKeystore *=\).*|\1 ${SYNC_LDAP_BIND_KEYSTOREPATH}|" \
+	-e "s|^\( *ldapGroupSync.ldapBindAlias *=\).*|\1 ${SYNC_LDAP_BIND_ALIAS}|" \
+	-e "s|^\( *ldapGroupSync.userSearchBase *=\).*|\1 ${SYNC_LDAP_USER_SEARCH_BASE}|" \
+	-e "s|^\( *ldapGroupSync.userSearchScope *=\).*|\1 ${SYNC_LDAP_USER_SEARCH_SCOPE}|" \
+	-e "s|^\( *ldapGroupSync.userObjectClass *=\).*|\1 ${SYNC_LDAP_USER_OBJECT_CLASS}|" \
+	-e "s%^\( *ldapGroupSync.userSearchFilter *=\).*%\1 ${SYNC_LDAP_USER_SEARCH_FILTER}%" \
+	-e "s|^\( *ldapGroupSync.userNameAttribute *=\).*|\1 ${SYNC_LDAP_USER_NAME_ATTRIBUTE}|" \
+	-e "s|^\( *ldapGroupSync.userGroupNameAttribute *=\).*|\1 ${SYNC_LDAP_USER_GROUP_NAME_ATTRIBUTE}|" \
+	-e "s|^\( *ldapGroupSync.username.caseConversion *=\).*|\1 ${SYNC_LDAP_USERNAME_CASE_CONVERSION}|" \
+	-e "s|^\( *ldapGroupSync.groupname.caseConversion *=\).*|\1 ${SYNC_LDAP_GROUPNAME_CASE_CONVERSION}|" \
+	-e "s|^\( *logdir *=\).*|\1 ${logdir}|" \
+	${CFG_FILE} > ${NEW_CFG_FILE}
+
+    echo "<${logdir}> ${CFG_FILE} > ${NEW_CFG_FILE}"
 else
-  echo "ERROR: Required file, not found: ${CFG_FILE}, Aborting installation"
-  exit 8
+    echo "ERROR: Required file, not found: ${CFG_FILE}, Aborting installation"
+    exit 8
 fi
+
+mv ${cdir}/conf/unixauthservice.properties ${cdir}/conf/unixauthservice.properties.${curDt}
+mv ${cdir}/conf/unixauthservice.properties.tmp ${cdir}/conf/unixauthservice.properties
+
 #END Create $INSTALL_DIR/conf/unixauthservice.properties
+
+#Update native exe
+#ranger-usersync/native/credValidator.uexe
+if [ -f ${cdir}/native/credValidator.uexe ]; then
+	chmod 750 ${cdir}/native/credValidator.uexe
+	chown root ${cdir}/native/credValidator.uexe
+	chgrp $unix_group ${cdir}/native/credValidator.uexe
+	chmod u+s ${cdir}/native/credValidator.uexe
+fi
 
 # Install the init.d process in /etc/init.d and create appropriate link to /etc/rc2.d folder
 if [ -d /etc/init.d ]
 then
   cp ${cdir}/initd  /etc/init.d/${MOD_NAME}
   chmod +x /etc/init.d/${MOD_NAME}
-  
-  if [ -d /etc/rc2.d ] 
+
+  if [ -d /etc/rc2.d ]
   then
     echo "Creating boot script S99${MOD_NAME} in rc2.d directory .... "
     ln -sf /etc/init.d/${MOD_NAME}  /etc/rc2.d/S99${MOD_NAME}
@@ -267,7 +312,7 @@ then
   fi
 
   # SUSE has rc2.d and rc3.d under /etc/rc.d
-  if [ -d /etc/rc.d/rc2.d ] 
+  if [ -d /etc/rc.d/rc2.d ]
   then
     echo "Creating boot script S99${MOD_NAME} in rc2.d directory .... "
     ln -sf /etc/init.d/${MOD_NAME}  /etc/rc.d/rc2.d/S99${MOD_NAME}
@@ -283,4 +328,4 @@ then
 fi
 
 # Start the service
-service ${MOD_NAME} start
+#service ${MOD_NAME} start

@@ -23,8 +23,10 @@ if [ $# -ne 2 ]
     echo $USAGE;
 fi
 
+curDt=`date '+%Y%m%d%H%M%S'`
 authentication_method=$1
 path=$2
+CONFIG_FILE=$path/WEB-INF/classes/conf/security-applicationContext.xml
 
 if [ $authentication_method = "UNIX" ] ; then
     	echo $path;
@@ -34,8 +36,8 @@ if [ $authentication_method = "UNIX" ] ; then
 	  for(i=1;i<=d;i++){ print _[i] }
 	  f=1;next
 	}
-	/UNIX_BEAN_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/unix_bean_settings.xml $path/META-INF/security-applicationContext.xml  > tmp
-	mv tmp $path/META-INF/security-applicationContext.xml
+	/UNIX_BEAN_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/unix_bean_settings.xml $CONFIG_FILE  > tmp
+	mv tmp $CONFIG_FILE
 	
 	awk 'FNR==NR{ _[++d]=$0;next}
 	/UNIX_SEC_SETTINGS_START/{
@@ -43,8 +45,8 @@ if [ $authentication_method = "UNIX" ] ; then
 	  for(i=1;i<=d;i++){ print _[i] }
 	  f=1;next
 	}
-	/UNIX_SEC_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/unix_security_settings.xml $path/META-INF/security-applicationContext.xml  > tmp
-	mv tmp $path/META-INF/security-applicationContext.xml
+	/UNIX_SEC_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/unix_security_settings.xml $CONFIG_FILE  > tmp
+	mv tmp $CONFIG_FILE
 
     exit 0;
 
@@ -56,8 +58,8 @@ elif [ $authentication_method = "LDAP" ]; then
 	  for(i=1;i<=d;i++){ print _[i] }
 	  f=1;next
 	}
-	/LDAP_BEAN_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ldap_bean_settings.xml $path/META-INF/security-applicationContext.xml  > tmp
-	mv tmp $path/META-INF/security-applicationContext.xml
+	/LDAP_BEAN_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ldap_bean_settings.xml $CONFIG_FILE  > tmp
+	mv tmp $CONFIG_FILE
 		
 	awk 'FNR==NR{ _[++d]=$0;next}
 	/LDAP_SEC_SETTINGS_START/{
@@ -65,8 +67,8 @@ elif [ $authentication_method = "LDAP" ]; then
 	  for(i=1;i<=d;i++){ print _[i] }
 	  f=1;next
 	}
-	/LDAP_SEC_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ldap_security_settings.xml $path/META-INF/security-applicationContext.xml  > tmp
-	mv tmp $path/META-INF/security-applicationContext.xml
+	/LDAP_SEC_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ldap_security_settings.xml $CONFIG_FILE  > tmp
+	mv tmp $CONFIG_FILE
 
     exit 0;
 			
@@ -78,8 +80,8 @@ elif [ $authentication_method = "ACTIVE_DIRECTORY" ]; then
 	  for(i=1;i<=d;i++){ print _[i] }
 	  f=1;next
 	}
-	/AD_BEAN_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ad_bean_settings.xml $path/META-INF/security-applicationContext.xml  > tmp
-	mv tmp $path/META-INF/security-applicationContext.xml
+	/AD_BEAN_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ad_bean_settings.xml $CONFIG_FILE  > tmp
+	mv tmp $CONFIG_FILE
 		
 	awk 'FNR==NR{ _[++d]=$0;next}
 	/AD_SEC_SETTINGS_START/{
@@ -87,8 +89,8 @@ elif [ $authentication_method = "ACTIVE_DIRECTORY" ]; then
 	  for(i=1;i<=d;i++){ print _[i] }
 	  f=1;next
 	}
-	/AD_SEC_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ad_security_settings.xml $path/META-INF/security-applicationContext.xml  > tmp
-	mv tmp $path/META-INF/security-applicationContext.xml
+	/AD_SEC_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ad_security_settings.xml $CONFIG_FILE  > tmp
+	mv tmp $CONFIG_FILE
 
     exit 0;
 elif [ $authentication_method = "NONE" ]; then

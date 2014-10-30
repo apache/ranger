@@ -10,13 +10,13 @@ Build Process
 
 3. After the above build command execution, you should see the following TAR files in the target folder:
 
-	argus-<version-number>-admin.tar
-	argus-<version-number>-usersync.tar
-	argus-<version-number>-hdfs-agent.tar
-	argus-<version-number>-hive-agent.tar
-	argus-<version-number>-hbase-agent.tar
-	argus-<version-number>-knox-agent.tar
-	argus-<version-number>-storm-agent.tar
+	ranger-<version-number>-admin.tar
+	ranger-<version-number>-usersync.tar
+	ranger-<version-number>-hdfs-plugin.tar
+	ranger-<version-number>-hive-plugin.tar
+	ranger-<version-number>-hbase-plugin.tar
+	ranger-<version-number>-knox-plugin.tar
+	ranger-<version-number>-storm-plugin.tar
 
 Importing Argus Project into Eclipse
 ====================================
@@ -31,9 +31,9 @@ Deployment Process
 
 Installation Host Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-1.	Argus Admin Tool Component  (argus-<version-number>-admin.tar) should be installed on a host where Policy Admin Tool web application runs on port 6080 (default).
-2.  Argus User Synchronization Component (argus-<version-number>-usersync.tar) should be installed on a host to synchronize the external user/group information into Argus database via Argus Admin Tool.
-3.  Argus Component Agents (plugin) should be installed on the component boxes:
+1.	Ranger Admin Tool Component  (ranger-<version-number>-admin.tar) should be installed on a host where Policy Admin Tool web application runs on port 6080 (default).
+2.  Ranger User Synchronization Component (ranger-<version-number>-usersync.tar) should be installed on a host to synchronize the external user/group information into Ranger database via Ranger Admin Tool.
+3.  Ranger Component Agents (plugin) should be installed on the component boxes:
 	(a)  HDFS Agent needs to be installed on Name Node hosts
 	(b)  Hive Agent needs to be installed on HiveServer2 hosts
 	(c)  HBase Agent needs to be installed on both Master and Regional Server nodes.
@@ -45,9 +45,9 @@ Installation Process
 
 1. Download the tar file into a temporary folder in the box where it needs to be installed.
 
-2. Expand the tar file into /usr/lib/argus/ folder
+2. Expand the tar file into /usr/lib/ranger/ folder
 
-3. Go to the component name under the expanded folder (e.g. /usr/lib/argus/argus-<version-number>-admin/) 
+3. Go to the component name under the expanded folder (e.g. /usr/lib/ranger/ranger-<version-number>-admin/)
 
 4. Modify the install.properties file with appropriate variables
 
@@ -55,5 +55,5 @@ Installation Process
 	Execute ./install.sh
 
    If the install.sh file does not exists, 
-	Execute ./enable-<component>-agent.sh
+	Execute ./enable-<component>-plugin.sh
 

@@ -40,7 +40,7 @@ public class EmbededServer {
 	
 	private static final Logger LOG = Logger.getLogger(EmbededServer.class.getName()) ;
 	
-	private static final String DEFAULT_CONFIG_FILENAME = "xapolicymgr.properties" ;
+	private static final String DEFAULT_CONFIG_FILENAME = "ranger_webserver.properties" ;
 	
 	private static String configFile = DEFAULT_CONFIG_FILENAME ;
 	

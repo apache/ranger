@@ -17,14 +17,14 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>security_agents.agents-impl</groupId>
-  <artifactId>agents-impl</artifactId>
+  <groupId>security_plugins.ranger-plugins-impl</groupId>
+  <artifactId>ranger-plugins-impl</artifactId>
   <name>Agent Implementation Libary</name>
-  <description>Security Agents Implementation</description>
+  <description>Security Plugins Implementation</description>
   <packaging>jar</packaging>
   <parent>
-     <groupId>org.apache.argus</groupId>
-     <artifactId>argus</artifactId>
+     <groupId>org.apache.ranger</groupId>
+     <artifactId>ranger</artifactId>
      <version>0.4.0</version>
      <relativePath>..</relativePath>
   </parent>
@@ -80,38 +80,38 @@
       <systemPath>${local.lib.dir}/hive-0.14.0-SNAPSHOT/hive-metastore-0.14.0-SNAPSHOT.jar</systemPath>
     </dependency>
     <dependency>
-      <groupId>security_agents.agents-audit</groupId>
-      <artifactId>agents-audit</artifactId>
+      <groupId>security_plugins.ranger-plugins-audit</groupId>
+      <artifactId>ranger-plugins-audit</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_agents.agents-common</groupId>
-      <artifactId>agents-common</artifactId>
+      <groupId>security_plugins.ranger-plugins-common</groupId>
+      <artifactId>ranger-plugins-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_agents.hdfs-agent</groupId>
-      <artifactId>hdfs-agent</artifactId>
+      <groupId>security_plugins.ranger-hdfs-plugin</groupId>
+      <artifactId>ranger-hdfs-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_agents.hive-agent</groupId>
-      <artifactId>hive-agent</artifactId>
+      <groupId>security_plugins.ranger-hive-plugin</groupId>
+      <artifactId>ranger-hive-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_agents.hbase-agent</groupId>
-      <artifactId>hbase-agent</artifactId>
+      <groupId>security_plugins.ranger-hbase-plugin</groupId>
+      <artifactId>ranger-hbase-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_agents.knox-agent</groupId>
-      <artifactId>knox-agent</artifactId>
+      <groupId>security_plugins.ranger-knox-plugin</groupId>
+      <artifactId>ranger-knox-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_agents.storm-agent</groupId>
-      <artifactId>storm-agent</artifactId>
+      <groupId>security_plugins.ranger-storm-plugin</groupId>
+      <artifactId>ranger-storm-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

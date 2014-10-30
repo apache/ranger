@@ -20,7 +20,7 @@
 # Base env variable for ARGUS related files/directories
 #
 
-PROJ_NAME=argus
+PROJ_NAME=ranger
 BASE_CONF_DIR=/etc/${PROJ_NAME}
 
 #
@@ -52,15 +52,15 @@ fi
 
 COMPONENT_NAME=`basename $0 | cut -d. -f1 | sed -e 's:^disable-::' | sed -e 's:^enable-::'`
 
-echo "${COMPONENT_NAME}" | grep 'agent' > /dev/null 2>&1
+echo "${COMPONENT_NAME}" | grep 'plugin' > /dev/null 2>&1
 
 if [ $? -ne 0 ]
 then
-	echo "$0 : is not applicable for component [${COMPONENT_NAME}]. It is applicable only for argus agent component; Exiting ..."
+	echo "$0 : is not applicable for component [${COMPONENT_NAME}]. It is applicable only for ranger plugin component; Exiting ..."
 	exit 0 
 fi
 
-HCOMPONENT_NAME=`echo ${COMPONENT_NAME} | sed -e 's:-agent::'`
+HCOMPONENT_NAME=`echo ${COMPONENT_NAME} | sed -e 's:-plugin::'`
 
 CFG_OWNER_INF="${HCOMPONENT_NAME}:${HCOMPONENT_NAME}"
 
@@ -96,7 +96,7 @@ PROJ_INSTALL_LIB_DIR="${PROJ_INSTALL_DIR}/install/lib"
 INSTALL_ARGS="${PROJ_INSTALL_DIR}/install.properties"
 JAVA=java
 
-hdir=${PROJ_INSTALL_DIR}/../../${HCOMPONENT_NAME}
+hdir=${PROJ_INSTALL_DIR}/../${HCOMPONENT_NAME}
 
 #
 # TEST - START
@@ -171,7 +171,7 @@ create_jceks() {
 	if [ $? -ne 0 ]
 	then
 		echo "Unable to store password in non-plain text format. Error: [`cat ${tempFile}`]"
-		echo "Exiting agent installation"
+		echo "Exiting plugin installation"
 		rm -f ${tempFile}
 		exit 0
 	fi
@@ -180,7 +180,7 @@ create_jceks() {
 }
 
 #
-# If there is a set-argus-${COMPONENT}-env.sh, install it
+# If there is a set-ranger-${COMPONENT}-env.sh, install it
 #
 dt=`date '+%Y%m%d-%H%M%S'`
 
@@ -254,9 +254,9 @@ then
 	INSTALL_CP="${PROJ_INSTALL_LIB_DIR}/*" 
 	if [ "${action}" = "enable" ]
 	then
-		echo "<argus>\n<enabled>`date`</enabled>\n</argus>" > ${HCOMPONENT_CONF_DIR}/argus-security.xml
-		chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/argus-security.xml
-		chmod a+r ${HCOMPONENT_CONF_DIR}/argus-security.xml
+		echo "<ranger>\n<enabled>`date`</enabled>\n</ranger>" > ${HCOMPONENT_CONF_DIR}/ranger-security.xml
+		chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/ranger-security.xml
+		chmod a+r ${HCOMPONENT_CONF_DIR}/ranger-security.xml
 		for cf in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.xml
 		do
 			cfb=`basename ${cf}`
@@ -270,9 +270,9 @@ then
 			chmod a+r ${HCOMPONENT_CONF_DIR}/${cfb}
 		done
     else
-		if [ -f ${HCOMPONENT_CONF_DIR}/argus-security.xml ]
+		if [ -f ${HCOMPONENT_CONF_DIR}/ranger-security.xml ]
 		then
-			mv ${HCOMPONENT_CONF_DIR}/argus-security.xml ${HCOMPONENT_CONF_DIR}/.argus-security.xml.`date '+%Y%m%d%H%M%S'`
+			mv ${HCOMPONENT_CONF_DIR}/ranger-security.xml ${HCOMPONENT_CONF_DIR}/.ranger-security.xml.`date '+%Y%m%d%H%M%S'`
 		fi
 	fi
 

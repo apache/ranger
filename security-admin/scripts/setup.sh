@@ -13,14 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# -------------------------------------------------------------------------------------
+#
+# Ranger Admin Setup Script
+#
+# This script will install policymanager webapplication under tomcat and also, initialize the database with xasecure users/tables.
 
 PROPFILE=$PWD/install.properties
 propertyValue=''
 
 . $PROPFILE
-if [ ! $? = "0" ];then	
-	log "$PROPFILE file not found....!!"; 
-	exit 1; 
+if [ ! $? = "0" ];then
+	log "$PROPFILE file not found....!!";
+	exit 1;
 fi
 
 DB_HOST="${db_host}"
@@ -31,16 +36,16 @@ usage() {
   exit 2
 } 2>/dev/null
 
-log() {  
+log() {
    local prefix="[$(date +%Y/%m/%d\ %H:%M:%S)]: "
    echo "${prefix} $@" >> $LOGFILE
-   echo "${prefix} $@" 
-} 
+   echo "${prefix} $@"
+}
 
 check_ret_status(){
 	if [ $1 -ne 0 ]; then
-		log "[E] $2"; 
-		exit 1; 
+		log "[E] $2";
+		exit 1;
 	fi
 }
 
@@ -54,7 +59,7 @@ check_ret_status_for_groupadd(){
 
 is_command () {
     log "[I] check if command $1 exists"
-    type "$1" >/dev/null 
+    type "$1" >/dev/null
 }
 
 get_distro(){
@@ -72,9 +77,9 @@ get_distro(){
 #Get Properties from File
 #$1 -> propertyName $2 -> fileName $3 -> variableName
 getPropertyFromFile(){
-	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation	
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation
 	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
-	value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`	
+	value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`
 	#echo 'value:'$value
 	#validate=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-) # for validation
 	#if  test -z "$validate" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
@@ -105,17 +110,14 @@ init_variables(){
 
 	VERSION=`cat ${PWD}/version`
 
-	XAPOLICYMGR_DIR=/usr/lib/xapolicymgr
+	XAPOLICYMGR_DIR=$PWD
 
-	if [ "${VERSION}" != "" ]
-	then
- 		INSTALL_DIR=${XAPOLICYMGR_DIR}-${VERSION}
-	else
-		INSTALL_DIR=${XAPOLICYMGR_DIR}
- 	fi
+	RANGER_ADMIN=ranger-admin
+
+	INSTALL_DIR=${XAPOLICYMGR_DIR}
 
 	WEBAPP_ROOT=${INSTALL_DIR}/ews/webapp
-	
+
 	DB_FLAVOR=`echo $DB_FLAVOR | tr '[:lower:]' '[:upper:]'`
 	if [ "${DB_FLAVOR}" == "" ]
 	then
@@ -140,11 +142,11 @@ wait_for_tomcat_shutdown() {
 		if [ $? -eq 1 ]; then
 			log "[I] Tomcat stopped"
 			i=21
-		else 
+		else
 			log "[I] stopping Tomcat.."
 			i=`expr $i + 1`
 			sleep 1
-		fi 
+		fi
 	done
 }
 
@@ -197,18 +199,18 @@ check_java_version() {
 		exit 1;
 	fi
 
-	$JAVA_BIN -version 2>&1 | grep -q $JAVA_VERSION_REQUIRED 
+	$JAVA_BIN -version 2>&1 | grep -q $JAVA_VERSION_REQUIRED
 	if [ $? != 0 ] ; then
 		log "[E] Java 1.7 is required"
 		exit 1;
 	fi
 
-	#Check for JAVA_HOME 
+	#Check for JAVA_HOME
 	if [ "${JAVA_HOME}" == "" ]
 	then
- 		log "[E] JAVA_HOME environment property not defined, aborting installation."
- 		exit 1
- 	fi
+		log "[E] JAVA_HOME environment property not defined, aborting installation."
+		exit 1
+	fi
 
 	#$JAVA_BIN -version 2>&1 | grep -q "$JAVA_ORACLE"
 	#if [ $? != 0 ] ; then
@@ -219,10 +221,10 @@ check_java_version() {
 
 sanity_check_files() {
 
-	if test -f $war_file; then
-		log "[I] $war_file file found" 
+	if test -d $app_home; then
+		log "[I] $app_home folder found"
 	else
-		log "[E] $war_file does not exists" ; exit 1;
+		log "[E] $app_home does not exists" ; exit 1;
     fi
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
     then
@@ -329,7 +331,7 @@ check_db_admin_password () {
 		cmdStatus=0 # $substring is not in $string
     fi
 	while :
-	do	
+	do
 		if  [  $cmdStatus != 0 ]; then
 			if [ $count != 0 ]
 			then
@@ -380,7 +382,7 @@ check_db_admin_password () {
 			else
 				cmdStatus=0 # $substring is not in $string
 		    fi
-	   	else
+		else
 			log "[I] Checking DB password DONE"
 			break;
 		fi
@@ -395,7 +397,7 @@ check_db_user_password() {
 	do
 		if [ $count -gt 0 ]
 		then
-			log "[I] You can not have a empty password for user: (${muser})." 
+			log "[I] You can not have a empty password for user: (${muser})."
 		fi
 		if [ ${count} -gt 2 ]
 		then
@@ -420,7 +422,7 @@ check_audit_user_password() {
 	do
 		if [ $count -gt 0 ]
 		then
-			log "[I] You can not have a empty password for user: (${muser})." 
+			log "[I] You can not have a empty password for user: (${muser})."
 		fi
 		if [ ${count} -gt 2 ]
 		then
@@ -679,58 +681,18 @@ import_db(){
 	fi
 }
 
-extract_war () {
-	if [ ! -e $war_file ]
-	then
-		log "[E] $war_file file not found!"
-	fi
-	log "[I] Extract War file $war_file to $app_home" # 
-	if [ -d $app_home ]
-	then
-		mv ${app_home} ${app_home}_archive_`date '+%s'`
-	fi
-	mkdir -p $app_home
-	unzip -q $war_file -d $app_home 
-	check_ret_status $? "Extraction of war file failed....!!"
-	log "[I] Extract War file $war_file DONE" # 
-}
-
-copy_to_webapps (){
-	log "[I] Copying to ${WEBAPP_ROOT} ";
-	if [ -f $app_home/WEB-INF/log4j.xml.prod ]
-    then
-        mv -f $app_home/WEB-INF/log4j.xml.prod $app_home/WEB-INF/log4j.xml
-    fi
-    cp -rf $app_home/* ${WEBAPP_ROOT}
-	check_ret_status $? "Copying to ${WEBAPP_ROOT} failed"
-	
-	#
-	# the jar file, ${INSTALL_DIR}/webapps/ROOT/WEB-INF/lib/unixauthclient-*.jar should be accessed from external to have the parameter to work correctly
-	#
-	for f in  ${WEBAPP_ROOT}/WEB-INF/lib/unixauthclient-*.jar
-    do
-		if [ -f ${f} ]
-		then
-			mkdir -p ${INSTALL_DIR}/xasecure_jaas/
-			mv ${f} ${INSTALL_DIR}/xasecure_jaas/
-		fi
-    done
-
-	log "[I] Copying to ${WEBAPP_ROOT} DONE";
-}
-
 copy_db_connector(){
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
 		log "[I] Copying MYSQL Connector to $app_home/WEB-INF/lib ";
-	    cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/lib
+	    cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/classes/lib
 		check_ret_status $? "Copying MYSQL Connector to $app_home/WEB-INF/lib failed"
 		log "[I] Copying MYSQL Connector to $app_home/WEB-INF/lib DONE";
 	fi
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
     then
         log "[I] Copying ORACLE Connector to $app_home/WEB-INF/lib ";
-        cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/lib
+        cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/classes/lib
         check_ret_status $? "Copying ORACLE Connector to $app_home/WEB-INF/lib failed"
         log "[I] Copying ORACLE Connector to $app_home/WEB-INF/lib DONE";
     fi
@@ -738,9 +700,13 @@ copy_db_connector(){
 
 update_properties() {
 	newPropertyValue=''
-	to_file=$app_home/WEB-INF/classes/xa_system.properties
+	echo "export JAVA_HOME=${JAVA_HOME}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
+	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
+
+
+	to_file=$app_home/WEB-INF/classes/conf/xa_system.properties
 	if test -f $to_file; then
-		log "[I] $to_file file found" 
+		log "[I] $to_file file found"
 	else
 		log "[E] $to_file does not exists" ; exit 1;
     fi
@@ -802,12 +768,12 @@ update_properties() {
 
 	propertyName=http.enabled
 	newPropertyValue="${policymgr_http_enabled}"
-	updatePropertyToFile $propertyName $newPropertyValue $to_file	
-	
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+
 	propertyName=jdbc.user
 	newPropertyValue="${db_user}"
-	updatePropertyToFile $propertyName $newPropertyValue $to_file	
-	
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+
 	propertyName=auditDB.jdbc.user
 	newPropertyValue="${audit_db_user}"
 	updatePropertyToFile $propertyName $newPropertyValue $to_file
@@ -818,76 +784,77 @@ update_properties() {
 	echo "Starting configuration for XA DB credentials:"
 
 	db_password_alias=policyDB.jdbc.password
-	
-   	if [ "${keystore}" != "" ]
-   	then
+
+	if [ "${keystore}" != "" ]
+	then
 		mkdir -p `dirname "${keystore}"`
 
-   		java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
-   		
-   		propertyName=xaDB.jdbc.credential.alias
+		java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
+
+		propertyName=xaDB.jdbc.credential.alias
 		newPropertyValue="${db_password_alias}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-	
+
 		propertyName=xaDB.jdbc.credential.provider.path
 		newPropertyValue="${keystore}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
 
 		propertyName=jdbc.password
-		newPropertyValue="_"	
+		newPropertyValue="_"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-   	else  	
+	else
 		propertyName=jdbc.password
-		newPropertyValue="${db_password}"	
+		newPropertyValue="${db_password}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-	fi	
-	
+	fi
+
 	if test -f $keystore; then
 		#echo "$keystore found."
 		chown -R ${unix_user}:${unix_group} ${keystore}
+		chmod 640 ${keystore}
 	else
 		#echo "$keystore not found. so clear text password"
 		propertyName=jdbc.password
 		newPropertyValue="${db_password}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
 	fi
- 
+
 	###########
 	audit_db_password_alias=auditDB.jdbc.password
 
 	echo "Starting configuration for Audit DB credentials:"
-	
-   	if [ "${keystore}" != "" ]
-   	then
-	   	java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
-	   	
+
+	if [ "${keystore}" != "" ]
+	then
+		java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
+
 		propertyName=auditDB.jdbc.credential.alias
 		newPropertyValue="${audit_db_password_alias}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file	
-		
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
 		propertyName=auditDB.jdbc.credential.provider.path
 		newPropertyValue="${keystore}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
 
 		propertyName=auditDB.jdbc.password
-		newPropertyValue="_"	
+		newPropertyValue="_"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-   	else
+	else
 		propertyName=auditDB.jdbc.password
-		newPropertyValue="${audit_db_password}"	
+		newPropertyValue="${audit_db_password}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-	fi	
-	
+	fi
+
 	if test -f $keystore; then
 		chown -R ${unix_user}:${unix_group} ${keystore}
 		#echo "$keystore found."
 	else
 		#echo "$keystore not found. so use clear text password"
 		propertyName=auditDB.jdbc.password
-		newPropertyValue="${audit_db_password}"	
+		newPropertyValue="${audit_db_password}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
 	fi
-	
+
 }
 
 create_audit_db_user(){
@@ -1069,84 +1036,78 @@ create_audit_db_user(){
 
 do_unixauth_setup() {
 
-	XASECURE_JAAS_DIR="${INSTALL_DIR}/xasecure_jaas"
+	RANGER_JAAS_CONF_DIR="${INSTALL_DIR}/ews/webapp/WEB-INF/classes/conf/ranger_jaas"
 
-	if [ -d "${XASECURE_JAAS_DIR}" ]
-	then
-		mv "${XASECURE_JAAS_DIR}" "${XASECURE_JAAS_DIR}_archive_`date '+%s'`"
-	fi
-
-	mkdir -p ${XASECURE_JAAS_DIR}
-
-	cp ./unixauth-config/*  ${XASECURE_JAAS_DIR}
+	cp ./unixauth-config/*  ${RANGER_JAAS_CONF_DIR}
 
 	cat unixauth-config/unixauth.properties | \
 			grep -v '^remoteLoginEnabled=' | \
 			grep -v '^authServiceHostName=' | \
-			grep -v '^authServicePort=' > ${INSTALL_DIR}/xasecure_jaas/unixauth.properties
+			grep -v '^authServicePort=' > ${RANGER_JAAS_CONF_DIR}/unixauth.properties
 
-	echo "remoteLoginEnabled=${remoteLoginEnabled}"   >> ${INSTALL_DIR}/xasecure_jaas/unixauth.properties
-	echo "authServiceHostName=${authServiceHostName}" >> ${INSTALL_DIR}/xasecure_jaas/unixauth.properties
-	echo "authServicePort=${authServicePort}"         >> ${INSTALL_DIR}/xasecure_jaas/unixauth.properties
+	echo "remoteLoginEnabled=${remoteLoginEnabled}"   >> ${RANGER_JAAS_CONF_DIR}/unixauth.properties
+	echo "authServiceHostName=${authServiceHostName}" >> ${RANGER_JAAS_CONF_DIR}/unixauth.properties
+	echo "authServicePort=${authServicePort}"         >> ${RANGER_JAAS_CONF_DIR}/unixauth.properties
 
-	owner=xasecure
-	group=xasecure
-	chown -R ${owner}:${group} ${XASECURE_JAAS_DIR}
-	chmod -R go-rwx ${XASECURE_JAAS_DIR}
+	owner=ranger
+	group=ranger
+	chown -R ${owner}:${group} ${RANGER_JAAS_CONF_DIR}
+	chmod -R go-rwx ${RANGER_JAAS_CONF_DIR}
 }
+
 do_authentication_setup(){
-	log "[I] Starting setup based on user authentication method=$authentication_method";     
+	log "[I] Starting setup based on user authentication method=$authentication_method";
 	./setup_authentication.sh $authentication_method $app_home
 
     if [ $authentication_method = "LDAP" ] ; then
-    	log "[I] Loading LDAP attributes and properties";
-		newPropertyValue=''	
-		ldap_file=$app_home/WEB-INF/classes/xa_ldap.properties
+	log "[I] Loading LDAP attributes and properties";
+		newPropertyValue=''
+		ldap_file=$app_home/WEB-INF/classes/conf/ranger_jaas/xa_ldap.properties
 		if test -f $ldap_file; then
-			log "[I] $ldap_file file found" 
+			log "[I] $ldap_file file found"
 			propertyName=xa_ldap_url
 			newPropertyValue="${xa_ldap_url}"
-			
+
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
-			
+
 			propertyName=xa_ldap_userDNpattern
 			newPropertyValue="${xa_ldap_userDNpattern}"
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
-			
+
 			propertyName=xa_ldap_groupSearchBase
 			newPropertyValue="${xa_ldap_groupSearchBase}"
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
-			
+
 			propertyName=xa_ldap_groupSearchFilter
 			newPropertyValue="${xa_ldap_groupSearchFilter}"
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
-			
+
 			propertyName=xa_ldap_groupRoleAttribute
 			newPropertyValue="${xa_ldap_groupRoleAttribute}"
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
-			
+
 			propertyName=authentication_method
 			newPropertyValue="${authentication_method}"
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
 		else
 			log "[E] $ldap_file does not exists" ; exit 1;
-		
-    	fi
+
+	fi
     fi
     if [ $authentication_method = "ACTIVE_DIRECTORY" ] ; then
-    	log "[I] Loading ACTIVE DIRECTORY attributes and properties";
+	log "[I] Loading ACTIVE DIRECTORY attributes and properties";
 		newPropertyValue=''
-		ldap_file=$app_home/WEB-INF/classes/xa_ldap.properties
+		ldap_file=$app_home/WEB-INF/classes/conf/ranger_jaas/xa_ldap.properties
 		if test -f $ldap_file; then
-			log "[I] $ldap_file file found" 
+			log "[I] $ldap_file file found"
 			propertyName=xa_ldap_ad_url
 			newPropertyValue="${xa_ldap_ad_url}"
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
-		
+
 			propertyName=xa_ldap_ad_domain
 			newPropertyValue="${xa_ldap_ad_domain}"
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
-			
+
 			propertyName=authentication_method
 			newPropertyValue="${authentication_method}"
 			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
@@ -1157,7 +1118,7 @@ do_authentication_setup(){
     if [ $authentication_method = "UNIX" ] ; then
         do_unixauth_setup
     fi
-    log "[I] Finished setup based on user authentication method=$authentication_method";  
+    log "[I] Finished setup based on user authentication method=$authentication_method";
 }
 
 #=====================================================================
@@ -1187,89 +1148,88 @@ setup_unix_user_group(){
 setup_install_files(){
 
 	log "[I] Setting up installation files and directory";
-	if [ -d ${INSTALL_DIR} ]
-	then
-		mv ${INSTALL_DIR} ${INSTALL_DIR}_${curDt}
+
+	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
+	    log "[I] Copying ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist ${WEBAPP_ROOT}/WEB-INF/classes/conf"
+	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf
+	    cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
+		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	fi
 
-	mkdir -p ${INSTALL_DIR}
-	mkdir -p ${INSTALL_DIR}/ews
-	mkdir -p ${WEBAPP_ROOT}
+	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas ]; then
+	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas"
+	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas
+		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas
+		chmod 700 ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas
+	fi
 
-	cp -r ews/* ${INSTALL_DIR}/
-	mv ${INSTALL_DIR}/lib ${INSTALL_DIR}/ews/
-	mv ${INSTALL_DIR}/xapolicymgr.properties ${INSTALL_DIR}/ews/
-	mv ${INSTALL_DIR}/xapolicymgr /etc/init.d/xapolicymgr
+	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
+	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/lib"
+	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/lib
+		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
+	fi
 
-	cat ews/startpolicymgr.sh | sed -e "s|[ \t]*JAVA_HOME=| JAVA_HOME=${JAVA_HOME}|" > ${INSTALL_DIR}/startpolicymgr.sh
+	if [ ! -f /etc/init.d/${RANGER_ADMIN} ]; then
+	    log "[I] Setting up init.d"
+	    mv ${INSTALL_DIR}/ews/${RANGER_ADMIN} /etc/init.d/${RANGER_ADMIN}
 
-	chmod ug+rx /etc/init.d/xapolicymgr
+	    chmod ug+rx /etc/init.d/${RANGER_ADMIN}
 
-	if [ -d /etc/rc2.d ]
-    then
+	    if [ -d /etc/rc2.d ]
+	    then
 		RC_DIR=/etc/rc2.d
-        log "[I] Creating script S88xapolicymgr/K90xapolicymgr in $RC_DIR directory .... "
-		rm -f $RC_DIR/S88xapolicymgr  $RC_DIR/K90xapolicymgr
-		ln -s /etc/init.d/xapolicymgr $RC_DIR/S88xapolicymgr
-		ln -s /etc/init.d/xapolicymgr $RC_DIR/K90xapolicymgr
-    fi
+		log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
+		rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
+		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
+		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
+	    fi
 
-    if [ -d /etc/rc3.d ]
-    then
-	    RC_DIR=/etc/rc3.d
-        log "[I] Creating script S88xapolicymgr/K90xapolicymgr in $RC_DIR directory .... "
-		rm -f $RC_DIR/S88xapolicymgr  $RC_DIR/K90xapolicymgr
-		ln -s /etc/init.d/xapolicymgr $RC_DIR/S88xapolicymgr
-		ln -s /etc/init.d/xapolicymgr $RC_DIR/K90xapolicymgr
-    fi
+	    if [ -d /etc/rc3.d ]
+	    then
+		RC_DIR=/etc/rc3.d
+		log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
+		rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
+		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
+		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
+	    fi
 
-	# SUSE has rc2.d and rc3.d under /etc/rc.d
-    if [ -d /etc/rc.d/rc2.d ]
-    then
+	    # SUSE has rc2.d and rc3.d under /etc/rc.d
+	    if [ -d /etc/rc.d/rc2.d ]
+	    then
 		RC_DIR=/etc/rc.d/rc2.d
-        log "[I] Creating script S88xapolicymgr/K90xapolicymgr in $RC_DIR directory .... "
-		rm -f $RC_DIR/S88xapolicymgr  $RC_DIR/K90xapolicymgr
-		ln -s /etc/init.d/xapolicymgr $RC_DIR/S88xapolicymgr
-		ln -s /etc/init.d/xapolicymgr $RC_DIR/K90xapolicymgr
-    fi
-    if [ -d /etc/rc.d/rc3.d ]
-    then
+		log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
+		rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
+		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
+		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
+	    fi
+	    if [ -d /etc/rc.d/rc3.d ]
+	    then
 		RC_DIR=/etc/rc.d/rc3.d
-        log "[I] Creating script S88xapolicymgr/K90xapolicymgr in $RC_DIR directory .... "
-		rm -f $RC_DIR/S88xapolicymgr  $RC_DIR/K90xapolicymgr
-		ln -s /etc/init.d/xapolicymgr $RC_DIR/S88xapolicymgr
-		ln -s /etc/init.d/xapolicymgr $RC_DIR/K90xapolicymgr
-    fi
-
-
-	if [ -L ${XAPOLICYMGR_DIR} ]
-	then 
-		rm -f ${XAPOLICYMGR_DIR}
+		log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
+		rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
+		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
+		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
+	    fi
 	fi
 
-	ln -s ${INSTALL_DIR} ${XAPOLICYMGR_DIR}
 
-	if [ ! -L /var/log/xapolicymgr ]
-	then
-		ln -s ${XAPOLICYMGR_DIR}/ews/logs  /var/log/xapolicymgr
+	if [ ! -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
+	    log "[I] ${XAPOLICYMGR_DIR}/ews/logs folder"
+	    mkdir -p ${XAPOLICYMGR_DIR}/ews/logs
+	    chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs
 	fi
+
 	log "[I] Setting up installation files and directory DONE";
 
-	if [ -d ${INSTALL_DIR}/ ]
-	then
+	if [ ! -f ${INSTALL_DIR}/rpm ]; then
+	    if [ -d ${INSTALL_DIR} ]
+	    then
 		chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}
+		chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}/*
+	    fi
 	fi
 }
 
-restart_policymgr(){
-
-	log "[I] Restarting xapolicymgr";
-	service xapolicymgr stop 
-	service xapolicymgr start
-	sleep 30  # To ensure that the root application is initialized fully
-	log "[I] Restarting xapolicymgr DONE";
-
-}
 execute_java_patches(){
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
@@ -1289,8 +1249,8 @@ execute_java_patches(){
 					if [ ${c} -eq 0 ]
 					then
 						log "[I] patch ${javaPatch} is being applied..";
-						msg=`java -cp "$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
-						check_ret_status $? "Unable to apply patch:$javaPatch"
+						msg=`java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+						check_ret_status $? "Unable to apply patch:$javaPatch. $msg"
 						touch ${tempFile}
 						echo >> ${tempFile}
 						echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
@@ -1322,8 +1282,8 @@ execute_java_patches(){
 					if test "${result2#*$version}" == "$result2"
 					then
 						log "[I] patch ${javaPatch} is being applied..";
-						msg=`java -cp "$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
-						check_ret_status $? "Unable to apply patch:$javaPatch"
+						msg=`java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+						check_ret_status $? "Unable to apply patch:$javaPatch. $msg"
 						touch ${tempFile}
 						echo >> ${tempFile}
 						echo "insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by) values ( X_DB_VERSION_H_SEQ.nextval,'${version}', sysdate, '${db_user}', sysdate, '${db_user}') ;" >> ${tempFile}
@@ -1361,14 +1321,12 @@ setup_install_files
 sanity_check_files
 check_db_admin_password
 create_db_user
-extract_war
 copy_db_connector
 import_db
 upgrade_db
 create_audit_db_user
 update_properties
 do_authentication_setup
-copy_to_webapps
 execute_java_patches
-restart_policymgr
+
 echo "Installation of XASecure PolicyManager Web Application is completed."

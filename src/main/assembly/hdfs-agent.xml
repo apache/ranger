@@ -16,12 +16,12 @@
   limitations under the License.
 -->
 <assembly>
-  <id>hdfs-agent</id> 
+  <id>hdfs-plugin</id>
   <formats>
-     <format>tar</format>
+     <format>tar.gz</format>
 	 <format>zip</format>
   </formats>
-  <baseDirectory>${project.name}-${project.version}-hdfs-agent</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-hdfs-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>
@@ -44,11 +44,11 @@
         <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
-	<include>security_agents.agents-audit:agents-audit</include>
-	<include>security_agents.agents-cred:agents-cred</include>
-	<include>security_agents.agents-impl:agents-impl</include>
-	<include>security_agents.agents-common:agents-common</include>
-	<include>security_agents.hdfs-agent:hdfs-agent</include>
+	<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
+	<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
+	<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl</include>
+	<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
+	<include>security_plugins.ranger-hdfs-plugin:ranger-hdfs-plugin</include>
      </includes>
     </moduleSet>
     <moduleSet>
@@ -77,8 +77,8 @@
         <unpack>false</unpack>
      </binaries>
      <includes>
-		<include>security_agents.agents-installer:agents-installer</include>
-        <include>org.apache.argus:credentialbuilder</include>
+		<include>security_plugins.ranger-plugins-installer:ranger-plugins-installer</include>
+        <include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
   </moduleSets> 	
@@ -102,18 +102,18 @@
 		<fileMode>444</fileMode>
 	</fileSet>
   </fileSets>
-  <!-- enable/disable script for agent -->
+  <!-- enable/disable script for plugin -->
   <files>
 	<file>
 		<source>agents-common/scripts/enable-agent.sh</source>
 		<outputDirectory>/</outputDirectory>
-		<destName>enable-hdfs-agent.sh</destName>
+		<destName>enable-hdfs-plugin.sh</destName>
 		<fileMode>755</fileMode>
 	</file>
 	<file>
 		<source>agents-common/scripts/enable-agent.sh</source>
 		<outputDirectory>/</outputDirectory>
-		<destName>disable-hdfs-agent.sh</destName>
+		<destName>disable-hdfs-plugin.sh</destName>
 		<fileMode>755</fileMode>
 	</file>
 	<file>
@@ -125,7 +125,7 @@
     <file>
 		<source>hdfs-agent/conf/xasecure-hadoop-env.sh</source>
 		<outputDirectory>/install/conf.templates/enable</outputDirectory>
-		<destName>set-hdfs-agent-env.sh</destName>
+		<destName>set-hdfs-plugin-env.sh</destName>
 		<fileMode>755</fileMode>
     </file>	
   </files>

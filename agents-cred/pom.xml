@@ -17,17 +17,17 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>security_agents.agents-cred</groupId>
-  <artifactId>agents-cred</artifactId>
+  <groupId>security_plugins.ranger-plugins-cred</groupId>
+  <artifactId>ranger-plugins-cred</artifactId>
   <name>Credential Support</name>
-  <description>Agent Common</description>
+  <description>Plugins Common</description>
   <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <parent>
-     <groupId>org.apache.argus</groupId>
-     <artifactId>argus</artifactId>
+     <groupId>org.apache.ranger</groupId>
+     <artifactId>ranger</artifactId>
      <version>0.4.0</version>
      <relativePath>..</relativePath>
   </parent>

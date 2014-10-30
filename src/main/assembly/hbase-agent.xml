@@ -16,12 +16,12 @@
   limitations under the License.
 -->
 <assembly>
-  <id>hbase-agent</id> 
+  <id>hbase-plugin</id>
   <formats>
-     <format>tar</format>
+     <format>tar.gz</format>
 	 <format>zip</format>
   </formats>
-  <baseDirectory>${project.name}-${project.version}-hbase-agent</baseDirectory>
+  <baseDirectory>${project.name}-${project.version}-hbase-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
     <moduleSet>
@@ -43,11 +43,11 @@
         <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
-	<include>security_agents.agents-audit:agents-audit</include>
-	<include>security_agents.agents-cred:agents-cred</include>
-	<include>security_agents.agents-impl:agents-impl</include>
-	<include>security_agents.agents-common:agents-common</include>
-	<include>security_agents.hbase-agent:hbase-agent</include>
+	<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
+	<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
+	<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl</include>
+	<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
+	<include>security_plugins.ranger-hbase-plugin:ranger-hbase-plugin</include>
      </includes>
     </moduleSet>
     <moduleSet>
@@ -76,8 +76,8 @@
         <unpack>false</unpack>
      </binaries>
      <includes>
-		<include>security_agents.agents-installer:agents-installer</include>
-		<include>org.apache.argus:credentialbuilder</include>
+		<include>security_plugins.plugins-installer:plugins-installer</include>
+		<include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
   </moduleSets> 	
@@ -112,18 +112,18 @@
         <fileMode>444</fileMode>
     </fileSet>
   </fileSets>
-  <!-- enable/disable script for agent -->
+  <!-- enable/disable script for Plugin -->
   <files>
     <file>
 		<source>agents-common/scripts/enable-agent.sh</source>
         <outputDirectory>/</outputDirectory>
-        <destName>enable-hbase-agent.sh</destName>
+        <destName>enable-hbase-plugin.sh</destName>
         <fileMode>755</fileMode>
     </file>
     <file>
 		<source>agents-common/scripts/enable-agent.sh</source>
         <outputDirectory>/</outputDirectory>
-        <destName>disable-hbase-agent.sh</destName>
+        <destName>disable-hbase-plugin.sh</destName>
         <fileMode>755</fileMode>
     </file>
     <file>

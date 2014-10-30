@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>org.apache.argus</groupId>
-      <artifactId>argus</artifactId>
+      <groupId>org.apache.ranger</groupId>
+      <artifactId>ranger</artifactId>
       <version>0.4.0</version>
       <relativePath>..</relativePath>
     </parent>
@@ -36,7 +36,7 @@
 
     <dependencies>
         <dependency>
-          <groupId>org.apache.argus</groupId>
+          <groupId>org.apache.ranger</groupId>
           <artifactId>unixusersync</artifactId>
           <version>${project.version}</version>
         </dependency>

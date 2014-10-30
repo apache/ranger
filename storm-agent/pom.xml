@@ -17,17 +17,17 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>security_agents.storm-agent</groupId>
-  <artifactId>storm-agent</artifactId>
-  <name>Storm Security Agent</name>
-  <description>Storm Security Agents</description>
+  <groupId>security_plugins.ranger-storm-plugin</groupId>
+  <artifactId>ranger-storm-plugin</artifactId>
+  <name>Storm Security Plugin</name>
+  <description>Storm Security Plugins</description>
   <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <parent>
-     <groupId>org.apache.argus</groupId>
-     <artifactId>argus</artifactId>
+     <groupId>org.apache.ranger</groupId>
+     <artifactId>ranger</artifactId>
      <version>0.4.0</version>
      <relativePath>..</relativePath>
   </parent>
@@ -38,17 +38,17 @@
 		<version>0.9.2-incubating</version>
 	</dependency>
     <dependency>
-      <groupId>security_agents.agents-common</groupId>
-      <artifactId>agents-common</artifactId>
+      <groupId>security_plugins.ranger-plugins-common</groupId>
+      <artifactId>ranger-plugins-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_agents.agents-audit</groupId>
-      <artifactId>agents-audit</artifactId>
+      <groupId>security_plugins.ranger-plugins-audit</groupId>
+      <artifactId>ranger-plugins-audit</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.argus</groupId>
+      <groupId>org.apache.ranger</groupId>
       <artifactId>credentialbuilder</artifactId>
       <version>${project.version}</version>
     </dependency>

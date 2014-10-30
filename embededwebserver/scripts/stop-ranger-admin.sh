@@ -15,13 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-XAPOLICYMGR_DIR=/usr/lib/xapolicymgr
+cd `dirname $0`
+XAPOLICYMGR_DIR=`pwd`
+
 XAPOLICYMGR_EWS_DIR=${XAPOLICYMGR_DIR}/ews
+RANGER_JAAS_LIB_DIR="${XAPOLICYMGR_EWS_DIR}/ranger_jaas"
+RANGER_JAAS_CONF_DIR="${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf/ranger_jaas"
+
+if [ -f ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/ranger_admin_env.sh ]; then
+	. ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/ranger_admin_env.sh
+fi
+
+#export JAVA_HOME=
+if [ -f ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh ]; then
+	. ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh
+fi
+if [ "$JAVA_HOME" != "" ]; then
+	export PATH=$JAVA_HOME/bin:$PATH
+fi
+
 cd ${XAPOLICYMGR_EWS_DIR}
 if [ ! -d logs ]
 then
 	mkdir logs
 fi
-java -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/lib/*:${XAPOLICYMGR_DIR}/xasecure_jaas/*" com.xasecure.server.tomcat.StopEmbededServer > logs/catalina.out 2>&1
-echo "XAPolicyManager has been stopped."
-
+java -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}" com.xasecure.server.tomcat.StopEmbededServer > logs/catalina.out 2>&1
+echo "Apache Ranger Admin has been stopped."

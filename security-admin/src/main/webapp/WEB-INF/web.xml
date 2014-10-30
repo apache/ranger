@@ -23,7 +23,7 @@
   <context-param>
     <param-name>contextConfigLocation</param-name>
     <param-value>META-INF/applicationContext.xml
-			META-INF/security-applicationContext.xml
+			WEB-INF/classes/conf/security-applicationContext.xml
 			META-INF/scheduler-applicationContext.xml</param-value>
   </context-param>
   <context-param>
