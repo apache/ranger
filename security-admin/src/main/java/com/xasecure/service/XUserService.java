@@ -83,6 +83,9 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				"Email Address", false));
 		trxLogAttrs.put("password", new VTrxLogAttr("password", "Password",
 				false));
+		trxLogAttrs.put("userRoleList", new VTrxLogAttr("userRoleList", "User Role",
+				false));
+		
 	}
 
 	public XUserService() {
