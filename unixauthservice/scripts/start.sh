@@ -15,12 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cdir=`dirname $0`
 
-if [ "${cdir}" = "." ]
-then
-	cdir=`pwd`
-fi
+realScriptPath=`readlink -f $0`
+realScriptDir=`dirname $realScriptPath`
+cd $realScriptDir
+cdir=`pwd`
 
 echo "Starting UnixAuthenticationService"
 #export JAVA_HOME=

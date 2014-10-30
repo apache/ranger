@@ -15,8 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd `dirname $0`
-XAPOLICYMGR_DIR=`pwd`
+realScriptPath=`readlink -f $0`
+realScriptDir=`dirname $realScriptPath`
+XAPOLICYMGR_DIR=`(cd $realScriptDir/..; pwd)`
 
 XAPOLICYMGR_EWS_DIR=${XAPOLICYMGR_DIR}/ews
 RANGER_JAAS_LIB_DIR="${XAPOLICYMGR_EWS_DIR}/ranger_jaas"

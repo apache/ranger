@@ -21,10 +21,10 @@ BIN_PATH=/usr/bin
 
 case $1 in
 start)
-	/bin/su --login  $LINUX_USER "${BIN_PATH}/start-ranger-admin"
+	/bin/su --login  $LINUX_USER "${BIN_PATH}/ranger-admin-start"
 	;;
 stop)
-	/bin/su --login  $LINUX_USER "${BIN_PATH}/stop-ranger-admin"
+	/bin/su --login  $LINUX_USER "${BIN_PATH}/ranger-admin-stop"
     ;;
 restart)
 	/bin/su --login  $LINUX_USER "${BIN_PATH}/stop-ranger-admin.sh"  && sleep 30

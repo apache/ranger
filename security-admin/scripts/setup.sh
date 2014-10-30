@@ -1062,7 +1062,7 @@ do_authentication_setup(){
     if [ $authentication_method = "LDAP" ] ; then
 	log "[I] Loading LDAP attributes and properties";
 		newPropertyValue=''
-		ldap_file=$app_home/WEB-INF/classes/conf/ranger_jaas/xa_ldap.properties
+		ldap_file=$app_home/WEB-INF/classes/conf/xa_ldap.properties
 		if test -f $ldap_file; then
 			log "[I] $ldap_file file found"
 			propertyName=xa_ldap_url
@@ -1097,7 +1097,7 @@ do_authentication_setup(){
     if [ $authentication_method = "ACTIVE_DIRECTORY" ] ; then
 	log "[I] Loading ACTIVE DIRECTORY attributes and properties";
 		newPropertyValue=''
-		ldap_file=$app_home/WEB-INF/classes/conf/ranger_jaas/xa_ldap.properties
+		ldap_file=$app_home/WEB-INF/classes/conf/xa_ldap.properties
 		if test -f $ldap_file; then
 			log "[I] $ldap_file file found"
 			propertyName=xa_ldap_ad_url

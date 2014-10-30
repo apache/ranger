@@ -15,7 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cdir=`dirname $0`
+realScriptPath=`readlink -f $0`
+realScriptDir=`dirname $realScriptPath`
+cd $realScriptDir
+cdir=`pwd`
+
 pidf=${cdir}/.mypid
 port=`grep  '^[ ]*authServicePort' ${cdir}/conf/unixauthservice.properties | awk -F= '{ print $2 }' | awk '{ print $1 }'`
 pid=`netstat -antp | grep LISTEN | grep  ${port} | awk '{ print $NF }' | awk -F/ '{ if ($2 == "java") { print $1 } }'`
