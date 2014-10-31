@@ -84,6 +84,8 @@ import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.AccessControlService;
 import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos.SnapshotDescription;
+import org.apache.hadoop.hbase.protobuf.generated.SecureBulkLoadProtos.CleanupBulkLoadRequest;
+import org.apache.hadoop.hbase.protobuf.generated.SecureBulkLoadProtos.PrepareBulkLoadRequest;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
@@ -366,8 +368,11 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	}
 	protected void requirePermission(String request, Permission.Action perm, RegionCoprocessorEnvironment env, Collection<byte[]> families) throws IOException {
 		HashMap<byte[], Set<byte[]>> familyMap = new HashMap<byte[], Set<byte[]>>();
-		for (byte[] family : families) {
-			familyMap.put(family, null);
+
+		if(families != null) {
+			for (byte[] family : families) {
+				familyMap.put(family, null);
+			}
 		}
 		requirePermission(request, perm, env, familyMap);
 	}
@@ -957,6 +962,18 @@ public class XaSecureAuthorizationCoprocessor extends XaSecureAuthorizationCopro
 	@Override
 	public void postMerge(ObserverContext<RegionServerCoprocessorEnvironment> c, HRegion regionA, HRegion regionB, HRegion mergedRegion) throws IOException {
 		auditEvent("mergeRegions", regionA.getTableDesc().getTableName().getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
+	}
+
+	public void prePrepareBulkLoad(ObserverContext<RegionCoprocessorEnvironment> ctx, PrepareBulkLoadRequest request) throws IOException {
+		List<byte[]> cfs = null;
+
+		requirePermission("prePrepareBulkLoad", Permission.Action.WRITE, ctx.getEnvironment(), cfs);
+	}
+
+	public void preCleanupBulkLoad(ObserverContext<RegionCoprocessorEnvironment> ctx, CleanupBulkLoadRequest request) throws IOException {
+		List<byte[]> cfs = null;
+
+		requirePermission("preCleanupBulkLoad", Permission.Action.WRITE, ctx.getEnvironment(), cfs);
 	}
 	
 	private void auditEvent(String eventName, byte[] tableName, byte[] columnFamilyName, byte[] qualifierName, byte[] row, byte[] value, User user, short accessFlag) {

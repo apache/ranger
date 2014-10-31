@@ -355,6 +355,17 @@ define(function(require){
 					if(m.get('action') == 'delete' || m.get('action') == 'update')
 						that.previousGroupList.push(m.get('parentObjectName'));
 					modelArr.push(m);
+				}else if(m.get('attributeName') == 'User Role'){
+					var newRole =  m.get('newValue').replace(/[[\]]/g,'');
+					var prevRole = m.get('previousValue').replace(/[[\]]/g,'');
+					if( newRole == "ROLE_USER")
+						m.set('newValue',XAEnums.UserRoles.ROLE_USER.label)
+					else if(newRole == "ROLE_SYS_ADMIN")
+						m.set('newValue',XAEnums.UserRoles.ROLE_SYS_ADMIN.label)
+					if(prevRole == "ROLE_USER")
+						m.set('previousValue',XAEnums.UserRoles.ROLE_USER.label)
+					else if(prevRole == "ROLE_SYS_ADMIN")
+						m.set('previousValue',XAEnums.UserRoles.ROLE_SYS_ADMIN.label)
 				}else{
 					if(!m.has('attributeName'))
 						modelArr.push(m);

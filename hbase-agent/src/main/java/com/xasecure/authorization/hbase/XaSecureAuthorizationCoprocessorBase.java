@@ -29,19 +29,24 @@ import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.coprocessor.BaseRegionObserver;
+import org.apache.hadoop.hbase.coprocessor.BulkLoadObserver;
 import org.apache.hadoop.hbase.coprocessor.MasterCoprocessorEnvironment;
 import org.apache.hadoop.hbase.coprocessor.MasterObserver;
 import org.apache.hadoop.hbase.coprocessor.ObserverContext;
+import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.coprocessor.RegionServerCoprocessorEnvironment;
 import org.apache.hadoop.hbase.coprocessor.RegionServerObserver;
 import org.apache.hadoop.hbase.master.RegionPlan;
 import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos.SnapshotDescription;
+import org.apache.hadoop.hbase.protobuf.generated.SecureBulkLoadProtos.CleanupBulkLoadRequest;
+import org.apache.hadoop.hbase.protobuf.generated.SecureBulkLoadProtos.PrepareBulkLoadRequest;
 import org.apache.hadoop.hbase.regionserver.HRegion;
+import org.apache.hadoop.hbase.replication.ReplicationEndpoint;
 import org.apache.hadoop.hbase.security.access.Permission;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 
 public class XaSecureAuthorizationCoprocessorBase extends BaseRegionObserver
-		implements MasterObserver, RegionServerObserver {
+		implements MasterObserver, RegionServerObserver, BulkLoadObserver {
 
 	@Override
 	public void preStopRegionServer(
@@ -612,5 +617,55 @@ public class XaSecureAuthorizationCoprocessorBase extends BaseRegionObserver
 			NamespaceDescriptor ns) throws IOException {
 		// TODO Auto-generated method stub
 
+	}
+
+	public void preRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
+			// TODO Auto-generated method stub
+
+	}
+
+	public void postRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
+			// TODO Auto-generated method stub
+
+	}
+	
+	public void preTableFlush(final ObserverContext<MasterCoprocessorEnvironment> ctx, final TableName tableName) throws IOException {
+			// TODO Auto-generated method stub
+
+	}
+
+	public void postTableFlush(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+			// TODO Auto-generated method stub
+
+	}
+
+	public void preTruncateTableHandler(final ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+			// TODO Auto-generated method stub
+
+	}
+
+	public void postTruncateTableHandler(final ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+			// TODO Auto-generated method stub
+
+	}
+
+	public void preTruncateTable(final ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+			// TODO Auto-generated method stub
+
+	}
+
+	public void postTruncateTable(final ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
+			// TODO Auto-generated method stub
+
+	}
+
+	public ReplicationEndpoint postCreateReplicationEndPoint(ObserverContext<RegionServerCoprocessorEnvironment> ctx, ReplicationEndpoint endpoint) {
+		return endpoint;
+	}
+
+	public void prePrepareBulkLoad(ObserverContext<RegionCoprocessorEnvironment> ctx, PrepareBulkLoadRequest request) throws IOException {
+	}
+
+	public void preCleanupBulkLoad(ObserverContext<RegionCoprocessorEnvironment> ctx, CleanupBulkLoadRequest request) throws IOException {
 	}
 }

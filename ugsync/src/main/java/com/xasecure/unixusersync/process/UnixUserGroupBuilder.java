@@ -42,8 +42,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance() ;
 	private Map<String,List<String>>  	user2GroupListMap = new HashMap<String,List<String>>();
+	private Map<String,List<String>>  	internalUser2GroupListMap = new HashMap<String,List<String>>();
 	private Map<String,String>			groupId2groupNameMap = new HashMap<String,String>() ;
-	private List<String>				userList = new ArrayList<String>() ;
 	private int 						minimumUserId  = 0 ;
 	
 	private long  passwordFileModiiedAt = 0 ;
@@ -98,7 +98,6 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private void buildUserGroupInfo() throws Throwable {
 		user2GroupListMap = new HashMap<String,List<String>>();
 		groupId2groupNameMap = new HashMap<String,String>() ;
-		userList = new ArrayList<String>() ;
 
 		buildUnixGroupList(); 
 		buildUnixUserList();
@@ -107,8 +106,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		}
 	}
 	
-	public void print() {
-		for(String user : userList) {
+	private void print() {
+		for(String user : user2GroupListMap.keySet()) {
 			LOG.debug("USER:" + user) ;
 			List<String> groups = user2GroupListMap.get(user) ;
 			if (groups != null) {
@@ -117,14 +116,6 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				}
 			}
 		}
-	}
-	
-	private List<String>  getUserList() {
-		return userList ;
-	}
-	
-	private List<String>  getGroupListForUser(String aUserName) {
-		return user2GroupListMap.get(aUserName) ;
 	}
 	
 	private void buildUnixUserList() throws Throwable {
@@ -168,21 +159,23 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				}
 									
 				if (numUserId >= minimumUserId ) {
-					userList.add(userName) ;
 					String groupName = groupId2groupNameMap.get(groupId) ;
 					if (groupName != null) {
-						List<String> groupList = user2GroupListMap.get(userName) ;
-						if (groupList == null) {
-							groupList = new ArrayList<String>() ;
-							user2GroupListMap.put(userName, groupList) ;
+						List<String> groupList = new ArrayList<String>();
+						groupList.add(groupName);
+						// do we already know about this use's membership to other groups?  If so add those, too
+						if (internalUser2GroupListMap.containsKey(userName)) {
+							groupList.addAll(internalUser2GroupListMap.get(userName));
 						}
-						if (! groupList.contains(groupName)) {
-							groupList.add(groupName) ;
-						}
+						user2GroupListMap.put(userName, groupList);
 					}
 					else {
-						LOG.warn("Group Name could not be found for group id: [" + groupId + "]") ;
+						// we are ignoring the possibility that this user was present in /etc/groups.
+						LOG.warn("Group Name could not be found for group id: [" + groupId + "]. Skipping adding user [" + userName + "] with id [" + userId + "].") ;
 					}
+				}
+				else {
+					LOG.debug("Skipping user [" + userName + "] since its userid [" + userId + "] is less than minuserid limit [" + minimumUserId + "].");
 				}
 			}
 			
@@ -234,13 +227,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				}
 				
 				groupId2groupNameMap.put(groupId,groupName) ;
-				
+				// also build an internal map of users to their group list which is consulted by user list creator
 				if (groupMembers != null && ! groupMembers.trim().isEmpty()) {
 					for(String user : groupMembers.split(",")) {
-						List<String> groupList = user2GroupListMap.get(user) ;
+						List<String> groupList = internalUser2GroupListMap.get(user) ;
 						if (groupList == null) {
 							groupList = new ArrayList<String>() ;
-							user2GroupListMap.put(user, groupList) ;
+							internalUser2GroupListMap.put(user, groupList) ;
 						}
 						if (! groupList.contains(groupName)) {
 							groupList.add(groupName) ;

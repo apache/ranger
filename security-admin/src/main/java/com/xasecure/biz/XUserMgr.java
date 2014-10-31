@@ -139,6 +139,7 @@ public class XUserMgr extends XUserMgrBase {
 		vXPortalUser.setFirstName(vXUser.getFirstName());
 		vXPortalUser.setLastName(vXUser.getLastName());
 		vXPortalUser.setEmailAddress(vXUser.getEmailAddress());
+		vXPortalUser.setPublicScreenName(vXUser.getFirstName() +" "+ vXUser.getLastName());
 		vXPortalUser.setPassword(actualPassword);
 		vXPortalUser.setUserRoleList(vXUser.getUserRoleList());
 		vXPortalUser = userMgr.createDefaultAccountUser(vXPortalUser);
