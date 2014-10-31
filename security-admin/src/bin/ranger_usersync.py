@@ -14,10 +14,13 @@
 
 import sys
 import os
+import logging
 import subprocess
 import time
 #import ranger_install
 from xml.dom.minidom import getDOMImplementation
+import shutil
+import commands
 import re
 
 cmd = sys.argv[0]
@@ -38,6 +41,17 @@ def log(msg,type):
         logging.warning(" %s",msg)
     if type == 'exception':
         logging.exception(" %s",msg)
+
+def copy_files(source_dir,dest_dir):
+    for dir_path, dir_names, file_names in os.walk(source_dir):
+        for file_name in file_names:
+            target_dir = dir_path.replace(source_dir, dest_dir, 1)
+            if not os.path.exists(target_dir):
+                os.mkdir(target_dir)
+            src_file = os.path.join(dir_path, file_name)
+            dest_file = os.path.join(target_dir, file_name)
+            shutil.copyfile(src_file, dest_file)
+
 
 
 def appendTextElement(name, value):
@@ -62,6 +76,9 @@ def init_variables():
 	conf_dict["RANGER_ADMIN_HOME"] = os.getenv("RANGER_ADMIN_HOME")
 	conf_dict["RANGER_USERSYNC_HOME"] = os.getenv("RANGER_USERSYNC_HOME")
 	conf_dict["INSTALL_DIR"] = os.getenv("RANGER_USERSYNC_HOME")
+        USERSYNC_HOME = conf_dict['RANGER_USERSYNC_HOME']
+	copy_files(os.path.join(USERSYNC_HOME,"conf.dist"), os.path.join(USERSYNC_HOME,"conf"))
+        pass
 
 def get_class_path(paths):
     separator = ';' if sys.platform == 'win32' else ':';

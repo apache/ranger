@@ -184,8 +184,9 @@ def get_jdk_options():
 def get_ranger_classpath():
     global conf_dict
     EWS_ROOT = conf_dict['EWS_ROOT']
+    WEBAPP_ROOT = conf_dict['WEBAPP_ROOT']
 
-    cp = [ os.path.join(EWS_ROOT,"lib","*"), EWS_ROOT, os.path.join(os.getenv('JAVA_HOME'), 'lib', '*')]
+    cp = [ os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "conf"), os.path.join(EWS_ROOT,"lib","*"), EWS_ROOT, os.path.join(os.getenv('JAVA_HOME'), 'lib', '*')]
     class_path = get_class_path(cp)
     return class_path
 
@@ -245,14 +246,15 @@ def init_variables(switch):
         populate_config_dict_from_env()
     else:
         populate_config_dict_from_file()
-    INSTALL_DIR = os.path.join(conf_dict['RANGER_ADMIN_HOME'] , "app")
+    #INSTALL_DIR = os.path.join(conf_dict['RANGER_ADMIN_HOME'] , "app")
+    INSTALL_DIR = conf_dict['RANGER_ADMIN_HOME']
     EWS_ROOT    = os.path.join(INSTALL_DIR , "ews")
     WEBAPP_ROOT = os.path.join(INSTALL_DIR , "ews" , "webapp")
 
-    if switch == "service":
-        war_file_path = os.path.join(conf_dict['RANGER_ADMIN_HOME'] , "war", "security-admin-web-*.war")
-        war_file_list = glob.glob(war_file_path)
-        conf_dict['war_file']   = war_file_list[0]
+    #if switch == "service":
+    #    war_file_path = os.path.join(conf_dict['RANGER_ADMIN_HOME'] , "war", "security-admin-web-*.war")
+    #    war_file_list = glob.glob(war_file_path)
+    #    conf_dict['war_file']   = war_file_list[0]
 
     conf_dict['EWS_ROOT']   = EWS_ROOT
     conf_dict['WEBAPP_ROOT']= WEBAPP_ROOT
@@ -295,6 +297,10 @@ def setup_install_files():
         log("creating WEBAPP dir : " + WEBAPP_ROOT, "debug")
         os.makedirs(WEBAPP_ROOT)
 
+    if not os.path.isdir(os.path.join(WEBAPP_ROOT,"WEB-INF","classes","conf")):
+        log("creating conf dir : " + WEBAPP_ROOT, "debug")
+        os.makedirs(os.path.join(WEBAPP_ROOT,"WEB-INF","classes","conf"))
+
     if not os.path.isdir(EWS_LIB_DIR):
         log("creating EWS_LIB_DIR dir : " + EWS_LIB_DIR, "debug")
         os.makedirs(EWS_LIB_DIR)
@@ -303,12 +309,14 @@ def setup_install_files():
     #    log("creating EWS_LOG_DIR dir : " + EWS_LOG_DIR, "debug")
     #    os.makedirs(EWS_LOG_DIR)
 
-    log("copying libraries ", "debug")
-    copy_files(os.path.join(RANGER_ADMIN_HOME,"ews","lib"), EWS_LIB_DIR)
+    #log("copying libraries ", "debug")
+    #copy_files(os.path.join(RANGER_ADMIN_HOME,"ews","lib"), EWS_LIB_DIR)
 
-    log("copying xapolicymgr.properties file", "debug")
-    shutil.copyfile(os.path.join(RANGER_ADMIN_HOME,"ews","xapolicymgr.properties"), os.path.join(EWS_ROOT,"xapolicymgr.properties"))
+    #log("copying xapolicymgr.properties file", "debug")
+    #shutil.copyfile(os.path.join(RANGER_ADMIN_HOME,"ews","xapolicymgr.properties"), os.path.join(EWS_ROOT,"xapolicymgr.properties"))
 
+    log("copying conf.dist/ to conf/", "debug")
+    copy_files(os.path.join(WEBAPP_ROOT,"WEB-INF","classes","conf.dist"), os.path.join(WEBAPP_ROOT,"WEB-INF","classes","conf"))
     log(" Setting up installation files and directory DONE", "info");
 pass
 
@@ -595,22 +603,22 @@ def import_db ():
             log("\nImport asset sql file not found\n","exception")
             sys.exit(1)
 
-def extract_war():
-    global conf_dict
-    war_file = conf_dict['war_file']
-    WEBAPP_ROOT = conf_dict['WEBAPP_ROOT']
-
-    if os.path.isfile(war_file):
-        log("Extract War file " + war_file + " to " + WEBAPP_ROOT,"info")
-    else:
-        log(war_file + " file not found!","exception")
-
-    if os.path.isdir(WEBAPP_ROOT):
-        with zipfile.ZipFile(war_file, "r") as z:
-            z.extractall(WEBAPP_ROOT)
-        log("Extract War file " + war_file + " to " + WEBAPP_ROOT + " DONE! ","info")
-        if os.path.isfile ( os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml.prod")) :
-            shutil.copyfile(os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml.prod"), os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml"))
+#def extract_war():
+#    global conf_dict
+#    war_file = conf_dict['war_file']
+#    WEBAPP_ROOT = conf_dict['WEBAPP_ROOT']
+#
+#    if os.path.isfile(war_file):
+#        log("Extract War file " + war_file + " to " + WEBAPP_ROOT,"info")
+#    else:
+#        log(war_file + " file not found!","exception")
+#
+#    if os.path.isdir(WEBAPP_ROOT):
+#        with zipfile.ZipFile(war_file, "r") as z:
+#            z.extractall(WEBAPP_ROOT)
+#        log("Extract War file " + war_file + " to " + WEBAPP_ROOT + " DONE! ","info")
+#        if os.path.isfile ( os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml.prod")) :
+#            shutil.copyfile(os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml.prod"), os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml"))
 
 # def copy_mysql_connector():
 #     log("Copying MYSQL Connector to "+app_home+"/WEB-INF/lib ","info")
@@ -635,11 +643,9 @@ pass
 
 def update_xapolicymgr_properties():
     global conf_dict
-    EWS_ROOT = conf_dict['EWS_ROOT']
     WEBAPP_ROOT = conf_dict['WEBAPP_ROOT']
-    xapolicymgr_properties = os.path.join(EWS_ROOT, "xapolicymgr.properties")
+    xapolicymgr_properties = os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "conf", "ranger_webserver.properties")
     log("xapolicymgr_properties: " + xapolicymgr_properties, "debug")
-    to_file = os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "xa_system.properties")
     ModConfig(xapolicymgr_properties,"xa.webapp.dir", WEBAPP_ROOT.replace('\\','/' ))
 
 
@@ -660,7 +666,7 @@ def update_properties():
     update_xapolicymgr_properties()
 
     newPropertyValue=''
-    to_file = os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "xa_system.properties")
+    to_file = os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "conf", "xa_system.properties")
 
     if os.path.isfile(to_file):
         log("to_file: " + to_file + " file found", "info")
@@ -771,7 +777,7 @@ def setup_authentication(authentication_method, xmlPath):
 
        log("Setting up "+authentication_method+" authentication for : " + xmlPath,"debug")
 
-       appContextPath = os.path.join(xmlPath ,"META-INF","security-applicationContext.xml")
+       appContextPath = os.path.join(xmlPath, "WEB-INF", "classes", "conf", "security-applicationContext.xml")
        beanSettingPath = os.path.join(xmlPath, "META-INF","contextXML","ldap_bean_settings.xml")
        secSettingPath = os.path.join(xmlPath , "META-INF","contextXML","ldap_security_settings.xml")
        ## Logic is to find LDAP_BEAN_SETTINGS_START,LDAP_SEC_SETTINGS_START  from appContext xml file and append
@@ -798,7 +804,7 @@ def setup_authentication(authentication_method, xmlPath):
 
    elif authentication_method == "ACTIVE_DIRECTORY":
        log("Setting up "+authentication_method+" authentication for : " + xmlPath,"debug")
-       appContextPath = os.path.join(xmlPath , "META-INF","security-applicationContext.xml")
+       appContextPath = os.path.join(xmlPath, "WEB-INF", "classes", "conf", "security-applicationContext.xml")
        beanSettingPath = os.path.join(xmlPath , "META-INF","contextXML","ad_bean_settings.xml")
        secSettingPath = os.path.join(xmlPath , "META-INF","contextXML","ad_security_settings.xml")
 
@@ -832,12 +838,12 @@ def do_authentication_setup():
    global conf_dict
    webappRoot = conf_dict['WEBAPP_ROOT']
    sys_conf_dict={}
-   log("Starting setup based on user authentication method=authentication_method","debug")
 #    ##Written new function to perform authentication setup for all  cases
    authentication_method = conf_dict['RANGER_AUTHENTICATION_METHOD']
+   log("Starting setup based on user authentication method = " + authentication_method,"debug")
    setup_authentication(authentication_method, webappRoot)
    # ldap_file=  os.path.join(webappRoot ,"WEB-INF","resources","xa_ldap.properties")
-   ldap_file=  os.path.join(webappRoot ,"WEB-INF","classes","xa_ldap.properties")
+   ldap_file=  os.path.join(webappRoot, "WEB-INF", "classes", "conf", "xa_ldap.properties")
    if os.path.isfile(ldap_file):
        log(ldap_file + " file found", "info")
    else:
@@ -896,7 +902,7 @@ def do_authentication_setup():
    if authentication_method == "ACTIVE_DIRECTORY":
        log("[I] Loading ACTIVE DIRECTORY attributes and properties", "debug")
        newPropertyValue=''
-       ldap_file= os.path.join(webappRoot,"WEB-INF","classes","xa_ldap.properties")
+       ldap_file= os.path.join(webappRoot, "WEB-INF", "classes", "conf", "xa_ldap.properties")
        if os.path.isfile(ldap_file):
            log("LDAP file : "+ ldap_file + " file found", "info")
            propertyName="xa_ldap_ad_url"
@@ -1031,14 +1037,14 @@ def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
 
 
 # Entry point to script using --service
-def run_setup(cmd, app_type):
+def run_setup(cmd):
     init_logfiles()
     log("--------- Running Ranger PolicyManager Install Script ---------","debug")
     #parse_config_file()
     init_variables("service")
     setup_install_files()
     write_config_to_file()
-    extract_war()
+    #extract_war()
     update_properties()
     do_authentication_setup()
     return

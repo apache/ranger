@@ -20,7 +20,7 @@ import ranger_install
 import re
 
 cmd = sys.argv[0]
-app_type = sys.argv[1]
+app_type = 'ranger-admin'
 
 
 service_entry = '--service' in sys.argv
@@ -29,7 +29,7 @@ configure_entry = '--configure' in sys.argv
 
 if service_entry:
 	try:
-		ranger_install.run_setup(cmd, app_type)
+		ranger_install.run_setup(cmd)
 		jdk_options = ranger_install.get_jdk_options()
 		class_path = ranger_install.get_ranger_classpath()
 		java_class = 'com.xasecure.server.tomcat.EmbededServer'
@@ -61,7 +61,8 @@ if service_entry:
 
 		print prettyXml
 	except:
-		sys.exit()
+		print "######################## Ranger Setup failed! #######################"
+		sys.exit(1)
 
 
 if configure_entry:
