@@ -23,14 +23,19 @@ XAPOLICYMGR_EWS_DIR=${XAPOLICYMGR_DIR}/ews
 RANGER_JAAS_LIB_DIR="${XAPOLICYMGR_EWS_DIR}/ranger_jaas"
 RANGER_JAAS_CONF_DIR="${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf/ranger_jaas"
 
-if [ -f ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/ranger_admin_env.sh ]; then
-	. ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/ranger_admin_env.sh
-fi
+JAVA_OPTS=" ${JAVA_OPTS} -XX:MaxPermSize=256m -Xmx1024m -Xms1024m "
 
 #export JAVA_HOME=
 if [ -f ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh ]; then
 	. ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh
 fi
+
+for custom_env_script in `find ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/ -name "ranger-admin-env*"`; do
+	if [ -f $custom_env_script ]; then
+		. $custom_env_script
+	fi
+done
+
 if [ "$JAVA_HOME" != "" ]; then
 	export PATH=$JAVA_HOME/bin:$PATH
 fi
@@ -40,5 +45,5 @@ if [ ! -d logs ]
 then
 	mkdir logs
 fi
-java -Dproc_rangeradmin -Xmx1024m -Xms1024m -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*" com.xasecure.server.tomcat.EmbededServer > logs/catalina.out 2>&1 &
+java -Dproc_rangeradmin ${JAVA_OPTS} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*" com.xasecure.server.tomcat.EmbededServer > logs/catalina.out 2>&1 &
 echo "Apache Ranger Admin has started"

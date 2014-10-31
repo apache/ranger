@@ -25,6 +25,12 @@ echo "Starting UnixAuthenticationService"
 #export JAVA_HOME=
 . ${cdir}/conf/java_home.sh
 
+for custom_env_script in `find ${cdir}/conf/ -name "ranger-usersync-env*"`; do
+	if [ -f $custom_env_script ]; then
+		. $custom_env_script
+	fi
+done
+
 if [ "$JAVA_HOME" != "" ]; then
 	export PATH=$JAVA_HOME/bin:$PATH
 fi
@@ -42,7 +48,7 @@ cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf"
 ${cdir}/stop.sh
 cd ${cdir}
 umask 0077
-nohup java -Dproc_rangerusersync -Dlogdir="${logdir}" -cp "${cp}" com.xasecure.authentication.UnixAuthenticationService > ${logdir}/auth.log 2>&1 &
+nohup java -Dproc_rangerusersync ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" com.xasecure.authentication.UnixAuthenticationService > ${logdir}/auth.log 2>&1 &
 echo $! >  ${pidf}
 sleep 5
 port=`grep  '^[ ]*authServicePort' ${cdir}/conf/unixauthservice.properties | awk -F= '{ print $2 }' | awk '{ print $1 }'`
