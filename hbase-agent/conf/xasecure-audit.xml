@@ -133,7 +133,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.destination.directory</name>
-		<value>hdfs://namenodehost:8020/argus/audit/%app-type%/%time:yyyyMMdd%</value>
+		<value>hdfs://namenodehost:8020/ranger/audit/%app-type%/%time:yyyyMMdd%</value>
 	</property>	
 
 	<property>

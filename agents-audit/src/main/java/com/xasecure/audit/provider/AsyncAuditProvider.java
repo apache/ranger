@@ -40,8 +40,8 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 	private Thread  mThread           = null;
 	private boolean mStopThread       = false;
 	private String  mName             = null;
-	private int     mMaxQueueSize     = -1;
-	private int     mMaxFlushInterval = -1;
+	private int     mMaxQueueSize     = 10 * 1024;
+	private int     mMaxFlushInterval = 5000; // 5 seconds
 
 	// Summary of logs handled
 	private AtomicLong lifeTimeInLogCount  = new AtomicLong(0); // Total count, including drop count
@@ -55,6 +55,12 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 
 	public AsyncAuditProvider(String name, int maxQueueSize, int maxFlushInterval) {
 		LOG.info("AsyncAuditProvider(" + name + "): creating..");
+
+		if(maxQueueSize < 1) {
+			LOG.warn("AsyncAuditProvider(" + name + "): invalid maxQueueSize=" + maxQueueSize + ". will use default " + mMaxQueueSize);
+
+			maxQueueSize = mMaxQueueSize;
+		}
 
 		mName             = name;
 		mMaxQueueSize     = maxQueueSize;
