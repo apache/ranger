@@ -138,7 +138,19 @@ public class EmbededServer {
 		server.getHost().getPipeline().addValve(valve);
 		
 		try {
-			Context webappCtx = server.addWebapp("/",  new File(getConfig("xa.webapp.dir")).getAbsolutePath()) ;
+			String webapp_dir= getConfig("xa.webapp.dir");
+			if( webapp_dir == null || webapp_dir.trim().isEmpty()) {
+				//If webapp location property is not set, then let's dervice from catalina_base
+				String catalina_base = getConfig("catalina.base");
+				if( catalina_base == null || catalina_base.trim().isEmpty()) {
+					LOG.severe("Tomcat Server failed to start: catalina.base and/or xa.webapp.dir is not set") ;
+					System.exit(1);
+				}
+				webapp_dir = catalina_base + File.separator + "webapp";
+				LOG.info("Deriving webapp folder from catalina.base property. folder=" + webapp_dir);
+			}
+			LOG.info("Webapp folder=" + webapp_dir);
+			Context webappCtx = server.addWebapp("/",  new File(webapp_dir).getAbsolutePath()) ;
 			webappCtx.init() ;
 		} catch (ServletException e1) {
 			LOG.severe("Tomcat Server failed to add webapp:" + e1.toString()) ;
@@ -159,7 +171,12 @@ public class EmbededServer {
 	
 	
 	protected String getConfig(String key) {
-		return serverConfigProperties.getProperty(key) ;
+		String value = serverConfigProperties.getProperty(key) ;
+		if ( value == null || value.trim().isEmpty()) {
+			//Value not found in properties file, let's try to get from System's property
+			value = System.getProperty(key);
+		}
+		return value;
 	}
 	
 	protected String getConfig(String key, String defaultValue) {
