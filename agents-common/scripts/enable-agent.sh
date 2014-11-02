@@ -140,6 +140,16 @@ then
 	exit 1
 fi
 
+ambari_hive_install="N"
+if  [ "${HCOMPONENT_NAME}" = "hive" ]
+then
+	HCOMPONENT_CONF_SERVER_DIR="${HCOMPONENT_CONF_DIR}"/../conf.server
+	if [ -d "${HCOMPONENT_CONF_SERVER_DIR}" ]
+	then 
+		ambari_hive_install="Y"
+	fi
+fi
+
 #
 # Common functions used by all enable/disable scripts
 #
@@ -348,6 +358,22 @@ then
                     then
                     	cat ${newfn} > ${fullpathorgfn}
                     fi
+                    
+                    # For Ambari install copy the .xml to conf.server also
+					if [ "${ambari_hive_install}" = "Y" ]
+					then
+					    fullpathorgHS2fn="${HCOMPONENT_CONF_SERVER_DIR}/${orgfn}"
+					    archiveHS2fn="${HCOMPONENT_CONF_SERVER_DIR}/.${orgfn}.${dt}"
+        				newHS2fn="${HCOMPONENT_CONF_SERVER_DIR}/.${orgfn}-new.${dt}"
+						log "Saving current conf.server file: ${fullpathorgHS2fn} to ${archiveHS2fn} ..."
+						if [ -f ${fullpathorgHS2fn} ]
+						then 
+            				cp ${fullpathorgHS2fn} ${archiveHS2fn}
+            			fi
+						cp ${fullpathorgfn} ${HCOMPONENT_CONF_SERVER_DIR}/${orgfn}
+						chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_SERVER_DIR}/${orgfn}
+					fi
+					
                	else
 				    echo "ERROR: Unable to make changes to config. file: ${fullpathorgfn}"
                     echo "exiting ...."
