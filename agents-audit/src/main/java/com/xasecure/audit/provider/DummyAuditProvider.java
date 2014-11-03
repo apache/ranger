@@ -17,10 +17,16 @@
  */
 package com.xasecure.audit.provider;
 
+import java.util.Properties;
+
 import com.xasecure.audit.model.AuditEventBase;
 
 
 public class DummyAuditProvider implements AuditProvider {
+	@Override
+	public void init(Properties prop) {
+		// intentionally left empty
+	}
 
 	@Override
 	public void log(AuditEventBase event) {

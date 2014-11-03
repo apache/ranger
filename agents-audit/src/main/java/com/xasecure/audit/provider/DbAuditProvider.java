@@ -20,6 +20,7 @@ package com.xasecure.audit.provider;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -31,15 +32,27 @@ import org.apache.commons.logging.LogFactory;
 
 import com.xasecure.audit.dao.DaoManager;
 import com.xasecure.audit.model.AuditEventBase;
+import com.xasecure.authorization.hadoop.utils.XaSecureCredentialProvider;
 
 
 /*
  * NOTE:
  * - Instances of this class are not thread-safe.
  */
-public class DbAuditProvider implements AuditProvider {
+public class DbAuditProvider extends BaseAuditProvider {
 
 	private static final Log LOG = LogFactory.getLog(DbAuditProvider.class);
+
+	public static final String AUDIT_DB_IS_ASYNC_PROP           = "xasecure.audit.db.is.async";
+	public static final String AUDIT_DB_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.db.async.max.queue.size" ;
+	public static final String AUDIT_DB_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.db.async.max.flush.interval.ms";
+
+	private static final String AUDIT_DB_BATCH_SIZE_PROP            = "xasecure.audit.db.batch.size" ;
+	private static final String AUDIT_DB_RETRY_MIN_INTERVAL_PROP    = "xasecure.audit.db.config.retry.min.interval.ms";
+	private static final String AUDIT_JPA_CONFIG_PROP_PREFIX        = "xasecure.audit.jpa.";
+	private static final String AUDIT_DB_CREDENTIAL_PROVIDER_FILE   = "xasecure.audit.credential.provider.file";
+	private static final String AUDIT_DB_CREDENTIAL_PROVIDER_ALIAS	= "auditDBCred";
+	private static final String AUDIT_JPA_JDBC_PASSWORD  			= "javax.persistence.jdbc.password";
 
 	private EntityManagerFactory entityManagerFactory;
 	private DaoManager          daoManager;
@@ -51,12 +64,31 @@ public class DbAuditProvider implements AuditProvider {
 	private Map<String, String> mDbProperties         = null;
 	private long                mLastDbFailedTime     = 0;
 
-	public DbAuditProvider(Map<String, String> properties, int dbBatchSize, int dbRetryMinIntervalMs) {
+	public DbAuditProvider() {
 		LOG.info("DbAuditProvider: creating..");
-		
-		mDbProperties         = properties;
-		mCommitBatchSize      = dbBatchSize < 1 ? 1 : dbBatchSize;
-		mDbRetryMinIntervalMs = dbRetryMinIntervalMs;
+	}
+
+	@Override
+	public void init(Properties props) {
+		LOG.info("DbAuditProvider.init()");
+
+		super.init(props);
+
+		mDbProperties         = BaseAuditProvider.getPropertiesWithPrefix(props, AUDIT_JPA_CONFIG_PROP_PREFIX);
+		mCommitBatchSize      = BaseAuditProvider.getIntProperty(props, AUDIT_DB_BATCH_SIZE_PROP, 1000);
+		mDbRetryMinIntervalMs = BaseAuditProvider.getIntProperty(props, AUDIT_DB_RETRY_MIN_INTERVAL_PROP, 15 * 1000);
+
+		boolean isAsync = BaseAuditProvider.getBooleanProperty(props, AUDIT_DB_IS_ASYNC_PROP, false);
+
+		if(! isAsync) {
+			mCommitBatchSize = 1; // Batching not supported in sync mode
+		}
+
+		String jdbcPassword = getCredentialString(BaseAuditProvider.getStringProperty(props, AUDIT_DB_CREDENTIAL_PROVIDER_FILE), AUDIT_DB_CREDENTIAL_PROVIDER_ALIAS);
+
+		if(jdbcPassword != null && !jdbcPassword.isEmpty()) {
+			mDbProperties.put(AUDIT_JPA_JDBC_PASSWORD, jdbcPassword);
+		}
 	}
 
 	@Override
@@ -308,7 +340,17 @@ public class DbAuditProvider implements AuditProvider {
 		LOG.warn(msg, excp);
 	}
 
-	private void logFailedEvent(AuditEventBase event) {
-		LOG.warn("failed to log audit event: " + MiscUtil.stringify(event) + " }");
- 	}
+	private String getCredentialString(String url,String alias) {
+		String ret = null;
+
+		if(url != null && alias != null) {
+			char[] cred = XaSecureCredentialProvider.getInstance().getCredentialString(url,alias);
+
+			if ( cred != null ) {
+				ret = new String(cred);	
+			}
+		}
+		
+		return ret;
+	}
 }

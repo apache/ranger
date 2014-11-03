@@ -17,11 +17,13 @@
 package com.xasecure.audit.provider.hdfs;
 
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.xasecure.audit.model.AuditEventBase;
+import com.xasecure.audit.provider.BaseAuditProvider;
 import com.xasecure.audit.provider.BufferedAuditProvider;
 import com.xasecure.audit.provider.DebugTracer;
 import com.xasecure.audit.provider.LocalFileLogBuffer;
@@ -30,26 +32,36 @@ import com.xasecure.audit.provider.MiscUtil;
 
 public class HdfsAuditProvider extends BufferedAuditProvider {
 	private static final Log LOG = LogFactory.getLog(HdfsAuditProvider.class);
-	
+
+	public static final String AUDIT_HDFS_IS_ASYNC_PROP           = "xasecure.audit.hdfs.is.async";
+	public static final String AUDIT_HDFS_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.hdfs.async.max.queue.size" ;
+	public static final String AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.hdfs.async.max.flush.interval.ms";
+
 	public HdfsAuditProvider() {
 	}
 
-	public void init(Map<String, String> properties) {
-		String encoding                                = properties.get("encoding");
+	public void init(Properties props) {
+		LOG.info("HdfsAuditProvider.init()");
 
-		String hdfsDestinationDirectory                = properties.get("destination.directory");
-		String hdfsDestinationFile                     = properties.get("destination.file");
-		int    hdfsDestinationFlushIntervalSeconds     = MiscUtil.parseInteger(properties.get("destination.flush.interval.seconds"), 15 * 60);
-		int    hdfsDestinationRolloverIntervalSeconds  = MiscUtil.parseInteger(properties.get("destination.rollover.interval.seconds"), 24 * 60 * 60);
-		int    hdfsDestinationOpenRetryIntervalSeconds = MiscUtil.parseInteger(properties.get("destination.open.retry.interval.seconds"), 60);
+		super.init(props);
 
-		String localFileBufferDirectory               = properties.get("local.buffer.directory");
-		String localFileBufferFile                    = properties.get("local.buffer.file");
-		int    localFileBufferFlushIntervalSeconds    = MiscUtil.parseInteger(properties.get("local.buffer.flush.interval.seconds"), 1 * 60);
-		int    localFileBufferFileBufferSizeBytes     = MiscUtil.parseInteger(properties.get("local.buffer.file.buffer.size.bytes"), 8 * 1024);
-		int    localFileBufferRolloverIntervalSeconds = MiscUtil.parseInteger(properties.get("local.buffer.rollover.interval.seconds"), 10 * 60);
-		String localFileBufferArchiveDirectory        = properties.get("local.archive.directory");
-		int    localFileBufferArchiveFileCount        = MiscUtil.parseInteger(properties.get("local.archive.max.file.count"), 10);
+		Map<String, String> hdfsProps = BaseAuditProvider.getPropertiesWithPrefix(props, "xasecure.audit.hdfs.config.");
+
+		String encoding                                = hdfsProps.get("encoding");
+
+		String hdfsDestinationDirectory                = hdfsProps.get("destination.directory");
+		String hdfsDestinationFile                     = hdfsProps.get("destination.file");
+		int    hdfsDestinationFlushIntervalSeconds     = MiscUtil.parseInteger(hdfsProps.get("destination.flush.interval.seconds"), 15 * 60);
+		int    hdfsDestinationRolloverIntervalSeconds  = MiscUtil.parseInteger(hdfsProps.get("destination.rollover.interval.seconds"), 24 * 60 * 60);
+		int    hdfsDestinationOpenRetryIntervalSeconds = MiscUtil.parseInteger(hdfsProps.get("destination.open.retry.interval.seconds"), 60);
+
+		String localFileBufferDirectory               = hdfsProps.get("local.buffer.directory");
+		String localFileBufferFile                    = hdfsProps.get("local.buffer.file");
+		int    localFileBufferFlushIntervalSeconds    = MiscUtil.parseInteger(hdfsProps.get("local.buffer.flush.interval.seconds"), 1 * 60);
+		int    localFileBufferFileBufferSizeBytes     = MiscUtil.parseInteger(hdfsProps.get("local.buffer.file.buffer.size.bytes"), 8 * 1024);
+		int    localFileBufferRolloverIntervalSeconds = MiscUtil.parseInteger(hdfsProps.get("local.buffer.rollover.interval.seconds"), 10 * 60);
+		String localFileBufferArchiveDirectory        = hdfsProps.get("local.archive.directory");
+		int    localFileBufferArchiveFileCount        = MiscUtil.parseInteger(hdfsProps.get("local.archive.max.file.count"), 10);
 
 		DebugTracer tracer = new Log4jTracer(LOG);
 

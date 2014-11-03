@@ -18,11 +18,14 @@
 
 package com.xasecure.audit.provider;
 
+import java.util.Properties;
+
 import com.xasecure.audit.model.AuditEventBase;
 
 public interface AuditProvider {
 	public void log(AuditEventBase event);
 
+    public void init(Properties prop);
     public void start();
     public void stop();
     public void waitToComplete();
