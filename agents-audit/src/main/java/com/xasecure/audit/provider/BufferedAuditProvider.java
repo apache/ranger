@@ -17,12 +17,18 @@
  */
 package com.xasecure.audit.provider;
 
+import java.util.Properties;
+
 import com.xasecure.audit.model.AuditEventBase;
 
-public abstract class BufferedAuditProvider implements AuditProvider {
+public abstract class BufferedAuditProvider extends BaseAuditProvider {
 	private LogBuffer<AuditEventBase>      mBuffer      = null;
 	private LogDestination<AuditEventBase> mDestination = null;
 
+	@Override
+	public void init(Properties props) {
+		super.init(props);
+	}
 
 	@Override
 	public void log(AuditEventBase event) {
@@ -38,7 +44,9 @@ public abstract class BufferedAuditProvider implements AuditProvider {
 			event.setEventId(MiscUtil.generateUniqueId());
 		}
 
-		mBuffer.add(event);
+		if(! mBuffer.add(event)) {
+			logFailedEvent(event);
+		}
 	}
 
 	@Override

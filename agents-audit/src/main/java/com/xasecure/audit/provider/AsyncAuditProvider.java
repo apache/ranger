@@ -23,6 +23,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -73,6 +74,13 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		this(name, maxQueueSize, maxFlushInterval);
 
 		addAuditProvider(provider);
+	}
+
+	@Override
+	public void init(Properties props) {
+		LOG.info("AsyncAuditProvider(" + mName + ").init()");
+
+		super.init(props);
 	}
 
 	public int getIntervalLogDurationMS() {
@@ -126,8 +134,9 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		LOG.info("==> AsyncAuditProvider.run()");
 
 		while (!mStopThread) {
+			AuditEventBase event = null;
 			try {
-				AuditEventBase event = dequeueEvent();
+				event = dequeueEvent();
 
 				if (event != null) {
 					super.log(event);
@@ -135,7 +144,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 					flush();
 				}
 			} catch (Exception excp) {
-				LOG.error("AsyncAuditProvider.run()", excp);
+				logFailedEvent(event, excp);
 			}
 		}
 
@@ -203,7 +212,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 			if (intervalInLogCount.get() > 0 || intervalOutLogCount.get() > 0 ) {
 				long queueSize = mQueue.size();
 
-				LOG.info("AsyncAuditProvider-stats:" + mName + ": past " + formatTimeForLog(intervalSinceLastLog)
+				LOG.info("AsyncAuditProvider-stats:" + mName + ": past " + formatIntervalForLog(intervalSinceLastLog)
 						+ ": inLogs=" + intervalInLogCount.get()
 						+ ", outLogs=" + intervalOutLogCount.get()
 						+ ", dropped=" + intervalDropCount.get()
@@ -239,29 +248,6 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		}
 
 		LOG.debug("<== AsyncAuditProvider.waitToComplete()");
-	}
-
-	private String getTimeDiffStr(long time1, long time2) {
-		long timeInMs = Math.abs(time1 - time2);
-		return formatTimeForLog(timeInMs);
-	}
-
-	private String formatTimeForLog(long timeInMs) {
-		long hours = timeInMs / (60 * 60 * 1000);
-		long minutes = (timeInMs / (60 * 1000)) % 60;
-		long seconds = (timeInMs % (60 * 1000)) / 1000;
-		long mSeconds = (timeInMs % (1000));
-
-		if (hours > 0)
-			return String.format("%02d:%02d:%02d.%03d hours", hours, minutes,
-					seconds, mSeconds);
-		else if (minutes > 0)
-			return String.format("%02d:%02d.%03d minutes", minutes, seconds,
-					mSeconds);
-		else if (seconds > 0)
-			return String.format("%02d.%03d seconds", seconds, mSeconds);
-		else
-			return String.format("%03d milli-seconds", mSeconds);
 	}
 
 	private long getTimeTillNextFlush() {

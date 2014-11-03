@@ -56,6 +56,8 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	private String mBufferFilename   = null;
 	private long   mNextRolloverTime = 0;
 	private long   mNextFlushTime    = 0;
+	private int    mFileOpenRetryIntervalInMs = 60 * 1000;
+	private long   mNextFileOpenRetryTime     = 0;
 
 	private DestinationDispatcherThread<T> mDispatcherThread = null;
 	
@@ -200,9 +202,9 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 					ret = true;
 				} catch(IOException excp) {
 					mLogger.warn("LocalFileLogBuffer.add(): write failed", excp);
+
+					closeFile();
 				}
-			} else {
-				mLogger.warn("LocalFileLogBuffer.add(): writer is null");
 			}
 		}
 
@@ -216,38 +218,44 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 	private synchronized void openFile() {
 		mLogger.debug("==> LocalFileLogBuffer.openFile()");
+		
+		long now = System.currentTimeMillis();
 
 		closeFile();
 
-		mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
-
-		long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
-
-		mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
-
-		FileOutputStream ostream = null;
-		try {
-			ostream = new FileOutputStream(mBufferFilename, mIsAppend);
-		} catch(Exception excp) {
+		if(mNextFileOpenRetryTime <= now) {
+			mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
+	
+			long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
+	
+			mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
+	
 			MiscUtil.createParents(new File(mBufferFilename));
-
+	
+			FileOutputStream ostream = null;
 			try {
 				ostream = new FileOutputStream(mBufferFilename, mIsAppend);
-			} catch(Exception ex) {
-				// ignore; error printed down
+			} catch(Exception excp) {
+				mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file " + mBufferFilename, excp);
 			}
-		}
-
-		mWriter = createWriter(ostream);
-
-		if(mWriter != null) {
-			mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
-
-			mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
-		} else {
-			mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
-
-			mBufferFilename = null;
+	
+			if(ostream != null) {
+				mWriter = createWriter(ostream);
+	
+				if(mWriter != null) {
+					mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
+		
+					mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
+				} else {
+					mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
+		
+					mBufferFilename = null;
+				}
+			}
+			
+			if(mWriter == null) {
+				mNextFileOpenRetryTime = now + mFileOpenRetryIntervalInMs;
+			}
 		}
 
 		mLogger.debug("<== LocalFileLogBuffer.openFile()");
@@ -432,7 +440,7 @@ class DestinationDispatcherThread<T> extends Thread {
 					try {
 						mCompletedLogfiles.wait(pollIntervalInMs);
 					} catch(InterruptedException excp) {
-						mLogger.warn("DestinationDispatcherThread.run(): failed to wait for log file", excp);
+						throw new RuntimeException("DestinationDispatcherThread.run(): failed to wait for log file", excp);
 					}
 				}
 				
@@ -494,7 +502,11 @@ class DestinationDispatcherThread<T> extends Thread {
 
 			// loop until log is sent successfully
 			while(!mStopThread && !mDestination.sendStringified(log)) {
-				sleep(destinationPollIntervalInMs, "LocalFileLogBuffer.sendCurrentFile(" + mCurrentLogfile + "): failed to wait for destination to be available");
+				try {
+					Thread.sleep(destinationPollIntervalInMs);
+				} catch(InterruptedException excp) {
+					throw new RuntimeException("LocalFileLogBuffer.sendCurrentFile(" + mCurrentLogfile + "): failed while waiting for destination to be available", excp);
+				}
 			}
 		}
 
@@ -653,14 +665,6 @@ class DestinationDispatcherThread<T> extends Thread {
 	    }
 
 	    return reader;
-	}
-
-	private void sleep(long sleepTimeInMs, String onFailMsg) {
-		try {
-			Thread.sleep(sleepTimeInMs);
-		} catch(InterruptedException excp) {
-			mLogger.warn(onFailMsg, excp);
-		}
 	}
 
 	@Override

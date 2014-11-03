@@ -3,6 +3,7 @@ package com.xasecure.audit.provider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,7 +33,7 @@ import com.xasecure.audit.model.StormAuditEvent;
  * limitations under the License.
  */
 
-public class MultiDestAuditProvider implements AuditProvider {
+public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	private static final Log LOG = LogFactory.getLog(MultiDestAuditProvider.class);
 
@@ -44,11 +45,24 @@ public class MultiDestAuditProvider implements AuditProvider {
 	}
 
 	public MultiDestAuditProvider(AuditProvider provider) {
-		LOG.info("MultiDestAuditProvider: creating..");
-
 		addAuditProvider(provider);
 	}
-	
+
+	@Override
+	public void init(Properties props) {
+		LOG.info("MultiDestAuditProvider.init()");
+
+		super.init(props);
+
+		for(AuditProvider provider : mProviders) {
+    		try {
+                provider.init(props);
+    		} catch(Throwable excp) {
+    			LOG.info("MultiDestAuditProvider.init(): failed" + provider.getClass().getCanonicalName() + ")");
+    		}
+        }
+	}
+
 	public void addAuditProvider(AuditProvider provider) {
 		if(provider != null) {
 			LOG.info("MultiDestAuditProvider.addAuditProvider(providerType=" + provider.getClass().getCanonicalName() + ")");
@@ -71,7 +85,7 @@ public class MultiDestAuditProvider implements AuditProvider {
     		try {
                 provider.log(event);
     		} catch(Throwable excp) {
-    			LOG.error("AsyncAuditProvider.log(): failed for provider { " + provider.getClass().getName() + " }", excp);
+    			logFailedEvent(event, excp);
     		}
         }
 	}
