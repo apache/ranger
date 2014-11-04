@@ -1,4 +1,4 @@
-Apache Argus is an effort undergoing incubation at the Apache Software 
+Apache Ranger is an effort undergoing incubation at the Apache Software 
 Foundation (ASF), sponsored by the Apache Incubator PMC. 
 
 Incubation is required of all newly accepted projects until a further review 
@@ -9,7 +9,7 @@ While incubation status is not necessarily a reflection of the completeness
 or stability of the code, it does indicate that the project has yet to be 
 fully endorsed by the ASF.
 
-For more information about the incubation status of the Apache Argus project you
+For more information about the incubation status of the Apache Ranger project you
 can go to the following page:
 
 http://incubator.apache.org/argus/

@@ -1,4 +1,4 @@
-Apache Argus
+Apache Ranger
 Copyright 2011-2013 The Apache Software Foundation
 
 This product includes software developed at The Apache Software
@@ -27,7 +27,7 @@ This product includes jQuery Toggles v2.0.4 (http://simontabor.com/labs/toggles 
 This product includes jQuery UI Tag-it! (http://aehlke.github.com/tag-it/ - MIT license), Copyright 2011, Levy Carneiro Jr.
 This product includes Select2 3.4.3 (http://ivaynberg.github.io/select2/ - Apache License - 2.0), Copyright 2012 Igor Vaynberg.  
 This product includes bootbox.js v3.3.0 (http://bootboxjs.com/ - MIT license), Copyright © 2011-2014 by Nick Payne.  
-This product includes jQuery Pines Notify (pnotify) Plugin 1.2.0 (http://pinesframework.org/pnotify/ - MPL), Copyright © 2009-2012 Hunter Perrin.
+This product includes jQuery Pines Notify (pnotify) Plugin 1.2.0 (http://sciactive.com/pnotify/- MPL), Copyright © 2009-2012 Hunter Perrin.
 This product includes moment.js (http://moment.js - MIT license), Copyright © 2011-2014 Tim Wood, Iskren Chernev, Moment.js contributors.  
 This product includes VisualSearch.js 0.4.0 (http://documentcloud.github.com/visualsearch - MIT license), © 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.  
 This product includes Globalize (http://github.com/jquery/globalize - MIT license), Copyright Software Freedom Conservancy, Inc.
