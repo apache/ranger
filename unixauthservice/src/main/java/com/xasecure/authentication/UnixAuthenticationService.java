@@ -28,12 +28,15 @@ import java.net.Socket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -48,7 +51,7 @@ public class UnixAuthenticationService {
 	
 	private static final String serviceName = "UnixAuthenticationService" ;
 	
-	private static final String SSL_ALGORITHM = "SSLv3" ;
+	private static final String SSL_ALGORITHM = "TLS" ;
 	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "authServicePort" ;
 	private static final String SSL_KEYSTORE_PATH_PARAM = "keyStore" ;
 	private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM = "keyStorePassword" ;
@@ -216,6 +219,26 @@ public class UnixAuthenticationService {
 		SSLServerSocketFactory sf = context.getServerSocketFactory() ; 
 
 		ServerSocket socket = (SSLEnabled ? sf.createServerSocket(portNum) :  new ServerSocket(portNum) ) ;
+		
+		if (SSLEnabled) {
+			SSLServerSocket secureSocket = (SSLServerSocket) socket ;
+			String[] protocols = secureSocket.getEnabledProtocols() ;
+			Set<String> allowedProtocols = new HashSet<String>() ;
+			for(String ep : protocols) {
+				if (! ep.toUpperCase().startsWith("SSLV3")) {
+					LOG.info("Enabling Protocol: [" + ep + "]");
+					allowedProtocols.add(ep) ;
+				}
+				else {
+					LOG.info("Disabling Protocol: [" + ep + "]");
+				}
+			}
+			
+			if (!allowedProtocols.isEmpty()) {
+				secureSocket.setEnabledProtocols(allowedProtocols.toArray(new String[0]));
+			}
+		}
+		
 				
 		Socket client = null ;
 		
