@@ -1,12 +1,14 @@
 package com.xasecure.pdp.hdfs;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.xasecure.pdp.model.Policy;
@@ -15,47 +17,32 @@ import com.xasecure.pdp.model.ResourcePath;
 
 public class URLBasedAuthDBTest {
 
-	@Before
-	public void setUp() throws Exception {
-	}
-
 	@Test
-	public void testIsAuditLogEnabledByACL() {
+	public void testIsAuditLogEnabledByACL_emptyPolicyContainer() {
 
-		// if authdb isn't initialized then return false
-		URLBasedAuthDB authDB = URLBasedAuthDB.getInstance();
-		assertFalse(authDB.isAuditLogEnabledByACL("blah"));
+		// audit can't be enabled if authdb isn't initialized 
+		assertFalse(mAuthDB.isAuditLogEnabledByACL("blah"));
 		
-		// Policy container with empty acl list is the same!
-		URLBasedAuthDB spy = spy(authDB);
-		PolicyContainer policyContainer = mock(PolicyContainer.class);
+		// or if the policy container in is null!
+		URLBasedAuthDB spy = spy(mAuthDB);
+		when(spy.getPolicyContainer()).thenReturn(null);
+		assertFalse(mAuthDB.isAuditLogEnabledByACL("blah"));
+		
+		// of if policy container is empty, i.e. has no policies!
 		List<Policy> policies = new ArrayList<Policy>();
+		PolicyContainer policyContainer = mock(PolicyContainer.class);
 		when(policyContainer.getAcl()).thenReturn(policies);
-		
 		when(spy.getPolicyContainer()).thenReturn(policyContainer);
-		assertFalse(spy.isAuditLogEnabledByACL("blah"));
+		assertFalse(mAuthDB.isAuditLogEnabledByACL("blah"));
 		
-		// or a non-empty acl with empty resource lists!
+		// or if all policies are empty, i.e. no acls!
 		Policy aPolicy = mock(Policy.class);
 		when(aPolicy.getResourceList()).thenReturn(new ArrayList<ResourcePath>());
 		policies.add(aPolicy);
+		when(policyContainer.getAcl()).thenReturn(policies);
+		when(spy.getPolicyContainer()).thenReturn(policyContainer);
 		assertFalse(spy.isAuditLogEnabledByACL("blah"));
-		
-		// setup a resource non-recursive path
-		ResourcePath path = mock(ResourcePath.class);
-		when(path.getPath()).thenReturn("aPath");
-		when(path.isWildcardPath()).thenReturn(false);
-		
-		// build a resource list with this path
-		List<ResourcePath> resourcePaths = new ArrayList<ResourcePath>();
-		resourcePaths.add(path);
-		when(aPolicy.getResourceList()).thenReturn(resourcePaths);
-		// let the ACL not be recursive either
-		when(aPolicy.getRecursiveInd()).thenReturn(0);
-		when(aPolicy.getAuditInd()).thenReturn(1);
-		assertFalse(spy.isAuditLogEnabledByACL("blah"));
-		// right path matches
-		assertTrue(spy.isAuditLogEnabledByACL("aPath"));
 	}
 	
+	private final URLBasedAuthDB mAuthDB = URLBasedAuthDB.getInstance();	
 }
