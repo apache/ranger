@@ -180,6 +180,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		LOG.info("LDAPUserGroupBuilder updateSink started");
+    NamingEnumeration<SearchResult> searchResultEnum = null;
 		try {
 			createLdapContext();
 			
@@ -191,7 +192,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		    
 			int counter = 0;
 			do {
-				NamingEnumeration<SearchResult> searchResultEnum = ldapContext
+				searchResultEnum = ldapContext
 					.search(userSearchBase, extendedSearchFilter,
 							searchControls);
 				while (searchResultEnum.hasMore()) { 
@@ -281,6 +282,9 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 			LOG.info("LDAPUserGroupBuilder.updateSink() completed with user count: "
 					+ counter);
 		} finally {
+      if (searchResultEnum != null) {
+        searchResultEnum.close();
+      }
 			closeLdapContext();
 		}
 	}
