@@ -22,7 +22,6 @@
 
 /**
  * List wrapper class for VXPolicy
- * @author tushar
  */
 
 import java.util.*;

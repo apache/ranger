@@ -22,7 +22,6 @@
 
 /**
  * Repository
- * @author tushar
  */
 
 import com.xasecure.common.*;

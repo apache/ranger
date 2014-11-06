@@ -48,10 +48,6 @@ import com.xasecure.view.VXRepository;
 import com.xasecure.view.VXRepositoryList;
 import com.xasecure.view.VXResource;
 
-/**
- * @author tushar
- * 
- */
 
 /**
  * JUnit testSuite for {@link com.xasecure.rest.PublicAPIs}

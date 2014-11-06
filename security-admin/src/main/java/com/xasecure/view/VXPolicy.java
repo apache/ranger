@@ -22,7 +22,6 @@
 
 /**
  * Policy
- * @author tushar
  */
 
 import java.util.*;

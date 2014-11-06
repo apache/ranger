@@ -22,7 +22,6 @@
 
 /**
  * Permission map
- * @author tushar
  */
 
 import java.util.List;

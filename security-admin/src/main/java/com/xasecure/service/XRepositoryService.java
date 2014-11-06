@@ -17,9 +17,6 @@
  * under the License.
  */
 
- /**
- * 
- */
 package com.xasecure.service;
 
 import java.util.ArrayList;
@@ -40,11 +37,6 @@ import com.xasecure.view.VXAsset;
 import com.xasecure.view.VXAssetList;
 import com.xasecure.view.VXRepository;
 import com.xasecure.view.VXRepositoryList;
-
-/**
- * @author tushar
- * 
- */
 
 @Service
 public class XRepositoryService extends
