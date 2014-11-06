@@ -16,21 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
- /**************************************************************************
- *                                                                        *
- * The information in this document is proprietary to XASecure Inc.,      *
- * It may not be used, reproduced or disclosed without the written        *
- * approval from the XASecure Inc.,                                       *
- *                                                                        *
- * PRIVILEGED AND CONFIDENTIAL XASECURE PROPRIETARY INFORMATION           *
-
- /**
-  *
-  *	@version: 1.0.004
-  *
-  */
-
 package com.xasecure.authorization.hadoop;
 
 import org.apache.commons.logging.Log;
