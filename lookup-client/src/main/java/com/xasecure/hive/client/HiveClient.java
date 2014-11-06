@@ -61,9 +61,9 @@ public class HiveClient extends BaseClient implements Closeable {
 	}
 	
 	public void initHive() {
-		
 		isKerberosAuth = getConfigHolder().isKerberosAuthentication();
 		if (isKerberosAuth) {
+			LOG.info("Secured Mode: JDBC Connection done with preAuthenticated Subject");
 			Subject.doAs(getLoginSubject(), new PrivilegedAction<Object>() {
 				public Object run() {
 					initConnection();
@@ -73,14 +73,28 @@ public class HiveClient extends BaseClient implements Closeable {
 		}
 		else {
 			LOG.info("Since Password is NOT provided, Trying to use UnSecure client with username and password");
-			String userName = getConfigHolder().getUserName() ;
-			String password = getConfigHolder().getPassword() ;
-			initConnection(userName,password);
+			final String userName = getConfigHolder().getUserName() ;
+			final String password = getConfigHolder().getPassword() ;
+			Subject.doAs(getLoginSubject(), new PrivilegedAction<Object>() {
+				public Object run() {
+					initConnection(userName,password);
+					return null;
+				}
+			}) ;	
 		}
-		
 	}
 	
-	public List<String> getDatabaseList(String databaseMatching) {
+	public List<String> getDatabaseList(String databaseMatching){
+	 	final String dbMatching=databaseMatching;
+		List<String> dblist = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+			public List<String>  run() {
+				return getDBList(dbMatching);
+			}
+		}) ;
+		return dblist;
+	}
+		
+	private List<String> getDBList(String databaseMatching) {
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -121,8 +135,19 @@ public class HiveClient extends BaseClient implements Closeable {
 		}
 		return ret ;
 	}
+	
+	public List<String> getTableList(String database, String tableNameMatching){
+		final String db=database;
+		final String tblNameMatching=tableNameMatching;
+		List<String> tableList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+			public List<String>  run() {
+				return getTblList(db,tblNameMatching);
+			}
+		}) ;
+		return tableList;
+	}
 
-	public List<String> getTableList(String database, String tableNameMatching) {
+	public List<String> getTblList(String database, String tableNameMatching) {
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -186,8 +211,20 @@ public class HiveClient extends BaseClient implements Closeable {
 		List<String> ret = null ;
 		return ret ;
 	}
-
+	
 	public List<String> getColumnList(String database, String tableName, String columnNameMatching) {
+		final String db=database;
+		final String tblName=tableName;
+		final String clmNameMatching=columnNameMatching;
+		List<String> columnList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+			public List<String>  run() {
+					return getClmList(db,tblName,clmNameMatching);
+				}
+			}) ;
+		return columnList;
+	}
+	
+	public List<String> getClmList(String database, String tableName, String columnNameMatching) {
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -254,7 +291,12 @@ public class HiveClient extends BaseClient implements Closeable {
 	
 	
 	public void close() {
-		close(con) ;
+		Subject.doAs(getLoginSubject(), new PrivilegedAction<Void>(){
+			public Void run() {
+				close(con) ;
+				return null;
+			}
+		});
 	}
 	
 	private void close(Statement aStat) {
@@ -389,7 +431,6 @@ public class HiveClient extends BaseClient implements Closeable {
 			System.exit(1) ;
 		}
 		
-		
 		try {
 			hc = new HiveClient(args[0]) ;
 			
@@ -447,6 +488,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		HiveClient connectionObj = new HiveClient(dataSource,
 				connectionProperties);
 		if (connectionObj != null) {
+		
 			List<String> testResult = connectionObj.getDatabaseList("*");
 			if (testResult != null && testResult.size() != 0) {
 				connectivityStatus = true;
