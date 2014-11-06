@@ -218,43 +218,45 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 	private synchronized void openFile() {
 		mLogger.debug("==> LocalFileLogBuffer.openFile()");
-		
+
 		long now = System.currentTimeMillis();
 
 		closeFile();
 
 		if(mNextFileOpenRetryTime <= now) {
-			mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
-	
-			long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
-	
-			mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
-	
-			MiscUtil.createParents(new File(mBufferFilename));
-	
-			FileOutputStream ostream = null;
 			try {
-				ostream = new FileOutputStream(mBufferFilename, mIsAppend);
-			} catch(Exception excp) {
-				mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file " + mBufferFilename, excp);
-			}
-	
-			if(ostream != null) {
-				mWriter = createWriter(ostream);
-	
-				if(mWriter != null) {
-					mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
-		
-					mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
-				} else {
-					mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
-		
-					mBufferFilename = null;
+				mNextRolloverTime = MiscUtil.getNextRolloverTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
+
+				long startTime = MiscUtil.getRolloverStartTime(mNextRolloverTime, (mRolloverIntervalSeconds * 1000L));
+
+				mBufferFilename = MiscUtil.replaceTokens(mDirectory + File.separator + mFile, startTime);
+
+				MiscUtil.createParents(new File(mBufferFilename));
+
+				FileOutputStream ostream = null;
+				try {
+					ostream = new FileOutputStream(mBufferFilename, mIsAppend);
+				} catch(Exception excp) {
+					mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file " + mBufferFilename, excp);
 				}
-			}
-			
-			if(mWriter == null) {
-				mNextFileOpenRetryTime = now + mFileOpenRetryIntervalInMs;
+
+				if(ostream != null) {
+					mWriter = createWriter(ostream);
+
+					if(mWriter != null) {
+						mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
+
+						mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
+					} else {
+						mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
+
+						mBufferFilename = null;
+					}
+				}
+			} finally {
+				if(mWriter == null) {
+					mNextFileOpenRetryTime = now + mFileOpenRetryIntervalInMs;
+				}
 			}
 		}
 
