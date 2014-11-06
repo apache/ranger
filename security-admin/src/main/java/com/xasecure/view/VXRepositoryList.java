@@ -22,7 +22,6 @@
 
 /**
  * List wrapper class for VXRepository
- * @author tushar
  */
 
 import java.util.*;

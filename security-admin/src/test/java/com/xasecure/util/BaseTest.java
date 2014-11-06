@@ -38,10 +38,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.xasecure.util.CLIUtil;
 
-/**
- * @author tushar
- * 
- */
 @TransactionConfiguration
 @Transactional
 @RunWith(SpringJUnit4ClassRunner.class)

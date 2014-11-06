@@ -17,9 +17,6 @@
  * under the License.
  */
 
- /**
- * 
- */
 package com.xasecure.service;
 
 import java.util.ArrayList;
@@ -59,11 +56,6 @@ import com.xasecure.view.VXPolicy;
 import com.xasecure.view.VXPolicyList;
 import com.xasecure.view.VXResource;
 import com.xasecure.view.VXResourceList;
-
-/**
- * @author tushar
- * 
- */
 
 @Service
 public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {

@@ -22,7 +22,6 @@
 
 /**
  * List wrapper class for VXPermObj
- * @author tushar
  */
 
 import java.util.*;
