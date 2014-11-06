@@ -33,6 +33,13 @@ then
     exit 1
 fi
 
+#Check for JAVA_HOME
+if [ "${JAVA_HOME}" == "" ]
+then
+    echo "ERROR: JAVA_HOME environment property not defined, aborting installation."
+    exit 1
+fi
+
 #
 # Identify the component, action from the script file
 #
@@ -94,7 +101,7 @@ DEFAULT_XML_CONFIG=${PROJ_INSTALL_DIR}/install/conf.templates/default/configurat
 PROJ_LIB_DIR=${PROJ_INSTALL_DIR}/lib
 PROJ_INSTALL_LIB_DIR="${PROJ_INSTALL_DIR}/install/lib"
 INSTALL_ARGS="${PROJ_INSTALL_DIR}/install.properties"
-JAVA=java
+JAVA=$JAVA_HOME/bin/java
 
 hdir=${PROJ_INSTALL_DIR}/../${HCOMPONENT_NAME}
 
@@ -176,7 +183,7 @@ create_jceks() {
 
 	tempFile=/tmp/jce.$$.out
 
-    java -cp ":${PROJ_INSTALL_LIB_DIR}/*:" com.hortonworks.credentialapi.buildks create "${alias}" -value "${pass}" -provider "jceks://file${jceksFile}" > ${tempFile} 2>&1
+    $JAVA_HOME/bin/java -cp ":${PROJ_INSTALL_LIB_DIR}/*:" com.hortonworks.credentialapi.buildks create "${alias}" -value "${pass}" -provider "jceks://file${jceksFile}" > ${tempFile} 2>&1
 
 	if [ $? -ne 0 ]
 	then

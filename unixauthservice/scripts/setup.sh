@@ -216,7 +216,7 @@ then
     echo "Storing ldap bind password in credential store"
 	mkdir -p `dirname "${SYNC_LDAP_BIND_KEYSTOREPATH}"`
 	chown ${unix_user}:${unix_group} `dirname "${SYNC_LDAP_BIND_KEYSTOREPATH}"`
-	java -cp "./lib/*" com.hortonworks.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
+	$JAVA_HOME/bin/java -cp "./lib/*" com.hortonworks.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
     SYNC_LDAP_BIND_PASSWORD="_"
   fi
 

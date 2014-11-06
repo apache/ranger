@@ -192,11 +192,20 @@ check_db_connector() {
     fi
 }
 check_java_version() {
+	#Check for JAVA_HOME
+	if [ "${JAVA_HOME}" == "" ]
+	then
+		log "[E] JAVA_HOME environment property not defined, aborting installation."
+		exit 1
+	fi
+
+        export JAVA_BIN=${JAVA_HOME}/bin/java
+
 	if is_command ${JAVA_BIN} ; then
 		log "[I] '${JAVA_BIN}' command found"
 	else
-		log "[E] '${JAVA_BIN}' command not found"
-		exit 1;
+               log "[E] '${JAVA_BIN}' command not found"
+               exit 1;
 	fi
 
 	$JAVA_BIN -version 2>&1 | grep -q $JAVA_VERSION_REQUIRED
@@ -205,12 +214,6 @@ check_java_version() {
 		exit 1;
 	fi
 
-	#Check for JAVA_HOME
-	if [ "${JAVA_HOME}" == "" ]
-	then
-		log "[E] JAVA_HOME environment property not defined, aborting installation."
-		exit 1
-	fi
 
 	#$JAVA_BIN -version 2>&1 | grep -q "$JAVA_ORACLE"
 	#if [ $? != 0 ] ; then
@@ -789,7 +792,7 @@ update_properties() {
 	then
 		mkdir -p `dirname "${keystore}"`
 
-		java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
+		$JAVA_HOME/bin/java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
 
 		propertyName=xaDB.jdbc.credential.alias
 		newPropertyValue="${db_password_alias}"
@@ -826,7 +829,7 @@ update_properties() {
 
 	if [ "${keystore}" != "" ]
 	then
-		java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
+		$JAVA_HOME/bin/java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
 
 		propertyName=auditDB.jdbc.credential.alias
 		newPropertyValue="${audit_db_password_alias}"
@@ -1249,7 +1252,7 @@ execute_java_patches(){
 					if [ ${c} -eq 0 ]
 					then
 						log "[I] patch ${javaPatch} is being applied..";
-						msg=`java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
 						check_ret_status $? "Unable to apply patch:$javaPatch. $msg"
 						touch ${tempFile}
 						echo >> ${tempFile}
@@ -1282,7 +1285,7 @@ execute_java_patches(){
 					if test "${result2#*$version}" == "$result2"
 					then
 						log "[I] patch ${javaPatch} is being applied..";
-						msg=`java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
 						check_ret_status $? "Unable to apply patch:$javaPatch. $msg"
 						touch ${tempFile}
 						echo >> ${tempFile}
