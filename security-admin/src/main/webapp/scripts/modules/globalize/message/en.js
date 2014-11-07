@@ -221,7 +221,6 @@ define(function(require) {
 				welcome						: 'Welcome',
 				logout 						: 'Logout',
 				xaSecure					: 'XA Secure',
-				hortonWorksInc				: 'Hortonworks Inc.',
 				listOfPlugins				: 'See third-party tools/resources that Ranger uses and their respective authors.',
 				licenseText                 : 'Licensed under the Apache License, Version 2.0',
 				
