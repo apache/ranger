@@ -17,7 +17,7 @@
 
 
 #
-# Base env variable for ARGUS related files/directories
+# Base env variable for Ranger related files/directories
 #
 
 PROJ_NAME=ranger
@@ -595,6 +595,6 @@ fi
 # Set notice to restart the ${HCOMPONENT_NAME}
 #
 
-echo "ARGUS Plugin for ${HCOMPONENT_NAME} has been ${action}d. Please restart ${HCOMPONENT_NAME} to ensure that changes are effective."
+echo "Ranger Plugin for ${HCOMPONENT_NAME} has been ${action}d. Please restart ${HCOMPONENT_NAME} to ensure that changes are effective."
 
 exit 0
