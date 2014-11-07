@@ -29,4 +29,6 @@ public interface LogDestination<T> {
 	public boolean send(T log);
 
 	public boolean sendStringified(String log);
+
+	public boolean flush();
 }
