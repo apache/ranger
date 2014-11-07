@@ -515,6 +515,7 @@ class DestinationDispatcherThread<T> extends Thread {
 		closeCurrentFile();
 
 		if(!mStopThread) {
+			mDestination.flush();
 			archiveCurrentFile();
 		}
 

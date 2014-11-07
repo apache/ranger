@@ -184,7 +184,9 @@ public class MiscUtil {
 				File parentDir = new File(parentName);
 
 				if(!parentDir.exists()) {
-					parentDir.mkdirs();
+					if(! parentDir.mkdirs()) {
+						LogLog.warn("createParents(): failed to create " + parentDir.getAbsolutePath());
+					}
 				}
 			}
 		}

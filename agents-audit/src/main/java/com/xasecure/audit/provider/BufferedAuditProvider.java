@@ -37,7 +37,7 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 		}
 
 		if(event.getLogType() == null) {
-			event.setLogType("ArgusAudit");
+			event.setLogType("RangerAudit");
 		}
 
 		if(event.getEventId() == null) {
