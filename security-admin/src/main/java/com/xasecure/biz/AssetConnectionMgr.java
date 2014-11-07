@@ -136,7 +136,7 @@ public class AssetConnectionMgr {
 					List<String> testConnect = hadoopFS.listFiles("/", "*");
 					if(testConnect == null){
 						hadoopConnectionCache.remove(dataSourceName);
-						getHadoopConnection(dataSourceName);
+						hadoopFS = getHadoopConnection(dataSourceName);
 					}
 				}
 			}
@@ -178,6 +178,13 @@ public class AssetConnectionMgr {
 					} else {
 						logger.error("Connection Config not defined for asset :"
 								+ asset.getName(), new Throwable());
+					}
+				} else {
+					try {
+						List<String> testConnect = hiveClient.getDatabaseList("*");
+					} catch(Exception e) {
+						hiveConnectionCache.remove(dataSourceName);
+						hiveClient = getHiveConnection(dataSourceName);
 					}
 				}
 			}
@@ -288,7 +295,7 @@ public class AssetConnectionMgr {
 									try{
 										hBaseClient=new HBaseClient(dataSourceName);
 									}catch(Exception ex){
-										
+										logger.error("Error connecting HBase repository : ", ex);
 									}
 								}
 								return hBaseClient;
@@ -315,11 +322,10 @@ public class AssetConnectionMgr {
 									try{
 										hBaseClient=new HBaseClient(dataSourceName,configMap);
 									}catch(Exception ex){
-										
+										logger.error("Error connecting HBase repository : ", ex);
 									}
 								}
 								return hBaseClient;
-								
 							}
 						};
 						
@@ -339,6 +345,12 @@ public class AssetConnectionMgr {
 					}
 					if(client!=null){
 						hbaseConnectionCache.put(asset.getName(), client);
+					}
+				} else {
+					List<String> testConnect = client.getTableList(".\\*");
+					if(testConnect == null){
+						hbaseConnectionCache.remove(dataSourceName);
+						client = getHBaseConnection(dataSourceName);
 					}
 				}
 				repoConnectStatusMap.put(asset.getName(), true);
