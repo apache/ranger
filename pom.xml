@@ -214,6 +214,13 @@
         <version>2.17</version>
         <configuration>
           <skipTests>${skipTests}</skipTests>
+          <encoding>UTF-8</encoding>
+          <systemProperties>
+              <property>
+                 <name>catalina.base</name>
+                 <value>${project.build.directory}</value>
+              </property>
+          </systemProperties>
         </configuration>
       </plugin>
       <plugin>
