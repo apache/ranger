@@ -17,76 +17,26 @@
 -->
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration xmlns:xi="http://www.w3.org/2001/XInclude">
-
-	<property>
-		<name>xasecure.audit.provider.factory</name>
-		<value>com.xasecure.audit.provider.AuditProviderFactory</value>
-	</property>
-
-	<!--  Properties whose name begin with "xasecure.audit." are used to configure JPA -->
-	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.url</name>
-		<value>jdbc:mysql://localhost:3306/xa_db</value>
-	</property>
-
-	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.user</name>
-		<value>xaaudit</value>
-	</property>
-
-	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.password</name>
-		<value>none</value>
-	</property>
-
-	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.driver</name>
-		<value>com.mysql.jdbc.Driver</value>
-	</property>
-
-    <property>
-		<name>xasecure.audit.credential.provider.file</name>
-		<value>jceks://file/etc/xasecure/conf/auditcred.jceks</value>
-	</property>
-	
-	<property>
-		<name>xasecure.audit.repository.name</name>
-		<value>hadoopdev</value>
-	</property>	
-	
 	<property>
 		<name>xasecure.audit.is.enabled</name>
 		<value>true</value>
 	</property>	
 
 	<property>
-		<name>xasecure.audit.log4j.is.enabled</name>
-		<value>false</value>
-	</property>	
-
-	<property>
-		<name>xasecure.audit.log4j.is.async</name>
-		<value>false</value>
+		<name>xasecure.audit.repository.name</name>
+		<value>stormdev</value>
 	</property>	
 	
-	<property>
-		<name>xasecure.audit.log4j.async.max.queue.size</name>
-		<value>10240</value>
-	</property>	
 
-	<property>
-		<name>xasecure.audit.log4j.async.max.flush.interval.ms</name>
-		<value>30000</value>
-	</property>	
-	
+	<!-- DB audit provider configuration -->
 	<property>
 		<name>xasecure.audit.db.is.enabled</name>
-		<value>true</value>
+		<value>false</value>
 	</property>	
 	
 	<property>
 		<name>xasecure.audit.db.is.async</name>
-		<value>false</value>
+		<value>true</value>
 	</property>	
 	
 	<property>
@@ -103,6 +53,33 @@
 		<name>xasecure.audit.db.batch.size</name>
 		<value>100</value>
 	</property>	
+
+	<!--  Properties whose name begin with "xasecure.audit.jpa." are used to configure JPA -->
+	<property>
+		<name>xasecure.audit.jpa.javax.persistence.jdbc.url</name>
+		<value>jdbc:mysql://localhost:3306/ranger_audit</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.jpa.javax.persistence.jdbc.user</name>
+		<value>rangerlogger</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.jpa.javax.persistence.jdbc.password</name>
+		<value>none</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.jpa.javax.persistence.jdbc.driver</name>
+		<value>com.mysql.jdbc.Driver</value>
+	</property>
+
+    <property>
+		<name>xasecure.audit.credential.provider.file</name>
+		<value>jceks://file/etc/ranger/stormdev/auditcred.jceks</value>
+	</property>
+	
 
 
 	<!-- HDFS audit provider configuration -->
@@ -133,7 +110,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.destination.directory</name>
-		<value>hdfs://namenodehost:8020/ranger/audit/%app-type%/%time:yyyyMMdd%</value>
+		<value>hdfs://NAMENODE_HOST:8020/ranger/audit/%app-type%/%time:yyyyMMdd%</value>
 	</property>	
 
 	<property>
@@ -189,5 +166,27 @@
 	<property>
 		<name>xasecure.audit.hdfs.config.local.archive.max.file.count</name>
 		<value>10</value>
+	</property>	
+	
+
+	<!-- Log4j audit provider configuration -->
+	<property>
+		<name>xasecure.audit.log4j.is.enabled</name>
+		<value>false</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.log4j.is.async</name>
+		<value>false</value>
+	</property>	
+	
+	<property>
+		<name>xasecure.audit.log4j.async.max.queue.size</name>
+		<value>10240</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.log4j.async.max.flush.interval.ms</name>
+		<value>30000</value>
 	</property>	
 </configuration>

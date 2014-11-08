@@ -31,12 +31,12 @@
 	<!-- DB audit provider configuration -->
 	<property>
 		<name>xasecure.audit.db.is.enabled</name>
-		<value>true</value>
+		<value>false</value>
 	</property>	
 
 	<property>
 		<name>xasecure.audit.db.is.async</name>
-		<value>false</value>
+		<value>true</value>
 	</property>	
 
 	<property>
@@ -57,12 +57,12 @@
 	<!--  Properties whose name begin with "xasecure.audit.jpa." are used to configure JPA -->
 	<property>
 		<name>xasecure.audit.jpa.javax.persistence.jdbc.url</name>
-		<value>jdbc:mysql://localhost:3306/xa_db</value>
+		<value>jdbc:mysql://localhost:3306/ranger_audit</value>
 	</property>
 
 	<property>
 		<name>xasecure.audit.jpa.javax.persistence.jdbc.user</name>
-		<value>xaaudit</value>
+		<value>rangerlogger</value>
 	</property>
 
 	<property>
@@ -77,7 +77,7 @@
 	
 	<property>
 		<name>xasecure.audit.credential.provider.file</name>
-		<value>jceks://file/etc/xasecure/conf/auditcred.jceks</value>
+		<value>jceks://file/etc/ranger/hadoopdev/auditcred.jceks</value>
 	</property>
 
 
@@ -109,7 +109,7 @@
 
 	<property>
 		<name>xasecure.audit.hdfs.config.destination.directory</name>
-		<value>hdfs://namenodehost:8020/ranger/audit/%app-type%/%time:yyyyMMdd%</value>
+		<value>hdfs://NAMENODE_HOST:8020/ranger/audit/%app-type%/%time:yyyyMMdd%</value>
 	</property>	
 
 	<property>
@@ -167,6 +167,7 @@
 		<value>10</value>
 	</property>	
 
+
 	<!-- Log4j audit provider configuration -->
 	<property>
 		<name>xasecure.audit.log4j.is.enabled</name>
@@ -187,5 +188,4 @@
 		<name>xasecure.audit.log4j.async.max.flush.interval.ms</name>
 		<value>30000</value>
 	</property>	
-	
 </configuration>

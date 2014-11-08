@@ -46,6 +46,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private int     mOpenRetryIntervalSeconds = 60;
 	private DebugTracer mLogger               = null;
 
+	private FSDataOutputStream mFsDataOutStream    = null;
 	private OutputStreamWriter mWriter             = null; 
 	private String             mHdfsFilename       = null;
 	private long               mNextRolloverTime   = 0;
@@ -168,6 +169,45 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		return ret;
 	}
 
+	@Override
+	public boolean flush() {
+		mLogger.debug("==> HdfsLogDestination.flush()");
+
+		boolean ret = false;
+
+		OutputStreamWriter writer  = mWriter;
+
+		if(writer != null) {
+			try {
+				writer.flush();
+				
+				ret = true;
+			} catch (IOException excp) {
+				logException("HdfsLogDestination: flush() failed", excp);
+			}
+		}
+
+		FSDataOutputStream ostream = mFsDataOutStream;
+
+		if(ostream != null) {
+			try {
+				ostream.hflush();
+
+				ret = true;
+			} catch (IOException excp) {
+				logException("HdfsLogDestination: hflush() failed", excp);
+			}
+		}
+
+		if(ret) {
+			mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
+		}
+
+		mLogger.debug("<== HdfsLogDestination.flush()");
+
+		return ret;
+	}
+
 	private void openFile() {
 		mLogger.debug("==> HdfsLogDestination.openFile()");
 
@@ -243,6 +283,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		if(mWriter != null) {
 			mLogger.debug("HdfsLogDestination.openFile(): opened file " + mHdfsFilename);
 
+			mFsDataOutStream    = ostream;
 			mNextFlushTime      = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
 			mLastOpenFailedTime = 0;
 		} else {
@@ -257,16 +298,18 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 	private void closeFile() {
 		mLogger.debug("==> HdfsLogDestination.closeFile()");
+		
+		flush();
 
 		OutputStreamWriter writer = mWriter;
 
-		mWriter = null;
+		mWriter          = null;
+		mFsDataOutStream = null;
 
 		if(writer != null) {
 			try {
 				mLogger.info("HdfsLogDestination.closeFile(): closing file " + mHdfsFilename);
 
-				writer.flush();
 				writer.close();
 			} catch(IOException excp) {
 				logException("HdfsLogDestination: failed to close file " + mHdfsFilename, excp);
@@ -296,13 +339,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		} else  if(now > mNextRolloverTime) {
 			rollover();
 		} else if(now > mNextFlushTime) {
-			try {
-				mNextFlushTime = now + (mFlushIntervalSeconds * 1000L);
-
-				mWriter.flush();
-			} catch (IOException excp) {
-				logException("HdfsLogDestination: failed to flush", excp);
-			}
+			flush();
 		}
 	}
 

@@ -26,6 +26,7 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import javax.security.auth.Subject;
 
 import org.apache.commons.io.FilenameUtils;
@@ -35,6 +36,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import com.xasecure.hadoop.client.config.BaseClient;
 import com.xasecure.hadoop.client.exceptions.HadoopException;
@@ -66,6 +68,7 @@ public class HadoopFS extends BaseClient {
 			}
 			
 			Configuration conf = new Configuration() ;
+			UserGroupInformation.setConfiguration(conf);
 			
 			FileSystem fs = null ;
 			try {
