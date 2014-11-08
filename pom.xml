@@ -83,7 +83,7 @@
 		<hadoop.version>3.0.0-SNAPSHOT</hadoop.version>
 		<hamcrest.all.version>1.3</hamcrest.all.version>
 		<hbase.version>0.99.2-SNAPSHOT</hbase.version>
-		<hive.version>0.13.0</hive.version>
+		<hive.version>0.14.0-SNAPSHOT</hive.version>
 		<javassist.version>3.12.1.GA</javassist.version>
 		<javax.persistence.version>2.1.0</javax.persistence.version>
 		<javax.servlet.version>3.1.0</javax.servlet.version>

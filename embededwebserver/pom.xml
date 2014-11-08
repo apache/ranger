@@ -59,5 +59,10 @@
 	<artifactId>tomcat-embed-websocket</artifactId>
 	<version>${tomcat.embed.version}</version>
     </dependency>
+    <dependency>
+        <groupId>org.eclipse.jdt.core.compiler</groupId>
+        <artifactId>ecj</artifactId>
+        <version>P20140317-1600</version>
+    </dependency>
   </dependencies>
 </project>

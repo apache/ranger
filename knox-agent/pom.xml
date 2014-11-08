@@ -33,18 +33,9 @@
   </parent>
   <dependencies>
     <dependency>
-	<groupId>org.apache.hadoop.gateway</groupId>
-	<artifactId>gateway-site</artifactId>
-	<version>${knox.gateway.version}</version>
-        <scope>system</scope>
-        <systemPath>${local.lib.dir}/gateway-spi-0.5.0-SNAPSHOT.jar</systemPath>
-    </dependency>
-    <dependency>
-	<groupId>org.apache.hadoop.gateway</groupId>
-	<artifactId>gateway-site-util</artifactId>
-	<version>${knox.gateway.version}</version>
-        <scope>system</scope>
-        <systemPath>${local.lib.dir}/gateway-util-urltemplate-0.5.0-SNAPSHOT.jar</systemPath>
+	<groupId>org.apache.knox</groupId>
+	<artifactId>gateway-spi</artifactId>
+    <version>0.5.0</version>
     </dependency>
     <dependency>
 	<groupId>javax.servlet</groupId>
