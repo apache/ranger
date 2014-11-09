@@ -231,8 +231,21 @@ if [ ! -d conf ]; then
     log "[I] Copying conf.dist conf"
     mkdir conf
     cp conf.dist/* conf
-	chown ${unix_user}:${unix_group} conf
-	chmod 750 conf
+    chown ${unix_user}:${unix_group} conf
+    chmod 750 conf
+fi
+if [ ! -f conf/cert/unixauthservice.jks ] 
+then
+    if [ ! -d conf/cert ]
+    then
+        mkdir -p conf/cert
+    fi
+    ${JAVA_HOME}/bin/keytool -genkeypair -keyalg RSA -alias selfsigned -keystore conf/cert/unixauthservice.jks \
+                             -keypass UnIx529p -storepass UnIx529p -validity 360 -keysize 2048 \
+                             -dname "cn=unixauthservice,ou=authenticator,o=mycompany,c=US" 
+
+	chmod o-rwx conf/cert/unixauthservice.jks
+
 fi
 
 echo "export JAVA_HOME=${JAVA_HOME}" > conf/java_home.sh

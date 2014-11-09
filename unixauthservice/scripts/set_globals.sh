@@ -76,7 +76,7 @@ if [ ! -d /etc/ranger/usersync/conf ]; then
 	chown -R $unix_user:$unix_group /etc/ranger/usersync/conf
 fi
 
-log "[I] Soft linking /etc/ranger/usersync/conf to ews/webapp/WEB-INF/classes/conf"
+log "[I] Soft linking /etc/ranger/usersync/conf to conf"
 mv -f conf conf.$curDt 2> /dev/null
 ln -sf /etc/ranger/usersync/conf conf
 
