@@ -30,6 +30,8 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.Properties;
 
@@ -39,6 +41,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -61,10 +64,11 @@ public class RemoteUnixLoginModule implements LoginModule {
 	private static final String SSL_TRUSTSTORE_PATH_PARAM = "trustStore";
 	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM = "trustStorePassword";
 	private static final String SSL_ENABLED_PARAM = "sslEnabled";
+	private static final String SERVER_CERT_VALIDATION_PARAM = "serverCertValidation" ;
 	
 	private static final String JAAS_ENABLED_PARAM = "remoteLoginEnabled" ;
 
-	private static final String SSL_ALGORITHM = "SSLv3";
+	private static final String SSL_ALGORITHM = "TLS";
 
 	private String userName;
 	private char[] password;
@@ -84,6 +88,8 @@ public class RemoteUnixLoginModule implements LoginModule {
 	private String trustStorePathPassword;
 
 	private boolean SSLEnabled = false;
+	
+	private boolean serverCertValidation = true ;
 	
 	private boolean remoteLoginEnabled = true ;
 
@@ -133,7 +139,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 		Properties config = null ;
 
 		String val = (String) options.get(REMOTE_UNIX_AUTHENICATION_CONFIG_FILE_PARAM);
-		logError("Remote Unix Auth Configuration file [" + val + "]") ;
+		log("Remote Unix Auth Configuration file [" + val + "]") ;
 		if (val != null) {
 			InputStream in = null ;
 			try {
@@ -217,8 +223,11 @@ public class RemoteUnixLoginModule implements LoginModule {
 				}
 				log("keyStorePathPassword:" + keyStorePathPassword);
 			}
+			
+			String certValidationFlag = (String) options.get(SERVER_CERT_VALIDATION_PARAM) ;
+			serverCertValidation = (! (certValidationFlag != null && ("false".equalsIgnoreCase(certValidationFlag.trim().toLowerCase())))) ;
+			log("Server Cert Validation : " + serverCertValidation) ;
 		}
-
 
 	}
 
@@ -330,28 +339,53 @@ public class RemoteUnixLoginModule implements LoginModule {
 					}
 	
 					TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-	
-					KeyStore trustStoreKeyStore = null;
-	
-					if (trustStorePath != null) {
-						trustStoreKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-	
-						InputStream in = null;
-	
-						in = getFileInputStream(trustStorePath);
-	
-						try {
-							trustStoreKeyStore.load(in, trustStorePathPassword.toCharArray());
-						} finally {
-							if (in != null) {
-								in.close();
+					
+					TrustManager[] tm = null ;
+					
+					if (serverCertValidation) {
+
+						KeyStore trustStoreKeyStore = null;
+
+						if (trustStorePath != null) {
+							trustStoreKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+		
+							InputStream in = null;
+		
+							in = getFileInputStream(trustStorePath);
+		
+							try {
+								trustStoreKeyStore.load(in, trustStorePathPassword.toCharArray());
+								
+								trustManagerFactory.init(trustStoreKeyStore);
+								
+								tm = trustManagerFactory.getTrustManagers();
+
+							} finally {
+								if (in != null) {
+									in.close();
+								}
 							}
 						}
 					}
-	
-					trustManagerFactory.init(trustStoreKeyStore);
-	
-					TrustManager[] tm = trustManagerFactory.getTrustManagers();
+					else {
+						TrustManager ignoreValidationTM = new X509TrustManager() {
+						    public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+						    	// Ignore Server Certificate Validation
+						    }
+
+						    public X509Certificate[] getAcceptedIssuers() {
+						        return new X509Certificate[0];
+						    }
+
+						    public void checkServerTrusted(X509Certificate[] chain,
+						                    String authType)
+						                    throws CertificateException {
+						    	// Ignore Server Certificate Validation
+						    }
+						};
+						
+						tm  = new TrustManager[] {ignoreValidationTM} ;
+					}
 	
 					SecureRandom random = new SecureRandom();
 	

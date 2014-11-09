@@ -62,9 +62,6 @@ public class UnixAuthenticationService {
 	private static final String ADMIN_ROLE_LIST_PARAM = "admin.roleNames" ;
 	private static final String SSL_ENABLED_PARAM = "useSSL" ;
 	
-	
-
-
 	private String keyStorePath ;
 	private String keyStorePathPassword ;
 	private String trustStorePath ;
@@ -76,8 +73,17 @@ public class UnixAuthenticationService {
 	
 	private boolean SSLEnabled = false ;
 	
+	static private boolean enableUnixAuth = false;
 
 	public static void main(String[] args) {
+		if (args.length > 0) {
+			for (String s : args) {
+				if ("-enableUnixAuth".equalsIgnoreCase(s)) {
+					enableUnixAuth = true;
+					break;
+				}
+			}
+		}
 		UnixAuthenticationService service = new UnixAuthenticationService() ;
 		service.run() ;
 	}
@@ -88,9 +94,15 @@ public class UnixAuthenticationService {
 	
 	public void run() {
 		try {
+			LOG.info("Starting User Sync Service!");
 			startUnixUserGroupSyncProcess() ;
-			init() ;
-			startService() ;
+			if (enableUnixAuth) {
+				LOG.info("Enabling Unix Auth Service!");
+			    init() ;
+			    startService() ;
+			} else {
+				LOG.info("Unix Auth Service Disabled!");
+			}
 		}
 		catch(Throwable t) {
 			LOG.error("ERROR: Service: " + serviceName , t);
