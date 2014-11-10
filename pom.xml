@@ -336,17 +336,12 @@
         <excludes>
 
 		  <exclude>**/dependency-reduced-pom.xml</exclude>
-          <exclude>**/infinispan-cache-config.xml</exclude>
-          <exclude>**/.htaccess</exclude>
           <exclude>**/robots.txt</exclude>
           <exclude>**/MANIFEST.MF</exclude>
           <exclude>**/bootstrap.min.js</exclude>
-          <exclude>**/server.crt</exclude>
-          <exclude>**/jaas.conf</exclude>
 
           <exclude>**/src/main/webapp/fonts/**</exclude>
           <exclude>**/src/main/webapp/libs/**</exclude>
-          <exclude>**/contextXML/*</exclude>
 
           <exclude>.git/**</exclude>
           <exclude>.pc/**</exclude>

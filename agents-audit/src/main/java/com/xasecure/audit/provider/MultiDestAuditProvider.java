@@ -1,20 +1,3 @@
-package com.xasecure.audit.provider;
-
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.xasecure.audit.model.AuditEventBase;
-import com.xasecure.audit.model.HBaseAuditEvent;
-import com.xasecure.audit.model.HdfsAuditEvent;
-import com.xasecure.audit.model.HiveAuditEvent;
-import com.xasecure.audit.model.KnoxAuditEvent;
-import com.xasecure.audit.model.StormAuditEvent;
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -32,6 +15,22 @@ import com.xasecure.audit.model.StormAuditEvent;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.xasecure.audit.provider;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.xasecure.audit.model.AuditEventBase;
+import com.xasecure.audit.model.HBaseAuditEvent;
+import com.xasecure.audit.model.HdfsAuditEvent;
+import com.xasecure.audit.model.HiveAuditEvent;
+import com.xasecure.audit.model.KnoxAuditEvent;
+import com.xasecure.audit.model.StormAuditEvent;
+
 
 public class MultiDestAuditProvider extends BaseAuditProvider {
 
