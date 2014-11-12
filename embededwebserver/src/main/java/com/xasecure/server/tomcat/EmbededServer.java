@@ -112,7 +112,7 @@ public class EmbededServer {
 			ssl.setAttribute("keystorePass", getConfig("https.attrib.keystorePass"));
 			ssl.setAttribute("keystoreFile",  getConfig("https.attrib.keystoreFile")) ;
 			
-			String enabledProtocols = "TLSv1, TLSv1.1, TLSv1.2" ;
+			String enabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2" ;
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols ) ;
 			
 			server.getService().addConnector(ssl); 
