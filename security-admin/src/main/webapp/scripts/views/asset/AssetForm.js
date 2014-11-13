@@ -128,6 +128,11 @@ define(function(require){
 					fieldClass : "hdfs",
 					editorAttrs :{'class':'stretchTextInput'}
 				},
+				hadoopRpcProtection : {
+					title		: this.model.propertiesNameMap.hadoopRpcProtection,//'hadoop.rpc.protection',
+					fieldClass : "hdfs",
+					editorAttrs :{'class':'stretchTextInput'}
+				},
 				driverClassName : {
 					fieldClass : "hive",
 					title : this.model.propertiesNameMap.driverClassName,//'xalogin.jdbc.driverClassName'
@@ -231,7 +236,7 @@ define(function(require){
 			switch(parseInt(this.model.get('assetType'))){
 				case XAEnums.AssetType.ASSET_HDFS.value :
 					attrs = ['userName','passwordKeytabfile','fsDefaultName' ,'authorization', 'authentication', 'auth_to_local', 'datanode', 'namenode', 'secNamenode',
-								'commonnameforcertificate'];
+					         'hadoopRpcProtection', 'commonnameforcertificate'];
 					break;
 				case XAEnums.AssetType.ASSET_HIVE.value :
 					attrs = ['userName','passwordKeytabfile','driverClassName', 'url','commonnameforcertificate'];
@@ -304,6 +309,7 @@ define(function(require){
 					this.fields.datanode.$el.hide();
 					this.fields.namenode.$el.hide();
 					this.fields.secNamenode.$el.hide();
+					this.fields.hadoopRpcProtection.$el.hide();
 					this.fields.rpcEngine.$el.hide();
 					this.fields.rpcProtection.$el.hide();
 					this.fields.commonnameforcertificate.$el.hide();
