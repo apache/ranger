@@ -351,6 +351,22 @@ public class AppConstants extends XACommonEnums {
 	 */
 	public static final int XAPermType_MAX = 31;
 
+	/***************************************************************
+	 * Enum values for DatabaseFavor
+	 **************************************************************/
+	/**
+	 * DB Favor Unknown
+	 */
+	public static final int DB_FLAVOR_UNKNOWN = 0;
+	/**
+	 * DB Favor MySql
+	 */
+	public static final int DB_FLAVOR_MYSQL = 1;
+	/**
+	 * DB Favor Oracle
+	 */
+	public static final int DB_FLAVOR_ORACLE = 2;
+
 
 	/***************************************************************
 	 * Enum values for ClassTypes
@@ -906,6 +922,32 @@ public class AppConstants extends XACommonEnums {
 			return AppConstants.POLICY_EXCLUSION; // POLICY_EXCLUSION
 		}
 		return 0;
+	}
+
+	static public int getEnumFor_DatabaseFlavor(String label) {
+		if (label == null) {
+			return DB_FLAVOR_UNKNOWN; // DB_FLAVOR_UNKNOWN
+		}
+		if ("MYSQL".equalsIgnoreCase(label)) {
+			return DB_FLAVOR_MYSQL; // DB_FLAVOR_MYSQL
+		}
+		if ("ORACLE".equalsIgnoreCase(label)) {
+			return DB_FLAVOR_ORACLE; // DB_FLAVOR_ORACLE
+		}
+		return DB_FLAVOR_UNKNOWN;
+	}
+
+	static public String getLabelFor_DatabaseFlavor(int elementValue) {
+		if (elementValue == DB_FLAVOR_UNKNOWN) {
+			return "UNKNOWN"; // Unknown
+		}
+		if (elementValue == DB_FLAVOR_MYSQL) {
+			return "MYSQL"; // MYSQL
+		}
+		if (elementValue == DB_FLAVOR_ORACLE) {
+			return "ORACLE"; // ORACLE
+		}
+		return null;
 	}
 
 }
