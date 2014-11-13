@@ -1,6 +1,6 @@
 package com.xasecure.audit.model;
 
-
+import com.google.gson.annotations.SerializedName;  
 import com.xasecure.audit.dao.DaoManager;
 import com.xasecure.audit.entity.XXStormAuditEvent;
 
@@ -22,8 +22,13 @@ import com.xasecure.audit.entity.XXStormAuditEvent;
  */
 
 public class StormAuditEvent extends AuditEventBase {
+	@SerializedName("resource")  
 	protected String resourcePath;
+
+	@SerializedName("resType")  
 	protected String resourceType;
+
+	@SerializedName("reqData")  
 	protected String requestData;
 
 	public StormAuditEvent() {
