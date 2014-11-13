@@ -84,6 +84,9 @@ public class HadoopClassLoader extends ClassLoader {
 				for(Object keyobj : prop.keySet()) {
 					String key = (String)keyobj;
 					String val = prop.getProperty(key) ;
+					if (HadoopConfigHolder.HADOOP_RPC_PROTECTION.equals(key) && (val == null || val.trim().isEmpty()))  {
+						continue;
+					}
 					out.println("<property><name>" + key.trim() + "</name><value>" + val + "</value></property>") ;
 				}
 				out.println("</configuration>") ;
