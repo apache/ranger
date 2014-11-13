@@ -28,8 +28,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
+import com.xasecure.biz.XABizUtil;
+
 
 public class SearchCriteria {
+	Logger logger = Logger.getLogger(SearchCriteria.class);
 
 	int startIndex = 0;
 	int maxRows = Integer.MAX_VALUE;
@@ -182,6 +187,13 @@ public class SearchCriteria {
 	 *            the isDistinct to set
 	 */
 	public void setDistinct(boolean isDistinct) {
+
+		int dbFlavor = XABizUtil.getDBFlavor();
+		if (isDistinct && dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
+			isDistinct = false;
+			logger.debug("Database flavor is `ORACLE` so ignoring DISTINCT "
+					+ "clause from select statement.");
+		}
 		this.isDistinct = isDistinct;
 	}
 

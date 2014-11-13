@@ -1277,4 +1277,40 @@ public class XABizUtil {
 			daoManager.getXXTrxLog().create(xTrxLog);
 		}
 	}
+
+	public static int getDBFlavor() {
+
+		String dbFlavor = "";
+		boolean dbFlavorPropFound = true;
+
+		dbFlavor = PropertiesUtil.getProperty("xa.db.flavor");
+		if (dbFlavor == null || dbFlavor.trim().isEmpty()) {
+			dbFlavor = PropertiesUtil.getProperty("jdbc.dialect");
+			dbFlavorPropFound = false;
+		}
+
+		if (dbFlavor != null && !dbFlavor.trim().isEmpty()) {
+			if (dbFlavorPropFound) {
+				if ("MYSQL".equalsIgnoreCase(dbFlavor)) {
+					return AppConstants.DB_FLAVOR_MYSQL;
+				} else if ("ORACLE".equalsIgnoreCase(dbFlavor)) {
+					return AppConstants.DB_FLAVOR_ORACLE;
+				} else {
+					return AppConstants.DB_FLAVOR_UNKNOWN;
+				}
+			} else {
+				if (dbFlavor.toUpperCase().contains("MYSQL")) {
+					return AppConstants.DB_FLAVOR_MYSQL;
+				} else if (dbFlavor.toUpperCase().contains("ORACLE")) {
+					return AppConstants.DB_FLAVOR_ORACLE;
+				} else {
+					return AppConstants.DB_FLAVOR_UNKNOWN;
+				}
+			}
+		} else {
+			logger.error("Property : xa.db.flavor or jdbc.dialect, not found");
+			return AppConstants.DB_FLAVOR_UNKNOWN;
+		}
+	}
+
 }
