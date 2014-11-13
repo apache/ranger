@@ -103,6 +103,7 @@ define(function(require){
 			datanode : "dfs.datanode.kerberos.principal",
 			namenode : "dfs.namenode.kerberos.principal",
 			secNamenode : "dfs.secondary.namenode.kerberos.principal",
+			hadoopRpcProtection : "hadoop.rpc.protection",
 			//hive
 			driverClassName : "jdbc.driverClassName",
 			url	: "jdbc.url",
