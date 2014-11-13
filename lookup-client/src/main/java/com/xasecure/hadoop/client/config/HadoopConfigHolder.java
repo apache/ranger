@@ -41,6 +41,7 @@ public class HadoopConfigHolder  {
 	public static final String XASECURE_LOGIN_PASSWORD = "password" ;
 	public static final String HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";
 	public static final String HADOOP_SECURITY_AUTHENTICATION_METHOD = "kerberos";
+	public static final String HADOOP_RPC_PROTECTION = "hadoop.rpc.protection";
 	
 
 	private static boolean initialized = false ;
