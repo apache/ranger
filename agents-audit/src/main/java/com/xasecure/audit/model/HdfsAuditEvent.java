@@ -21,11 +21,16 @@
 
 import java.util.Date;
 
+import com.google.gson.annotations.SerializedName;  
+
 import com.xasecure.audit.dao.DaoManager;
 import com.xasecure.audit.entity.XXHdfsAuditEvent;
 
 public class HdfsAuditEvent extends AuditEventBase {
+	@SerializedName("resource")  
 	protected String resourcePath;
+
+	@SerializedName("resType")  
 	protected String resourceType;
 
 	public HdfsAuditEvent() {

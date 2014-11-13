@@ -17,16 +17,24 @@
  * under the License.
  */
 
- package com.xasecure.audit.model;
+package com.xasecure.audit.model;
 
 import java.util.Date;
+
+import com.google.gson.annotations.SerializedName;  
 
 import com.xasecure.audit.dao.DaoManager;
 import com.xasecure.audit.entity.XXHBaseAuditEvent;
 
+
 public class HBaseAuditEvent extends AuditEventBase {
+	@SerializedName("resource")  
 	protected String resourcePath;
+
+	@SerializedName("resType")  
 	protected String resourceType;
+
+	@SerializedName("reqData")  
 	protected String requestData;
 
 	public HBaseAuditEvent() {

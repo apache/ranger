@@ -20,10 +20,10 @@
  package com.xasecure.audit.model;
 
 import java.util.Date;
-import java.util.UUID;
+
+import com.google.gson.annotations.SerializedName;  
 
 import com.xasecure.audit.dao.DaoManager;
-
 
 
 public abstract class AuditEventBase {
@@ -33,22 +33,55 @@ public abstract class AuditEventBase {
 	protected static final int MAX_REQUEST_DATA_FIELD_SIZE = 1800 ;
 
 	
+	@SerializedName("agent")  
 	protected String agentId        = null;
+
+	@SerializedName("reqUser")  
 	protected String user           = null;
+
+	@SerializedName("evtTime")  
 	protected Date   eventTime      = new Date();
+
+	@SerializedName("policy")  
 	protected long   policyId       = 0;
+
+	@SerializedName("access")  
 	protected String accessType     = null;
+
+	@SerializedName("result")  
 	protected short  accessResult   = 0; // 0 - DENIED; 1 - ALLOWED; HTTP return code 
+
+	@SerializedName("reason")  
 	protected String resultReason   = null;
+
+	@SerializedName("enforcer")  
 	protected String aclEnforcer    = null;
+
+	@SerializedName("repoType")  
 	protected int    repositoryType = 0;
+
+	@SerializedName("repo")  
 	protected String repositoryName = null;
+
+	@SerializedName("sess")  
 	protected String sessionId      = null;
+
+	@SerializedName("cliType")  
 	protected String clientType     = null;
+
+	@SerializedName("cliIP")  
 	protected String clientIP       = null;
+
+	@SerializedName("action")  
 	protected String action         = null;
+
+	@SerializedName("agentHost")  
 	protected String agentHostname  = null;
+
+	@SerializedName("logType")  
 	protected String logType        = null;
+
+	@SerializedName("id")  
 	protected String eventId        = null;
 
 	protected AuditEventBase() {

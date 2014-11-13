@@ -21,12 +21,18 @@
 
 import java.util.Date;
 
+import com.google.gson.annotations.SerializedName;  
 import com.xasecure.audit.dao.DaoManager;
 import com.xasecure.audit.entity.XXHiveAuditEvent;
 
 public class HiveAuditEvent extends AuditEventBase {
+	@SerializedName("resource")  
 	protected String resourcePath;
+
+	@SerializedName("resType")  
 	protected String resourceType;
+
+	@SerializedName("reqData")  
 	protected String requestData;
 
 	public HiveAuditEvent() {
