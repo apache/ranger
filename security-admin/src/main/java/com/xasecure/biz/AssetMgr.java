@@ -2170,7 +2170,7 @@ public class AssetMgr extends AssetMgrBase {
 			final XXPolicyExportAudit xXPolicyExportAudit) {
 		TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 		txTemplate
-				.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+				.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
 		XXPolicyExportAudit policyExportAudit = (XXPolicyExportAudit) txTemplate
 				.execute(new TransactionCallback<Object>() {
 					public Object doInTransaction(TransactionStatus status) {
