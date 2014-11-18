@@ -19,13 +19,10 @@
 
  package com.xasecure.usergroupsync;
 
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import com.xasecure.unixusersync.config.UserGroupSyncConfig;
-import com.xasecure.unixusersync.process.PolicyMgrUserGroupBuilder;
-import com.xasecure.unixusersync.process.UnixUserGroupBuilder;
 
 public class UserGroupSync implements Runnable {
 	
@@ -77,6 +74,8 @@ public class UserGroupSync implements Runnable {
 				}
 			}
 
+			boolean forceSync = false;
+
 			while (! shutdownFlag ) {
 				try {
 					Thread.sleep(sleepTimeBetweenCycleInMillis);
@@ -85,12 +84,14 @@ public class UserGroupSync implements Runnable {
 				}
 
 				try {
-					syncUserGroup() ;
+					syncUserGroup(forceSync) ;
+
+					forceSync = false;
 				}
 				catch(Throwable t) {
 					LOG.error("Failed to synchronize UserGroup information. Error details: ", t) ;
 
-					System.exit(1);
+					forceSync = true;  // force sync to the destination in the next attempt
 				}
 			}
 		
@@ -103,11 +104,11 @@ public class UserGroupSync implements Runnable {
 		}
 	}
 	
-	private void syncUserGroup() throws Throwable {
+	private void syncUserGroup(boolean forceSync) throws Throwable {
 		UserGroupSyncConfig config = UserGroupSyncConfig.getInstance() ;
 
 		if (config.isUserSyncEnabled()) {
-			if (ugSource.isChanged()) {
+			if (forceSync || ugSource.isChanged()) {
 				LOG.info("Begin: update user/group from source==>sink");
 				ugSource.updateSink(ugSink);
 				LOG.info("End: update user/group from source==>sink");
