@@ -15,11 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+function getInstallProperty() {
+    grep "^$1" ${INSTALL_ARGS} | awk -F= '{  sub("^[ \t]*", "", $2); sub("[ \t]*$", "", $2); print $2 }'
+}
 
 #
 # Base env variable for Ranger related files/directories
 #
-
 PROJ_NAME=ranger
 BASE_CONF_DIR=/etc/${PROJ_NAME}
 
@@ -296,7 +298,7 @@ then
 	#
 	# Ensure that POLICY_CACHE_FILE_PATH is accessible
 	#
-	REPO_NAME=`grep '^REPOSITORY_NAME' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+	REPO_NAME=$(getInstallProperty 'REPOSITORY_NAME')
 	export POLICY_CACHE_FILE_PATH=/etc/${PROJ_NAME}/${REPO_NAME}/policycache
 	export CREDENTIAL_PROVIDER_FILE=/etc/${PROJ_NAME}/${REPO_NAME}/cred.jceks
 	if [ ! -d ${POLICY_CACHE_FILE_PATH} ]
@@ -313,9 +315,9 @@ then
 	# We need to do the AUDIT JDBC url 
 	#
 
-	db_flavor=`grep '^XAAUDIT.DB.FLAVOUR' ${INSTALL_ARGS} | awk -F= '{ print $2 }' |  tr '[:lower:]' '[:upper:]'`
-    audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${INSTALL_ARGS}  | awk -F= '{ print $2 }'`
-    audit_db_name=`grep '^XAAUDIT.DB.DATABASE_NAME'  ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+	db_flavor=`echo $(getInstallProperty 'XAAUDIT.DB.FLAVOUR') | tr '[:lower:]' '[:upper:]'`
+    audit_db_hostname=$(getInstallProperty 'XAAUDIT.DB.HOSTNAME')
+    audit_db_name=$(getInstallProperty 'XAAUDIT.DB.DATABASE_NAME')
 
 	if [ "${db_flavor}" = "MYSQL" ]
 	then
@@ -405,7 +407,7 @@ then
 	if [ -d "${PROJ_LIB_DIR}" ]
 	then
 		dt=`date '+%Y%m%d%H%M%S'`
-		dbJar=`grep '^SQL_CONNECTOR_JAR' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+		dbJar=$(getInstallProperty 'SQL_CONNECTOR_JAR')
 		for f in ${PROJ_LIB_DIR}/*.jar ${dbJar}
 		do
 			if [ -f "${f}" ]
@@ -457,7 +459,7 @@ then
 	
 	auditCredAlias="auditDBCred"
 	
-	auditdbCred=`grep '^XAAUDIT.DB.PASSWORD' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+	auditdbCred=$(getInstallProperty 'XAAUDIT.DB.PASSWORD')
 	
 	create_jceks "${auditCredAlias}"  "${auditdbCred}"  "${CredFile}"
 	
@@ -469,14 +471,14 @@ then
 	
 	sslkeystoreAlias="sslKeyStore"
 	
-	sslkeystoreCred=`grep '^SSL_KEYSTORE_PASSWORD' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+	sslkeystoreCred=$(getInstallProperty 'SSL_KEYSTORE_PASSWORD')
 	
 	create_jceks "${sslkeystoreAlias}" "${sslkeystoreCred}" "${CredFile}"
 	
 	
 	ssltruststoreAlias="sslTrustStore"
 	
-	ssltruststoreCred=`grep '^SSL_TRUSTSTORE_PASSWORD' ${INSTALL_ARGS} | awk -F= '{ print $2 }'`
+	ssltruststoreCred=$(getInstallProperty 'SSL_TRUSTSTORE_PASSWORD')
 	
 	create_jceks "${ssltruststoreAlias}" "${ssltruststoreCred}" "${CredFile}"
 	
