@@ -15,6 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+### BEGIN INIT INFO
+# Provides:        ranger-admin
+# Required-Start:  $local_fs $remote_fs $network $named $syslog $time
+# Required-Stop:   $local_fs $remote_fs $network $named $syslog $time
+# Default-Start:   2 3 4 5
+# Default-Stop:
+# Short-Description: Start/Stop Ranger Admin
+### END INIT INFO
 
 LINUX_USER=ranger
 BIN_PATH=/usr/bin

@@ -14,6 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+### BEGIN INIT INFO
+# Provides:        ranger-usersync
+# Required-Start:  $local_fs $remote_fs $network $named $syslog $time
+# Required-Stop:   $local_fs $remote_fs $network $named $syslog $time
+# Default-Start:   2 3 4 5
+# Default-Stop:
+# Short-Description: Start/Stop Ranger Usersync
+### END INIT INFO
+
 START_SCRIPT=/usr/bin/ranger-usersync-start
 STOP_SCRIPT=/usr/bin/ranger-usersync-stop
 
