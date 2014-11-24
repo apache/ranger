@@ -68,7 +68,7 @@ public class XaSecureCredentialProvider {
    return null;
   }
   
-  private List<CredentialProvider>  getCredentialProviders(String url){
+  List<CredentialProvider>  getCredentialProviders(String url){
    try {
 	   Configuration conf = new Configuration();
 

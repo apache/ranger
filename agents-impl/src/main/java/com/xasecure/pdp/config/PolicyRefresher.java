@@ -82,7 +82,7 @@ public class PolicyRefresher  {
 		}
 	}
 
-	private void setPolicyContainer(PolicyContainer aPolicyContainer) {
+	public void setPolicyContainer(PolicyContainer aPolicyContainer) {
 		this.policyContainer = aPolicyContainer ;
 	}
 	
