@@ -62,7 +62,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a AddGroup ItemView");
 
-			_.extend(this, _.pick(options, 'groupList'));
+			_.extend(this, _.pick(options));
 			this.bindEvents();
 		},
 
@@ -75,9 +75,6 @@ define(function(require){
 		/** on render callback */
 		onRender: function() {
 			var that = this , arr =[];
-			this.groupArr = this.groupList.map(function(m){
-				return { id : m.id+"" , text : m.get('name')};
-			});
 			this.initializePlugins();
 			$.fn.editable.defaults.mode = 'popover';
 			
@@ -92,7 +89,7 @@ define(function(require){
 			    emptytext : 'Please select',
 				select2 :this.getSelect2Options(),
 			    display: function(values,srcDate) {
-			    	if(_.isNull(values)){
+			    	if(_.isNull(values) ){
 			    		$(this).html('');
 			    		return;
 			    	}
@@ -100,23 +97,31 @@ define(function(require){
 			    	if(!_.isArray(values))
 			    		values=values.toString().split(',');
 			    	var valArr = [];
-		    		var valArr = _.map(values, function(val){
-		    			var obj = _.findWhere(that.groupArr,{id:val});
-		    			return "<span class='label label-inverse'>" + obj.text + "</span>";
-		    		});
+			    	if(!_.isUndefined($(that.el).find('.select2-container-multi')) && $(that.el).find('.select2-container-multi').length > 0){
+			    		values = $(that.el).find('.select2-container-multi').select2('data')
+			    	}else{
+			    		var groupNameList = that.model.get('groupNameList');
+			    		values = _.map(that.model.get('groupIdList'),function(id,i){ return {'id': id, 'text': groupNameList[i]};});
+			    	}
+			    	valArr = _.map(values,function(val,i){ 
+			    		return "<span class='label label-inverse'>" + val.text + "</span>"  
+			    	},that);
+			    	that.groupArr = values;
+			    	that.firstTimeEditGroup = true;
 		    		
 		    		$(this).html(valArr.join(" "));
-		    		if(valArr.length > 0){
+		    		/*if(valArr.length > 0){
 		    			that.$('.field-groupIdList').removeClass('error');
 		    			that.ui.errorMsg.hide();
 		    		}else{
 		    			that.$('.field-groupIdList').addClass('error');
 		    			that.ui.errorMsg.show();
-		    		}
+		    		}*/
 			    		
 			    },
 			    success: function(response, newValue) {
 			    	console.log(newValue);
+			    	that.firstTimeEditGroup = false;
 			    	//that.model.set('group',newValue);
 			    	
 			    }
@@ -143,22 +148,24 @@ define(function(require){
 		    return false;
 		},
 		getSelect2Options :function(){
-			var that = this;
+			var that = this,groupCnt = 0;
+    		var tags = _.map(that.model.get('groupIdList'),function(id,i){ return {'id': id, 'text': that.model.get('groupNameList')[i]};});
 			return{
 				closeOnSelect : true,
 				placeholder : 'Select Group',
 			//	maximumSelectionSize : 1,
 				width :'220px',
 				tokenSeparators: [",", " "],
-				tags : this.groupArr,
+				tags : tags,
+//				multiple: true,
 				initSelection : function (element, callback) {
 					var data = [];
-					console.log(that.groupList);
+					if(!_.isUndefined(that.groupArr) && that.firstTimeEditGroup){
+						data = that.groupArr;
+					}
+					else
+						data = element.select2('data');
 					
-					$(element.val().split(",")).each(function () {
-						var obj = _.findWhere(that.groupArr,{id:this});	
-						data.push({id: this, text: obj.text});
-					});
 					callback(data);
 				},
 				/*createSearchChoice: function(term, data) {
@@ -179,6 +186,7 @@ define(function(require){
 					},
 					results: function (data, page) { 
 						var results = [],selectedVals = [];
+						groupCnt = data.resultSize
 						if(!_.isEmpty(that.$('.tags').data('editable').input.$input.val()))
 							selectedVals = that.$('.tags').data('editable').input.$input.val().split(',');
 						if(data.resultSize != "0"){
@@ -187,6 +195,7 @@ define(function(require){
 								if(!_.isEmpty(selectedVals))
 									results = XAUtil.filterResultByIds(results, selectedVals);
 				//				console.log(results.length);
+								groupCnt = results.length;
 								return {results : results};
 					//		}
 						//	results = [{id : (data.vXGroups.id)+"", text: data.vXGroups.name}];
@@ -202,7 +211,10 @@ define(function(require){
 					return result.text;
 				},
 				formatNoMatches: function(result){
-					return 'No group found.';
+					if(groupCnt > 0)
+						return 'Please enter one more character.'
+					else
+						return 'No group found.';
 				}
 			};
 		},

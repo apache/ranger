@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -208,8 +209,8 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	private void populateGroupList(Long xUserId, VXUser vObj) {
 		List<XXGroupUser> xGroupUserList = daoManager.getXXGroupUser()
 				.findByUserId(xUserId);
-		Set<Long> groupIdList = new HashSet<Long>();
-		Set<String> groupNameList = new HashSet<String>();
+		Set<Long> groupIdList = new LinkedHashSet<Long>();
+		Set<String> groupNameList = new LinkedHashSet<String>();
 		if (xGroupUserList != null) {
 			for (XXGroupUser xGroupUser : xGroupUserList) {
 				groupIdList.add(xGroupUser.getParentGroupId());

@@ -75,7 +75,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a UserCreate Layout");
 
-			_.extend(this, _.pick(options, 'groupList'));
+			_.extend(this, _.pick(options));
 			this.showBasicFields = true;
 			this.editUser = this.model.has('id') ? true : false;
 			this.bindEvents();
@@ -117,7 +117,6 @@ define(function(require){
 			this.form = new UserForm({
 				template : require('hbs!tmpl/users/UserForm_tmpl'),
 				model : this.model,
-				groupList : this.groupList,
 				showBasicFields : this.showBasicFields
 			});
 			this.rForm.show(this.form);

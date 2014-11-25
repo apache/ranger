@@ -164,22 +164,11 @@ define(function(require){
 		},
 		renderCustomFields: function(){
 			var that = this;
-			this.groupList = new VXGroupList();
-			var params = {sortBy : 'name'};
-			this.groupList.setPageSize(100);
-			this.groupList.fetch({
-				cache : true,
-				data : params
-				}).done(function(){
-				that.$('[data-customfields="groupIdList"]').html(new AddGroup({
-					groupList  : that.groupList,
-					model : that.model
-				}).render().el);
-				if(!that.showBasicFields)
-					that.$('[data-customfields="groupIdList"]').hide();
-			});
-			
-		
+			that.$('[data-customfields="groupIdList"]').html(new AddGroup({
+				model : that.model
+			}).render().el);
+			if(!that.showBasicFields)
+				that.$('[data-customfields="groupIdList"]').hide();
 		},
 		showCustomFields : function(){
 			if(!this.showBasicFields){

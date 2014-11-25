@@ -54,14 +54,17 @@ define(function(require){
     		tab 		: '.nav-tabs',
     		addNewUser	: '[data-id="addNewUser"]',
     		addNewGroup	: '[data-id="addNewGroup"]',
-    		visualSearch: '.visual_search'
+    		visualSearch: '.visual_search',
+    		btnShowMore : '[data-id="showMore"]',
+			btnShowLess : '[data-id="showLess"]',
     	},
 
 		/** ui events hash */
 		events: function() {
 			var events = {};
 			events['click '+this.ui.tab+' li a']  = 'onTabChange';
-			//events['change ' + this.ui.input]  = 'onInputChange';
+			events['click ' + this.ui.btnShowMore]  = 'onShowMore';
+			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			return events;
 		},
 
@@ -252,6 +255,17 @@ define(function(require){
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
 					label : localization.tt("lbl.groups"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue,model) {
+							if(!_.isUndefined(rawValue)){
+								return XAUtil.showGroups(_.map(rawValue,function(name){return {'userId': model.id,'groupName': name}}));
+							}
+							else
+							return '--';
+						}
+					}),
+					/*cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+					label : localization.tt("lbl.groups"),
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue) {
 							var html = '';
 							if(!_.isUndefined(rawValue)){
@@ -262,7 +276,7 @@ define(function(require){
 							}else
 								return '--';
 						}
-					}),
+					}),*/
 					editable : false,
 					sortable : false
 				},
@@ -457,7 +471,18 @@ define(function(require){
 				};
 			XAUtil.addVisualSearch(searchOpt,serverAttrName, coll,pluginAttr);
 		},
-
+		onShowMore : function(e){
+			var id = $(e.currentTarget).attr('policy-group-id');
+			this.rTableList.$el.find('[policy-group-id="'+id+'"]').show();
+			$('[data-id="showLess"][policy-group-id="'+id+'"]').show();
+			$('[data-id="showMore"][policy-group-id="'+id+'"]').hide();
+		},
+		onShowLess : function(e){
+			var id = $(e.currentTarget).attr('policy-group-id');
+			this.rTableList.$el.find('[policy-group-id="'+id+'"]').slice(4).hide();
+			$('[data-id="showLess"][policy-group-id="'+id+'"]').hide();
+			$('[data-id="showMore"][policy-group-id="'+id+'"]').show();
+		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},

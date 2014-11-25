@@ -571,19 +571,14 @@ define(function(require) {
 		   var view 		= require('views/users/UserCreate');
 		   var VXUser		= require('models/VXUser');
 		   var VXUserList	= require('collections/VXUserList');
-		   var VXGroupList	= require('collections/VXGroupList');
 
-		   var groupList = new VXGroupList();
 		   var user 	 = new VXUser({id : userId});
 		   
 		   user.collection = new VXUserList();
 		   user.fetch({cache : true}).done(function(){
-			   	   groupList.fetch({cache : true ,async:false}).done(function(){
-				   App.rContent.show(new view({
-					   model : user,
-					   groupList :groupList
-				   }));
-			   });   
+			   App.rContent.show(new view({
+				   model : user,
+			   }));
 		   });
 	   },
 	   groupCreateAction : function(){

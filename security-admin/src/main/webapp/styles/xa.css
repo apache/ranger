@@ -1031,6 +1031,8 @@ ul.tabs > li > a {
 }
 .controls-row .tags {
   width: 225px;
+  max-height: 180px;
+  overflow-y: auto;
 }
 
 .controls-row .link-tag {

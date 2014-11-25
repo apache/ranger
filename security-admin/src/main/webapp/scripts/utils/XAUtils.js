@@ -318,7 +318,7 @@ define(function(require) {
 		$.msg(options);
 	};
 	XAUtils.showGroups = function(rawValue){
-		var showMoreLess = false;
+		var showMoreLess = false,id;
 		if(_.isArray(rawValue))
 			rawValue =  new Backbone.Collection(rawValue);
 		if(!_.isUndefined(rawValue) && rawValue.models.length > 0){
@@ -326,20 +326,24 @@ define(function(require) {
 				if(m.has('groupName'))
 					return m.get('groupName') ;
 			})));
-			if(groupArr.length > 0)
-				var resourceId =rawValue.models[0].attributes.resourceId; 
+			if(groupArr.length > 0){
+				if(rawValue.first().has('resourceId'))
+					id = rawValue.first().get('resourceId');
+				else
+					id = rawValue.first().get('userId');
+			}
 			var newGroupArr = _.map(groupArr, function(name, i){
 				if(i >=  4)
-					return '<span class="label label-info" policy-group-id="'+resourceId+'" style="display:none;">' + name + '</span>';
+					return '<span class="label label-info" policy-group-id="'+id+'" style="display:none;">' + name + '</span>';
 				else if(i == 3 && groupArr.length > 4){
 					showMoreLess = true;
-					return '<span class="label label-info" policy-group-id="'+resourceId+'">' + name + '</span>';
+					return '<span class="label label-info" policy-group-id="'+id+'">' + name + '</span>';
 				}
 				else
-					return '<span class="label label-info" policy-group-id="'+resourceId+'">' + name + '</span>';
+					return '<span class="label label-info" policy-group-id="'+id+'">' + name + '</span>';
 			});
 			if(showMoreLess){
-				newGroupArr.push('<span class="pull-left"><a href="javascript:void(0);" data-id="showMore" class="" policy-group-id="'+resourceId+'"><code style=""> + More..</code></a></span><span class="pull-left" ><a href="javascript:void(0);" data-id="showLess" class="" policy-group-id="'+resourceId+'" style="display:none;"><code> - Less..</code></a></span>');
+				newGroupArr.push('<span class="pull-left"><a href="javascript:void(0);" data-id="showMore" class="" policy-group-id="'+id+'"><code style=""> + More..</code></a></span><span class="pull-left" ><a href="javascript:void(0);" data-id="showLess" class="" policy-group-id="'+id+'" style="display:none;"><code> - Less..</code></a></span>');
 			}
 			return newGroupArr.length ? newGroupArr.join(' ') : '--';
 		}else
