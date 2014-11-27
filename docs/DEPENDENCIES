@@ -1,0 +1,199 @@
+// ------------------------------------------------------------------
+// Transitive dependencies of this project determined from the
+// maven pom organized by organization.
+// ------------------------------------------------------------------
+
+Apache Maven Site Plugin
+
+
+From: 'an unknown organization'
+  - antlr  antlr:antlr:jar:2.7.2
+
+  - FindBugs-jsr305 (http://findbugs.sourceforge.net/) com.google.code.findbugs:jsr305:jar:2.0.1
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - commons-beanutils  commons-beanutils:commons-beanutils:jar:1.7.0
+
+  - dom4j  dom4j:dom4j:jar:1.1
+
+  - servlet-api  javax.servlet:servlet-api:jar:2.5
+
+  - Plexus Cipher: encryption/decryption Component (http://spice.sonatype.org/plexus-cipher) org.sonatype.plexus:plexus-cipher:jar:1.4
+    License: Apache Public License 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
+  - Plexus Security Dispatcher Component (http://spice.sonatype.org/plexus-sec-dispatcher) org.sonatype.plexus:plexus-sec-dispatcher:jar:1.3
+    License: Apache Public License 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
+  - Sisu - Guice (http://forge.sonatype.com/sisu-guice/) org.sonatype.sisu:sisu-guice:pom:2.1.7
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - XZ for Java (http://tukaani.org/xz/java.html) org.tukaani:xz:jar:1.2
+    License: Public Domain 
+  - oro  oro:oro:jar:2.0.8
+
+  - XMLUnit for Java (http://xmlunit.sourceforge.net/) xmlunit:xmlunit:jar:1.5
+    License: BSD License  (http://xmlunit.svn.sourceforge.net/viewvc/*checkout*/xmlunit/trunk/xmlunit/LICENSE.txt)
+
+From: 'Apache Software Foundation' (http://velocity.apache.org/)
+  - VelocityTools (http://velocity.apache.org/tools/devel/) org.apache.velocity:velocity-tools:jar:2.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+From: 'Apache Software Foundation' (http://www.apache.org/)
+  - HttpClient (http://hc.apache.org/httpcomponents-client) org.apache.httpcomponents:httpclient:jar:4.0.2
+    License: Apache License  (../LICENSE.txt)
+  - HttpCore (http://hc.apache.org/httpcomponents-core/) org.apache.httpcomponents:httpcore:jar:4.0.1
+    License: Apache License  (http://www.apache.org/licenses/LICENSE-2.0.html)
+  - Struts Core (http://struts.apache.org) org.apache.struts:struts-core:jar:1.3.8
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Struts Taglib (http://struts.apache.org) org.apache.struts:struts-taglib:jar:1.3.8
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Struts Tiles (http://struts.apache.org) org.apache.struts:struts-tiles:jar:1.3.8
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - XML Commons External Components XML APIs (http://xml.apache.org/commons/components/external/) xml-apis:xml-apis:jar:1.3.04
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+From: 'Codehaus' (http://www.codehaus.org/)
+  - Plexus Archiver Component (http://plexus.codehaus.org/plexus-components/plexus-archiver) org.codehaus.plexus:plexus-archiver:jar:2.4.3
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Plexus Classworlds (http://plexus.codehaus.org/plexus-classworlds/) org.codehaus.plexus:plexus-classworlds:jar:2.2.3
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Plexus :: Component Annotations (http://plexus.codehaus.org/plexus-containers/plexus-component-annotations/) org.codehaus.plexus:plexus-component-annotations:jar:1.5.5
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Default Plexus Container  org.codehaus.plexus:plexus-container-default:jar:1.0-alpha-30
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Plexus I18N Component (http://plexus.codehaus.org/plexus-components/plexus-i18n) org.codehaus.plexus:plexus-i18n:jar:1.0-beta-7
+
+  - Plexus Interpolation API (http://plexus.codehaus.org/plexus-components/plexus-interpolation) org.codehaus.plexus:plexus-interpolation:jar:1.14
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Plexus IO Components (http://plexus.codehaus.org/plexus-components/plexus-io) org.codehaus.plexus:plexus-io:jar:2.0.8
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Plexus Common Utilities (http://plexus.codehaus.org/plexus-utils) org.codehaus.plexus:plexus-utils:jar:3.0.15
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Plexus Velocity Component (http://plexus.codehaus.org/plexus-components/plexus-velocity) org.codehaus.plexus:plexus-velocity:jar:1.1.8
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+From: 'Mort Bay Consulting' (http://www.mortbay.com)
+  - Jetty Server (http://www.eclipse.org/jetty/jetty-parent/project/modules/jetty) org.mortbay.jetty:jetty:jar:6.1.25
+    License: Apache Software License - Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0)    License: Eclipse Public License - Version 1.0  (http://www.eclipse.org/org/documents/epl-v10.php)
+  - Jetty Utilities (http://www.eclipse.org/jetty/jetty-parent/project/jetty-util) org.mortbay.jetty:jetty-util:jar:6.1.25
+    License: Apache Software License - Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0)    License: Eclipse Public License - Version 1.0  (http://www.eclipse.org/org/documents/epl-v10.php)
+  - Servlet Specification API (http://jetty.mortbay.org/servlet-api) org.mortbay.jetty:servlet-api:jar:2.5-20081211
+    License: Apache License Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
+
+From: 'ObjectWeb' (http://www.objectweb.org/)
+  - ASM Core (http://asm.objectweb.org/asm/) org.ow2.asm:asm:jar:4.1
+    License: BSD  (http://asm.objectweb.org/license.html)
+  - ASM Analysis (http://asm.objectweb.org/asm-analysis/) org.ow2.asm:asm-analysis:jar:4.1
+    License: BSD  (http://asm.objectweb.org/license.html)
+  - ASM Tree (http://asm.objectweb.org/asm-tree/) org.ow2.asm:asm-tree:jar:4.1
+    License: BSD  (http://asm.objectweb.org/license.html)
+  - ASM Util (http://asm.objectweb.org/asm-util/) org.ow2.asm:asm-util:jar:4.1
+    License: BSD  (http://asm.objectweb.org/license.html)
+
+From: 'org.parboiled' (http://parboiled.org)
+  - parboiled-core (http://parboiled.org) org.parboiled:parboiled-core:jar:1.1.4
+    License: Apache 2  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - parboiled-java (http://parboiled.org) org.parboiled:parboiled-java:jar:1.1.4
+    License: Apache 2  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+From: 'org.pegdown' (http://pegdown.org)
+  - pegdown (http://pegdown.org) org.pegdown:pegdown:jar:1.2.1
+    License: Apache 2  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+From: 'Sonatype, Inc.' (http://www.sonatype.com)
+  - Aether :: API (http://aether.sonatype.org/aether-api/) org.sonatype.aether:aether-api:jar:1.7
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Aether :: Implementation (http://aether.sonatype.org/aether-impl/) org.sonatype.aether:aether-impl:jar:1.7
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Aether :: SPI (http://aether.sonatype.org/aether-spi/) org.sonatype.aether:aether-spi:jar:1.7
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Aether :: Utilities (http://aether.sonatype.org/aether-util/) org.sonatype.aether:aether-util:jar:1.7
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Sisu - Inject (JSR330 bean support) (http://sisu.sonatype.org/sisu-inject/guice-bean/sisu-inject-bean/) org.sonatype.sisu:sisu-inject-bean:bundle:1.4.2
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Sisu - Inject (Plexus bean support) (http://sisu.sonatype.org/sisu-inject/guice-bean/guice-plexus/sisu-inject-plexus/) org.sonatype.sisu:sisu-inject-plexus:bundle:1.4.2
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+From: 'Steve Ditlinger' (http://sslext.sourceforge.net/)
+  - sslext  sslext:sslext:jar:1.2-0
+    License: Apache Software License, Version 1.1  (http://www.apache.org/licenses/LICENSE-1.1)
+
+From: 'The Apache Software Foundation' (http://jakarta.apache.org)
+  - Commons Chain (http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/) commons-chain:commons-chain:jar:1.1
+    License: The Apache Software License, Version 2.0  (/LICENSE.txt)
+  - Codec (http://jakarta.apache.org/commons/codec/) commons-codec:commons-codec:jar:1.3
+    License: The Apache Software License, Version 2.0  (/LICENSE.txt)
+  - Digester (http://jakarta.apache.org/commons/digester/) commons-digester:commons-digester:jar:1.8
+    License: The Apache Software License, Version 2.0  (/LICENSE.txt)
+  - Validator (http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/) commons-validator:commons-validator:jar:1.3.1
+    License: The Apache Software License, Version 2.0  (/LICENSE.txt)
+
+From: 'The Apache Software Foundation' (http://www.apache.org/)
+  - Commons Collections (http://commons.apache.org/collections/) commons-collections:commons-collections:jar:3.2.1
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Commons IO (http://commons.apache.org/io/) commons-io:commons-io:jar:1.4
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Commons Lang (http://commons.apache.org/lang/) commons-lang:commons-lang:jar:2.5
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Commons Logging (http://commons.apache.org/logging) commons-logging:commons-logging:jar:1.1.1
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Commons Compress (http://commons.apache.org/compress/) org.apache.commons:commons-compress:jar:1.5
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Aether Provider (http://maven.apache.org/maven-aether-provider/) org.apache.maven:maven-aether-provider:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Archiver (http://maven.apache.org/shared/maven-archiver/) org.apache.maven:maven-archiver:jar:2.4.2
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Artifact (http://maven.apache.org/maven-artifact/) org.apache.maven:maven-artifact:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Core (http://maven.apache.org/maven-core/) org.apache.maven:maven-core:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Model (http://maven.apache.org/maven-model/) org.apache.maven:maven-model:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Model Builder (http://maven.apache.org/maven-model-builder/) org.apache.maven:maven-model-builder:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Plugin API (http://maven.apache.org/maven-plugin-api/) org.apache.maven:maven-plugin-api:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Repository Metadata Model (http://maven.apache.org/maven-repository-metadata/) org.apache.maven:maven-repository-metadata:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Settings (http://maven.apache.org/maven-settings/) org.apache.maven:maven-settings:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Settings Builder (http://maven.apache.org/maven-settings-builder/) org.apache.maven:maven-settings-builder:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: Core (http://maven.apache.org/doxia/doxia/doxia-core/) org.apache.maven.doxia:doxia-core:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: Decoration Model (http://maven.apache.org/doxia/doxia-sitetools/doxia-decoration-model/) org.apache.maven.doxia:doxia-decoration-model:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: Integration Tools (http://maven.apache.org/doxia/doxia-tools/doxia-integration-tools/) org.apache.maven.doxia:doxia-integration-tools:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: Logging API (http://maven.apache.org/doxia/doxia/doxia-logging-api/) org.apache.maven.doxia:doxia-logging-api:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: APT Module (http://maven.apache.org/doxia/doxia/doxia-modules/doxia-module-apt/) org.apache.maven.doxia:doxia-module-apt:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: FML Module (http://maven.apache.org/doxia/doxia/doxia-modules/doxia-module-fml/) org.apache.maven.doxia:doxia-module-fml:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: Markdown Module (http://maven.apache.org/doxia/doxia/doxia-modules/doxia-module-markdown/) org.apache.maven.doxia:doxia-module-markdown:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: XDoc Module (http://maven.apache.org/doxia/doxia/doxia-modules/doxia-module-xdoc/) org.apache.maven.doxia:doxia-module-xdoc:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: XHTML Module (http://maven.apache.org/doxia/doxia/doxia-modules/doxia-module-xhtml/) org.apache.maven.doxia:doxia-module-xhtml:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: Sink API (http://maven.apache.org/doxia/doxia/doxia-sink-api/) org.apache.maven.doxia:doxia-sink-api:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Doxia :: Site Renderer (http://maven.apache.org/doxia/doxia-sitetools/doxia-site-renderer/) org.apache.maven.doxia:doxia-site-renderer:jar:1.6
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Reporting API (http://maven.apache.org/shared/maven-reporting-api/) org.apache.maven.reporting:maven-reporting-api:jar:3.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Apache Maven Reporting Executor (http://maven.apache.org/shared/maven-reporting-exec/) org.apache.maven.reporting:maven-reporting-exec:jar:1.2
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Shared Utils (http://maven.apache.org/shared/maven-shared-utils/) org.apache.maven.shared:maven-shared-utils:jar:0.3
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Maven Wagon API (http://maven.apache.org/wagon/wagon-provider-api) org.apache.maven.wagon:wagon-provider-api:jar:1.0
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Apache Velocity (http://velocity.apache.org/engine/releases/velocity-1.5/) org.apache.velocity:velocity:pom:1.5
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Xerces2 Java Parser (http://xerces.apache.org/xerces2-j) xerces:xercesImpl:jar:2.9.1
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+From: 'The Eclipse Foundation' (http://www.eclipse.org/)
+  - Aether Utilities (http://www.eclipse.org/aether/aether-util/) org.eclipse.aether:aether-util:jar:0.9.0.M2
+    License: Eclipse Public License, Version 1.0  (http://www.eclipse.org/legal/epl-v10.html)
+
+
+
+

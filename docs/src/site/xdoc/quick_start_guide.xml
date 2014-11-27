@@ -1,0 +1,189 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<document>
+    <properties>
+        <author email="bganesan@hortonworks.com">Balaji Ganesan</author>
+        <title>Build and Check Release</title>
+    </properties>
+    <!-- Optional HEAD element, which is copied as is into the XHTML <head> element -->
+    <head>
+    </head>
+    <body>
+        <!-- The body of the document contains a number of sections -->
+        <section name="Quick Start Guide">
+            <subsection name = "Build Process">
+            <!-- Within sections, any XHTML can be used -->
+            <p>
+                1. Check out the code from GIT repository
+            </p>
+            <ul>
+               <source>git clone git://git.apache.org/incubator-ranger.git</source>
+               <source>cd incubator-ranger </source>
+            </ul>
+            
+            <p>
+                2. Please execute the following Maven command:
+            </p>
+            <ul>
+                <source>$ export JAVA_HOME=%jdk 7 Home%</source>
+                <source> $ mvn clean </source>
+                <source> $ mvn -DskipTests=false clean compile package install assembly:assembly </source>
+            </ul>
+                <p>
+                    3. After the above build command execution, you should see the following TAR files in the target folder:
+                </p>
+                <source>
+        ranger-%version-number%-admin.tar.gz
+        ranger-%version-number%-usersync.tar.gz
+        ranger-%version-number%-hdfs-plugin.tar.gz
+        ranger-%version-number%-hive-plugin.tar.gz
+        ranger-%version-number%-hbase-plugin.tar.gz
+        ranger-%version-number%-knox-plugin.tar.gz
+        ranger-%version-number%-storm-plugin.tar.gz
+                </source>
+            <!-- in addition to XHTML, any number of subsections can be within a section -->
+        </subsection>
+        
+        <subsection name= "Create an Apache Release">
+            
+            <p>
+                1. Checkout from ranger release branch
+            </p>
+            <ul>
+                <source>$ git checkout ranger-%version%</source>
+           </ul>
+            
+            <p>
+                2. Run maven commands to build and validate the build is working fine
+                (See Build Process: step 2):
+            </p>
+            <ul>
+                <source>$ export JAVA_HOME=%jdk 7 Home%</source>
+                <source> $ mvn clean </source>
+                <source> $ mvn -DskipTests=false clean compile package install assembly:assembly </source>
+            </ul>
+            <p>
+                3.  Clean all generated files for building the source build
+            <source>
+                $ mvn clean
+            </source>
+            </p>
+            <p>
+                4.  Create a TAR source file using the following command:
+                <source>
+        $ tar zcf %relDir%/ranger-%version-number%.tar.gz \
+        --exclude="./.git" --exclude="./.gitignore" --exclude="./.settings/*" \
+        --exclude="./.classpath" --exclude="./.project" --exclude="./winpkg/*" \
+        --exclude="./hdfs-agent/dependency-reduced-pom.xml"  .
+                </source>
+            </p>
+            <p>
+               5. To create a prefix folder as ranger-%version-number%, do the following commands:
+                   <source>
+        $ mkdir %relDir%/%tempFolderName%
+        $ cd %relDir%/%tempFolderName%
+        $ mkdir ranger-%version-number%
+        $ cd ranger-%version-number%
+        $ tar xf %relDir%/ranger-%version-number%.tar.gz
+        $ find . -name '.DS_Store' -exec rm -f {} \;   # required if run on MacOS
+        $ cd %relDir%/%tempFolderName%
+        $ rm %relDir%/ranger-%version-number%.tar.gz
+        $ tar zcf %relDir%/ranger-%version-number%.tar.gz ./ranger-%version-number%
+                </source>
+            </p>
+            <p>
+                6. To create a signature for the %relDir%/ranger-%version-number%.tar.gz, do the following commands:
+                    <source>   $ gpg --armor --output %relDir%/ranger-%version-number%.tar.gz.asc --detach-sig  %relDir%/ranger-%version-number%.tar.gz
+</source>
+        </p>
+            
+            <p>
+               7. To create MD5/SHA hash for the %relDir%/ranger-%version-number%.tar.gz, do the following commands:
+            <source>  $ gpg --print-mds %relDir%/ranger-%version-number%.tar.gz > %relDir%/ranger-%version-number%.tar.gz.mds</source>
+            </p>
+            <p>
+               8. Now, the following files are ready to be published for release:
+                <source>
+        %relDir%/ranger-%version-number%.tar.gz
+        %relDir%/ranger-%version-number%.tar.gz.asc
+        %relDir%/ranger-%version-number%.tar.gz.mds
+                </source>
+            </p>
+            </subsection>
+
+        <subsection name = "Verifying Build (also called as a Release)">
+            <p>
+                1. Download the release source file, ranger-%build-version%.tar.gz  (from URL provided in the release email)
+           
+            <ul>2. Download the PGP signature for, ranger-%build-version%.tar.gz which usaully named as ranger-%build-version%.tar.gz.asc(from URL provided in the release email)</ul>
+            <ul>3. Execute the following command to verify the release </ul>
+        </p>
+        <source> $ gpg --verify ranger-%build-version%.tar.gz.asc ranger-%build-version%.tar.gz </source>
+        
+        <p>
+            4. Download MD5/SHA hash for ranger-%build-version%.tar.gz which usaully named as ranger-%build-version%.tar.gz.mds (from URL provided in the release email)
+            <source>$ gpg --print-mds ranger-%build-version%.tar.gz </source>
+            Compare MD5, SHA hash generated from the above command and the signature available in the ranger-%build-version%.tar.gz.mds.
+        </p>
+
+        </subsection>
+        <subsection name = "Importing Apache Ranger Project into Eclipse" >
+            <p>
+                <ul>1. Create a Eclipse workspace called 'ranger' </ul>
+                <ul> 2. Import maven project from the root directory where ranger source code is downloaded and build using the following command:</ul>
+            </p>
+            <source>
+                $ export JAVA_HOME=%Jdk 7 Home%
+                $ mvn clean
+                $ mvn -DskipTests=false clean compile package install assembly:assembly
+                $ mvn eclipse:eclipse
+            </source>
+        </subsection>
+        
+        <subsection name = "Deployment Process" >
+            <h4>Installation Host Information</h4>
+                <p>
+                    <ul>1.	Ranger Admin Tool Component  (ranger-%version-number%-admin.tar.gz) should be installed on a host where Policy Admin Tool web application runs on port 6080 (default).</ul>
+                    <ul>2.  Ranger User Synchronization Component (ranger-%version-number%-usersync.tar.gz) should be installed on a host to synchronize the external user/group information into Ranger database via Ranger Admin Tool.</ul>
+                    <ul>3.  Ranger Component plugin should be installed on the component boxes:</ul>
+                            <ul>(a)  HDFS Plugin needs to be installed on Name Node hosts</ul>
+                            <ul>(b)  Hive Plugin needs to be installed on HiveServer2 hosts</ul>
+                            <ul>(c)  HBase Plugin needs to be installed on both Master and Regional Server nodes.</ul>
+                            <ul>(d)  Knox Plugin needs to be installed on Knox hosts.</ul>
+                            <ul>(e)  Storm Plugin needs to be installed on Storm hosts.</ul>
+            </p>
+            <h4> Installation Process </h4>
+            <p>
+                <ul>1. Download the tar.gz file into a temporary folder in the box where it needs to be installed.</ul>
+                
+                <ul>2. Expand the tar.gz file into /usr/lib/ranger/ folder </ul>
+                
+                <ul>3. Go to the component name under the expanded folder (e.g. /usr/lib/ranger/ranger-%version-number%-admin/)</ul>
+                    
+                <ul>4. Modify the install.properties file with appropriate variables </ul>
+                    
+                <ul> 5. If the module has setup.sh,
+                    <source>Execute ./setup.sh </source>
+                    
+                    If the setup.sh file does not exists, 
+                    <source>Execute ./enable-%component%-plugin.sh</source>
+                    </ul>
+            </p>
+        </subsection>
+        </section>
+    </body>
+</document>

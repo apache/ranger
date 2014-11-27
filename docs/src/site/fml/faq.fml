@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<faqs xmlns="http://maven.apache.org/FML/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/FML/1.0 http://maven.apache.org/xsd/fml-1.0.xsd" id="FAQ" title="Frequently Asked Questions">
+  <part id="General">
+    <title>General</title>
+    <faq id="What does Apache Ranger offer for Hadoop">
+      <question>What does Apache Ranger offer for Apache Hadoop and related components?</question>
+      <answer>
+        <p>
+            Apache Ranger offers a centralized security framework to manage fine grained access control over Hadoop and related components (Apache Hive, HBase etc.). Using Ranger administration console, users can easily manage policies around accessing a resource (file, folder, database, table, column etc) for a particular set of users and/or groups, and enforce the policies within Hadoop. They also can enable audit tracking and policy analytics for deeper control of the environment. Ranger’ solution also provides ability to delegate administration of certain data to other group owners, with an aim of decentralizing data ownership
+          </p>
+    </answer>
+    </faq>
+    <faq id="What components does Apache Ranger support today">
+    <question>What projects does Apache Ranger support today</question>
+     <answer>
+         <p>
+             Apache Ranger supports fine grained authorization and auditing for following Apache projects:
+         </p>
+         <ul>
+         <li>Apache Hadoop</li>
+         <li>Apache Hive</li>
+         <li>Apache HBase</li>
+         <li>Apache Storm</li>
+         <li>Apache Knox</li>
+     </ul>
+     </answer>
+    </faq>
+    
+    <faq id="How does it work over Hadoop and related components">
+      <question>How does it work over Hadoop and related components</question>
+      <answer>
+        <p>
+        Apache Ranger' solution at the core has a centralized web application, which consists of the policy administration, audit and reporting modules. Authorized users will be able to manage their security policies using the web tool or using REST APIs.  These security policies are enforced within Hadoop ecosystem using lightweight Ranger Java plugins, which run as part of the same process as the namenode (HDFS), Hive2Server(Hive), HBase server (Hbase), Nimbus server (Storm) and Knox server (Knox) respectively. Thus there is no additional OS level process to manage.
+        </p>
+      </answer>
+    </faq>
+    <faq id="Is there a single point of failure?">
+      <question>Is there a single point of failure?</question>
+      <answer>
+        <p>
+           No, Apache Ranger is not a Single Point of Failure. Ranger' plugins run within the same process as the component, e.g. NameNode for HDFS.  These agents pull the policy-changes using REST API at a configured regular interval (e.g.: 30 second). The plugin is able to function even if the policy server is temporarily down and will provide the authorization enforcement. Also, the policy manager web application can be hosted on a HA infrastructure. (with multiple apache server, multiple tomcat servers and a standby database server w/o replication setup).
+        </p>
+    </answer>
+    </faq>
+  </part>
+  
+  <part id="Apache Hadoop">
+    <title>Apache Hadoop</title>
+    <faq id="How does Ranger provide authorization in Apache Hadoop">
+      <question>How does Ranger provide authorization in Apache Hadoop?</question>
+      <answer>
+        <p>
+          Ranger provides a plugin for Apache Hadoop, specifically for the NameNode as part of the authorization method. Ranger' plugin is in the path of the user request and is able to make a decision on whether the user request shoud be authorized. The plugin also collects access request details required for auditing
+        </p>
+        <p>
+            Ranger will enforce the security policies available in the policy database. Users can create a security policy for a specific set of resources (one or more folders and/or files) and assign specific set of permissions (e.g: read, write, execute) to a specific set of users and/or groups. The security policies are stored our policy manager and are independent from native permissions.
+            </p>
+    </answer>
+        </faq>
+      <faq id="Does Ranger emulate native unix level permissions?">
+          <question>Does Ranger emulated permissions at the unix level for Apache Hadoop?</question>
+          <answer>
+              <p>
+                 No, Ranger enforces authorization based on policies entered in the policy administration tool and does not emulate the permissions at the unix level.  Ranger does provide a defaut feature to validate access using native hadoop file-level permissions if the Ranger policies do not cover the requested access
+              </p>
+              </answer>
+          </faq>
+  
+  <faq id="Do we need an Ranger plugin in each datanode?">
+      <question>Does Argun plugin need to be implemented in each datanode ?</question>
+      <answer>
+          <p>
+              No, Ranger plugin for Hadoop is only needed in the NameNode.
+              
+          </p>
+      </answer>
+  </faq>
+
+</part>
+    <part id="Apache Hive">
+        <title>Apache Hive</title>
+        <faq id="How does Ranger provide authorization in Apache Hive">
+            <question>How does Ranger provide authorization in Apache Hive?</question>
+            <answer>
+                <p>
+                    Ranger plugin is enabled in Hiveserver2 as part of the authorization
+                </p>
+            </answer>
+            </faq>
+        
+        <faq id="How does Ranger authorization compared to SQL standard authorization">
+            <question>How does Ranger authorization compare to SQL standard authorization?</question>
+            <answer>
+                <p>
+                    Apache Hive currently provides two methods of authorization, Storage based authorization and SQL standard authorization, which was introduced in Hive 13. SQL standard authorization provides grant/revoke functionality at database, table level. The commands would be familiar to a DBA admin. Ranger provides a centralized authorization interface for Hive and provides more granular access control at column level through the Hive plugin. Ranger also provides ability to use wildcard in resource names within the policy.
+                </p>
+            </answer>
+        </faq>
+        
+</part>
+
+<part id="Apache HBase">
+    <title>Apache HBase</title>
+    <faq id="How does Ranger provide authorization in Apache HBase">
+        <question>How does Ranger provide authorization in Apache Hbase?</question>
+        <answer>
+            <p>
+                Ranger provides a coprocessor which added to HBase, and includes the logic to perform authorization check and collect audit data.
+            </p>
+        </answer>
+    </faq>
+</part>
+<part id="Apache Knox">
+    <title>Apache Knox</title>
+    <faq id="How does Ranger provide authorization in Apache Knox">
+        <question>How does Ranger provide authorization in Apache Knox?</question>
+        <answer>
+            <p>
+                Apache Knox currently provides a service level authorization for users/groups. These acls are stored locally in a file. Ranger has built a plugin for Knox to enable administration of these policies through central UI/REST APIs as well as detailed auditing of Knox user access.
+            </p>
+        </answer>
+    </faq>
+</part>
+</faqs>
