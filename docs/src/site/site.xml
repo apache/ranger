@@ -29,7 +29,7 @@ under the License.
   </skin>
 
 <bannerLeft>
-    <name>Argus logo</name>
+    <name>Ranger Logo</name>
     <src>/logo/rangerlogo.png</src>
     <height>200px</height>
     <width>400px</width>
@@ -65,7 +65,7 @@ under the License.
         <sideBarEnabled>true</sideBarEnabled>
         <sourceLineNumbersEnabled>true</sourceLineNumbersEnabled>
         <twitter>
-            <user>apacheargus</user>
+            <user>Ranger4Hadoop</user>
             <showUser>true</showUser>
             <showFollowers>true</showFollowers>
         </twitter>
