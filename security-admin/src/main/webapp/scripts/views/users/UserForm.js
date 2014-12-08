@@ -209,14 +209,14 @@ define(function(require){
 				var groupArr = this.$('[data-customfields="groupIdList"]').find('.tags').editable('getValue', true);
 				if(_.isNumber(groupArr))
 					groupArr = groupArr.toString().split(',');
-				if(_.isEmpty(groupArr) ){
+				/*if(_.isEmpty(groupArr) ){
 					this.$('[data-customfields="groupIdList"]').find('.control-group').addClass('error');
 					this.$('[data-customfields="groupIdList"]').find('[data-error="groupIdList"]').show();
 					return false;
 				}else{
 					this.$('[data-customfields="groupIdList"]').find('.control-group').removeClass('error');
 					this.$('[data-customfields="groupIdList"]').find('[data-error="groupIdList"]').hide();				
-				}
+				}*/
 				this.model.set('groupIdList',groupArr);
 				this.model.set('status',XAEnums.ActivationStatus.ACT_STATUS_ACTIVE.value);
 				this.model.unset('passwordConfirm');
