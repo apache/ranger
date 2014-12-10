@@ -52,7 +52,7 @@ ${project.name}
 
 * Usage
 
-  General instructions on how to use the Apache Ranger can be found on the {{{./wiki.html}Wiki Page}}.
+  General instructions on how to use the Apache Ranger can be found on the {{{https://cwiki.apache.org/confluence/display/RANGER/Index}Wiki Page}}.
 
   In case you have questions regarding the Ranger' usage, please have a look at the {{{./faq.html}FAQ}} and feel
   free to contact the {{{./mail-lists.html}user mailing list}}. The posts to the mailing list are archived and could
