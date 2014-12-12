@@ -145,20 +145,20 @@ fi
 
 if [ "${SYNC_SOURCE}" == "" ]
 then
-  SYNC_SOURCE="com.xasecure.unixusersync.process.UnixUserGroupBuilder"
+  SYNC_SOURCE="org.apache.ranger.unixusersync.process.UnixUserGroupBuilder"
 elif [ "${SYNC_SOURCE}" == "unix" ]
 then
-  SYNC_SOURCE="com.xasecure.unixusersync.process.UnixUserGroupBuilder"
+  SYNC_SOURCE="org.apache.ranger.unixusersync.process.UnixUserGroupBuilder"
 elif [ "${SYNC_SOURCE}" == "ldap" ]
 then
-  SYNC_SOURCE="com.xasecure.ldapusersync.process.LdapUserGroupBuilder"
+  SYNC_SOURCE="org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder"
 else
   echo "Unsupported value for SYNC_SOURCE: ${SYNC_SOURCE}, supported values: ldap, unix, default: unix"
   exit 3
 fi
 
 
-if [ "${SYNC_SOURCE}" == "com.xasecure.ldapusersync.process.LdapUserGroupBuilder" ]
+if [ "${SYNC_SOURCE}" == "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder" ]
 then
 
   if [ "${SYNC_INTERVAL}" == "" ]
@@ -216,7 +216,7 @@ then
     echo "Storing ldap bind password in credential store"
 	mkdir -p `dirname "${SYNC_LDAP_BIND_KEYSTOREPATH}"`
 	chown ${unix_user}:${unix_group} `dirname "${SYNC_LDAP_BIND_KEYSTOREPATH}"`
-	$JAVA_HOME/bin/java -cp "./lib/*" com.hortonworks.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
+	$JAVA_HOME/bin/java -cp "./lib/*" org.apache.ranger.credentialapi.buildks create $SYNC_LDAP_BIND_ALIAS -value $SYNC_LDAP_BIND_PASSWORD -provider jceks://file$SYNC_LDAP_BIND_KEYSTOREPATH
     SYNC_LDAP_BIND_PASSWORD="_"
   fi
 

@@ -69,7 +69,7 @@
 		<appender-ref ref="sql_appender" />
 	</category>
 
-	<category name="com.xasecure" additivity="false">
+	<category name="org.apache.ranger" additivity="false">
 		<priority value="info" />
 		<appender-ref ref="xa_log_appender" />
 	</category>

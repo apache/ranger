@@ -792,7 +792,7 @@ update_properties() {
 	then
 		mkdir -p `dirname "${keystore}"`
 
-		$JAVA_HOME/bin/java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
+		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
 
 		propertyName=xaDB.jdbc.credential.alias
 		newPropertyValue="${db_password_alias}"
@@ -829,7 +829,7 @@ update_properties() {
 
 	if [ "${keystore}" != "" ]
 	then
-		$JAVA_HOME/bin/java -cp "cred/lib/*" com.hortonworks.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
+		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
 
 		propertyName=auditDB.jdbc.credential.alias
 		newPropertyValue="${audit_db_password_alias}"
@@ -1239,10 +1239,10 @@ execute_java_patches(){
 		dt=`date '+%s'`
 		tempFile=/tmp/sql_${dt}_$$.sql
 		mysqlexec="${SQL_COMMAND_INVOKER} -u ${db_root_user} --password="${db_root_password}" -h ${DB_HOST} ${db_name}"
-		javaFiles=`ls -1 $app_home/WEB-INF/classes/com/xasecure/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
+		javaFiles=`ls -1 $app_home/WEB-INF/classes/org/apache/ranger/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
 		for javaPatch in ${javaFiles}
 		do
-			if test -f "$app_home/WEB-INF/classes/com/xasecure/patch/$javaPatch"; then
+			if test -f "$app_home/WEB-INF/classes/org/apache/ranger/patch/$javaPatch"; then
 				className=$(basename "$javaPatch" .class)
 				version=`echo ${className} | awk -F'_' '{ print $2 }'`
 				if [ "${version}" != "" ]
@@ -1252,7 +1252,7 @@ execute_java_patches(){
 					if [ ${c} -eq 0 ]
 					then
 						log "[I] patch ${javaPatch} is being applied..";
-						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" org.apache.ranger.patch.${className}`
 						check_ret_status $? "Unable to apply patch:$javaPatch. $msg"
 						touch ${tempFile}
 						echo >> ${tempFile}
@@ -1272,10 +1272,10 @@ execute_java_patches(){
 	then
 		dt=`date '+%s'`
 		tempFile=/tmp/sql_${dt}_$$.sql
-		javaFiles=`ls -1 $app_home/WEB-INF/classes/com/xasecure/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
+		javaFiles=`ls -1 $app_home/WEB-INF/classes/org/apache/ranger/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
 		for javaPatch in ${javaFiles}
 		do
-			if test -f "$app_home/WEB-INF/classes/com/xasecure/patch/$javaPatch"; then
+			if test -f "$app_home/WEB-INF/classes/org/apache/ranger/patch/$javaPatch"; then
 				className=$(basename "$javaPatch" .class)
 				version=`echo ${className} | awk -F'_' '{ print $2 }'`
 				if [ "${version}" != "" ]
@@ -1285,7 +1285,7 @@ execute_java_patches(){
 					if test "${result2#*$version}" == "$result2"
 					then
 						log "[I] patch ${javaPatch} is being applied..";
-						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" com.xasecure.patch.${className}`
+						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" org.apache.ranger.patch.${className}`
 						check_ret_status $? "Unable to apply patch:$javaPatch. $msg"
 						touch ${tempFile}
 						echo >> ${tempFile}

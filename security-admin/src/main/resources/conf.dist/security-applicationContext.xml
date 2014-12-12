@@ -99,30 +99,30 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 		</beans:property>
 	</beans:bean>
 
-	<beans:bean id="customUsernamePasswordAuthenticationFilter" class="com.xasecure.security.web.filter.XAUsernamePasswordAuthenticationFilter">
+	<beans:bean id="customUsernamePasswordAuthenticationFilter" class="org.apache.ranger.security.web.filter.XAUsernamePasswordAuthenticationFilter">
 		<beans:property name="authenticationManager" ref="authenticationManager"/>
 		<beans:property name="authenticationSuccessHandler" ref="ajaxAuthSuccessHandler"/>
 		<beans:property name="authenticationFailureHandler"	ref="ajaxAuthFailureHandler"/>
 		<!--  beans:property name="rememberMeServices" ref="rememberMeServices"/ -->
 	</beans:bean>
 
-	<beans:bean id="authenticationProcessingFilterEntryPoint" class="com.xasecure.security.web.authentication.XAAuthenticationEntryPoint">
+	<beans:bean id="authenticationProcessingFilterEntryPoint" class="org.apache.ranger.security.web.authentication.XAAuthenticationEntryPoint">
 		<beans:property name="loginFormUrl" value="/login.jsp"/>
 		<beans:property name="forceHttps" value="false"/>
 	</beans:bean>
 
-	<beans:bean id="ajaxAuthSuccessHandler" class="com.xasecure.security.web.authentication.XAAuthSuccessHandler">
+	<beans:bean id="ajaxAuthSuccessHandler" class="org.apache.ranger.security.web.authentication.XAAuthSuccessHandler">
 		<beans:property name="defaultTargetUrl" value="/dashboard.jsp"/>
 	</beans:bean>
 
-	<beans:bean id="ajaxAuthFailureHandler" class="com.xasecure.security.web.authentication.XAAuthFailureHandler">
+	<beans:bean id="ajaxAuthFailureHandler" class="org.apache.ranger.security.web.authentication.XAAuthFailureHandler">
 		<beans:property name="defaultFailureUrl" value="/public/failedLogin.jsp?login_error=1"/>
 	</beans:bean>
 
-	<beans:bean id="customLogoutSuccessHandler" class="com.xasecure.security.web.authentication.CustomLogoutSuccessHandler">
+	<beans:bean id="customLogoutSuccessHandler" class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
 	</beans:bean>
 
-	<beans:bean id="userContextFormationFilter" class="com.xasecure.security.web.filter.XASecurityContextFormationFilter"/>
+	<beans:bean id="userContextFormationFilter" class="org.apache.ranger.security.web.filter.XASecurityContextFormationFilter"/>
 
 	<security:jdbc-user-service id="userService" data-source-ref="defaultDataSource"
 			users-by-username-query="select LOGIN_ID,PASSWORD,STATUS from x_portal_user where LOGIN_ID=? and STATUS = 1"
@@ -153,7 +153,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<!-- AD_BEAN_SETTINGS_END -->
 	<!-- LDAP_BEAN_SETTINGS_START -->
 	<!-- LDAP_BEAN_SETTINGS_END -->
-	<!--  beans:bean id="rememberMeFilter" class="com.xasecure.security.web.filter.MyRememberMeFilter">
+	<!--  beans:bean id="rememberMeFilter" class="org.apache.ranger.security.web.filter.MyRememberMeFilter">
 		<beans:property name="rememberMeServices" ref="rememberMeServices"/>
 		<beans:property name="authenticationManager" ref="authenticationManager" />
 	</beans:bean>
@@ -169,5 +169,5 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
         "org.springframework.security.authentication.RememberMeAuthenticationProvider">
 	<beans:property name="key" value="REMEMBER_ME_PASSWORD"/>
 	</beans:bean -->
-	<beans:bean id="securityEventListener" class ="com.xasecure.security.listener.SpringEventListener"/>
+	<beans:bean id="securityEventListener" class ="org.apache.ranger.security.listener.SpringEventListener"/>
 </beans:beans>

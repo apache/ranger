@@ -22,7 +22,7 @@
 	<!--  The following property is used to select appropriate XASecure Authorizer Module (filebased, policymanager based) -->
 	<property>
 		<name>storm.authorization.verifier.classname</name>
-		<value>com.xasecure.pdp.storm.XASecureAuthorizer</value>
+		<value>org.apache.ranger.pdp.storm.RangerAuthorizer</value>
 		<description>
 			Class Name of the authorization Module 
 		</description>

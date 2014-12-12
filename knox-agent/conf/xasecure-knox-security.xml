@@ -22,7 +22,7 @@
 	<!--  The following property is used to select appropriate XASecure Authorizer Module (filebased, policymanager based) -->
 	<property>
 		<name>knox.authorization.verifier.classname</name>
-		<value>com.xasecure.pdp.knox.XASecureAuthorizer</value>
+		<value>org.apache.ranger.pdp.knox.RangerAuthorizer</value>
 		<description>
 			Class Name of the authorization Module 
 		</description>

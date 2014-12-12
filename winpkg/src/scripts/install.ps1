@@ -133,7 +133,7 @@ function Main( $scriptDir )
     ### Apply configuration changes to xasecure-hdfs-security.xml
     ###
 	$hdfsSecurityChanges = @{
-		"hdfs.authorization.verifier.classname"					= "com.xasecure.pdp.hdfs.XASecureAuthorizer"
+		"hdfs.authorization.verifier.classname"					= "org.apache.ranger.pdp.hdfs.RangerAuthorizer"
 		"xasecure.hdfs.policymgr.url"							= "${ENV:RANGER_EXTERNAL_URL}/service/assets/policyList/${ENV:RANGER_HDFS_REPO}"
 		"xasecure.hdfs.policymgr.url.saveAsFile"				= "${ENV:RANGER_HOME}\tmp\hadoop_${ENV:RANGER_HDFS_REPO}"
 		"xasecure.hdfs.policymgr.url.laststoredfile"			= "${ENV:RANGER_HOME}\tmp\hadoop_${ENV:RANGER_HDFS_REPO}_json"
@@ -164,7 +164,7 @@ function Main( $scriptDir )
     ####
 	$hivechanges =   @{
 		"hive.security.authorization.enabled"	= "true"
-		"hive.security.authorization.manager"	= "com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory"
+		"hive.security.authorization.manager"	= "org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory"
 		"hive.conf.restricted.list"				= "hive.security.authorization.enabled, hive.security.authorization.manager, hive.security.authenticator.manager"
 	}
 
@@ -174,7 +174,7 @@ function Main( $scriptDir )
     #$xmlFile = Join-Path $ENV:HIVE_CONF_DIR "hiveserver2-site.xml"
 	$hiveServerChanges =  @{
 		"hive.security.authorization.enabled"	= "true"
-		"hive.security.authorization.manager"	= "com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory"
+		"hive.security.authorization.manager"	= "org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory"
 		"hive.security.authenticator.manager"	= "org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator"
 		"hive.conf.restricted.list"				= "hive.security.authorization.enabled, hive.security.authorization.manager, hive.security.authenticator.manager"
 	}
@@ -213,7 +213,7 @@ function Main( $scriptDir )
     #$xmlFile = Join-Path $ENV:HIVE_CONF_DIR "xasecure-hive-security.xml"
 	#
     $hiveSecurityChanges = @{
-		"hive.authorization.verifier.classname"					= "com.xasecure.pdp.hive.XASecureAuthorizer"
+		"hive.authorization.verifier.classname"					= "org.apache.ranger.pdp.hive.RangerAuthorizer"
 		"xasecure.hive.policymgr.url"							= "${ENV:RANGER_EXTERNAL_URL}/service/assets/policyList/${ENV:RANGER_HIVE_REPO}"
 		"xasecure.hive.policymgr.url.saveAsFile"				= "${ENV:RANGER_HOME}\tmp\hive_${ENV:RANGER_HIVE_REPO}"
 		"xasecure.hive.policymgr.url.laststoredfile"			= "${ENV:RANGER_HOME}\tmp\hive_${ENV:RANGER_HIVE_REPO}_json"
@@ -247,8 +247,8 @@ function Main( $scriptDir )
 	    #$xmlFile = Join-Path $ENV:HBASE_CONF_DIR "hbase-site.xml"
 		$hbaseChanges =   @{
 	        "hbase.security.authorization"      = "true"
-		"hbase.coprocessor.master.classes"	= "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
-			"hbase.coprocessor.region.classes"	= "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
+		"hbase.coprocessor.master.classes"	= "org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor"
+			"hbase.coprocessor.region.classes"	= "org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor"
 			"hbase.rpc.protection"				= "PRIVACY"
 		    "hbase.rpc.engine"					= "org.apache.hadoop.hbase.ipc.SecureRpcEngine"
 		}
@@ -288,7 +288,7 @@ function Main( $scriptDir )
 	    #$xmlFile = Join-Path $ENV:HBASE_CONF_DIR "xasecure-hbase-security.xml"
 		#
 	    $hbaseSecurityChanges =     @{
-			"hbase.authorization.verifier.classname"				= "com.xasecure.pdp.hbase.XASecureAuthorizer"
+			"hbase.authorization.verifier.classname"				= "org.apache.ranger.pdp.hbase.RangerAuthorizer"
 			"xasecure.hbase.policymgr.url"							= "${ENV:RANGER_EXTERNAL_URL}/service/assets/policyList/${ENV:RANGER_HBASE_REPO}"
 			"xasecure.hbase.policymgr.url.saveAsFile"				= "${ENV:RANGER_HOME}\tmp\hbase_${ENV:RANGER_HBASE_REPO}"
 			"xasecure.hbase.policymgr.url.laststoredfile"			= "${ENV:RANGER_HOME}\tmp\hbase_${ENV:RANGER_HBASE_REPO}_json"
@@ -357,7 +357,7 @@ function Main( $scriptDir )
 	    #$xmlFile = Join-Path $ENV:KNOX_CONF_DIR "xasecure-knox-security.xml"
 		#
 	    $knoxSecurityChanges =     @{
-			"knox.authorization.verifier.classname"				= "com.xasecure.pdp.knox.XASecureAuthorizer"
+			"knox.authorization.verifier.classname"				= "org.apache.ranger.pdp.knox.RangerAuthorizer"
 			"xasecure.knox.policymgr.url"							= "${ENV:RANGER_EXTERNAL_URL}/service/assets/policyList/${ENV:RANGER_KNOX_REPO}"
 			"xasecure.knox.policymgr.url.saveAsFile"				= "${ENV:RANGER_HOME}\tmp\knox_${ENV:RANGER_KNOX_REPO}"
 			"xasecure.knox.policymgr.url.laststoredfile"			= "${ENV:RANGER_HOME}\tmp\knox_${ENV:RANGER_KNOX_REPO}_json"
@@ -424,7 +424,7 @@ function Main( $scriptDir )
 	    #$xmlFile = Join-Path $ENV:STORM_CONF_DIR "xasecure-storm-security.xml"
 		#
 	    $stormSecurityChanges =     @{
-			"storm.authorization.verifier.classname"				= "com.xasecure.pdp.storm.XASecureAuthorizer"
+			"storm.authorization.verifier.classname"				= "org.apache.ranger.pdp.storm.RangerAuthorizer"
 			"xasecure.storm.policymgr.url"							= "${ENV:RANGER_EXTERNAL_URL}/service/assets/policyList/${ENV:RANGER_STORM_REPO}"
 			"xasecure.storm.policymgr.url.saveAsFile"				= "${ENV:RANGER_HOME}\tmp\storm_${ENV:RANGER_STORM_REPO}"
 			"xasecure.storm.policymgr.url.laststoredfile"			= "${ENV:RANGER_HOME}\tmp\storm_${ENV:RANGER_STORM_REPO}_json"

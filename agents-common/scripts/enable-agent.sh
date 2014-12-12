@@ -185,7 +185,7 @@ create_jceks() {
 
 	tempFile=/tmp/jce.$$.out
 
-    $JAVA_HOME/bin/java -cp ":${PROJ_INSTALL_LIB_DIR}/*:" com.hortonworks.credentialapi.buildks create "${alias}" -value "${pass}" -provider "jceks://file${jceksFile}" > ${tempFile} 2>&1
+    $JAVA_HOME/bin/java -cp ":${PROJ_INSTALL_LIB_DIR}/*:" org.apache.ranger.credentialapi.buildks create "${alias}" -value "${pass}" -provider "jceks://file${jceksFile}" > ${tempFile} 2>&1
 
 	if [ $? -ne 0 ]
 	then
@@ -359,7 +359,7 @@ then
             cp ${fullpathorgfn} ${archivefn}
 			if [ $? -eq 0 ]
 			then
-				${JAVA} -cp "${INSTALL_CP}" com.xasecure.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} -p  ${INSTALL_ARGS}
+				${JAVA} -cp "${INSTALL_CP}" org.apache.ranger.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} -p  ${INSTALL_ARGS}
 				if [ $? -eq 0 ]
                 then
                 	diff -w ${newfn} ${fullpathorgfn} > /dev/null 2>&1
@@ -544,13 +544,13 @@ then
 			}
 			{
     			if ($1 == "nimbus.authorizer") {
-        			if ($2 ~ /^[ \t]*"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer"[ \t]*$/) {
+        			if ($2 ~ /^[ \t]*"org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer"[ \t]*$/) {
             			configured = 1 ;
             			printf("%s\n",$0) ;
         			}
         			else {
             			printf("#%s\n",$0);
-            			printf("nimbus.authorizer: \"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer\"\n") ;
+            			printf("nimbus.authorizer: \"org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer\"\n") ;
             			configured = 1 ;
         			}
     			}
@@ -560,7 +560,7 @@ then
 			}
 			END {
     			if (configured == 0) {
-        			printf("nimbus.authorizer: \"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer\"\n") ;
+        			printf("nimbus.authorizer: \"org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer\"\n") ;
     			}
 			}' ${CFG_FILE} > ${CFG_FILE}.new &&  cat ${CFG_FILE}.new > ${CFG_FILE} && rm -f ${CFG_FILE}.new
 

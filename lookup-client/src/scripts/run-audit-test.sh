@@ -27,4 +27,4 @@ done
 
 export cp
 
-java -Xmx1024M -Xms1024M -cp "${cp}" com.xasecure.audit.test.TestEvents $*
+java -Xmx1024M -Xms1024M -cp "${cp}" org.apache.ranger.audit.test.TestEvents $*

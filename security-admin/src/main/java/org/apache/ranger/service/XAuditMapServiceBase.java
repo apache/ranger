@@ -1,0 +1,85 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+ package org.apache.ranger.service;
+
+/**
+ * 
+ */
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.ranger.common.*;
+import org.apache.ranger.entity.*;
+import org.apache.ranger.service.*;
+import org.apache.ranger.view.*;
+
+public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAuditMap>
+		extends AbstractBaseResourceService<T, V> {
+	public static final String NAME = "XAuditMap";
+
+	public XAuditMapServiceBase() {
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected XXAuditMap mapViewToEntityBean(VXAuditMap vObj, XXAuditMap mObj, int OPERATION_CONTEXT) {
+		mObj.setResourceId( vObj.getResourceId());
+		mObj.setGroupId( vObj.getGroupId());
+		mObj.setUserId( vObj.getUserId());
+		mObj.setAuditType( vObj.getAuditType());
+		return mObj;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected VXAuditMap mapEntityToViewBean(VXAuditMap vObj, XXAuditMap mObj) {
+		vObj.setResourceId( mObj.getResourceId());
+		vObj.setGroupId( mObj.getGroupId());
+		vObj.setUserId( mObj.getUserId());
+		vObj.setAuditType( mObj.getAuditType());
+		return vObj;
+	}
+
+	/**
+	 * @param searchCriteria
+	 * @return
+	 */
+	public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
+		VXAuditMapList returnList = new VXAuditMapList();
+		List<VXAuditMap> xAuditMapList = new ArrayList<VXAuditMap>();
+
+		@SuppressWarnings("unchecked")
+		List<XXAuditMap> resultList = (List<XXAuditMap>)searchResources(searchCriteria,
+				searchFields, sortFields, returnList);
+
+		// Iterate over the result list and create the return list
+		for (XXAuditMap gjXAuditMap : resultList) {
+			@SuppressWarnings("unchecked")
+			VXAuditMap vXAuditMap = populateViewBean((T)gjXAuditMap);
+			xAuditMapList.add(vXAuditMap);
+		}
+
+		returnList.setVXAuditMaps(xAuditMapList);
+		return returnList;
+	}
+
+}

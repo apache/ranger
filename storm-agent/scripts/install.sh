@@ -22,7 +22,7 @@ create_jceks()
 	pass=$2
 	jceksFile=$3
 	
-	java -cp "${install_dir}/cred/lib/*:${install_dir}/installer/lib/*" com.hortonworks.credentialapi.buildks create ${alias} -value ${pass} -provider jceks://file${jceksFile}
+	java -cp "${install_dir}/cred/lib/*:${install_dir}/installer/lib/*" org.apache.ranger.credentialapi.buildks create ${alias} -value ${pass} -provider jceks://file${jceksFile}
 	if [ $? -ne 0 ]
 	then
 		echo "ERROR: Unable to create/update credential file [${jceksFile}] for alias [${alias}]"
@@ -253,7 +253,7 @@ do
                 if [ $? -eq 0 ]
                 then
                 	cp="${install_dir}/installer/lib/*:${install_dir}/cred/lib/*:"
-                        java -cp "${cp}" com.xasecure.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} ${PROP_ARGS}
+                        java -cp "${cp}" org.apache.ranger.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} ${PROP_ARGS}
                         if [ $? -eq 0 ]
                         then
                                 diff -w ${newfn} ${fullpathorgfn} > /dev/null 2>&1 
@@ -302,13 +302,13 @@ awk -F: 'BEGIN {
 }
 { 
 	if ($1 == "nimbus.authorizer") {
-		if ($2 ~ /^[ \t]*"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer"[ \t]*$/) {
+		if ($2 ~ /^[ \t]*"org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer"[ \t]*$/) {
 			configured = 1 ;
 			printf("%s\n",$0) ;
 		}
 		else {
 			printf("#%s\n",$0);
-			printf("nimbus.authorizer: \"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer\"\n") ;
+			printf("nimbus.authorizer: \"org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer\"\n") ;
 			configured = 1 ;
 		}
 	}
@@ -318,7 +318,7 @@ awk -F: 'BEGIN {
 }
 END {
 	if (configured == 0) {
-		printf("nimbus.authorizer: \"com.xasecure.authorization.storm.authorizer.XaSecureStormAuthorizer\"\n") ;
+		printf("nimbus.authorizer: \"org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer\"\n") ;
 	}
 }' ${ARCHIVE_FILE} > ${ARCHIVE_FILE}.new 
 

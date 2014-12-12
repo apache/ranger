@@ -44,5 +44,5 @@ if [ ! -d logs ]
 then
 	mkdir logs
 fi
-java ${JAVA_OPTS} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}" com.xasecure.server.tomcat.StopEmbededServer > logs/catalina.out 2>&1
+java ${JAVA_OPTS} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}" org.apache.ranger.server.tomcat.StopEmbededServer > logs/catalina.out 2>&1
 echo "Apache Ranger Admin has been stopped."

@@ -4,7 +4,6 @@
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
-        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
         <dependent-module archiveName="lookup-client-0.4.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/lookup-client/lookup-client">
             <dependency-type>uses</dependency-type>
         </dependent-module>

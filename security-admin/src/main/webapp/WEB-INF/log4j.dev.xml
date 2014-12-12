@@ -84,7 +84,7 @@
 		<!-- <appender-ref ref="log4jdbc_daily_rolling_file" /> -->
 	</category>
 
-	<category name="com.xasecure" additivity="false">
+	<category name="org.apache.ranger" additivity="false">
 		<priority value="info" />
 		<appender-ref ref="console" />
 		<!-- <appender-ref ref="daily_rolling_file" /> -->

@@ -35,10 +35,10 @@ http://www.springframework.org/schema/task/spring-task-3.1.xsd
 http://www.springframework.org/schema/util
 http://www.springframework.org/schema/util/spring-util.xsd">
 
-	<context:component-scan base-package="com.xasecure" >
-		<!-- context:exclude-filter type="regex" expression="com.xasecure\.common\.db\.DaoManager" / -->
+	<context:component-scan base-package="org.apache.ranger" >
+		<!-- context:exclude-filter type="regex" expression="org.apache.ranger\.common\.db\.DaoManager" / -->
 	</context:component-scan>
-	<context:component-scan base-package="com.xasecure" />
+	<context:component-scan base-package="org.apache.ranger" />
 	<tx:annotation-driven />
     	
 	<bean id="defaultEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
@@ -81,7 +81,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		</property>
 	</bean>
 	
-	<bean id="propertyConfigurer" class="com.xasecure.common.PropertiesUtil">
+	<bean id="propertyConfigurer" class="org.apache.ranger.common.PropertiesUtil">
 		<property name="locations">
 			<list>
 				<value>classpath:xa_default.properties</value>
@@ -105,7 +105,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		</property>
 	</bean>
 	
-	<bean id="messageMappingConfigurer" class="com.xasecure.common.ErrorMessageUtil">
+	<bean id="messageMappingConfigurer" class="org.apache.ranger.common.ErrorMessageUtil">
 		<property name="locations">
 			<list>
 				<value>classpath:db_message_bundle.properties</value>

@@ -1021,13 +1021,13 @@ def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
     finalLibPath = libpath.replace('\\','/').replace('//','/')
     finalFilePath = 'jceks://file/'+filepath.replace('\\','/').replace('//','/')
     if getorcreate == 'create':
-        commandtorun = ['java', '-cp', finalLibPath, 'com.hortonworks.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
+        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
         p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, error = p.communicate()
         statuscode = p.returncode
         return statuscode
     elif getorcreate == 'get':
-        commandtorun = ['java', '-cp', finalLibPath, 'com.hortonworks.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
+        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
         p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, error = p.communicate()
         statuscode = p.returncode

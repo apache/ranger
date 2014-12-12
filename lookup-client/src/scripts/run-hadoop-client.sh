@@ -17,7 +17,7 @@
 
 case $# in
 4 )
-    java -cp "./dist/*:./lib/hadoop/*:./conf:." com.xasecure.hadoop.client.HadoopFSTester  "${1}" "${2}" "${3}" "${4}" ;;
+    java -cp "./dist/*:./lib/hadoop/*:./conf:." org.apache.ranger.hadoop.client.HadoopFSTester  "${1}" "${2}" "${3}" "${4}" ;;
 * )
-    java -cp "./dist/*:./lib/hadoop/*:./conf:." com.xasecure.hadoop.client.HadoopFSTester   ;;
+    java -cp "./dist/*:./lib/hadoop/*:./conf:." org.apache.ranger.hadoop.client.HadoopFSTester   ;;
 esac

@@ -1,1 +1,1 @@
-premain-class: com.xasecure.authorization.hadoop.agent.AuthCodeInjectionJavaAgent
+premain-class: org.apache.ranger.authorization.hadoop.agent.AuthCodeInjectionJavaAgent

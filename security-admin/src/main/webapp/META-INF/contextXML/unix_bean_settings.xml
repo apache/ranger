@@ -24,7 +24,7 @@
 							<beans:array>
 								<beans:bean class="javax.security.auth.login.AppConfigurationEntry">
 									<beans:constructor-arg
-										value="com.xasecure.authentication.unix.jaas.RemoteUnixLoginModule" />
+										value="org.apache.ranger.authentication.unix.jaas.RemoteUnixLoginModule" />
 									<beans:constructor-arg>
 										<util:constant static-field="javax.security.auth.login.AppConfigurationEntry$LoginModuleControlFlag.REQUIRED" />
 									</beans:constructor-arg>
@@ -42,7 +42,7 @@
 		</beans:property>
 		<beans:property name="authorityGranters">
 			<beans:list>
-				<beans:bean class="com.xasecure.authentication.unix.jaas.RoleUserAuthorityGranter" />
+				<beans:bean class="org.apache.ranger.authentication.unix.jaas.RoleUserAuthorityGranter" />
 			</beans:list>
 		</beans:property>
 	</beans:bean>

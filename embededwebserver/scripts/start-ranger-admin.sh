@@ -45,5 +45,5 @@ if [ ! -d logs ]
 then
 	mkdir logs
 fi
-java -Dproc_rangeradmin ${JAVA_OPTS} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*" com.xasecure.server.tomcat.EmbededServer > logs/catalina.out 2>&1 &
+java -Dproc_rangeradmin ${JAVA_OPTS} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*" org.apache.ranger.server.tomcat.EmbededServer > logs/catalina.out 2>&1 &
 echo "Apache Ranger Admin has started"

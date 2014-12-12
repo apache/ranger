@@ -315,7 +315,7 @@ do
                 if [ $? -eq 0 ]
                 then
                 	cp="${install_dir}/installer/lib/*:${hdp_dir}/*:${hdp_lib_dir}/*"
-                        java -cp "${cp}" com.xasecure.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} ${PROP_ARGS}
+                        java -cp "${cp}" org.apache.ranger.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} ${PROP_ARGS}
                         if [ $? -eq 0 ]
                         then
                                 diff -w ${newfn} ${fullpathorgfn} > /dev/null 2>&1 

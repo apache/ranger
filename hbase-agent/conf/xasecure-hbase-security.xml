@@ -22,7 +22,7 @@
 	      Authorizer Module (file-based, policy-manager based) -->
 	<property>
 		<name>hbase.authorization.verifier.classname</name>
-		<value>com.xasecure.pdp.hbase.XASecureAuthorizer</value>
+		<value>org.apache.ranger.pdp.hbase.RangerAuthorizer</value>
 		<description>
 			Class Name of the authorization Module 
 		</description>

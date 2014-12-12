@@ -25,7 +25,7 @@
 		<version>0.4.0</version>
 		<relativePath>..</relativePath>
     </parent>
-    <groupId>com.hortonworks.hadoop.security</groupId>
+    <groupId>org.apache.ranger.credentialapi.buildks</groupId>
     <artifactId>ranger-winpkg</artifactId>
     <description>Ranger WinPkg</description>
     <name>Ranger WinPkg</name>

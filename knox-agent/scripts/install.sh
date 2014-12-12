@@ -21,7 +21,7 @@ function create_jceks()
        alias=$1
        pass=$2
        jceksFile=$3
-       java -cp "${install_dir}/cred/lib/*" com.hortonworks.credentialapi.buildks create ${alias} -value ${pass} -provider jceks://file${jceksFile}
+       java -cp "${install_dir}/cred/lib/*" org.apache.ranger.credentialapi.buildks create ${alias} -value ${pass} -provider jceks://file${jceksFile}
 }
 
 #Update Properties to File
@@ -211,7 +211,7 @@ do
 		if [ $? -eq 0 ]
 		then
 			cp="${install_dir}/cred/lib/*:${install_dir}/installer/lib/*:/usr/lib/hadoop/*:/usr/lib/hadoop/lib/*"
-			java -cp "${cp}" com.xasecure.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} ${PROP_ARGS}
+			java -cp "${cp}" org.apache.ranger.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} ${PROP_ARGS}
 			if [ $? -eq 0 ]
 			then
 				diff -w ${newfn} ${fullpathorgfn} > /dev/null 2>&1

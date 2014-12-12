@@ -32,7 +32,7 @@ if service_entry:
 		ranger_install.run_setup(cmd)
 		jdk_options = ranger_install.get_jdk_options()
 		class_path = ranger_install.get_ranger_classpath()
-		java_class = 'com.xasecure.server.tomcat.EmbededServer'
+		java_class = 'org.apache.ranger.server.tomcat.EmbededServer'
 		class_arguments = ''
 
 		from xml.dom.minidom import getDOMImplementation

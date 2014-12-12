@@ -19,21 +19,21 @@
 	<persistence-unit name="defaultPU">
 		<mapping-file>META-INF/jpa_named_queries.xml</mapping-file>
 
-         <class>com.xasecure.entity.XXDBBase</class>
-         <class>com.xasecure.entity.XXAuthSession</class>
-         <class>com.xasecure.entity.XXPortalUser</class>
-         <class>com.xasecure.entity.XXPortalUserRole</class>
-         <class>com.xasecure.entity.XXAsset</class>
-         <class>com.xasecure.entity.XXResource</class>
-         <class>com.xasecure.entity.XXCredentialStore</class>
-         <class>com.xasecure.entity.XXGroup</class>
-         <class>com.xasecure.entity.XXUser</class>
-         <class>com.xasecure.entity.XXGroupUser</class>
-         <class>com.xasecure.entity.XXGroupGroup</class>
-         <class>com.xasecure.entity.XXPermMap</class>
-         <class>com.xasecure.entity.XXAuditMap</class>
-         <class>com.xasecure.entity.XXPolicyExportAudit</class>
-         <class>com.xasecure.entity.XXTrxLog</class>
+         <class>org.apache.ranger.entity.XXDBBase</class>
+         <class>org.apache.ranger.entity.XXAuthSession</class>
+         <class>org.apache.ranger.entity.XXPortalUser</class>
+         <class>org.apache.ranger.entity.XXPortalUserRole</class>
+         <class>org.apache.ranger.entity.XXAsset</class>
+         <class>org.apache.ranger.entity.XXResource</class>
+         <class>org.apache.ranger.entity.XXCredentialStore</class>
+         <class>org.apache.ranger.entity.XXGroup</class>
+         <class>org.apache.ranger.entity.XXUser</class>
+         <class>org.apache.ranger.entity.XXGroupUser</class>
+         <class>org.apache.ranger.entity.XXGroupGroup</class>
+         <class>org.apache.ranger.entity.XXPermMap</class>
+         <class>org.apache.ranger.entity.XXAuditMap</class>
+         <class>org.apache.ranger.entity.XXPolicyExportAudit</class>
+         <class>org.apache.ranger.entity.XXTrxLog</class>
          <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
 
 		<properties>
@@ -41,7 +41,7 @@
 		</properties>
 	</persistence-unit>
 	<persistence-unit name="loggingPU">
-        <class>com.xasecure.entity.XXAccessAudit</class>
+        <class>org.apache.ranger.entity.XXAccessAudit</class>
         <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
 
 		<properties>

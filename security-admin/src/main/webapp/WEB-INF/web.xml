@@ -16,7 +16,7 @@
   limitations under the License.
 -->
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
-  <display-name>com.xasecure</display-name>
+  <display-name>org.apache.ranger</display-name>
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
   </welcome-file-list>
@@ -52,15 +52,15 @@
     <servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
     <init-param>
       <param-name>com.sun.jersey.config.property.packages</param-name>
-      <param-value>com.xasecure.rest,com.xasecure.common,xa.rest</param-value>
+      <param-value>org.apache.ranger.rest,org.apache.ranger.common,xa.rest</param-value>
     </init-param>
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-      <param-value>com.xasecure.service.filter.XARESTAPIFilter</param-value>
+      <param-value>org.apache.ranger.service.filter.XARESTAPIFilter</param-value>
     </init-param>
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-      <param-value>com.xasecure.service.filter.XARESTAPIFilter</param-value>
+      <param-value>org.apache.ranger.service.filter.XARESTAPIFilter</param-value>
     </init-param>
     <init-param>
       <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>

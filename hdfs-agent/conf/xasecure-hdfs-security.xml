@@ -21,7 +21,7 @@
 	<!--  The following property is used to select appropriate XASecure Authorizer Module (filebased, policymanager based) -->
 	<property>
 		<name>hdfs.authorization.verifier.classname</name>
-		<value>com.xasecure.pdp.hdfs.XASecureAuthorizer</value>
+		<value>org.apache.ranger.pdp.hdfs.RangerAuthorizer</value>
 		<description>
 			Class Name of the authorization Module 
 		</description>

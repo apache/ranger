@@ -48,7 +48,7 @@ cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf"
 ${cdir}/stop.sh
 cd ${cdir}
 umask 0077
-nohup java -Dproc_rangerusersync ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" com.xasecure.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
+nohup java -Dproc_rangerusersync ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
 echo $! >  ${pidf}
 sleep 5
 port=`grep  '^[ ]*authServicePort' ${cdir}/conf/unixauthservice.properties | awk -F= '{ print $2 }' | awk '{ print $1 }'`
