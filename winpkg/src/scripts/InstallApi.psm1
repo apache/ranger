@@ -130,7 +130,7 @@ function InstallRangerCore(
 
 		### Verify that roles are in the supported set
 		### TODO
-		CheckRole $roles @("ranger")
+		CheckRole $roles @("ranger-admin")
 
 
 
@@ -138,7 +138,7 @@ function InstallRangerCore(
 		foreach( $service in empty-null ($roles -Split('\s+')))
 		{
 			CreateAndConfigureHadoopService $service $HDP_RESOURCES_DIR $rangerInstallToBin $serviceCredential
-			if ( $service -eq "ranger" )
+			if ( $service -eq "ranger-admin" )
 			{
 				$credStorePath = Join-Path $ENV:RANGER_HOME "jceks"
 				$credStorePath = $credStorePath -replace "\\", "/"
@@ -955,7 +955,7 @@ function Uninstall(
 
 		### Stop and delete services
         ###
-        foreach( $service in @("ranger", "ranger-usersync"))
+        foreach( $service in @("ranger-admin", "ranger-usersync"))
         {
             StopAndDeleteHadoopService $service
         }
@@ -1045,7 +1045,7 @@ function StartService(
     if ( $component -eq "ranger" )
     {
         Write-Log "StartService: ranger services"
-		CheckRole $roles @("ranger")
+		CheckRole $roles @("ranger-admin","ranger-usersync")
 
         foreach ( $role in $roles -Split("\s+") )
         {
@@ -1082,7 +1082,7 @@ function StopService(
     if ( $component -eq "ranger" )
     {
         ### Verify that roles are in the supported set
-        CheckRole $roles @("ranger")
+        CheckRole $roles @("ranger-admin", "ranger-usersync")
         foreach ( $role in $roles -Split("\s+") )
         {
             try
