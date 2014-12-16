@@ -24,14 +24,10 @@
  * 
  */
 
-import java.util.*;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.view.*;
-import org.apache.ranger.json.JsonDateSerializer;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerConstants;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -87,7 +83,7 @@ public class VXPermMap extends VXDataObject implements java.io.Serializable {
 	 * Is recursive
 	 * This attribute is of type enum CommonEnums::BooleanValue
 	 */
-	protected int isRecursive = XAConstants.BOOL_NONE;
+	protected int isRecursive = RangerConstants.BOOL_NONE;
 	/**
 	 * Is wild card
 	 */
@@ -103,7 +99,7 @@ public class VXPermMap extends VXDataObject implements java.io.Serializable {
 	public VXPermMap ( ) {
 		permFor = AppConstants.XA_PERM_FOR_UNKNOWN;
 		permType = AppConstants.XA_PERM_TYPE_UNKNOWN;
-		isRecursive = XAConstants.BOOL_NONE;
+		isRecursive = RangerConstants.BOOL_NONE;
 	}
 
 	/**

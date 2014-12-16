@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.ranger.biz.SessionMgr;
-import org.apache.ranger.common.XAConstants;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.entity.XXAuthSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -63,7 +63,7 @@ public class StandaloneSecurityHandler {
 		AffirmativeBased accessDecisionManager = (AffirmativeBased) context
 				.getBean(ACCESS_DECISION_MANAGER_BEAN_NAME);
 		Collection<ConfigAttribute> list = new ArrayList<ConfigAttribute>();
-		SecurityConfig config = new SecurityConfig(XAConstants.ROLE_SYS_ADMIN);
+		SecurityConfig config = new SecurityConfig(RangerConstants.ROLE_SYS_ADMIN);
 		list.add(config);
 		accessDecisionManager.decide(token, null, list);
 

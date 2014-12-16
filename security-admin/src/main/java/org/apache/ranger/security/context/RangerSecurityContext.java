@@ -27,7 +27,7 @@ import java.io.Serializable;
 import org.apache.ranger.common.RequestContext;
 import org.apache.ranger.common.UserSessionBase;
 
-public class XASecurityContext implements Serializable{
+public class RangerSecurityContext implements Serializable{
     private static final long serialVersionUID = 1L;
     private UserSessionBase userSession;
     private RequestContext requestContext;

@@ -39,27 +39,27 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.biz.XABizUtil;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.XAConfigUtil;
-import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.common.view.VList;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.security.handler.Permission;
-import org.apache.ranger.security.handler.XADomainObjectSecurityHandler;
+import org.apache.ranger.security.handler.RangerDomainObjectSecurityHandler;
 import org.apache.ranger.view.VXDataObject;
 import org.apache.ranger.view.VXLong;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +88,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	public List<SearchField> searchFields = new ArrayList<SearchField>();
 
 	@Autowired
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	protected static final HashMap<Class<?>, String> tEntityValueMap = new HashMap<Class<?>, String>();
 	static {
@@ -102,7 +102,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	StringUtil stringUtil;
 
 	@Autowired
-	protected XADaoManager daoMgr;
+	protected RangerDaoManager daoMgr;
 
 	@Autowired
 	protected SearchUtil searchUtil;
@@ -111,13 +111,13 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	protected RESTErrorUtil restErrorUtil;
 
 	@Autowired
-	XADomainObjectSecurityHandler objectSecurityHandler;
+	RangerDomainObjectSecurityHandler objectSecurityHandler;
 
 	@Autowired
-	XABizUtil bizUtil;
+	RangerBizUtil bizUtil;
 
 	@Autowired
-	XAConfigUtil msConfigUtil;
+	RangerConfigUtil msConfigUtil;
 
 	protected abstract void validateForCreate(V viewBaseBean);
 

@@ -24,13 +24,22 @@
  * 
  */
 
-import java.util.*;
+import java.util.Date;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
+import org.apache.ranger.common.RangerConstants;
 
 
 @Entity
@@ -71,7 +80,7 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="ACCESS_RESULT"   )
-	protected int accessResult = XAConstants.ACCESS_RESULT_DENIED;
+	protected int accessResult = RangerConstants.ACCESS_RESULT_DENIED;
 
 	/**
 	 * Access Type
@@ -236,7 +245,7 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 	 */
 	public XXAccessAudit ( ) {
 		auditType = AppConstants.ASSET_UNKNOWN;
-		accessResult = XAConstants.ACCESS_RESULT_DENIED;
+		accessResult = RangerConstants.ACCESS_RESULT_DENIED;
 	}
 
 	@Override

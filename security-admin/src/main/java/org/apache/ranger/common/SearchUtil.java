@@ -45,7 +45,7 @@ public class SearchUtil {
 	RESTErrorUtil restErrorUtil;
 
 	@Autowired
-	XAConfigUtil configUtil;
+	RangerConfigUtil configUtil;
 
 	// @Autowired
 	// AKADomainObjectSecurityHandler securityHandler;

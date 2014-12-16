@@ -22,25 +22,28 @@
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.ranger.biz.XABizUtil;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.XAConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.util.XAEnumUtil;
-import org.apache.ranger.view.*;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXGroupUser;
+import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXPortalUserRole;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.util.RangerEnumUtil;
+import org.apache.ranger.view.VXPortalUser;
+import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -52,7 +55,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	public static Long createdByUserId = 1L;
 
 	@Autowired
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	@Autowired
 	XPermMapService xPermMapService;
@@ -61,10 +64,10 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	StringUtil stringUtil;
 
 	@Autowired
-	XAEnumUtil xaEnumUtil;
+	RangerEnumUtil xaEnumUtil;
 
 	@Autowired
-	XABizUtil xaBizUtil;
+	RangerBizUtil xaBizUtil;
 
 	String hiddenPasswordString;
 
@@ -242,7 +245,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				}
 			}
 			if(userRoleList==null || userRoleList.size()==0){
-				userRoleList.add(XAConstants.ROLE_USER);
+				userRoleList.add(RangerConstants.ROLE_USER);
 			}			
 			vObj.setUserRoleList(userRoleList);
 		}

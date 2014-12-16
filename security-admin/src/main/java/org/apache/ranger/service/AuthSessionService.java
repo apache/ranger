@@ -22,11 +22,11 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XAConstants;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPortalUser;
@@ -66,7 +66,7 @@ public class AuthSessionService extends
 				"obj.authType", "Authentication Type",
 				XXAuthSession.AuthType_MAX));
 		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createEnum("deviceType",
-				"obj.deviceType", "Device Type", XAConstants.DeviceType_MAX));
+				"obj.deviceType", "Device Type", RangerConstants.DeviceType_MAX));
 		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString("requestIP",
 				"obj.requestIP", SearchField.SEARCH_TYPE.PARTIAL,
 				StringUtil.VALIDATION_IP_ADDRESS));
@@ -95,7 +95,7 @@ public class AuthSessionService extends
 
 	@Override
 	protected int getClassType() {
-		return XAConstants.CLASS_TYPE_AUTH_SESS;
+		return RangerConstants.CLASS_TYPE_AUTH_SESS;
 	}
 
 	/*

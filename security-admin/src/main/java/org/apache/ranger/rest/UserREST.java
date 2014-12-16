@@ -34,17 +34,17 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConfigUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XAConfigUtil;
-import org.apache.ranger.common.XAConstants;
-import org.apache.ranger.common.annotation.XAAnnotationClassName;
-import org.apache.ranger.common.annotation.XAAnnotationJSMgrName;
-import org.apache.ranger.common.annotation.XAAnnotationRestAPI;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.common.annotation.RangerAnnotationClassName;
+import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.common.annotation.RangerAnnotationRestAPI;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.util.XARestUtil;
+import org.apache.ranger.util.RangerRestUtil;
 import org.apache.ranger.view.VXPasswordChange;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
@@ -61,7 +61,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Path("users")
 @Component
 @Scope("request")
-@XAAnnotationJSMgrName("UserMgr")
+@RangerAnnotationJSMgrName("UserMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class UserREST {
 	static Logger logger = Logger.getLogger(UserREST.class);
@@ -70,10 +70,10 @@ public class UserREST {
 	StringUtil stringUtil;
 
 	@Autowired
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	@Autowired
-	XAConfigUtil configUtil;
+	RangerConfigUtil configUtil;
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -85,7 +85,7 @@ public class UserREST {
 	UserMgr userManager;
 
 	@Autowired
-	XARestUtil msRestUtil;
+	RangerRestUtil msRestUtil;
 
 	/**
 	 * Implements the traditional search functionalities for UserProfile
@@ -125,7 +125,7 @@ public class UserREST {
 
 		// status
 		searchUtil.extractEnum(request, searchCriteria, "status", "Status",
-				"statusList", XAConstants.ActivationStatus_MAX);
+				"statusList", RangerConstants.ActivationStatus_MAX);
 
 		// publicScreenName
 		searchUtil.extractString(request, searchCriteria, "publicScreenName",
@@ -191,7 +191,7 @@ public class UserREST {
 	@PUT
 	@Consumes({ "application/json", "application/xml" })
 	@Produces({ "application/xml", "application/json" })
-	@XAAnnotationRestAPI(updates_classes = "VUserProfile")
+	@RangerAnnotationRestAPI(updates_classes = "VUserProfile")
 	public VXPortalUser update(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
 		logger.info("update:" + userProfile.getEmailAddress());
@@ -232,7 +232,7 @@ public class UserREST {
 	@Path("{userId}/deactivate")
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXPortalUser.class)
+	@RangerAnnotationClassName(class_name = VXPortalUser.class)
 	public VXPortalUser deactivateUser(@PathParam("userId") Long userId) {
 		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userId);
 		if (gjUser == null) {

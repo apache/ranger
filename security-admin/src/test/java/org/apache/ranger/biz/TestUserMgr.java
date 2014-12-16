@@ -24,26 +24,23 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.ranger.biz.UserMgr;
-import org.apache.ranger.biz.XABizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXPortalUserRoleDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.apache.ranger.security.context.XAContextHolder;
-import org.apache.ranger.security.context.XASecurityContext;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.view.VXPasswordChange;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 import org.apache.ranger.view.VXResponse;
-import org.apache.ranger.view.VXString;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -69,7 +66,7 @@ public class TestUserMgr {
 	VXPortalUser VXPortalUser;
 
 	@Mock
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	@Mock
 	RESTErrorUtil restErrorUtil;
@@ -81,15 +78,15 @@ public class TestUserMgr {
 	StringUtil stringUtil;
 
 	@Mock
-	XABizUtil msBizUtil;
+	RangerBizUtil msBizUtil;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
 	public void setup() {
-		XASecurityContext context = new XASecurityContext();
+		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(new UserSessionBase());
-		XAContextHolder.setSecurityContext(context);
+		RangerContextHolder.setSecurityContext(context);
 		UserSessionBase currentUserSession = ContextUtil
 				.getCurrentUserSession();
 		currentUserSession.setUserAdmin(true);

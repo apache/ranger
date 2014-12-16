@@ -25,12 +25,12 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
-import org.apache.ranger.common.db.*;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPortalUserRole;
 
 public class XXPortalUserRoleDao extends BaseDao<XXPortalUserRole> {
 
-	public XXPortalUserRoleDao(XADaoManagerBase daoManager) {
+	public XXPortalUserRoleDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
 

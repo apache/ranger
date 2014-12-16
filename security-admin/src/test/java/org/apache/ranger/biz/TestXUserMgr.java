@@ -19,21 +19,18 @@ package org.apache.ranger.biz;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.ranger.biz.UserMgr;
-import org.apache.ranger.biz.XABizUtil;
-import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.entity.XXGroup;
-import org.apache.ranger.security.context.XAContextHolder;
-import org.apache.ranger.security.context.XASecurityContext;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XGroupUserService;
 import org.apache.ranger.service.XUserService;
@@ -69,7 +66,7 @@ public class TestXUserMgr {
 	XGroupService xGroupService;
 
 	@Mock
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	@Mock
 	RESTErrorUtil restErrorUtil;
@@ -81,7 +78,7 @@ public class TestXUserMgr {
 	StringUtil stringUtil;
 
 	@Mock
-	XABizUtil msBizUtil;
+	RangerBizUtil msBizUtil;
 
 	@Mock
 	UserMgr userMgr;
@@ -93,9 +90,9 @@ public class TestXUserMgr {
 	public ExpectedException thrown = ExpectedException.none();
 
 	public void setup() {
-		XASecurityContext context = new XASecurityContext();
+		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(new UserSessionBase());
-		XAContextHolder.setSecurityContext(context);
+		RangerContextHolder.setSecurityContext(context);
 		UserSessionBase currentUserSession = ContextUtil
 				.getCurrentUserSession();
 		currentUserSession.setUserAdmin(true);

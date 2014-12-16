@@ -33,14 +33,14 @@ import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConfigUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.XAConfigUtil;
-import org.apache.ranger.common.XAConstants;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXTrxLog;
@@ -65,7 +65,7 @@ public class UserMgr {
 	private static final Md5PasswordEncoder md5Encoder = new Md5PasswordEncoder();
 
 	@Autowired
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -77,7 +77,7 @@ public class UserMgr {
 	SearchUtil searchUtil;
 
 	@Autowired
-	XABizUtil msBizUtil;
+	RangerBizUtil msBizUtil;
 
 	@Autowired
 	SessionMgr sessionMgr;
@@ -90,13 +90,13 @@ public class UserMgr {
 	DateUtil dateUtil;
 
 	@Autowired
-	XAConfigUtil configUtil;
+	RangerConfigUtil configUtil;
 	
 	@Autowired
 	XPortalUserService xPortalUserService;
 
-	String publicRoles[] = new String[] { XAConstants.ROLE_USER,
-			XAConstants.ROLE_OTHER };
+	String publicRoles[] = new String[] { RangerConstants.ROLE_USER,
+			RangerConstants.ROLE_OTHER };
 
 	private static final List<String> DEFAULT_ROLE_LIST = new ArrayList<String>(
 			1);
@@ -104,9 +104,9 @@ public class UserMgr {
 	private static final List<String> VALID_ROLE_LIST = new ArrayList<String>(2);
 
 	static {
-		DEFAULT_ROLE_LIST.add(XAConstants.ROLE_USER);
-		VALID_ROLE_LIST.add(XAConstants.ROLE_SYS_ADMIN);
-		VALID_ROLE_LIST.add(XAConstants.ROLE_USER);
+		DEFAULT_ROLE_LIST.add(RangerConstants.ROLE_USER);
+		VALID_ROLE_LIST.add(RangerConstants.ROLE_SYS_ADMIN);
+		VALID_ROLE_LIST.add(RangerConstants.ROLE_USER);
 	}
 
 	public UserMgr() {
@@ -153,7 +153,7 @@ public class UserMgr {
 				roleList.add(role);
 			}
 		}else{
-			roleList.add(XAConstants.ROLE_USER);
+			roleList.add(RangerConstants.ROLE_USER);
 		}
 
 		return createUser(userProfile, userStatus, roleList);
@@ -483,9 +483,9 @@ public class UserMgr {
 	 */
 	public VXPortalUser deactivateUser(XXPortalUser gjUser) {
 		if (gjUser != null
-				&& gjUser.getStatus() != XAConstants.ACT_STATUS_DEACTIVATED) {
+				&& gjUser.getStatus() != RangerConstants.ACT_STATUS_DEACTIVATED) {
 			logger.info("Marking user " + gjUser.getLoginId() + " as deleted");
-			gjUser.setStatus(XAConstants.ACT_STATUS_DEACTIVATED);
+			gjUser.setStatus(RangerConstants.ACT_STATUS_DEACTIVATED);
 			gjUser = daoManager.getXXPortalUser().update(gjUser);
 			return mapXXPortalUserVXPortalUser(gjUser);
 		}
@@ -883,7 +883,7 @@ public class UserMgr {
 	}
 
 	public boolean deleteUserRole(Long userId, XXPortalUserRole gjUserRole) {
-		/*if (XAConstants.ROLE_USER.equals(gjUserRole.getUserRole())) {
+		/*if (RangerConstants.ROLE_USER.equals(gjUserRole.getUserRole())) {
 			return false;
 		}*/
 		boolean publicRole = false;
@@ -937,12 +937,12 @@ public class UserMgr {
 		XXPortalUserRole userRoleObj = new XXPortalUserRole();
 		userRoleObj.setUserRole(userRole.toUpperCase());
 		userRoleObj.setUserId(userId);
-		userRoleObj.setStatus(XAConstants.STATUS_ENABLED);
+		userRoleObj.setStatus(RangerConstants.STATUS_ENABLED);
 		daoManager.getXXPortalUserRole().create(userRoleObj);
 
 		// If role is not OTHER, then remove OTHER
-		if (!XAConstants.ROLE_OTHER.equalsIgnoreCase(userRole)) {
-			deleteUserRole(userId, XAConstants.ROLE_OTHER);
+		if (!RangerConstants.ROLE_OTHER.equalsIgnoreCase(userRole)) {
+			deleteUserRole(userId, RangerConstants.ROLE_OTHER);
 		}
 
 		sessionMgr.resetUserSessionForProfiles(ContextUtil
@@ -1024,13 +1024,13 @@ public class UserMgr {
 
 	public VXPortalUser createUser(VXPortalUser userProfile) {
 		XXPortalUser xXPortalUser = this
-				.createUser(userProfile, XACommonEnums.STATUS_ENABLED);
+				.createUser(userProfile, RangerCommonEnums.STATUS_ENABLED);
 		return mapXXPortalUserVXPortalUser(xXPortalUser);
 	}
 
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile) {
 		if(userProfile.getPassword()==null||userProfile.getPassword().trim().isEmpty()){
-			userProfile.setUserSource(XACommonEnums.USER_EXTERNAL);
+			userProfile.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 		}
 		// access control
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
@@ -1056,7 +1056,7 @@ public class UserMgr {
 					xXPortalUser = this.findByEmailAddress(emailAddress);
 					if (xXPortalUser == null) {
 						xXPortalUser = this.createUser(userProfile,
-								XACommonEnums.STATUS_ENABLED);
+								RangerCommonEnums.STATUS_ENABLED);
 					} else {
 						throw restErrorUtil
 								.createRESTException(
@@ -1070,7 +1070,7 @@ public class UserMgr {
 					String randomEmail = GUIDUtil.genGUI();
 					userProfile.setEmailAddress(randomEmail);
 					xXPortalUser = this.createUser(userProfile,
-							XACommonEnums.STATUS_ENABLED);
+							RangerCommonEnums.STATUS_ENABLED);
 				}
 			} else {
 				/*throw restErrorUtil

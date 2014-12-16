@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
@@ -35,14 +33,15 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.util.XAEnumUtil;
-import org.apache.ranger.view.*;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXAsset;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.util.RangerEnumUtil;
+import org.apache.ranger.view.VXAsset;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +56,7 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 	JSONUtil jsonUtil;
 
 	@Autowired
-	XADaoManager appDaoMgr;
+	RangerDaoManager appDaoMgr;
 	
 	@Autowired
 	StringUtil stringUtil;
@@ -73,7 +72,7 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 	private String hiddenPasswordString;
 	
 	@Autowired
-	XAEnumUtil xaEnumUtil;
+	RangerEnumUtil xaEnumUtil;
 	
 	public XAssetService(){
 		super();

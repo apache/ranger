@@ -24,13 +24,18 @@
  * 
  */
 
-import java.util.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 
 
 @Entity
@@ -80,7 +85,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="STATUS"  , nullable=false )
-	protected int status = XAConstants.STATUS_DISABLED;
+	protected int status = RangerConstants.STATUS_DISABLED;
 
 	/**
 	 * Type of group
@@ -93,7 +98,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 	protected int groupType = AppConstants.XA_GROUP_UNKNOWN;
 	
 	@Column(name="GROUP_SRC"  , nullable=false )
-	protected int groupSource = XACommonEnums.GROUP_INTERNAL;
+	protected int groupSource = RangerCommonEnums.GROUP_INTERNAL;
 
 	/**
 	 * Id of the credential store
@@ -109,9 +114,9 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public XXGroup ( ) {
-		status = XAConstants.STATUS_DISABLED;
+		status = RangerConstants.STATUS_DISABLED;
 		groupType = AppConstants.XA_GROUP_UNKNOWN;
-		groupSource = XACommonEnums.GROUP_INTERNAL;
+		groupSource = RangerCommonEnums.GROUP_INTERNAL;
 	}
 
 	@Override

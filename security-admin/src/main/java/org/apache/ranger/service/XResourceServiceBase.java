@@ -26,10 +26,10 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.entity.XXResource;
+import org.apache.ranger.view.VXResource;
+import org.apache.ranger.view.VXResourceList;
 
 public abstract class XResourceServiceBase<T extends XXResource, V extends VXResource>
 		extends AbstractBaseResourceService<T, V> {

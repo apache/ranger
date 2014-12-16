@@ -22,7 +22,7 @@
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.ranger.security.context.XAContextHolder;
+import org.apache.ranger.security.context.RangerContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -60,13 +60,13 @@ public class RestUtil {
 	public static int getClientTimeOffset(){
 		int clientTimeOffsetInMinute = 0;
 		try{
-			clientTimeOffsetInMinute= XAContextHolder.getSecurityContext().getRequestContext().getClientTimeOffsetInMinute();
+			clientTimeOffsetInMinute= RangerContextHolder.getSecurityContext().getRequestContext().getClientTimeOffsetInMinute();
 		}catch(Exception ex){
 			
 		}
 		if(clientTimeOffsetInMinute==0){
 			try{
-				clientTimeOffsetInMinute= XAContextHolder.getSecurityContext().getUserSession().getClientTimeOffsetInMinute();
+				clientTimeOffsetInMinute= RangerContextHolder.getSecurityContext().getUserSession().getClientTimeOffsetInMinute();
 			}catch(Exception ex){
 				
 			}

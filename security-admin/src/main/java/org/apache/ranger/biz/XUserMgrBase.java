@@ -19,9 +19,28 @@
 
  package org.apache.ranger.biz;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.service.XAuditMapService;
+import org.apache.ranger.service.XGroupGroupService;
+import org.apache.ranger.service.XGroupService;
+import org.apache.ranger.service.XGroupUserService;
+import org.apache.ranger.service.XPermMapService;
+import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.VXAuditMap;
+import org.apache.ranger.view.VXAuditMapList;
+import org.apache.ranger.view.VXGroup;
+import org.apache.ranger.view.VXGroupGroup;
+import org.apache.ranger.view.VXGroupGroupList;
+import org.apache.ranger.view.VXGroupList;
+import org.apache.ranger.view.VXGroupUser;
+import org.apache.ranger.view.VXGroupUserList;
+import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXPermMap;
+import org.apache.ranger.view.VXPermMapList;
+import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.VXUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 public class XUserMgrBase {
 

@@ -24,14 +24,9 @@
  * 
  */
 
-import java.util.*;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.view.*;
-import org.apache.ranger.json.JsonDateSerializer;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.RangerConstants;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -49,7 +44,7 @@ public class VXTrxLog extends VXDataObject implements java.io.Serializable {
 	 * Name of the class to which the object id belongs to
 	 * This attribute is of type enum CommonEnums::ClassTypes
 	 */
-	protected int objectClassType = XAConstants.CLASS_TYPE_NONE;
+	protected int objectClassType = RangerConstants.CLASS_TYPE_NONE;
 	/**
 	 * Id of the object to which this notes refers to
 	 */
@@ -107,7 +102,7 @@ public class VXTrxLog extends VXDataObject implements java.io.Serializable {
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXTrxLog ( ) {
-		objectClassType = XAConstants.CLASS_TYPE_NONE;
+		objectClassType = RangerConstants.CLASS_TYPE_NONE;
 	}
 
 	/**

@@ -22,14 +22,14 @@
 import javax.persistence.NoResultException;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.db.*;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAsset;
 
 public class XXAssetDao extends BaseDao<XXAsset> {
 	static final Logger logger = Logger.getLogger(XXAssetDao.class);
 
-    public XXAssetDao( XADaoManagerBase  daoManager ) {
+    public XXAssetDao( RangerDaoManagerBase  daoManager ) {
 		super(daoManager);
     }
     
@@ -42,7 +42,7 @@ public class XXAssetDao extends BaseDao<XXAsset> {
 			return getEntityManager()
 					.createNamedQuery("XXAsset.findByAssetName", XXAsset.class)
 					.setParameter("name", name.trim())
-					.setParameter("status",XACommonEnums.STATUS_DELETED)
+					.setParameter("status",RangerCommonEnums.STATUS_DELETED)
 					.getSingleResult();
 		} catch (NoResultException e) {
 			// ignore

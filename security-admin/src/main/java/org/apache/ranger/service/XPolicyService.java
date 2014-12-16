@@ -37,7 +37,7 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPermMap;
@@ -67,7 +67,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 	StringUtil stringUtil;
 
 	@Autowired
-	XADaoManager xaDaoMgr;
+	RangerDaoManager xaDaoMgr;
 
 	@Autowired
 	XPermMapService xPermMapService;

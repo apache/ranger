@@ -24,13 +24,17 @@
  * 
  */
 
-import java.util.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerConstants;
 
 
 @Entity
@@ -123,7 +127,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="IS_RECURSIVE"  , nullable=false )
-	protected int isRecursive = XAConstants.BOOL_NONE;
+	protected int isRecursive = RangerConstants.BOOL_NONE;
 
 	/**
 	 * Is wild card
@@ -158,7 +162,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 	public XXPermMap ( ) {
 		permFor = AppConstants.XA_PERM_FOR_UNKNOWN;
 		permType = AppConstants.XA_PERM_TYPE_UNKNOWN;
-		isRecursive = XAConstants.BOOL_NONE;
+		isRecursive = RangerConstants.BOOL_NONE;
 	}
 
 	@Override

@@ -27,19 +27,16 @@ import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.ranger.biz.AssetConnectionMgr;
-import org.apache.ranger.biz.AssetMgr;
-import org.apache.ranger.biz.XABizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAssetDao;
 import org.apache.ranger.db.XXResourceDao;
 import org.apache.ranger.db.XXUserDao;
@@ -47,8 +44,8 @@ import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.security.context.XAContextHolder;
-import org.apache.ranger.security.context.XASecurityContext;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XPermMapService;
@@ -97,7 +94,7 @@ public class TestAssetMgr {
 	StringUtil stringUtil;
 	
 	@Mock
-	XADaoManager xADaoManager;
+	RangerDaoManager rangerDaoManager;
 	
 	@Mock
 	XResourceService xResourceService;
@@ -112,7 +109,7 @@ public class TestAssetMgr {
 	XAuditMapService xAuditMapService;
 	
 	@Mock
-	XABizUtil xaBizUtil;
+	RangerBizUtil xaBizUtil;
 	
 	@Mock 
 	AssetConnectionMgr assetConnectionMgr;
@@ -124,18 +121,18 @@ public class TestAssetMgr {
 	public ExpectedException thrown = ExpectedException.none();
 	
 	public void setup(){
-		XASecurityContext context = new XASecurityContext();
+		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(new UserSessionBase());
-		XAContextHolder.setSecurityContext(context);		
+		RangerContextHolder.setSecurityContext(context);		
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
 		currentUserSession.setUserAdmin(true);
 	}
 	
 	@Test
 	public void testCreateXAssetForNoUserSession(){
-		XASecurityContext context = new XASecurityContext();
+		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(new UserSessionBase());
-		XAContextHolder.setSecurityContext(context);		
+		RangerContextHolder.setSecurityContext(context);		
 		XXPortalUser portalUser = new XXPortalUser();
 		portalUser.setId(id);
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
@@ -171,7 +168,7 @@ public class TestAssetMgr {
 		vXResource.setAuditList(new ArrayList<VXAuditMap>());
 		Mockito.when(xResourceService.createResource((VXResource)Mockito.anyObject())).thenReturn(vXResource);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-		Mockito.when(xADaoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(rangerDaoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(xxUser);
 		VXUser vxUser = new VXUser(); 
 		Mockito.when(xUserService.populateViewBean(xxUser)).thenReturn(vxUser);
@@ -201,10 +198,10 @@ public class TestAssetMgr {
 		XXAsset xxAsset = new XXAsset();
 		XXResourceDao xxResourceDao = Mockito.mock(XXResourceDao.class);
 		XXAssetDao xxAssetDao = Mockito.mock(XXAssetDao.class);
-		Mockito.when(xADaoManager.getXXAsset()).thenReturn(xxAssetDao);
+		Mockito.when(rangerDaoManager.getXXAsset()).thenReturn(xxAssetDao);
 		Mockito.when(xxAssetDao.getById(vXAsset.getId())).thenReturn(xxAsset);
 		Mockito.when(xAssetService.updateResource((VXAsset)Mockito.anyObject())).thenReturn(vXAssetDB);
-		Mockito.when(xADaoManager.getXXResource()).thenReturn(xxResourceDao);
+		Mockito.when(rangerDaoManager.getXXResource()).thenReturn(xxResourceDao);
 		List<XXResource> lst = new ArrayList<XXResource>();
 		Mockito.when(xxResourceDao.findByResourceNameAndAssetIdAndRecursiveFlag(Mockito.anyString(),Mockito.anyLong(), Mockito.anyInt())).thenReturn(lst );
 		
@@ -235,7 +232,7 @@ public class TestAssetMgr {
 		vXResource.setAuditList(new ArrayList<VXAuditMap>());
 		Mockito.when(xResourceService.createResource((VXResource)Mockito.anyObject())).thenReturn(vXResource);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-		Mockito.when(xADaoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(rangerDaoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(xxUser);
 		VXUser vxUser = new VXUser(); 
 		Mockito.when(xUserService.populateViewBean(xxUser)).thenReturn(vxUser);
@@ -278,7 +275,7 @@ public class TestAssetMgr {
 		vXResource.setAuditList(new ArrayList<VXAuditMap>());
 		Mockito.when(xResourceService.createResource((VXResource)Mockito.anyObject())).thenReturn(vXResource);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-		Mockito.when(xADaoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(rangerDaoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(xxUser);
 		VXUser vxUser = new VXUser(); 
 		Mockito.when(xUserService.populateViewBean(xxUser)).thenReturn(vxUser);
@@ -321,7 +318,7 @@ public class TestAssetMgr {
 		vXResource.setAuditList(new ArrayList<VXAuditMap>());
 		Mockito.when(xResourceService.createResource((VXResource)Mockito.anyObject())).thenReturn(vXResource);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-		Mockito.when(xADaoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(rangerDaoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(xxUser);
 		VXUser vxUser = new VXUser(); 
 		Mockito.when(xUserService.populateViewBean(xxUser)).thenReturn(vxUser);
@@ -364,7 +361,7 @@ public class TestAssetMgr {
 		vXResource.setAuditList(new ArrayList<VXAuditMap>());
 		Mockito.when(xResourceService.createResource((VXResource)Mockito.anyObject())).thenReturn(vXResource);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-		Mockito.when(xADaoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(rangerDaoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(xxUser);
 		VXUser vxUser = new VXUser(); 
 		Mockito.when(xUserService.populateViewBean(xxUser)).thenReturn(vxUser);
@@ -402,7 +399,7 @@ public class TestAssetMgr {
 		XXAsset xxAsset = new XXAsset();
 				
 		VXResponse vXResponse = new VXResponse();
-		Mockito.when(xADaoManager.getXXAsset()).thenReturn(xxAssetDao);
+		Mockito.when(rangerDaoManager.getXXAsset()).thenReturn(xxAssetDao);
 		Mockito.when(xxAssetDao.getById(assetId)).thenReturn(xxAsset);
 		Mockito.when(stringUtil.split(vXResource.getName(), ",")).thenReturn(new String[0]);
 		Mockito.when(xaBizUtil.hasPermission(vXResource,AppConstants.XA_PERM_TYPE_ADMIN)).thenReturn(vXResponse);
@@ -435,7 +432,7 @@ public class TestAssetMgr {
 		XXResourceDao xxResourceDao = Mockito.mock(XXResourceDao.class);
 		XXResource xxResource = new XXResource();
 		Mockito.when(xResourceService.updateResource(vXResourceChkDb)).thenReturn(vXResourceChkDb);
-		Mockito.when(xADaoManager.getXXResource()).thenReturn(xxResourceDao);
+		Mockito.when(rangerDaoManager.getXXResource()).thenReturn(xxResourceDao);
 		Mockito.when(xxResourceDao.getById(vXResource.getId())).thenReturn(xxResource);
 		
 		VXResource vXResourceUpd = assetMgr.updateXResource(vXResourceChkDb);
@@ -472,7 +469,7 @@ public class TestAssetMgr {
 		Mockito.when(stringUtil.split("", ",")).thenReturn(new String[0]);
 		
 		VXResponse vXResponse = new VXResponse();
-		Mockito.when(xADaoManager.getXXAsset()).thenReturn(xxAssetDao);
+		Mockito.when(rangerDaoManager.getXXAsset()).thenReturn(xxAssetDao);
 		Mockito.when(xxAssetDao.getById(assetId)).thenReturn(xxAsset);
 		Mockito.when(stringUtil.split(vXResource.getName(), ",")).thenReturn(new String[0]);
 		Mockito.when(xaBizUtil.hasPermission(vXResource,AppConstants.XA_PERM_TYPE_ADMIN)).thenReturn(vXResponse);
@@ -505,7 +502,7 @@ public class TestAssetMgr {
 		XXResourceDao xxResourceDao = Mockito.mock(XXResourceDao.class);
 		XXResource xxResource = new XXResource();
 		Mockito.when(xResourceService.updateResource(vXResourceChkDb)).thenReturn(vXResourceChkDb);
-		Mockito.when(xADaoManager.getXXResource()).thenReturn(xxResourceDao);
+		Mockito.when(rangerDaoManager.getXXResource()).thenReturn(xxResourceDao);
 		Mockito.when(xxResourceDao.getById(vXResource.getId())).thenReturn(xxResource);
 		
 		VXResource vXResourceUpd = assetMgr.updateXResource(vXResourceChkDb);
@@ -541,7 +538,7 @@ public class TestAssetMgr {
 		Mockito.when(stringUtil.split("", ",")).thenReturn(new String[0]);
 		
 		VXResponse vXResponse = new VXResponse();
-		Mockito.when(xADaoManager.getXXAsset()).thenReturn(xxAssetDao);
+		Mockito.when(rangerDaoManager.getXXAsset()).thenReturn(xxAssetDao);
 		Mockito.when(xxAssetDao.getById(assetId)).thenReturn(xxAsset);
 		Mockito.when(stringUtil.split(vXResource.getName(), ",")).thenReturn(new String[0]);
 		Mockito.when(xaBizUtil.hasPermission(vXResource,AppConstants.XA_PERM_TYPE_ADMIN)).thenReturn(vXResponse);
@@ -574,7 +571,7 @@ public class TestAssetMgr {
 		XXResourceDao xxResourceDao = Mockito.mock(XXResourceDao.class);
 		XXResource xxResource = new XXResource();
 		Mockito.when(xResourceService.updateResource(vXResourceChkDb)).thenReturn(vXResourceChkDb);
-		Mockito.when(xADaoManager.getXXResource()).thenReturn(xxResourceDao);
+		Mockito.when(rangerDaoManager.getXXResource()).thenReturn(xxResourceDao);
 		Mockito.when(xxResourceDao.getById(vXResource.getId())).thenReturn(xxResource);
 		
 		VXResource vXResourceUpd = assetMgr.updateXResource(vXResourceChkDb);
@@ -610,7 +607,7 @@ public class TestAssetMgr {
 		Mockito.when(stringUtil.split("", ",")).thenReturn(new String[0]);
 		
 		VXResponse vXResponse = new VXResponse();
-		Mockito.when(xADaoManager.getXXAsset()).thenReturn(xxAssetDao);
+		Mockito.when(rangerDaoManager.getXXAsset()).thenReturn(xxAssetDao);
 		Mockito.when(xxAssetDao.getById(assetId)).thenReturn(xxAsset);
 		Mockito.when(stringUtil.split(vXResource.getName(), ",")).thenReturn(new String[0]);
 		Mockito.when(xaBizUtil.hasPermission(vXResource,AppConstants.XA_PERM_TYPE_ADMIN)).thenReturn(vXResponse);
@@ -643,7 +640,7 @@ public class TestAssetMgr {
 		XXResourceDao xxResourceDao = Mockito.mock(XXResourceDao.class);
 		XXResource xxResource = new XXResource();
 		Mockito.when(xResourceService.updateResource(vXResourceChkDb)).thenReturn(vXResourceChkDb);
-		Mockito.when(xADaoManager.getXXResource()).thenReturn(xxResourceDao);
+		Mockito.when(rangerDaoManager.getXXResource()).thenReturn(xxResourceDao);
 		Mockito.when(xxResourceDao.getById(vXResource.getId())).thenReturn(xxResource);
 		
 		VXResource vXResourceUpd = assetMgr.updateXResource(vXResourceChkDb);
@@ -664,10 +661,10 @@ public class TestAssetMgr {
 		setup();
 		VXAsset vXAsset = new VXAsset();
 		vXAsset.setId(hiveAssetId);
-		vXAsset.setActiveStatus(XACommonEnums.STATUS_ENABLED);
+		vXAsset.setActiveStatus(RangerCommonEnums.STATUS_ENABLED);
 		Mockito.when(xAssetService.readResource(hiveAssetId)).thenReturn(vXAsset);
 		assetMgr.deleteXAsset(hiveAssetId, true);
-		Assert.assertEquals(vXAsset.getActiveStatus(), XACommonEnums.STATUS_DELETED);
+		Assert.assertEquals(vXAsset.getActiveStatus(), RangerCommonEnums.STATUS_DELETED);
 	} 
 	
 	@Test
@@ -675,10 +672,10 @@ public class TestAssetMgr {
 		setup();
 		VXAsset vXAsset = new VXAsset();
 		vXAsset.setId(hbaseAssetId);
-		vXAsset.setActiveStatus(XACommonEnums.STATUS_ENABLED);
+		vXAsset.setActiveStatus(RangerCommonEnums.STATUS_ENABLED);
 		Mockito.when(xAssetService.readResource(hiveAssetId)).thenReturn(vXAsset);
 		assetMgr.deleteXAsset(hbaseAssetId, true);
-		Assert.assertEquals(vXAsset.getActiveStatus(), XACommonEnums.STATUS_DELETED);
+		Assert.assertEquals(vXAsset.getActiveStatus(), RangerCommonEnums.STATUS_DELETED);
 	}
 	
 	@Test
@@ -686,10 +683,10 @@ public class TestAssetMgr {
 		setup();
 		VXAsset vXAsset = new VXAsset();
 		vXAsset.setId(knoxAssetId);
-		vXAsset.setActiveStatus(XACommonEnums.STATUS_ENABLED);
+		vXAsset.setActiveStatus(RangerCommonEnums.STATUS_ENABLED);
 		Mockito.when(xAssetService.readResource(hiveAssetId)).thenReturn(vXAsset);
 		assetMgr.deleteXAsset(knoxAssetId, true);
-		Assert.assertEquals(vXAsset.getActiveStatus(), XACommonEnums.STATUS_DELETED);
+		Assert.assertEquals(vXAsset.getActiveStatus(), RangerCommonEnums.STATUS_DELETED);
 	}
 	
 	@Test
@@ -697,10 +694,10 @@ public class TestAssetMgr {
 		setup();
 		VXAsset vXAsset = new VXAsset();
 		vXAsset.setId(stormAssetId);
-		vXAsset.setActiveStatus(XACommonEnums.STATUS_ENABLED);
+		vXAsset.setActiveStatus(RangerCommonEnums.STATUS_ENABLED);
 		Mockito.when(xAssetService.readResource(hiveAssetId)).thenReturn(vXAsset);
 		assetMgr.deleteXAsset(stormAssetId, true);
-		Assert.assertEquals(vXAsset.getActiveStatus(), XACommonEnums.STATUS_DELETED);
+		Assert.assertEquals(vXAsset.getActiveStatus(), RangerCommonEnums.STATUS_DELETED);
 	}
 	
 	private VXResource createVXResource(String assetTypeName, Long assetId, int assetType, int resourceType){

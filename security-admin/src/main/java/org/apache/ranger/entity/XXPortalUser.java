@@ -24,13 +24,17 @@
  * 
  */
 
-import java.util.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerConstants;
 
 
 @Entity
@@ -121,7 +125,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="STATUS"  , nullable=false )
-	protected int status = XAConstants.ACT_STATUS_DISABLED;
+	protected int status = RangerConstants.ACT_STATUS_DISABLED;
 
 	/**
 	 * Source of the user
@@ -131,7 +135,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="USER_SRC"  , nullable=false )
-	protected int userSource = XAConstants.USER_APP;
+	protected int userSource = RangerConstants.USER_APP;
 
 	/**
 	 * Note
@@ -147,8 +151,8 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public XXPortalUser ( ) {
-		status = XAConstants.ACT_STATUS_DISABLED;
-		userSource = XAConstants.USER_APP;
+		status = RangerConstants.ACT_STATUS_DISABLED;
+		userSource = RangerConstants.USER_APP;
 	}
 
 	@Override

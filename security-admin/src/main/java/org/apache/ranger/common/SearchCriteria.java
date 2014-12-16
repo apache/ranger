@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.biz.XABizUtil;
+import org.apache.ranger.biz.RangerBizUtil;
 
 
 public class SearchCriteria {
@@ -187,7 +187,7 @@ public class SearchCriteria {
 	 */
 	public void setDistinct(boolean isDistinct) {
 
-		int dbFlavor = XABizUtil.getDBFlavor();
+		int dbFlavor = RangerBizUtil.getDBFlavor();
 		if (isDistinct && dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
 			isDistinct = false;
 			logger.debug("Database flavor is `ORACLE` so ignoring DISTINCT "

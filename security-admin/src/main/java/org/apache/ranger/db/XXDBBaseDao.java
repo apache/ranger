@@ -20,11 +20,11 @@
  package org.apache.ranger.db;
 
 import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.entity.XXDBBase;
 
 public class XXDBBaseDao extends BaseDao<XXDBBase> {
 
-    public XXDBBaseDao( XADaoManagerBase daoManager ) {
+    public XXDBBaseDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
     }
 }

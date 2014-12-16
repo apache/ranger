@@ -28,9 +28,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
@@ -41,8 +39,8 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RequestContext;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXAuthSession;
-import org.apache.ranger.security.context.XAContextHolder;
-import org.apache.ranger.security.context.XASecurityContext;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.util.RestUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -50,10 +48,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
-public class XASecurityContextFormationFilter extends GenericFilterBean {
+public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 	static Logger logger = Logger
-			.getLogger(XASecurityContextFormationFilter.class);
+			.getLogger(RangerSecurityContextFormationFilter.class);
 
 	public static final String AKA_SC_SESSION_KEY = "AKA_SECURITY_CONTEXT";
 	public static final String USER_AGENT = "User-Agent";
@@ -66,7 +64,7 @@ public class XASecurityContextFormationFilter extends GenericFilterBean {
 
 	String testIP = null;
 
-	public XASecurityContextFormationFilter() {
+	public RangerSecurityContextFormationFilter() {
 		testIP = PropertiesUtil.getProperty("xa.env.ip");
 	}
 
@@ -91,10 +89,10 @@ public class XASecurityContextFormationFilter extends GenericFilterBean {
 				HttpSession httpSession = httpRequest.getSession(false);
 
 				// [1]get the context from session
-				XASecurityContext context = (XASecurityContext) httpSession.getAttribute(AKA_SC_SESSION_KEY);
+				RangerSecurityContext context = (RangerSecurityContext) httpSession.getAttribute(AKA_SC_SESSION_KEY);
 				int clientTimeOffset = 0;
 				if (context == null) {
-					context = new XASecurityContext();
+					context = new RangerSecurityContext();
 					httpSession.setAttribute(AKA_SC_SESSION_KEY, context);					
 				}
 				String userAgent = httpRequest.getHeader(USER_AGENT);
@@ -118,7 +116,7 @@ public class XASecurityContextFormationFilter extends GenericFilterBean {
 				requestContext.setClientTimeOffsetInMinute(clientTimeOffset);
 				context.setRequestContext(requestContext);			
 
-				XAContextHolder.setSecurityContext(context);
+				RangerContextHolder.setSecurityContext(context);
 
 				UserSessionBase userSession = sessionMgr.processSuccessLogin(
 						XXAuthSession.AUTH_TYPE_PASSWORD, userAgent);
@@ -133,7 +131,7 @@ public class XASecurityContextFormationFilter extends GenericFilterBean {
 
 		} finally {
 			// [4]remove context from thread-local
-			XAContextHolder.resetSecurityContext();
+			RangerContextHolder.resetSecurityContext();
 		}
 	}
 }

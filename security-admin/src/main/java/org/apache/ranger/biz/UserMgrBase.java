@@ -19,9 +19,13 @@
 
  package org.apache.ranger.biz;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.service.XPortalUserService;
+import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXPortalUser;
+import org.apache.ranger.view.VXPortalUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 public class UserMgrBase {
 

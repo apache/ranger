@@ -26,7 +26,7 @@ public class RequestContext implements Serializable {
 	private String ipAddress = null;
 	private String userAgent = null;
 	private String requestURL = null;
-	private int deviceType = XACommonEnums.DEVICE_UNKNOWN;
+	private int deviceType = RangerCommonEnums.DEVICE_UNKNOWN;
 	private String serverRequestId = null;
 	private boolean isSync = true;
 	private long startTime = System.currentTimeMillis();

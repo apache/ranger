@@ -40,16 +40,16 @@ import org.springframework.security.web.authentication.ExceptionMappingAuthentic
  * 
  *
  */
-public class XAAuthFailureHandler extends
+public class RangerAuthFailureHandler extends
 ExceptionMappingAuthenticationFailureHandler {
-    static Logger logger = Logger.getLogger(XAAuthFailureHandler.class);
+    static Logger logger = Logger.getLogger(RangerAuthFailureHandler.class);
 
     String ajaxLoginfailurePage = null;
     
     @Autowired
     JSONUtil jsonUtil;
 
-    public XAAuthFailureHandler() {
+    public RangerAuthFailureHandler() {
 	super();
 	if (ajaxLoginfailurePage == null) {
 	    ajaxLoginfailurePage = PropertiesUtil.getProperty(

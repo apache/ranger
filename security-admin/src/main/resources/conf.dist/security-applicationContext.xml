@@ -99,30 +99,30 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 		</beans:property>
 	</beans:bean>
 
-	<beans:bean id="customUsernamePasswordAuthenticationFilter" class="org.apache.ranger.security.web.filter.XAUsernamePasswordAuthenticationFilter">
+	<beans:bean id="customUsernamePasswordAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerUsernamePasswordAuthenticationFilter">
 		<beans:property name="authenticationManager" ref="authenticationManager"/>
 		<beans:property name="authenticationSuccessHandler" ref="ajaxAuthSuccessHandler"/>
 		<beans:property name="authenticationFailureHandler"	ref="ajaxAuthFailureHandler"/>
 		<!--  beans:property name="rememberMeServices" ref="rememberMeServices"/ -->
 	</beans:bean>
 
-	<beans:bean id="authenticationProcessingFilterEntryPoint" class="org.apache.ranger.security.web.authentication.XAAuthenticationEntryPoint">
+	<beans:bean id="authenticationProcessingFilterEntryPoint" class="org.apache.ranger.security.web.authentication.RangerAuthenticationEntryPoint">
 		<beans:property name="loginFormUrl" value="/login.jsp"/>
 		<beans:property name="forceHttps" value="false"/>
 	</beans:bean>
 
-	<beans:bean id="ajaxAuthSuccessHandler" class="org.apache.ranger.security.web.authentication.XAAuthSuccessHandler">
+	<beans:bean id="ajaxAuthSuccessHandler" class="org.apache.ranger.security.web.authentication.RangerAuthSuccessHandler">
 		<beans:property name="defaultTargetUrl" value="/dashboard.jsp"/>
 	</beans:bean>
 
-	<beans:bean id="ajaxAuthFailureHandler" class="org.apache.ranger.security.web.authentication.XAAuthFailureHandler">
+	<beans:bean id="ajaxAuthFailureHandler" class="org.apache.ranger.security.web.authentication.RangerAuthFailureHandler">
 		<beans:property name="defaultFailureUrl" value="/public/failedLogin.jsp?login_error=1"/>
 	</beans:bean>
 
 	<beans:bean id="customLogoutSuccessHandler" class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
 	</beans:bean>
 
-	<beans:bean id="userContextFormationFilter" class="org.apache.ranger.security.web.filter.XASecurityContextFormationFilter"/>
+	<beans:bean id="userContextFormationFilter" class="org.apache.ranger.security.web.filter.RangerSecurityContextFormationFilter"/>
 
 	<security:jdbc-user-service id="userService" data-source-ref="defaultDataSource"
 			users-by-username-query="select LOGIN_ID,PASSWORD,STATUS from x_portal_user where LOGIN_ID=? and STATUS = 1"

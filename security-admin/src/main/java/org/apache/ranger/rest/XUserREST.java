@@ -20,24 +20,47 @@
  package org.apache.ranger.rest;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.biz.*;
-import org.apache.ranger.common.DateUtil;
+import org.apache.ranger.biz.SessionMgr;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XAConstants;
-import org.apache.ranger.common.annotation.XAAnnotationClassName;
-import org.apache.ranger.common.annotation.XAAnnotationJSMgrName;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.entity.XXAuthSession;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.annotation.RangerAnnotationClassName;
+import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.service.AuthSessionService;
+import org.apache.ranger.service.XAuditMapService;
+import org.apache.ranger.service.XGroupGroupService;
+import org.apache.ranger.service.XGroupService;
+import org.apache.ranger.service.XGroupUserService;
+import org.apache.ranger.service.XPermMapService;
+import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.VXAuditMap;
+import org.apache.ranger.view.VXAuditMapList;
+import org.apache.ranger.view.VXAuthSession;
+import org.apache.ranger.view.VXAuthSessionList;
+import org.apache.ranger.view.VXGroup;
+import org.apache.ranger.view.VXGroupGroup;
+import org.apache.ranger.view.VXGroupGroupList;
+import org.apache.ranger.view.VXGroupList;
+import org.apache.ranger.view.VXGroupUser;
+import org.apache.ranger.view.VXGroupUserList;
+import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXPermMap;
+import org.apache.ranger.view.VXPermMapList;
+import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.VXUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,7 +71,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Path("xusers")
 @Component
 @Scope("request")
-@XAAnnotationJSMgrName("XUserMgr")
+@RangerAnnotationJSMgrName("XUserMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class XUserREST {
 	static Logger logger = Logger.getLogger(XUserREST.class);
@@ -81,7 +104,7 @@ public class XUserREST {
 	RESTErrorUtil restErrorUtil;
 
 	@Autowired
-	XADaoManager xADaoManager;
+	RangerDaoManager rangerDaoManager;
 
 	@Autowired
 	SessionMgr sessionMgr;
@@ -136,7 +159,7 @@ public class XUserREST {
 	@DELETE
 	@Path("/groups/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXGroup.class)
+	@RangerAnnotationClassName(class_name = VXGroup.class)
 	public void deleteXGroup(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
@@ -218,7 +241,7 @@ public class XUserREST {
 	@DELETE
 	@Path("/users/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXUser.class)
+	@RangerAnnotationClassName(class_name = VXUser.class)
 	public void deleteXUser(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
@@ -283,7 +306,7 @@ public class XUserREST {
 	@DELETE
 	@Path("/groupusers/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXGroupUser.class)
+	@RangerAnnotationClassName(class_name = VXGroupUser.class)
 	public void deleteXGroupUser(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
@@ -340,7 +363,7 @@ public class XUserREST {
 	@DELETE
 	@Path("/groupgroups/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXGroupGroup.class)
+	@RangerAnnotationClassName(class_name = VXGroupGroup.class)
 	public void deleteXGroupGroup(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = false;
@@ -398,7 +421,7 @@ public class XUserREST {
 	@DELETE
 	@Path("/permmaps/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXPermMap.class)
+	@RangerAnnotationClassName(class_name = VXPermMap.class)
 	public void deleteXPermMap(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = false;
@@ -455,7 +478,7 @@ public class XUserREST {
 	@DELETE
 	@Path("/auditmaps/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXAuditMap.class)
+	@RangerAnnotationClassName(class_name = VXAuditMap.class)
 	public void deleteXAuditMap(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = false;

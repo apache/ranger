@@ -19,7 +19,6 @@
 
  package org.apache.ranger.service;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,25 +27,36 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.biz.XABizUtil;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SearchField.DATA_TYPE;
+import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.XAConstants;
-import org.apache.ranger.common.SearchField.DATA_TYPE;
-import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.util.XAEnumUtil;
-import org.apache.ranger.view.*;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXAsset;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXPermMap;
+import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXResource;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.util.RangerEnumUtil;
+import org.apache.ranger.view.VXAuditMap;
+import org.apache.ranger.view.VXAuditMapList;
+import org.apache.ranger.view.VXPermMap;
+import org.apache.ranger.view.VXPermMapList;
+import org.apache.ranger.view.VXResource;
+import org.apache.ranger.view.VXResourceList;
+import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -68,12 +78,12 @@ public class XResourceService extends
 	StringUtil stringUtil;
 	
 	@Autowired
-	XADaoManager xADaoManager;
+	RangerDaoManager rangerDaoManager;
 	@Autowired
-	XABizUtil xaBizUtil;
+	RangerBizUtil xaBizUtil;
 	
 	@Autowired
-	XAEnumUtil xaEnumUtil;
+	RangerEnumUtil xaEnumUtil;
 	
 	@Autowired
 	XPolicyService xPolicyService;
@@ -185,7 +195,7 @@ public class XResourceService extends
 		Long assetId = vObj.getAssetId();
 		int assetType;
 		if(assetId != null){
-			XXAsset xAsset = xADaoManager.getXXAsset().getById(assetId);
+			XXAsset xAsset = rangerDaoManager.getXXAsset().getById(assetId);
 			if(xAsset != null){
 				assetType = xAsset.getAssetType();
 			} else {
@@ -326,7 +336,7 @@ public class XResourceService extends
 	}
 
 	private void populateAssetProperties(VXResource vXResource) {
-		XXAsset xxAsset = xADaoManager.getXXAsset().getById(
+		XXAsset xxAsset = rangerDaoManager.getXXAsset().getById(
 				vXResource.getAssetId());
 		if (xxAsset != null) {
 			vXResource.setAssetName(xxAsset.getName());
@@ -420,7 +430,7 @@ public class XResourceService extends
 			XXPortalUser xXPortalUser= null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
-					xXPortalUser=xADaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
+					xXPortalUser=rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
 					if(xXPortalUser!=null){
 						mObj.setAddedByUserId(xXPortalUser.getId());
 					}
@@ -428,7 +438,7 @@ public class XResourceService extends
 			}
 			if(mObj.getUpdatedByUserId()==null || mObj.getUpdatedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getUpdatedBy())){
-					xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
+					xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
 					if(xXPortalUser!=null){
 						mObj.setUpdatedByUserId(xXPortalUser.getId());
 					}		
@@ -447,13 +457,13 @@ public class XResourceService extends
 		if(mObj!=null && vObj!=null){			
 			XXPortalUser xXPortalUser= null;
 			if(stringUtil.isEmpty(vObj.getOwner())){
-				xXPortalUser=xADaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());		
+				xXPortalUser=rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());		
 				if(xXPortalUser!=null){
 					vObj.setOwner(xXPortalUser.getLoginId());
 				}
 			}
 			if(stringUtil.isEmpty(vObj.getUpdatedBy())){
-				xXPortalUser= xADaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
+				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
 				if(xXPortalUser!=null){
 					vObj.setUpdatedBy(xXPortalUser.getLoginId());
 				}	
@@ -468,7 +478,7 @@ public class XResourceService extends
 	 */
 	public void checkAccess(VXResource vXResource) {
 		
-		XXAsset xxAsset = xADaoManager.getXXAsset().getById(
+		XXAsset xxAsset = rangerDaoManager.getXXAsset().getById(
 				vXResource.getAssetId());
 		if (xxAsset == null) {
 			throw restErrorUtil
@@ -531,7 +541,7 @@ public class XResourceService extends
 								resourceTypeList);
 
 						if (!access) {
-							XXUser xxUser = xADaoManager.getXXUser().getById(
+							XXUser xxUser = rangerDaoManager.getXXUser().getById(
 									vxPermMap.getUserId());
 							throw restErrorUtil.createRESTException(
 											xxUser.getName() + " may not have "
@@ -553,7 +563,7 @@ public class XResourceService extends
 								vXResource.getIsRecursive(), assetType,
 								resourceTypeList);
 						if (!access) {
-							XXGroup xxGroup = xADaoManager.getXXGroup()
+							XXGroup xxGroup = rangerDaoManager.getXXGroup()
 									.getById(vxPermMap.getGroupId());
 							throw restErrorUtil.createRESTException(xxGroup
 									.getName() + " may not have " + AppConstants
@@ -644,19 +654,19 @@ public class XResourceService extends
 			int isRecursive, List<Integer> resourceTypeList) {
 		HashMap<String, Object> accessMap = new HashMap<String, Object>();
 		boolean isAccess = false;
-		List<XXGroup> xGroupList = xADaoManager.getXXGroup().findByUserId(
+		List<XXGroup> xGroupList = rangerDaoManager.getXXGroup().findByUserId(
 				userId);
 		boolean isRecursivlyAllowed = false;
 		List<XXResource> xXResourceList = null;
 		if (assetType == AppConstants.ASSET_HDFS) {
-			xXResourceList = xADaoManager.getXXResource().findByAssetId(
+			xXResourceList = rangerDaoManager.getXXResource().findByAssetId(
 					assetId);
 			//this code block is to add record of 'public' group in group_user mapping list.
-			XXGroup xXGroupPublic = xADaoManager.getXXGroup().
-					findByGroupName(XAConstants.GROUP_PUBLIC);
+			XXGroup xXGroupPublic = rangerDaoManager.getXXGroup().
+					findByGroupName(RangerConstants.GROUP_PUBLIC);
 			if (xXGroupPublic != null
 					&& xXGroupPublic.getName().trim()
-							.equalsIgnoreCase(XAConstants.GROUP_PUBLIC)) {
+							.equalsIgnoreCase(RangerConstants.GROUP_PUBLIC)) {
 				if(xGroupList!=null){
 					xGroupList.add(xXGroupPublic);
 				}else{
@@ -665,7 +675,7 @@ public class XResourceService extends
 				}
 			}
 		} else {
-			xXResourceList = xADaoManager.getXXResource()
+			xXResourceList = rangerDaoManager.getXXResource()
 					.findByAssetIdAndResourceTypes(assetId, resourceTypeList);
 		}
 		String expandedName = xaBizUtil.replaceMetaChars(path);
@@ -715,7 +725,7 @@ public class XResourceService extends
 				}
 				if (matchFound) {
 					// get the perms for this resource
-					List<XXPermMap> permMapList = xADaoManager.getXXPermMap()
+					List<XXPermMap> permMapList = rangerDaoManager.getXXPermMap()
 							.findByResourceId(xResource.getId());
 					for (XXPermMap permMap : permMapList) {
 						if (permMap.getPermType() == permType) {
@@ -751,10 +761,10 @@ public class XResourceService extends
 		List<XXResource> xXResourceList = new ArrayList<XXResource>();
 		
 		if (assetType == AppConstants.ASSET_HDFS) {
-			xXResourceList = xADaoManager.getXXResource().findByAssetId(
+			xXResourceList = rangerDaoManager.getXXResource().findByAssetId(
 					assetId);
 		} else {
-			xXResourceList = xADaoManager.getXXResource()
+			xXResourceList = rangerDaoManager.getXXResource()
 					.findByAssetIdAndResourceTypes(assetId, resourceTypeList);
 		}
 		
@@ -805,7 +815,7 @@ public class XResourceService extends
 			}
 			if (matchFound) {
 				// get the perms for this resource
-				List<XXPermMap> permMapList = xADaoManager.getXXPermMap()
+				List<XXPermMap> permMapList = rangerDaoManager.getXXPermMap()
 						.findByResourceId(xResource.getId());
 				for (XXPermMap permMap : permMapList) {
 					if (permMap.getPermType() == permType) {
@@ -945,7 +955,7 @@ public class XResourceService extends
 			return null;
 		}
 
-		XXAsset xAsset = xADaoManager.getXXAsset().getById(vObj.getAssetId());
+		XXAsset xAsset = rangerDaoManager.getXXAsset().getById(vObj.getAssetId());
 		String parentObjectName = xAsset.getName();
 		
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();

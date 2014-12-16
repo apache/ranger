@@ -27,10 +27,13 @@ import java.util.List;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.util.XAEnumUtil;
-import org.apache.ranger.view.*;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXAuditMap;
+import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.util.RangerEnumUtil;
+import org.apache.ranger.view.VXAuditMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -41,10 +44,10 @@ public class XAuditMapService extends
 		XAuditMapServiceBase<XXAuditMap, VXAuditMap> {
 
 	@Autowired
-	XAEnumUtil xaEnumUtil;
+	RangerEnumUtil xaEnumUtil;
 
 	@Autowired
-	XADaoManager xADaoManager;
+	RangerDaoManager rangerDaoManager;
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	static {
@@ -103,7 +106,7 @@ public class XAuditMapService extends
 					value = xaEnumUtil.getLabel(enumName, enumValue);
 				} else {
 					value = ""+field.get(vObj);
-					XXUser xUser = xADaoManager.getXXUser().getById(Long.parseLong(value));
+					XXUser xUser = rangerDaoManager.getXXUser().getById(Long.parseLong(value));
 					value = xUser.getName();
 				}
 				
@@ -145,7 +148,7 @@ public class XAuditMapService extends
 			XXPortalUser xXPortalUser=null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
-					xXPortalUser=xADaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
+					xXPortalUser=rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
 					if(xXPortalUser!=null){
 						mObj.setAddedByUserId(xXPortalUser.getId());
 					}
@@ -153,7 +156,7 @@ public class XAuditMapService extends
 			}
 			if(mObj.getUpdatedByUserId()==null || mObj.getUpdatedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getUpdatedBy())){
-					xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
+					xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
 					if(xXPortalUser!=null){
 						mObj.setUpdatedByUserId(xXPortalUser.getId());
 					}		
@@ -169,13 +172,13 @@ public class XAuditMapService extends
 		if(mObj!=null && vObj!=null){
 			XXPortalUser xXPortalUser=null;
 			if(stringUtil.isEmpty(vObj.getOwner())){
-				xXPortalUser= xADaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());	
+				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());	
 				if(xXPortalUser!=null){
 					vObj.setOwner(xXPortalUser.getLoginId());
 				}
 			}
 			if(stringUtil.isEmpty(vObj.getUpdatedBy())){
-				xXPortalUser= xADaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
+				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
 				if(xXPortalUser!=null){
 					vObj.setUpdatedBy(xXPortalUser.getLoginId());
 				}

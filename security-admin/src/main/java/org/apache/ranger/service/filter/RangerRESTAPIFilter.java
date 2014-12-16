@@ -32,11 +32,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.security.context.XAContextHolder;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 
@@ -45,8 +43,8 @@ import com.sun.jersey.api.uri.UriTemplate;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
 
-public class XARESTAPIFilter extends LoggingFilter {
-	Logger logger = Logger.getLogger(XARESTAPIFilter.class);
+public class RangerRESTAPIFilter extends LoggingFilter {
+	Logger logger = Logger.getLogger(RangerRESTAPIFilter.class);
 	static boolean initDone = false;
 
 	boolean logStdOut = true;

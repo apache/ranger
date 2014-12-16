@@ -25,9 +25,9 @@ package org.apache.ranger.biz;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.XAConstants;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXDBBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,12 +37,12 @@ public abstract class BaseMgr {
     static final Logger logger = Logger.getLogger(BaseMgr.class);
 
     @Autowired
-    XADaoManager daoManager;
+    RangerDaoManager daoManager;
 
     @Autowired
     RESTErrorUtil restErrorUtil;
 
-    public XADaoManager getDaoManager() {
+    public RangerDaoManager getDaoManager() {
 	return daoManager;
     }
 
@@ -72,7 +72,7 @@ public abstract class BaseMgr {
     protected void validateClassType(int objectClassType) {
 	// objectClassType
 	restErrorUtil.validateMinMax(objectClassType, 1,
-		XAConstants.ClassTypes_MAX, "Invalid classType", null,
+		RangerConstants.ClassTypes_MAX, "Invalid classType", null,
 		"objectClassType");
     }
 

@@ -22,12 +22,12 @@
 
 import java.util.List;
 
-import org.apache.ranger.common.db.*;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPortalUser;
 
 public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 
-	public XXPortalUserDao(XADaoManagerBase daoManager) {
+	public XXPortalUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
 

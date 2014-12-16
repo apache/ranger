@@ -26,14 +26,13 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.db.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXGroupUser;
 
 public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 	static final Logger logger = Logger.getLogger(XXGroupUserDao.class);
 
-	public XXGroupUserDao(XADaoManagerBase daoManager) {
+	public XXGroupUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
 

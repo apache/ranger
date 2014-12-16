@@ -23,7 +23,7 @@
 
 package org.apache.ranger.common;
 
-public class XAConstants extends XACommonEnums {
+public class RangerConstants extends RangerCommonEnums {
 
 	// Default Roles
 	public final static String ROLE_SYS_ADMIN = "ROLE_SYS_ADMIN";

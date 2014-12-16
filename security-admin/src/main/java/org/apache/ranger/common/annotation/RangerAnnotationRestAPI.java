@@ -26,10 +26,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * 
+ * Annotating the REST APIs
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
-public @interface XAAnnotationJSMgrName {
-    public String value();
+public @interface RangerAnnotationRestAPI {
+    public String api_name() default "";
+    public boolean updates_generic_objects() default false;
+    public String updates_classes() default "";
 }

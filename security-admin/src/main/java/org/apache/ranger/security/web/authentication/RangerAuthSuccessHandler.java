@@ -43,9 +43,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
  * 
  *
  */
-public class XAAuthSuccessHandler extends
+public class RangerAuthSuccessHandler extends
 SavedRequestAwareAuthenticationSuccessHandler {
-    static Logger logger = Logger.getLogger(XAAuthSuccessHandler.class);
+    static Logger logger = Logger.getLogger(RangerAuthSuccessHandler.class);
 
     String ajaxLoginSuccessPage = null;
     
@@ -55,7 +55,7 @@ SavedRequestAwareAuthenticationSuccessHandler {
     @Autowired
     JSONUtil jsonUtil;
 
-    public XAAuthSuccessHandler() {
+    public RangerAuthSuccessHandler() {
 	super();
 	if (ajaxLoginSuccessPage == null) {
 	    ajaxLoginSuccessPage = PropertiesUtil.getProperty(

@@ -19,13 +19,12 @@
 
  package org.apache.ranger.db;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.db.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXPolicyExportAudit;
 
 public class XXPolicyExportAuditDao extends BaseDao<XXPolicyExportAudit> {
 
-    public XXPolicyExportAuditDao( XADaoManagerBase daoManager ) {
+    public XXPolicyExportAuditDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
     }
 }

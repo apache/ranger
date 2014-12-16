@@ -24,8 +24,6 @@ package org.apache.ranger.biz;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.hive.client.HiveClient;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 /**
  * 

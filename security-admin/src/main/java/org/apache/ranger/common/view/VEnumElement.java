@@ -21,7 +21,7 @@
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.ranger.common.XACommonEnums;
+import org.apache.ranger.common.RangerCommonEnums;
 
 @XmlRootElement
 public class VEnumElement extends ViewBaseBean implements java.io.Serializable {
@@ -145,7 +145,7 @@ public class VEnumElement extends ViewBaseBean implements java.io.Serializable {
 
 	@Override
 	public int getMyClassType( ) {
-	    return XACommonEnums.CLASS_TYPE_ENUM_ELEMENT;
+	    return RangerCommonEnums.CLASS_TYPE_ENUM_ELEMENT;
 	}
 
 	/**

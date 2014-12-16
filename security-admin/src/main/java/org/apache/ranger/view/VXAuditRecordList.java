@@ -19,7 +19,8 @@
 
  package org.apache.ranger.view;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

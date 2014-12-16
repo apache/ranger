@@ -23,7 +23,6 @@ import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -40,15 +39,15 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.AssetMgr;
-import org.apache.ranger.biz.XABizUtil;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.XASearchUtil;
-import org.apache.ranger.common.annotation.XAAnnotationClassName;
-import org.apache.ranger.common.annotation.XAAnnotationJSMgrName;
+import org.apache.ranger.common.annotation.RangerAnnotationClassName;
+import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.service.AbstractBaseResourceService;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAgentService;
@@ -64,13 +63,11 @@ import org.apache.ranger.view.VXAssetList;
 import org.apache.ranger.view.VXCredentialStore;
 import org.apache.ranger.view.VXCredentialStoreList;
 import org.apache.ranger.view.VXLong;
-import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPolicy;
 import org.apache.ranger.view.VXPolicyExportAuditList;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResourceList;
 import org.apache.ranger.view.VXResponse;
-import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXTrxLogList;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,13 +80,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Path("assets")
 @Component
 @Scope("request")
-@XAAnnotationJSMgrName("AssetMgr")
+@RangerAnnotationJSMgrName("AssetMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class AssetREST {
 	static Logger logger = Logger.getLogger(AssetREST.class);
 
 	@Autowired
-	XASearchUtil searchUtil;
+	RangerSearchUtil searchUtil;
 
 	@Autowired
 	AssetMgr assetMgr;
@@ -119,7 +116,7 @@ public class AssetREST {
 	XTrxLogService xTrxLogService;
 	
 	@Autowired
-	XABizUtil msBizUtil;
+	RangerBizUtil msBizUtil;
 
 	@Autowired
 	XAccessAuditService xAccessAuditService;
@@ -148,7 +145,7 @@ public class AssetREST {
 	@DELETE
 	@Path("/assets/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXAsset.class)
+	@RangerAnnotationClassName(class_name = VXAsset.class)
 	public void deleteXAsset(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
@@ -177,8 +174,8 @@ public class AssetREST {
 		Object status = searchCriteria.getParamValue("status");
 		if (status == null || ((Collection) status).size() == 0) {
 			ArrayList<Integer> valueList = new ArrayList<Integer>();
-			valueList.add(XACommonEnums.STATUS_DISABLED);
-			valueList.add(XACommonEnums.STATUS_ENABLED);
+			valueList.add(RangerCommonEnums.STATUS_DISABLED);
+			valueList.add(RangerCommonEnums.STATUS_ENABLED);
 			searchCriteria.addParam("status", valueList);
 		}
 		return assetMgr.searchXAssets(searchCriteria);
@@ -196,8 +193,8 @@ public class AssetREST {
 		Object status = searchCriteria.getParamValue("status");
 		if (status == null || ((Collection) status).size() == 0) {
 			ArrayList<Integer> valueList = new ArrayList<Integer>();
-			valueList.add(XACommonEnums.STATUS_DISABLED);
-			valueList.add(XACommonEnums.STATUS_ENABLED);
+			valueList.add(RangerCommonEnums.STATUS_DISABLED);
+			valueList.add(RangerCommonEnums.STATUS_ENABLED);
 			searchCriteria.addParam("status", valueList);
 		}
 		return assetMgr.getXAssetSearchCount(searchCriteria);
@@ -229,7 +226,7 @@ public class AssetREST {
 	@DELETE
 	@Path("/resources/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXResource.class)
+	@RangerAnnotationClassName(class_name = VXResource.class)
 	public void deleteXResource(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = false;
@@ -425,7 +422,7 @@ public class AssetREST {
 	@DELETE
 	@Path("/credstores/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXCredentialStore.class)
+	@RangerAnnotationClassName(class_name = VXCredentialStore.class)
 	public void deleteXCredentialStore(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = false;

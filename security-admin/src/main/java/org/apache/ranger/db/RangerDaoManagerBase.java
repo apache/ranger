@@ -23,26 +23,23 @@
  * 
  */
 
-import javax.persistence.*;
-
-import java.util.*;
+import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.db.*;
-import org.apache.ranger.entity.*;
-import org.springframework.stereotype.Component;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.db.BaseDao;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
-public abstract class XADaoManagerBase {
-	final static Logger logger = Logger.getLogger(XADaoManagerBase.class);
+public abstract class RangerDaoManagerBase {
+	final static Logger logger = Logger.getLogger(RangerDaoManagerBase.class);
 
 	@Autowired
 	protected RESTErrorUtil restErrorUtil;
 	abstract public EntityManager getEntityManager();
 
-	public XADaoManagerBase() {
+	public RangerDaoManagerBase() {
 	}
 
 	public BaseDao<?> getDaoForClassType(int classType) {

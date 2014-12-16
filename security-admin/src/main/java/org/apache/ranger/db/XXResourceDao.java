@@ -20,21 +20,21 @@
  package org.apache.ranger.db;
 
 
-import java.util.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.db.*;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXResource;
 
 public class XXResourceDao extends BaseDao<XXResource> {
 	static final Logger logger = Logger.getLogger(XXResourceDao.class);
 
-	public XXResourceDao(XADaoManagerBase daoManager) {
+	public XXResourceDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
 

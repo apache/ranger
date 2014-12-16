@@ -26,8 +26,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XAConfigUtil;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXPortalUser;
@@ -36,8 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class XARestUtil {
-	static final Logger logger = Logger.getLogger(XARestUtil.class);
+public class RangerRestUtil {
+	static final Logger logger = Logger.getLogger(RangerRestUtil.class);
 
 	@Autowired
 	StringUtil stringUtil;
@@ -46,7 +46,7 @@ public class XARestUtil {
 	RESTErrorUtil restErrorUtil;
 
 	@Autowired
-	XAConfigUtil configUtil;
+	RangerConfigUtil configUtil;
 
 	void splitUserRoleList(Collection<String> collection) {
 		Collection<String> newCollection = new ArrayList<String>();

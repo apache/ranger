@@ -23,7 +23,6 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.ranger.authentication.unix.jaas.UnixGroupPrincipal;
 import org.springframework.security.authentication.jaas.AuthorityGranter;
 
 public class RoleUserAuthorityGranter implements AuthorityGranter {

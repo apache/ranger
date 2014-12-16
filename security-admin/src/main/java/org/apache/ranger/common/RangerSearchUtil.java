@@ -19,22 +19,12 @@
 
  package org.apache.ranger.common;
 
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SearchUtil;
-import org.apache.ranger.db.XADaoManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class XASearchUtil extends SearchUtil {
-	final static Logger logger = Logger.getLogger(XASearchUtil.class);
+public class RangerSearchUtil extends SearchUtil {
+	final static Logger logger = Logger.getLogger(RangerSearchUtil.class);
 	/*
 	@Override
 	public Query createSearchQuery(EntityManager em, String queryStr, String sortClause,

@@ -21,7 +21,7 @@
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.apache.ranger.common.XACommonEnums;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.entity.XXDBBase;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
@@ -51,6 +51,6 @@ public class ViewBaseBean implements java.io.Serializable {
     @XmlTransient
     @JsonIgnore
     public int getMyClassType() {
-	return XACommonEnums.CLASS_TYPE_NONE;
+	return RangerCommonEnums.CLASS_TYPE_NONE;
     }
 }

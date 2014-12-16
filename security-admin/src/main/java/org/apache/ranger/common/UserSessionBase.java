@@ -21,10 +21,7 @@
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPortalUser;
@@ -36,7 +33,7 @@ public class UserSessionBase implements Serializable {
 	XXPortalUser xXPortalUser;
 	XXAuthSession xXAuthSession;
 	private boolean userAdmin;
-	private int authProvider = XAConstants.USER_APP;
+	private int authProvider = RangerConstants.USER_APP;
 	private List<String> userRoleList = new ArrayList<String>();
 	int clientTimeOffsetInMinute = 0;
 	public Long getUserId() {

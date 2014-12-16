@@ -23,7 +23,6 @@
 package org.apache.ranger.patch;
 
 import java.text.DecimalFormat;
-import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;

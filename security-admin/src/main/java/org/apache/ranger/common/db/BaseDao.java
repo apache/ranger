@@ -32,27 +32,25 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.db.XADaoManagerBase;
-import org.apache.ranger.entity.XXDBBase;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.RangerDaoManagerBase;
 
 public abstract class BaseDao<T> {
 	static final Logger logger = Logger.getLogger(BaseDao.class);
 
-	protected XADaoManager daoManager;
+	protected RangerDaoManager daoManager;
 
 	EntityManager em;
 
 	protected Class<T> tClass;
 
-	public BaseDao(XADaoManagerBase daoManager) {
-		this.daoManager = (XADaoManager) daoManager;
+	public BaseDao(RangerDaoManagerBase daoManager) {
+		this.daoManager = (RangerDaoManager) daoManager;
 		this.init(daoManager.getEntityManager());
 	}
 
-	public BaseDao(XADaoManagerBase daoManager, String persistenceContextUnit) {
-		this.daoManager = (XADaoManager) daoManager;
+	public BaseDao(RangerDaoManagerBase daoManager, String persistenceContextUnit) {
+		this.daoManager = (RangerDaoManager) daoManager;
 
 		EntityManager em = this.daoManager.getEntityManager(persistenceContextUnit);
 

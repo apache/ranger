@@ -23,11 +23,8 @@
  * 
  */
 
-import java.util.*;
 
-import org.apache.ranger.common.*;
-
-public class XACommonEnums {
+public class RangerCommonEnums {
 
 	/***************************************************************
 	 * Enum values for ActiveStatus

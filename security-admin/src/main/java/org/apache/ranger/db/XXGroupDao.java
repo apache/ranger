@@ -23,16 +23,12 @@
 import java.util.ArrayList;
 import java.util.List;
 
-
-
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.db.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXGroup;
 
 public class XXGroupDao extends BaseDao<XXGroup> {
 
-	public XXGroupDao(XADaoManagerBase daoManager) {
+	public XXGroupDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
 

@@ -25,14 +25,13 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.db.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXAuditMap;
 
 public class XXAuditMapDao extends BaseDao<XXAuditMap> {
 	static final Logger logger = Logger.getLogger(XXAssetDao.class);
 
-    public XXAuditMapDao( XADaoManagerBase daoManager ) {
+    public XXAuditMapDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
     }
 

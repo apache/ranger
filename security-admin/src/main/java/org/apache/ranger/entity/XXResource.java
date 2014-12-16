@@ -24,13 +24,17 @@
  * 
  */
 
-import java.util.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerConstants;
 
 
 @Entity
@@ -123,7 +127,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="IS_ENCRYPT"  , nullable=false )
-	protected int isEncrypt = XAConstants.BOOL_FALSE;
+	protected int isEncrypt = RangerConstants.BOOL_FALSE;
 
 	/**
 	 * Is recursive
@@ -133,7 +137,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="IS_RECURSIVE"  , nullable=false )
-	protected int isRecursive = XAConstants.BOOL_NONE;
+	protected int isRecursive = RangerConstants.BOOL_NONE;
 
 	/**
 	 * Group to which this resource belongs to
@@ -203,7 +207,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="RES_STATUS"  , nullable=false )
-	protected int resourceStatus = XAConstants.STATUS_ENABLED;
+	protected int resourceStatus = RangerConstants.STATUS_ENABLED;
 
 	/**
 	 * Table Type
@@ -248,9 +252,9 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 	 */
 	public XXResource ( ) {
 		resourceType = AppConstants.RESOURCE_PATH;
-		isEncrypt = XAConstants.BOOL_FALSE;
-		isRecursive = XAConstants.BOOL_NONE;
-		resourceStatus = XAConstants.STATUS_ENABLED;
+		isEncrypt = RangerConstants.BOOL_FALSE;
+		isRecursive = RangerConstants.BOOL_NONE;
+		resourceStatus = RangerConstants.STATUS_ENABLED;
 		tableType = AppConstants.POLICY_INCLUSION;
 		columnType = AppConstants.POLICY_INCLUSION;
 	}

@@ -28,8 +28,8 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.common.XACommonEnums;
 import org.apache.ranger.view.VXAsset;
 import org.apache.ranger.view.VXAssetList;
 import org.apache.ranger.view.VXRepository;
@@ -61,7 +61,7 @@ public class XRepositoryService extends
 		vRepo.setConfig(vXAsset.getConfig());
 		
 		int actStatus = vXAsset.getActiveStatus();
-		boolean isAct = (actStatus == XACommonEnums.STATUS_DISABLED) ? false
+		boolean isAct = (actStatus == RangerCommonEnums.STATUS_DISABLED) ? false
 				: true;
 
 		vRepo.setIsActive(isAct);
@@ -81,8 +81,8 @@ public class XRepositoryService extends
 				.getRepositoryType()));
 		vXAsset.setConfig(vXRepo.getConfig());
 		
-		int actStatus = (!vXRepo.getIsActive()) ? XACommonEnums.STATUS_DISABLED
-				: XACommonEnums.STATUS_ENABLED;
+		int actStatus = (!vXRepo.getIsActive()) ? RangerCommonEnums.STATUS_DISABLED
+				: RangerCommonEnums.STATUS_ENABLED;
 
 		vXAsset.setActiveStatus(actStatus);
 
@@ -97,8 +97,8 @@ public class XRepositoryService extends
 
 		ArrayList<Integer> statusList = new ArrayList<Integer>();
 		if (statusObj == null) {
-			statusList.add(XACommonEnums.STATUS_DISABLED);
-			statusList.add(XACommonEnums.STATUS_ENABLED);
+			statusList.add(RangerCommonEnums.STATUS_DISABLED);
+			statusList.add(RangerCommonEnums.STATUS_ENABLED);
 		} else {
 			boolean status = restErrorUtil.parseBoolean(
 					request.getParameter("status"), "Invalid value for "

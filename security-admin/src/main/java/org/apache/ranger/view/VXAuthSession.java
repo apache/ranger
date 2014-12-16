@@ -24,14 +24,12 @@
  * 
  */
 
-import java.util.*;
+import java.util.Date;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.view.*;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.json.JsonDateSerializer;
-import org.apache.ranger.view.*;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;

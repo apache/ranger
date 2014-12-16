@@ -26,10 +26,10 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.view.VXGroup;
+import org.apache.ranger.view.VXGroupList;
 
 public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		extends AbstractBaseResourceService<T, V> {

@@ -21,17 +21,16 @@ import java.util.List;
 
 import org.apache.ranger.common.view.VEnum;
 import org.apache.ranger.common.view.VEnumElement;
-import org.apache.ranger.util.XAEnumUtil;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class TestXAEnumUtil {
+public class TestRangerEnumUtil {
 
 	@Autowired
-	XAEnumUtil xaEnumUtil = new XAEnumUtil();
+	RangerEnumUtil xaEnumUtil = new RangerEnumUtil();
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

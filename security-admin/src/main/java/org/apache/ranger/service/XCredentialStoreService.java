@@ -19,10 +19,8 @@
 
  package org.apache.ranger.service;
 
-import org.apache.ranger.biz.*;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.entity.XXCredentialStore;
+import org.apache.ranger.view.VXCredentialStore;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 

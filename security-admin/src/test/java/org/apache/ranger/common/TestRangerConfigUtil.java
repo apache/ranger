@@ -16,18 +16,14 @@
  */
 package org.apache.ranger.common;
 
-import org.apache.ranger.common.XAConfigUtil;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-public class TestXAConfigUtil {
+public class TestRangerConfigUtil {
 
 	@Autowired
-	XAConfigUtil xaConfigUtil = new XAConfigUtil();	
+	RangerConfigUtil xaConfigUtil = new RangerConfigUtil();	
 
 	@Test
 	public void testGetDefaultMaxRows() {

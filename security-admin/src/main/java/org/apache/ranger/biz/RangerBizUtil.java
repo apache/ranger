@@ -26,20 +26,23 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOCase;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.XAConstants;
 import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXGroup;
@@ -58,20 +61,15 @@ import org.apache.ranger.view.VXStringList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Random;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOCase;
-
 @Component
-public class XABizUtil {
-	static final Logger logger = Logger.getLogger(XABizUtil.class);
+public class RangerBizUtil {
+	static final Logger logger = Logger.getLogger(RangerBizUtil.class);
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
 	@Autowired
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	@Autowired
 	StringUtil stringUtil;
@@ -97,7 +95,7 @@ public class XABizUtil {
 	static String fileSeparator = PropertiesUtil.getProperty(
 			"xa.file.separator", "/");
 
-	public XABizUtil() {
+	public RangerBizUtil() {
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty(
 				"xa.user.firstname.maxlength", "16"));
 		maxDisplayNameLength = PropertiesUtil.getIntProperty(
@@ -140,7 +138,7 @@ public class XABizUtil {
 			}
 		}
 		if (classType == null) {
-			return XACommonEnums.CLASS_TYPE_NONE;
+			return RangerCommonEnums.CLASS_TYPE_NONE;
 		} else {
 			return classType;
 		}
@@ -165,12 +163,12 @@ public class XABizUtil {
 		if (contentType.equalsIgnoreCase("JPEG")
 				|| contentType.equalsIgnoreCase("JPG")
 				|| contentType.endsWith("jpg") || contentType.endsWith("jpeg")) {
-			return XAConstants.MIME_JPEG;
+			return RangerConstants.MIME_JPEG;
 		}
 		if (contentType.equalsIgnoreCase("PNG") || contentType.endsWith("png")) {
-			return XAConstants.MIME_PNG;
+			return RangerConstants.MIME_PNG;
 		}
-		return XAConstants.MIME_UNKNOWN;
+		return RangerConstants.MIME_UNKNOWN;
 	}
 
 	/**
@@ -179,9 +177,9 @@ public class XABizUtil {
 	 */
 	public String getMimeType(int mimeType) {
 		switch (mimeType) {
-		case XAConstants.MIME_JPEG:
+		case RangerConstants.MIME_JPEG:
 			return "jpg";
-		case XAConstants.MIME_PNG:
+		case RangerConstants.MIME_PNG:
 			return "png";
 		}
 		return "";
@@ -218,7 +216,7 @@ public class XABizUtil {
 	}
 
 	public String getDisplayNameForClassName(XXDBBase obj) {
-		String classTypeDisplayName = XAConstants.getLabelFor_ClassTypes(obj
+		String classTypeDisplayName = RangerConstants.getLabelFor_ClassTypes(obj
 				.getMyClassType());
 		if (classTypeDisplayName == null) {
 			logger.error(
@@ -309,7 +307,7 @@ public class XABizUtil {
 		if (objId == null) {
 			return null;
 		}
-		if (objClassType == XAConstants.CLASS_TYPE_USER_PROFILE) {
+		if (objClassType == RangerConstants.CLASS_TYPE_USER_PROFILE) {
 			return userMgr.mapXXPortalUserVXPortalUser(daoManager.getXXPortalUser().getById(
 					objId));
 		}
@@ -331,7 +329,7 @@ public class XABizUtil {
 		if (obj == null) {
 			return;
 		}
-		if (obj.getMyClassType() == XAConstants.CLASS_TYPE_NONE) {
+		if (obj.getMyClassType() == RangerConstants.CLASS_TYPE_NONE) {
 			return;
 		}
 
@@ -1044,7 +1042,7 @@ public class XABizUtil {
 	}
 	
 	public Long getPublicGroupId() {
-		XXGroup xXGroupPublic = daoManager.getXXGroup().findByGroupName(XAConstants.GROUP_PUBLIC);
+		XXGroup xXGroupPublic = daoManager.getXXGroup().findByGroupName(RangerConstants.GROUP_PUBLIC);
 
 		return xXGroupPublic != null ? xXGroupPublic.getId() : null;
 	}

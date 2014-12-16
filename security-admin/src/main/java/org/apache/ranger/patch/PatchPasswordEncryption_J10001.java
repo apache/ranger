@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.util.CLIUtil;
@@ -33,7 +33,7 @@ public class PatchPasswordEncryption_J10001 extends BaseLoader {
 	int lineCount = 0;
 	
 	@Autowired
-	XADaoManager xaDaoManager;
+	RangerDaoManager xaDaoManager;
 	
 	@Autowired
 	StringUtil stringUtil;

@@ -26,13 +26,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.biz.UserMgr;
-import org.apache.ranger.biz.XABizUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.common.XAConstants;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPortalUser;
@@ -54,16 +52,16 @@ public class XUserMgr extends XUserMgrBase {
 	@Autowired
 	XUserService xUserService;
 	@Autowired
-	XABizUtil msBizUtil;
+	RangerBizUtil msBizUtil;
 
 	@Autowired
 	UserMgr userMgr;
 
 	@Autowired
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	@Autowired
-	XABizUtil xaBizUtil;
+	RangerBizUtil xaBizUtil;
 
 	static final Logger logger = Logger.getLogger(XUserMgr.class);
 
@@ -219,7 +217,7 @@ public class XUserMgr extends XUserMgrBase {
 			roleList=userMgr.getRolesForUser(xXPortalUser);	
 		}
 		if(roleList==null || roleList.size()==0){
-			roleList.add(XAConstants.ROLE_USER);
+			roleList.add(RangerConstants.ROLE_USER);
 		}	
 		
 		// TODO I've to get the transaction log from here.

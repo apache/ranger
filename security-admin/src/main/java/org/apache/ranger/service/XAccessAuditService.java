@@ -20,22 +20,19 @@
  package org.apache.ranger.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-
-import javax.persistence.Query;
 
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SearchUtil;
-import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.SearchUtil;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
-import org.apache.ranger.common.view.VList;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXAccessAudit;
+import org.apache.ranger.view.VXAccessAudit;
+import org.apache.ranger.view.VXAccessAuditList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -51,7 +48,7 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 	protected SearchUtil searchUtil;
 	
 	@Autowired
-	XADaoManager appDaoMgr;
+	RangerDaoManager appDaoMgr;
 
 	protected String queryStr;
 	protected final String distinctCountQueryStr;

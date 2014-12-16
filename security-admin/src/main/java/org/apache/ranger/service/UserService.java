@@ -26,10 +26,10 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RangerConfigUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.XAConfigUtil;
-import org.apache.ranger.common.XAConstants;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.view.VXMessage;
@@ -47,7 +47,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 	public static final String NAME = "User";
 
 	@Autowired
-	XAConfigUtil configUtil;
+	RangerConfigUtil configUtil;
 
 	private static UserService instance = null;
 
@@ -213,7 +213,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 
 		// validate status
 		restErrorUtil.validateMinMax(userProfile.getStatus(), 0,
-				XAConstants.ActivationStatus_MAX, "Invalid status", null,
+				RangerConstants.ActivationStatus_MAX, "Invalid status", null,
 				"status");
 
 		// validate user roles

@@ -24,13 +24,22 @@
  * 
  */
 
-import java.util.*;
+import java.util.Date;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
+import org.apache.ranger.common.RangerConstants;
 
 
 @Entity
@@ -187,7 +196,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="DEVICE_TYPE"  , nullable=false )
-	protected int deviceType = XAConstants.DEVICE_UNKNOWN;
+	protected int deviceType = RangerConstants.DEVICE_UNKNOWN;
 
 	/**
 	 * IP where the request came from
@@ -216,7 +225,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 		authStatus = AUTH_STATUS_UNKNOWN;
 		authType = AUTH_TYPE_UNKNOWN;
 		authProvider = AUTH_TYPE_UNKNOWN;
-		deviceType = XAConstants.DEVICE_UNKNOWN;
+		deviceType = RangerConstants.DEVICE_UNKNOWN;
 	}
 
 	@Override

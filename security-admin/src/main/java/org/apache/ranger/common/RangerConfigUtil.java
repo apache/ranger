@@ -20,7 +20,6 @@
  package org.apache.ranger.common;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.PropertiesUtil;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,8 +27,8 @@ import org.springframework.stereotype.Component;
  * 
  */
 @Component
-public class XAConfigUtil {
-	static Logger logger = Logger.getLogger(XAConfigUtil.class);
+public class RangerConfigUtil {
+	static Logger logger = Logger.getLogger(RangerConfigUtil.class);
 
 	String webappRootURL;
 	int defaultMaxRows = 250;
@@ -38,7 +37,7 @@ public class XAConfigUtil {
 	boolean isModerationEnabled = false;
 	boolean isUserPrefEnabled = false;
 
-	public XAConfigUtil() {
+	public RangerConfigUtil() {
 		webappRootURL = PropertiesUtil
 				.getProperty("xa.webapp.url.root");
 		if (webappRootURL == null || webappRootURL.trim().length() == 0) {

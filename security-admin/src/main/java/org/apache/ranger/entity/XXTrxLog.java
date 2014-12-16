@@ -24,13 +24,17 @@
  * 
  */
 
-import java.util.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerConstants;
 
 
 @Entity
@@ -60,7 +64,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="CLASS_TYPE"  , nullable=false )
-	protected int objectClassType = XAConstants.CLASS_TYPE_NONE;
+	protected int objectClassType = RangerConstants.CLASS_TYPE_NONE;
 
 	/**
 	 * Id of the object to which this notes refers to
@@ -191,7 +195,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public XXTrxLog ( ) {
-		objectClassType = XAConstants.CLASS_TYPE_NONE;
+		objectClassType = RangerConstants.CLASS_TYPE_NONE;
 	}
 
 	@Override

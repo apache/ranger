@@ -19,13 +19,12 @@
 
  package org.apache.ranger.db;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.db.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXAccessAudit;
 
 public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
 
-    public XXAccessAuditDao( XADaoManagerBase daoManager ) {
+    public XXAccessAuditDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager, "loggingPU");
     }
 }

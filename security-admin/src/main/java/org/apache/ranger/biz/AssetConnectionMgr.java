@@ -30,7 +30,7 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.TimedEventUtil;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.hadoop.client.HadoopFS;
 import org.apache.ranger.hbase.client.HBaseClient;
@@ -62,7 +62,7 @@ public class AssetConnectionMgr {
 	protected StringUtil stringUtil;
 	
 	@Autowired
-	protected XADaoManager xADaoManager;
+	protected RangerDaoManager rangerDaoManager;
 	
 	@Autowired
 	XAssetService xAssetService;
@@ -76,7 +76,7 @@ public class AssetConnectionMgr {
 	
 	public HadoopFS getHadoopConnection(final String dataSourceName) {
 		HadoopFS hadoopFS = null;
-		XXAsset asset = xADaoManager.getXXAsset().findByAssetName(dataSourceName);
+		XXAsset asset = rangerDaoManager.getXXAsset().findByAssetName(dataSourceName);
 		if (asset != null) {
 			// get it from the cache
 			synchronized (hadoopConnectionCache) {
@@ -148,7 +148,7 @@ public class AssetConnectionMgr {
 	
 	public HiveClient getHiveConnection(final String dataSourceName) {
 		HiveClient hiveClient = null;
-		XXAsset asset = xADaoManager.getXXAsset().findByAssetName(dataSourceName);
+		XXAsset asset = rangerDaoManager.getXXAsset().findByAssetName(dataSourceName);
 		if (asset != null) {
 			// get it from the cache
 			synchronized (hiveConnectionCache) {
@@ -196,7 +196,7 @@ public class AssetConnectionMgr {
 	public KnoxClient getKnoxClient(String dataSourceName) {
 		KnoxClient knoxClient = null;
 		logger.debug("Getting knoxClient for datasource: " + dataSourceName);
-		XXAsset asset = xADaoManager.getXXAsset().findByAssetName(dataSourceName);
+		XXAsset asset = rangerDaoManager.getXXAsset().findByAssetName(dataSourceName);
 		if (asset == null) {
 			logger.error("Asset not found with name " + dataSourceName, new Throwable());
 		} else {
@@ -268,7 +268,7 @@ public class AssetConnectionMgr {
 	
 	public HBaseClient getHBaseConnection(final String dataSourceName) {
 		HBaseClient client = null;
-		XXAsset asset = xADaoManager.getXXAsset().findByAssetName(
+		XXAsset asset = rangerDaoManager.getXXAsset().findByAssetName(
 				dataSourceName);
 		if (asset != null) {
 			// get it from the cache

@@ -21,7 +21,6 @@
 
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -41,8 +40,6 @@ import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.serde2.lazybinary.LazyBinaryUtils.VLong;
-import org.apache.hive.com.esotericsoftware.minlog.Log;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
@@ -50,13 +47,13 @@ import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.TimedEventUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.XAConstants;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXGroup;
@@ -126,19 +123,19 @@ public class AssetMgr extends AssetMgrBase {
 	AssetConnectionMgr assetConnectionMgr;
 
 	@Autowired
-	XABizUtil msBizUtil;
+	RangerBizUtil msBizUtil;
 
 	@Autowired
 	StringUtil stringUtil;
 
 	@Autowired
-	XADaoManager xADaoManager;
+	RangerDaoManager rangerDaoManager;
 
 	@Autowired
 	XUserService xUserService;
 
 	@Autowired
-	XABizUtil xaBizUtil;
+	RangerBizUtil xaBizUtil;
 
 	@Autowired
 	XTrxLogService xTrxLogService;
@@ -171,14 +168,14 @@ public class AssetMgr extends AssetMgrBase {
 		}
 			
 		Long assetId = vXResource.getAssetId();
-		XXAsset xAsset = xADaoManager.getXXAsset().getById(assetId);
+		XXAsset xAsset = rangerDaoManager.getXXAsset().getById(assetId);
 		if (xAsset == null) {
 			logger.error("Repository not found for assetId : " + assetId);
 			throw restErrorUtil.create403RESTException("Repository for which"
 					+ " the policy is created, doesn't exist.");
 		}		
 		
-		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){
+		if(xAsset.getActiveStatus()==RangerCommonEnums.ACT_STATUS_DISABLED){
 			if(!session.isUserAdmin()){
 				logger.error("Trying to create/update policy in disabled repository");
 				throw restErrorUtil.createRESTException("Resource "
@@ -239,7 +236,7 @@ public class AssetMgr extends AssetMgrBase {
 			throw restErrorUtil.createRESTException(vXResponse);
 		}
 
-		if (vXResource.getCheckParentPermission() != XAConstants.BOOL_FALSE) {
+		if (vXResource.getCheckParentPermission() != RangerConstants.BOOL_FALSE) {
 			// check parent access for user and group
 			xResourceService.checkAccess(vXResource);
 		}
@@ -316,14 +313,14 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
 		Long assetId = vXResource.getAssetId();
-		XXAsset xAsset = xADaoManager.getXXAsset().getById(assetId);
+		XXAsset xAsset = rangerDaoManager.getXXAsset().getById(assetId);
 		if (xAsset == null) {
 			throw restErrorUtil.createRESTException("The repository for which "
 					+ "you're updating policy, doesn't exist.",
 					MessageEnums.INVALID_INPUT_DATA);
 		}
 		
-		if(xAsset.getActiveStatus()==XACommonEnums.STATUS_DISABLED){
+		if(xAsset.getActiveStatus()==RangerCommonEnums.STATUS_DISABLED){
 			if(!currentUserSession.isUserAdmin()){
 				logger.error("Trying to update policy in disabled repository");
 				throw restErrorUtil.createRESTException("Resource "
@@ -375,7 +372,7 @@ public class AssetMgr extends AssetMgrBase {
 			throw restErrorUtil.createRESTException(vXResponse);
 		}
 
-		if (vXResource.getCheckParentPermission() != XAConstants.BOOL_FALSE) {
+		if (vXResource.getCheckParentPermission() != RangerConstants.BOOL_FALSE) {
 			// check parent access for user and group
 			xResourceService.checkAccess(vXResource);
 		}
@@ -446,7 +443,7 @@ public class AssetMgr extends AssetMgrBase {
 		
 		//policyName creation and validation logic end here
 	
-		XXResource xResouce = xADaoManager.getXXResource().getById(
+		XXResource xResouce = rangerDaoManager.getXXResource().getById(
 				vXResource.getId());
 		
 		List<XXTrxLog> trxLogList = xResourceService.getTransactionLog(
@@ -475,7 +472,7 @@ public class AssetMgr extends AssetMgrBase {
 			for (VXPermMap newObj : newPermMapList) {
 				if (newObj.getUserId() == null && newObj.getGroupId() == null
 						&& !stringUtil.isEmpty(newObj.getUserName())) {
-					XXUser xxUser = xADaoManager.getXXUser().findByUserName(
+					XXUser xxUser = rangerDaoManager.getXXUser().findByUserName(
 							newObj.getUserName());
 					if (xxUser != null) {
 						newObj.setUserId(xxUser.getId());
@@ -634,14 +631,14 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
 		Long assetId = vResource.getAssetId();
-		XXAsset xAsset = xADaoManager.getXXAsset().getById(assetId);
+		XXAsset xAsset = rangerDaoManager.getXXAsset().getById(assetId);
 		if (xAsset == null) {
 			throw restErrorUtil.createRESTException("The repository for which "
 					+ "you're deleting policy, doesn't exist.",
 					MessageEnums.INVALID_INPUT_DATA);
 		}
 
-		if(xAsset.getActiveStatus()==XACommonEnums.STATUS_DISABLED){
+		if(xAsset.getActiveStatus()==RangerCommonEnums.STATUS_DISABLED){
 			if(!currentUserSession.isUserAdmin()){
 				logger.error("Trying to delete policy in disabled repository");
 				throw restErrorUtil.createRESTException("Resource "
@@ -785,13 +782,13 @@ public class AssetMgr extends AssetMgrBase {
 			X509Certificate[] certchain, boolean httpEnabled, String epoch,
 			String ipAddress, boolean isSecure, String count, String agentId) {
 
-		XXAsset xAsset = xADaoManager.getXXAsset().findByAssetName(repository);
+		XXAsset xAsset = rangerDaoManager.getXXAsset().findByAssetName(repository);
 		if(xAsset==null){
 			logger.error("Requested repository not found");
 			throw restErrorUtil.createRESTException("No Data Found.",
 					MessageEnums.DATA_NOT_FOUND);
 		}
-		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){
+		if(xAsset.getActiveStatus()==RangerCommonEnums.ACT_STATUS_DISABLED){
 			logger.error("Requested repository is disabled");
 			throw restErrorUtil.createRESTException("Unauthorized access.",
 					MessageEnums.OPER_NO_EXPORT);
@@ -923,7 +920,7 @@ public class AssetMgr extends AssetMgrBase {
 		// //////////////////////////////////////
 		// Get latest updated time of repository
 		// //////////////////////////////////////
-		Timestamp luTime = xADaoManager.getXXResource()
+		Timestamp luTime = rangerDaoManager.getXXResource()
 				.getMaxUpdateTimeForAssetName(repository);
 
 		HashMap<String, Object> updatedRepo = new HashMap<String, Object>();
@@ -943,7 +940,7 @@ public class AssetMgr extends AssetMgrBase {
 
 			if(epochTime == updatedTime) {
 				//TODO: instead of getting entire list, get just count(*) for the given repository
-				xResourceList = xADaoManager.getXXResource().findUpdatedResourcesByAssetName(repository, new Date(0L));
+				xResourceList = rangerDaoManager.getXXResource().findUpdatedResourcesByAssetName(repository, new Date(0L));
 				
 				int resourceListSz = (xResourceList == null) ? 0 : xResourceList.size() ;
 				
@@ -958,7 +955,7 @@ public class AssetMgr extends AssetMgrBase {
 				}
 				
 			} else {
-				xResourceList = xADaoManager.getXXResource().findUpdatedResourcesByAssetName(repository, new Date(0L));
+				xResourceList = rangerDaoManager.getXXResource().findUpdatedResourcesByAssetName(repository, new Date(0L));
 			}
 
 
@@ -970,13 +967,13 @@ public class AssetMgr extends AssetMgrBase {
 					resourceMap.put("resource", xResource.getName());
 					resourceMap.put("isRecursive",
 							getBooleanValue(xResource.getIsRecursive()));
-					resourceMap.put("policyStatus", XACommonEnums
+					resourceMap.put("policyStatus", RangerCommonEnums
 							.getLabelFor_ActiveStatus(xResource
 									.getResourceStatus()));
 					// resourceMap.put("isEncrypt",
 					// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
 					populatePermMap(xResource, resourceMap, AppConstants.ASSET_HDFS);
-					List<XXAuditMap> xAuditMaps = xADaoManager.getXXAuditMap()
+					List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
 							.findByResourceId(xResource.getId());
 					if (xAuditMaps.size() != 0) {
 						resourceMap.put("audit", 1);
@@ -991,7 +988,7 @@ public class AssetMgr extends AssetMgrBase {
 					HashMap<String, Object> resourceMap = new HashMap<String, Object>();
 					resourceMap.put("id", xResource.getId());
 					resourceMap.put("database_name", xResource.getDatabases());
-					resourceMap.put("policyStatus", XACommonEnums
+					resourceMap.put("policyStatus", RangerCommonEnums
 							.getLabelFor_ActiveStatus(xResource
 									.getResourceStatus()));
 					resourceMap.put("tablePolicyType", AppConstants
@@ -1009,7 +1006,7 @@ public class AssetMgr extends AssetMgrBase {
 					}
 
 					populatePermMap(xResource, resourceMap, AppConstants.ASSET_HIVE);
-					List<XXAuditMap> xAuditMaps = xADaoManager.getXXAuditMap()
+					List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
 							.findByResourceId(xResource.getId());
 					if (xAuditMaps.size() != 0) {
 						resourceMap.put("audit", 1);
@@ -1029,7 +1026,7 @@ public class AssetMgr extends AssetMgrBase {
 					resourceMap.put("column_name", xResource.getColumns());
 					resourceMap.put("column_families",
 							xResource.getColumnFamilies());
-					resourceMap.put("policyStatus", XACommonEnums
+					resourceMap.put("policyStatus", RangerCommonEnums
 							.getLabelFor_ActiveStatus(xResource
 									.getResourceStatus()));
 					if (xResource.getIsEncrypt() == 1) {
@@ -1040,7 +1037,7 @@ public class AssetMgr extends AssetMgrBase {
 					// resourceMap.put("isEncrypt",
 					// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
 					populatePermMap(xResource, resourceMap, AppConstants.ASSET_HBASE);
-					List<XXAuditMap> xAuditMaps = xADaoManager.getXXAuditMap()
+					List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
 							.findByResourceId(xResource.getId());
 					if (xAuditMaps.size() != 0) {
 						resourceMap.put("audit", 1);
@@ -1057,7 +1054,7 @@ public class AssetMgr extends AssetMgrBase {
 					resourceMap.put("id", xResource.getId());
 					resourceMap.put("topology_name", xResource.getTopologies()) ;
 					resourceMap.put("service_name", xResource.getServices()) ;
-					resourceMap.put("policyStatus", XACommonEnums
+					resourceMap.put("policyStatus", RangerCommonEnums
 							.getLabelFor_ActiveStatus(xResource
 									.getResourceStatus()));
 					if (xResource.getIsEncrypt() == 1) {
@@ -1068,7 +1065,7 @@ public class AssetMgr extends AssetMgrBase {
 					// resourceMap.put("isEncrypt",
 					// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
 					populatePermMap(xResource, resourceMap, AppConstants.ASSET_KNOX);
-					List<XXAuditMap> xAuditMaps = xADaoManager.getXXAuditMap()
+					List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
 							.findByResourceId(xResource.getId());
 					if (xAuditMaps.size() != 0) {
 						resourceMap.put("audit", 1);
@@ -1085,7 +1082,7 @@ public class AssetMgr extends AssetMgrBase {
 
                             resourceMap.put("id", xResource.getId());
                             resourceMap.put("topology_name", xResource.getTopologies()) ;
-                            resourceMap.put("policyStatus", XACommonEnums
+                            resourceMap.put("policyStatus", RangerCommonEnums
                                             .getLabelFor_ActiveStatus(xResource
                                                             .getResourceStatus()));
                             if (xResource.getIsEncrypt() == 1) {
@@ -1094,7 +1091,7 @@ public class AssetMgr extends AssetMgrBase {
                                     resourceMap.put("encrypt", 0);
                             }
                             populatePermMap(xResource, resourceMap, AppConstants.ASSET_STORM);
-                            List<XXAuditMap> xAuditMaps = xADaoManager.getXXAuditMap()
+                            List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
                                             .findByResourceId(xResource.getId());
                             if (xAuditMaps.size() != 0) {
                                     resourceMap.put("audit", 1);
@@ -1285,14 +1282,14 @@ public class AssetMgr extends AssetMgrBase {
 		vXResource = xResourceService.createResource(vXResource);
 
 		if (userName != null && !userName.isEmpty()) {
-			XXUser xxUser = xADaoManager.getXXUser().findByUserName(userName);
+			XXUser xxUser = rangerDaoManager.getXXUser().findByUserName(userName);
 			VXUser vXUser;
 			if (xxUser != null) {
 				vXUser = xUserService.populateViewBean(xxUser);
 			} else {
 				vXUser = new VXUser();
 				vXUser.setName(userName);
-				vXUser.setUserSource(XACommonEnums.USER_EXTERNAL);
+				vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 				vXUser=xUserMgr.createXUser(vXUser);
 				//vXUser = xUserService.createResource(vXUser);
 			}
@@ -1366,10 +1363,10 @@ public class AssetMgr extends AssetMgrBase {
 				defaultConfig=xAssetService.getConfigWithEncryptedPassword(defaultConfig,true);
 				vXAsset.setConfig(defaultConfig);
 			}
-			XXAsset xAsset = xADaoManager.getXXAsset()
+			XXAsset xAsset = rangerDaoManager.getXXAsset()
 					.getById(vXAsset.getId());
 			
-			if (xAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+			if (xAsset.getActiveStatus() == RangerCommonEnums.STATUS_DELETED) {
 				logger.error("Trying to update Asset which is soft deleted");
 				throw restErrorUtil.createRESTException(
 						"Repository that you want to update does not exist.",
@@ -1400,7 +1397,7 @@ public class AssetMgr extends AssetMgrBase {
 		if (usb != null && usb.isUserAdmin() && force) {
 			VXAsset vxAsset = xAssetService.readResource(id);
 			
-			if (vxAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+			if (vxAsset.getActiveStatus() == RangerCommonEnums.STATUS_DELETED) {
 				logger.error("Trying to delete Asset which is already soft deleted");
 				throw restErrorUtil.createRESTException(
 						"Repository not found or its already deleted, for Id : "
@@ -1416,7 +1413,7 @@ public class AssetMgr extends AssetMgrBase {
 					deleteXResource(resource.getId(), true);
 				}
 			}
-			vxAsset.setActiveStatus(XACommonEnums.STATUS_DELETED);
+			vxAsset.setActiveStatus(RangerCommonEnums.STATUS_DELETED);
 			xAssetService.updateResource(vxAsset);
 			List<XXTrxLog> trxLogList = xAssetService.getTransactionLog(
 					vxAsset, "delete");
@@ -1570,7 +1567,7 @@ public class AssetMgr extends AssetMgrBase {
 
 	public VXResponse testConfig(VXAsset vXAsset) {
 		
-		if (vXAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+		if (vXAsset.getActiveStatus() == RangerCommonEnums.STATUS_DELETED) {
 			logger.error("Trying to test Asset which is soft deleted");
 			throw restErrorUtil.createRESTException(
 					"Repository not found, Repository Name : " + vXAsset.getName(),
@@ -1592,7 +1589,7 @@ public class AssetMgr extends AssetMgrBase {
 		if (password != null && password.equals(hiddenPasswordString)) {
 			String assetName = vXAsset.getName();
 			if (assetName != null) {
-				XXAsset existingVXAsset = xADaoManager.getXXAsset()
+				XXAsset existingVXAsset = rangerDaoManager.getXXAsset()
 						.findByAssetName(assetName);
 				if (existingVXAsset != null
 						&& existingVXAsset.getConfig() != null) {
@@ -1968,7 +1965,7 @@ public class AssetMgr extends AssetMgrBase {
 	@SuppressWarnings("unchecked")
 	private HashMap<String, Object> populatePermMap(XXResource xResource,
 			HashMap<String, Object> resourceMap, int assetType) {
-		List<XXPermMap> xPermMapList = xADaoManager.getXXPermMap()
+		List<XXPermMap> xPermMapList = rangerDaoManager.getXXPermMap()
 				.findByResourceId(xResource.getId());
 
 		Set<Long> groupList = new HashSet<Long>();
@@ -1993,7 +1990,7 @@ public class AssetMgr extends AssetMgrBase {
 						if (groupId != null) {
 							Set<String> groups = (Set<String>) sortedPermMap
 									.get("groups");
-							XXGroup xGroup = xADaoManager.getXXGroup()
+							XXGroup xGroup = rangerDaoManager.getXXGroup()
 									.getById(groupId);
 							if(xGroup!=null && groups != null){
 								groups.add(xGroup.getName());
@@ -2002,7 +1999,7 @@ public class AssetMgr extends AssetMgrBase {
 						} else if (userId != null) {
 							Set<String> users = (Set<String>) sortedPermMap
 									.get("users");
-							XXUser xUser = xADaoManager.getXXUser().getById(
+							XXUser xUser = rangerDaoManager.getXXUser().getById(
 									userId);
 							if (users != null && xUser != null) {
 								users.add(xUser.getName());
@@ -2043,14 +2040,14 @@ public class AssetMgr extends AssetMgrBase {
 
 					if (groupId != null) {
 						Set<String> groupSet = new HashSet<String>();
-						XXGroup xGroup = xADaoManager.getXXGroup().getById(
+						XXGroup xGroup = rangerDaoManager.getXXGroup().getById(
 								xPermMap.getGroupId());
 						String group = xGroup.getName();
 						groupSet.add(group);
 						sortedPermMap.put("groups", groupSet);
 					} else if (userId != null) {
 						Set<String> userSet = new HashSet<String>();
-						XXUser xUser = xADaoManager.getXXUser()
+						XXUser xUser = rangerDaoManager.getXXUser()
 								.getById(userId);
 						String user = xUser.getName();
 						userSet.add(user);
@@ -2095,7 +2092,7 @@ public class AssetMgr extends AssetMgrBase {
 	public void UpdateDefaultPolicyUserAndPerm(VXResource vXResource,
 			String userName) {
 		if (userName != null && !userName.isEmpty()) {
-			XXUser xxUser = xADaoManager.getXXUser().findByUserName(userName);
+			XXUser xxUser = rangerDaoManager.getXXUser().findByUserName(userName);
 			VXUser vXUser;
 			if (xxUser != null) {
 				vXUser = xUserService.populateViewBean(xxUser);
@@ -2108,7 +2105,7 @@ public class AssetMgr extends AssetMgrBase {
 			}
 			// fetch old permission and consider only one permission for default
 			// policy
-			List<XXPermMap> xxPermMapList = xADaoManager.getXXPermMap()
+			List<XXPermMap> xxPermMapList = rangerDaoManager.getXXPermMap()
 					.findByResourceId(vXResource.getId());
 			VXPermMap vXPermMap = null;
 			if (xxPermMapList != null && xxPermMapList.size() != 0) {
@@ -2136,17 +2133,17 @@ public class AssetMgr extends AssetMgrBase {
 		List<XXResource> xxResourceList = new ArrayList<XXResource>();
 		if (assetType == AppConstants.ASSET_HDFS) {
 			resourceName = "/*";
-			xxResourceList = xADaoManager.getXXResource()
+			xxResourceList = rangerDaoManager.getXXResource()
 					.findByResourceNameAndAssetIdAndRecursiveFlag(resourceName,
 							assetId, AppConstants.BOOL_TRUE);
 		} else if (assetType == AppConstants.ASSET_HIVE) {
 			resourceName = "/*/*/*";
-			xxResourceList = xADaoManager.getXXResource()
+			xxResourceList = rangerDaoManager.getXXResource()
 					.findByResourceNameAndAssetIdAndResourceType(resourceName,
 							assetId, AppConstants.RESOURCE_UNKNOWN);
 		} else if (assetType == AppConstants.ASSET_HBASE) {
 			resourceName = "/*/*/*";
-			xxResourceList = xADaoManager.getXXResource()
+			xxResourceList = rangerDaoManager.getXXResource()
 					.findByResourceNameAndAssetIdAndResourceType(resourceName,
 							assetId, AppConstants.RESOURCE_UNKNOWN);
 		}
@@ -2184,7 +2181,7 @@ public class AssetMgr extends AssetMgrBase {
 								return null;
 							}
 						}
-						return xADaoManager.getXXPolicyExportAudit().create(
+						return rangerDaoManager.getXXPolicyExportAudit().create(
 								xXPolicyExportAudit);
 					}
 				});
@@ -2216,7 +2213,7 @@ public class AssetMgr extends AssetMgrBase {
 				searchCriteria.getParamList().put("endDate", temp);
 			}
 			if (searchCriteria.getParamList().containsKey("owner")) {
-				XXPortalUser xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(
+				XXPortalUser xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(
 						(searchCriteria.getParamList().get("owner").toString()));
 				if(xXPortalUser!=null){
 					searchCriteria.getParamList().put("owner", xXPortalUser.getId());
@@ -2268,7 +2265,7 @@ public class AssetMgr extends AssetMgrBase {
 	}
 
 	public VXTrxLogList getTransactionReport(String transactionId) {
-		List<XXTrxLog> xTrxLogList = xADaoManager.getXXTrxLog()
+		List<XXTrxLog> xTrxLogList = rangerDaoManager.getXXTrxLog()
 				.findByTransactionId(transactionId);
 		VXTrxLogList vXTrxLogList = new VXTrxLogList();
 		List<VXTrxLog> vXTrxLogs = vXTrxLogList.getVXTrxLogs();
@@ -2362,7 +2359,7 @@ public class AssetMgr extends AssetMgrBase {
 		VXAsset vXAsset=null;
 		if (currentUserSession.isUserAdmin()) {
 			vXAsset = xAssetService.readResource(id);
-			if (vXAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+			if (vXAsset.getActiveStatus() == RangerCommonEnums.STATUS_DELETED) {
 				logger.error("Trying to read Asset which is soft deleted");
 				throw restErrorUtil.createRESTException(
 						"Repository not found for this Id : " + id,
@@ -2370,9 +2367,9 @@ public class AssetMgr extends AssetMgrBase {
 						"Repository does not exist for this Id : " + id);
 			}
 		}else{			
-			XXAsset  xXAsset=xADaoManager.getXXAsset().getById(id);	
+			XXAsset  xXAsset=rangerDaoManager.getXXAsset().getById(id);	
 			
-			if (xXAsset.getActiveStatus() == XACommonEnums.STATUS_DELETED) {
+			if (xXAsset.getActiveStatus() == RangerCommonEnums.STATUS_DELETED) {
 				logger.error("Trying to read Asset which is soft deleted");
 				throw restErrorUtil.createRESTException(
 						"Repository not found for this Id : " + id,
@@ -2381,13 +2378,13 @@ public class AssetMgr extends AssetMgrBase {
 			}
 			
 			vXAsset=xAssetService.populateViewBean(xXAsset);
-			/*List<XXResource>  xXResourceList=xADaoManager
+			/*List<XXResource>  xXResourceList=rangerDaoManager
 					.getXXResource().findByAssetId(id);
 			for (XXResource xXResource : xXResourceList) {
 				VXResponse vXResponse = xaBizUtil.hasPermission(xResourceService.populateViewBean(xXResource), 
 						AppConstants.XA_PERM_TYPE_ADMIN);
 				if(vXResponse.getStatusCode() == VXResponse.STATUS_SUCCESS){
-					XXAsset  xXAsset=xADaoManager.getXXAsset().getById(id);		
+					XXAsset  xXAsset=rangerDaoManager.getXXAsset().getById(id);		
 					vXAsset=xAssetService.populateViewBean(xXAsset);
 					break;
 				}
@@ -2419,14 +2416,14 @@ public class AssetMgr extends AssetMgrBase {
 		}
 		vXResource = xResourceService.createResource(vXResource);
 		if (userName != null && !userName.isEmpty()) {
-			XXUser xxUser = xADaoManager.getXXUser().findByUserName(userName);
+			XXUser xxUser = rangerDaoManager.getXXUser().findByUserName(userName);
 			VXUser vXUser;
 			if (xxUser != null) {
 				vXUser = xUserService.populateViewBean(xxUser);
 			} else {
 				vXUser = new VXUser();
 				vXUser.setName(userName);
-				vXUser.setUserSource(XACommonEnums.USER_EXTERNAL);
+				vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 				vXUser=xUserMgr.createXUser(vXUser);
 				//vXUser = xUserService.createResource(vXUser);
 			}
@@ -2468,13 +2465,13 @@ public class AssetMgr extends AssetMgrBase {
 			throw restErrorUtil.createRESTException("Unauthorized access.",
 					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
 		}
-		XXAsset xAsset = xADaoManager.getXXAsset().findByAssetName(repository);
+		XXAsset xAsset = rangerDaoManager.getXXAsset().findByAssetName(repository);
 		if(xAsset==null){
 			logger.error("Requested repository not found");
 			throw restErrorUtil.createRESTException("No Data Found.",
 					MessageEnums.DATA_NOT_FOUND);
 		}
-		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){
+		if(xAsset.getActiveStatus()==RangerCommonEnums.ACT_STATUS_DISABLED){
 			logger.error("Requested repository is disabled");
 			throw restErrorUtil.createRESTException("Unauthorized access.",
 					MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
@@ -2538,25 +2535,25 @@ public class AssetMgr extends AssetMgrBase {
 		}
 		
 		//checks user exists or not
-		XXUser xUser = xADaoManager.getXXUser().findByUserName(vXResource.getOwner());		
+		XXUser xUser = rangerDaoManager.getXXUser().findByUserName(vXResource.getOwner());		
 		if(xUser==null){
 			throw restErrorUtil.createRESTException("User " +vXResource.getOwner() + " is Not Found",
 					MessageEnums.DATA_NOT_FOUND);
 		}	
-		XXPortalUser xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(vXResource.getOwner());
+		XXPortalUser xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(vXResource.getOwner());
 		if(xXPortalUser==null){
 			throw restErrorUtil.createRESTException("User " +vXResource.getOwner() + " is Not Found",
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		//checks repository exists or not
-		XXAsset xAsset = xADaoManager.getXXAsset().findByAssetName(vXResource.getAssetName());
+		XXAsset xAsset = rangerDaoManager.getXXAsset().findByAssetName(vXResource.getAssetName());
 		if (xAsset == null) {
 			logger.error("Repository not found for asset : " + vXResource.getAssetName());
 			throw restErrorUtil.createRESTException("Repository for which"
 					+ " the policy is created, doesn't exist.",MessageEnums.DATA_NOT_FOUND);
 		}	
 		//checks repository active or not
-		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){			
+		if(xAsset.getActiveStatus()==RangerCommonEnums.ACT_STATUS_DISABLED){			
 				logger.error("Trying to create/update policy in disabled repository");
 				throw restErrorUtil.createRESTException("Resource "
 						+ "creation/updation not allowed in disabled repository",MessageEnums.OPER_NO_PERMISSION);
@@ -2589,13 +2586,13 @@ public class AssetMgr extends AssetMgrBase {
 		}
 		
 		//checks user is admin in resource or not
-		List<XXResource> xResourceList=xADaoManager.getXXResource().findByAssetId(xAsset.getId());		
+		List<XXResource> xResourceList=rangerDaoManager.getXXResource().findByAssetId(xAsset.getId());		
 		if(xResourceList!=null){
 			boolean isAdmin=false;
-			List<XXPortalUserRole> xXPortalUserRoleList = xADaoManager.getXXPortalUserRole().findByParentId(xXPortalUser.getId());
+			List<XXPortalUserRole> xXPortalUserRoleList = rangerDaoManager.getXXPortalUserRole().findByParentId(xXPortalUser.getId());
 			if(xXPortalUserRoleList!=null && xXPortalUserRoleList.size()>0){
 				for(XXPortalUserRole xXPortalUserRole: xXPortalUserRoleList){
-					if(xXPortalUserRole.getUserRole().equalsIgnoreCase(XAConstants.ROLE_SYS_ADMIN)){
+					if(xXPortalUserRole.getUserRole().equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN)){
 						isAdmin=true;
 						break;
 					}
@@ -2703,7 +2700,7 @@ public class AssetMgr extends AssetMgrBase {
 			}
 			if(vXPermMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_USER){
 				if(vXPermMapTemp.getUserId()==null && !stringUtil.isEmpty(vXPermMapTemp.getUserName())){
-					xxUser = xADaoManager.getXXUser().findByUserName(vXPermMapTemp.getUserName());
+					xxUser = rangerDaoManager.getXXUser().findByUserName(vXPermMapTemp.getUserName());
 					if (xxUser != null) {
 						vXPermMapTemp.setUserId(xxUser.getId());
 					} else{
@@ -2714,7 +2711,7 @@ public class AssetMgr extends AssetMgrBase {
 			}
 			if(vXPermMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
 				if(vXPermMapTemp.getGroupId()==null && !stringUtil.isEmpty(vXPermMapTemp.getGroupName())){
-					xxGroup = xADaoManager.getXXGroup().findByGroupName(
+					xxGroup = rangerDaoManager.getXXGroup().findByGroupName(
 							vXPermMapTemp.getGroupName());
 					if (xxGroup != null) {
 						vXPermMapTemp.setGroupId(xxGroup.getId());
@@ -2759,7 +2756,7 @@ public class AssetMgr extends AssetMgrBase {
 		if(vXResourceList!=null && vXResourceList.getListSize()>0){					
 			//replace perm map if true
 			if(vXPolicy.isReplacePerm()){
-				XXResource xXResource = xADaoManager.getXXResource().getById(vXResource.getId());
+				XXResource xXResource = rangerDaoManager.getXXResource().getById(vXResource.getId());
 				VXResource vXResourceDBObj=xResourceService.populateViewBean(xXResource);
 				List<XXTrxLog> trxLogListDelete = xResourceService.getTransactionLog(
 						vXResourceDBObj, xXResource, "delete");
@@ -2806,7 +2803,7 @@ public class AssetMgr extends AssetMgrBase {
 		
 		//update case
 		if(vXResourceList!=null && vXResourceList.getListSize()>0){
-			XXResource xXResource = xADaoManager.getXXResource().getById(vXResource.getId());
+			XXResource xXResource = rangerDaoManager.getXXResource().getById(vXResource.getId());
 			vXResource.setCreateDate(xXResource.getCreateTime());
 			vXResource.setUpdateDate(xXResource.getUpdateTime());
 			trxLogList = xResourceService.getTransactionLog(vXResource, xXResource, "update");
@@ -2912,26 +2909,26 @@ public class AssetMgr extends AssetMgrBase {
 			return vXResource;
 		}
 		//checks user exists or not
-		XXUser xUser = xADaoManager.getXXUser().findByUserName(vXResource.getOwner());		
+		XXUser xUser = rangerDaoManager.getXXUser().findByUserName(vXResource.getOwner());		
 		if(xUser==null){
 			throw restErrorUtil.createRESTException("User " +vXResource.getOwner() + " is Not Found",
 					MessageEnums.DATA_NOT_FOUND);
 		}
-		XXPortalUser xXPortalUser= xADaoManager.getXXPortalUser().findByLoginId(vXResource.getOwner());		
+		XXPortalUser xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(vXResource.getOwner());		
 		if(xXPortalUser==null){
 			throw restErrorUtil.createRESTException("User " +vXResource.getOwner() + " is Not Found",
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		
 		//checks repository exists or not
-		XXAsset xAsset = xADaoManager.getXXAsset().findByAssetName(vXResource.getAssetName());
+		XXAsset xAsset = rangerDaoManager.getXXAsset().findByAssetName(vXResource.getAssetName());
 		if (xAsset == null) {
 			logger.error("Repository not found for asset : " + vXResource.getAssetName());
 			throw restErrorUtil.createRESTException("Repository for which"
 					+ " the policy is created, doesn't exist.",MessageEnums.DATA_NOT_FOUND);
 		}	
 		//checks repository active or not
-		if(xAsset.getActiveStatus()==XACommonEnums.ACT_STATUS_DISABLED){			
+		if(xAsset.getActiveStatus()==RangerCommonEnums.ACT_STATUS_DISABLED){			
 				logger.error("Trying to delete policy in disabled repository");
 				throw restErrorUtil.createRESTException("revoke "
 						+ " not allowed in disabled repository",MessageEnums.OPER_NO_PERMISSION);
@@ -2990,13 +2987,13 @@ public class AssetMgr extends AssetMgrBase {
 		}
 		
 		//checks grantor is admin in resource or not
-		List<XXPortalUserRole> xXPortalUserRoleList = xADaoManager.getXXPortalUserRole().findByParentId(xXPortalUser.getId());
-		List<XXResource> xResourceList=xADaoManager.getXXResource().findByAssetId(xAsset.getId());		
+		List<XXPortalUserRole> xXPortalUserRoleList = rangerDaoManager.getXXPortalUserRole().findByParentId(xXPortalUser.getId());
+		List<XXResource> xResourceList=rangerDaoManager.getXXResource().findByAssetId(xAsset.getId());		
 		if(xResourceList!=null){
 			boolean isAdmin=false;
 			if(xXPortalUserRoleList!=null && xXPortalUserRoleList.size()>0){
 				for(XXPortalUserRole xXPortalUserRole: xXPortalUserRoleList){
-					if(xXPortalUserRole.getUserRole().equalsIgnoreCase(XAConstants.ROLE_SYS_ADMIN)){
+					if(xXPortalUserRole.getUserRole().equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN)){
 						isAdmin=true;
 						break;
 					}
@@ -3052,7 +3049,7 @@ public class AssetMgr extends AssetMgrBase {
 				}
 				if(vXPermMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_USER){
 					if(vXPermMapTemp.getUserId()==null && !stringUtil.isEmpty(vXPermMapTemp.getUserName())){
-						xxUser = xADaoManager.getXXUser().findByUserName(vXPermMapTemp.getUserName());
+						xxUser = rangerDaoManager.getXXUser().findByUserName(vXPermMapTemp.getUserName());
 						if (xxUser != null) {
 							vXPermMapTemp.setUserId(xxUser.getId());
 						} else{
@@ -3063,7 +3060,7 @@ public class AssetMgr extends AssetMgrBase {
 				}
 				if(vXPermMapTemp.getPermFor()==AppConstants.XA_PERM_FOR_GROUP){
 					if(vXPermMapTemp.getGroupId()==null && !stringUtil.isEmpty(vXPermMapTemp.getGroupName())){
-						xxGroup = xADaoManager.getXXGroup().findByGroupName(
+						xxGroup = rangerDaoManager.getXXGroup().findByGroupName(
 								vXPermMapTemp.getGroupName());
 						if (xxGroup != null) {
 							vXPermMapTemp.setGroupId(xxGroup.getId());
@@ -3079,7 +3076,7 @@ public class AssetMgr extends AssetMgrBase {
 		vXResource.setPermMapList(permMapList);
 		
 		//permission deletion preprocessing
-		XXResource xResource = xADaoManager.getXXResource().getById(
+		XXResource xResource = rangerDaoManager.getXXResource().getById(
 				vXResource.getId());
 		vXResource.setCreateDate(xResource.getCreateTime());
 		vXResource.setUpdateDate(xResource.getUpdateTime());
@@ -3180,7 +3177,7 @@ public class AssetMgr extends AssetMgrBase {
 	
     public VXStringList getStormResources(final String dataSourceName,String topologyName) {
         VXStringList ret = null ;
-        XXAsset asset = xADaoManager.getXXAsset().findByAssetName(dataSourceName);
+        XXAsset asset = rangerDaoManager.getXXAsset().findByAssetName(dataSourceName);
         String config = asset.getConfig() ;
         if(!stringUtil.isEmpty(config)){
 			config=xAssetService.getConfigWithDecryptedPassword(config);

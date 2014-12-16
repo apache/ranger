@@ -23,13 +23,13 @@
 import javax.persistence.NoResultException;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.db.*;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUser;
 
 public class XXUserDao extends BaseDao<XXUser> {
 	static final Logger logger = Logger.getLogger(XXResourceDao.class);
 
-	public XXUserDao(XADaoManagerBase daoManager) {
+	public XXUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
 

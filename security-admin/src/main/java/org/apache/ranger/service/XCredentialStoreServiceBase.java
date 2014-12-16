@@ -26,10 +26,10 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.entity.XXCredentialStore;
+import org.apache.ranger.view.VXCredentialStore;
+import org.apache.ranger.view.VXCredentialStoreList;
 
 public abstract class XCredentialStoreServiceBase<T extends XXCredentialStore, V extends VXCredentialStore>
 		extends AbstractBaseResourceService<T, V> {

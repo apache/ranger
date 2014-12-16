@@ -25,13 +25,13 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.db.*;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTrxLog;
 
 public class XXTrxLogDao extends BaseDao<XXTrxLog> {
 	private static Logger logger = Logger.getLogger(XXTrxLogDao.class);
 	
-    public XXTrxLogDao( XADaoManagerBase daoManager ) {
+    public XXTrxLogDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
     }
     

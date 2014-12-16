@@ -37,14 +37,14 @@ import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.XAConstants;
-import org.apache.ranger.common.XASearchUtil;
-import org.apache.ranger.common.annotation.XAAnnotationClassName;
-import org.apache.ranger.common.annotation.XAAnnotationJSMgrName;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.common.annotation.RangerAnnotationClassName;
+import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.service.AbstractBaseResourceService;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.service.XPolicyService;
@@ -70,13 +70,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Path("public")
 @Component
 @Scope("request")
-@XAAnnotationJSMgrName("PublicMgr")
+@RangerAnnotationJSMgrName("PublicMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PublicAPIs {
 	static Logger logger = Logger.getLogger(PublicAPIs.class);
 
 	@Autowired
-	XASearchUtil searchUtil;
+	RangerSearchUtil searchUtil;
 
 	@Autowired
 	AssetMgr assetMgr;
@@ -100,7 +100,7 @@ public class PublicAPIs {
 	StringUtil stringUtil;
 
 	@Autowired
-	XADaoManager xaDaoMgr;
+	RangerDaoManager xaDaoMgr;
 
 	@GET
 	@Path("/api/repository/{id}")
@@ -133,7 +133,7 @@ public class PublicAPIs {
 	@DELETE
 	@Path("/api/repository/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXAsset.class)
+	@RangerAnnotationClassName(class_name = VXAsset.class)
 	public void deleteRepository(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 
@@ -182,8 +182,8 @@ public class PublicAPIs {
 				request, xAssetService.sortFields);
 
         ArrayList<Integer> valueList = new ArrayList<Integer>();
-        valueList.add(XAConstants.STATUS_DISABLED);
-        valueList.add(XAConstants.STATUS_ENABLED);
+        valueList.add(RangerConstants.STATUS_DISABLED);
+        valueList.add(RangerConstants.STATUS_ENABLED);
         searchCriteria.addParam("status", valueList);
 
 		return assetMgr.getXAssetSearchCount(searchCriteria);
@@ -224,7 +224,7 @@ public class PublicAPIs {
 	@DELETE
 	@Path("/api/policy/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@XAAnnotationClassName(class_name = VXResource.class)
+	@RangerAnnotationClassName(class_name = VXResource.class)
 	public void deletePolicy(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		String forceStr = request.getParameter("force");
@@ -272,8 +272,8 @@ public class PublicAPIs {
 			boolean isRecursiveBool = restErrorUtil.parseBoolean(isRec,
 					"Invalid value for " + "isRecursive",
 					MessageEnums.INVALID_INPUT_DATA, null, "isRecursive");
-			int isRecursive = (isRecursiveBool == true) ? XAConstants.BOOL_TRUE
-					: XAConstants.BOOL_FALSE;
+			int isRecursive = (isRecursiveBool == true) ? RangerConstants.BOOL_TRUE
+					: RangerConstants.BOOL_FALSE;
 			searchCriteria.getParamList().put("isRecursive", isRecursive);
 		}
 			
@@ -285,14 +285,14 @@ public class PublicAPIs {
 		String resStatus = request.getParameter("isEnabled");
 		List<Integer> resList = new ArrayList<Integer>();
 		if (stringUtil.isEmpty(resStatus)) {
-			resList.add(XACommonEnums.STATUS_ENABLED);
-			resList.add(XACommonEnums.STATUS_DISABLED);
+			resList.add(RangerCommonEnums.STATUS_ENABLED);
+			resList.add(RangerCommonEnums.STATUS_DISABLED);
 		} else {
 			boolean policyStatus = restErrorUtil.parseBoolean(resStatus,
 					"Invalid value for " + "isEnabled",
 					MessageEnums.INVALID_INPUT_DATA, null, "isEnabled");
-			int policyStat = (policyStatus) ? XACommonEnums.STATUS_ENABLED
-					: XACommonEnums.STATUS_DISABLED;
+			int policyStat = (policyStatus) ? RangerCommonEnums.STATUS_ENABLED
+					: RangerCommonEnums.STATUS_DISABLED;
 			resList.add(policyStat);
 		}
 		searchCriteria.getParamList().put("resourceStatus", resList);

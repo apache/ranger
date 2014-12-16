@@ -24,14 +24,14 @@
  * 
  */
 
-import java.util.*;
+import java.util.Date;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.view.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.json.JsonDateSerializer;
-import org.apache.ranger.view.*;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -53,7 +53,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	 * Access Result
 	 * This attribute is of type enum CommonEnums::AccessResult
 	 */
-	protected int accessResult = XAConstants.ACCESS_RESULT_DENIED;
+	protected int accessResult = RangerConstants.ACCESS_RESULT_DENIED;
 	/**
 	 * Access Type
 	 */
@@ -124,7 +124,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXAccessAudit ( ) {
-		accessResult = XAConstants.ACCESS_RESULT_DENIED;
+		accessResult = RangerConstants.ACCESS_RESULT_DENIED;
 	}
 
 	/**

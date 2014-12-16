@@ -28,12 +28,16 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.XACommonEnums;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.util.XAEnumUtil;
-import org.apache.ranger.view.*;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXAsset;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXGroupUser;
+import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.util.RangerEnumUtil;
+import org.apache.ranger.view.VXGroupUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -46,10 +50,10 @@ public class XGroupUserService extends
 	public static Long createdByUserId = 1L;
 	
 	@Autowired
-	XADaoManager xADaoManager;
+	RangerDaoManager rangerDaoManager;
 
 	@Autowired
-	XAEnumUtil xaEnumUtil;
+	RangerEnumUtil xaEnumUtil;
 	
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	static {
@@ -84,7 +88,7 @@ public class XGroupUserService extends
 		XXGroup xGroup = daoManager.getXXGroup().findByGroupName(vxGroupUser.getName());
 		vxGroupUser.setParentGroupId(xGroup.getId());
 		xxGroupUser = mapViewToEntityBean(vxGroupUser, xxGroupUser, 0);
-		XXPortalUser xXPortalUser = xADaoManager.getXXPortalUser().getById(createdByUserId);
+		XXPortalUser xXPortalUser = rangerDaoManager.getXXPortalUser().getById(createdByUserId);
 		if (xXPortalUser != null) {
 			xxGroupUser.setAddedByUserId(createdByUserId);
 			xxGroupUser.setUpdatedByUserId(createdByUserId);
@@ -117,11 +121,11 @@ public class XGroupUserService extends
 //		}
 		
 		Long groupId = vObj.getParentGroupId();
-		XXGroup xGroup = xADaoManager.getXXGroup().getById(groupId);
+		XXGroup xGroup = rangerDaoManager.getXXGroup().getById(groupId);
 		String groupName = xGroup.getName();
 
 		Long userId = vObj.getUserId();
-		XXUser xUser = xADaoManager.getXXUser().getById(userId);
+		XXUser xUser = rangerDaoManager.getXXUser().getById(userId);
 		String userName = xUser.getName();
 
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
@@ -148,7 +152,7 @@ public class XGroupUserService extends
 					value = xaEnumUtil.getLabel(enumName, enumValue);
 				} else {
 					value = ""+field.get(vObj);
-					XXGroup xXGroup = xADaoManager.getXXGroup().getById(Long.parseLong(value));
+					XXGroup xXGroup = rangerDaoManager.getXXGroup().getById(Long.parseLong(value));
 					value = xXGroup.getName();
 				}
 				

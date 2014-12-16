@@ -29,17 +29,17 @@ import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.HTTPUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.XAConstants;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.apache.ranger.security.context.XAContextHolder;
-import org.apache.ranger.security.context.XASecurityContext;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.service.AuthSessionService;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXAuthSession;
@@ -63,7 +63,7 @@ public class SessionMgr {
 	RESTErrorUtil restErrorUtil;
 	
 	@Autowired
-	XADaoManager daoManager;
+	RangerDaoManager daoManager;
 
 	@Autowired
 	AuthSessionService authSessionService;
@@ -87,7 +87,7 @@ public class SessionMgr {
 		boolean newSessionCreation = true;
 		UserSessionBase userSession = null;
 
-		XASecurityContext context = XAContextHolder.getSecurityContext();
+		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 		if (context != null) {
 			userSession = context.getUserSession();
 		}
@@ -177,7 +177,7 @@ public class SessionMgr {
 			String userRole = gjUserRole.getUserRole();
 
 			strRoleList.add(userRole);
-			if (userRole.equals(XAConstants.ROLE_SYS_ADMIN)) {
+			if (userRole.equals(RangerConstants.ROLE_SYS_ADMIN)) {
 				userSession.setUserAdmin(true);
 			}
 		}
@@ -192,7 +192,7 @@ public class SessionMgr {
 		gjAuthSession.setAuthTime(DateUtil.getUTCDate());
 		gjAuthSession.setAuthStatus(authStatus);
 		gjAuthSession.setAuthType(authType);
-		gjAuthSession.setDeviceType(XACommonEnums.DEVICE_UNKNOWN);
+		gjAuthSession.setDeviceType(RangerCommonEnums.DEVICE_UNKNOWN);
 		gjAuthSession.setExtSessionId(sessionId);
 		gjAuthSession.setRequestIP(remoteAddr);
 		gjAuthSession.setRequestUserAgent(null);
@@ -246,7 +246,7 @@ public class SessionMgr {
 		gjAuthSession.setAuthTime(DateUtil.getUTCDate());
 		gjAuthSession.setAuthStatus(XXAuthSession.AUTH_STATUS_SUCCESS);
 		gjAuthSession.setAuthType(authType);
-		gjAuthSession.setDeviceType(XACommonEnums.DEVICE_UNKNOWN);
+		gjAuthSession.setDeviceType(RangerCommonEnums.DEVICE_UNKNOWN);
 		gjAuthSession.setExtSessionId(null);
 		gjAuthSession.setRequestIP(ipAddress);
 		gjAuthSession.setRequestUserAgent(null);
@@ -258,9 +258,9 @@ public class SessionMgr {
 		userSession.setXXAuthSession(gjAuthSession);
 
 		// create context with user-session and set in thread-local
-		XASecurityContext context = new XASecurityContext();
+		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(userSession);
-		XAContextHolder.setSecurityContext(context);
+		RangerContextHolder.setSecurityContext(context);
 
 		resetUserSessionForProfiles(userSession);
 

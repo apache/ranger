@@ -24,8 +24,6 @@ import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.view.ViewBaseBean;
 
 @XmlRootElement
 public class VTrxLogAttr extends ViewBaseBean implements Serializable{

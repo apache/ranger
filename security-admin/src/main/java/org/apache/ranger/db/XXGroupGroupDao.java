@@ -19,13 +19,12 @@
 
  package org.apache.ranger.db;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.db.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXGroupGroup;
 
 public class XXGroupGroupDao extends BaseDao<XXGroupGroup> {
 
-    public XXGroupGroupDao( XADaoManagerBase daoManager ) {
+    public XXGroupGroupDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
     }
 }

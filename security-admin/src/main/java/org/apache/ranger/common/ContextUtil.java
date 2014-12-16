@@ -19,8 +19,8 @@
 
  package org.apache.ranger.common;
 
-import org.apache.ranger.security.context.XAContextHolder;
-import org.apache.ranger.security.context.XASecurityContext;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 
 public class ContextUtil {
 
@@ -31,7 +31,7 @@ public class ContextUtil {
 	}
 
 	public static Long getCurrentUserId() {
-		XASecurityContext context = XAContextHolder.getSecurityContext();
+		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 		if (context != null) {
 			UserSessionBase userSession = context.getUserSession();
 			if (userSession != null) {
@@ -42,7 +42,7 @@ public class ContextUtil {
 	}
 
 	public static String getCurrentUserPublicName() {
-		XASecurityContext context = XAContextHolder.getSecurityContext();
+		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 		if (context != null) {
 			UserSessionBase userSession = context.getUserSession();
 			if (userSession != null) {
@@ -55,7 +55,7 @@ public class ContextUtil {
 
 	public static UserSessionBase getCurrentUserSession() {
 		UserSessionBase userSession = null;
-		XASecurityContext context = XAContextHolder.getSecurityContext();
+		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 		if (context != null) {
 			userSession = context.getUserSession();
 		}
@@ -63,7 +63,7 @@ public class ContextUtil {
 	}
 
 	public static RequestContext getCurrentRequestContext() {
-		XASecurityContext context = XAContextHolder.getSecurityContext();
+		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 		if (context != null) {
 			return context.getRequestContext();
 		}
@@ -71,7 +71,7 @@ public class ContextUtil {
 	}
 
 	public static String getCurrentUserLoginId() {
-		XASecurityContext context = XAContextHolder.getSecurityContext();
+		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 		if (context != null) {
 			UserSessionBase userSession = context.getUserSession();
 			if (userSession != null) {

@@ -26,8 +26,8 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXDBBase;
-import org.apache.ranger.security.context.XAContextHolder;
-import org.apache.ranger.security.context.XASecurityContext;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 
 public class JPABeanCallbacks {
 	static final Logger logger = Logger.getLogger(JPABeanCallbacks.class);
@@ -40,7 +40,7 @@ public class JPABeanCallbacks {
 
 				entity.setUpdateTime(DateUtil.getUTCDate());
 
-				XASecurityContext context = XAContextHolder
+				RangerSecurityContext context = RangerContextHolder
 						.getSecurityContext();
 				if (context != null) {
 					UserSessionBase userSession = context.getUserSession();

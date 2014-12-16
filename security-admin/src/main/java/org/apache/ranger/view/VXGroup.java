@@ -24,15 +24,10 @@
  *
  */
 
-import java.util.*;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.persistence.Column;
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.view.*;
-import org.apache.ranger.json.JsonDateSerializer;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -60,7 +55,7 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
 	 */
 	protected int groupType = AppConstants.XA_GROUP_UNKNOWN;
 	
-	protected int groupSource = XACommonEnums.GROUP_INTERNAL;
+	protected int groupSource = RangerCommonEnums.GROUP_INTERNAL;
 	/**
 	 * Id of the credential store
 	 */

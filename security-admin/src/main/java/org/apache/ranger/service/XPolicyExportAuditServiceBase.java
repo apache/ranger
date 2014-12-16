@@ -26,10 +26,10 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.entity.XXPolicyExportAudit;
+import org.apache.ranger.view.VXPolicyExportAudit;
+import org.apache.ranger.view.VXPolicyExportAuditList;
 
 public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudit, V extends VXPolicyExportAudit>
 		extends AbstractBaseResourceService<T, V> {

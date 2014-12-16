@@ -23,11 +23,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XASearchUtil;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.rest.PublicAPIs;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.service.AbstractBaseResourceService;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.service.XPolicyService;
@@ -63,7 +62,7 @@ public class TestPublicAPIs {
 	PublicAPIs publicAPIs = new PublicAPIs();
 
 	@Mock
-	XASearchUtil searchUtil;
+	RangerSearchUtil searchUtil;
 
 	@Mock
 	AssetMgr assetMgr;
@@ -87,7 +86,7 @@ public class TestPublicAPIs {
 	StringUtil stringUtil;
 
 	@Mock
-	XADaoManager xaDaoMgr;
+	RangerDaoManager xaDaoMgr;
 
 	@Test
 	public void testGetRepository(){

@@ -19,13 +19,12 @@
 
  package org.apache.ranger.db;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.db.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXCredentialStore;
 
 public class XXCredentialStoreDao extends BaseDao<XXCredentialStore> {
 
-    public XXCredentialStoreDao( XADaoManagerBase daoManager ) {
+    public XXCredentialStoreDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
     }
 }

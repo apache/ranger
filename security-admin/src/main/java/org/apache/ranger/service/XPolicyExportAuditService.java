@@ -20,12 +20,12 @@
  package org.apache.ranger.service;
 
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.entity.XXPolicyExportAudit;
+import org.apache.ranger.view.VXPolicyExportAudit;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 

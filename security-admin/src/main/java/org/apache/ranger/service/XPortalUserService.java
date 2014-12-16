@@ -27,9 +27,11 @@ import java.util.List;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.util.XAEnumUtil;
-import org.apache.ranger.view.*;
+import org.apache.ranger.entity.XXAsset;
+import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.util.RangerEnumUtil;
+import org.apache.ranger.view.VXPortalUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -40,7 +42,7 @@ public class XPortalUserService extends
 		XPortalUserServiceBase<XXPortalUser, VXPortalUser> {
 
 	@Autowired
-	XAEnumUtil xaEnumUtil;
+	RangerEnumUtil xaEnumUtil;
 
 	@Autowired
 	StringUtil stringUtil;

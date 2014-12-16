@@ -19,9 +19,22 @@
 
  package org.apache.ranger.biz;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.service.XAssetService;
+import org.apache.ranger.service.XCredentialStoreService;
+import org.apache.ranger.service.XPolicyExportAuditService;
+import org.apache.ranger.service.XResourceService;
+import org.apache.ranger.view.VXAsset;
+import org.apache.ranger.view.VXAssetList;
+import org.apache.ranger.view.VXCredentialStore;
+import org.apache.ranger.view.VXCredentialStoreList;
+import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXPolicyExportAudit;
+import org.apache.ranger.view.VXPolicyExportAuditList;
+import org.apache.ranger.view.VXResource;
+import org.apache.ranger.view.VXResourceList;
 import org.springframework.beans.factory.annotation.Autowired;
 public class AssetMgrBase {
 

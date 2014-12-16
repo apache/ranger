@@ -26,11 +26,11 @@ import org.apache.log4j.Logger;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-public class XAUsernamePasswordAuthenticationFilter extends
+public class RangerUsernamePasswordAuthenticationFilter extends
 	UsernamePasswordAuthenticationFilter {
 
     static Logger logger = Logger
-	    .getLogger(XAUsernamePasswordAuthenticationFilter.class);
+	    .getLogger(RangerUsernamePasswordAuthenticationFilter.class);
 
     /*
      * (non-Javadoc)

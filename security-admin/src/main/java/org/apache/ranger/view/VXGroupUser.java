@@ -24,14 +24,9 @@
  *
  */
 
-import java.util.*;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.view.*;
-import org.apache.ranger.json.JsonDateSerializer;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.AppConstants;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;

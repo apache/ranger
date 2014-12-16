@@ -27,6 +27,6 @@ import java.lang.annotation.RetentionPolicy;
 
 
 @Retention(RetentionPolicy.RUNTIME)
-public @interface XAAnnotationClassName {
+public @interface RangerAnnotationClassName {
     public Class class_name();
 }

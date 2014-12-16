@@ -24,14 +24,12 @@
  * 
  */
 
-import java.util.*;
+import java.util.List;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.common.view.*;
-import org.apache.ranger.json.JsonDateSerializer;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerConstants;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -75,7 +73,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	 * Whether to encrypt this resource
 	 * This attribute is of type enum CommonEnums::BooleanValue
 	 */
-	protected int isEncrypt = XAConstants.BOOL_FALSE;
+	protected int isEncrypt = RangerConstants.BOOL_FALSE;
 	/**
 	 * List of permissions maps
 	 */
@@ -88,7 +86,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	 * Is recursive
 	 * This attribute is of type enum CommonEnums::BooleanValue
 	 */
-	protected int isRecursive = XAConstants.BOOL_NONE;
+	protected int isRecursive = RangerConstants.BOOL_NONE;
 	/**
 	 * Group to which this resource belongs to
 	 */
@@ -137,7 +135,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	 * Check parent permission
 	 * This attribute is of type enum CommonEnums::BooleanValue
 	 */
-	protected int checkParentPermission = XAConstants.BOOL_NONE;
+	protected int checkParentPermission = RangerConstants.BOOL_NONE;
 	/**
 	 * Topologoies
 	 */
@@ -152,9 +150,9 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	 */
 	public VXResource ( ) {
 		resourceType = AppConstants.RESOURCE_PATH;
-		isEncrypt = XAConstants.BOOL_FALSE;
-		isRecursive = XAConstants.BOOL_NONE;
-		checkParentPermission = XAConstants.BOOL_NONE;
+		isEncrypt = RangerConstants.BOOL_FALSE;
+		isRecursive = RangerConstants.BOOL_NONE;
+		checkParentPermission = RangerConstants.BOOL_NONE;
 	}
 
 	/**

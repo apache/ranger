@@ -26,30 +26,30 @@
 import java.io.Serializable;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.biz.XABizUtil;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.db.XADaoManager;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXDBBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class XADomainObjectSecurityHandler {
+public class RangerDomainObjectSecurityHandler {
 
 	public static Logger logger = Logger
-			.getLogger(XADomainObjectSecurityHandler.class);
+			.getLogger(RangerDomainObjectSecurityHandler.class);
 
 	@Autowired
-	public XADaoManager daoManager;
+	public RangerDaoManager daoManager;
 
 	@Autowired
-	XABizUtil msBizUtil;
+	RangerBizUtil msBizUtil;
 
 	boolean checkParentObject = false;
 
-	public XADomainObjectSecurityHandler() {
+	public RangerDomainObjectSecurityHandler() {
 		checkParentObject = PropertiesUtil.getBooleanProperty(
 				"xa.db.access.filter.check.parentobject", checkParentObject);
 	}
@@ -57,7 +57,7 @@ public class XADomainObjectSecurityHandler {
 	/**
 	 * @return the daoManager
 	 */
-	public XADaoManager getDaoManager() {
+	public RangerDaoManager getDaoManager() {
 		return daoManager;
 	}
 

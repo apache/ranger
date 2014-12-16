@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.common.XAConfigUtil;
+import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
@@ -42,18 +42,18 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
  * 
  *
  */
-public class XAAuthenticationEntryPoint extends
+public class RangerAuthenticationEntryPoint extends
 LoginUrlAuthenticationEntryPoint {
-    static Logger logger = Logger.getLogger(XAAuthenticationEntryPoint.class);
+    static Logger logger = Logger.getLogger(RangerAuthenticationEntryPoint.class);
     static int ajaxReturnCode = -1;
     
     @Autowired
-    XAConfigUtil configUtil;
+    RangerConfigUtil configUtil;
     
     @Autowired
     JSONUtil jsonUtil;
 
-    public XAAuthenticationEntryPoint() {
+    public RangerAuthenticationEntryPoint() {
 	super();
 	if (logger.isDebugEnabled()) {
 	    logger.debug("AjaxAwareAuthenticationEntryPoint(): constructor");

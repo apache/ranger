@@ -24,13 +24,16 @@
  * 
  */
 
-import java.util.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
-
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.RangerConstants;
 
 
 @Entity
@@ -81,13 +84,13 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="STATUS"  , nullable=false )
-	protected int status = XAConstants.STATUS_DISABLED;
+	protected int status = RangerConstants.STATUS_DISABLED;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public XXPortalUserRole ( ) {
-		status = XAConstants.STATUS_DISABLED;
+		status = RangerConstants.STATUS_DISABLED;
 	}
 
 	/**

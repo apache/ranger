@@ -19,11 +19,8 @@
 
  package org.apache.ranger.common;
 
-import java.util.*;
 
-import org.apache.ranger.common.*;
-
-public class AppConstants extends XACommonEnums {
+public class AppConstants extends RangerCommonEnums {
 
 	/***************************************************************
 	 * Enum values for AssetType

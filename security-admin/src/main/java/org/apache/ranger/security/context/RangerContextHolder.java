@@ -20,17 +20,26 @@
  /**
  *
  */
-package org.apache.ranger.common.annotation;
+package org.apache.ranger.security.context;
 
-import java.lang.annotation.*;
+public class RangerContextHolder {
 
-/**
- * Annotating the REST APIs
- *
- */
-@Retention(RetentionPolicy.RUNTIME)
-public @interface XAAnnotationRestAPI {
-    public String api_name() default "";
-    public boolean updates_generic_objects() default false;
-    public String updates_classes() default "";
+    private static final ThreadLocal<RangerSecurityContext> securityContextThreadLocal = new ThreadLocal<RangerSecurityContext>();
+
+    private RangerContextHolder() {
+
+    }
+
+    public static RangerSecurityContext getSecurityContext(){
+	return securityContextThreadLocal.get();
+    }
+
+    public static void setSecurityContext(RangerSecurityContext context){
+	securityContextThreadLocal.set(context);
+    }
+
+    public static void resetSecurityContext(){
+	securityContextThreadLocal.remove();
+    }
+
 }

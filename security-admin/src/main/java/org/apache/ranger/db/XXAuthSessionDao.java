@@ -28,7 +28,7 @@ import org.apache.ranger.entity.XXAuthSession;
 
 public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 
-    public XXAuthSessionDao( XADaoManagerBase daoManager ) {
+    public XXAuthSessionDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
     }
     

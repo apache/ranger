@@ -19,7 +19,6 @@ package org.apache.ranger.common;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.apache.ranger.common.DateUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

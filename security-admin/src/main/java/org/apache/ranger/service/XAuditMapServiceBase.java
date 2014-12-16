@@ -26,10 +26,10 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.*;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.view.*;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.entity.XXAuditMap;
+import org.apache.ranger.view.VXAuditMap;
+import org.apache.ranger.view.VXAuditMapList;
 
 public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAuditMap>
 		extends AbstractBaseResourceService<T, V> {

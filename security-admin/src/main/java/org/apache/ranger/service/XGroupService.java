@@ -24,21 +24,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.ranger.biz.*;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.XACommonEnums;
-import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.XADaoManager;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.service.*;
-import org.apache.ranger.util.XAEnumUtil;
-import org.apache.ranger.view.*;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXAsset;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.util.RangerEnumUtil;
+import org.apache.ranger.view.VXGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -50,10 +49,10 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	public static Long createdByUserId = 1L;
 	
 	@Autowired
-	XADaoManager xADaoManager;
+	RangerDaoManager rangerDaoManager;
 	
 	@Autowired
-	XAEnumUtil xaEnumUtil;
+	RangerEnumUtil xaEnumUtil;
 	
 	@Autowired
 	StringUtil stringUtil;
@@ -77,7 +76,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 
 	@Override
 	protected void validateForCreate(VXGroup vObj) {
-		XXGroup xxGroup = xADaoManager.getXXGroup().findByGroupName(
+		XXGroup xxGroup = rangerDaoManager.getXXGroup().findByGroupName(
 				vObj.getName());
 		if (xxGroup != null) {
 			throw restErrorUtil.createRESTException("XGroup already exists",
@@ -94,7 +93,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	}
 
 	public VXGroup getGroupByGroupName(String groupName) {
-		XXGroup xxGroup = xADaoManager.getXXGroup().findByGroupName(groupName);
+		XXGroup xxGroup = rangerDaoManager.getXXGroup().findByGroupName(groupName);
 
 		if (xxGroup == null) {
 			throw restErrorUtil.createRESTException(
@@ -104,7 +103,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	}
 	
 	public VXGroup createXGroupWithOutLogin(VXGroup vxGroup) {
-		XXGroup xxGroup = xADaoManager.getXXGroup().findByGroupName(
+		XXGroup xxGroup = rangerDaoManager.getXXGroup().findByGroupName(
 				vxGroup.getName());
 		boolean groupExists = true;
 
@@ -114,7 +113,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 		}
 
 		xxGroup = mapViewToEntityBean(vxGroup, xxGroup, 0);
-		XXPortalUser xXPortalUser = xADaoManager.getXXPortalUser().getById(createdByUserId);
+		XXPortalUser xXPortalUser = rangerDaoManager.getXXPortalUser().getById(createdByUserId);
 		if (xXPortalUser != null) {
 			xxGroup.setAddedByUserId(createdByUserId);
 			xxGroup.setUpdatedByUserId(createdByUserId);

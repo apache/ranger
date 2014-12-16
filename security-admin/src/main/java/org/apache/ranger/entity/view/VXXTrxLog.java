@@ -22,11 +22,19 @@
 
 import java.util.Date;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.DateUtil;
-import org.apache.ranger.common.XAConstants;
+import org.apache.ranger.common.RangerConstants;
 
 @Entity
 @Table(name="vx_trx_log")
@@ -58,7 +66,7 @@ public class VXXTrxLog implements java.io.Serializable {
 	protected Long updatedByUserId;
 
 	@Column(name="CLASS_TYPE"  , nullable=false )
-	protected int objectClassType = XAConstants.CLASS_TYPE_NONE;
+	protected int objectClassType = RangerConstants.CLASS_TYPE_NONE;
 
 	@Column(name="OBJECT_ID"   )
 	protected Long objectId;
