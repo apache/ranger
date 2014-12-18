@@ -1,0 +1,34 @@
+{
+  "id":5,
+  "name":"knox",
+  "implClass":"org.apache.ranger.services.knox.RangerServiceKnox",
+  "label":"Knox Gateway",
+  "description":"Knox Gateway",
+  "guid":"84b481b5-f23b-4f71-b8b6-ab33977149ca",
+  "createTime":"20141208-22:48:42.238--0800",
+  "updateTime":"20141208-22:48:42.238--0800",
+  "version":1,
+  "enums":
+  [
+  ],
+  "configs":
+  [
+    {"name":"username","type":"string","mandatory":true,"label":"Username"},
+	{"name":"password","type":"password","mandatory":true,"label":"Password"},
+	{"name":"knox.url","type":"string","mandatory":true,"defaultValue":""},
+	{"name":"certificate.cn","type":"string","mandatory":false,"label":"Common Name for Certificate"}
+  ],
+  "resources":
+  [
+    {"name":"topology","level":1,"mandatory":true,"lookupSupported":true,"label":"Knox Topology","description":"Knox Topology"},
+    {"name":"service","level":2,"parent":"topology","mandatory":true,"lookupSupported":true,"label":"Knox Service","description":"Knox Service"}
+  ],
+  "accessTypes":
+  [
+    {"name":"allow","label":"Allow"}
+  ],
+  "policyConditions":
+  [
+    {"name":"ip-range","evalClass":"org.apache.ranger.knox.IpRangeCondition","label":"IP Address Range","description":"IP Address Range"}
+  ]
+}

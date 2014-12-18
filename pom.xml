@@ -49,6 +49,7 @@
   <module>ugsync</module>
   <module>unixauthclient</module>
   <module>unixauthservice</module>
+  <module>plugin-common</module>
   </modules>
   <properties>
 		<antlr.version>3.5.2</antlr.version>
