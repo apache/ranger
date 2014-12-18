@@ -1,0 +1,51 @@
+{
+  "id":2,
+  "name":"hbase",
+  "implClass":"org.apache.ranger.services.hbase.RangerServiceHBase",
+  "label":"HBase",
+  "description":"HBase",
+  "guid":"d6cea1f0-2509-4791-8fc1-7b092399ba3b",
+  "createTime":"20141208-22:50:22.426--0800",
+  "updateTime":"20141208-22:50:22.426--0800",
+  "version":1,
+  "enums":
+  [
+    {
+	  "name":"authnType",
+	  "elements":
+	  [
+	    {"name":"simple","label":"Simple"},
+	    {"name":"kerberos","label":"Kerberos"},
+	  ],
+	  "defaultIndex":0
+	}
+  ],
+  "configs":
+  [
+    {"name":"username","type":"string","mandatory":true,"label":"Username"},
+	{"name":"password","type":"password","mandatory":true,"label":"Password"},
+	{"name":"hadoop.security.authentication","type":"enum","subtype":"authnType","mandatory":true,"defaultValue":"simple"},
+	{"name":"hbase.master.kerberos.principal","type":"string","mandatory":false,"defaultValue":""},
+	{"name":"hbase.security.authentication","type":"enum","subtype":"authnType","mandatory":true,"defaultValue":"simple"},
+	{"name":"hbase.zookeeper.property.clientPort","type":"int","mandatory":true,"defaultValue":"2181"},
+	{"name":"hbase.zookeeper.quorum","type":"string","mandatory":true,"defaultValue":""},
+	{"name":"zookeeper.znode.parent","type":"string","mandatory":true,"defaultValue":"/hbase"}
+  ],
+  "resources":
+  [
+    {"name":"table","level":1,"parent":"","mandatory":true,"lookupSupported":true,"label":"HBase Table","description":"HBase Table"},
+    {"name":"column-family","level":2,"parent":"table","mandatory":true,"lookupSupported":true,"label":"HBase Column-family","description":"HBase Column-family"},
+    {"name":"column","level":3,"parent":"column-family","mandatory":true,"lookupSupported":false,"label":"HBase Column","description":"HBase Column"}
+  ],
+  "accessTypes":
+  [
+    {"name":"read","label":"Read"},
+	{"name":"write","label":"Write"},
+	{"name":"create","label":"Create"}
+  ],
+  "policyConditions":
+  [
+    {
+	}
+  ]
+}

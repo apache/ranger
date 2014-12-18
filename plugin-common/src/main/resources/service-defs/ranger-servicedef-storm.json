@@ -1,0 +1,46 @@
+{
+  "id":6,
+  "name":"storm",
+  "implClass":"org.apache.ranger.services.storm.RangerServiceStorm",
+  "label":"Storm",
+  "description":"Storm",
+  "guid":"2a60f427-edcf-4e20-834c-a9a267b5b963",
+  "createTime":"20141208-22:55:47.095--0800",
+  "updateTime":"20141208-22:55:47.095--0800",
+  "version":1,
+  "enums":
+  [
+  ],
+  "configs":
+  [
+    {"name":"username","type":"string","mandatory":true,"label":"Username"},
+	{"name":"password","type":"password","mandatory":true,"label":"Password"},
+	{"name":"nimbus.url","type":"string","mandatory":true,"defaultValue":"","label":"Nimbus URL"},
+	{"name":"certificate.cn","type":"string","mandatory":false,"label":"Common Name for Certificate"}
+  ],
+  "resources":
+  [
+    {"name":"topology","level":1,"mandatory":true,"lookupSupported":true,"label":"Storm Topology","description":"Storm Topology"}
+  ],
+  "accessTypes":
+  [
+    {"name":"topology-submit","label":"Submit Topology"},
+    {"name":"file-upload","label":"File Upload"},
+    {"name":"nimbus-conf-get","label":"Get Nimbus Conf"},
+    {"name":"cluster-conf-get","label":"Get Cluster Conf"},
+    {"name":"cluster-info-get","label":"Get Cluster Info"},
+    {"name":"file-download","label":"File Download"},
+    {"name":"topology-kill","label":"Kill Topology"},
+    {"name":"rebalance","label":"Rebalance"},
+    {"name":"activate","label":"Activate"},
+    {"name":"deactivate","label":"Deactivate"},
+    {"name":"topology-conf-get","label":"Get Topology Conf"},
+    {"name":"topology-get","label":"Get Topology"},
+    {"name":"topology-user-get","label":"Get User Topology"},
+    {"name":"topology-info-get","label":"Get Topology Info"},
+    {"name":"new-credential-upload","label":"Upload New Credential"}
+  ],
+  "policyConditions":
+  [
+  ]
+}
