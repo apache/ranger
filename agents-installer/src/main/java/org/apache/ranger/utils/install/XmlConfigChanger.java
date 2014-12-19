@@ -114,7 +114,7 @@ public class XmlConfigChanger {
 			String header = "ERROR: " + e ;
 			HelpFormatter helpFormatter = new HelpFormatter();
 			helpFormatter.printHelp("java " + XmlConfigChanger.class.getName(), header, options, null, true);
-			System.exit(1);
+			throw new RuntimeException(e);
 		}
 
 		String inputFileName = cmd.getOptionValue('i') ;
@@ -123,7 +123,7 @@ public class XmlConfigChanger {
 			String header = "ERROR: Input file [" + this.inpFile.getAbsolutePath() + "] can not be read.";
 			HelpFormatter helpFormatter = new HelpFormatter();
 			helpFormatter.printHelp("java " + XmlConfigChanger.class.getName(), header, options, null, true);
-			System.exit(1);
+			throw new RuntimeException(header);
 		}
 		
 		String outputFileName = cmd.getOptionValue('o') ;
@@ -132,7 +132,7 @@ public class XmlConfigChanger {
 			String header = "ERROR: Output file [" + this.outFile.getAbsolutePath() + "] already exists. Specify a filepath for creating new output file for the input [" + this.inpFile.getAbsolutePath() + "]";
 			HelpFormatter helpFormatter = new HelpFormatter();
 			helpFormatter.printHelp("java " + XmlConfigChanger.class.getName(), header, options, null, true);
-			System.exit(1);
+			throw new RuntimeException(header);
 		}
 		
 		String configFileName = cmd.getOptionValue('c') ;
@@ -141,7 +141,7 @@ public class XmlConfigChanger {
 			String header = "ERROR: Config file [" + this.confFile.getAbsolutePath() + "] can not be read.";
 			HelpFormatter helpFormatter = new HelpFormatter();
 			helpFormatter.printHelp("java " + XmlConfigChanger.class.getName(), header, options, null, true);
-			System.exit(1);
+			throw new RuntimeException(header);
 		}
 
 		String installPropFileName = (cmd.hasOption('p') ? cmd.getOptionValue('p') : null ) ;
@@ -151,7 +151,7 @@ public class XmlConfigChanger {
 				String header = "ERROR: Install Property file [" + this.propFile.getAbsolutePath() + "] can not be read.";
 				HelpFormatter helpFormatter = new HelpFormatter();
 				helpFormatter.printHelp("java " + XmlConfigChanger.class.getName(), header, options, null, true);
-				System.exit(1);
+				throw new RuntimeException(header);
 			}
 		}
 		

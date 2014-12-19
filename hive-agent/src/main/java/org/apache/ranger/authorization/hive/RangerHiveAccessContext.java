@@ -17,11 +17,12 @@
  * under the License.
  */
 
- package org.apache.ranger.authorization.hive;
+package org.apache.ranger.authorization.hive;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
-
 
 public class RangerHiveAccessContext {
 	private String mClientIpAddress;
@@ -71,5 +72,36 @@ public class RangerHiveAccessContext {
 
 	public void setSessionString(String sessionString) {
 		this.mSessionString = sessionString;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (obj == this) {
+			return true;
+		}
+		if (obj.getClass() != getClass()) {
+			return false;
+		}
+		RangerHiveAccessContext that = (RangerHiveAccessContext) obj;
+		return new EqualsBuilder()
+				.appendSuper(super.equals(obj))
+				.append(mClientIpAddress, that.mClientIpAddress)
+				.append(mClientType, that.mClientType)
+				.append(mCommandString, that.mCommandString)
+				.append(mSessionString, that.mSessionString).isEquals();
+	}
+	
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(31, 37)
+				.appendSuper(41)
+				.append(mClientIpAddress)
+				.append(mClientType)
+				.append(mCommandString)
+				.append(mSessionString)
+				.toHashCode();
 	}
 }

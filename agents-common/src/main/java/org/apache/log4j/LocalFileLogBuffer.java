@@ -377,7 +377,9 @@ public class LocalFileLogBuffer implements LogBuffer<String> {
 					File parentDir = new File(parentName);
 	
 					if(!parentDir.exists()) {
-						parentDir.mkdirs();
+						if (!parentDir.mkdirs()) {
+							LogLog.warn("Creation of directory [" + parentName + "] failed!");
+						}
 					}
 				}
 			}

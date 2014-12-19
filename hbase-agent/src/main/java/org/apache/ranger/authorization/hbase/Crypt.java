@@ -65,7 +65,7 @@ public class Crypt {
 			descrypter.init(Cipher.DECRYPT_MODE, deckey, new IvParameterSpec(IV));
 		} catch (Throwable t) {
 			LOG.error("Unable to initialzie Encrypt/Decrypt module - Exiting from HBase", t);
-			System.exit(1);
+			throw new RuntimeException(t);
 		}
 	}
 	

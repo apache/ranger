@@ -22,6 +22,8 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.ranger.authorization.utils.StringUtil;
 
 public class RangerHiveObjectAccessInfo {
@@ -218,23 +220,51 @@ public class RangerHiveObjectAccessInfo {
 
 	@Override
 	public boolean equals(Object obj) {
-		boolean ret = false;
-		
-		if(obj != null && obj instanceof RangerHiveObjectAccessInfo) {
-			RangerHiveObjectAccessInfo that = (RangerHiveObjectAccessInfo)obj;
-			
-			ret =  StringUtil.equalsIgnoreCase(mOperType, that.mOperType)
-				&& mAccessType == that.mAccessType
-				&& mObjectType == that.mObjectType
-				&& StringUtil.equalsIgnoreCase(mDatabase, that.mDatabase)
-				&& StringUtil.equalsIgnoreCase(mTable, that.mTable)
-				&& StringUtil.equalsIgnoreCase(mView, that.mView)
-				&& StringUtil.equalsIgnoreCase(mPartition, that.mPartition)
-				&& StringUtil.equalsIgnoreCase(mIndex, that.mIndex)
-				&& StringUtil.equalsIgnoreCase(mColumns, that.mColumns)
-				  ;
+		if (obj == null) {
+			return false;
 		}
-		
-		return ret;
+		if (obj == this) {
+			return true;
+		}
+		if (obj.getClass() != getClass()) {
+			return false;
+		}
+		RangerHiveObjectAccessInfo that = (RangerHiveObjectAccessInfo) obj;
+		return new EqualsBuilder()
+				.appendSuper(super.equals(obj))
+				.append(mAccessType, that.mAccessType)
+				.append(mColumns, that.mColumns)
+				.append(mContext, that.mContext)
+				.append(mDatabase, that.mDatabase)
+				.append(mDeniedObjectName, that.mDeniedObjectName)
+				.append(mFunction, that.mFunction)
+				.append(mIndex, that.mIndex)
+				.append(mObjectType, that.mObjectType)
+				.append(mOperType, that.mOperType)
+				.append(mPartition, that.mPartition)
+				.append(mTable, that.mTable)
+				.append(mUri, that.mUri)
+				.append(mView, that.mView)
+				.isEquals();
+	}
+	
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(37, 41)
+		.appendSuper(43)
+		.append(mAccessType)
+		.append(mColumns)
+		.append(mContext)
+		.append(mDatabase)
+		.append(mDeniedObjectName)
+		.append(mFunction)
+		.append(mIndex)
+		.append(mObjectType)
+		.append(mOperType)
+		.append(mPartition)
+		.append(mTable)
+		.append(mUri)
+		.append(mView)
+		.toHashCode();
 	}
 }

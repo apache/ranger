@@ -210,11 +210,15 @@ public class PolicyRefresher  {
 				LOG.warn("Unable to save the policy into Last Stored Policy File [" + lastSaveFile.getAbsolutePath() + "]");
 			}
 		    finally {
-		    	 //make the policy file cache to be 600 permission when it gets created and updated
-		    	 lastSaveFile.setReadable(false,false);
-		    	 lastSaveFile.setWritable(false,false);
-		    	 lastSaveFile.setReadable(true,true);
-		    	 lastSaveFile.setWritable(true,true);
+				//make the policy file cache to be 600 permission when it gets created and updated
+				boolean result = true;
+				result = lastSaveFile.setReadable(false,false) && result;
+				result = lastSaveFile.setWritable(false,false) && result;
+				result = lastSaveFile.setReadable(true,true) && result;
+				result = lastSaveFile.setWritable(true,true) && result;
+		    	 if (!result) {
+		    		 LOG.warn("Setting access permission to 600 on policy file [" + lastStoredFileName + "] failed!");
+		    	 }
 		    	 if (writer != null) {
 				 writer.close();
 		    	}
