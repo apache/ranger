@@ -21,6 +21,8 @@ package org.apache.ranger.plugin.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -40,13 +42,13 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RangerPolicy extends RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String                     service        = null;
-	private String                     name           = null;
-	private String                     description    = null;
-	private Boolean                    isEnabled      = null;
-	private Boolean                    isAuditEnabled = null;
-	private List<RangerPolicyResource> resources      = null;
-	private List<RangerPolicyItem>     policyItems    = null;
+	private String                            service        = null;
+	private String                            name           = null;
+	private String                            description    = null;
+	private Boolean                           isEnabled      = null;
+	private Boolean                           isAuditEnabled = null;
+	private Map<String, RangerPolicyResource> resources      = null;
+	private List<RangerPolicyItem>            policyItems    = null;
 
 
 	/**
@@ -63,7 +65,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param isEnabled
 	 * @param configs
 	 */
-	public RangerPolicy(String service, String name, String description, Boolean isEnabled, List<RangerPolicyResource> resources, List<RangerPolicyItem> policyItems) {
+	public RangerPolicy(String service, String name, String description, Boolean isEnabled, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems) {
 		super();
 
 		setService(service);
@@ -160,19 +162,19 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	/**
 	 * @return the resources
 	 */
-	public List<RangerPolicyResource> getResources() {
+	public Map<String, RangerPolicyResource> getResources() {
 		return resources;
 	}
 
 	/**
 	 * @param configs the resources to set
 	 */
-	public void setResources(List<RangerPolicyResource> resources) {
-		this.resources = new ArrayList<RangerPolicyResource>();
+	public void setResources(Map<String, RangerPolicyResource> resources) {
+		this.resources = new HashMap<String, RangerPolicyResource>();
 
 		if(resources != null) {
-			for(RangerPolicyResource resource : resources) {
-				this.resources.add(resource);
+			for(Map.Entry<String, RangerPolicyResource> e : resources.entrySet()) {
+				this.resources.put(e.getKey(), e.getValue());
 			}
 		}
 	}
@@ -219,10 +221,10 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		sb.append("resources={");
 		if(resources != null) {
-			for(RangerPolicyResource resource : resources) {
-				if(resource != null) {
-					resource.toString(sb);
-				}
+			for(Map.Entry<String, RangerPolicyResource> e : resources.entrySet()) {
+				sb.append(e.getKey()).append("={");
+				e.getValue().toString(sb);
+				sb.append("} ");
 			}
 		}
 		sb.append("} ");
@@ -246,49 +248,48 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerPolicyResource implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String  type       = null;
-		private String  value      = null;
-		private Boolean isExcludes = null;
-		private Boolean isRecursive = null;
+		private List<String> values      = null;
+		private Boolean      isExcludes = null;
+		private Boolean      isRecursive = null;
 
 
 		public RangerPolicyResource() {
-			this(null, null, null, null);
+			this((List<String>)null, null, null);
 		}
 
-		public RangerPolicyResource(String type, String value, Boolean isExcludes, Boolean isRecursive) {
-			setType(type);
-			setValue(value);
+		public RangerPolicyResource(String value, Boolean isExcludes, Boolean isRecursive) {
+			List<String> values = new ArrayList<String>();
+			values.add(value);
+
+			setValues(values);
+			setIsExcludes(isExcludes);
+			setIsRecursive(isRecursive);
+		}
+
+		public RangerPolicyResource(List<String> values, Boolean isExcludes, Boolean isRecursive) {
+			setValues(values);
 			setIsExcludes(isExcludes);
 			setIsRecursive(isRecursive);
 		}
 
 		/**
-		 * @return the type
+		 * @return the values
 		 */
-		public String getType() {
-			return type;
+		public List<String> getValues() {
+			return values;
 		}
 
 		/**
-		 * @param type the type to set
+		 * @param values the values to set
 		 */
-		public void setType(String type) {
-			this.type = type;
-		}
+		public void setValues(List<String> values) {
+			this.values = new ArrayList<String>();
 
-		/**
-		 * @return the value
-		 */
-		public String getValue() {
-			return value;
-		}
-
-		/**
-		 * @param value the value to set
-		 */
-		public void setValue(String value) {
-			this.value = value;
+			if(values != null) {
+				for(String value : values) {
+					this.values.add(value);
+				}
+			}
 		}
 
 		/**
@@ -330,8 +331,13 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerPolicyResource={");
-			sb.append("type={").append(type).append("} ");
-			sb.append("value={").append(value).append("} ");
+			sb.append("values={");
+			if(values != null) {
+				for(String value : values) {
+					sb.append(value).append(" ");
+				}
+			}
+			sb.append("} ");
 			sb.append("isExcludes={").append(isExcludes).append("} ");
 			sb.append("isRecursive={").append(isRecursive).append("} ");
 			sb.append("}");

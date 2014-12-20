@@ -87,27 +87,24 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public boolean isAccessAllowed(RangerAccessRequest request) {
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
 		// TODO Auto-generated method stub
-		return false;
+		return null;
 	}
 
 	@Override
-	public boolean isAccessAllowed(List<RangerAccessRequest> requests,
-			List<Boolean> results) {
+	public void isAccessAllowed(List<RangerAccessRequest> requests, List<RangerAccessResult> results) {
 		// TODO Auto-generated method stub
-		return false;
 	}
 
 	@Override
-	public void auditAccess(RangerAccessRequest request) {
+	public void auditAccess(RangerAccessResult result) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void auditAccess(List<RangerAccessRequest> requests,
-			List<Boolean> results) {
+	public void auditAccess(List<RangerAccessResult> results) {
 		// TODO Auto-generated method stub
 		
 	}
