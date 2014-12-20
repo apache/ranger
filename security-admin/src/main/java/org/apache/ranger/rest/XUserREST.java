@@ -60,6 +60,7 @@ import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.VXUserGroupInfo;
 import org.apache.ranger.view.VXUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -216,6 +217,13 @@ public class XUserREST {
 	public VXUser createXUser(VXUser vXUser) {
 		return xUserMgr.createXUserWithOutLogin(vXUser);
 	}
+	
+	@POST
+	@Path("/users/userinfo")
+	@Produces({ "application/xml", "application/json" })
+	public VXUserGroupInfo createXUserGroupFromMap(VXUserGroupInfo vXUserGroupInfo) {
+		return  xUserMgr.createXUserGroupFromMap(vXUserGroupInfo);
+	} 
 	
 	@POST
 	@Path("/secure/users")

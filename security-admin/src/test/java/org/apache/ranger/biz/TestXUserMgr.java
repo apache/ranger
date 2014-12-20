@@ -18,6 +18,7 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -40,6 +41,7 @@ import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.VXUserGroupInfo;
 import org.apache.ranger.view.VXUserList;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -393,4 +395,53 @@ public class TestXUserMgr {
 		Mockito.verify(xGroupUserService).searchXGroupUsers((SearchCriteria) Mockito
 				.anyObject());
 	}
+	
+	@Test
+	public void test24CreateVXUserGroupInfo(){
+	
+		VXUserGroupInfo vXUserGroupInfo = new VXUserGroupInfo();
+		VXUser vXUser = new VXUser();
+		vXUser.setName("user1");
+		vXUser.setDescription("testuser1 -added for unit testing");
+		
+		List<VXGroupUser> vXGroupUserList = new ArrayList<VXGroupUser>();
+		List<VXGroup> vXGroupList = new ArrayList<VXGroup>();
+		
+		final VXGroup vXGroup1 = new VXGroup();
+		vXGroup1.setName("users");
+		vXGroup1.setDescription("users -added for unit testing");
+		vXGroupList.add(vXGroup1);
+		
+		VXGroupUser vXGroupUser1 = new VXGroupUser();
+		vXGroupUser1.setName("users");
+		vXGroupUserList.add(vXGroupUser1);
+		
+		final VXGroup vXGroup2 = new VXGroup();
+		vXGroup2.setName("user1");
+		vXGroup2.setDescription("user1 -added for unit testing");
+		vXGroupList.add(vXGroup2);
+		
+		VXGroupUser vXGroupUser2 = new VXGroupUser();
+		vXGroupUser2.setName("user1");
+		vXGroupUserList.add(vXGroupUser2);
+		
+		vXUserGroupInfo.setXuserInfo(vXUser);
+		vXUserGroupInfo.setXgroupInfo(vXGroupList);
+		
+		Mockito.when(xUserService.createXUserWithOutLogin(vXUser)).thenReturn(vXUser);
+		Mockito.when(xGroupService.createXGroupWithOutLogin(vXGroup1)).thenReturn(vXGroup1);
+		Mockito.when(xGroupService.createXGroupWithOutLogin(vXGroup2)).thenReturn(vXGroup2);
+		Mockito.when(xGroupUserService.createXGroupUserWithOutLogin(vXGroupUser1)).thenReturn(vXGroupUser1);
+		Mockito.when(xGroupUserService.createXGroupUserWithOutLogin(vXGroupUser2)).thenReturn(vXGroupUser2);
+		
+		VXUserGroupInfo vxUserGroupTest = xUserMgr.createXUserGroupFromMap(vXUserGroupInfo);
+		Assert.assertEquals("user1", vxUserGroupTest
+				.getXuserInfo()
+				.getName());
+		List<VXGroup> result = vxUserGroupTest.getXgroupInfo();
+		List<VXGroup> expected = new ArrayList<VXGroup>();
+		expected.add(vXGroup1);
+		expected.add(vXGroup2);
+		Assert.assertTrue(result.containsAll(expected));
+	}	
 }

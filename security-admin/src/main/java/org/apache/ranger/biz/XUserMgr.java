@@ -42,6 +42,7 @@ import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.VXUserGroupInfo;
 import org.apache.ranger.view.VXUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -298,6 +299,32 @@ public class XUserMgr extends XUserMgrBase {
 		}
 
 		return vXUser;
+	}
+	
+	public VXUserGroupInfo createXUserGroupFromMap(VXUserGroupInfo vXUserGroupInfo) {
+		
+		VXUserGroupInfo vxUGInfo = new VXUserGroupInfo();
+		
+		VXUser vXUser = vXUserGroupInfo.getXuserInfo();
+		
+		vXUser = xUserService.createXUserWithOutLogin(vXUser);
+		
+		vxUGInfo.setXuserInfo(vXUser);
+		
+		List<VXGroup> vxg = new ArrayList<VXGroup>();
+		
+		for(VXGroup vXGroup : vXUserGroupInfo.getXgroupInfo()){
+			VXGroup VvXGroup = xGroupService.createXGroupWithOutLogin(vXGroup);
+			vxg.add(VvXGroup);
+			VXGroupUser vXGroupUser = new VXGroupUser();
+			vXGroupUser.setUserId(vXUser.getId());
+			vXGroupUser.setName(VvXGroup.getName());
+			vXGroupUser = xGroupUserService.createXGroupUserWithOutLogin(vXGroupUser);
+		}
+		
+		vxUGInfo.setXgroupInfo(vxg);
+		
+		return vxUGInfo;
 	}
 
 	public VXUser createXUserWithOutLogin(VXUser vXUser) {		

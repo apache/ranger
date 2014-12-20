@@ -46,6 +46,8 @@ public class UserGroupSyncConfig  {
 
 	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"usergroupSync.policymanager.mockRun" ;
 	
+	public static final String UGSYNC_SOURCE_FILE_PROC =	"usergroupSync.filesource.file";
+	
 	private static final String SSL_KEYSTORE_PATH_PARAM = "keyStore" ;
 
 	private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM = "keyStorePassword" ;
@@ -174,6 +176,10 @@ public class UserGroupSyncConfig  {
 		return ret;
 	}
 	
+	public String getUserSyncFileSource(){
+		String val = prop.getProperty(UGSYNC_SOURCE_FILE_PROC) ;
+		return val;
+	}
 	
 	public boolean isUserSyncEnabled() {
 		String val = prop.getProperty(UGSYNC_ENABLED_PROP) ;
