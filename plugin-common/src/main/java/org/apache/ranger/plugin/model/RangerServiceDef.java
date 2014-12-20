@@ -713,6 +713,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private Boolean lookupSupported    = null;
 		private Boolean recursiveSupported = null;
 		private Boolean excludesSupported  = null;
+		private String  matcher            = null;
+		private String  matcherOptions     = null;
 		private String  label              = null;
 		private String  description        = null;
 		private String  rbKeyLabel         = null;
@@ -720,10 +722,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerResourceDef() {
-			this(null, null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerResourceDef(String name, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String label, String description, String rbKeyLabel, String rbKeyDescription) {
+		public RangerResourceDef(String name, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String label, String description, String rbKeyLabel, String rbKeyDescription) {
 			setName(name);
 			setLevel(level);
 			setParent(parent);
@@ -731,6 +733,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setLookupSupported(lookupSupported);
 			setRecursiveSupported(recursiveSupported);
 			setExcludesSupported(excludesSupported);
+			setMatcher(matcher);
+			setMatcher(matcherOptions);
 			setLabel(label);
 			setDescription(description);
 			setRbKeyLabel(rbKeyLabel);
@@ -836,6 +840,34 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
+		 * @return the matcher
+		 */
+		public String getMatcher() {
+			return matcher;
+		}
+
+		/**
+		 * @param matcher the matcher to set
+		 */
+		public void setMatcher(String matcher) {
+			this.matcher = matcher;
+		}
+
+		/**
+		 * @return the matcher
+		 */
+		public String getMatcherOptions() {
+			return matcherOptions;
+		}
+
+		/**
+		 * @param matcher the matcher to set
+		 */
+		public void setMatcherOptions(String matcherOptions) {
+			this.matcherOptions = matcherOptions;
+		}
+
+		/**
 		 * @return the label
 		 */
 		public String getLabel() {
@@ -909,6 +941,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("lookupSupported={").append(lookupSupported).append("} ");
 			sb.append("recursiveSupported={").append(recursiveSupported).append("} ");
 			sb.append("excludesSupported={").append(excludesSupported).append("} ");
+			sb.append("matcher={").append(matcher).append("} ");
+			sb.append("matcherOptions={").append(matcherOptions).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
