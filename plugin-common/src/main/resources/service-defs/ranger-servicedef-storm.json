@@ -20,7 +20,7 @@
   ],
   "resources":
   [
-    {"name":"topology","level":1,"mandatory":true,"lookupSupported":true,"label":"Storm Topology","description":"Storm Topology"}
+    {"name":"topology","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.policyengine.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Storm Topology","description":"Storm Topology"}
   ],
   "accessTypes":
   [
