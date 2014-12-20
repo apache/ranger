@@ -22,11 +22,11 @@ package org.apache.ranger.plugin.policyengine;
 import java.util.List;
 
 public interface RangerPolicyEngine {
-	boolean isAccessAllowed(RangerAccessRequest request);
+	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
 
-	boolean isAccessAllowed(List<RangerAccessRequest> requests, List<Boolean> results);
+	void isAccessAllowed(List<RangerAccessRequest> requests, List<RangerAccessResult> results);
 
-	void auditAccess(RangerAccessRequest request);
+	void auditAccess(RangerAccessResult result);
 
-	void auditAccess(List<RangerAccessRequest> requests, List<Boolean> results);
+	void auditAccess(List<RangerAccessResult> results);
 }

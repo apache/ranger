@@ -117,7 +117,7 @@ public class TestServiceManager {
 		int initPolicyCount = policies == null ? 0 : policies.size();
 
 		RangerPolicy policy = new RangerPolicy(updatedSvc.getName(), policyName, "test policy description", Boolean.TRUE, null, null);
-		policy.getResources().add(new RangerPolicyResource("path", "/demo/test/finance", Boolean.FALSE, Boolean.TRUE));
+		policy.getResources().put("path", new RangerPolicyResource("/demo/test/finance", Boolean.FALSE, Boolean.TRUE));
 
 		RangerPolicyItem item1 = new RangerPolicyItem();
 		item1.getAccesses().add(new RangerPolicyItemAccess("read", Boolean.TRUE));

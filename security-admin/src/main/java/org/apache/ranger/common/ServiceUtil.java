@@ -232,26 +232,30 @@ public class ServiceUtil {
 		}
 		ret.setAuditList(auditList);
 
-		for(RangerPolicy.RangerPolicyResource res : policy.getResources()) {
-			if(res.getType().equalsIgnoreCase("path")) {
-				ret.setName(addResource(ret.getName(), res.getValue()));
+		for(Map.Entry<String, RangerPolicy.RangerPolicyResource> e : policy.getResources().entrySet()) {
+			RangerPolicy.RangerPolicyResource res       = e.getValue();
+			String                            resType   = e.getKey();
+			String                            resString = getResourceString(res.getValues());
+
+			if(resType.equalsIgnoreCase("path")) {
+				ret.setName(resString);
 				ret.setIsRecursive(Boolean.TRUE.equals(res.getIsRecursive()) ? RangerCommonEnums.BOOL_TRUE : RangerCommonEnums.BOOL_FALSE);
-			} else if(res.getType().equalsIgnoreCase("table")) {
-				ret.setTables(addResource(ret.getTables(), res.getValue()));
+			} else if(resType.equalsIgnoreCase("table")) {
+				ret.setTables(resString);
 				ret.setTableType(Boolean.TRUE.equals(res.getIsExcludes()) ? RangerCommonEnums.POLICY_EXCLUSION : RangerCommonEnums.POLICY_INCLUSION);
-			} else if(res.getType().equalsIgnoreCase("column-family")) {
-				ret.setColumnFamilies(addResource(ret.getColumnFamilies(), res.getValue()));
-			} else if(res.getType().equalsIgnoreCase("column")) {
-				ret.setColumns(addResource(ret.getColumns(), res.getValue()));
+			} else if(resType.equalsIgnoreCase("column-family")) {
+				ret.setColumnFamilies(resString);
+			} else if(resType.equalsIgnoreCase("column")) {
+				ret.setColumns(resString);
 				ret.setColumnType(Boolean.TRUE.equals(res.getIsExcludes()) ? RangerCommonEnums.POLICY_EXCLUSION : RangerCommonEnums.POLICY_INCLUSION);
-			} else if(res.getType().equalsIgnoreCase("database")) {
-				ret.setDatabases(addResource(ret.getDatabases(), res.getValue()));
-			} else if(res.getType().equalsIgnoreCase("udf")) {
-				ret.setUdfs(addResource(ret.getUdfs(), res.getValue()));
-			} else if(res.getType().equalsIgnoreCase("topology")) {
-				ret.setTopologies(addResource(ret.getTopologies(), res.getValue()));
-			} else if(res.getType().equalsIgnoreCase("service")) {
-				ret.setServices(addResource(ret.getServices(), res.getValue()));
+			} else if(resType.equalsIgnoreCase("database")) {
+				ret.setDatabases(resString);
+			} else if(resType.equalsIgnoreCase("udf")) {
+				ret.setUdfs(resString);
+			} else if(resType.equalsIgnoreCase("topology")) {
+				ret.setTopologies(resString);
+			} else if(resType.equalsIgnoreCase("service")) {
+				ret.setServices(resString);
 			}
 		}
 
@@ -308,12 +312,22 @@ public class ServiceUtil {
 		return ret;
 	}
 
-	private List<RangerPolicy.RangerPolicyResource> toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, List<RangerPolicy.RangerPolicyResource> resList) {
-		List<RangerPolicy.RangerPolicyResource> ret = resList == null ? new ArrayList<RangerPolicy.RangerPolicyResource>() : resList;
+	private Map<String, RangerPolicy.RangerPolicyResource> toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, Map<String, RangerPolicy.RangerPolicyResource> resources) {
+		Map<String, RangerPolicy.RangerPolicyResource> ret = resources == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resources;
 
 		if(resourceString != null) {
-			for(String resource : resourceString.split(",")) {
-				ret.add(new RangerPolicy.RangerPolicyResource(resourceType, resource, isExcludes, isRecursive));
+			RangerPolicy.RangerPolicyResource resource = ret.get(resourceType);
+
+			if(resource == null) {
+				resource = new RangerPolicy.RangerPolicyResource();
+				resource.setIsExcludes(isExcludes);
+				resource.setIsRecursive(isRecursive);
+
+				ret.put(resourceType, resource);
+			}
+
+			for(String res : resourceString.split(",")) {
+				resource.getValues().add(res);
 			}
 		}
 
@@ -392,8 +406,20 @@ public class ServiceUtil {
 		return ret;
 	}
 	
-	private String addResource(String currentVal, String valToAdd) {
-		return (currentVal == null || currentVal.isEmpty()) ? valToAdd : (currentVal + "," + valToAdd);
+	private String getResourceString(List<String> values) {
+		String ret = null;
+
+		if(values != null) {
+			for(String value : values) {
+				if(ret == null) {
+					ret = value;
+				} else if(value != null) {
+					ret += ("," + value);
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	private String getUserName(VXPermMap permMap) {
