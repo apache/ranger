@@ -56,7 +56,7 @@ if [ ! -z ${ARCHIVE_FILE}.new ]
 then
 	cat ${ARCHIVE_FILE}.new > ${CONFIG_FILE}
 	rm -f ${ARCHIVE_FILE}.new
-	echo "Apache Argus Plugin has been uninstalled from Storm Service. Please restart Storm nimbus and ui services ..."
+	echo "Apache Ranger Plugin has been uninstalled from Storm Service. Please restart Storm nimbus and ui services ..."
 else
 	echo "ERROR: ${ARCHIVE_FILE}.new file has not created successfully."
 	exit 1
