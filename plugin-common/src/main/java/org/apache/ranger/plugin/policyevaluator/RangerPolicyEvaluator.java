@@ -17,16 +17,19 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.policyengine;
+package org.apache.ranger.plugin.policyevaluator;
 
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
-public interface RangerResourceMatcher {
-	public final String OPTIONS_SEP        = ";";
-	public final String OPTION_IGNORE_CASE = "ignoreCase";
-	public final String OPTION_WILD_CARD   = "wildCard";
+public interface RangerPolicyEvaluator {
+	void init(RangerPolicy policy, RangerServiceDef serviceDef);
 
-	void init(RangerPolicyResource policyResource, String options);
+	RangerPolicy getPolicy();
 
-	boolean isMatch(String value);
+	RangerServiceDef getServiceDef();
+
+	RangerAccessResult evaluate(RangerAccessRequest request);
 }

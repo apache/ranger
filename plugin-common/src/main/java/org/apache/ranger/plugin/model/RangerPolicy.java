@@ -518,14 +518,20 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		private String  type      = null;
 		private Boolean isAllowed = null;
+		private Boolean isAudited = null;
 
 		public RangerPolicyItemAccess() {
-			this(null, null);
+			this(null, null, null);
 		}
 
-		public RangerPolicyItemAccess(String type, Boolean value) {
+		public RangerPolicyItemAccess(String type) {
+			this(type, null, null);
+		}
+
+		public RangerPolicyItemAccess(String type, Boolean isAllowed, Boolean isAudited) {
 			setType(type);
-			setValue(value);
+			setIsAllowed(isAllowed);
+			setIsAudited(isAudited);
 		}
 
 		/**
@@ -543,17 +549,31 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 
 		/**
-		 * @return the value
+		 * @return the isAllowed
 		 */
-		public Boolean getValue() {
+		public Boolean getIsAllowed() {
 			return isAllowed;
 		}
 
 		/**
-		 * @param value the value to set
+		 * @param isAllowed the isAllowed to set
 		 */
-		public void setValue(Boolean isAllowed) {
-			this.isAllowed = isAllowed == null ? Boolean.FALSE : isAllowed;
+		public void setIsAllowed(Boolean isAllowed) {
+			this.isAllowed = isAllowed == null ? Boolean.TRUE : isAllowed;
+		}
+
+		/**
+		 * @return the isAudited
+		 */
+		public Boolean getIsAudited() {
+			return isAudited;
+		}
+
+		/**
+		 * @param isAudited the isAudited to set
+		 */
+		public void setIsAudited(Boolean isAudited) {
+			this.isAudited = isAudited == null ? Boolean.TRUE : isAudited;
 		}
 
 		@Override
@@ -569,6 +589,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			sb.append("RangerPolicyItemAccess={");
 			sb.append("type={").append(type).append("} ");
 			sb.append("isAllowed={").append(isAllowed).append("} ");
+			sb.append("isAudited={").append(isAudited).append("} ");
 			sb.append("}");
 
 			return sb;

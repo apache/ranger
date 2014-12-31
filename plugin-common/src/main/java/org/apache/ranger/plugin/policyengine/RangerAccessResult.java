@@ -23,40 +23,110 @@ package org.apache.ranger.plugin.policyengine;
 public class RangerAccessResult {
 	private RangerAccessRequest request;
 	private boolean             isAllowed;
-	private boolean             auditAccess;
+	private boolean             isAudited;
 	private long                policyId;
 	private String              reason;
 
 
-	public RangerAccessResult(RangerAccessRequest request, boolean isAllowed, boolean auditAccess) {
-		this(request, isAllowed, auditAccess, -1, null);
+	public RangerAccessResult(RangerAccessRequest request) {
+		this(request, false, false, -1, null);
 	}
 
-	public RangerAccessResult(RangerAccessRequest request, boolean isAllowed, boolean auditAccess, long policyId, String reason) {
-		this.request     = request;
-		this.isAllowed   = isAllowed;
-		this.auditAccess = auditAccess;
-		this.policyId    = policyId;
-		this.reason      = reason;
+	public RangerAccessResult(RangerAccessRequest request, boolean isAllowed, boolean isAudited) {
+		this(request, isAllowed, isAudited, -1, null);
 	}
 
+	public RangerAccessResult(RangerAccessRequest request, boolean isAllowed, boolean isAudited, long policyId, String reason) {
+		this.request   = request;
+		this.isAllowed = isAllowed;
+		this.isAudited = isAudited;
+		this.policyId  = policyId;
+		this.reason    = reason;
+	}
+
+	/**
+	 * @return the request
+	 */
 	public RangerAccessRequest getRequest() {
 		return request;
 	}
 
+	/**
+	 * @return the isAllowed
+	 */
 	public boolean isAllowed() {
 		return isAllowed;
 	}
 
-	public boolean auditAccess() {
-		return auditAccess;
+	/**
+	 * @param isAllowed the isAllowed to set
+	 */
+	public void setAllowed(boolean isAllowed) {
+		this.isAllowed = isAllowed;
 	}
 
+	/**
+	 * @return the auditAccess
+	 */
+	public boolean isAudited() {
+		return isAudited;
+	}
+
+	/**
+	 * @param auditAccess the auditAccess to set
+	 */
+	public void setAudited(boolean isAudited) {
+		this.isAudited = isAudited;
+	}
+
+	/**
+	 * @return the policyId
+	 */
 	public long getPolicyId() {
 		return policyId;
 	}
 
+	/**
+	 * @param policyId the policyId to set
+	 */
+	public void setPolicyId(long policyId) {
+		this.policyId = policyId;
+	}
+
+	/**
+	 * @return the reason
+	 */
 	public String getReason() {
 		return reason;
+	}
+
+	/**
+	 * @param reason the reason to set
+	 */
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+
+	@Override
+	public String toString( ) {
+		StringBuilder sb = new StringBuilder();
+
+		toString(sb);
+
+		return sb.toString();
+	}
+
+	public StringBuilder toString(StringBuilder sb) {
+		sb.append("RangerAccessResult={");
+
+		sb.append("request={").append(request).append("} ");
+		sb.append("isAllowed={").append(isAllowed).append("} ");
+		sb.append("isAudited={").append(isAudited).append("} ");
+		sb.append("policyId={").append(policyId).append("} ");
+		sb.append("reason={").append(reason).append("} ");
+
+		sb.append("}");
+
+		return sb;
 	}
 }

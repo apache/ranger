@@ -17,32 +17,16 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.policyengine;
+package org.apache.ranger.plugin.resourcematcher;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
-public interface RangerAccessRequest {
-	RangerResource getResource();
+public interface RangerResourceMatcher {
+	void init(RangerPolicyResource policyResource, String optionsString);
 
-	String getAccessType();
+	RangerPolicyResource getPolicyResource();
 
-	String getUser();
+	String getOptionsString();
 
-	Collection<String> getUserGroups();
-
-	Date getAccessTime();
-
-	String getClientIPAddress();
-
-	String getClientType();
-
-	String getAction();
-
-	String getRequestData();
-
-	String getSessionId();
-	
-	Map<String, Object> getContext();
+	boolean isMatch(String resource);
 }
