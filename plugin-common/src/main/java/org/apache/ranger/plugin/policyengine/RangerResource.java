@@ -24,6 +24,10 @@ import java.util.List;
 public interface RangerResource {
 	public abstract String getOwnerUser();
 
+	public abstract boolean elementExists(String type);
+
+	public abstract boolean elementIsSingleValued(String type);
+
 	public abstract String getElementValue(String type);
 
 	public abstract List<String> getElementValues(String type);

@@ -19,34 +19,35 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.manager.ServiceDefManager;
 import org.apache.ranger.plugin.manager.ServiceManager;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
 
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineImpl.class);
 
-	private String             svcName    = null;
-	private ServiceDefManager  sdMgr      = null;
-	private ServiceManager     svcMgr     = null;
-	private RangerService      service    = null;
-	private RangerServiceDef   serviceDef = null;
-	private List<RangerPolicy> policies   = null;
+	private String                      svcName          = null;
+	private List<RangerPolicyEvaluator> policyEvaluators = null;
+
 
 	public RangerPolicyEngineImpl() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngine()");
 		}
-
-		sdMgr  = new ServiceDefManager();
-		svcMgr = new ServiceManager();
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngine()");
@@ -58,13 +59,18 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngine.init(" + serviceName + ")");
 		}
 
-		svcName = serviceName;
-		service = svcMgr.getByName(svcName);
+		svcName          = serviceName;
+		policyEvaluators = new ArrayList<RangerPolicyEvaluator>();
+
+		ServiceManager svcMgr  = new ServiceManager();
+		RangerService  service = svcMgr.getByName(svcName);
 
 		if(service == null) {
 			LOG.error(svcName + ": service not found");
 		} else {
-			serviceDef = sdMgr.getByName(service.getType());
+			ServiceDefManager sdMgr = new ServiceDefManager();
+
+			RangerServiceDef serviceDef = sdMgr.getByName(service.getType());
 
 			if(serviceDef == null) {
 				String msg = service.getType() + ": service-def not found";
@@ -74,10 +80,20 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				throw new Exception(msg);
 			}
 
-			policies = svcMgr.getPolicies(service.getId());
+			List<RangerPolicy> policies = svcMgr.getPolicies(service.getId());
+			
+			if(policies != null) {
+				for(RangerPolicy policy : policies) {
+					RangerPolicyEvaluator evaluator = getPolicyEvaluator(policy, serviceDef);
+
+					if(evaluator != null) {
+						policyEvaluators.add(evaluator);
+					}
+				}
+			}
 
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("found " + (policies == null ? 0 : policies.size()) + " policies in service '" + svcName + "'");
+				LOG.debug("found " + (policyEvaluators == null ? 0 : policyEvaluators.size()) + " policies in service '" + svcName + "'");
 			}
 		}
 
@@ -86,15 +102,48 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 	}
 
+	private RangerPolicyEvaluator getPolicyEvaluator(RangerPolicy policy, RangerServiceDef serviceDef) {
+		RangerPolicyEvaluator ret = null;
+
+		// TODO: instantiate policy-matcher
+
+		return ret;
+	}
+
 	@Override
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
-		// TODO Auto-generated method stub
-		return null;
+		RangerAccessResult ret = null;
+
+		for(RangerPolicyEvaluator evaluator : policyEvaluators) {
+			ret = evaluator.evaluate(request);
+			
+			if(ret != null) {
+				break;
+			}
+		}
+
+		if(ret == null) {
+			ret = new RangerAccessResult(request);
+
+			ret.setAllowed(Boolean.FALSE);
+			ret.setAudited(Boolean.FALSE);
+		}
+
+		return ret;
 	}
 
 	@Override
 	public void isAccessAllowed(List<RangerAccessRequest> requests, List<RangerAccessResult> results) {
-		// TODO Auto-generated method stub
+		if(requests != null && results != null) {
+			results.clear();
+
+			for(int i = 0; i < requests.size(); i++) {
+				RangerAccessRequest request = requests.get(i);
+				RangerAccessResult  result  = isAccessAllowed(request);
+				
+				results.add(result);
+			}
+		}
 	}
 
 	@Override
@@ -107,5 +156,34 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	public void auditAccess(List<RangerAccessResult> results) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public String toString( ) {
+		StringBuilder sb = new StringBuilder();
+
+		toString(sb);
+
+		return sb.toString();
+	}
+
+	public StringBuilder toString(StringBuilder sb) {
+		sb.append("RangerPolicyEngineImpl={");
+
+		sb.append("svcName={").append(svcName).append("} ");
+
+		sb.append("policyEvaluators={");
+		if(policyEvaluators != null) {
+			for(RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+				if(policyEvaluator != null) {
+					sb.append(policyEvaluator).append(" ");
+				}
+			}
+		}
+		sb.append("} ");
+
+		sb.append("}");
+
+		return sb;
 	}
 }

@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+
 
 public class RangerResourceImpl implements RangerResource {
 	private String              ownerUser = null;
@@ -36,6 +39,18 @@ public class RangerResourceImpl implements RangerResource {
 	@Override
 	public String getOwnerUser() {
 		return ownerUser;
+	}
+
+	@Override
+	public boolean elementExists(String type) {
+		return elements != null && elements.containsKey(type);
+	}
+
+	@Override
+	public boolean elementIsSingleValued(String type) {
+		Object val = (elements != null && elements.containsKey(type)) ? elements.get(type) : null;
+
+		return val == null || (val instanceof String) || (((List<?>)val).size() <= 1);
 	}
 
 	@Override
@@ -133,5 +148,34 @@ public class RangerResourceImpl implements RangerResource {
 			list.add(value);
 		}
 
+	}
+
+	@Override
+	public String toString( ) {
+		StringBuilder sb = new StringBuilder();
+
+		toString(sb);
+
+		return sb.toString();
+	}
+
+	public StringBuilder toString(StringBuilder sb) {
+		sb.append("RangerResourceImpl={");
+
+		sb.append("ownerUser={").append(ownerUser).append("} ");
+
+		sb.append("elements={");
+		if(elements != null) {
+			for(Map.Entry<String, Object> e : elements.entrySet()) {
+				sb.append(e.getKey()).append("={");
+				sb.append(e.getValue());
+				sb.append("} ");
+			}
+		}
+		sb.append("} ");
+
+		sb.append("}");
+
+		return sb;
 	}
 }

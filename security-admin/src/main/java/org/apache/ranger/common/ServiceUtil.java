@@ -181,7 +181,7 @@ public class ServiceUtil {
 					}					
 				} 
 
-				accessList.add(new RangerPolicyItemAccess(toAccessType(permMap.getPermType()), Boolean.TRUE));
+				accessList.add(new RangerPolicyItemAccess(toAccessType(permMap.getPermType())));
 
 				ipAddress = permMap.getIpAddress();
 			}

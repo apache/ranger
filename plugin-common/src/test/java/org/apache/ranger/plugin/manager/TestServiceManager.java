@@ -120,14 +120,14 @@ public class TestServiceManager {
 		policy.getResources().put("path", new RangerPolicyResource("/demo/test/finance", Boolean.FALSE, Boolean.TRUE));
 
 		RangerPolicyItem item1 = new RangerPolicyItem();
-		item1.getAccesses().add(new RangerPolicyItemAccess("read", Boolean.TRUE));
-		item1.getAccesses().add(new RangerPolicyItemAccess("write", Boolean.TRUE));
-		item1.getAccesses().add(new RangerPolicyItemAccess("execute", Boolean.TRUE));
+		item1.getAccesses().add(new RangerPolicyItemAccess("read"));
+		item1.getAccesses().add(new RangerPolicyItemAccess("write"));
+		item1.getAccesses().add(new RangerPolicyItemAccess("execute"));
 		item1.getUsers().add("admin");
 		item1.getGroups().add("finance");
 
 		RangerPolicyItem item2 = new RangerPolicyItem();
-		item2.getAccesses().add(new RangerPolicyItemAccess("read", Boolean.TRUE));
+		item2.getAccesses().add(new RangerPolicyItemAccess("read"));
 		item2.getGroups().add("public");
 
 		policy.getPolicyItems().add(item1);
