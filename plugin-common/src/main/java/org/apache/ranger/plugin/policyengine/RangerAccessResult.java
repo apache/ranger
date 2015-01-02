@@ -21,24 +21,27 @@ package org.apache.ranger.plugin.policyengine;
 
 
 public class RangerAccessResult {
-	private RangerAccessRequest request;
-	private boolean             isAllowed;
-	private boolean             isAudited;
-	private long                policyId;
-	private String              reason;
+	public enum Result { ALLOWED, DENIED, PARTIALLY_DENIED };
+
+	private RangerAccessRequest request        = null;
+	private Result              result         = null;
+	private RangerResource      deniedResource = null;
+	private boolean             isAudited      = false;
+	private long                policyId       = -1;
+	private String              reason         = null;
 
 
 	public RangerAccessResult(RangerAccessRequest request) {
-		this(request, false, false, -1, null);
+		this(request, Result.DENIED, false, -1, null);
 	}
 
-	public RangerAccessResult(RangerAccessRequest request, boolean isAllowed, boolean isAudited) {
-		this(request, isAllowed, isAudited, -1, null);
+	public RangerAccessResult(RangerAccessRequest request, Result result, boolean isAudited) {
+		this(request, result, isAudited, -1, null);
 	}
 
-	public RangerAccessResult(RangerAccessRequest request, boolean isAllowed, boolean isAudited, long policyId, String reason) {
+	public RangerAccessResult(RangerAccessRequest request, Result result, boolean isAudited, long policyId, String reason) {
 		this.request   = request;
-		this.isAllowed = isAllowed;
+		this.result    = result;
 		this.isAudited = isAudited;
 		this.policyId  = policyId;
 		this.reason    = reason;
@@ -52,17 +55,31 @@ public class RangerAccessResult {
 	}
 
 	/**
-	 * @return the isAllowed
+	 * @return the result
 	 */
-	public boolean isAllowed() {
-		return isAllowed;
+	public Result getResult() {
+		return result;
 	}
 
 	/**
-	 * @param isAllowed the isAllowed to set
+	 * @param result the result to set
 	 */
-	public void setAllowed(boolean isAllowed) {
-		this.isAllowed = isAllowed;
+	public void setResult(Result result) {
+		this.result = result;
+	}
+
+	/**
+	 * @return the deniedResource
+	 */
+	public RangerResource getDeniedResource() {
+		return deniedResource;
+	}
+
+	/**
+	 * @param deniedResource the deniedResource to set
+	 */
+	public void setDeniedResource(RangerResource deniedResource) {
+		this.deniedResource = deniedResource;
 	}
 
 	/**
@@ -107,6 +124,14 @@ public class RangerAccessResult {
 		this.reason = reason;
 	}
 
+	public void addDeniedResource(String resourceType, String resourceValue) {
+		if(deniedResource == null) {
+			deniedResource = new RangerResourceImpl();
+		}
+		
+		((RangerResourceImpl)deniedResource).addElement(resourceType, resourceValue);
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -120,7 +145,8 @@ public class RangerAccessResult {
 		sb.append("RangerAccessResult={");
 
 		sb.append("request={").append(request).append("} ");
-		sb.append("isAllowed={").append(isAllowed).append("} ");
+		sb.append("result={").append(result).append("} ");
+		sb.append("deniedResource={").append(deniedResource).append("} ");
 		sb.append("isAudited={").append(isAudited).append("} ");
 		sb.append("policyId={").append(policyId).append("} ");
 		sb.append("reason={").append(reason).append("} ");

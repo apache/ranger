@@ -21,10 +21,15 @@ package org.apache.ranger.plugin.policyengine;
 
 import java.util.List;
 
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+
 public interface RangerPolicyEngine {
+	void setPolicies(RangerServiceDef serviceDef, List<RangerPolicy> policies);
+
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
 
-	void isAccessAllowed(List<RangerAccessRequest> requests, List<RangerAccessResult> results);
+	List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests);
 
 	void auditAccess(RangerAccessResult result);
 
