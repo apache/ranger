@@ -35,6 +35,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult.Result;
 import org.apache.ranger.plugin.policyengine.RangerResource;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
@@ -95,7 +96,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 							ret = new RangerAccessResult(request);
 
 							ret.setPolicyId(policy.getId());
-							ret.setAllowed(access.getIsAllowed());
+							ret.setResult(access.getIsAllowed() ? Result.ALLOWED : Result.DENIED);
 							ret.setAudited(access.getIsAudited());
 
 							break;

@@ -20,130 +20,118 @@
 package org.apache.ranger.plugin.policyengine;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.manager.ServiceDefManager;
 import org.apache.ranger.plugin.manager.ServiceManager;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult.Result;
+import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
 
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineImpl.class);
 
-	private String                      svcName          = null;
 	private List<RangerPolicyEvaluator> policyEvaluators = null;
 
 
 	public RangerPolicyEngineImpl() {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngine()");
+			LOG.debug("==> RangerPolicyEngineImpl()");
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngine()");
+			LOG.debug("<== RangerPolicyEngineImpl()");
 		}
 	}
 	
-	public void init(String serviceName) throws Exception {
+	@Override
+	public void setPolicies(RangerServiceDef serviceDef, List<RangerPolicy> policies) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngine.init(" + serviceName + ")");
+			LOG.debug("==> RangerPolicyEngineImpl.setPolicies(" + serviceDef + ", " + policies + ")");
 		}
 
-		svcName          = serviceName;
-		policyEvaluators = new ArrayList<RangerPolicyEvaluator>();
+		if(serviceDef != null && policies != null) {
+			List<RangerPolicyEvaluator> evaluators = new ArrayList<RangerPolicyEvaluator>();
 
-		ServiceManager svcMgr  = new ServiceManager();
-		RangerService  service = svcMgr.getByName(svcName);
+			for(RangerPolicy policy : policies) {
+				RangerPolicyEvaluator evaluator = getPolicyEvaluator(policy, serviceDef);
 
-		if(service == null) {
-			LOG.error(svcName + ": service not found");
-		} else {
-			ServiceDefManager sdMgr = new ServiceDefManager();
-
-			RangerServiceDef serviceDef = sdMgr.getByName(service.getType());
-
-			if(serviceDef == null) {
-				String msg = service.getType() + ": service-def not found";
-
-				LOG.error(msg);
-
-				throw new Exception(msg);
-			}
-
-			List<RangerPolicy> policies = svcMgr.getPolicies(service.getId());
-			
-			if(policies != null) {
-				for(RangerPolicy policy : policies) {
-					RangerPolicyEvaluator evaluator = getPolicyEvaluator(policy, serviceDef);
-
-					if(evaluator != null) {
-						policyEvaluators.add(evaluator);
-					}
+				if(evaluator != null) {
+					evaluators.add(evaluator);
 				}
 			}
-
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("found " + (policyEvaluators == null ? 0 : policyEvaluators.size()) + " policies in service '" + svcName + "'");
-			}
+			
+			this.policyEvaluators = evaluators;
+		} else {
+			LOG.error("RangerPolicyEngineImpl.setPolicies(): invalid arguments - null serviceDef/policies");
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngine.init(" + serviceName + ")");
+			LOG.debug("<== RangerPolicyEngineImpl.setPolicies(" + serviceDef + ", " + policies + ")");
 		}
-	}
-
-	private RangerPolicyEvaluator getPolicyEvaluator(RangerPolicy policy, RangerServiceDef serviceDef) {
-		RangerPolicyEvaluator ret = null;
-
-		// TODO: instantiate policy-matcher
-
-		return ret;
 	}
 
 	@Override
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + request + ")");
+		}
+
 		RangerAccessResult ret = null;
 
-		for(RangerPolicyEvaluator evaluator : policyEvaluators) {
-			ret = evaluator.evaluate(request);
-			
-			if(ret != null) {
-				break;
+		List<RangerPolicyEvaluator> evaluators = policyEvaluators;
+
+		if(request != null && evaluators != null) {
+			for(RangerPolicyEvaluator evaluator : evaluators) {
+				ret = evaluator.evaluate(request);
+
+				if(ret != null) {
+					break;
+				}
 			}
 		}
 
 		if(ret == null) {
 			ret = new RangerAccessResult(request);
 
-			ret.setAllowed(Boolean.FALSE);
+			ret.setResult(Result.DENIED);
 			ret.setAudited(Boolean.FALSE);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + request + "): " + ret);
 		}
 
 		return ret;
 	}
 
 	@Override
-	public void isAccessAllowed(List<RangerAccessRequest> requests, List<RangerAccessResult> results) {
-		if(requests != null && results != null) {
-			results.clear();
+	public List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + requests + ")");
+		}
+		
+		List<RangerAccessResult> ret = new ArrayList<RangerAccessResult>();
 
-			for(int i = 0; i < requests.size(); i++) {
-				RangerAccessRequest request = requests.get(i);
-				RangerAccessResult  result  = isAccessAllowed(request);
-				
-				results.add(result);
+		if(requests != null) {
+			for(RangerAccessRequest request : requests) {
+				RangerAccessResult result = isAccessAllowed(request);
+
+				ret.add(result);
 			}
 		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + requests + "): " + ret);
+		}
+
+		return ret;
 	}
 
 	@Override
@@ -158,6 +146,60 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		
 	}
 
+	public void init(String svcName) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.init(" + svcName + ")");
+		}
+
+		ServiceManager    svcMgr = new ServiceManager();
+		ServiceDefManager sdMgr  = new ServiceDefManager();
+
+		RangerServiceDef   serviceDef = null;
+		List<RangerPolicy> policies   = null;
+
+		RangerService  service = svcMgr.getByName(svcName);
+
+		if(service == null) {
+			String msg = svcName + ": service not found";
+
+			LOG.error(msg);
+
+			throw new Exception(msg);
+		} else {
+			serviceDef = sdMgr.getByName(service.getType());
+
+			if(serviceDef == null) {
+				String msg = service.getType() + ": service-def not found";
+
+				LOG.error(msg);
+
+				throw new Exception(msg);
+			}
+
+			policies = svcMgr.getPolicies(service.getId());
+
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("RangerPolicyEngineImpl.init(): found " + (policyEvaluators == null ? 0 : policyEvaluators.size()) + " policies in service '" + svcName + "'");
+			}
+		}
+
+		setPolicies(serviceDef, policies);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.init(" + svcName + ")");
+		}
+	}
+
+	private RangerPolicyEvaluator getPolicyEvaluator(RangerPolicy policy, RangerServiceDef serviceDef) {
+		RangerPolicyEvaluator ret = null;
+
+		ret = new RangerDefaultPolicyEvaluator(); // TODO: configurable evaluator class?
+
+		ret.init(policy, serviceDef);
+
+		return ret;
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -169,8 +211,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerPolicyEngineImpl={");
-
-		sb.append("svcName={").append(svcName).append("} ");
 
 		sb.append("policyEvaluators={");
 		if(policyEvaluators != null) {
