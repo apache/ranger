@@ -25,7 +25,6 @@ public class RangerAccessResult {
 
 	private RangerAccessRequest request        = null;
 	private Result              result         = null;
-	private RangerResource      deniedResource = null;
 	private boolean             isAudited      = false;
 	private long                policyId       = -1;
 	private String              reason         = null;
@@ -66,20 +65,6 @@ public class RangerAccessResult {
 	 */
 	public void setResult(Result result) {
 		this.result = result;
-	}
-
-	/**
-	 * @return the deniedResource
-	 */
-	public RangerResource getDeniedResource() {
-		return deniedResource;
-	}
-
-	/**
-	 * @param deniedResource the deniedResource to set
-	 */
-	public void setDeniedResource(RangerResource deniedResource) {
-		this.deniedResource = deniedResource;
 	}
 
 	/**
@@ -124,14 +109,6 @@ public class RangerAccessResult {
 		this.reason = reason;
 	}
 
-	public void addDeniedResource(String resourceType, String resourceValue) {
-		if(deniedResource == null) {
-			deniedResource = new RangerResourceImpl();
-		}
-		
-		((RangerResourceImpl)deniedResource).addElement(resourceType, resourceValue);
-	}
-
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -146,7 +123,6 @@ public class RangerAccessResult {
 
 		sb.append("request={").append(request).append("} ");
 		sb.append("result={").append(result).append("} ");
-		sb.append("deniedResource={").append(deniedResource).append("} ");
 		sb.append("isAudited={").append(isAudited).append("} ");
 		sb.append("policyId={").append(policyId).append("} ");
 		sb.append("reason={").append(reason).append("} ");
