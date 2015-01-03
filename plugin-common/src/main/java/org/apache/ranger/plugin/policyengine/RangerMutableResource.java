@@ -21,16 +21,10 @@ package org.apache.ranger.plugin.policyengine;
 
 import java.util.Collection;
 
-public interface RangerResource {
-	public abstract String getOwnerUser();
+public interface RangerMutableResource extends RangerResource {
+	void setOwnerUser(String ownerUser);
 
-	public abstract boolean elementExists(String type);
+	void setElement(String type, String value);
 
-	public abstract String getElementValue(String type);
-
-	public abstract boolean isLeafElement(String type);
-
-	public abstract String getLeafElementType();
-
-	public abstract Collection<String> getLeafElementValues();
+	void setLeafElement(String type, Collection<String> value);
 }

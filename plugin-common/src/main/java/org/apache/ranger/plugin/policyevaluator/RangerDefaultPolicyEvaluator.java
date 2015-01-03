@@ -86,6 +86,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		RangerAccessResult ret    = null;
 		RangerPolicy       policy = getPolicy();
 
+		/*
+		 * TODO: handle partial-deny cases, especially for plug-ins that can deal with
+		 *       allowing access to part of the requested resource - like HBase returning
+		 *       columns for which the user has access to 
+		 */
 		if(request != null && policy != null && matchResource(request.getResource())) {
 			for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
 				RangerPolicyItemAccess access = getAccess(policyItem, request.getAccessType());
@@ -126,14 +131,14 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			for(ResourceDefMatcher matcher : matchers) {
 				 String resourceType = matcher.getResourceType();
 
-				 if(resource.elementIsSingleValued(resourceType)) {
+				 if(resource.isLeafElement(resourceType)) {
+					 Collection<String> resourceValues = resource.getLeafElementValues();
+
+					 ret = matcher.isMatch(resourceValues);
+				 } else {
 					 String resourceValue = resource.getElementValue(resourceType);
 
 					 ret = matcher.isMatch(resourceValue);
-				 } else {
-					 List<String> resourceValues = resource.getElementValues(resourceType);
-
-					 ret = matcher.isMatch(resourceValues);
 				 }
 
 				 if(! ret) {

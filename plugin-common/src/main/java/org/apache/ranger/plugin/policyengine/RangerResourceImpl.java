@@ -19,18 +19,16 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
-
-public class RangerResourceImpl implements RangerResource {
+public class RangerResourceImpl implements RangerMutableResource {
 	private String              ownerUser = null;
-	private Map<String, Object> elements  = null;
+	private Map<String, String> elements  = null;
+	private String              leafElementType   = null;
+	private Collection<String>  leafElementValues = null;
 
 
 	public RangerResourceImpl() {
@@ -43,34 +41,24 @@ public class RangerResourceImpl implements RangerResource {
 
 	@Override
 	public boolean elementExists(String type) {
-		return elements != null && elements.containsKey(type);
+		return ((elements != null && elements.containsKey(type)) ||
+				(leafElementType != null && leafElementType.equals(type) && leafElementValues != null && !leafElementType.isEmpty()));
 	}
 
 	@Override
-	public boolean elementIsSingleValued(String type) {
-		Object val = (elements != null && elements.containsKey(type)) ? elements.get(type) : null;
-
-		return val == null || (val instanceof String) || (((List<?>)val).size() <= 1);
+	public boolean isLeafElement(String type) {
+		return leafElementType != null && leafElementType.equals(type);
 	}
 
 	@Override
 	public String getElementValue(String type) {
 		String ret = null;
 
-		if(elements != null) {
-			Object value = elements.get(type);
-
-			if(value != null) {
-				if(value instanceof String) {
-					ret = (String)value;
-				} else { // value must be a List<String>
-					@SuppressWarnings("unchecked")
-					List<String> list = (List<String>)value;
-
-					if(list != null && list.size() > 0) {
-						ret = list.get(0);
-					}
-				}
+		if(elements != null && elements.containsKey(type)) {
+			ret = elements.get(type);
+		} else if(leafElementType != null && leafElementType.equals(type)) {
+			if(leafElementValues != null && !leafElementValues.isEmpty()) {
+				ret = leafElementValues.iterator().next();
 			}
 		}
 
@@ -78,76 +66,35 @@ public class RangerResourceImpl implements RangerResource {
 	}
 
 	@Override
-	public List<String> getElementValues(String type) {
-		List<String> ret = null;
-
-		if(elements != null) {
-			Object value = elements.get(type);
-			
-			if(value != null) {
-				if(value instanceof String) {
-					ret = new ArrayList<String>();
-					ret.add((String)value);
-				} else { // value must be a List<String>
-					@SuppressWarnings("unchecked")
-					List<String> tmpList = (List<String>)value;
-
-					ret = tmpList;
-				}
-			}
-		}
-
-		return ret;
+	public String getLeafElementType() {
+		return leafElementType;
 	}
 
+	@Override
+	public Collection<String> getLeafElementValues() {
+		return leafElementValues;
+	}
+
+	@Override
 	public void setOwnerUser(String ownerUser) {
 		this.ownerUser = ownerUser;
 	}
 
+	@Override
 	public void setElement(String type, String value) {
+		// TODO: verify that leafElementType != type
 		if(elements == null) {
-			elements = new HashMap<String, Object>();
+			elements = new HashMap<String, String>();
 		}
 
 		elements.put(type, value);
 	}
 
-	public void setElement(String type, List<String> value) {
-		if(elements == null) {
-			elements = new HashMap<String, Object>();
-		}
-
-		elements.put(type, value);
-	}
-
-	public void addElement(String type, String value) {
-		if(elements == null) {
-			elements = new HashMap<String, Object>();
-		}
-
-		Object val = elements.get(type);
-
-		if(val == null) {
-			elements.put(type, value);
-		} else {
-			List<String> list = null;
-
-			if(val instanceof String) { // convert to a list-value
-				list = new ArrayList<String>();
-
-				elements.put(type,  list);
-
-				list.add((String)val);
-			} else { // value must be a List<String>
-				@SuppressWarnings("unchecked")
-				List<String> tmpList = (List<String>)val;
-				
-				list = tmpList;
-			}
-			
-			list.add(value);
-		}
-
+	@Override
+	public void setLeafElement(String type, Collection<String> value) {
+		// TODO: verify that elements doesn't have an entry for type
+		leafElementType  = type;
+		leafElementValues = value;
 	}
 
 	@Override
@@ -166,10 +113,18 @@ public class RangerResourceImpl implements RangerResource {
 
 		sb.append("elements={");
 		if(elements != null) {
-			for(Map.Entry<String, Object> e : elements.entrySet()) {
-				sb.append(e.getKey()).append("={");
-				sb.append(e.getValue());
-				sb.append("} ");
+			for(Map.Entry<String, String> e : elements.entrySet()) {
+				sb.append(e.getKey()).append("=").append(e.getValue()).append("; ");
+			}
+		}
+		sb.append("} ");
+
+		sb.append("leafElementType={").append(leafElementType).append("} ");
+
+		sb.append("leafElementValues={");
+		if(leafElementValues != null) {
+			for(String s : leafElementValues) {
+				sb.append(s).append("; ");
 			}
 		}
 		sb.append("} ");
