@@ -83,25 +83,18 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + request + ")");
 		}
 
-		RangerAccessResult ret = null;
+		RangerAccessResult ret = new RangerAccessResult();
 
 		List<RangerPolicyEvaluator> evaluators = policyEvaluators;
 
 		if(request != null && evaluators != null) {
 			for(RangerPolicyEvaluator evaluator : evaluators) {
-				ret = evaluator.evaluate(request);
+				evaluator.evaluate(request, ret);
 
-				if(ret != null) {
+				if(ret.isFinal()) {
 					break;
 				}
 			}
-		}
-
-		if(ret == null) {
-			ret = new RangerAccessResult(request);
-
-			ret.setResult(Result.DENIED);
-			ret.setAudited(Boolean.FALSE);
 		}
 
 		if(LOG.isDebugEnabled()) {

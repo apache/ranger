@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -78,33 +79,35 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	}
 
 	@Override
-	public RangerAccessResult evaluate(RangerAccessRequest request) {
+	public void evaluate(RangerAccessRequest request, RangerAccessResult result) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ")");
+			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
 		}
 
-		RangerAccessResult ret    = null;
-		RangerPolicy       policy = getPolicy();
+		RangerPolicy policy = getPolicy();
 
-		/*
-		 * TODO: handle partial-deny cases, especially for plug-ins that can deal with
-		 *       allowing access to part of the requested resource - like HBase returning
-		 *       columns for which the user has access to 
-		 */
-		if(request != null && policy != null && matchResource(request.getResource())) {
-			for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-				RangerPolicyItemAccess access = getAccess(policyItem, request.getAccessType());
+		if(policy != null && policy.getIsEnabled() && request != null && result != null && !result.isFinal()) {
+			if(matchResource(request.getResource())) {
+				for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+					RangerPolicyItemAccess access = getAccess(policyItem, request.getAccessType());
 
-				if(access != null && access.getIsAllowed()) {
-					if(matchUserGroup(policyItem, request.getUser(), request.getUserGroups())) {
-						if(matchCustomConditions(policyItem, request)) {
-							ret = new RangerAccessResult(request);
+					if(access != null && (access.getIsAllowed() || policy.getIsAuditEnabled())) {
+						if(matchUserGroup(policyItem, request.getUser(), request.getUserGroups())) {
+							if(matchCustomConditions(policyItem, request)) {
+								if(result.getResult() != Result.ALLOWED && access.getIsAllowed()) {
+									result.setResult(Result.ALLOWED);
+									result.setPolicyId(policy.getId());
+								}
 
-							ret.setPolicyId(policy.getId());
-							ret.setResult(access.getIsAllowed() ? Result.ALLOWED : Result.DENIED);
-							ret.setAudited(access.getIsAudited());
+								if(! result.isAudited() && policy.getIsAuditEnabled()) {
+									result.setAudited(true);
+								}
 
-							break;
+								if(result.getResult() == Result.ALLOWED && result.isAudited()) {
+									result.setFinal(true);
+									break;
+								}
+							}
 						}
 					}
 				}
@@ -112,10 +115,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(" + request + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
 		}
-
-		return ret;
 	}
 
 	protected boolean matchResource(RangerResource resource) {
@@ -129,15 +130,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			ret = true;
 
 			for(ResourceDefMatcher matcher : matchers) {
-				 String resourceType = matcher.getResourceType();
+				 String resourceType  = matcher.getResourceType();
+				 String resourceValue = resource.getElementValue(resourceType);
 
-				 if(resource.isLeafElement(resourceType)) {
-					 Collection<String> resourceValues = resource.getLeafElementValues();
-
-					 ret = matcher.isMatch(resourceValues);
-				 } else {
-					 String resourceValue = resource.getElementValue(resourceType);
-
+				 if(resourceValue != null) {
 					 ret = matcher.isMatch(resourceValue);
 				 }
 
@@ -161,12 +157,15 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		boolean ret = false;
 
-		if(policyItem != null && user != null && policyItem.getUsers() != null) {
-			ret = policyItem.getUsers().contains(user);
-		}
-
-		if(!ret && policyItem != null && groups != null && policyItem.getGroups() != null) {
-			ret = !Collections.disjoint(policyItem.getGroups(), groups);
+		if(policyItem != null) {
+			if(!ret && user != null && policyItem.getUsers() != null) {
+				ret = policyItem.getUsers().contains(user);
+			}
+	
+			if(!ret && groups != null && policyItem.getGroups() != null) {
+				ret = policyItem.getGroups().contains(GROUP_PUBLIC) ||
+						!Collections.disjoint(policyItem.getGroups(), groups);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

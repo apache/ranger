@@ -27,10 +27,4 @@ public interface RangerResource {
 	public abstract boolean elementExists(String type);
 
 	public abstract String getElementValue(String type);
-
-	public abstract boolean isLeafElement(String type);
-
-	public abstract String getLeafElementType();
-
-	public abstract Collection<String> getLeafElementValues();
 }

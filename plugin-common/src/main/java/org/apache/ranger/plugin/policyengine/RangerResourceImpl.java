@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,8 +26,6 @@ import java.util.Map;
 public class RangerResourceImpl implements RangerMutableResource {
 	private String              ownerUser = null;
 	private Map<String, String> elements  = null;
-	private String              leafElementType   = null;
-	private Collection<String>  leafElementValues = null;
 
 
 	public RangerResourceImpl() {
@@ -41,13 +38,7 @@ public class RangerResourceImpl implements RangerMutableResource {
 
 	@Override
 	public boolean elementExists(String type) {
-		return ((elements != null && elements.containsKey(type)) ||
-				(leafElementType != null && leafElementType.equals(type) && leafElementValues != null && !leafElementType.isEmpty()));
-	}
-
-	@Override
-	public boolean isLeafElement(String type) {
-		return leafElementType != null && leafElementType.equals(type);
+		return elements != null && elements.containsKey(type);
 	}
 
 	@Override
@@ -56,23 +47,9 @@ public class RangerResourceImpl implements RangerMutableResource {
 
 		if(elements != null && elements.containsKey(type)) {
 			ret = elements.get(type);
-		} else if(leafElementType != null && leafElementType.equals(type)) {
-			if(leafElementValues != null && !leafElementValues.isEmpty()) {
-				ret = leafElementValues.iterator().next();
-			}
 		}
 
 		return ret;
-	}
-
-	@Override
-	public String getLeafElementType() {
-		return leafElementType;
-	}
-
-	@Override
-	public Collection<String> getLeafElementValues() {
-		return leafElementValues;
 	}
 
 	@Override
@@ -88,13 +65,6 @@ public class RangerResourceImpl implements RangerMutableResource {
 		}
 
 		elements.put(type, value);
-	}
-
-	@Override
-	public void setLeafElement(String type, Collection<String> value) {
-		// TODO: verify that elements doesn't have an entry for type
-		leafElementType  = type;
-		leafElementValues = value;
 	}
 
 	@Override
@@ -115,16 +85,6 @@ public class RangerResourceImpl implements RangerMutableResource {
 		if(elements != null) {
 			for(Map.Entry<String, String> e : elements.entrySet()) {
 				sb.append(e.getKey()).append("=").append(e.getValue()).append("; ");
-			}
-		}
-		sb.append("} ");
-
-		sb.append("leafElementType={").append(leafElementType).append("} ");
-
-		sb.append("leafElementValues={");
-		if(leafElementValues != null) {
-			for(String s : leafElementValues) {
-				sb.append(s).append("; ");
 			}
 		}
 		sb.append("} ");

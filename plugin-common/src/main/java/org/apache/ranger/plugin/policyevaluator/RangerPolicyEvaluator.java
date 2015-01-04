@@ -25,11 +25,13 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
 public interface RangerPolicyEvaluator {
+	public static final String GROUP_PUBLIC = "public";
+
 	void init(RangerPolicy policy, RangerServiceDef serviceDef);
 
 	RangerPolicy getPolicy();
 
 	RangerServiceDef getServiceDef();
 
-	RangerAccessResult evaluate(RangerAccessRequest request);
+	void evaluate(RangerAccessRequest request, RangerAccessResult result);
 }

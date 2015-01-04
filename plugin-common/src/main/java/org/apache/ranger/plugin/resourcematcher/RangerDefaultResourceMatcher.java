@@ -53,11 +53,15 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 					if(policyValue == null) {
 						continue;
 					}
-	
+
 					if(optIgnoreCase) {
 						policyValue = policyValue.toLowerCase();
 					}
-					
+
+					if(optWildCard) {
+						policyValue = getWildCardPattern(policyValue);
+					}
+
 					policyValues.add(policyValue);
 				}
 			}
