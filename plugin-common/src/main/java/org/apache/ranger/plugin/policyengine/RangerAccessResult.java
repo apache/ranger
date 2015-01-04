@@ -21,36 +21,29 @@ package org.apache.ranger.plugin.policyengine;
 
 
 public class RangerAccessResult {
-	public enum Result { ALLOWED, DENIED, PARTIALLY_DENIED };
+	public enum Result { ALLOWED, DENIED };
 
-	private RangerAccessRequest request        = null;
-	private Result              result         = null;
-	private boolean             isAudited      = false;
-	private long                policyId       = -1;
-	private String              reason         = null;
+	private Result  result    = null;
+	private boolean isAudited = false;
+	private boolean isFinal   = false;
+	private long    policyId  = -1;
+	private String  reason    = null;
 
 
-	public RangerAccessResult(RangerAccessRequest request) {
-		this(request, Result.DENIED, false, -1, null);
+	public RangerAccessResult() {
+		this(Result.DENIED, false, false, -1, null);
 	}
 
-	public RangerAccessResult(RangerAccessRequest request, Result result, boolean isAudited) {
-		this(request, result, isAudited, -1, null);
+	public RangerAccessResult(Result result, boolean isAudited, boolean isFinal) {
+		this(result, isAudited, isFinal, -1, null);
 	}
 
-	public RangerAccessResult(RangerAccessRequest request, Result result, boolean isAudited, long policyId, String reason) {
-		this.request   = request;
+	public RangerAccessResult(Result result, boolean isAudited, boolean isFinal, long policyId, String reason) {
 		this.result    = result;
 		this.isAudited = isAudited;
+		this.isFinal   = isFinal;
 		this.policyId  = policyId;
 		this.reason    = reason;
-	}
-
-	/**
-	 * @return the request
-	 */
-	public RangerAccessRequest getRequest() {
-		return request;
 	}
 
 	/**
@@ -68,17 +61,31 @@ public class RangerAccessResult {
 	}
 
 	/**
-	 * @return the auditAccess
+	 * @return the isAudited
 	 */
 	public boolean isAudited() {
 		return isAudited;
 	}
 
 	/**
-	 * @param auditAccess the auditAccess to set
+	 * @param isAudited the isAudited to set
 	 */
 	public void setAudited(boolean isAudited) {
 		this.isAudited = isAudited;
+	}
+
+	/**
+	 * @return the isFinal
+	 */
+	public boolean isFinal() {
+		return isFinal;
+	}
+
+	/**
+	 * @param isFinal the isFinal to set
+	 */
+	public void setFinal(boolean isFinal) {
+		this.isFinal = isFinal;
 	}
 
 	/**
@@ -121,9 +128,9 @@ public class RangerAccessResult {
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerAccessResult={");
 
-		sb.append("request={").append(request).append("} ");
 		sb.append("result={").append(result).append("} ");
 		sb.append("isAudited={").append(isAudited).append("} ");
+		sb.append("isFinal={").append(isFinal).append("} ");
 		sb.append("policyId={").append(policyId).append("} ");
 		sb.append("reason={").append(reason).append("} ");
 

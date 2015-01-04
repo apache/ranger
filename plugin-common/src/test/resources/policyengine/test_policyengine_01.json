@@ -1,0 +1,61 @@
+{
+  "serviceDef":{
+    "name":"hive",
+    "resources":[
+      {"name":"database","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Database","description":"Hive Database"},
+      {"name":"table","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Table","description":"Hive Table"},
+      {"name":"udf","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive UDF","description":"Hive UDF"},
+      {"name":"column","level":3,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Column","description":"Hive Column"}
+    ],
+    "accessTypes":[
+      {"name":"select","label":"select"},
+      {"name":"update","label":"update"},
+      {"name":"create","label":"Create"},
+      {"name":"drop","label":"Drop"},
+      {"name":"alter","label":"Alter"},
+      {"name":"index","label":"Index"},
+      {"name":"lock","label":"Lock"},
+      {"name":"all","label":"All"}
+    ]
+  },
+
+  "policies":[
+    {"id":1,"name":"audit-all-select","isEnabled":true,"isAuditEnabled":true,
+     "resources":{"database":{"values":["*"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+     "policyItems":[
+       {"accesses":[{"type":"select","isAllowed":false}],"users":[],"groups":["public"],"delegateAdmin":false}
+     ]
+    }
+    ,
+    {"id":2,"name":"db=default; table=test*; column=*","isEnabled":true,"isAuditEnabled":true,
+     "resources":{"database":{"values":["default"]},"table":{"values":["test*"]},"column":{"values":["*"]}},
+     "policyItems":[
+       {"accesses":[{"type":"select","isAllowed":true}],"users":["user1","user2"],"groups":["group1","group2"],"delegateAdmin":false}
+     ]
+    }
+  ],
+
+  "tests":[
+    {"request":{
+      "resource":{"elements":{"database":"default"}},
+      "accessType":"select","user":"user1","userGroups":["users"],"requestData":"use default"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"request":{
+      "resource":{"elements":{"database":"default","table":"testtable","column":"col1"}},
+      "accessType":"select","user":"user1","userGroups":["users"],"requestData":"select col1 from default.testtable"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"request":{
+      "resource":{"elements":{"database":"finance"}},
+      "accessType":"select","user":"user1","userGroups":["users"],"requestData":"use finance"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+  ]
+}
+

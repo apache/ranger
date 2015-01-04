@@ -130,6 +130,15 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		return ret;
 	}
 
+	public String getWildCardPattern(String policyValue) {
+		if (policyValue != null) {
+			policyValue = policyValue.replaceAll("\\?", "\\.") 
+									 .replaceAll("\\*", ".*") ;
+		}
+
+		return policyValue ;
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
