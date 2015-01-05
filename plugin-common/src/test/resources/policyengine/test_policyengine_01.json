@@ -8,8 +8,8 @@
       {"name":"column","level":3,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Column","description":"Hive Column"}
     ],
     "accessTypes":[
-      {"name":"select","label":"select"},
-      {"name":"update","label":"update"},
+      {"name":"select","label":"Select"},
+      {"name":"update","label":"Update"},
       {"name":"create","label":"Create"},
       {"name":"drop","label":"Drop"},
       {"name":"alter","label":"Alter"},
@@ -31,28 +31,225 @@
      "resources":{"database":{"values":["default"]},"table":{"values":["test*"]},"column":{"values":["*"]}},
      "policyItems":[
        {"accesses":[{"type":"select","isAllowed":true}],"users":["user1","user2"],"groups":["group1","group2"],"delegateAdmin":false}
+       ,
+       {"accesses":[{"type":"create","isAllowed":true},{"type":"drop","isAllowed":true}],"users":["admin"],"groups":["admin"],"delegateAdmin":true}
      ]
     }
   ],
 
   "tests":[
-    {"request":{
+    {"name":"'use default;' as user1 ==> ALLOWED",
+     "request":{
       "resource":{"elements":{"database":"default"}},
       "accessType":"select","user":"user1","userGroups":["users"],"requestData":"use default"
      },
      "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
     }
     ,
-    {"request":{
+    {"name":"'use default;' as user2 ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default"}},
+      "accessType":"select","user":"user2","userGroups":["users"],"requestData":"use default"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'use default;' as user3 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default"}},
+      "accessType":"select","user":"user3","userGroups":["users"],"requestData":"use default"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'use default;' as user3, group1 ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default"}},
+      "accessType":"select","user":"user3","userGroups":["users", "group1"],"requestData":"use default"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'use default;' as user3, group2 ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default"}},
+      "accessType":"select","user":"user3","userGroups":["users", "group2"],"requestData":"use default"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'use default;' as user3, group3 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default"}},
+      "accessType":"select","user":"user3","userGroups":["users", "group3"],"requestData":"use default"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'use finance;' as user3, group3 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"finance"}},
+      "accessType":"select","user":"user1","userGroups":["users"],"requestData":"use finance"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'select col1 from default.testtable;' as user1 ==> ALLOWED",
+     "request":{
       "resource":{"elements":{"database":"default","table":"testtable","column":"col1"}},
       "accessType":"select","user":"user1","userGroups":["users"],"requestData":"select col1 from default.testtable"
      },
      "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
     }
     ,
-    {"request":{
-      "resource":{"elements":{"database":"finance"}},
-      "accessType":"select","user":"user1","userGroups":["users"],"requestData":"use finance"
+    {"name":"'select col1 from default.testtable;' as user2 ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable","column":"col1"}},
+      "accessType":"select","user":"user2","userGroups":["users"],"requestData":"select col1 from default.testtable"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'select col1 from default.testtable;' as user3 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable","column":"col1"}},
+      "accessType":"select","user":"user3","userGroups":["users"],"requestData":"select col1 from default.testtable"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'select col1 from default.testtable;' as user3, group1 ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable","column":"col1"}},
+      "accessType":"select","user":"user3","userGroups":["users","group1"],"requestData":"select col1 from default.testtable"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'select col1 from default.testtable;' as user3, group2 ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable","column":"col1"}},
+      "accessType":"select","user":"user3","userGroups":["users","group2"],"requestData":"select col1 from default.testtable"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'select col1 from default.testtable;' as user3, group3 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable","column":"col1"}},
+      "accessType":"select","user":"user3","userGroups":["users","group3"],"requestData":"select col1 from default.testtable"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'select col1 from default.table1;' as user1 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"table1","column":"col1"}},
+      "accessType":"select","user":"user1","userGroups":["users"],"requestData":"select col1 from default.table1"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'create table default.testtable1;' as user1 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable1"}},
+      "accessType":"create","user":"user1","userGroups":["users"],"requestData":"create table default.testtable1"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'create table default.testtable1;' as user1, group1 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable1"}},
+      "accessType":"create","user":"user1","userGroups":["users","group1"],"requestData":"create table default.testtable1"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'create table default.testtable1;' as admin ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable1"}},
+      "accessType":"create","user":"admin","userGroups":["users"],"requestData":"create table default.testtable1"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'create table default.testtable1;' as user1, admin ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable1"}},
+      "accessType":"create","user":"user1","userGroups":["users","admin"],"requestData":"create table default.testtable1"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+     ,
+    {"name":"'drop table default.testtable1;' as user1 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable1"}},
+      "accessType":"drop","user":"user1","userGroups":["users"],"requestData":"drop table default.testtable1"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'drop table default.testtable1;' as user1, group1 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable1"}},
+      "accessType":"drop","user":"user1","userGroups":["users","group1"],"requestData":"drop table default.testtable1"
+     },
+     "result":{"result":"DENIED","isAudited":true,"policyId":-1}
+    }
+    ,
+    {"name":"'drop table default.testtable1;' as admin ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable1"}},
+      "accessType":"drop","user":"admin","userGroups":["users"],"requestData":"drop table default.testtable1"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'drop table default.testtable1;' as user1, admin ==> ALLOWED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"testtable1"}},
+      "accessType":"drop","user":"user1","userGroups":["users","admin"],"requestData":"drop table default.testtable1"
+     },
+     "result":{"result":"ALLOWED","isAudited":true,"policyId":2}
+    }
+    ,
+    {"name":"'create table default.table1;' as user1 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"table1"}},
+      "accessType":"create","user":"user1","userGroups":["users"],"requestData":"create table default.testtable1"
+     },
+     "result":{"result":"DENIED","isAudited":false,"policyId":-1}
+    }
+    ,
+    {"name":"'create table default.table1;' as user1, admin ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"table1"}},
+      "accessType":"create","user":"user1","userGroups":["users","admin"],"requestData":"create table default.testtable1"
+     },
+     "result":{"result":"DENIED","isAudited":false,"policyId":-1}
+    }
+    ,
+    {"name":"'drop table default.table1;' as user1 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"table1"}},
+      "accessType":"drop","user":"user1","userGroups":["users"],"requestData":"drop table default.testtable1"
+     },
+     "result":{"result":"DENIED","isAudited":false,"policyId":-1}
+    }
+    ,
+    {"name":"'drop table default.table1;' as user1, admin ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"table1"}},
+      "accessType":"drop","user":"user1","userGroups":["users","admin"],"requestData":"drop table default.testtable1"
+     },
+     "result":{"result":"DENIED","isAudited":false,"policyId":-1}
+    }
+    ,
+    {"name":"'select col1 from default.table1;' as user3 ==> DENIED",
+     "request":{
+      "resource":{"elements":{"database":"default","table":"table1","column":"col1"}},
+      "accessType":"select","user":"user3","userGroups":["users"],"requestData":"select col1 from default.table1"
      },
      "result":{"result":"DENIED","isAudited":true,"policyId":-1}
     }

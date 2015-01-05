@@ -91,23 +91,23 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
 					RangerPolicyItemAccess access = getAccess(policyItem, request.getAccessType());
 
-					if(access != null && (access.getIsAllowed() || policy.getIsAuditEnabled())) {
+					if(access != null) {
+						if(! result.isAudited() && policy.getIsAuditEnabled()) {
+							result.setAudited(true);
+						}
+
 						if(matchUserGroup(policyItem, request.getUser(), request.getUserGroups())) {
 							if(matchCustomConditions(policyItem, request)) {
 								if(result.getResult() != Result.ALLOWED && access.getIsAllowed()) {
 									result.setResult(Result.ALLOWED);
 									result.setPolicyId(policy.getId());
 								}
-
-								if(! result.isAudited() && policy.getIsAuditEnabled()) {
-									result.setAudited(true);
-								}
-
-								if(result.getResult() == Result.ALLOWED && result.isAudited()) {
-									result.setFinal(true);
-									break;
-								}
 							}
+						}
+
+						if(result.getResult() == Result.ALLOWED && result.isAudited()) {
+							result.setFinal(true);
+							break;
 						}
 					}
 				}
