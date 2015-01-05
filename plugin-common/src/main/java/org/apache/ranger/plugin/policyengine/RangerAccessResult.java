@@ -19,6 +19,9 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringUtils;
+
 
 public class RangerAccessResult {
 	public enum Result { ALLOWED, DENIED };
@@ -114,6 +117,38 @@ public class RangerAccessResult {
 	 */
 	public void setReason(String reason) {
 		this.reason = reason;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		boolean ret = false;
+
+		if(obj != null && (obj instanceof RangerAccessResult)) {
+			RangerAccessResult other = (RangerAccessResult)obj;
+
+			ret = (this == other);
+
+			if(! ret) {
+				ret = this.isAudited == other.isAudited &&
+					  this.policyId == other.policyId &&
+					  StringUtils.equals(this.reason, other.reason) &&
+					  ObjectUtils.equals(this.result, other.result);
+			}
+		}
+
+		return ret;
+	}
+
+	@Override
+	public int hashCode() {
+		int ret = 7;
+
+		ret = 31 * ret + (isAudited ? 1 : 0);
+		ret = 31 * ret + (int)policyId;
+		ret = 31 * ret + (reason == null ? 0 : reason.hashCode());
+		ret = 31 * ret + (result == null ? 0 : result.hashCode());
+
+		return ret;
 	}
 
 	@Override

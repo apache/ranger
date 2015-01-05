@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTests.TestData;
+import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -53,19 +53,17 @@ public class TestPolicyEngine {
 
 	public void runTests(InputStreamReader reader, String testName) {
 		try {
-			PolicyEngineTests tests = gsonBuilder.fromJson(reader, PolicyEngineTests.class);
+			PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
 
-			assertTrue("invalid input: " + testName, tests != null && tests.serviceDef != null && tests.policies != null && tests.tests != null);
+			assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
 
-			policyEngine.setPolicies(tests.serviceDef, tests.policies);
+			policyEngine.setPolicies(testCase.serviceDef, testCase.policies);
 			
-			for(TestData td : tests.tests) {
-				RangerAccessResult expected = td.result;
-				RangerAccessResult result   = policyEngine.isAccessAllowed(td.request);
+			for(TestData test : testCase.tests) {
+				RangerAccessResult expected = test.result;
+				RangerAccessResult result   = policyEngine.isAccessAllowed(test.request);
 
-				assertEquals(result.getResult(), expected.getResult());
-				assertEquals(result.isAudited(), expected.isAudited());
-				assertEquals(result.getPolicyId(), expected.getPolicyId());
+				assertEquals(test.name, expected, result);
 			}
 		} catch(Throwable excp) {
 			excp.printStackTrace();
@@ -73,10 +71,10 @@ public class TestPolicyEngine {
 		
 	}
 
-	static class PolicyEngineTests {
-		public RangerServiceDef      serviceDef;
-		public List<RangerPolicy>    policies;
-		public List<TestData>        tests;
+	static class PolicyEngineTestCase {
+		public RangerServiceDef   serviceDef;
+		public List<RangerPolicy> policies;
+		public List<TestData>     tests;
 		
 		class TestData {
 			public String              name;
