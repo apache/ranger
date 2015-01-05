@@ -19,18 +19,18 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 public interface RangerAccessRequest {
 	RangerResource getResource();
 
-	String getAccessType();
+	Set<String> getAccessTypes();
 
 	String getUser();
 
-	Collection<String> getUserGroups();
+	Set<String> getUserGroups();
 
 	Date getAccessTime();
 

@@ -1,20 +1,17 @@
 package org.apache.ranger.plugin.policyengine;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import java.util.Set;
 
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private RangerResource      resource        = null;
-	private String              accessType      = null;
+	private Set<String>         accessTypes     = null;
 	private String              user            = null;
-	private Collection<String>  userGroups      = null;
+	private Set<String>         userGroups      = null;
 	private Date                accessTime      = null;
 	private String              clientIPAddress = null;
 	private String              clientType      = null;
@@ -28,9 +25,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this(null, null, null, null);
 	}
 
-	public RangerAccessRequestImpl(RangerResource resource, String accessType, String user, Collection<String> userGroups) {
+	public RangerAccessRequestImpl(RangerResource resource, Set<String> accessTypes, String user, Set<String> userGroups) {
 		setResource(resource);
-		setAccessType(accessType);
+		setAccessTypes(accessTypes);
 		setUser(user);
 		setUserGroups(userGroups);
 
@@ -50,8 +47,8 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public String getAccessType() {
-		return accessType;
+	public Set<String> getAccessTypes() {
+		return accessTypes;
 	}
 
 	@Override
@@ -60,7 +57,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public Collection<String> getUserGroups() {
+	public Set<String> getUserGroups() {
 		return userGroups;
 	}
 
@@ -104,15 +101,15 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.resource = resource;
 	}
 
-	public void setAccessType(String accessType) {
-		this.accessType = accessType;
+	public void setAccessTypes(Set<String> accessTypes) {
+		this.accessTypes = (accessTypes == null) ? new HashSet<String>() : accessTypes;
 	}
 
 	public void setUser(String user) {
 		this.user = user;
 	}
 
-	public void setUserGroups(Collection<String> userGroups) {
+	public void setUserGroups(Set<String> userGroups) {
 		this.userGroups = (userGroups == null) ? new HashSet<String>() : userGroups;
 	}
 
@@ -157,7 +154,14 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("RangerAccessRequestImpl={");
 
 		sb.append("resource={").append(resource).append("} ");
-		sb.append("accessType={").append(accessType).append("} ");
+
+		sb.append("accessTypes={");
+		if(accessTypes != null) {
+			for(String accessType : accessTypes) {
+				sb.append(accessType).append(" ");
+			}
+		}
+
 		sb.append("user={").append(user).append("} ");
 
 		sb.append("userGroups={");

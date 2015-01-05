@@ -19,104 +19,108 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 
 
 public class RangerAccessResult {
-	public enum Result { ALLOWED, DENIED };
+	public enum Result { ALLOWED, DENIED, PARTIALLY_ALLOWED };
 
-	private Result  result    = null;
-	private boolean isAudited = false;
-	private boolean isFinal   = false;
-	private long    policyId  = -1;
-	private String  reason    = null;
-
+	private Map<String, ResultDetail> accessTypeResults = null;
 
 	public RangerAccessResult() {
-		this(Result.DENIED, false, false, -1, null);
+		this(null);
 	}
 
-	public RangerAccessResult(Result result, boolean isAudited, boolean isFinal) {
-		this(result, isAudited, isFinal, -1, null);
-	}
-
-	public RangerAccessResult(Result result, boolean isAudited, boolean isFinal, long policyId, String reason) {
-		this.result    = result;
-		this.isAudited = isAudited;
-		this.isFinal   = isFinal;
-		this.policyId  = policyId;
-		this.reason    = reason;
+	public RangerAccessResult(Map<String, ResultDetail> accessTypeResults) {
+		setAccessTypeResults(accessTypeResults);
 	}
 
 	/**
-	 * @return the result
+	 * @return the accessTypeResults
 	 */
-	public Result getResult() {
-		return result;
+	public Map<String, ResultDetail> getAccessTypeResults() {
+		return accessTypeResults;
 	}
 
 	/**
 	 * @param result the result to set
 	 */
-	public void setResult(Result result) {
-		this.result = result;
+	public void setAccessTypeResults(Map<String, ResultDetail> accessTypeResults) {
+		this.accessTypeResults = accessTypeResults == null ? new HashMap<String, ResultDetail>() : accessTypeResults;
 	}
 
 	/**
-	 * @return the isAudited
+	 * @param accessType the accessType
+	 * @return the accessTypeResult
 	 */
-	public boolean isAudited() {
-		return isAudited;
+	public ResultDetail getAccessTypeResult(String accessType) {
+		return accessTypeResults == null ? null : accessTypeResults.get(accessType);
 	}
 
 	/**
-	 * @param isAudited the isAudited to set
+	 * @param accessType the accessType
+	 * @param result the result to set
 	 */
-	public void setAudited(boolean isAudited) {
-		this.isAudited = isAudited;
+	public void setAccessTypeResult(String accessType, ResultDetail result) {
+		if(accessTypeResults == null) {
+			accessTypeResults = new HashMap<String, ResultDetail>();
+		}
+
+		accessTypeResults.put(accessType, result);
+	}
+
+	public boolean isAllAllowedAndAudited() {
+		boolean ret = true;
+
+		if(accessTypeResults != null) {
+			for(Map.Entry<String, ResultDetail> e : accessTypeResults.entrySet()) {
+				ResultDetail result = e.getValue();
+				
+				ret = result.isAllowed && result.isAudited;
+				
+				if(! ret) {
+					break;
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	/**
-	 * @return the isFinal
+	 * @return the overall result
 	 */
-	public boolean isFinal() {
-		return isFinal;
-	}
+	public Result getResult() {
+		Result ret = Result.ALLOWED;
 
-	/**
-	 * @param isFinal the isFinal to set
-	 */
-	public void setFinal(boolean isFinal) {
-		this.isFinal = isFinal;
-	}
+		if(accessTypeResults != null) {
+			int numAllowed = 0;
+			int numDenied  = 0;
 
-	/**
-	 * @return the policyId
-	 */
-	public long getPolicyId() {
-		return policyId;
-	}
+			for(Map.Entry<String, ResultDetail> e : accessTypeResults.entrySet()) {
+				ResultDetail result = e.getValue();
+				
+				if(result.isAllowed) {
+					numAllowed++;
+				} else {
+					numDenied++;
+				}
+			}
+			
+			if(numAllowed == accessTypeResults.size()) {
+				ret = Result.ALLOWED;
+			} else if(numDenied == accessTypeResults.size()) {
+				ret = Result.DENIED;
+			} else {
+				ret = Result.PARTIALLY_ALLOWED;
+			}
+		}
 
-	/**
-	 * @param policyId the policyId to set
-	 */
-	public void setPolicyId(long policyId) {
-		this.policyId = policyId;
-	}
-
-	/**
-	 * @return the reason
-	 */
-	public String getReason() {
-		return reason;
-	}
-
-	/**
-	 * @param reason the reason to set
-	 */
-	public void setReason(String reason) {
-		this.reason = reason;
+		return ret;
 	}
 
 	@Override
@@ -126,14 +130,8 @@ public class RangerAccessResult {
 		if(obj != null && (obj instanceof RangerAccessResult)) {
 			RangerAccessResult other = (RangerAccessResult)obj;
 
-			ret = (this == other);
-
-			if(! ret) {
-				ret = this.isAudited == other.isAudited &&
-					  this.policyId == other.policyId &&
-					  StringUtils.equals(this.reason, other.reason) &&
-					  ObjectUtils.equals(this.result, other.result);
-			}
+			ret = (this == other) ||
+				   ObjectUtils.equals(accessTypeResults, other.accessTypeResults);
 		}
 
 		return ret;
@@ -143,10 +141,7 @@ public class RangerAccessResult {
 	public int hashCode() {
 		int ret = 7;
 
-		ret = 31 * ret + (isAudited ? 1 : 0);
-		ret = 31 * ret + (int)policyId;
-		ret = 31 * ret + (reason == null ? 0 : reason.hashCode());
-		ret = 31 * ret + (result == null ? 0 : result.hashCode());
+		ret = 31 * ret + (accessTypeResults == null ? 0 : accessTypeResults.hashCode()); // TODO: review
 
 		return ret;
 	}
@@ -163,14 +158,136 @@ public class RangerAccessResult {
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerAccessResult={");
 
-		sb.append("result={").append(result).append("} ");
-		sb.append("isAudited={").append(isAudited).append("} ");
-		sb.append("isFinal={").append(isFinal).append("} ");
-		sb.append("policyId={").append(policyId).append("} ");
-		sb.append("reason={").append(reason).append("} ");
+		sb.append("accessTypeResults={");
+		if(accessTypeResults != null) {
+			for(Map.Entry<String, ResultDetail> e : accessTypeResults.entrySet()) {
+				sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
+			}
+		}
+		sb.append("} ");
 
 		sb.append("}");
 
 		return sb;
+	}
+
+	public static class ResultDetail {
+		private boolean isAllowed;
+		private boolean isAudited;
+		private long    policyId;
+		private String  reason;
+
+		public ResultDetail() {
+			setIsAllowed(false);
+			setIsAudited(false);
+			setPolicyId(-1);
+			setReason(null);
+		}
+
+		/**
+		 * @return the isAllowed
+		 */
+		public boolean isAllowed() {
+			return isAllowed;
+		}
+
+		/**
+		 * @param isAllowed the isAllowed to set
+		 */
+		public void setIsAllowed(boolean isAllowed) {
+			this.isAllowed = isAllowed;
+		}
+
+		/**
+		 * @return the isAudited
+		 */
+		public boolean isAudited() {
+			return isAudited;
+		}
+
+		/**
+		 * @param isAudited the isAudited to set
+		 */
+		public void setIsAudited(boolean isAudited) {
+			this.isAudited = isAudited;
+		}
+
+		/**
+		 * @return the policyId
+		 */
+		public long getPolicyId() {
+			return policyId;
+		}
+
+		/**
+		 * @param policyId the policyId to set
+		 */
+		public void setPolicyId(long policyId) {
+			this.policyId = policyId;
+		}
+
+		/**
+		 * @return the reason
+		 */
+		public String getReason() {
+			return reason;
+		}
+
+		/**
+		 * @param reason the reason to set
+		 */
+		public void setReason(String reason) {
+			this.reason = reason;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			boolean ret = false;
+
+			if(obj != null && (obj instanceof ResultDetail)) {
+				ResultDetail other = (ResultDetail)obj;
+
+				ret = (this == other);
+
+				if(! ret) {
+					ret = this.isAllowed == other.isAllowed &&
+						  this.isAudited == other.isAudited &&
+						  this.policyId == other.policyId &&
+						  StringUtils.equals(this.reason, other.reason);
+				}
+			}
+
+			return ret;
+		}
+
+		@Override
+		public int hashCode() {
+			int ret = 7;
+
+			ret = 31 * ret + (isAllowed ? 1 : 0);
+			ret = 31 * ret + (isAudited ? 1 : 0);
+			ret = 31 * ret + (int)policyId;
+			ret = 31 * ret + (reason == null ? 0 : reason.hashCode());
+
+			return ret;
+		}
+
+		@Override
+		public String toString( ) {
+			StringBuilder sb = new StringBuilder();
+
+			toString(sb);
+
+			return sb.toString();
+		}
+
+		public StringBuilder toString(StringBuilder sb) {
+			sb.append("isAllowed={").append(isAllowed).append("} ");
+			sb.append("isAudited={").append(isAudited).append("} ");
+			sb.append("policyId={").append(policyId).append("} ");
+			sb.append("reason={").append(reason).append("} ");
+
+			return sb;
+		}
 	}
 }

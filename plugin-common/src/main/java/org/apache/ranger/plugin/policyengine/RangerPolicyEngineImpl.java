@@ -29,7 +29,6 @@ import org.apache.ranger.plugin.manager.ServiceManager;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult.Result;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
@@ -60,10 +59,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<RangerPolicyEvaluator> evaluators = new ArrayList<RangerPolicyEvaluator>();
 
 			for(RangerPolicy policy : policies) {
-				RangerPolicyEvaluator evaluator = getPolicyEvaluator(policy, serviceDef);
-
-				if(evaluator != null) {
-					evaluators.add(evaluator);
+				if(policy.getIsEnabled()) {
+					RangerPolicyEvaluator evaluator = getPolicyEvaluator(policy, serviceDef);
+	
+					if(evaluator != null) {
+						evaluators.add(evaluator);
+					}
 				}
 			}
 			
@@ -87,11 +88,15 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		List<RangerPolicyEvaluator> evaluators = policyEvaluators;
 
-		if(request != null && evaluators != null) {
+		if(request != null && request.getAccessTypes() != null && evaluators != null) {
+			for(String accessType : request.getAccessTypes()) {
+				ret.setAccessTypeResult(accessType, new RangerAccessResult.ResultDetail());
+			}
+
 			for(RangerPolicyEvaluator evaluator : evaluators) {
 				evaluator.evaluate(request, ret);
-
-				if(ret.isFinal()) {
+				
+				if(ret.isAllAllowedAndAudited()) {
 					break;
 				}
 			}
@@ -127,17 +132,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	@Override
-	public void auditAccess(RangerAccessResult result) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void auditAccess(List<RangerAccessResult> results) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	public void init(String svcName) throws Exception {
 		if(LOG.isDebugEnabled()) {
@@ -184,11 +178,19 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	private RangerPolicyEvaluator getPolicyEvaluator(RangerPolicy policy, RangerServiceDef serviceDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.getPolicyEvaluator(" + policy + "," + serviceDef + ")");
+		}
+
 		RangerPolicyEvaluator ret = null;
 
 		ret = new RangerDefaultPolicyEvaluator(); // TODO: configurable evaluator class?
 
 		ret.init(policy, serviceDef);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.getPolicyEvaluator(" + policy + "," + serviceDef + "): " + ret);
+		}
 
 		return ret;
 	}
