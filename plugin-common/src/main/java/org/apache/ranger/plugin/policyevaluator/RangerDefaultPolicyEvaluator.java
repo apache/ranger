@@ -86,29 +86,42 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		RangerPolicy policy = getPolicy();
 
-		if(policy != null && policy.getIsEnabled() && request != null && result != null && !result.isFinal()) {
+		if(policy != null && request != null && result != null) {
 			if(matchResource(request.getResource())) {
 				for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-					RangerPolicyItemAccess access = getAccess(policyItem, request.getAccessType());
+					for(String accessType : request.getAccessTypes()) {
+						RangerPolicyItemAccess access = getAccess(policyItem, accessType);
 
-					if(access != null) {
-						if(! result.isAudited() && policy.getIsAuditEnabled()) {
-							result.setAudited(true);
+						if(access == null) {
+							continue;
+						}
+
+						RangerAccessResult.ResultDetail accessResult = result.getAccessTypeResult(accessType);
+						
+						if(accessResult.isAllowed() && accessResult.isAudited()) {
+							continue;
+						}
+
+						if(!accessResult.isAudited() && policy.getIsAuditEnabled()) {
+							accessResult.setIsAudited(true);
 						}
 
 						if(matchUserGroup(policyItem, request.getUser(), request.getUserGroups())) {
 							if(matchCustomConditions(policyItem, request)) {
-								if(result.getResult() != Result.ALLOWED && access.getIsAllowed()) {
-									result.setResult(Result.ALLOWED);
-									result.setPolicyId(policy.getId());
+								if(!accessResult.isAllowed() && access.getIsAllowed()) {
+									accessResult.setIsAllowed(true);
+									accessResult.setPolicyId(policy.getId());
 								}
 							}
 						}
 
-						if(result.getResult() == Result.ALLOWED && result.isAudited()) {
-							result.setFinal(true);
+						if(result.isAllAllowedAndAudited()) {
 							break;
 						}
+					}
+
+					if(result.isAllAllowedAndAudited()) {
+						break;
 					}
 				}
 			}

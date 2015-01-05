@@ -30,8 +30,4 @@ public interface RangerPolicyEngine {
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
 
 	List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests);
-
-	void auditAccess(RangerAccessResult result);
-
-	void auditAccess(List<RangerAccessResult> results);
 }
