@@ -22,14 +22,8 @@ package org.apache.ranger.plugin.policyengine;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-
 
 public class RangerResourceImpl implements RangerMutableResource {
-	private static final String RESOURCE_SEP = "/";
-
 	private String              ownerUser = null;
 	private Map<String, String> elements  = null;
 
@@ -43,49 +37,16 @@ public class RangerResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
-	public boolean elementExists(String type) {
-		return elements != null && elements.containsKey(type);
+	public boolean exists(String name) {
+		return elements != null && elements.containsKey(name);
 	}
 
 	@Override
-	public String getElementValue(String type) {
+	public String getValue(String name) {
 		String ret = null;
 
-		if(elements != null && elements.containsKey(type)) {
-			ret = elements.get(type);
-		}
-
-		return ret;
-	}
-
-	@Override
-	public String getValueAsString(RangerServiceDef serviceDef) {
-		String ret = null;
-
-		if(elements != null && serviceDef != null && serviceDef.getResources() != null) {
-			StringBuilder sb = new StringBuilder();
-
-			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-				if(resourceDef == null) {
-					continue;
-				}
-
-				String value = getElementValue(resourceDef.getName());
-
-				if(StringUtils.isEmpty(value)) {
-					continue;
-				}
-
-				if(sb.length() > 0) {
-					sb.append(RESOURCE_SEP);
-				}
-
-				sb.append(value);
-			}
-
-			if(sb.length() > 0) {
-				ret = sb.toString();
-			}
+		if(elements != null && elements.containsKey(name)) {
+			ret = elements.get(name);
 		}
 
 		return ret;
@@ -97,12 +58,12 @@ public class RangerResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
-	public void setElement(String type, String value) {
+	public void setValue(String name, String value) {
 		if(elements == null) {
 			elements = new HashMap<String, String>();
 		}
 
-		elements.put(type, value);
+		elements.put(name, value);
 	}
 
 	@Override

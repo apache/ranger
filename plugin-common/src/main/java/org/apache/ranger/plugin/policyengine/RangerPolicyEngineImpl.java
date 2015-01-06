@@ -24,11 +24,9 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.manager.ServiceDefManager;
-import org.apache.ranger.plugin.manager.ServiceManager;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
@@ -36,7 +34,10 @@ import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineImpl.class);
 
+	private static final String RESOURCE_SEP = "/";
+
 	private boolean                     autoAuditEnabled = true;
+	private RangerServiceDef            serviceDef       = null;
 	private List<RangerPolicyEvaluator> policyEvaluators = null;
 
 
@@ -61,7 +62,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.setPolicies(" + serviceDef + ", " + policies + ")");
 		}
-
+		
 		if(serviceDef != null && policies != null) {
 			List<RangerPolicyEvaluator> evaluators = new ArrayList<RangerPolicyEvaluator>();
 
@@ -74,7 +75,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					}
 				}
 			}
-			
+
+			this.serviceDef       = serviceDef;
 			this.policyEvaluators = evaluators;
 		} else {
 			LOG.error("RangerPolicyEngineImpl.setPolicies(): invalid arguments - null serviceDef/policies");
@@ -109,6 +111,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
+		if(autoAuditEnabled) {
+			// TODO: generate access audit
+		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + request + "): " + ret);
 		}
@@ -140,6 +146,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 
+	/*
 	public void init(String svcName) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.init(" + svcName + ")");
@@ -182,6 +189,55 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.init(" + svcName + ")");
 		}
+	}
+	*/
+
+	public String getResourceName(RangerResource resource) {
+		String ret = null;
+
+		if(resource != null && serviceDef != null && serviceDef.getResources() != null) {
+			List<RangerResourceDef> resourceDefs = serviceDef.getResources();
+
+			for(int idx = resourceDefs.size() - 1; idx >= 0; idx--) {
+				RangerResourceDef resourceDef = resourceDefs.get(idx);
+
+				if(resourceDef == null || !resource.exists(resourceDef.getName())) {
+					continue;
+				}
+
+				ret = resourceDef.getName();
+
+				break;
+			}
+		}
+		
+		return ret;
+	}
+
+	public String getResourceValueAsString(RangerResource resource) {
+		String ret = null;
+
+		if(resource != null && serviceDef != null && serviceDef.getResources() != null) {
+			StringBuilder sb = new StringBuilder();
+
+			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+				if(resourceDef == null || !resource.exists(resourceDef.getName())) {
+					continue;
+				}
+
+				if(sb.length() > 0) {
+					sb.append(RESOURCE_SEP);
+				}
+
+				sb.append(resource.getValue(resourceDef.getName()));
+			}
+
+			if(sb.length() > 0) {
+				ret = sb.toString();
+			}
+		}
+
+		return ret;
 	}
 
 	private RangerPolicyEvaluator getPolicyEvaluator(RangerPolicy policy, RangerServiceDef serviceDef) {
