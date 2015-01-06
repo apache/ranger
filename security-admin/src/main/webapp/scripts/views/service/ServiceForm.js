@@ -156,13 +156,15 @@ define(function(require){
 					that.model.unset(obj.name);
 				}
 			});
-			this.model.set('configs',JSON.stringify(config));
-			
+			//this.model.set('configs',JSON.stringify(config));
+			this.model.set('configs',config);
+
 			//Set service type
-			_.each(XAEnums.AssetType, function(asset){
+			this.model.set('type',this.rangerServiceDefModel.get('name'))
+			/*_.each(XAEnums.AssetType, function(asset){
 				if(asset.label.toUpperCase() == this.rangerServiceDefModel.get('name').toUpperCase())
 					this.model.set('type',asset.label)
-			},this);
+			},this);*/
 //			
 			//Set isEnabled
 			if(parseInt(this.model.get('isEnabled')) == XAEnums.ActiveStatus.STATUS_ENABLED.value)

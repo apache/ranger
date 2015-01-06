@@ -33,9 +33,9 @@
   ],
   "resources":
   [
-    {"name":"table","type":"string","level":1,"parent":"","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Table","description":"HBase Table"},
-    {"name":"column-family","type":"string","level":2,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Column-family","description":"HBase Column-family"},
-    {"name":"column","type":"string","level":3,"parent":"column-family","mandatory":true,"lookupSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Column","description":"HBase Column"}
+    {"name":"table","type":"select2","level":1,"parent":"","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Table","description":"HBase Table"},
+    {"name":"column-family","type":"select2","level":2,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Column-family","description":"HBase Column-family"},
+    {"name":"column","type":"select2","level":3,"parent":"column-family","mandatory":true,"lookupSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Column","description":"HBase Column"}
   ],
   "accessTypes":
   [

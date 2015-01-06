@@ -101,10 +101,12 @@ define(function(require){
 			this.params = {};
 		},
 		initializeServiceDef : function(){
+			
 			var service = _.find(XAEnums.ServiceType,function(service){
 				return service.label.toUpperCase() == this.rangerService.get('type').toUpperCase();
 			},this);
-			this.rangerServiceDefModel	= new RangerServiceDef({ id : service.value });
+			this.rangerServiceDefModel	= new RangerServiceDef();
+			this.rangerServiceDefModel.url = "service/plugins/definitions/name/"+this.rangerService.get('type');
 			this.rangerServiceDefModel.fetch({
 				cache : false,
 				async : false
