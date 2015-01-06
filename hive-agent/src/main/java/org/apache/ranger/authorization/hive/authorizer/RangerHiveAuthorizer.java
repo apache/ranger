@@ -116,7 +116,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								boolean             grantOption)
 										throws HiveAuthzPluginException, HiveAccessControlException {
 		if(! UpdateXaPoliciesOnGrantRevoke) {
-			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Argus HiveAuthorizer. Please use Argus Security Admin to setup access control.");
+			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
 
 		boolean                isSuccess     = false;
@@ -164,7 +164,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								 boolean             grantOption)
 										 throws HiveAuthzPluginException, HiveAccessControlException {
 		if(! UpdateXaPoliciesOnGrantRevoke) {
-			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Argus HiveAuthorizer. Please use Argus Security Admin to setup access control.");
+			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
 
 		boolean                isSuccess     = false;
@@ -274,7 +274,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				RangerHiveObjectAccessInfo hiveAccessObj = getObjectAccessInfo(hiveOpType, hiveObj, context, true);
 				
 				if(   hiveAccessObj != null
-				   && hiveAccessObj.getAccessType() != HiveAccessType.ADMIN // access check is performed at the Argus policy server, as a part of updating the permissions
+				   && hiveAccessObj.getAccessType() != HiveAccessType.ADMIN // access check is performed at the Ranger policy server, as a part of updating the permissions
 				   && !ret.contains(hiveAccessObj)) {
 					ret.add(hiveAccessObj);
 				}
@@ -286,7 +286,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				RangerHiveObjectAccessInfo hiveAccessObj = getObjectAccessInfo(hiveOpType, hiveObj, context, false);
 				
 				if(   hiveAccessObj != null
-				   && hiveAccessObj.getAccessType() != HiveAccessType.ADMIN // access check is performed at the Argus policy server, as a part of updating the permissions
+				   && hiveAccessObj.getAccessType() != HiveAccessType.ADMIN // access check is performed at the Ranger policy server, as a part of updating the permissions
 				   && !ret.contains(hiveAccessObj)) {
 					ret.add(hiveAccessObj);
 				}

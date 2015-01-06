@@ -12,5 +12,4 @@ fully endorsed by the ASF.
 For more information about the incubation status of the Apache Ranger project you
 can go to the following page:
 
-http://incubator.apache.org/argus/
-
+http://ranger.incubator.apache.org

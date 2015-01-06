@@ -224,7 +224,7 @@ public abstract class RangerHiveAuthorizerBase implements HiveAuthorizer {
 	}
 
 	private void throwNotImplementedException(String method) throws HiveAuthzPluginException {
-		throw new HiveAuthzPluginException(method + "() not implemented in Argus HiveAuthorizer");
+		throw new HiveAuthzPluginException(method + "() not implemented in Ranger HiveAuthorizer");
 	}
 
 }
