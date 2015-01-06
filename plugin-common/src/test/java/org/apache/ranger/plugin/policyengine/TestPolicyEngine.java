@@ -24,8 +24,8 @@ import com.google.gson.JsonParseException;
 
 
 public class TestPolicyEngine {
-	static RangerPolicyEngine policyEngine = null;
-	static Gson               gsonBuilder  = null;
+	static RangerPolicyEngineImpl policyEngine = null;
+	static Gson                   gsonBuilder  = null;
 
 
 	@BeforeClass
@@ -58,7 +58,7 @@ public class TestPolicyEngine {
 			assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
 
 			policyEngine.setPolicies(testCase.serviceDef, testCase.policies);
-			
+
 			for(TestData test : testCase.tests) {
 				RangerAccessResult expected = test.result;
 				RangerAccessResult result   = policyEngine.isAccessAllowed(test.request);

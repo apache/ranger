@@ -707,6 +707,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private static final long serialVersionUID = 1L;
 
 		private String  name               = null;
+		private String  type               = null;
 		private Integer level              = null;
 		private String  parent             = null;
 		private Boolean mandatory          = null;
@@ -722,11 +723,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerResourceDef() {
-			this(null, null, null, null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerResourceDef(String name, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String label, String description, String rbKeyLabel, String rbKeyDescription) {
+		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String label, String description, String rbKeyLabel, String rbKeyDescription) {
 			setName(name);
+			setType(type);
 			setLevel(level);
 			setParent(parent);
 			setMandatory(mandatory);
@@ -753,6 +755,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		 */
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		/**
+		 * @return the type
+		 */
+		public String getType() {
+			return type;
+		}
+
+		/**
+		 * @param type the type to set
+		 */
+		public void setType(String type) {
+			this.type = type;
 		}
 
 		/**
@@ -935,6 +951,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerResourceDef={");
 			sb.append("name={").append(name).append("} ");
+			sb.append("type={").append(type).append("} ");
 			sb.append("level={").append(level).append("} ");
 			sb.append("parent={").append(parent).append("} ");
 			sb.append("mandatory={").append(mandatory).append("} ");

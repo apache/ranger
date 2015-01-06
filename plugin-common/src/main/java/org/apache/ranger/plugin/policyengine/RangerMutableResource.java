@@ -23,5 +23,5 @@ package org.apache.ranger.plugin.policyengine;
 public interface RangerMutableResource extends RangerResource {
 	void setOwnerUser(String ownerUser);
 
-	void setElement(String type, String value);
+	void setValue(String type, String value);
 }

@@ -59,16 +59,16 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if(policy != null && policy.getResources() != null) {
 			for(Map.Entry<String, RangerPolicyResource> e : policy.getResources().entrySet()) {
-				String               resourceType   = e.getKey();
+				String               resourceName   = e.getKey();
 				RangerPolicyResource policyResource = e.getValue();
-				RangerResourceDef    resourceDef    = getResourceDef(resourceType);
+				RangerResourceDef    resourceDef    = getResourceDef(resourceName);
 
 				RangerResourceMatcher matcher = createResourceMatcher(resourceDef, policyResource);
 
 				if(matcher != null) {
 					matchers.add(new ResourceDefMatcher(resourceDef, matcher));
 				} else {
-					// TODO: ERROR: no matcher found for resourceType
+					// TODO: ERROR: no matcher found for resourceName
 				}
 			}
 		}
@@ -143,8 +143,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			ret = true;
 
 			for(ResourceDefMatcher matcher : matchers) {
-				 String resourceType  = matcher.getResourceType();
-				 String resourceValue = resource.getElementValue(resourceType);
+				 String resourceName  = matcher.getResourceName();
+				 String resourceValue = resource.getValue(resourceName);
 
 				 if(resourceValue != null) {
 					 ret = matcher.isMatch(resourceValue);
@@ -229,18 +229,18 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	protected RangerResourceDef getResourceDef(String resourceType) {
+	protected RangerResourceDef getResourceDef(String resourceName) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.getResourceDef(" + resourceType + ")");
+			LOG.debug("==> RangerDefaultPolicyEvaluator.getResourceDef(" + resourceName + ")");
 		}
 
 		RangerResourceDef ret = null;
 
 		RangerServiceDef serviceDef = getServiceDef();
 
-		if(serviceDef != null && resourceType != null) {
+		if(serviceDef != null && resourceName != null) {
 			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-				if(StringUtils.equalsIgnoreCase(resourceType, resourceDef.getName())) {
+				if(StringUtils.equalsIgnoreCase(resourceName, resourceDef.getName())) {
 					ret = resourceDef;
 
 					break;
@@ -249,7 +249,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.getResourceDef(" + resourceType + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyEvaluator.getResourceDef(" + resourceName + "): " + ret);
 		}
 
 		return ret;
@@ -325,7 +325,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			this.resourceMatcher = resourceMatcher;
 		}
 		
-		String getResourceType() {
+		String getResourceName() {
 			return resourceDef.getName();
 		}
 
