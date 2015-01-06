@@ -36,16 +36,23 @@ import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineImpl.class);
 
+	private boolean                     autoAuditEnabled = true;
 	private List<RangerPolicyEvaluator> policyEvaluators = null;
 
 
 	public RangerPolicyEngineImpl() {
+		this(true);
+	}
+
+	public RangerPolicyEngineImpl(boolean autoAuditEnabled) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl()");
+			LOG.debug("==> RangerPolicyEngineImpl(" + autoAuditEnabled + ")");
 		}
 
+		this.autoAuditEnabled = autoAuditEnabled;
+
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl()");
+			LOG.debug("<== RangerPolicyEngineImpl(" + autoAuditEnabled + ")");
 		}
 	}
 	

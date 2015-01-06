@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.resourcematcher;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -55,23 +56,20 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 		if(optionsString != null) {
 			for(String optionString : optionsString.split(OPTIONS_SEP)) {
-				if(optionString == null) {
+				if(StringUtils.isEmpty(optionString)) {
 					continue;
 				}
-				optionString = optionString.trim();
 
-				if(!optionString.isEmpty()) {
-					String[] nvArr = optionString.split(OPTION_NV_SEP);
+				String[] nvArr = optionString.split(OPTION_NV_SEP);
 
-					String name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
-					String value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
+				String name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
+				String value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
 
-					if(name == null || name.isEmpty()) {
-						continue;
-					}
-
-					options.put(name, value);
+				if(StringUtils.isEmpty(name)) {
+					continue;
 				}
+
+				options.put(name, value);
 			}
 		}
 

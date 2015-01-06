@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -120,7 +121,7 @@ public class ServiceDefFileStore extends BaseFileStore implements ServiceDefStor
 
 		String existingName = existing.getName();
 
-		boolean renamed = !serviceDef.getName().equalsIgnoreCase(existingName);
+		boolean renamed = !StringUtils.equalsIgnoreCase(serviceDef.getName(), existingName);
 
 		// renaming service-def would require updating services that refer to this service-def
 		if(renamed) {
@@ -325,7 +326,7 @@ public class ServiceDefFileStore extends BaseFileStore implements ServiceDefStor
 		RangerServiceDef ret = null;
 
 		for(RangerServiceDef sd : serviceDefs) {
-			if(sd != null && sd.getName() != null && sd.getName().equalsIgnoreCase(sdName)) {
+			if(sd != null && StringUtils.equalsIgnoreCase(sd.getName(), sdName)) {
 				ret = sd;
 
 				break;

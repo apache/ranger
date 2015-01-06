@@ -22,8 +22,14 @@ package org.apache.ranger.plugin.policyengine;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+
 
 public class RangerResourceImpl implements RangerMutableResource {
+	private static final String RESOURCE_SEP = "/";
+
 	private String              ownerUser = null;
 	private Map<String, String> elements  = null;
 
@@ -53,13 +59,45 @@ public class RangerResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
+	public String getValueAsString(RangerServiceDef serviceDef) {
+		String ret = null;
+
+		if(elements != null && serviceDef != null && serviceDef.getResources() != null) {
+			StringBuilder sb = new StringBuilder();
+
+			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+				if(resourceDef == null) {
+					continue;
+				}
+
+				String value = getElementValue(resourceDef.getName());
+
+				if(StringUtils.isEmpty(value)) {
+					continue;
+				}
+
+				if(sb.length() > 0) {
+					sb.append(RESOURCE_SEP);
+				}
+
+				sb.append(value);
+			}
+
+			if(sb.length() > 0) {
+				ret = sb.toString();
+			}
+		}
+
+		return ret;
+	}
+
+	@Override
 	public void setOwnerUser(String ownerUser) {
 		this.ownerUser = ownerUser;
 	}
 
 	@Override
 	public void setElement(String type, String value) {
-		// TODO: verify that leafElementType != type
 		if(elements == null) {
 			elements = new HashMap<String, String>();
 		}

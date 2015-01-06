@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -86,9 +87,9 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 
 			for(String policyValue : policyValues) {
 				if(policyIsRecursive) {
-					ret = optWildCard ? isRecursiveWildCardMatch(resource, policyValue) : resource.startsWith(policyValue);
+					ret = optWildCard ? isRecursiveWildCardMatch(resource, policyValue) : StringUtils.startsWith(resource, policyValue);
 				} else {
-					ret = optWildCard ? FilenameUtils.wildcardMatch(resource, policyValue) : resource.equals(policyValue);
+					ret = optWildCard ? FilenameUtils.wildcardMatch(resource, policyValue) : StringUtils.equals(resource, policyValue);
 				}
 
 				if(ret) {

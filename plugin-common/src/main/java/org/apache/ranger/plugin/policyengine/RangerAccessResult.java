@@ -99,21 +99,18 @@ public class RangerAccessResult {
 
 		if(accessTypeResults != null) {
 			int numAllowed = 0;
-			int numDenied  = 0;
 
 			for(Map.Entry<String, ResultDetail> e : accessTypeResults.entrySet()) {
 				ResultDetail result = e.getValue();
 				
 				if(result.isAllowed) {
 					numAllowed++;
-				} else {
-					numDenied++;
 				}
 			}
 			
 			if(numAllowed == accessTypeResults.size()) {
 				ret = Result.ALLOWED;
-			} else if(numDenied == accessTypeResults.size()) {
+			} else if(numAllowed == 0) {
 				ret = Result.DENIED;
 			} else {
 				ret = Result.PARTIALLY_ALLOWED;
@@ -180,7 +177,7 @@ public class RangerAccessResult {
 		public ResultDetail() {
 			setIsAllowed(false);
 			setIsAudited(false);
-			setPolicyId(-1);
+			setPolicyId(RangerPolicyEngine.UNKNOWN_POLICY);
 			setReason(null);
 		}
 
