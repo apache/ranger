@@ -85,36 +85,66 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_LDAP_BIND_PASSWORD = "ldapGroupSync.ldapBindPassword";	
 	
 	private static final String LGSYNC_LDAP_AUTHENTICATION_MECHANISM = "ldapGroupSync.ldapAuthenticationMechanism";
-	
-	private static final String LGSYNC_USER_SEARCH_BASE = "ldapGroupSync.userSearchBase";
-	
+  private static final String DEFAULT_AUTHENTICATION_MECHANISM = "simple";
+
+  private static final String LGSYNC_SEARCH_BASE = "ldapGroupSync.searchBase";
+
+  private static final String LGSYNC_USER_SEARCH_BASE = "ldapGroupSync.userSearchBase";
+
+  private static final String LGSYNC_USER_SEARCH_SCOPE = "ldapGroupSync.userSearchScope";
+
 	private static final String LGSYNC_USER_OBJECT_CLASS = "ldapGroupSync.userObjectClass";
+  private static final String DEFAULT_USER_OBJECT_CLASS = "person";
 	
 	private static final String LGSYNC_USER_SEARCH_FILTER = "ldapGroupSync.userSearchFilter";
 	
 	private static final String LGSYNC_USER_NAME_ATTRIBUTE = "ldapGroupSync.userNameAttribute";
+  private static final String DEFAULT_USER_NAME_ATTRIBUTE = "cn";
 	
 	private static final String LGSYNC_USER_GROUP_NAME_ATTRIBUTE = "ldapGroupSync.userGroupNameAttribute";
-	
-	private static final String DEFAULT_AUTHENTICATION_MECHANISM = "simple";
-	
-	private static final String DEFAULT_USER_OBJECT_CLASS = "person";
-	
-	private static final String DEFAULT_USER_NAME_ATTRIBUTE = "cn";
+  private static final String DEFAULT_USER_GROUP_NAME_ATTRIBUTE = "memberof,ismemberof";
 	
 	public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none" ;
 	public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower" ;
 	public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE = "upper" ;
 	 
 	private static final String UGSYNC_USERNAME_CASE_CONVERSION_PARAM = "ldapGroupSync.username.caseConversion" ;
+  private static final String DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE = UGSYNC_LOWER_CASE_CONVERSION_VALUE  ;
+
 	private static final String UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM = "ldapGroupSync.groupname.caseConversion" ;
-	 
-	private static final String DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE = UGSYNC_LOWER_CASE_CONVERSION_VALUE  ;
 	private static final String DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE = UGSYNC_LOWER_CASE_CONVERSION_VALUE ;
 	
-	private static final String DEFAULT_USER_GROUP_NAME_ATTRIBUTE = "memberof,ismemberof";
-	
 	private static final String DEFAULT_USER_GROUP_TEXTFILE_DELIMITER = ",";
+
+  private static final String LGSYNC_PAGED_RESULTS_ENABLED = "ldapGroupSync.pagedResultsEnabled";
+  private static final boolean DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED = true;
+
+  private static final String LGSYNC_PAGED_RESULTS_SIZE = "ldapGroupSync.pagedResultsSize";
+  private static final int DEFAULT_LGSYNC_PAGED_RESULTS_SIZE = 500;
+
+  // get groups only
+  private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ldapGroupSync.groupSearchEnabled";
+  private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = false;
+
+  // get group -> user link, bosco
+  private static final String LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = "ldapGroupSync.groupUserMapSyncEnabled";
+  private static final boolean DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = false;
+
+  // defaults to value of searchBase if searchBase is not null, else defaults to userSearchBase, bosco
+  private static final String LGSYNC_GROUP_SEARCH_BASE = "ldapGroupSync.groupSearchBase";
+
+  private static final String LGSYNC_GROUP_SEARCH_SCOPE = "ldapGroupSync.groupSearchScope";
+
+  private static final String LGSYNC_GROUP_OBJECT_CLASS = "ldapGroupSync.groupObjectClass";
+  private static final String DEFAULT_LGSYNC_GROUP_OBJECT_CLASS = "groupofnames";
+
+  private static final String LGSYNC_GROUP_SEARCH_FILTER = "ldapGroupSync.groupSearchFilter";
+
+  private static final String LGSYNC_GROUP_NAME_ATTRIBUTE = "ldapGroupSync.groupNameAttribute";
+  private static final String DEFAULT_LGSYNC_GROUP_NAME_ATTRIBUTE = "cn";
+
+  private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ldapGroupSync.groupMemberAttributeName";
+  private static final String DEFAULT_LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "member";
 
 	private Properties prop = new Properties() ;
 	
@@ -333,6 +363,9 @@ public class UserGroupSyncConfig  {
 	
 	public String getUserSearchBase()  throws Throwable {
 		String val =  prop.getProperty(LGSYNC_USER_SEARCH_BASE);
+    if(val == null || val.trim().isEmpty()) {
+      val = getSearchBase();
+    }
 		if(val == null || val.trim().isEmpty()) {
 			throw new Exception(LGSYNC_USER_SEARCH_BASE + " for LdapGroupSync is not specified");
 		}
@@ -341,7 +374,7 @@ public class UserGroupSyncConfig  {
 	
 	
 	public int getUserSearchScope() {
-		String val =  prop.getProperty(LGSYNC_USER_SEARCH_BASE);
+		String val =  prop.getProperty(LGSYNC_USER_SEARCH_SCOPE);
 		if (val == null || val.trim().isEmpty()) {
 			return 2; //subtree scope
 		}
@@ -405,8 +438,114 @@ public class UserGroupSyncConfig  {
  		String ret = prop.getProperty(UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM, DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE) ;
  		return ret.trim().toLowerCase() ;
  	}
- 
- 	public String getProperty(String aPropertyName) {
+
+  public String getSearchBase() {
+    return prop.getProperty(LGSYNC_SEARCH_BASE);
+  }
+
+  public boolean isPagedResultsEnabled() {
+    boolean pagedResultsEnabled;
+    String val = prop.getProperty(LGSYNC_PAGED_RESULTS_ENABLED);
+    if(val == null || val.trim().isEmpty()) {
+      pagedResultsEnabled = DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED;
+    } else {
+      pagedResultsEnabled  = Boolean.valueOf(val);
+    }
+    return pagedResultsEnabled;
+  }
+
+  public int getPagedResultsSize() {
+    int pagedResultsSize = DEFAULT_LGSYNC_PAGED_RESULTS_SIZE;
+    String val = prop.getProperty(LGSYNC_PAGED_RESULTS_SIZE);
+    if(val == null || val.trim().isEmpty()) {
+      pagedResultsSize = DEFAULT_LGSYNC_PAGED_RESULTS_SIZE;
+    } else {
+       pagedResultsSize = Integer.parseInt(val);
+    }
+    if (pagedResultsSize < 1)  {
+      pagedResultsSize = DEFAULT_LGSYNC_PAGED_RESULTS_SIZE;
+    }
+    return pagedResultsSize;
+  }
+
+  public boolean isGroupSearchEnabled() {
+    boolean groupSearchEnabled;
+    String val = prop.getProperty(LGSYNC_GROUP_SEARCH_ENABLED);
+    if(val == null || val.trim().isEmpty()) {
+       groupSearchEnabled = DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED;
+    } else {
+       groupSearchEnabled  = Boolean.valueOf(val);
+    }
+    return groupSearchEnabled;
+  }
+
+  public boolean isGroupUserMapSyncEnabled() {
+    boolean groupUserMapSyncEnabled;
+    String val = prop.getProperty(LGSYNC_GROUP_USER_MAP_SYNC_ENABLED);
+    if(val == null || val.trim().isEmpty()) {
+      groupUserMapSyncEnabled = DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED;
+    } else {
+      groupUserMapSyncEnabled  = Boolean.valueOf(val);
+    }
+    return groupUserMapSyncEnabled;
+  }
+
+  public String getGroupSearchBase() throws Throwable {
+    String val =  prop.getProperty(LGSYNC_GROUP_SEARCH_BASE);
+    if(val == null || val.trim().isEmpty()) {
+      val = getSearchBase();
+    }
+    if(val == null || val.trim().isEmpty()) {
+      val = getUserSearchBase();
+    }
+    return val;
+  }
+
+  public int getGroupSearchScope() {
+    String val =  prop.getProperty(LGSYNC_GROUP_SEARCH_SCOPE);
+    if (val == null || val.trim().isEmpty()) {
+      return 2; //subtree scope
+    }
+
+    val = val.trim().toLowerCase();
+    if (val.equals("0") || val.startsWith("base")) {
+      return 0; // object scope
+    } else if (val.equals("1") || val.startsWith("one")) {
+      return 1; // one level scope
+    } else {
+      return 2; // subtree scope
+    }
+  }
+
+  public String getGroupObjectClass() {
+    String val =  prop.getProperty(LGSYNC_GROUP_OBJECT_CLASS);
+    if (val == null || val.trim().isEmpty()) {
+      return DEFAULT_LGSYNC_GROUP_OBJECT_CLASS;
+    }
+    return val;
+  }
+
+  public String getGroupSearchFilter() {
+    return  prop.getProperty(LGSYNC_GROUP_SEARCH_FILTER);
+  }
+
+  public String getUserGroupMemberAttributeName() {
+    String val =  prop.getProperty(LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME);
+    if (val == null || val.trim().isEmpty()) {
+      return DEFAULT_LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME;
+    }
+    return val;
+  }
+
+  public String getGroupNameAttribute() {
+    String val =  prop.getProperty(LGSYNC_GROUP_NAME_ATTRIBUTE);
+    if (val == null || val.trim().isEmpty()) {
+      return DEFAULT_LGSYNC_GROUP_NAME_ATTRIBUTE;
+    }
+    return val;
+  }
+
+  public String getProperty(String aPropertyName) {
  		return prop.getProperty(aPropertyName) ;
  	}
  
