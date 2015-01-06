@@ -88,6 +88,15 @@ define(function(require) {
 		ASSET_KNOX:{value:5, label:'Knox', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
 		ASSET_STORM:{value:6, label:'Storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'}
 	});
+	
+	XAEnums.ServiceType = mergeParams(XAEnums.ServiceType, {
+		Service_UNKNOWN:{value:0, label:'Unknown', rbkey:'xa.enum.AssetType.ASSET_UNKNOWN', tt: 'lbl.AssetType_ASSET_UNKNOWN'},
+		Service_HDFS:{value:1, label:'hdfs', rbkey:'xa.enum.AssetType.ASSET_HDFS', tt: 'lbl.AssetType_ASSET_HDFS'},
+		Service_HIVE:{value:2, label:'hive', rbkey:'xa.enum.AssetType.ASSET_HIVE', tt: 'lbl.AssetType_ASSET_HIVE'},
+		Service_HBASE:{value:3, label:'hbase', rbkey:'xa.enum.AssetType.ASSET_HBASE', tt: 'lbl.AssetType_ASSET_HBASE'},
+		Service_KNOX:{value:4, label:'knox', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
+		Service_STORM:{value:5, label:'storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'}
+	});
 
 	XAEnums.AuthStatus = mergeParams(XAEnums.AuthStatus, {
 		AUTH_STATUS_UNKNOWN:{value:0, label:'Unknown', rbkey:'xa.enum.AuthStatus.AUTH_STATUS_UNKNOWN', tt: 'lbl.AuthStatus_AUTH_STATUS_UNKNOWN'},

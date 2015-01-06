@@ -182,10 +182,36 @@ define(function(require) {
 					title: 'lbl.editAsset'
 				};
 			},
+
+			ServiceCreate : function(options){
+				var href = '#!/service/create';
+				if(_.has(options,'model')){
+					href =  '#!/service/create/'+options.model.get('assetType');
+				}
+				return {
+					href : href,
+					text : 'lbl.createAsset',
+					title: 'lbl.createAsset'
+				};
+			},
+			ServiceEdit : function(options){
+				var href = "javascript:void(0);";
+				if(_.has(options,'model')){
+					href =  '#!/service/'+options.model.get('id');
+				}
+				if(_.has(options,'id')){
+					href =  '#!/service/'+options.id;
+				}
+				return {
+					href : href,
+					text : 'lbl.editAsset',
+					title: 'lbl.editAsset'
+				};
+			},
 			ManagePolicies : function(options){
 				var href = "javascript:void(0);";
 				if(_.has(options,'model')){
-					href =  '#!/hdfs/'+options.model.id+"/policies";
+					href =  '#!/service/'+options.model.id+"/policies";
 				}
 				return {
 					href : href,

@@ -310,7 +310,7 @@
 			  },
 			
 			  getValue: function() {
-				  return this.$el.find('.toggle-slide').hasClass('active')? XAEnums.BooleanValue.BOOL_TRUE.value :  XAEnums.BooleanValue.BOOL_FALSE.value ;
+				  return this.$el.find('.toggle-slide').hasClass('active')? true:  false;
 				  //return this.$el.find('.active').text() == "ON" ? true : false;
 			  },
 			

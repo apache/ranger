@@ -1,0 +1,67 @@
+{{!-- 
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--}}
+<h3 class="wrap-header bold">{{tt 'h.repositoryManager'}}</h3>
+
+<div class="wrap non-collapsible policy-manager">
+	<div class="row-fluid">
+	{{#each serviceDefs}}
+		<div class="span4">
+			<div class="position-relative">
+				<table class="table table-bordered table-striped">
+					<!-- table-policy -->
+					<thead>
+						<tr>
+							<th>
+								<span class="policy-title">
+									<img alt="HDFS" src="images/folder-grey.png">
+									{{./this.attributes.name}} 
+									{{#if ../isSysAdmin}} 
+										<a href="#!/service/{{./this.id}}/create"class="pull-right" title="Add"> <i class="icon-plus"></i></a> 
+									{{/if}}
+								</span>	
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{{{getServices ../services this}}}
+
+						<!-- <tr>
+							<td>
+								<div>
+									<a data-id="{{./this.id}}" href="#!/hdfs/{{./this.id}}/policies">{{./this.attributes.name}}</a>
+									{{#if ../isSysAdmin}}
+									<div class="pull-right">
+										<a data-id="{{./this.id}}" class="btn btn-mini"
+											href="#!/asset/{{./this.id}}" title="Edit"><i
+											class="icon-edit"></i></a> <a data-id="{{./this.id}}"
+											class="deleteRep btn btn-mini btn-danger"
+											href="javascript:void(0);" title="Delete"><i
+											class="icon-trash"></i></a>
+									</div>
+									{{/if}}
+								</div>
+							</td>
+						</tr> -->
+					</tbody>
+				</table>
+				<div data-id="r_tableSpinner" class="loading">
+				</div>
+			</div>
+		</div>
+		{{/each}}
+		</div>
+	</div>	

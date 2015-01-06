@@ -374,37 +374,22 @@ define(function(require) {
 		// [1] => [ {id: 18, groupId : 1, permType :5}, {id: 18, groupId : 1, permType :4} ]
 		// [2] => [ {id: 18, groupId : 2, permType :5} ]
 		if(!model.isNew()){
-			if(!_.isUndefined(model.get('permMapList'))){
-				var vPermMapList = model.get('permMapList'); //model.get('_vPermMapList');
-				var groupPerms = _.filter(vPermMapList,function(m){if(m.permFor == XAEnums.XAPermForType.XA_PERM_FOR_GROUP.value ) return m;});
-				var permsGroupBy = _.groupBy(groupPerms,function(m) { return m.permGroup; });
-				_.each(permsGroupBy,function(values, g){
-					if(g != 'undefined'){
-						var idPermMapArr = []; // This should be array of integers of perms eg. [1,2,5]
-						var groupIds=[],groupNames=[];
-						_.each(values, function(v){
-							if(groupIds.indexOf(v.groupId) == -1)
-								groupIds.push(v.groupId);
-							if(groupNames.indexOf(v.groupName ) == -1)
-								groupNames.push(v.groupName);
-							if(_.isEmpty(_.findWhere(idPermMapArr, {permType: v.permType})))
-								idPermMapArr.push( { id : v.id,permType :v.permType, groupId :v.groupId} );
-						});
-						
+			if(!_.isUndefined(model.get('policyItems'))){
+				var policyItems = model.get('policyItems'); 
+				var groupPolicyItems = _.filter(policyItems,function(m){if(!_.isEmpty(m.groups)) return m;});
+				_.each(groupPolicyItems,function(obj){
 						var m = new Backbone.Model({
-							groupId 	: groupIds.join(','),
-							groupName 	: groupNames.join(','),
-							ipAddress	: values[0].ipAddress,
+//							groupId 	: groupIds.join(','),
+							groupName 	: obj.groups.join(','),
+//							ipAddress	: values[0].ipAddress,
 							editMode 	: true,
-							
+							accesses	: obj.accesses
 						});
-						m.set('_vPermList', idPermMapArr);
 						formInputColl.add(m);
-					}
 					
 				});
 			}
-	   }
+		}
 		return formInputColl;
 	};
 	
@@ -415,38 +400,22 @@ define(function(require) {
 		// [1] => [ {id: 18, groupId : 1, permType :5}, {id: 18, groupId : 1, permType :4} ]
 		// [2] => [ {id: 18, groupId : 2, permType :5} ]
 		if(!model.isNew()){
-			if(!_.isUndefined(model.get('permMapList'))){
-				var vPermMapList =  model.get('permMapList');//model.get('_vPermMapList');
-				var userPerms = _.filter(vPermMapList, function(m){if(m.permFor == XAEnums.XAPermForType.XA_PERM_FOR_USER.value) return m;});
-				var userPermsGroupBy = _.groupBy(userPerms,function(m) { return m.permGroup; });
-				_.each(userPermsGroupBy,function(values, g){
-					if(g != 'undefined'){
-						var idPermMapArr = []; // This should be array of integers of perms eg. [1,2,5]
-						
-						var userIds=[],userNames=[];
-						_.each(values, function(v){
-							if(userIds.indexOf(v.userId) == -1)
-								userIds.push(v.userId);
-							if(userNames.indexOf(v.userName) == -1)
-								userNames.push(v.userName);
-							if(_.isEmpty(_.findWhere(idPermMapArr, {permType: v.permType})))
-								idPermMapArr.push( { id : v.id,permType :v.permType, userId :v.userId } );
-						});
-						
+			if(!_.isUndefined(model.get('policyItems'))){
+				var policyItems = model.get('policyItems'); 
+				var userPolicyItems = _.filter(policyItems,function(m){if(!_.isEmpty(m.users)) return m;});
+				_.each(userPolicyItems,function(obj){
 						var m = new Backbone.Model({
-							userId 		: userIds.join(','),
-							userName 	: userNames.join(','),
-							ipAddress	: values[0].ipAddress,
-							editMode 	: true
+//							userId 	: groupIds.join(','),
+							userName 	: obj.users.join(','),
+//							ipAddress	: values[0].ipAddress,
+							editMode 	: true,
+							accesses	: obj.accesses
 						});
-						
-						m.set('_vPermList', idPermMapArr);
 						coll.add(m);
-					}
 					
-				});	
+				});
 			}
-		   }
+		}
 		return coll;
 	};
 	 XAUtils.checkDirtyField  =  function(arg1, arg2, $elem) {

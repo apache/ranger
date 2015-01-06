@@ -481,6 +481,36 @@
 		}
 	    return new Handlebars.SafeString(html);
 	});
+	Handlebars.registerHelper('getServices', function(services, serviceDef) {
+		var XAEnums			= require('utils/XAEnums');
+		var tr = '';
+		var serviceType = serviceDef.get('name').toUpperCase();
+		_.each(XAEnums.AssetType, function(asset){
+			if(asset.label.toUpperCase() == serviceType.toUpperCase()){
+				serviceType = asset.label;
+				return;
+			}
+		});
+		
+		if(!_.isUndefined(services[serviceType])){
+			_.each(services[serviceType],function(serv){
+				serviceName = serv.get('name');
+				tr += '<tr>\
+					<td>\
+					<div>\
+					<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies">'+serv.attributes.name+'</a>\
+					<div class="pull-right">\
+					<a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
+					<a data-id="'+serv.id+'" class="deleteRep btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
+					<i class="icon-trash"></i></a>\
+					</div>\
+					</div>\
+					</td>\
+					</tr>';
+			});
+		}
+		return tr;
+	});
 	
 
 	return HHelpers;
