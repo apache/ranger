@@ -27,8 +27,8 @@ function(Backbone){
 	return Backbone.Marionette.AppRouter.extend({
 		/** Backbone routes hash */
 		appRoutes: {
-			""							: "policyManagerAction",//"dashboardAction",
-			"!/policymanager"			: "policyManagerAction",
+			""							: "serviceManagerAction",//"dashboardAction",
+			"!/policymanager"			: "serviceManagerAction",
 
 			/* HDFS related */
 			"!/hdfs"					: "hdfsManageAction",
@@ -79,7 +79,17 @@ function(Backbone){
 			"!/user/:id"		: "userEditAction",
 			
 			"!/group/create"	: "groupCreateAction",
-			"!/group/:id"		: "groupEditAction"
+			"!/group/:id"		: "groupEditAction",
+
+			/************GENERIC UI *****************************************/
+			/****** Service related **********************/
+			"!/service/:serviceType/create" 	: "serviceCreateAction",
+			"!/service/:serviceType/edit/:id"	: "serviceEditAction",
+			
+			"!/service/:serviceId/policies"			: "policyManageAction",
+			"!/service/:serviceId/policies/create"	: "RangerPolicyCreateAction",
+			"!/service/:serviceId/policies/:id/edit": "RangerPolicyEditAction"
+			
 		}
 	});
 });

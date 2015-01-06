@@ -58,8 +58,8 @@ define(function(require) {
 	   policyManagerAction :function(){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
 		   console.log('Policy Manager action called..');
-		   var view 		= require('views/policymanager/PolicyManagerLayout');
-		   var VXAssetList 	= require('collections/VXAssetList');
+		   var view             = require('views/policymanager/PolicyManagerLayout');
+		   var VXAssetList      = require('collections/VXAssetList');
 		   var collection 	= new VXAssetList();
 		   
 		   collection.fetch({
@@ -611,6 +611,137 @@ define(function(require) {
 				   model : group
 			   }));
 		   });	   
-	   }
+	   },
+
+
+   	   /************************************************************/
+   	   //************** Generic design Related *********************/
+   	   /************************************************************/
+
+	   serviceManagerAction :function(){
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+		   console.log('Policy Manager action called..');
+		   var view 				= require('views/policymanager/ServiceLayout');
+		   var RangerServiceDefList	= require('collections/RangerServiceDefList');
+		   var collection 			= new RangerServiceDefList();
+		   collection.queryParams.sortBy = 'id';
+		   collection.fetch({
+			   cache : false,
+			   async:false
+		   }).done(function(){
+			   if(App.rContent.currentView) App.rContent.currentView.close();
+			   //TODO FROM SERVER SIDE IT SHOULD GIVE SORTBY `ID` BY DEFAULT
+//			   collection = collection.sort()
+			   App.rContent.show(new view({
+				   collection : collection
+			   }));
+		   });
+	   },
+
+	   serviceCreateAction :function(serviceTypeId){
+    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+		   var view				= require('views/service/ServiceCreate');
+		   var RangerServiceDef	= require('models/RangerServiceDef');
+		   var RangerService	= require('models/RangerService');
+		   
+		   var rangerServiceDefModel	= new RangerServiceDef({id:serviceTypeId});
+		   var rangerServiceModel 	= new RangerService();
+//		   rangerServiceDefModel.fetch({
+//			   cache:true
+//		   }).done(function(){
+			   App.rContent.show(new view({
+				   model 		: rangerServiceModel,
+				   serviceTypeId : serviceTypeId
+			   }));
+//		   });
+	   },
+	   serviceEditAction :function(serviceTypeId, serviceId){
+    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+		   var view				= require('views/service/ServiceCreate');
+		   var RangerServiceDef	= require('models/RangerServiceDef');
+		   var RangerService	= require('models/RangerService');
+		   
+		   var rangerServiceDefModel	= new RangerServiceDef({ id : serviceTypeId });
+		   var rangerService = new RangerService({ 'id' : serviceId });
+
+		   rangerService.fetch({
+			   cache:false
+		   }).done(function(){
+			   App.rContent.show(new view({
+				   model 			: rangerService,
+				   serviceTypeId	:serviceTypeId
+			   }));
+		   });
+	   },
+	   
+	   policyManageAction :function(serviceId){
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+		   var view 			= require('views/policies/RangerPolicyTableLayout');
+		   var RangerService	= require('models/RangerService');
+		   var RangerPolicyList	= require('collections/RangerPolicyList');
+		   
+		   var rangerService = new RangerService({id : serviceId});
+		   var rangerPolicyList = new RangerPolicyList();
+		   /*var rangerPolicyList = new RangerPolicyList([],{
+			   queryParams : {
+				   'serviceId' : serviceId 
+			   }
+		   });*/
+		   rangerPolicyList.url = "service/plugins/services/"+serviceId+"/policies"
+		   
+		   rangerService.fetch({
+			  cache : false,
+			  async : false
+		   });
+		   
+		   rangerPolicyList.fetch({
+			   cache : false,
+		   }).done(function(){
+			   App.rContent.show(new view({
+				   collection : rangerPolicyList,
+				   rangerService : rangerService
+			   }));
+		   });   
+	   },
+	   RangerPolicyCreateAction :function(serviceId){
+    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+
+		   var view 			= require('views/policies/RangerPolicyCreate');
+		   var RangerService	= require('models/RangerService');
+		   var RangerPolicy		= require('models/RangerPolicy');
+		   
+		   var rangerService = new RangerService({id : serviceId});
+		   rangerService.fetch({
+				  cache : false,
+		   }).done(function(){
+			   App.rContent.show(new view({
+				   model : new RangerPolicy(),
+				   rangerService : rangerService,
+			   }));
+		   });
+	   },
+	   RangerPolicyEditAction :function(serviceId, policyId){
+    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+
+		   var view 			= require('views/policies/RangerPolicyCreate');
+		   var RangerService	= require('models/RangerService');
+		   var RangerPolicy		= require('models/RangerPolicy');
+		   
+		   var rangerService = new RangerService({id : serviceId});
+		   var rangerPolicy = new RangerPolicy({ id : policyId});
+		   rangerService.fetch({
+			   cache : false,
+			   async : false,
+		   });
+		   rangerPolicy.fetch({
+				  cache : false,
+		   }).done(function(){
+			   App.rContent.show(new view({
+				   model : rangerPolicy,
+				   rangerService :rangerService
+			   }));
+		   });
+	   },
+	   
 	});
 });

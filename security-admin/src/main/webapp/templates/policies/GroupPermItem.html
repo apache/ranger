@@ -15,8 +15,9 @@
   limitations under the License.
 --}}
 <td>
-	<input  type="text" data-js="selectUsers" /> 	
+	<input  type="text" data-js="selectGroups" /> 	
 </td>
+
 {{#if policyKnox}}
 <td>
 	<input  type="text" data-js="ipAddress" placeholder="Enter IP address"/> 	
@@ -38,10 +39,12 @@
 </td>	
 {{/if}}
 {{#each permissions}}
-		<td style="cursor:pointer;">
-			<input data-id="{{./this.value}}" data-name="{{./this.label}}" type="checkbox">
-		</td>
+	<td style="cursor:pointer;">
+		<input data-id="{{./this.value}}" data-name="{{./this.label}}" type="checkbox">
+	</td>
 {{/each}}
+	
+
 
 <td>
 	<button type="button" class="btn btn-small btn-danger " data-action="delete">

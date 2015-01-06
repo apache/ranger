@@ -336,7 +336,7 @@ public class ServiceREST {
 	}
 
 	@PUT
-	@Path("/services")
+	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
 	public RangerService updateService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
@@ -441,7 +441,8 @@ public class ServiceREST {
 		List<RangerPolicy> ret = null;
 
 		try {
-			ret = svcMgr.getAllPolicies();
+			Long serviceId = Long.parseLong(request.getParameter("serviceId"));
+			ret = svcMgr.getPolicies(serviceId);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}

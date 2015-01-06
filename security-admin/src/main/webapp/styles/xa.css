@@ -1678,3 +1678,18 @@ td.html-cell.renderable:last-child {
 	font-size: 11px;
 	font-family: monospace;
 }
+/**************/
+.policy-form .field-name{
+	float: left;
+	margin-bottom: 0 !important;
+}
+.policy-form .field-isEnabled{
+float: left;
+margin-bottom: 0 !important;
+}
+.policy-form .field-isEnabled .controls{
+	margin-left:30px;
+}
+.policy-form .field-database,.policy-form .field-table, .policy-form .field-path, .policy-form .field-topology{
+	clear: both;
+}
