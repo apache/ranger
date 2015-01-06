@@ -484,13 +484,13 @@
 	Handlebars.registerHelper('getServices', function(services, serviceDef) {
 		var XAEnums			= require('utils/XAEnums');
 		var tr = '';
-		var serviceType = serviceDef.get('name').toUpperCase();
-		_.each(XAEnums.AssetType, function(asset){
+		var serviceType = serviceDef.get('name');
+		/*_.each(XAEnums.AssetType, function(asset){
 			if(asset.label.toUpperCase() == serviceType.toUpperCase()){
 				serviceType = asset.label;
 				return;
 			}
-		});
+		});*/
 		
 		if(!_.isUndefined(services[serviceType])){
 			_.each(services[serviceType],function(serv){

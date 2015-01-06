@@ -93,7 +93,7 @@ define(function(require) {
 			this.createSelectUserDropDown();
 			this.userDropDownChange();
 			
-			this.accessItems = _.map(this.getPerms(), function(perm){ return {'type':perm.label,'value': false}});
+			this.accessItems = _.map(this.getPerms(), function(perm){ if(!_.isUndefined(perm)) return {'type':perm.label,'value': false}});
 		},
 		checkDirtyFieldForDropDown : function(e){
 			//that.model.has('groupId')

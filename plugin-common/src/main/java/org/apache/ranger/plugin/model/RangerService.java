@@ -26,9 +26,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.ranger.plugin.manager.CustomizedMapDeserializer;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 
@@ -44,6 +46,7 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	private String              name        = null;
 	private String              description = null;
 	private Boolean             isEnabled   = null;
+	@JsonDeserialize(using = CustomizedMapDeserializer.class)
 	private Map<String, String> configs     = null;
 
 

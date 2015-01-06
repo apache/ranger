@@ -94,7 +94,7 @@ define(function(require) {
 			}
 			
 			
-			this.accessItems = _.map(this.getPerms(), function(perm){ return {'type':perm.label,value : false}});
+			this.accessItems = _.map(this.getPerms(), function(perm){ if(!_.isUndefined(perm)) return {'type':perm.label,value : false}});
 		},
 		groupDropDownChange : function(){
 			var that = this;
