@@ -21,8 +21,8 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -86,7 +86,7 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 			}
 
 			for(String policyValue : policyValues) {
-				ret = optWildCard ? resource.matches(policyValue) : resource.equals(policyValue);
+				ret = optWildCard ? resource.matches(policyValue) : StringUtils.equals(resource, policyValue);
 
 				if(ret) {
 					break;

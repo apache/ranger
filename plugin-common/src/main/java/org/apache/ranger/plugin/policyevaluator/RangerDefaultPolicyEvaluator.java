@@ -36,7 +36,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult.Result;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResource;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
@@ -176,7 +176,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			}
 	
 			if(!ret && groups != null && policyItem.getGroups() != null) {
-				ret = policyItem.getGroups().contains(GROUP_PUBLIC) ||
+				ret = policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC) ||
 						!Collections.disjoint(policyItem.getGroups(), groups);
 			}
 		}
@@ -214,7 +214,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if(policyItem != null && accessType != null && policyItem.getAccesses() != null) {
 			for(RangerPolicyItemAccess access : policyItem.getAccesses()) {
-				if(accessType.equalsIgnoreCase(access.getType())) {
+				if(StringUtils.equalsIgnoreCase(accessType, access.getType())) {
 					ret = access;
 
 					break;
@@ -240,7 +240,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if(serviceDef != null && resourceType != null) {
 			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-				if(resourceType.equalsIgnoreCase(resourceDef.getName())) {
+				if(StringUtils.equalsIgnoreCase(resourceType, resourceDef.getName())) {
 					ret = resourceDef;
 
 					break;
@@ -265,7 +265,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		String clsName = resourceDef != null ? resourceDef.getMatcher() : null;
 		String options = resourceDef != null ? resourceDef.getMatcherOptions() : null;
 
-		if(clsName == null || clsName.isEmpty()) {
+		if(StringUtils.isEmpty(clsName)) {
 			ret = new RangerDefaultResourceMatcher();
 		} else {
 			try {

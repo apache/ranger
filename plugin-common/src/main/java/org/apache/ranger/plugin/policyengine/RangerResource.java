@@ -19,7 +19,8 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import java.util.Collection;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+
 
 public interface RangerResource {
 	public abstract String getOwnerUser();
@@ -27,4 +28,6 @@ public interface RangerResource {
 	public abstract boolean elementExists(String type);
 
 	public abstract String getElementValue(String type);
+
+	public abstract String getValueAsString(RangerServiceDef serviceDef);
 }

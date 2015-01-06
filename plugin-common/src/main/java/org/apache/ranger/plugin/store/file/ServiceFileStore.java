@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.store.file;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -97,7 +98,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		String existingName = existing.getName();
 
-		boolean renamed = !service.getName().equalsIgnoreCase(existingName);
+		boolean renamed = !StringUtils.equalsIgnoreCase(service.getName(), existingName);
 		
 		if(renamed) {
 			RangerService newNameService = getByName(service.getName());
@@ -201,9 +202,9 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			if(services != null) {
 				for(RangerService service : services) {
-					if(service.getName().equalsIgnoreCase(name)) {
+					if(StringUtils.equalsIgnoreCase(service.getName(), name)) {
 						ret = service;
-	
+
 						break;
 					}
 				}
@@ -299,11 +300,11 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			throw new Exception("service does not exist - name=" + policy.getService());
 		}
 
-		if(! existing.getService().equalsIgnoreCase(policy.getService())) {
+		if(! StringUtils.equalsIgnoreCase(existing.getService(), policy.getService())) {
 			throw new Exception("policy id=" + policy.getId() + " already exists in service " + existing.getService() + ". It can not be moved to service " + policy.getService());
 		}
 
-		boolean renamed = !policy.getName().equalsIgnoreCase(existing.getName());
+		boolean renamed = !StringUtils.equalsIgnoreCase(policy.getName(), existing.getName());
 		
 		if(renamed) {
 			RangerPolicy newNamePolicy = getPolicyByName(service.getName(), policy.getName());
@@ -421,7 +422,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			if(policies != null) {
 				for(RangerPolicy policy : policies) {
-					if(policy.getName().equals(policyName)) {
+					if(StringUtils.equals(policy.getName(), policyName)) {
 						ret = policy;
 
 						break;
@@ -458,7 +459,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			if(policies != null) {
 				for(RangerPolicy policy : policies) {
-					if(policy.getService().equals(serviceName)) {
+					if(StringUtils.equals(policy.getService(), serviceName)) {
 						ret.add(policy);
 					}
 				}
@@ -544,7 +545,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		if(policies != null) {
 			for(RangerPolicy policy : policies) {
-				if(policy.getService().equalsIgnoreCase(oldName)) {
+				if(StringUtils.equalsIgnoreCase(policy.getService(), oldName)) {
 					policy.setService(service.getName());
 	
 					preUpdate(policy);

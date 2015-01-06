@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import java.util.Collection;
 
 public interface RangerMutableResource extends RangerResource {
 	void setOwnerUser(String ownerUser);

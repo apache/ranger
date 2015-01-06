@@ -25,6 +25,9 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
 public interface RangerPolicyEngine {
+	public static final String GROUP_PUBLIC   = "public";
+	public static final long   UNKNOWN_POLICY = -1;
+
 	void setPolicies(RangerServiceDef serviceDef, List<RangerPolicy> policies);
 
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
