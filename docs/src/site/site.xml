@@ -56,7 +56,7 @@ under the License.
         <item name ="Team" href="team-list.html"/>
     </menu>
 	<menu name="Releases">
-		<item name="0.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/Release+0.4.0" />
+		<item name="0.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/Index" />
 	</menu>
 </body>
 

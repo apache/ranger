@@ -17,6 +17,7 @@
 # Build Instruction for Apache Ranger Documentation
 # ---------------------------------------------------------------------
 
+$ export DOC_SRC_DIR=incubator-ranger/docs
 $ cd ${DOC_SRC_DIR}
 
 $ mvn site
@@ -31,7 +32,12 @@ mkdir -p ${DOC_DEPLOY_DIR}
 svn co https://svn.apache.org/repos/asf/incubator/ranger/site/trunk ranger
 
 cd ${DOC_SRC_DIR}/target
-cp -r * ${DOC_DEPLOY_DIR}/ranger/
+rsync -avcn * ${DOC_DEPLOY_DIR}/ranger
+#Review the files that are getting overwritten
+
+#Replaced cp with rsync, so we copy only the changed files
+#cp -r * ${DOC_DEPLOY_DIR}/ranger/
+rsync -avc * ${DOC_DEPLOY_DIR}/ranger
 
 cd ${DOC_DEPLOY_DIR}/ranger
 
