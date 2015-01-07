@@ -22,17 +22,21 @@ package org.apache.ranger.unixusersync.process;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 
 public class FileSourceUserGroupBuilder  implements UserGroupSource {
@@ -125,83 +129,85 @@ public class FileSourceUserGroupBuilder  implements UserGroupSource {
 		File f = new File(userGroupFilename);
 		
 		if (f.exists() && f.canRead()) {
+			Map<String,List<String>> tmpUser2GroupListMap = null;
 			
-			Map<String,List<String>> tmpUser2GroupListMap = new HashMap<String,List<String>>();
-			
-			JsonReader jsonReader = new JsonReader(new BufferedReader(new FileReader(f)));
-			
-			jsonReader.setLenient(true);
-			
-			jsonReader.beginArray();
-			
-			while (jsonReader.hasNext() ) {
-				Map<String, List<String>> usergroupMap = getUserGroupMap(jsonReader);
-				
-				for(String user : usergroupMap.keySet()) {
-					List<String> groups = usergroupMap.get(user) ;
-					tmpUser2GroupListMap.put(user,groups);
-				}		
+			if ( isJsonFile(userGroupFilename) ) {
+				tmpUser2GroupListMap = readJSONfile(f);
+			} else {
+				tmpUser2GroupListMap = readTextFile(f);
 			}
-			
-			jsonReader.endArray();
-			
-			jsonReader.close();
 
-			user2GroupListMap     = tmpUser2GroupListMap;
-			
-			usergroupFileModified = f.lastModified() ;
-			
+			if(tmpUser2GroupListMap != null) {
+				user2GroupListMap     = tmpUser2GroupListMap;
+				
+				usergroupFileModified = f.lastModified() ;
+			} else {
+				LOG.info("No new UserGroup to sync at this time");
+			}
 		} else {
 			throw new Exception("User Group Source File " + userGroupFilename + "doesn't not exist or readable");
 		}
 	}
 	
+	public boolean isJsonFile(String userGroupFilename) {
+		boolean ret = false;
+
+		if ( userGroupFilename.toLowerCase().endsWith(".json")) {
+			ret = true;
+		}
+
+		return ret;
+	}
 	
-	public Map<String, List<String>> getUserGroupMap(JsonReader jsonReader) throws Exception {
+	public 	Map<String, List<String>> readJSONfile(File jsonFile) throws Exception {
+		Map<String, List<String>> ret = new HashMap<String, List<String>>();
+
+		JsonReader jsonReader = new JsonReader(new BufferedReader(new FileReader(jsonFile)));
+		
+		Gson gson = new GsonBuilder().create() ;
+
+		ret = gson.fromJson(jsonReader, ret.getClass());
+		
+		return ret;
+
+	}
+	
+	public Map<String, List<String>> readTextFile(File textFile) throws Exception {
 		
 		Map<String, List<String>> ret = new HashMap<String, List<String>>();
-		String user = null ;
-		List<String> groups = new ArrayList<String>();
 		
-		jsonReader.beginObject();
+		String delimiter = config.getUserSyncFileSourceDelimiter();
+		 
+		CSVFormat csvFormat = CSVFormat.newFormat(delimiter.charAt(0));
 		
-		while ( jsonReader.hasNext()) {
-			
-			String name = jsonReader.nextName();
-			
-			if ( name.equals("user")) {
-				user = jsonReader.nextString();
-			} else if ( name.equals("groups")) {
-				groups = getGroups(jsonReader);
-			} else {
-				StringBuilder sb = new StringBuilder();
-				sb.append("User Group Source JSON array should have following **user** and **groups** as name tag e.g");
-				sb.append("[ {\"user\":\"userid1\",\"groups\":[\"groupid1\",\"groupid2\"]},");
-				sb.append("[ {\"user\":\"userid2\",\"groups\":[\"groupid1\",\"groupid2\"]}..]");
-				throw new Exception(sb.toString());
-			}
-			
-			if ( user != null ) {
-				ret.put(user, groups);
-			}
+		CSVParser csvParser = new CSVParser(new BufferedReader(new FileReader(textFile)), csvFormat);
+		
+		List<CSVRecord> csvRecordList = csvParser.getRecords();
+		
+		if ( csvRecordList != null) {
+			for(CSVRecord csvRecord : csvRecordList) {
+				List<String> groups = new ArrayList<String>();
+				String user = csvRecord.get(0);
+				if ( (user.substring(0,1).equals("\"")) && (user.substring(user.length()-1)).equals("\"")) {
+					user = user.substring(1,user.length()-1);
+				} 
+					
+				int i = csvRecord.size();
+				
+				for (int j = 1; j < i; j ++) {
+					String group = csvRecord.get(j);
+					if ( (group.substring(0,1).equals("\"")) && (group.substring(group.length()-1)).equals("\"")) {
+						group = group.substring(1,group.length()-1);
+					} 
+					groups.add(group);
+				}
+				ret.put(user,groups);
+			 } 
 		}
-		
-		jsonReader.endObject();
-		
+
+		csvParser.close();
+
 		return ret;
 	}
-	
-	public List<String> getGroups(JsonReader reader) throws IOException {
-		List<String> ret = new ArrayList<String>();
-		
-		reader.beginArray();
-		
-		while(reader.hasNext()) {
-			ret.add(reader.nextString());
-		}
-		
-		reader.endArray();
-		
-		return ret;
-	}
+
 }
