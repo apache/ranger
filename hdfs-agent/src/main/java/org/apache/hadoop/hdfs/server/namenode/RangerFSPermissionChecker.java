@@ -38,7 +38,7 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.EnumRepositoryType;
-import org.apache.ranger.audit.model.HdfsAuditEvent;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.HDFSAccessVerifier;
 import org.apache.ranger.authorization.hadoop.HDFSAccessVerifierFactory;
@@ -217,7 +217,7 @@ public class RangerFSPermissionChecker {
 		
 		String accessType = ( (e.getAccess() == null) ? RangerHadoopConstants.AUDITLOG_EMPTY_STRING : e.getAccess().toString() ) ;
 		
-		HdfsAuditEvent auditEvent = new HdfsAuditEvent();
+		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 
 		auditEvent.setUser(username);
 		auditEvent.setResourcePath(requestedPath);

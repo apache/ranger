@@ -20,6 +20,7 @@ package org.apache.ranger.audit.provider;
 import java.util.Properties;
 
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 
 public abstract class BufferedAuditProvider extends BaseAuditProvider {
 	private LogBuffer<AuditEventBase>      mBuffer      = null;
@@ -32,16 +33,20 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public void log(AuditEventBase event) {
-		if(event.getAgentHostname() == null) {
-			event.setAgentHostname(MiscUtil.getHostname());
-		}
+		if(event instanceof AuthzAuditEvent) {
+			AuthzAuditEvent authzEvent = (AuthzAuditEvent)event;
 
-		if(event.getLogType() == null) {
-			event.setLogType("RangerAudit");
-		}
+			if(authzEvent.getAgentHostname() == null) {
+				authzEvent.setAgentHostname(MiscUtil.getHostname());
+			}
 
-		if(event.getEventId() == null) {
-			event.setEventId(MiscUtil.generateUniqueId());
+			if(authzEvent.getLogType() == null) {
+				authzEvent.setLogType("RangerAudit");
+			}
+
+			if(authzEvent.getEventId() == null) {
+				authzEvent.setEventId(MiscUtil.generateUniqueId());
+			}
 		}
 
 		if(! mBuffer.add(event)) {

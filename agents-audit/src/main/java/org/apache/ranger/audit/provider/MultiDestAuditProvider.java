@@ -24,11 +24,6 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.model.HBaseAuditEvent;
-import org.apache.ranger.audit.model.HdfsAuditEvent;
-import org.apache.ranger.audit.model.HiveAuditEvent;
-import org.apache.ranger.audit.model.KnoxAuditEvent;
-import org.apache.ranger.audit.model.StormAuditEvent;
 
 
 public class MultiDestAuditProvider extends BaseAuditProvider {

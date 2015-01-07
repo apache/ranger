@@ -46,7 +46,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.admin.client.datatype.GrantRevokeData;
 import org.apache.ranger.audit.model.EnumRepositoryType;
-import org.apache.ranger.audit.model.HiveAuditEvent;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
@@ -716,7 +716,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	}
 
     private void logAuditEventForDfs(UserGroupInformation ugi, String dfsCommand, boolean accessGranted) {
-		HiveAuditEvent auditEvent = new HiveAuditEvent();
+		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 
 		try {
 			auditEvent.setAclEnforcer(RangerModuleName);
@@ -748,7 +748,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
     }
 
 	private void logAuditEvent(UserGroupInformation ugi, RangerHiveObjectAccessInfo objAccessInfo, boolean accessGranted) {
-		HiveAuditEvent auditEvent = new HiveAuditEvent();
+		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 
 		try {
 			auditEvent.setAclEnforcer(RangerModuleName);

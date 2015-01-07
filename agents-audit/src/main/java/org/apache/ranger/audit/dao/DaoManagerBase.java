@@ -28,53 +28,17 @@ public abstract class DaoManagerBase {
 
 	abstract public EntityManager getEntityManager();
 
-	private RangerHBaseAuditEventDao mHBaseDao = null;
-	private RangerHdfsAuditEventDao  mHdfsDao  = null;
-	private RangerHiveAuditEventDao  mHiveDao  = null;
-	private RangerKnoxAuditEventDao  mKnoxDao  = null;
-	private RangerStormAuditEventDao mStormDao = null;
+	private AuthzAuditEventDao mAuthzAuditDao = null;
 
     public DaoManagerBase() {
 	}
 
-	public RangerHBaseAuditEventDao getXAHBaseAuditEventDao() {
-		if(mHBaseDao == null) {
-			mHBaseDao = new RangerHBaseAuditEventDao(this);
+	public AuthzAuditEventDao getAuthzAuditEventDao() {
+		if(mAuthzAuditDao == null) {
+			mAuthzAuditDao = new AuthzAuditEventDao(this);
 		}
 
-		return mHBaseDao;
-	}
-
-	public RangerHdfsAuditEventDao getXAHdfsAuditEventDao() {
-		if(mHdfsDao == null) {
-			mHdfsDao = new RangerHdfsAuditEventDao(this);
-		}
-
-		return mHdfsDao;
-	}
-
-	public RangerHiveAuditEventDao getXAHiveAuditEventDao() {
-		if(mHiveDao == null) {
-			mHiveDao = new RangerHiveAuditEventDao(this);
-		}
-
-		return mHiveDao;
-	}
-
-	public RangerKnoxAuditEventDao getXAKnoxAuditEventDao() {
-		if(mKnoxDao == null) {
-			mKnoxDao = new RangerKnoxAuditEventDao(this);
-		}
-
-		return mKnoxDao;
-	}
-
-	public RangerStormAuditEventDao getXAStormAuditEventDao() {
-		if(mStormDao == null) {
-			mStormDao = new RangerStormAuditEventDao(this);
-		}
-
-		return mStormDao;
+		return mAuthzAuditDao;
 	}
 }
 

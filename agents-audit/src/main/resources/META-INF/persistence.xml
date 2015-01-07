@@ -17,12 +17,7 @@
 -->
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
 	<persistence-unit name="xa_server">
-		<class>org.apache.ranger.audit.entity.XXBaseAuditEvent</class>
-		<class>org.apache.ranger.audit.entity.XXHBaseAuditEvent</class>
-		<class>org.apache.ranger.audit.entity.XXHdfsAuditEvent</class>
-		<class>org.apache.ranger.audit.entity.XXHiveAuditEvent</class>
-		<class>org.apache.ranger.audit.entity.XXKnoxAuditEvent</class>
-		<class>org.apache.ranger.audit.entity.XXStormAuditEvent</class>
+		<class>org.apache.ranger.audit.entity.AuthzAuditEventDbObj</class>
 
 		<properties>
 			<property name="eclipselink.logging.level" value="SEVERE"/>

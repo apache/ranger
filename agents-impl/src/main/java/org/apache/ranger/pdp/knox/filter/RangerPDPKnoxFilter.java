@@ -40,7 +40,7 @@ import org.apache.hadoop.gateway.security.GroupPrincipal;
 import org.apache.hadoop.gateway.security.ImpersonatedPrincipal;
 import org.apache.hadoop.gateway.security.PrimaryPrincipal;
 import org.apache.ranger.audit.model.EnumRepositoryType;
-import org.apache.ranger.audit.model.KnoxAuditEvent;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditProvider;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
@@ -183,7 +183,7 @@ public class RangerPDPKnoxFilter implements Filter {
 			String topology, String service,
 			String accessType, boolean accessGranted) {
 
-		KnoxAuditEvent auditEvent = new KnoxAuditEvent();
+		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 
 		auditEvent.setUser(userName == null ? 
 				RangerHadoopConstants.AUDITLOG_EMPTY_STRING : userName);
