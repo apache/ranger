@@ -17,13 +17,13 @@
  * under the License.
  */
 
- package org.apache.ranger.audit.dao;
+package org.apache.ranger.audit.dao;
 
-import org.apache.ranger.audit.entity.XXHBaseAuditEvent;
+import org.apache.ranger.audit.entity.AuthzAuditEventDbObj;
 
-public class RangerHBaseAuditEventDao extends BaseDao<XXHBaseAuditEvent> {
+public class AuthzAuditEventDao extends BaseDao<AuthzAuditEventDbObj> {
 
-	public RangerHBaseAuditEventDao(DaoManagerBase daoManager) {
+	public AuthzAuditEventDao(DaoManagerBase daoManager) {
 		super(daoManager);
 	}
 }

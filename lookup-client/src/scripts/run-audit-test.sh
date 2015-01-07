@@ -16,11 +16,12 @@
 # limitations under the License.
 
 
-HADOOP_DIR=/usr/hdp/current/hadoop
+HADOOP_DIR=/usr/hdp/current/hadoop-client
+HADOOP_LIB_DIR=/usr/hdp/current/hadoop-client/lib
 HADOOP_CONF_DIR=/etc/hadoop/conf
 
-cp=
-for jar in $HADOOP_CONF_DIR $HADOOP_DIR/lib/* $HADOOP_DIR/client/*
+cp=./ranger-plugins-audit-0.4.0.jar
+for jar in $HADOOP_CONF_DIR $HADOOP_LIB_DIR/commons-logging-1.1.3.jar $HADOOP_LIB_DIR/log4j-1.2.17.jar $HADOOP_LIB_DIR/eclipselink-2.5.2-M1.jar $HADOOP_LIB_DIR/gson-2.2.4.jar $HADOOP_LIB_DIR/javax.persistence-2.1.0.jar $HADOOP_LIB_DIR/mysql-connector-java.jar $HADOOP_DIR/hadoop-common.jar
 do
   cp=${cp}:${jar}
 done

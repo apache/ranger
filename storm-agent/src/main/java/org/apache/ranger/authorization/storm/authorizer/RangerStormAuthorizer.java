@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.EnumRepositoryType;
-import org.apache.ranger.audit.model.StormAuditEvent;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
@@ -126,7 +126,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 			
 			if (isAuditEnabled) {
 				
-				StormAuditEvent auditEvent = new StormAuditEvent() ;
+				AuthzAuditEvent auditEvent = new AuthzAuditEvent() ;
 	
 				String sessionId = null ;
 				String clientIp = null ;

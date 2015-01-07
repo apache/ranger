@@ -93,7 +93,7 @@ import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.admin.client.datatype.GrantRevokeData;
 import org.apache.ranger.admin.client.datatype.GrantRevokeData.PermMap;
 import org.apache.ranger.audit.model.EnumRepositoryType;
-import org.apache.ranger.audit.model.HBaseAuditEvent;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
@@ -982,7 +982,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				resourceType = "column";
 			}
 			
-			HBaseAuditEvent auditEvent = new HBaseAuditEvent();
+			AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 
 			auditEvent.setAclEnforcer(RangerModuleName);
 			auditEvent.setResourceType(resourceType);
