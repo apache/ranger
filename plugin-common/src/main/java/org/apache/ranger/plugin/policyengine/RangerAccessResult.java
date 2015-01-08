@@ -58,19 +58,7 @@ public class RangerAccessResult {
 	 * @return the accessTypeResult
 	 */
 	public ResultDetail getAccessTypeResult(String accessType) {
-		if(accessTypeResults == null) {
-			accessTypeResults = new HashMap<String, ResultDetail>();
-		}
-		
-		ResultDetail ret = accessTypeResults.get(accessType);
-		
-		if(ret == null) {
-			ret = new ResultDetail();
-			
-			accessTypeResults.put(accessType, ret);
-		}
-
-		return ret;
+		return accessTypeResults == null ? null : accessTypeResults.get(accessType);
 	}
 
 	/**

@@ -67,12 +67,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<RangerPolicyEvaluator> evaluators = new ArrayList<RangerPolicyEvaluator>();
 
 			for(RangerPolicy policy : policies) {
-				if(policy.getIsEnabled()) {
-					RangerPolicyEvaluator evaluator = getPolicyEvaluator(policy, serviceDef);
-	
-					if(evaluator != null) {
-						evaluators.add(evaluator);
-					}
+				if(! policy.getIsEnabled()) {
+					continue;
+				}
+
+				RangerPolicyEvaluator evaluator = getPolicyEvaluator(policy, serviceDef);
+
+				if(evaluator != null) {
+					evaluators.add(evaluator);
 				}
 			}
 
@@ -246,53 +248,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 	}
 
-
-	/*
-	public void init(String svcName) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.init(" + svcName + ")");
-		}
-
-		ServiceManager    svcMgr = new ServiceManager();
-		ServiceDefManager sdMgr  = new ServiceDefManager();
-
-		RangerServiceDef   serviceDef = null;
-		List<RangerPolicy> policies   = null;
-
-		RangerService  service = svcMgr.getByName(svcName);
-
-		if(service == null) {
-			String msg = svcName + ": service not found";
-
-			LOG.error(msg);
-
-			throw new Exception(msg);
-		} else {
-			serviceDef = sdMgr.getByName(service.getType());
-
-			if(serviceDef == null) {
-				String msg = service.getType() + ": service-def not found";
-
-				LOG.error(msg);
-
-				throw new Exception(msg);
-			}
-
-			policies = svcMgr.getPolicies(service.getId());
-
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("RangerPolicyEngineImpl.init(): found " + (policyEvaluators == null ? 0 : policyEvaluators.size()) + " policies in service '" + svcName + "'");
-			}
-		}
-
-		setPolicies(serviceDef, policies);
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.init(" + svcName + ")");
-		}
-	}
-	*/
-
 	public String getResourceName(RangerResource resource) {
 		String ret = null;
 
@@ -350,11 +305,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if(request != null) {
 			if(CollectionUtils.isEmpty(request.getAccessTypes())) {
-				ret.setAccessTypeResult(RangerPolicyEngine.ACCESS_ANY, new RangerAccessResult.ResultDetail());
-			} else {
-				for(String accessType : request.getAccessTypes()) {
-					ret.setAccessTypeResult(accessType, new RangerAccessResult.ResultDetail());
-				}
+				request.getAccessTypes().add(ANY_ACCESS);
+			}
+
+			for(String accessType : request.getAccessTypes()) {
+				ret.setAccessTypeResult(accessType, new RangerAccessResult.ResultDetail());
 			}
 
 			List<RangerPolicyEvaluator> evaluators = policyEvaluators;
@@ -421,4 +376,51 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		return sb;
 	}
+
+
+	/*
+	public void init(String svcName) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.init(" + svcName + ")");
+		}
+
+		ServiceManager    svcMgr = new ServiceManager();
+		ServiceDefManager sdMgr  = new ServiceDefManager();
+
+		RangerServiceDef   serviceDef = null;
+		List<RangerPolicy> policies   = null;
+
+		RangerService  service = svcMgr.getByName(svcName);
+
+		if(service == null) {
+			String msg = svcName + ": service not found";
+
+			LOG.error(msg);
+
+			throw new Exception(msg);
+		} else {
+			serviceDef = sdMgr.getByName(service.getType());
+
+			if(serviceDef == null) {
+				String msg = service.getType() + ": service-def not found";
+
+				LOG.error(msg);
+
+				throw new Exception(msg);
+			}
+
+			policies = svcMgr.getPolicies(service.getId());
+
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("RangerPolicyEngineImpl.init(): found " + (policyEvaluators == null ? 0 : policyEvaluators.size()) + " policies in service '" + svcName + "'");
+			}
+		}
+
+		setPolicies(serviceDef, policies);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.init(" + svcName + ")");
+		}
+	}
+	*/
 }
