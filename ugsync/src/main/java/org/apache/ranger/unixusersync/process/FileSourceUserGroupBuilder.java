@@ -188,18 +188,17 @@ public class FileSourceUserGroupBuilder  implements UserGroupSource {
 			for(CSVRecord csvRecord : csvRecordList) {
 				List<String> groups = new ArrayList<String>();
 				String user = csvRecord.get(0);
-				if ( (user.substring(0,1).equals("\"")) && (user.substring(user.length()-1)).equals("\"")) {
-					user = user.substring(1,user.length()-1);
-				} 
+				
+				user = user.replaceAll("^\"|\"$", "");
 					
 				int i = csvRecord.size();
 				
 				for (int j = 1; j < i; j ++) {
 					String group = csvRecord.get(j);
-					if ( (group.substring(0,1).equals("\"")) && (group.substring(group.length()-1)).equals("\"")) {
-						group = group.substring(1,group.length()-1);
-					} 
-					groups.add(group);
+					if ( group != null && !group.isEmpty()) {
+						 group = group.replaceAll("^\"|\"$", ""); 
+						 groups.add(group);
+					}
 				}
 				ret.put(user,groups);
 			 } 
