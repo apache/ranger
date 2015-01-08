@@ -89,7 +89,7 @@ define(function(require){
 				this.setupModel();
 			}*/
 			if(!this.model.isNew()){
-				_.each(JSON.parse(this.model.attributes.configs),function(name, value){
+				_.each(this.model.attributes.configs,function(name, value){
 					this.model.set(value,name)
 				},this);
 			}

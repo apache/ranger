@@ -36,7 +36,7 @@ define(function(require){
 	var GroupPermList 	= require('views/policies/GroupPermList');
 	var UserPermList 	= require('views/policies/UserPermList');
 	var RangerPolicyResource		= require('models/RangerPolicyResource');
-	var RangerPolicyResourceList	= require('collections/RangerPolicyResourceList');
+	var BackboneFormDataType	= require('models/BackboneFormDataType');
 
 	require('backbone-forms.list');
 	require('backbone-forms.templates');
@@ -109,40 +109,9 @@ define(function(require){
 		schema :function(){
 			var attrs = {};
 			var that = this;
-			_.each(this.rangerServiceDefModel.get('resources'),function(v,k){ 
-				if (v != null) {
+			var formDataType = new BackboneFormDataType();
+			attrs = formDataType.getFormElements(this.rangerServiceDefModel.get('resources'),this.rangerServiceDefModel.get('enums'), attrs, this);
 
-					var formObj = {};
-					switch(v.type){
-							case 'string' : formObj.type = 'Text'; break;
-							case 'select2' : 
-								formObj.type = 'Select2Remote';
-								formObj.pluginAttr = that.getPlugginAttr(false),
-								formObj.editorAttrs = {'data-placeholder': v.label },
-								formObj.options = function(callback, editor){
-				                    callback();
-				                },
-				                formObj.onFocusOpen = true
-								break;
-							case 'path' : 
-								formObj.type = 'Text';
-								that.initilializePathPlugin = true;
-								that.pathFieldName = v.name;
-								break;
-							default : formObj.type = 'Text'; break;
-					}	
-
-					formObj.title = v.label || v.name;
-					formObj.validators = [];
-					if (_.has(v,'mandatory') && v.mandatory){
-						formObj.validators.push('required');
-						formObj.title = formObj.title +" *"
-					}
-					formObj['class'] = 'serviceConfig';
-					var name = v.name;
-					attrs[name] = formObj;
-				}
-			});
 			var attr1 = _.pick(_.result(this.model,'schemaBase'), 'name','isEnabled');
 			var attr2 = _.pick(_.result(this.model,'schemaBase'),'description', 'isRecursive', 'isAuditEnabled');
 			return _.extend(attr1,_.extend(attrs,attr2));
@@ -178,86 +147,10 @@ define(function(require){
 		evResourceStatusChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor);
 		},
-		formValidation : function(){
-			var groupSet = false,permSet = false,auditStatus= false,encryptStatus= false,groupPermSet = false,
-							userSet=false,userPerm = false,isUsers =false;
-			console.log('validation called..');
-			var breakFlag =false;
-			this.formInputList.each(function(m){
-				if(m.has('groupId') ||  m.has('_vPermList')){
-					if(! breakFlag){
-						groupSet = m.has('groupId') ? true : false ; 
-						if(!m.has('_vPermList')){
-							permSet = false;
-						}else
-							permSet = true;
-						if(groupSet && permSet)
-							groupPermSet = true;
-						else
-							breakFlag=true;
-					}
-				}
-			});
-			breakFlag = false;
-			
-			this.userPermInputList.each(function(m){
-					if(! breakFlag){
-						userSet = m.has('userId') || m.has('userName') ? true : false ; 
-						if(!m.has('_vPermList')){
-							userPerm = false;
-						}else
-							userPerm = true;
-						if(userSet && userPerm)
-							isUsers = true;
-						else
-							breakFlag=true;
-					}
-			});
-			var auditLoggin = this.fields.isAuditEnabled.editor.getValue();
-
-			return {groupPermSet: groupPermSet , groupSet : groupSet,permSet : permSet,auditLoggin :auditLoggin,
-				userSet : userSet,userPerm:userPerm,isUsers:isUsers};
-		},
 		setupForm : function() {
-			var resourcePath = _.map(this.model.get('resources'), function(obj,i){
-				if( i == 0 ) this.model.set('isRecursive', obj.isRecursive) 
-				return obj.value; 
-			}, this);
-			if(this.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_HDFS.label.toUpperCase()){
-				this.model.set('path', resourcePath.toString());
-			}else if(this.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_HIVE.label.toUpperCase()){
-				_.each(resourcePath, function(path) {
-					var temp  = path.split("/");
-					if(!_.isUndefined(temp[1]))	this.model.set('database', temp[1])	
-					if(!_.isUndefined(temp[2]))	this.model.set('table', temp[2])
-					if(!_.isUndefined(temp[3]))	this.model.set('column', temp[3])
-					
-				},this);
-			}else if(this.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_HBASE.label.toUpperCase()){
-				_.each(resourcePath, function(path) {
-					var temp  = path.split("/");
-					if(!_.isUndefined(temp[1]))	this.model.set('table', temp[1])	
-					if(!_.isUndefined(temp[2]))	this.model.set('column-family', temp[2])
-					if(!_.isUndefined(temp[3]))	this.model.set('column', temp[3])
-					
-				},this);
-			}else if(this.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_KNOX.label.toUpperCase()){
-				_.each(resourcePath, function(path) {
-					var temp  = path.split("/");
-					if(!_.isUndefined(temp[1]))	this.model.set('topology', temp[1])	
-					if(!_.isUndefined(temp[2]))	this.model.set('service', temp[2])
-					
-				},this);
-			}else if(this.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_STORM.label.toUpperCase()){
-				var resourcePath = _.map(this.model.get('resources'), function(obj,i){
-					if( i == 0 ) this.model.set('isRecursive', obj.isRecursive) 
-					return obj.value; 
-				}, this);
-				_.each(resourcePath, function(path) {
-					var temp  = path.split("/");
-					if(!_.isUndefined(temp[1]))	this.model.set('topology', temp[1])	
-				},this);
-			}
+			_.each(this.model.attributes.resources,function(obj,key){
+				this.model.set(key, obj.values.toString())
+			},this)
 		},
 		setUpSwitches :function(){
 			var that = this;
@@ -280,11 +173,6 @@ define(function(require){
 		renderCustomFields: function(){
 			var that = this;
 			var accessType = this.rangerServiceDefModel.get('accessTypes').filter(function(val) { return val !== null; });
-			var policyType = this.rangerService.get('type')
-			_.each(XAEnums.ServiceType, function(obj){ 
-				if(that.rangerService.get('type').toUpperCase() == obj.label.toUpperCase())
-					policyType = obj.value;
-			});
 			this.groupList = new VXGroupList();
 			var params = {sortBy : 'name'};
 			this.groupList.setPageSize(100,{fetch:false});
@@ -296,7 +184,7 @@ define(function(require){
 						collection : that.formInputList,
 						groupList  : that.groupList,
 						model : that.model,
-						policyType 	: policyType,
+//						policyType 	: policyType,
 						accessTypes : accessType,
 						rangerServiceDefModel : that.rangerServiceDefModel
 					}).render().el);
@@ -313,7 +201,7 @@ define(function(require){
 						collection : that.userPermInputList,
 						model : that.model,
 						userList : that.userList,
-						policyType 	: policyType,
+//						policyType 	: policyType,
 						accessTypes : accessType,
 						rangerServiceDefModel : that.rangerServiceDefModel
 					}).render().el);
@@ -321,43 +209,19 @@ define(function(require){
 		},
 	
 		beforeSave : function(){
-			var that = this, resources = '';
+			var that = this, resources = [];
 			this.model.set('service',this.rangerService.get('name'));
-			if(that.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_HDFS.label.toUpperCase())
-				resources = this.model.get('path').split(',');
-			else if(that.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_HIVE.label.toUpperCase()){
-				resources = "/"+this.model.get('database');
-				resources += !_.isEmpty(this.model.get('table')) ? "/"+this.model.get('table') : '';
-				resources += !_.isEmpty(this.model.get('column')) ? "/"+this.model.get('column') : '';
-				resources = resources.split(',');
-			}else if(that.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_HBASE.label.toUpperCase()){
-				resources = "/"+this.model.get('table');
-				resources += !_.isEmpty(this.model.get('column-family')) ? "/"+this.model.get('column-family') : '';
-				resources += !_.isEmpty(this.model.get('column')) ? "/"+this.model.get('column') : '';
-				resources = resources.split(',');
-			}else if(that.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_KNOX.label.toUpperCase()){
-				resources = "/"+this.model.get('topology')+"/"+this.model.get('service');
-				resources = resources.split(',');
-			}else if(that.rangerService.get('type').toUpperCase() == XAEnums.ServiceType.Service_STORM.label.toUpperCase()){
-				resources = "/"+this.model.get('topology')
-				resources = resources.split(',');
-			}
-			var rPolicyResourceList = new RangerPolicyResourceList();
-			_.each(resources, function(val){
-				var rPolicyResource = new RangerPolicyResource();
-				rPolicyResource.set('type',that.rangerService.get('type'));
-				rPolicyResource.set('value',val);
-				rPolicyResource.set('isRecursive',that.model.get('isRecursive'))
-				rPolicyResource.set('isExcludes',null)
-				rPolicyResourceList.add(rPolicyResource);
+			var resources = {};
+			_.each(this.rangerServiceDefModel.get('resources'),function(obj){
+				if(!_.isNull(obj)){
+					var rPolicyResource = new RangerPolicyResource();
+					rPolicyResource.set('values',that.model.get(obj.name).split(','));
+					rPolicyResource.set('isRecursive',that.model.get('isRecursive'))
+					resources[obj.name] = rPolicyResource;
+					that.model.unset(obj.name);
+				}
 			});
-			
-			
-			
-			
-//			this.model.set('isEnabled',this.model.get('isEnabled')+"");
-//			this.model.set('isAuditEnabled',this.model.get('isAuditEnabled')+"");
-			this.model.set('resources',rPolicyResourceList);
+			this.model.set('resources',resources);
 			this.model.unset('isRecursive');
 			this.model.unset('path');
 			
@@ -392,6 +256,11 @@ define(function(require){
 				}
 			}, this);
 			this.model.set('policyItems', policyItemList)
+			
+			//Unset attrs which are not needed 
+			_.each(this.model.attributes.resources,function(obj,key){
+				this.model.unset(key, obj.values.toString())
+			},this)
 			
 		},
 		/** all post render plugin initialization */

@@ -32,6 +32,7 @@ define(function(require){
 	var XATableLayout	= require('views/common/XATableLayout');
 	var localization	= require('utils/XALangSupport');
 	var vFolderInfo = require('views/folders/FolderInfo');
+	var RangerServiceDef	= require('models/RangerServiceDef');
 	var RangerPolicyTableLayoutTmpl = require('hbs!tmpl/policies/RangerPolicyTableLayout_tmpl');
 
 	require('backgrid-filter');
@@ -99,6 +100,7 @@ define(function(require){
 					assetId : this.assetModel.id
 			};*/
 			this.bindEvents();
+			this.initializeServiceDef();
 //			this.isSysAdmin = SessionMgr.isSystemAdmin();
 		},
 
@@ -110,7 +112,14 @@ define(function(require){
 			//this.listenTo(this.collection, "sync", this.render, this);
 			//
 		},
-
+		initializeServiceDef : function(){
+			this.rangerServiceDefModel	= new RangerServiceDef();
+			this.rangerServiceDefModel.url = "service/plugins/definitions/name/"+this.rangerService.get('type');
+			this.rangerServiceDefModel.fetch({
+				cache : false,
+				async : false
+			})
+		},
 		/** on render callback */
 		onRender: function() {
 //			this.initializePlugins();
@@ -148,17 +157,40 @@ define(function(require){
 					editable: false,
 					sortable : false
 				},	
-				resources : {
+		/*		database : {
+					cell : "html",
+					label	: localization.tt("lbl.database"),
+					editable: false,
+					sortable : false,
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue,model) {
+							rawValue = model.get('resources')
+							var name=''
+							_.each(rawValue, function(obj){
+								if(!_.isUndefined(obj.values)) 
+									name += obj.values.toString();
+							});
+							return name;
+						}
+					})
+				},*/
+			/*	resources : {
 					cell : "html",
 					label	: localization.tt("lbl.resourcePath"),
 					editable: false,
 					sortable : false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue) {
-							return _.map(rawValue, function(resource){ return resource.value;}).toString();
+							console.log(rawValue)
+							var name=''
+							_.each(rawValue, function(obj){
+								if(!_.isUndefined(obj.values)) 
+									name += obj.values.toString();
+							});
+							return name;
 						}
 					})
-				},
+				},*/
 				isEnabled:{
 					label:localization.tt('lbl.status'),
 					cell :"html",
@@ -292,6 +324,22 @@ define(function(require){
 				}
 */				
 			};
+			_.each(this.rangerServiceDefModel.get('resources'), function(obj){
+				if(!_.isUndefined(obj) && !_.isNull(obj))
+					 cols[obj.name]={
+							cell : "html",
+							label	: localization.tt("lbl."+obj.name),
+							editable: false,
+							sortable : false,
+							formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+								fromRaw: function (rawValue,model) {
+									rawValue = model.get('resources')
+									return rawValue[obj.name].values.toString();
+								}
+							})
+						};
+
+			});
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},
 		onDelete :function(e){

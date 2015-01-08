@@ -33,12 +33,12 @@ define(function(require) {
     	
 	var UserPermissionItem = Backbone.Marionette.ItemView.extend({
 		_msvName : 'UserPermissionItem',
-		template : require('hbs!tmpl/common/UserPermissionItem'),
+		template : require('hbs!tmpl/policies/UserPermItem'),
 		tagName : 'tr',
 		templateHelpers : function(){
 						
 			return {
-				permissions 	: this.getPerms(),
+				permissions 	: this.accessTypes,
 				policyKnox 		: this.policyType == XAEnums.ServiceType.Service_KNOX.value ? true :false,
 //				policyStorm 	: this.policyType == XAEnums.ServiceType.Service_STORM.value ? true :false,
 			   isModelNew		: !this.model.has('editMode'),
@@ -74,6 +74,11 @@ define(function(require) {
 		onRender : function() {
 			var that = this;
 			
+			this.accessItems = _.map(this.accessTypes, function(perm){ 
+				if(!_.isUndefined(perm)) 
+					return {'type':perm.label,isAllowed : false}
+			});
+			
 			if(this.model.get('userName') != undefined){
 				this.ui.selectUsers.val(this.model.get('userName').split(','));
 			}
@@ -83,8 +88,10 @@ define(function(require) {
 			
 			if(this.model.has('editMode') && this.model.get('editMode')){
 				_.each(this.model.get('accesses'), function(p){
-					if(p.value)
+					if(p.isAllowed){
 						this.$el.find('input[data-name="' + p.type + '"]').attr('checked', 'checked');
+						_.each(this.accessItems,function(obj){ if(obj.type == p.type) obj.isAllowed=true;})
+					}
 				},this);
 			}
 			if(this.policyType == XAEnums.AssetType.ASSET_STORM.value)
@@ -93,7 +100,6 @@ define(function(require) {
 			this.createSelectUserDropDown();
 			this.userDropDownChange();
 			
-			this.accessItems = _.map(this.getPerms(), function(perm){ if(!_.isUndefined(perm)) return {'type':perm.label,'value': false}});
 		},
 		checkDirtyFieldForDropDown : function(e){
 			//that.model.has('groupId')
@@ -131,9 +137,9 @@ define(function(require) {
 				var $checkbox = $el.find('input');
 				$checkbox.is(':checked') ? $checkbox.prop('checked',false) : $checkbox.prop('checked',true);  
 			}
-			var curPerm = $el.find('input').data('id');
+//			var curPerm = $el.find('input').data('id');
 			var curPermName = $el.find('input').data('name');
-			if(!_.isUndefined(curPerm)){
+			if(!_.isUndefined(curPermName)){
 				var perms = [];
 				if(this.model.has('accesses')){
 					if(_.isArray(this.model.get('accesses')))
@@ -144,16 +150,16 @@ define(function(require) {
 				
 				
 				if($el.find('input[type="checkbox"]').is(':checked')){
-					_.each(that.accessItems, function(obj){ if(obj.type == curPermName) obj.value = true });
-					if(curPerm == XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value){
-						$el.parent().find('input[type="checkbox"]:not(:checked)[data-id!="'+curPerm+'"]').map(function(){
-							_.each(that.accessItems, function(obj){ if(obj.type == $(this).data('name')) obj.value = true }, this);
+					_.each(that.accessItems, function(obj){ if(obj.type == curPermName) obj.isAllowed = true });
+					/*if(curPermName == XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.label){
+						$el.parent().find('input[type="checkbox"]:not(:checked)[data-name!="'+curPermName+'"]').map(function(){
+							_.each(that.accessItems, function(obj){ if(obj.type == $(this).data('name')) obj.isAllowed = true }, this);
 						});
 						//	this.model.set('_vPermList', perms);
 						$el.parent().find('input[type="checkbox"]').prop('checked',true);
-					}
+					}*/
 				} else {
-					_.each(that.accessItems, function(obj){ if(obj.type == curPermName ) obj.value = false }, this);
+					_.each(that.accessItems, function(obj){ if(obj.type == curPermName ) obj.isAllowed = false }, this);
 				}
 //				this.checkDirtyFieldForCheckBox(perms);
 				if(!_.isEmpty(that.accessItems)){
@@ -345,10 +351,6 @@ define(function(require) {
 				});
 			});
 		},
-		getPerms : function(){
-			var permList = _.map(this.accessTypes,function(type){ return type.label});
-			return _.map(permList, function(perm){ return _.findWhere(XAEnums.XAPermType,{label:perm})})
-		}
 
 	});
 
