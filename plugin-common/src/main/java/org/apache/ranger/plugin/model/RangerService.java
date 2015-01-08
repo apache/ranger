@@ -46,7 +46,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	private String              name        = null;
 	private String              description = null;
 	private Boolean             isEnabled   = null;
-	@JsonDeserialize(using = CustomizedMapDeserializer.class)
 	private Map<String, String> configs     = null;
 
 
@@ -151,7 +150,15 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 * @param configs the configs to set
 	 */
 	public void setConfigs(Map<String, String> configs) {
-		this.configs = new HashMap<String, String>();
+		if(this.configs == null) {
+			this.configs = new HashMap<String, String>();
+		}
+
+		if(this.configs == configs) {
+			return;
+		}
+		
+		this.configs.clear();
 
 		if(configs != null) {
 			for(Map.Entry<String, String> e : configs.entrySet()) {

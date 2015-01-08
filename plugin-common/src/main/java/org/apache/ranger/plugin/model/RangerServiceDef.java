@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -178,7 +179,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param configs the configs to set
 	 */
 	public void setConfigs(List<RangerServiceConfigDef> configs) {
-		this.configs = new ArrayList<RangerServiceConfigDef>();
+		if(this.configs == null) {
+			this.configs = new ArrayList<RangerServiceConfigDef>();
+		} else 
+
+		if(this.configs == configs) {
+			return;
+		}
+
+		this.configs.clear();
 
 		if(configs != null) {
 			for(RangerServiceConfigDef config : configs) {
@@ -198,7 +207,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param resources the resources to set
 	 */
 	public void setResources(List<RangerResourceDef> resources) {
-		this.resources = new ArrayList<RangerResourceDef>();
+		if(this.resources == null) {
+			this.resources = new ArrayList<RangerResourceDef>();
+		}
+
+		if(this.resources == resources) {
+			return;
+		}
+
+		this.resources.clear();
 
 		if(resources != null) {
 			for(RangerResourceDef resource : resources) {
@@ -218,7 +235,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param accessTypes the accessTypes to set
 	 */
 	public void setAccessTypes(List<RangerAccessTypeDef> accessTypes) {
-		this.accessTypes = new ArrayList<RangerAccessTypeDef>();
+		if(this.accessTypes == null) {
+			this.accessTypes = new ArrayList<RangerAccessTypeDef>();
+		}
+
+		if(this.accessTypes == accessTypes) {
+			return;
+		}
+
+		this.accessTypes.clear();
 
 		if(accessTypes != null) {
 			for(RangerAccessTypeDef accessType : accessTypes) {
@@ -238,7 +263,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param policyConditions the policyConditions to set
 	 */
 	public void setPolicyConditions(List<RangerPolicyConditionDef> policyConditions) {
-		this.policyConditions = new ArrayList<RangerPolicyConditionDef>();
+		if(this.policyConditions == null) {
+			this.policyConditions = new ArrayList<RangerPolicyConditionDef>();
+		}
+
+		if(this.policyConditions == policyConditions) {
+			return;
+		}
+
+		this.policyConditions.clear();
 
 		if(policyConditions != null) {
 			for(RangerPolicyConditionDef policyCondition : policyConditions) {
@@ -258,7 +291,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param enums the enums to set
 	 */
 	public void setEnums(List<RangerEnumDef> enums) {
-		this.enums = new ArrayList<RangerEnumDef>();
+		if(this.enums == null) {
+			this.enums = new ArrayList<RangerEnumDef>();
+		}
+
+		if(this.enums == enums) {
+			return;
+		}
+
+		this.enums.clear();
 
 		if(enums != null) {
 			for(RangerEnumDef enum1 : enums) {
@@ -387,7 +428,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		 * @param elements the elements to set
 		 */
 		public void setElements(List<RangerEnumElementDef> elements) {
-			this.elements = new ArrayList<RangerEnumElementDef>();
+			if(this.elements == null) {
+				this.elements = new ArrayList<RangerEnumElementDef>();
+			}
+
+			if(this.elements == elements) {
+				return;
+			}
+
+			this.elements.clear();
 
 			if(elements != null) {
 				for(RangerEnumElementDef element : elements) {
@@ -974,19 +1023,21 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerAccessTypeDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String name       = null;
-		private String label      = null;
-		private String rbKeyLabel = null;
+		private String             name       = null;
+		private String             label      = null;
+		private String             rbKeyLabel = null;
+		private Collection<String> impliedAccessTypes = null;
 
 
 		public RangerAccessTypeDef() {
-			this(null, null, null);
+			this(null, null, null, null);
 		}
 
-		public RangerAccessTypeDef(String name, String label, String rbKeyLabel) {
+		public RangerAccessTypeDef(String name, String label, String rbKeyLabel, Collection<String> impliedAccessTypes) {
 			setName(name);
 			setLabel(label);
 			setRbKeyLabel(rbKeyLabel);
+			setImpliedAccessTypes(impliedAccessTypes);
 		}
 
 		/**
@@ -1029,6 +1080,34 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		 */
 		public void setRbKeyLabel(String rbKeyLabel) {
 			this.rbKeyLabel = rbKeyLabel;
+		}
+
+		/**
+		 * @return the impliedAccessTypes
+		 */
+		public Collection<String> getImpliedAccessTypes() {
+			return impliedAccessTypes;
+		}
+
+		/**
+		 * @param impliedAccessTypes the impliedAccessTypes to set
+		 */
+		public void setImpliedAccessTypes(Collection<String> impliedAccessTypes) {
+			if(this.impliedAccessTypes == null) {
+				this.impliedAccessTypes = new ArrayList<String>();
+			}
+
+			if(this.impliedAccessTypes == impliedAccessTypes) {
+				return;
+			}
+
+			this.impliedAccessTypes.clear();
+
+			if(impliedAccessTypes != null) {
+				for(String impliedAccessType : impliedAccessTypes) {
+					this.impliedAccessTypes.add(impliedAccessType);
+				}
+			}
 		}
 
 		@Override

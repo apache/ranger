@@ -19,56 +19,31 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
 
 public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerPathResourceMatcher.class);
 
-	private List<String> policyValues      = null;
-	private boolean      policyIsExcludes  = false;
-	private boolean      policyIsRecursive = false;
+	private boolean policyIsRecursive = false;
 
 	@Override
-	public void init(RangerPolicyResource policyResource, String optionsString) {
+	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource, String optionsString) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPathResourceMatcher.init(" + policyResource + ", " + optionsString + ")");
+			LOG.debug("==> RangerPathResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
 		}
 
-		super.init(policyResource,  optionsString);
+		super.init(resourceDef, policyResource,  optionsString);
 
-		policyValues      = new ArrayList<String>();
-		policyIsExcludes  = false;
-		policyIsRecursive = false;
-
-		if(policyResource != null) {
-			policyIsExcludes  = policyResource.getIsExcludes();
-			policyIsRecursive = policyResource.getIsRecursive();
-
-			if(policyResource.getValues() != null) {
-				for(String policyValue : policyResource.getValues()) {
-					if(policyValue == null) {
-						continue;
-					}
-	
-					if(optIgnoreCase) {
-						policyValue = policyValue.toLowerCase();
-					}
-
-					policyValues.add(policyValue);
-				}
-			}
-		}
+		policyIsRecursive = policyResource == null ? false : policyResource.getIsRecursive();
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPathResourceMatcher.init(" + policyResource + ", " + optionsString + ")");
+			LOG.debug("<== RangerPathResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
 		}
 	}
 
@@ -96,6 +71,8 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 					break;
 				}
 			}
+		} else {
+			ret = isMatchAny;
 		}
 
 		if(policyIsExcludes) {

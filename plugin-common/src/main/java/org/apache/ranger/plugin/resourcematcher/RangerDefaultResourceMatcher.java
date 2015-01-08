@@ -19,56 +19,28 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
 
 public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultResourceMatcher.class);
 
-	private List<String> policyValues     = null;
-	private boolean      policyIsExcludes = false;
 
 	@Override
-	public void init(RangerPolicyResource policyResource, String optionsString) {
+	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource, String optionsString) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultResourceMatcher.init(" + policyResource + ", " + optionsString + ")");
+			LOG.debug("==> RangerDefaultResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
 		}
 
-		super.init(policyResource,  optionsString);
-
-		policyValues     = new ArrayList<String>();
-		policyIsExcludes = false;
-
-		if(policyResource != null) {
-			policyIsExcludes = policyResource.getIsExcludes();
-
-			if(policyResource.getValues() != null) {
-				for(String policyValue : policyResource.getValues()) {
-					if(policyValue == null) {
-						continue;
-					}
-
-					if(optIgnoreCase) {
-						policyValue = policyValue.toLowerCase();
-					}
-
-					if(optWildCard) {
-						policyValue = getWildCardPattern(policyValue);
-					}
-
-					policyValues.add(policyValue);
-				}
-			}
-		}
+		super.init(resourceDef, policyResource,  optionsString);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultResourceMatcher.init(" + policyResource + ", " + optionsString + ")");
+			LOG.debug("<== RangerDefaultResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
 		}
 	}
 
@@ -92,6 +64,8 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 					break;
 				}
 			}
+		} else {
+			ret = isMatchAny;
 		}
 
 		if(policyIsExcludes) {

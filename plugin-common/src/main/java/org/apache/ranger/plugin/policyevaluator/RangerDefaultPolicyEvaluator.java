@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +45,7 @@ import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyEvaluator.class);
 
-	private List<ResourceDefMatcher> matchers = null;
+	private List<RangerResourceMatcher> matchers = null;
 
 	@Override
 	public void init(RangerPolicy policy, RangerServiceDef serviceDef) {
@@ -55,20 +55,19 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		super.init(policy, serviceDef);
 
-		this.matchers = new ArrayList<ResourceDefMatcher>();
+		this.matchers = new ArrayList<RangerResourceMatcher>();
 
-		if(policy != null && policy.getResources() != null) {
-			for(Map.Entry<String, RangerPolicyResource> e : policy.getResources().entrySet()) {
-				String               resourceName   = e.getKey();
-				RangerPolicyResource policyResource = e.getValue();
-				RangerResourceDef    resourceDef    = getResourceDef(resourceName);
+		if(policy != null && policy.getResources() != null && serviceDef != null) {
+			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+				String               resourceName   = resourceDef.getName();
+				RangerPolicyResource policyResource = policy.getResources().get(resourceName);
 
 				RangerResourceMatcher matcher = createResourceMatcher(resourceDef, policyResource);
 
 				if(matcher != null) {
-					matchers.add(new ResourceDefMatcher(resourceDef, matcher));
+					matchers.add(matcher);
 				} else {
-					// TODO: ERROR: no matcher found for resourceName
+					LOG.error("failed to find matcher for resource " + resourceName);
 				}
 			}
 		}
@@ -89,34 +88,74 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(policy != null && request != null && result != null) {
 			if(matchResource(request.getResource())) {
 				for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-					for(String accessType : request.getAccessTypes()) {
-						RangerPolicyItemAccess access = getAccess(policyItem, accessType);
-
-						if(access == null) {
-							continue;
-						}
-
-						RangerAccessResult.ResultDetail accessResult = result.getAccessTypeResult(accessType);
-						
-						if(accessResult.isAllowed() && accessResult.isAudited()) {
-							continue;
-						}
+					
+					// if no access is requested, grant if ***any*** access is available
+					if(CollectionUtils.isEmpty(request.getAccessTypes())) {
+						RangerAccessResult.ResultDetail accessResult = result.getAccessTypeResult(RangerPolicyEngine.ACCESS_ANY);
 
 						if(!accessResult.isAudited() && policy.getIsAuditEnabled()) {
 							accessResult.setIsAudited(true);
 						}
-
-						if(matchUserGroup(policyItem, request.getUser(), request.getUserGroups())) {
-							if(matchCustomConditions(policyItem, request)) {
-								if(!accessResult.isAllowed() && access.getIsAllowed()) {
-									accessResult.setIsAllowed(true);
-									accessResult.setPolicyId(policy.getId());
-								}
-							}
+						
+						if(! matchUserGroup(policyItem, request.getUser(), request.getUserGroups())) {
+							continue;
 						}
 
-						if(result.isAllAllowedAndAudited()) {
-							break;
+						if(! matchCustomConditions(policyItem, request)) {
+							continue;
+						}
+
+						if(CollectionUtils.isEmpty(policyItem.getAccesses())) {
+							continue;
+						}
+
+						for(RangerPolicyItemAccess access : policyItem.getAccesses()) {
+							if(!accessResult.isAllowed() && access.getIsAllowed()) {
+								accessResult.setIsAllowed(true);
+								accessResult.setPolicyId(policy.getId());
+
+								break;
+							}
+						}
+					} else {
+						if(! matchUserGroup(policyItem, request.getUser(), request.getUserGroups())) {
+							continue;
+						}
+
+						if(! matchCustomConditions(policyItem, request)) {
+							continue;
+						}
+
+						for(String accessType : request.getAccessTypes()) {
+							RangerAccessResult.ResultDetail accessResult = result.getAccessTypeResult(accessType);
+
+							if(CollectionUtils.isEmpty(policyItem.getAccesses())) {
+								if(!accessResult.isAudited() && policy.getIsAuditEnabled()) {
+									accessResult.setIsAudited(true);
+								}
+
+								continue;
+							}
+							
+							RangerPolicyItemAccess access = getAccess(policyItem, accessType);
+							
+							if(access == null) {
+								continue;
+							}
+
+
+							if(accessResult.isAllowed() && accessResult.isAudited()) {
+								continue;
+							}
+	
+							if(!accessResult.isAudited() && policy.getIsAuditEnabled()) {
+								accessResult.setIsAudited(true);
+							}
+	
+							if(!accessResult.isAllowed() && access.getIsAllowed()) {
+								accessResult.setIsAllowed(true);
+								accessResult.setPolicyId(policy.getId());
+							}
 						}
 					}
 
@@ -142,13 +181,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(matchers != null && !matchers.isEmpty()) {
 			ret = true;
 
-			for(ResourceDefMatcher matcher : matchers) {
-				 String resourceName  = matcher.getResourceName();
+			for(RangerResourceMatcher matcher : matchers) {
+				 String resourceName  = matcher.getResourceDef().getName();
 				 String resourceValue = resource.getValue(resourceName);
 
-				 if(resourceValue != null) {
-					 ret = matcher.isMatch(resourceValue);
-				 }
+				 ret = matcher.isMatch(resourceValue);
 
 				 if(! ret) {
 					 break;
@@ -229,32 +266,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	protected RangerResourceDef getResourceDef(String resourceName) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.getResourceDef(" + resourceName + ")");
-		}
-
-		RangerResourceDef ret = null;
-
-		RangerServiceDef serviceDef = getServiceDef();
-
-		if(serviceDef != null && resourceName != null) {
-			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-				if(StringUtils.equalsIgnoreCase(resourceName, resourceDef.getName())) {
-					ret = resourceDef;
-
-					break;
-				}
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.getResourceDef(" + resourceName + "): " + ret);
-		}
-
-		return ret;
-	}
-
 	protected RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource resource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.createResourceMatcher(" + resourceDef + ", " + resource + ")");
@@ -286,7 +297,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if(ret != null) {
-			ret.init(resource,  options);
+			ret.init(resourceDef, resource,  options);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -303,10 +314,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		sb.append("matchers={");
 		if(matchers != null) {
-			for(ResourceDefMatcher matcher : matchers) {
-				sb.append("{");
-				matcher.toString(sb);
-				sb.append("} ");
+			for(RangerResourceMatcher matcher : matchers) {
+				sb.append("{").append(matcher).append("} ");
 			}
 		}
 		sb.append("} ");
@@ -314,48 +323,5 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		sb.append("}");
 
 		return sb;
-	}
-	
-	class ResourceDefMatcher {
-		RangerResourceDef     resourceDef     = null;
-		RangerResourceMatcher resourceMatcher = null;
-
-		ResourceDefMatcher(RangerResourceDef resourceDef, RangerResourceMatcher resourceMatcher) {
-			this.resourceDef     = resourceDef;
-			this.resourceMatcher = resourceMatcher;
-		}
-		
-		String getResourceName() {
-			return resourceDef.getName();
-		}
-
-		boolean isMatch(String value) {
-			return resourceMatcher.isMatch(value);
-		}
-
-		boolean isMatch(Collection<String> values) {
-			boolean ret = false;
-
-			if(values == null || values.isEmpty()) {
-				ret = resourceMatcher.isMatch(null);
-			} else {
-				for(String value : values) {
-					ret = resourceMatcher.isMatch(value);
-
-					if(! ret) {
-						break;
-					}
-				}
-			}
-
-			return ret;
-		}
-
-		public StringBuilder toString(StringBuilder sb) {
-			sb.append("resourceDef={").append(resourceDef).append("} ");
-			sb.append("resourceMatcher={").append(resourceMatcher).append("} ");
-
-			return sb;
-		}
 	}
 }

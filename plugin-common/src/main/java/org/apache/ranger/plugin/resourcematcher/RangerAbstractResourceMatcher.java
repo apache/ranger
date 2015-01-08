@@ -19,36 +19,47 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
 
 public abstract class RangerAbstractResourceMatcher implements RangerResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractResourceMatcher.class);
+
+	public final String WILDCARD_PATTERN = ".*";
 
 	public final String OPTIONS_SEP        = ";";
 	public final String OPTION_NV_SEP      = "=";
 	public final String OPTION_IGNORE_CASE = "ignoreCase";
 	public final String OPTION_WILD_CARD   = "wildCard";
 
+	private RangerResourceDef    resourceDef    = null;
 	private RangerPolicyResource policyResource = null;
 	private String               optionsString  = null;
 	private Map<String, String>  options        = null;
 
-	protected boolean optIgnoreCase    = false;
-	protected boolean optWildCard      = false;
+	protected boolean      optIgnoreCase = false;
+	protected boolean      optWildCard   = false;
+
+	protected List<String> policyValues     = null;
+	protected boolean      policyIsExcludes = false;
+	protected boolean      isMatchAny       = false;
 
 	@Override
-	public void init(RangerPolicyResource policyResource, String optionsString) {
+	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource, String optionsString) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractResourceMatcher.init(" + policyResource + ", " + optionsString + ")");
+			LOG.debug("==> RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
 		}
 
+		this.resourceDef    = resourceDef;
 		this.policyResource = policyResource;
 		this.optionsString  = optionsString;
 
@@ -76,9 +87,43 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		optIgnoreCase = getBooleanOption(OPTION_IGNORE_CASE, true);
 		optWildCard   = getBooleanOption(OPTION_WILD_CARD, true);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractResourceMatcher.init(" + policyResource + ", " + optionsString + ")");
+		policyValues     = new ArrayList<String>();
+		policyIsExcludes = policyResource == null ? false : policyResource.getIsExcludes();
+
+		if(policyResource != null && policyResource.getValues() != null) {
+			for(String policyValue : policyResource.getValues()) {
+				if(policyValue == null) {
+					continue;
+				}
+
+				if(optIgnoreCase) {
+					policyValue = policyValue.toLowerCase();
+				}
+
+				if(optWildCard) {
+					policyValue = getWildCardPattern(policyValue);
+				}
+
+				if(policyValue.equals(WILDCARD_PATTERN)) {
+					isMatchAny = true;
+				}
+
+				policyValues.add(policyValue);
+			}
 		}
+
+		if(policyValues.isEmpty()) {
+			isMatchAny = true;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
+		}
+	}
+
+	@Override
+	public RangerResourceDef getResourceDef() {
+		return resourceDef;
 	}
 
 	@Override
@@ -149,6 +194,11 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerAbstractResourceMatcher={");
 
+		sb.append("resourceDef={");
+		if(resourceDef != null) {
+			resourceDef.toString(sb);
+		}
+		sb.append("} ");
 		sb.append("policyResource={");
 		if(policyResource != null) {
 			policyResource.toString(sb);

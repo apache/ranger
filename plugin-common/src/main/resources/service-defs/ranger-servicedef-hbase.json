@@ -41,7 +41,8 @@
   [
     {"name":"read","label":"Read"},
 	{"name":"write","label":"Write"},
-	{"name":"create","label":"Create"}
+	{"name":"create","label":"Create"},
+	{"name":"admin","label":"Admin","impliedAccessTypes":["read","write","create"]}
   ],
   "policyConditions":
   [

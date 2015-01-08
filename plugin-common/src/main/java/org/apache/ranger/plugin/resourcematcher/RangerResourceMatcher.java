@@ -20,9 +20,12 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
 public interface RangerResourceMatcher {
-	void init(RangerPolicyResource policyResource, String optionsString);
+	void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource, String optionsString);
+
+	RangerResourceDef getResourceDef();
 
 	RangerPolicyResource getPolicyResource();
 

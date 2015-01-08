@@ -170,7 +170,15 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param configs the resources to set
 	 */
 	public void setResources(Map<String, RangerPolicyResource> resources) {
-		this.resources = new HashMap<String, RangerPolicyResource>();
+		if(this.resources == null) {
+			this.resources = new HashMap<String, RangerPolicyResource>();
+		}
+
+		if(this.resources == resources) {
+			return;
+		}
+
+		this.resources.clear();
 
 		if(resources != null) {
 			for(Map.Entry<String, RangerPolicyResource> e : resources.entrySet()) {
@@ -190,7 +198,15 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param policyItems the policyItems to set
 	 */
 	public void setPolicyItems(List<RangerPolicyItem> policyItems) {
-		this.policyItems = new ArrayList<RangerPolicyItem>();
+		if(this.policyItems == null) {
+			this.policyItems = new ArrayList<RangerPolicyItem>();
+		}
+
+		if(this.policyItems == policyItems) {
+			return;
+		}
+
+		this.policyItems.clear();
 
 		if(policyItems != null) {
 			for(RangerPolicyItem policyItem : policyItems) {
@@ -258,10 +274,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 
 		public RangerPolicyResource(String value, Boolean isExcludes, Boolean isRecursive) {
-			List<String> values = new ArrayList<String>();
-			values.add(value);
-
-			setValues(values);
+			setValue(value);
 			setIsExcludes(isExcludes);
 			setIsRecursive(isRecursive);
 		}
@@ -283,13 +296,34 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 * @param values the values to set
 		 */
 		public void setValues(List<String> values) {
-			this.values = new ArrayList<String>();
+			if(this.values == null) {
+				this.values = new ArrayList<String>();
+			}
+
+			if(this.values == values) {
+				return;
+			}
+
+			this.values.clear();
 
 			if(values != null) {
 				for(String value : values) {
 					this.values.add(value);
 				}
 			}
+		}
+
+		/**
+		 * @param value the value to set
+		 */
+		public void setValue(String value) {
+			if(this.values == null) {
+				this.values = new ArrayList<String>();
+			}
+
+			this.values.clear();
+
+			this.values.add(value);
 		}
 
 		/**
@@ -377,7 +411,13 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 * @param accesses the accesses to set
 		 */
 		public void setAccesses(List<RangerPolicyItemAccess> accesses) {
-			this.accesses = new ArrayList<RangerPolicyItemAccess>();
+			if(this.accesses == null) {
+				this.accesses = new ArrayList<RangerPolicyItemAccess>();
+			}
+
+			if(this.accesses == accesses) {
+				return;
+			}
 
 			if(accesses != null) {
 				for(RangerPolicyItemAccess access : accesses) {
@@ -395,7 +435,13 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 * @param users the users to set
 		 */
 		public void setUsers(List<String> users) {
-			this.users = new ArrayList<String>();
+			if(this.users == null) {
+				this.users = new ArrayList<String>();
+			}
+
+			if(this.users == users) {
+				return;
+			}
 
 			if(users != null) {
 				for(String user : users) {
@@ -413,7 +459,13 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 * @param groups the groups to set
 		 */
 		public void setGroups(List<String> groups) {
-			this.groups = new ArrayList<String>();
+			if(this.groups == null) {
+				this.groups = new ArrayList<String>();
+			}
+
+			if(this.groups == groups) {
+				return;
+			}
 
 			if(groups != null) {
 				for(String group : groups) {
@@ -431,7 +483,13 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 * @param conditions the conditions to set
 		 */
 		public void setConditions(List<RangerPolicyItemCondition> conditions) {
-			this.conditions = new ArrayList<RangerPolicyItemCondition>();
+			if(this.conditions == null) {
+				this.conditions = new ArrayList<RangerPolicyItemCondition>();
+			}
+
+			if(this.conditions == conditions) {
+				return;
+			}
 
 			if(conditions != null) {
 				for(RangerPolicyItemCondition condition : conditions) {

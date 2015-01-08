@@ -24,10 +24,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult.ResultDetail;
@@ -348,18 +348,24 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		RangerAccessResult ret = new RangerAccessResult();
 
-		List<RangerPolicyEvaluator> evaluators = policyEvaluators;
-
-		if(request != null && request.getAccessTypes() != null && evaluators != null) {
-			for(String accessType : request.getAccessTypes()) {
-				ret.setAccessTypeResult(accessType, new RangerAccessResult.ResultDetail());
+		if(request != null) {
+			if(CollectionUtils.isEmpty(request.getAccessTypes())) {
+				ret.setAccessTypeResult(RangerPolicyEngine.ACCESS_ANY, new RangerAccessResult.ResultDetail());
+			} else {
+				for(String accessType : request.getAccessTypes()) {
+					ret.setAccessTypeResult(accessType, new RangerAccessResult.ResultDetail());
+				}
 			}
 
-			for(RangerPolicyEvaluator evaluator : evaluators) {
-				evaluator.evaluate(request, ret);
-				
-				if(ret.isAllAllowedAndAudited()) {
-					break;
+			List<RangerPolicyEvaluator> evaluators = policyEvaluators;
+
+			if(evaluators != null) {
+				for(RangerPolicyEvaluator evaluator : evaluators) {
+					evaluator.evaluate(request, ret);
+
+					if(ret.isAllAllowedAndAudited()) {
+						break;
+					}
 				}
 			}
 		}
