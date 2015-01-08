@@ -46,7 +46,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	private String              name        = null;
 	private String              description = null;
 	private Boolean             isEnabled   = null;
-	@JsonDeserialize(using = CustomizedMapDeserializer.class)
 	private Map<String, String> configs     = null;
 
 
