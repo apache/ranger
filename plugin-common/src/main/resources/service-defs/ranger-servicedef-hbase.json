@@ -24,9 +24,9 @@
   [
     {"name":"username","type":"string","mandatory":true,"label":"Username"},
 	{"name":"password","type":"password","mandatory":true,"label":"Password"},
-	{"name":"hadoop.security.authentication","type":"enum","subtype":"authnType","mandatory":true,"defaultValue":"simple"},
+	{"name":"hadoop.security.authentication","type":"enum","subType":"authnType","mandatory":true,"defaultValue":"simple"},
 	{"name":"hbase.master.kerberos.principal","type":"string","mandatory":false,"defaultValue":""},
-	{"name":"hbase.security.authentication","type":"enum","subtype":"authnType","mandatory":true,"defaultValue":"simple"},
+	{"name":"hbase.security.authentication","type":"enum","subType":"authnType","mandatory":true,"defaultValue":"simple"},
 	{"name":"hbase.zookeeper.property.clientPort","type":"int","mandatory":true,"defaultValue":"2181"},
 	{"name":"hbase.zookeeper.quorum","type":"string","mandatory":true,"defaultValue":""},
 	{"name":"zookeeper.znode.parent","type":"string","mandatory":true,"defaultValue":"/hbase"}

@@ -25,6 +25,7 @@ define(function(require){
     
 	var XAEnums			= require('utils/XAEnums');
 	var localization	= require('utils/XALangSupport');
+	var BackboneFormDataType	= require('models/BackboneFormDataType');
 
 	require('backbone-forms');
 	require('backbone-forms.list');
@@ -78,36 +79,8 @@ define(function(require){
 
 			var attrs = _.pick(_.result(this.rangerServiceDefModel,'schemaBase'), 'name', 'description', 'isEnabled', 'type');
 			var that = this;
-			_.each(this.rangerServiceDefModel.get('configs'),function(v,k){ 
-				if (v != null) {
-
-					var formObj = {};
-					var enumObj = _.find(that.rangerServiceDefModel.get('enums'), function(e){ return e && e.name == v.type;});
-					if (enumObj !== undefined ){
-						formObj.type = 'Select';
-						formObj.options = _.pluck(_.compact(enumObj.elements),'label'); 
-					} else {
-						switch(v.type){
-							case 'string' : formObj.type = 'Text'; break;
-							case 'bool' : formObj.type = 'Checkbox'; formObj.options = { y: 'Yes', n: 'No' }; break;
-							case 'int' : formObj.type = 'Number'; break;
-							default : formObj.type = 'Text'; break;
-						}	
-
-
-					}
-					formObj.title = v.label || v.name;
-					formObj.validators = [];
-					if (_.has(v,'mandatory') && v.mandatory){
-						formObj.validators.push('required');
-						formObj.title = formObj.title +" *"
-					}
-					formObj['class'] = 'serviceConfig';
-					var name = v.name;
-					attrs[name] = formObj;
-				}
-			});
-			return attrs;
+			var formDataType = new BackboneFormDataType();
+			return formDataType.getFormElements(this.rangerServiceDefModel.get('configs'),this.rangerServiceDefModel.get('enums'), attrs, this);
 		},
 
 		/** on render callback */
@@ -156,9 +129,9 @@ define(function(require){
 					that.model.unset(obj.name);
 				}
 			});
-			//this.model.set('configs',JSON.stringify(config));
+//			this.model.set('configs',JSON.stringify(config));
 			this.model.set('configs',config);
-
+			
 			//Set service type
 			this.model.set('type',this.rangerServiceDefModel.get('name'))
 			/*_.each(XAEnums.AssetType, function(asset){
@@ -174,7 +147,7 @@ define(function(require){
 			
 			//Remove unwanted attributes from model
 			if(!this.model.isNew()){
-				_.each(JSON.parse(this.model.attributes.configs),function(value, name){
+				_.each(this.model.attributes.configs, function(value, name){
 					this.model.unset(name)
 				},this);
 			}

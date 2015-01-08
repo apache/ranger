@@ -102,9 +102,6 @@ define(function(require){
 		},
 		initializeServiceDef : function(){
 			
-			var service = _.find(XAEnums.ServiceType,function(service){
-				return service.label.toUpperCase() == this.rangerService.get('type').toUpperCase();
-			},this);
 			this.rangerServiceDefModel	= new RangerServiceDef();
 			this.rangerServiceDefModel.url = "service/plugins/definitions/name/"+this.rangerService.get('type');
 			this.rangerServiceDefModel.fetch({
@@ -129,7 +126,7 @@ define(function(require){
 		},
 
 		/** all post render plugin initialization */
-		initializePlugins: function(){
+	/*	initializePlugins: function(){
 		},
 		popupCallBack : function(msg,validateObj){
 			var that = this;
@@ -140,7 +137,7 @@ define(function(require){
 				//		that.savePolicy();
 				}
 			});
-		},
+		},*/
 		onSave: function(){
 			var that = this, valid = false;
 			var errors = this.form.commit({validate : false});
@@ -281,7 +278,7 @@ define(function(require){
 				}
 			});
 		},
-		onDelete :function(){
+		/*onDelete :function(){
 			var that = this;
 			XAUtil.confirmPopup({
 				//msg :localize.tt('msg.confirmDelete'),
@@ -307,7 +304,7 @@ define(function(require){
 					
 				}
 			});
-		},
+		},*/
 		onCancel : function(){
 			XAUtil.allowNavigation();
 			App.appRouter.navigate("#!/service/"+this.rangerService.id+"/policies",{trigger: true});
