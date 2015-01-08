@@ -10,6 +10,15 @@
         <dependent-module archiveName="unixauthclient-0.4.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/unixauthclient/unixauthclient">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="plugin-common-0.4.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/plugin-common/plugin-common">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="ranger-plugins-audit-0.4.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/ranger-plugins-audit/ranger-plugins-audit">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="ranger-plugins-cred-0.4.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/ranger-plugins-cred/ranger-plugins-cred">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="context-root" value="security-admin-web"/>
         <property name="java-output-path" value="/security-admin-web/target/classes"/>
         <property name="component.exclusion.patterns" value="WEB-INF/lib/spring-*.SEC03.jar,WEB-INF/lib/spring-*.RC3.jar,WEB-INF/lib/spring-2.*.jar"/>

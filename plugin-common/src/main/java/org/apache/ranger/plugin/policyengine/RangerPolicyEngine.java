@@ -19,8 +19,10 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
@@ -28,9 +30,17 @@ public interface RangerPolicyEngine {
 	public static final String GROUP_PUBLIC   = "public";
 	public static final long   UNKNOWN_POLICY = -1;
 
-	void setPolicies(RangerServiceDef serviceDef, List<RangerPolicy> policies);
+	void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies);
 
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
 
 	List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests);
+
+	void logAudit(AuthzAuditEvent auditEvent);
+
+	void logAudit(Collection<AuthzAuditEvent> auditEvents);
+
+	Collection<AuthzAuditEvent> getAuditEvents(RangerAccessRequest request, RangerAccessResult result);
+
+	Collection<AuthzAuditEvent> getAuditEvents(List<RangerAccessRequest> requests, List<RangerAccessResult> results);
 }
