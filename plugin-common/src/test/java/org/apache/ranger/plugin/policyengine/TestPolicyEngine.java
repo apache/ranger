@@ -61,8 +61,17 @@ public class TestPolicyEngine {
 	}
 
 	@Test
-	public void testPolicyEngine_01() {
-		String            filename = "/policyengine/test_policyengine_01.json";
+	public void testPolicyEngine_hive() {
+		String            filename = "/policyengine/test_policyengine_hive.json";
+		InputStream       inStream = this.getClass().getResourceAsStream(filename);
+		InputStreamReader reader   = new InputStreamReader(inStream);
+
+		runTests(reader, filename);
+	}
+
+	@Test
+	public void testPolicyEngine_hbase() {
+		String            filename = "/policyengine/test_policyengine_hbase.json";
 		InputStream       inStream = this.getClass().getResourceAsStream(filename);
 		InputStreamReader reader   = new InputStreamReader(inStream);
 

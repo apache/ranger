@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.policyevaluator;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -33,6 +34,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -52,6 +54,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.init()");
 		}
+
+		preprocessPolicy(policy, serviceDef);
 
 		super.init(policy, serviceDef);
 
@@ -371,5 +375,80 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		sb.append("}");
 
 		return sb;
+	}
+
+	private void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef) {
+		if(policy == null || CollectionUtils.isEmpty(policy.getPolicyItems()) || serviceDef == null) {
+			return;
+		}
+
+		Map<String, Collection<String>> impliedAccessGrants = getImpliedAccessGrants(serviceDef);
+
+		if(impliedAccessGrants == null || impliedAccessGrants.isEmpty()) {
+			return;
+		}
+
+		for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+			if(CollectionUtils.isEmpty(policyItem.getAccesses())) {
+				continue;
+			}
+
+			for(Map.Entry<String, Collection<String>> e : impliedAccessGrants.entrySet()) {
+				String             accessType    = e.getKey();
+				Collection<String> impliedGrants = e.getValue();
+
+				RangerPolicyItemAccess access = getAccess(policyItem, accessType);
+
+				if(access == null) {
+					continue;
+				}
+				
+				for(String impliedGrant : impliedGrants) {
+					RangerPolicyItemAccess impliedAccess = getAccess(policyItem, impliedGrant);
+					
+					if(impliedAccess == null) {
+						impliedAccess = new RangerPolicyItemAccess(impliedGrant, access.getIsAllowed(), access.getIsAudited());
+						
+						policyItem.getAccesses().add(impliedAccess);
+					} else {
+						if(! impliedAccess.getIsAllowed()) {
+							impliedAccess.setIsAllowed(access.getIsAllowed());
+						}
+
+						if(! impliedAccess.getIsAudited()) {
+							impliedAccess.setIsAudited(access.getIsAudited());
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private Map<String, Collection<String>> getImpliedAccessGrants(RangerServiceDef serviceDef) {
+		Map<String, Collection<String>> ret = null;
+
+		if(serviceDef != null && !CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
+			for(RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
+				if(!CollectionUtils.isEmpty(accessTypeDef.getImpliedAccessGrants())) {
+					if(ret == null) {
+						ret = new HashMap<String, Collection<String>>();
+					}
+
+					Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
+
+					if(impliedAccessGrants == null) {
+						impliedAccessGrants = new HashSet<String>();
+
+						ret.put(accessTypeDef.getName(), impliedAccessGrants);
+					}
+
+					for(String impliedAccessGrant : accessTypeDef.getImpliedAccessGrants()) {
+						impliedAccessGrants.add(impliedAccessGrant);
+					}
+				}
+			}
+		}
+
+		return ret;
 	}
 }

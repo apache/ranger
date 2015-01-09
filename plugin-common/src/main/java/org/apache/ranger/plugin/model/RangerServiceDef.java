@@ -1023,21 +1023,21 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerAccessTypeDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String             name       = null;
-		private String             label      = null;
-		private String             rbKeyLabel = null;
-		private Collection<String> impliedAccessTypes = null;
+		private String             name                = null;
+		private String             label               = null;
+		private String             rbKeyLabel          = null;
+		private Collection<String> impliedAccessGrants = null;
 
 
 		public RangerAccessTypeDef() {
 			this(null, null, null, null);
 		}
 
-		public RangerAccessTypeDef(String name, String label, String rbKeyLabel, Collection<String> impliedAccessTypes) {
+		public RangerAccessTypeDef(String name, String label, String rbKeyLabel, Collection<String> impliedAccessGrants) {
 			setName(name);
 			setLabel(label);
 			setRbKeyLabel(rbKeyLabel);
-			setImpliedAccessTypes(impliedAccessTypes);
+			setImpliedAccessGrants(impliedAccessGrants);
 		}
 
 		/**
@@ -1083,29 +1083,29 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
-		 * @return the impliedAccessTypes
+		 * @return the impliedAccessGrants
 		 */
-		public Collection<String> getImpliedAccessTypes() {
-			return impliedAccessTypes;
+		public Collection<String> getImpliedAccessGrants() {
+			return impliedAccessGrants;
 		}
 
 		/**
-		 * @param impliedAccessTypes the impliedAccessTypes to set
+		 * @param impliedAccessGrants the impliedAccessGrants to set
 		 */
-		public void setImpliedAccessTypes(Collection<String> impliedAccessTypes) {
-			if(this.impliedAccessTypes == null) {
-				this.impliedAccessTypes = new ArrayList<String>();
+		public void setImpliedAccessGrants(Collection<String> impliedAccessGrants) {
+			if(this.impliedAccessGrants == null) {
+				this.impliedAccessGrants = new ArrayList<String>();
 			}
 
-			if(this.impliedAccessTypes == impliedAccessTypes) {
+			if(this.impliedAccessGrants == impliedAccessGrants) {
 				return;
 			}
 
-			this.impliedAccessTypes.clear();
+			this.impliedAccessGrants.clear();
 
-			if(impliedAccessTypes != null) {
-				for(String impliedAccessType : impliedAccessTypes) {
-					this.impliedAccessTypes.add(impliedAccessType);
+			if(impliedAccessGrants != null) {
+				for(String impliedAccessGrant : impliedAccessGrants) {
+					this.impliedAccessGrants.add(impliedAccessGrant);
 				}
 			}
 		}
@@ -1124,6 +1124,17 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("name={").append(name).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
+
+			sb.append("impliedAccessGrants={");
+			if(impliedAccessGrants != null) {
+				for(String impliedAccessGrant : impliedAccessGrants) {
+					if(impliedAccessGrant != null) {
+						sb.append(impliedAccessGrant).append(" ");
+					}
+				}
+			}
+			sb.append("} ");
+
 			sb.append("}");
 
 			return sb;
