@@ -34,13 +34,13 @@
   [
     {"name":"username","type":"string","mandatory":true,"label":"Username"},
 	{"name":"password","type":"password","mandatory":true,"label":"Password"},
-	{"name":"hadoop.security.authorization","type":"bool","mandatory":true,"defaultValue":"false"},
+	{"name":"hadoop.security.authorization","type":"bool","subType":"TrueFalse","mandatory":true,"defaultValue":"false"},
 	{"name":"hadoop.security.authentication","type":"enum","subType":"authnType","mandatory":true,"defaultValue":"simple"},
 	{"name":"hadoop.security.auth_to_local","type":"string","mandatory":false},
 	{"name":"dfs.datanode.kerberos.principal","type":"string","mandatory":false},
 	{"name":"dfs.namenode.kerberos.principal","type":"string","mandatory":false},
 	{"name":"dfs.secondary.namenode.kerberos.principal","type":"string","mandatory":false},
-	{"name":"hadoop.rpc.protection","type":"rpcProtection","mandatory":false,"defaultValue":"authentication"},
+	{"name":"hadoop.rpc.protection","type":"enum","subType":"rpcProtection","mandatory":false,"defaultValue":"authentication"},
 	{"name":"certificate.cn","type":"string","mandatory":false,"label":"Common Name for Certificate"}
   ],
   "resources":

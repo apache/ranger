@@ -61,24 +61,36 @@ public class TestPolicyEngine {
 	}
 
 	@Test
-	public void testPolicyEngine_hive() {
-		String            filename = "/policyengine/test_policyengine_hive.json";
-		InputStream       inStream = this.getClass().getResourceAsStream(filename);
-		InputStreamReader reader   = new InputStreamReader(inStream);
+	public void testPolicyEngine_hdfs() {
+		String[] hdfsTestResourceFiles = { "/policyengine/test_policyengine_hdfs.json" };
 
-		runTests(reader, filename);
+		runTestsFromResourceFiles(hdfsTestResourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_hive() {
+		String[] hiveTestResourceFiles = { "/policyengine/test_policyengine_hive.json" };
+
+		runTestsFromResourceFiles(hiveTestResourceFiles);
 	}
 
 	@Test
 	public void testPolicyEngine_hbase() {
-		String            filename = "/policyengine/test_policyengine_hbase.json";
-		InputStream       inStream = this.getClass().getResourceAsStream(filename);
-		InputStreamReader reader   = new InputStreamReader(inStream);
+		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase.json" };
 
-		runTests(reader, filename);
+		runTestsFromResourceFiles(hbaseTestResourceFiles);
 	}
 
-	public void runTests(InputStreamReader reader, String testName) {
+	private void runTestsFromResourceFiles(String[] resourceNames) {
+		for(String resourceName : resourceNames) {
+			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
+			InputStreamReader reader   = new InputStreamReader(inStream);
+
+			runTests(reader, resourceName);
+		}
+	}
+
+	private void runTests(InputStreamReader reader, String testName) {
 		try {
 			PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
 

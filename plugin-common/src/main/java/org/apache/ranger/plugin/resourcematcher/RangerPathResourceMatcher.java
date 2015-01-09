@@ -62,9 +62,17 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 
 			for(String policyValue : policyValues) {
 				if(policyIsRecursive) {
-					ret = optWildCard ? isRecursiveWildCardMatch(resource, policyValue) : StringUtils.startsWith(resource, policyValue);
+					ret = StringUtils.startsWith(resource, policyValue);
+					
+					if(! ret && optWildCard) {
+						ret = isRecursiveWildCardMatch(resource, policyValue) ;
+					}
 				} else {
-					ret = optWildCard ? FilenameUtils.wildcardMatch(resource, policyValue) : StringUtils.equals(resource, policyValue);
+					ret = StringUtils.equals(resource, policyValue);
+					
+					if(! ret && optWildCard) {
+						ret = FilenameUtils.wildcardMatch(resource, policyValue);
+					}
 				}
 
 				if(ret) {
