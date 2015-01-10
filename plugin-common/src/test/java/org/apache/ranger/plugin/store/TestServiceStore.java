@@ -17,26 +17,28 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.manager;
+package org.apache.ranger.plugin.store;
 
 import static org.junit.Assert.*;
 
 import java.util.List;
 
-import org.apache.ranger.plugin.manager.ServiceDefManager;
-import org.apache.ranger.plugin.manager.ServiceManager;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.store.ServiceDefStore;
+import org.apache.ranger.plugin.store.ServiceDefStoreFactory;
+import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestServiceManager {
-	static ServiceDefManager sdMgr  = null;
-	static ServiceManager    svcMgr = null;
+public class TestServiceStore {
+	static ServiceDefStore svcDefStore = null;
+	static ServiceStore    svcStore    = null;
 
 	static String sdName      = "HdfsTest";
 	static String serviceName = "HdfsTest-dev";
@@ -44,31 +46,31 @@ public class TestServiceManager {
 
 	@BeforeClass
 	public static void setupTest() {
-		sdMgr  = new ServiceDefManager();
-		svcMgr = new ServiceManager();
+		svcDefStore = ServiceDefStoreFactory.instance().getServiceDefStore();
+		svcStore    = ServiceStoreFactory.instance().getServiceStore();
 	}
 
 	@Test
 	public void testServiceManager() throws Exception {
-		List<RangerServiceDef> sds = sdMgr.getAll();
+		List<RangerServiceDef> sds = svcDefStore.getAll();
 
 		int initSdCount = sds == null ? 0 : sds.size();
 
 		RangerServiceDef sd = new RangerServiceDef(sdName, "org.apache.ranger.services.TestService", "TestService", "test servicedef description", null, null, null, null, null);
 
-		RangerServiceDef createdSd = sdMgr.create(sd);
+		RangerServiceDef createdSd = svcDefStore.create(sd);
 		assertNotNull("createServiceDef() failed", createdSd != null);
 
-		sds = sdMgr.getAll();
+		sds = svcDefStore.getAll();
 		assertEquals("createServiceDef() failed", initSdCount + 1, sds == null ? 0 : sds.size());
 
 		String updatedDescription = sd.getDescription() + ": updated";
 		createdSd.setDescription(updatedDescription);
-		RangerServiceDef updatedSd = sdMgr.update(createdSd);
+		RangerServiceDef updatedSd = svcDefStore.update(createdSd);
 		assertNotNull("updateServiceDef(updatedDescription) failed", updatedSd);
 		assertEquals("updateServiceDef(updatedDescription) failed", updatedDescription, updatedSd.getDescription());
 
-		sds = sdMgr.getAll();
+		sds = svcDefStore.getAll();
 		assertEquals("updateServiceDef(updatedDescription) failed", initSdCount + 1, sds == null ? 0 : sds.size());
 
 		String updatedName = sd.getName() + "-Renamed";
@@ -82,37 +84,37 @@ public class TestServiceManager {
 		assertEquals("updateServiceDef(updatedName) failed", initSdCount + 1, sds == null ? 0 : sds.size());
 		*/
 
-		List<RangerService> services = svcMgr.getAll();
+		List<RangerService> services = svcStore.getAll();
 
 		int initServiceCount = services == null ? 0 : services.size();
 
 		RangerService svc = new RangerService(sdName, serviceName, "test service description", Boolean.TRUE, null);
 
-		RangerService createdSvc = svcMgr.create(svc);
+		RangerService createdSvc = svcStore.create(svc);
 		assertNotNull("createService() failed", createdSvc);
 
-		services = svcMgr.getAll();
+		services = svcStore.getAll();
 		assertEquals("createServiceDef() failed", initServiceCount + 1, services == null ? 0 : services.size());
 
 		updatedDescription = createdSvc.getDescription() + ": updated";
 		createdSvc.setDescription(updatedDescription);
-		RangerService updatedSvc = svcMgr.update(createdSvc);
+		RangerService updatedSvc = svcStore.update(createdSvc);
 		assertNotNull("updateService(updatedDescription) failed", updatedSvc);
 		assertEquals("updateService(updatedDescription) failed", updatedDescription, updatedSvc.getDescription());
 
-		services = svcMgr.getAll();
+		services = svcStore.getAll();
 		assertEquals("updateService(updatedDescription) failed", initServiceCount + 1, services == null ? 0 : services.size());
 
 		updatedName = serviceName + "-Renamed";
 		updatedSvc.setName(updatedName);
-		updatedSvc = svcMgr.update(updatedSvc);
+		updatedSvc = svcStore.update(updatedSvc);
 		assertNotNull("updateService(updatedName) failed", updatedSvc);
 		assertEquals("updateService(updatedName) failed", updatedName, updatedSvc.getName());
 
-		services = svcMgr.getAll();
+		services = svcStore.getAll();
 		assertEquals("updateService(updatedName) failed", initServiceCount + 1, services == null ? 0 : services.size());
 
-		List<RangerPolicy> policies = svcMgr.getAllPolicies();
+		List<RangerPolicy> policies = svcStore.getAllPolicies();
 
 		int initPolicyCount = policies == null ? 0 : policies.size();
 
@@ -133,7 +135,7 @@ public class TestServiceManager {
 		policy.getPolicyItems().add(item1);
 		policy.getPolicyItems().add(item2);
 
-		RangerPolicy createdPolicy = svcMgr.createPolicy(policy);
+		RangerPolicy createdPolicy = svcStore.createPolicy(policy);
 		assertNotNull(createdPolicy);
 		assertNotNull(createdPolicy.getPolicyItems());
 		assertEquals(createdPolicy.getPolicyItems().size(), 2);
@@ -155,49 +157,49 @@ public class TestServiceManager {
 		assertNotNull(createItem2.getGroups());
 		assertEquals(createItem2.getGroups().size(), 1);
 
-		policies = svcMgr.getAllPolicies();
+		policies = svcStore.getAllPolicies();
 		assertEquals("createPolicy() failed", initPolicyCount + 1, policies == null ? 0 : policies.size());
 
 		updatedDescription = policy.getDescription() + ":updated";
 		createdPolicy.setDescription(updatedDescription);
-		RangerPolicy updatedPolicy = svcMgr.updatePolicy(createdPolicy);
+		RangerPolicy updatedPolicy = svcStore.updatePolicy(createdPolicy);
 		assertNotNull("updatePolicy(updatedDescription) failed", updatedPolicy != null);
 
-		policies = svcMgr.getAllPolicies();
+		policies = svcStore.getAllPolicies();
 		assertEquals("updatePolicy(updatedDescription) failed", initPolicyCount + 1, policies == null ? 0 : policies.size());
 
 		updatedName = policyName + "-Renamed";
 		updatedPolicy.setName(updatedName);
-		updatedPolicy = svcMgr.updatePolicy(updatedPolicy);
+		updatedPolicy = svcStore.updatePolicy(updatedPolicy);
 		assertNotNull("updatePolicy(updatedName) failed", updatedPolicy);
 
-		policies = svcMgr.getAllPolicies();
+		policies = svcStore.getAllPolicies();
 		assertEquals("updatePolicy(updatedName) failed", initPolicyCount + 1, policies == null ? 0 : policies.size());
 
 		// rename the service; all the policies for this service should reflect the new service name
 		updatedName = serviceName + "-Renamed2";
 		updatedSvc.setName(updatedName);
-		updatedSvc = svcMgr.update(updatedSvc);
+		updatedSvc = svcStore.update(updatedSvc);
 		assertNotNull("updateService(updatedName2) failed", updatedSvc);
 		assertEquals("updateService(updatedName2) failed", updatedName, updatedSvc.getName());
 
-		services = svcMgr.getAll();
+		services = svcStore.getAll();
 		assertEquals("updateService(updatedName2) failed", initServiceCount + 1, services == null ? 0 : services.size());
 
-		updatedPolicy = svcMgr.getPolicy(createdPolicy.getId());
+		updatedPolicy = svcStore.getPolicy(createdPolicy.getId());
 		assertNotNull("updateService(updatedName2) failed", updatedPolicy);
 		assertEquals("updateService(updatedName2) failed", updatedPolicy.getService(), updatedSvc.getName());
 
-		svcMgr.deletePolicy(policy.getId());
-		policies = svcMgr.getAllPolicies();
+		svcStore.deletePolicy(policy.getId());
+		policies = svcStore.getAllPolicies();
 		assertEquals("deletePolicy() failed", initPolicyCount, policies == null ? 0 : policies.size());
 
-		svcMgr.delete(svc.getId());
-		services = svcMgr.getAll();
+		svcStore.delete(svc.getId());
+		services = svcStore.getAll();
 		assertEquals("deleteService() failed", initServiceCount, services == null ? 0 : services.size());
 
-		sdMgr.delete(sd.getId());
-		sds = sdMgr.getAll();
+		svcDefStore.delete(sd.getId());
+		sds = svcDefStore.getAll();
 		assertEquals("deleteServiceDef() failed", initSdCount, sds == null ? 0 : sds.size());
 	}
 }

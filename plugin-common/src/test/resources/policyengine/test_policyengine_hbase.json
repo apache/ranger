@@ -13,7 +13,7 @@
       {"name":"read","label":"Read"},
       {"name":"write","label":"Write"},
       {"name":"create","label":"Create"},
-      {"name":"admin","label":"Admin","impliedAccessGrants":["read","write","create"]}
+      {"name":"admin","label":"Admin","impliedGrants":["read","write","create"]}
     ]
   },
 

@@ -34,11 +34,13 @@ import javax.ws.rs.core.Context;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.manager.ServiceDefManager;
-import org.apache.ranger.plugin.manager.ServiceManager;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.store.ServiceDefStore;
+import org.apache.ranger.plugin.store.ServiceDefStoreFactory;
+import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -56,12 +58,12 @@ public class ServiceREST {
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
-	private ServiceDefManager sdMgr  = null;
-	private ServiceManager    svcMgr  = null;
+	private ServiceDefStore serviceDefStore = null;
+	private ServiceStore    svcStore        = null;
 
 	public ServiceREST() {
-		sdMgr  = new ServiceDefManager();
-		svcMgr = new ServiceManager();
+		serviceDefStore = ServiceDefStoreFactory.instance().getServiceDefStore();
+		svcStore        = ServiceStoreFactory.instance().getServiceStore();
 	}
 
 	@GET
@@ -75,7 +77,7 @@ public class ServiceREST {
 		RangerServiceDef ret = null;
 
 		try {
-			ret = sdMgr.get(id);
+			ret = serviceDefStore.get(id);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -102,7 +104,7 @@ public class ServiceREST {
 		RangerServiceDef ret = null;
 
 		try {
-			ret = sdMgr.getByName(name);
+			ret = serviceDefStore.getByName(name);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -129,7 +131,7 @@ public class ServiceREST {
 		List<RangerServiceDef> ret = null;
 
 		try {
-			ret = sdMgr.getAll();
+			ret = serviceDefStore.getAll();
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -153,7 +155,7 @@ public class ServiceREST {
 		RangerServiceDef ret = null;
 
 		try {
-			ret = sdMgr.create(serviceDef);
+			ret = serviceDefStore.create(serviceDef);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -177,7 +179,7 @@ public class ServiceREST {
 		RangerServiceDef ret = null;
 
 		try {
-			ret = sdMgr.update(serviceDef);
+			ret = serviceDefStore.update(serviceDef);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -199,7 +201,7 @@ public class ServiceREST {
 		}
 
 		try {
-			sdMgr.delete(id);
+			serviceDefStore.delete(id);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -221,7 +223,7 @@ public class ServiceREST {
 		RangerService ret = null;
 
 		try {
-			ret = svcMgr.get(id);
+			ret = svcStore.get(id);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -248,7 +250,7 @@ public class ServiceREST {
 		RangerService ret = null;
 
 		try {
-			ret = svcMgr.getByName(name);
+			ret = svcStore.getByName(name);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -275,7 +277,7 @@ public class ServiceREST {
 		List<RangerService> ret = null;
 
 		try {
-			ret = svcMgr.getAll();
+			ret = svcStore.getAll();
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -323,7 +325,7 @@ public class ServiceREST {
 		RangerService ret = null;
 
 		try {
-			ret = svcMgr.create(service);
+			ret = svcStore.create(service);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -346,7 +348,7 @@ public class ServiceREST {
 		RangerService ret = null;
 
 		try {
-			ret = svcMgr.update(service);
+			ret = svcStore.update(service);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -368,7 +370,7 @@ public class ServiceREST {
 		}
 
 		try {
-			svcMgr.delete(id);
+			svcStore.delete(id);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -389,7 +391,7 @@ public class ServiceREST {
 		VXResponse ret = new VXResponse();
 
 		try {
-			svcMgr.validateConfig(service);
+			// TODO: svcStore.validateConfig(service);
 		} catch(Exception excp) {
 			ret.setStatusCode(VXResponse.STATUS_ERROR);
 			// TODO: message
@@ -414,7 +416,7 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		try {
-			ret = svcMgr.getPolicy(id);
+			ret = svcStore.getPolicy(id);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -442,7 +444,8 @@ public class ServiceREST {
 
 		try {
 			Long serviceId = Long.parseLong(request.getParameter("serviceId"));
-			ret = svcMgr.getPolicies(serviceId);
+
+			ret = svcStore.getServicePolicies(serviceId);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -490,7 +493,7 @@ public class ServiceREST {
 		List<RangerPolicy> ret = null;
 
 		try {
-			ret = svcMgr.getPolicies(serviceId);
+			ret = svcStore.getServicePolicies(serviceId);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -517,7 +520,7 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		try {
-			ret = svcMgr.createPolicy(policy);
+			ret = svcStore.createPolicy(policy);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -540,7 +543,7 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		try {
-			ret = svcMgr.updatePolicy(policy);
+			ret = svcStore.updatePolicy(policy);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -562,7 +565,7 @@ public class ServiceREST {
 		}
 
 		try {
-			svcMgr.deletePolicy(id);
+			svcStore.deletePolicy(id);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}

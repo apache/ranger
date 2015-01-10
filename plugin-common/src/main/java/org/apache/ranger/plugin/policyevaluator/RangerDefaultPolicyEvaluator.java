@@ -393,6 +393,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				continue;
 			}
 
+			// Only one round of 'expansion' is done; multi-level impliedGrants (like shown below) are not handled for now
+			// multi-level impliedGrants: given admin=>write; write=>read: must imply admin=>read,write
 			for(Map.Entry<String, Collection<String>> e : impliedAccessGrants.entrySet()) {
 				String             accessType    = e.getKey();
 				Collection<String> impliedGrants = e.getValue();
@@ -402,13 +404,13 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				if(access == null) {
 					continue;
 				}
-				
+
 				for(String impliedGrant : impliedGrants) {
 					RangerPolicyItemAccess impliedAccess = getAccess(policyItem, impliedGrant);
-					
+
 					if(impliedAccess == null) {
 						impliedAccess = new RangerPolicyItemAccess(impliedGrant, access.getIsAllowed(), access.getIsAudited());
-						
+
 						policyItem.getAccesses().add(impliedAccess);
 					} else {
 						if(! impliedAccess.getIsAllowed()) {
@@ -429,7 +431,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if(serviceDef != null && !CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
 			for(RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
-				if(!CollectionUtils.isEmpty(accessTypeDef.getImpliedAccessGrants())) {
+				if(!CollectionUtils.isEmpty(accessTypeDef.getImpliedGrants())) {
 					if(ret == null) {
 						ret = new HashMap<String, Collection<String>>();
 					}
@@ -442,7 +444,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						ret.put(accessTypeDef.getName(), impliedAccessGrants);
 					}
 
-					for(String impliedAccessGrant : accessTypeDef.getImpliedAccessGrants()) {
+					for(String impliedAccessGrant : accessTypeDef.getImpliedGrants()) {
 						impliedAccessGrants.add(impliedAccessGrant);
 					}
 				}
