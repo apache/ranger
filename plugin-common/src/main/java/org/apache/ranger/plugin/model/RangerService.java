@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.model;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +30,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 
@@ -41,11 +41,13 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RangerService extends RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String              type        = null;
-	private String              name        = null;
-	private String              description = null;
-	private Boolean             isEnabled   = null;
-	private Map<String, String> configs     = null;
+	private String              type             = null;
+	private String              name             = null;
+	private String              description      = null;
+	private Boolean             isEnabled        = null;
+	private Map<String, String> configs          = null;
+	private Long                policyVersion    = null;
+	private Date                policyUpdateTime = null;
 
 
 	/**
@@ -166,6 +168,34 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		}
 	}
 
+	/**
+	 * @return the policyVersion
+	 */
+	public Long getPolicyVersion() {
+		return policyVersion;
+	}
+
+	/**
+	 * @param policyVersion the policyVersion to set
+	 */
+	public void setPolicyVersion(Long policyVersion) {
+		this.policyVersion = policyVersion;
+	}
+
+	/**
+	 * @return the policyUpdateTime
+	 */
+	public Date getPolicyUpdateTime() {
+		return policyUpdateTime;
+	}
+
+	/**
+	 * @param policyUpdateTime the policyUpdateTime to set
+	 */
+	public void setPolicyUpdateTime(Date policyUpdateTime) {
+		this.policyUpdateTime = policyUpdateTime;
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -191,6 +221,9 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 			}
 		}
 		sb.append("} ");
+
+		sb.append("policyVersion={").append(policyVersion).append("} ");
+		sb.append("policyUpdateTime={").append(policyUpdateTime).append("} ");
 
 		sb.append("}");
 

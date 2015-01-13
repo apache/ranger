@@ -38,6 +38,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -55,7 +58,7 @@ public class BaseFileStore {
 
 
 	protected void init() {
-		dataDir = System.getProperty("org.apache.ranger.datastore.dir", "/etc/ranger/data"); // TODO: read from configuration
+		dataDir = System.getProperty("ranger.policystore.file.dir", "/etc/ranger/data"); // TODO: read from configuration
 
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
@@ -249,6 +252,38 @@ public class BaseFileStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== BaseFileStore.renamePath(" + oldPath + "," + newPath + "): " + ret);
 		}
+
+		return ret;
+	}
+
+	protected RangerServiceDef saveToFile(RangerServiceDef serviceDef, boolean overWrite) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> BaseFileStore.saveToFile(" + serviceDef + "," + overWrite + ")");
+		}
+
+		Path filePath = new Path(getServiceDefFile(serviceDef.getId()));
+
+		RangerServiceDef ret = saveToFile(serviceDef, filePath, overWrite);
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== BaseFileStore.saveToFile(" + serviceDef + "," + overWrite + "): ");
+		}
+
+		return ret;
+	}
+
+	protected RangerService saveToFile(RangerService service, boolean overWrite) throws Exception {
+		Path filePath = new Path(getServiceFile(service.getId()));
+
+		RangerService ret = saveToFile(service, filePath, overWrite);
+		
+		return ret;
+	}
+
+	protected RangerPolicy saveToFile(RangerPolicy policy, long serviceId, boolean overWrite) throws Exception {
+		Path filePath = new Path(getPolicyFile(serviceId, policy.getId()));
+
+		RangerPolicy ret = saveToFile(policy, filePath, overWrite);
 
 		return ret;
 	}

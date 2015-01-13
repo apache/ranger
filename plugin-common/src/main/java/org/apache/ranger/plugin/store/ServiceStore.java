@@ -19,23 +19,39 @@
 
 package org.apache.ranger.plugin.store;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.util.ServicePolicies;
 
 public interface ServiceStore {
-	RangerService create(RangerService service) throws Exception;
+	RangerServiceDef createServiceDef(RangerServiceDef serviceDef) throws Exception;
 
-	RangerService update(RangerService service) throws Exception;
+	RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) throws Exception;
 
-	void delete(Long id) throws Exception;
+	void deleteServiceDef(Long id) throws Exception;
 
-	RangerService get(Long id) throws Exception;
+	RangerServiceDef getServiceDef(Long id) throws Exception;
 
-	RangerService getByName(String name) throws Exception;
+	RangerServiceDef getServiceDefByName(String name) throws Exception;
 
-	List<RangerService> getAll() throws Exception;
+	List<RangerServiceDef> getAllServiceDefs() throws Exception;
+
+
+	RangerService createService(RangerService service) throws Exception;
+
+	RangerService updateService(RangerService service) throws Exception;
+
+	void deleteService(Long id) throws Exception;
+
+	RangerService getService(Long id) throws Exception;
+
+	RangerService getServiceByName(String name) throws Exception;
+
+	List<RangerService> getAllServices() throws Exception;
 
 
 	RangerPolicy createPolicy(RangerPolicy policy) throws Exception;
@@ -48,9 +64,11 @@ public interface ServiceStore {
 
 	RangerPolicy getPolicyByName(String serviceName, String policyName) throws Exception;
 
+	List<RangerPolicy> getAllPolicies() throws Exception;
+
 	List<RangerPolicy> getServicePolicies(String serviceName) throws Exception;
 
 	List<RangerPolicy> getServicePolicies(Long serviceId) throws Exception;
 
-	List<RangerPolicy> getAllPolicies() throws Exception;
+	ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
 }

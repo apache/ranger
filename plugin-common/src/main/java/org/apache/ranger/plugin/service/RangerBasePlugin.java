@@ -20,26 +20,27 @@
 package org.apache.ranger.plugin.service;
 
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.store.ServiceStoreFactory;
+import org.apache.ranger.plugin.util.PolicyRefresher;
 
 
 public abstract class RangerBasePlugin {
-	private boolean initDone = false;
+	private boolean         initDone  = false;
+	private PolicyRefresher refresher = null;
 
-	public boolean init() {
+
+	public boolean init(RangerPolicyEngine policyEngine) {
 		if(!initDone) {
 			synchronized(this) {
 				if(! initDone) {
-					/* TODO:
-					loadConfig(); // to get serviceName, policy download URL, local cache file details, etc
+					String serviceName = System.getProperty("ranger.plugin.service.name", "hbasedev"); // TODO: read from configuration
 
-					initAuditFramework();
+					ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore();
 
-					loadLocallyCachedPolicies();
-
-					getPolicyEngine().setPolicies(serviceDef, policies);
-
-					setupPolicyRefresher(); // to poll for policy updates
-					 */
+					refresher = new PolicyRefresher(policyEngine, serviceName, serviceStore);
+					
+					refresher.start();
 					
 					initDone = true;
 				}
@@ -50,8 +51,10 @@ public abstract class RangerBasePlugin {
 	}
 	
 	public void cleanup() {
-		// TODO:
+		PolicyRefresher refresher = this.refresher;
+		
+		if(refresher != null) {
+			refresher.stopRefresher();
+		}
 	}
-
-	public abstract RangerPolicyEngine getPolicyEngine();
 }
