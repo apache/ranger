@@ -206,7 +206,7 @@ define(function(require) {
 				topologyName					: 'Topology Name',
 				serivceName						: 'Service Name',
 				ipAddress						: 'IP Address',
-					
+				delegatedAdmin					: 'Delegate Admin'	
 			},
 			btn : {
 				add							: 'Add',
@@ -258,7 +258,8 @@ define(function(require) {
 				searchForPolicy				:"Search for your policy...",
 				searchForYourUser 			:"Search for your users...",
 				searchForYourGroup 			:"Search for your groups...",
-				access						: 'Access'
+				access						: 'Access',
+				policyCondition				: 'Policy Condtions'
 				
 				
 			},

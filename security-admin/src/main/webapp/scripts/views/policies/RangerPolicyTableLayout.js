@@ -328,7 +328,7 @@ define(function(require){
 				if(!_.isUndefined(obj) && !_.isNull(obj))
 					 cols[obj.name]={
 							cell : "html",
-							label	: localization.tt("lbl."+obj.name),
+							label	: obj.name,
 							editable: false,
 							sortable : false,
 							formatter: _.extend({}, Backgrid.CellFormatter.prototype, {

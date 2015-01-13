@@ -74,20 +74,7 @@ define(function(require){
 			this.permMapList = this.model.isNew() ? new VXPermMapList() : this.model.get('permMapList');
 			this.auditList = this.model.isNew() ? new VXAuditMapList() : this.model.get('auditList');
 			
-			//this.userList.fetch();
-			
-
-			/*If the model passed to the fn is new return an empty collection
-			 * otherwise return a collection that has models like 
-			 * {
-			 * 	groupId : 5,
-			 * 	permissionList : [4,3]
-			 * }
-			 * The formInputList will be passed to the forminputitemlist view.
-			 */
-
 			this.formInputList 		= XAUtil.makeCollForGroupPermission(this.model);
-			this.userPermInputList  = XAUtil.makeCollForUserPermission(this.model);
 
 		},
 		/** all events binding here */
@@ -126,16 +113,9 @@ define(function(require){
 				this.initializePathPlugins();
 			}
 			this.renderCustomFields();
-		/*	if(!this.model.isNew()){
+			if(!this.model.isNew()){
 				this.setUpSwitches();
 			}
-			if(this.model.isNew() && this.fields._vAuditListToggle.editor.getValue() == 1){
-				this.model.set('auditList', new VXAuditMapList(new VXAuditMap({
-					'auditType' : XAEnums.XAAuditType.XA_AUDIT_TYPE_ALL.value,//fieldEditor.getValue()//
-					'resourceId' :this.model.get('id')
-					
-				})));
-			}*/
 			this.$el.find('.field-isEnabled').find('.control-label').remove();
 		},
 		evAuditChange : function(form, fieldEditor){
@@ -154,27 +134,22 @@ define(function(require){
 		},
 		setUpSwitches :function(){
 			var that = this;
-			var encryptStatus = false,auditStatus = false,recursiveStatus = false;
-			auditStatus = this.model.has('auditList') ? true : false; 
-			this.fields._vAuditListToggle.editor.setValue(auditStatus);
-			
-			_.each(_.toArray(XAEnums.BooleanValue),function(m){
-				if(parseInt(that.model.get('isEncrypt')) == m.value)
-					encryptStatus =  (m.label == XAEnums.BooleanValue.BOOL_TRUE.label) ? true : false;
-				if(parseInt(that.model.get('isRecursive')) == m.value)
-					recursiveStatus =  (m.label == XAEnums.BooleanValue.BOOL_TRUE.label) ? true : false;
-			});
-			this.fields.isEncrypt.editor.setValue(encryptStatus);
-			this.fields.isRecursive.editor.setValue(recursiveStatus);
-			if(parseInt(this.model.get('resourceStatus')) != XAEnums.BooleanValue.BOOL_TRUE.value)
-				this.fields.resourceStatus.editor.setValue(false);
+			this.fields.isAuditEnabled.editor.setValue(this.model.get('isAuditEnabled'));
+			this.fields.isEnabled.editor.setValue(this.model.get('isEnabled'));
 		},
 		/** all custom field rendering */
 		renderCustomFields: function(){
 			var that = this;
 			var accessType = this.rangerServiceDefModel.get('accessTypes').filter(function(val) { return val !== null; });
-			this.groupList = new VXGroupList();
+			this.userList = new VXUserList();
 			var params = {sortBy : 'name'};
+			this.userList.setPageSize(100,{fetch:false});
+			this.userList.fetch({
+				cache :true,
+				data: params,
+				async : false
+			});
+			this.groupList = new VXGroupList();
 			this.groupList.setPageSize(100,{fetch:false});
 			this.groupList.fetch({
 					cache :true,
@@ -183,29 +158,13 @@ define(function(require){
 					that.$('[data-customfields="groupPerms"]').html(new GroupPermList({
 						collection : that.formInputList,
 						groupList  : that.groupList,
+						userList   : that.userList,
 						model : that.model,
-//						policyType 	: policyType,
 						accessTypes : accessType,
 						rangerServiceDefModel : that.rangerServiceDefModel
 					}).render().el);
 			});
-			
-			this.userList = new VXUserList();
-			var params = {sortBy : 'name'};
-			this.userList.setPageSize(100,{fetch:false});
-			this.userList.fetch({
-					cache :true,
-					data: params
-				}).done(function(){
-					that.$('[data-customfields="userPerms"]').html(new UserPermList({
-						collection : that.userPermInputList,
-						model : that.model,
-						userList : that.userList,
-//						policyType 	: policyType,
-						accessTypes : accessType,
-						rangerServiceDefModel : that.rangerServiceDefModel
-					}).render().el);
-			});
+
 		},
 	
 		beforeSave : function(){
@@ -229,32 +188,7 @@ define(function(require){
 			
 			var RangerPolicyItem = Backbone.Collection.extend();
 			var policyItemList = new RangerPolicyItem();
-			this.formInputList.each(function(m){
-				if(!_.isUndefined(m.get('groupName'))){
-					var RangerPolicyItem=Backbone.Model.extend()
-					var policyItem = new RangerPolicyItem();
-					policyItem.set('groups',m.get('groupName').split(','))
-					
-					var RangerPolicyItemAccessList = Backbone.Collection.extend();
-					var rangerPlcItemAccessList = new RangerPolicyItemAccessList(m.get('accesses'));
-					policyItem.set('accesses', rangerPlcItemAccessList)
-					policyItemList.add(policyItem)
-					
-				}
-			}, this);
-			this.userPermInputList.each(function(m){
-				if(!_.isUndefined(m.get('userName'))){
-					var RangerPolicyItem=Backbone.Model.extend()
-					var policyItem = new RangerPolicyItem();
-					policyItem.set('users',m.get('userName').split(','))
-					
-					var RangerPolicyItemAccessList = Backbone.Collection.extend();
-					var rangerPlcItemAccessList = new RangerPolicyItemAccessList(m.get('accesses'));
-					policyItem.set('accesses', rangerPlcItemAccessList)
-					policyItemList.add(policyItem)
-					
-				}
-			}, this);
+			policyItemList = this.setPermissionsToColl(this.formInputList, policyItemList);
 			this.model.set('policyItems', policyItemList)
 			
 			//Unset attrs which are not needed 
@@ -262,6 +196,36 @@ define(function(require){
 				this.model.unset(key, obj.values.toString())
 			},this)
 			
+		},
+		setPermissionsToColl : function(list, policyItemList) {
+			list.each(function(m){
+				if(!_.isUndefined(m.get('groupName')) || !_.isUndefined(m.get("userName"))){ //groupName or userName
+					var RangerPolicyItem=Backbone.Model.extend()
+					var policyItem = new RangerPolicyItem();
+					if(!_.isUndefined(m.get('groupName')) && !_.isNull(m.get('groupName'))){
+						policyItem.set("groups",m.get("groupName").split(','));
+					}
+					if(!_.isUndefined(m.get('userName')) && !_.isNull(m.get('userName'))){
+						policyItem.set("users",m.get("userName").split(','));
+					}
+					if(!_.isUndefined(m.get('delegateAdmin'))){
+						policyItem.set("delegateAdmin",m.get("delegateAdmin"));
+					}
+					
+					var RangerPolicyItemAccessList = Backbone.Collection.extend();
+					var rangerPlcItemAccessList = new RangerPolicyItemAccessList(m.get('accesses'));
+					policyItem.set('accesses', rangerPlcItemAccessList)
+					
+					if(!_.isUndefined(m.get('conditions'))){
+						var RangerPolicyItemConditionList = Backbone.Collection.extend();
+						var rPolicyItemCondList = new RangerPolicyItemConditionList(m.get('conditions'))
+						policyItem.set('conditions', rPolicyItemCondList)
+					}
+					policyItemList.add(policyItem)
+					
+				}
+			}, this);
+			return policyItemList;
 		},
 		/** all post render plugin initialization */
 		initializePathPlugins: function(){
