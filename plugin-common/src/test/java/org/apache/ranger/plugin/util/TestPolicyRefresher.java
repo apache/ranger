@@ -38,16 +38,16 @@ import org.junit.Test;
 
 
 public class TestPolicyRefresher {
-	static RangerPolicyEngineImpl policyEngine      = null;
-	static ServiceStore           svcStore          = null;
-	static PolicyRefresher        refresher         = null;
+	static RangerPolicyEngineImpl policyEngine = null;
+	static ServiceStore           svcStore     = null;
+	static PolicyRefresher        refresher    = null;
 
-	static long                   sleepTimeInMs     = 45 * 1000;
-	static String                 sdName            = "hbase";
-	static String                 svcName           = "unit-test-TestPolicyRefresher";
-	static RangerService          svc               = null;
-	static RangerPolicy           policy1           = null;
-	static RangerPolicy           policy2           = null;
+	static long                   sleepTimeInMs = 35 * 1000;
+	static String                 sdName        = "hbase";
+	static String                 svcName       = "svc-unit-test-TestPolicyRefresher";
+	static RangerService          svc           = null;
+	static RangerPolicy           policy1       = null;
+	static RangerPolicy           policy2       = null;
 
 	static boolean                isPolicyRefreshed = false;
 	static long                   policyCount       = 0;
@@ -58,6 +58,14 @@ public class TestPolicyRefresher {
 	 */
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		svcStore = ServiceStoreFactory.instance().getServiceStore();
+		
+		// cleanup if the test service already exists
+		svc = svcStore.getServiceByName(svcName);
+		if(svc != null) {
+			svcStore.deleteService(svc.getId());
+		}
+
 		policyEngine = new RangerPolicyEngineImpl() {
 			@Override
 			public void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies) {
@@ -68,16 +76,8 @@ public class TestPolicyRefresher {
 			}
 		};
 
-		svcStore = ServiceStoreFactory.instance().getServiceStore();
-		
 		refresher = new PolicyRefresher(policyEngine, svcName, svcStore);
 		refresher.start();
-
-		// cleanup if the test service already exists
-		svc = svcStore.getServiceByName(svcName);
-		if(svc != null) {
-			svcStore.deleteService(svc.getId());
-		}
 
 		// create a service
 		svc = new RangerService(sdName, svcName, "test service description", Boolean.TRUE, null);
@@ -91,24 +91,22 @@ public class TestPolicyRefresher {
 	 */
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		if(svcStore == null) {
-			return;
-		}
-
-		if(policy1 != null) {
-			svcStore.deletePolicy(policy1.getId());
-		}
-
-		if(policy2 != null) {
-			svcStore.deletePolicy(policy2.getId());
-		}
-
-		if(svc != null) {
-			svcStore.deleteService(svc.getId());
-		}
-		
 		if(refresher != null) {
 			refresher.stopRefresher();
+		}
+
+		if(svcStore != null) {
+			if(policy1 != null) {
+				svcStore.deletePolicy(policy1.getId());
+			}
+	
+			if(policy2 != null) {
+				svcStore.deletePolicy(policy2.getId());
+			}
+	
+			if(svc != null) {
+				svcStore.deleteService(svc.getId());
+			}
 		}
 	}
 
@@ -135,12 +133,6 @@ public class TestPolicyRefresher {
 
 		policy1 = svcStore.createPolicy(policy);
 
-		Thread.sleep(sleepTimeInMs);
-
-		assertTrue("policy refresh - after one new policy", isPolicyRefreshed);
-		assertEquals("policy count - after one new policy", 1, policyCount);
-		isPolicyRefreshed = false;
-
 		policy = new RangerPolicy(svc.getName(), "policy2", "test policy description", Boolean.TRUE, null, null);
 		policy.getResources().put("table", new RangerPolicyResource("employee", Boolean.FALSE, Boolean.TRUE));
 		policy.getResources().put("column-family", new RangerPolicyResource("finance", Boolean.FALSE, Boolean.TRUE));
@@ -156,13 +148,11 @@ public class TestPolicyRefresher {
 		policy2 = svcStore.createPolicy(policy);
 
 		Thread.sleep(sleepTimeInMs);
-
 		assertTrue("policy refresh - after two new policies", isPolicyRefreshed);
 		assertEquals("policy count - after two new policies", 2, policyCount);
 		isPolicyRefreshed = false;
 
 		Thread.sleep(sleepTimeInMs);
-
 		assertFalse("policy refresh - after no new policies", isPolicyRefreshed);
 		assertEquals("policy count - after no new policies", 2, policyCount);
 		isPolicyRefreshed = false;
@@ -175,7 +165,6 @@ public class TestPolicyRefresher {
 		policy2 = svcStore.updatePolicy(policy2);
 
 		Thread.sleep(sleepTimeInMs);
-
 		assertTrue("policy refresh - after update policy", isPolicyRefreshed);
 		assertEquals("policy count - after update policy", 2, policyCount);
 		isPolicyRefreshed = false;
@@ -183,7 +172,6 @@ public class TestPolicyRefresher {
 		svcStore.deletePolicy(policy2.getId());
 
 		Thread.sleep(sleepTimeInMs);
-
 		assertTrue("policy refresh - after delete policy", isPolicyRefreshed);
 		assertEquals("policy count - after delete policy", 1, policyCount);
 		isPolicyRefreshed = false;

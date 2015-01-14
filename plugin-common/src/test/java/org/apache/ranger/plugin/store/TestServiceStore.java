@@ -38,17 +38,28 @@ import org.junit.Test;
 public class TestServiceStore {
 	static ServiceStore svcStore    = null;
 
-	static String sdName      = "HdfsTest";
-	static String serviceName = "HdfsTest-dev";
+	static String sdName      = "svcDef-unit-test-TestServiceStore";
+	static String serviceName = "svc-unit-test-TestServiceStore";
 	static String policyName  = "testPolicy-1";
 
 	@BeforeClass
-	public static void setupTest() {
+	public static void setupTest() throws Exception {
 		svcStore = ServiceStoreFactory.instance().getServiceStore();
+
+		// cleanup if the test service and service-def if they already exist
+		RangerService svc = svcStore.getServiceByName(serviceName);
+		if(svc != null) {
+			svcStore.deleteService(svc.getId());
+		}
+
+		RangerServiceDef svcDef = svcStore.getServiceDefByName(sdName);
+		if(svcDef != null) {
+			svcStore.deleteServiceDef(svcDef.getId());
+		}
 	}
 
 	@Test
-	public void testServiceManager() throws Exception {
+	public void testServiceStore() throws Exception {
 		List<RangerServiceDef> sds = svcStore.getAllServiceDefs();
 
 		int initSdCount = sds == null ? 0 : sds.size();
@@ -199,7 +210,8 @@ public class TestServiceStore {
 		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getPolicies().get(0).getName(), updatedPolicy.getName());
 
 		ServicePolicies updatedPolicies = svcStore.getServicePoliciesIfUpdated(updatedSvc.getName(), svcPolicies.getPolicyVersion());
-		assertNull(updatedPolicies);
+		assertNotNull(updatedPolicies);
+		assertEquals(0, updatedPolicies.getPolicies().size());
 
 		svcStore.deletePolicy(policy.getId());
 		policies = svcStore.getAllPolicies();
