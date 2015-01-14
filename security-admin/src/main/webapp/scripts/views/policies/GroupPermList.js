@@ -37,128 +37,150 @@ define(function(require) {
 		tagName : 'tr',
 		templateHelpers : function(){
 			
-			
 			return {
-				permissions 	: this.accessTypes,//this.getPerms(),
-				policyKnox 		: this.policyType == XAEnums.ServiceType.Service_KNOX.value ? true :false,
-//				policyStorm 	: this.policyType == XAEnums.ServiceType.Service_STORM.value ? true :false,
+				permissions 	: this.accessTypes,
+				policyConditions: this.policyConditions,
 				isModelNew		: !this.model.has('editMode'),
-				stormPerms		: this.stormPermsIds.length == 14 ? _.union(this.stormPermsIds,[-1]) : this.stormPermsIds  
-						
+				perms			: this.permsIds.length == 14 ? _.union(this.permsIds,[-1]) : this.permsIds,
 			};
 		},
 		ui : {
 			selectGroups	: '[data-js="selectGroups"]',
-			inputIPAddress	: '[data-js="ipAddress"]',
-			tags			: '[class=tags]'
+			selectUsers		: '[data-js="selectUsers"]',
+			addPerms		: 'a[data-js="permissions"]',
+			conditionsTags	: '[class=tags1]',
+			delegatedAdmin	: 'input[data-js="delegatedAdmin"]'
 		},
 		events : {
 			'click [data-action="delete"]'	: 'evDelete',
 			'click td'						: 'evClickTD',
 			'change [data-js="selectGroups"]': 'evSelectGroup',
-			'change [data-js="ipAddress"]'	: 'evIPAddress'
+			'change [data-js="selectUsers"]': 'evSelectUser',
+			'change input[class="policy-conditions"]'	: 'policyCondtionChange'
 		},
 
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes'));
-            //this.subjectList = this.mStudent.getSubjectList();
-			this.stormPermsIds = [];
-			if(this.policyType == XAEnums.AssetType.ASSET_STORM.value){
-				if(this.model.has('editMode') && this.model.get('editMode')){
-					this.stormPermsIds = _.map(this.model.get('_vPermList'), function(p){
-											if(XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value != p.permType)
-												return p.permType;
-										});
-				}
-			}
+			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes','policyConditions','userList'));
+			this.setupPermissionsAndConditions();
 			
 		},
  
 		onRender : function() {
-			var that = this;
+			this.setupFormForEditMode();
+			
+			this.createDropDown(this.ui.selectGroups, this.groupList, true);
+			this.createDropDown(this.ui.selectUsers, this.userList, false);
+			this.dropDownChange(this.ui.selectGroups);
+			this.dropDownChange(this.ui.selectUsers);
+
+			this.renderPerms();
+			this.renderPolicyCondtion();
+		},
+		setupFormForEditMode : function() {
 			this.accessItems = _.map(this.accessTypes, function(perm){ 
 				if(!_.isUndefined(perm)) 
 					return {'type':perm.label,isAllowed : false}
 			});
-			
-			if(!_.isUndefined(this.model.get('groupName'))){
-				this.ui.selectGroups.val(this.model.get('groupName').split(','));
-			}
-			if(!_.isUndefined(this.model.get('ipAddress'))){
-				this.ui.inputIPAddress.val(this.model.get('ipAddress').toString());
-			}
 			if(this.model.has('editMode') && this.model.get('editMode')){
+				if(!_.isUndefined(this.model.get('groupName')) && !_.isNull(this.model.get('groupName'))){
+					this.ui.selectGroups.val(this.model.get('groupName').split(','));
+				}
+				if(!_.isUndefined(this.model.get('userName')) && !_.isNull(this.model.get('userName'))){
+					this.ui.selectUsers.val(this.model.get('userName').split(','));
+				}
+				
+				if(!_.isUndefined(this.model.get('conditions'))){
+					_.each(this.model.get('conditions'), function(obj){
+						this.$el.find('input[data-js="'+obj.type+'"]').val(obj.value.toString())
+					},this);
+				}
 				_.each(this.model.get('accesses'), function(p){
 					if(p.isAllowed){
 						this.$el.find('input[data-name="' + p.type + '"]').attr('checked', 'checked');
 						_.each(this.accessItems,function(obj){ if(obj.type == p.type) obj.isAllowed=true;})
 					}
 				},this);
-			}
-			this.createGroupDropDown();
-			this.groupDropDownChange();
-			if(this.policyType == XAEnums.AssetType.ASSET_STORM.value){
-				this.renderStormPerms();
+				
+				if(!_.isUndefined(this.model.get('delegateAdmin')) && this.model.get('delegateAdmin')){
+					this.ui.delegatedAdmin.attr('checked', 'checked');
+				}
 			}
 		},
-		groupDropDownChange : function(){
+		setupPermissionsAndConditions : function() {
 			var that = this;
-			this.ui.selectGroups.on('change',function(e){
+			this.permsIds = [], this.conditions = {};
+			//Set Permissions obj
+			if( this.model.has('editMode') && this.model.get('editMode')){
+				_.each(this.model.get('accesses'), function(p){
+					if(p.isAllowed){
+						var access = _.find(that.accessTypes,function(obj){if(obj.label == p.type) return obj});
+						this.permsIds.push(access.name);
+					}
+					
+				}, this);
+				//Set PolicyCondtion Obj to show in edit mode
+				_.each(this.model.get('conditions'), function(p){
+					this.conditions[p.type] = p.value;
+				}, this);
+			}
+		},
+		dropDownChange : function($select){
+			var that = this;
+			$select.on('change',function(e){
 		//		console.log(e.currentTarget.value);
+				var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group': 'user';
 				that.checkDirtyFieldForDropDown(e);
-				var duplicateGroupName = false;
 				
 				that.toggleAddButton(e);
 				if(e.removed != undefined){
-					var gIdArr = [],gNameArr = [];
-					gIdArr = _.without(that.model.get('groupId').split(','), e.removed.id);
-					if(that.model.get('groupName') != undefined)
-						gNameArr = _.without(that.model.get('groupName').split(','), e.removed.text);
-					if(!_.isEmpty(gIdArr)){
-						that.model.set('groupId',gIdArr.join(','));
-						that.model.set('groupName',gNameArr.join(','));
+					var gNameArr = [];
+					if(that.model.get(name+'Name') != undefined)
+						gNameArr = _.without(that.model.get(name+'Name').split(','), e.removed.text);
+					if(!_.isEmpty(gNameArr)){
+						that.model.set(name+'Name',gNameArr.join(','));
 					}else{
-						that.model.unset('groupId');
-						that.model.unset('groupName');
+						that.model.unset(name+'Name');
 					}
 					return;
 				}
 				if(!_.isUndefined(e.added)){
-						that.model.set('groupId', e.currentTarget.value);
-						var groupNameList = _.map($(e.currentTarget).select2("data"), function(obj){return obj.text});
-						that.model.set('groupName',groupNameList.toString())
+						var nameList = _.map($(e.currentTarget).select2("data"), function(obj){return obj.text});
+						that.model.set(name+'Name',nameList.toString());
 				}
 			});
 		},
-		createGroupDropDown :function(){
+		createDropDown :function($select, list, typeGroup){
 			var that = this;
-			if(this.model.has('editMode') && !_.isEmpty(this.ui.selectGroups.val())){
-				var temp = this.ui.selectGroups.val().split(",");
+			var placeholder = (typeGroup) ? 'Select Group' : 'Select User';
+			var url 		= (typeGroup) ? "service/xusers/groups" : "service/xusers/users";
+			if(this.model.has('editMode') && !_.isEmpty($select.val())){
+				var temp = $select.val().split(",");
 				_.each(temp , function(name){
-					if(_.isUndefined(that.groupList.where({ name : name}))){
-						var group = new VXGroup({name: name});
-						group.fetch({async:false}).done(function(){
-							that.groupList.add(group);
+					if(_.isUndefined(list.where({ name : name}))){
+						var model;
+						model = typeGroup ? new VXGroup({name: name}) : new VXUser({name: name});  
+						model.fetch({async:false}).done(function(){
+							list.add(model);
 						});
 					}
 				});
 			}
-			this.groupArr = this.groupList.map(function(m){
+			var tags = list.map(function(m){
 				return { id : m.id+"" , text : m.get('name')};
 			});
-			this.ui.selectGroups.select2({
+			$select.select2({
 				closeOnSelect : true,
-				placeholder : 'Select Group',
+				placeholder : placeholder,
 			//	maximumSelectionSize : 1,
 				width :'220px',
 				tokenSeparators: [",", " "],
-				tags : this.groupArr, 
+				tags : tags, 
 				initSelection : function (element, callback) {
 					var data = [];
-					console.log(that.groupList);
+					console.log(list);
 					
 					$(element.val().split(",")).each(function () {
-						var obj = _.findWhere(that.groupArr,{text:this});
+						var obj = _.findWhere(tags,{text:this});
 						data.push({id: obj.id, text: this})
 					});
 					callback(data);
@@ -174,7 +196,7 @@ define(function(require) {
 					}*/
 				},
 				ajax: { 
-					url: "service/xusers/groups",
+					url: url,
 					dataType: 'json',
 					data: function (term, page) {
 						return {name : term};
@@ -183,13 +205,15 @@ define(function(require) {
 						var results = [] , selectedVals = [];
 						/*if(!_.isEmpty(that.ui.selectGroups.select2('val')))
 							selectedVals = that.ui.selectGroups.select2('val');*/
-						selectedVals = that.getGroupSelectdValues();
+						selectedVals = that.getGroupSelectdValues($select, typeGroup);
 						if(data.resultSize != "0"){
 							//if(data.vXGroups.length > 1){
-
-								results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+								if(typeGroup)
+									results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+								else
+									results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
 								if(!_.isEmpty(selectedVals))
-									results = XAUtil.filterResultByIds(results, selectedVals);
+									results = XAUtil.filterResultByText(results, selectedVals);
 						//		console.log(results.length);
 								return {results : results};
 							//}
@@ -210,15 +234,105 @@ define(function(require) {
 				}
 			}).on('select2-focus', XAUtil.select2Focus);
 		},
-		getGroupSelectdValues : function(){
+		renderPerms :function(){
+			var that = this;
+//			var permArr = _.pick(XAEnums.XAPermType,  XAUtil.getStormActions(this.policyType));
+			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
+			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
+			this.ui.addPerms.editable({
+			    emptytext : 'Add Permissions',
+				source: this.perms,
+				value : this.permsIds,
+				display: function(values,srcData) {
+					if(_.isNull(values) || _.isEmpty(values)){
+						$(this).empty();
+						that.model.unset('accesses');
+						return;
+					}
+					if(_.contains(values,"-1")){
+						values = _.without(values,"-1")
+					}
+//			    	that.checkDirtyFieldForGroup(values);
+					var permTypeArr = [];
+					var valArr = _.map(values, function(id){
+						if(!_.isUndefined(id)){
+							var obj = _.findWhere(srcData,{'value' : id});
+							permTypeArr.push({permType : obj.value});
+							return "<span class='label label-inverse'>" + obj.text + "</span>";
+						}
+					});
+					var perms = []
+					if(that.model.has('accesses')){
+							perms = that.model.get('accesses');
+					}
+					_.each(that.accessTypes, function(obj) {
+						if(_.contains(values, obj.name)){
+							var type = obj.label
+							_.each(that.accessItems, function(item){ if(item.type == type) item.isAllowed = true });
+						}
+					});
+					// Save data to model
+					
+					if(!_.isEmpty(that.accessItems))
+						that.model.set('accesses', that.accessItems);
+					
+					$(this).html(valArr.join(" "));
+				},
+			}).on('click', function(e) {
+				e.stopPropagation();
+				e.preventDefault();
+				that.$('input[type="checkbox"][value="-1"]').click(function(e){
+					var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
+					$(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false); 
+					
+				});
+			});
+			
+		},
+		renderPolicyCondtion : function() {
+			var that = this;
+			if(this.policyConditions.length > 0){
+				var tmpl = _.map(this.policyConditions,function(obj){ 
+					return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span></label><input type="text" name="'+obj.name+'" ></div>'
+				});
+				XAUtil.customXEditableForPolicyCond(tmpl.join(''));
+				this.$('#policyConditions').editable({
+					emptytext : 'Add Conditions',
+					value : this.conditions, 
+					display: function(value) {
+						var continue_ = false, i = 0;
+						if(!value) {
+							$(this).empty();
+							return; 
+						} // End if
+						_.each(value, function(val, name){ if(!_.isEmpty(val)) continue_ = true; });
+						if(continue_){
+							var html = _.map(value, function(val,name) {
+								var label = (i%2 == 0) ? 'label label-inverse' : 'label';
+								i++;
+								return _.isEmpty(val) ? '' : '<span class="'+label+'">'+name+' : '+ val + '</span>';	
+							});
+							var cond = _.map(value, function(val, name) {return {'type' : name, 'value' :val};});
+							that.model.set('conditions', cond);
+							$(this).html(html); 
+						}else{
+							that.model.unset('conditions');
+							$(this).empty();
+						}
+					} // End display option
+				}); // End editable()
+			}
+		},
+		getGroupSelectdValues : function($select, typeGroup){
 			var vals = [],selectedVals = [];
+			var name = typeGroup ? 'group' : 'user';
 			this.collection.each(function(m){
-				if(!_.isUndefined(m.get('groupId'))){
-					vals.push.apply(vals, m.get('groupId').split(','));
+				if(!_.isUndefined(m.get(name+'Name')) && !_.isNull(m.get(name+'Name'))){
+					vals.push.apply(vals, m.get(name+'Name').split(','));
 				}
 			});
-			if(!_.isEmpty(this.ui.selectGroups.select2('val')))
-				selectedVals = this.ui.selectGroups.select2('val');
+			if(!_.isEmpty($select.select2('val')))
+				selectedVals = $select.select2('val');
 			vals.push.apply(vals , selectedVals);
 			vals = $.unique(vals);
 			return vals;
@@ -229,40 +343,11 @@ define(function(require) {
 			this.toggleAddButton();
 		},
 		evClickTD : function(e){
-			var that = this;
-			var $el = $(e.currentTarget),permList =[],perms =[];
-			if($(e.toElement).is('td')){
-				var $checkbox = $el.find('input');
-				$checkbox.is(':checked') ? $checkbox.prop('checked',false) : $checkbox.prop('checked',true);
-			}
-			var curPerm = $el.find('input').data('id');
-			var curPermName = $el.find('input').data('name');
-			if(!_.isUndefined(curPermName)){
-				var perms = [];
-				if(this.model.has('accesses')){
-					if(_.isArray(this.model.get('accesses')))
-						perms = this.model.get('accesses');
-					else
-						perms.push(this.model.get('accesses'));
-				}
-				if($el.find('input[type="checkbox"]').is(':checked')){
-					_.each(that.accessItems, function(obj){ if(obj.type == curPermName) obj.isAllowed = true });
-					
-					/*if(curPermName == XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value){
-						$el.parent().find('input[type="checkbox"]:not(:checked)[data-name!="'+curPermName+'"]').map(function(){
-							_.each(that.accessItems, function(obj){ if(obj.type == $(this).data('name')) obj.isAllowed = true }, this);
-						});
-						$el.parent().find('input[type="checkbox"]').prop('checked',true);
-					}*/
-				} else {
-					_.each(that.accessItems, function(obj){ if(obj.type == curPermName ) obj.isAllowed = false }, this);
-				}
-				
-//				this.checkDirtyFieldForCheckBox(perms);
-				if(!_.isEmpty(that.accessItems))
-					this.model.set('accesses', that.accessItems);
-				else 
-					this.model.unset('accesses');
+			var $el = $(e.currentTarget);
+			//Set Delegated Admin value 
+			if(!_.isUndefined($el.find('input').data('js'))){
+				this.model.set('delegateAdmin',$el.find('input').is(':checked'))
+				return;
 			}
 		},
 		checkDirtyFieldForCheckBox : function(perms){
@@ -289,60 +374,17 @@ define(function(require) {
 				$('[data-action="addGroup"]').show();
 			}
 		},
-		evIPAddress :function(e){
-			if(!_.isEmpty($(e.currentTarget).val()))
-				this.model.set('ipAddress',$(e.currentTarget).val().split(','));
-			else
-				this.model.unset('ipAddress');
-		},
-		renderStormPerms :function(){
-			var that = this;
-			var permArr = _.pick(XAEnums.XAPermType,  XAUtil.getStormActions(this.policyType));
-			this.stormPerms =  _.map(permArr,function(m){return {text:m.label, value:m.value};});
-			this.stormPerms.push({'value' : -1, 'text' : 'Select/Deselect All'});
-			this.ui.tags.editable({
-			    placement: 'right',
-//			    emptytext : 'Please select',
-			    source: this.stormPerms,
-			    display: function(idList,srcData) {
-			    	if(_.isEmpty(idList.toString())){
-			    		$(this).html('');
-			    		return;
-			    	}
-			    	if(!_.isArray(idList))
-			    		idList = [idList];
-//			    	that.checkDirtyFieldForGroup(values);
-			    	var permTypeArr = [];
-		    		var valArr = _.map(idList, function(id){
-		    			if(!(parseInt(id) <= 0) && (!_.isNaN(parseInt(id)))){
-		    				var obj = _.findWhere(srcData,{'value' : parseInt(id)});
-		    				permTypeArr.push({permType : obj.value});
-		    				return "<span class='label label-inverse'>" + obj.text + "</span>";
-		    			}
-		    		});
-		    		
-		    		if(that.model.has('_vPermList')){
-                        var adminPerm = _.where(that.model.get('_vPermList'),{'permType': XAEnums.XAPermType.XA_PERM_TYPE_ADMIN.value });
-                        permTypeArr = _.isEmpty(adminPerm) ? permTypeArr : _.union(permTypeArr,adminPerm);
-                    }
-                    that.model.set('_vPermList', permTypeArr);
-//		    		if(!_.isEmpty(perms))
-//		    			that.model.set('_vPermList', perms);
-//		    		that.model.set('_vPermList', permTypeArr);
-		    		$(this).html(valArr.join(" "));
-			    },
-			});
-			this.$('[id^="tags-edit-"]').click(function(e) {
-			    e.stopPropagation();
-			    e.preventDefault();
-			    that.$('#' + $(this).data('editable') ).editable('toggle');
-			    that.$('input[type="checkbox"][value="-1"]').click(function(e){
-					var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
-					$(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false); 
-					
-				});
-			});
-			
+		policyCondtionChange :function(e){
+			if(!_.isEmpty($(e.currentTarget).val()) && !_.isEmpty(this.policyConditions)){
+				var policyCond = { 'type' : $(e.currentTarget).attr('data-js'), 'value' : $(e.currentTarget).val() } ;
+				var conditions = [];
+				if(this.model.has('conditions')){
+					conditions = this.model.get('conditions')
+				}
+				conditions.push(policyCond);
+				this.model.set('conditions',conditions);
+			}
+				
 		},
 		checkDirtyFieldForDropDown : function(e){
 			//that.model.has('groupId')
@@ -351,10 +393,6 @@ define(function(require) {
 				groupIdList = this.model.get('groupId').split(',');
 			XAUtil.checkDirtyField(groupIdList, e.val, $(e.currentTarget));
 		},
-		getPerms : function(){
-			var permList = _.map(this.accessTypes,function(type){ return type.label});
-			return _.map(permList, function(perm){ return _.findWhere(XAEnums.XAPermType,{label:perm})})
-		}
 	});
 
 
@@ -380,15 +418,17 @@ define(function(require) {
 			return {
 				'collection' 	: this.collection,
 				'groupList' 	: this.groupList,
+				'userList' 	: this.userList,
 				'policyType'	: this.policyType,
-				'accessTypes'	: this.accessTypes
+				'accessTypes'	: this.accessTypes,
+				'policyConditions' : this.rangerServiceDefModel.get('policyConditions')
 			};
 		},
 		events : {
 			'click [data-action="addGroup"]' : 'addNew'
 		},
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes','rangerServiceDefModel'));
+			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes','rangerServiceDefModel','userList'));
 			//this.hiveGroupPerm = _.has(options,'hiveGroupPerm') ? true : false;
 			this.listenTo(this.groupList, 'sync', this.render, this);
 			if(this.collection.length == 0)
@@ -419,12 +459,14 @@ define(function(require) {
 				this.$('button[data-action="addGroup"]').show();
 		},
 		getPermHeaders : function(){
-			var permList = _.map(this.accessTypes,function(type){ return type.label});
+			var permList = [];//_.map(this.accessTypes,function(type){ return type.label});
+			
+			permList.unshift(localization.tt('lbl.delegatedAdmin'));
+			permList.unshift(localization.tt('lbl.permissions'));
 			if(!_.isEmpty(this.rangerServiceDefModel.get('policyConditions'))){
-				_.each(this.rangerServiceDefModel.get('policyConditions'), function(cond){
-					if(!_.isNull(cond) && !_.isNull(cond.label)) permList.unshift(cond.label);
-				});
+				permList.unshift(localization.tt('h.policyCondition'));
 			}
+			permList.unshift(localization.tt('lbl.selectUser'));
 			permList.unshift(localization.tt('lbl.selectGroup'));
 			permList.push("");
 			return permList;

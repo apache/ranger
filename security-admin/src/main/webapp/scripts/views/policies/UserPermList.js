@@ -39,7 +39,7 @@ define(function(require) {
 						
 			return {
 				permissions 	: this.accessTypes,
-				policyKnox 		: this.policyType == XAEnums.ServiceType.Service_KNOX.value ? true :false,
+				policyConditions: this.policyConditions,
 //				policyStorm 	: this.policyType == XAEnums.ServiceType.Service_STORM.value ? true :false,
 			   isModelNew		: !this.model.has('editMode'),
 			   stormPerms		: this.stormPermsIds.length == 14 ? _.union(this.stormPermsIds,[-1]) : this.stormPermsIds
@@ -47,18 +47,17 @@ define(function(require) {
 		},
 		ui : {
 			selectUsers		: '[data-js="selectUsers"]',
-			inputIPAddress	: '[data-js="ipAddress"]',
 			tags			: '[class=tags]'
 		},
 		events : {
 			'click [data-action="delete"]'	: 'evDelete',
 			'click td'						: 'evClickTD',
 			'change [data-js="selectUsers"]': 'evSelectUser',
-			'change [data-js="ipAddress"]'	: 'evIPAddress'
+			'change input[class="policy-conditions"]'	: 'policyCondtionChange'
 		},
 
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'userList','policyType','accessTypes'));
+			_.extend(this, _.pick(options, 'userList','policyType','accessTypes','policyConditions'));
             //this.subjectList = this.mStudent.getSubjectList();
 			this.stormPermsIds = [];
 			if(this.policyType == XAEnums.AssetType.ASSET_STORM.value){
@@ -82,8 +81,11 @@ define(function(require) {
 			if(this.model.get('userName') != undefined){
 				this.ui.selectUsers.val(this.model.get('userName').split(','));
 			}
-			if(!_.isUndefined(this.model.get('ipAddress'))){
-				this.ui.inputIPAddress.val(this.model.get('ipAddress').toString());
+			if(!_.isUndefined(this.model.get('conditions'))){
+				_.each(this.model.get('conditions'), function(obj){
+					console.log(obj)
+					this.$el.find('input[data-js="'+obj.type+'"]').val(obj.value.toString())
+				},this);
 			}
 			
 			if(this.model.has('editMode') && this.model.get('editMode')){
@@ -300,11 +302,16 @@ define(function(require) {
 			vals = $.unique(vals);
 			return vals;
 		},
-		evIPAddress :function(e){
-			if(!_.isEmpty($(e.currentTarget).val()))
-				this.model.set('ipAddress',$(e.currentTarget).val().split(','));
-			else
-				this.model.unset('ipAddress');
+		policyCondtionChange :function(e){
+			if(!_.isEmpty($(e.currentTarget).val()) && !_.isEmpty(this.policyConditions)){
+				var policyCond = { 'type' : $(e.currentTarget).attr('data-js'), 'value' : $(e.currentTarget).val() } ;
+				var conditions = [];
+				if(this.model.has('conditions')){
+					conditions = this.model.get('conditions')
+				}
+				conditions.push(policyCond);
+				this.model.set('conditions',conditions);
+			}
 		},
 		renderStormPerms :function(){
 			var that = this;
@@ -378,7 +385,8 @@ define(function(require) {
 				'collection' : this.collection,
 				'userList' : this.userList,
 				'policyType'	: this.policyType,
-				'accessTypes' : this.accessTypes
+				'accessTypes' : this.accessTypes,
+				'policyConditions' : this.rangerServiceDefModel.get('policyConditions')
 			};
 		},
 		events : {
@@ -422,7 +430,7 @@ define(function(require) {
 					if(!_.isNull(cond) && !_.isNull(cond.label)) permList.unshift(cond.label);
 				});
 			}
-			permList.unshift(localization.tt('lbl.selectGroup'));
+			permList.unshift(localization.tt('lbl.selectUser'));
 			permList.push("");
 			return permList;
 		},

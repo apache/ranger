@@ -305,6 +305,13 @@ define(function(require) {
 				
 			});
 	};
+	XAUtils.filterResultByText = function(results , selectedVals){
+		return _.filter(results,function(obj){
+			if($.inArray(obj.text,selectedVals) < 0)
+				return obj;
+				
+			});
+	};
 	XAUtils.scrollToField = function(field){
 		$("html, body").animate({
 			scrollTop: field.position().top-80
@@ -376,14 +383,18 @@ define(function(require) {
 		if(!model.isNew()){
 			if(!_.isUndefined(model.get('policyItems'))){
 				var policyItems = model.get('policyItems'); 
-				var groupPolicyItems = _.filter(policyItems,function(m){if(!_.isEmpty(m.groups)) return m;});
-				_.each(groupPolicyItems,function(obj){
+//				var groupPolicyItems = _.filter(policyItems,function(m){if(!_.isEmpty(m.groups)) return m;});
+				_.each(policyItems,function(obj){
+					var groupNames = null, userNames = null;
+					if(!_.isEmpty(obj.groups))	groupNames = obj.groups.join(',');
+					if(!_.isEmpty(obj.users))	userNames = obj.users.join(',');
 						var m = new Backbone.Model({
-//							groupId 	: groupIds.join(','),
-							groupName 	: obj.groups.join(','),
-//							ipAddress	: values[0].ipAddress,
+							groupName 	: groupNames,
+							userName 	: userNames,
+							accesses	: obj.accesses,
+							conditions	: obj.conditions,
+							delegateAdmin: obj.delegateAdmin,
 							editMode 	: true,
-							accesses	: obj.accesses
 						});
 						formInputColl.add(m);
 					
@@ -409,7 +420,8 @@ define(function(require) {
 							userName 	: obj.users.join(','),
 //							ipAddress	: values[0].ipAddress,
 							editMode 	: true,
-							accesses	: obj.accesses
+							accesses	: obj.accesses,
+							conditions	: obj.conditions
 						});
 						coll.add(m);
 					
@@ -642,6 +654,58 @@ define(function(require) {
 			that.ui.policyDisabledAlert.hide();
 			that.$(that.rForm.el).removeClass("policy-disabled");
 		}
+	};
+	XAUtils.customXEditableForPolicyCond = function(template) {
+//		$.fn.editable.defaults.mode = 'inline';
+		var PolicyConditions = function (options) {
+	        this.init('policyConditions', options, PolicyConditions.defaults);
+	    };
+
+	    //inherit from Abstract input
+	    $.fn.editableutils.inherit(PolicyConditions, $.fn.editabletypes.abstractinput);
+
+	    $.extend(PolicyConditions.prototype, {   
+	        render: function() {
+	           this.$input = this.$tpl.find('input');
+	        },
+	        
+	       value2str: function(value) {
+	           var str = '';
+	           if(value) {
+	               for(var k in value) {
+	                   str = str + k + ':' + value[k] + ';';  
+	               }
+	           }
+	           return str;
+	       }, 
+	       
+	       value2input: function(value) {
+	    	   _.each(value, function(val,name){
+    		      this.$input.filter('[name='+name+']').val(value[name]);
+	    	   },this);
+	       },       
+	           
+	       input2value: function() {
+	    	   var obj={};
+	    	   _.each(this.$input,function(input){ 
+	    		   var name = input.name;
+	    		   var val = this.$input.filter('[name="'+name+'"]').val() 
+	    		   obj[name] = val;
+	    	   },this);
+	    	   
+	           return obj;
+	       },
+	       activate: function() {
+	    	   this.$input.first().focus()
+	       },
+	    });
+
+	    PolicyConditions.defaults = $.extend({}, $.fn.editabletypes.abstractinput.defaults, {
+	        tpl: template,
+	             
+	        inputclass: ''
+	    });
+	    $.fn.editabletypes.policyConditions = PolicyConditions;
 	};
     return XAUtils;
 });

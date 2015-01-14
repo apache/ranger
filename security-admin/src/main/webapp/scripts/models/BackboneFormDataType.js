@@ -30,7 +30,19 @@ define(function(require) {
 				if (v != null) {
 					var formObj = {};
 					switch (v.type) {
-						case 'string':formObj.type = 'Text';break;
+						case 'string':
+							if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
+								formObj.type = 'Select2Remote';
+								formObj.pluginAttr = form.getPlugginAttr(false),
+								formObj.editorAttrs = {'data-placeholder': v.label },
+								formObj.options = function(callback, editor){
+				                    callback();
+				                },
+				                formObj.onFocusOpen = true
+							}else{
+								formObj.type = 'Text';
+							}
+							break;
 						case 'bool':
 							formObj.type = 'Checkbox';
 							formObj.options = {	y : 'Yes',n : 'No'};
@@ -40,15 +52,6 @@ define(function(require) {
 							var enumObj = _.find(enums, function(e) {return e && e.name == v.subType;});
 							formObj.type = 'Select';
 							formObj.options = _.pluck(_.compact(enumObj.elements),'label');
-							break;
-						case 'select2' : 
-							formObj.type = 'Select2Remote';
-							formObj.pluginAttr = form.getPlugginAttr(false),
-							formObj.editorAttrs = {'data-placeholder': v.label },
-							formObj.options = function(callback, editor){
-			                    callback();
-			                },
-			                formObj.onFocusOpen = true
 							break;
 						case 'path' : 
 							formObj.type = 'Text';

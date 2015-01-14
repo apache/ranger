@@ -17,11 +17,13 @@
 <td>
 	<input  type="text" data-js="selectUsers" /> 	
 </td>
-{{#if policyKnox}}
-<td>
-	<input  type="text" data-js="ipAddress" placeholder="Enter IP address"/> 	
-</td>
-{{/if}}
+{{#each policyConditions}}
+	{{#if this.name}}
+	<td>
+		<input  type="text" data-js="{{this.name}}" placeholder="{{this.label}}" class="policy-conditions"/> 	
+	</td>
+	{{/if}}
+{{/each}}
 
 {{#if policyStorm}}
 <td>	

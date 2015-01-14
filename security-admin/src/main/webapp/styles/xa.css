@@ -491,7 +491,7 @@ body {
 
 .table-permission {
   float: left;
-  width: 45%
+  width: 90%
 }
 
 /* toggle */
@@ -1692,4 +1692,13 @@ margin-bottom: 0 !important;
 }
 .policy-form .field-database,.policy-form .field-table, .policy-form .field-path, .policy-form .field-topology{
 	clear: both;
+}
+.margin-bottom-5{
+margin-bottom: 5px;
+}
+
+.popover-content {
+	overflow-y: auto;
+	padding-right: 25px;
+	max-height: 250px;
 }

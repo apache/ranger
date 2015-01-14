@@ -635,7 +635,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
-		 * @param uiType the type to set
+		 * @param type the type to set
 		 */
 		public void setSubType(String subType) {
 			this.subType = subType;
@@ -756,6 +756,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private static final long serialVersionUID = 1L;
 
 		private String  name               = null;
+		private String  type               = null;
 		private Integer level              = null;
 		private String  parent             = null;
 		private Boolean mandatory          = null;
@@ -766,7 +767,6 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private String  matcherOptions     = null;
 		private String  label              = null;
 		private String  description        = null;
-		private String  uiType             = null;
 		private String  rbKeyLabel         = null;
 		private String  rbKeyDescription   = null;
 
@@ -775,8 +775,9 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerResourceDef(String name, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String label, String description, String uiType, String rbKeyLabel, String rbKeyDescription) {
+		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String label, String description, String rbKeyLabel, String rbKeyDescription) {
 			setName(name);
+			setType(type);
 			setLevel(level);
 			setParent(parent);
 			setMandatory(mandatory);
@@ -787,7 +788,6 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setMatcher(matcherOptions);
 			setLabel(label);
 			setDescription(description);
-			setUIType(uiType);
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
 		}
@@ -804,6 +804,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		 */
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		/**
+		 * @return the type
+		 */
+		public String getType() {
+			return type;
+		}
+
+		/**
+		 * @param type the type to set
+		 */
+		public void setType(String type) {
+			this.type = type;
 		}
 
 		/**
@@ -947,20 +961,6 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
-		 * @return the uiType
-		 */
-		public String getUIType() {
-			return uiType;
-		}
-
-		/**
-		 * @param uiType the uiType to set
-		 */
-		public void setUIType(String uiType) {
-			this.uiType = uiType;
-		}
-
-		/**
 		 * @return the rbKeyLabel
 		 */
 		public String getRbKeyLabel() {
@@ -1000,6 +1000,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerResourceDef={");
 			sb.append("name={").append(name).append("} ");
+			sb.append("type={").append(type).append("} ");
 			sb.append("level={").append(level).append("} ");
 			sb.append("parent={").append(parent).append("} ");
 			sb.append("mandatory={").append(mandatory).append("} ");
@@ -1010,7 +1011,6 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("matcherOptions={").append(matcherOptions).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
-			sb.append("uiType={").append(uiType).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
 			sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
 			sb.append("}");
