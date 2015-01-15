@@ -42,15 +42,17 @@ public class TestPolicyRefresher {
 	static ServiceStore           svcStore     = null;
 	static PolicyRefresher        refresher    = null;
 
-	static long                   sleepTimeInMs = 35 * 1000;
-	static String                 sdName        = "hbase";
-	static String                 svcName       = "svc-unit-test-TestPolicyRefresher";
-	static RangerService          svc           = null;
-	static RangerPolicy           policy1       = null;
-	static RangerPolicy           policy2       = null;
+	static final long   pollingIntervalInMs = 5 * 1000;
+	static final long   sleepTimeInMs       = pollingIntervalInMs + (5 * 1000);
+	static final String sdName              = "hbase";
+	static final String svcName             = "svc-unit-test-TestPolicyRefresher";
 
-	static boolean                isPolicyRefreshed = false;
-	static long                   policyCount       = 0;
+	static RangerService svc     = null;
+	static RangerPolicy  policy1 = null;
+	static RangerPolicy  policy2 = null;
+
+	static boolean       isPolicyRefreshed = false;
+	static long          policyCount       = 0;
 
 
 	/**
@@ -77,6 +79,7 @@ public class TestPolicyRefresher {
 		};
 
 		refresher = new PolicyRefresher(policyEngine, svcName, svcStore);
+		refresher.setPollingIntervalMilliSeconds(pollingIntervalInMs);
 		refresher.start();
 
 		// create a service

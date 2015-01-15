@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.store;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.plugin.model.RangerPolicy;

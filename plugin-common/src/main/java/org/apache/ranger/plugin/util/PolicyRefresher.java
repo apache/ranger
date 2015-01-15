@@ -53,6 +53,20 @@ public class PolicyRefresher extends Thread {
 		}
 	}
 	
+	/**
+	 * @return the pollingIntervalMilliSeconds
+	 */
+	public long getPollingIntervalMilliSeconds() {
+		return pollingIntervalMilliSeconds;
+	}
+
+	/**
+	 * @param pollingIntervalMilliSeconds the pollingIntervalMilliSeconds to set
+	 */
+	public void setPollingIntervalMilliSeconds(long pollingIntervalMilliSeconds) {
+		this.pollingIntervalMilliSeconds = pollingIntervalMilliSeconds;
+	}
+
 	public void stopRefresher() {
 		shutdownFlag = true;
 	}

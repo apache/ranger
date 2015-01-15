@@ -50,7 +50,10 @@ public class RangerDaoManager extends RangerDaoManagerBase {
 	}
 
 	public EntityManager getEntityManager(String persistenceContextUnit) {
-		logger.error("RangerDaoManager.getEntityManager(" + persistenceContextUnit + ")");
+		if(logger.isDebugEnabled()) {
+			logger.debug("RangerDaoManager.getEntityManager(" + persistenceContextUnit + ")");
+		}
+
 		if (persistenceContextUnit.equalsIgnoreCase("loggingPU")) {
 			return loggingEM;
 		}

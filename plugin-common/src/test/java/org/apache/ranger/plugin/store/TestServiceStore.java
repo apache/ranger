@@ -38,23 +38,27 @@ import org.junit.Test;
 public class TestServiceStore {
 	static ServiceStore svcStore    = null;
 
-	static String sdName      = "svcDef-unit-test-TestServiceStore";
-	static String serviceName = "svc-unit-test-TestServiceStore";
-	static String policyName  = "testPolicy-1";
+	static final String sdName      = "svcDef-unit-test-TestServiceStore";
+	static final String serviceName = "svc-unit-test-TestServiceStore";
+	static final String policyName  = "testPolicy-1";
 
 	@BeforeClass
 	public static void setupTest() throws Exception {
 		svcStore = ServiceStoreFactory.instance().getServiceStore();
 
 		// cleanup if the test service and service-def if they already exist
-		RangerService svc = svcStore.getServiceByName(serviceName);
-		if(svc != null) {
-			svcStore.deleteService(svc.getId());
+		List<RangerService> services = svcStore.getAllServices();
+		for(RangerService service : services) {
+			if(service.getName().startsWith(serviceName)) {
+				svcStore.deleteService(service.getId());
+			}
 		}
 
-		RangerServiceDef svcDef = svcStore.getServiceDefByName(sdName);
-		if(svcDef != null) {
-			svcStore.deleteServiceDef(svcDef.getId());
+		List<RangerServiceDef> serviceDefs = svcStore.getAllServiceDefs();
+		for(RangerServiceDef serviceDef : serviceDefs) {
+			if(serviceDef.getName().startsWith(sdName)) {
+				svcStore.deleteServiceDef(serviceDef.getId());
+			}
 		}
 	}
 
@@ -205,7 +209,7 @@ public class TestServiceStore {
 		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getServiceId(), updatedSvc.getId());
 		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getPolicyVersion(), updatedSvc.getPolicyVersion());
 		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getPolicyUpdateTime(), updatedSvc.getPolicyUpdateTime());
-		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getServiceDef(), updatedSd);
+		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getServiceDef().getId(), updatedSd.getId());
 		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getPolicies().size(), 1);
 		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getPolicies().get(0).getName(), updatedPolicy.getName());
 

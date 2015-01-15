@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,8 +39,6 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 
 public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceFileStore.class);
-
-	private List<RangerServiceDef> serviceDefs      = null;
 
 	private long nextServiceDefId = 0;
 	private long nextServiceId    = 0;
@@ -88,8 +87,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			serviceDef.setId(nextServiceDefId++);
 
 			ret = saveToFile(serviceDef, false);
-
-			addServiceDef(ret);
 
 			postCreate(ret);
 		} catch(Exception excp) {
@@ -187,8 +184,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			Path filePath = new Path(getServiceDefFile(id));
 
 			deleteFile(filePath);
-			
-			removeServiceDef(existing);
 
 			postDelete(existing);
 		} catch(Exception excp) {
@@ -236,7 +231,57 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceDefFileStore.getAllServiceDefs()");
 		}
 
-		List<RangerServiceDef> ret = serviceDefs;
+		List<RangerServiceDef> ret = new ArrayList<RangerServiceDef>();
+
+		try {
+			// load definitions for legacy services from embedded resources
+			String[] legacyServiceDefResources = {
+					"/service-defs/ranger-servicedef-hdfs.json",
+					"/service-defs/ranger-servicedef-hive.json",
+					"/service-defs/ranger-servicedef-hbase.json",
+					"/service-defs/ranger-servicedef-knox.json",
+					"/service-defs/ranger-servicedef-storm.json",
+			};
+			
+			for(String resource : legacyServiceDefResources) {
+				RangerServiceDef sd = loadFromResource(resource, RangerServiceDef.class);
+				
+				if(sd != null) {
+					ret.add(sd);
+				}
+			}
+			nextServiceDefId = getMaxId(ret) + 1;
+
+			// load service definitions from file system
+			List<RangerServiceDef> sds = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE_DEF, RangerServiceDef.class);
+			
+			if(sds != null) {
+				for(RangerServiceDef sd : sds) {
+					if(sd != null) {
+						if(isLegacyServiceDef(sd)) {
+							LOG.warn("Found in-built service-def '" + sd.getName() + "'  under " + getDataDir() + ". Ignorning");
+
+							continue;
+						}
+						
+						// if the ServiceDef is already found, remove the earlier definition
+						for(int i = 0; i < ret.size(); i++) {
+							RangerServiceDef currSd = ret.get(i);
+							
+							if(StringUtils.equals(currSd.getName(), sd.getName()) ||
+							   ObjectUtils.equals(currSd.getId(), sd.getId())) {
+								ret.remove(i);
+							}
+						}
+
+						ret.add(sd);
+					}
+				}
+			}
+			nextServiceDefId = getMaxId(ret) + 1;
+		} catch(Exception excp) {
+			LOG.error("ServiceDefFileStore.getAllServiceDefs(): failed to read service-defs", excp);
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefFileStore.getAllServiceDefs(): count=" + (ret == null ? 0 : ret.size()));
@@ -423,6 +468,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		try {
 			ret = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE, RangerService.class);
+
+			nextServiceId = getMaxId(ret) + 1;
 		} catch(Exception excp) {
 			LOG.error("ServiceFileStore.getAllServices(): failed to read services", excp);
 		}
@@ -646,6 +693,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		try {
 			ret = loadFromDir(new Path(getDataDir()), FILE_PREFIX_POLICY, RangerPolicy.class);
+
+			nextPolicyId  = getMaxId(ret) + 1;
 		} catch(Exception excp) {
 			LOG.error("ServiceFileStore.getAllPolicies(): failed to read policies", excp);
 		}
@@ -776,103 +825,12 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		super.init();
-		
-		initServiceDef();
-		initService();
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.init()");
 		}
 	}
 
-
-	private void initServiceDef() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefFileStore.initServiceDef()");
-		}
-
-		super.init();
-
-		try {
-			serviceDefs = new ArrayList<RangerServiceDef>();
-
-			// load definitions for legacy services from embedded resources
-			String[] legacyServiceDefResources = {
-					"/service-defs/ranger-servicedef-hdfs.json",
-					"/service-defs/ranger-servicedef-hive.json",
-					"/service-defs/ranger-servicedef-hbase.json",
-					"/service-defs/ranger-servicedef-knox.json",
-					"/service-defs/ranger-servicedef-storm.json",
-			};
-			
-			for(String resource : legacyServiceDefResources) {
-				RangerServiceDef sd = loadFromResource(resource, RangerServiceDef.class);
-				
-				if(sd != null) {
-					serviceDefs.add(sd);
-				}
-			}
-			nextServiceDefId = getMaxId(serviceDefs) + 1;
-
-			// load service definitions from file system
-			List<RangerServiceDef> sds = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE_DEF, RangerServiceDef.class);
-			
-			if(sds != null) {
-				for(RangerServiceDef sd : sds) {
-					if(sd != null) {
-						if(isLegacyServiceDef(sd)) {
-							LOG.warn("Found in-built service-def '" + sd.getName() + "'  under " + getDataDir() + ". Ignorning");
-
-							continue;
-						}
-
-						RangerServiceDef existingSd = findServiceDefByName(sd.getName());
-
-						if(existingSd != null) {
-							removeServiceDef(existingSd);
-						}
-
-						existingSd = findServiceDefById(sd.getId());
-
-						if(existingSd != null) {
-							removeServiceDef(existingSd);
-						}
-
-						serviceDefs.add(sd);
-					}
-				}
-			}
-			nextServiceDefId = getMaxId(serviceDefs) + 1;
-		} catch(Exception excp) {
-			LOG.error("ServiceDefFileStore.initServiceDef(): failed to read service-defs", excp);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefFileStore.initServiceDef()");
-		}
-	}
-
-	private void initService() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceFileStore.initService()");
-		}
-
-		super.init();
-
-		try {
-			List<RangerService> services = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE, RangerService.class);
-			List<RangerPolicy>  policies = loadFromDir(new Path(getDataDir()), FILE_PREFIX_POLICY, RangerPolicy.class);
-
-			nextServiceId = getMaxId(services) + 1;
-			nextPolicyId  = getMaxId(policies) + 1;
-		} catch(Exception excp) {
-			LOG.error("ServiceDefFileStore.initService() failed", excp);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceFileStore.initService()");
-		}
-	}
 
 	private void handleServiceRename(RangerService service, String oldName) throws Exception {
 		List<RangerPolicy> policies = getAllPolicies();
@@ -931,8 +889,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		saveToFile(service, true);
 	}
 
-	private RangerServiceDef findServiceDefById(long id) {
+	private RangerServiceDef findServiceDefById(long id) throws Exception {
 		RangerServiceDef ret = null;
+
+		List<RangerServiceDef> serviceDefs = getAllServiceDefs();
 
 		for(RangerServiceDef sd : serviceDefs) {
 			if(sd != null && sd.getId() != null && sd.getId().longValue() == id) {
@@ -945,8 +905,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		return ret;
 	}
 
-	private RangerServiceDef findServiceDefByName(String sdName) {
+	private RangerServiceDef findServiceDefByName(String sdName) throws Exception {
 		RangerServiceDef ret = null;
+
+		List<RangerServiceDef> serviceDefs = getAllServiceDefs();
 
 		for(RangerServiceDef sd : serviceDefs) {
 			if(sd != null && StringUtils.equalsIgnoreCase(sd.getName(), sdName)) {
@@ -957,14 +919,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		return ret;
-	}
-
-	private void addServiceDef(RangerServiceDef sd) {
-		serviceDefs.add(sd);
-	}
-
-	private void removeServiceDef(RangerServiceDef sd) {
-		serviceDefs.remove(sd);
 	}
 
 	private boolean isLegacyServiceDef(RangerServiceDef sd) {
