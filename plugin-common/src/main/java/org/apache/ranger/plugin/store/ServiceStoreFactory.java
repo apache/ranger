@@ -68,7 +68,7 @@ public class ServiceStoreFactory {
 		if(useFileStore) {
 			serviceStore = new ServiceFileStore(); // TODO: configurable store implementation
 		} else {
-			RangerRESTClient restClient = new RangerRESTClient("http://172.18.145.30:6080", "");
+			RangerRESTClient restClient = new RangerRESTClient("http://localhost:6080", "");
 			restClient.setBasicAuthInfo("admin", "admin");
 	
 			serviceStore = new ServiceRESTStore(restClient);

@@ -30,40 +30,6 @@ function(Backbone){
 			""							: "serviceManagerAction",//"dashboardAction",
 			"!/policymanager"			: "serviceManagerAction",
 
-			/* HDFS related */
-			"!/hdfs"					: "hdfsManageAction",
-			"!/hdfs/:id/policies"		: "hdfsManageAction",
-			"!/policy/:assetId/create"	: "policyCreateAction",
-			"!/policy/:id/edit"			: "policyEditAction",
-			"!/hdfs/:assetId/policy/:id": "policyViewAction",
-			
-			/****** Hive related **********************/
-			"!/hive"						: "hiveManageAction",
-			"!/hive/:id/policies"			: "hiveManageAction",
-			"!/hive/:assetId/policy/create"	: "hivePolicyCreateAction",
-			"!/hive/:assetId/policy/:id"	: "hivePolicyEditAction",
-			
-			/****** HBASE related **********************/
-			"!/hbase"						: "hbaseManageAction",
-			"!/hbase/:id/policies"			: "hbaseManageAction",
-			"!/hbase/:assetId/policy/create": "hbasePolicyCreateAction",
-			"!/hbase/:assetId/policy/:id"	: "hbasePolicyEditAction",
-			
-			/****** KNOX related ************************/
-			"!/knox/:id/policies"			: "knoxManageAction",
-			"!/knox/:assetId/policy/create"	: "knoxPolicyCreateAction",
-			"!/knox/:assetId/policy/:id"	: "knoxPolicyEditAction",
-			
-			/****** STORM related ************************/
-			"!/storm/:id/policies"			: "stormManageAction",
-			"!/storm/:assetId/policy/create": "stormPolicyCreateAction",
-			"!/storm/:assetId/policy/:id"	: "stormPolicyEditAction",
-			
-			/****** Asset related **********************/
-			"!/asset"					: "policyManagerAction",
-			"!/asset/create/:assetType" : "assetCreateAction",
-			"!/asset/:id"				: "assetEditAction",
-			
 			/****** Analytics Report related **********************/
 			"!/reports/userAccess"		: "userAccessReportAction",
 			
@@ -82,7 +48,6 @@ function(Backbone){
 			"!/group/:id"		: "groupEditAction",
 
 			/************GENERIC UI *****************************************/
-			/****** Service related **********************/
 			"!/service/:serviceType/create" 	: "serviceCreateAction",
 			"!/service/:serviceType/edit/:id"	: "serviceEditAction",
 			

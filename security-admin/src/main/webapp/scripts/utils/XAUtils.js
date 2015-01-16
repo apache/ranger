@@ -707,5 +707,15 @@ define(function(require) {
 	    });
 	    $.fn.editabletypes.policyConditions = PolicyConditions;
 	};
+	XAUtils.capitaliseFirstLetter = function (string){
+	    return string.charAt(0).toUpperCase() + string.slice(1);
+	};
+	XAUtils.getServicePoliciesURL = function(serviceId) {
+		return "service/plugins/policies/service/"+serviceId;
+	};
+	XAUtils.getRangerServiceDef = function(name) {
+		return "service/plugins/definitions/name/"+name;
+	};
+	
     return XAUtils;
 });

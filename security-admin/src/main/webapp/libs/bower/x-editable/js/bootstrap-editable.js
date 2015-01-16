@@ -610,7 +610,7 @@ Editableform is linked with one of input types, e.g. 'text', 'select' etc.
     '</form>';
 
     //loading div
-    $.fn.editableform.loading = '<div class="editableform-loading"></div>';
+    $.fn.editableform.loading = '<div class="loading"></div>';
 
     //buttons
     $.fn.editableform.buttons = '<button type="submit" class="editable-submit">ok</button>'+

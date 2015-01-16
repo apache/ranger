@@ -15,36 +15,22 @@
   limitations under the License.
 --}}
 <td>
+	<input  type="text" data-js="selectGroups" /> 	
+</td>
+<td>
 	<input  type="text" data-js="selectUsers" /> 	
 </td>
-{{#each policyConditions}}
-	{{#if this.name}}
-	<td>
-		<input  type="text" data-js="{{this.name}}" placeholder="{{this.label}}" class="policy-conditions"/> 	
-	</td>
-	{{/if}}
-{{/each}}
-
-{{#if policyStorm}}
+{{#if policyConditions}}
 <td>	
-        <span class="tags" id="tags-editable-1" data-toggle="manual" data-type="checklist" 
-            data-value="{{stormPerms}}" data-original-title="Select Actions">
-        </span>
-       	<a href="#" id="tags-edit-1" data-editable="tags-editable-1" class="" style="margin-left:10px;">
-      		{{#if isModelNew}}
-       			<i class="icon-plus" title="Add"></i>
-       		{{else}}
-       			<i class="icon-pencil" title="Edit"></i>
-       		{{/if}}
-       	</a>
-</td>	
+	<a href="#" id="policyConditions" data-type="policyConditions" data-original-title="Policy Conditions" title="add/edit conditions"></a>
+</td>
 {{/if}}
-{{#each permissions}}
-		<td style="cursor:pointer;">
-			<input data-name="{{./this.label}}" type="checkbox">
-		</td>
-{{/each}}
-
+<td>	
+	<a href="#" data-js="permissions" data-type="checklist" data-title="Select permissions" title="add/edit permissions"></a>
+</td>	
+<td>
+	<input data-js="delegatedAdmin" type="checkbox">
+</td>
 <td>
 	<button type="button" class="btn btn-small btn-danger " data-action="delete">
 		<i class="icon-remove"></i>

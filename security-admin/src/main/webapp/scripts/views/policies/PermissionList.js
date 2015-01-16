@@ -29,11 +29,13 @@ define(function(require) {
 	var XAUtil			= require('utils/XAUtils');
 	var localization	= require('utils/XALangSupport');
 	var VXGroup			= require('models/VXGroup');
+	var VXGroupList			= require('collections/VXGroupList');
+	var VXUserList			= require('collections/VXUserList');
 	require('bootstrap-editable');
     	
 	var FormInputItem = Backbone.Marionette.ItemView.extend({
 		_msvName : 'FormInputItem',
-		template : require('hbs!tmpl/policies/GroupPermItem'),
+		template : require('hbs!tmpl/policies/PermissionItem'),
 		tagName : 'tr',
 		templateHelpers : function(){
 			
@@ -66,13 +68,15 @@ define(function(require) {
 		},
  
 		onRender : function() {
+			//To setup permissions for edit mode 
 			this.setupFormForEditMode();
-			
+			//create select2 dropdown for groups and users  
 			this.createDropDown(this.ui.selectGroups, this.groupList, true);
 			this.createDropDown(this.ui.selectUsers, this.userList, false);
+			//groups or users select2 dropdown change vent 
 			this.dropDownChange(this.ui.selectGroups);
 			this.dropDownChange(this.ui.selectUsers);
-
+			//render permissions and policy conditions
 			this.renderPerms();
 			this.renderPolicyCondtion();
 		},
@@ -156,11 +160,12 @@ define(function(require) {
 			if(this.model.has('editMode') && !_.isEmpty($select.val())){
 				var temp = $select.val().split(",");
 				_.each(temp , function(name){
-					if(_.isUndefined(list.where({ name : name}))){
-						var model;
-						model = typeGroup ? new VXGroup({name: name}) : new VXUser({name: name});  
-						model.fetch({async:false}).done(function(){
-							list.add(model);
+					if(_.isEmpty(list.where({ 'name' : name}))){
+						var coll;
+						coll = typeGroup ? new VXGroupList() : new VXUserList();
+						coll.queryParams['name'] = name;
+						coll.fetch({async:false}).done(function(){
+							list.add(coll.models);
 						});
 					}
 				});
@@ -185,16 +190,6 @@ define(function(require) {
 					});
 					callback(data);
 				},
-				createSearchChoice: function(term, data) {
-				/*	if ($(data).filter(function() {
-						return this.text.localeCompare(term) === 0;
-					}).length === 0) {
-						return {
-							id : term,
-							text: term
-						};
-					}*/
-				},
 				ajax: { 
 					url: url,
 					dataType: 'json',
@@ -203,22 +198,16 @@ define(function(require) {
 					},
 					results: function (data, page) { 
 						var results = [] , selectedVals = [];
-						/*if(!_.isEmpty(that.ui.selectGroups.select2('val')))
-							selectedVals = that.ui.selectGroups.select2('val');*/
-						selectedVals = that.getGroupSelectdValues($select, typeGroup);
+						//Get selected values of groups/users dropdown
+						selectedVals = that.getSelectdValues($select, typeGroup);
 						if(data.resultSize != "0"){
-							//if(data.vXGroups.length > 1){
-								if(typeGroup)
-									results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
-								else
-									results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
-								if(!_.isEmpty(selectedVals))
-									results = XAUtil.filterResultByText(results, selectedVals);
-						//		console.log(results.length);
-								return {results : results};
-							//}
-						//	results = [{id : data.vXGroups.id+"", text: data.vXGroups.name}];
-						//	return {results : results};
+							if(typeGroup)
+								results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+							else
+								results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+							if(!_.isEmpty(selectedVals))
+								results = XAUtil.filterResultByText(results, selectedVals);
+							return {results : results};
 						}
 						return {results : results};
 					}
@@ -236,9 +225,9 @@ define(function(require) {
 		},
 		renderPerms :function(){
 			var that = this;
-//			var permArr = _.pick(XAEnums.XAPermType,  XAUtil.getStormActions(this.policyType));
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
 			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
+			//create x-editable for permissions
 			this.ui.addPerms.editable({
 			    emptytext : 'Add Permissions',
 				source: this.perms,
@@ -265,13 +254,16 @@ define(function(require) {
 					if(that.model.has('accesses')){
 							perms = that.model.get('accesses');
 					}
+					//reset isAllowed flag in accesssItems to set newly isAllowed
+					_.each(that.accessItems, function(item){ item.isAllowed = false });
+					
 					_.each(that.accessTypes, function(obj) {
 						if(_.contains(values, obj.name)){
 							var type = obj.label
 							_.each(that.accessItems, function(item){ if(item.type == type) item.isAllowed = true });
 						}
 					});
-					// Save data to model
+					// Save form data to model
 					
 					if(!_.isEmpty(that.accessItems))
 						that.model.set('accesses', that.accessItems);
@@ -281,21 +273,32 @@ define(function(require) {
 			}).on('click', function(e) {
 				e.stopPropagation();
 				e.preventDefault();
+				var selectAll = true;
+				var checklist = that.$('.editable-checklist').find('input[type="checkbox"]')
+				_.each(checklist,function(checkbox){ if($(checkbox).val() != -1 && !$(checkbox).is(':checked')) selectAll = false;})
+				if(selectAll){
+					that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',true)
+				}
+				//for selectAll functionality
 				that.$('input[type="checkbox"][value="-1"]').click(function(e){
 					var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
 					$(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false); 
 					
 				});
+				
 			});
 			
 		},
 		renderPolicyCondtion : function() {
 			var that = this;
+			
 			if(this.policyConditions.length > 0){
 				var tmpl = _.map(this.policyConditions,function(obj){ 
 					return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span></label><input type="text" name="'+obj.name+'" ></div>'
 				});
+				//Create new bootstrap x-editable `policyConditions` dataType for policy conditions 
 				XAUtil.customXEditableForPolicyCond(tmpl.join(''));
+				//create x-editable for policy conditions
 				this.$('#policyConditions').editable({
 					emptytext : 'Add Conditions',
 					value : this.conditions, 
@@ -304,7 +307,7 @@ define(function(require) {
 						if(!value) {
 							$(this).empty();
 							return; 
-						} // End if
+						}
 						_.each(value, function(val, name){ if(!_.isEmpty(val)) continue_ = true; });
 						if(continue_){
 							var html = _.map(value, function(val,name) {
@@ -319,11 +322,11 @@ define(function(require) {
 							that.model.unset('conditions');
 							$(this).empty();
 						}
-					} // End display option
-				}); // End editable()
+					}
+				});
 			}
 		},
-		getGroupSelectdValues : function($select, typeGroup){
+		getSelectdValues : function($select, typeGroup){
 			var vals = [],selectedVals = [];
 			var name = typeGroup ? 'group' : 'user';
 			this.collection.each(function(m){
@@ -362,7 +365,6 @@ define(function(require) {
 			this.collection.each(function(m){
 				if(!_.isUndefined(m.get('groupId'))){
 					temp.push.apply(temp, m.get('groupId').split(','));
-					
 				}
 			});
 			if(!_.isUndefined(e)){
@@ -399,9 +401,7 @@ define(function(require) {
 
 	return Backbone.Marionette.CompositeView.extend({
 		_msvName : 'FormInputItemList',
-		template : require('hbs!tmpl/policies/GroupPermList'),
-		//tagName : 'ul', 
-		//className : 'timeline-container',
+		template : require('hbs!tmpl/policies/PermissionList'),
 		templateHelpers :function(){
 			return {
 				permHeaders : this.getPermHeaders()
@@ -429,13 +429,11 @@ define(function(require) {
 		},
 		initialize : function(options) {
 			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes','rangerServiceDefModel','userList'));
-			//this.hiveGroupPerm = _.has(options,'hiveGroupPerm') ? true : false;
 			this.listenTo(this.groupList, 'sync', this.render, this);
 			if(this.collection.length == 0)
 				this.collection.add(new Backbone.Model());
 		},
 		onRender : function(){
-			//console.log("onRender of ArtifactFormNoteList called");
 			this.toggleAddButton();
 		},
 		addNew : function(){
@@ -459,8 +457,7 @@ define(function(require) {
 				this.$('button[data-action="addGroup"]').show();
 		},
 		getPermHeaders : function(){
-			var permList = [];//_.map(this.accessTypes,function(type){ return type.label});
-			
+			var permList = [];
 			permList.unshift(localization.tt('lbl.delegatedAdmin'));
 			permList.unshift(localization.tt('lbl.permissions'));
 			if(!_.isEmpty(this.rangerServiceDefModel.get('policyConditions'))){

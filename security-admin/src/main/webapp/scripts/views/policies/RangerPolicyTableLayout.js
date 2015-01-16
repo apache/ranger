@@ -39,10 +39,10 @@ define(function(require){
 	require('backgrid-paginator');
 	require('bootbox');
 
-	var PolicyTableLayout = Backbone.Marionette.Layout.extend(
-	/** @lends PolicyTableLayout */
+	var RangerPolicyTableLayout = Backbone.Marionette.Layout.extend(
+	/** @lends RangerPolicyTableLayout */
 	{
-		_viewName : 'PolicyTableLayout',
+		_viewName : 'RangerPolicyTableLayout',
 		
     	template: RangerPolicyTableLayoutTmpl,
 
@@ -79,7 +79,7 @@ define(function(require){
 		/** ui events hash */
 		events: function() {
 			var events = {};
-			events['click ' + this.ui.btnDeletePolicy]  = 'onDelete';
+//			events['click ' + this.ui.btnDeletePolicy]  = 'onDelete';
 			events['click ' + this.ui.btnShowMore]  = 'onShowMore';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			
@@ -87,11 +87,11 @@ define(function(require){
 		},
 
     	/**
-		* intialize a new PolicyTableLayout Layout 
+		* intialize a new RangerPolicyTableLayout Layout 
 		* @constructs
 		*/
 		initialize: function(options) {
-			console.log("initialized a PolicyTableLayout Layout");
+			console.log("initialized a RangerPolicyTableLayout Layout");
 
 			_.extend(this, _.pick(options,'rangerService'));
 			
@@ -157,40 +157,6 @@ define(function(require){
 					editable: false,
 					sortable : false
 				},	
-		/*		database : {
-					cell : "html",
-					label	: localization.tt("lbl.database"),
-					editable: false,
-					sortable : false,
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue,model) {
-							rawValue = model.get('resources')
-							var name=''
-							_.each(rawValue, function(obj){
-								if(!_.isUndefined(obj.values)) 
-									name += obj.values.toString();
-							});
-							return name;
-						}
-					})
-				},*/
-			/*	resources : {
-					cell : "html",
-					label	: localization.tt("lbl.resourcePath"),
-					editable: false,
-					sortable : false,
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							console.log(rawValue)
-							var name=''
-							_.each(rawValue, function(obj){
-								if(!_.isUndefined(obj.values)) 
-									name += obj.values.toString();
-							});
-							return name;
-						}
-					})
-				},*/
 				isEnabled:{
 					label:localization.tt('lbl.status'),
 					cell :"html",
@@ -217,118 +183,12 @@ define(function(require){
 					drag : false,
 					sortable : false
 				},
-				/*isRecursive:{
-					label:localization.tt('lbl.includesAllPathsRecursively'),
-					cell :"html",
-					editable:false,
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							var status;
-							_.each(_.toArray(XAEnums.BooleanValue),function(m){
-								if(parseInt(rawValue) == m.value){
-									status =  (m.label == XAEnums.BooleanValue.BOOL_TRUE.label) ? true : false;
-								}	
-							});
-							return status ? '<label class="label label-success">YES</label>' : '<label class="label label">NO</label>';
-						}
-					}),
-					click : false,
-					drag : false,
-					sortable : false
-				},
-				permMapList : {
-					reName : 'groupName',
-					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
-					label : localization.tt("lbl.groups"),
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							if(!_.isUndefined(rawValue))
-								return XAUtil.showGroups(rawValue);
-							else
-							return '--';
-						}
-					}),
-					editable : false,
-					sortable : false
-				},
-				auditList : {
-					label : localization.tt("lbl.auditLogging"),
-					cell: "html",
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue, model) {
-							return model.has('auditList') ? '<label class="label label-success">ON</label>' : '<label class="label label">OFF</label>';
-						}
-					}),
-					click : false,
-					drag : false,
-					sortable : false,
-					editable : false
-				},
-				isEncrypt:{
-					label:localization.tt("lbl.encrypted"),
-					cell :"Switch",
-					editable:false,
-				//	canHeaderFilter : true,
-				//	headerFilterList :[{label : 'ON',value : 1},{label :'OFF' ,value:2}],
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							var status;
-							_.each(_.toArray(XAEnums.BooleanValue),function(m){
-								if(parseInt(rawValue) == m.value){
-									status =  (m.label == XAEnums.BooleanValue.BOOL_TRUE.label) ? true : false;
-									return ;
-								}	
-							});
-							//You can use rawValue to custom your html, you can change this value using the name parameter.
-							return status;
-						}
-					}),
-					click : false,
-					drag : false,
-					onText : 'ON',
-					offText : 'OFF',
-					sortable : false
-				},
-				resourceStatus:{
-					label:localization.tt('lbl.status'),
-					cell :"html",
-					editable:false,
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							var status;
-							_.each(_.toArray(XAEnums.BooleanValue),function(m){
-								if(parseInt(rawValue) == m.value){
-									status =  (m.label == XAEnums.BooleanValue.BOOL_TRUE.label) ? true : false;
-								}	
-							});
-							return status ? '<label class="label label-success">Enabled</label>' : '<label class="label label-important">Disabled</label>';
-						}
-					}),
-					click : false,
-					drag : false,
-					sortable : false
-				},
-				permissions : {
-					cell :  "html",
-					label : localization.tt("lbl.action"),
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue,model) {
-							return '<a href="#!/hdfs/'+model.get('assetId')+'/policy/'+model.id+'" class="btn btn-mini" title="Edit"><i class="icon-edit icon-large" /></a>\
-									<a href="javascript:void(0);" data-name ="deletePolicy" data-id="'+model.id+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash icon-large" /></a>';
-							//You can use rawValue to custom your html, you can change this value using the name parameter.
-						}
-					}),
-					editable: false,
-					sortable : false
-
-				}
-*/				
 			};
 			_.each(this.rangerServiceDefModel.get('resources'), function(obj){
 				if(!_.isUndefined(obj) && !_.isNull(obj))
 					 cols[obj.name]={
 							cell : "html",
-							label	: obj.name,
+							label	: XAUtil.capitaliseFirstLetter(obj.name),
 							editable: false,
 							sortable : false,
 							formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
@@ -432,5 +292,5 @@ define(function(require){
 
 	});
 
-	return PolicyTableLayout; 
+	return RangerPolicyTableLayout; 
 });

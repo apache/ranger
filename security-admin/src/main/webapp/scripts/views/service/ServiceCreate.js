@@ -72,8 +72,8 @@ define(function(require){
 			var events = {};
 			events['click ' + this.ui.btnSave]		= 'onSave';
 			events['click ' + this.ui.btnCancel]	= 'onCancel';
-			events['click ' + this.ui.btnDelete]	= 'onDelete';
-			events['click ' + this.ui.btnTestConn]	= 'onTestConnection';
+//			events['click ' + this.ui.btnDelete]	= 'onDelete';
+//			events['click ' + this.ui.btnTestConn]	= 'onTestConnection';
 			return events;
 		},
 

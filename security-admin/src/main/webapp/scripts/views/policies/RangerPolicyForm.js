@@ -33,8 +33,7 @@ define(function(require){
 	var VXGroupList		= require('collections/VXGroupList');
 	var VXAuditMapList	= require('collections/VXAuditMapList');
 	var VXUserList		= require('collections/VXUserList');
-	var GroupPermList 	= require('views/policies/GroupPermList');
-	var UserPermList 	= require('views/policies/UserPermList');
+	var PermissionList 	= require('views/policies/PermissionList');
 	var RangerPolicyResource		= require('models/RangerPolicyResource');
 	var BackboneFormDataType	= require('models/BackboneFormDataType');
 
@@ -45,17 +44,17 @@ define(function(require){
 	require('jquery-ui');
 	require('tag-it');
 
-	var PolicyForm = Backbone.Form.extend(
-	/** @lends PolicyForm */
+	var RangerPolicyForm = Backbone.Form.extend(
+	/** @lends RangerPolicyForm */
 	{
-		_viewName : 'PolicyForm',
+		_viewName : 'RangerPolicyForm',
 
     	/**
-		* intialize a new PolicyForm Form View 
+		* intialize a new RangerPolicyForm Form View 
 		* @constructs
 		*/
 		initialize: function(options) {
-			console.log("initialized a PolicyForm Form View");
+			console.log("initialized a RangerPolicyForm Form View");
 			_.extend(this, _.pick(options, 'rangerServiceDefModel', 'rangerService'));
 			this.setupForm()
     		Backbone.Form.prototype.initialize.call(this, options);
@@ -63,19 +62,8 @@ define(function(require){
 			this.initializeCollection();
 			this.bindEvents();
 		},
-		type : {
-			DATABASE : 1,
-			TABLE    : 2,
-			COLUMN   : 3,
-			VIEW   : 4,
-			UDF   : 5
-		},
 		initializeCollection: function(){
-			this.permMapList = this.model.isNew() ? new VXPermMapList() : this.model.get('permMapList');
-			this.auditList = this.model.isNew() ? new VXAuditMapList() : this.model.get('auditList');
-			
 			this.formInputList 		= XAUtil.makeCollForGroupPermission(this.model);
-
 		},
 		/** all events binding here */
 		bindEvents : function(){
@@ -94,13 +82,17 @@ define(function(require){
 		*/
 		fields: ['name', 'description', 'isEnabled', 'isAuditEnabled'],
 		schema :function(){
+			return this.getSchema();
+		},
+		getSchema : function(){
 			var attrs = {};
-			var that = this;
+			var schemaNames = this.rangerServiceDefModel.get('name') == "hdfs" ? ['description', 'isRecursive', 'isAuditEnabled'] : ['description', 'isAuditEnabled'];
+			
 			var formDataType = new BackboneFormDataType();
 			attrs = formDataType.getFormElements(this.rangerServiceDefModel.get('resources'),this.rangerServiceDefModel.get('enums'), attrs, this);
-
+			
 			var attr1 = _.pick(_.result(this.model,'schemaBase'), 'name','isEnabled');
-			var attr2 = _.pick(_.result(this.model,'schemaBase'),'description', 'isRecursive', 'isAuditEnabled');
+			var attr2 = _.pick(_.result(this.model,'schemaBase'),schemaNames);
 			return _.extend(attr1,_.extend(attrs,attr2));
 		},
 		/** on render callback */
@@ -108,7 +100,7 @@ define(function(require){
 			var that = this;
 			
 			Backbone.Form.prototype.render.call(this, options);
-
+			//initialize path plugin for hdfs component : resourcePath
 			if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){ 
 				this.initializePathPlugins();
 			}
@@ -129,13 +121,18 @@ define(function(require){
 		},
 		setupForm : function() {
 			_.each(this.model.attributes.resources,function(obj,key){
-				this.model.set(key, obj.values.toString())
+				this.model.set(key, obj.values.toString());
+				if(!_.isUndefined(obj.isRecursive))
+					this.model.set('isRecursive', obj.isRecursive);
+				
 			},this)
 		},
 		setUpSwitches :function(){
 			var that = this;
 			this.fields.isAuditEnabled.editor.setValue(this.model.get('isAuditEnabled'));
 			this.fields.isEnabled.editor.setValue(this.model.get('isEnabled'));
+			if(!_.isUndefined(this.fields.isRecursive))
+				this.fields.isRecursive.editor.setValue(this.model.get('isRecursive'));
 		},
 		/** all custom field rendering */
 		renderCustomFields: function(){
@@ -155,12 +152,12 @@ define(function(require){
 					cache :true,
 					data : params
 				}).done(function(){
-					that.$('[data-customfields="groupPerms"]').html(new GroupPermList({
+					that.$('[data-customfields="groupPerms"]').html(new PermissionList({
 						collection : that.formInputList,
 						groupList  : that.groupList,
 						userList   : that.userList,
-						model : that.model,
-						accessTypes : accessType,
+						model 	   : that.model,
+						accessTypes: accessType,
 						rangerServiceDefModel : that.rangerServiceDefModel
 					}).render().el);
 			});
@@ -169,7 +166,7 @@ define(function(require){
 	
 		beforeSave : function(){
 			var that = this, resources = [];
-			this.model.set('service',this.rangerService.get('name'));
+
 			var resources = {};
 			_.each(this.rangerServiceDefModel.get('resources'),function(obj){
 				if(!_.isNull(obj)){
@@ -189,12 +186,13 @@ define(function(require){
 			var RangerPolicyItem = Backbone.Collection.extend();
 			var policyItemList = new RangerPolicyItem();
 			policyItemList = this.setPermissionsToColl(this.formInputList, policyItemList);
-			this.model.set('policyItems', policyItemList)
 			
-			//Unset attrs which are not needed 
+			this.model.set('policyItems', policyItemList)
+			this.model.set('service',this.rangerService.get('name'));			
+			/*//Unset attrs which are not needed 
 			_.each(this.model.attributes.resources,function(obj,key){
 				this.model.unset(key, obj.values.toString())
-			},this)
+			},this)*/
 			
 		},
 		setPermissionsToColl : function(list, policyItemList) {
@@ -321,25 +319,12 @@ define(function(require){
 			        	that.fields[that.pathFieldName].$el.find('.help-inline').html('Please enter valid resource path : ' + ui.tagLabel);
 			        	return false;
 			        }
-//			        this.value = tags;
-			        /*if(_.contains(ui.tagLabel,','))
-			        	tags = ui.tagLabel.split(',');
-			        	this.value = tags;*/
 					}
 			});
-			/*this.fields.name.editor.$el.tagit({
-				beforeTagAdded: function(event, ui) {
-		        // do something special
-				var tags =  [];
-		        console.log(ui.tag);
-		        if(_.contains(ui.tagLabel,','))
-		        	tags = ui.tagLabel.split(',');
-		        	this.value = tags;
-				}
-			});*/
+	
 			
 		},
-		getPlugginAttr :function(autocomplete, searchType){
+		getPlugginAttr :function(autocomplete, searchType, lookupURL){
 			var that =this;
 			var type = searchType;
 			if(!autocomplete)
@@ -349,7 +334,6 @@ define(function(require){
 				
 				return {
 					closeOnSelect : true,
-					//placeholder : 'Select User',
 					tags:true,
 					multiple: true,
 					minimumInputLength: 1,
@@ -372,24 +356,8 @@ define(function(require){
 							};
 						}
 					},
-					/*query: function (query) {
-						var url = "service/assets/hive/resources";
-						var data = _.extend(that.getDataParams(type, query.term));
-						//var results = [ {id: query.term, path: query.term}];
-
-						$.get(url, data, function (resp) {
-							var serverRes = [];
-							if(resp.resultSize){
-								serverRes = resp.vXStrings.map(function(m, i){	return {id : m.text, path: m.text};	});
-							}
-							query.callback({results: serverRes});
-						}, 'json');
-
-						//query.callback({results: results});
-					},*/
-
 					ajax: { 
-						url: "service/assets/hive/resources",
+						url: lookupURL,
 						dataType: 'json',
 						params : {
 							timeout: 3000
@@ -417,13 +385,6 @@ define(function(require){
 									resultSize : 0
 								});
 							});
-							/*$.ajax.error(function(data) { 
-								console.log("ajax failed");
-								return {
-									results : []
-								};
-							});*/
-
 						}
 
 					},	
@@ -446,5 +407,5 @@ define(function(require){
 		},
 	});
 
-	return PolicyForm;
+	return RangerPolicyForm;
 });

@@ -33,7 +33,7 @@ define(function(require) {
 						case 'string':
 							if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
 								formObj.type = 'Select2Remote';
-								formObj.pluginAttr = form.getPlugginAttr(false),
+								formObj.pluginAttr = _.isUndefined(v.url) ? form.getPlugginAttr(false) : form.getPlugginAttr(true, v.url), 
 								formObj.editorAttrs = {'data-placeholder': v.label },
 								formObj.options = function(callback, editor){
 				                    callback();

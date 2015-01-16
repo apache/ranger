@@ -22,7 +22,6 @@ define(function(require){
     'use strict';
 
 	var Backbone		= require('backbone');
-    
 	var XAEnums			= require('utils/XAEnums');
 	var localization	= require('utils/XALangSupport');
 	var BackboneFormDataType	= require('models/BackboneFormDataType');
@@ -87,25 +86,22 @@ define(function(require){
 		render: function(options) {
 			Backbone.Form.prototype.render.call(this, options);
 
+			this.setupForm();
 			this.initializePlugins();
 			this.renderCustomFields();
-			/*if(!this.model.isNew())
-				this.fields.serviceType.editor.$el.prop('disabled',true);
-			else
-				this.fields.activeStatus.editor.setValue(XAEnums.ActiveStatus.STATUS_ENABLED.value);
-			*/
-			if(this.model.isNew())
-				this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_ENABLED.value);
-			else{
-				//Set isEnabled Status
-				if(!_.isUndefined(this.model.get('isEnabled')))
-					if(XAEnums.ActiveStatus.STATUS_ENABLED.value == this.model.get('isEnabled'))
-						this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_ENABLED.value);
-					else
-						this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_DISABLED.value);
-			}
 		},
-
+		setupForm : function() {
+			if(this.model.isNew()){
+				this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_ENABLED.value);
+			}else{
+			//Set isEnabled Status
+				if(XAEnums.ActiveStatus.STATUS_ENABLED.value == this.model.get('isEnabled')){
+					this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_ENABLED.value);
+				}else{
+					this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_DISABLED.value);
+				}
+			}	
+		},
 		/** all custom field rendering */
 		renderCustomFields: function(){
 		},
@@ -129,21 +125,16 @@ define(function(require){
 					that.model.unset(obj.name);
 				}
 			});
-//			this.model.set('configs',JSON.stringify(config));
 			this.model.set('configs',config);
 			
 			//Set service type
 			this.model.set('type',this.rangerServiceDefModel.get('name'))
-			/*_.each(XAEnums.AssetType, function(asset){
-				if(asset.label.toUpperCase() == this.rangerServiceDefModel.get('name').toUpperCase())
-					this.model.set('type',asset.label)
-			},this);*/
-//			
 			//Set isEnabled
-			if(parseInt(this.model.get('isEnabled')) == XAEnums.ActiveStatus.STATUS_ENABLED.value)
+			if(parseInt(this.model.get('isEnabled')) == XAEnums.ActiveStatus.STATUS_ENABLED.value){
 				this.model.set('isEnabled',true);
-			else
+			}else{
 				this.model.set('isEnabled',false);
+			}
 			
 			//Remove unwanted attributes from model
 			if(!this.model.isNew()){
@@ -152,7 +143,6 @@ define(function(require){
 				},this);
 			}
 		},
-
 		removeElementFromArr : function(arr ,elem){
 			var index = $.inArray(elem,arr);
 			if(index >= 0) arr.splice(index,1);
