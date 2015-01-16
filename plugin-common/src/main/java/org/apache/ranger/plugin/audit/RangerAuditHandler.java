@@ -17,22 +17,16 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.policyengine;
+package org.apache.ranger.plugin.audit;
 
 import java.util.List;
 
-import org.apache.ranger.plugin.audit.RangerAuditHandler;
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
-public interface RangerPolicyEngine {
-	public static final String GROUP_PUBLIC   = "public";
-	public static final String ANY_ACCESS     = "any";
-	public static final long   UNKNOWN_POLICY = -1;
 
-	void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies);
+public interface RangerAuditHandler {
+	void logAudit(RangerAccessRequest request, RangerAccessResult result);
 
-	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler);
-
-	List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests, RangerAuditHandler auditHandler);
+	void logAudit(List<RangerAccessRequest> requests, List<RangerAccessResult> results);
 }

@@ -22,21 +22,40 @@ package org.apache.ranger.plugin.policyengine;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 
 
 public class RangerAccessResult {
 	public enum Result { ALLOWED, DENIED, PARTIALLY_ALLOWED };
 
+	private String           serviceName = null;
+	private RangerServiceDef serviceDef  = null;
 	private Map<String, ResultDetail> accessTypeResults = null;
 
-	public RangerAccessResult() {
-		this(null);
+	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef) {
+		this(serviceName, serviceDef, null);
 	}
 
-	public RangerAccessResult(Map<String, ResultDetail> accessTypeResults) {
+	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef, Map<String, ResultDetail> accessTypeResults) {
+		this.serviceName = serviceName;
+		this.serviceDef  = serviceDef;
+
 		setAccessTypeResults(accessTypeResults);
+	}
+
+	/**
+	 * @return the serviceName
+	 */
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	/**
+	 * @return the serviceDef
+	 */
+	public RangerServiceDef getServiceDef() {
+		return serviceDef;
 	}
 
 	/**
@@ -116,29 +135,6 @@ public class RangerAccessResult {
 				ret = Result.PARTIALLY_ALLOWED;
 			}
 		}
-
-		return ret;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		boolean ret = false;
-
-		if(obj != null && (obj instanceof RangerAccessResult)) {
-			RangerAccessResult other = (RangerAccessResult)obj;
-
-			ret = (this == other) ||
-				   ObjectUtils.equals(accessTypeResults, other.accessTypeResults);
-		}
-
-		return ret;
-	}
-
-	@Override
-	public int hashCode() {
-		int ret = 7;
-
-		ret = 31 * ret + (accessTypeResults == null ? 0 : accessTypeResults.hashCode()); // TODO: review
 
 		return ret;
 	}

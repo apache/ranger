@@ -25,7 +25,7 @@
     {"id":2,"name":"allow-read-to-all under /public/","isEnabled":true,"isAuditEnabled":false,
      "resources":{"path":{"values":["/public/"],"isRecursive":true}},
      "policyItems":[
-       {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+       {"accesses":[{"type":"read","isAllowed":true},{"type":"execute","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
      ]
     }
     ,
@@ -134,6 +134,14 @@
       "accessTypes":["read"],"user":"user1","userGroups":[],"requestData":"read /public/technology/blogs.db"
      },
      "result":{"accessTypeResults":{"read":{"isAllowed":true,"isAudited":false,"policyId":2}}}
+    }
+    ,
+    {"name":"ALLOW 'read /public/technology' for u=user1",
+     "request":{
+      "resource":{"elements":{"path":"/public/technology/blogs.db"}},
+      "accessTypes":["read","execute"],"user":"user1","userGroups":[],"requestData":"read /public/technology/blogs.db"
+     },
+     "result":{"accessTypeResults":{"execute":{"isAllowed":true,"isAudited":false,"policyId":2},"read":{"isAllowed":true,"isAudited":false,"policyId":2}}}
     }
   ]
 }

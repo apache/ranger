@@ -20,27 +20,20 @@
 package org.apache.ranger.plugin.policyengine;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult.ResultDetail;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
-import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.audit.model.AuthzAuditEvent;
 
 
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineImpl.class);
-
-	private static final String RESOURCE_SEP = "/";
 
 	private String                      serviceName      = null;
 	private RangerServiceDef            serviceDef       = null;
@@ -91,14 +84,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + request + ")");
 		}
 
 		RangerAccessResult ret = isAccessAllowedNoAudit(request);
 
-		logAudit(getAuditEvents(request, ret));
+		if(auditHandler != null) {
+			auditHandler.logAudit(request, ret);
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + request + "): " + ret);
@@ -108,7 +103,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests) {
+	public List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests, RangerAuditHandler auditHandler) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + requests + ")");
 		}
@@ -123,174 +118,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		logAudit(getAuditEvents(requests, ret));
+		if(auditHandler != null) {
+			auditHandler.logAudit(requests, ret);
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + requests + "): " + ret);
-		}
-
-		return ret;
-	}
-
-	@Override
-	public Collection<AuthzAuditEvent> getAuditEvents(RangerAccessRequest request, RangerAccessResult result) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.getAuditEvents(" + request + ", " + result + ")");
-		}
-
-		List<AuthzAuditEvent> ret = null;
-
-		if(request != null && result != null) {
-			// TODO: optimize the number of audit logs created
-			for(Map.Entry<String, ResultDetail> e : result.getAccessTypeResults().entrySet()) {
-				String       accessType   = e.getKey();
-				ResultDetail accessResult = e.getValue();
-
-				if(! accessResult.isAudited()) {
-					continue;
-				}
-
-				AuthzAuditEvent event = new AuthzAuditEvent();
-
-				event.setRepositoryName(serviceName);
-				event.setRepositoryType(serviceDef.getId().intValue());
-				event.setResourcePath(getResourceValueAsString(request.getResource()));
-				event.setEventTime(request.getAccessTime());
-				event.setUser(request.getUser());
-				event.setAccessType(request.getAction());
-				event.setAccessResult((short)(accessResult.isAllowed() ? 1 : 0));
-				event.setAclEnforcer("ranger-acl"); // TODO: review
-				event.setAction(accessType);
-				event.setClientIP(request.getClientIPAddress());
-				event.setClientType(request.getClientType());
-				event.setAgentHostname(null);
-				event.setAgentId(null);
-				event.setEventId(null);
-
-				if(ret == null) {
-					ret = new ArrayList<AuthzAuditEvent>();
-				}
-
-				ret.add(event);
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.getAuditEvents(" + request + ", " + result + "): " + ret);
-		}
-
-		return ret;
-	}
-	
-	@Override
-	public Collection<AuthzAuditEvent> getAuditEvents(List<RangerAccessRequest> requests, List<RangerAccessResult> results) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.getAuditEvents(" + requests + ", " + results + ")");
-		}
-
-		List<AuthzAuditEvent> ret = null;
-
-		if(requests != null && results != null) {
-			int count = Math.min(requests.size(), results.size());
-
-			// TODO: optimize the number of audit logs created
-			for(int i = 0; i < count; i++) {
-				Collection<AuthzAuditEvent> events = getAuditEvents(requests.get(i), results.get(i));
-
-				if(events == null) {
-					continue;
-				}
-
-				if(ret == null) {
-					ret = new ArrayList<AuthzAuditEvent>();
-				}
-
-				ret.addAll(events);
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.getAuditEvents(" + requests + ", " + results + "): " + ret);
-		}
-
-		return ret;
-	}
-
-	@Override
-	public void logAudit(AuthzAuditEvent auditEvent) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.logAudit(" + auditEvent + ")");
-		}
-
-		if(auditEvent != null) {
-			AuditProviderFactory.getAuditProvider().log(auditEvent);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.logAudit(" + auditEvent + ")");
-		}
-	}
-
-	@Override
-	public void logAudit(Collection<AuthzAuditEvent> auditEvents) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.logAudit(" + auditEvents + ")");
-		}
-
-		if(auditEvents != null) {
-			for(AuthzAuditEvent auditEvent : auditEvents) {
-				logAudit(auditEvent);
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.logAudit(" + auditEvents + ")");
-		}
-	}
-
-	public String getResourceName(RangerResource resource) {
-		String ret = null;
-
-		if(resource != null && serviceDef != null && serviceDef.getResources() != null) {
-			List<RangerResourceDef> resourceDefs = serviceDef.getResources();
-
-			for(int idx = resourceDefs.size() - 1; idx >= 0; idx--) {
-				RangerResourceDef resourceDef = resourceDefs.get(idx);
-
-				if(resourceDef == null || !resource.exists(resourceDef.getName())) {
-					continue;
-				}
-
-				ret = resourceDef.getName();
-
-				break;
-			}
-		}
-		
-		return ret;
-	}
-
-	public String getResourceValueAsString(RangerResource resource) {
-		String ret = null;
-
-		if(resource != null && serviceDef != null && serviceDef.getResources() != null) {
-			StringBuilder sb = new StringBuilder();
-
-			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-				if(resourceDef == null || !resource.exists(resourceDef.getName())) {
-					continue;
-				}
-
-				if(sb.length() > 0) {
-					sb.append(RESOURCE_SEP);
-				}
-
-				sb.append(resource.getValue(resourceDef.getName()));
-			}
-
-			if(sb.length() > 0) {
-				ret = sb.toString();
-			}
 		}
 
 		return ret;
@@ -301,7 +134,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + ")");
 		}
 
-		RangerAccessResult ret = new RangerAccessResult();
+		RangerAccessResult ret = new RangerAccessResult(serviceName, serviceDef);
 
 		if(request != null) {
 			if(CollectionUtils.isEmpty(request.getAccessTypes())) {
