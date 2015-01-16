@@ -19,6 +19,8 @@
 
 package org.apache.ranger.plugin.service;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.ServiceStoreFactory;
@@ -34,7 +36,22 @@ public abstract class RangerBasePlugin {
 		if(!initDone) {
 			synchronized(this) {
 				if(! initDone) {
-					String serviceName = System.getProperty("ranger.plugin.service.name", "hbasedev"); // TODO: read from configuration
+					String serviceName = null;
+
+					// get the serviceName from download URL: http://ranger-admin-host:port/service/assets/policyList/serviceName
+					String policyDownloadUrl = RangerConfiguration.getInstance().get("xasecure.hdfs.policymgr.url");
+
+					if(! StringUtils.isEmpty(policyDownloadUrl)) {
+						int idx = policyDownloadUrl.lastIndexOf('/');
+
+						if(idx != -1) {
+							serviceName = policyDownloadUrl.substring(idx) + 1;
+						}
+					}
+					
+					if(StringUtils.isEmpty(serviceName)) {
+						serviceName = RangerConfiguration.getInstance().get("ranger.plugin.service.name", "hbasedev");
+					}
 
 					ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore();
 

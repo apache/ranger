@@ -687,7 +687,7 @@ define(function(require) {
 				   'serviceId' : serviceId 
 			   }
 		   });*/
-		   rangerPolicyList.url = "service/plugins/services/"+serviceId+"/policies"
+		   rangerPolicyList.url = "service/plugins/policies/service/"+serviceId
 		   
 		   rangerService.fetch({
 			  cache : false,

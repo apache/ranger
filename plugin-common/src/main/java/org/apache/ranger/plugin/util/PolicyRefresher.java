@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -46,7 +47,7 @@ public class PolicyRefresher extends Thread {
 		this.serviceName  = serviceName;
 		this.serviceStore = serviceStore;
 
-		this.pollingIntervalMilliSeconds = 30 * 1000; // TODO: read from configuration
+		this.pollingIntervalMilliSeconds = RangerConfiguration.getInstance().getLong("xasecure.hdfs.policymgr.url.reloadIntervalInMillis", 30 * 1000);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher.PolicyRefresher(serviceName=" + serviceName + ")");

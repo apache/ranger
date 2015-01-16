@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -58,7 +59,7 @@ public class BaseFileStore {
 
 
 	protected void init() {
-		dataDir = System.getProperty("ranger.policystore.file.dir", "/etc/ranger/data"); // TODO: read from configuration
+		dataDir = RangerConfiguration.getInstance().get("ranger.policystore.file.dir", "/etc/ranger/data");
 
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();

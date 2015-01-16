@@ -60,5 +60,10 @@
   		<artifactId>ranger-plugins-audit</artifactId>
   		<version>${project.version}</version>
   	</dependency>
+  	<dependency>
+  		<groupId>security_plugins.ranger-plugins-common</groupId>
+  		<artifactId>ranger-plugins-common</artifactId>
+  		<version>${project.version}</version>
+  	</dependency>
   </dependencies>
 </project>

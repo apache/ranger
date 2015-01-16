@@ -493,7 +493,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			throw new Exception("service does not exist - name=" + policy.getService());
 		}
 
-		RangerPolicy existing = getPolicyByName(policy.getService(), policy.getName());
+		RangerPolicy existing = findPolicyByName(policy.getService(), policy.getName());
 
 		if(existing != null) {
 			throw new Exception("policy already exists: ServiceName=" + policy.getService() + "; PolicyName=" + policy.getName() + ". ID=" + existing.getId());
@@ -547,7 +547,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		boolean renamed = !StringUtils.equalsIgnoreCase(policy.getName(), existing.getName());
 		
 		if(renamed) {
-			RangerPolicy newNamePolicy = getPolicyByName(service.getName(), policy.getName());
+			RangerPolicy newNamePolicy = findPolicyByName(service.getName(), policy.getName());
 
 			if(newNamePolicy != null) {
 				throw new Exception("another policy already exists with name '" + policy.getName() + "'. ID=" + newNamePolicy.getId());
@@ -646,44 +646,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	}
 
 	@Override
-	public RangerPolicy getPolicyByName(String serviceName, String policyName) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceFileStore.getPolicyByName(" + serviceName + ", " + policyName + ")");
-		}
-
-		RangerService service = getServiceByName(serviceName);
-
-		if(service == null) {
-			throw new Exception("service does not exist - name='" + serviceName);
-		}
-
-		RangerPolicy ret = null;
-
-		try {
-			List<RangerPolicy> policies = getAllPolicies();
-
-			if(policies != null) {
-				for(RangerPolicy policy : policies) {
-					if(StringUtils.equals(policy.getService(),  service.getName()) &&
-					   StringUtils.equals(policy.getName(), policyName)) {
-						ret = policy;
-
-						break;
-					}
-				}
-			}
-		} catch(Exception excp) {
-			LOG.error("ServiceFileStore.getPolicyByName(" + serviceName + ", " + policyName + "): failed to read policies", excp);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceFileStore.getPolicyByName(" + serviceName + ", " + policyName + "): " + ret);
-		}
-
-		return ret;
-	}
-
-	@Override
 	public List<RangerPolicy> getAllPolicies() throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceFileStore.getAllPolicies()");
@@ -701,6 +663,27 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.getAllPolicies(): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@Override
+	public List<RangerPolicy> getServicePolicies(Long serviceId) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceFileStore.getPolicies(" + serviceId + ")");
+		}
+
+		RangerService service = getService(serviceId);
+
+		if(service == null) {
+			throw new Exception("service does not exist - id='" + serviceId);
+		}
+
+		List<RangerPolicy> ret = getServicePolicies(service.getName());
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceFileStore.getPolicies(" + serviceId + "): " + ((ret == null) ? 0 : ret.size()));
 		}
 
 		return ret;
@@ -742,27 +725,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.getPolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
-		}
-
-		return ret;
-	}
-
-	@Override
-	public List<RangerPolicy> getServicePolicies(Long serviceId) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceFileStore.getPolicies(" + serviceId + ")");
-		}
-
-		RangerService service = getService(serviceId);
-
-		if(service == null) {
-			throw new Exception("service does not exist - id='" + serviceId);
-		}
-
-		List<RangerPolicy> ret = getServicePolicies(service.getName());
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceFileStore.getPolicies(" + serviceId + "): " + ((ret == null) ? 0 : ret.size()));
 		}
 
 		return ret;
@@ -916,6 +878,43 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 				break;
 			}
+		}
+
+		return ret;
+	}
+
+	private RangerPolicy findPolicyByName(String serviceName, String policyName) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceFileStore.findPolicyByName(" + serviceName + ", " + policyName + ")");
+		}
+
+		RangerService service = getServiceByName(serviceName);
+
+		if(service == null) {
+			throw new Exception("service does not exist - name='" + serviceName);
+		}
+
+		RangerPolicy ret = null;
+
+		try {
+			List<RangerPolicy> policies = getAllPolicies();
+
+			if(policies != null) {
+				for(RangerPolicy policy : policies) {
+					if(StringUtils.equals(policy.getService(),  service.getName()) &&
+					   StringUtils.equals(policy.getName(), policyName)) {
+						ret = policy;
+
+						break;
+					}
+				}
+			}
+		} catch(Exception excp) {
+			LOG.error("ServiceFileStore.findPolicyByName(" + serviceName + ", " + policyName + "): failed to read policies", excp);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceFileStore.findPolicyByName(" + serviceName + ", " + policyName + "): " + ret);
 		}
 
 		return ret;

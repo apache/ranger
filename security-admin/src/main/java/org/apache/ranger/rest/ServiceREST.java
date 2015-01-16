@@ -39,6 +39,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.ServiceStoreFactory;
+import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -60,6 +61,75 @@ public class ServiceREST {
 
 	public ServiceREST() {
 		svcStore = ServiceStoreFactory.instance().getServiceStore();
+	}
+
+
+	@POST
+	@Path("/definitions")
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.createServiceDef(" + serviceDef + ")");
+		}
+
+		RangerServiceDef ret = null;
+
+		try {
+			ret = svcStore.createServiceDef(serviceDef);
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.createServiceDef(" + serviceDef + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@PUT
+	@Path("/definitions/{id}")
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.updateServiceDef(" + serviceDef + ")");
+		}
+
+		RangerServiceDef ret = null;
+
+		try {
+			ret = svcStore.updateServiceDef(serviceDef);
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.updateServiceDef(" + serviceDef + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@DELETE
+	@Path("/definitions/{id}")
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteServiceDef(@PathParam("id") Long id) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.deleteServiceDef(" + id + ")");
+		}
+
+		try {
+			svcStore.deleteServiceDef(id);
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.deleteServiceDef(" + id + ")");
+		}
 	}
 
 	@GET
@@ -139,74 +209,72 @@ public class ServiceREST {
 		return ret;
 	}
 
+
 	@POST
-	@Path("/definitions")
+	@Path("/services")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) {
+	public RangerService createService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.createServiceDef(" + serviceDef + ")");
+			LOG.debug("==> ServiceREST.createService(" + service + ")");
 		}
 
-		RangerServiceDef ret = null;
+		RangerService ret = null;
 
 		try {
-			ret = svcStore.createServiceDef(serviceDef);
+			ret = svcStore.createService(service);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.createServiceDef(" + serviceDef + "): " + ret);
+			LOG.debug("<== ServiceREST.createService(" + service + "): " + ret);
 		}
 
 		return ret;
 	}
 
 	@PUT
-	@Path("/definitions")
+	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) {
+	public RangerService updateService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.updateServiceDef(" + serviceDef + ")");
+			LOG.debug("==> ServiceREST.updateService(): " + service);
 		}
 
-		RangerServiceDef ret = null;
+		RangerService ret = null;
 
 		try {
-			ret = svcStore.updateServiceDef(serviceDef);
+			ret = svcStore.updateService(service);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.updateServiceDef(" + serviceDef + "): " + ret);
+			LOG.debug("<== ServiceREST.updateService(" + service + "): " + ret);
 		}
 
 		return ret;
 	}
 
 	@DELETE
-	@Path("/definitions/{id}")
+	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deleteServiceDef(@PathParam("id") Long id) {
+	public void deleteService(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.deleteServiceDef(" + id + ")");
+			LOG.debug("==> ServiceREST.deleteService(" + id + ")");
 		}
 
 		try {
-			svcStore.deleteServiceDef(id);
+			svcStore.deleteService(id);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.deleteServiceDef(" + id + ")");
+			LOG.debug("<== ServiceREST.deleteService(" + id + ")");
 		}
 	}
-
 
 	@GET
 	@Path("/services/{id}")
@@ -311,72 +379,6 @@ public class ServiceREST {
 	}
 
 	@POST
-	@Path("/services")
-	@Produces({ "application/json", "application/xml" })
-	public RangerService createService(RangerService service) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.createService(" + service + ")");
-		}
-
-		RangerService ret = null;
-
-		try {
-			ret = svcStore.createService(service);
-		} catch(Exception excp) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.createService(" + service + "): " + ret);
-		}
-
-		return ret;
-	}
-
-	@PUT
-	@Path("/services/{id}")
-	@Produces({ "application/json", "application/xml" })
-	public RangerService updateService(RangerService service) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.updateService(): " + service);
-		}
-
-		RangerService ret = null;
-
-		try {
-			ret = svcStore.updateService(service);
-		} catch(Exception excp) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.updateService(" + service + "): " + ret);
-		}
-
-		return ret;
-	}
-
-	@DELETE
-	@Path("/services/{id}")
-	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deleteService(@PathParam("id") Long id) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.deleteService(" + id + ")");
-		}
-
-		try {
-			svcStore.deleteService(id);
-		} catch(Exception excp) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.deleteService(" + id + ")");
-		}
-	}
-
-	@POST
 	@Path("/services/validateConfig")
 	@Produces({ "application/json", "application/xml" })
 	public VXResponse validateConfig(RangerService service) {
@@ -400,110 +402,6 @@ public class ServiceREST {
 		return ret;
 	}
 
-
-	@GET
-	@Path("/policies/{id}")
-	@Produces({ "application/json", "application/xml" })
-	public RangerPolicy getPolicy(@PathParam("id") Long id) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicy(" + id + ")");
-		}
-
-		RangerPolicy ret = null;
-
-		try {
-			ret = svcStore.getPolicy(id);
-		} catch(Exception excp) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if(ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicy(" + id + "): " + ret);
-		}
-
-		return ret;
-	}
-
-	@GET
-	@Path("/policies")
-	@Produces({ "application/json", "application/xml" })
-	public List<RangerPolicy> getPolicies(@Context HttpServletRequest request) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicies()");
-		}
-
-		List<RangerPolicy> ret = null;
-
-		try {
-			Long serviceId = Long.parseLong(request.getParameter("serviceId"));
-
-			ret = svcStore.getServicePolicies(serviceId);
-		} catch(Exception excp) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicies(): count=" + (ret == null ? 0 : ret.size()));
-		}
-
-		return ret;
-	}
-
-	@GET
-	@Path("/policies/count")
-	@Produces({ "application/json", "application/xml" })
-	public Long countPolicies(@Context HttpServletRequest request) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.countPolicies():");
-		}
-
-		Long ret = null;
-
-		try {
-			List<RangerPolicy> services = getPolicies(request);
-			
-			ret = new Long(services == null ? 0 : services.size());
-		} catch(Exception excp) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.countPolicies(): " + ret);
-		}
-
-		return ret;
-	}
-
-	@GET
-	@Path("/services/{id}/policies")
-	@Produces({ "application/json", "application/xml" })
-	public List<RangerPolicy> getServicePolicies(@PathParam("id") Long serviceId, @Context HttpServletRequest request) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceId + ")");
-		}
-
-		List<RangerPolicy> ret = null;
-
-		try {
-			ret = svcStore.getServicePolicies(serviceId);
-		} catch(Exception excp) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if(ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count=" + (ret == null ? 0 : ret.size()));
-		}
-
-		return ret;
-	}
 
 	@POST
 	@Path("/policies")
@@ -529,7 +427,7 @@ public class ServiceREST {
 	}
 
 	@PUT
-	@Path("/policies")
+	@Path("/policies/{id}")
 	@Produces({ "application/json", "application/xml" })
 	public RangerPolicy updatePolicy(RangerPolicy policy) {
 		if(LOG.isDebugEnabled()) {
@@ -569,5 +467,161 @@ public class ServiceREST {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.deletePolicy(" + id + ")");
 		}
+	}
+
+	@GET
+	@Path("/policies/{id}")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicy getPolicy(@PathParam("id") Long id) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicy(" + id + ")");
+		}
+
+		RangerPolicy ret = null;
+
+		try {
+			ret = svcStore.getPolicy(id);
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicy(" + id + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@GET
+	@Path("/policies")
+	@Produces({ "application/json", "application/xml" })
+	public List<RangerPolicy> getPolicies(@Context HttpServletRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicies()");
+		}
+
+		List<RangerPolicy> ret = null;
+
+		try {
+			ret = svcStore.getAllPolicies();
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicies(): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@GET
+	@Path("/policies/count")
+	@Produces({ "application/json", "application/xml" })
+	public Long countPolicies(@Context HttpServletRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.countPolicies():");
+		}
+
+		Long ret = null;
+
+		try {
+			List<RangerPolicy> services = getPolicies(request);
+			
+			ret = new Long(services == null ? 0 : services.size());
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.countPolicies(): " + ret);
+		}
+
+		return ret;
+	}
+
+	@GET
+	@Path("/policies/service/{id}")
+	@Produces({ "application/json", "application/xml" })
+	public List<RangerPolicy> getServicePolicies(@PathParam("id") Long serviceId, @Context HttpServletRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceId + ")");
+		}
+
+		List<RangerPolicy> ret = null;
+
+		try {
+			ret = svcStore.getServicePolicies(serviceId);
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@GET
+	@Path("/policies/service/name/{name}")
+	@Produces({ "application/json", "application/xml" })
+	public List<RangerPolicy> getServicePolicies(@PathParam("name") String serviceName, @Context HttpServletRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceName + ")");
+		}
+
+		List<RangerPolicy> ret = null;
+
+		try {
+			ret = svcStore.getServicePolicies(serviceName);
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@GET
+	@Path("/policies/service/name/{name}/{lastKnownVersion}")
+	@Produces({ "application/json", "application/xml" })
+	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("name") String serviceName, @PathParam("lastKnownVersion") Long lastKnownVersion) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
+		}
+
+		ServicePolicies ret = null;
+
+		try {
+			ret = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+		} catch(Exception excp) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+		}
+
+		return ret;
 	}
 }

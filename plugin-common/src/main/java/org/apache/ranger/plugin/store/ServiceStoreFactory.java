@@ -22,6 +22,8 @@ package org.apache.ranger.plugin.store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.store.file.ServiceFileStore;
+import org.apache.ranger.plugin.store.rest.ServiceRESTStore;
+import org.apache.ranger.plugin.util.RangerRESTClient;
 
 
 public class ServiceStoreFactory {
@@ -60,8 +62,18 @@ public class ServiceStoreFactory {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceStoreFactory.init()");
 		}
+		
+		boolean useFileStore = true;
 
-		serviceStore = new ServiceFileStore(); // TODO: configurable store implementation
+		if(useFileStore) {
+			serviceStore = new ServiceFileStore(); // TODO: configurable store implementation
+		} else {
+			RangerRESTClient restClient = new RangerRESTClient("http://172.18.145.30:6080", "");
+			restClient.setBasicAuthInfo("admin", "admin");
+	
+			serviceStore = new ServiceRESTStore(restClient);
+		}
+
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceStoreFactory.init()");

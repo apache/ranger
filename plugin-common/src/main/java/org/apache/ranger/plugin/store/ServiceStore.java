@@ -61,13 +61,11 @@ public interface ServiceStore {
 
 	RangerPolicy getPolicy(Long id) throws Exception;
 
-	RangerPolicy getPolicyByName(String serviceName, String policyName) throws Exception;
-
 	List<RangerPolicy> getAllPolicies() throws Exception;
 
-	List<RangerPolicy> getServicePolicies(String serviceName) throws Exception;
-
 	List<RangerPolicy> getServicePolicies(Long serviceId) throws Exception;
+
+	List<RangerPolicy> getServicePolicies(String serviceName) throws Exception;
 
 	ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
 }

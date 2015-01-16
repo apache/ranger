@@ -64,6 +64,8 @@ public class TestServiceStore {
 
 	@Test
 	public void testServiceStore() throws Exception {
+		String updatedName, updatedDescription;
+
 		List<RangerServiceDef> sds = svcStore.getAllServiceDefs();
 
 		int initSdCount = sds == null ? 0 : sds.size();
@@ -76,7 +78,7 @@ public class TestServiceStore {
 		sds = svcStore.getAllServiceDefs();
 		assertEquals("createServiceDef() failed", initSdCount + 1, sds == null ? 0 : sds.size());
 
-		String updatedDescription = sd.getDescription() + ": updated";
+		updatedDescription = sd.getDescription() + ": updated";
 		createdSd.setDescription(updatedDescription);
 		RangerServiceDef updatedSd = svcStore.updateServiceDef(createdSd);
 		assertNotNull("updateServiceDef(updatedDescription) failed", updatedSd);
@@ -86,7 +88,7 @@ public class TestServiceStore {
 		assertEquals("updateServiceDef(updatedDescription) failed", initSdCount + 1, sds == null ? 0 : sds.size());
 
 		/*
-		String updatedName = sd.getName() + "-Renamed";
+		updatedName = sd.getName() + "-Renamed";
 		updatedSd.setName(updatedName);
 		updatedSd = sdMgr.update(updatedSd);
 		assertNotNull("updateServiceDef(updatedName) failed", updatedSd);
@@ -117,7 +119,7 @@ public class TestServiceStore {
 		services = svcStore.getAllServices();
 		assertEquals("updateService(updatedDescription) failed", initServiceCount + 1, services == null ? 0 : services.size());
 
-		String updatedName = serviceName + "-Renamed";
+		updatedName = serviceName + "-Renamed";
 		updatedSvc.setName(updatedName);
 		updatedSvc = svcStore.updateService(updatedSvc);
 		assertNotNull("updateService(updatedName) failed", updatedSvc);
