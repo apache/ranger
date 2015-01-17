@@ -46,6 +46,7 @@
 					<include>org.apache.hadoop:hadoop-auth</include>
 					<include>org.slf4j:slf4j-api</include>
 					<include>org.apache.hadoop:hadoop-common</include>
+					<include>org.apache.commons:commons-csv</include>
 					<include>org.apache.ranger:credentialbuilder</include>
 				</includes>
 				<unpack>false</unpack>
