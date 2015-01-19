@@ -342,7 +342,6 @@
          <configuration>
            <descriptors>
              <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
-			 <!--
              <descriptor>src/main/assembly/hive-agent.xml</descriptor>
              <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
              <descriptor>src/main/assembly/knox-agent.xml</descriptor>
@@ -350,7 +349,6 @@
              <descriptor>src/main/assembly/admin-web.xml</descriptor>
              <descriptor>src/main/assembly/usersync.xml</descriptor>
              <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-			 -->
            </descriptors>
          </configuration>
       </plugin>
