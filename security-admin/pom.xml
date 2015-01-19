@@ -18,14 +18,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>security-admin-web</artifactId>
-  <version>0.4.0</version>
+  <version>0.4.1</version>
   <name>Security Admin Web Application</name>
   <description>security-admin-tool java web application</description>
   <packaging>war</packaging>
   <parent>
 	<groupId>org.apache.ranger</groupId>
 	<artifactId>ranger</artifactId>
-  	<version>0.4.0</version>
+  	<version>0.4.1</version>
   </parent>
   <dependencies>
 		<dependency>
@@ -247,12 +247,10 @@
 		<dependency>
 		    <groupId>junit</groupId>
 		    <artifactId>junit</artifactId>
-		    <version>${junit.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>${mockito.version}</version>
+			<artifactId>mockito-core</artifactId>
 		</dependency>
 		<dependency>
 		    <groupId>com.googlecode.log4jdbc</groupId>
@@ -414,11 +412,13 @@
                        <version>${hive.version}</version>
                        <scope>runtime</scope>
                 </dependency>
+	<!-- 
 	<dependency>
       <groupId>cn.guoyukun.jdbc</groupId>
       <artifactId>oracle-ojdbc6</artifactId>
       <version>11.2.0.3.0</version>
 	</dependency>
+	-->
   </dependencies>
   <build>
   <pluginManagement>
