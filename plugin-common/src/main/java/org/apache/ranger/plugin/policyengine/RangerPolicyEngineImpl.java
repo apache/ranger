@@ -35,9 +35,10 @@ import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineImpl.class);
 
-	private String                      serviceName      = null;
-	private RangerServiceDef            serviceDef       = null;
-	private List<RangerPolicyEvaluator> policyEvaluators = null;
+	private String                      serviceName         = null;
+	private RangerServiceDef            serviceDef          = null;
+	private List<RangerPolicyEvaluator> policyEvaluators    = null;
+	private RangerAuditHandler          defaultAuditHandler = null;
 
 
 	public RangerPolicyEngineImpl() {
@@ -71,6 +72,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				}
 			}
 
+			/* TODO:
+			 *  sort evaluators list for faster completion of isAccessAllowed() method
+			 *   1. Global policies: the policies that cover for any resource (for example: database=*; table=*; column=*)
+			 *   2. Policies that cover all resources under level-1 (for example: every thing in one or more databases)
+			 *   3. Policies that cover all resources under level-2 (for example: every thing in one or more tables)
+			 *   ...
+			 *   4. Policies that cover all resources under level-n (for example: one or more columns)
+			 * 
+			 */
+
 			this.serviceName      = serviceName;
 			this.serviceDef       = serviceDef;
 			this.policyEvaluators = evaluators;
@@ -81,6 +92,31 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.setPolicies(" + serviceName + ", " + serviceDef + ", " + policies + ")");
 		}
+	}
+
+	@Override
+	public void setDefaultAuditHandler(RangerAuditHandler auditHandler) {
+		this.defaultAuditHandler = auditHandler;
+	}
+
+	@Override
+	public RangerAuditHandler getDefaultAuditHandler() {
+		return defaultAuditHandler;
+	}
+
+	@Override
+	public RangerAccessResult createAccessResult() {
+		return new RangerAccessResult(serviceName, serviceDef);	
+	}
+
+	@Override
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
+		return isAccessAllowed(request, defaultAuditHandler);
+	}
+
+	@Override
+	public List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests) {
+		return isAccessAllowed(requests, defaultAuditHandler);
 	}
 
 	@Override
@@ -134,7 +170,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + ")");
 		}
 
-		RangerAccessResult ret = new RangerAccessResult(serviceName, serviceDef);
+		RangerAccessResult ret = createAccessResult();
 
 		if(request != null) {
 			if(CollectionUtils.isEmpty(request.getAccessTypes())) {
@@ -195,6 +231,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerPolicyEngineImpl={");
 
+		sb.append("serviceName={").append(serviceName).append("} ");
+		sb.append("serviceDef={").append(serviceDef).append("} ");
+
 		sb.append("policyEvaluators={");
 		if(policyEvaluators != null) {
 			for(RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
@@ -209,51 +248,4 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		return sb;
 	}
-
-
-	/*
-	public void init(String svcName) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.init(" + svcName + ")");
-		}
-
-		ServiceManager    svcMgr = new ServiceManager();
-		ServiceDefManager sdMgr  = new ServiceDefManager();
-
-		RangerServiceDef   serviceDef = null;
-		List<RangerPolicy> policies   = null;
-
-		RangerService  service = svcMgr.getByName(svcName);
-
-		if(service == null) {
-			String msg = svcName + ": service not found";
-
-			LOG.error(msg);
-
-			throw new Exception(msg);
-		} else {
-			serviceDef = sdMgr.getByName(service.getType());
-
-			if(serviceDef == null) {
-				String msg = service.getType() + ": service-def not found";
-
-				LOG.error(msg);
-
-				throw new Exception(msg);
-			}
-
-			policies = svcMgr.getPolicies(service.getId());
-
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("RangerPolicyEngineImpl.init(): found " + (policyEvaluators == null ? 0 : policyEvaluators.size()) + " policies in service '" + svcName + "'");
-			}
-		}
-
-		setPolicies(serviceDef, policies);
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.init(" + svcName + ")");
-		}
-	}
-	*/
 }

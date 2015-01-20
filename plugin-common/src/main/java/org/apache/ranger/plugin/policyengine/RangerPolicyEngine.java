@@ -32,6 +32,16 @@ public interface RangerPolicyEngine {
 
 	void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies);
 
+	void setDefaultAuditHandler(RangerAuditHandler auditHandler);
+
+	RangerAuditHandler getDefaultAuditHandler();
+
+	RangerAccessResult createAccessResult();
+
+	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
+
+	List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests);
+
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler);
 
 	List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests, RangerAuditHandler auditHandler);
