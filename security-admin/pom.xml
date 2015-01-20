@@ -412,11 +412,13 @@
                        <version>${hive.version}</version>
                        <scope>runtime</scope>
                 </dependency>
+	<!-- 
 	<dependency>
 		<groupId>org.apache.ranger</groupId>
 		<artifactId>plugin-common</artifactId>
 		<version>0.4.0</version>
 	</dependency>
+	-->
   </dependencies>
   <build>
   <pluginManagement>
