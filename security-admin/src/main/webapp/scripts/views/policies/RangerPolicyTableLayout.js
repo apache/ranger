@@ -125,6 +125,9 @@ define(function(require){
 //			this.initializePlugins();
 //			this.addVisualSearch();
 			this.renderTable();
+			//TODO REMOVE
+			this.rTableList.$el.find('th[class="renderable table"]').removeClass('table')
+			
 //			XAUtil.highlightDisabledPolicy(this);
 		},
 
@@ -194,7 +197,7 @@ define(function(require){
 							formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 								fromRaw: function (rawValue,model) {
 									rawValue = model.get('resources')
-									return rawValue[obj.name].values.toString();
+									return _.isUndefined(rawValue[obj.name]) ? '--' : rawValue[obj.name].values.toString();
 								}
 							})
 						};

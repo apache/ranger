@@ -33,8 +33,17 @@ define(function(require) {
 						case 'string':
 							if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
 								formObj.type = 'Select2Remote';
-								formObj.pluginAttr = _.isUndefined(v.url) ? form.getPlugginAttr(false) : form.getPlugginAttr(true, v.url), 
+								 if(_.isUndefined(v.url)){
+									 var options = {'containerCssClass' : v.name };
+									 formObj.pluginAttr =  form.getPlugginAttr(false, options); 
+								 }else{
+									 var options = {'url' : v.url , 'containerCssClass' : v.name };									 
+									 formObj.pluginAttr =  form.getPlugginAttr(true, options);
+								 }
 								formObj.editorAttrs = {'data-placeholder': v.label },
+								//
+								formObj.level = v.level;
+								formObj.name = v.name;
 								formObj.options = function(callback, editor){
 				                    callback();
 				                },

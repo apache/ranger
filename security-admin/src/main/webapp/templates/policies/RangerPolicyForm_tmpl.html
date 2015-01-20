@@ -19,7 +19,28 @@
 		<p class="formHeader">
 			Policy Details : 
 		</p>
+		
+		
+		
+{{#if fieldsets}}		
 	<b data-fieldsets class="policy-form"></b>
+{{else}}	      
+    <div data-fields="{{schemaBase}}" class="policy-form {{marginBottom57}}" ></div>
+    <div>
+    	{{#each sameLevelType}}
+            <div style="margin-left: 65px;margin-bottom: 19px;">
+	            <span data-editors="{{this.name}}" class="policy-form"  ></span>
+	            <span data-editors="{{this.options}}" class="policy-form" style=" margin-left: 11px; "></span>
+            </div>
+         {{/each}}   
+            <!-- <b data-editors="udf" class="policy-form"></b> -->
+    </div>
+    <div data-fields="{{schemaBase1}}" class="policy-form" ></div>
+{{/if}}    	
+	<!-- <b data-fieldsets class="policy-form"></b> -->
+	
+	
+	
 	</fieldset>
 	 <fieldset>
 		<p class="formHeader">
