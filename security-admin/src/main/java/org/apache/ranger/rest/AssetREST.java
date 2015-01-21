@@ -70,7 +70,6 @@ import org.apache.ranger.view.VXPolicyExportAuditList;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResourceList;
 import org.apache.ranger.view.VXResponse;
-import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXTrxLogList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -420,57 +419,6 @@ public class AssetREST {
 	}
 
 	@GET
-	@Path("/hdfs/resources")
-	@Produces({ "application/xml", "application/json" })
-	public VXStringList pullHdfsResources(@Context HttpServletRequest request) {
-		String dataSourceName = request.getParameter("dataSourceName");
-		String baseDir = request.getParameter("baseDirectory");
-		return assetMgr.getHdfsResources(dataSourceName, baseDir);
-	}
-
-	@GET
-	@Path("/hive/resources")
-	@Produces({ "application/xml", "application/json" })
-	public VXStringList pullHiveResources(@Context HttpServletRequest request) {
-		String dataSourceName = request.getParameter("dataSourceName");
-		String databaseName = request.getParameter("databaseName");
-		String tableName = request.getParameter("tableName");
-		String columnName = request.getParameter("columnName");
-		return assetMgr.getHiveResources(dataSourceName, databaseName,
-				tableName, columnName);
-	}
-
-	@GET
-	@Path("/hbase/resources")
-	@Produces({ "application/xml", "application/json" })
-	public VXStringList pullHBaseResources(@Context HttpServletRequest request) {
-		String dataSourceName = request.getParameter("dataSourceName");
-		String tableName = request.getParameter("tableName");
-		String columnFamiles = request.getParameter("columnFamilies");
-		return assetMgr.getHBaseResources(dataSourceName, tableName,
-				columnFamiles);
-	}
-
-	@GET
-	@Path("/knox/resources")
-	@Produces({ "application/xml", "application/json" })
-	public VXStringList pullKnoxResources(@Context HttpServletRequest request) {
-		String dataSourceName = request.getParameter("dataSourceName");
-		String topologyName = request.getParameter("topologyName");
-		String serviceName = request.getParameter("serviceName");		
-		return assetMgr.getKnoxResources(dataSourceName, topologyName, serviceName);
-	}
-	
-    @GET
-    @Path("/storm/resources")
-    @Produces({ "application/xml", "application/json" })
-    public VXStringList pullStormResources(@Context HttpServletRequest request) {
-        String dataSourceName = request.getParameter("dataSourceName");
-        String topologyName = request.getParameter("topologyName");
-        return assetMgr.getStormResources(dataSourceName, topologyName);
-    }
-
-	@GET
 	@Path("/credstores/{id}")
 	@Produces({ "application/xml", "application/json" })
 	public VXCredentialStore getXCredentialStore(@PathParam("id") Long id) {
@@ -530,7 +478,10 @@ public class AssetREST {
 				new SearchCriteria(), "fileType", "File type",
 				StringUtil.VALIDATION_TEXT);
 
-		File file = assetMgr.getXResourceFile(id, fileType);
+		VXResource resource = getXResource(id);
+
+		File file = assetMgr.getXResourceFile(resource, fileType);
+
 		return Response
 				.ok(file, MediaType.APPLICATION_OCTET_STREAM)
 				.header("Content-Disposition",
@@ -543,32 +494,33 @@ public class AssetREST {
 	public String getResourceJSON(@Context HttpServletRequest request,
 			@PathParam("repository") String repository) {
 		
-		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
-		String epoch = request.getParameter("epoch");
+		String            epoch       = request.getParameter("epoch");
+		X509Certificate[] certchain   = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+		String            ipAddress   = request.getHeader("X-FORWARDED-FOR");  
+		boolean           isSecure    = request.isSecure();
+		String            policyCount = request.getParameter("policyCount");
+		String            agentId     = request.getParameter("agentId");
 
-		X509Certificate[] certchain = (X509Certificate[]) request.getAttribute(
-				"javax.servlet.request.X509Certificate");
-		
-		String ipAddress = request.getHeader("X-FORWARDED-FOR");  
 		if (ipAddress == null) {  
 			ipAddress = request.getRemoteAddr();
 		}
 
-		boolean isSecure = request.isSecure();
-		
-		String policyCount = request.getParameter("policyCount");
-		String agentId = request.getParameter("agentId");
-		
-//		File file = assetMgr.getLatestRepoPolicy(repository, 
-//				certchain, httpEnabled, epoch, ipAddress, isSecure, policyCount, agentId);
-		
+		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
 
-//		return Response
-//				.ok(file, MediaType.APPLICATION_OCTET_STREAM)
-//				.header("Content-Disposition",
-//						"attachment;filename=" + file.getName()).build();
+		RangerService      service  = serviceREST.getServiceByName(repository);
+		List<RangerPolicy> policies = serviceREST.getServicePolicies(repository, request);
+
+		long             policyUpdTime = (service != null && service.getPolicyUpdateTime() != null) ? service.getPolicyUpdateTime().getTime() : 0l;
+		VXAsset          vAsset        = serviceUtil.toVXAsset(service);
+		List<VXResource> vResourceList = new ArrayList<VXResource>();
 		
-		String file = assetMgr.getLatestRepoPolicy(repository, 
+		if(policies != null) {
+			for(RangerPolicy policy : policies) {
+				vResourceList.add(serviceUtil.toVXResource(policy, service));
+			}
+		}
+
+		String file = assetMgr.getLatestRepoPolicy(vAsset, vResourceList, policyUpdTime,
 				certchain, httpEnabled, epoch, ipAddress, isSecure, policyCount, agentId);
 		
 		return file;

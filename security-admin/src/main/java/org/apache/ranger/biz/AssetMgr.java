@@ -22,7 +22,6 @@
 import java.io.File;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -55,7 +54,6 @@ import org.apache.ranger.common.TimedEventUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
-import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPolicyExportAudit;
@@ -688,6 +686,11 @@ public class AssetMgr extends AssetMgrBase {
 					MessageEnums.DATA_NOT_FOUND, id, "dataSourceId",
 					"DataSource not found with " + "id " + id);
 		}
+		
+		return getXResourceFile(xResource, fileType);
+	}
+
+	public File getXResourceFile(VXResource xResource, String fileType) {
 		File file = null;
 		try {
 			if (fileType != null) {
@@ -778,11 +781,9 @@ public class AssetMgr extends AssetMgrBase {
 		}
 	}
 
-	public String getLatestRepoPolicy(String repository,
+	public String getLatestRepoPolicy(VXAsset xAsset, List<VXResource> xResourceList, Long updatedTime,
 			X509Certificate[] certchain, boolean httpEnabled, String epoch,
 			String ipAddress, boolean isSecure, String count, String agentId) {
-
-		XXAsset xAsset = rangerDaoManager.getXXAsset().findByAssetName(repository);
 		if(xAsset==null){
 			logger.error("Requested repository not found");
 			throw restErrorUtil.createRESTException("No Data Found.",
@@ -793,9 +794,12 @@ public class AssetMgr extends AssetMgrBase {
 			throw restErrorUtil.createRESTException("Unauthorized access.",
 					MessageEnums.OPER_NO_EXPORT);
 		}
+
+		HashMap<String, Object> updatedRepo = new HashMap<String, Object>();
+		updatedRepo.put("repository_name", xAsset.getName());
 		
 		XXPolicyExportAudit policyExportAudit = new XXPolicyExportAudit();
-		policyExportAudit.setRepositoryName(repository);
+		policyExportAudit.setRepositoryName(xAsset.getName());
 
 		if (agentId != null && !agentId.isEmpty()) {
 			policyExportAudit.setAgentId(agentId);
@@ -872,29 +876,6 @@ public class AssetMgr extends AssetMgrBase {
 			}
 		}
 
-		if (repository == null || repository.isEmpty()) {
-
-			policyExportAudit
-					.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
-			createPolicyAudit(policyExportAudit);
-
-			logger.error("Repository name not provided");
-			throw restErrorUtil.createRESTException("Unauthorized access.",
-					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		}
-
-		
-
-		if (xAsset == null) {
-			policyExportAudit
-					.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
-			createPolicyAudit(policyExportAudit);
-
-			logger.error("Requested repository doesn't exist");
-			throw restErrorUtil.createRESTException("Unauthorized access.",
-					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		}
-
 		if (policyCount == null) {
 			policyCount = 0l;
 		}
@@ -917,197 +898,168 @@ public class AssetMgr extends AssetMgrBase {
 			}
 		}
 
-		// //////////////////////////////////////
-		// Get latest updated time of repository
-		// //////////////////////////////////////
-		Timestamp luTime = rangerDaoManager.getXXResource()
-				.getMaxUpdateTimeForAssetName(repository);
+		long epochTime = epoch != null ? Long.parseLong(epoch) : 0;
 
-		HashMap<String, Object> updatedRepo = new HashMap<String, Object>();
-		updatedRepo.put("repository_name", repository);
+		if(epochTime == updatedTime) {
+			int resourceListSz = (xResourceList == null) ? 0 : xResourceList.size() ;
+			
+			if (policyCount == resourceListSz) {
+				policyExportAudit
+						.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED);
+				createPolicyAudit(policyExportAudit);
 
-		Long updatedTime = 0l;
-		List<HashMap<String, Object>> resourceList = new ArrayList<HashMap<String, Object>>();
-		
-		if (luTime != null) {
-			updatedTime = luTime.getTime();
+				throw restErrorUtil.createRESTException(
+						HttpServletResponse.SC_NOT_MODIFIED,
+						"No change since last update", false);
+			}
 		}
-		
-		{
-			List<XXResource> xResourceList = new ArrayList<XXResource>();
 
-			long epochTime = epoch != null ? Long.parseLong(epoch) : 0;
+		List<HashMap<String, Object>> resourceList = new ArrayList<HashMap<String, Object>>();
 
-			if(epochTime == updatedTime) {
-				//TODO: instead of getting entire list, get just count(*) for the given repository
-				xResourceList = rangerDaoManager.getXXResource().findUpdatedResourcesByAssetName(repository, new Date(0L));
-				
-				int resourceListSz = (xResourceList == null) ? 0 : xResourceList.size() ;
-				
-				if (policyCount == resourceListSz) {
-					policyExportAudit
-							.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED);
-					createPolicyAudit(policyExportAudit);
-	
-					throw restErrorUtil.createRESTException(
-							HttpServletResponse.SC_NOT_MODIFIED,
-							"No change since last update", false);
+		// HDFS Repository
+		if (xAsset.getAssetType() == AppConstants.ASSET_HDFS) {
+			for (VXResource xResource : xResourceList) {
+				HashMap<String, Object> resourceMap = new HashMap<String, Object>();
+				resourceMap.put("id", xResource.getId());
+				resourceMap.put("resource", xResource.getName());
+				resourceMap.put("isRecursive",
+						getBooleanValue(xResource.getIsRecursive()));
+				resourceMap.put("policyStatus", RangerCommonEnums
+						.getLabelFor_ActiveStatus(xResource
+								.getResourceStatus()));
+				// resourceMap.put("isEncrypt",
+				// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
+				populatePermMap(xResource, resourceMap, AppConstants.ASSET_HDFS);
+				List<VXAuditMap> xAuditMaps = xResource.getAuditList();
+				if (xAuditMaps.size() != 0) {
+					resourceMap.put("audit", 1);
+				} else {
+					resourceMap.put("audit", 0);
 				}
-				
-			} else {
-				xResourceList = rangerDaoManager.getXXResource().findUpdatedResourcesByAssetName(repository, new Date(0L));
+
+				resourceList.add(resourceMap);
 			}
-
-
-			// HDFS Repository
-			if (xAsset.getAssetType() == AppConstants.ASSET_HDFS) {
-				for (XXResource xResource : xResourceList) {
-					HashMap<String, Object> resourceMap = new HashMap<String, Object>();
-					resourceMap.put("id", xResource.getId());
-					resourceMap.put("resource", xResource.getName());
-					resourceMap.put("isRecursive",
-							getBooleanValue(xResource.getIsRecursive()));
-					resourceMap.put("policyStatus", RangerCommonEnums
-							.getLabelFor_ActiveStatus(xResource
-									.getResourceStatus()));
-					// resourceMap.put("isEncrypt",
-					// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
-					populatePermMap(xResource, resourceMap, AppConstants.ASSET_HDFS);
-					List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
-							.findByResourceId(xResource.getId());
-					if (xAuditMaps.size() != 0) {
-						resourceMap.put("audit", 1);
-					} else {
-						resourceMap.put("audit", 0);
-					}
-
-					resourceList.add(resourceMap);
-				}
-			} else if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
-				for (XXResource xResource : xResourceList) {
-					HashMap<String, Object> resourceMap = new HashMap<String, Object>();
-					resourceMap.put("id", xResource.getId());
-					resourceMap.put("database_name", xResource.getDatabases());
-					resourceMap.put("policyStatus", RangerCommonEnums
-							.getLabelFor_ActiveStatus(xResource
-									.getResourceStatus()));
-					resourceMap.put("tablePolicyType", AppConstants
-							.getLabelFor_PolicyType(xResource.getTableType()));
-					resourceMap.put("columnPolicyType", AppConstants
-							.getLabelFor_PolicyType(xResource.getColumnType()));
-					int resourceType = xResource.getResourceType();
-					if (resourceType == AppConstants.RESOURCE_UDF) {
-						resourceMap.put("udf_name", xResource.getUdfs());
-					} else if (resourceType == AppConstants.RESOURCE_COLUMN) {
-						resourceMap.put("table_name", xResource.getTables());
-						resourceMap.put("column_name", xResource.getColumns());
-					} else if (resourceType == AppConstants.RESOURCE_TABLE) {
-						resourceMap.put("table_name", xResource.getTables());
-					}
-
-					populatePermMap(xResource, resourceMap, AppConstants.ASSET_HIVE);
-					List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
-							.findByResourceId(xResource.getId());
-					if (xAuditMaps.size() != 0) {
-						resourceMap.put("audit", 1);
-					} else {
-						resourceMap.put("audit", 0);
-					}
-					resourceList.add(resourceMap);
-				}
-			}
-
-			else if (xAsset.getAssetType() == AppConstants.ASSET_HBASE) {
-				for (XXResource xResource : xResourceList) {
-					HashMap<String, Object> resourceMap = new HashMap<String, Object>();
-
-					resourceMap.put("id", xResource.getId());
+		} else if (xAsset.getAssetType() == AppConstants.ASSET_HIVE) {
+			for (VXResource xResource : xResourceList) {
+				HashMap<String, Object> resourceMap = new HashMap<String, Object>();
+				resourceMap.put("id", xResource.getId());
+				resourceMap.put("database_name", xResource.getDatabases());
+				resourceMap.put("policyStatus", RangerCommonEnums
+						.getLabelFor_ActiveStatus(xResource
+								.getResourceStatus()));
+				resourceMap.put("tablePolicyType", AppConstants
+						.getLabelFor_PolicyType(xResource.getTableType()));
+				resourceMap.put("columnPolicyType", AppConstants
+						.getLabelFor_PolicyType(xResource.getColumnType()));
+				int resourceType = xResource.getResourceType();
+				if (resourceType == AppConstants.RESOURCE_UDF) {
+					resourceMap.put("udf_name", xResource.getUdfs());
+				} else if (resourceType == AppConstants.RESOURCE_COLUMN) {
 					resourceMap.put("table_name", xResource.getTables());
 					resourceMap.put("column_name", xResource.getColumns());
-					resourceMap.put("column_families",
-							xResource.getColumnFamilies());
-					resourceMap.put("policyStatus", RangerCommonEnums
-							.getLabelFor_ActiveStatus(xResource
-									.getResourceStatus()));
-					if (xResource.getIsEncrypt() == 1) {
-						resourceMap.put("encrypt", 1);
-					} else {
-						resourceMap.put("encrypt", 0);
-					}
-					// resourceMap.put("isEncrypt",
-					// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
-					populatePermMap(xResource, resourceMap, AppConstants.ASSET_HBASE);
-					List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
-							.findByResourceId(xResource.getId());
-					if (xAuditMaps.size() != 0) {
-						resourceMap.put("audit", 1);
-					} else {
-						resourceMap.put("audit", 0);
-					}
-					resourceList.add(resourceMap);
+				} else if (resourceType == AppConstants.RESOURCE_TABLE) {
+					resourceMap.put("table_name", xResource.getTables());
 				}
-			}
-			else if (xAsset.getAssetType() == AppConstants.ASSET_KNOX) {
-				for (XXResource xResource : xResourceList) {
-					HashMap<String, Object> resourceMap = new HashMap<String, Object>();
 
-					resourceMap.put("id", xResource.getId());
-					resourceMap.put("topology_name", xResource.getTopologies()) ;
-					resourceMap.put("service_name", xResource.getServices()) ;
-					resourceMap.put("policyStatus", RangerCommonEnums
-							.getLabelFor_ActiveStatus(xResource
-									.getResourceStatus()));
-					if (xResource.getIsEncrypt() == 1) {
-						resourceMap.put("encrypt", 1);
-					} else {
-						resourceMap.put("encrypt", 0);
-					}
-					// resourceMap.put("isEncrypt",
-					// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
-					populatePermMap(xResource, resourceMap, AppConstants.ASSET_KNOX);
-					List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
-							.findByResourceId(xResource.getId());
-					if (xAuditMaps.size() != 0) {
-						resourceMap.put("audit", 1);
-					} else {
-						resourceMap.put("audit", 0);
-					}
-					resourceList.add(resourceMap);
-				}
+				populatePermMap(xResource, resourceMap, AppConstants.ASSET_HIVE);
 				
-            }
-            else if (xAsset.getAssetType() == AppConstants.ASSET_STORM) {
-                    for (XXResource xResource : xResourceList) {
-                            HashMap<String, Object> resourceMap = new HashMap<String, Object>();
-
-                            resourceMap.put("id", xResource.getId());
-                            resourceMap.put("topology_name", xResource.getTopologies()) ;
-                            resourceMap.put("policyStatus", RangerCommonEnums
-                                            .getLabelFor_ActiveStatus(xResource
-                                                            .getResourceStatus()));
-                            if (xResource.getIsEncrypt() == 1) {
-                                    resourceMap.put("encrypt", 1);
-                            } else {
-                                    resourceMap.put("encrypt", 0);
-                            }
-                            populatePermMap(xResource, resourceMap, AppConstants.ASSET_STORM);
-                            List<XXAuditMap> xAuditMaps = rangerDaoManager.getXXAuditMap()
-                                            .findByResourceId(xResource.getId());
-                            if (xAuditMaps.size() != 0) {
-                                    resourceMap.put("audit", 1);
-                            } else {
-                                    resourceMap.put("audit", 0);
-                            }
-                            resourceList.add(resourceMap);
-                    }
-			} else {
-				policyExportAudit
-						.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
-				createPolicyAudit(policyExportAudit);
-				throw restErrorUtil.createRESTException(
-						"The operation isn't yet supported for the repository",
-						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+				List<VXAuditMap> xAuditMaps = xResource.getAuditList();
+				if (xAuditMaps.size() != 0) {
+					resourceMap.put("audit", 1);
+				} else {
+					resourceMap.put("audit", 0);
+				}
+				resourceList.add(resourceMap);
 			}
+		}
+
+		else if (xAsset.getAssetType() == AppConstants.ASSET_HBASE) {
+			for (VXResource xResource : xResourceList) {
+				HashMap<String, Object> resourceMap = new HashMap<String, Object>();
+
+				resourceMap.put("id", xResource.getId());
+				resourceMap.put("table_name", xResource.getTables());
+				resourceMap.put("column_name", xResource.getColumns());
+				resourceMap.put("column_families",
+						xResource.getColumnFamilies());
+				resourceMap.put("policyStatus", RangerCommonEnums
+						.getLabelFor_ActiveStatus(xResource
+								.getResourceStatus()));
+				if (xResource.getIsEncrypt() == 1) {
+					resourceMap.put("encrypt", 1);
+				} else {
+					resourceMap.put("encrypt", 0);
+				}
+				// resourceMap.put("isEncrypt",
+				// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
+				populatePermMap(xResource, resourceMap, AppConstants.ASSET_HBASE);
+				List<VXAuditMap> xAuditMaps = xResource.getAuditList();
+				if (xAuditMaps.size() != 0) {
+					resourceMap.put("audit", 1);
+				} else {
+					resourceMap.put("audit", 0);
+				}
+				resourceList.add(resourceMap);
+			}
+		}
+		else if (xAsset.getAssetType() == AppConstants.ASSET_KNOX) {
+			for (VXResource xResource : xResourceList) {
+				HashMap<String, Object> resourceMap = new HashMap<String, Object>();
+
+				resourceMap.put("id", xResource.getId());
+				resourceMap.put("topology_name", xResource.getTopologies()) ;
+				resourceMap.put("service_name", xResource.getServices()) ;
+				resourceMap.put("policyStatus", RangerCommonEnums
+						.getLabelFor_ActiveStatus(xResource
+								.getResourceStatus()));
+				if (xResource.getIsEncrypt() == 1) {
+					resourceMap.put("encrypt", 1);
+				} else {
+					resourceMap.put("encrypt", 0);
+				}
+				// resourceMap.put("isEncrypt",
+				// AKAConstants.getLabelFor_BooleanValue(xResource.getIsEncrypt()));
+				populatePermMap(xResource, resourceMap, AppConstants.ASSET_KNOX);
+				List<VXAuditMap> xAuditMaps = xResource.getAuditList();
+				if (xAuditMaps.size() != 0) {
+					resourceMap.put("audit", 1);
+				} else {
+					resourceMap.put("audit", 0);
+				}
+				resourceList.add(resourceMap);
+			}
+			
+        }
+        else if (xAsset.getAssetType() == AppConstants.ASSET_STORM) {
+                for (VXResource xResource : xResourceList) {
+                        HashMap<String, Object> resourceMap = new HashMap<String, Object>();
+
+                        resourceMap.put("id", xResource.getId());
+                        resourceMap.put("topology_name", xResource.getTopologies()) ;
+                        resourceMap.put("policyStatus", RangerCommonEnums
+                                        .getLabelFor_ActiveStatus(xResource
+                                                        .getResourceStatus()));
+                        if (xResource.getIsEncrypt() == 1) {
+                                resourceMap.put("encrypt", 1);
+                        } else {
+                                resourceMap.put("encrypt", 0);
+                        }
+                        populatePermMap(xResource, resourceMap, AppConstants.ASSET_STORM);
+                        List<VXAuditMap> xAuditMaps = xResource.getAuditList();
+                        if (xAuditMaps.size() != 0) {
+                                resourceMap.put("audit", 1);
+                        } else {
+                                resourceMap.put("audit", 0);
+                        }
+                        resourceList.add(resourceMap);
+                }
+		} else {
+			policyExportAudit
+					.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+			createPolicyAudit(policyExportAudit);
+			throw restErrorUtil.createRESTException(
+					"The operation isn't yet supported for the repository",
+					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
 		}
 
 		policyCount = Long.valueOf(resourceList.size());
@@ -1963,20 +1915,19 @@ public class AssetMgr extends AssetMgrBase {
 		}
 	}
 	@SuppressWarnings("unchecked")
-	private HashMap<String, Object> populatePermMap(XXResource xResource,
+	private HashMap<String, Object> populatePermMap(VXResource xResource,
 			HashMap<String, Object> resourceMap, int assetType) {
-		List<XXPermMap> xPermMapList = rangerDaoManager.getXXPermMap()
-				.findByResourceId(xResource.getId());
+		List<VXPermMap> xPermMapList = xResource.getPermMapList();
 
 		Set<Long> groupList = new HashSet<Long>();
-		for (XXPermMap xPermMap : xPermMapList) {
+		for (VXPermMap xPermMap : xPermMapList) {
 			groupList.add(xPermMap.getId());
 		}
 
 		List<HashMap<String, Object>> sortedPermMapGroupList = new ArrayList<HashMap<String, Object>>();
 
 		// Loop for adding group perms
-		for (XXPermMap xPermMap : xPermMapList) {
+		for (VXPermMap xPermMap : xPermMapList) {
 			String groupKey = xPermMap.getPermGroup();
 			if (groupKey != null) {
 				boolean found = false;
@@ -1988,21 +1939,17 @@ public class AssetMgr extends AssetMgrBase {
 						Long userId = xPermMap.getUserId();
 
 						if (groupId != null) {
-							Set<String> groups = (Set<String>) sortedPermMap
-									.get("groups");
-							XXGroup xGroup = rangerDaoManager.getXXGroup()
-									.getById(groupId);
-							if(xGroup!=null && groups != null){
-								groups.add(xGroup.getName());
+							Set<String> groups = (Set<String>) sortedPermMap.get("groups");
+
+							if(groups != null){
+								groups.add(xPermMap.getGroupName());
 								sortedPermMap.put("groups", groups);
 							}
 						} else if (userId != null) {
-							Set<String> users = (Set<String>) sortedPermMap
-									.get("users");
-							XXUser xUser = rangerDaoManager.getXXUser().getById(
-									userId);
-							if (users != null && xUser != null) {
-								users.add(xUser.getName());
+							Set<String> users = (Set<String>) sortedPermMap.get("users");
+
+							if (users != null) {
+								users.add(xPermMap.getUserName());
 								sortedPermMap.put("users", users);								
 							}
 						}
@@ -2040,16 +1987,12 @@ public class AssetMgr extends AssetMgrBase {
 
 					if (groupId != null) {
 						Set<String> groupSet = new HashSet<String>();
-						XXGroup xGroup = rangerDaoManager.getXXGroup().getById(
-								xPermMap.getGroupId());
-						String group = xGroup.getName();
+						String group = xPermMap.getGroupName();
 						groupSet.add(group);
 						sortedPermMap.put("groups", groupSet);
 					} else if (userId != null) {
 						Set<String> userSet = new HashSet<String>();
-						XXUser xUser = rangerDaoManager.getXXUser()
-								.getById(userId);
-						String user = xUser.getName();
+						String user = xPermMap.getUserName();
 						userSet.add(user);
 						sortedPermMap.put("users", userSet);
 					}

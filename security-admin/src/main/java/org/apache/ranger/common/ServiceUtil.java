@@ -244,7 +244,7 @@ public class ServiceUtil {
 			VXAuditMap auditMap = new VXAuditMap();
 
 			auditMap.setResourceId(policy.getId());
-			auditMap.setAuditType(1);
+			auditMap.setAuditType(AppConstants.XA_AUDIT_TYPE_ALL);
 
 			auditList = new ArrayList<VXAuditMap>();
 			auditList.add(auditMap);
@@ -296,6 +296,10 @@ public class ServiceUtil {
 
 			for(String userName : policyItem.getUsers()) {
 				for(RangerPolicyItemAccess access : policyItem.getAccesses()) {
+					if(! access.getIsAllowed()) {
+						continue;
+					}
+
 					VXPermMap permMap = new VXPermMap();
 
 					permMap.setPermFor(AppConstants.XA_PERM_FOR_USER);
@@ -307,11 +311,28 @@ public class ServiceUtil {
 
 					permMapList.add(permMap);
 				}
+				
+				if(policyItem.getDelegateAdmin()) {
+					VXPermMap permMap = new VXPermMap();
+
+					permMap.setPermFor(AppConstants.XA_PERM_FOR_USER);
+					permMap.setPermGroup(new Integer(permGroup).toString());
+					permMap.setUserName(userName);
+					permMap.setUserId(getUserId(userName));
+					permMap.setPermType(toPermType("Admin"));
+					permMap.setIpAddress(ipAddress);
+
+					permMapList.add(permMap);
+				}
 			}
 			permGroup++;
 
 			for(String groupName : policyItem.getGroups()) {
 				for(RangerPolicyItemAccess access : policyItem.getAccesses()) {
+					if(! access.getIsAllowed()) {
+						continue;
+					}
+
 					VXPermMap permMap = new VXPermMap();
 
 					permMap.setPermFor(AppConstants.XA_PERM_FOR_GROUP);
@@ -319,6 +340,19 @@ public class ServiceUtil {
 					permMap.setGroupName(groupName);
 					permMap.setGroupId(getGroupId(groupName));
 					permMap.setPermType(toPermType(access.getType()));
+					permMap.setIpAddress(ipAddress);
+
+					permMapList.add(permMap);
+				}
+				
+				if(policyItem.getDelegateAdmin()) {
+					VXPermMap permMap = new VXPermMap();
+
+					permMap.setPermFor(AppConstants.XA_PERM_FOR_GROUP);
+					permMap.setPermGroup(new Integer(permGroup).toString());
+					permMap.setGroupName(groupName);
+					permMap.setGroupId(getGroupId(groupName));
+					permMap.setPermType(toPermType("Admin"));
 					permMap.setIpAddress(ipAddress);
 
 					permMapList.add(permMap);
