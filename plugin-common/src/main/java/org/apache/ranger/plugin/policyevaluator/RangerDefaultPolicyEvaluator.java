@@ -409,16 +409,12 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					RangerPolicyItemAccess impliedAccess = getAccess(policyItem, impliedGrant);
 
 					if(impliedAccess == null) {
-						impliedAccess = new RangerPolicyItemAccess(impliedGrant, access.getIsAllowed(), access.getIsAudited());
+						impliedAccess = new RangerPolicyItemAccess(impliedGrant, access.getIsAllowed());
 
 						policyItem.getAccesses().add(impliedAccess);
 					} else {
 						if(! impliedAccess.getIsAllowed()) {
 							impliedAccess.setIsAllowed(access.getIsAllowed());
-						}
-
-						if(! impliedAccess.getIsAudited()) {
-							impliedAccess.setIsAudited(access.getIsAudited());
 						}
 					}
 				}
