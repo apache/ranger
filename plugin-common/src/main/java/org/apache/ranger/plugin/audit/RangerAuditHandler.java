@@ -19,14 +19,13 @@
 
 package org.apache.ranger.plugin.audit;
 
-import java.util.List;
+import java.util.Collection;
 
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
 
 public interface RangerAuditHandler {
-	void logAudit(RangerAccessRequest request, RangerAccessResult result);
+	void logAudit(RangerAccessResult result);
 
-	void logAudit(List<RangerAccessRequest> requests, List<RangerAccessResult> results);
+	void logAudit(Collection<RangerAccessResult> results);
 }

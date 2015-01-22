@@ -27,7 +27,7 @@ import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 
 
-public abstract class RangerBasePlugin {
+public class RangerBasePlugin {
 	private boolean         initDone  = false;
 	private PolicyRefresher refresher = null;
 
@@ -48,7 +48,7 @@ public abstract class RangerBasePlugin {
 							serviceName = policyDownloadUrl.substring(idx) + 1;
 						}
 					}
-					
+
 					if(StringUtils.isEmpty(serviceName)) {
 						serviceName = RangerConfiguration.getInstance().get("ranger.plugin.service.name", "hbasedev");
 					}
@@ -56,9 +56,9 @@ public abstract class RangerBasePlugin {
 					ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore();
 
 					refresher = new PolicyRefresher(policyEngine, serviceName, serviceStore);
-					
-					refresher.start();
-					
+
+					refresher.startRefresher();
+
 					initDone = true;
 				}
 			}
@@ -66,10 +66,10 @@ public abstract class RangerBasePlugin {
 
 		return initDone;
 	}
-	
+
 	public void cleanup() {
 		PolicyRefresher refresher = this.refresher;
-		
+
 		if(refresher != null) {
 			refresher.stopRefresher();
 		}

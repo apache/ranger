@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -105,8 +106,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public RangerAccessResult createAccessResult() {
-		return new RangerAccessResult(serviceName, serviceDef);	
+	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
+		return new RangerAccessResult(serviceName, serviceDef, request);	
 	}
 
 	@Override
@@ -115,7 +116,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests) {
+	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests) {
 		return isAccessAllowed(requests, defaultAuditHandler);
 	}
 
@@ -128,7 +129,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerAccessResult ret = isAccessAllowedNoAudit(request);
 
 		if(auditHandler != null) {
-			auditHandler.logAudit(request, ret);
+			auditHandler.logAudit(ret);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -139,12 +140,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests, RangerAuditHandler auditHandler) {
+	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAuditHandler auditHandler) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + requests + ")");
 		}
 		
-		List<RangerAccessResult> ret = new ArrayList<RangerAccessResult>();
+		Collection<RangerAccessResult> ret = new ArrayList<RangerAccessResult>();
 
 		if(requests != null) {
 			for(RangerAccessRequest request : requests) {
@@ -155,7 +156,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if(auditHandler != null) {
-			auditHandler.logAudit(requests, ret);
+			auditHandler.logAudit(ret);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -170,7 +171,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + ")");
 		}
 
-		RangerAccessResult ret = createAccessResult();
+		RangerAccessResult ret = createAccessResult(request);
 
 		if(request != null) {
 			if(CollectionUtils.isEmpty(request.getAccessTypes())) {

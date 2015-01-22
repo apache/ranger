@@ -68,6 +68,12 @@ public class PolicyRefresher extends Thread {
 		this.pollingIntervalMilliSeconds = pollingIntervalMilliSeconds;
 	}
 
+	public void startRefresher() {
+		shutdownFlag = false;
+
+		super.start();
+	}
+
 	public void stopRefresher() {
 		shutdownFlag = true;
 	}

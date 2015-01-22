@@ -46,42 +46,44 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 	}
 
 	@Override
-	public void logAudit(RangerAccessRequest request, RangerAccessResult result) {
+	public void logAudit(RangerAccessResult result) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.logAudit(" + request + ", " + result + ")");
+			LOG.debug("==> RangerDefaultAuditHandler.logAudit(" + result + ")");
 		}
 
-		Collection<AuthzAuditEvent> events = getAuditEvents(request, result);
+		Collection<AuthzAuditEvent> events = getAuthzEvents(result);
 
-		logAudit(events);
+		logAuthzAudits(events);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.logAudit(" + request + ", " + result + ")");
+			LOG.debug("<== RangerDefaultAuditHandler.logAudit(" + result + ")");
 		}
 	}
 
 	@Override
-	public void logAudit(List<RangerAccessRequest> requests, List<RangerAccessResult> results) {
+	public void logAudit(Collection<RangerAccessResult> results) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.logAudit(" + requests + ", " + results + ")");
+			LOG.debug("==> RangerDefaultAuditHandler.logAudit(" + results + ")");
 		}
 
-		Collection<AuthzAuditEvent> events = getAuditEvents(requests, results);
+		Collection<AuthzAuditEvent> events = getAuthzEvents(results);
 
-		logAudit(events);
+		logAuthzAudits(events);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.logAudit(" + requests + ", " + results + ")");
+			LOG.debug("<== RangerDefaultAuditHandler.logAudit(" + results + ")");
 		}
 	}
 
 
-	public Collection<AuthzAuditEvent> getAuditEvents(RangerAccessRequest request, RangerAccessResult result) {
+	public Collection<AuthzAuditEvent> getAuthzEvents(RangerAccessResult result) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.getAuditEvents(" + request + ", " + result + ")");
+			LOG.debug("==> RangerDefaultAuditHandler.getAuthzEvents(" + result + ")");
 		}
 
 		List<AuthzAuditEvent> ret = null;
+
+		RangerAccessRequest request = result != null ? result.getAccessRequest() : null;
 
 		if(request != null && result != null) {
 			RangerServiceDef serviceDef   = result.getServiceDef();
@@ -105,6 +107,7 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 				event.setRepositoryType(serviceType);
 				event.setResourceType(resourceType);
 				event.setResourcePath(resourcePath);
+				event.setRequestData(request.getRequestData());
 				event.setEventTime(request.getAccessTime());
 				event.setUser(request.getUser());
 				event.setAccessType(request.getAction());
@@ -126,25 +129,23 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.getAuditEvents(" + request + ", " + result + "): " + ret);
+			LOG.debug("<== RangerDefaultAuditHandler.getAuthzEvents(" + result + "): " + ret);
 		}
 
 		return ret;
 	}
 
-	public Collection<AuthzAuditEvent> getAuditEvents(List<RangerAccessRequest> requests, List<RangerAccessResult> results) {
+	public Collection<AuthzAuditEvent> getAuthzEvents(Collection<RangerAccessResult> results) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.getAuditEvents(" + requests + ", " + results + ")");
+			LOG.debug("==> RangerDefaultAuditHandler.getAuthzEvents(" + results + ")");
 		}
 
 		List<AuthzAuditEvent> ret = null;
 
-		if(requests != null && results != null) {
-			int count = Math.min(requests.size(), results.size());
-
+		if(results != null) {
 			// TODO: optimize the number of audit logs created
-			for(int i = 0; i < count; i++) {
-				Collection<AuthzAuditEvent> events = getAuditEvents(requests.get(i), results.get(i));
+			for(RangerAccessResult result : results) {
+				Collection<AuthzAuditEvent> events = getAuthzEvents(result);
 
 				if(events == null) {
 					continue;
@@ -159,7 +160,7 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.getAuditEvents(" + requests + ", " + results + "): " + ret);
+			LOG.debug("<== RangerDefaultAuditHandler.getAuthzEvents(" + results + "): " + ret);
 		}
 
 		return ret;
@@ -167,7 +168,7 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 
 	public void logAuthzAudit(AuthzAuditEvent auditEvent) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.logAudit(" + auditEvent + ")");
+			LOG.debug("==> RangerDefaultAuditHandler.logAuthzAudit(" + auditEvent + ")");
 		}
 
 		if(auditEvent != null) {
@@ -175,13 +176,13 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.logAudit(" + auditEvent + ")");
+			LOG.debug("<== RangerDefaultAuditHandler.logAuthzAudit(" + auditEvent + ")");
 		}
 	}
 
-	public void logAudit(Collection<AuthzAuditEvent> auditEvents) {
+	public void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.logAudit(" + auditEvents + ")");
+			LOG.debug("==> RangerDefaultAuditHandler.logAuthzAudits(" + auditEvents + ")");
 		}
 
 		if(auditEvents != null) {
@@ -191,7 +192,7 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.logAudit(" + auditEvents + ")");
+			LOG.debug("<== RangerDefaultAuditHandler.logAuthzAudits(" + auditEvents + ")");
 		}
 	}
 

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.ranger.plugin.audit.RangerAuditHandler;
@@ -36,13 +37,13 @@ public interface RangerPolicyEngine {
 
 	RangerAuditHandler getDefaultAuditHandler();
 
-	RangerAccessResult createAccessResult();
+	RangerAccessResult createAccessResult(RangerAccessRequest request);
 
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
 
-	List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests);
+	Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests);
 
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler);
 
-	List<RangerAccessResult> isAccessAllowed(List<RangerAccessRequest> requests, RangerAuditHandler auditHandler);
+	Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAuditHandler auditHandler);
 }

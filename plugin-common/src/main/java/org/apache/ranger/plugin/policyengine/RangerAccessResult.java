@@ -29,17 +29,19 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 public class RangerAccessResult {
 	public enum Result { ALLOWED, DENIED, PARTIALLY_ALLOWED };
 
-	private String           serviceName = null;
-	private RangerServiceDef serviceDef  = null;
+	private String              serviceName = null;
+	private RangerServiceDef    serviceDef  = null;
+	private RangerAccessRequest request     = null;
 	private Map<String, ResultDetail> accessTypeResults = null;
 
-	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef) {
-		this(serviceName, serviceDef, null);
+	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef, RangerAccessRequest request) {
+		this(serviceName, serviceDef, request, null);
 	}
 
-	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef, Map<String, ResultDetail> accessTypeResults) {
+	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef, RangerAccessRequest request, Map<String, ResultDetail> accessTypeResults) {
 		this.serviceName = serviceName;
 		this.serviceDef  = serviceDef;
+		this.request     = request;
 
 		setAccessTypeResults(accessTypeResults);
 	}
@@ -56,6 +58,13 @@ public class RangerAccessResult {
 	 */
 	public RangerServiceDef getServiceDef() {
 		return serviceDef;
+	}
+
+	/**
+	 * @return the request
+	 */
+	public RangerAccessRequest getAccessRequest() {
+		return request;
 	}
 
 	/**

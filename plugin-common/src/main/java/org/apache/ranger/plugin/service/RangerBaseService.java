@@ -49,7 +49,7 @@ public abstract class RangerBaseService {
 		return service;
 	}
 
-	public abstract void validateConfig();
+	public abstract void validateConfig() throws Exception;
 	
-	public abstract List<String> lookupResource(ResourceLookupContext context);
+	public abstract List<String> lookupResource(ResourceLookupContext context) throws Exception;
 }
