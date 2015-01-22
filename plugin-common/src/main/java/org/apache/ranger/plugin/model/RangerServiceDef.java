@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -383,6 +384,22 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		return sb;
 	}
+
+	public final static Comparator<RangerServiceDef> nameComparator = new Comparator<RangerServiceDef>() {
+		@Override
+		public int compare(RangerServiceDef o1, RangerServiceDef o2) {
+			String name1 = (o1 == null) ? null : o1.getName();
+			String name2 = (o2 == null) ? null : o2.getName();
+
+			if(name1 == null) {
+				return -1;
+			} else if(name2 == null) {
+				return 1;
+			} else {
+				return name1.compareTo(name2);
+			}
+		}
+	};
 
 
 	public static class RangerEnumDef implements java.io.Serializable {

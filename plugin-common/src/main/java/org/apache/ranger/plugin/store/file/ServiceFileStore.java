@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.store.file;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -287,6 +288,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("<== ServiceDefFileStore.getAllServiceDefs(): count=" + (ret == null ? 0 : ret.size()));
 		}
 
+		if(ret != null) {
+			Collections.sort(ret, RangerServiceDef.idComparator);
+		}
+
 		return ret;
 	}
 
@@ -478,6 +483,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("<== ServiceFileStore.getAllServices(): count=" + (ret == null ? 0 : ret.size()));
 		}
 
+		if(ret != null) {
+			Collections.sort(ret, RangerService.idComparator);
+		}
+
 		return ret;
 	}
 
@@ -665,6 +674,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("<== ServiceFileStore.getAllPolicies(): count=" + (ret == null ? 0 : ret.size()));
 		}
 
+		if(ret != null) {
+			Collections.sort(ret, RangerPolicy.idComparator);
+		}
+
 		return ret;
 	}
 
@@ -727,6 +740,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("<== ServiceFileStore.getPolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
 		}
 
+		if(ret != null) {
+			Collections.sort(ret, RangerPolicy.idComparator);
+		}
+
 		return ret;
 	}
 
@@ -775,6 +792,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+		}
+
+		if(ret != null && ret.getPolicies() != null) {
+			Collections.sort(ret.getPolicies(), RangerPolicy.idComparator);
 		}
 
 		return ret;
