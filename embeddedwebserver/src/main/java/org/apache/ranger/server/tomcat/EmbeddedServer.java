@@ -36,9 +36,9 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.AccessLogValve;
 
-public class EmbededServer {
+public class EmbeddedServer {
 	
-	private static final Logger LOG = Logger.getLogger(EmbededServer.class.getName()) ;
+	private static final Logger LOG = Logger.getLogger(EmbeddedServer.class.getName()) ;
 	
 	private static final String DEFAULT_CONFIG_FILENAME = "ranger_webserver.properties" ;
 	
@@ -47,11 +47,11 @@ public class EmbededServer {
 	private Properties serverConfigProperties = new Properties() ;
 
 	public static void main(String[] args) {
-		new EmbededServer(args).start() ;
+		new EmbeddedServer(args).start() ;
 	}
 	
 	
-	public EmbededServer(String[] args) {
+	public EmbeddedServer(String[] args) {
 		if (args.length > 0) {
 			configFile = args[0] ;
 		}

@@ -81,7 +81,7 @@
   <module>agents-impl</module>
   <module>agents-installer</module>
   <module>credentialbuilder</module>
-  <module>embededwebserver</module>
+  <module>embeddedwebserver</module>
   <module>hbase-agent</module>
   <module>hdfs-agent</module>
   <module>hive-agent</module>
@@ -437,6 +437,7 @@
     </pluginManagement>
     <plugins>
 
+	<!--
     <plugin>
       <groupId>org.apache.rat</groupId>
       <artifactId>apache-rat-plugin</artifactId>
@@ -487,6 +488,7 @@
 
       </configuration>
     </plugin>
+	-->
 
       <plugin>
          <groupId>org.apache.maven.plugins</groupId>

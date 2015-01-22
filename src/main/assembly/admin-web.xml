@@ -66,7 +66,7 @@
         </dependencySets>
      </binaries>
      <includes>
-	    <include>org.apache.ranger:embededwebserver</include>
+	    <include>org.apache.ranger:embeddedwebserver</include>
      </includes>
     </moduleSet>
 
@@ -129,18 +129,18 @@
   <fileSets>
 	<fileSet>
 		<outputDirectory>/ews</outputDirectory>
-		<directory>embededwebserver/scripts</directory>
+		<directory>embeddedwebserver/scripts</directory>
 		<fileMode>544</fileMode>
 	</fileSet>
 	<fileSet>
 		<outputDirectory>/ews/webapp/WEB-INF/classes/conf.dist</outputDirectory>
-		<directory>embededwebserver/conf</directory>
+		<directory>embeddedwebserver/conf</directory>
 		<fileMode>700</fileMode>
 	</fileSet>
 <!--
 	<fileSet>
 		<outputDirectory>/ews/lib</outputDirectory>
-		<directory>embededwebserver/lib</directory>
+		<directory>embeddedwebserver/lib</directory>
 	</fileSet>
 -->
 	<fileSet>
