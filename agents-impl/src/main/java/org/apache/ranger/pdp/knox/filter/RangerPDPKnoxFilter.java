@@ -62,7 +62,7 @@ public class RangerPDPKnoxFilter implements Filter {
 	private final String REPOSITORY_NAME = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
 	
 	static {
-		RangerConfiguration.getInstance().initAudit(AuditProviderFactory.ApplicationType.Knox);
+		RangerConfiguration.getInstance().initAudit("knox");
 	}
 
 	@Override

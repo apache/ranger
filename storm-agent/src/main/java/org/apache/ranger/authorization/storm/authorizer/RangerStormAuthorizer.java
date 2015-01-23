@@ -49,7 +49,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 	private RangerStormAccessVerifier rangerVerifier = RangerStormAccessVerifierFactory.getInstance() ;
 
 	static {
-		RangerConfiguration.getInstance().initAudit(AuditProviderFactory.ApplicationType.Storm);
+		RangerConfiguration.getInstance().initAudit("storm");
 	}
 
 

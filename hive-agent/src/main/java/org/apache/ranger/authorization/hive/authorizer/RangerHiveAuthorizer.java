@@ -80,15 +80,15 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		
 		if(!RangerConfiguration.getInstance().isAuditInitDone()) {
 			if(sessionContext != null) {
-				AuditProviderFactory.ApplicationType appType = AuditProviderFactory.ApplicationType.Unknown;
+				String appType = "unknown";
 
 				switch(sessionContext.getClientType()) {
 					case HIVECLI:
-						appType = AuditProviderFactory.ApplicationType.HiveCLI;
+						appType = "hiveCLI";
 					break;
 
 					case HIVESERVER2:
-						appType = AuditProviderFactory.ApplicationType.HiveServer2;
+						appType = "hiveServer2";
 					break;
 				}
 

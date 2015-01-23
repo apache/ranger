@@ -94,7 +94,7 @@ public class RangerConfiguration extends Configuration {
 		return config;
 	}
 
-	public void initAudit(AuditProviderFactory.ApplicationType appType) {
+	public void initAudit(String appType) {
 		AuditProviderFactory auditFactory = AuditProviderFactory.getInstance();
 
 		if(auditFactory == null) {

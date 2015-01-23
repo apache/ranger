@@ -751,18 +751,18 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	private static final String REGIONAL_SERVER_COPROCESSOR_TYPE = "regionalServer";
 	@Override
 	public void start(CoprocessorEnvironment env) throws IOException {
-		AuditProviderFactory.ApplicationType appType = AuditProviderFactory.ApplicationType.Unknown;
+		String appType = "unknown";
 
 		if (env instanceof MasterCoprocessorEnvironment) {
 			coprocessorType = MASTER_COPROCESSOR_TYPE;
-			appType = AuditProviderFactory.ApplicationType.HBaseMaster;
+			appType = "hbaseMaster";
 		} else if (env instanceof RegionServerCoprocessorEnvironment) {
 			coprocessorType = REGIONAL_SERVER_COPROCESSOR_TYPE;
-			appType = AuditProviderFactory.ApplicationType.HBaseRegionalServer;
+			appType = "hbaseRegional";
 		} else if (env instanceof RegionCoprocessorEnvironment) {
 			regionEnv = (RegionCoprocessorEnvironment) env;
 			coprocessorType = REGIONAL_COPROCESSOR_TYPE;
-			appType = AuditProviderFactory.ApplicationType.HBaseRegionalServer;
+			appType = "hbseRegional";
 		}
 
 		RangerConfiguration.getInstance().initAudit(appType);

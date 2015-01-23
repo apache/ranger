@@ -25,7 +25,6 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.model.EnumRepositoryType;
 import org.apache.ranger.audit.provider.AuditProvider;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.audit.provider.AuditProviderFactory.ApplicationType;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
@@ -73,7 +72,7 @@ public class TestEvents {
                 auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
             }
 
-            AuditProviderFactory.getInstance().init(auditProperties, ApplicationType.Hdfs);
+            AuditProviderFactory.getInstance().init(auditProperties, "hdfs");
 
             AuditProvider provider = AuditProviderFactory.getAuditProvider();
 
