@@ -109,15 +109,16 @@ public class HadoopAuthClassTransformer implements ClassFileTransformer {
 							}
 						
 							if (checkMethod != null) {
+								checkMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,true) ;");
+								CtClass throwable = ClassPool.getDefault().get("java.lang.Throwable");
+								checkMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,false) ; throw $e; }", throwable);
+
 								if (snapShotClass == null && (!withIntParamInMiddle)) {
 									checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(ugi,$1,$2) ) { return ; } }");
 								}
 								else {
 									checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(ugi,$1,$3) ) { return ; } }");
 								}
-								checkMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,true) ;");
-								CtClass throwable = ClassPool.getDefault().get("java.lang.Throwable");
-								checkMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,false) ; throw $e; }", throwable);
 
 								System.out.println("Injection of code is successfull ....");
 							}
@@ -141,10 +142,10 @@ public class HadoopAuthClassTransformer implements ClassFileTransformer {
 						CtMethod checkMethod = curClass.getDeclaredMethod("checkPermission");
 						
 						if (checkMethod != null) {
-							checkMethod.insertBefore("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPre($1) ;");
 							checkMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1) ;");
 							CtClass throwable = ClassPool.getDefault().get("org.apache.hadoop.security.AccessControlException");
 							checkMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1); throw $e; }", throwable);	
+							checkMethod.insertBefore("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPre($1) ;");
 							injected_cm = true ;
 						}
 

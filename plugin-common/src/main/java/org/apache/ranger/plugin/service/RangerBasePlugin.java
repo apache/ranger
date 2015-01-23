@@ -19,72 +19,156 @@
 
 package org.apache.ranger.plugin.service;
 
+import java.util.Collection;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.plugin.audit.RangerAuditHandler;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 
 
 public class RangerBasePlugin {
-	private boolean         initDone    = false;
-	private String          serviceType = null;
-	private PolicyRefresher refresher   = null;
+	private String             serviceType  = null;
+	private String             serviceName  = null;
+	private RangerPolicyEngine policyEngine = null;
+	private PolicyRefresher    refresher    = null;
 
-	
+
 	public RangerBasePlugin(String serviceType) {
 		this.serviceType = serviceType;
 	}
 
-	public RangerPolicyEngine getPolicyEngine() {
-		return refresher == null ? null : refresher.getPolicyEngine();
+	public String getServiceType() {
+		return serviceType;
 	}
 
 	public String getServiceName() {
-		return refresher == null ? null : refresher.getServiceName();
+		return serviceName;
 	}
 
-	public boolean init(RangerPolicyEngine policyEngine) {
-		if(!initDone) {
-			synchronized(this) {
-				if(! initDone) {
-					String serviceName = null;
+	public RangerPolicyEngine getPolicyEngine() {
+		return policyEngine;
+	}
 
-					// get the serviceName from download URL: http://ranger-admin-host:port/service/assets/policyList/serviceName
-					String policyDownloadUrl = RangerConfiguration.getInstance().get("xasecure." + serviceType + ".policymgr.url");
+	public void init() {
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl();
+		
+		init(policyEngine);
+	}
 
-					if(! StringUtils.isEmpty(policyDownloadUrl)) {
-						int idx = policyDownloadUrl.lastIndexOf('/');
+	public synchronized void init(RangerPolicyEngine policyEngine) {
+		cleanup();
 
-						if(idx != -1) {
-							serviceName = policyDownloadUrl.substring(idx + 1);
-						}
-					}
+		// get the serviceName from download URL: http://ranger-admin-host:port/service/assets/policyList/serviceName
+		String policyDownloadUrl = RangerConfiguration.getInstance().get("xasecure." + serviceType + ".policymgr.url");
 
-					if(StringUtils.isEmpty(serviceName)) {
-						serviceName = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
-					}
+		if(! StringUtils.isEmpty(policyDownloadUrl)) {
+			int idx = policyDownloadUrl.lastIndexOf('/');
 
-					ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore();
-
-					refresher = new PolicyRefresher(policyEngine, serviceName, serviceStore);
-
-					refresher.startRefresher();
-
-					initDone = true;
-				}
+			if(idx != -1) {
+				serviceName = policyDownloadUrl.substring(idx + 1);
 			}
 		}
 
-		return initDone;
+		if(StringUtils.isEmpty(serviceName)) {
+			serviceName = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
+		}
+
+		ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore();
+
+		refresher = new PolicyRefresher(policyEngine, serviceName, serviceStore);
+		refresher.startRefresher();
+		this.policyEngine = policyEngine;
 	}
 
-	public void cleanup() {
+	public synchronized void cleanup() {
 		PolicyRefresher refresher = this.refresher;
+
+		this.serviceName  = null;
+		this.policyEngine = null;
+		this.refresher    = null;
 
 		if(refresher != null) {
 			refresher.stopRefresher();
 		}
+	}
+
+	public void setDefaultAuditHandler(RangerAuditHandler auditHandler) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			policyEngine.setDefaultAuditHandler(auditHandler);
+		}
+	}
+
+	public RangerAuditHandler getDefaultAuditHandler() {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.getDefaultAuditHandler();
+		}
+
+		return null;
+	}
+
+
+	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.createAccessResult(request);
+		}
+
+		return null;
+	}
+
+
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.isAccessAllowed(request);
+		}
+
+		return null;
+	}
+
+
+	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.isAccessAllowed(requests);
+		}
+
+		return null;
+	}
+
+
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.isAccessAllowed(request, auditHandler);
+		}
+
+		return null;
+	}
+
+
+	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAuditHandler auditHandler) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.isAccessAllowed(requests, auditHandler);
+		}
+
+		return null;
 	}
 }

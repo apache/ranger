@@ -19,11 +19,7 @@
 
  package org.apache.ranger.audit.model;
 
-import java.util.Date;
-
 import org.apache.ranger.audit.dao.DaoManager;
-
-import com.google.gson.annotations.SerializedName;  
 
 
 public abstract class AuditEventBase {

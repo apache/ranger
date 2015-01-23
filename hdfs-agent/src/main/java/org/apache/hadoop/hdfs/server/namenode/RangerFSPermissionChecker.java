@@ -47,8 +47,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerResource;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
@@ -108,12 +106,12 @@ public class RangerFSPermissionChecker {
 				}
 			}
 
-			if (rangerPlugin != null && rangerPlugin.getPolicyEngine() != null) {
+			if (rangerPlugin != null) {
 				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(aPathName, aPathOwnerName, access, user, groups);
 
-				RangerAccessResult result = rangerPlugin.getPolicyEngine().isAccessAllowed(request, getCurrentAuditHandler());
+				RangerAccessResult result = rangerPlugin.isAccessAllowed(request, getCurrentAuditHandler());
 
-				accessGranted = result.getResult() == RangerAccessResult.Result.ALLOWED;
+				accessGranted = (result != null && result.getResult() == RangerAccessResult.Result.ALLOWED);
 			}
 		}
 
@@ -159,9 +157,7 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 	}
 	
 	public void init() {
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl();
-		
-		super.init(policyEngine);
+		super.init();
 	}
 }
 
