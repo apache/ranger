@@ -53,7 +53,21 @@ public class PolicyRefresher extends Thread {
 			LOG.debug("<== PolicyRefresher.PolicyRefresher(serviceName=" + serviceName + ")");
 		}
 	}
-	
+
+	/**
+	 * @return the policyEngine
+	 */
+	public RangerPolicyEngine getPolicyEngine() {
+		return policyEngine;
+	}
+
+	/**
+	 * @return the serviceName
+	 */
+	public String getServiceName() {
+		return serviceName;
+	}
+
 	/**
 	 * @return the pollingIntervalMilliSeconds
 	 */

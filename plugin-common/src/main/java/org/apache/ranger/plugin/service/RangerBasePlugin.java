@@ -28,9 +28,22 @@ import org.apache.ranger.plugin.util.PolicyRefresher;
 
 
 public class RangerBasePlugin {
-	private boolean         initDone  = false;
-	private PolicyRefresher refresher = null;
+	private boolean         initDone    = false;
+	private String          serviceType = null;
+	private PolicyRefresher refresher   = null;
 
+	
+	public RangerBasePlugin(String serviceType) {
+		this.serviceType = serviceType;
+	}
+
+	public RangerPolicyEngine getPolicyEngine() {
+		return refresher == null ? null : refresher.getPolicyEngine();
+	}
+
+	public String getServiceName() {
+		return refresher == null ? null : refresher.getServiceName();
+	}
 
 	public boolean init(RangerPolicyEngine policyEngine) {
 		if(!initDone) {
@@ -39,18 +52,18 @@ public class RangerBasePlugin {
 					String serviceName = null;
 
 					// get the serviceName from download URL: http://ranger-admin-host:port/service/assets/policyList/serviceName
-					String policyDownloadUrl = RangerConfiguration.getInstance().get("xasecure.hdfs.policymgr.url");
+					String policyDownloadUrl = RangerConfiguration.getInstance().get("xasecure." + serviceType + ".policymgr.url");
 
 					if(! StringUtils.isEmpty(policyDownloadUrl)) {
 						int idx = policyDownloadUrl.lastIndexOf('/');
 
 						if(idx != -1) {
-							serviceName = policyDownloadUrl.substring(idx) + 1;
+							serviceName = policyDownloadUrl.substring(idx + 1);
 						}
 					}
 
 					if(StringUtils.isEmpty(serviceName)) {
-						serviceName = RangerConfiguration.getInstance().get("ranger.plugin.service.name", "hbasedev");
+						serviceName = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
 					}
 
 					ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore();

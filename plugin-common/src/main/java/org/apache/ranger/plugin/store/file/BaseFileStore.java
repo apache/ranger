@@ -59,7 +59,7 @@ public class BaseFileStore {
 
 
 	protected void init() {
-		dataDir = RangerConfiguration.getInstance().get("ranger.policystore.file.dir", "/etc/ranger/data");
+		dataDir = RangerConfiguration.getInstance().get("ranger.policystore.file.dir", "file:///etc/ranger/data");
 
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();

@@ -756,7 +756,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		RangerService service = getServiceByName(serviceName);
 
 		if(service == null) {
-			throw new Exception("service does not exist - name='" + serviceName);
+			throw new Exception("service does not exist - name=" + serviceName);
 		}
 
 		RangerServiceDef serviceDef = findServiceDefByName(service.getType());

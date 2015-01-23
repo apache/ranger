@@ -34,6 +34,7 @@
   [
     {"name":"username","type":"string","mandatory":true,"label":"Username"},
 	{"name":"password","type":"password","mandatory":true,"label":"Password"},
+	{"name":"fs.default.name","type":"string","mandatory":true,"label":"Namenode URL"},
 	{"name":"hadoop.security.authorization","type":"bool","subType":"TrueFalse","mandatory":true,"defaultValue":"false"},
 	{"name":"hadoop.security.authentication","type":"enum","subType":"authnType","mandatory":true,"defaultValue":"simple"},
 	{"name":"hadoop.security.auth_to_local","type":"string","mandatory":false},
