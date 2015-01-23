@@ -37,9 +37,6 @@ import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
  */
 
 public class AuditProviderFactory {
-
-	public enum ApplicationType { Unknown, Hdfs, HiveCLI, HiveServer2, HBaseMaster, HBaseRegionalServer, Knox, Storm };
-
 	private static final Log LOG = LogFactory.getLog(AuditProviderFactory.class);
 
 	private static final String AUDIT_IS_ENABLED_PROP       = "xasecure.audit.is.enabled" ;
@@ -85,7 +82,7 @@ public class AuditProviderFactory {
 		return mInitDone;
 	}
 
-	public synchronized void init(Properties props, ApplicationType appType) {
+	public synchronized void init(Properties props, String appType) {
 		LOG.info("AuditProviderFactory: initializing..");
 		
 		if(mInitDone) {
@@ -95,7 +92,7 @@ public class AuditProviderFactory {
 		}
 		mInitDone = true;
 		
-		setApplicationType(appType);
+		MiscUtil.setApplicationType(appType);
 
 		boolean isEnabled             = BaseAuditProvider.getBooleanProperty(props, AUDIT_IS_ENABLED_PROP, false);
 		boolean isAuditToDbEnabled    = BaseAuditProvider.getBooleanProperty(props, AUDIT_DB_IS_ENABLED_PROP, false);
@@ -181,46 +178,6 @@ public class AuditProviderFactory {
 		JVMShutdownHook jvmShutdownHook = new JVMShutdownHook(mProvider);
 
 	    Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
-	}
-
-	private static void setApplicationType(ApplicationType appType) {
-		String strAppType = null;
-
-		switch(appType) {
-			case Hdfs:
-				strAppType = "hdfs";
-			break;
-	
-			case HiveCLI:
-				strAppType = "hiveCli";
-			break;
-	
-			case HiveServer2:
-				strAppType = "hiveServer2";
-			break;
-	
-			case HBaseMaster:
-				strAppType = "hbaseMaster";
-			break;
-
-			case HBaseRegionalServer:
-				strAppType = "hbaseRegional";
-			break;
-
-			case Knox:
-				strAppType = "knox";
-			break;
-
-			case Storm:
-				strAppType = "storm";
-			break;
-
-			case Unknown:
-				strAppType = "unknown";
-			break;
-		}
-
-		MiscUtil.setApplicationType(strAppType);
 	}
 	
 	private AuditProvider getDefaultProvider() {
