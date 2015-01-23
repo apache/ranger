@@ -292,7 +292,8 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		String              serviceName  = result.getServiceName();
 		String              resourceType = getResourceName(request.getResource(), serviceDef);
 		String              resourcePath = getResourceValueAsString(request.getResource(), serviceDef);
-		Long                policyId     = (result.getAccessTypeResults() != null && result.getAccessTypeResults().size() > 0) ? result.getAccessTypeResults().get(0).getPolicyId() : null;
+		Long                policyId     = (result.getAccessTypeResults() != null && !result.getAccessTypeResults().isEmpty())
+														? result.getAccessTypeResults().values().iterator().next().getPolicyId() : null;
 
 		auditEvent.setUser(request.getUser());
 		auditEvent.setResourcePath(pathToBeValidated);
