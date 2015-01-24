@@ -106,6 +106,9 @@ SYNC_LDAP_BIND_DN=`grep '^[ \t]*SYNC_LDAP_BIND_DN[ \t]*=' ${cdir}/install.proper
 
 SYNC_LDAP_BIND_PASSWORD=`grep '^[ \t]*SYNC_LDAP_BIND_PASSWORD[ \t]*=' ${cdir}/install.properties | sed -e 's:^[ \t]*SYNC_LDAP_BIND_PASSWORD[ \t]*=[ \t]*::'`
 
+SYNC_LDAP_SEARCH_BASE=`grep '^[ \t]*SYNC_LDAP_SEARCH_BASE[ \t]*=' ${cdir}/install.properties | sed -e 's:^[ \t]*SYNC_LDAP_SEARCH_BASE[ \t]*=[ \t]*::'`
+echo "$SYNC_LDAP_SEARCH_BASE"
+
 SYNC_LDAP_USER_SEARCH_BASE=`grep '^[ \t]*SYNC_LDAP_USER_SEARCH_BASE[ \t]*=' ${cdir}/install.properties | sed -e 's:^[ \t]*SYNC_LDAP_USER_SEARCH_BASE[ \t]*=[ \t]*::'`
 
 SYNC_LDAP_USER_SEARCH_SCOPE=`grep '^[ \t]*SYNC_LDAP_USER_SEARCH_SCOPE[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
@@ -121,6 +124,21 @@ SYNC_LDAP_USER_GROUP_NAME_ATTRIBUTE=`grep '^[ \t]*SYNC_LDAP_USER_GROUP_NAME_ATTR
 SYNC_LDAP_USERNAME_CASE_CONVERSION=`grep '^[ \t]*SYNC_LDAP_USERNAME_CASE_CONVERSION[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
 
 SYNC_LDAP_GROUPNAME_CASE_CONVERSION=`grep '^[ \t]*SYNC_LDAP_GROUPNAME_CASE_CONVERSION[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+
+SYNC_PAGED_RESULTS_ENABLED=`grep '^[ \t]*SYNC_PAGED_RESULTS_ENABLED[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+SYNC_PAGED_RESULTS_SIZE=`grep '^[ \t]*SYNC_PAGED_RESULTS_SIZE[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+
+
+SYNC_GROUP_SEARCH_ENABLED=`grep '^[ \t]*SYNC_GROUP_SEARCH_ENABLED[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+SYNC_GROUP_USER_MAP_SYNC_ENABLED=`grep '^[ \t]*SYNC_GROUP_USER_MAP_SYNC_ENABLED[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+
+SYNC_GROUP_SEARCH_BASE=`grep '^[ \t]*SYNC_GROUP_SEARCH_BASE[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+SYNC_GROUP_SEARCH_SCOPE=`grep '^[ \t]*SYNC_GROUP_SEARCH_SCOPE[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+SYNC_GROUP_OBJECT_CLASS=`grep '^[ \t]*SYNC_GROUP_OBJECT_CLASS[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+SYNC_LDAP_GROUP_SEARCH_FILTER=`grep '^[ \t]*SYNC_LDAP_GROUP_SEARCH_FILTER[ \t]*=' ${cdir}/install.properties | sed -e 's:^[ \t]*SYNC_LDAP_GROUP_SEARCH_FILTER[ \t]*=[ \t]*::'`
+SYNC_GROUP_NAME_ATTRIBUTE=`grep '^[ \t]*SYNC_GROUP_NAME_ATTRIBUTE[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+SYNC_GROUP_MEMBER_ATTRIBUTE_NAME=`grep '^[ \t]*SYNC_GROUP_MEMBER_ATTRIBUTE_NAME[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | sed -e 's:[ \t]*::g'`
+
 
 if [ "${SYNC_LDAP_USERNAME_CASE_CONVERSION}" == "" ]
 then
@@ -178,9 +196,9 @@ then
     exit 5
   fi
 
-  if [ "${SYNC_LDAP_USER_SEARCH_BASE}" == "" ]
+  if [ "${SYNC_LDAP_USER_SEARCH_BASE}" == "" ] && [ "${SYNC_LDAP_SEARCH_BASE}" == "" ]
   then
-    echo "SYNC_LDAP_USER_SEARCH_BASE must be specified when SYNC_SOURCE is ldap"
+    echo "SYNC_LDAP_USER_SEARCH_BASE or SYNC_LDAP_SEARCH_BASE must be specified when SYNC_SOURCE is ldap"
     exit 6
   fi
 
@@ -274,7 +292,7 @@ then
 	-e "s|^\( *ldapGroupSync.ldapBindPassword *=\).*|\1 ${SYNC_LDAP_BIND_PASSWORD}|" \
 	-e "s|^\( *ldapGroupSync.ldapBindKeystore *=\).*|\1 ${SYNC_LDAP_BIND_KEYSTOREPATH}|" \
 	-e "s|^\( *ldapGroupSync.ldapBindAlias *=\).*|\1 ${SYNC_LDAP_BIND_ALIAS}|" \
-	-e "s|^\( *ldapGroupSync.userSearchBase *=\).*|\1 ${SYNC_LDAP_USER_SEARCH_BASE}|" \
+	-e "s|^\( *ldapGroupSync.searchBase *=\).*|\1 ${SYNC_LDAP_SEARCH_BASE}|" \
 	-e "s|^\( *ldapGroupSync.userSearchScope *=\).*|\1 ${SYNC_LDAP_USER_SEARCH_SCOPE}|" \
 	-e "s|^\( *ldapGroupSync.userObjectClass *=\).*|\1 ${SYNC_LDAP_USER_OBJECT_CLASS}|" \
 	-e "s%^\( *ldapGroupSync.userSearchFilter *=\).*%\1 ${SYNC_LDAP_USER_SEARCH_FILTER}%" \
@@ -283,6 +301,16 @@ then
 	-e "s|^\( *ldapGroupSync.username.caseConversion *=\).*|\1 ${SYNC_LDAP_USERNAME_CASE_CONVERSION}|" \
 	-e "s|^\( *ldapGroupSync.groupname.caseConversion *=\).*|\1 ${SYNC_LDAP_GROUPNAME_CASE_CONVERSION}|" \
 	-e "s|^\( *logdir *=\).*|\1 ${logdir}|" \
+	-e "s|^\( *ldapGroupSync.pagedResultsEnabled *=\).*|\1 ${SYNC_PAGED_RESULTS_ENABLED}|" \
+	-e "s|^\( *ldapGroupSync.pagedResultsSize *=\).*|\1 ${SYNC_PAGED_RESULTS_SIZE}|" \
+	-e "s|^\( *ldapGroupSync.groupSearchEnabled *=\).*|\1 ${SYNC_GROUP_SEARCH_ENABLED}|" \
+	-e "s|^\( *ldapGroupSync.groupUserMapSyncEnabled *=\).*|\1 ${SYNC_GROUP_USER_MAP_SYNC_ENABLED}|" \
+	-e "s|^\( *ldapGroupSync.groupSearchBase *=\).*|\1 ${SYNC_GROUP_SEARCH_BASE}|" \
+	-e "s|^\( *ldapGroupSync.groupSearchScope *=\).*|\1 ${SYNC_GROUP_SEARCH_SCOPE}|" \
+	-e "s|^\( *ldapGroupSync.groupObjectClass *=\).*|\1 ${SYNC_GROUP_OBJECT_CLASS}|" \
+	-e "s|^\( *ldapGroupSync.groupSearchFilter *=\).*|\1 ${SYNC_GROUP_SEARCH_FILTER}|" \
+	-e "s|^\( *ldapGroupSync.groupNameAttribute *=\).*|\1 ${SYNC_GROUP_NAME_ATTRIBUTE}|" \
+	-e "s|^\( *ldapGroupSync.groupMemberAttributeName *=\).*|\1 ${SYNC_GROUP_MEMBER_ATTRIBUTE_NAME}|" \
 	${CFG_FILE} > ${NEW_CFG_FILE}
 
     echo "<${logdir}> ${CFG_FILE} > ${NEW_CFG_FILE}"

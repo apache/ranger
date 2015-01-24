@@ -122,15 +122,12 @@ public class UserGroupSyncConfig  {
   private static final String LGSYNC_PAGED_RESULTS_SIZE = "ldapGroupSync.pagedResultsSize";
   private static final int DEFAULT_LGSYNC_PAGED_RESULTS_SIZE = 500;
 
-  // get groups only
   private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ldapGroupSync.groupSearchEnabled";
   private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = false;
 
-  // get group -> user link, bosco
   private static final String LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = "ldapGroupSync.groupUserMapSyncEnabled";
   private static final boolean DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = false;
 
-  // defaults to value of searchBase if searchBase is not null, else defaults to userSearchBase, bosco
   private static final String LGSYNC_GROUP_SEARCH_BASE = "ldapGroupSync.groupSearchBase";
 
   private static final String LGSYNC_GROUP_SEARCH_SCOPE = "ldapGroupSync.groupSearchScope";
