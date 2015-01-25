@@ -188,7 +188,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				for(RangerPolicyEvaluator evaluator : evaluators) {
 					evaluator.evaluate(request, ret);
 
-					if(ret.isAllAllowedAndAudited()) {
+					if(ret.getIsAudited() && ret.getResult() == RangerAccessResult.Result.ALLOWED) {
 						break;
 					}
 				}

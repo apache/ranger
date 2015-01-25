@@ -32,16 +32,19 @@ public class RangerAccessResult {
 	private String              serviceName = null;
 	private RangerServiceDef    serviceDef  = null;
 	private RangerAccessRequest request     = null;
+
+	private boolean                   isAudited         = false;
 	private Map<String, ResultDetail> accessTypeResults = null;
 
 	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef, RangerAccessRequest request) {
-		this(serviceName, serviceDef, request, null);
+		this(serviceName, serviceDef, request, false, null);
 	}
 
-	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef, RangerAccessRequest request, Map<String, ResultDetail> accessTypeResults) {
+	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef, RangerAccessRequest request, boolean isAudited, Map<String, ResultDetail> accessTypeResults) {
 		this.serviceName = serviceName;
 		this.serviceDef  = serviceDef;
 		this.request     = request;
+		this.isAudited   = isAudited;
 
 		setAccessTypeResults(accessTypeResults);
 	}
@@ -68,6 +71,20 @@ public class RangerAccessResult {
 	}
 
 	/**
+	 * @return the isAudited
+	 */
+	public boolean getIsAudited() {
+		return isAudited;
+	}
+
+	/**
+	 * @param isAudited the isAudited to set
+	 */
+	public void setIsAudited(boolean isAudited) {
+		this.isAudited = isAudited;
+	}
+
+	/**
 	 * @return the accessTypeResults
 	 */
 	public Map<String, ResultDetail> getAccessTypeResults() {
@@ -79,6 +96,15 @@ public class RangerAccessResult {
 	 */
 	public void setAccessTypeResults(Map<String, ResultDetail> accessTypeResults) {
 		this.accessTypeResults = accessTypeResults == null ? new HashMap<String, ResultDetail>() : accessTypeResults;
+
+		// ensure that accessTypeResults has all the accessTypes in the request
+		if(request != null && request.getAccessTypes() != null) {
+			for(String accessType : request.getAccessTypes()) {
+				if(! this.accessTypeResults.containsKey(accessType)) {
+					this.accessTypeResults.put(accessType, new ResultDetail());
+				}
+			}
+		}
 	}
 
 	/**
@@ -101,47 +127,36 @@ public class RangerAccessResult {
 		accessTypeResults.put(accessType, result);
 	}
 
-	public boolean isAllAllowedAndAudited() {
-		boolean ret = true;
-
-		if(accessTypeResults != null) {
-			for(Map.Entry<String, ResultDetail> e : accessTypeResults.entrySet()) {
-				ResultDetail result = e.getValue();
-				
-				ret = result.isAllowed && result.isAudited;
-				
-				if(! ret) {
-					break;
-				}
-			}
-		}
-
-		return ret;
-	}
-
 	/**
 	 * @return the overall result
 	 */
 	public Result getResult() {
 		Result ret = Result.ALLOWED;
 
-		if(accessTypeResults != null) {
-			int numAllowed = 0;
+		if(accessTypeResults != null && !accessTypeResults.isEmpty()) {
+			boolean anyAllowed    = false;
+			boolean anyNotAllowed = false;
 
 			for(Map.Entry<String, ResultDetail> e : accessTypeResults.entrySet()) {
 				ResultDetail result = e.getValue();
-				
+
 				if(result.isAllowed) {
-					numAllowed++;
+					anyAllowed = true;
+				} else {
+					anyNotAllowed = true;
+				}
+
+				if(anyAllowed && anyNotAllowed) {
+					break;
 				}
 			}
 			
-			if(numAllowed == accessTypeResults.size()) {
-				ret = Result.ALLOWED;
-			} else if(numAllowed == 0) {
+			if(anyAllowed && anyNotAllowed) {
+				ret = Result.PARTIALLY_ALLOWED;
+			} else if(anyNotAllowed) {
 				ret = Result.DENIED;
 			} else {
-				ret = Result.PARTIALLY_ALLOWED;
+				ret = Result.ALLOWED;
 			}
 		}
 
@@ -160,6 +175,7 @@ public class RangerAccessResult {
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerAccessResult={");
 
+		sb.append("isAudited={").append(isAudited).append("} ");
 		sb.append("accessTypeResults={");
 		if(accessTypeResults != null) {
 			for(Map.Entry<String, ResultDetail> e : accessTypeResults.entrySet()) {
@@ -175,13 +191,11 @@ public class RangerAccessResult {
 
 	public static class ResultDetail {
 		private boolean isAllowed;
-		private boolean isAudited;
 		private long    policyId;
 		private String  reason;
 
 		public ResultDetail() {
 			setIsAllowed(false);
-			setIsAudited(false);
 			setPolicyId(RangerPolicyEngine.UNKNOWN_POLICY);
 			setReason(null);
 		}
@@ -198,20 +212,6 @@ public class RangerAccessResult {
 		 */
 		public void setIsAllowed(boolean isAllowed) {
 			this.isAllowed = isAllowed;
-		}
-
-		/**
-		 * @return the isAudited
-		 */
-		public boolean isAudited() {
-			return isAudited;
-		}
-
-		/**
-		 * @param isAudited the isAudited to set
-		 */
-		public void setIsAudited(boolean isAudited) {
-			this.isAudited = isAudited;
 		}
 
 		/**
@@ -253,7 +253,6 @@ public class RangerAccessResult {
 
 				if(! ret) {
 					ret = this.isAllowed == other.isAllowed &&
-						  this.isAudited == other.isAudited &&
 						  this.policyId == other.policyId &&
 						  StringUtils.equals(this.reason, other.reason);
 				}
@@ -267,7 +266,6 @@ public class RangerAccessResult {
 			int ret = 7;
 
 			ret = 31 * ret + (isAllowed ? 1 : 0);
-			ret = 31 * ret + (isAudited ? 1 : 0);
 			ret = 31 * ret + (int)policyId;
 			ret = 31 * ret + (reason == null ? 0 : reason.hashCode());
 
@@ -285,7 +283,6 @@ public class RangerAccessResult {
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("isAllowed={").append(isAllowed).append("} ");
-			sb.append("isAudited={").append(isAudited).append("} ");
 			sb.append("policyId={").append(policyId).append("} ");
 			sb.append("reason={").append(reason).append("} ");
 

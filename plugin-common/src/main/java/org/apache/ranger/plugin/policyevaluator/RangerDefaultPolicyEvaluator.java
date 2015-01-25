@@ -93,6 +93,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			boolean isResourceMatch     = matchResource(request.getResource());
 			boolean isResourceHeadMatch = isResourceMatch || matchResourceHead(request.getResource());
 
+			if(isResourceMatch && policy.getIsAuditEnabled()) {
+				result.setIsAudited(true);
+			}
+
 			for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
 				boolean isUserGroupMatch        = matchUserGroup(policyItem, request.getUser(), request.getUserGroups());
 				boolean isCustomConditionsMatch = matchCustomConditions(policyItem, request);
@@ -105,7 +109,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					RangerAccessResult.ResultDetail accessResult = result.getAccessTypeResult(accessType);
 
 					// are we done with this accessType?
-					if(accessResult.isAllowed() && accessResult.isAudited()) {
+					if(accessResult.isAllowed()) {
 						continue;
 					}
 
@@ -118,8 +122,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						}
 					}
 
-					if(!accessResult.isAudited() && policy.getIsAuditEnabled()) {
-						accessResult.setIsAudited(true);
+					if(policy.getIsAuditEnabled()) {
+						result.setIsAudited(true);
 					}
 
 					if(!isUserGroupMatch) {
@@ -141,7 +145,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						}
 					} else {
 						RangerPolicyItemAccess access = getAccess(policyItem, accessType);
-						
+
 						if(access == null) {
 							continue;
 						}
@@ -153,7 +157,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					}
 				}
 
-				if(result.isAllAllowedAndAudited()) {
+				if(result.getIsAudited() && result.getResult() == RangerAccessResult.Result.ALLOWED) {
 					break;
 				}
 			}

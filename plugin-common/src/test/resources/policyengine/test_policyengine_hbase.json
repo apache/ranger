@@ -48,7 +48,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["read"],"user":"user1","userGroups":["users","finance"],"requestData":"scan finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"read":{"isAllowed":true,"isAudited":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"ALLOW 'put finance restricted-cf;' for finance",
@@ -56,7 +56,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["write"],"user":"user1","userGroups":["users","finance"],"requestData":"put finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"write":{"isAllowed":true,"isAudited":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"write":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"DENY 'create finance restricted-cf;' for finance",
@@ -64,7 +64,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["create"],"user":"user1","userGroups":["users","finance"],"requestData":"create finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"create":{"isAllowed":false,"isAudited":true,"policyId":-1}}}
+     "result":{"isAudited":true,"accessTypeResults":{"create":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"DENY 'grant finance restricted-cf;' for finance",
@@ -72,7 +72,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["admin"],"user":"user1","userGroups":["users","finance"],"requestData":"grant finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"admin":{"isAllowed":false,"isAudited":true,"policyId":-1}}}
+     "result":{"isAudited":true,"accessTypeResults":{"admin":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"DENY 'scan finance restricted-cf;' for user1",
@@ -80,7 +80,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["read"],"user":"user1","userGroups":["users"],"requestData":"scan finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"read":{"isAllowed":false,"isAudited":true,"policyId":-1}}}
+     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"DENY 'put finance restricted-cf;' for user1",
@@ -88,7 +88,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["write"],"user":"user1","userGroups":["users"],"requestData":"put finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"write":{"isAllowed":false,"isAudited":true,"policyId":-1}}}
+     "result":{"isAudited":true,"accessTypeResults":{"write":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"DENY 'create finance restricted-cf;' for user1",
@@ -96,7 +96,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["create"],"user":"user1","userGroups":["users"],"requestData":"create finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"create":{"isAllowed":false,"isAudited":true,"policyId":-1}}}
+     "result":{"isAudited":true,"accessTypeResults":{"create":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"DENY 'grant finance restricted-cf;' for user1",
@@ -104,7 +104,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["admin"],"user":"user1","userGroups":["users"],"requestData":"grant finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"admin":{"isAllowed":false,"isAudited":true,"policyId":-1}}}
+     "result":{"isAudited":true,"accessTypeResults":{"admin":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"ALLOW 'scan finance restricted-cf;' for finance-admin",
@@ -112,7 +112,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["read"],"user":"user1","userGroups":["users","finance-admin"],"requestData":"scan finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"read":{"isAllowed":true,"isAudited":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"ALLOW 'put finance restricted-cf;' for finance-admin",
@@ -120,7 +120,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["write"],"user":"user1","userGroups":["users","finance-admin"],"requestData":"put finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"write":{"isAllowed":true,"isAudited":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"write":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"ALLOW 'create finance restricted-cf;' for finance-admin",
@@ -128,7 +128,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["create"],"user":"user1","userGroups":["users","finance-admin"],"requestData":"create finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"create":{"isAllowed":true,"isAudited":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"create":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"ALLOW 'grant finance restricted-cf;' for finance-admin",
@@ -136,7 +136,7 @@
       "resource":{"elements":{"table":"finance","column-family":"restricted-cf"}},
       "accessTypes":["admin"],"user":"user1","userGroups":["users","finance-admin"],"requestData":"grant finance restricted-cf"
      },
-     "result":{"accessTypeResults":{"admin":{"isAllowed":true,"isAudited":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"admin":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"ALLOW 'scan finance regular-cf;' for user1",
@@ -144,7 +144,7 @@
       "resource":{"elements":{"table":"finance","column-family":"regular-cf"}},
       "accessTypes":["read"],"user":"user1","userGroups":["users"],"requestData":"scan finance regular-cf"
      },
-     "result":{"accessTypeResults":{"read":{"isAllowed":true,"isAudited":false,"policyId":3}}}
+     "result":{"isAudited":false,"accessTypeResults":{"read":{"isAllowed":true,"policyId":3}}}
     }
     ,
     {"name":"DENY 'put finance regular-cf;' for user1",
@@ -152,7 +152,7 @@
       "resource":{"elements":{"table":"finance","column-family":"regular-cf"}},
       "accessTypes":["write"],"user":"user1","userGroups":["users"],"requestData":"put finance regular-cf"
      },
-     "result":{"accessTypeResults":{"write":{"isAllowed":false,"isAudited":false,"policyId":-1}}}
+     "result":{"isAudited":false,"accessTypeResults":{"write":{"isAllowed":false,"policyId":-1}}}
     }
   ]
 }

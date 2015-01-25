@@ -85,7 +85,7 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 
 		RangerAccessRequest request = result != null ? result.getAccessRequest() : null;
 
-		if(request != null && result != null) {
+		if(request != null && result != null && result.getIsAudited()) {
 			RangerServiceDef serviceDef   = result.getServiceDef();
 			int              serviceType  = (serviceDef != null && serviceDef.getId() != null) ? serviceDef.getId().intValue() : -1;
 			String           serviceName  = result.getServiceName();
@@ -96,10 +96,6 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 			for(Map.Entry<String, ResultDetail> e : result.getAccessTypeResults().entrySet()) {
 				String       accessType   = e.getKey();
 				ResultDetail accessResult = e.getValue();
-
-				if(! accessResult.isAudited()) {
-					continue;
-				}
 
 				AuthzAuditEvent event = createAuthzAuditEvent();
 
