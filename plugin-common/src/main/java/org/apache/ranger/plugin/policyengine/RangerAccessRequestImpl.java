@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private RangerResource      resource        = null;
@@ -118,6 +120,14 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 
 	public void setResource(RangerResource resource) {
 		this.resource = resource;
+	}
+
+	public void setAccessType(String accessType) {
+		this.accessTypes = new HashSet<String>();
+
+		if(! StringUtils.isEmpty(accessType)) {
+			this.accessTypes.add(accessType);
+		}
 	}
 
 	public void setAccessTypes(Set<String> accessTypes) {

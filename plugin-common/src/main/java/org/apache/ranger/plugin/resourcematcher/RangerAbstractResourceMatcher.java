@@ -92,7 +92,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 		if(policyResource != null && policyResource.getValues() != null) {
 			for(String policyValue : policyResource.getValues()) {
-				if(policyValue == null) {
+				if(StringUtils.isEmpty(policyValue)) {
 					continue;
 				}
 
@@ -150,7 +150,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	public String getOption(String name, String defaultValue) {
 		String ret = getOption(name);
 
-		if(ret == null) {
+		if(StringUtils.isEmpty(ret)) {
 			ret = defaultValue;
 		}
 
@@ -160,7 +160,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	public boolean getBooleanOption(String name) {
 		String val = getOption(name);
 
-		boolean ret = (val == null) ? false : Boolean.parseBoolean(val);
+		boolean ret = StringUtils.isEmpty(val) ? false : Boolean.parseBoolean(val);
 
 		return ret;
 	}
@@ -168,7 +168,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	public boolean getBooleanOption(String name, boolean defaultValue) {
 		String strVal = getOption(name);
 
-		boolean ret = (strVal == null) ? defaultValue : Boolean.parseBoolean(strVal);
+		boolean ret = StringUtils.isEmpty(strVal) ? defaultValue : Boolean.parseBoolean(strVal);
 
 		return ret;
 	}
@@ -207,6 +207,9 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		sb.append("optionsString={").append(optionsString).append("} ");
 		sb.append("optIgnoreCase={").append(optIgnoreCase).append("} ");
 		sb.append("optWildCard={").append(optWildCard).append("} ");
+		sb.append("policyValues={").append(StringUtils.join(policyValues, ",")).append("} ");
+		sb.append("policyIsExcludes={").append(policyIsExcludes).append("} ");
+		sb.append("isMatchAny={").append(isMatchAny).append("} ");
 
 		sb.append("options={");
 		if(options != null) {

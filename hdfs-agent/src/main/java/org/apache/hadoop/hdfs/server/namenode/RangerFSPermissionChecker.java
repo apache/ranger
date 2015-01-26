@@ -270,16 +270,8 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 	@Override
 	public void logAudit(RangerAccessResult result) {
-		if(! isAuditEnabled) {
-			for(Map.Entry<String, RangerAccessResult.ResultDetail> e : result.getAccessTypeResults().entrySet()) {
-				RangerAccessResult.ResultDetail resDetail = e.getValue();
-
-				if(resDetail.isAudited()) {
-					isAuditEnabled = true;
-
-					break;
-				}
-			}
+		if(! isAuditEnabled && result.getIsAudited()) {
+			isAuditEnabled = true;
 		}
 
 		RangerAccessRequest request      = result.getAccessRequest();

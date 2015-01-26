@@ -53,9 +53,19 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	@Override
+	public RangerServiceDef getServiceDef() {
+		return serviceDef;
+	}
+
+	@Override
 	public void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.setPolicies(" + serviceName + ", " + serviceDef + ", " + policies + ")");
+			LOG.debug("==> RangerPolicyEngineImpl.setPolicies(" + serviceName + ", " + serviceDef + ", policies.count=" + (policies == null ? 0 : policies.size()) + ")");
 		}
 
 		if(serviceName != null && serviceDef != null && policies != null) {

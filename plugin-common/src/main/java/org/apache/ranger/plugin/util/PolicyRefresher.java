@@ -108,7 +108,9 @@ public class PolicyRefresher extends Thread {
 				boolean isUpdated = newVersion != 0 && lastKnownVersion != newVersion;
 
 				if(isUpdated) {
-					LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
+					}
 
 					policyEngine.setPolicies(serviceName, svcPolicies.getServiceDef(), svcPolicies.getPolicies());
 					

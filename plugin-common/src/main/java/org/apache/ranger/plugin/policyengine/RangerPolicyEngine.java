@@ -31,6 +31,10 @@ public interface RangerPolicyEngine {
 	public static final String ANY_ACCESS     = "any";
 	public static final long   UNKNOWN_POLICY = -1;
 
+	String getServiceName();
+
+	RangerServiceDef getServiceDef();
+
 	void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies);
 
 	void setDefaultAuditHandler(RangerAuditHandler auditHandler);
