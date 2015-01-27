@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.policyengine;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 public class RangerResourceImpl implements RangerMutableResource {
@@ -47,6 +48,17 @@ public class RangerResourceImpl implements RangerMutableResource {
 
 		if(elements != null && elements.containsKey(name)) {
 			ret = elements.get(name);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public Set<String> getKeys() {
+		Set<String> ret = null;
+
+		if(elements != null) {
+			ret = elements.keySet();
 		}
 
 		return ret;

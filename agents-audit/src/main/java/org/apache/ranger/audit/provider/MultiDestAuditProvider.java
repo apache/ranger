@@ -51,7 +51,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
     		try {
                 provider.init(props);
     		} catch(Throwable excp) {
-    			LOG.info("MultiDestAuditProvider.init(): failed" + provider.getClass().getCanonicalName() + ")");
+    			LOG.info("MultiDestAuditProvider.init(): failed " + provider.getClass().getCanonicalName() + ")", excp);
     		}
         }
 	}

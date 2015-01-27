@@ -19,6 +19,8 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.Set;
+
 
 public interface RangerResource {
 	public abstract String getOwnerUser();
@@ -26,4 +28,6 @@ public interface RangerResource {
 	public abstract boolean exists(String name);
 
 	public abstract String getValue(String name);
+
+	public Set<String> getKeys();
 }
