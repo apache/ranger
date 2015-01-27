@@ -21,16 +21,10 @@ package org.apache.hadoop.hdfs.server.namenode;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.*;
 
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -42,6 +36,7 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.hadoop.exceptions.RangerAccessControlException;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -50,11 +45,13 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerResource;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
+import com.google.common.collect.Sets;
+
 
 public class RangerFSPermissionChecker {
 	private static final Log LOG = LogFactory.getLog(RangerFSPermissionChecker.class);
 
-	private static final boolean addHadoopAuth 	  = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT) ;
+	private static final boolean addHadoopAuth = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT) ;
 
 
 	private static RangerHdfsPlugin                    rangerPlugin        = null;
@@ -69,7 +66,7 @@ public class RangerFSPermissionChecker {
 		String      path      = inode.getFullPathName();
 		String      pathOwner = inode.getUserName();
 		String      user      = ugi.getShortUserName();
-		Set<String> groups    = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(ugi.getGroupNames())));
+		Set<String> groups    = Sets.newHashSet(ugi.getGroupNames());
 
 		boolean accessGranted =  AuthorizeAccessForUser(path, pathOwner, access, user, groups);
 
@@ -162,6 +159,10 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 }
 
 class RangerHdfsResource implements RangerResource {
+	private static final String KEY_PATH = "path";
+
+	private static final Set<String> KEYS_PATH = Sets.newHashSet(KEY_PATH);
+
 	private String path  = null;
 	private String owner = null;
 
@@ -177,16 +178,20 @@ class RangerHdfsResource implements RangerResource {
 
 	@Override
 	public boolean exists(String name) {
-		return StringUtils.equalsIgnoreCase(name, "path");
+		return StringUtils.equalsIgnoreCase(name, KEY_PATH);
 	}
 
 	@Override
 	public String getValue(String name) {
-		if(StringUtils.equalsIgnoreCase(name, "path")) {
+		if(StringUtils.equalsIgnoreCase(name, KEY_PATH)) {
 			return path;
 		}
 
 		return null;
+	}
+
+	public Set<String> getKeys() {
+		return KEYS_PATH;
 	}
 }
 
@@ -197,13 +202,13 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 		access2ActionListMapper = new HashMap<FsAction, Set<String>>();
 
 		access2ActionListMapper.put(FsAction.NONE,          new HashSet<String>());
-		access2ActionListMapper.put(FsAction.ALL,           new HashSet<String>(Arrays.asList(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE)));
-		access2ActionListMapper.put(FsAction.READ,          new HashSet<String>(Arrays.asList(READ_ACCCESS_TYPE)));
-		access2ActionListMapper.put(FsAction.READ_WRITE,    new HashSet<String>(Arrays.asList(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE)));
-		access2ActionListMapper.put(FsAction.READ_EXECUTE,  new HashSet<String>(Arrays.asList(READ_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE)));
-		access2ActionListMapper.put(FsAction.WRITE,         new HashSet<String>(Arrays.asList(WRITE_ACCCESS_TYPE)));
-		access2ActionListMapper.put(FsAction.WRITE_EXECUTE, new HashSet<String>(Arrays.asList(WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE)));
-		access2ActionListMapper.put(FsAction.EXECUTE,       new HashSet<String>(Arrays.asList(EXECUTE_ACCCESS_TYPE)));
+		access2ActionListMapper.put(FsAction.ALL,           Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.READ,          Sets.newHashSet(READ_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.READ_WRITE,    Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.READ_EXECUTE,  Sets.newHashSet(READ_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.WRITE,         Sets.newHashSet(WRITE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.WRITE_EXECUTE, Sets.newHashSet(WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.EXECUTE,       Sets.newHashSet(EXECUTE_ACCCESS_TYPE));
 	}
 
 	public RangerHdfsAccessRequest(String path, String pathOwner, FsAction access, String user, Set<String> groups) {
@@ -211,18 +216,9 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessTypes(access2ActionListMapper.get(access));
 		super.setUser(user);
 		super.setUserGroups(groups);
-		super.setAccessTime(getUTCDate());
+		super.setAccessTime(StringUtil.getUTCDate());
 		super.setClientIPAddress(getRemoteIp());
 		super.setAction(access.toString());
-	}
-
-	private static Date getUTCDate() {
-		Calendar local=Calendar.getInstance();
-	    int offset = local.getTimeZone().getOffset(local.getTimeInMillis());
-	    GregorianCalendar utc = new GregorianCalendar(TimeZone.getTimeZone("GMT+0"));
-	    utc.setTimeInMillis(local.getTimeInMillis());
-	    utc.add(Calendar.MILLISECOND, -offset);
-	    return utc.getTime();
 	}
 	
 	private static String getRemoteIp() {
