@@ -87,8 +87,6 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 
 		if(request != null && result != null && result.getIsAudited()) {
 			RangerServiceDef serviceDef   = result.getServiceDef();
-			int              serviceType  = (serviceDef != null && serviceDef.getId() != null) ? serviceDef.getId().intValue() : -1;
-			String           serviceName  = result.getServiceName();
 			String           resourceType = getResourceName(request.getResource(), serviceDef);
 			String           resourcePath = getResourceValueAsString(request.getResource(), serviceDef);
 
@@ -99,8 +97,8 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 
 				AuthzAuditEvent event = createAuthzAuditEvent();
 
-				event.setRepositoryName(serviceName);
-				event.setRepositoryType(serviceType);
+				event.setRepositoryName(result.getServiceName());
+				event.setRepositoryType(result.getServiceType());
 				event.setResourceType(resourceType);
 				event.setResourcePath(resourcePath);
 				event.setRequestData(request.getRequestData());
@@ -108,6 +106,7 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 				event.setUser(request.getUser());
 				event.setAccessType(request.getAction());
 				event.setAccessResult((short)(accessResult.isAllowed() ? 1 : 0));
+				event.setPolicyId(result.getPolicyId());
 				event.setAclEnforcer("ranger-acl"); // TODO: review
 				event.setAction(accessType);
 				event.setClientIP(request.getClientIPAddress());

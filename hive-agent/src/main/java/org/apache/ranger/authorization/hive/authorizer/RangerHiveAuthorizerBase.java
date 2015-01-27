@@ -29,7 +29,6 @@ import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.DisallowTransformHook;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizer;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext.CLIENT_TYPE;
@@ -40,7 +39,6 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObje
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveRoleGrant;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.SettableConfigUpdater;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.ranger.authorization.hive.RangerHiveAccessContext;
 import org.apache.ranger.authorization.utils.StringUtil;
 
 public abstract class RangerHiveAuthorizerBase implements HiveAuthorizer {
@@ -93,10 +91,6 @@ public abstract class RangerHiveAuthorizerBase implements HiveAuthorizer {
 
 	public UserGroupInformation getCurrentUserGroupInfo() {
 		return mUgi;
-	}
-	
-	public RangerHiveAccessContext getAccessContext(HiveAuthzContext context) {
-		return new RangerHiveAccessContext(context, mSessionContext);
 	}
 
 	@Override

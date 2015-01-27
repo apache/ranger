@@ -20,8 +20,11 @@
 package org.apache.ranger.plugin.policyengine;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
@@ -157,6 +160,40 @@ public class RangerAccessResult {
 				ret = Result.DENIED;
 			} else {
 				ret = Result.ALLOWED;
+			}
+		}
+
+		return ret;
+	}
+
+	public int getServiceType() {
+		int ret = -1;
+
+		if(serviceDef != null && serviceDef.getId() != null) {
+			ret = serviceDef.getId().intValue();
+		}
+
+		return ret;
+	}
+
+	public long getPolicyId() {
+		long ret = -1;
+
+		if(! MapUtils.isEmpty(accessTypeResults)) {
+			ResultDetail detail = accessTypeResults.values().iterator().next();
+			
+			ret = detail.getPolicyId();
+		}
+
+		return ret;
+	}
+
+	public Set<Long> getPolicyIds() {
+		Set<Long> ret = new HashSet<Long>();
+
+		if(! MapUtils.isEmpty(accessTypeResults)) {
+			for(ResultDetail detail : accessTypeResults.values()) {
+				ret.add(detail.getPolicyId());
 			}
 		}
 

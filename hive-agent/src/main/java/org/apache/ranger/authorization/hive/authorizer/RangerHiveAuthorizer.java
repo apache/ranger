@@ -20,8 +20,11 @@
  package org.apache.ranger.authorization.hive.authorizer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -45,27 +48,24 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObje
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.admin.client.datatype.GrantRevokeData;
-import org.apache.ranger.audit.model.EnumRepositoryType;
-import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
-import org.apache.ranger.authorization.hive.RangerHiveAccessContext;
-import org.apache.ranger.authorization.hive.RangerHiveAccessVerifier;
-import org.apache.ranger.authorization.hive.RangerHiveAccessVerifierFactory;
-import org.apache.ranger.authorization.hive.RangerHiveObjectAccessInfo;
-import org.apache.ranger.authorization.hive.RangerHiveObjectAccessInfo.HiveAccessType;
-import org.apache.ranger.authorization.hive.RangerHiveObjectAccessInfo.HiveObjectType;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult.Result;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
+
+import com.google.common.collect.Sets;
 
 public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class) ; 
 
-	private static final String RangerModuleName =  RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME) ;
-	private static final String repositoryName     = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
+	private static final char COLUMN_SEP = ',';
+
 	private static final boolean UpdateXaPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 
-	private RangerHiveAccessVerifier mHiveAccessVerifier = null ;
+	private static RangerHivePlugin hivePlugin = null ;
 
 
 	public RangerHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
@@ -76,23 +76,32 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		LOG.debug("RangerHiveAuthorizer.RangerHiveAuthorizer()");
 
-		mHiveAccessVerifier = RangerHiveAccessVerifierFactory.getInstance() ;
-		
-		if(!RangerConfiguration.getInstance().isAuditInitDone()) {
-			if(sessionContext != null) {
-				String appType = "unknown";
+		if(hivePlugin == null) {
+			synchronized(RangerHiveAuthorizer.class) {
+				if(hivePlugin == null) {
+					RangerHivePlugin temp = new RangerHivePlugin();
+					temp.init();
+					
+					if(!RangerConfiguration.getInstance().isAuditInitDone()) {
+						if(sessionContext != null) {
+							String appType = "unknown";
 
-				switch(sessionContext.getClientType()) {
-					case HIVECLI:
-						appType = "hiveCLI";
-					break;
+							switch(sessionContext.getClientType()) {
+								case HIVECLI:
+									appType = "hiveCLI";
+								break;
 
-					case HIVESERVER2:
-						appType = "hiveServer2";
-					break;
+								case HIVESERVER2:
+									appType = "hiveServer2";
+								break;
+							}
+
+							RangerConfiguration.getInstance().initAudit(appType);
+						}
+					}
+
+					hivePlugin = temp;
 				}
-
-				RangerConfiguration.getInstance().initAudit(appType);
 			}
 		}
 	}
@@ -119,8 +128,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
 
+		/* TODO:
+		 * 
 		boolean                isSuccess     = false;
-		RangerHiveObjectAccessInfo objAccessInfo = getObjectAccessInfo(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject, new RangerHiveAccessContext(null, getHiveAuthzSessionContext()), true);
+		RangerHiveObjectAccessInfo objAccessInfo = getHiveAccessRequests(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject, new RangerHiveAccessContext(null, getHiveAuthzSessionContext()), true);
 
 		try {
 			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, getGrantorUsername(grantorPrincipal), grantOption);
@@ -144,6 +155,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				logAuditEvent(ugi, objAccessInfo, isSuccess);
 			}
 		}
+		*/
 	}
 
 	/**
@@ -167,8 +179,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
 
+		/* TODO:
+		 * 
 		boolean                isSuccess     = false;
-		RangerHiveObjectAccessInfo objAccessInfo = getObjectAccessInfo(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject, new RangerHiveAccessContext(null, getHiveAuthzSessionContext()), true);
+		RangerHiveObjectAccessInfo objAccessInfo = getHiveAccessRequests(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject, new RangerHiveAccessContext(null, getHiveAuthzSessionContext()), true);
 
 		try {
 			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, getGrantorUsername(grantorPrincipal), grantOption);
@@ -192,6 +206,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				logAuditEvent(ugi, objAccessInfo, isSuccess);
 			}
 		}
+		*/
 	}
 
 	/**
@@ -209,136 +224,167 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 							    List<HivePrivilegeObject> outputHObjs,
 							    HiveAuthzContext          context)
 		      throws HiveAuthzPluginException, HiveAccessControlException {
-
-		UserGroupInformation ugi =  this.getCurrentUserGroupInfo();
+		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
 			throw new HiveAccessControlException("Permission denied: user information not available");
 		}
 
-		RangerHiveAccessContext hiveContext = this.getAccessContext(context);
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug(toString(hiveOpType, inputHObjs, outputHObjs, hiveContext));
-		}
-		
-		if(hiveOpType == HiveOperationType.DFS) {
-			handleDfsCommand(hiveOpType, inputHObjs, outputHObjs, hiveContext);
-			
-			return;
-		}
+		try {
+			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
+			String                  user           = ugi.getShortUserName();
+			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
 
-		List<RangerHiveObjectAccessInfo> objAccessList = getObjectAccessInfo(hiveOpType, inputHObjs, outputHObjs, hiveContext);
-
-		for(RangerHiveObjectAccessInfo objAccessInfo : objAccessList) {
-            boolean ret = false;
-
-            if(objAccessInfo.getObjectType() == HiveObjectType.URI) {
-                ret = isURIAccessAllowed(ugi, objAccessInfo.getAccessType(), objAccessInfo.getUri(), getHiveConf());
-            } else if(objAccessInfo.getAccessType() != HiveAccessType.ADMIN) {
-                ret = mHiveAccessVerifier.isAccessAllowed(ugi, objAccessInfo);
-            }
-
-			if(! ret) {
-				if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
-					logAuditEvent(ugi, objAccessInfo, false);
-				}
-				
-				String deniedObjectName = objAccessInfo.getDeinedObjectName();
-				
-				if(StringUtil.isEmpty(deniedObjectName)) {
-					deniedObjectName = objAccessInfo.getObjectName();
-				}
-
-				throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
-													 ugi.getShortUserName(), objAccessInfo.getAccessType().name(), deniedObjectName));
+			if(LOG.isDebugEnabled()) {
+				LOG.debug(toString(hiveOpType, inputHObjs, outputHObjs, context, sessionContext));
 			}
-		}
 
-		// access is allowed; audit all accesses
-		for(RangerHiveObjectAccessInfo objAccessInfo : objAccessList) {
-			if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
-				logAuditEvent(ugi, objAccessInfo, true);
+			if(hiveOpType == HiveOperationType.DFS) {
+				handleDfsCommand(hiveOpType, inputHObjs, outputHObjs, context, sessionContext, user, groups, auditHandler);
+
+				return;
 			}
-		}
-	}
+
+			List<RangerHiveAccessRequest> requests = new ArrayList<RangerHiveAccessRequest>();
+
+			if(inputHObjs != null) {
+				for(HivePrivilegeObject hiveObj : inputHObjs) {
+					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj);
+
+					if(resource.getObjectType() == HiveObjectType.URI) {
+						String   path       = hiveObj.getObjectName();
+						FsAction permission = FsAction.READ;
+
+		                if(!isURIAccessAllowed(user, groups, permission, path, getHiveConf())) {
+		    				throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user, permission.name(), path));
+		                }
+
+						continue;
+					}
+
+					HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, true);
+
+					// ADMIN: access check is performed at the Ranger policy server, as a part of updating the permissions
+					if(accessType == HiveAccessType.ADMIN || accessType == HiveAccessType.NONE) {
+						continue;
+					}
+
+					if(!existsByResourceAndAccessType(requests, resource, accessType)) {
+						RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType, accessType, context, sessionContext);
+
+						requests.add(request);
+					}
+				}
+			}
+
+			if(outputHObjs != null) {
+				for(HivePrivilegeObject hiveObj : outputHObjs) {
+					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj);
+
+					if(resource.getObjectType() == HiveObjectType.URI) {
+						String   path       = hiveObj.getObjectName();
+						FsAction permission = FsAction.WRITE;
+
+		                if(!isURIAccessAllowed(user, groups, permission, path, getHiveConf())) {
+		    				throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user, permission.name(), path));
+		                }
+
+						continue;
+					}
+
+					HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, false);
+
+					// ADMIN: access check is performed at the Ranger policy server, as a part of updating the permissions
+					if(accessType == HiveAccessType.ADMIN || accessType == HiveAccessType.NONE) {
+						continue;
+					}
+
+					if(!existsByResourceAndAccessType(requests, resource, accessType)) {
+						RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType, accessType, context, sessionContext);
+
+						requests.add(request);
+					}
+				}
+			}
+
+			for(RangerHiveAccessRequest request : requests) {
+	            RangerHiveResource resource = (RangerHiveResource)request.getResource();
+	            RangerAccessResult result   = null;
+
+	            if(resource.getObjectType() == HiveObjectType.COLUMN && StringUtils.contains(resource.getColumn(), COLUMN_SEP)) {
+	            	List<RangerAccessRequest> colRequests = new ArrayList<RangerAccessRequest>();
+
+	            	String[] columns = StringUtils.split(resource.getColumn(), COLUMN_SEP);
+
+	            	for(String column : columns) {
+	            		column = column == null ? null : column.trim();
+
+	            		if(StringUtils.isEmpty(column.trim())) {
+	            			continue;
+	            		}
+
+	            		RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTableOrUdf(), column);
+
+	            		RangerHiveAccessRequest colRequest = request.copy();
+	            		colRequest.setResource(colResource);
+
+	            		colRequests.add(colRequest);
+	            	}
+
+	            	Collection<RangerAccessResult> colResults = hivePlugin.isAccessAllowed(colRequests, auditHandler);
+
+	            	if(colResults != null) {
+		            	for(RangerAccessResult colResult : colResults) {
+		            		result = colResult;
+
+		            		if(result.getResult() != Result.ALLOWED) {
+		            			break;
+		            		}
+		            	}
+	            	}
+	            } else {
+		            result = hivePlugin.isAccessAllowed(request, auditHandler);
+	            }
+
+				if(result != null && result.getResult() != Result.ALLOWED) {
+					String path = auditHandler.getResourceValueAsString(request.getResource(), result.getServiceDef());
 	
-	private List<RangerHiveObjectAccessInfo> getObjectAccessInfo(HiveOperationType       hiveOpType,
-														   List<HivePrivilegeObject> inputsHObjs,
-														   List<HivePrivilegeObject> outputHObjs,
-														   RangerHiveAccessContext       context) {
-		List<RangerHiveObjectAccessInfo> ret = new ArrayList<RangerHiveObjectAccessInfo>();
-
-		if(inputsHObjs != null) {
-			for(HivePrivilegeObject hiveObj : inputsHObjs) {
-				RangerHiveObjectAccessInfo hiveAccessObj = getObjectAccessInfo(hiveOpType, hiveObj, context, true);
-				
-				if(   hiveAccessObj != null
-				   && hiveAccessObj.getAccessType() != HiveAccessType.ADMIN // access check is performed at the Ranger policy server, as a part of updating the permissions
-				   && !ret.contains(hiveAccessObj)) {
-					ret.add(hiveAccessObj);
+					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
+														 user, request.getAccessType().name(), path));
 				}
 			}
+		} finally {
+			auditHandler.flushAudit();
 		}
-
-		if(outputHObjs != null) {
-			for(HivePrivilegeObject hiveObj : outputHObjs) {
-				RangerHiveObjectAccessInfo hiveAccessObj = getObjectAccessInfo(hiveOpType, hiveObj, context, false);
-				
-				if(   hiveAccessObj != null
-				   && hiveAccessObj.getAccessType() != HiveAccessType.ADMIN // access check is performed at the Ranger policy server, as a part of updating the permissions
-				   && !ret.contains(hiveAccessObj)) {
-					ret.add(hiveAccessObj);
-				}
-			}
-		}
-
-		if(ret.size() == 0 && LOG.isDebugEnabled()) {
-			LOG.debug("getObjectAccessInfo(): no objects found for access check! " + toString(hiveOpType, inputsHObjs, outputHObjs, context));
-		}
-		
-		return ret;
 	}
 
-	private RangerHiveObjectAccessInfo getObjectAccessInfo(HiveOperationType hiveOpType, HivePrivilegeObject hiveObj, RangerHiveAccessContext context, boolean isInput) {
-		RangerHiveObjectAccessInfo ret = null;
+	private RangerHiveResource getHiveResource(HiveOperationType   hiveOpType,
+											   HivePrivilegeObject hiveObj) {
+		RangerHiveResource ret = null;
 
 		HiveObjectType objectType = getObjectType(hiveObj, hiveOpType);
-		HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, isInput);
-		String         operType   = hiveOpType.name();
 
 		switch(objectType) {
 			case DATABASE:
-				ret = new RangerHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname());
+				ret = new RangerHiveResource(objectType, hiveObj.getDbname());
 			break;
 	
 			case TABLE:
-				ret = new RangerHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), HiveObjectType.TABLE, hiveObj.getObjectName());
-			break;
-	
 			case VIEW:
-				ret = new RangerHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), HiveObjectType.VIEW, hiveObj.getObjectName());
-			break;
-	
 			case PARTITION:
-				ret = new RangerHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), HiveObjectType.PARTITION, hiveObj.getObjectName());
-			break;
-	
 			case INDEX:
-				String indexName = "?"; // TODO:
-				ret = new RangerHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), hiveObj.getObjectName(), HiveObjectType.INDEX, indexName);
+			case FUNCTION:
+				ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName());
 			break;
 	
 			case COLUMN:
-				ret = new RangerHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), hiveObj.getObjectName(), hiveObj.getColumns());
-			break;
-
-			case FUNCTION:
-				ret = new RangerHiveObjectAccessInfo(operType, context, accessType, hiveObj.getDbname(), HiveObjectType.FUNCTION, hiveObj.getObjectName());
+				ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName(), StringUtils.join(hiveObj.getColumns(), COLUMN_SEP));
 			break;
 
             case URI:
-                ret = new RangerHiveObjectAccessInfo(operType, context, accessType, HiveObjectType.URI, hiveObj.getObjectName());
+				ret = new RangerHiveResource(objectType, hiveObj.getObjectName());
             break;
 
 			case NONE:
@@ -555,31 +601,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return accessType;
 	}
 
-    private boolean isURIAccessAllowed(UserGroupInformation ugi, HiveAccessType accessType, String uri, HiveConf conf) {
+    private boolean isURIAccessAllowed(String userName, Set<String> groups, FsAction action, String uri, HiveConf conf) {
         boolean ret = false;
-
-        FsAction action = FsAction.NONE;
-
-        switch(accessType) {
-            case ALTER:
-            case CREATE:
-            case UPDATE:
-            case DROP:
-            case INDEX:
-            case LOCK:
-            case ADMIN:
-    		case ALL:
-                action = FsAction.WRITE;
-            break;
-
-            case SELECT:
-            case USE:
-                action = FsAction.READ;
-            break;
-
-            case NONE:
-            break;
-        }
 
         if(action == FsAction.NONE) {
             ret = true;
@@ -589,7 +612,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                 FileSystem fs         = FileSystem.get(filePath.toUri(), conf);
                 Path       path       = FileUtils.getPathOrParentThatExists(fs, filePath);
                 FileStatus fileStatus = fs.getFileStatus(path);
-                String     userName   = ugi.getShortUserName();
 
                 if (FileUtils.isOwnerOfFileHierarchy(fs, fileStatus, userName)) {
                     ret = true;
@@ -607,7 +629,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private void handleDfsCommand(HiveOperationType         hiveOpType,
 								  List<HivePrivilegeObject> inputHObjs,
 							      List<HivePrivilegeObject> outputHObjs,
-							      RangerHiveAccessContext       context)
+							      HiveAuthzContext          context,
+							      HiveAuthzSessionContext   sessionContext,
+								  String                    user,
+								  Set<String>               groups,
+								  RangerHiveAuditHandler    auditHandler)
 	      throws HiveAuthzPluginException, HiveAccessControlException {
 
 		String dfsCommandParams = null;
@@ -624,14 +650,42 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			}
 		}
 
-		UserGroupInformation ugi = this.getCurrentUserGroupInfo();
+		int    serviceType = -1;
+		String serviceName = null;
 
-		logAuditEventForDfs(ugi, dfsCommandParams, false);
+		if(hivePlugin != null) {
+			if(hivePlugin.getPolicyEngine() != null &&
+			   hivePlugin.getPolicyEngine().getServiceDef() != null &&
+			   hivePlugin.getPolicyEngine().getServiceDef().getId() != null ) {
+				serviceType = hivePlugin.getPolicyEngine().getServiceDef().getId().intValue();
+			}
+
+			serviceName = hivePlugin.getServiceName();
+		}
+
+		auditHandler.logAuditEventForDfs(user, dfsCommandParams, false, serviceType, serviceName);
 
 		throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have privilege for [%s] command",
-											 ugi.getShortUserName(), hiveOpType.name()));
+											 user, hiveOpType.name()));
 	}
-	
+
+	private boolean existsByResourceAndAccessType(Collection<RangerHiveAccessRequest> requests, RangerHiveResource resource, HiveAccessType accessType) {
+		boolean ret = false;
+
+		if(requests != null && resource != null) {
+			for(RangerHiveAccessRequest request : requests) {
+				if(request.getAccessType() == accessType && request.getResource().equals(resource)) {
+					ret = true;
+
+					break;
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	/*
 	private String getGrantorUsername(HivePrincipal grantorPrincipal) {
 		String grantor = grantorPrincipal != null ? grantorPrincipal.getName() : null;
 
@@ -714,82 +768,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		return grData;
 	}
-
-    private void logAuditEventForDfs(UserGroupInformation ugi, String dfsCommand, boolean accessGranted) {
-		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
-
-		try {
-			auditEvent.setAclEnforcer(RangerModuleName);
-			auditEvent.setResourceType("@dfs"); // to be consistent with earlier release
-			auditEvent.setAccessType("DFS");
-			auditEvent.setAction("DFS");
-			auditEvent.setUser(ugi.getShortUserName());
-			auditEvent.setAccessResult((short)(accessGranted ? 1 : 0));
-			auditEvent.setEventTime(StringUtil.getUTCDate());
-			auditEvent.setRepositoryType(EnumRepositoryType.HIVE);
-			auditEvent.setRepositoryName(repositoryName) ;
-			auditEvent.setRequestData(dfsCommand);
-
-			auditEvent.setResourcePath(dfsCommand);
-		
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("logAuditEvent [" + auditEvent + "] - START");
-			}
-
-			AuditProviderFactory.getAuditProvider().log(auditEvent);
-
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("logAuditEvent [" + auditEvent + "] - END");
-			}
-		}
-		catch(Throwable t) {
-			LOG.error("ERROR logEvent [" + auditEvent + "]", t);
-		}
-    }
-
-	private void logAuditEvent(UserGroupInformation ugi, RangerHiveObjectAccessInfo objAccessInfo, boolean accessGranted) {
-		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
-
-		try {
-			auditEvent.setAclEnforcer(RangerModuleName);
-			auditEvent.setSessionId(objAccessInfo.getContext().getSessionString());
-			auditEvent.setResourceType("@" + StringUtil.toLower(objAccessInfo.getObjectType().name())); // to be consistent with earlier release
-			auditEvent.setAccessType(objAccessInfo.getAccessType().toString());
-			auditEvent.setAction(objAccessInfo.getOperType());
-			auditEvent.setUser(ugi.getShortUserName());
-			auditEvent.setAccessResult((short)(accessGranted ? 1 : 0));
-			auditEvent.setClientIP(objAccessInfo.getContext().getClientIpAddress());
-			auditEvent.setClientType(objAccessInfo.getContext().getClientType());
-			auditEvent.setEventTime(StringUtil.getUTCDate());
-			auditEvent.setRepositoryType(EnumRepositoryType.HIVE);
-			auditEvent.setRepositoryName(repositoryName) ;
-			auditEvent.setRequestData(objAccessInfo.getContext().getCommandString());
-
-			if(! accessGranted && !StringUtil.isEmpty(objAccessInfo.getDeinedObjectName())) {
-				auditEvent.setResourcePath(objAccessInfo.getDeinedObjectName());
-			} else {
-				auditEvent.setResourcePath(objAccessInfo.getObjectName());
-			}
-		
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("logAuditEvent [" + auditEvent + "] - START");
-			}
-
-			AuditProviderFactory.getAuditProvider().log(auditEvent);
-
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("logAuditEvent [" + auditEvent + "] - END");
-			}
-		}
-		catch(Throwable t) {
-			LOG.error("ERROR logEvent [" + auditEvent + "]", t);
-		}
-	}
+	*/
 	
 	private String toString(HiveOperationType         hiveOpType,
 							List<HivePrivilegeObject> inputHObjs,
 							List<HivePrivilegeObject> outputHObjs,
-							RangerHiveAccessContext       context) {
+							HiveAuthzContext          context,
+							HiveAuthzSessionContext   sessionContext) {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("'checkPrivileges':{");
@@ -804,12 +789,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		sb.append("]");
 
 		sb.append(", 'context':{");
-		if(context != null) {
-			sb.append("'clientType':").append(context.getClientType());
-			sb.append(", 'commandString':").append(context.getCommandString());
-			sb.append(", 'ipAddress':").append(context.getClientIpAddress());
-			sb.append(", 'sessionString':").append(context.getSessionString());
-		}
+		sb.append("'clientType':").append(sessionContext == null ? null : sessionContext.getClientType());
+		sb.append(", 'commandString':").append(context == null ? null : context.getCommandString());
+		sb.append(", 'ipAddress':").append(context == null ? null : context.getIpAddress());
+		sb.append(", 'sessionString':").append(sessionContext == null ? null : sessionContext.getSessionString());
 		sb.append("}");
 
 		sb.append(", 'user':").append(this.getCurrentUserGroupInfo().getUserName());
@@ -847,3 +830,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return sb;
 	}
 }
+
+enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI };
+enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, ALL, ADMIN };
+
+class RangerHivePlugin extends RangerBasePlugin {
+	public RangerHivePlugin() {
+		super("hive");
+	}
+}
+
+
