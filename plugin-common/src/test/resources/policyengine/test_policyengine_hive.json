@@ -46,7 +46,7 @@
       "resource":{"elements":{"database":"default"}},
       "accessTypes":[],"user":"user1","userGroups":["users"],"requestData":"use default"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"any":{"isAllowed":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"_any":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"ALLOW 'use default;' for user2",
@@ -54,7 +54,7 @@
       "resource":{"elements":{"database":"default"}},
       "accessTypes":[],"user":"user2","userGroups":["users"],"requestData":"use default"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"any":{"isAllowed":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"_any":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"DENY 'use default;' to user3",
@@ -62,7 +62,7 @@
       "resource":{"elements":{"database":"default"}},
       "accessTypes":[],"user":"user3","userGroups":["users"],"requestData":"use default"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"any":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":true,"accessTypeResults":{"_any":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"ALLOW 'use default;' to group1",
@@ -70,7 +70,7 @@
       "resource":{"elements":{"database":"default"}},
       "accessTypes":[],"user":"user3","userGroups":["users", "group1"],"requestData":"use default"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"any":{"isAllowed":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"_any":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"ALLOW 'use default;' to group2",
@@ -78,7 +78,7 @@
       "resource":{"elements":{"database":"default"}},
       "accessTypes":[],"user":"user3","userGroups":["users", "group2"],"requestData":"use default"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"any":{"isAllowed":true,"policyId":2}}}
+     "result":{"isAudited":true,"accessTypeResults":{"_any":{"isAllowed":true,"policyId":2}}}
     }
     ,
     {"name":"DENY 'use default;' to user3/group3",
@@ -86,7 +86,7 @@
       "resource":{"elements":{"database":"default"}},
       "accessTypes":[],"user":"user3","userGroups":["users", "group3"],"requestData":"use default"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"any":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":true,"accessTypeResults":{"_any":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"DENY 'use finance;' to user3/group3",
@@ -94,7 +94,7 @@
       "resource":{"elements":{"database":"finance"}},
       "accessTypes":[],"user":"user1","userGroups":["users"],"requestData":"use finance"
      },
-     "result":{"isAudited":false,"accessTypeResults":{"any":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":false,"accessTypeResults":{"_any":{"isAllowed":false,"policyId":-1}}}
     }
     ,
     {"name":"ALLOW 'select col1 from default.testtable;' to user1",

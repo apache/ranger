@@ -29,6 +29,6 @@
   ],
   "policyConditions":
   [
-    {"name":"ip-range","evalClass":"org.apache.ranger.knox.IpRangeCondition","label":"IP Address Range","description":"IP Address Range"}
+    {"name":"ip-range","evaluator":"org.apache.ranger.knox.IpRangeCondition","evaluatorOptions":"","label":"IP Address Range","description":"IP Address Range"}
   ]
 }

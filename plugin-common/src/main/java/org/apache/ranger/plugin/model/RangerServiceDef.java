@@ -1163,7 +1163,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private static final long serialVersionUID = 1L;
 
 		private String name             = null;
-		private String evalClass        = null;
+		private String evaluator        = null;
+		private String evaluatorOptions = null;
 		private String label            = null;
 		private String description      = null;
 		private String rbKeyLabel       = null;
@@ -1171,24 +1172,25 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerPolicyConditionDef() {
-			this(null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evalClass) {
-			this(name, evalClass, null, null, null, null);
+		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions) {
+			this(name, evaluator, evaluatorOptions, null, null, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evalClass, String label) {
-			this(name, evalClass, label, null, null, null);
+		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions, String label) {
+			this(name, evaluator, evaluatorOptions, label, null, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evalClass, String label, String description) {
-			this(name, evalClass, label, description, null, null);
+		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions, String label, String description) {
+			this(name, evaluator, evaluatorOptions, label, description, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evalClass, String label, String description, String rbKeyLabel, String rbKeyDescription) {
+		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions, String label, String description, String rbKeyLabel, String rbKeyDescription) {
 			setName(name);
-			setEvalClass(evalClass);
+			setEvaluator(evaluator);
+			setEvaluatorOptions(evaluatorOptions);
 			setLabel(label);
 			setDescription(description);
 			setRbKeyLabel(rbKeyLabel);
@@ -1210,17 +1212,31 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
-		 * @return the evalClass
+		 * @return the evaluator
 		 */
-		public String getEvalClass() {
-			return evalClass;
+		public String getEvaluator() {
+			return evaluator;
 		}
 
 		/**
-		 * @param evalClass the evalClass to set
+		 * @param evaluator the evaluator to set
 		 */
-		public void setEvalClass(String evalClass) {
-			this.evalClass = evalClass;
+		public void setEvaluator(String evaluator) {
+			this.evaluator = evaluator;
+		}
+
+		/**
+		 * @return the evaluator
+		 */
+		public String getEvaluatorOptions() {
+			return evaluatorOptions;
+		}
+
+		/**
+		 * @param evaluator the evaluator to set
+		 */
+		public void setEvaluatorOptions(String evaluatorOptions) {
+			this.evaluatorOptions = evaluatorOptions;
 		}
 
 		/**
@@ -1291,7 +1307,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerPolicyConditionDef={");
 			sb.append("name={").append(name).append("} ");
-			sb.append("evalClass={").append(evalClass).append("} ");
+			sb.append("evaluator={").append(evaluator).append("} ");
+			sb.append("evaluatorOptions={").append(evaluatorOptions).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");

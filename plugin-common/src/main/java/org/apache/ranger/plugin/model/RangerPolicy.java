@@ -657,7 +657,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerPolicyItemCondition implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String type = null;
+		private String type  = null;
 		private String value = null;
 
 		public RangerPolicyItemCondition() {

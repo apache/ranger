@@ -28,7 +28,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 
 public interface RangerPolicyEngine {
 	public static final String GROUP_PUBLIC   = "public";
-	public static final String ANY_ACCESS     = "any";
+	public static final String ANY_ACCESS     = "_any";
+	public static final String ADMIN_ACCESS   = "_admin";
 	public static final long   UNKNOWN_POLICY = -1;
 
 	String getServiceName();
