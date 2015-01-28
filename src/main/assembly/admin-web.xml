@@ -102,7 +102,28 @@
 	    <include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
-
+<moduleSet>
+     <binaries>
+        <includeDependencies>false</includeDependencies>
+        <outputDirectory>/jisql/lib</outputDirectory>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <dependencySets>
+            <dependencySet>
+                <outputDirectory>/jisql/lib</outputDirectory>
+                <unpack>false</unpack>
+				<includes>
+                    <include>net.sourceforge.javacsv:javacsv</include>
+                    <include>net.sf.jopt-simple:jopt-simple</include>
+				</includes>
+            </dependencySet>
+        </dependencySets>
+     </binaries>
+     <includes>
+	    <include>org.apache.ranger:jisql</include>
+     </includes>
+    </moduleSet>
   </moduleSets> 	
 
   <fileSets>
