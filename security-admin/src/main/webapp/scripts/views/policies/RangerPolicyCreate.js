@@ -73,7 +73,7 @@ define(function(require){
 			var events = {};
 			events['click ' + this.ui.btnSave]		= 'onSave';
 			events['click ' + this.ui.btnCancel]	= 'onCancel';
-//			events['click ' + this.ui.btnDelete]	= 'onDelete';
+			events['click ' + this.ui.btnDelete]	= 'onDelete';
 			
 			return events;
 		},
@@ -160,6 +160,32 @@ define(function(require){
 			XAUtil.allowNavigation();
 			App.appRouter.navigate("#!/service/"+this.rangerService.id+"/policies",{trigger: true});
 
+		},
+		onDelete :function(){
+			var that = this;
+			XAUtil.confirmPopup({
+				//msg :localize.tt('msg.confirmDelete'),
+				msg :'Are you sure want to delete ?',
+				callback : function(){
+					XAUtil.blockUI();
+					that.model.destroy({
+						success: function(model, response) {
+							XAUtil.blockUI('unblock');
+							XAUtil.allowNavigation();
+							XAUtil.notifySuccess('Success', localization.tt('msg.policyDeleteMsg'));
+							App.appRouter.navigate("#!/service/"+that.rangerService.id+"/policies",{trigger: true});
+						},
+						error: function (model, response, options) {
+							XAUtil.blockUI('unblock');
+							if ( response && response.responseJSON && response.responseJSON.msgDesc){
+								    XAUtil.notifyError('Error', response.responseJSON.msgDesc);
+							    }else
+							    	XAUtil.notifyError('Error', 'Error deleting Policy!');
+							    console.log("error");
+						}
+					});
+				}
+			});
 		},
 		/** on close */
 		onClose: function(){

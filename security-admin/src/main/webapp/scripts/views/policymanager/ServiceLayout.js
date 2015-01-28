@@ -28,6 +28,7 @@ define(function(require){
 	var XAUtil				= require('utils/XAUtils');
 	var SessionMgr 			= require('mgrs/SessionMgr');
 	var RangerServiceList 	= require('collections/RangerServiceList');
+	var RangerService 	= require('models/RangerService');
 	
 	var ServicemanagerlayoutTmpl = require('hbs!tmpl/common/ServiceManagerLayout_tmpl');
 	return Backbone.Marionette.Layout.extend(
@@ -39,24 +40,26 @@ define(function(require){
 
 		templateHelpers: function(){
 			var groupedServices = this.services.groupBy("type");
-
 			return {
 				isSysAdmin : SessionMgr.isSystemAdmin(),
 				serviceDefs : this.collection.models,
 				services : groupedServices
 			};
 		},
-    	breadCrumbs :[XALinks.get('RepositoryManager')],
+    	breadCrumbs :[XALinks.get('ServiceManager')],
 
 		/** Layout sub regions */
     	regions: {},
 
     	/** ui selector cache */
-    	ui: {},
+    	ui: {
+    		'btnDelete' : '.deleteRepo',
+    	},
 
 		/** ui events hash */
 		events : function(){
 			var events = {};
+			events['click ' + this.ui.btnDelete]	= 'onDelete';
 			return events;
 		},
     	/**
@@ -85,7 +88,6 @@ define(function(require){
 			this.$('[data-id="r_tableSpinner"]').removeClass('loading').addClass('display-none');
 			this.initializePlugins();
 		},
-
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 
@@ -97,6 +99,25 @@ define(function(require){
 			   async : false
 			});
 
+		},
+		onDelete : function(e){
+			var that = this;
+			var model = this.services.get($(e.currentTarget).data('id'));
+			if(model){
+				model = new RangerService(model.attributes);
+				XAUtil.confirmPopup({
+					msg :'Are you sure want to delete ?',
+					callback : function(){
+						XAUtil.blockUI();
+						model.destroy({success: function(model, response) {
+							XAUtil.blockUI('unblock');
+							that.services.remove(model.get('id'));
+							XAUtil.notifySuccess('Success', 'Service deleted successfully');
+							that.render();
+						}});
+					}
+				});
+			}
 		},
 		/** on close */
 		onClose: function(){

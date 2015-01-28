@@ -72,7 +72,7 @@ define(function(require){
 			var events = {};
 			events['click ' + this.ui.btnSave]		= 'onSave';
 			events['click ' + this.ui.btnCancel]	= 'onCancel';
-//			events['click ' + this.ui.btnDelete]	= 'onDelete';
+			events['click ' + this.ui.btnDelete]	= 'onDelete';
 //			events['click ' + this.ui.btnTestConn]	= 'onTestConnection';
 			return events;
 		},
@@ -156,7 +156,7 @@ define(function(require){
 				success: function () {
 					XAUtil.blockUI('unblock');
 					XAUtil.allowNavigation();
-					var msg = that.editService ? 'Repository updated successfully' :'Repository created successfully';
+					var msg = that.editService ? 'Service updated successfully' :'Service created successfully';
 					XAUtil.notifySuccess('Success', msg);
 					
 					if(that.editService){
@@ -201,15 +201,16 @@ define(function(require){
 						success: function(model, response) {
 							XAUtil.blockUI('unblock');
 							XAUtil.allowNavigation();
-							XAUtil.notifySuccess('Success', 'Repository delete successfully');
+							XAUtil.notifySuccess('Success', 'Service delete successfully');
 							App.appRouter.navigate("#!/policymanager",{trigger: true});
 						},
 						error: function (model, response, options) {
 							XAUtil.blockUI('unblock');
 							if ( response && response.responseJSON && response.responseJSON.msgDesc){
 									XAUtil.notifyError('Error', response.responseJSON.msgDesc);
-							}else
+							}else{
 								XAUtil.notifyError('Error', 'Error occured while deleting service!');
+							}
 						}
 					});
 					

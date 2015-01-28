@@ -14,21 +14,23 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<td>
+<td class="width-25">
 	<input  type="text" data-js="selectGroups" /> 	
 </td>
-<td>
+<td class="width-25">
 	<input  type="text" data-js="selectUsers" /> 	
 </td>
 {{#if policyConditions}}
 <td>	
 	<a href="#" id="policyConditions" data-type="policyConditions" data-original-title="Policy Conditions" title="add/edit conditions"></a>
+	<span class="add-conditions link-tag" style="margin-left: 3%; color: green; cursor: pointer;" title="add"><i class="icon-plus"></i></span>
 </td>
 {{/if}}
 <td>	
-	<a href="#" data-js="permissions" data-type="checklist" data-title="Select permissions" title="add/edit permissions"></a>
+	<a href="#" data-js="permissions" data-type="checklist" data-title="Select permissions" title="add/edit permissions" />
+	<span class="add-permissions link-tag" style="margin-left: 3%; color: green; cursor: pointer;" title="add"><i class="icon-plus"></i></span>
 </td>	
-<td>
+<td style=" width: 12%; ">
 	<input data-js="delegatedAdmin" type="checkbox">
 </td>
 <td>

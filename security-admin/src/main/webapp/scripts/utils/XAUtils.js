@@ -356,6 +356,31 @@ define(function(require) {
 		}else
 			return '--';
 	};
+	XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showGroups){
+		var showMoreLess = false, groupArr = [];
+		var type = _.isUndefined(showGroups) ? 'groups' : 'users';
+		if(!_.isArray(rawValue) && !_.isUndefined(rawValue[type]))
+			return '--';
+		_.each(rawValue,function(perm){ 
+			groupArr = _.union(groupArr, perm[type]) 
+		});
+		
+		var newGroupArr = _.map(groupArr, function(name, i){
+			if(i >=  4){
+				return '<span class="label label-info" policy-'+type+'-id="'+model.id+'" style="display:none;">' + name + '</span>';
+			}else if(i == 3 && groupArr.length > 4){
+				showMoreLess = true;
+				return '<span class="label label-info" policy-'+type+'-id="'+model.id+'">' + name + '</span>';
+			}else{
+				return '<span class="label label-info" policy-'+type+'-id="'+model.id+'">' + name + '</span>';
+			}
+		});
+		if(showMoreLess){
+			newGroupArr.push('<span class="pull-left"><a href="javascript:void(0);" data-id="showMore" class="" policy-'+type+'-id="'+model.id+'"><code style=""> + More..</code></a></span><span class="pull-left" ><a href="javascript:void(0);" data-id="showLess" class="" policy-'+type+'-id="'+model.id+'" style="display:none;"><code> - Less..</code></a></span>');
+		}
+		return newGroupArr.length ? newGroupArr.join(' ') : '--';
+		
+	};
 	 
 	XAUtils.defaultErrorHandler = function(model, error) {
 		var App		= require('App');

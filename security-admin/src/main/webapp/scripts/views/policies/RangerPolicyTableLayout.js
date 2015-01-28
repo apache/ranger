@@ -33,6 +33,7 @@ define(function(require){
 	var localization	= require('utils/XALangSupport');
 	var vFolderInfo = require('views/folders/FolderInfo');
 	var RangerServiceDef	= require('models/RangerServiceDef');
+	var RangerPolicy 		= require('models/RangerPolicy');
 	var RangerPolicyTableLayoutTmpl = require('hbs!tmpl/policies/RangerPolicyTableLayout_tmpl');
 
 	require('backgrid-filter');
@@ -59,7 +60,7 @@ define(function(require){
 		},
         
     	breadCrumbs : function(){
-    		return [XALinks.get('RepositoryManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
+    		return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
 //    		return [];
    		},        
 
@@ -79,7 +80,7 @@ define(function(require){
 		/** ui events hash */
 		events: function() {
 			var events = {};
-//			events['click ' + this.ui.btnDeletePolicy]  = 'onDelete';
+			events['click ' + this.ui.btnDeletePolicy]  = 'onDelete';
 			events['click ' + this.ui.btnShowMore]  = 'onShowMore';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			
@@ -125,8 +126,6 @@ define(function(require){
 //			this.initializePlugins();
 //			this.addVisualSearch();
 			this.renderTable();
-			//TODO REMOVE
-			this.rTableList.$el.find('th[class="renderable table"]').removeClass('table')
 			
 //			XAUtil.highlightDisabledPolicy(this);
 		},
@@ -186,8 +185,39 @@ define(function(require){
 					drag : false,
 					sortable : false
 				},
+				policyItems : {
+					reName : 'groupName',
+					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+					label : localization.tt("lbl.group"),
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							if(!_.isUndefined(rawValue))
+								return XAUtil.showGroupsOrUsersForPolicy(rawValue, model);
+							else 
+								return '--';
+						}
+					}),
+					editable : false,
+					sortable : false
+				},
+				//Hack for backgrid plugin doesn't allow to have same column name 
+				guid : {
+					reName : 'userName',
+					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+					label : localization.tt("lbl.users"),
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							if(!_.isUndefined(rawValue))
+								return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, false);
+							else 
+								return '--';
+						}
+					}),
+					editable : false,
+					sortable : false
+				},
 			};
-			_.each(this.rangerServiceDefModel.get('resources'), function(obj){
+			/*_.each(this.rangerServiceDefModel.get('resources'), function(obj){
 				if(!_.isUndefined(obj) && !_.isNull(obj))
 					 cols[obj.name]={
 							cell : "html",
@@ -202,14 +232,28 @@ define(function(require){
 							})
 						};
 
-			});
+			});*/
+			cols['permissions'] = {
+				cell :  "html",
+				label : localization.tt("lbl.action"),
+				formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+					fromRaw: function (rawValue,model) {
+						return '<a href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit" class="btn btn-mini" title="Edit"><i class="icon-edit icon-large" /></a>\
+								<a href="javascript:void(0);" data-name ="deletePolicy" data-id="'+model.id+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash icon-large" /></a>';
+						//You can use rawValue to custom your html, you can change this value using the name parameter.
+					}
+				}),
+				editable: false,
+				sortable : false
+
+			};
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},
 		onDelete :function(e){
 			var that = this;
-			var VXResource = require('models/VXResource');
+			
 			var obj = this.collection.get($(e.currentTarget).data('id'));
-			var model = new VXResource(obj.attributes);
+			var model = new RangerPolicy(obj.attributes);
 			model.collection = this.collection;
 			XAUtil.confirmPopup({
 				//msg :localize.tt('msg.confirmDelete'),
@@ -220,7 +264,6 @@ define(function(require){
 						success: function(model, response) {
 							XAUtil.blockUI('unblock');
 							that.collection.remove(model.get('id'));
-							$(that.rFolderInfo.el).hide();
 							XAUtil.notifySuccess('Success', localization.tt('msg.policyDeleteMsg'));
 							if(that.collection.length ==  0){
 								that.renderTable();
@@ -240,16 +283,28 @@ define(function(require){
 			});
 		},
 		onShowMore : function(e){
-			var id = $(e.currentTarget).attr('policy-group-id');
-			this.rTableList.$el.find('[policy-group-id="'+id+'"]').show();
-			$('[data-id="showLess"][policy-group-id="'+id+'"]').show();
-			$('[data-id="showMore"][policy-group-id="'+id+'"]').hide();
+			var attrName = 'policy-groups-id';
+			var id = $(e.currentTarget).attr(attrName);
+			if(_.isUndefined(id)){
+				id = $(e.currentTarget).attr('policy-users-id');
+				attrName = 'policy-users-id';
+			}   
+			var $td = $(e.currentTarget).parents('td');
+			$td.find('['+attrName+'="'+id+'"]').show();
+			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').show();
+			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').hide();
 		},
 		onShowLess : function(e){
-			var id = $(e.currentTarget).attr('policy-group-id');
-			this.rTableList.$el.find('[policy-group-id="'+id+'"]').slice(4).hide();
-			$('[data-id="showLess"][policy-group-id="'+id+'"]').hide();
-			$('[data-id="showMore"][policy-group-id="'+id+'"]').show();
+			var attrName = 'policy-groups-id';
+			var id = $(e.currentTarget).attr(attrName);
+			if(_.isUndefined(id)){
+				id = $(e.currentTarget).attr('policy-users-id');
+				attrName = 'policy-users-id';
+			}
+			var $td = $(e.currentTarget).parents('td');
+			$td.find('['+attrName+'="'+id+'"]').slice(4).hide();
+			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').hide();
+			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').show();
 		},
 		addVisualSearch : function(){
 			var that = this;

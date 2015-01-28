@@ -53,25 +53,6 @@ define(function(require) {
 			
             App.rContent.show(new vDashboardLayout({}));
         },
-		
-	   //************** Policy Related *********************/
-	   policyManagerAction :function(){
-		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
-		   console.log('Policy Manager action called..');
-		   var view             = require('views/policymanager/PolicyManagerLayout');
-		   var VXAssetList      = require('collections/VXAssetList');
-		   var collection 	= new VXAssetList();
-		   
-		   collection.fetch({
-			   cache : false,
-			   async:false
-		   }).done(function(){
-			   if(App.rContent.currentView) App.rContent.currentView.close();
-			   App.rContent.show(new view({
-				   collection : collection
-			   }));
-		   });
-	   },
 	   
 	   //************** Analytics(reports)  Related *********************/
 	   userAccessReportAction : function(){

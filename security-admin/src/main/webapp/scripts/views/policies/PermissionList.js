@@ -51,7 +51,9 @@ define(function(require) {
 			selectUsers		: '[data-js="selectUsers"]',
 			addPerms		: 'a[data-js="permissions"]',
 			conditionsTags	: '[class=tags1]',
-			delegatedAdmin	: 'input[data-js="delegatedAdmin"]'
+			delegatedAdmin	: 'input[data-js="delegatedAdmin"]',
+			addPermissionsSpan : '.add-permissions',
+			addConditionsSpan : '.add-conditions',
 		},
 		events : {
 			'click [data-action="delete"]'	: 'evDelete',
@@ -74,6 +76,7 @@ define(function(require) {
 			this.createDropDown(this.ui.selectGroups, this.groupList, true);
 			this.createDropDown(this.ui.selectUsers, this.userList, false);
 			//groups or users select2 dropdown change vent 
+			
 			this.dropDownChange(this.ui.selectGroups);
 			this.dropDownChange(this.ui.selectUsers);
 			//render permissions and policy conditions
@@ -236,6 +239,8 @@ define(function(require) {
 					if(_.isNull(values) || _.isEmpty(values)){
 						$(this).empty();
 						that.model.unset('accesses');
+						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addPermissionsSpan.attr('title','add');
 						return;
 					}
 					if(_.contains(values,"-1")){
@@ -247,7 +252,7 @@ define(function(require) {
 						if(!_.isUndefined(id)){
 							var obj = _.findWhere(srcData,{'value' : id});
 							permTypeArr.push({permType : obj.value});
-							return "<span class='label label-inverse'>" + obj.text + "</span>";
+							return "<span class='label label-info'>" + obj.text + "</span>";
 						}
 					});
 					var perms = []
@@ -269,25 +274,36 @@ define(function(require) {
 						that.model.set('accesses', that.accessItems);
 					
 					$(this).html(valArr.join(" "));
+					that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addPermissionsSpan.attr('title','edit');
 				},
 			}).on('click', function(e) {
 				e.stopPropagation();
 				e.preventDefault();
-				var selectAll = true;
-				var checklist = that.$('.editable-checklist').find('input[type="checkbox"]')
-				_.each(checklist,function(checkbox){ if($(checkbox).val() != -1 && !$(checkbox).is(':checked')) selectAll = false;})
-				if(selectAll){
-					that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',true)
-				}
-				//for selectAll functionality
-				that.$('input[type="checkbox"][value="-1"]').click(function(e){
-					var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
-					$(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false); 
-					
-				});
-				
+				that.clickOnPermissions(that);
+			});
+			that.ui.addPermissionsSpan.click(function(e) {
+				e.stopPropagation();
+				that.$('a[data-js="permissions"]').editable('toggle');
+				that.clickOnPermissions(that);
 			});
 			
+		},
+		clickOnPermissions : function(that) {
+			var selectAll = true;
+			var checklist = that.$('.editable-checklist').find('input[type="checkbox"]')
+			_.each(checklist,function(checkbox){ if($(checkbox).val() != -1 && !$(checkbox).is(':checked')) selectAll = false;})
+			if(selectAll){
+				that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',true)
+			}else{
+				that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',false)
+			}
+			//for selectAll functionality
+			that.$('input[type="checkbox"][value="-1"]').click(function(e){
+				var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
+				$(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false); 
+				
+			});
 		},
 		renderPolicyCondtion : function() {
 			var that = this;
@@ -317,13 +333,22 @@ define(function(require) {
 							});
 							var cond = _.map(value, function(val, name) {return {'type' : name, 'value' :val};});
 							that.model.set('conditions', cond);
-							$(this).html(html); 
+							$(this).html(html);
+							that.ui.addConditionsSpan.find('i').attr('class', 'icon-pencil');
+							that.ui.addConditionsSpan.attr('title','edit');
 						}else{
 							that.model.unset('conditions');
 							$(this).empty();
+							that.ui.addConditionsSpan.find('i').attr('class', 'icon-plus');
+							that.ui.addConditionsSpan.attr('title','add');
 						}
 					}
 				});
+				that.ui.addConditionsSpan.click(function(e) {
+					e.stopPropagation();
+					that.$('#policyConditions').editable('toggle');
+				});
+				
 			}
 		},
 		getSelectdValues : function($select, typeGroup){

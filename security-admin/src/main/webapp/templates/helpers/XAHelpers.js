@@ -501,7 +501,7 @@
 					<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies">'+serv.attributes.name+'</a>\
 					<div class="pull-right">\
 					<a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
-					<a data-id="'+serv.id+'" class="deleteRep btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
+					<a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
 					<i class="icon-trash"></i></a>\
 					</div>\
 					</div>\

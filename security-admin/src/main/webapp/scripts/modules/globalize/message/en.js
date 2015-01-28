@@ -235,6 +235,7 @@ define(function(require) {
 				analytics					: 'Analytics',
 				audit						: 'Audit',
 				repositoryManager			: 'Manage Repository',
+				serviceManager				: 'Service Manager',
 				hdfs  						: 'HDFS',
 				hive  						: 'Hive',
 				createPolicy 				: 'Create Policy',

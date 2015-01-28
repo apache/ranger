@@ -49,6 +49,11 @@ define(function(require) {
 				text : 'h.repositoryManager',
 				title: 'h.repositoryManager'
 			},
+			ServiceManager :{
+				href : '#!/policymanager', 
+				text : 'h.serviceManager',
+				title: 'h.serviceManager'
+			},
 			Users : { 
 				href : '#!/users/usertab',
 				text : 'h.usersOrGroups',
