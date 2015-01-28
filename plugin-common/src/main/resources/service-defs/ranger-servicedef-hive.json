@@ -13,29 +13,29 @@
   ],
   "configs":
   [
-    {"name":"username","type":"string","mandatory":true,"label":"Username"},
-	{"name":"password","type":"password","mandatory":true,"label":"Password"},
-	{"name":"jdbc.driverClassName","type":"string","mandatory":true,"defaultValue":"org.apache.hive.jdbc.HiveDriver"},
-	{"name":"jdbc.url","type":"string","mandatory":true,"defaultValue":""},
-	{"name":"certificate.cn","type":"string","mandatory":false,"label":"Common Name for Certificate"}
+    {"name":"username",            "type":"string",  "mandatory":true, "label":"Username"},
+	{"name":"password",            "type":"password","mandatory":true, "label":"Password"},
+	{"name":"jdbc.driverClassName","type":"string",  "mandatory":true, "defaultValue":"org.apache.hive.jdbc.HiveDriver"},
+	{"name":"jdbc.url",            "type":"string",  "mandatory":true, "defaultValue":""},
+	{"name":"certificate.cn",      "type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
   ],
   "resources":
   [
-    {"name":"database","type":"string","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Database","description":"Hive Database"},
-    {"name":"table","type":"string","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Table","description":"Hive Table"},
-    {"name":"udf","type":"string","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive UDF","description":"Hive UDF"},
-    {"name":"column","type":"string","level":3,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Column","description":"Hive Column"}
+    {"name":"database","type":"string","level":1,"parent":"",        "mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Database","description":"Hive Database"},
+    {"name":"table",   "type":"string","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Table","description":"Hive Table"},
+    {"name":"udf",     "type":"string","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive UDF","description":"Hive UDF"},
+    {"name":"column",  "type":"string","level":3,"parent":"table",   "mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Hive Column","description":"Hive Column"}
   ],
   "accessTypes":
   [
     {"name":"select","label":"select"},
 	{"name":"update","label":"update"},
 	{"name":"create","label":"Create"},
-	{"name":"drop","label":"Drop"},
-	{"name":"alter","label":"Alter"},
-	{"name":"index","label":"Index"},
-	{"name":"lock","label":"Lock"},
-	{"name":"all","label":"All"}
+	{"name":"drop",  "label":"Drop"},
+	{"name":"alter", "label":"Alter"},
+	{"name":"index", "label":"Index"},
+	{"name":"lock",  "label":"Lock"},
+	{"name":"all",   "label":"All"}
   ],
   "policyConditions":
   [

@@ -13,15 +13,15 @@
   ],
   "configs":
   [
-    {"name":"username","type":"string","mandatory":true,"label":"Username"},
-	{"name":"password","type":"password","mandatory":true,"label":"Password"},
-	{"name":"knox.url","type":"string","mandatory":true,"defaultValue":""},
-	{"name":"certificate.cn","type":"string","mandatory":false,"label":"Common Name for Certificate"}
+    {"name":"username",      "type":"string",  "mandatory":true, "label":"Username"},
+	{"name":"password",      "type":"password","mandatory":true, "label":"Password"},
+	{"name":"knox.url",      "type":"string",  "mandatory":true, "defaultValue":""},
+	{"name":"certificate.cn","type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
   ],
   "resources":
   [
-    {"name":"topology","type":"string","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Knox Topology","description":"Knox Topology"},
-    {"name":"service","type":"string","level":2,"parent":"topology","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Knox Service","description":"Knox Service"}
+    {"name":"topology","type":"string","level":1,"parent":"",        "mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Knox Topology","description":"Knox Topology"},
+    {"name":"service", "type":"string","level":2,"parent":"topology","mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Knox Service","description":"Knox Service"}
   ],
   "accessTypes":
   [

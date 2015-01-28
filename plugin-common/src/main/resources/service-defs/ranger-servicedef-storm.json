@@ -13,31 +13,31 @@
   ],
   "configs":
   [
-    {"name":"username","type":"string","mandatory":true,"label":"Username"},
-	{"name":"password","type":"password","mandatory":true,"label":"Password"},
-	{"name":"nimbus.url","type":"string","mandatory":true,"defaultValue":"","label":"Nimbus URL"},
-	{"name":"certificate.cn","type":"string","mandatory":false,"label":"Common Name for Certificate"}
+    {"name":"username",      "type":"string",  "mandatory":true, "label":"Username"},
+	{"name":"password",      "type":"password","mandatory":true, "label":"Password"},
+	{"name":"nimbus.url",    "type":"string",  "mandatory":true, "label":"Nimbus URL","defaultValue":""},
+	{"name":"certificate.cn","type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
   ],
   "resources":
   [
-    {"name":"topology","type":"string","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Storm Topology","description":"Storm Topology"}
+    {"name":"topology","type":"string","level":1,"mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Storm Topology","description":"Storm Topology"}
   ],
   "accessTypes":
   [
-    {"name":"topology-submit","label":"Submit Topology"},
-    {"name":"file-upload","label":"File Upload"},
-    {"name":"nimbus-conf-get","label":"Get Nimbus Conf"},
-    {"name":"cluster-conf-get","label":"Get Cluster Conf"},
-    {"name":"cluster-info-get","label":"Get Cluster Info"},
-    {"name":"file-download","label":"File Download"},
-    {"name":"topology-kill","label":"Kill Topology"},
-    {"name":"rebalance","label":"Rebalance"},
-    {"name":"activate","label":"Activate"},
-    {"name":"deactivate","label":"Deactivate"},
-    {"name":"topology-conf-get","label":"Get Topology Conf"},
-    {"name":"topology-get","label":"Get Topology"},
-    {"name":"topology-user-get","label":"Get User Topology"},
-    {"name":"topology-info-get","label":"Get Topology Info"},
+    {"name":"topology-submit",      "label":"Submit Topology"},
+    {"name":"file-upload",          "label":"File Upload"},
+    {"name":"nimbus-conf-get",      "label":"Get Nimbus Conf"},
+    {"name":"cluster-conf-get",     "label":"Get Cluster Conf"},
+    {"name":"cluster-info-get",     "label":"Get Cluster Info"},
+    {"name":"file-download",        "label":"File Download"},
+    {"name":"topology-kill",        "label":"Kill Topology"},
+    {"name":"rebalance",            "label":"Rebalance"},
+    {"name":"activate",             "label":"Activate"},
+    {"name":"deactivate",           "label":"Deactivate"},
+    {"name":"topology-conf-get",    "label":"Get Topology Conf"},
+    {"name":"topology-get",         "label":"Get Topology"},
+    {"name":"topology-user-get",    "label":"Get User Topology"},
+    {"name":"topology-info-get",    "label":"Get Topology Info"},
     {"name":"new-credential-upload","label":"Upload New Credential"}
   ],
   "policyConditions":

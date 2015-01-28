@@ -14,7 +14,7 @@
 	  "name":"authnType",
 	  "elements":
 	  [
-	    {"name":"simple","label":"Simple"},
+	    {"name":"simple",  "label":"Simple"},
 	    {"name":"kerberos","label":"Kerberos"}
 	  ],
 	  "defaultIndex":0
@@ -24,29 +24,29 @@
 	  "elements":
 	  [
 	    {"name":"authentication","label":"Authentication"},
-	    {"name":"integrity","label":"Integrity"},
-	    {"name":"privacy","label":"Privacy"}
+	    {"name":"integrity",     "label":"Integrity"},
+	    {"name":"privacy",       "label":"Privacy"}
 	  ],
 	  "defaultIndex":0
 	},
   ],
   "configs":
   [
-    {"name":"username","type":"string","mandatory":true,"label":"Username"},
-	{"name":"password","type":"password","mandatory":true,"label":"Password"},
-	{"name":"fs.default.name","type":"string","mandatory":true,"label":"Namenode URL"},
-	{"name":"hadoop.security.authorization","type":"bool","subType":"TrueFalse","mandatory":true,"defaultValue":"false"},
-	{"name":"hadoop.security.authentication","type":"enum","subType":"authnType","mandatory":true,"defaultValue":"simple"},
-	{"name":"hadoop.security.auth_to_local","type":"string","mandatory":false},
-	{"name":"dfs.datanode.kerberos.principal","type":"string","mandatory":false},
-	{"name":"dfs.namenode.kerberos.principal","type":"string","mandatory":false},
-	{"name":"dfs.secondary.namenode.kerberos.principal","type":"string","mandatory":false},
-	{"name":"hadoop.rpc.protection","type":"enum","subType":"rpcProtection","mandatory":false,"defaultValue":"authentication"},
-	{"name":"certificate.cn","type":"string","mandatory":false,"label":"Common Name for Certificate"}
+    {"name":"username",                                "type":"string",  "subType":"",             "mandatory":true, "label":"Username"},
+	{"name":"password",                                "type":"password","subType":"",             "mandatory":true, "label":"Password"},
+	{"name":"fs.default.name",                         "type":"string",  "subType":"",             "mandatory":true, "label":"Namenode URL"},
+	{"name":"hadoop.security.authorization",           "type":"bool",    "subType":"TrueFalse",    "mandatory":true, "defaultValue":"false"},
+	{"name":"hadoop.security.authentication",          "type":"enum",    "subType":"authnType",    "mandatory":true, "defaultValue":"simple"},
+	{"name":"hadoop.security.auth_to_local",           "type":"string",  "subType":"",             "mandatory":false},
+	{"name":"dfs.datanode.kerberos.principal",         "type":"string",  "subType":"",             "mandatory":false},
+	{"name":"dfs.namenode.kerberos.principal",          "type":"string", "subType":"",             "mandatory":false},
+	{"name":"dfs.secondary.namenode.kerberos.principal","type":"string", "subType":"",             "mandatory":false},
+	{"name":"hadoop.rpc.protection",                    "type":"enum",   "subType":"rpcProtection","mandatory":false,"defaultValue":"authentication"},
+	{"name":"certificate.cn",                           "type":"string", "subType":"",             "mandatory":false,"label":"Common Name for Certificate"}
   ],
   "resources":
   [
-    {"name":"path","type":"path","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Resource Path","description":"HDFS file or directory path"}
+    {"name":"path","type":"path","level":1,"parent":"","mandatory":true,"lookupSupported":true,"recursiveSupported":true,"excludesSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Resource Path","description":"HDFS file or directory path"}
   ],
   "accessTypes":
   [
