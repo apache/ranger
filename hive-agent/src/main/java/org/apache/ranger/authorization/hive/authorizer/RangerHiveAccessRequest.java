@@ -68,7 +68,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		}
 	}
 
-	public HiveAccessType getAccessType() {
+	public HiveAccessType getHiveAccessType() {
 		return accessType;
 	}
 
@@ -76,7 +76,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		RangerHiveAccessRequest ret = new RangerHiveAccessRequest();
 
 		ret.setResource(getResource());
-		ret.setAccessTypes(getAccessTypes());
+		ret.setAccessType(getAccessType());
 		ret.setUser(getUser());
 		ret.setUserGroups(getUserGroups());
 		ret.setAccessTime(getAccessTime());

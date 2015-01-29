@@ -53,7 +53,6 @@ import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult.Result;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.collect.Sets;
@@ -339,7 +338,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		            	for(RangerAccessResult colResult : colResults) {
 		            		result = colResult;
 
-		            		if(result.getResult() != Result.ALLOWED) {
+		            		if(!result.getIsAllowed()) {
 		            			break;
 		            		}
 		            	}
@@ -348,11 +347,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		            result = hivePlugin.isAccessAllowed(request, auditHandler);
 	            }
 
-				if(result != null && result.getResult() != Result.ALLOWED) {
+				if(result != null && !result.getIsAllowed()) {
 					String path = auditHandler.getResourceValueAsString(request.getResource(), result.getServiceDef());
 	
 					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
-														 user, request.getAccessType().name(), path));
+														 user, request.getHiveAccessType().name(), path));
 				}
 			}
 		} finally {
@@ -674,7 +673,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		if(requests != null && resource != null) {
 			for(RangerHiveAccessRequest request : requests) {
-				if(request.getAccessType() == accessType && request.getResource().equals(resource)) {
+				if(request.getHiveAccessType() == accessType && request.getResource().equals(resource)) {
 					ret = true;
 
 					break;

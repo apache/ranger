@@ -26,7 +26,7 @@ import java.util.Set;
 public interface RangerAccessRequest {
 	RangerResource getResource();
 
-	Set<String> getAccessTypes();
+	String getAccessType();
 
 	String getUser();
 

@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.audit.RangerAuditHandler;
@@ -184,21 +185,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerAccessResult ret = createAccessResult(request);
 
 		if(request != null) {
-			if(CollectionUtils.isEmpty(request.getAccessTypes())) {
-				request.getAccessTypes().add(ANY_ACCESS);
-			}
-
-			for(String accessType : request.getAccessTypes()) {
-				ret.setAccessTypeResult(accessType, new RangerAccessResult.ResultDetail());
-			}
-
 			List<RangerPolicyEvaluator> evaluators = policyEvaluators;
 
 			if(evaluators != null) {
 				for(RangerPolicyEvaluator evaluator : evaluators) {
 					evaluator.evaluate(request, ret);
 
-					if(ret.getIsAudited() && ret.getResult() == RangerAccessResult.Result.ALLOWED) {
+					// stop once allowed=true && audited==true
+					if(ret.getIsAllowed() && ret.getIsAudited()) {
 						break;
 					}
 				}

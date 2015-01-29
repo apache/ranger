@@ -41,107 +41,115 @@
     {"name":"ALLOW 'read /finance/restricted/sales.db' for g=finance",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db"
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":true,"policyId":3}}}
+     "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
     ,
     {"name":"ALLOW 'read /finance/restricted/hr/payroll.db' for g=finance",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/hr/payroll.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/hr/payroll.db"
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/hr/payroll.db"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":true,"policyId":3}}}
+     "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
     ,
     {"name":"DENY 'read /operations/visitors.db' for g=finance",
      "request":{
       "resource":{"elements":{"path":"/operations/visitors.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":["finance"],"requestData":"read /operations/visitors.db"
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /operations/visitors.db"
      },
-     "result":{"isAudited":false,"accessTypeResults":{"read":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"ALLOW 'read /public/technology/blogs.db' for g=finance",
      "request":{
       "resource":{"elements":{"path":"/public/technology/blogs.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":["finance"],"requestData":"read /public/technology/blogs.db"
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /public/technology/blogs.db"
      },
-     "result":{"isAudited":false,"accessTypeResults":{"read":{"isAllowed":true,"policyId":2}}}
+     "result":{"isAudited":false,"isAllowed":true,"policyId":2}
     }
     ,
 
     {"name":"DENY 'read /finance/restricted/sales.db' for g=hr",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":["hr"],"requestData":"read /finance/restricted/sales.db"
+      "accessType":"read","user":"user1","userGroups":["hr"],"requestData":"read /finance/restricted/sales.db"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"FALSE 'read /finance/restricted/hr/payroll.db' for g=hr",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/hr/payroll.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":["hr"],"requestData":"read /finance/restricted/hr/payroll.db"
+      "accessType":"read","user":"user1","userGroups":["hr"],"requestData":"read /finance/restricted/hr/payroll.db"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"DENY 'read /operations/visitors.db' for g=hr",
      "request":{
       "resource":{"elements":{"path":"/operations/visitors.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":["hr"],"requestData":"read /operations/visitors.db"
+      "accessType":"read","user":"user1","userGroups":["hr"],"requestData":"read /operations/visitors.db"
      },
-     "result":{"isAudited":false,"accessTypeResults":{"read":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"ALLOW 'read /public/technology/blogs.db' for g=hr",
      "request":{
       "resource":{"elements":{"path":"/public/technology/blogs.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":["hr"],"requestData":"read /public/technology/blogs.db"
+      "accessType":"read","user":"user1","userGroups":["hr"],"requestData":"read /public/technology/blogs.db"
      },
-     "result":{"isAudited":false,"accessTypeResults":{"read":{"isAllowed":true,"policyId":2}}}
+     "result":{"isAudited":false,"isAllowed":true,"policyId":2}
     }
     ,
 
     {"name":"DENY 'read /finance/restricted/sales.db' for u=user1",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":[],"requestData":"read /finance/restricted/sales.db"
+      "accessType":"read","user":"user1","userGroups":[],"requestData":"read /finance/restricted/sales.db"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"DENY 'read /finance/restricted/hr/payroll.db' for u=user1",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/hr/payroll.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":[],"requestData":"read /finance/restricted/hr/payroll.db"
+      "accessType":"read","user":"user1","userGroups":[],"requestData":"read /finance/restricted/hr/payroll.db"
      },
-     "result":{"isAudited":true,"accessTypeResults":{"read":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"DENY 'read /operations/visitors.db' for u=user1",
      "request":{
       "resource":{"elements":{"path":"/operations/visitors.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":[],"requestData":"read /operations/visitors.db"
+      "accessType":"read","user":"user1","userGroups":[],"requestData":"read /operations/visitors.db"
      },
-     "result":{"isAudited":false,"accessTypeResults":{"read":{"isAllowed":false,"policyId":-1}}}
+     "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"ALLOW 'read /public/technology/blogs.db' for u=user1",
      "request":{
       "resource":{"elements":{"path":"/public/technology/blogs.db"}},
-      "accessTypes":["read"],"user":"user1","userGroups":[],"requestData":"read /public/technology/blogs.db"
+      "accessType":"read","user":"user1","userGroups":[],"requestData":"read /public/technology/blogs.db"
      },
-     "result":{"isAudited":false,"accessTypeResults":{"read":{"isAllowed":true,"policyId":2}}}
+     "result":{"isAudited":false,"isAllowed":true,"policyId":2}
     }
     ,
     {"name":"ALLOW 'read /public/technology' for u=user1",
      "request":{
       "resource":{"elements":{"path":"/public/technology/blogs.db"}},
-      "accessTypes":["read","execute"],"user":"user1","userGroups":[],"requestData":"read /public/technology/blogs.db"
+      "accessType":"read","user":"user1","userGroups":[],"requestData":"read /public/technology/blogs.db"
      },
-     "result":{"isAudited":false,"accessTypeResults":{"execute":{"isAllowed":true,"policyId":2},"read":{"isAllowed":true,"policyId":2}}}
+     "result":{"isAudited":false,"isAllowed":true,"policyId":2}
+    }
+    ,
+    {"name":"ALLOW 'read /public/technology' for u=user1",
+     "request":{
+      "resource":{"elements":{"path":"/public/technology/blogs.db"}},
+      "accessType":"execute","user":"user1","userGroups":[],"requestData":"read /public/technology/blogs.db"
+     },
+     "result":{"isAudited":false,"isAllowed":true,"policyId":2}
     }
   ]
 }

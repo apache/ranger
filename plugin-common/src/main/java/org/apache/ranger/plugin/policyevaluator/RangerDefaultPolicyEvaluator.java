@@ -92,73 +92,56 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(policy != null && request != null && result != null) {
 			boolean isResourceMatch     = matchResource(request.getResource());
 			boolean isResourceHeadMatch = isResourceMatch || matchResourceHead(request.getResource());
+			String  accessType          = request.getAccessType();
 
-			if(isResourceMatch && policy.getIsAuditEnabled()) {
-				result.setIsAudited(true);
+			if(StringUtils.isEmpty(accessType)) {
+				accessType = RangerPolicyEngine.ANY_ACCESS;
 			}
 
-			for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-				boolean isUserGroupMatch        = matchUserGroup(policyItem, request.getUser(), request.getUserGroups());
-				boolean isCustomConditionsMatch = matchCustomConditions(policyItem, request);
+			boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
 
-				if(! isCustomConditionsMatch) {
-					continue;
+			if(isResourceMatch || (isResourceHeadMatch && isAnyAccess)) {
+				if(policy.getIsAuditEnabled()) {
+					result.setIsAudited(true);
 				}
 
-				for(String accessType : request.getAccessTypes()) {
-					RangerAccessResult.ResultDetail accessResult = result.getAccessTypeResult(accessType);
-
-					// are we done with this accessType?
-					if(accessResult.isAllowed()) {
-						continue;
-					}
-
-					boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
-
-					// partial match is only for "any" access
-					if(!isResourceMatch) {
-						if(!isResourceHeadMatch || !isAnyAccess) {
-							continue;
-						}
-					}
-
-					if(policy.getIsAuditEnabled()) {
-						result.setIsAudited(true);
-					}
-
-					if(!isUserGroupMatch) {
-						continue;
+				for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+					if(result.getIsAllowed()) {
+						break;
 					}
 
 					if(CollectionUtils.isEmpty(policyItem.getAccesses())) {
 						continue;
 					}
 
+					boolean isUserGroupMatch = matchUserGroup(policyItem, request.getUser(), request.getUserGroups());
+
+					if(! isUserGroupMatch) {
+						continue;
+					}
+
+					boolean isCustomConditionsMatch = matchCustomConditions(policyItem, request);
+	
+					if(! isCustomConditionsMatch) {
+						continue;
+					}
+	
 					if(isAnyAccess) {
 						for(RangerPolicyItemAccess access : policyItem.getAccesses()) {
-							if(!accessResult.isAllowed() && access.getIsAllowed()) {
-								accessResult.setIsAllowed(true);
-								accessResult.setPolicyId(policy.getId());
+							if(access.getIsAllowed()) {
+								result.setIsAllowed(true);
+								result.setPolicyId(policy.getId());
+								break;
 							}
-
-							break;
 						}
 					} else {
 						RangerPolicyItemAccess access = getAccess(policyItem, accessType);
 
-						if(access == null) {
-							continue;
-						}
-
-						if(!accessResult.isAllowed() && access.getIsAllowed()) {
-							accessResult.setIsAllowed(true);
-							accessResult.setPolicyId(policy.getId());
+						if(access != null && access.getIsAllowed()) {
+							result.setIsAllowed(true);
+							result.setPolicyId(policy.getId());
 						}
 					}
-				}
-
-				if(result.getIsAudited() && result.getResult() == RangerAccessResult.Result.ALLOWED) {
-					break;
 				}
 			}
 		}

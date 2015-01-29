@@ -51,6 +51,21 @@ import com.google.common.collect.Sets;
 public class RangerFSPermissionChecker {
 	private static final Log LOG = LogFactory.getLog(RangerFSPermissionChecker.class);
 
+	private static Map<FsAction, Set<String>> access2ActionListMapper = null ;
+
+	static {
+		access2ActionListMapper = new HashMap<FsAction, Set<String>>();
+
+		access2ActionListMapper.put(FsAction.NONE,          new HashSet<String>());
+		access2ActionListMapper.put(FsAction.ALL,           Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.READ,          Sets.newHashSet(READ_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.READ_WRITE,    Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.READ_EXECUTE,  Sets.newHashSet(READ_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.WRITE,         Sets.newHashSet(WRITE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.WRITE_EXECUTE, Sets.newHashSet(WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.EXECUTE,       Sets.newHashSet(EXECUTE_ACCCESS_TYPE));
+	}
+
 	private static final boolean addHadoopAuth = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT) ;
 
 
@@ -104,11 +119,22 @@ public class RangerFSPermissionChecker {
 			}
 
 			if (rangerPlugin != null) {
-				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(aPathName, aPathOwnerName, access, user, groups);
+				Set<String> accessTypes = access2ActionListMapper.get(access);
 
-				RangerAccessResult result = rangerPlugin.isAccessAllowed(request, getCurrentAuditHandler());
+				boolean isAllowed = true;
+				for(String accessType : accessTypes) {
+					RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(aPathName, aPathOwnerName, access, accessType, user, groups);
 
-				accessGranted = (result != null && result.getResult() == RangerAccessResult.Result.ALLOWED);
+					RangerAccessResult result = rangerPlugin.isAccessAllowed(request, getCurrentAuditHandler());
+
+					isAllowed = result.getIsAllowed();
+					
+					if(!isAllowed) {
+						break;
+					}
+				}
+
+				accessGranted = isAllowed;
 			}
 		}
 
@@ -196,24 +222,9 @@ class RangerHdfsResource implements RangerResource {
 }
 
 class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
-	private static Map<FsAction, Set<String>> access2ActionListMapper = null ;
-
-	static {
-		access2ActionListMapper = new HashMap<FsAction, Set<String>>();
-
-		access2ActionListMapper.put(FsAction.NONE,          new HashSet<String>());
-		access2ActionListMapper.put(FsAction.ALL,           Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ,          Sets.newHashSet(READ_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ_WRITE,    Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ_EXECUTE,  Sets.newHashSet(READ_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.WRITE,         Sets.newHashSet(WRITE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.WRITE_EXECUTE, Sets.newHashSet(WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.EXECUTE,       Sets.newHashSet(EXECUTE_ACCCESS_TYPE));
-	}
-
-	public RangerHdfsAccessRequest(String path, String pathOwner, FsAction access, String user, Set<String> groups) {
+	public RangerHdfsAccessRequest(String path, String pathOwner, FsAction access, String accessType, String user, Set<String> groups) {
 		super.setResource(new RangerHdfsResource(path, pathOwner));
-		super.setAccessTypes(access2ActionListMapper.get(access));
+		super.setAccessType(accessType);
 		super.setUser(user);
 		super.setUserGroups(groups);
 		super.setAccessTime(StringUtil.getUTCDate());
@@ -279,7 +290,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		auditEvent.setResourcePath(pathToBeValidated);
 		auditEvent.setResourceType(resourceType) ;
 		auditEvent.setAccessType(request.getAction());
-		auditEvent.setAccessResult((short)(result.getResult() == RangerAccessResult.Result.ALLOWED ? 1 : 0));
+		auditEvent.setAccessResult((short)(result.getIsAllowed() ? 1 : 0));
 		auditEvent.setClientIP(request.getClientIPAddress());
 		auditEvent.setEventTime(request.getAccessTime());
 		auditEvent.setAclEnforcer(RangerModuleName);

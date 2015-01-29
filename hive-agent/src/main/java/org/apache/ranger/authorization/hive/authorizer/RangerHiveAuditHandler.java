@@ -30,7 +30,6 @@ import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult.Result;
 
 public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	private static final String RangerModuleName =  RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME) ;
@@ -52,15 +51,14 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 		RangerHiveAccessRequest request  = (RangerHiveAccessRequest)result.getAccessRequest();
 		RangerHiveResource      resource = (RangerHiveResource)request.getResource();
-		boolean                 isAllowed = result.getResult() == Result.ALLOWED;
 
 		auditEvent.setAclEnforcer(RangerModuleName);
 		auditEvent.setSessionId(request.getSessionId());
 		auditEvent.setResourceType("@" + StringUtil.toLower(resource.getObjectType().name())); // to be consistent with earlier release
-		auditEvent.setAccessType(request.getAccessType().toString());
+		auditEvent.setAccessType(request.getHiveAccessType().toString());
 		auditEvent.setAction(request.getAction());
 		auditEvent.setUser(request.getUser());
-		auditEvent.setAccessResult((short)(isAllowed ? 1 : 0));
+		auditEvent.setAccessResult((short)(result.getIsAllowed() ? 1 : 0));
 		auditEvent.setPolicyId(result.getPolicyId());
 		auditEvent.setClientIP(request.getClientIPAddress());
 		auditEvent.setClientType(request.getClientType());
@@ -88,7 +86,6 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 			RangerHiveAccessRequest request    = (RangerHiveAccessRequest)result.getAccessRequest();
 			RangerHiveResource      resource   = (RangerHiveResource)request.getResource();
-			boolean                 isAllowed  = result.getResult() == Result.ALLOWED;
 			AuthzAuditEvent         auditEvent = auditEvents.get(result.getPolicyId());
 
 			if(auditEvent == null) {
@@ -98,10 +95,10 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 				auditEvent.setAclEnforcer(RangerModuleName);
 				auditEvent.setSessionId(request.getSessionId());
 				auditEvent.setResourceType("@" + StringUtil.toLower(resource.getObjectType().name())); // to be consistent with earlier release
-				auditEvent.setAccessType(request.getAccessType().toString());
+				auditEvent.setAccessType(request.getHiveAccessType().toString());
 				auditEvent.setAction(request.getAction());
 				auditEvent.setUser(request.getUser());
-				auditEvent.setAccessResult((short)(isAllowed ? 1 : 0));
+				auditEvent.setAccessResult((short)(result.getIsAllowed() ? 1 : 0));
 				auditEvent.setPolicyId(result.getPolicyId());
 				auditEvent.setClientIP(request.getClientIPAddress());
 				auditEvent.setClientType(request.getClientType());
@@ -110,13 +107,13 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 				auditEvent.setRepositoryName(result.getServiceName()) ;
 				auditEvent.setRequestData(request.getRequestData());
 				auditEvent.setResourcePath(getResourceValueAsString(resource, result.getServiceDef()));
-			} else if(isAllowed){
+			} else if(result.getIsAllowed()){
 				auditEvent.setResourcePath(auditEvent.getResourcePath() + "," + resource.getColumn());
 			} else {
 				auditEvent.setResourcePath(getResourceValueAsString(resource, result.getServiceDef()));
 			}
 			
-			if(!isAllowed) {
+			if(!result.getIsAllowed()) {
 				auditEvent.setResourcePath(getResourceValueAsString(resource, result.getServiceDef()));
 
 				break;

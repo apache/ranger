@@ -30,7 +30,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private RangerResource      resource        = null;
-	private Set<String>         accessTypes     = null;
+	private String              accessType      = null;
 	private String              user            = null;
 	private Set<String>         userGroups      = null;
 	private Date                accessTime      = null;
@@ -46,9 +46,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this(null, null, null, null);
 	}
 
-	public RangerAccessRequestImpl(RangerResource resource, Set<String> accessTypes, String user, Set<String> userGroups) {
+	public RangerAccessRequestImpl(RangerResource resource, String accessType, String user, Set<String> userGroups) {
 		setResource(resource);
-		setAccessTypes(accessTypes);
+		setAccessType(accessType);
 		setUser(user);
 		setUserGroups(userGroups);
 
@@ -68,8 +68,8 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public Set<String> getAccessTypes() {
-		return accessTypes;
+	public String getAccessType() {
+		return accessType;
 	}
 
 	@Override
@@ -123,15 +123,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	public void setAccessType(String accessType) {
-		this.accessTypes = new HashSet<String>();
-
-		if(! StringUtils.isEmpty(accessType)) {
-			this.accessTypes.add(accessType);
-		}
-	}
-
-	public void setAccessTypes(Set<String> accessTypes) {
-		this.accessTypes = (accessTypes == null) ? new HashSet<String>() : accessTypes;
+		this.accessType = accessType;
 	}
 
 	public void setUser(String user) {
@@ -183,14 +175,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("RangerAccessRequestImpl={");
 
 		sb.append("resource={").append(resource).append("} ");
-
-		sb.append("accessTypes={");
-		if(accessTypes != null) {
-			for(String accessType : accessTypes) {
-				sb.append(accessType).append(" ");
-			}
-		}
-
+		sb.append("accessType={").append(accessType).append("} ");
 		sb.append("user={").append(user).append("} ");
 
 		sb.append("userGroups={");

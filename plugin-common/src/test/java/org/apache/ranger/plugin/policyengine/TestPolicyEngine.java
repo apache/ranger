@@ -103,8 +103,9 @@ public class TestPolicyEngine {
 				RangerAccessResult result   = policyEngine.isAccessAllowed(test.request, null);
 
 				assertNotNull(test.name, result);
+				assertEquals(test.name, expected.getIsAllowed(), result.getIsAllowed());
 				assertEquals(test.name, expected.getIsAudited(), result.getIsAudited());
-				assertEquals(test.name, expected.getAccessTypeResults(), result.getAccessTypeResults());
+				assertEquals(test.name, expected.getPolicyId(), result.getPolicyId());
 			}
 		} catch(Throwable excp) {
 			excp.printStackTrace();
