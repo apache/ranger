@@ -20,6 +20,7 @@
 package org.apache.ranger.rest;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -32,6 +33,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -638,9 +642,31 @@ public class ServiceREST {
 
 
 	private SearchFilter getSearchFilter(HttpServletRequest request) {
-		SearchFilter ret = null;
+		if(request == null || MapUtils.isEmpty(request.getParameterMap())) {
+			return null;
+		}
 
-		// TODO: create SearchFilter from HttpServletRequest params
+		SearchFilter ret = new SearchFilter();
+
+		ret.setParam(SearchFilter.LOGIN_USER, request.getParameter(SearchFilter.LOGIN_USER));
+		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter(SearchFilter.SERVICE_TYPE));
+		ret.setParam(SearchFilter.SERVICE_TYPE_ID, request.getParameter(SearchFilter.SERVICE_TYPE_ID));
+		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter(SearchFilter.SERVICE_NAME));
+		ret.setParam(SearchFilter.SERVICE_ID, request.getParameter(SearchFilter.SERVICE_ID));
+		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter(SearchFilter.POLICY_NAME));
+		ret.setParam(SearchFilter.POLICY_ID, request.getParameter(SearchFilter.POLICY_ID));
+		ret.setParam(SearchFilter.USER, request.getParameter(SearchFilter.USER));
+		ret.setParam(SearchFilter.GROUP, request.getParameter(SearchFilter.GROUP));
+		ret.setParam(SearchFilter.SORT_BY, request.getParameter(SearchFilter.SORT_BY));
+		
+		for(Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
+			String   name   = e.getKey();
+			String[] values = e.getValue();
+			
+			if(!StringUtils.isEmpty(name) && !ArrayUtils.isEmpty(values) && name.startsWith(SearchFilter.RESOURCE_PREFIX)) {
+				ret.setParam(name, values[0]);
+			}
+		}
 
 		return ret;
 	}

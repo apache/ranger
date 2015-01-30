@@ -22,17 +22,22 @@ package org.apache.ranger.plugin.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
+
 
 public class SearchFilter {
 	public static final String LOGIN_USER      = "loginUser";
 	public static final String SERVICE_TYPE    = "serviceType";
+	public static final String SERVICE_TYPE_ID = "serviceTypeId";
 	public static final String SERVICE_NAME    = "serviceName";
 	public static final String SERVICE_ID      = "serviceId";
 	public static final String POLICY_NAME     = "policyName";
+	public static final String POLICY_ID       = "policyId";
 	public static final String RESOURCE_PREFIX = "resource:";
 	public static final String STATUS          = "status";
-	public static final String USER_NAME       = "userName";
-	public static final String GROUP_NAME      = "groupName";
+	public static final String USER            = "user";
+	public static final String GROUP           = "group";
 	public static final String START_INDEX     = "startIndex";
 	public static final String PAGE_SIZE       = "pageSize";
 	public static final String SORT_BY         = "sortBy";
@@ -41,6 +46,10 @@ public class SearchFilter {
 
 	public SearchFilter() {
 		this(null);
+	}
+
+	public SearchFilter(String name, String value) {
+		setParam(name, value);
 	}
 
 	public SearchFilter(Map<String, String> values) {
@@ -60,6 +69,10 @@ public class SearchFilter {
 	}
 
 	public void setParam(String name, String value) {
+		if(StringUtils.isEmpty(name) || StringUtils.isEmpty(value)) {
+			return;
+		}
+
 		if(params == null) {
 			params = new HashMap<String, String>();
 		}
@@ -67,8 +80,12 @@ public class SearchFilter {
 		params.put(name, value);
 	}
 
-	public Map<String, String> getParamsWithPrefix(String prefix) {
+	public Map<String, String> getParamsWithPrefix(String prefix, boolean stripPrefix) {
 		Map<String, String> ret = null;
+
+		if(prefix == null) {
+			prefix = StringUtils.EMPTY;
+		}
 
 		if(params != null) {
 			for(Map.Entry<String, String> e : params.entrySet()) {
@@ -79,11 +96,19 @@ public class SearchFilter {
 						ret = new HashMap<String, String>();
 					}
 
+					if(stripPrefix) {
+						name = name.substring(prefix.length());
+					}
+
 					ret.put(name, e.getValue());
 				}
 			}
 		}
 
 		return ret;
+	}
+
+	public boolean isEmpty() {
+		return MapUtils.isEmpty(params);
 	}
 }

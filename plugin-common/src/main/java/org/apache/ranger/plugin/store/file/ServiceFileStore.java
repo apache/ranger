@@ -20,13 +20,16 @@
 package org.apache.ranger.plugin.store.file;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.PredicateUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -36,8 +39,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -219,14 +224,12 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		RangerServiceDef ret = null;
 
-		List<RangerServiceDef> serviceDefs = getAllServiceDefs();
+		if(id != null) {
+			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_TYPE_ID, id.toString());
 
-		for(RangerServiceDef sd : serviceDefs) {
-			if(sd != null && sd.getId() != null && sd.getId().longValue() == id) {
-				ret = sd;
+			List<RangerServiceDef> serviceDefs = getServiceDefs(filter);
 
-				break;
-			}
+			ret = CollectionUtils.isEmpty(serviceDefs) ? null : serviceDefs.get(0);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -244,14 +247,12 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		RangerServiceDef ret = null;
 
-		List<RangerServiceDef> serviceDefs = getAllServiceDefs();
+		if(name != null) {
+			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_TYPE, name);
 
-		for(RangerServiceDef sd : serviceDefs) {
-			if(sd != null && StringUtils.equalsIgnoreCase(sd.getName(), name)) {
-				ret = sd;
+			List<RangerServiceDef> serviceDefs = getServiceDefs(filter);
 
-				break;
-			}
+			ret = CollectionUtils.isEmpty(serviceDefs) ? null : serviceDefs.get(0);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -270,7 +271,13 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		List<RangerServiceDef> ret = getAllServiceDefs();
 
 		if(ret != null && filter != null) {
-			CollectionUtils.filter(ret, getServiceDefPredicate(filter));
+			CollectionUtils.filter(ret, getPredicate(filter));
+
+			Comparator<RangerServiceDef> comparator = getServiceDefComparator(filter);
+
+			if(comparator != null) {
+				Collections.sort(ret, comparator);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -425,20 +432,12 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		RangerService ret = null;
 
-		try {
-			List<RangerService> services = getAllServices();
+		if(name != null) {
+			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, name);
 
-			if(services != null) {
-				for(RangerService service : services) {
-					if(StringUtils.equalsIgnoreCase(service.getName(), name)) {
-						ret = service;
+			List<RangerService> services = getServices(filter);
 
-						break;
-					}
-				}
-			}
-		} catch(Exception excp) {
-			LOG.error("ServiceFileStore.getServiceByName(" + name + "): failed to read service", excp);
+			ret = CollectionUtils.isEmpty(services) ? null : services.get(0);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -457,7 +456,13 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		List<RangerService> ret = getAllServices();
 
 		if(ret != null && filter != null) {
-			CollectionUtils.filter(ret, getServicePredicate(filter));
+			CollectionUtils.filter(ret, getPredicate(filter));
+
+			Comparator<RangerService> comparator = getServiceComparator(filter);
+
+			if(comparator != null) {
+				Collections.sort(ret, comparator);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -608,20 +613,12 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		RangerPolicy ret = null;
 
-		try {
-			List<RangerPolicy> policies = getAllPolicies();
+		if(id != null) {
+			SearchFilter filter = new SearchFilter(SearchFilter.POLICY_ID, id.toString());
 
-			if(policies != null) {
-				for(RangerPolicy policy : policies) {
-					if(policy.getId().equals(id)) {
-						ret = policy;
-	
-						break;
-					}
-				}
-			}
-		} catch(Exception excp) {
-			throw new Exception(id + ": failed to read policy", excp);
+			List<RangerPolicy> policies = getPolicies(filter);
+
+			ret = CollectionUtils.isEmpty(policies) ? null : policies.get(0);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -640,7 +637,13 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		List<RangerPolicy> ret = getAllPolicies();
 
 		if(ret != null) {
-			CollectionUtils.filter(ret, getPolicyPredicate(filter));
+			CollectionUtils.filter(ret, getPredicate(filter));
+
+			Comparator<RangerPolicy> comparator = getPolicyComparator(filter);
+
+			if(comparator != null) {
+				Collections.sort(ret, comparator);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -680,25 +683,19 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 
 		try {
-			List<RangerPolicy> policies = getPolicies(filter);
-
-			if(policies != null) {
-				for(RangerPolicy policy : policies) {
-					if(StringUtils.equals(policy.getService(), serviceName)) {
-						ret.add(policy);
-					}
-				}
+			if(filter == null) {
+				filter = new SearchFilter();
 			}
+
+			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+			ret = getPolicies(filter);
 		} catch(Exception excp) {
 			LOG.error("ServiceFileStore.getServicePolicies(" + serviceName + "): failed to read policies", excp);
 		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
-		}
-
-		if(ret != null) {
-			Collections.sort(ret, RangerPolicy.idComparator);
 		}
 
 		return ret;
@@ -731,20 +728,11 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		ret.setPolicies(new ArrayList<RangerPolicy>());
 
 		if(lastKnownVersion == null || service.getPolicyVersion() == null || lastKnownVersion.longValue() != service.getPolicyVersion().longValue()) {
+			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, serviceName);
 
-			try {
-				List<RangerPolicy> policies = getAllPolicies();
+			List<RangerPolicy> policies = getPolicies(filter);
 
-				if(policies != null) {
-					for(RangerPolicy policy : policies) {
-						if(StringUtils.equals(policy.getService(), serviceName)) {
-							ret.getPolicies().add(policy);
-						}
-					}
-				}
-			} catch(Exception excp) {
-				LOG.error("ServiceFileStore.getServicePoliciesIfUpdated(" + serviceName + "): failed to read policies", excp);
-			}
+			ret.setPolicies(policies);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -752,7 +740,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(ret != null && ret.getPolicies() != null) {
-			Collections.sort(ret.getPolicies(), RangerPolicy.idComparator);
+			Collections.sort(ret.getPolicies(), policyIdComparator);
 		}
 
 		return ret;
@@ -829,22 +817,14 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		RangerPolicy ret = null;
 
-		try {
-			List<RangerPolicy> policies = getAllPolicies();
+		SearchFilter filter = new SearchFilter();
 
-			if(policies != null) {
-				for(RangerPolicy policy : policies) {
-					if(StringUtils.equals(policy.getService(),  service.getName()) &&
-					   StringUtils.equals(policy.getName(), policyName)) {
-						ret = policy;
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+		filter.setParam(SearchFilter.POLICY_NAME, policyName);
 
-						break;
-					}
-				}
-			}
-		} catch(Exception excp) {
-			LOG.error("ServiceFileStore.findPolicyByName(" + serviceName + ", " + policyName + "): failed to read policies", excp);
-		}
+		List<RangerPolicy> policies = getPolicies(filter);
+
+		ret = CollectionUtils.isEmpty(policies) ? null : policies.get(0);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.findPolicyByName(" + serviceName + ", " + policyName + "): " + ret);
@@ -927,7 +907,11 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, RangerServiceDef.idComparator);
+			Collections.sort(ret, serviceDefIdComparator);
+
+			for(RangerServiceDef sd : ret) {
+				Collections.sort(sd.getResources(), resourceLevelComparator);
+			}
 		}
 
 		return ret;
@@ -953,7 +937,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, RangerService.idComparator);
+			Collections.sort(ret, serviceIdComparator);
 		}
 
 		return ret;
@@ -975,7 +959,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, RangerPolicy.idComparator);
+			Collections.sort(ret, policyIdComparator);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1009,301 +993,605 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		return service != null ? service.getId() : null;
 	}
 
-	/*
-	public static final String LOGIN_USER      = "loginUser";
-	public static final String SERVICE_TYPE    = "serviceType";
-	public static final String SERVICE_NAME    = "serviceName";
-	public static final String SERVICE_ID      = "serviceId";
-	public static final String POLICY_NAME     = "policyName";
-	public static final String RESOURCE_PREFIX = "resource:";
-	public static final String STATUS          = "status";
-	public static final String USER_NAME       = "userName";
-	public static final String GROUP_NAME      = "groupName";
-	public static final String START_INDEX     = "startIndex";
-	public static final String PAGE_SIZE       = "pageSize";
-	public static final String SORT_BY         = "sortBy";
-	 */
+	private final static Comparator<RangerServiceDef> serviceDefNameComparator = new Comparator<RangerServiceDef>() {
+		@Override
+		public int compare(RangerServiceDef o1, RangerServiceDef o2) {
+			String name1 = (o1 == null) ? null : o1.getName();
+			String name2 = (o2 == null) ? null : o2.getName();
 
-	private Predicate getServiceDefPredicate(SearchFilter filter) {
+			if(name1 == null) {
+				return -1;
+			} else if(name2 == null) {
+				return 1;
+			} else {
+				return name1.compareTo(name2);
+			}
+		}
+	};
+
+	private final static Comparator<RangerServiceDef> serviceDefIdComparator = new Comparator<RangerServiceDef>() {
+		@Override
+		public int compare(RangerServiceDef o1, RangerServiceDef o2) {
+			long id1 = (o1 == null || o1.getId() == null) ? 0 : o1.getId().longValue();
+			long id2 = (o2 == null || o2.getId() == null) ? 0 : o2.getId().longValue();
+
+			if(id1 < id2) {
+				return -1;
+			} else if(id1 > id2) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	};
+
+	private final static Comparator<RangerService> serviceNameComparator = new Comparator<RangerService>() {
+		@Override
+		public int compare(RangerService o1, RangerService o2) {
+			String name1 = (o1 == null) ? null : o1.getName();
+			String name2 = (o2 == null) ? null : o2.getName();
+
+			if(name1 == null) {
+				return -1;
+			} else if(name2 == null) {
+				return 1;
+			} else {
+				return name1.compareTo(name2);
+			}
+		}
+	};
+
+	private final static Comparator<RangerService> serviceIdComparator = new Comparator<RangerService>() {
+		@Override
+		public int compare(RangerService o1, RangerService o2) {
+			long id1 = (o1 == null || o1.getId() == null) ? 0 : o1.getId().longValue();
+			long id2 = (o2 == null || o2.getId() == null) ? 0 : o2.getId().longValue();
+
+			if(id1 < id2) {
+				return -1;
+			} else if(id1 > id2) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	};
+
+	private final static Comparator<RangerPolicy> policyNameComparator = new Comparator<RangerPolicy>() {
+		@Override
+		public int compare(RangerPolicy o1, RangerPolicy o2) {
+			String name1 = (o1 == null) ? null : o1.getName();
+			String name2 = (o2 == null) ? null : o2.getName();
+
+			if(name1 == null) {
+				return -1;
+			} else if(name2 == null) {
+				return 1;
+			} else {
+				return name1.compareTo(name2);
+			}
+		}
+	};
+
+	private final static Comparator<RangerPolicy> policyIdComparator = new Comparator<RangerPolicy>() {
+		@Override
+		public int compare(RangerPolicy o1, RangerPolicy o2) {
+			long id1 = (o1 == null || o1.getId() == null) ? 0 : o1.getId().longValue();
+			long id2 = (o2 == null || o2.getId() == null) ? 0 : o2.getId().longValue();
+
+			if(id1 < id2) {
+				return -1;
+			} else if(id1 > id2) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	};
+
+	private final static Comparator<RangerResourceDef> resourceLevelComparator = new Comparator<RangerResourceDef>() {
+		@Override
+		public int compare(RangerResourceDef o1, RangerResourceDef o2) {
+			long level1 = (o1 == null || o1.getLevel() == null) ? 0l : o1.getLevel().longValue();
+			long level2 = (o2 == null || o2.getLevel() == null) ? 0l : o2.getLevel().longValue();
+
+			if(level1 < level2) {
+				return -1;
+			} else if(level1 > level2) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	};
+
+
+	private Predicate getPredicate(SearchFilter filter) {
 		if(filter == null) {
 			return null;
 		}
 
 		List<Predicate> predicates = new ArrayList<Predicate>();
 
-		final String serviceType = filter.getParam(SearchFilter.SERVICE_TYPE);
-		if(! StringUtils.isEmpty(serviceType)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerServiceDef) {
-						RangerServiceDef serviceDef = (RangerServiceDef)object;
-
-						ret = StringUtils.equals(serviceType, serviceDef.getName());
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
+		addPredicateForLoginUser(filter.getParam(SearchFilter.LOGIN_USER), predicates);
+		addPredicateForServiceType(filter.getParam(SearchFilter.SERVICE_TYPE), predicates);
+		addPredicateForServiceTypeId(filter.getParam(SearchFilter.SERVICE_TYPE_ID), predicates);
+		addPredicateForServiceName(filter.getParam(SearchFilter.SERVICE_NAME), predicates);
+		addPredicateForServiceId(filter.getParam(SearchFilter.SERVICE_ID), predicates);
+		addPredicateForPolicyName(filter.getParam(SearchFilter.POLICY_NAME), predicates);
+		addPredicateForPolicyId(filter.getParam(SearchFilter.POLICY_ID), predicates);
+		addPredicateForUserName(filter.getParam(SearchFilter.USER), predicates);
+		addPredicateForGroupName(filter.getParam(SearchFilter.GROUP), predicates);
+		addPredicateForResources(filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true), predicates);
 
 		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
 
 		return ret;
 	}
 
-	private Predicate getServicePredicate(SearchFilter filter) {
-		if(filter == null) {
+	private Comparator<RangerServiceDef> getServiceDefComparator(SearchFilter filter) {
+		String sortBy = filter == null ? null : filter.getParam(SearchFilter.SORT_BY);
+
+		if(StringUtils.isEmpty(sortBy)) {
 			return null;
 		}
 
-		List<Predicate> predicates = new ArrayList<Predicate>();
+		Comparator<RangerServiceDef> ret = null;
 
-		final String serviceType = filter.getParam(SearchFilter.SERVICE_TYPE);
-		if(! StringUtils.isEmpty(serviceType)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerService) {
-						RangerService service = (RangerService)object;
-
-						ret = StringUtils.equals(serviceType, service.getType());
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
+		if(StringUtils.equals(sortBy, SearchFilter.SERVICE_TYPE)) {
+			ret = serviceDefNameComparator;
+		} else if(StringUtils.equals(sortBy, SearchFilter.SERVICE_TYPE_ID)) {
+			ret = serviceDefIdComparator;
 		}
-
-		final String serviceName = filter.getParam(SearchFilter.SERVICE_NAME);
-		if(! StringUtils.isEmpty(serviceName)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerService) {
-						RangerService service = (RangerService)object;
-						
-						ret = StringUtils.equals(serviceName, service.getName());
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
-
-		final String serviceId = filter.getParam(SearchFilter.SERVICE_ID);
-		if(! StringUtils.isEmpty(serviceId)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerService) {
-						RangerService service = (RangerService)object;
-						Long svcId = service.getId();
-
-						if(svcId != null) {
-							ret = StringUtils.equals(serviceId, svcId.toString());
-						}
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
-
-		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
 
 		return ret;
 	}
 
-	private Predicate getPolicyPredicate(SearchFilter filter) {
-		if(filter == null) {
+	private Comparator<RangerService> getServiceComparator(SearchFilter filter) {
+		String sortBy = filter == null ? null : filter.getParam(SearchFilter.SORT_BY);
+
+		if(StringUtils.isEmpty(sortBy)) {
 			return null;
 		}
 
-		List<Predicate> predicates = new ArrayList<Predicate>();
+		Comparator<RangerService> ret = null;
 
-		final String loginUser = filter.getParam(SearchFilter.LOGIN_USER);
-		if(! StringUtils.isEmpty(loginUser)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
+		if(StringUtils.equals(sortBy, SearchFilter.SERVICE_NAME)) {
+			ret = serviceNameComparator;
+		} else if(StringUtils.equals(sortBy, SearchFilter.SERVICE_TYPE_ID)) {
+			ret = serviceIdComparator;
+		}
 
-					if(object != null && object instanceof RangerPolicy) {
-						RangerPolicy policy = (RangerPolicy)object;
-						
-						for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-							if(!policyItem.getDelegateAdmin()) {
-								continue;
+		return ret;
+	}
+
+	private Comparator<RangerPolicy> getPolicyComparator(SearchFilter filter) {
+		String sortBy = filter == null ? null : filter.getParam(SearchFilter.SORT_BY);
+
+		if(StringUtils.isEmpty(sortBy)) {
+			return null;
+		}
+
+		Comparator<RangerPolicy> ret = null;
+
+		if(StringUtils.equals(sortBy, SearchFilter.POLICY_NAME)) {
+			ret = policyNameComparator;
+		} else if(StringUtils.equals(sortBy, SearchFilter.POLICY_ID)) {
+			ret = policyIdComparator;
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForLoginUser(final String loginUser, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(loginUser)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+						if(!policyItem.getDelegateAdmin()) {
+							continue;
+						}
+
+						if(policyItem.getUsers().contains(loginUser)) { // TODO: group membership check
+							ret = true;
+
+							break;
+						}
+					}
+				} else if(object instanceof RangerService) {
+					ret = true; // nothing to do here
+				} else if(object instanceof RangerServiceDef) {
+					ret = true; // nothing to do here
+				}
+
+				return ret;
+			}
+		};
+
+		if(ret != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForServiceType(final String serviceType, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(serviceType)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					ret = StringUtils.equals(serviceType, getServiceType(policy.getService()));
+				} else if(object instanceof RangerService) {
+					RangerService service = (RangerService)object;
+
+					ret = StringUtils.equals(serviceType, service.getType());
+				} else if(object instanceof RangerServiceDef) {
+					RangerServiceDef serviceDef = (RangerServiceDef)object;
+
+					ret = StringUtils.equals(serviceType, serviceDef.getName());
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForServiceTypeId(final String serviceTypeId, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(serviceTypeId)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					ret = true; // nothing to do here
+				} else if(object instanceof RangerService) {
+					ret = true; // nothing to do here
+				} else if(object instanceof RangerServiceDef) {
+					RangerServiceDef serviceDef = (RangerServiceDef)object;
+					Long             svcDefId   = serviceDef.getId();
+
+					if(svcDefId != null) {
+						ret = StringUtils.equals(serviceTypeId, svcDefId.toString());
+					}
+				}
+
+				return ret;
+			}
+		};
+		
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+		
+		return ret;
+	}
+
+	private Predicate addPredicateForServiceName(final String serviceName, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(serviceName)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					ret = StringUtils.equals(serviceName, policy.getService());
+				} else if(object instanceof RangerService) {
+					RangerService service = (RangerService)object;
+
+					ret = StringUtils.equals(serviceName, service.getName());
+				} else if(object instanceof RangerServiceDef) {
+					ret = true; // nothing to do here
+				}
+
+				return ret;
+			}
+		};
+
+		if(ret != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForServiceId(final String serviceId, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(serviceId)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+					Long         svcId  = getServiceId(policy.getService());
+
+					if(svcId != null) {
+						ret = StringUtils.equals(serviceId, svcId.toString());
+					}
+				} else if(object instanceof RangerService) {
+					RangerService service = (RangerService)object;
+
+					if(service.getId() != null) {
+						ret = StringUtils.equals(serviceId, service.getId().toString());
+					}
+				} else if(object instanceof RangerServiceDef) {
+					ret = true; // nothing to do here
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForPolicyName(final String policyName, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(policyName)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					ret = StringUtils.equals(policyName, policy.getName());
+				} else if(object instanceof RangerService) {
+					ret = true; // nothing to do here
+				} else if(object instanceof RangerServiceDef) {
+					ret = true; // nothing to do here
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+			
+		return ret;
+	}
+
+	private Predicate addPredicateForPolicyId(final String policyId, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(policyId)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					if(policy.getId() != null) {
+						ret = StringUtils.equals(policyId, policy.getId().toString());
+					}
+				} else if(object instanceof RangerService) {
+					ret = true; // nothing to do here
+				} else if(object instanceof RangerServiceDef) {
+					ret = true; // nothing to do here
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForUserName(final String userName, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(userName)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+						if(policyItem.getUsers().contains(userName)) { // TODO: group membership check
+							ret = true;
+
+							break;
+						}
+					}
+				} else if(object instanceof RangerService) {
+					ret = true; // nothing to do here
+				} else if(object instanceof RangerServiceDef) {
+					ret = true; // nothing to do here
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForGroupName(final String groupName, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(groupName)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+						if(policyItem.getGroups().contains(groupName)) {
+							ret = true;
+
+							break;
+						}
+					}
+				} else if(object instanceof RangerService) {
+					ret = true; // nothing to do here
+				} else if(object instanceof RangerServiceDef) {
+					ret = true; // nothing to do here
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForResources(final Map<String, String> resources, List<Predicate> predicates) {
+		if(MapUtils.isEmpty(resources)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					if(! MapUtils.isEmpty(policy.getResources())) {
+						int numFound = 0;
+						for(String name : resources.keySet()) {
+							boolean isMatch = false;
+
+							RangerPolicyResource policyResource = policy.getResources().get(name);
+
+							if(policyResource != null && CollectionUtils.isEmpty(policyResource.getValues())) {
+								if(policyResource.getValues().contains(name)) {
+									isMatch = true;
+								} else {
+									// TODO: wildcard match
+								}
 							}
 
-							if(policyItem.getUsers().contains(loginUser)) { // TODO: group membership check
-								ret = true;
-
+							if(isMatch) {
+								numFound++;
+							} else {
 								break;
 							}
 						}
+
+						ret = numFound == policy.getResources().size();
 					}
-
-					return ret;
+				} else if(object instanceof RangerService) {
+					ret = true; // nothing to do here
+				} else if(object instanceof RangerServiceDef) {
+					ret = true; // nothing to do here
 				}
-			};
-			
-			predicates.add(p);
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
 		}
-
-		final String serviceType = filter.getParam(SearchFilter.SERVICE_TYPE);
-		if(! StringUtils.isEmpty(serviceType)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerPolicy) {
-						RangerPolicy policy = (RangerPolicy)object;
-						
-						ret = StringUtils.equals(serviceType, getServiceType(policy.getService()));
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
-
-		final String serviceName = filter.getParam(SearchFilter.SERVICE_NAME);
-		if(! StringUtils.isEmpty(serviceName)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerPolicy) {
-						RangerPolicy policy = (RangerPolicy)object;
-						
-						ret = StringUtils.equals(serviceName, policy.getService());
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
-
-		final String serviceId = filter.getParam(SearchFilter.SERVICE_ID);
-		if(! StringUtils.isEmpty(serviceId)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerPolicy) {
-						RangerPolicy policy = (RangerPolicy)object;
-						Long svcId = getServiceId(policy.getService());
-
-						if(svcId != null) {
-							ret = StringUtils.equals(serviceId, svcId.toString());
-						}
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
-
-		final String policyName = filter.getParam(SearchFilter.POLICY_NAME);
-		if(! StringUtils.isEmpty(policyName)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerPolicy) {
-						RangerPolicy policy = (RangerPolicy)object;
-
-						ret = StringUtils.equals(policyName, policy.getName());
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
-
-		final String userName = filter.getParam(SearchFilter.USER_NAME);
-		if(! StringUtils.isEmpty(userName)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerPolicy) {
-						RangerPolicy policy = (RangerPolicy)object;
-						
-						for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-							if(policyItem.getUsers().contains(userName)) { // TODO: group membership check
-								ret = true;
-
-								break;
-							}
-						}
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
-
-		final String groupName = filter.getParam(SearchFilter.GROUP_NAME);
-		if(! StringUtils.isEmpty(groupName)) {
-			Predicate p = new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					boolean ret = false;
-
-					if(object != null && object instanceof RangerPolicy) {
-						RangerPolicy policy = (RangerPolicy)object;
-
-						for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-							if(policyItem.getGroups().contains(groupName)) {
-								ret = true;
-
-								break;
-							}
-						}
-					}
-
-					return ret;
-				}
-			};
-			
-			predicates.add(p);
-		}
-
-		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
 
 		return ret;
 	}

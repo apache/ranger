@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.model;
 
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -230,20 +229,4 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 
 		return sb;
 	}
-
-	public final static Comparator<RangerService> nameComparator = new Comparator<RangerService>() {
-		@Override
-		public int compare(RangerService o1, RangerService o2) {
-			String name1 = (o1 == null) ? null : o1.getName();
-			String name2 = (o2 == null) ? null : o2.getName();
-
-			if(name1 == null) {
-				return -1;
-			} else if(name2 == null) {
-				return 1;
-			} else {
-				return name1.compareTo(name2);
-			}
-		}
-	};
 }
