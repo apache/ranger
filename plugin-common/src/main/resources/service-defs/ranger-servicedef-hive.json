@@ -14,10 +14,10 @@
   "configs":
   [
     {"name":"username",            "type":"string",  "mandatory":true, "label":"Username"},
-	{"name":"password",            "type":"password","mandatory":true, "label":"Password"},
-	{"name":"jdbc.driverClassName","type":"string",  "mandatory":true, "defaultValue":"org.apache.hive.jdbc.HiveDriver"},
-	{"name":"jdbc.url",            "type":"string",  "mandatory":true, "defaultValue":""},
-	{"name":"certificate.cn",      "type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
+    {"name":"password",            "type":"password","mandatory":true, "label":"Password"},
+    {"name":"jdbc.driverClassName","type":"string",  "mandatory":true, "defaultValue":"org.apache.hive.jdbc.HiveDriver"},
+    {"name":"jdbc.url",            "type":"string",  "mandatory":true, "defaultValue":""},
+    {"name":"certificate.cn",      "type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
   ],
   "resources":
   [
@@ -29,13 +29,13 @@
   "accessTypes":
   [
     {"name":"select","label":"select"},
-	{"name":"update","label":"update"},
-	{"name":"create","label":"Create"},
-	{"name":"drop",  "label":"Drop"},
-	{"name":"alter", "label":"Alter"},
-	{"name":"index", "label":"Index"},
-	{"name":"lock",  "label":"Lock"},
-	{"name":"all",   "label":"All"}
+    {"name":"update","label":"update"},
+    {"name":"create","label":"Create"},
+    {"name":"drop",  "label":"Drop"},
+    {"name":"alter", "label":"Alter"},
+    {"name":"index", "label":"Index"},
+    {"name":"lock",  "label":"Lock"},
+    {"name":"all",   "label":"All"}
   ],
   "policyConditions":
   [

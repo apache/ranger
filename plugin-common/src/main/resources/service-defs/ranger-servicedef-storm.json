@@ -14,9 +14,9 @@
   "configs":
   [
     {"name":"username",      "type":"string",  "mandatory":true, "label":"Username"},
-	{"name":"password",      "type":"password","mandatory":true, "label":"Password"},
-	{"name":"nimbus.url",    "type":"string",  "mandatory":true, "label":"Nimbus URL","defaultValue":""},
-	{"name":"certificate.cn","type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
+    {"name":"password",      "type":"password","mandatory":true, "label":"Password"},
+    {"name":"nimbus.url",    "type":"string",  "mandatory":true, "label":"Nimbus URL","defaultValue":""},
+    {"name":"certificate.cn","type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
   ],
   "resources":
   [

@@ -11,25 +11,25 @@
   "enums":
   [
     {
-	  "name":"authnType",
-	  "elements":
-	  [
-	    {"name":"simple",  "label":"Simple"},
-	    {"name":"kerberos","label":"Kerberos"}
-	  ],
-	  "defaultIndex":0
-	}
+      "name":"authnType",
+      "elements":
+      [
+        {"name":"simple",  "label":"Simple"},
+        {"name":"kerberos","label":"Kerberos"}
+      ],
+      "defaultIndex":0
+    }
   ],
   "configs":
   [
     {"name":"username",                           "type":"string",  "subType":"",         "mandatory":true, "label":"Username"},
-	{"name":"password",                           "type":"password","subType":"",         "mandatory":true, "label":"Password"},
-	{"name":"hadoop.security.authentication",     "type":"enum",    "subType":"authnType","mandatory":true, "defaultValue":"simple"},
-	{"name":"hbase.master.kerberos.principal",    "type":"string",  "subType":"",         "mandatory":false,"defaultValue":""},
-	{"name":"hbase.security.authentication",      "type":"enum",    "subType":"authnType","mandatory":true, "defaultValue":"simple"},
-	{"name":"hbase.zookeeper.property.clientPort","type":"int",     "subType":"",         "mandatory":true, "defaultValue":"2181"},
-	{"name":"hbase.zookeeper.quorum",             "type":"string",  "subType":"",         "mandatory":true, "defaultValue":""},
-	{"name":"zookeeper.znode.parent",             "type":"string",  "subType":"",         "mandatory":true, "defaultValue":"/hbase"}
+    {"name":"password",                           "type":"password","subType":"",         "mandatory":true, "label":"Password"},
+    {"name":"hadoop.security.authentication",     "type":"enum",    "subType":"authnType","mandatory":true, "defaultValue":"simple"},
+    {"name":"hbase.master.kerberos.principal",    "type":"string",  "subType":"",         "mandatory":false,"defaultValue":""},
+    {"name":"hbase.security.authentication",      "type":"enum",    "subType":"authnType","mandatory":true, "defaultValue":"simple"},
+    {"name":"hbase.zookeeper.property.clientPort","type":"int",     "subType":"",         "mandatory":true, "defaultValue":"2181"},
+    {"name":"hbase.zookeeper.quorum",             "type":"string",  "subType":"",         "mandatory":true, "defaultValue":""},
+    {"name":"zookeeper.znode.parent",             "type":"string",  "subType":"",         "mandatory":true, "defaultValue":"/hbase"}
   ],
   "resources":
   [
@@ -40,9 +40,9 @@
   "accessTypes":
   [
     {"name":"read",  "label":"Read"},
-	{"name":"write", "label":"Write"},
-	{"name":"create","label":"Create"},
-	{"name":"admin", "label":"Admin","impliedGrants":["read","write","create"]}
+    {"name":"write", "label":"Write"},
+    {"name":"create","label":"Create"},
+    {"name":"admin", "label":"Admin","impliedGrants":["read","write","create"]}
   ],
   "policyConditions":
   [
