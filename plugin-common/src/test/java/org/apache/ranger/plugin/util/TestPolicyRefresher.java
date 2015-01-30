@@ -78,8 +78,7 @@ public class TestPolicyRefresher {
 			}
 		};
 
-		refresher = new PolicyRefresher(policyEngine, svcName, svcStore);
-		refresher.setPollingIntervalMilliSeconds(pollingIntervalInMs);
+		refresher = new PolicyRefresher(policyEngine, sdName, svcName, svcStore, pollingIntervalInMs, null);
 		refresher.start();
 
 		// create a service

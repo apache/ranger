@@ -65,24 +65,28 @@ public class RangerBasePlugin {
 	public synchronized void init(RangerPolicyEngine policyEngine) {
 		cleanup();
 
-		// get the serviceName from download URL: http://ranger-admin-host:port/service/assets/policyList/serviceName
-		String policyDownloadUrl = RangerConfiguration.getInstance().get("xasecure." + serviceType + ".policymgr.url");
 
-		if(! StringUtils.isEmpty(policyDownloadUrl)) {
-			int idx = policyDownloadUrl.lastIndexOf('/');
+		String serviceName       = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
+		String serviceStoreClass = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.store.class", "org.apache.ranger.plugin.store.rest.ServiceRESTStore");
+		String cacheDir          = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.store.cache.dir", "/tmp");
+		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong("ranger.plugin." + serviceType + ".service.store.pollIntervalMs", 30 * 1000);
 
-			if(idx != -1) {
-				serviceName = policyDownloadUrl.substring(idx + 1);
+		if(StringUtils.isEmpty(serviceName)) {
+			// get the serviceName from download URL: http://ranger-admin-host:port/service/assets/policyList/serviceName
+			String policyDownloadUrl = RangerConfiguration.getInstance().get("xasecure." + serviceType + ".policymgr.url");
+
+			if(! StringUtils.isEmpty(policyDownloadUrl)) {
+				int idx = policyDownloadUrl.lastIndexOf('/');
+
+				if(idx != -1) {
+					serviceName = policyDownloadUrl.substring(idx + 1);
+				}
 			}
 		}
 
-		if(StringUtils.isEmpty(serviceName)) {
-			serviceName = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
-		}
+		ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore(serviceStoreClass);
 
-		ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore();
-
-		refresher = new PolicyRefresher(policyEngine, serviceName, serviceStore);
+		refresher = new PolicyRefresher(policyEngine, serviceType, serviceName, serviceStore, pollingIntervalMs, cacheDir);
 		refresher.startRefresher();
 		this.policyEngine = policyEngine;
 	}

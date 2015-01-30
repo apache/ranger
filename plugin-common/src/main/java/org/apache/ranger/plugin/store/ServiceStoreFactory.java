@@ -19,11 +19,13 @@
 
 package org.apache.ranger.plugin.store;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.store.file.ServiceFileStore;
-import org.apache.ranger.plugin.store.rest.ServiceRESTStore;
-import org.apache.ranger.plugin.util.RangerRESTClient;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 
 
 public class ServiceStoreFactory {
@@ -31,7 +33,8 @@ public class ServiceStoreFactory {
 
 	private static ServiceStoreFactory sInstance = null;
 
-	private ServiceStore serviceStore = null;
+	private Map<String, ServiceStore> serviceStores       = null;
+	private ServiceStore              defaultServiceStore = null;
 
 
 	public static ServiceStoreFactory instance() {
@@ -43,7 +46,46 @@ public class ServiceStoreFactory {
 	}
 
 	public ServiceStore getServiceStore() {
-		return serviceStore;
+		ServiceStore ret = defaultServiceStore;
+
+		if(ret == null) { // if no service store has been created yet, create the default store. TODO: review the impact and update, if necessary
+			String defaultServiceStoreClass = RangerConfiguration.getInstance().get("ranger.default.service.store.class", "org.apache.ranger.plugin.store.file.ServiceFileStore");
+
+			ret = getServiceStore(defaultServiceStoreClass);
+		}
+
+		return ret;
+	}
+
+	public ServiceStore getServiceStore(String storeClassname) {
+		ServiceStore ret = serviceStores.get(storeClassname);
+
+		if(ret == null) {
+			synchronized(this) {
+				ret = serviceStores.get(storeClassname);
+
+				if(ret == null) {
+					try {
+						@SuppressWarnings("unchecked")
+						Class<ServiceStore> storeClass = (Class<ServiceStore>)Class.forName(storeClassname);
+
+						ret = storeClass.newInstance();
+
+						ret.init();
+
+						serviceStores.put(storeClassname, ret);
+
+						if(defaultServiceStore == null) {
+							defaultServiceStore = ret;
+						}
+					} catch(Exception excp) {
+						LOG.error("failed to instantiate service store of type " + storeClassname, excp);
+					}
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	private ServiceStoreFactory() {
@@ -62,18 +104,8 @@ public class ServiceStoreFactory {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceStoreFactory.init()");
 		}
-		
-		boolean useFileStore = true;
 
-		if(useFileStore) {
-			serviceStore = new ServiceFileStore(); // TODO: configurable store implementation
-		} else {
-			RangerRESTClient restClient = new RangerRESTClient("http://localhost:6080", "");
-			restClient.setBasicAuthInfo("admin", "admin");
-	
-			serviceStore = new ServiceRESTStore(restClient);
-		}
-
+		serviceStores = new HashMap<String, ServiceStore>();
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceStoreFactory.init()");

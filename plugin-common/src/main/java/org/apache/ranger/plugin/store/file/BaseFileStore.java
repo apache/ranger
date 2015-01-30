@@ -58,8 +58,8 @@ public class BaseFileStore {
 	protected static String FILE_SUFFIX_JSON        = ".json";
 
 
-	protected void init() {
-		dataDir = RangerConfiguration.getInstance().get("ranger.policystore.file.dir", "file:///etc/ranger/data");
+	protected void initStore() {
+		dataDir = RangerConfiguration.getInstance().get("ranger.service.store.file.dir", "file:///etc/ranger/data");
 
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();

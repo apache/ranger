@@ -26,15 +26,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.PredicateUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 
@@ -60,13 +65,23 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceFileStore.ServiceFileStore()");
 		}
 
-		init();
-
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.ServiceFileStore()");
 		}
 	}
 
+	@Override
+	public void init() throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceFileStore.init()");
+		}
+
+		super.initStore();
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceFileStore.init()");
+		}
+	}
 
 	@Override
 	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) throws Exception {
@@ -74,7 +89,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceDefFileStore.createServiceDef(" + serviceDef + ")");
 		}
 
-		RangerServiceDef existing = findServiceDefByName(serviceDef.getName());
+		RangerServiceDef existing = getServiceDefByName(serviceDef.getName());
 		
 		if(existing != null) {
 			throw new Exception(serviceDef.getName() + ": service-def already exists (id=" + existing.getId() + ")");
@@ -109,7 +124,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceDefFileStore.updateServiceDef(" + serviceDef + ")");
 		}
 
-		RangerServiceDef existing = findServiceDefById(serviceDef.getId());
+		RangerServiceDef existing = getServiceDef(serviceDef.getId());
 
 		if(existing == null) {
 			throw new Exception(serviceDef.getId() + ": service-def does not exist");
@@ -163,7 +178,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceDefFileStore.deleteServiceDef(" + id + ")");
 		}
 
-		RangerServiceDef existing = findServiceDefById(id);
+		RangerServiceDef existing = getServiceDef(id);
 
 		if(existing == null) {
 			throw new Exception("service-def does not exist. id=" + id);
@@ -202,7 +217,17 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceDefFileStore.getServiceDef(" + id + ")");
 		}
 
-		RangerServiceDef ret = findServiceDefById(id);
+		RangerServiceDef ret = null;
+
+		List<RangerServiceDef> serviceDefs = getAllServiceDefs();
+
+		for(RangerServiceDef sd : serviceDefs) {
+			if(sd != null && sd.getId() != null && sd.getId().longValue() == id) {
+				ret = sd;
+
+				break;
+			}
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefFileStore.getServiceDef(" + id + "): " + ret);
@@ -217,7 +242,17 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceDefFileStore.getServiceDefByName(" + name + ")");
 		}
 
-		RangerServiceDef ret = findServiceDefByName(name);
+		RangerServiceDef ret = null;
+
+		List<RangerServiceDef> serviceDefs = getAllServiceDefs();
+
+		for(RangerServiceDef sd : serviceDefs) {
+			if(sd != null && StringUtils.equalsIgnoreCase(sd.getName(), name)) {
+				ret = sd;
+
+				break;
+			}
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefFileStore.getServiceDefByName(" + name + "): " + ret);
@@ -227,69 +262,19 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	}
 
 	@Override
-	public List<RangerServiceDef> getAllServiceDefs() throws Exception {
+	public List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefFileStore.getAllServiceDefs()");
+			LOG.debug("==> ServiceDefFileStore.getServiceDefs()");
 		}
 
-		List<RangerServiceDef> ret = new ArrayList<RangerServiceDef>();
+		List<RangerServiceDef> ret = getAllServiceDefs();
 
-		try {
-			// load definitions for legacy services from embedded resources
-			String[] legacyServiceDefResources = {
-					"/service-defs/ranger-servicedef-hdfs.json",
-					"/service-defs/ranger-servicedef-hive.json",
-					"/service-defs/ranger-servicedef-hbase.json",
-					"/service-defs/ranger-servicedef-knox.json",
-					"/service-defs/ranger-servicedef-storm.json",
-			};
-			
-			for(String resource : legacyServiceDefResources) {
-				RangerServiceDef sd = loadFromResource(resource, RangerServiceDef.class);
-				
-				if(sd != null) {
-					ret.add(sd);
-				}
-			}
-			nextServiceDefId = getMaxId(ret) + 1;
-
-			// load service definitions from file system
-			List<RangerServiceDef> sds = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE_DEF, RangerServiceDef.class);
-			
-			if(sds != null) {
-				for(RangerServiceDef sd : sds) {
-					if(sd != null) {
-						if(isLegacyServiceDef(sd)) {
-							LOG.warn("Found in-built service-def '" + sd.getName() + "'  under " + getDataDir() + ". Ignorning");
-
-							continue;
-						}
-						
-						// if the ServiceDef is already found, remove the earlier definition
-						for(int i = 0; i < ret.size(); i++) {
-							RangerServiceDef currSd = ret.get(i);
-							
-							if(StringUtils.equals(currSd.getName(), sd.getName()) ||
-							   ObjectUtils.equals(currSd.getId(), sd.getId())) {
-								ret.remove(i);
-							}
-						}
-
-						ret.add(sd);
-					}
-				}
-			}
-			nextServiceDefId = getMaxId(ret) + 1;
-		} catch(Exception excp) {
-			LOG.error("ServiceDefFileStore.getAllServiceDefs(): failed to read service-defs", excp);
+		if(ret != null && filter != null) {
+			CollectionUtils.filter(ret, getServiceDefPredicate(filter));
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefFileStore.getAllServiceDefs(): count=" + (ret == null ? 0 : ret.size()));
-		}
-
-		if(ret != null) {
-			Collections.sort(ret, RangerServiceDef.idComparator);
+			LOG.debug("<== ServiceDefFileStore.getServiceDefs(): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;
@@ -464,27 +449,19 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	}
 
 	@Override
-	public List<RangerService> getAllServices() throws Exception {
+	public List<RangerService> getServices(SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceFileStore.getAllServices()");
+			LOG.debug("==> ServiceFileStore.getServices()");
 		}
 
-		List<RangerService> ret = null;
+		List<RangerService> ret = getAllServices();
 
-		try {
-			ret = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE, RangerService.class);
-
-			nextServiceId = getMaxId(ret) + 1;
-		} catch(Exception excp) {
-			LOG.error("ServiceFileStore.getAllServices(): failed to read services", excp);
+		if(ret != null && filter != null) {
+			CollectionUtils.filter(ret, getServicePredicate(filter));
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceFileStore.getAllServices(): count=" + (ret == null ? 0 : ret.size()));
-		}
-
-		if(ret != null) {
-			Collections.sort(ret, RangerService.idComparator);
+			LOG.debug("<== ServiceFileStore.getServices(): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;
@@ -655,36 +632,28 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	}
 
 	@Override
-	public List<RangerPolicy> getAllPolicies() throws Exception {
+	public List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceFileStore.getAllPolicies()");
+			LOG.debug("==> ServiceFileStore.getPolicies()");
 		}
 
-		List<RangerPolicy> ret = null;
-
-		try {
-			ret = loadFromDir(new Path(getDataDir()), FILE_PREFIX_POLICY, RangerPolicy.class);
-
-			nextPolicyId  = getMaxId(ret) + 1;
-		} catch(Exception excp) {
-			LOG.error("ServiceFileStore.getAllPolicies(): failed to read policies", excp);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceFileStore.getAllPolicies(): count=" + (ret == null ? 0 : ret.size()));
-		}
+		List<RangerPolicy> ret = getAllPolicies();
 
 		if(ret != null) {
-			Collections.sort(ret, RangerPolicy.idComparator);
+			CollectionUtils.filter(ret, getPolicyPredicate(filter));
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceFileStore.getPolicies(): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;
 	}
 
 	@Override
-	public List<RangerPolicy> getServicePolicies(Long serviceId) throws Exception {
+	public List<RangerPolicy> getServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceFileStore.getPolicies(" + serviceId + ")");
+			LOG.debug("==> ServiceFileStore.getServicePolicies(" + serviceId + ")");
 		}
 
 		RangerService service = getService(serviceId);
@@ -693,37 +662,25 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			throw new Exception("service does not exist - id='" + serviceId);
 		}
 
-		List<RangerPolicy> ret = getServicePolicies(service.getName());
+		List<RangerPolicy> ret = getServicePolicies(service.getName(), filter);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceFileStore.getPolicies(" + serviceId + "): " + ((ret == null) ? 0 : ret.size()));
+			LOG.debug("<== ServiceFileStore.getServicePolicies(" + serviceId + "): " + ((ret == null) ? 0 : ret.size()));
 		}
 
 		return ret;
 	}
 
 	@Override
-	public List<RangerPolicy> getServicePolicies(String serviceName) throws Exception {
+	public List<RangerPolicy> getServicePolicies(String serviceName, SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceFileStore.getPolicies(" + serviceName + ")");
-		}
-
-		RangerService service = getServiceByName(serviceName);
-
-		if(service == null) {
-			throw new Exception("service does not exist - name='" + serviceName);
-		}
-
-		RangerServiceDef serviceDef = findServiceDefByName(service.getType());
-		
-		if(serviceDef == null) {
-			throw new Exception(service.getType() + ": unknown service-def)");
+			LOG.debug("==> ServiceFileStore.getServicePolicies(" + serviceName + ")");
 		}
 
 		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 
 		try {
-			List<RangerPolicy> policies = getAllPolicies();
+			List<RangerPolicy> policies = getPolicies(filter);
 
 			if(policies != null) {
 				for(RangerPolicy policy : policies) {
@@ -733,11 +690,11 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 				}
 			}
 		} catch(Exception excp) {
-			LOG.error("ServiceFileStore.getPolicies(" + serviceName + "): failed to read policies", excp);
+			LOG.error("ServiceFileStore.getServicePolicies(" + serviceName + "): failed to read policies", excp);
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceFileStore.getPolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
+			LOG.debug("<== ServiceFileStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
 		}
 
 		if(ret != null) {
@@ -759,7 +716,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			throw new Exception("service does not exist - name=" + serviceName);
 		}
 
-		RangerServiceDef serviceDef = findServiceDefByName(service.getType());
+		RangerServiceDef serviceDef = getServiceDefByName(service.getType());
 		
 		if(serviceDef == null) {
 			throw new Exception(service.getType() + ": unknown service-def)");
@@ -799,19 +756,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		return ret;
-	}
-
-	@Override
-	protected void init() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceFileStore.init()");
-		}
-
-		super.init();
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceFileStore.init()");
-		}
 	}
 
 
@@ -872,38 +816,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		saveToFile(service, true);
 	}
 
-	private RangerServiceDef findServiceDefById(long id) throws Exception {
-		RangerServiceDef ret = null;
-
-		List<RangerServiceDef> serviceDefs = getAllServiceDefs();
-
-		for(RangerServiceDef sd : serviceDefs) {
-			if(sd != null && sd.getId() != null && sd.getId().longValue() == id) {
-				ret = sd;
-
-				break;
-			}
-		}
-
-		return ret;
-	}
-
-	private RangerServiceDef findServiceDefByName(String sdName) throws Exception {
-		RangerServiceDef ret = null;
-
-		List<RangerServiceDef> serviceDefs = getAllServiceDefs();
-
-		for(RangerServiceDef sd : serviceDefs) {
-			if(sd != null && StringUtils.equalsIgnoreCase(sd.getName(), sdName)) {
-				ret = sd;
-
-				break;
-			}
-		}
-
-		return ret;
-	}
-
 	private RangerPolicy findPolicyByName(String serviceName, String policyName) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceFileStore.findPolicyByName(" + serviceName + ", " + policyName + ")");
@@ -951,5 +863,448 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 	private boolean isLegacyServiceDef(Long id) {
 		return id == null ? false : legacyServiceDefs.containsValue(id);
+	}
+
+	private List<RangerServiceDef> getAllServiceDefs() throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDefFileStore.getAllServiceDefs()");
+		}
+
+		List<RangerServiceDef> ret = new ArrayList<RangerServiceDef>();
+
+		try {
+			// load definitions for legacy services from embedded resources
+			String[] legacyServiceDefResources = {
+					"/service-defs/ranger-servicedef-hdfs.json",
+					"/service-defs/ranger-servicedef-hive.json",
+					"/service-defs/ranger-servicedef-hbase.json",
+					"/service-defs/ranger-servicedef-knox.json",
+					"/service-defs/ranger-servicedef-storm.json",
+			};
+			
+			for(String resource : legacyServiceDefResources) {
+				RangerServiceDef sd = loadFromResource(resource, RangerServiceDef.class);
+				
+				if(sd != null) {
+					ret.add(sd);
+				}
+			}
+			nextServiceDefId = getMaxId(ret) + 1;
+
+			// load service definitions from file system
+			List<RangerServiceDef> sds = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE_DEF, RangerServiceDef.class);
+			
+			if(sds != null) {
+				for(RangerServiceDef sd : sds) {
+					if(sd != null) {
+						if(isLegacyServiceDef(sd)) {
+							LOG.warn("Found in-built service-def '" + sd.getName() + "'  under " + getDataDir() + ". Ignorning");
+
+							continue;
+						}
+						
+						// if the ServiceDef is already found, remove the earlier definition
+						for(int i = 0; i < ret.size(); i++) {
+							RangerServiceDef currSd = ret.get(i);
+							
+							if(StringUtils.equals(currSd.getName(), sd.getName()) ||
+							   ObjectUtils.equals(currSd.getId(), sd.getId())) {
+								ret.remove(i);
+							}
+						}
+
+						ret.add(sd);
+					}
+				}
+			}
+			nextServiceDefId = getMaxId(ret) + 1;
+		} catch(Exception excp) {
+			LOG.error("ServiceDefFileStore.getAllServiceDefs(): failed to read service-defs", excp);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDefFileStore.getAllServiceDefs(): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		if(ret != null) {
+			Collections.sort(ret, RangerServiceDef.idComparator);
+		}
+
+		return ret;
+	}
+
+	private List<RangerService> getAllServices() throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceFileStore.getAllServices()");
+		}
+
+		List<RangerService> ret = null;
+
+		try {
+			ret = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE, RangerService.class);
+
+			nextServiceId = getMaxId(ret) + 1;
+		} catch(Exception excp) {
+			LOG.error("ServiceFileStore.getAllServices(): failed to read services", excp);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceFileStore.getAllServices(): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		if(ret != null) {
+			Collections.sort(ret, RangerService.idComparator);
+		}
+
+		return ret;
+	}
+
+	private List<RangerPolicy> getAllPolicies() throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceFileStore.getAllPolicies()");
+		}
+
+		List<RangerPolicy> ret = null;
+
+		try {
+			ret = loadFromDir(new Path(getDataDir()), FILE_PREFIX_POLICY, RangerPolicy.class);
+
+			nextPolicyId  = getMaxId(ret) + 1;
+		} catch(Exception excp) {
+			LOG.error("ServiceFileStore.getAllPolicies(): failed to read policies", excp);
+		}
+
+		if(ret != null) {
+			Collections.sort(ret, RangerPolicy.idComparator);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceFileStore.getAllPolicies(): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	private String getServiceType(String serviceName) {
+		RangerService service = null;
+
+		try {
+			service = getServiceByName(serviceName);
+		} catch(Exception excp) {
+			// ignore
+		}
+
+		return service != null ? service.getType() : null;
+	}
+
+	private Long getServiceId(String serviceName) {
+		RangerService service = null;
+
+		try {
+			service = getServiceByName(serviceName);
+		} catch(Exception excp) {
+			// ignore
+		}
+
+		return service != null ? service.getId() : null;
+	}
+
+	/*
+	public static final String LOGIN_USER      = "loginUser";
+	public static final String SERVICE_TYPE    = "serviceType";
+	public static final String SERVICE_NAME    = "serviceName";
+	public static final String SERVICE_ID      = "serviceId";
+	public static final String POLICY_NAME     = "policyName";
+	public static final String RESOURCE_PREFIX = "resource:";
+	public static final String STATUS          = "status";
+	public static final String USER_NAME       = "userName";
+	public static final String GROUP_NAME      = "groupName";
+	public static final String START_INDEX     = "startIndex";
+	public static final String PAGE_SIZE       = "pageSize";
+	public static final String SORT_BY         = "sortBy";
+	 */
+
+	private Predicate getServiceDefPredicate(SearchFilter filter) {
+		if(filter == null) {
+			return null;
+		}
+
+		List<Predicate> predicates = new ArrayList<Predicate>();
+
+		final String serviceType = filter.getParam(SearchFilter.SERVICE_TYPE);
+		if(! StringUtils.isEmpty(serviceType)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerServiceDef) {
+						RangerServiceDef serviceDef = (RangerServiceDef)object;
+
+						ret = StringUtils.equals(serviceType, serviceDef.getName());
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
+
+		return ret;
+	}
+
+	private Predicate getServicePredicate(SearchFilter filter) {
+		if(filter == null) {
+			return null;
+		}
+
+		List<Predicate> predicates = new ArrayList<Predicate>();
+
+		final String serviceType = filter.getParam(SearchFilter.SERVICE_TYPE);
+		if(! StringUtils.isEmpty(serviceType)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerService) {
+						RangerService service = (RangerService)object;
+
+						ret = StringUtils.equals(serviceType, service.getType());
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		final String serviceName = filter.getParam(SearchFilter.SERVICE_NAME);
+		if(! StringUtils.isEmpty(serviceName)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerService) {
+						RangerService service = (RangerService)object;
+						
+						ret = StringUtils.equals(serviceName, service.getName());
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		final String serviceId = filter.getParam(SearchFilter.SERVICE_ID);
+		if(! StringUtils.isEmpty(serviceId)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerService) {
+						RangerService service = (RangerService)object;
+						Long svcId = service.getId();
+
+						if(svcId != null) {
+							ret = StringUtils.equals(serviceId, svcId.toString());
+						}
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
+
+		return ret;
+	}
+
+	private Predicate getPolicyPredicate(SearchFilter filter) {
+		if(filter == null) {
+			return null;
+		}
+
+		List<Predicate> predicates = new ArrayList<Predicate>();
+
+		final String loginUser = filter.getParam(SearchFilter.LOGIN_USER);
+		if(! StringUtils.isEmpty(loginUser)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerPolicy) {
+						RangerPolicy policy = (RangerPolicy)object;
+						
+						for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+							if(!policyItem.getDelegateAdmin()) {
+								continue;
+							}
+
+							if(policyItem.getUsers().contains(loginUser)) { // TODO: group membership check
+								ret = true;
+
+								break;
+							}
+						}
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		final String serviceType = filter.getParam(SearchFilter.SERVICE_TYPE);
+		if(! StringUtils.isEmpty(serviceType)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerPolicy) {
+						RangerPolicy policy = (RangerPolicy)object;
+						
+						ret = StringUtils.equals(serviceType, getServiceType(policy.getService()));
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		final String serviceName = filter.getParam(SearchFilter.SERVICE_NAME);
+		if(! StringUtils.isEmpty(serviceName)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerPolicy) {
+						RangerPolicy policy = (RangerPolicy)object;
+						
+						ret = StringUtils.equals(serviceName, policy.getService());
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		final String serviceId = filter.getParam(SearchFilter.SERVICE_ID);
+		if(! StringUtils.isEmpty(serviceId)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerPolicy) {
+						RangerPolicy policy = (RangerPolicy)object;
+						Long svcId = getServiceId(policy.getService());
+
+						if(svcId != null) {
+							ret = StringUtils.equals(serviceId, svcId.toString());
+						}
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		final String policyName = filter.getParam(SearchFilter.POLICY_NAME);
+		if(! StringUtils.isEmpty(policyName)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerPolicy) {
+						RangerPolicy policy = (RangerPolicy)object;
+
+						ret = StringUtils.equals(policyName, policy.getName());
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		final String userName = filter.getParam(SearchFilter.USER_NAME);
+		if(! StringUtils.isEmpty(userName)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerPolicy) {
+						RangerPolicy policy = (RangerPolicy)object;
+						
+						for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+							if(policyItem.getUsers().contains(userName)) { // TODO: group membership check
+								ret = true;
+
+								break;
+							}
+						}
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		final String groupName = filter.getParam(SearchFilter.GROUP_NAME);
+		if(! StringUtils.isEmpty(groupName)) {
+			Predicate p = new Predicate() {
+				@Override
+				public boolean evaluate(Object object) {
+					boolean ret = false;
+
+					if(object != null && object instanceof RangerPolicy) {
+						RangerPolicy policy = (RangerPolicy)object;
+
+						for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
+							if(policyItem.getGroups().contains(groupName)) {
+								ret = true;
+
+								break;
+							}
+						}
+					}
+
+					return ret;
+				}
+			};
+			
+			predicates.add(p);
+		}
+
+		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
+
+		return ret;
 	}
 }

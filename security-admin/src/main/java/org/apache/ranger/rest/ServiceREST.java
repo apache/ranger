@@ -39,6 +39,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.ServiceStoreFactory;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -196,8 +197,10 @@ public class ServiceREST {
 
 		List<RangerServiceDef> ret = null;
 
+		SearchFilter filter = getSearchFilter(request);
+
 		try {
-			ret = svcStore.getAllServiceDefs();
+			ret = svcStore.getServiceDefs(filter);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -340,8 +343,10 @@ public class ServiceREST {
 
 		List<RangerService> ret = null;
 
+		SearchFilter filter = getSearchFilter(request);
+
 		try {
-			ret = svcStore.getAllServices();
+			ret = svcStore.getServices(filter);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -506,8 +511,10 @@ public class ServiceREST {
 
 		List<RangerPolicy> ret = null;
 
+		SearchFilter filter = getSearchFilter(request);
+
 		try {
-			ret = svcStore.getAllPolicies();
+			ret = svcStore.getPolicies(filter);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -522,7 +529,7 @@ public class ServiceREST {
 	@GET
 	@Path("/policies/count")
 	@Produces({ "application/json", "application/xml" })
-	public Long countPolicies(@Context HttpServletRequest request) {
+	public Long countPolicies( @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.countPolicies():");
 		}
@@ -554,8 +561,10 @@ public class ServiceREST {
 
 		List<RangerPolicy> ret = null;
 
+		SearchFilter filter = getSearchFilter(request);
+
 		try {
-			ret = svcStore.getServicePolicies(serviceId);
+			ret = svcStore.getServicePolicies(serviceId, filter);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -581,8 +590,10 @@ public class ServiceREST {
 
 		List<RangerPolicy> ret = null;
 
+		SearchFilter filter = getSearchFilter(request);
+
 		try {
-			ret = svcStore.getServicePolicies(serviceName);
+			ret = svcStore.getServicePolicies(serviceName, filter);
 		} catch(Exception excp) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -621,6 +632,15 @@ public class ServiceREST {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
+
+		return ret;
+	}
+
+
+	private SearchFilter getSearchFilter(HttpServletRequest request) {
+		SearchFilter ret = null;
+
+		// TODO: create SearchFilter from HttpServletRequest params
 
 		return ret;
 	}

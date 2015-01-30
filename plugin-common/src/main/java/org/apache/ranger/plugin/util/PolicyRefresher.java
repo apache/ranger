@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -30,24 +29,25 @@ public class PolicyRefresher extends Thread {
 	private static final Log LOG = LogFactory.getLog(PolicyRefresher.class);
 
 	private RangerPolicyEngine policyEngine      = null;
+	private String             serviceType       = null;
 	private String             serviceName       = null;
 	private ServiceStore       serviceStore      = null;
-	private ServicePolicies    lastKnownPolicies = null;
+	private long               pollingIntervalMs = 30 * 1000;
 
-	private boolean shutdownFlag                = false;
-	private long    pollingIntervalMilliSeconds = 30 * 1000;
+	private boolean         shutdownFlag      = false;
+	private ServicePolicies lastKnownPolicies = null;
 
 
-	public PolicyRefresher(RangerPolicyEngine policyEngine, String serviceName, ServiceStore serviceStore) {
+	public PolicyRefresher(RangerPolicyEngine policyEngine, String serviceType, String serviceName, ServiceStore serviceStore, long pollingIntervalMs, String cacheDir) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher.PolicyRefresher(serviceName=" + serviceName + ")");
 		}
 
-		this.policyEngine = policyEngine;
-		this.serviceName  = serviceName;
-		this.serviceStore = serviceStore;
-
-		this.pollingIntervalMilliSeconds = RangerConfiguration.getInstance().getLong("xasecure.hdfs.policymgr.url.reloadIntervalInMillis", 30 * 1000);
+		this.policyEngine      = policyEngine;
+		this.serviceType       = serviceType;
+		this.serviceName       = serviceName;
+		this.serviceStore      = serviceStore;
+		this.pollingIntervalMs = pollingIntervalMs;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher.PolicyRefresher(serviceName=" + serviceName + ")");
@@ -62,6 +62,13 @@ public class PolicyRefresher extends Thread {
 	}
 
 	/**
+	 * @return the serviceType
+	 */
+	public String getServiceType() {
+		return serviceType;
+	}
+
+	/**
 	 * @return the serviceName
 	 */
 	public String getServiceName() {
@@ -69,17 +76,24 @@ public class PolicyRefresher extends Thread {
 	}
 
 	/**
+	 * @return the serviceStore
+	 */
+	public ServiceStore getServiceStore() {
+		return serviceStore;
+	}
+
+	/**
 	 * @return the pollingIntervalMilliSeconds
 	 */
-	public long getPollingIntervalMilliSeconds() {
-		return pollingIntervalMilliSeconds;
+	public long getPollingIntervalMs() {
+		return pollingIntervalMs;
 	}
 
 	/**
 	 * @param pollingIntervalMilliSeconds the pollingIntervalMilliSeconds to set
 	 */
 	public void setPollingIntervalMilliSeconds(long pollingIntervalMilliSeconds) {
-		this.pollingIntervalMilliSeconds = pollingIntervalMilliSeconds;
+		this.pollingIntervalMs = pollingIntervalMilliSeconds;
 	}
 
 	public void startRefresher() {
@@ -125,7 +139,7 @@ public class PolicyRefresher extends Thread {
 			}
 
 			try {
-				Thread.sleep(pollingIntervalMilliSeconds);
+				Thread.sleep(pollingIntervalMs);
 			} catch(Exception excp) {
 				LOG.error("PolicyRefresher(serviceName=" + serviceName + ").run(): error while sleep. exiting thread", excp);
 

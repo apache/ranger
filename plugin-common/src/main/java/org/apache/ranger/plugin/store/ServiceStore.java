@@ -24,9 +24,12 @@ import java.util.List;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 public interface ServiceStore {
+	void init() throws Exception;
+
 	RangerServiceDef createServiceDef(RangerServiceDef serviceDef) throws Exception;
 
 	RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) throws Exception;
@@ -37,7 +40,7 @@ public interface ServiceStore {
 
 	RangerServiceDef getServiceDefByName(String name) throws Exception;
 
-	List<RangerServiceDef> getAllServiceDefs() throws Exception;
+	List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception;
 
 
 	RangerService createService(RangerService service) throws Exception;
@@ -50,7 +53,7 @@ public interface ServiceStore {
 
 	RangerService getServiceByName(String name) throws Exception;
 
-	List<RangerService> getAllServices() throws Exception;
+	List<RangerService> getServices(SearchFilter filter) throws Exception;
 
 
 	RangerPolicy createPolicy(RangerPolicy policy) throws Exception;
@@ -61,11 +64,11 @@ public interface ServiceStore {
 
 	RangerPolicy getPolicy(Long id) throws Exception;
 
-	List<RangerPolicy> getAllPolicies() throws Exception;
+	List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception;
 
-	List<RangerPolicy> getServicePolicies(Long serviceId) throws Exception;
+	List<RangerPolicy> getServicePolicies(Long serviceId, SearchFilter filter) throws Exception;
 
-	List<RangerPolicy> getServicePolicies(String serviceName) throws Exception;
+	List<RangerPolicy> getServicePolicies(String serviceName, SearchFilter filter) throws Exception;
 
 	ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
 }
