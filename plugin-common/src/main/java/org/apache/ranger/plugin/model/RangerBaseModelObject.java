@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.model;
 
-import java.util.Comparator;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -41,6 +40,7 @@ public class RangerBaseModelObject implements java.io.Serializable {
 
 	private Long    id         = null;
 	private String  guid       = null;
+	private Boolean isEnabled  = null;
 	private String  createdBy  = null;
 	private String  updatedBy  = null;
 	private Date    createTime = null;
@@ -51,10 +51,11 @@ public class RangerBaseModelObject implements java.io.Serializable {
 	 * 
 	 */
 	public RangerBaseModelObject() {
+		setIsEnabled(null);
 	}
 
 	public void updateFrom(RangerBaseModelObject other) {
-		// Nothing to copy
+		setIsEnabled(other.getIsEnabled());
 	}
 
 	/**
@@ -80,6 +81,18 @@ public class RangerBaseModelObject implements java.io.Serializable {
 	 */
 	public void setGuid(String guid) {
 		this.guid = guid;
+	}
+	/**
+	 * @return the isEnabled
+	 */
+	public Boolean getIsEnabled() {
+		return isEnabled;
+	}
+	/**
+	 * @param isEnabled the isEnabled to set
+	 */
+	public void setIsEnabled(Boolean isEnabled) {
+		this.isEnabled = isEnabled == null ? Boolean.TRUE : isEnabled;
 	}
 	/**
 	 * @return the createdBy
@@ -154,6 +167,7 @@ public class RangerBaseModelObject implements java.io.Serializable {
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("id={").append(id).append("} ");
 		sb.append("guid={").append(guid).append("} ");
+		sb.append("isEnabled={").append(isEnabled).append("} ");
 		sb.append("createdBy={").append(createdBy).append("} ");
 		sb.append("updatedBy={").append(updatedBy).append("} ");
 		sb.append("createTime={").append(createTime).append("} ");

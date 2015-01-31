@@ -82,7 +82,7 @@ public class TestPolicyRefresher {
 		refresher.start();
 
 		// create a service
-		svc = new RangerService(sdName, svcName, "test service description", Boolean.TRUE, null);
+		svc = new RangerService(sdName, svcName, "test service description", null);
 
 		svc = svcStore.createService(svc);
 		assertNotNull("createService(" + svcName + ") failed", svc);
@@ -116,7 +116,7 @@ public class TestPolicyRefresher {
 	public void testRefresher() throws Exception {
 		assertEquals("policy count - initial", 0, policyCount);
 
-		RangerPolicy policy = new RangerPolicy(svc.getName(), "policy1", "test policy description", Boolean.TRUE, null, null);
+		RangerPolicy policy = new RangerPolicy(svc.getName(), "policy1", "test policy description", null, null);
 		policy.getResources().put("table", new RangerPolicyResource("employee", Boolean.FALSE, Boolean.TRUE));
 		policy.getResources().put("column-family", new RangerPolicyResource("personal", Boolean.FALSE, Boolean.TRUE));
 		policy.getResources().put("column", new RangerPolicyResource("ssn", Boolean.FALSE, Boolean.TRUE));
@@ -135,7 +135,7 @@ public class TestPolicyRefresher {
 
 		policy1 = svcStore.createPolicy(policy);
 
-		policy = new RangerPolicy(svc.getName(), "policy2", "test policy description", Boolean.TRUE, null, null);
+		policy = new RangerPolicy(svc.getName(), "policy2", "test policy description", null, null);
 		policy.getResources().put("table", new RangerPolicyResource("employee", Boolean.FALSE, Boolean.TRUE));
 		policy.getResources().put("column-family", new RangerPolicyResource("finance", Boolean.FALSE, Boolean.TRUE));
 		policy.getResources().put("column", new RangerPolicyResource("balance", Boolean.FALSE, Boolean.TRUE));

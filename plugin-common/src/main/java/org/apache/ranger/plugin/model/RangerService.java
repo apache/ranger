@@ -44,7 +44,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	private String              type             = null;
 	private String              name             = null;
 	private String              description      = null;
-	private Boolean             isEnabled        = null;
 	private Map<String, String> configs          = null;
 	private Long                policyVersion    = null;
 	private Date                policyUpdateTime = null;
@@ -54,33 +53,33 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 * @param type
 	 */
 	public RangerService() {
-		this(null, null, null, null, null);
+		this(null, null, null, null);
 	}
 
 	/**
 	 * @param type
 	 * @param name
 	 * @param description
-	 * @param isEnabled
 	 * @param configs
 	 */
-	public RangerService(String type, String name, String description, Boolean isEnabled, Map<String, String> configs) {
+	public RangerService(String type, String name, String description, Map<String, String> configs) {
 		super();
 
 		setType(type);
 		setName(name);
 		setDescription(description);
-		setIsEnabled(isEnabled);
 		setConfigs(configs);
 	}
 
+	/**
+	 * @param other
+	 */
 	public void updateFrom(RangerService other) {
 		super.updateFrom(other);
 
 		setType(other.getType());
 		setName(other.getName());
 		setDescription(other.getDescription());
-		setIsEnabled(other.getIsEnabled());
 		setConfigs(other.getConfigs());
 	}
 
@@ -124,20 +123,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 */
 	public void setDescription(String description) {
 		this.description = description;
-	}
-
-	/**
-	 * @return the isEnabled
-	 */
-	public Boolean getIsEnabled() {
-		return isEnabled;
-	}
-
-	/**
-	 * @param isEnabled the isEnabled to set
-	 */
-	public void setIsEnabled(Boolean isEnabled) {
-		this.isEnabled = isEnabled == null ? Boolean.TRUE : isEnabled;
 	}
 
 	/**
@@ -212,7 +197,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		sb.append("name={").append(name).append("} ");
 		sb.append("type={").append(type).append("} ");
 		sb.append("description={").append(description).append("} ");
-		sb.append("isEnabled={").append(isEnabled).append("} ");
 
 		sb.append("configs={");
 		if(configs != null) {

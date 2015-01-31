@@ -104,7 +104,7 @@ public class TestServiceStore {
 
 		int initServiceCount = services == null ? 0 : services.size();
 
-		RangerService svc = new RangerService(sdName, serviceName, "test service description", Boolean.TRUE, null);
+		RangerService svc = new RangerService(sdName, serviceName, "test service description", null);
 
 		RangerService createdSvc = svcStore.createService(svc);
 		assertNotNull("createService() failed", createdSvc);
@@ -134,7 +134,7 @@ public class TestServiceStore {
 
 		int initPolicyCount = policies == null ? 0 : policies.size();
 
-		RangerPolicy policy = new RangerPolicy(updatedSvc.getName(), policyName, "test policy description", Boolean.TRUE, null, null);
+		RangerPolicy policy = new RangerPolicy(updatedSvc.getName(), policyName, "test policy description", null, null);
 		policy.getResources().put("path", new RangerPolicyResource("/demo/test/finance", Boolean.FALSE, Boolean.TRUE));
 
 		RangerPolicyItem item1 = new RangerPolicyItem();

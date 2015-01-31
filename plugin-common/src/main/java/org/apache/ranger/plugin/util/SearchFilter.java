@@ -27,17 +27,19 @@ import org.apache.commons.lang.StringUtils;
 
 
 public class SearchFilter {
-	public static final String LOGIN_USER      = "loginUser";
-	public static final String SERVICE_TYPE    = "serviceType";
-	public static final String SERVICE_TYPE_ID = "serviceTypeId";
-	public static final String SERVICE_NAME    = "serviceName";
-	public static final String SERVICE_ID      = "serviceId";
-	public static final String POLICY_NAME     = "policyName";
-	public static final String POLICY_ID       = "policyId";
-	public static final String RESOURCE_PREFIX = "resource:";
-	public static final String STATUS          = "status";
-	public static final String USER            = "user";
-	public static final String GROUP           = "group";
+	public static final String LOGIN_USER      = "loginUser";     // search
+	public static final String SERVICE_TYPE    = "serviceType";   // search, sort
+	public static final String SERVICE_TYPE_ID = "serviceTypeId"; // search, sort
+	public static final String SERVICE_NAME    = "serviceName";   // search, sort
+	public static final String SERVICE_ID      = "serviceId";     // search, sort
+	public static final String POLICY_NAME     = "policyName";    // search, sort
+	public static final String POLICY_ID       = "policyId";      // search, sort
+	public static final String STATUS          = "status";        // search
+	public static final String USER            = "user";          // search
+	public static final String GROUP           = "group";         // search
+	public static final String RESOURCE_PREFIX = "resource:";     // search
+	public static final String CREATE_TIME     = "createTime";    // sort
+	public static final String UPDATE_TIME     = "updateTime";    // sort
 	public static final String START_INDEX     = "startIndex";
 	public static final String PAGE_SIZE       = "pageSize";
 	public static final String SORT_BY         = "sortBy";

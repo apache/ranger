@@ -220,6 +220,7 @@ public class ServiceREST {
 	@POST
 	@Path("/services")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public RangerService createService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.createService(" + service + ")");
@@ -243,6 +244,7 @@ public class ServiceREST {
 	@PUT
 	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public RangerService updateService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updateService(): " + service);
@@ -461,7 +463,6 @@ public class ServiceREST {
 	@DELETE
 	@Path("/policies/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public void deletePolicy(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deletePolicy(" + id + ")");
@@ -655,6 +656,7 @@ public class ServiceREST {
 		ret.setParam(SearchFilter.SERVICE_ID, request.getParameter(SearchFilter.SERVICE_ID));
 		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter(SearchFilter.POLICY_NAME));
 		ret.setParam(SearchFilter.POLICY_ID, request.getParameter(SearchFilter.POLICY_ID));
+		ret.setParam(SearchFilter.STATUS, request.getParameter(SearchFilter.STATUS));
 		ret.setParam(SearchFilter.USER, request.getParameter(SearchFilter.USER));
 		ret.setParam(SearchFilter.GROUP, request.getParameter(SearchFilter.GROUP));
 		ret.setParam(SearchFilter.SORT_BY, request.getParameter(SearchFilter.SORT_BY));

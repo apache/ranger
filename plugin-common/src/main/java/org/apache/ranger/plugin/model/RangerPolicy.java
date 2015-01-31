@@ -45,7 +45,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private String                            service        = null;
 	private String                            name           = null;
 	private String                            description    = null;
-	private Boolean                           isEnabled      = null;
 	private Boolean                           isAuditEnabled = null;
 	private Map<String, RangerPolicyResource> resources      = null;
 	private List<RangerPolicyItem>            policyItems    = null;
@@ -55,35 +54,36 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param type
 	 */
 	public RangerPolicy() {
-		this(null, null, null, null, null, null);
+		this(null, null, null, null, null);
 	}
 
 	/**
 	 * @param type
 	 * @param name
 	 * @param description
-	 * @param isEnabled
-	 * @param configs
+	 * @param resources
+	 * @param policyItems
 	 */
-	public RangerPolicy(String service, String name, String description, Boolean isEnabled, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems) {
+	public RangerPolicy(String service, String name, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems) {
 		super();
 
 		setService(service);
 		setName(name);
 		setDescription(description);
-		setIsEnabled(isEnabled);
 		setIsAuditEnabled(null);
 		setResources(resources);
 		setPolicyItems(policyItems);
 	}
 
+	/**
+	 * @param other
+	 */
 	public void updateFrom(RangerPolicy other) {
 		super.updateFrom(other);
 
 		setService(other.getService());
 		setName(other.getName());
 		setDescription(other.getDescription());
-		setIsEnabled(other.getIsEnabled());
 		setIsAuditEnabled(other.getIsAuditEnabled());
 		setResources(other.getResources());
 		setPolicyItems(other.getPolicyItems());
@@ -129,20 +129,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 */
 	public void setDescription(String description) {
 		this.description = description;
-	}
-
-	/**
-	 * @return the isEnabled
-	 */
-	public Boolean getIsEnabled() {
-		return isEnabled;
-	}
-
-	/**
-	 * @param isEnabled the isEnabled to set
-	 */
-	public void setIsEnabled(Boolean isEnabled) {
-		this.isEnabled = isEnabled == null ? Boolean.TRUE : isEnabled;
 	}
 
 	/**
@@ -232,7 +218,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		sb.append("service={").append(service).append("} ");
 		sb.append("name={").append(name).append("} ");
 		sb.append("description={").append(description).append("} ");
-		sb.append("isEnabled={").append(isEnabled).append("} ");
 		sb.append("isAuditEnabled={").append(isAuditEnabled).append("} ");
 
 		sb.append("resources={");

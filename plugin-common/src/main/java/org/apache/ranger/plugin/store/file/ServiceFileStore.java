@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.store.file;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -37,6 +36,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
+import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -270,10 +270,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		List<RangerServiceDef> ret = getAllServiceDefs();
 
-		if(ret != null && filter != null) {
+		if(ret != null && filter != null && !filter.isEmpty()) {
 			CollectionUtils.filter(ret, getPredicate(filter));
 
-			Comparator<RangerServiceDef> comparator = getServiceDefComparator(filter);
+			Comparator<RangerBaseModelObject> comparator = getSorter(filter);
 
 			if(comparator != null) {
 				Collections.sort(ret, comparator);
@@ -455,10 +455,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		List<RangerService> ret = getAllServices();
 
-		if(ret != null && filter != null) {
+		if(ret != null && filter != null && !filter.isEmpty()) {
 			CollectionUtils.filter(ret, getPredicate(filter));
 
-			Comparator<RangerService> comparator = getServiceComparator(filter);
+			Comparator<RangerBaseModelObject> comparator = getSorter(filter);
 
 			if(comparator != null) {
 				Collections.sort(ret, comparator);
@@ -636,10 +636,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		List<RangerPolicy> ret = getAllPolicies();
 
-		if(ret != null) {
+		if(ret != null && filter != null && !filter.isEmpty()) {
 			CollectionUtils.filter(ret, getPredicate(filter));
 
-			Comparator<RangerPolicy> comparator = getPolicyComparator(filter);
+			Comparator<RangerBaseModelObject> comparator = getSorter(filter);
 
 			if(comparator != null) {
 				Collections.sort(ret, comparator);
@@ -740,7 +740,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(ret != null && ret.getPolicies() != null) {
-			Collections.sort(ret.getPolicies(), policyIdComparator);
+			Collections.sort(ret.getPolicies(), idComparator);
 		}
 
 		return ret;
@@ -907,7 +907,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, serviceDefIdComparator);
+			Collections.sort(ret, idComparator);
 
 			for(RangerServiceDef sd : ret) {
 				Collections.sort(sd.getResources(), resourceLevelComparator);
@@ -937,7 +937,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, serviceIdComparator);
+			Collections.sort(ret, idComparator);
 		}
 
 		return ret;
@@ -959,7 +959,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, policyIdComparator);
+			Collections.sort(ret, idComparator);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -993,121 +993,110 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		return service != null ? service.getId() : null;
 	}
 
-	private final static Comparator<RangerServiceDef> serviceDefNameComparator = new Comparator<RangerServiceDef>() {
+	private final static Comparator<RangerBaseModelObject> idComparator = new Comparator<RangerBaseModelObject>() {
 		@Override
-		public int compare(RangerServiceDef o1, RangerServiceDef o2) {
-			String name1 = (o1 == null) ? null : o1.getName();
-			String name2 = (o2 == null) ? null : o2.getName();
+		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
+			Long val1 = (o1 != null) ? o1.getId() : null;
+			Long val2 = (o2 != null) ? o2.getId() : null;
 
-			if(name1 == null) {
-				return -1;
-			} else if(name2 == null) {
-				return 1;
-			} else {
-				return name1.compareTo(name2);
-			}
+			return ObjectUtils.compare(val1, val2);
 		}
 	};
 
-	private final static Comparator<RangerServiceDef> serviceDefIdComparator = new Comparator<RangerServiceDef>() {
+	private final static Comparator<RangerBaseModelObject> createTimeComparator = new Comparator<RangerBaseModelObject>() {
 		@Override
-		public int compare(RangerServiceDef o1, RangerServiceDef o2) {
-			long id1 = (o1 == null || o1.getId() == null) ? 0 : o1.getId().longValue();
-			long id2 = (o2 == null || o2.getId() == null) ? 0 : o2.getId().longValue();
+		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
+			Date val1 = (o1 != null) ? o1.getCreateTime() : null;
+			Date val2 = (o2 != null) ? o2.getCreateTime() : null;
 
-			if(id1 < id2) {
-				return -1;
-			} else if(id1 > id2) {
-				return 1;
-			} else {
-				return 0;
-			}
+			return ObjectUtils.compare(val1, val2);
 		}
 	};
 
-	private final static Comparator<RangerService> serviceNameComparator = new Comparator<RangerService>() {
+	private final static Comparator<RangerBaseModelObject> updateTimeComparator = new Comparator<RangerBaseModelObject>() {
 		@Override
-		public int compare(RangerService o1, RangerService o2) {
-			String name1 = (o1 == null) ? null : o1.getName();
-			String name2 = (o2 == null) ? null : o2.getName();
+		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
+			Date val1 = (o1 != null) ? o1.getUpdateTime() : null;
+			Date val2 = (o2 != null) ? o2.getUpdateTime() : null;
 
-			if(name1 == null) {
-				return -1;
-			} else if(name2 == null) {
-				return 1;
-			} else {
-				return name1.compareTo(name2);
-			}
+			return ObjectUtils.compare(val1, val2);
 		}
 	};
 
-	private final static Comparator<RangerService> serviceIdComparator = new Comparator<RangerService>() {
+	private final static Comparator<RangerBaseModelObject> serviceDefNameComparator = new Comparator<RangerBaseModelObject>() {
 		@Override
-		public int compare(RangerService o1, RangerService o2) {
-			long id1 = (o1 == null || o1.getId() == null) ? 0 : o1.getId().longValue();
-			long id2 = (o2 == null || o2.getId() == null) ? 0 : o2.getId().longValue();
+		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
+			String val1 = null;
+			String val2 = null;
 
-			if(id1 < id2) {
-				return -1;
-			} else if(id1 > id2) {
-				return 1;
-			} else {
-				return 0;
+			if(o1 != null) {
+				if(o1 instanceof RangerServiceDef) {
+					val1 = ((RangerServiceDef)o1).getName();
+				} else if(o1 instanceof RangerService) {
+					val1 = ((RangerService)o1).getType();
+				}
 			}
+
+			if(o2 != null) {
+				if(o2 instanceof RangerServiceDef) {
+					val2 = ((RangerServiceDef)o2).getName();
+				} else if(o2 instanceof RangerService) {
+					val2 = ((RangerService)o2).getType();
+				}
+			}
+
+			return ObjectUtils.compare(val1, val2);
 		}
 	};
 
-	private final static Comparator<RangerPolicy> policyNameComparator = new Comparator<RangerPolicy>() {
+	private final static Comparator<RangerBaseModelObject> serviceNameComparator = new Comparator<RangerBaseModelObject>() {
 		@Override
-		public int compare(RangerPolicy o1, RangerPolicy o2) {
-			String name1 = (o1 == null) ? null : o1.getName();
-			String name2 = (o2 == null) ? null : o2.getName();
+		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
+			String val1 = null;
+			String val2 = null;
 
-			if(name1 == null) {
-				return -1;
-			} else if(name2 == null) {
-				return 1;
-			} else {
-				return name1.compareTo(name2);
+			if(o1 != null) {
+				if(o1 instanceof RangerPolicy) {
+					val1 = ((RangerPolicy)o1).getService();
+				} else if(o1 instanceof RangerService) {
+					val1 = ((RangerService)o1).getType();
+				}
 			}
+
+			if(o2 != null) {
+				if(o2 instanceof RangerPolicy) {
+					val2 = ((RangerPolicy)o2).getService();
+				} else if(o2 instanceof RangerService) {
+					val2 = ((RangerService)o2).getType();
+				}
+			}
+
+			return ObjectUtils.compare(val1, val2);
 		}
 	};
 
-	private final static Comparator<RangerPolicy> policyIdComparator = new Comparator<RangerPolicy>() {
+	private final static Comparator<RangerBaseModelObject> policyNameComparator = new Comparator<RangerBaseModelObject>() {
 		@Override
-		public int compare(RangerPolicy o1, RangerPolicy o2) {
-			long id1 = (o1 == null || o1.getId() == null) ? 0 : o1.getId().longValue();
-			long id2 = (o2 == null || o2.getId() == null) ? 0 : o2.getId().longValue();
+		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
+			String val1 = (o1 != null && o1 instanceof RangerPolicy) ? ((RangerPolicy)o1).getName() : null;
+			String val2 = (o2 != null && o2 instanceof RangerPolicy) ? ((RangerPolicy)o2).getName() : null;
 
-			if(id1 < id2) {
-				return -1;
-			} else if(id1 > id2) {
-				return 1;
-			} else {
-				return 0;
-			}
+			return ObjectUtils.compare(val1, val2);
 		}
 	};
 
 	private final static Comparator<RangerResourceDef> resourceLevelComparator = new Comparator<RangerResourceDef>() {
 		@Override
 		public int compare(RangerResourceDef o1, RangerResourceDef o2) {
-			long level1 = (o1 == null || o1.getLevel() == null) ? 0l : o1.getLevel().longValue();
-			long level2 = (o2 == null || o2.getLevel() == null) ? 0l : o2.getLevel().longValue();
+			Integer val1 = (o1 != null) ? o1.getLevel() : null;
+			Integer val2 = (o2 != null) ? o2.getLevel() : null;
 
-			if(level1 < level2) {
-				return -1;
-			} else if(level1 > level2) {
-				return 1;
-			} else {
-				return 0;
-			}
+			return ObjectUtils.compare(val1, val2);
 		}
 	};
 
-
 	private Predicate getPredicate(SearchFilter filter) {
-		if(filter == null) {
+		if(filter == null || filter.isEmpty()) {
 			return null;
 		}
 
@@ -1120,6 +1109,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		addPredicateForServiceId(filter.getParam(SearchFilter.SERVICE_ID), predicates);
 		addPredicateForPolicyName(filter.getParam(SearchFilter.POLICY_NAME), predicates);
 		addPredicateForPolicyId(filter.getParam(SearchFilter.POLICY_ID), predicates);
+		addPredicateForStatus(filter.getParam(SearchFilter.STATUS), predicates);
 		addPredicateForUserName(filter.getParam(SearchFilter.USER), predicates);
 		addPredicateForGroupName(filter.getParam(SearchFilter.GROUP), predicates);
 		addPredicateForResources(filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true), predicates);
@@ -1129,56 +1119,27 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		return ret;
 	}
 
-	private Comparator<RangerServiceDef> getServiceDefComparator(SearchFilter filter) {
-		String sortBy = filter == null ? null : filter.getParam(SearchFilter.SORT_BY);
+	private static Map<String, Comparator<RangerBaseModelObject>> sorterMap  = new HashMap<String, Comparator<RangerBaseModelObject>>();
 
-		if(StringUtils.isEmpty(sortBy)) {
-			return null;
-		}
-
-		Comparator<RangerServiceDef> ret = null;
-
-		if(StringUtils.equals(sortBy, SearchFilter.SERVICE_TYPE)) {
-			ret = serviceDefNameComparator;
-		} else if(StringUtils.equals(sortBy, SearchFilter.SERVICE_TYPE_ID)) {
-			ret = serviceDefIdComparator;
-		}
-
-		return ret;
+	static {
+		sorterMap.put(SearchFilter.SERVICE_TYPE, serviceDefNameComparator);
+		sorterMap.put(SearchFilter.SERVICE_TYPE_ID, idComparator);
+		sorterMap.put(SearchFilter.SERVICE_NAME, serviceNameComparator);
+		sorterMap.put(SearchFilter.SERVICE_TYPE_ID, idComparator);
+		sorterMap.put(SearchFilter.POLICY_NAME, policyNameComparator);
+		sorterMap.put(SearchFilter.POLICY_ID, idComparator);
+		sorterMap.put(SearchFilter.CREATE_TIME, createTimeComparator);
+		sorterMap.put(SearchFilter.UPDATE_TIME, updateTimeComparator);
 	}
 
-	private Comparator<RangerService> getServiceComparator(SearchFilter filter) {
+	private Comparator<RangerBaseModelObject> getSorter(SearchFilter filter) {
 		String sortBy = filter == null ? null : filter.getParam(SearchFilter.SORT_BY);
 
 		if(StringUtils.isEmpty(sortBy)) {
 			return null;
 		}
 
-		Comparator<RangerService> ret = null;
-
-		if(StringUtils.equals(sortBy, SearchFilter.SERVICE_NAME)) {
-			ret = serviceNameComparator;
-		} else if(StringUtils.equals(sortBy, SearchFilter.SERVICE_TYPE_ID)) {
-			ret = serviceIdComparator;
-		}
-
-		return ret;
-	}
-
-	private Comparator<RangerPolicy> getPolicyComparator(SearchFilter filter) {
-		String sortBy = filter == null ? null : filter.getParam(SearchFilter.SORT_BY);
-
-		if(StringUtils.isEmpty(sortBy)) {
-			return null;
-		}
-
-		Comparator<RangerPolicy> ret = null;
-
-		if(StringUtils.equals(sortBy, SearchFilter.POLICY_NAME)) {
-			ret = policyNameComparator;
-		} else if(StringUtils.equals(sortBy, SearchFilter.POLICY_ID)) {
-			ret = policyIdComparator;
-		}
+		Comparator<RangerBaseModelObject> ret = sorterMap.get(sortBy);
 
 		return ret;
 	}
@@ -1211,10 +1172,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 							break;
 						}
 					}
-				} else if(object instanceof RangerService) {
-					ret = true; // nothing to do here
-				} else if(object instanceof RangerServiceDef) {
-					ret = true; // nothing to do here
+				} else {
+					ret = true;
 				}
 
 				return ret;
@@ -1281,17 +1240,15 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 				boolean ret = false;
 
-				if(object instanceof RangerPolicy) {
-					ret = true; // nothing to do here
-				} else if(object instanceof RangerService) {
-					ret = true; // nothing to do here
-				} else if(object instanceof RangerServiceDef) {
+				if(object instanceof RangerServiceDef) {
 					RangerServiceDef serviceDef = (RangerServiceDef)object;
 					Long             svcDefId   = serviceDef.getId();
 
 					if(svcDefId != null) {
 						ret = StringUtils.equals(serviceTypeId, svcDefId.toString());
 					}
+				} else {
+					ret = true;
 				}
 
 				return ret;
@@ -1327,8 +1284,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 					RangerService service = (RangerService)object;
 
 					ret = StringUtils.equals(serviceName, service.getName());
-				} else if(object instanceof RangerServiceDef) {
-					ret = true; // nothing to do here
+				} else {
+					ret = true;
 				}
 
 				return ret;
@@ -1369,8 +1326,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 					if(service.getId() != null) {
 						ret = StringUtils.equals(serviceId, service.getId().toString());
 					}
-				} else if(object instanceof RangerServiceDef) {
-					ret = true; // nothing to do here
+				} else {
+					ret = true;
 				}
 
 				return ret;
@@ -1402,10 +1359,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 					RangerPolicy policy = (RangerPolicy)object;
 
 					ret = StringUtils.equals(policyName, policy.getName());
-				} else if(object instanceof RangerService) {
-					ret = true; // nothing to do here
-				} else if(object instanceof RangerServiceDef) {
-					ret = true; // nothing to do here
+				} else {
+					ret = true;
 				}
 
 				return ret;
@@ -1439,10 +1394,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 					if(policy.getId() != null) {
 						ret = StringUtils.equals(policyId, policy.getId().toString());
 					}
-				} else if(object instanceof RangerService) {
-					ret = true; // nothing to do here
-				} else if(object instanceof RangerServiceDef) {
-					ret = true; // nothing to do here
+				} else {
+					ret = true;
 				}
 
 				return ret;
@@ -1480,10 +1433,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 							break;
 						}
 					}
-				} else if(object instanceof RangerService) {
-					ret = true; // nothing to do here
-				} else if(object instanceof RangerServiceDef) {
-					ret = true; // nothing to do here
+				} else {
+					ret = true;
 				}
 
 				return ret;
@@ -1521,10 +1472,45 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 							break;
 						}
 					}
-				} else if(object instanceof RangerService) {
-					ret = true; // nothing to do here
-				} else if(object instanceof RangerServiceDef) {
-					ret = true; // nothing to do here
+				} else {
+					ret = true;
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForStatus(final String status, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(status)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerBaseModelObject) {
+					RangerBaseModelObject obj = (RangerBaseModelObject)object;
+
+					if(StringUtils.equals(status, "enabled")) {
+						ret = obj.getIsEnabled();
+					} else if(StringUtils.equals(status, "disabled")) {
+						ret = !obj.getIsEnabled();
+					}
+				} else {
+					ret = true;
 				}
 
 				return ret;
@@ -1562,11 +1548,18 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 							RangerPolicyResource policyResource = policy.getResources().get(name);
 
-							if(policyResource != null && CollectionUtils.isEmpty(policyResource.getValues())) {
-								if(policyResource.getValues().contains(name)) {
+							if(policyResource != null && !CollectionUtils.isEmpty(policyResource.getValues())) {
+								String val = resources.get(name);
+
+								if(policyResource.getValues().contains(val)) {
 									isMatch = true;
 								} else {
-									// TODO: wildcard match
+									for(String policyResourceValue : policyResource.getValues()) {
+										if(policyResourceValue.contains(val)) { // TODO: consider match for wildcard in policyResourceValue?
+											isMatch = true;
+											break;
+										}
+									}
 								}
 							}
 
@@ -1577,12 +1570,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 							}
 						}
 
-						ret = numFound == policy.getResources().size();
+						ret = numFound == resources.size();
 					}
-				} else if(object instanceof RangerService) {
-					ret = true; // nothing to do here
-				} else if(object instanceof RangerServiceDef) {
-					ret = true; // nothing to do here
+				} else {
+					ret = true;
 				}
 
 				return ret;

@@ -58,6 +58,17 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		this(null, null, null, null, null, null, null, null, null);
 	}
 
+	/**
+	 * @param name
+	 * @param implClass
+	 * @param label
+	 * @param description
+	 * @param configs
+	 * @param resources
+	 * @param accessTypes
+	 * @param policyConditions
+	 * @param enums
+	 */
 	public RangerServiceDef(String name, String implClass, String label, String description, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerEnumDef> enums) {
 		super();
 
@@ -72,7 +83,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		setEnums(enums);
 	}
 
+	/**
+	 * @param other
+	 */
 	public void updateFrom(RangerServiceDef other) {
+		super.updateFrom(other);
+
 		setName(other.getName());
 		setImplClass(other.getImplClass());
 		setLabel(other.getLabel());
