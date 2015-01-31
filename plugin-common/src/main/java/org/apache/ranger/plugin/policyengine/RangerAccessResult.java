@@ -82,6 +82,13 @@ public class RangerAccessResult {
 	}
 
 	/**
+	 * @param reason the reason to set
+	 */
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+	
+	/**
 	 * @return the isAudited
 	 */
 	public boolean getIsAudited() {
@@ -93,6 +100,13 @@ public class RangerAccessResult {
 	 */
 	public void setIsAudited(boolean isAudited) {
 		this.isAudited = isAudited;
+	}
+
+	/**
+	 * @return the reason
+	 */
+	public String getReason() {
+		return reason;
 	}
 
 	/**

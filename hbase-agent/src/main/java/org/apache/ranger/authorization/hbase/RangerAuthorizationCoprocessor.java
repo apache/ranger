@@ -23,9 +23,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,17 +36,15 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
@@ -63,9 +64,9 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.coprocessor.RegionServerCoprocessorEnvironment;
 import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
+import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.ipc.RequestContext;
-import org.apache.hadoop.hbase.master.RegionPlan;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
@@ -84,21 +85,23 @@ import org.apache.hadoop.hbase.security.AccessDeniedException;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.access.Permission;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
+import org.apache.hadoop.hbase.security.access.RangerAccessControlLists;
 import org.apache.hadoop.hbase.security.access.TablePermission;
 import org.apache.hadoop.hbase.security.access.UserPermission;
-import org.apache.hadoop.hbase.security.access.RangerAccessControlLists;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.admin.client.datatype.GrantRevokeData;
 import org.apache.ranger.admin.client.datatype.GrantRevokeData.PermMap;
-import org.apache.ranger.audit.model.EnumRepositoryType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
@@ -109,25 +112,28 @@ import com.google.protobuf.Service;
 
 public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocessorBase implements AccessControlService.Interface, CoprocessorService {
 	private static final Log LOG = LogFactory.getLog(RangerAuthorizationCoprocessor.class.getName());
-	private static final String RangerModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME) ;
-	private static final short  accessGrantedFlag  = 1;
-	private static final short  accessDeniedFlag   = 0;
 	private static final String repositoryName          = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
 	private static final boolean UpdateRangerPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 	private static final String GROUP_PREFIX = "@";
-
 		
 	private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 	private static final String WILDCARD = "*";
-	private static final byte[] WILDCARD_MATCH = "*".getBytes();
 	
     private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
 
     private RegionCoprocessorEnvironment regionEnv;
 	private Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
 	
-	private HBaseAccessController accessController = HBaseAccessControllerFactory.getInstance();
 	private List<String> superUserList = null;
+
+	/*
+	 * These are package level only for testability and aren't meant to be exposed outside via getters/setters or made available to derived classes.
+	 */
+	final HbaseFactory _factory = HbaseFactory.getInstance();
+	final RangerPolicyEngine _authorizer = _factory.getPolicyEngine();
+	final HbaseUserUtils _userUtils = _factory.getUserUtils();
+	final HbaseAuthUtils _authUtils = _factory.getAuthUtils();
+	
 	// Utilities Methods 
 	protected byte[] getTableName(RegionCoprocessorEnvironment e) {
 		HRegion region = e.getRegion();
@@ -140,7 +146,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 		return tableName;
 	}
-	protected void isSystemOrSuperUser(Configuration conf) throws IOException {
+	protected void requireSystemOrSuperUser(Configuration conf) throws IOException {
 		User user = User.getCurrent();
 		if (user == null) {
 			throw new IOException("Unable to obtain the current user, authorization checks for internal operations will not work correctly!");
@@ -169,16 +175,16 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	protected boolean isSpecialTable(String tableNameStr) {
 		return tableNameStr.equals("hbase:meta") ||  tableNameStr.equals("-ROOT-") || tableNameStr.equals(".META.");
 	}
-	@SuppressWarnings("unused")
-	private String getUser() {
-		User u = getActiveUser();
-		if (u == null) {
-			return "(user:unknown)";
+	protected boolean isAccessForMetaTables(RegionCoprocessorEnvironment env) {
+		HRegionInfo hri = env.getRegion().getRegionInfo();
+		
+		if (hri.isMetaTable() || hri.isMetaRegion()) {
+			return true;
 		} else {
-			String groups = (u.getGroupNames() == null) ? "" : StringUtils.join(u.getGroupNames(), ",");
-			return "(user:" + u.getShortName() + ", groups: [" + groups + "])";
+			return false;
 		}
 	}
+
 	private User getActiveUser() {
 		User user = RequestContext.getRequestUser();
 		if (!RequestContext.isInRequestContext()) {
@@ -211,148 +217,384 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			}
 		}
 	}
-	// Methods that are delegated to AUTHManager 
-	public boolean isPermissionGranted(User user, Action action) {
-		if (isSuperUser(user)) {
-			return true;
-		} else {
-			return accessController.isAccessAllowed(user, action);
+
+	/**
+	 * @param families
+	 * @return empty map if families is null, would never have empty or null keys, would never have null values, values could be empty (non-null) set
+	 */
+	Map<String, Set<String>> getColumnFamilies(Map<byte[], ? extends Collection<?>> families) {
+		if (families == null) {
+			// null families map passed.  Ok, returning empty map.
+			return Collections.<String, Set<String>>emptyMap();
 		}
-	}
-	public boolean isPermissionGranted(User user, byte[] tableName, Action action) {
-		if (isSuperUser(user)) {
-			return true;
-		} else {
-			return accessController.isAccessAllowed(user, tableName, action);
-		}
-	}
-	public boolean isPermissionGranted(User user, byte[] tableName, byte[] colf, Action action) {
-		if (isSuperUser(user)) {
-			return true;
-		} else {
-			return accessController.isAccessAllowed(user, tableName, colf, WILDCARD_MATCH, action);
-		}
-	}
-	public boolean isPermissionGranted(User user, byte[] tableName, byte[] colf, byte[] col, Action action) {
-		if (isSuperUser(user)) {
-			return true;
-		} else {
-			return accessController.isAccessAllowed(user, tableName, colf, col, action);
-		}
-	}
-	// Methods that are internally used by co-processors 
-	@SuppressWarnings("unchecked")
-	public void requirePermission(String request, Action action, RegionCoprocessorEnvironment rEnv, Map<byte[], ? extends Collection<?>> families) throws IOException {
-		HRegionInfo hri = rEnv.getRegion().getRegionInfo();
-		byte[] tableName = hri.getTable().getName() ;
-		String tableNameStr = Bytes.toString(tableName);
-		if (hri.isMetaTable() || hri.isMetaRegion()) {
-			if (action == TablePermission.Action.READ) {
-				return;
-			}
-		}
-		User user = getActiveUser();
-		if (user == null) {
-			throw new AccessDeniedException("No user associated with request (" + request + ") for action: " + action + "on table:" + tableName);
-		}
-		if (isSuperUser(user)) {
-			return;
-		}
-		if (action == TablePermission.Action.WRITE && (hri.isMetaTable() || hri.isMetaRegion()) && (isPermissionGranted(user, Permission.Action.CREATE) || isPermissionGranted(user, Permission.Action.ADMIN))) {
-			return;
-		}
-		if (isPermissionGranted(user, tableName, (byte[]) null, action)) {
-			return;
-		}
-		if (families != null && families.size() > 0) {
-			// all families must pass
-			for (Map.Entry<byte[], ? extends Collection<?>> family : families.entrySet()) {
-				// a) check for family level access
-				if (isPermissionGranted(user, tableName, family.getKey(), action)) {
-					continue; // family-level permission overrides per-qualifier
-				}
-				// b) qualifier level access can still succeed
-				if ((family.getValue() != null) && (family.getValue().size() > 0)) {
-					if (family.getValue() instanceof Set) { // Set<byte[]> - Set
-															// of Columns
-						// for each qualifier of the family
-						Set<byte[]> qualifierSet = (Set<byte[]>) family.getValue();
-						for (byte[] qualifier : qualifierSet) {
-							if (!isPermissionGranted(user, tableName, family.getKey(), qualifier, action)) {
-								if (accessController.isAudited(tableName)) {
-									auditEvent(request, tableName, family.getKey(), qualifier, null, null, user, accessDeniedFlag);
-								}
-								throw new AccessDeniedException("Insufficient permissions for user '" + user + "',action: " + action + ", tableName:" + tableNameStr + ", family:" + Bytes.toString(family.getKey()) + ",column: " + Bytes.toString(qualifier));
-							}
-						}
-					} else if (family.getValue() instanceof List) { // List<KeyValue>
-																	// - List of
-																	// KeyValue
-																	// pair
-						List<KeyValue> kvList = (List<KeyValue>) family.getValue();
-						for (KeyValue kv : kvList) {
-							if (!isPermissionGranted(user, tableName, family.getKey(), kv.getQualifier(), action)) {
-								if (accessController.isAudited(tableName)) {
-									auditEvent(request, tableName, family.getKey(), kv.getQualifier(), null, null, user, accessDeniedFlag);
-								}
-								throw new AccessDeniedException("Insufficient permissions for user '" + user + "',action: " + action + ", tableName:" + tableNameStr + ", family:" + Bytes.toString(family.getKey()) + ",column: " + Bytes.toString(kv.getQualifier()));
-							}
-						}
-					}
+		Map<String, Set<String>> result = new HashMap<String, Set<String>>();
+		for (Map.Entry<byte[], ? extends Collection<?>> anEntry : families.entrySet()) {
+			byte[] familyBytes = anEntry.getKey();
+			String family = Bytes.toString(familyBytes);
+			if (family == null || family.isEmpty()) {
+				LOG.error("Unexpected Input: got null or empty column family (key) in families map! Ignoring...");
+			} else {
+				Collection<?> columnCollection = anEntry.getValue();
+				if (CollectionUtils.isEmpty(columnCollection)) {
+					// family points to null map, OK.
+					result.put(family, Collections.<String> emptySet());
 				} else {
-					if (accessController.isAudited(tableName)) {
-						auditEvent(request, tableName, family.getKey(), null, null, null, user, accessDeniedFlag);
+					Iterator<String> columnIterator = new ColumnIterator(columnCollection);
+					Set<String> columns = new HashSet<String>();
+					while (columnIterator.hasNext()) {
+						String column = columnIterator.next();
+						columns.add(column);
 					}
-					throw new AccessDeniedException("Insufficient permissions for user '" + user + "',action: " + action + ", tableName:" + tableNameStr + ", family:" + Bytes.toString(family.getKey()) + ", no columns found.");
+					result.put(family, columns);
 				}
 			}
-			return;
 		}
-		if (accessController.isAudited(tableName)) {
-			auditEvent(request, tableName, null, null, null, null, user, accessDeniedFlag);
-		}
-		throw new AccessDeniedException("Insufficient permissions for user '" + user + "',action: " + action + ", tableName:" + tableNameStr);
+		return result;
 	}
-	// Check if the user has global permission ...
-	protected void requireGlobalPermission(String request, String objName, Permission.Action action) throws AccessDeniedException {
-		User user = getActiveUser();
-		if (!isPermissionGranted(user, action)) {
-			if (accessController.isAudited(WILDCARD_MATCH)) {
-				auditEvent(request, objName, null, null, null, null, user, accessDeniedFlag);
-			}
-			throw new AccessDeniedException("Insufficient permissions for user '" + getActiveUser() + "' (global, action=" + action + ")");
+	
+	static class ColumnFamilyAccessResult {
+		final boolean _everythingIsAccessible;
+		final boolean _somethingIsAccessible;
+		final List<AuthzAuditEvent> _accessAllowedEvents;
+		final AuthzAuditEvent _accessDeniedEvent;
+		final Map<String, Set<String>> _allowedColumns;
+		final String _denialReason;
+		
+		ColumnFamilyAccessResult(
+				boolean everythingIsAccessible, boolean somethingIsAccessible, 
+				List<AuthzAuditEvent> accessAllowedEvents, AuthzAuditEvent accessDeniedEvent,
+				Map<String, Set<String>> allowedColumns, String denialReason) {
+			_everythingIsAccessible = everythingIsAccessible;
+			_somethingIsAccessible = somethingIsAccessible;
+			// WARNING: we are just holding on to reference of the collection.  Potentially risky optimization
+			_accessAllowedEvents = accessAllowedEvents;
+			_accessDeniedEvent = accessDeniedEvent;
+			_allowedColumns = allowedColumns;
+			_denialReason = denialReason;
+		}
+		
+		@Override
+		public String toString() {
+			return Objects.toStringHelper(getClass())
+					.add("everythingIsAccessible", _everythingIsAccessible)
+					.add("somethingIsAccessible", _somethingIsAccessible)
+					.add("accessAllowedEvents", _accessAllowedEvents)
+					.add("accessDeniedEvent", _accessDeniedEvent)
+					.add("allowedColumns", _allowedColumns)
+					.add("denialReason", _denialReason)
+					.toString();
+			
 		}
 	}
-	protected void requirePermission(String request, byte[] tableName, Permission.Action action) throws AccessDeniedException {
-		User user = getActiveUser();
-		if (!isPermissionGranted(user, tableName, action)) {
-			if (accessController.isAudited(tableName)) {
-				auditEvent(request, tableName, null, null, null, null, user, accessDeniedFlag);
-			}
-			throw new AccessDeniedException("Insufficient permissions for user '" + getActiveUser() + "' (global, action=" + action + ")");
+	
+	ColumnFamilyAccessResult evaluateAccess(String operation, Action action, final RegionCoprocessorEnvironment env, 
+			final Map<byte[], ? extends Collection<?>> familyMap) throws AccessDeniedException {
+		
+		String access = _authUtils.getAccess(action);
+		
+		if (LOG.isDebugEnabled()) {
+			final String format = "evaluateAccess: entered: Operation[%s], access[%s], families[%s]";
+			Map<String, Set<String>> families = getColumnFamilies(familyMap);
+			String message = String.format(format, operation, access, families);
+			LOG.debug(message);
 		}
-	}
-	protected void requirePermission(String request, byte[] aTableName, byte[] aColumnFamily, byte[] aQualifier, Permission.Action... actions) throws AccessDeniedException {
-		User user = getActiveUser();
-		boolean isAllowed = false;
 
-		for (Action action : actions) {
-			isAllowed = isPermissionGranted(user, aTableName, aColumnFamily, aQualifier, action);
+		byte[] tableBytes = getTableName(env);
+		if (tableBytes == null || tableBytes.length == 0) {
+			String message = "evaluateAccess: Unexpected: Couldn't get table from RegionCoprocessorEnvironment. Access denied, not audited";
+			LOG.debug(message);
+			throw new AccessDeniedException("Insufficient permissions for operation '" + operation + "',action: " + action);
+		}
+		String table = Bytes.toString(tableBytes);
 
-			if(isAllowed) {
-				break;
+		final String messageTemplate = "evaluateAccess: exiting: Operation[%s], access[%s], families[%s], verdict[%s]";
+		ColumnFamilyAccessResult result;
+		if (canSkipAccessCheck(operation, access, table) || canSkipAccessCheck(operation, access, env)) {
+			LOG.debug("evaluateAccess: exiting: isKnownAccessPattern returned true: access allowed, not audited");
+			result = new ColumnFamilyAccessResult(true, true, null, null, null, null);
+			if (LOG.isDebugEnabled()) {
+				Map<String, Set<String>> families = getColumnFamilies(familyMap);
+				String message = String.format(messageTemplate, operation, access, families, result.toString());
+				LOG.debug(message);
+			}
+			return result;
+		}
+		
+		User user = getActiveUser();
+		// let's create a session that would be reused.  Set things on it that won't change.
+		HbaseAuditHandler auditHandler = _factory.getAuditHandler(); 
+		AuthorizationSession session = new AuthorizationSession(_authorizer)
+				.operation(operation)
+				.remoteAddress(getRemoteAddress())
+				.auditHandler(auditHandler)
+				.user(user)
+				.access(access)
+				.table(table);
+		Map<String, Set<String>> families = getColumnFamilies(familyMap);
+		if (families == null || families.isEmpty()) {
+			// table level access is desired
+			session.buildRequest()
+				.authorize();
+			boolean authorized = session.isAuthorized();
+			String reason = "";
+			if (!authorized) {
+				reason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, no column families found.", user.getName(), operation, table);
+			}
+			AuthzAuditEvent event = auditHandler.discardMostRecentEvent(); // this could be null, of course, depending on audit settings of table.
+
+			// if authorized then pass captured events as access allowed set else as access denied set.
+			result = new ColumnFamilyAccessResult(authorized, authorized, 
+						authorized ? Collections.singletonList(event) : null,
+						authorized ? null : event, null, reason); 
+			if (LOG.isDebugEnabled()) {
+				String message = String.format(messageTemplate, operation, access, families, result.toString());
+				LOG.debug(message);
+			}
+			return result;
+		}
+		
+		boolean everythingIsAccessible = true;
+		boolean somethingIsAccessible = false;
+		// we would have to accumulate audits of all successful accesses and any one denial (which in our case ends up being the last denial)
+		List<AuthzAuditEvent> authorizedEvents = new ArrayList<AuthzAuditEvent>(); 
+		AuthzAuditEvent deniedEvent = null;
+		String denialReason = null;
+		// we need to cache the auths results so that we can create a filter, if needed
+		Map<String, Set<String>> accessResultsCache = new HashMap<String, Set<String>>();
+		
+		for (Map.Entry<String, Set<String>> anEntry : families.entrySet()) {
+			String family = anEntry.getKey();
+			session.columnFamily(family);
+			
+			Set<String> columns = anEntry.getValue();
+			if (columns == null || columns.isEmpty()) {
+				// family level access is desired.
+				session.column(null) // zap stale column from prior iteration of this loop, if any
+					.buildRequest()
+					.authorize();
+				if (session.isAuthorized()) {
+					// we need to do 3 things: housekeeping, capturing audit events, building the results cache for filter
+					somethingIsAccessible = true;
+					AuthzAuditEvent event = auditHandler.discardMostRecentEvent();
+					if (event != null) {
+						authorizedEvents.add(event);
+					}
+					// presence of key with null value would imply access to all columns in a family.
+					accessResultsCache.put(family, null);
+				} else {
+					everythingIsAccessible = false;
+					deniedEvent = auditHandler.discardMostRecentEvent();
+					denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s, no columns found.", user.getName(), operation, table, family);
+				}
+			} else {
+				Set<String> accessibleColumns = new HashSet<String>(); // will be used in to populate our results cache for the filter
+ 				for (String column : columns) {
+ 					session.column(column)
+ 						.buildRequest()
+ 						.authorize();
+ 					if (session.isAuthorized()) {
+ 						// we need to do 3 things: housekeeping, capturing audit events, building the results cache for filter
+ 						somethingIsAccessible = true;
+ 						AuthzAuditEvent event = auditHandler.discardMostRecentEvent();
+ 						if (event != null) {
+ 							authorizedEvents.add(event);
+ 						}
+ 						accessibleColumns.add(column);
+ 					} else {
+ 						everythingIsAccessible = false;
+ 						deniedEvent = auditHandler.discardMostRecentEvent();
+ 						denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s, column: %s", user.getName(), operation, table, family, column);  
+ 					}
+				}
+ 				if (!accessibleColumns.isEmpty()) {
+ 					accessResultsCache.put(family, accessibleColumns);
+ 				}
 			}
 		}
 		
-		if (!isAllowed) {
-			if (accessController.isAudited(aTableName)) {
-				auditEvent(request, aTableName, aColumnFamily, aQualifier, null, null, user, accessDeniedFlag);
-			}
-			Permission.Action deniedAction = actions.length > 0 ? actions[0] : null;
+		result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, deniedEvent, accessResultsCache, denialReason);
+		if (LOG.isDebugEnabled()) {
+			String message = String.format(messageTemplate, operation, access, families, result.toString());
+			LOG.debug(message);
+		}
+		return result;
+	}
+	
+	Filter authorizeAccess(String operation, Action action, final RegionCoprocessorEnvironment env, final Map<byte[], NavigableSet<byte[]>> familyMap) throws AccessDeniedException {
 
-			throw new AccessDeniedException("Insufficient permissions for user '" + user + "',action: " + deniedAction + ", tableName:" + Bytes.toString(aTableName) + ", family:" + Bytes.toString(aColumnFamily) + ",column: " + Bytes.toString(aQualifier));
+		ColumnFamilyAccessResult accessResult = evaluateAccess(operation, action, env, familyMap);
+		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+		if (accessResult._everythingIsAccessible) {
+			auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
+			LOG.debug("authorizeAccess: exiting: No filter returned since all access was allowed");
+			return null; // no filter needed since we are good to go.
+		} else if (accessResult._somethingIsAccessible) {
+			auditHandler.logAuthzAudits(accessResult._accessAllowedEvents); // we still need to log those to which we got access.
+			LOG.debug("authorizeAccess: exiting: Filter returned since some access was allowed");
+			return new RangerAuthorizationFilter(accessResult._allowedColumns);
+		} else {
+			// If we are here then it means nothing was accessible!  So let's log one denial (in our case, the last denial) and throw an exception
+			auditHandler.logAuthzAudit(accessResult._accessDeniedEvent);
+			LOG.debug("authorizeAccess: exiting: Throwing exception since nothing was accessible");
+			throw new AccessDeniedException(accessResult._denialReason);
 		}
 	}
+	
+	Filter combineFilters(Filter filter, Filter existingFilter) {
+		Filter combinedFilter = filter;
+		if (existingFilter != null) {
+			combinedFilter = new FilterList(FilterList.Operator.MUST_PASS_ALL, Lists.newArrayList(filter, existingFilter));
+		}
+		return combinedFilter;
+	}
+
+	void requirePermission(final String operation, final Action action, final RegionCoprocessorEnvironment regionServerEnv, final Map<byte[], ? extends Collection<?>> familyMap) 
+			throws AccessDeniedException {
+
+		ColumnFamilyAccessResult accessResult = evaluateAccess(operation, action, regionServerEnv, familyMap);
+		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+		if (accessResult._everythingIsAccessible) {
+			auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
+			LOG.debug("requirePermission: exiting: all access was allowed");
+			return;
+		} else {
+			auditHandler.logAuthzAudit(accessResult._accessDeniedEvent);
+			LOG.debug("requirePermission: exiting: throwing exception as everything wasn't accessible");
+			throw new AccessDeniedException(accessResult._denialReason);
+		}
+	}
+	
+	/**
+	 * This could run s
+	 * @param operation
+	 * @param otherInformation
+	 * @param access
+	 * @param table
+	 * @param columnFamily
+	 * @param column
+	 * @return
+	 * @throws AccessDeniedException 
+	 */
+	void authorizeAccess(String operation, String otherInformation, Action action, String table, String columnFamily, String column) throws AccessDeniedException {
+		
+		String access = _authUtils.getAccess(action);
+		if (LOG.isDebugEnabled()) {
+			final String format = "authorizeAccess: %s: Operation[%s], Info[%s], access[%s], table[%s], columnFamily[%s], column[%s]";
+			String message = String.format(format, "Entering", operation, otherInformation, access, table, columnFamily, column);
+			LOG.debug(message);
+		}
+		
+		final String format =  "authorizeAccess: %s: Operation[%s], Info[%s], access[%s], table[%s], columnFamily[%s], column[%s], allowed[%s], reason[%s]";
+		if (canSkipAccessCheck(operation, access, table)) {
+			if (LOG.isDebugEnabled()) {
+				String message = String.format(format, "Exiting", operation, otherInformation, access, table, columnFamily, column, true, "can skip auth check");
+				LOG.debug(message);
+			}
+			return;
+		}
+		User user = getActiveUser();
+		
+		HbaseAuditHandler auditHandler = _factory.getAuditHandler(); 
+		AuthorizationSession session = new AuthorizationSession(_authorizer)
+			.operation(operation)
+			.otherInformation(otherInformation)
+			.remoteAddress(getRemoteAddress())
+			.auditHandler(auditHandler)
+			.user(user)
+			.access(access)
+			.table(table)
+			.columnFamily(columnFamily)
+			.column(column)
+			.buildRequest()
+			.authorize();
+		
+		if (LOG.isDebugEnabled()) {
+			boolean allowed = session.isAuthorized();
+			String reason = session.getDenialReason();
+			String message = String.format(format, "Exiting", operation, otherInformation, access, table, columnFamily, column, allowed, reason);
+			LOG.debug(message);
+		}
+		
+		session.publishResults();
+	}
+	
+	boolean canSkipAccessCheck(final String operation, String access, final String table) 
+			throws AccessDeniedException {
+		
+		User user = getActiveUser();
+		boolean result = false;
+		if (user == null) {
+			String message = "Unexpeceted: User is null: access denied, not audited!"; 
+			LOG.warn("canSkipAccessCheck: exiting" + message);
+			throw new AccessDeniedException("No user associated with request (" + operation + ") for action: " + access + "on table:" + table);
+		} else if (isSuperUser(user)) {
+			LOG.debug("canSkipAccessCheck: true: superuser access allowed, not audited");
+			result = true;
+		} else if (isAccessForMetadataRead(access, table)) {
+			LOG.debug("canSkipAccessCheck: true: metadata read access always allowed, not audited");
+			result = true;
+		} else {
+			LOG.debug("Can't skip access checks");
+		}
+		
+		return result;
+	}
+	
+	boolean canSkipAccessCheck(final String operation, String access, final RegionCoprocessorEnvironment regionServerEnv) throws AccessDeniedException {
+
+		User user = getActiveUser();
+		// read access to metadata tables is always allowed and isn't audited.
+		if (isAccessForMetaTables(regionServerEnv) && _authUtils.isReadAccess(access)) {
+			LOG.debug("isKnownAccessPattern: exiting: Read access for metadata tables allowed, not audited!");
+			return true;
+		}
+		// if write access is desired to metatables then global create access is sufficient
+		if (_authUtils.isWriteAccess(access) && isAccessForMetaTables(regionServerEnv)) {
+			String createAccess = _authUtils.getAccess(Action.CREATE);
+			AuthorizationSession session = new AuthorizationSession(_authorizer)
+				.operation(operation)
+				.remoteAddress(getRemoteAddress())
+				.user(user)
+				.access(createAccess)
+				.buildRequest()
+				.authorize();
+			if (session.isAuthorized()) {
+				// NOTE: this access isn't logged
+				LOG.debug("isKnownAccessPattern: exiting: User has global create access, allowed!");
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	boolean isAccessForMetadataRead(String access, String table) {
+		if (_authUtils.isReadAccess(access) && isSpecialTable(table)) {
+			LOG.debug("isAccessForMetadataRead: Metadata tables read: access allowed!");
+			return true;
+		}
+		return false;
+	}
+
+	// Check if the user has global permission ...
+	protected void requireGlobalPermission(String request, String objName, Permission.Action action) throws AccessDeniedException {
+		authorizeAccess(request, objName, action, null, null, null);
+	}
+
+	protected void requirePermission(String request, byte[] tableName, Permission.Action action) throws AccessDeniedException {
+		String table = Bytes.toString(tableName);
+
+		authorizeAccess(request, null, action, table, null, null);
+	}
+	
+	protected void requirePermission(String request, byte[] aTableName, byte[] aColumnFamily, byte[] aQualifier, Permission.Action action) throws AccessDeniedException {
+
+		String table = Bytes.toString(aTableName);
+		String columnFamily = Bytes.toString(aColumnFamily);
+		String column = Bytes.toString(aQualifier);
+
+		authorizeAccess(request, null, action, table, columnFamily, column);
+	}
+	
 	protected void requirePermission(String request, Permission.Action perm, RegionCoprocessorEnvironment env, Collection<byte[]> families) throws IOException {
 		HashMap<byte[], Set<byte[]>> familyMap = new HashMap<byte[], Set<byte[]>>();
 
@@ -363,44 +605,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 		requirePermission(request, perm, env, familyMap);
 	}
-	protected boolean isPermissionGranted(String request, User requestUser, Permission.Action perm, RegionCoprocessorEnvironment env, Map<byte[], NavigableSet<byte[]>> familyMap) {
-		boolean ret = true;
-		try {
-			requirePermission(request, perm, env, familyMap);
-		} catch (Throwable t) {
-			ret = false;
-		}
-		return ret;
-	}
-	protected boolean hasFamilyQualifierPermission(User requestUser, Permission.Action perm, RegionCoprocessorEnvironment env, Map<byte[], NavigableSet<byte[]>> familyMap) {
-		User user = requestUser;
-		byte[] tableName = getTableName(env);
-		if (familyMap != null && familyMap.size() > 0) {
-			for (Map.Entry<byte[], NavigableSet<byte[]>> family : familyMap.entrySet()) {
-				if (family.getValue() != null && !family.getValue().isEmpty()) {
-					for (byte[] qualifier : family.getValue()) {
-						boolean isGranted = isPermissionGranted(user, tableName, family.getKey(), qualifier, perm);
-						LOG.info(":=> hasFamilyQualifierPermission: T(" + Bytes.toString(tableName) + "), family: (" + Bytes.toString(family.getKey() ) + "), Q(" + Bytes.toString(qualifier) + "), Permission: [" + perm + "] => [" + isGranted + "]") ;
-						if (isGranted) {
-							return true;
-						}
-					}
-				} else {
-					boolean isGranted = isPermissionGranted(user, tableName, family.getKey(), perm);
-					LOG.info(":=>  hasFamilyPermission: T(" + Bytes.toString(tableName) + "), family: (" + Bytes.toString(family.getKey() ) + ", Permission: [" + perm + "] => [" + isGranted + "]") ;
-					if (isGranted) {
-						return true;
-					}
-				}
-			}
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Empty family map passed for permission check");
-			}
-		}
-		return false;
-	}
-	
 	
 	public void checkPermissions(Permission[] permissions) throws IOException {
 		String tableName = regionEnv.getRegion().getTableDesc().getTableName().getNameAsString() ;
@@ -432,120 +636,26 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	
 	@Override
-	public void postAddColumn(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, HColumnDescriptor column) throws IOException {
-		auditEvent("addColumn", tableName.getName(), column.getName(), null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postAssign(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo) throws IOException {
-		auditEvent("assign", regionInfo.getTable().getNameAsString(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postBalance(ObserverContext<MasterCoprocessorEnvironment> c,List<RegionPlan> aRegPlanList) throws IOException {
-		auditEvent("balance", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postBalanceSwitch(ObserverContext<MasterCoprocessorEnvironment> c, boolean oldValue, boolean newValue) throws IOException {
-		auditEvent("balanceSwitch", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postCloneSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
-		auditEvent("cloneSnapshot", hTableDescriptor.getNameAsString(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postCreateTable(ObserverContext<MasterCoprocessorEnvironment> ctx, HTableDescriptor desc, HRegionInfo[] regions) throws IOException {
-		auditEvent("createTable", desc.getNameAsString(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postDelete(ObserverContext<RegionCoprocessorEnvironment> c, Delete delete, WALEdit edit, Durability durability) throws IOException {
-		auditEvent("delete", delete.toString(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postDeleteColumn(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, byte[] col) throws IOException {
-		auditEvent("deleteColumn", tableName.getName(), col, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postDeleteSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
-		auditEvent("deleteSnapShot", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postDeleteTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-		auditEvent("deleteTable", tableName.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postDisableTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-		auditEvent("disableTable", tableName.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postEnableTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-		auditEvent("enableTable", tableName.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postModifyColumn(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, HColumnDescriptor descriptor) throws IOException {
-		auditEvent("modifyColumn", tableName.getName(), descriptor.getName(), null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postModifyTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, HTableDescriptor htd) throws IOException {
-		auditEvent("modifyTable", tableName.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postMove(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo region, ServerName srcServer, ServerName destServer) throws IOException {
-		auditEvent("move", region.getTable().getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postOpen(ObserverContext<RegionCoprocessorEnvironment> ctx) {
-		auditEvent("open", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postRestoreSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
-		auditEvent("restoreSnapshot", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
 	public void postScannerClose(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s) throws IOException {
-		try {
-			scannerOwners.remove(s);
-		} finally {
-			byte[] tableName = getTableName(c.getEnvironment());
-
-			if (!isSpecialTable(tableName)) {
-				auditEvent("scannerClose", tableName, null, null, null, null, getActiveUser(), accessGrantedFlag);
-			}
-		}
+		scannerOwners.remove(s);
 	}
 	@Override
 	public RegionScanner postScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan, RegionScanner s) throws IOException {
-		try {
-			User user = getActiveUser();
-			if (user != null && user.getShortName() != null) {
-				scannerOwners.put(s, user.getShortName());
-			}
-		} finally {
-			byte[] tableName = getTableName(c.getEnvironment());
-
-			if (!isSpecialTable(tableName)) {
-				auditEvent("scannerOpen", tableName, null, null, null, null, getActiveUser(), accessGrantedFlag);
-			}
+		User user = getActiveUser();
+		if (user != null && user.getShortName() != null) {
+			scannerOwners.put(s, user.getShortName());
 		}
 		return s;
-	}
-	@Override
-	public void postSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
-		auditEvent("snapshot", hTableDescriptor.getNameAsString(), null, null, null, null, getActiveUser(), accessGrantedFlag);
 	}
 	@Override
 	public void postStartMaster(ObserverContext<MasterCoprocessorEnvironment> ctx) throws IOException {
 		if(UpdateRangerPoliciesOnGrantRevoke) {
 			RangerAccessControlLists.init(ctx.getEnvironment().getMasterServices());
 		}
-
-		auditEvent("startMaster", (String) null, null, null, null, null, getActiveUser(), accessGrantedFlag);
-	}
-	@Override
-	public void postUnassign(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo, boolean force) throws IOException {
-		auditEvent("unassign", regionInfo.getTable().getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
 	}
 	@Override
 	public void preAddColumn(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, HColumnDescriptor column) throws IOException {
-		requirePermission("addColumn", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("addColumn", tableName.getName(), null, null, Action.CREATE);
 	}
 	@Override
 	public Result preAppend(ObserverContext<RegionCoprocessorEnvironment> c, Append append) throws IOException {
@@ -597,12 +707,12 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public InternalScanner preCompact(ObserverContext<RegionCoprocessorEnvironment> e, Store store, InternalScanner scanner,ScanType scanType) throws IOException {
-		requirePermission("compact", getTableName(e.getEnvironment()), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("compact", getTableName(e.getEnvironment()), null, null, Action.CREATE);
 		return scanner;
 	}
 	@Override
 	public void preCompactSelection(ObserverContext<RegionCoprocessorEnvironment> e, Store store, List<StoreFile> candidates) throws IOException {
-		requirePermission("compactSelection", getTableName(e.getEnvironment()), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("compactSelection", getTableName(e.getEnvironment()), null, null, Action.CREATE);
 	}
 
 	@Override
@@ -615,7 +725,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preDeleteColumn(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, byte[] col) throws IOException {
-		requirePermission("deleteColumn", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("deleteColumn", tableName.getName(), null, null, Action.CREATE);
 	}
 	@Override
 	public void preDeleteSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
@@ -623,15 +733,15 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preDeleteTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-		requirePermission("deleteTable", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("deleteTable", tableName.getName(), null, null, Action.CREATE);
 	}
 	@Override
 	public void preDisableTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-		requirePermission("disableTable", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("disableTable", tableName.getName(), null, null, Action.CREATE);
 	}
 	@Override
 	public void preEnableTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-		requirePermission("enableTable", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("enableTable", tableName.getName(), null, null, Action.CREATE);
 	}
 	@Override
 	public boolean preExists(ObserverContext<RegionCoprocessorEnvironment> c, Get get, boolean exists) throws IOException {
@@ -640,7 +750,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preFlush(ObserverContext<RegionCoprocessorEnvironment> e) throws IOException {
-		requirePermission("flush", getTableName(e.getEnvironment()), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("flush", getTableName(e.getEnvironment()), null, null, Action.CREATE);
 	}
 	@Override
 	public void preGetClosestRowBefore(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, Result result) throws IOException {
@@ -660,11 +770,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preModifyColumn(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, HColumnDescriptor descriptor) throws IOException {
-		requirePermission("modifyColumn", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("modifyColumn", tableName.getName(), null, null, Action.CREATE);
 	}
 	@Override
 	public void preModifyTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, HTableDescriptor htd) throws IOException {
-		requirePermission("modifyTable", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
+		requirePermission("modifyTable", tableName.getName(), null, null, Action.CREATE);
 	}
 	@Override
 	public void preMove(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo region, ServerName srcServer, ServerName destServer) throws IOException {
@@ -680,7 +790,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		} else {
 			HRegionInfo regionInfo = region.getRegionInfo();
 			if (isSpecialTable(regionInfo)) {
-				isSystemOrSuperUser(regionEnv.getConfiguration());
+				requireSystemOrSuperUser(regionEnv.getConfiguration());
 			} else {
 				requirePermission("open", getTableName(e.getEnvironment()), Action.ADMIN);
 			}
@@ -703,21 +813,21 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	@Override
 	public RegionScanner preScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan, RegionScanner s) throws IOException {
 		RegionCoprocessorEnvironment e = c.getEnvironment();
-		User user = getActiveUser();
-		boolean isGranted = isPermissionGranted("scannerOpen", user, TablePermission.Action.READ, e, scan.getFamilyMap());
-		if (!isGranted) {
-			if (hasFamilyQualifierPermission(user, TablePermission.Action.READ, e, scan.getFamilyMap())) {
-				byte[] table = getTableName(e);
-				RangerAccessControlFilter filter = new RangerAccessControlFilter(user, table);
-				if (scan.hasFilter()) {
-					FilterList wrapper = new FilterList(FilterList.Operator.MUST_PASS_ALL, Lists.newArrayList(filter, scan.getFilter()));
-					scan.setFilter(wrapper);
-				} else {
-					scan.setFilter(filter);
-				}
-			} else {
-				throw new AccessDeniedException("Insufficient permissions for user '" + (user != null ? user.getShortName() : "null") + "' for scanner open on table " + Bytes.toString(getTableName(e)));
+		
+		Map<byte[], NavigableSet<byte[]>> familyMap = scan.getFamilyMap();
+		String operation = "scannerOpen";
+		Filter filter = authorizeAccess(operation, Action.READ, e, familyMap);
+		if (filter == null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("preGetOp: Access allowed for all families/column.");
 			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("preGetOp: Access allowed for some of the families/column.");
+			}
+			Filter existingFilter = scan.getFilter();
+			Filter combinedFilter = combineFilters(filter, existingFilter);
+			scan.setFilter(combinedFilter);
 		}
 		return s;
 	}
@@ -779,12 +889,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				}
 			}
 		}
+		// create and initialize the plugin class
+		new RangerBasePlugin("hbase") {}.init(_authorizer);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Start of Coprocessor: [" + coprocessorType + "] with superUserList [" + superUserList + "]");
 		}
-	}
-	@Override
-	public void stop(CoprocessorEnvironment env) {
 	}
 	@Override
 	public void prePut(ObserverContext<RegionCoprocessorEnvironment> c, Put put, WALEdit edit, Durability durability) throws IOException {
@@ -792,134 +901,38 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	
 	@Override
-	public void postPut(ObserverContext<RegionCoprocessorEnvironment> c, Put put, WALEdit edit, Durability durability) {
-		byte[] tableName = getTableName(c.getEnvironment());
-		if (!isSpecialTable(tableName)) {
-			if (accessController.isAudited(tableName)) {
-				Map<byte[], List<Cell>> colf2KeyValMap = put.getFamilyCellMap() ;
-				for (byte[] colf : colf2KeyValMap.keySet()) {
-					if (colf != null) {
-						List<Cell> kvList = colf2KeyValMap.get(colf);
-						for (Cell kv : kvList) {
-							auditEvent("Put", tableName, CellUtil.cloneFamily(kv),   CellUtil.cloneQualifier(kv) , CellUtil.cloneRow(kv), CellUtil.cloneValue(kv), getActiveUser(), accessGrantedFlag);
-						}
-					}
-				}
-
-				
-			}
-		}
-	}
-
-	@Override
 	public void preGetOp(final ObserverContext<RegionCoprocessorEnvironment> rEnv, final Get get, final List<Cell> result) throws IOException {
 		RegionCoprocessorEnvironment e = rEnv.getEnvironment();
-		User requestUser = getActiveUser();
+		Map<byte[], NavigableSet<byte[]>> familyMap = get.getFamilyMap() ;
 
-
-		if (LOG.isDebugEnabled())
-		{
-			StringBuilder fields = new StringBuilder() ;
-			Map<byte[], NavigableSet<byte[]>> familyMap = get.getFamilyMap() ;
-			if (familyMap != null && familyMap.size() > 0) {
-				for(byte[] columnfamily : familyMap.keySet() ) {
-					if (columnfamily != null && columnfamily.length > 0) {
-						NavigableSet<byte[]> columnNameSet = familyMap.get(columnfamily) ;
-						if (columnNameSet != null && columnNameSet.size() > 0) {
-	 						for(byte[] columnname : columnNameSet) {
-								fields.append("Field[" + Bytes.toString(columnfamily) + ":" + Bytes.toString(columnname) + "],") ;
-							}
-						}
-						else {
-							fields.append("Field[" + Bytes.toString(columnfamily) + ":null],") ;
-						}
-					}
-				}
+		String operation = "get";
+		Filter filter = authorizeAccess(operation, Action.READ, e, familyMap);
+		if (filter == null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("preGetOp: Access allowed.");
 			}
-			else {
-				if (familyMap == null){
-					fields.append("{null}") ;
-				}
-				else {
-					fields.append("{empty}") ;
-				}
-			}
-			LOG.debug("preGet is checking permission for the following fields: {" + fields.toString() + "}");
+		} else {
+			Filter existingFilter = get.getFilter();
+			Filter combinedFilter = combineFilters(filter, existingFilter);
+			get.setFilter(combinedFilter);
 		}
-		
-		boolean isPermGranted = isPermissionGranted("get", requestUser, TablePermission.Action.READ, e, get.getFamilyMap());
-		
-		if (!isPermGranted) {
-			isPermGranted = hasFamilyQualifierPermission(requestUser, TablePermission.Action.READ, e, get.getFamilyMap());
-			if (isPermGranted) {
-				byte[] table = getTableName(e);
-				RangerAccessControlFilter filter = new RangerAccessControlFilter(requestUser, table);
-				if (get.getFilter() != null) {
-					FilterList wrapper = new FilterList(FilterList.Operator.MUST_PASS_ALL, Lists.newArrayList(filter, get.getFilter()));
-					get.setFilter(wrapper);
-				} else {
-					get.setFilter(filter);
-				}
-			} else {
-				throw new AccessDeniedException("Insufficient permissions (table=" + e.getRegion().getTableDesc().getNameAsString() + ", action=READ)");
-			}
-		}
+		return;
 	}
-	@Override
-	public void postGetOp(final ObserverContext<RegionCoprocessorEnvironment> env, final Get get, final List<Cell> results) throws IOException {
-		HRegionInfo hri = env.getEnvironment().getRegion().getRegionInfo();
-		
-		byte[] tableName = hri.getTable().getName() ;
-		
-		if (!isSpecialTable(tableName)) {
-			try {
-				if (accessController.isAudited(tableName)) {
-					for (Cell cell : results) {
-						auditEvent("Get", tableName, cell.getFamily(), cell.getQualifier(), cell.getRow(), cell.getValue(), getActiveUser(), accessGrantedFlag);
-					}
-				}
-			} catch (Throwable t) {
-			}
-		}
-	}
-
 	@Override
 	public void preRegionOffline(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo) throws IOException {
 	    requirePermission("regionOffline", regionInfo.getTable().getName(), null, null, Action.ADMIN);
-	}
-	@Override
-	public void postRegionOffline(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo) throws IOException {
-		auditEvent("regionOffline", regionInfo.getTable().getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
 	}
 	@Override
 	public void preCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
 		requireGlobalPermission("createNamespace", ns.getName(), Action.ADMIN);
 	}
 	@Override
-	public void postCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
-		if (accessController.isAudited(WILDCARD_MATCH)) {
-			auditEvent("createNamespace", ns.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-		}
-	}
-	@Override
 	public void preDeleteNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace) throws IOException {
 		requireGlobalPermission("deleteNamespace", namespace, Action.ADMIN);
 	}
 	@Override
-	public void postDeleteNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace) throws IOException {
-		if (accessController.isAudited(WILDCARD_MATCH)) {
-			auditEvent("deleteNamespace", namespace, null, null, null, null, getActiveUser(), accessGrantedFlag);
-		}
-	}
-	@Override
 	public void preModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
 		requireGlobalPermission("modifyNamespace", ns.getName(), Action.ADMIN);
-	}
-	@Override
-	public void postModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
-		if (accessController.isAudited(WILDCARD_MATCH)) {
-			auditEvent("modifyNamespace", ns.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
-		}
 	}
 	@Override
 	public void preGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList,  List<HTableDescriptor> descriptors) throws IOException {
@@ -927,28 +940,13 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			requireGlobalPermission("getTableDescriptors", WILDCARD, Action.ADMIN);
 		} else { // Otherwise, if the requestor has ADMIN or CREATE privs for all listed tables, the request can be granted.
 			for (TableName tableName: tableNamesList) {
-				requirePermission("getTableDescriptors", tableName.getName(), null, null, Action.ADMIN, Action.CREATE);
-			}
-		}
-	}
-	@Override
-	public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<HTableDescriptor> descriptors) throws IOException {
-		if (descriptors == null || descriptors.isEmpty()) { // If the list is empty, this is a request for all table descriptors and requires GLOBAL ADMIN privs.
-			auditEvent("getTableDescriptors", WILDCARD, null, null, null, null, getActiveUser(), accessGrantedFlag);
-		} else { // Otherwise, if the requestor has ADMIN or CREATE privs for all listed tables, the request can be granted.
-			for (HTableDescriptor descriptor : descriptors) {
-				auditEvent("getTableDescriptors", descriptor.getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
+				requirePermission("getTableDescriptors", tableName.getName(), null, null, Action.CREATE);
 			}
 		}
 	}
 	@Override
 	public void preMerge(ObserverContext<RegionServerCoprocessorEnvironment> ctx, HRegion regionA, HRegion regionB) throws IOException {
 		requirePermission("mergeRegions", regionA.getTableDesc().getTableName().getName(), null, null, Action.ADMIN);
-	}
-
-	@Override
-	public void postMerge(ObserverContext<RegionServerCoprocessorEnvironment> c, HRegion regionA, HRegion regionB, HRegion mergedRegion) throws IOException {
-		auditEvent("mergeRegions", regionA.getTableDesc().getTableName().getName(), null, null, null, null, getActiveUser(), accessGrantedFlag);
 	}
 
 	public void prePrepareBulkLoad(ObserverContext<RegionCoprocessorEnvironment> ctx, PrepareBulkLoadRequest request) throws IOException {
@@ -961,55 +959,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		List<byte[]> cfs = null;
 
 		requirePermission("preCleanupBulkLoad", Permission.Action.WRITE, ctx.getEnvironment(), cfs);
-	}
-	
-	private void auditEvent(String eventName, byte[] tableName, byte[] columnFamilyName, byte[] qualifierName, byte[] row, byte[] value, User user, short accessFlag) {
-		auditEvent(eventName, Bytes.toString(tableName), Bytes.toString(columnFamilyName), Bytes.toString(qualifierName), row, value, user, accessFlag);
-	}
-	
-	private void auditEvent(String eventName, String tableName, String columnFamilyName, String qualifierName, byte[] row, byte[] value, User user, short accessFlag) {
-		
-		if (tableName != null && accessController.isAudited(tableName.getBytes())) {
-			
-			String resourceType = "table";
-			String resourceName = tableName;
-			if (columnFamilyName != null && columnFamilyName.length() > 0) {
-				resourceName += "/" + columnFamilyName;
-				resourceType = "columnFamily";
-			}
-			if (qualifierName != null && qualifierName.length() > 0) {
-				resourceName += "/" + qualifierName;
-				resourceType = "column";
-			}
-			
-			AuthzAuditEvent auditEvent = new AuthzAuditEvent();
-
-			auditEvent.setAclEnforcer(RangerModuleName);
-			auditEvent.setResourceType(resourceType);
-			auditEvent.setResourcePath(resourceName);
-			auditEvent.setAction(eventName);
-			auditEvent.setAccessType(eventName);
-			auditEvent.setUser(user == null ? RangerHadoopConstants.AUDITLOG_EMPTY_STRING  : user.getShortName());
-			auditEvent.setAccessResult(accessFlag);
-			auditEvent.setClientIP(getRemoteAddress());
-			auditEvent.setEventTime(getUTCDate());
-			auditEvent.setRepositoryType(EnumRepositoryType.HBASE);
-			auditEvent.setRepositoryName(repositoryName);
-			
-			try {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Writing audit log [" + auditEvent + "] - START.");
-				}
-				AuditProviderFactory.getAuditProvider().log(auditEvent);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Writing audit log [" + auditEvent + "] - END.");
-				}
-			}
-			catch(Throwable t) {
-				LOG.error("ERROR during audit log [" + auditEvent + "]", t);
-			}
-			
-		}
 	}
 	
 	public static Date getUTCDate() {
@@ -1047,13 +996,14 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			} finally {
 				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
 	
-				if(accessController.isAudited(tableName)) {
-					byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
-					byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
-	
-					// Note: failed return from REST call will be logged as 'DENIED'
-					auditEvent("grant", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
-				}
+				// TODO - Auditing of grant-revoke to be sorted out.
+//				if(accessController.isAudited(tableName)) {
+//					byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
+//					byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
+//	
+//					// Note: failed return from REST call will be logged as 'DENIED'
+//					auditEvent("grant", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
+//				}
 			}
 		}
 
@@ -1088,13 +1038,14 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			} finally {
 				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
 	
-				if(accessController.isAudited(tableName)) {
-					byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
-					byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
-	
-					// Note: failed return from REST call will be logged as 'DENIED'
-					auditEvent("revoke", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
-				}
+				// TODO Audit of grant revoke to be sorted out
+//				if(accessController.isAudited(tableName)) {
+//					byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
+//					byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
+//	
+//					// Note: failed return from REST call will be logged as 'DENIED'
+//					auditEvent("revoke", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
+//				}
 			}
 		}
 

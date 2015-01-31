@@ -131,7 +131,7 @@ public class PolicyRefresher extends Thread {
 					lastKnownPolicies = svcPolicies;
 				} else {
 					if(LOG.isDebugEnabled()) {
-						LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
+						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
 					}
 				}
 			} catch(Exception excp) {

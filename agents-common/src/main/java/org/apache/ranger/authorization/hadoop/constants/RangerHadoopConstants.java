@@ -52,9 +52,6 @@ public class RangerHadoopConstants {
 	public static final String KNOX_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "knox.authorization.verifier.classname" ;
 	public static final String KNOX_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "org.apache.ranger.pdp.knox.RangerAuthorizer" ;
 
-	public static final String HBASE_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "hbase.authorization.verifier.classname" ;
-	public static final String HBASE_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "org.apache.ranger.pdp.hbase.RangerAuthorizer" ;
-	
 	public static final String STORM_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "storm.authorization.verifier.classname" ;
 	public static final String STORM_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "org.apache.ranger.pdp.storm.RangerAuthorizer" ;
 

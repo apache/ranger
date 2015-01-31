@@ -18,16 +18,6 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration xmlns:xi="http://www.w3.org/2001/XInclude">
 
-	<!--  The following property is used to select appropriate XASecure 
-	      Authorizer Module (file-based, policy-manager based) -->
-	<property>
-		<name>hbase.authorization.verifier.classname</name>
-		<value>org.apache.ranger.pdp.hbase.RangerAuthorizer</value>
-		<description>
-			Class Name of the authorization Module 
-		</description>
-	</property>
-
 	<!-- The following properties are used only when PolicyManager is used as 
 		main storage for all policy -->
 	<property>

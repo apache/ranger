@@ -100,7 +100,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.setPolicies(" + serviceName + ", " + serviceDef + ", " + policies + ")");
+			LOG.debug("<== RangerPolicyEngineImpl.setPolicies(" + serviceName + ", " + serviceDef + ", policies.count=" + (policies == null ? 0 : policies.size()) + ")");
 		}
 	}
 
