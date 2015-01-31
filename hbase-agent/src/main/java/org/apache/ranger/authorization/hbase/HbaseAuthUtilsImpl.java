@@ -1,0 +1,66 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.ranger.authorization.hbase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.NamespaceDescriptor;
+import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
+import org.apache.hadoop.hbase.security.access.Permission.Action;
+import org.apache.hadoop.hbase.util.Bytes;
+
+public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
+
+	private static final Log LOG = LogFactory.getLog(HbaseAuthUtilsImpl.class.getName());
+
+	public String getNameSpace(NamespaceDescriptor ns) {
+		if (ns == null) {
+			// TODO log an error and Throw an error so the operation is denied?
+		}
+		return ns.getName();
+	}
+
+	@Override
+	public String getAccess(Action action) {
+		return action.toString().toLowerCase();
+	}
+
+	@Override
+	public boolean isReadAccess(String access) {
+		return getAccess(Action.READ).equals(access);
+	}
+
+	@Override
+	public boolean isWriteAccess(String access) {
+		return getAccess(Action.WRITE).equals(access);
+	}
+
+	@Override
+	public String getTable(RegionCoprocessorEnvironment regionServerEnv) {
+		HRegionInfo hri = regionServerEnv.getRegion().getRegionInfo();
+		byte[] tableName = hri.getTable().getName() ;
+		String tableNameStr = Bytes.toString(tableName);
+		if (LOG.isDebugEnabled()) {
+			String message = String.format("getTable: Returning tablename[%s]", tableNameStr);
+			LOG.debug(message);
+		}
+		return tableNameStr;
+	}
+}
