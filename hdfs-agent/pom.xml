@@ -75,11 +75,6 @@
 		<groupId>org.mockito</groupId>
 		<artifactId>mockito-core</artifactId>
 	</dependency>
-	<dependency>
-		<groupId>org.apache.ranger</groupId>
-		<artifactId>plugin-common</artifactId>
-		<version>${project.version}</version>
-	</dependency>
   </dependencies>
   <build>
 	<!--

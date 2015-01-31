@@ -401,6 +401,11 @@
 			<artifactId>unixauthclient</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+        <dependency>
+          <groupId>security_plugins.ranger-plugins-common</groupId>
+          <artifactId>ranger-plugins-common</artifactId>
+          <version>${project.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
@@ -412,18 +417,6 @@
                        <version>${hive.version}</version>
                        <scope>runtime</scope>
                 </dependency>
-	<!-- 
-	<dependency>
-		<groupId>org.apache.ranger</groupId>
-		<artifactId>plugin-common</artifactId>
-		<version>0.4.0</version>
-	</dependency>
-	-->
-	<dependency>
-		<groupId>org.apache.ranger</groupId>
-		<artifactId>plugin-common</artifactId>
-		<version>${project.version}</version>
-	</dependency>
   </dependencies>
   <build>
   <pluginManagement>
