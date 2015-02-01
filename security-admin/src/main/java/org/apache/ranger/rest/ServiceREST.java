@@ -19,6 +19,7 @@
 
 package org.apache.ranger.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -50,6 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.common.RESTErrorUtil;
 
 
@@ -61,6 +64,9 @@ public class ServiceREST {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
+	
+	@Autowired
+	ServiceMgr serviceMgr;
 
 	private ServiceStore svcStore = null;
 
@@ -400,14 +406,38 @@ public class ServiceREST {
 		VXResponse ret = new VXResponse();
 
 		try {
-			// TODO: svcStore.validateConfig(service);
+			ret = serviceMgr.validateConfig(service);
 		} catch(Exception excp) {
-			ret.setStatusCode(VXResponse.STATUS_ERROR);
-			// TODO: message
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.validateConfig(" + service + "): " + ret);
+		}
+
+		return ret;
+	}
+	
+	@POST
+	@Path("/services/lookupResource/{serviceName}")
+	@Produces({ "application/json", "application/xml" })
+	public List<String> lookupResource(@PathParam("serviceName") String serviceName, ResourceLookupContext context) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.lookupResource(" + serviceName + ")");
+		}
+
+		List<String> ret = new ArrayList<String>();
+
+		try {
+			ret = serviceMgr.lookupResource(serviceName,context);
+		} catch(Exception excp) {
+			LOG.error("lookupResource() failed", excp);
+
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.validateConfig(" + serviceName + "): " + ret);
 		}
 
 		return ret;

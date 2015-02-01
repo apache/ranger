@@ -1,0 +1,127 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.ranger.services.hdfs.client;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.plugin.util.TimedEventUtil;
+
+public class HdfsResourceMgr {
+
+	public static final String PATH   = "path";
+	public static final Logger logger = Logger.getLogger(HdfsResourceMgr.class);
+	
+	public static HashMap<String, Object> testConnection(String serviceName, Map<String, String> configs) throws Exception {
+		HashMap<String, Object> ret = null;
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== HdfsResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
+		}	
+		
+		try {
+			ret = HdfsClient.testConnection(serviceName, configs);
+		} catch (Exception e) {
+		  logger.error("<== HdfsResourceMgr.testConnection Error: " + e) ;
+		  throw e;
+		}
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== HdfsResourceMgr.HdfsResourceMgr Result : "+ ret  ) ;
+		}	
+		return ret;
+	}
+	
+	public static List<String> getHdfsResources(String serviceName, Map<String, String> configs,ResourceLookupContext context) throws Exception {
+		
+		List<String> resultList 			  = null;
+		String userInput 					  = context.getUserInput();
+		String resource						  = context.getResourceName();
+		Map<String, List<String>> resourceMap = context.getResources();
+		final List<String>		  pathList	  = new ArrayList<String>();
+		
+		if( resource != null && resourceMap != null && resourceMap.get(PATH) != null) {
+			for (String path: resourceMap.get(PATH)) {
+				pathList.add(path);
+			}
+		}
+		
+		if (serviceName != null && userInput != null) {
+			try {
+				if(logger.isDebugEnabled()) {
+					logger.debug("<== HdfsResourceMgr.HdfsResourceMgr UserInput: "+ userInput  + "configs: " + configs + "context: "  + context) ;
+				}
+				
+				String wildCardToMatch;
+				final HdfsClient hdfsClient = new HdfsConnectionMgr().getHadoopConnection(serviceName, configs);
+				if (hdfsClient != null) {
+					Integer lastIndex = userInput.lastIndexOf("/");
+					if (lastIndex < 0) {
+						wildCardToMatch = userInput + "*";
+						userInput = "/";
+					} else if (lastIndex == 0 && userInput.length() == 1) {
+						wildCardToMatch = null;
+						userInput = "/";
+					} else if ((lastIndex + 1) == userInput.length()) {
+						wildCardToMatch = null;
+						userInput = userInput.substring(0, lastIndex + 1);
+					} else {
+						wildCardToMatch = userInput.substring(lastIndex + 1)
+								+ "*";
+						userInput = userInput.substring(0, lastIndex + 1);
+					}
+
+					final String finalBaseDir = userInput;
+					final String finalWildCardToMatch = wildCardToMatch;
+					final Callable<List<String>> callableObj = new Callable<List<String>>() {
+
+						@Override
+						public List<String> call() throws Exception {
+							return hdfsClient.listFiles(finalBaseDir,
+									finalWildCardToMatch, pathList);
+						}
+
+					};
+
+					resultList = TimedEventUtil.timedTask(callableObj, 5,TimeUnit.SECONDS); 
+					if(logger.isDebugEnabled()) {
+						logger.debug("Resource dir : " + userInput
+							+ " wild card to match : " + wildCardToMatch
+							+ "\n Matching resources : " + resultList);
+					}
+				}
+			} catch (Exception e) {
+				logger.error("Unable to get hdfs resources.", e);
+				throw e;
+			}
+
+		}
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== HdfsResourceMgr.HdfsResourceMgr Result : "+ resultList  ) ;
+		}	
+		return resultList;
+    }
+}

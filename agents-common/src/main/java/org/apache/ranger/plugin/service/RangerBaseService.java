@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.service;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.ranger.plugin.model.RangerService;
@@ -49,7 +50,7 @@ public abstract class RangerBaseService {
 		return service;
 	}
 
-	public abstract void validateConfig() throws Exception;
+	public abstract HashMap<String, Object> validateConfig() throws Exception;
 	
 	public abstract List<String> lookupResource(ResourceLookupContext context) throws Exception;
 }
