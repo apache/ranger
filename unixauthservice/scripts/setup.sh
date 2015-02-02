@@ -368,5 +368,9 @@ then
 
 fi
 
+# Create SoftLink of ranger-usersync-services to /usr/bin/
+ln -sf ${INSTALL_DIR}/ranger-usersync-services.sh /usr/bin/${MOD_NAME}
+chmod ug+rx /usr/bin/${MOD_NAME}
+
 # Start the service
 #service ${MOD_NAME} start

@@ -94,11 +94,17 @@
       	<artifactId>slf4j-api</artifactId>
       	<version>${slf4j-api.version}</version>
       </dependency>   
-	  <dependency>
-	<groupId>org.apache.ranger</groupId>
+      <dependency>
+	  	<groupId>org.apache.ranger</groupId>
     	<artifactId>credentialbuilder</artifactId>
     	<version>${project.version}</version>  	
-	  </dependency>  
+      </dependency>  
+      <dependency>
+        <groupId>org.apache.ranger</groupId>
+        <artifactId>ranger-util</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
     </dependencies>
 
 </project>
