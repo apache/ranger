@@ -78,26 +78,22 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if(hivePlugin == null) {
 			synchronized(RangerHiveAuthorizer.class) {
 				if(hivePlugin == null) {
-					RangerHivePlugin temp = new RangerHivePlugin();
-					temp.init();
-					
-					if(!RangerConfiguration.getInstance().isAuditInitDone()) {
-						if(sessionContext != null) {
-							String appType = "unknown";
+					String appType = "unknown";
 
-							switch(sessionContext.getClientType()) {
-								case HIVECLI:
-									appType = "hiveCLI";
-								break;
+					if(sessionContext != null) {
+						switch(sessionContext.getClientType()) {
+							case HIVECLI:
+								appType = "hiveCLI";
+							break;
 
-								case HIVESERVER2:
-									appType = "hiveServer2";
-								break;
-							}
-
-							RangerConfiguration.getInstance().initAudit(appType);
+							case HIVESERVER2:
+								appType = "hiveServer2";
+							break;
 						}
 					}
+
+					RangerHivePlugin temp = new RangerHivePlugin(appType);
+					temp.init();
 
 					hivePlugin = temp;
 				}
@@ -834,8 +830,8 @@ enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUN
 enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, ALL, ADMIN };
 
 class RangerHivePlugin extends RangerBasePlugin {
-	public RangerHivePlugin() {
-		super("hive");
+	public RangerHivePlugin(String appType) {
+		super("hive", appType);
 	}
 }
 

@@ -645,9 +645,9 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/policies/service/name/{name}/{lastKnownVersion}")
+	@Path("/policies/download/{serviceName}/{lastKnownVersion}")
 	@Produces({ "application/json", "application/xml" })
-	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("name") String serviceName, @PathParam("lastKnownVersion") Long lastKnownVersion) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @PathParam("lastKnownVersion") Long lastKnownVersion) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
 		}

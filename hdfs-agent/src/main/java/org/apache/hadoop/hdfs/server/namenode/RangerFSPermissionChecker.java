@@ -66,9 +66,6 @@ public class RangerFSPermissionChecker {
 		access2ActionListMapper.put(FsAction.EXECUTE,       Sets.newHashSet(EXECUTE_ACCCESS_TYPE));
 	}
 
-	private static final boolean addHadoopAuth = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT) ;
-
-
 	private static RangerHdfsPlugin                    rangerPlugin        = null;
 	private static ThreadLocal<RangerHdfsAuditHandler> currentAuditHandler = new ThreadLocal<RangerHdfsAuditHandler>();
 
@@ -85,7 +82,7 @@ public class RangerFSPermissionChecker {
 
 		boolean accessGranted =  AuthorizeAccessForUser(path, pathOwner, access, user, groups);
 
-		if (!accessGranted &&  !addHadoopAuth ) {
+		if (!accessGranted &&  !RangerHdfsPlugin.isHadoopAuthEnabled()) {
 			String inodeInfo = (inode.isDirectory() ? "directory" : "file") +  "="  + "\"" + path + "\""  ;
 		    throw new RangerAccessControlException("Permission denied: principal{user=" + user + ",groups: " + groups + "}, access=" + access + ", " + inodeInfo ) ; 
 		}
@@ -175,12 +172,20 @@ public class RangerFSPermissionChecker {
 }
 
 class RangerHdfsPlugin extends RangerBasePlugin {
+	private static boolean hadoopAuthEnabled = false;
+
 	public RangerHdfsPlugin() {
-		super("hdfs");
+		super("hdfs", "hdfs");
 	}
 	
 	public void init() {
 		super.init();
+		
+		RangerHdfsPlugin.hadoopAuthEnabled = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT);
+	}
+
+	public static boolean isHadoopAuthEnabled() {
+		return RangerHdfsPlugin.hadoopAuthEnabled;
 	}
 }
 
@@ -265,8 +270,6 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 				excludeUsers.add(excludeUser) ;
 				}
 		}
-
-		RangerConfiguration.getInstance().initAudit("hdfs");	
 	}
 
 	public RangerHdfsAuditHandler(String pathToBeValidated) {

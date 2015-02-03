@@ -64,7 +64,7 @@ public class ServiceRESTStore implements ServiceStore {
 	public final String REST_URL_POLICY_GET_ALL     = "/service/plugins/policies";
 	public final String REST_URL_POLICY_GET_FOR_SERVICE         = "/service/plugins/policies/service/";
 	public final String REST_URL_POLICY_GET_FOR_SERVICE_BY_NAME = "/service/plugins/policies/service/name/";
-	public final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/service/name/";
+	public final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
 
 	public static final String REST_MIME_TYPE_JSON = "application/json" ;
 
@@ -83,12 +83,9 @@ public class ServiceRESTStore implements ServiceStore {
 	@Override
 	public void init() throws Exception {
 		String restUrl       = RangerConfiguration.getInstance().get("ranger.service.store.rest.url", "http://localhost:6080");
-		String restUsername  = RangerConfiguration.getInstance().get("ranger.service.store.rest.username", "admin");
-		String restPassword  = RangerConfiguration.getInstance().get("ranger.service.store.rest.password", "admin");
 		String sslConfigFile = RangerConfiguration.getInstance().get("ranger.service.store.rest.ssl.config.file", "");
 
 		restClient = new RangerRESTClient(restUrl, sslConfigFile);
-		restClient.setBasicAuthInfo(restUsername, restPassword);
 	}
 
 	@Override

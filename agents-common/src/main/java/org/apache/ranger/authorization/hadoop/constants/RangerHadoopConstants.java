@@ -20,14 +20,6 @@ package org.apache.ranger.authorization.hadoop.constants;
 
 public class RangerHadoopConstants {
 	
-	public static final String RANGER_AUDIT_FILE          = "xasecure-audit.xml" ; 
-	public static final String RANGER_HDFS_SECURITY_FILE  = "xasecure-hdfs-security.xml" ; 
-	public static final String RANGER_KNOX_SECURITY_FILE  = "xasecure-knox-security.xml" ; 
-	public static final String RANGER_HBASE_SECURITY_FILE = "xasecure-hbase-security.xml" ; 
-	public static final String RANGER_HIVE_SECURITY_FILE  = "xasecure-hive-security.xml" ; 
-	public static final String RANGER_POLICYMGR_SSL_FILE  = "xasecure-policymgr-ssl.xml"  ;
-	public static final String RANGER_STORM_SECURITY_FILE = "xasecure-storm-security.xml" ;
-	
 	public static final String RANGER_ADD_HDFS_PERMISSION_PROP = "xasecure.add-hadoop-authorization" ;
 	public static final boolean RANGER_ADD_HDFS_PERMISSION_DEFAULT = false ;
 	public static final String READ_ACCCESS_TYPE = "read";

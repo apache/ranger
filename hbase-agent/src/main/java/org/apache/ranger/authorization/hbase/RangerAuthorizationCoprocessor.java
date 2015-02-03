@@ -875,8 +875,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			appType = "hbseRegional";
 		}
 
-		RangerConfiguration.getInstance().initAudit(appType);
-
 		if (superUserList == null) {
 			superUserList = new ArrayList<String>();
 			Configuration conf = env.getConfiguration();
@@ -890,7 +888,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			}
 		}
 		// create and initialize the plugin class
-		new RangerBasePlugin("hbase") {}.init(_authorizer);
+		new RangerBasePlugin("hbase", appType) {}.init(_authorizer);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Start of Coprocessor: [" + coprocessorType + "] with superUserList [" + superUserList + "]");
 		}

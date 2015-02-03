@@ -35,17 +35,23 @@ import org.apache.ranger.plugin.util.PolicyRefresher;
 
 public class RangerBasePlugin {
 	private String             serviceType  = null;
+	private String             auditAppType = null;
 	private String             serviceName  = null;
 	private RangerPolicyEngine policyEngine = null;
 	private PolicyRefresher    refresher    = null;
 
 
-	public RangerBasePlugin(String serviceType) {
-		this.serviceType = serviceType;
+	public RangerBasePlugin(String serviceType, String auditAppType) {
+		this.serviceType  = serviceType;
+		this.auditAppType = auditAppType;
 	}
 
 	public String getServiceType() {
 		return serviceType;
+	}
+
+	public String getAuditAppType() {
+		return auditAppType;
 	}
 
 	public String getServiceName() {
@@ -65,6 +71,8 @@ public class RangerBasePlugin {
 	public synchronized void init(RangerPolicyEngine policyEngine) {
 		cleanup();
 
+		RangerConfiguration.getInstance().addResourcesForServiceType(serviceType);
+		RangerConfiguration.getInstance().initAudit(auditAppType);
 
 		String serviceName       = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
 		String serviceStoreClass = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.store.class", "org.apache.ranger.plugin.store.rest.ServiceRESTStore");

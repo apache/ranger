@@ -19,10 +19,20 @@
 
 package org.apache.ranger.plugin.util;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Reader;
+import java.io.Writer;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.store.ServiceStore;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 
 public class PolicyRefresher extends Thread {
@@ -33,14 +43,17 @@ public class PolicyRefresher extends Thread {
 	private String             serviceName       = null;
 	private ServiceStore       serviceStore      = null;
 	private long               pollingIntervalMs = 30 * 1000;
+	private String             cacheFile         = null;
 
-	private boolean         shutdownFlag      = false;
-	private ServicePolicies lastKnownPolicies = null;
+	private boolean shutdownFlag     = false;
+	private long    lastKnownVersion = -1;
+	private Gson    gson             = null;
+
 
 
 	public PolicyRefresher(RangerPolicyEngine policyEngine, String serviceType, String serviceName, ServiceStore serviceStore, long pollingIntervalMs, String cacheDir) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> PolicyRefresher.PolicyRefresher(serviceName=" + serviceName + ")");
+			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").PolicyRefresher()");
 		}
 
 		this.policyEngine      = policyEngine;
@@ -48,9 +61,16 @@ public class PolicyRefresher extends Thread {
 		this.serviceName       = serviceName;
 		this.serviceStore      = serviceStore;
 		this.pollingIntervalMs = pollingIntervalMs;
+		this.cacheFile         = cacheDir == null ? null : (cacheDir + File.separator + String.format("%s_%s.json", serviceType, serviceName));
+
+        try {
+        	this.gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+		} catch(Throwable excp) {
+			LOG.fatal("PolicyRefresher(): failed to create GsonBuilder object", excp);
+		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== PolicyRefresher.PolicyRefresher(serviceName=" + serviceName + ")");
+			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").PolicyRefresher()");
 		}
 	}
 
@@ -96,7 +116,10 @@ public class PolicyRefresher extends Thread {
 		this.pollingIntervalMs = pollingIntervalMilliSeconds;
 	}
 
+
 	public void startRefresher() {
+		loadFromCache();
+
 		shutdownFlag = false;
 
 		super.start();
@@ -108,34 +131,38 @@ public class PolicyRefresher extends Thread {
 
 	public void run() {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> PolicyRefresher.run()");
+			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").run()");
 		}
 
 		while(! shutdownFlag) {
 			try {
-				long lastKnownVersion = (lastKnownPolicies == null || lastKnownPolicies.getPolicyVersion() == null) ? 0 : lastKnownPolicies.getPolicyVersion().longValue();
-
 				ServicePolicies svcPolicies = serviceStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
 
-				long newVersion = (svcPolicies == null || svcPolicies.getPolicyVersion() == null) ? 0 : svcPolicies.getPolicyVersion().longValue();
+				long newVersion = (svcPolicies == null || svcPolicies.getPolicyVersion() == null) ? -1 : svcPolicies.getPolicyVersion().longValue();
 
-				boolean isUpdated = newVersion != 0 && lastKnownVersion != newVersion;
+				boolean isUpdated = newVersion != -1 && lastKnownVersion != newVersion;
 
 				if(isUpdated) {
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
+		        	if(!StringUtils.equals(serviceName, svcPolicies.getServiceName())) {
+		        		LOG.warn("PolicyRefresher(serviceName=" + serviceName + "): ignoring unexpected serviceName '" + svcPolicies.getServiceName() + "' in service-store");
+		        	}
+
+		        	if(LOG.isDebugEnabled()) {
+						LOG.debug("PolicyRefresher(serviceName=" + serviceName + "): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
 					}
 
+					saveToCache(svcPolicies);
+
+		        	lastKnownVersion = svcPolicies.getPolicyVersion() == null ? -1 : svcPolicies.getPolicyVersion().longValue();
+
 					policyEngine.setPolicies(serviceName, svcPolicies.getServiceDef(), svcPolicies.getPolicies());
-					
-					lastKnownPolicies = svcPolicies;
 				} else {
 					if(LOG.isDebugEnabled()) {
 						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
 					}
 				}
 			} catch(Exception excp) {
-				LOG.error("PolicyRefresher(serviceName=" + serviceName + ").run(): ", excp);
+				LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policies. Will continue to use last known version of policies (" + lastKnownVersion + ")", excp);
 			}
 
 			try {
@@ -148,7 +175,93 @@ public class PolicyRefresher extends Thread {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== PolicyRefresher.run()");
+			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").run()");
+		}
+	}
+
+	private void loadFromCache() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadFromCache()");
+		}
+
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+	    	File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
+
+	    	if(cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
+	    		Reader reader = null;
+
+	    		try {
+		        	reader = new FileReader(cacheFile);
+
+			        ServicePolicies policies = gson.fromJson(reader, ServicePolicies.class);
+
+			        if(policies != null) {
+			        	if(!StringUtils.equals(serviceName, policies.getServiceName())) {
+			        		LOG.warn("ignoring unexpected serviceName '" + policies.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
+			        	}
+
+			        	lastKnownVersion = policies.getPolicyVersion() == null ? -1 : policies.getPolicyVersion().longValue();
+
+			        	policyEngine.setPolicies(serviceName, policies.getServiceDef(), policies.getPolicies());
+			        }
+		        } catch (Exception excp) {
+		        	LOG.error("failed to load policies from cache file " + cacheFile.getAbsolutePath(), excp);
+		        } finally {
+		        	if(reader != null) {
+		        		try {
+		        			reader.close();
+		        		} catch(Exception excp) {
+		        			LOG.error("error while closing opened cache file " + cacheFile.getAbsolutePath(), excp);
+		        		}
+		        	}
+		        }
+			} else {
+				LOG.warn("cache file does not exist or not readble '" + (cacheFile == null ? null : cacheFile.getAbsolutePath()) + "'");
+			}
+		} else {
+			LOG.warn("policyEngine is null");
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadFromCache()");
+		}
+	}
+
+	private void saveToCache(ServicePolicies policies) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
+		}
+
+		if(policies != null) {
+	    	File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
+
+	    	if(cacheFile != null) {
+				Writer writer = null;
+	
+				try {
+					writer = new FileWriter(cacheFile);
+	
+			        gson.toJson(policies, writer);
+		        } catch (Exception excp) {
+		        	LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+		        } finally {
+		        	if(writer != null) {
+		        		try {
+		        			writer.close();
+		        		} catch(Exception excp) {
+		        			LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+		        		}
+		        	}
+		        }
+	    	}
+		} else {
+			LOG.info("policies is null. Nothing to save in cache");
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
 		}
 	}
 }

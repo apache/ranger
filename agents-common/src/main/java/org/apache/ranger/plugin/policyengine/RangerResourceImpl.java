@@ -75,7 +75,11 @@ public class RangerResourceImpl implements RangerMutableResource {
 			elements = new HashMap<String, String>();
 		}
 
-		elements.put(name, value);
+		if(value == null) {
+			elements.remove(name);
+		} else {
+			elements.put(name, value);
+		}
 	}
 
 	@Override

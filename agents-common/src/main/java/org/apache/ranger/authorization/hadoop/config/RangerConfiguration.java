@@ -28,7 +28,6 @@ import java.util.Properties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 
 public class RangerConfiguration extends Configuration {
 	
@@ -38,36 +37,28 @@ public class RangerConfiguration extends Configuration {
 	
 	private RangerConfiguration() {
 		super(false) ;
-		
-		//
-		// WorkAround for having all Hadoop Configuration in the CLASSPATH first, even if it is invoked by Hive Engine.
-		// 
-		//   So, we look for "hive-site.xml", if it is available, take the xasecure-audit.xml file from the same location.
-		//   If we do not see "hive-site.xml", we look for "hbase-site.xml", if found, take the xasecure-audit.xml file from the same location.
-		//   If we do not see "hbase-site.xml", we look for "hdfs-site.xml", if found, take the xasecure-audit.xml file from the same location.
-		//   If we do not see, we let the CLASSPATH based search to find xasecure-audit.xml file.
-		
-		
-		URL auditFileLocation = getRangerAuditXMLFileLocation() ;
-		
-		if (auditFileLocation != null) {
-			addResource(auditFileLocation) ;
-		}
-		else {
-			addResourceIfReadable(RangerHadoopConstants.RANGER_AUDIT_FILE) ;
-		}
-		addResourceIfReadable(RangerHadoopConstants.RANGER_HDFS_SECURITY_FILE);
-		addResourceIfReadable(RangerHadoopConstants.RANGER_KNOX_SECURITY_FILE);
-		addResourceIfReadable(RangerHadoopConstants.RANGER_HBASE_SECURITY_FILE) ;
-		addResourceIfReadable(RangerHadoopConstants.RANGER_HIVE_SECURITY_FILE) ;
-		addResourceIfReadable(RangerHadoopConstants.RANGER_STORM_SECURITY_FILE);
-		
 	}
-	
+
+	public void addResourcesForServiceType(String serviceType) {
+		String auditCfg    = "ranger-" + serviceType + "-audit.xml";
+		String securityCfg = "ranger-" + serviceType + "-security.xml";
+		
+		addResourceIfReadable(auditCfg);
+		addResourceIfReadable(securityCfg);
+	}
+
 	@SuppressWarnings("deprecation")
 	private void addResourceIfReadable(String aResourceName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> addResourceIfReadable(" + aResourceName + ")");
+		}
+
 		String fName = getFileLocation(aResourceName) ;
 		if (fName != null) {
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("<== addResourceIfReadable(" + aResourceName + "): resource file is " + fName);
+			}
+
 			File f = new File(fName) ;
 			if (f.exists() && f.canRead()) {
 				URL fUrl = null ;
@@ -75,9 +66,23 @@ public class RangerConfiguration extends Configuration {
 					fUrl = f.toURL() ;
 					addResource(fUrl) ;
 				} catch (MalformedURLException e) {
-					LOG.debug("Unable to find URL for the resource name [" + aResourceName +"]. Ignoring the resource:" + aResourceName);
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Unable to find URL for the resource name [" + aResourceName +"]. Ignoring the resource:" + aResourceName);
+					}
+				}
+			} else {
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("<== addResourceIfReadable(" + aResourceName + "): resource not readable");
 				}
 			}
+		} else {
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("<== addResourceIfReadable(" + aResourceName + "): couldn't find resource file location");
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== addResourceIfReadable(" + aResourceName + ")");
 		}
 	}
 	
@@ -117,31 +122,6 @@ public class RangerConfiguration extends Configuration {
 		AuditProviderFactory auditFactory = AuditProviderFactory.getInstance();
 
 		return auditFactory != null && auditFactory.isInitDone();
-	}
-
-	
-	@SuppressWarnings("deprecation")
-	public  URL getRangerAuditXMLFileLocation() {
-		URL ret = null ;
-
-		try {
-			for(String  cfgFile : 	new String[] {  "hive-site.xml",  "hbase-site.xml",  "hdfs-site.xml" } ) {
-				String loc = getFileLocation(cfgFile) ;
-				if (loc != null) {
-					if (new File(loc).canRead()) {
-						File parentFile = new File(loc).getParentFile() ;
-						ret = new File(parentFile, RangerHadoopConstants.RANGER_AUDIT_FILE).toURL() ;
-						break ;
-					}
-				}
-			}
-		}
-		catch(Throwable t) {
-			LOG.error("Unable to locate audit file location." , t) ;
-			ret = null ;
-		}
-		
-		return ret ;
 	}
 	
 	private String getFileLocation(String fileName) {
