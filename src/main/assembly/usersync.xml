@@ -48,6 +48,7 @@
 					<include>org.apache.hadoop:hadoop-common</include>
 					<include>org.apache.commons:commons-csv</include>
 					<include>org.apache.ranger:credentialbuilder</include>
+					<include>org.apache.ranger:ranger-util</include>
 				</includes>
 				<unpack>false</unpack>
   			</dependencySet>

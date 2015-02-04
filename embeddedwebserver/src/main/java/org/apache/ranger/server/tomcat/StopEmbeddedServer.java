@@ -22,15 +22,15 @@
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class StopEmbededServer extends EmbededServer {
+public class StopEmbeddedServer extends EmbeddedServer {
 
 	private static final String SHUTDOWN_HOSTNAME = "localhost" ;
 	
 	public static void main(String[] args) {
-		new StopEmbededServer(args).stop();
+		new StopEmbeddedServer(args).stop();
 	}
 
-	public StopEmbededServer(String[] args) {
+	public StopEmbeddedServer(String[] args) {
 		super(args);
 	}
 	

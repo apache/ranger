@@ -1215,7 +1215,6 @@ setup_install_files(){
 	    fi
 	fi
 
-
 	if [ ! -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
 	    log "[I] ${XAPOLICYMGR_DIR}/ews/logs folder"
 	    mkdir -p ${XAPOLICYMGR_DIR}/ews/logs
@@ -1231,6 +1230,10 @@ setup_install_files(){
 		chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}/*
 	    fi
 	fi
+
+	# Copy ranger-admin-services to /usr/bin
+	ln -sf ${INSTALL_DIR}/ews/ranger-admin-services.sh /usr/bin/ranger-admin
+	chmod ug+rx /usr/bin/ranger-admin	
 }
 
 execute_java_patches(){

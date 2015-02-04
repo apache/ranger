@@ -23,17 +23,23 @@
 # Short-Description: Start/Stop Ranger Usersync
 ### END INIT INFO
 
-START_SCRIPT=/usr/bin/ranger-usersync-start
-STOP_SCRIPT=/usr/bin/ranger-usersync-stop
+BIN_PATH=/usr/bin
+MOD_NAME=ranger-usersync
 
 case $1 in
 	start)
-		${START_SCRIPT}
+		${BIN_PATH}/${MOD_NAME} start
 		;;
 	stop)
-		${STOP_SCRIPT}
+		${BIN_PATH}/${MOD_NAME} stop
+		;;
+	restart)
+		echo "Stopping Apache Ranger Usersync."
+		${BIN_PATH}/${MOD_NAME} stop
+		echo "Starting Apache Ranger Usersync."
+		${BIN_PATH}/${MOD_NAME} start
 		;;
 	*)
-		echo "Invalid argument [$1]; Only start|stop are supported."
+		echo "Invalid argument [$1]; Only start | stop | restart, are supported."
 		exit 1
 	esac

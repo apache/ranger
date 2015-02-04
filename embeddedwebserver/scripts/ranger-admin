@@ -24,20 +24,23 @@
 # Short-Description: Start/Stop Ranger Admin
 ### END INIT INFO
 
-LINUX_USER=ranger
 BIN_PATH=/usr/bin
+MOD_NAME=ranger-admin
 
 case $1 in
 start)
-	/bin/su --login  $LINUX_USER "${BIN_PATH}/ranger-admin-start"
+	echo "Starting Apache Ranger Admin."
+	${BIN_PATH}/${MOD_NAME} start
 	;;
 stop)
-	/bin/su --login  $LINUX_USER "${BIN_PATH}/ranger-admin-stop"
-    ;;
+	echo "Stopping Apache Ranger Admin."
+	${BIN_PATH}/${MOD_NAME} stop
+	;;
 restart)
-	/bin/su --login  $LINUX_USER "${BIN_PATH}/stop-ranger-admin.sh"  && sleep 30
-	/bin/su --login  $LINUX_USER "${BIN_PATH}/start-ranger-admin.sh"
-
+	echo "Stopping Apache Ranger Admin."
+	${BIN_PATH}/${MOD_NAME} stop
+	echo "Stopping Apache Ranger Admin."
+	${BIN_PATH}/${MOD_NAME} start
 	;;
 *)
 	echo "Invalid argument [$1]; Only start|stop|restart are supported."
