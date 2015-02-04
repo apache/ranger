@@ -20,17 +20,19 @@ package org.apache.ranger.credentialapi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.credentialapi.buildks;
 import org.junit.Before;
 import org.junit.Test;
 
 public class TestCredentialReader {
-  private final String keystoreFile =System.getProperty("user.home")+"/testkeystore.jceks";  
+  private final String keystoreFile = new File(System.getProperty("user.home")+"/testkeystore.jceks").toURI().getPath();
   @Before
   public void setup() throws Exception {   
 	buildks buildksOBJ=new buildks();	
-    String[] argsCreateCommand = {"create", "TestCredential2", "-value", "PassworD123", "-provider", "jceks://file" + keystoreFile};
+    String[] argsCreateCommand = {"create", "TestCredential2", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
     int rc2=buildksOBJ.createCredential(argsCreateCommand); 
     assertEquals( 0, rc2);
     assertTrue(rc2==0);  
@@ -42,7 +44,7 @@ public class TestCredentialReader {
     assertEquals( "PassworD123", password);
     assertTrue(password,"PassworD123".equals(password));
     //delete after use
-    String[] argsdeleteCommand = {"delete", "TestCredential2", "-provider", "jceks://file" + keystoreFile};
+    String[] argsdeleteCommand = {"delete", "TestCredential2", "-provider", "jceks://file@/" + keystoreFile};
 	buildks buildksOBJ=new buildks();
 	buildksOBJ.deleteCredential(argsdeleteCommand);
     
