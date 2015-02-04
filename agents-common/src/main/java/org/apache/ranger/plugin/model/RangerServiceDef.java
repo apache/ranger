@@ -593,6 +593,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private String  subType          = null;
 		private Boolean mandatory        = null;
 		private String  defaultValue     = null;
+		private String  validationRegEx  = null;
 		private String  label            = null;
 		private String  description      = null;
 		private String  rbKeyLabel       = null;
@@ -600,15 +601,16 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerServiceConfigDef() {
-			this(null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerServiceConfigDef(String name, String type, String subType, Boolean mandatory, String defaultValue, String label, String description, String rbKeyLabel, String rbKeyDescription) {
+		public RangerServiceConfigDef(String name, String type, String subType, Boolean mandatory, String defaultValue, String validationRegEx, String label, String description, String rbKeyLabel, String rbKeyDescription) {
 			setName(name);
 			setType(type);
 			setSubType(subType);
 			setMandatory(mandatory);
 			setDefaultValue(defaultValue);
+			setValidationRegEx(validationRegEx);
 			setLabel(label);
 			setDescription(description);
 			setRbKeyLabel(rbKeyLabel);
@@ -686,6 +688,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
+		 * @return the validationRegEx
+		 */
+		public String getValidationRegEx() {
+			return validationRegEx;
+		}
+
+		/**
+		 * @param validationRegEx the validationRegEx to set
+		 */
+		public void setValidationRegEx(String validationRegEx) {
+			this.validationRegEx = validationRegEx;
+		}
+
+		/**
 		 * @return the label
 		 */
 		public String getLabel() {
@@ -757,6 +773,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("subType={").append(subType).append("} ");
 			sb.append("mandatory={").append(mandatory).append("} ");
 			sb.append("defaultValue={").append(defaultValue).append("} ");
+			sb.append("validationRegEx={").append(validationRegEx).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
@@ -781,6 +798,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private Boolean excludesSupported  = null;
 		private String  matcher            = null;
 		private String  matcherOptions     = null;
+		private String  validationRegEx    = null;
 		private String  label              = null;
 		private String  description        = null;
 		private String  rbKeyLabel         = null;
@@ -788,10 +806,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerResourceDef() {
-			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String label, String description, String rbKeyLabel, String rbKeyDescription) {
+		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String validationRegEx, String label, String description, String rbKeyLabel, String rbKeyDescription) {
 			setName(name);
 			setType(type);
 			setLevel(level);
@@ -802,6 +820,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setExcludesSupported(excludesSupported);
 			setMatcher(matcher);
 			setMatcher(matcherOptions);
+			setValidationRegEx(validationRegEx);
 			setLabel(label);
 			setDescription(description);
 			setRbKeyLabel(rbKeyLabel);
@@ -949,6 +968,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
+		 * @return the validationRegEx
+		 */
+		public String getValidationRegEx() {
+			return validationRegEx;
+		}
+
+		/**
+		 * @param validationRegEx the validationRegEx to set
+		 */
+		public void setValidationRegEx(String validationRegEx) {
+			this.validationRegEx = validationRegEx;
+		}
+
+		/**
 		 * @return the label
 		 */
 		public String getLabel() {
@@ -1025,6 +1058,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("excludesSupported={").append(excludesSupported).append("} ");
 			sb.append("matcher={").append(matcher).append("} ");
 			sb.append("matcherOptions={").append(matcherOptions).append("} ");
+			sb.append("validationRegEx={").append(validationRegEx).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
@@ -1164,6 +1198,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private String name             = null;
 		private String evaluator        = null;
 		private String evaluatorOptions = null;
+		private String validationRegEx  = null;
 		private String label            = null;
 		private String description      = null;
 		private String rbKeyLabel       = null;
@@ -1239,6 +1274,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
+		 * @return the validationRegEx
+		 */
+		public String getValidationRegEx() {
+			return validationRegEx;
+		}
+
+		/**
+		 * @param validationRegEx the validationRegEx to set
+		 */
+		public void setValidationRegEx(String validationRegEx) {
+			this.validationRegEx = validationRegEx;
+		}
+
+		/**
 		 * @return the label
 		 */
 		public String getLabel() {
@@ -1308,6 +1357,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("name={").append(name).append("} ");
 			sb.append("evaluator={").append(evaluator).append("} ");
 			sb.append("evaluatorOptions={").append(evaluatorOptions).append("} ");
+			sb.append("validationRegEx={").append(validationRegEx).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
