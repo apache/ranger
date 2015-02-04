@@ -16,7 +16,22 @@
 # limitations under the License.
 
 function getInstallProperty() {
-    grep "^$1" ${INSTALL_ARGS} | awk -F= '{  sub("^[ \t]*", "", $2); sub("[ \t]*$", "", $2); print $2 }'
+    local propertyName=$1
+    local propertyValue=""
+
+    for file in "${COMPONENT_INSTALL_ARGS}" "${INSTALL_ARGS}"
+    do
+        if [ -f "${file}" ]
+        then
+            propertyValue=`grep "^${propertyName}" ${file} | awk -F= '{  sub("^[ \t]*", "", $2); sub("[ \t]*$", "", $2); print $2 }'`
+            if [ "${propertyValue}" != "" ]
+            then
+                break
+            fi
+        fi
+    done
+
+    echo ${propertyValue}
 }
 
 #
@@ -103,6 +118,7 @@ DEFAULT_XML_CONFIG=${PROJ_INSTALL_DIR}/install/conf.templates/default/configurat
 PROJ_LIB_DIR=${PROJ_INSTALL_DIR}/lib
 PROJ_INSTALL_LIB_DIR="${PROJ_INSTALL_DIR}/install/lib"
 INSTALL_ARGS="${PROJ_INSTALL_DIR}/install.properties"
+COMPONENT_INSTALL_ARGS="${PROJ_INSTALL_DIR}/${COMPONENT_NAME}-install.properties"
 JAVA=$JAVA_HOME/bin/java
 
 HCOMPONENT_INSTALL_DIR_NAME=$(getInstallProperty 'COMPONENT_INSTALL_DIR_NAME')
