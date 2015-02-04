@@ -18,7 +18,6 @@
 
 package org.apache.ranger.authorization.hadoop.utils;
 
-import java.io.File;
 import java.util.List;
 
 import org.junit.Before;
@@ -34,10 +33,10 @@ import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 
 public class RangerCredentialProviderTest {
-	private final String keystoreFile = new File(System.getProperty("user.home")+"/testkeystore.jceks").toURI().getPath();
-	private String[] argsCreate = {"create", "TestCredential001", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
-	private String[] argsDelete = {"delete", "TestCredential001", "-provider", "jceks://file@/" + keystoreFile};
-	private String url = "jceks://file@/" + keystoreFile;
+	private final String keystoreFile = System.getProperty("user.home")+"/testkeystore.jceks";  
+	private String[] argsCreate = {"create", "TestCredential001", "-value", "PassworD123", "-provider", "jceks://file" + keystoreFile};
+	private String[] argsDelete = {"delete", "TestCredential001", "-provider", "jceks://file" + keystoreFile};
+	private String url = "jceks://file" + keystoreFile;
 	RangerCredentialProvider cp = null;
 	List<CredentialProvider> providers = null;
 	
