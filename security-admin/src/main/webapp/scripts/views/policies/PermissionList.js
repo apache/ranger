@@ -86,7 +86,7 @@ define(function(require) {
 		setupFormForEditMode : function() {
 			this.accessItems = _.map(this.accessTypes, function(perm){ 
 				if(!_.isUndefined(perm)) 
-					return {'type':perm.label,isAllowed : false}
+					return {'type':perm.name,isAllowed : false}
 			});
 			if(this.model.has('editMode') && this.model.get('editMode')){
 				if(!_.isUndefined(this.model.get('groupName')) && !_.isNull(this.model.get('groupName'))){
@@ -120,7 +120,7 @@ define(function(require) {
 			if( this.model.has('editMode') && this.model.get('editMode')){
 				_.each(this.model.get('accesses'), function(p){
 					if(p.isAllowed){
-						var access = _.find(that.accessTypes,function(obj){if(obj.label == p.type) return obj});
+						var access = _.find(that.accessTypes,function(obj){if(obj.name == p.type) return obj});
 						this.permsIds.push(access.name);
 					}
 					
@@ -264,7 +264,7 @@ define(function(require) {
 					
 					_.each(that.accessTypes, function(obj) {
 						if(_.contains(values, obj.name)){
-							var type = obj.label
+							var type = obj.name
 							_.each(that.accessItems, function(item){ if(item.type == type) item.isAllowed = true });
 						}
 					});

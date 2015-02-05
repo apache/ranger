@@ -206,7 +206,8 @@ define(function(require) {
 				topologyName					: 'Topology Name',
 				serivceName						: 'Service Name',
 				ipAddress						: 'IP Address',
-				delegatedAdmin					: 'Delegate Admin'	
+				delegatedAdmin					: 'Delegate Admin',
+				policyId						: 'Policy ID'
 			},
 			btn : {
 				add							: 'Add',

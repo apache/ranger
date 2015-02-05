@@ -77,7 +77,18 @@ define(function(require){
 			this.modelName = 'RangerServiceBase';
 			//this.bind("error", XAUtils.defaultErrorHandler);
 			this.bindErrorEvents();
-		}
+		},
+		testConfig : function(vRangerService, options){
+			var url = this.urlRoot  + '/validateConfig';
+			
+			options = _.extend({
+				data : JSON.stringify(vRangerService),
+				contentType : 'application/json',
+				dataType : 'json'
+			}, options);
+
+			return this.constructor.nonCrudOperation.call(this, url, 'POST', options);
+		},
 
 	}, {
 		// static class members

@@ -124,7 +124,7 @@ define(function(require){
 		/** on render callback */
 		onRender: function() {
 //			this.initializePlugins();
-//			this.addVisualSearch();
+			this.addVisualSearch();
 			this.renderTable();
 			
 //			XAUtil.highlightDisabledPolicy(this);
@@ -308,9 +308,9 @@ define(function(require){
 		},
 		addVisualSearch : function(){
 			var that = this;
-			var searchOpt = ['Resource Path','Group','Policy Name'];//,'Start Date','End Date','Today'];
-			var serverAttrName  = [{text : "Resource Path", label :"name"}, {text : "Group", label :"groupName"},
-								   {text : "Policy Name", label :"policyName"}];
+			var searchOpt = ['Policy Name','Group Name','User Name','Status'];//,'Start Date','End Date','Today'];
+			var serverAttrName  = [{text : "Policy Name", label :"policyName"},{text : "Group Name", label :"group"},
+			                        {text : "User Name", label :"user"}, {text : "Status", label :"status"}];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                 //  {text : 'Today',label :'today'}];
 									
@@ -321,13 +321,13 @@ define(function(require){
 				      callbacks :  { 
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
-									case 'Result':
-										callback(XAUtil.enumToSelectLabelValuePairs(XAEnums.AuthStatus));
+									case 'Status':
+										callback(this.getActiveStatusNVList());
 										break;
-									case 'Login Type':
+								/*	case 'Audit Status':
 										callback(XAUtil.enumToSelectLabelValuePairs(XAEnums.AuthType));
 										break;	
-									/*case 'Start Date' :
+									case 'Start Date' :
 										setTimeout(function () { XAUtil.displayDatepicker(that.ui.visualSearch, callback); }, 0);
 										break;
 									case 'End Date' :
@@ -343,6 +343,13 @@ define(function(require){
 				      }
 				};
 			window.vs = XAUtil.addVisualSearch(searchOpt,serverAttrName, this.collection,pluginAttr);
+		},
+		getActiveStatusNVList : function() {
+			var activeStatusList = _.filter(XAEnums.ActiveStatus, function(obj){
+				if(obj.label != XAEnums.ActiveStatus.STATUS_DELETED.label)
+					return obj;
+			});
+			return _.map(activeStatusList, function(status) { return { 'label': status.label, 'value': status.label.toLowerCase()}; })
 		},
 		/** on close */
 		onClose: function(){

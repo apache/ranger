@@ -25,29 +25,39 @@ define(function(require) {
 	var FormDataType = Backbone.Model.extend({
 		type : [ 'string', 'boolean', 'int' ],
 		getFormElements : function(configs, enums, attrs, form) {
-//			var attrs = [];
-			_.each(configs, function(v, k) {
+			var samelevelFieldCreated = [];
+			_.each(configs, function(v, k,config) {
 				if (v != null) {
 					var formObj = {};
 					switch (v.type) {
 						case 'string':
-							if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
-								formObj.type = 'Select2Remote';
-								 if(_.isUndefined(v.url)){
-									 var options = {'containerCssClass' : v.name };
-									 formObj.pluginAttr =  form.getPlugginAttr(false, options); 
-								 }else{
-									 var options = {'url' : v.url , 'containerCssClass' : v.name };									 
-									 formObj.pluginAttr =  form.getPlugginAttr(true, options);
-								 }
-								formObj.editorAttrs = {'data-placeholder': v.label },
-								//
-								formObj.level = v.level;
+							if($.inArray(v.level, samelevelFieldCreated) >= 0){
+								return;
+							}
+							if(v.excludesSupported || v.recursiveSupported || v.lookupSupported){
+								formObj.type = 'Resource';
+								if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
+									var options = {'containerCssClass' : v.name,
+											lookupURL : "service/plugins/services/lookupResource/"+form.rangerService.get('name')
+											};
+									formObj['select2Opts'] =  form.getPlugginAttr(true, options);
+								}
+								formObj['excludeSupport']= v.excludesSupported;
+								formObj['recursiveSupport'] = v.recursiveSupported;
 								formObj.name = v.name;
-								formObj.options = function(callback, editor){
-				                    callback();
-				                },
-				                formObj.onFocusOpen = true
+								formObj.level = v.level;
+								formObj.editorAttrs = {'data-placeholder': v.label };
+								//check whether resourceType drop down is created for same level or not 
+								var optionsAttrs = _.filter(config,function(field){ if(field.level == v.level) return field;})
+								if(optionsAttrs.length > 1){
+									formObj['resourcesAtSameLevel'] = true;
+									var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
+									formObj['sameLevelOpts'] = optionsTitle;
+									samelevelFieldCreated.push(v.level);
+									
+									v.name='sameLevel'+v.level;
+									v.label = '';
+								}
 							}else{
 								formObj.type = 'Text';
 							}
@@ -63,9 +73,25 @@ define(function(require) {
 							formObj.options = _.pluck(_.compact(enumObj.elements),'label');
 							break;
 						case 'path' : 
-							formObj.type = 'Text';
+							/*formObj.type = 'Text';
 							form.initilializePathPlugin = true;
-							form.pathFieldName = v.name;
+							form.pathFieldName = v.name;*/
+							formObj.type = 'Resource';
+							if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
+								var options = {'containerCssClass' : v.name,
+										lookupURL : "service/plugins/services/lookupResource/"+form.rangerService.get('name')
+										};
+								form.pathFieldName = v.name;
+								form.initilializePathPlugin = true;
+							}
+							formObj['excludeSupport']= v.excludesSupported;
+							formObj['recursiveSupport'] = v.recursiveSupported;
+							formObj['initilializePathPlugin'] = true;
+							formObj.name = v.name;
+							formObj.level = v.level;
+							formObj.editorAttrs = {'data-placeholder': v.label };
+							
+							
 							break;
 						default:formObj.type = 'Text';break;
 					}

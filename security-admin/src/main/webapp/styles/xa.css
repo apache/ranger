@@ -1690,9 +1690,6 @@ margin-bottom: 0 !important;
 .policy-form .field-isEnabled .controls{
 	margin-left:30px;
 }
-.policy-form .field-database,.policy-form .field-table, .policy-form .field-path, .policy-form .field-topology{
-	clear: both;
-}
 .margin-bottom-5{
 margin-bottom: 5px;
 }
@@ -1724,4 +1721,19 @@ margin-bottom: 5px;
 }
 .policy-manager .row-fluid [class*="span"]:nth-child(3n+4) {
 	clear: both;
+}
+.field-isEnabled + div {
+   clear:both;
+}
+.include-toggle{
+	margin-left: 264px;
+	margin-top: -29px;
+}
+.recursive-toggle{
+	margin-left: 363px;
+	margin-top: -20px;
+}
+.recursive-toggle-path {
+margin-left: 347px;
+margin-top: -29px;
 }

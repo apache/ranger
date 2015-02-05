@@ -244,6 +244,7 @@
 	   */
 	  var Form =  require('backbone-forms');
 	  require('select2');
+	  
 	  Form.editors.Select2 = Form.editors.Select.extend({		 
 	    initialize : function(options){
 	      this.pluginAttr = _.extend( {'width' : 'resolve'}, options.schema.pluginAttr || {});
@@ -337,6 +338,137 @@
 			
 			    this.$el.blur();
 			  }
+			
+			});
+	  
+	  /**
+	   * #RANGER RESOURCE
+	   * https://github.com/simontabor/jquery-toggles
+	   *
+	   */
+	  Form.editors.Resource = Form.editors.Base.extend({
+			ui : {
+				'resource' : '[data-js="resource"]',
+				'excludeSupport' : '[data-js="include"]',
+				'recursiveSupport' : '[data-js="recursive"]',
+				'resourceType' : '[data-js="resourceType"]',
+			},
+			  events: {
+			    'click':  function(event) {
+			},
+			  },
+			
+			  initialize: function(options) {
+			    Form.editors.Base.prototype.initialize.call(this, options);
+			    _.extend(this, _.pick(this.schema,'excludeSupport','recursiveSupport','select2Opts','resourcesAtSameLevel','sameLevelOpts','level','initilializePathPlugin'));
+
+			    this.template = this.getTemplate();
+//			    this.resourceObj = { 'level' : this.level};
+			    if(_.isUndefined(this.value) || _.isNull(this.value)){
+			    	this.value = {};
+			    }
+			  },
+			  getTemplate : function() {
+				  var optionsHtml="", selectTemplate = '',excludeSupportToggleDiv='', recursiveSupportToggleDiv='';
+				    if(!_.isUndefined(this.resourcesAtSameLevel) && this.resourcesAtSameLevel){
+				    	_.each(this.sameLevelOpts, function(option){ 
+				    		return optionsHtml += "<option value='"+option+"'>"+option+"</option>"
+				    	});
+				    	selectTemplate = '<select data-js="resourceType" class="btn dropdown-toggle" style="margin-right: 18px;margin-left: -116px;width: 100px;height: 29px;font-family: Tahoma;font-size: 14px;border-radius: 10px;border: 2px #cccccc solid;">\
+				    		'+optionsHtml+'\
+				    		</select>';
+				    }
+				    if(!_.isUndefined(this.excludeSupport) && this.excludeSupport){
+				    	excludeSupportToggleDiv = '<div class="toggle-xa include-toggle" data-js="include"><div  class="toggle"></div></div>';
+				    }
+				    if(!_.isUndefined(this.recursiveSupport) && this.recursiveSupport){
+				    	kclass = !_.isEmpty(excludeSupportToggleDiv) ?  'recursive-toggle' : 'include-toggle';
+				    	if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){
+				    		kclass = "recursive-toggle-path";
+				    	}
+				    	recursiveSupportToggleDiv = '<div class="toggle-xa '+kclass+'" data-js="recursive"><div  class="toggle"></div></div>';
+				    }
+				    return _.template(selectTemplate+'<input data-js="resource" maxlength="255" type="text">'+excludeSupportToggleDiv+''+recursiveSupportToggleDiv);
+			  },
+			
+			  /**
+			   * Adds the editor to the DOM
+			   */
+			  render: function() {
+				var that = this;
+			  	this.$el.html( this.template );
+			  	this.$resource = this.$el.find(this.ui.resource)
+			    this.$excludeSupport = this.$el.find(this.ui.excludeSupport)
+			    this.$recursiveSupport = this.$el.find(this.ui.recursiveSupport)
+			    this.$resourceType = this.$el.find(this.ui.resourceType)
+
+			    if(!_.isNull(this.value) && !_.isEmpty(this.value)){
+			    	this.$resource.val(this.value.values.toString())
+			    }
+			    if(!_.isUndefined(this.select2Opts)){
+			    	this.$resource.select2(this.select2Opts);
+			    }
+			  	var isExcludes = true, isRecursive = true;
+			  	if(this.excludeSupport){
+			  		if(!_.isNull(this.value)){
+			  			this.value.isExcludes = _.isUndefined(this.value.isExcludes) ? true : this.value.isExcludes;
+			  			isExcludes = this.value.isExcludes
+			  		}
+			  		this.$excludeSupport.toggles({
+			  			on: isExcludes,
+			  			text : {on : 'include', off : 'exclude' },
+			  			width: 80,
+			  		}).on('toggle', function (e, active) {
+			  		    that.value.isExcludes = active;
+			  		});
+			  	}
+			  	if(this.recursiveSupport){
+			  		if(!_.isNull(this.value)){
+			  			this.value.isRecursive = _.isUndefined(this.value.isRecursive) ? true : this.value.isRecursive;
+			  			isRecursive = this.value.isRecursive;
+			  		}
+			  		this.$recursiveSupport.toggles({
+			  			on: isRecursive,
+			  			text : {on : 'recursive', off : 'nonrecursive' },
+			  			width: 122,
+//			  			height: 20
+			  		}).on('toggle', function (e, active) {
+			  		    that.value.isRecursive = active;
+			  		});
+			  	}
+			  	if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
+			  		if(!_.isNull(this.value) && !_.isEmpty(this.value)){
+			  			this.$resourceType.val(this.value.resourceType);
+			  		}
+			  		this.$resourceType.on('change', function(e) {
+			  			if(!_.isUndefined(that.select2Opts)){
+			  				that.$resource.select2('val', '')
+						  }else{
+							  that.$resource.val('');
+						  }
+			  			//reset values
+			  			that.value.isExcludes = true;
+			  			that.value.isRecursive = true;
+			  			that.$excludeSupport.trigger('toggleOn');
+			  			that.$recursiveSupport.trigger('toggleOn');
+					});
+			  	}
+			    return this;
+			  },
+			
+			  getValue: function() {
+				  
+				  if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
+					  this.value['resourceType'] = this.$resourceType.val();  
+				  }
+				  this.value['resource'] = this.$resource.val(); 
+				  return this.value;
+				  //return this.$el.find('.active').text() == "ON" ? true : false;
+			  },
+			
+			  setValue: function(val) {
+				  return true;
+			  },
 			
 			});
 	  

@@ -35,6 +35,8 @@ define(function(require) {
 	var VXTrxLogList   			= require('collections/VXTrxLogList');
 	var VXAssetList 			= require('collections/VXAssetList');
 	var VXPolicyExportAuditList = require('collections/VXPolicyExportAuditList');
+	var RangerServiceDefList 	= require('collections/RangerServiceDefList');
+	var RangerService			= require('models/RangerService');
 	var AuditlayoutTmpl 		= require('hbs!tmpl/reports/AuditLayout_tmpl');
 	var vOperationDiffDetail	= require('views/reports/OperationDiffDetail');
 
@@ -162,6 +164,7 @@ define(function(require) {
 		  },
 		modifyTableForSubcolumns : function(){
 			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
+					<th class="renderable pid"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable cip">Repository</th>\
@@ -257,12 +260,13 @@ define(function(require) {
 		},
 		addSearchForBigDataTab :function(){
 			var that = this;
-			
+			var serviceDefList = this.getServiceDefList();
+			var serverListForRepoType =  serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 			                      {text : 'Today',label :'today'},{text : 'User',label :'requestUser'},
 			                      {text : 'Resource Name',label :'resourcePath'},{text : 'Policy ID',label :'policyId'},
 			                      {text : 'Resource Type',label :'resourceType'},{text : 'Repository Name',label :'repoName'},
-			                      {text : 'Repository Type',label :'repoType','multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AssetType)},
+			                      {text : 'Repository Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
 			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Audit Type',label :'auditType'},{text : 'Session ID',label :'sessionId'},
@@ -295,12 +299,8 @@ define(function(require) {
 								});
 								break;
 							case 'Repository Type':
-								var assetTypeList = _.filter(XAEnums.AssetType, function(obj){
-									if(obj.label != XAEnums.AssetType.ASSET_UNKNOWN.label 
-												&& obj.label != XAEnums.AssetType.ASSET_AGENT.label)
-										return obj;
-								});
-								callback(XAUtils.hackForVSLabelValuePairs(assetTypeList));
+								var serviceList =  serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('name').toUpperCase()}; })
+								callback(serviceList);
 								break;
 							case 'Result':
 				                callback(XAUtils.hackForVSLabelValuePairs(XAEnums.AccessResult));
@@ -331,6 +331,15 @@ define(function(require) {
 			      }
 			};
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.accessAuditList, pluginAttr);
+		},
+		getServiceDefList : function() {
+			var serviceList=[];
+			var serviceDefList 			= new RangerServiceDefList();
+			serviceDefList.fetch({ 
+				cache : false,
+				async:false
+			});
+			return serviceDefList;
 		},
 		addSearchForAdminTab : function(){
 			var that = this;
@@ -723,6 +732,21 @@ define(function(require) {
 		getColumns : function(){
 			var that = this;
 			var cols = {
+					policyId : {
+						cell : "uri",
+						href: function(model){
+							var rangerService = new RangerService();
+							rangerService.urlRoot += '/name/'+model.get('repoName'); 
+							rangerService.fetch({
+							  cache : false,
+							  async : false
+							});
+							return '#!/service/'+rangerService.get('id')+'/policies/'+model.get('policyId')+'/edit';
+						},
+						label	: localization.tt("lbl.policyId"),
+						editable: false,
+						sortable : false
+					},
 					eventTime : {
 						label : 'Event Time',// localization.tt("lbl.eventTime"),
 						cell: "String",

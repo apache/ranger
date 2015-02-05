@@ -49,10 +49,6 @@ define(function(require){
 	{
 		_viewName : 'RangerPolicyForm',
 
-		templateData : function() {
-			
-			return this.getTemplateData();
-		},
     	/**
 		* intialize a new RangerPolicyForm Form View 
 		* @constructs
@@ -60,7 +56,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a RangerPolicyForm Form View");
 			_.extend(this, _.pick(options, 'rangerServiceDefModel', 'rangerService'));
-			this.setupForm()
+    		this.setupForm();
     		Backbone.Form.prototype.initialize.call(this, options);
 
 			this.initializeCollection();
@@ -80,10 +76,6 @@ define(function(require){
 			this.on('resourceStatus:change', function(form, fieldEditor){
     			this.evResourceStatusChange(form, fieldEditor);
     		});
-			
-			/*this.on('sameLevelType:change', function(form, fieldEditor){
-				this.evResourceTypeChange(form, fieldEditor);
-			});*/
 		},
 
 		/** fields for the form
@@ -94,101 +86,19 @@ define(function(require){
 		},
 		getSchema : function(){
 			var attrs = {};
-			var schemaNames = this.rangerServiceDefModel.get('name') == "hdfs" ? ['description', 'isRecursive', 'isAuditEnabled'] : ['description', 'isAuditEnabled'];
+			var schemaNames = ['description', 'isAuditEnabled'];
 			
 			var formDataType = new BackboneFormDataType();
 			attrs = formDataType.getFormElements(this.rangerServiceDefModel.get('resources'),this.rangerServiceDefModel.get('enums'), attrs, this);
-			
-			attrs = this.setSameLevelField(attrs, schemaNames);
 			
 			var attr1 = _.pick(_.result(this.model,'schemaBase'), 'name','isEnabled');
 			var attr2 = _.pick(_.result(this.model,'schemaBase'),schemaNames);
 			return _.extend(attr1,_.extend(attrs,attr2));
 		},
-		setSameLevelField : function(attrs, schemaNames) {
-			var level = [],sameLevel = [],that = this;
-			this.sameLevelType = [],this.selectOptions = {};
-			this.sameLevelFound = false;
-			//Get array of all levels like [1,2,2,3,4,4,4,5,6]
-			_.each(attrs, function(obj){ level.push(obj.level) })
-			
-			/*	count levels 
-				counts = { 1 : 1, 2 : 2, 3 : 1, 4: 3, 5 : 1, 6 : 1}
-			*/
-			var counts = {};
-			level.forEach(function(x) { counts[x] = (counts[x] || 0)+1; });
-			//create level counter array which has more than one same level
-			_.each(counts, function(cnt,l) {
-				if(cnt > 1){
-					sameLevel.push(l);
-					this.sameLevelFound = true;
-				}
-			}, this);
-			
-			if(this.sameLevelFound){
-				this.schemaBase = ['name','isEnabled'];
-				this.schemaBase1 = schemaNames;
-				var editorsAttr = [], fieldAttrs = [];
-				//iterate over same level array
-				_.each(sameLevel, function(lev, i) {
-					//get same level resources
-					var OptionsAttrs = _.filter(attrs,function(field){ if(field.level == lev) return field;})
-					var optionsTitle = _.map(OptionsAttrs,function(field){ return field.name;});
-					
-					//cretae selectType for same level resource
-					attrs['sameLevelType'+lev]  = {
-							type 	: 'Select',
-							options	:  optionsTitle,
-							editorAttrs : {'class':'btn dropdown-toggle','style': 'width: 100px;height: 29px;font-family: Tahoma;font-size: 14px;border-radius: 10px;border: 2px #cccccc solid;'}
-					};
-					//hide all select options
-					_.each(optionsTitle, function(field,i){ 
-						if( i > 0 ) attrs[field].editorAttrs['style']='display:none';
-					})
-					//create sameLevelType array
-					var tmp = { 'name' : "sameLevelType"+lev, 'options' : optionsTitle.toString() };
-					this.sameLevelType.push(tmp);
-				
-					editorsAttr = editorsAttr.concat(optionsTitle)
-				}, this)
-				
-				//create fieldAttrs array 
-				_.each(attrs, function(obj){
-					if(!_.isUndefined(obj.name) && $.inArray(obj.name, editorsAttr) < 0 ){
-							fieldAttrs.push(obj.name);
-					} 
-				});
-				
-				// Add Resources in same order as give in JSON
-				var addToschemaBase = true;
-				_.each(attrs,function(field, i) {
-					if(!_.isUndefined(field.name)){
-						if($.inArray(field.name, editorsAttr) < 0 && addToschemaBase){
-							this.schemaBase.push(field.name)
-						}
-						if($.inArray(field.name, editorsAttr) >= 0){
-							addToschemaBase = false;
-						}
-						if($.inArray(field.name, editorsAttr) < 0 && !addToschemaBase){
-							this.schemaBase1.unshift(field.name)
-						}
-						
-					}
-				}, this);
-				
-				
-			}
-			//add change events on all sameLevelType
-			_.each(this.sameLevelType, function(obj, i){
-				that.on(obj.name+':change', function(form, fieldEditor) {
-					this.evResourceTypeChange(form, fieldEditor);
-				});
-			});
-			return attrs;
-		},
 		/** on render callback */
 		render: function(options) {
 			var that = this;
+			
 			Backbone.Form.prototype.render.call(this, options);
 			//initialize path plugin for hdfs component : resourcePath
 			if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){ 
@@ -199,7 +109,6 @@ define(function(require){
 				this.setUpSwitches();
 			}
 			this.$el.find('.field-isEnabled').find('.control-label').remove();
-			this.setupSameLevelType();
 		},
 		evAuditChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor);
@@ -210,47 +119,25 @@ define(function(require){
 		evResourceStatusChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor);
 		},
-		getTemplateData : function() {
-			var obj={ 'fieldsets' : true };
-			if(this.sameLevelFound){ 
-				obj  = { sameLevelType  : this.sameLevelType, 
-						 schemaBase	  	: this.schemaBase.toString(),
-						 schemaBase1	: this.schemaBase1.toString(),
-						 
-					};
-				if(this.schemaBase.length <= 2)
-					obj.marginBottom57 = 'margin-bottom-57';
-			}
-			return obj;
-		},
 		setupForm : function() {
-			_.each(this.model.attributes.resources,function(obj,key){
-				this.model.set(key, obj.values.toString());
-				if(!_.isUndefined(obj.isRecursive)){
-					this.model.set('isRecursive', obj.isRecursive);
-				}
-			},this)
+			if(!this.model.isNew()){
+				_.each(this.model.get('resources'),function(obj,key){
+					var resourceDef = _.findWhere(this.rangerServiceDefModel.get('resources'),{'name':key})
+					var sameLevelResourceDef = _.where(this.rangerServiceDefModel.get('resources'), {'level': resourceDef.level});
+					if(sameLevelResourceDef.length > 1){
+						obj['resourceType'] = key;
+						this.model.set('sameLevel'+resourceDef.level, obj)
+					}else{
+						this.model.set(resourceDef.name, obj)
+					}
+				},this)
+			}
 		},
 		setUpSwitches :function(){
 			var that = this;
 			this.fields.isAuditEnabled.editor.setValue(this.model.get('isAuditEnabled'));
 			this.fields.isEnabled.editor.setValue(this.model.get('isEnabled'));
-			if(!_.isUndefined(this.fields.isRecursive))
-				this.fields.isRecursive.editor.setValue(this.model.get('isRecursive'));
-		},
-		setupSameLevelType : function() {
-			//setup sameLevelType `select` if there
-			_.each(this.sameLevelType, function(obj, i){
-				if(!this.model.isNew()){
-					var sameLevelOpt = obj.options.split(',');
-					var sameLevelVal = _.find(sameLevelOpt, function(type){ if(!_.isEmpty(this.model.get(type))) return type;},this)
-					console.log(this.model.attributes)
-					this.model.set(obj.name,sameLevelVal);
-					this.fields[obj.name].editor.$el.val(sameLevelVal).trigger('change')
-				}else{
-					this.fields[obj.name].editor.$el.trigger('change')
-				}
-			}, this);
+			
 		},
 		/** all custom field rendering */
 		renderCustomFields: function(){
@@ -289,9 +176,25 @@ define(function(require){
 			_.each(this.rangerServiceDefModel.get('resources'),function(obj){
 				if(!_.isNull(obj)){
 					var rPolicyResource = new RangerPolicyResource();
-					rPolicyResource.set('values',that.model.get(obj.name).split(','));
-					rPolicyResource.set('isRecursive',that.model.get('isRecursive'))
-					resources[obj.name] = rPolicyResource;
+					var tmpObj =  that.model.get(obj.name);
+					if(!_.isUndefined(tmpObj) && _.isObject(tmpObj)){
+						rPolicyResource.set('values',tmpObj.resource.split(','));
+						if(!_.isUndefined(tmpObj.isRecursive)){
+							rPolicyResource.set('isRecursive', tmpObj.isRecursive)
+						}
+						if(!_.isUndefined(tmpObj.isExcludes)){
+							rPolicyResource.set('isExcludes', tmpObj.isExcludes)
+						}
+					}
+					if(rPolicyResource.has('values')){
+						if(!_.isUndefined(tmpObj) && !_.isUndefined(tmpObj.resourceType)){
+							resources[tmpObj.resourceType] = rPolicyResource;
+						}else{
+							if(_.isUndefined(resources[obj.name])){
+								resources[obj.name] = rPolicyResource;
+							}
+						}
+					}
 					that.model.unset(obj.name);
 				}
 			});
@@ -353,7 +256,7 @@ define(function(require){
 				return split( term ).pop();
 			}
 
-			this.fields[that.pathFieldName].editor.$el.bind( "keydown", function( event ) {
+			this.fields[that.pathFieldName].editor.$el.find('[data-js="resource"]').bind( "keydown", function( event ) {
 				// don't navigate away from the field on tab when selecting an item
 				/*if ( event.keyCode === $.ui.keyCode.TAB && $( this ).data( "ui-autocomplete" ).menu.active ) {
 					event.preventDefault();
@@ -372,9 +275,18 @@ define(function(require){
 				autocomplete : {
 					cache: false,
 					source: function( request, response ) {
-						var p = $.getJSON( "service/assets/hdfs/resources", {
-							dataSourceName: that.rangerService.get('name'),
-							baseDirectory: extractLast( request.term )
+						var url = "service/plugins/services/lookupResource/"+that.rangerService.get('name');
+						var context ={
+							'userInput' : extractLast( request.term ),
+							'resourceName' : null,
+							'resources' : { null:null }
+						};
+						var p = $.ajax({
+							url : url,
+							type : "POST",
+							data : JSON.stringify(context),
+							dataType : 'json',
+							contentType: "application/json; charset=utf-8",
 						}).done(function(data){
 							if(data.vXStrings){
 								response(data.vXStrings);
@@ -451,7 +363,7 @@ define(function(require){
 				
 				
 				return {
-					containerCssClass : options.type,
+					containerCssClass : options.containerCssClass,
 					closeOnSelect : true,
 					tags:true,
 					multiple: true,
@@ -475,15 +387,22 @@ define(function(require){
 							};
 						}
 					},
-					ajax: { 
+					ajax: {
 						url: options.lookupURL,
-						dataType: 'json',
+						type : 'POST',
 						params : {
-							timeout: 3000
+							timeout: 3000,
+							contentType: "application/json; charset=utf-8",
 						},
 						cache: false,
 						data: function (term, page) {
-							return _.extend(that.getDataParams(type, term));
+//							return _.extend(that.getDataParams(type, term));
+							var context ={
+									'userInput' : term,
+									'resourceName' : null,
+									'resources' : { null:null }
+								};
+							return JSON.stringify(context);
 							
 						},
 						results: function (data, page) { 
