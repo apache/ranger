@@ -295,7 +295,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		if (LOG.isDebugEnabled()) {
 			final String format = "evaluateAccess: entered: Operation[%s], access[%s], families[%s]";
 			Map<String, Set<String>> families = getColumnFamilies(familyMap);
-			String message = String.format(format, operation, access, families);
+			String message = String.format(format, operation, access, families.toString());
 			LOG.debug(message);
 		}
 
@@ -314,7 +314,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			result = new ColumnFamilyAccessResult(true, true, null, null, null, null);
 			if (LOG.isDebugEnabled()) {
 				Map<String, Set<String>> families = getColumnFamilies(familyMap);
-				String message = String.format(messageTemplate, operation, access, families, result.toString());
+				String message = String.format(messageTemplate, operation, access, families.toString(), result.toString());
 				LOG.debug(message);
 			}
 			return result;
@@ -331,8 +331,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				.access(access)
 				.table(table);
 		Map<String, Set<String>> families = getColumnFamilies(familyMap);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("evaluateAccess: families to process: " + families.toString());
+		}
 		if (families == null || families.isEmpty()) {
-			// table level access is desired
+			LOG.debug("evaluateAccess: Null or empty families collection, ok.  Table level access is desired");
 			session.buildRequest()
 				.authorize();
 			boolean authorized = session.isAuthorized();
@@ -347,10 +350,12 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 						authorized ? Collections.singletonList(event) : null,
 						authorized ? null : event, null, reason); 
 			if (LOG.isDebugEnabled()) {
-				String message = String.format(messageTemplate, operation, access, families, result.toString());
+				String message = String.format(messageTemplate, operation, access, families.toString(), result.toString());
 				LOG.debug(message);
 			}
 			return result;
+		} else {
+			LOG.debug("evaluateAccess: Families collection not null.  Skipping table-level check, will do finer level check");
 		}
 		
 		boolean everythingIsAccessible = true;
@@ -365,10 +370,12 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		for (Map.Entry<String, Set<String>> anEntry : families.entrySet()) {
 			String family = anEntry.getKey();
 			session.columnFamily(family);
-			
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("evaluateAccess: Processing family: " + family);
+			}
 			Set<String> columns = anEntry.getValue();
 			if (columns == null || columns.isEmpty()) {
-				// family level access is desired.
+				LOG.debug("evaluateAccess: columns collection null or empty, ok.  Family level access is desired.");
 				session.column(null) // zap stale column from prior iteration of this loop, if any
 					.buildRequest()
 					.authorize();
@@ -387,8 +394,12 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 					denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s, no columns found.", user.getName(), operation, table, family);
 				}
 			} else {
+				LOG.debug("evaluateAccess: columns collection not empty.  Skipping Family level check, will do finer level access check.");
 				Set<String> accessibleColumns = new HashSet<String>(); // will be used in to populate our results cache for the filter
  				for (String column : columns) {
+ 					if (LOG.isDebugEnabled()) {
+ 						LOG.debug("evaluateAccess: Processing column: " + column);
+ 					}
  					session.column(column)
  						.buildRequest()
  						.authorize();
@@ -414,7 +425,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		
 		result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, deniedEvent, accessResultsCache, denialReason);
 		if (LOG.isDebugEnabled()) {
-			String message = String.format(messageTemplate, operation, access, families, result.toString());
+			String message = String.format(messageTemplate, operation, access, families.toString(), result.toString());
 			LOG.debug(message);
 		}
 		return result;

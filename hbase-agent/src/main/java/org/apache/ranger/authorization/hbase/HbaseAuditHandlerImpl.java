@@ -41,7 +41,8 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 			_allEvents.add(_mostRecentEvent);
 		}
 		_mostRecentEvent = event;
-		return event;
+		// We return null because we don't want default audit handler to audit anything!
+		return null;
 	}
 	
 	@Override

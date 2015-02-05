@@ -163,14 +163,15 @@ public class AuthorizationSession {
 		resource.setValue("column", _column);
 		
 		String user = _userUtils.getUserAsString(_user);
-		LOG.debug("AuthorizationSession buildRequest: user[" + user + "], groups[" + _groups + "]");
-
 		RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, _access, user, _groups);
 		request.setAction(_operation);
 		request.setRequestData(_otherInformation);
 		request.setClientIPAddress(_remoteAddress);
 		
 		_request = request;
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Built request: " + request.toString());
+		}
 		return this;
 	}
 	

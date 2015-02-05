@@ -23,12 +23,16 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.filter.FilterBase;
 import org.apache.hadoop.hbase.util.Bytes;
 
 public class RangerAuthorizationFilter extends FilterBase {
 
+	private static final Log LOG = LogFactory.getLog(RangerAuthorizationFilter.class.getName());
 	final Map<String, Set<String>> _cache;
 
 	public RangerAuthorizationFilter(Map<String, Set<String>> cache) {
@@ -38,31 +42,46 @@ public class RangerAuthorizationFilter extends FilterBase {
 	@SuppressWarnings("deprecation")
 	@Override
 	public ReturnCode filterKeyValue(Cell kv) throws IOException {
-		// if our cache is null or empty then there is no hope for any access
+		
 		if (_cache == null || _cache.isEmpty()) {
+			LOG.debug("filterKeyValue: if cache is null or empty then there is no hope for any access. Denied!");
 			return ReturnCode.NEXT_COL;
 		}
-		// null/empty families are denied
+		
 		byte[] familyBytes = kv.getFamily();
 		if (familyBytes == null || familyBytes.length == 0) {
+			LOG.debug("filterKeyValue: null/empty families in request! Denied!");
 			return ReturnCode.NEXT_COL;
 		}
 		String family = Bytes.toString(familyBytes);
-		// null/empty columns are also denied
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("filterKeyValue: Evaluating family[" + family + "]");
+		}
+		
+		if (!_cache.containsKey(family)) {
+			LOG.debug("filterKeyValue: Cache map did not contain the family, i.e. nothing in family has access! Denied!");
+			return ReturnCode.NEXT_COL;
+		}
+		Set<String> columns = _cache.get(family);
+		
+		if (CollectionUtils.isEmpty(columns)) {
+			LOG.debug("filterKeyValue: empty/null column set in cache for family implies family level access. No need to bother with column level.  Allowed!");
+			return ReturnCode.INCLUDE;
+		}		
 		byte[] columnBytes = kv.getQualifier();
 		if (columnBytes == null || columnBytes.length == 0) {
+			LOG.debug("filterKeyValue: empty/null column set in request implies family level access, which isn't available.  Denied!");
 			return ReturnCode.NEXT_COL;
 		}
 		String column = Bytes.toString(columnBytes);
-		// allow if cache contains the family/column in it
-		Set<String> columns = _cache.get(family);
-		if (columns == null || columns.isEmpty()) {
-			// column family with a null/empty set of columns means all columns within that family are allowed
-			return ReturnCode.INCLUDE;
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("filterKeyValue: Evaluating column[" + column + "]");
 		}
-		else if (columns.contains(column)) {
+		if (columns.contains(column)) {
+			LOG.debug("filterKeyValue: cache contains Column in column-family's collection.  Access allowed!");
 			return ReturnCode.INCLUDE;
 		} else {
+			LOG.debug("filterKeyValue: cache missing Column in column-family's collection.  Access denied!");
 			return ReturnCode.NEXT_COL;
 		}
 	}
