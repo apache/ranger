@@ -43,6 +43,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -707,6 +708,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceFileStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
 		}
 
+		ServicePolicies ret = null;
+
 		RangerService service = getServiceByName(serviceName);
 
 		if(service == null) {
@@ -719,20 +722,19 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			throw new Exception(service.getType() + ": unknown service-def)");
 		}
 
-		ServicePolicies ret = new ServicePolicies();
-		ret.setServiceId(service.getId());
-		ret.setServiceName(service.getName());
-		ret.setPolicyVersion(service.getPolicyVersion());
-		ret.setPolicyUpdateTime(service.getPolicyUpdateTime());
-		ret.setServiceDef(serviceDef);
-		ret.setPolicies(new ArrayList<RangerPolicy>());
-
 		if(lastKnownVersion == null || service.getPolicyVersion() == null || lastKnownVersion.longValue() != service.getPolicyVersion().longValue()) {
 			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, serviceName);
 
 			List<RangerPolicy> policies = getPolicies(filter);
 
+			ret = new ServicePolicies();
+
+			ret.setServiceId(service.getId());
+			ret.setServiceName(service.getName());
+			ret.setPolicyVersion(service.getPolicyVersion());
+			ret.setPolicyUpdateTime(service.getPolicyUpdateTime());
 			ret.setPolicies(policies);
+			ret.setServiceDef(serviceDef);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1555,7 +1557,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 									isMatch = true;
 								} else {
 									for(String policyResourceValue : policyResource.getValues()) {
-										if(policyResourceValue.contains(val)) { // TODO: consider match for wildcard in policyResourceValue?
+										if(val.matches(RangerAbstractResourceMatcher.getWildCardPattern(policyResourceValue))) {
 											isMatch = true;
 											break;
 										}

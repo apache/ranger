@@ -138,11 +138,11 @@ public class PolicyRefresher extends Thread {
 			try {
 				ServicePolicies svcPolicies = serviceStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
 
-				long newVersion = (svcPolicies == null || svcPolicies.getPolicyVersion() == null) ? -1 : svcPolicies.getPolicyVersion().longValue();
-
-				boolean isUpdated = newVersion != -1 && lastKnownVersion != newVersion;
+				boolean isUpdated = svcPolicies != null;
 
 				if(isUpdated) {
+					long newVersion = svcPolicies.getPolicyVersion() == null ? -1 : svcPolicies.getPolicyVersion().longValue();
+
 		        	if(!StringUtils.equals(serviceName, svcPolicies.getServiceName())) {
 		        		LOG.warn("PolicyRefresher(serviceName=" + serviceName + "): ignoring unexpected serviceName '" + svcPolicies.getServiceName() + "' in service-store");
 		        	}
@@ -158,7 +158,7 @@ public class PolicyRefresher extends Thread {
 					policyEngine.setPolicies(serviceName, svcPolicies.getServiceDef(), svcPolicies.getPolicies());
 				} else {
 					if(LOG.isDebugEnabled()) {
-						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
+						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion);
 					}
 				}
 			} catch(Exception excp) {

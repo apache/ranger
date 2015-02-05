@@ -312,36 +312,32 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	protected RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource resource) {
+	protected static RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource resource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.createResourceMatcher(" + resourceDef + ", " + resource + ")");
 		}
 
 		RangerResourceMatcher ret = null;
 
+		String resName = resourceDef != null ? resourceDef.getName() : null;
 		String clsName = resourceDef != null ? resourceDef.getMatcher() : null;
 		String options = resourceDef != null ? resourceDef.getMatcherOptions() : null;
 
-		if(StringUtils.isEmpty(clsName)) {
-			ret = new RangerDefaultResourceMatcher();
-		} else {
+		if(! StringUtils.isEmpty(clsName)) {
 			try {
 				@SuppressWarnings("unchecked")
 				Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>)Class.forName(clsName);
 
 				ret = matcherClass.newInstance();
-			} catch(ClassNotFoundException excp) {
-				// TODO: ERROR
-				excp.printStackTrace();
-			} catch (InstantiationException excp) {
-				// TODO: ERROR
-				excp.printStackTrace();
-			} catch (IllegalAccessException excp) {
-				// TODO: ERROR
-				excp.printStackTrace();
+			} catch(Exception excp) {
+				LOG.error("failed to instantiate resource matcher '" + clsName + "' for '" + resName + "'. Default resource matcher will be used", excp);
 			}
 		}
 
+		if(ret == null) {
+			ret = new RangerDefaultResourceMatcher();
+		}
+		
 		if(ret != null) {
 			ret.init(resourceDef, resource,  options);
 		}

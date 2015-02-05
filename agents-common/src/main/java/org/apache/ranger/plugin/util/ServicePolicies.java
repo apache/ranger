@@ -44,10 +44,10 @@ public class ServicePolicies implements java.io.Serializable {
 
 	private String             serviceName;
 	private Long               serviceId;
-	private RangerServiceDef   serviceDef;
 	private Long               policyVersion;
 	private Date               policyUpdateTime;
 	private List<RangerPolicy> policies;
+	private RangerServiceDef   serviceDef;
 
 
 	/**
@@ -73,18 +73,6 @@ public class ServicePolicies implements java.io.Serializable {
 	 */
 	public void setServiceId(Long serviceId) {
 		this.serviceId = serviceId;
-	}
-	/**
-	 * @return the serviceDef
-	 */
-	public RangerServiceDef getServiceDef() {
-		return serviceDef;
-	}
-	/**
-	 * @param serviceDef the serviceDef to set
-	 */
-	public void setServiceDef(RangerServiceDef serviceDef) {
-		this.serviceDef = serviceDef;
 	}
 	/**
 	 * @return the policyVersion
@@ -121,5 +109,17 @@ public class ServicePolicies implements java.io.Serializable {
 	 */
 	public void setPolicies(List<RangerPolicy> policies) {
 		this.policies = policies;
+	}
+	/**
+	 * @return the serviceDef
+	 */
+	public RangerServiceDef getServiceDef() {
+		return serviceDef;
+	}
+	/**
+	 * @param serviceDef the serviceDef to set
+	 */
+	public void setServiceDef(RangerServiceDef serviceDef) {
+		this.serviceDef = serviceDef;
 	}
 }

@@ -218,8 +218,7 @@ public class TestServiceStore {
 		assertEquals("getServicePolicies(" + updatedSvc.getName() + ") failed", svcPolicies.getPolicies().get(0).getName(), updatedPolicy.getName());
 
 		ServicePolicies updatedPolicies = svcStore.getServicePoliciesIfUpdated(updatedSvc.getName(), svcPolicies.getPolicyVersion());
-		assertNotNull(updatedPolicies);
-		assertEquals(0, updatedPolicies.getPolicies().size());
+		assertNull(updatedPolicies);
 
 		filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, policyName);

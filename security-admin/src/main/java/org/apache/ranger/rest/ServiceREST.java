@@ -36,6 +36,7 @@ import javax.ws.rs.core.Context;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,8 +53,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.entity.XXPolicyExportAudit;
 
 
 @Path("plugins")
@@ -64,9 +67,12 @@ public class ServiceREST {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
-	
+
 	@Autowired
 	ServiceMgr serviceMgr;
+
+	@Autowired
+	AssetMgr assetMgr;
 
 	private ServiceStore svcStore = null;
 
@@ -647,21 +653,34 @@ public class ServiceREST {
 	@GET
 	@Path("/policies/download/{serviceName}/{lastKnownVersion}")
 	@Produces({ "application/json", "application/xml" })
-	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @PathParam("lastKnownVersion") Long lastKnownVersion) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @PathParam("lastKnownVersion") Long lastKnownVersion, @Context HttpServletRequest request) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
 		}
 
-		ServicePolicies ret = null;
+		ServicePolicies ret      = null;
+		int             httpCode = HttpServletResponse.SC_OK;
+		String          logMsg   = null;
 
 		try {
 			ret = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+
+			if(ret == null) {
+				httpCode = HttpServletResponse.SC_NOT_MODIFIED ;
+				logMsg   = "No change since last update";
+			} else {
+				httpCode = HttpServletResponse.SC_OK;
+				logMsg   = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
+			}
 		} catch(Exception excp) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			httpCode = HttpServletResponse.SC_BAD_REQUEST;
+			logMsg   = excp.getMessage();
+		} finally {
+			createPolicyDownloadAudit(serviceName, lastKnownVersion, ret, httpCode, request);
 		}
 
-		if(ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		if(httpCode != HttpServletResponse.SC_OK) {
+			throw restErrorUtil.createRESTException(httpCode, logMsg, true);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -670,7 +689,6 @@ public class ServiceREST {
 
 		return ret;
 	}
-
 
 	private SearchFilter getSearchFilter(HttpServletRequest request) {
 		if(request == null || MapUtils.isEmpty(request.getParameterMap())) {
@@ -701,5 +719,28 @@ public class ServiceREST {
 		}
 
 		return ret;
+	}
+
+	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, ServicePolicies policies, int httpRespCode, HttpServletRequest request) {
+		try {
+			String  agentId   = request.getParameter("agentId");
+			String  ipAddress = request.getHeader("X-FORWARDED-FOR");  
+
+			if (ipAddress == null) {  
+				ipAddress = request.getRemoteAddr();
+			}
+
+			XXPolicyExportAudit policyExportAudit = new XXPolicyExportAudit();
+
+			policyExportAudit.setRepositoryName(serviceName);
+			policyExportAudit.setAgentId(agentId);
+			policyExportAudit.setClientIP(ipAddress);
+			policyExportAudit.setRequestedEpoch(lastKnownVersion);
+			policyExportAudit.setHttpRetCode(httpRespCode);
+
+			assetMgr.createPolicyAudit(policyExportAudit);
+		} catch(Exception excp) {
+			LOG.error("error while creating policy download audit", excp);
+		}
 	}
 }
