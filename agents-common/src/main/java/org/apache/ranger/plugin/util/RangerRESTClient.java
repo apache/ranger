@@ -62,8 +62,8 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 public class RangerRESTClient {
 	private static final Log LOG = LogFactory.getLog(RangerRESTClient.class);
 
-	public static final String RANGER_PROP_POLICYMGR_URL                         = "xasecure.policymgr.url";
-	public static final String RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME          = "xasecure.policymgr.sslconfig.filename";
+	public static final String RANGER_PROP_POLICYMGR_URL                         = "ranger.service.store.rest.url";
+	public static final String RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME          = "ranger.service.store.rest.ssl.config.file";
 
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE                  = "xasecure.policymgr.clientssl.keystore";	
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_PASSWORD         = "xasecure.policymgr.clientssl.keystore.password";	

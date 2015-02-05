@@ -82,8 +82,8 @@ public class ServiceRESTStore implements ServiceStore {
 
 	@Override
 	public void init() throws Exception {
-		String restUrl       = RangerConfiguration.getInstance().get("ranger.service.store.rest.url", "http://localhost:6080");
-		String sslConfigFile = RangerConfiguration.getInstance().get("ranger.service.store.rest.ssl.config.file", "");
+		String restUrl       = RangerConfiguration.getInstance().get("ranger.service.store.rest.url");
+		String sslConfigFile = RangerConfiguration.getInstance().get("ranger.service.store.rest.ssl.config.file");
 
 		restClient = new RangerRESTClient(restUrl, sslConfigFile);
 	}
