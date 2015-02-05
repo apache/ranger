@@ -308,12 +308,19 @@ define(function(require){
 		},
 		addVisualSearch : function(){
 			var that = this;
+			var resourceSearchOpt = _.map(this.rangerServiceDefModel.get('resources'), function(resource){ return XAUtil.capitaliseFirstLetter(resource.name) });
+	
 			var searchOpt = ['Policy Name','Group Name','User Name','Status'];//,'Start Date','End Date','Today'];
+			searchOpt = _.union(searchOpt, resourceSearchOpt)
 			var serverAttrName  = [{text : "Policy Name", label :"policyName"},{text : "Group Name", label :"group"},
 			                        {text : "User Name", label :"user"}, {text : "Status", label :"status"}];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                 //  {text : 'Today',label :'today'}];
-									
+			var serverRsrcAttrName = _.map(resourceSearchOpt,function(opt){ 
+				return { 'text': XAUtil.capitaliseFirstLetter(opt), 
+					'label': 'resource:'+XAUtil.lowerCaseFirstLetter(opt) }; 
+			});
+			serverAttrName = _.union(serverAttrName, serverRsrcAttrName)
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForPolicy'),
 				      container : this.ui.visualSearch,
@@ -322,7 +329,7 @@ define(function(require){
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 									case 'Status':
-										callback(this.getActiveStatusNVList());
+										callback(that.getActiveStatusNVList());
 										break;
 								/*	case 'Audit Status':
 										callback(XAUtil.enumToSelectLabelValuePairs(XAEnums.AuthType));

@@ -527,7 +527,7 @@ define(function(require) {
 	        						} 
 	        					});
 	        					//visualSearch.options.readOnly = searchOptTemp.length <= 0 ? true : false;
-	        					callback(searchOptTemp);
+	        					callback(searchOptTemp,{preserveOrder : false});
 	        				},
 	        removedFacet : function(removedFacet,searchCollection,indexObj){
 					        	//console.log(removedFacet);
@@ -734,6 +734,9 @@ define(function(require) {
 	};
 	XAUtils.capitaliseFirstLetter = function (string){
 	    return string.charAt(0).toUpperCase() + string.slice(1);
+	};
+	XAUtils.lowerCaseFirstLetter = function (string){
+	    return string.charAt(0).toLowerCase() + string.slice(1);
 	};
 	XAUtils.getServicePoliciesURL = function(serviceId) {
 		return "service/plugins/policies/service/"+serviceId;

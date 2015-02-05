@@ -108,6 +108,7 @@ define(function(require) {
 			this.currentTab = '#'+this.tab;
 			var date = new Date().toString();
 			this.timezone = date.replace(/^.*GMT.*\(/, "").replace(/\)$/, "");
+			this.initializeServiceDefColl();
 		},
 
 		/** all events binding here */
@@ -131,6 +132,14 @@ define(function(require) {
 				//that.initializeCollection();
 				//that.onSearch();
 			},XAGlobals.settings.AUDIT_REPORT_POLLING);
+		},
+		initializeServiceDefColl : function() {
+			this.serviceDefList 			= new RangerServiceDefList();
+			this.serviceDefList.fetch({ 
+				cache : false,
+				async:false
+			});
+			return this.serviceDefList;
 		},
 		/** on render callback */
 		onRender : function() {
@@ -260,8 +269,7 @@ define(function(require) {
 		},
 		addSearchForBigDataTab :function(){
 			var that = this;
-			var serviceDefList = this.getServiceDefList();
-			var serverListForRepoType =  serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
+			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 			                      {text : 'Today',label :'today'},{text : 'User',label :'requestUser'},
 			                      {text : 'Resource Name',label :'resourcePath'},{text : 'Policy ID',label :'policyId'},
@@ -299,7 +307,7 @@ define(function(require) {
 								});
 								break;
 							case 'Repository Type':
-								var serviceList =  serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('name').toUpperCase()}; })
+								var serviceList =  that.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('name').toUpperCase()}; })
 								callback(serviceList);
 								break;
 							case 'Result':
@@ -331,15 +339,6 @@ define(function(require) {
 			      }
 			};
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.accessAuditList, pluginAttr);
-		},
-		getServiceDefList : function() {
-			var serviceList=[];
-			var serviceDefList 			= new RangerServiceDefList();
-			serviceDefList.fetch({ 
-				cache : false,
-				async:false
-			});
-			return serviceDefList;
 		},
 		addSearchForAdminTab : function(){
 			var that = this;
@@ -733,16 +732,22 @@ define(function(require) {
 			var that = this;
 			var cols = {
 					policyId : {
-						cell : "uri",
-						href: function(model){
-							var rangerService = new RangerService();
-							rangerService.urlRoot += '/name/'+model.get('repoName'); 
-							rangerService.fetch({
-							  cache : false,
-							  async : false
-							});
-							return '#!/service/'+rangerService.get('id')+'/policies/'+model.get('policyId')+'/edit';
-						},
+						cell : "html",
+						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+							fromRaw: function (rawValue, model) {
+								if(rawValue == -1){
+									return rawValue;
+								}	
+								var rangerService = new RangerService();
+								rangerService.urlRoot += '/name/'+model.get('repoName'); 
+								rangerService.fetch({
+								  cache : false,
+								  async : false
+								});
+								var href = '#!/service/'+rangerService.get('id')+'/policies/'+model.get('policyId')+'/edit';
+								return '<a href="'+href+'" title="'+rawValue+'">'+rawValue+'</a>';
+							}
+						}),
 						label	: localization.tt("lbl.policyId"),
 						editable: false,
 						sortable : false
@@ -780,10 +785,10 @@ define(function(require) {
 							fromRaw: function (rawValue, model) {
 								var html='';
 								var repoType = model.get('repoType');
-								_.each(_.toArray(XAEnums.AssetType),function(m){
-									if(parseInt(repoType) == m.value){
+								that.serviceDefList.each(function(m){
+									if(parseInt(repoType) == m.id){
 										html =  '<div title="'+rawValue+'">'+rawValue+'</div>\
-										<div title="'+rawValue+'" style="border-top: 1px solid #ddd;">'+m.label+'</div>';
+										<div title="'+rawValue+'" style="border-top: 1px solid #ddd;">'+m.get('name')+'</div>';
 										return ;
 									}	
 								});
