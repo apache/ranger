@@ -23,14 +23,10 @@ import java.security.Principal;
 import java.util.Map;
 
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.ranger.audit.model.EnumRepositoryType;
-import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
-import org.apache.ranger.authorization.storm.RangerStormAccessVerifier;
-import org.apache.ranger.authorization.storm.RangerStormAccessVerifierFactory;
+import org.apache.ranger.authorization.storm.StormRangerPlugin;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,17 +38,8 @@ public class RangerStormAuthorizer implements IAuthorizer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerStormAuthorizer.class);
 	
-	private static final String RangerModuleName =  RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME) ;
+	static final StormRangerPlugin plugin = new StormRangerPlugin();
 	
-	private static final String repositoryName     = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
-	
-	private RangerStormAccessVerifier rangerVerifier = RangerStormAccessVerifierFactory.getInstance() ;
-
-	static {
-		RangerConfiguration.getInstance().initAudit("storm");
-	}
-
-
 	/**
      * permit() method is invoked for each incoming Thrift request.
      * @param context request context includes info about 
@@ -65,6 +52,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 	public boolean permit(ReqContext aRequestContext, String aOperationName, Map aTopologyConfigMap) {
 		
 		boolean accessAllowed = false ;
+		boolean isAuditEnabled = false;
 		
 		String topologyName = null ;
 		
@@ -109,64 +97,18 @@ public class RangerStormAuthorizer implements IAuthorizer {
 				
 				
 			if (userName != null) {
-				accessAllowed = rangerVerifier.isAccessAllowed(userName, groups, aOperationName, topologyName) ;
+				String clientIp =  (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress() ) ;
+				RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName); 
+				RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
+				accessAllowed = result.getIsAllowed();
+				isAuditEnabled = result.getIsAudited();
+				
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("User found from principal [" + userName + "], groups [" + StringUtil.toString(groups) + "]: verifying using [" + rangerVerifier.getClass().getName() + "], allowedFlag => [" + accessAllowed + "]");
+					LOG.debug("User found from principal [" + userName + "], groups [" + StringUtil.toString(groups) + "]: verifying using [" + plugin.getClass().getName() + "], allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
 				}
 			}
 			else {
-				LOG.info("NULL User found from principal [" + user + "]: Skipping authorization;  allowedFlag => [" + accessAllowed + "]");
-			}
-				
-			boolean isAuditEnabled = rangerVerifier.isAudited(topologyName) ;
-			
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("User found from principal [" + userName + "] and verifying using [" + rangerVerifier + "], Audit Enabled:" + isAuditEnabled);
-			}
-			
-			if (isAuditEnabled) {
-				
-				AuthzAuditEvent auditEvent = new AuthzAuditEvent() ;
-	
-				String sessionId = null ;
-				String clientIp = null ;
-				
-				if (aRequestContext != null) {
-					sessionId = String.valueOf(aRequestContext.requestID()) ;
-					clientIp =  (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress() ) ;
-				}
-				
-				try {
-					auditEvent.setAclEnforcer(RangerModuleName);
-					auditEvent.setSessionId(sessionId);
-					auditEvent.setResourceType("@ TOPOLOGY"); 
-					auditEvent.setAccessType(aOperationName) ;
-					auditEvent.setAction(aOperationName);
-					auditEvent.setUser(userName);
-					auditEvent.setAccessResult((short)(accessAllowed ? 1 : 0));
-					auditEvent.setClientIP(clientIp);
-					auditEvent.setClientType("Strom REST");
-					auditEvent.setEventTime(StringUtil.getUTCDate());
-					auditEvent.setRepositoryType(EnumRepositoryType.STORM);
-					auditEvent.setRepositoryName(repositoryName) ;
-					auditEvent.setRequestData("");
-	
-					auditEvent.setResourcePath(topologyName);
-				
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("logAuditEvent [" + auditEvent + "] - START");
-					}
-	
-					AuditProviderFactory.getAuditProvider().log(auditEvent);
-	
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("logAuditEvent [" + auditEvent + "] - END");
-					}
-				}
-				catch(Throwable t) {
-					LOG.error("ERROR logEvent [" + auditEvent + "]", t);
-				}
-					
+				LOG.info("NULL User found from principal [" + user + "]: Skipping authorization;  allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
 			}
 		}
 		catch(Throwable t) {
@@ -178,7 +120,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 		                + " from: [" + aRequestContext.remoteAddress() + "]"
 		                + " user: [" + aRequestContext.principal() + "],"  
 		                + " op:   [" + aOperationName + "],"
-		                + "topology: [" + topologyName + "] => returns [" + accessAllowed + "]") ;
+		                + "topology: [" + topologyName + "] => returns [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled) ;
 			}
 		}
 		
@@ -192,6 +134,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 
 	@Override
 	public void prepare(Map aStormConfigMap) {
+		plugin.init();
 	}
 	
 }

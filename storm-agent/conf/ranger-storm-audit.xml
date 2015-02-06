@@ -22,12 +22,6 @@
 		<value>true</value>
 	</property>	
 
-	<property>
-		<name>xasecure.audit.repository.name</name>
-		<value>stormdev</value>
-	</property>	
-	
-
 	<!-- DB audit provider configuration -->
 	<property>
 		<name>xasecure.audit.db.is.enabled</name>

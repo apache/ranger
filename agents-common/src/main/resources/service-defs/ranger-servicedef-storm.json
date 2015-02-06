@@ -24,21 +24,20 @@
   ],
   "accessTypes":
   [
-    {"name":"topology-submit",      "label":"Submit Topology"},
-    {"name":"file-upload",          "label":"File Upload"},
-    {"name":"nimbus-conf-get",      "label":"Get Nimbus Conf"},
-    {"name":"cluster-conf-get",     "label":"Get Cluster Conf"},
-    {"name":"cluster-info-get",     "label":"Get Cluster Info"},
-    {"name":"file-download",        "label":"File Download"},
-    {"name":"topology-kill",        "label":"Kill Topology"},
+    {"name":"submitTopology",      "label":"Submit Topology"},
+    {"name":"fileUpload",          "label":"File Upload"},
+    {"name":"getNimbusConf",      "label":"Get Nimbus Conf"},
+    {"name":"getClusterInfo",     "label":"Get Cluster Info"},
+    {"name":"fileDownload",        "label":"File Download"},
+    {"name":"killTopology",        "label":"Kill Topology"},
     {"name":"rebalance",            "label":"Rebalance"},
     {"name":"activate",             "label":"Activate"},
     {"name":"deactivate",           "label":"Deactivate"},
-    {"name":"topology-conf-get",    "label":"Get Topology Conf"},
-    {"name":"topology-get",         "label":"Get Topology"},
-    {"name":"topology-user-get",    "label":"Get User Topology"},
-    {"name":"topology-info-get",    "label":"Get Topology Info"},
-    {"name":"new-credential-upload","label":"Upload New Credential"}
+    {"name":"getTopologyConf",    "label":"Get Topology Conf"},
+    {"name":"getTopology",         "label":"Get Topology"},
+    {"name":"getUserTopology",    "label":"Get User Topology"},
+    {"name":"getTopologyInfo",    "label":"Get Topology Info"},
+    {"name":"uploadNewCredentials","label":"Upload New Credential"}
   ],
   "policyConditions":
   [

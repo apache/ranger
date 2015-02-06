@@ -45,6 +45,9 @@
 					<include>com.sun.jersey:jersey-bundle</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>com.google.guava:guava:jar:${guava.version}</include>
+                    <include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
+                    <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
+                    <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
                 </includes>
             </dependencySet>
             <dependencySet>
