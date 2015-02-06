@@ -54,11 +54,11 @@ public class ColumnIterator implements Iterator<String> {
 	public boolean hasNext() {
 		if (_setIterator != null) {
 			return _setIterator.hasNext();
+		} else if (_listIterator != null) {
+			return _listIterator.hasNext();
+		} else {
+			return false;
 		}
-		if (_listIterator != null) {
-			_listIterator.hasNext();
-		}
-		return false;
 	}
 
 	/**

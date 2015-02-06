@@ -899,7 +899,8 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			}
 		}
 		// create and initialize the plugin class
-		new RangerBasePlugin("hbase", appType) {}.init(_authorizer);
+		new RangerBasePlugin("hbase", appType) {}
+			.init(_authorizer);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Start of Coprocessor: [" + coprocessorType + "] with superUserList [" + superUserList + "]");
 		}
