@@ -262,6 +262,27 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			}
 		}
 	}
+
+	/**
+	 * Check if user has privileges to do this action on these objects
+	 * @param hiveOpType
+	 * @param inputsHObjs
+	 * @param outputHObjs
+	 * @param context
+	 * @throws HiveAuthzPluginException
+	 * @throws HiveAccessControlException
+	 */
+	@Override
+	public List<HivePrivilegeObject> filterListCmdObjects(List<HivePrivilegeObject> objs,
+														  HiveAuthzContext          context)
+		      throws HiveAuthzPluginException, HiveAccessControlException {
+		List<HivePrivilegeObject> ret = null;
+
+		// TODO: only the objects the user has access-to should be added to 'ret'
+		ret = objs;
+
+		return ret;
+	}
 	
 	private List<RangerHiveObjectAccessInfo> getObjectAccessInfo(HiveOperationType       hiveOpType,
 														   List<HivePrivilegeObject> inputsHObjs,
