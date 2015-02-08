@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -134,6 +135,33 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	@Override
 	public String getOptionsString() {
 		return optionsString;
+	}
+
+	@Override
+	public boolean isSingleAndExactMatch(String resource) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractResourceMatcher.isSingleAndExactMatch(" + resource + ")");
+		}
+
+		boolean ret = false;
+
+		if(CollectionUtils.isEmpty(policyValues)) {
+			ret = StringUtils.isEmpty(resource);
+		} else if(policyValues.size() == 1) {
+			String policyValue = policyValues.get(0);
+			
+			if(isMatchAny) {
+				ret = StringUtils.equals(resource, "*");
+			} else {
+				ret = optIgnoreCase ? StringUtils.equalsIgnoreCase(resource, policyValue) : StringUtils.equals(resource, policyValue);
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractResourceMatcher.isSingleAndExactMatch(" + resource + "): " + ret);
+		}
+
+		return ret;
 	}
 
 

@@ -992,7 +992,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	
 				RangerAdminRESTClient xaAdmin = new RangerAdminRESTClient();
 	
-			    xaAdmin.grantPrivilege(grData);
+			    // TODO: xaAdmin.grantPrivilege(grData);
 	
 			    isSuccess = true;
 			} catch(IOException excp) {
@@ -1034,7 +1034,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	
 				RangerAdminRESTClient xaAdmin = new RangerAdminRESTClient();
 	
-			    xaAdmin.revokePrivilege(grData);
+			    // TODO: xaAdmin.revokePrivilege(grData);
 	
 			    isSuccess = true;
 			} catch(IOException excp) {

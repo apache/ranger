@@ -63,8 +63,10 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		
 		if(accessType == HiveAccessType.USE) {
 			this.setAccessType(RangerPolicyEngine.ANY_ACCESS);
+		} else if(accessType == HiveAccessType.ADMIN) {
+			this.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
 		} else {
-			this.setAccessType(accessType.toString().toLowerCase());
+			this.setAccessType(accessType.name().toLowerCase());
 		}
 	}
 

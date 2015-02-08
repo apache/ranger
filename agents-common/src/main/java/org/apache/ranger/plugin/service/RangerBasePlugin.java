@@ -22,23 +22,28 @@ package org.apache.ranger.plugin.service;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
-import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.store.ServiceStoreFactory;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 
 
 public class RangerBasePlugin {
+	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
+
 	private String             serviceType  = null;
 	private String             auditAppType = null;
 	private String             serviceName  = null;
-	private RangerPolicyEngine policyEngine = null;
 	private PolicyRefresher    refresher    = null;
+	private RangerPolicyEngine policyEngine = null;
 
 
 	public RangerBasePlugin(String serviceType, String auditAppType) {
@@ -58,6 +63,10 @@ public class RangerBasePlugin {
 		return serviceName;
 	}
 
+	public PolicyRefresher getPolicyRefresher() {
+		return refresher;
+	}
+
 	public RangerPolicyEngine getPolicyEngine() {
 		return policyEngine;
 	}
@@ -74,10 +83,7 @@ public class RangerBasePlugin {
 		RangerConfiguration.getInstance().addResourcesForServiceType(serviceType);
 		RangerConfiguration.getInstance().initAudit(auditAppType);
 
-		String serviceName       = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
-		String serviceStoreClass = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.store.class", "org.apache.ranger.plugin.store.rest.ServiceRESTStore");
-		String cacheDir          = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.store.cache.dir", "/tmp");
-		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong("ranger.plugin." + serviceType + ".service.store.pollIntervalMs", 30 * 1000);
+		serviceName = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
 
 		if(StringUtils.isEmpty(serviceName)) {
 			// get the serviceName from download URL: http://ranger-admin-host:port/service/assets/policyList/serviceName
@@ -92,9 +98,12 @@ public class RangerBasePlugin {
 			}
 		}
 
-		ServiceStore serviceStore = ServiceStoreFactory.instance().getServiceStore(serviceStoreClass);
+		String cacheDir          = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.store.cache.dir", "/tmp");
+		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong("ranger.plugin." + serviceType + ".service.store.pollIntervalMs", 30 * 1000);
 
-		refresher = new PolicyRefresher(policyEngine, serviceType, serviceName, serviceStore, pollingIntervalMs, cacheDir);
+		RangerAdminClient admin = new RangerAdminRESTClient();
+
+		refresher = new PolicyRefresher(policyEngine, serviceType, serviceName, admin, pollingIntervalMs, cacheDir);
 		refresher.startRefresher();
 		this.policyEngine = policyEngine;
 	}
@@ -124,17 +133,6 @@ public class RangerBasePlugin {
 
 		if(policyEngine != null) {
 			return policyEngine.getDefaultAuditHandler();
-		}
-
-		return null;
-	}
-
-
-	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
-		if(policyEngine != null) {
-			return policyEngine.createAccessResult(request);
 		}
 
 		return null;
@@ -182,5 +180,45 @@ public class RangerBasePlugin {
 		}
 
 		return null;
+	}
+
+	public boolean grantAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) {
+		boolean ret = false;
+
+		PolicyRefresher refresher = this.refresher;
+
+		if(refresher != null) {
+			RangerAdminClient admin = refresher.getRangerAdminClient();
+			
+			if(admin != null) {
+				try {
+					admin.grantAccess(serviceName, request);
+				} catch(Exception excp) {
+					LOG.error("grantAccess() failed", excp);
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public boolean revokeAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) {
+		boolean ret = false;
+
+		PolicyRefresher refresher = this.refresher;
+
+		if(refresher != null) {
+			RangerAdminClient admin = refresher.getRangerAdminClient();
+			
+			if(admin != null) {
+				try {
+					admin.revokeAccess(serviceName, request);
+				} catch(Exception excp) {
+					LOG.error("revokeAccess() failed", excp);
+				}
+			}
+		}
+
+		return ret;
 	}
 }

@@ -66,12 +66,14 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				String               resourceName   = resourceDef.getName();
 				RangerPolicyResource policyResource = policy.getResources().get(resourceName);
 
-				RangerResourceMatcher matcher = createResourceMatcher(resourceDef, policyResource);
+				if(policyResource != null) {
+					RangerResourceMatcher matcher = createResourceMatcher(resourceDef, policyResource);
 
-				if(matcher != null) {
-					matchers.put(resourceName, matcher);
-				} else {
-					LOG.error("failed to find matcher for resource " + resourceName);
+					if(matcher != null) {
+						matchers.put(resourceName, matcher);
+					} else {
+						LOG.error("failed to find matcher for resource " + resourceName);
+					}
 				}
 			}
 		}
@@ -90,7 +92,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		RangerPolicy policy = getPolicy();
 
 		if(policy != null && request != null && result != null) {
-			boolean isResourceMatch     = matchResource(request.getResource());
+			boolean isResourceMatch     = isMatch(request.getResource());
 			boolean isResourceHeadMatch = isResourceMatch || matchResourceHead(request.getResource());
 			String  accessType          = request.getAccessType();
 
@@ -98,7 +100,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				accessType = RangerPolicyEngine.ANY_ACCESS;
 			}
 
-			boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
+			boolean isAnyAccess   = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
+			boolean isAdminAccess = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
 
 			if(isResourceMatch || (isResourceHeadMatch && isAnyAccess)) {
 				if(policy.getIsAuditEnabled()) {
@@ -106,8 +109,14 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				}
 
 				for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-					if(result.getIsAllowed()) {
-						break;
+					if(isAdminAccess) {
+						if(policyItem.getDelegateAdmin()) {
+							result.setIsAllowed(true);
+							result.setPolicyId(policy.getId());
+							break;
+						}
+
+						continue;
 					}
 
 					if(CollectionUtils.isEmpty(policyItem.getAccesses())) {
@@ -121,11 +130,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					}
 
 					boolean isCustomConditionsMatch = matchCustomConditions(policyItem, request);
-	
+
 					if(! isCustomConditionsMatch) {
 						continue;
 					}
-	
+
 					if(isAnyAccess) {
 						for(RangerPolicyItemAccess access : policyItem.getAccesses()) {
 							if(access.getIsAllowed()) {
@@ -142,6 +151,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 							result.setPolicyId(policy.getId());
 						}
 					}
+
+					if(result.getIsAllowed()) {
+						break;
+					}
 				}
 			}
 		}
@@ -151,9 +164,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
-	protected boolean matchResource(RangerResource resource) {
+	@Override
+	public boolean isMatch(RangerResource resource) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.matchResource(" + resource + ")");
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isMatch(" + resource + ")");
 		}
 
 		boolean ret = false;
@@ -163,8 +177,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(serviceDef != null && serviceDef.getResources() != null) {
 			Collection<String> resourceKeys = resource == null ? null : resource.getKeys();
 			Collection<String> policyKeys   = matchers == null ? null : matchers.keySet();
-			
-			boolean keysMatch = (resourceKeys == null) || (policyKeys != null && policyKeys.containsAll(resourceKeys));
+
+			boolean keysMatch = CollectionUtils.isEmpty(resourceKeys) || (policyKeys != null && policyKeys.containsAll(resourceKeys));
 
 			if(keysMatch) {
 				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
@@ -172,7 +186,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					String                resourceValue = resource == null ? null : resource.getValue(resourceName);
 					RangerResourceMatcher matcher       = matchers == null ? null : matchers.get(resourceName);
 
-					// when no value exists for a resourceName, consider it a match only if (policy doesn't have a matcher OR matcher allows no-value resource)
+					// when no value exists for a resourceName, consider it a match only if: policy doesn't have a matcher OR matcher allows no-value resource
 					if(StringUtils.isEmpty(resourceValue)) {
 						ret = matcher == null || matcher.isMatch(resourceValue);
 					} else {
@@ -183,11 +197,60 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						break;
 					}
 				}
+			} else {
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("isMatch(): keysMatch=false. isMatch=" + resourceKeys + "; policyKeys=" + policyKeys);
+				}
 			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.matchResource(" + resource + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isMatch(" + resource + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	public boolean isSingleAndExactMatch(RangerResource resource) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isSingleAndExactMatch(" + resource + ")");
+		}
+
+		boolean ret = false;
+
+		RangerServiceDef serviceDef = getServiceDef();
+
+		if(serviceDef != null && serviceDef.getResources() != null) {
+			Collection<String> resourceKeys = resource == null ? null : resource.getKeys();
+			Collection<String> policyKeys   = matchers == null ? null : matchers.keySet();
+
+			boolean keysMatch = CollectionUtils.isEqualCollection(resourceKeys, policyKeys);
+
+			if(keysMatch) {
+				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+					String                resourceName  = resourceDef.getName();
+					String                resourceValue = resource == null ? null : resource.getValue(resourceName);
+					RangerResourceMatcher matcher       = matchers == null ? null : matchers.get(resourceName);
+
+					if(StringUtils.isEmpty(resourceValue)) {
+						ret = matcher == null || matcher.isSingleAndExactMatch(resourceValue);
+					} else {
+						ret = matcher != null && matcher.isSingleAndExactMatch(resourceValue);
+					}
+
+					if(! ret) {
+						break;
+					}
+				}
+			} else {
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("isSingleAndExactMatch(): keysMatch=false. resourceKeys=" + resourceKeys + "; policyKeys=" + policyKeys);
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isSingleAndExactMatch(" + resource + "): " + ret);
 		}
 
 		return ret;
@@ -227,7 +290,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					} else {
 						isMatch = matcher != null && matcher.isMatch(resourceValue);
 					}
-					
+
 					if(isMatch) {
 						numMatched++;
 					} else {
@@ -235,7 +298,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					}
 				}
 			}
-			
+
 			ret = (numMatched > 0) && serviceDef.getResources().size() == (numMatched + numUnmatched);
 		}
 
@@ -257,7 +320,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			if(!ret && user != null && policyItem.getUsers() != null) {
 				ret = policyItem.getUsers().contains(user);
 			}
-	
+
 			if(!ret && groups != null && policyItem.getGroups() != null) {
 				ret = policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC) ||
 						!Collections.disjoint(policyItem.getGroups(), groups);
@@ -337,7 +400,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(ret == null) {
 			ret = new RangerDefaultResourceMatcher();
 		}
-		
+
 		if(ret != null) {
 			ret.init(resourceDef, resource,  options);
 		}
@@ -351,7 +414,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerDefaultPolicyEvaluator={");
-		
+
 		super.toString(sb);
 
 		sb.append("matchers={");

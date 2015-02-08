@@ -32,4 +32,6 @@ public interface RangerResourceMatcher {
 	String getOptionsString();
 
 	boolean isMatch(String resource);
+
+	boolean isSingleAndExactMatch(String resource);
 }

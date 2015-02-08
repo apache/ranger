@@ -30,6 +30,16 @@ public class RangerResourceImpl implements RangerMutableResource {
 
 
 	public RangerResourceImpl() {
+		this(null, null);
+	}
+
+	public RangerResourceImpl(Map<String, String> elements) {
+		this(elements, null);
+	}
+
+	public RangerResourceImpl(Map<String, String> elements, String ownerUser) {
+		this.elements  = elements;
+		this.ownerUser = ownerUser;
 	}
 
 	@Override
@@ -71,13 +81,18 @@ public class RangerResourceImpl implements RangerMutableResource {
 
 	@Override
 	public void setValue(String name, String value) {
-		if(elements == null) {
-			elements = new HashMap<String, String>();
-		}
-
 		if(value == null) {
-			elements.remove(name);
+			if(elements != null) {
+				elements.remove(name);
+
+				if(elements.isEmpty()) {
+					elements = null;
+				}
+			}
 		} else {
+			if(elements == null) {
+				elements = new HashMap<String, String>();
+			}
 			elements.put(name, value);
 		}
 	}

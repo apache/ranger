@@ -20,7 +20,9 @@
 package org.apache.ranger.plugin.store.rest;
 
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -599,8 +601,13 @@ public class ServiceRESTStore implements ServiceStore {
 	private WebResource createWebResource(String url, SearchFilter filter) {
 		WebResource ret = restClient.getResource(url);
 
-		if(filter != null) {
-			// TODO: add query params for filter
+		if(filter != null && !MapUtils.isEmpty(filter.getParams())) {
+			for(Map.Entry<String, String> e : filter.getParams().entrySet()) {
+				String name  = e.getKey();
+				String value = e.getValue();
+
+				ret.queryParam(name, value);
+			}
 		}
 
 		return ret;

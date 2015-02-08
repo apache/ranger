@@ -19,10 +19,12 @@
 
 package org.apache.ranger.plugin.policyevaluator;
 
+
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerResource;
 
 public interface RangerPolicyEvaluator {
 	void init(RangerPolicy policy, RangerServiceDef serviceDef);
@@ -32,4 +34,8 @@ public interface RangerPolicyEvaluator {
 	RangerServiceDef getServiceDef();
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
+
+	boolean isMatch(RangerResource resource);
+
+	boolean isSingleAndExactMatch(RangerResource resource);
 }

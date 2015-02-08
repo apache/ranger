@@ -258,6 +258,12 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this((List<String>)null, null, null);
 		}
 
+		public RangerPolicyResource(String value) {
+			setValue(value);
+			setIsExcludes(null);
+			setIsRecursive(null);
+		}
+
 		public RangerPolicyResource(String value, Boolean isExcludes, Boolean isRecursive) {
 			setValue(value);
 			setIsExcludes(isExcludes);

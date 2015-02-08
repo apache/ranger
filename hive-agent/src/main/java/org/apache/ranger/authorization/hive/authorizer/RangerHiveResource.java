@@ -29,15 +29,15 @@ import com.google.common.collect.Sets;
 
 
 public class RangerHiveResource implements RangerResource {
-	private static final String KEY_DATABASE = "database";
-	private static final String KEY_TABLE    = "table";
-	private static final String KEY_UDF      = "udf";
-	private static final String KEY_COLUMN   = "column";
+	public static final String KEY_DATABASE = "database";
+	public static final String KEY_TABLE    = "table";
+	public static final String KEY_UDF      = "udf";
+	public static final String KEY_COLUMN   = "column";
 
-	private static final Set<String> KEYS_DATABASE = Sets.newHashSet(KEY_DATABASE);
-	private static final Set<String> KEYS_TABLE    = Sets.newHashSet(KEY_DATABASE, KEY_TABLE);
-	private static final Set<String> KEYS_UDF      = Sets.newHashSet(KEY_DATABASE, KEY_UDF);
-	private static final Set<String> KEYS_COLUMN   = Sets.newHashSet(KEY_DATABASE, KEY_TABLE, KEY_COLUMN);
+	public static final Set<String> KEYS_DATABASE = Sets.newHashSet(KEY_DATABASE);
+	public static final Set<String> KEYS_TABLE    = Sets.newHashSet(KEY_DATABASE, KEY_TABLE);
+	public static final Set<String> KEYS_UDF      = Sets.newHashSet(KEY_DATABASE, KEY_UDF);
+	public static final Set<String> KEYS_COLUMN   = Sets.newHashSet(KEY_DATABASE, KEY_TABLE, KEY_COLUMN);
 
 	private HiveObjectType objectType = null;
 	private String         database   = null;

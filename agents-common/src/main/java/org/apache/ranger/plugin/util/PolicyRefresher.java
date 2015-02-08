@@ -28,8 +28,8 @@ import java.io.Writer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.store.ServiceStore;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -41,7 +41,7 @@ public class PolicyRefresher extends Thread {
 	private RangerPolicyEngine policyEngine      = null;
 	private String             serviceType       = null;
 	private String             serviceName       = null;
-	private ServiceStore       serviceStore      = null;
+	private RangerAdminClient  rangerAdmin       = null;
 	private long               pollingIntervalMs = 30 * 1000;
 	private String             cacheFile         = null;
 
@@ -51,7 +51,7 @@ public class PolicyRefresher extends Thread {
 
 
 
-	public PolicyRefresher(RangerPolicyEngine policyEngine, String serviceType, String serviceName, ServiceStore serviceStore, long pollingIntervalMs, String cacheDir) {
+	public PolicyRefresher(RangerPolicyEngine policyEngine, String serviceType, String serviceName, RangerAdminClient rangerAdmin, long pollingIntervalMs, String cacheDir) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").PolicyRefresher()");
 		}
@@ -59,7 +59,7 @@ public class PolicyRefresher extends Thread {
 		this.policyEngine      = policyEngine;
 		this.serviceType       = serviceType;
 		this.serviceName       = serviceName;
-		this.serviceStore      = serviceStore;
+		this.rangerAdmin       = rangerAdmin;
 		this.pollingIntervalMs = pollingIntervalMs;
 		this.cacheFile         = cacheDir == null ? null : (cacheDir + File.separator + String.format("%s_%s.json", serviceType, serviceName));
 
@@ -96,10 +96,10 @@ public class PolicyRefresher extends Thread {
 	}
 
 	/**
-	 * @return the serviceStore
+	 * @return the rangerAdmin
 	 */
-	public ServiceStore getServiceStore() {
-		return serviceStore;
+	public RangerAdminClient getRangerAdminClient() {
+		return rangerAdmin;
 	}
 
 	/**
@@ -136,7 +136,7 @@ public class PolicyRefresher extends Thread {
 
 		while(! shutdownFlag) {
 			try {
-				ServicePolicies svcPolicies = serviceStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+				ServicePolicies svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
 
 				boolean isUpdated = svcPolicies != null;
 

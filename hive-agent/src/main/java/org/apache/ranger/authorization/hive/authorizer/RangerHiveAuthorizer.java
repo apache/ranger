@@ -21,9 +21,12 @@
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,14 +49,13 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObje
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivObjectActionType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.ranger.admin.client.RangerAdminRESTClient;
-import org.apache.ranger.admin.client.datatype.GrantRevokeData;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
 
 import com.google.common.collect.Sets;
 
@@ -61,8 +63,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class) ; 
 
 	private static final char COLUMN_SEP = ',';
-
-	private static final boolean UpdateXaPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 
 	private static RangerHivePlugin hivePlugin = null ;
 
@@ -119,38 +119,27 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								HivePrincipal       grantorPrincipal,
 								boolean             grantOption)
 										throws HiveAuthzPluginException, HiveAccessControlException {
-		if(! UpdateXaPoliciesOnGrantRevoke) {
+		if(! RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke) {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
 
-		/* TODO:
-		 * 
-		boolean                isSuccess     = false;
-		RangerHiveObjectAccessInfo objAccessInfo = getHiveAccessRequests(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject, new RangerHiveAccessContext(null, getHiveAuthzSessionContext()), true);
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
 		try {
-			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, getGrantorUsername(grantorPrincipal), grantOption);
+			RangerHiveResource resource = getHiveResource(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject);
+			GrantRevokeRequest request  = createGrantRevokeData(resource, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
 
+			LOG.info("grantPrivileges(): " + request);
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("grantPrivileges(): " + grData.toJson());
+				LOG.debug("grantPrivileges(): " + request);
 			}
 
-			RangerAdminRESTClient xaAdmin = new RangerAdminRESTClient();
-
-		    xaAdmin.grantPrivilege(grData);
-
-		    isSuccess = true;
+			hivePlugin.grantAccess(request, auditHandler);
 		} catch(Exception excp) {
 			throw new HiveAccessControlException(excp);
 		} finally {
-			if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
-				UserGroupInformation ugi = this.getCurrentUserGroupInfo();
-
-				// Note: failed return from REST call will be logged as 'DENIED'
-				logAuditEvent(ugi, objAccessInfo, isSuccess);
-			}
+			auditHandler.flushAudit();
 		}
-		*/
 	}
 
 	/**
@@ -170,38 +159,27 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								 HivePrincipal       grantorPrincipal,
 								 boolean             grantOption)
 										 throws HiveAuthzPluginException, HiveAccessControlException {
-		if(! UpdateXaPoliciesOnGrantRevoke) {
+		if(! RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke) {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
 
-		/* TODO:
-		 * 
-		boolean                isSuccess     = false;
-		RangerHiveObjectAccessInfo objAccessInfo = getHiveAccessRequests(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject, new RangerHiveAccessContext(null, getHiveAuthzSessionContext()), true);
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
 		try {
-			GrantRevokeData grData = createGrantRevokeData(objAccessInfo, hivePrincipals, hivePrivileges, getGrantorUsername(grantorPrincipal), grantOption);
+			RangerHiveResource resource = getHiveResource(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject);
+			GrantRevokeRequest request  = createGrantRevokeData(resource, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
 
+			LOG.info("revokePrivileges(): " + request);
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("revokePrivileges(): " + grData.toJson());
+				LOG.debug("revokePrivileges(): " + request);
 			}
 
-			RangerAdminRESTClient xaAdmin = new RangerAdminRESTClient();
-
-		    xaAdmin.revokePrivilege(grData);
-
-		    isSuccess = true;
+			hivePlugin.revokeAccess(request, auditHandler);
 		} catch(Exception excp) {
 			throw new HiveAccessControlException(excp);
 		} finally {
-			if(mHiveAccessVerifier.isAudited(objAccessInfo)) {
-				UserGroupInformation ugi = this.getCurrentUserGroupInfo();
-
-				// Note: failed return from REST call will be logged as 'DENIED'
-				logAuditEvent(ugi, objAccessInfo, isSuccess);
-			}
+			auditHandler.flushAudit();
 		}
-		*/
 	}
 
 	/**
@@ -261,8 +239,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 					HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, true);
 
-					// ADMIN: access check is performed at the Ranger policy server, as a part of updating the permissions
-					if(accessType == HiveAccessType.ADMIN || accessType == HiveAccessType.NONE) {
+					if(accessType == HiveAccessType.NONE) {
 						continue;
 					}
 
@@ -291,8 +268,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 					HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, false);
 
-					// ADMIN: access check is performed at the Ranger policy server, as a part of updating the permissions
-					if(accessType == HiveAccessType.ADMIN || accessType == HiveAccessType.NONE) {
+					if(accessType == HiveAccessType.NONE) {
 						continue;
 					}
 
@@ -680,7 +656,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	/*
 	private String getGrantorUsername(HivePrincipal grantorPrincipal) {
 		String grantor = grantorPrincipal != null ? grantorPrincipal.getName() : null;
 
@@ -693,77 +668,75 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return grantor;
 	}
 
-	private GrantRevokeData createGrantRevokeData(RangerHiveObjectAccessInfo objAccessInfo,
-												  List<HivePrincipal>    hivePrincipals,
-												  List<HivePrivilege>    hivePrivileges,
-												  String                 grantor,
-												  boolean                grantOption)
+	private GrantRevokeRequest createGrantRevokeData(RangerHiveResource  resource,
+													 List<HivePrincipal> hivePrincipals,
+													 List<HivePrivilege> hivePrivileges,
+													 HivePrincipal       grantorPrincipal,
+													 boolean             grantOption)
 														  throws HiveAccessControlException {
-		if(objAccessInfo == null ||
-		  ! (   objAccessInfo.getObjectType() == HiveObjectType.DATABASE
-		     || objAccessInfo.getObjectType() == HiveObjectType.TABLE
-		     || objAccessInfo.getObjectType() == HiveObjectType.VIEW
-		     || objAccessInfo.getObjectType() == HiveObjectType.COLUMN
+		if(resource == null ||
+		  ! (   resource.getObjectType() == HiveObjectType.DATABASE
+		     || resource.getObjectType() == HiveObjectType.TABLE
+		     || resource.getObjectType() == HiveObjectType.VIEW
+		     || resource.getObjectType() == HiveObjectType.COLUMN
 		   )
 		  ) {
-			throw new HiveAccessControlException("grantPrivileges(): unexpected object type '" + objAccessInfo.getObjectType().name());
+			throw new HiveAccessControlException("grant/revoke: unexpected object type '" + (resource == null ? null : resource.getObjectType().name()));
 		}
 
-		String database = objAccessInfo.getDatabase();
-		String table    = objAccessInfo.getObjectType() == HiveObjectType.VIEW ? objAccessInfo.getView() : objAccessInfo.getTable();
-		String columns  = StringUtil.toString(objAccessInfo.getColumns());
+		GrantRevokeRequest ret = new GrantRevokeRequest();
 
-		GrantRevokeData.PermMap permMap = new GrantRevokeData.PermMap ();
+		ret.setGrantor(getGrantorUsername(grantorPrincipal));
+		ret.setDelegateAdmin(grantOption ? Boolean.TRUE : Boolean.FALSE);
+		ret.setEnableAudit(Boolean.TRUE);
+		ret.setReplaceExistingPermissions(Boolean.FALSE);
 
-		for(HivePrivilege privilege : hivePrivileges) {
-			String privName = privilege.getName();
+		String database = StringUtils.isEmpty(resource.getDatabase()) ? "*" : resource.getDatabase();
+		String table    = StringUtils.isEmpty(resource.getTableOrUdf()) ? "*" : resource.getTableOrUdf();
+		String column   = StringUtils.isEmpty(resource.getColumn()) ? "*" : resource.getColumn();
 
-			if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.ALL.name())) {
-				permMap.addPerm(HiveAccessType.ALL.name());
-			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.ALTER.name())) {
-				permMap.addPerm(HiveAccessType.ALTER.name());
-			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.CREATE.name())) {
-				permMap.addPerm(HiveAccessType.CREATE.name());
-			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.DROP.name())) {
-				permMap.addPerm(HiveAccessType.DROP.name());
-			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.INDEX.name())) {
-				permMap.addPerm(HiveAccessType.INDEX.name());
-			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.LOCK.name())) {
-				permMap.addPerm(HiveAccessType.LOCK.name());
-			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.SELECT.name())) {
-				permMap.addPerm(HiveAccessType.SELECT.name());
-			} else if(StringUtil.equalsIgnoreCase(privName, HiveAccessType.UPDATE.name())) {
-				permMap.addPerm(HiveAccessType.UPDATE.name());
-			}
-		}
+		Map<String, String> mapResource = new HashMap<String, String>();
+		mapResource.put(RangerHiveResource.KEY_DATABASE, database);
+		mapResource.put(RangerHiveResource.KEY_TABLE, table);
+		mapResource.put(RangerHiveResource.KEY_COLUMN, column);
 
-		if(grantOption) {
-			permMap.addPerm(HiveAccessType.ADMIN.name());
-		}
+		ret.setResource(mapResource);
 
 		for(HivePrincipal principal : hivePrincipals) {
 			switch(principal.getType()) {
 				case USER:
-					permMap.addUser(principal.getName());
+					ret.getUsers().add(principal.getName());
 				break;
 
 				case GROUP:
 				case ROLE:
-					permMap.addGroup(principal.getName());
+					ret.getGroups().add(principal.getName());
 				break;
 
-				default:
+				case UNKNOWN:
 				break;
 			}
 		}
 
-		GrantRevokeData grData = new GrantRevokeData();
+		for(HivePrivilege privilege : hivePrivileges) {
+			String privName = privilege.getName();
+			
+			if(StringUtils.equalsIgnoreCase(privName, HiveAccessType.ALL.name()) ||
+			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.ALTER.name()) ||
+			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.CREATE.name()) ||
+			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.DROP.name()) ||
+			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.INDEX.name()) ||
+			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.LOCK.name()) ||
+			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.SELECT.name()) ||
+			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.UPDATE.name())) {
+				ret.getAccessTypes().add(privName.toLowerCase());
+			} else {
+				LOG.warn("grant/revoke: unexpected privilege type '" + privName + "'. Ignored");
+			}
+		}
 
-		grData.setHiveData(grantor, repositoryName, database, table, columns, permMap);
-
-		return grData;
+		return ret;
 	}
-	*/
 	
 	private String toString(HiveOperationType         hiveOpType,
 							List<HivePrivilegeObject> inputHObjs,
@@ -830,8 +803,17 @@ enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUN
 enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, ALL, ADMIN };
 
 class RangerHivePlugin extends RangerBasePlugin {
+	public static boolean UpdateXaPoliciesOnGrantRevoke = RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
+
 	public RangerHivePlugin(String appType) {
 		super("hive", appType);
+	}
+	
+	@Override
+	public void init() {
+		super.init();
+
+		RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 	}
 }
 
