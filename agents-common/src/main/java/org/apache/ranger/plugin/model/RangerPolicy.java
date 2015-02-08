@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -632,15 +633,15 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		private static final long serialVersionUID = 1L;
 
 		private String type  = null;
-		private String value = null;
+		private List<String> values = null;
 
 		public RangerPolicyItemCondition() {
 			this(null, null);
 		}
 
-		public RangerPolicyItemCondition(String type, String value) {
+		public RangerPolicyItemCondition(String type, List<String> values) {
 			setType(type);
-			setValue(value);
+			setValues(values);
 		}
 
 		/**
@@ -660,15 +661,20 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		/**
 		 * @return the value
 		 */
-		public String getValue() {
-			return value;
+		public List<String> getValues() {
+			return values;
 		}
 
 		/**
 		 * @param value the value to set
 		 */
-		public void setValue(String value) {
-			this.value = value;
+		public void setValues(List<String> values) {
+			if (CollectionUtils.isEmpty(values)) {
+				this.values = new ArrayList<String>();
+			}
+			else {
+				this.values = new ArrayList<String>(values);
+			}
 		}
 
 		@Override
@@ -683,7 +689,13 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerPolicyItemCondition={");
 			sb.append("type={").append(type).append("} ");
-			sb.append("value={").append(value).append("} ");
+			sb.append("values={");
+			if(values != null) {
+				for(String value : values) {
+					sb.append(value).append(" ");
+				}
+			}
+			sb.append("} ");
 			sb.append("}");
 
 			return sb;

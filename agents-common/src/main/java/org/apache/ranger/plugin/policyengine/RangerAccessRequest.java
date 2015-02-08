@@ -45,4 +45,6 @@ public interface RangerAccessRequest {
 	String getSessionId();
 	
 	Map<String, Object> getContext();
+	
+	Map<String, String> getConditions();
 }

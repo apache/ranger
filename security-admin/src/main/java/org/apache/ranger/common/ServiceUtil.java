@@ -20,11 +20,13 @@
 package org.apache.ranger.common;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXUser;
@@ -212,7 +214,7 @@ public class ServiceUtil {
 			policyItem.setAccesses(accessList);
 			
 			if(ipAddress != null && !ipAddress.isEmpty()) {
-				RangerPolicy.RangerPolicyItemCondition ipCondition = new RangerPolicy.RangerPolicyItemCondition("ipaddress", ipAddress);
+				RangerPolicy.RangerPolicyItemCondition ipCondition = new RangerPolicy.RangerPolicyItemCondition("ipaddress", Collections.singletonList(ipAddress));
 
 				policyItem.getConditions().add(ipCondition);
 			}
@@ -286,7 +288,11 @@ public class ServiceUtil {
 			
 			for(RangerPolicy.RangerPolicyItemCondition condition : policyItem.getConditions()) {
 				if(condition.getType() == "ipaddress") {
-					ipAddress = condition.getValue();
+					List<String> values = condition.getValues();
+					if (CollectionUtils.isNotEmpty(values)) {
+						// TODO changes this to properly deal with collection for now just returning 1st item
+						ipAddress = values.get(0);
+					}
 				}
 
 				if(ipAddress != null && !ipAddress.isEmpty()) {

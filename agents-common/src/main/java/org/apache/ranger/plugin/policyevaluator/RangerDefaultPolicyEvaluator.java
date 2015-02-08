@@ -23,18 +23,22 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -43,11 +47,14 @@ import org.apache.ranger.plugin.policyengine.RangerResource;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
+import com.google.common.base.Strings;
+
 
 public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyEvaluator.class);
 
 	private Map<String, RangerResourceMatcher> matchers = null;
+	private Map<String, RangerConditionEvaluator> conditionEvaluators = null;
 
 	@Override
 	public void init(RangerPolicy policy, RangerServiceDef serviceDef) {
@@ -77,10 +84,126 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				}
 			}
 		}
+		
+		conditionEvaluators = initializeConditionEvaluators(policy, serviceDef);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.init()");
 		}
+	}
+
+	/**
+	 * Non-private only for testability.
+	 * @param policy
+	 * @param serviceDef
+	 * @return a Map of condition name to a new evaluator object of the class configured in service definition for that condition name
+	 */
+	Map<String, RangerConditionEvaluator> initializeConditionEvaluators(RangerPolicy policy, RangerServiceDef serviceDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerDefaultPolicyEvaluator.initializeConditionEvaluators(%s, %s)", policy, serviceDef));
+		}
+
+		Map<String, RangerConditionEvaluator> result = new HashMap<String, RangerConditionEvaluator>();
+		if (policy == null) {
+			LOG.debug("initializeConditionEvaluators: Policy is null!");
+		} else if (CollectionUtils.isEmpty(policy.getPolicyItems())) {
+			LOG.debug("initializeConditionEvaluators: Policyitems collection null or empty!");
+		} else {
+			for (RangerPolicyItem item : policy.getPolicyItems()) {
+				if (CollectionUtils.isEmpty(item.getConditions())) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(String.format("initializeConditionEvaluators: null or empty condition collection on policy item[%s].  Ok, skipping", item));
+					}
+				} else {
+					for (RangerPolicyItemCondition condition : item.getConditions()) {
+						String conditionName = condition.getType();
+						// skip it if we have already processed this condition earlier
+						if (result.containsKey(conditionName)) {
+							continue;
+						}
+						String evaluatorClassName = getEvaluatorName(serviceDef, conditionName);
+						if (Strings.isNullOrEmpty(evaluatorClassName)) {
+							LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't get condition evaluator class name for condition[" + conditionName + "]!  Disabling all checks for this condition.");
+						} else {
+							RangerConditionEvaluator anEvaluator = newConditionEvauator(evaluatorClassName);
+							if (anEvaluator == null) {
+								LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't instantiate condition evaluator for class[" + evaluatorClassName + "].  All checks for condition[" + conditionName + "] disabled.");
+							} else {
+								anEvaluator.init(condition);
+								result.put(conditionName, anEvaluator);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerDefaultPolicyEvaluator.initializeConditionEvaluators(%s)", result.toString()));
+		}
+		return result;
+	}
+
+	// TODO this should be cached in the policyengine to avoid repeated processing for every policy 
+	String getEvaluatorName(RangerServiceDef serviceDef, String conditionName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerDefaultPolicyEvaluator.initializeConditionEvaluators(%s, %s)", serviceDef, conditionName));
+		}
+		
+		String evaluatorName = null;
+		if (Strings.isNullOrEmpty(conditionName)) {
+			LOG.debug("initializeConditionEvaluators: Condition name was null or empty!");
+		}
+		else if (serviceDef == null) {
+			LOG.debug("initializeConditionEvaluators: Servicedef was null!");
+		} else if (CollectionUtils.isEmpty(serviceDef.getPolicyConditions())) {
+			LOG.debug("initializeConditionEvaluators: Policy conditions collection of the service def is empty!  Ok, skipping.");
+		} else {
+			Iterator<RangerPolicyConditionDef> iterator = serviceDef.getPolicyConditions().iterator();
+			while (iterator.hasNext() && evaluatorName == null) {
+				RangerPolicyConditionDef conditionDef = iterator.next();
+				String name = conditionDef.getName();
+				if (conditionName.equals(name)) {
+					evaluatorName = conditionDef.getEvaluator();
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerDefaultPolicyEvaluator.initializeConditionEvaluators(%s -> %s)", conditionName, evaluatorName));
+		}
+		return evaluatorName;
+	}
+	
+	RangerConditionEvaluator newConditionEvauator(String className) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerDefaultPolicyEvaluator.newConditionEvauator(%s)", className));
+		}
+
+		RangerConditionEvaluator evaluator = null;
+		try {
+			@SuppressWarnings("unchecked")
+			Class<RangerConditionEvaluator> matcherClass = (Class<RangerConditionEvaluator>)Class.forName(className);
+
+			evaluator = matcherClass.newInstance();
+		} catch(ClassNotFoundException excp) {
+			LOG.error("Caught ClassNotFoundException: error instantiating object of class[" + className + "].  Returning null!");
+			excp.printStackTrace();
+		} catch (InstantiationException excp) {
+			LOG.error("Caught InstantiationException: error instantiating object of class[" + className + "].  Returning null!");
+			excp.printStackTrace();
+		} catch (IllegalAccessException excp) {
+			LOG.error("Caught IllegalAccessException: error instantiating object of class[" + className + "].  Returning null!");
+			excp.printStackTrace();
+		} catch (Throwable t) {
+			LOG.error("Caught Throwable: unexpected error instantiating object of class[" + className + "].  Returning null!");
+			t.printStackTrace();
+		}
+	
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerDefaultPolicyEvaluator.newConditionEvauator(%s)", evaluator == null ? null : evaluator.toString()));
+		}
+		return evaluator;
 	}
 
 	@Override
@@ -129,7 +252,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						continue;
 					}
 
-					boolean isCustomConditionsMatch = matchCustomConditions(policyItem, request);
+					boolean isCustomConditionsMatch = matchCustomConditions(request, conditionEvaluators);
 
 					if(! isCustomConditionsMatch) {
 						continue;
@@ -334,21 +457,44 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	protected boolean matchCustomConditions(RangerPolicyItem policyItem, RangerAccessRequest request) {
+	// takes map in as argument for testability
+	protected boolean matchCustomConditions(RangerAccessRequest request, Map<String, RangerConditionEvaluator> evaluatorMap) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.matchCustomConditions(" + policyItem + ", " + request + ")");
+			LOG.debug("==> RangerDefaultPolicyEvaluator.matchCustomConditions(" + request + ")");
 		}
 
-		boolean ret = false;
-
-		// TODO:
-		ret = true;
-
+		boolean matched = true;
+		
+		Map<String, String> input = request.getConditions();
+		if (input == null || input.size() == 0) {
+			// if input didn't even have certain inputs then it could never fail the check.
+			matched = true;  // assignment only to document in code the result
+		} else {
+			// we want to abort the minute we find a mismatch
+			Iterator<Map.Entry<String, String>> iterator = input.entrySet().iterator();
+			while (iterator.hasNext() && matched) {
+				Map.Entry<String, String> anEntry = iterator.next();
+				String conditionName = anEntry.getKey();
+				String value = anEntry.getValue();
+				RangerConditionEvaluator evaluator = evaluatorMap.get(conditionName); 
+				if (evaluator == null) {
+					// it is possible that due to mis-configuration no evaluator was found. 
+					LOG.warn("No evaluator found for condition[" + conditionName + "]! Check implicitly passed. Context: value[" + value + "]");
+				} else {
+					matched = evaluator.isMatched(value);
+					if (LOG.isDebugEnabled()) {
+						String format = "Condition evaluation verdict for condition[%s] with value[%s]: %s";
+						LOG.debug(String.format(format, conditionName, value, matched));
+					}
+				}
+			}
+		}
+		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.matchCustomConditions(" + policyItem + ", " + request + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyEvaluator.matchCustomConditions(" + request + "): " + matched);
 		}
 
-		return ret;
+		return matched;
 	}
 
 	protected RangerPolicyItemAccess getAccess(RangerPolicyItem policyItem, String accessType) {

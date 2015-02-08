@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.pdp.knox.filter;
+package org.apache.ranger.authorization.knox;
 
 import java.io.IOException;
 import java.security.AccessController;
@@ -39,36 +39,19 @@ import org.apache.hadoop.gateway.filter.AbstractGatewayFilter;
 import org.apache.hadoop.gateway.security.GroupPrincipal;
 import org.apache.hadoop.gateway.security.ImpersonatedPrincipal;
 import org.apache.hadoop.gateway.security.PrimaryPrincipal;
-import org.apache.ranger.audit.model.EnumRepositoryType;
-import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.AuditProvider;
-import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
-import org.apache.ranger.authorization.knox.KnoxAccessVerifier;
-import org.apache.ranger.authorization.knox.KnoxAccessVerifierFactory;
-import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
 public class RangerPDPKnoxFilter implements Filter {
 
 	private static final Log LOG = LogFactory.getLog(RangerPDPKnoxFilter.class);
-	private static final String  ACL_ENFORCER = "xasecure-acl";
-	private static final String PERM_ALLOW = "allow";
 	private String resourceRole = null;
-	private KnoxAccessVerifier knoxAccessVerifier;
-
-
-	AuditProvider auditProvider = AuditProviderFactory.getAuditProvider();
-	private final String REPOSITORY_NAME = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
-	
-	static {
-		RangerConfiguration.getInstance().initAudit("knox");
-	}
+	static final KnoxRangerPlugin plugin = new KnoxRangerPlugin();
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 		resourceRole = getInitParameter(filterConfig, "resource.role");
-		knoxAccessVerifier = KnoxAccessVerifierFactory.getInstance();
+		plugin.init();
 	}
 
 	private String getInitParameter(FilterConfig filterConfig, String paramName) {
@@ -120,32 +103,26 @@ public class RangerPDPKnoxFilter implements Filter {
 					+ impersonatedUser + ", effectiveUser: " + user +
 					", groups: " + groups + ", clientIp: " + clientIp);
 		}
-		boolean accessAllowed = knoxAccessVerifier.isAccessAllowed(
-				topologyName, serviceName, PERM_ALLOW, user, groups, clientIp);
+		RangerAccessRequest accessRequest = new KnoxRangerPlugin.RequestBuilder()
+			.service(serviceName)
+			.topology(topologyName)
+			.user(user)
+			.groups(groups)
+			.clientIp(clientIp)
+			.build();
+		
+		RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
 
+		boolean accessAllowed = result.getIsAllowed();
+		boolean audited = result.getIsAudited();
+		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Access allowed: " + accessAllowed);
+			LOG.debug("Audit enabled: " + audited);
 		}
 		if (accessAllowed) {
 			chain.doFilter(request, response);
-			if (knoxAccessVerifier.isAuditEnabled(topologyName, serviceName)) {
-				LOG.debug("Audit is enabled");
-				logAuditEvent(user, clientIp, topologyName, serviceName,
-						"allow", true);
-			} else {
-				LOG.debug("Audit is not  enabled");
-			}
 		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Access is denied");
-			}
-			if (knoxAccessVerifier.isAuditEnabled(topologyName, serviceName)) {
-				LOG.debug("Audit is enabled");
-				logAuditEvent(user, clientIp, topologyName, serviceName,
-						"allow", false);
-			} else {
-				LOG.debug("Audit is not  enabled");
-			}
 			sendForbidden((HttpServletResponse) response);
 		}
 	}
@@ -177,37 +154,6 @@ public class RangerPDPKnoxFilter implements Filter {
 
 	private String getServiceName() {
 		return resourceRole;
-	}
-
-	private void logAuditEvent(String userName, String clientIp, 
-			String topology, String service,
-			String accessType, boolean accessGranted) {
-
-		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
-
-		auditEvent.setUser(userName == null ? 
-				RangerHadoopConstants.AUDITLOG_EMPTY_STRING : userName);
-		auditEvent.setResourcePath("/" + topology + "/" + service);
-		auditEvent.setResourceType("service");
-		auditEvent.setAccessType(accessType);
-		auditEvent.setClientIP(clientIp);
-		auditEvent.setEventTime(StringUtil.getUTCDate());
-		auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
-		auditEvent.setResultReason(null);
-		auditEvent.setRepositoryType(EnumRepositoryType.KNOX);
-		auditEvent.setRepositoryName(REPOSITORY_NAME);
-		auditEvent.setAclEnforcer(ACL_ENFORCER);
-	
-		try {
-			LOG.debug("logEvent [" + auditEvent + "] - START");
-			
-			AuditProvider ap = AuditProviderFactory.getAuditProvider();
-			ap.log(auditEvent);
-			
-			LOG.debug("logEvent [" + auditEvent + "] - END");
-		} catch (Throwable t) {
-			LOG.error("ERROR logEvent [" + auditEvent + "]", t);
-		}
 	}
 
 

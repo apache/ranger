@@ -31,7 +31,7 @@ import org.apache.hadoop.gateway.topology.Service;
 
 public class RangerPDPKnoxDeploymentContributor extends ProviderDeploymentContributorBase {
 
-  private static final String FILTER_CLASSNAME = "org.apache.ranger.pdp.knox.filter.RangerPDPKnoxFilter";
+  private static final String FILTER_CLASSNAME = "org.apache.ranger.authorization.knox.RangerPDPKnoxFilter";
 
   @Override
   public String getRole() {
