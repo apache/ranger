@@ -21,12 +21,16 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 /**
  * Credits: Large parts of this file have been lifted as is from org.apache.ranger.pdp.knox.URLBasedAuthDB.  Credits for those are due to Dilli Arumugam. 
@@ -36,82 +40,183 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 public class RangerIpMatcher implements RangerConditionEvaluator {
 
 	private static final Log LOG = LogFactory.getLog(RangerIpMatcher.class);
-	private List<String> _ipAddresses = new ArrayList<String>();
+	private List<String> _exactIps = new ArrayList<String>();
+	private List<String> _wildCardIps = new ArrayList<String>();
 	private boolean _allowAny = false;
-
+	public static final String ConditionName = "ip-range";
+	
 	@Override
-	public void init(RangerPolicyItemCondition condition) {
-		if (condition != null) {
-			List<String> ipAddresses = condition.getValues();
-			if (CollectionUtils.isNotEmpty(ipAddresses)) {
-				_ipAddresses.addAll(ipAddresses);
-				// do this once, contains on a list is O(n) operation!
-				if (_ipAddresses.contains("*")) {
+	public void init(final RangerPolicyItemCondition condition) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerIpMatcher.init(" + condition + ")");
+		}
+
+		if (condition == null) {
+			LOG.debug("init: null policy condition! Will match always!");
+			_allowAny = true;
+		} else if (CollectionUtils.isEmpty(condition.getValues())) {
+			LOG.debug("init: empty conditions collection on policy condition!  Will match always!");
+			_allowAny = true;
+		} else if (condition.getValues().contains("*")) {
+			_allowAny = true;
+			LOG.debug("init: wildcard value found.  Will match always.");
+		} else {
+			for (String ip : condition.getValues()) {
+				String digestedIp = digestPolicyIp(ip);
+				if (digestedIp.isEmpty()) {
+					LOG.debug("init: digested ip was empty! Will match always");
 					_allowAny = true;
+				} else if (digestedIp.equals(ip)) {
+					_exactIps.add(ip);
+				} else {
+					_wildCardIps.add(digestedIp);
 				}
 			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerIpMatcher.init(" + condition + "): exact-ips[" + _exactIps + "], wildcard-ips[" + _wildCardIps + "]");
 		}
 	}
 
 	@Override
-	public boolean isMatched(String requestIp) {
-		boolean ipMatched = false;
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Checking ipMatch for rolePermissionIpList: " + _ipAddresses +
-					", requestIP: " + requestIp);
+	public boolean isMatched(final RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerIpMatcher.isMatched(" + request + ")");
 		}
-		if (CollectionUtils.isEmpty(_ipAddresses)) {
-			LOG.debug("RolePermission does not require IP Matching");
-			ipMatched = true;
-		} else if (_allowAny) {
-			LOG.debug("RolePermission allows any IP: *");
-			ipMatched = true;
+
+		boolean ipMatched = true;
+		if (_allowAny) {
+			LOG.debug("isMatched: allowAny flag is true.  Matched!");
 		} else {
-			for (String ip : _ipAddresses) {
-				if (ipMatches(ip, requestIp)) {
-					LOG.debug("RolePermission IP matches request IP");
-					ipMatched = true;
-					break;// break out of ipList
-				}
+			String requestIp = extractIp(request);
+			if (requestIp == null) {
+				LOG.debug("isMatched: couldn't get ip address from request.  Ok.  Implicitly matched!");
+			} else {
+				ipMatched = isWildcardMatched(_wildCardIps, requestIp) || isExactlyMatched(_exactIps, requestIp);
 			}
 		}
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerIpMatcher.isMatched(" + request+ "): " + ipMatched);
+		}
+
 		return ipMatched;
 	}
 	
-	private boolean ipMatches(String policyIp, String requestIp) {
-		if (policyIp == null) {
-			return false;
+	/**
+	 * Pre-digests the policy ip address to drop any trailing wildcard specifiers such that a simple beginsWith match can be done to check for match during authorization calls
+	 * @param ip
+	 * @return
+	 */
+	static final Pattern allWildcards = Pattern.compile("^((\\*(\\.\\*)*)|(\\*(:\\*)*))$"); // "*", "*.*", "*.*.*", "*:*", "*:*:*", etc.
+	static final Pattern trailingWildcardsIp4 = Pattern.compile("(\\.\\*)+$"); // "blah.*", "blah.*.*", etc.
+	static final Pattern trailingWildcardsIp6 = Pattern.compile("(:\\*)+$");   // "blah:*", "blah:*:*", etc.
+	
+	String digestPolicyIp(final String policyIp) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerIpMatcher.digestPolicyIp(" + policyIp + ")");
 		}
-		policyIp = policyIp.trim();
-		if (policyIp.isEmpty()) {
-			return false;
+
+		String result;
+		Matcher matcher = allWildcards.matcher(policyIp);
+		if (matcher.matches()) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("digestPolicyIp: policyIP[" + policyIp +"] all wildcards.");
+			}
+			result = "";
+		} else if (policyIp.contains(".")) {
+			matcher = trailingWildcardsIp4.matcher(policyIp);
+			result = matcher.replaceFirst(".");
+		} else {
+			matcher = trailingWildcardsIp6.matcher(policyIp);
+			// also lower cases the ipv6 items
+			result = matcher.replaceFirst(":").toLowerCase();
 		}
-		boolean ipMatched = false;
-		boolean wildEnd = false;
-		if (policyIp.contains(".")) {
-			while (policyIp.endsWith(".*")) {
-				wildEnd = true;
-				policyIp = policyIp.substring(0, policyIp.lastIndexOf(".*"));
-			}
-			if (wildEnd) {
-				policyIp = policyIp + ".";
-			}
-		} else if (policyIp.contains(":")) {
-			while (policyIp.endsWith(":*")) {
-				wildEnd = true;
-				policyIp = policyIp.substring(0, policyIp.lastIndexOf(":*"));
-			}
-			if (wildEnd) {
-				policyIp = policyIp + ":";
-			}
+		
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerIpMatcher.digestPolicyIp(" + policyIp + "): " + policyIp);
 		}
-		if (wildEnd && requestIp.toLowerCase().startsWith(policyIp.toLowerCase())) {
-			ipMatched = true;
-		} else if (policyIp.equalsIgnoreCase(requestIp)) {
-			ipMatched = true;
-		}
-		return ipMatched;
+		return result;
 	}
+	
+	boolean isWildcardMatched(final List<String> ips, final String requestIp) {
 
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerIpMatcher.isWildcardMatched(" + ips+ ", " + requestIp + ")");
+		}
 
+		boolean matchFound = false;
+		Iterator<String> iterator = ips.iterator();
+		while (iterator.hasNext() && !matchFound) {
+			String ip = iterator.next();
+			if (requestIp.contains(".") && requestIp.startsWith(ip)) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Wildcard Policy IP[" + ip + "] matches request IPv4[" + requestIp + "].");
+				}
+				matchFound = true;
+			} else if (requestIp.toLowerCase().startsWith(ip)) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Wildcard Policy IP[" + ip + "] matches request IPv6[" + requestIp + "].");
+					}
+					matchFound = true;
+			} else {
+				LOG.debug("Wildcard policy IP[" + ip + "] did not match request IP[" + requestIp + "].");
+			}
+		}
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerIpMatcher.isWildcardMatched(" + ips+ ", " + requestIp + "): " + matchFound);
+		}
+		return matchFound;
+	}
+	
+	boolean isExactlyMatched(final List<String> ips, final String requestIp) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerIpMatcher.isExactlyMatched(" + ips+ ", " + requestIp + ")");
+		}
+
+		boolean matchFound = false;
+		if (requestIp.contains(".")) {
+			matchFound = ips.contains(requestIp);
+		} else {
+			matchFound = ips.contains(requestIp.toLowerCase());
+		}
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerIpMatcher.isExactlyMatched(" + ips+ ", " + requestIp + "): " + matchFound);
+		}
+		return matchFound;
+	}
+	
+	/**
+	 * Extracts and returns the ip address from the request.  Returns null if one can't be obtained out of the request.
+	 * @param request
+	 * @return
+	 */
+	String extractIp(final RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerIpMatcher.extractIp(" + request+ ")");
+		}
+
+		String ip = null;
+		if (request == null) {
+			LOG.debug("isMatched: Unexpected: null request.  Implicitly matched!");
+		} else if (request.getContext() == null) {
+			LOG.debug("isMatched: Context map of request is null.  Ok. Implicitly matched!");
+		} else if (CollectionUtils.isEmpty(request.getContext().entrySet())) {
+			LOG.debug("isMatched: Missing context on request.  Ok. Condition isn't applicable.  Implicitly matched!");
+		} else if (!request.getContext().containsKey(ConditionName)) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("isMatched: Unexpected: Context did not have data for condition[" + ConditionName + "]. Implicitly matched!");
+			}
+		} else {
+			ip = (String)request.getContext().get(ConditionName);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerIpMatcher.extractIp(" + request+ "): " + ip);
+		}
+		return ip;
+	}
 }

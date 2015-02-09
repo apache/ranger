@@ -38,8 +38,6 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private String              requestData     = null;
 	private String              sessionId       = null;
 	private Map<String, Object> context         = null;
-	private Map<String, String> conditions      = null;
-
 
 	public RangerAccessRequestImpl() {
 		this(null, null, null, null);
@@ -59,7 +57,6 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setRequestData(null);
 		setSessionId(null);
 		setContext(null);
-		setConditions(null);
 	}
 
 	@Override
@@ -117,11 +114,6 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		return context;
 	}
 
-	@Override
-	public Map<String, String> getConditions() {
-		return conditions;
-	}
-
 	public void setResource(RangerResource resource) {
 		this.resource = resource;
 	}
@@ -166,10 +158,6 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.context = (context == null) ? new HashMap<String, Object>() : context;
 	}
 
-	public void setConditions(final Map<String, String> conditions) {
-		this.conditions = (conditions == null) ? new HashMap<String, String>() : conditions;
-	}
-
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -205,14 +193,6 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("context={");
 		if(context != null) {
 			for(Map.Entry<String, Object> e : context.entrySet()) {
-				sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
-			}
-		}
-		sb.append("} ");
-
-		sb.append("conditions={");
-		if(conditions != null) {
-			for(Map.Entry<String, String> e : conditions.entrySet()) {
 				sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
 			}
 		}

@@ -40,7 +40,7 @@ public class RangerPDPKnoxDeploymentContributor extends ProviderDeploymentContri
 
   @Override
   public String getName() {
-    return "XASecurePDPKnox";
+    return "RangerPDPKnox";
   }
 
   @Override

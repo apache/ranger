@@ -20,7 +20,11 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -199,7 +203,7 @@ public class RangerDefaultPolicyEvaluatorTest {
 			// empty body!
 		}
 		@Override
-		public boolean isMatched(String value) {
+		public boolean isMatched(RangerAccessRequest request) {
 			return true;
 		}
 		
@@ -213,7 +217,7 @@ public class RangerDefaultPolicyEvaluatorTest {
 		}
 
 		@Override
-		public boolean isMatched(String value) {
+		public boolean isMatched(RangerAccessRequest request) {
 			return false;
 		}
 		
@@ -225,36 +229,64 @@ public class RangerDefaultPolicyEvaluatorTest {
 	static class Evaluator4 extends AlwaysFail {}
 	
 	/**
-	 * A request may contain a value for several conditions.  A policy could contain evaluators for more conditions than that are in the request.
-	 * check should fail if any condition check fails for the conditions that are contained in the request
+	 * A request may contain a value for several conditions.  A policy item could contain evaluators for more/different conditions than that are in the request.
+	 * check should fail if condition evaluator for any policy fails for a conditions contained in the request.  If request does not have data for a condition
+	 * then it should succeed.  Data in request for condition that are not part of the policy item shouldn't affect the result.
 	 */
 	@Test
-	public void test_matchCustomConditions_happyPath() {
+	public void test_matchCustomConditions_happyPath1() {
+
+		// let's create the condition evaluator map for 4 conditions.
+		Map<String, RangerConditionEvaluator> evaluators = createEvaluatorMap();
 		
-		// let's first create a request with 3 different conditons
-		Map<String, String> requestValues = new HashMap<String, String>();
-		requestValues.put("c1", "value1");
-		requestValues.put("c2", "value2");
-		// let's create the condition evaluator map for each of these conditions and some more.
-		RangerAccessRequest request = mock(RangerAccessRequest.class);
-		when(request.getConditions()).thenReturn(requestValues);
-		Map<String, RangerConditionEvaluator> evaluators = new HashMap<String, RangerConditionEvaluator>();
-		evaluators.put("c1", new Evaluator1());
-		evaluators.put("c2", new Evaluator2());
-		evaluators.put("c3", new Evaluator3()); // conditions 3 and 4 would always fail!
-		evaluators.put("c4", new Evaluator4());
-		// stuff the evaluator with this map
+		// let's first create a request with 2 different conditions
+		RangerAccessRequest request = createAccessRequestWithConditions(new String[] {"c1", "c2"});
+
+		// Create a policy item -- which also has same exact same number of policy conditions defined on it (2)
+		RangerPolicyItem policyItem = createPolicyItemForConditions(new String[] {"c1", "c2"} );
+		
+		// check for success
 		RangerDefaultPolicyEvaluator policyEvaluator = new RangerDefaultPolicyEvaluator();
-		boolean result = policyEvaluator.matchCustomConditions(request, evaluators);
+		boolean result = policyEvaluator.matchCustomConditions(policyItem, request, evaluators);
+		assertTrue(result);
+
+		// missing conditions on request are ok, too -- they always succeed
+		// policy item has conditions c1 and c2 where as context will only have c1. 
+		request = createAccessRequestWithConditions(new String[] { "c1" } );
+		result = policyEvaluator.matchCustomConditions(policyItem, request, evaluators);
 		assertTrue(result);
 		
-		// now check for failure
-		requestValues.clear();
-		requestValues.put("c1", "value1");
-		requestValues.put("c3", "value3");
-		when(request.getConditions()).thenReturn(requestValues);
-		result = policyEvaluator.matchCustomConditions(request, evaluators);
+		// Extra conditions on request are ok, too -- they always succeed
+		// policy item has conditions c1 and c2 where as context has values for conditions c3 and c4 on it and we know their evaluators always fail! 
+		request = createAccessRequestWithConditions(new String[] {"c3", "c4"});
+		result = policyEvaluator.matchCustomConditions(policyItem, request, evaluators);
+		assertTrue(result);
+	}
+	
+	@Test
+	public void test_matchCustomConditions_happyPath2() {
+		// let's create the condition evaluator map for 4 conditions and some more.
+		Map<String, RangerConditionEvaluator> evaluators = createEvaluatorMap();
+		
+		// create policy item with a condition that we know will always fail
+		RangerPolicyItem policyItem = createPolicyItemForConditions(new String[] { "c1", "c3" } );
+		
+		// let's first create a request with 2 different conditions
+		RangerAccessRequest request = createAccessRequestWithConditions(new String[]{"c1", "c3"});
+
+		RangerDefaultPolicyEvaluator policyEvaluator = new RangerDefaultPolicyEvaluator();
+		boolean result = policyEvaluator.matchCustomConditions(policyItem, request, evaluators);
 		assertFalse(result);
+	}
+	
+	Map<String, RangerConditionEvaluator> createEvaluatorMap() {
+		Map<String, RangerConditionEvaluator> map = new HashMap<String, RangerConditionEvaluator>();
+		map.put("c1", new Evaluator1());
+		map.put("c2", new Evaluator2());
+		map.put("c3", new Evaluator3()); // conditions 3 and 4 would always fail!
+		map.put("c4", new Evaluator4());
+
+		return map;
 	}
 	
 	RangerPolicyItem getMockPolicyItem(String[] strings) {
@@ -294,4 +326,31 @@ public class RangerDefaultPolicyEvaluatorTest {
 		return serviceDef;
 	}
 	
+	RangerPolicyItem createPolicyItemForConditions(String[] conditions) {
+
+		List<RangerPolicyItemCondition> itemConditions = new ArrayList<RangerPolicy.RangerPolicyItemCondition>(conditions.length);
+		for (String conditionName : conditions) {
+			RangerPolicyItemCondition condition = mock(RangerPolicyItemCondition.class);
+			when(condition.getType()).thenReturn(conditionName);
+			itemConditions.add(condition);
+		}
+
+		RangerPolicyItem policyItem = mock(RangerPolicyItem.class);
+		when(policyItem.getConditions()).thenReturn(itemConditions);
+		
+		return policyItem;
+	}
+	
+	RangerAccessRequest createAccessRequestWithConditions(String[] conditionNames) {
+		// let's first create a request with 2 different conditions
+		Map<String, Object> context = new HashMap<String, Object>(conditionNames.length);
+		for (String conditionName: conditionNames) {
+			// value is not important for our test
+			context.put(conditionName, conditionName + "-value");
+		}
+		RangerAccessRequest request = mock(RangerAccessRequest.class);
+		when(request.getContext()).thenReturn(context);
+		
+		return request;
+	}
 }

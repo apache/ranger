@@ -186,18 +186,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			Class<RangerConditionEvaluator> matcherClass = (Class<RangerConditionEvaluator>)Class.forName(className);
 
 			evaluator = matcherClass.newInstance();
-		} catch(ClassNotFoundException excp) {
-			LOG.error("Caught ClassNotFoundException: error instantiating object of class[" + className + "].  Returning null!");
-			excp.printStackTrace();
-		} catch (InstantiationException excp) {
-			LOG.error("Caught InstantiationException: error instantiating object of class[" + className + "].  Returning null!");
-			excp.printStackTrace();
-		} catch (IllegalAccessException excp) {
-			LOG.error("Caught IllegalAccessException: error instantiating object of class[" + className + "].  Returning null!");
-			excp.printStackTrace();
-		} catch (Throwable t) {
-			LOG.error("Caught Throwable: unexpected error instantiating object of class[" + className + "].  Returning null!");
-			t.printStackTrace();
+		} catch(Throwable t) {
+			LOG.error("Caught Throwable: unexpected error instantiating object of class[" + className + "].  Returning null!", t);
 		}
 	
 		if(LOG.isDebugEnabled()) {
@@ -252,7 +242,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						continue;
 					}
 
-					boolean isCustomConditionsMatch = matchCustomConditions(request, conditionEvaluators);
+					boolean isCustomConditionsMatch = matchCustomConditions(policyItem, request, conditionEvaluators);
 
 					if(! isCustomConditionsMatch) {
 						continue;
@@ -458,43 +448,50 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	}
 
 	// takes map in as argument for testability
-	protected boolean matchCustomConditions(RangerAccessRequest request, Map<String, RangerConditionEvaluator> evaluatorMap) {
+	protected boolean matchCustomConditions(RangerPolicyItem policyItem, RangerAccessRequest request, Map<String, RangerConditionEvaluator> evaluatorMap) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.matchCustomConditions(" + request + ")");
 		}
 
-		boolean matched = true;
-		
-		Map<String, String> input = request.getConditions();
-		if (input == null || input.size() == 0) {
-			// if input didn't even have certain inputs then it could never fail the check.
-			matched = true;  // assignment only to document in code the result
+		boolean result = true;
+		if (policyItem == null) {
+			LOG.debug("matchCustomConditions: Unexpected: policyItem was null");
+		} else if (CollectionUtils.isEmpty(policyItem.getConditions())) {
+			LOG.debug("matchCustomConditions: policy item does not have any conditions! Ok, implicitly passed.");
 		} else {
-			// we want to abort the minute we find a mismatch
-			Iterator<Map.Entry<String, String>> iterator = input.entrySet().iterator();
+			Iterator<RangerPolicyItemCondition> iterator = policyItem.getConditions().iterator();
+			/*
+			 * We need to let the request be evaluated by the condition evaluator for each condition on the policy item.
+			 * We bail out as soon as we find a mismatch, i.e. ALL conditions must succeed for condition evaluation to return true.
+			 */
+			boolean matched = true;
 			while (iterator.hasNext() && matched) {
-				Map.Entry<String, String> anEntry = iterator.next();
-				String conditionName = anEntry.getKey();
-				String value = anEntry.getValue();
-				RangerConditionEvaluator evaluator = evaluatorMap.get(conditionName); 
-				if (evaluator == null) {
-					// it is possible that due to mis-configuration no evaluator was found. 
-					LOG.warn("No evaluator found for condition[" + conditionName + "]! Check implicitly passed. Context: value[" + value + "]");
+				RangerPolicyItemCondition itemCondition = iterator.next();
+				if (itemCondition == null) {
+					LOG.debug("matchCustomConditions: Unexpected: Item condition on policy item was null!  Ignoring...");
 				} else {
-					matched = evaluator.isMatched(value);
-					if (LOG.isDebugEnabled()) {
-						String format = "Condition evaluation verdict for condition[%s] with value[%s]: %s";
-						LOG.debug(String.format(format, conditionName, value, matched));
+					String conditionName = itemCondition.getType();
+					if (StringUtils.isBlank(conditionName)) {
+						LOG.debug("matchCustomConditions: Unexpected: condition name on item conditon [" + conditionName + "] was null/empty/blank! Ignoring...");
+					} else if (!evaluatorMap.containsKey(conditionName)) {
+						LOG.warn("matchCustomConditions: Unexpected: Could not find condition evaluator for condition[" + conditionName + "]! Ignoring...");
+					} else {
+						RangerConditionEvaluator conditionEvaluator = evaluatorMap.get(conditionName);
+						matched = conditionEvaluator.isMatched(request);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(String.format("matchCustomConditions: evaluator for condition[%s] returned[%s] for request[%s]", conditionName, matched, request));
+						}
 					}
 				}
 			}
+			result = result && matched;
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.matchCustomConditions(" + request + "): " + matched);
+			LOG.debug("<== RangerDefaultPolicyEvaluator.matchCustomConditions(" + request + "): " + result);
 		}
 
-		return matched;
+		return result;
 	}
 
 	protected RangerPolicyItemAccess getAccess(RangerPolicyItem policyItem, String accessType) {

@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.AccessType;
-import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.Condition;
 import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.PluginConfiguration;
 import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.ResourceName;
+import org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
@@ -95,8 +95,8 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 			request.setUserGroups(_groups);
 			request.setResource(resource);
 			// build condition for IP address
-			Map<String, String> conditions = Collections.singletonMap(Condition.IpRange, _clientIp);
-			request.setConditions(conditions);
+			Map<String, Object> conditions = Collections.singletonMap(RangerIpMatcher.ConditionName, (Object)_clientIp);
+			request.setContext(conditions);
 			
 			return request;
 		}
@@ -119,11 +119,6 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 		// must match the corresponding string used in service definition file
 		static class AccessType {
 			static final String Allow = "allow";
-		}
-		
-		// must match the corresponding string used in service definition file
-		static class Condition {
-			static final String IpRange = "ip-range";
 		}
 	}
 }
