@@ -35,7 +35,7 @@
     {"name":"username",                                "type":"string",  "subType":"",             "mandatory":true, "label":"Username"},
     {"name":"password",                                "type":"password","subType":"",             "mandatory":true, "label":"Password"},
     {"name":"fs.default.name",                         "type":"string",  "subType":"",             "mandatory":true, "label":"Namenode URL"},
-    {"name":"hadoop.security.authorization",           "type":"bool",    "subType":"TrueFalse",    "mandatory":true, "defaultValue":"false"},
+    {"name":"hadoop.security.authorization",           "type":"bool",    "subType":"YesTrue:NoFalse",    "mandatory":true, "defaultValue":"false"},
     {"name":"hadoop.security.authentication",          "type":"enum",    "subType":"authnType",    "mandatory":true, "defaultValue":"simple"},
     {"name":"hadoop.security.auth_to_local",           "type":"string",  "subType":"",             "mandatory":false},
     {"name":"dfs.datanode.kerberos.principal",         "type":"string",  "subType":"",             "mandatory":false},

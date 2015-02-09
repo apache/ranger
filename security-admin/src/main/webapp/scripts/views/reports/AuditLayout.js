@@ -736,7 +736,7 @@ define(function(require) {
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
 								if(rawValue == -1){
-									return rawValue;
+									return '--';
 								}	
 								var rangerService = new RangerService();
 								rangerService.urlRoot += '/name/'+model.get('repoName'); 

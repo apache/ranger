@@ -70,12 +70,9 @@ define(function(require){
 			this.on('isAuditEnabled:change', function(form, fieldEditor){
     			this.evAuditChange(form, fieldEditor);
     		});
-			this.on('isRecursive:change', function(form, fieldEditor){
-    			this.evRecursiveChange(form, fieldEditor);
-    		});
-			this.on('resourceStatus:change', function(form, fieldEditor){
-    			this.evResourceStatusChange(form, fieldEditor);
-    		});
+			this.on('isEnabled:change', function(form, fieldEditor){
+				this.evIsEnabledChange(form, fieldEditor);
+			});
 		},
 
 		/** fields for the form
@@ -86,12 +83,16 @@ define(function(require){
 		},
 		getSchema : function(){
 			var attrs = {};
+			var basicSchema = ['id', 'name','isEnabled']
 			var schemaNames = ['description', 'isAuditEnabled'];
+			if(this.model.isNew()){
+				basicSchema.shift();
+			}
 			
 			var formDataType = new BackboneFormDataType();
 			attrs = formDataType.getFormElements(this.rangerServiceDefModel.get('resources'),this.rangerServiceDefModel.get('enums'), attrs, this);
 			
-			var attr1 = _.pick(_.result(this.model,'schemaBase'), 'name','isEnabled');
+			var attr1 = _.pick(_.result(this.model,'schemaBase'),basicSchema);
 			var attr2 = _.pick(_.result(this.model,'schemaBase'),schemaNames);
 			return _.extend(attr1,_.extend(attrs,attr2));
 		},
@@ -111,13 +112,10 @@ define(function(require){
 			this.$el.find('.field-isEnabled').find('.control-label').remove();
 		},
 		evAuditChange : function(form, fieldEditor){
-			XAUtil.checkDirtyFieldForToggle(fieldEditor);
+			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
 		},
-		evRecursiveChange : function(form, fieldEditor){
-			XAUtil.checkDirtyFieldForToggle(fieldEditor);
-		},
-		evResourceStatusChange : function(form, fieldEditor){
-			XAUtil.checkDirtyFieldForToggle(fieldEditor);
+		evIsEnabledChange : function(form, fieldEditor){
+			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
 		},
 		setupForm : function() {
 			if(!this.model.isNew()){
@@ -248,7 +246,10 @@ define(function(require){
 		},
 		/** all post render plugin initialization */
 		initializePathPlugins: function(){
-			var that= this;	
+			var that= this,defaultValue = [];
+			if(!this.model.isNew() && _.isUndefined(this.model.get('path'))){
+				defaultValue = this.model.get('path').values;
+			}
 			function split( val ) {
 				return val.split( /,\s*/ );
 			}
@@ -288,8 +289,8 @@ define(function(require){
 							dataType : 'json',
 							contentType: "application/json; charset=utf-8",
 						}).done(function(data){
-							if(data.vXStrings){
-								response(data.vXStrings);
+							if(data){
+								response(data);
 							} else {
 								response();
 							}
@@ -350,6 +351,9 @@ define(function(require){
 			        	return false;
 			        }
 					}
+			}).on('change',function(e){
+				//check dirty field for tagit input type : `path`
+				XAUtil.checkDirtyField($(e.currentTarget).val(), defaultValue.toString(), $(e.currentTarget))
 			});
 	
 			
@@ -407,11 +411,14 @@ define(function(require){
 						},
 						results: function (data, page) { 
 							var results = [];
-							if(!_.isUndefined(data)){
+							if(data.length > 0){
+								results = data.map(function(m, i){	return {id : m, text: m};	});
+							}
+							/*if(!_.isUndefined(data)){
 								if(data.resultSize != "0"){
 									results = data.vXStrings.map(function(m, i){	return {id : m.value, text: m.value};	});
 								}
-							}
+							}*/
 							return { 
 								results : results
 							};

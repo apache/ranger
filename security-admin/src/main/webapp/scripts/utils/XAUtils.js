@@ -462,12 +462,21 @@ define(function(require) {
 				$elem.addClass('dirtyField');
 			}
 	};
-	XAUtils.checkDirtyFieldForToggle = function(fieldEditor){
-		if(fieldEditor.$el.hasClass('dirtyField')){
-			fieldEditor.$el.removeClass('dirtyField');
+	XAUtils.checkDirtyFieldForToggle = function($el){
+		if($el.hasClass('dirtyField')){
+			$el.removeClass('dirtyField');
 		}else{
-			fieldEditor.$el.addClass('dirtyField');
+			$el.addClass('dirtyField');
 		}
+	};
+	XAUtils.checkDirtyFieldForSelect2 = function($el, dirtyFieldValue, that){
+		if($el.hasClass('dirtyField') && _.isEqual($el.val(), dirtyFieldValue.toString())){
+			$el.removeClass('dirtyField');
+		}else if(!$el.hasClass('dirtyField')){
+			$el.addClass('dirtyField');
+			dirtyFieldValue =  !_.isUndefined(that.value.values) ? that.value.values : '';
+		}
+		return dirtyFieldValue;
 	};
 	XAUtils.enumToSelectLabelValuePairs = function(myEnum) {
 		return _.map(myEnum, function(o){

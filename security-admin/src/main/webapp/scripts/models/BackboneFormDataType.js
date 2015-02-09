@@ -54,7 +54,7 @@ define(function(require) {
 									var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
 									formObj['sameLevelOpts'] = optionsTitle;
 									samelevelFieldCreated.push(v.level);
-									
+
 									v.name='sameLevel'+v.level;
 									v.label = '';
 								}
@@ -63,14 +63,29 @@ define(function(require) {
 							}
 							break;
 						case 'bool':
-							formObj.type = 'Checkbox';
-							formObj.options = {	y : 'Yes',n : 'No'};
+							if(!_.isUndefined(v.subType) && !_.isEmpty(v.subType)){
+								formObj.type = 'Select';
+								var subType = v.subType.split(':')
+								formObj.options = [subType[0].substr(0, subType[0].length - 4), subType[1].substr(0, subType[1].length - 5)];
+								//to set default value 
+								if(form.model.isNew()){
+									if(!_.isUndefined(v.defaultValue) && v.defaultValue === "false"){
+										form.model.set(v.name, subType[1].substr(0, subType[1].length - 5))
+									}
+								}
+							}else{
+								formObj.type = 'Checkbox';
+								formObj.options = {	y : 'Yes',n : 'No'};
+							}
 							break;
 						case 'int':formObj.type = 'Number';break;
 						case 'enum':
 							var enumObj = _.find(enums, function(e) {return e && e.name == v.subType;});
 							formObj.type = 'Select';
-							formObj.options = _.pluck(_.compact(enumObj.elements),'label');
+//							formObj.options = _.pluck(_.compact(enumObj.elements),'label');
+							formObj.options = _.map((enumObj.elements), function(obj) {
+								return { 'label' : obj.label, 'val': obj.name};
+							});
 							break;
 						case 'path' : 
 							/*formObj.type = 'Text';
@@ -98,10 +113,16 @@ define(function(require) {
 
 					formObj.title = v.label || v.name;
 					formObj.validators = [];
-					if (_.has(v, 'mandatory') && v.mandatory) {
+					if (_.has(v, 'mandatory') && v.mandatory && v.type != 'bool') {
 						formObj.validators.push('required');
 						formObj.title = formObj.title + " *"
 					}
+					if(form.model.isNew()){
+						if(_.has(v, 'defaultValue') && !_.isEmpty(v.defaultValue) && v.type != 'bool'){
+							form.model.set(v.name, v.defaultValue)
+						}
+					}
+					
 					formObj['class'] = 'serviceConfig';
 					var name = v.name;
 					attrs[name] = formObj;

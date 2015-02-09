@@ -54,6 +54,13 @@ define(function(require){
 
 			// Overwrite your schema definition here
 			return _.extend(attrs,{
+				id : {
+					type		: 'Text',
+					title		: 'Policy ID *',
+					validators	: ['required'],
+					editorAttrs 	:{ 'disabled' : "true"},
+
+				},
 				name : {
 					type		: 'Text',
 					title		: 'Policy Name *',
