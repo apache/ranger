@@ -98,7 +98,7 @@ define(function(require) {
 				
 				if(!_.isUndefined(this.model.get('conditions'))){
 					_.each(this.model.get('conditions'), function(obj){
-						this.$el.find('input[data-js="'+obj.type+'"]').val(obj.value.toString())
+						this.$el.find('input[data-js="'+obj.type+'"]').val(obj.values.toString())
 					},this);
 				}
 				_.each(this.model.get('accesses'), function(p){
@@ -127,7 +127,7 @@ define(function(require) {
 				}, this);
 				//Set PolicyCondtion Obj to show in edit mode
 				_.each(this.model.get('conditions'), function(p){
-					this.conditions[p.type] = p.value;
+					this.conditions[p.type] = p.values;
 				}, this);
 			}
 		},
@@ -247,6 +247,8 @@ define(function(require) {
 						values = _.without(values,"-1")
 					}
 //			    	that.checkDirtyFieldForGroup(values);
+					
+					
 					var permTypeArr = [];
 					var valArr = _.map(values, function(id){
 						if(!_.isUndefined(id)){
@@ -331,7 +333,9 @@ define(function(require) {
 								i++;
 								return _.isEmpty(val) ? '' : '<span class="'+label+'">'+name+' : '+ val + '</span>';	
 							});
-							var cond = _.map(value, function(val, name) {return {'type' : name, 'value' :val};});
+							var cond = _.map(value, function(val, name) {
+								return {'type' : name, 'values' : !_.isArray(val) ?  val.split(',') : val};
+							});
 							that.model.set('conditions', cond);
 							$(this).html(html);
 							that.ui.addConditionsSpan.find('i').attr('class', 'icon-pencil');
@@ -372,6 +376,7 @@ define(function(require) {
 		},
 		evClickTD : function(e){
 			var $el = $(e.currentTarget);
+			XAUtil.checkDirtyFieldForToggle($el);
 			//Set Delegated Admin value 
 			if(!_.isUndefined($el.find('input').data('js'))){
 				this.model.set('delegateAdmin',$el.find('input').is(':checked'))

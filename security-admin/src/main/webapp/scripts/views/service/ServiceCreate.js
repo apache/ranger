@@ -88,11 +88,6 @@ define(function(require){
 			/*if(! this.model.isNew()){
 				this.setupModel();
 			}*/
-			if(!this.model.isNew()){
-				_.each(this.model.attributes.configs,function(name, value){
-					this.model.set(value,name)
-				},this);
-			}
 			this.form = new ServiceForm({
 				model :	this.model,
 				rangerServiceDefModel : this.rangerServiceDefModel,

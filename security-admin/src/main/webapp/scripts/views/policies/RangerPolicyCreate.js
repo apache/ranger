@@ -117,7 +117,10 @@ define(function(require){
 
 		/** on render callback */
 		onRender: function() {
+			XAUtil.showAlerForDisabledPolicy(this);
 			this.rForm.show(this.form);
+			this.rForm.$el.dirtyFields();
+			XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavPolicyForm'),this.rForm.$el);
 		},
 		onSave: function(){
 			var that = this, valid = false;

@@ -1737,3 +1737,7 @@ margin-bottom: 5px;
 margin-left: 347px;
 margin-top: -29px;
 }
+.policy-form .help-inline {
+	position: relative;
+	top: 10px;
+}

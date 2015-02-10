@@ -23,6 +23,8 @@ define(function(require){
 
 	var Backbone		= require('backbone');
 	var XAEnums			= require('utils/XAEnums');
+	var XAUtil			= require('utils/XAUtils');
+	
 	var localization	= require('utils/XALangSupport');
 	var BackboneFormDataType	= require('models/BackboneFormDataType');
 
@@ -56,6 +58,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a ServiceForm Form View");
 			_.extend(this, _.pick(options, 'rangerServiceDefModel'));
+			this.setupFormForEditMode();
     		Backbone.Form.prototype.initialize.call(this, options);
 
 			this.bindEvents();
@@ -63,6 +66,9 @@ define(function(require){
 
 		/** all events binding here */
 		bindEvents : function(){
+			this.on('isEnabled:change', function(form, fieldEditor){
+				this.evIsEnabledChange(form, fieldEditor);
+			});
 		},
 
 		/** schema for the form
@@ -90,6 +96,18 @@ define(function(require){
 			this.initializePlugins();
 			this.renderCustomFields();
 		},
+		setupFormForEditMode : function() {
+			if(!this.model.isNew()){
+				_.each(this.model.get('configs'),function(value, name){
+					var configObj = _.findWhere(this.rangerServiceDefModel.get('configs'),{'name' : name });
+					if(configObj.type == 'bool'){
+						this.model.set(name, this.getStringFromBoolean(configObj, value))
+					}else{
+						this.model.set(name, value)
+					}
+				},this);
+			}
+		},
 		setupForm : function() {
 			if(this.model.isNew()){
 				this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_ENABLED.value);
@@ -101,6 +119,9 @@ define(function(require){
 					this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_DISABLED.value);
 				}
 			}	
+		},
+		evIsEnabledChange : function(form, fieldEditor){
+			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
 		},
 		/** all custom field rendering */
 		renderCustomFields: function(){
@@ -121,7 +142,11 @@ define(function(require){
 			var config = {};
 			_.each(this.rangerServiceDefModel.get('configs'),function(obj){
 				if(!_.isNull(obj)){
-					config[obj.name] = that.model.get(obj.name).toString();
+					if(obj.type == 'bool'){
+						config[obj.name] = that.getBooleanForConfig(obj, that.model);
+					}else{
+						config[obj.name] = that.model.get(obj.name).toString();
+					}
 					that.model.unset(obj.name);
 				}
 			});
@@ -147,7 +172,23 @@ define(function(require){
 			var index = $.inArray(elem,arr);
 			if(index >= 0) arr.splice(index,1);
 			return arr;
-		}
+		},
+		getBooleanForConfig : function(cofigObj, model) {
+			var subType = cofigObj.subType.split(':');
+			if(subType[0].indexOf(model.get(cofigObj.name)) >= 0 ){
+				return true;
+			}else{
+				return false;
+			}
+		},
+		getStringFromBoolean : function(configObj, value) {
+			var subType = configObj.subType.split(':');
+			if(subType[0].toLowerCase().indexOf(value) >= 0 ){
+				return subType[0].substr(0, subType[0].length - 4);
+			}else{
+				return subType[1].substr(0, subType[0].length - 5);
+			}
+		},
 	});
 
 	return ServiceForm;
