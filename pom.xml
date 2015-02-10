@@ -351,6 +351,7 @@
              <descriptor>src/main/assembly/admin-web.xml</descriptor>
              <descriptor>src/main/assembly/usersync.xml</descriptor>
              <descriptor>src/main/assembly/ranger-src.xml</descriptor>
+             <descriptor>src/main/assembly/migration-util.xml</descriptor>
            </descriptors>
          </configuration>
       </plugin>
