@@ -21,11 +21,6 @@
 		<name>xasecure.audit.is.enabled</name>
 		<value>true</value>
 	</property>	
-
-	<property>
-		<name>xasecure.audit.repository.name</name>
-		<value>knoxdev</value>
-	</property>	
 	
 
 	<!-- DB audit provider configuration -->

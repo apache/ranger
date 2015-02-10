@@ -25,6 +25,8 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 
 
 public interface RangerAdminClient {
+	void init(String configPropertyPrefix);
+
 	ServicePolicies getServicePoliciesIfUpdated(String serviceName, long lastKnownVersion) throws Exception;
 
 	void grantAccess(String serviceName, GrantRevokeRequest request) throws Exception;

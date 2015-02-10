@@ -45,13 +45,12 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 
 	public RangerAdminRESTClient() {
-		String url               = RangerConfiguration.getInstance().get("ranger.service.store.rest.url");
-		String sslConfigFileName = RangerConfiguration.getInstance().get("ranger.service.store.rest.ssl.config.file");
-
-		init(url, sslConfigFileName);
 	}
 
-	public RangerAdminRESTClient(String url, String sslConfigFileName) {
+	public void init(String propertyPrefix) {
+		String url               = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
+		String sslConfigFileName = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
+
 		init(url, sslConfigFileName);
 	}
 

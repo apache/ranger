@@ -21,37 +21,20 @@
 		<name>ranger.plugin.hbase.service.name</name>
 		<value>hbasedev</value>
 		<description>
-			Name of the Ranger service containing policies for this YARN instance
+			Name of the Ranger service containing HBase policies
 		</description>
 	</property>
 
 	<property>
-		<name>ranger.plugin.hbase.service.store.class</name>
-		<value>org.apache.ranger.plugin.store.rest.ServiceRESTStore</value>
+		<name>ranger.plugin.hbase.policy.source.impl</name>
+		<value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>
 		<description>
-			Service storage implementation class to use to retrieve policies
+			Class to retrieve policies from the source
 		</description>
 	</property>
 
 	<property>
-		<name>ranger.plugin.hbase.service.store.pollIntervalMs</name>
-		<value>30000</value>
-		<description>
-			How often to poll for changes in policies?
-		</description>
-	</property>
-
-	<property>
-		<name>ranger.plugin.hbase.service.store.cache.dir</name>
-		<value>/etc/ranger/hbasedev/policycache</value>
-		<description>
-			Directory where Ranger policies are cached after successful retrieval from the store
-		</description>
-	</property>
-
-	<!-- The following properties are used only when Ranger Admin REST interface is used to retrieve the policies -->
-	<property>
-		<name>ranger.service.store.rest.url</name>
+		<name>ranger.plugin.hbase.policy.rest.url</name>
 		<value>http://policymanagerhost:port</value>
 		<description>
 			URL to Ranger Admin
@@ -59,14 +42,34 @@
 	</property>
 
 	<property>
-		<name>ranger.service.store.rest.ssl.config.file</name>
+		<name>ranger.plugin.hbase.policy.rest.ssl.config.file</name>
 		<value>/etc/hbase/conf/ranger-policymgr-ssl.xml</value>
-		<description>Path to the file containing SSL details to contact Ranger Admin</description>
+		<description>
+			Path to the file containing SSL details to contact Ranger Admin
+		</description>
+	</property>
+
+	<property>
+		<name>ranger.plugin.hbase.policy.pollIntervalMs</name>
+		<value>30000</value>
+		<description>
+			How often to poll for changes in policies?
+		</description>
+	</property>
+
+	<property>
+		<name>ranger.plugin.hbase.policy.cache.dir</name>
+		<value>/etc/ranger/hbasedev/policycache</value>
+		<description>
+			Directory where Ranger policies are cached after successful retrieval from the source
+		</description>
 	</property>
 
 	<property>
 		<name>xasecure.hbase.update.xapolicies.on.grant.revoke</name>
 		<value>true</value>
-		<description>Should Hbase plugin update Ranger policies for updates to permissions done using GRANT/REVOKE?</description>
+		<description>
+			Should HBase plugin update Ranger policies for updates to permissions done using GRANT/REVOKE?
+		</description>
 	</property>
 </configuration>

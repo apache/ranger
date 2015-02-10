@@ -29,12 +29,6 @@ public class RangerHadoopConstants {
 	public static final String HDFS_ROOT_FOLDER_PATH_ALT = "";
 	public static final String HDFS_ROOT_FOLDER_PATH = "/";
 	
-	public static final String HDFS_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "hdfs.authorization.verifier.classname" ;
-	public static final String HDFS_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "org.apache.ranger.pdp.hdfs.RangerAuthorizer" ;	
-
-	public static final String HIVE_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "hive.authorization.verifier.classname" ;
-	public static final String HIVE_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "org.apache.ranger.pdp.hive.RangerAuthorizer" ;
-
 	public static final String  HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP 	     = "xasecure.hive.update.xapolicies.on.grant.revoke" ;
 	public static final boolean HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE = true;
 

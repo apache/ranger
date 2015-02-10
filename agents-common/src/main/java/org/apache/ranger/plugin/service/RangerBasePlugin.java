@@ -83,25 +83,13 @@ public class RangerBasePlugin {
 		RangerConfiguration.getInstance().addResourcesForServiceType(serviceType);
 		RangerConfiguration.getInstance().initAudit(auditAppType);
 
-		serviceName = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.name");
+		String propertyPrefix    = "ranger.plugin." + serviceType;
+		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
+		String cacheDir          = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.cache.dir");
 
-		if(StringUtils.isEmpty(serviceName)) {
-			// get the serviceName from download URL: http://ranger-admin-host:port/service/assets/policyList/serviceName
-			String policyDownloadUrl = RangerConfiguration.getInstance().get("xasecure." + serviceType + ".policymgr.url");
+		serviceName = RangerConfiguration.getInstance().get(propertyPrefix + ".service.name");
 
-			if(! StringUtils.isEmpty(policyDownloadUrl)) {
-				int idx = policyDownloadUrl.lastIndexOf('/');
-
-				if(idx != -1) {
-					serviceName = policyDownloadUrl.substring(idx + 1);
-				}
-			}
-		}
-
-		String cacheDir          = RangerConfiguration.getInstance().get("ranger.plugin." + serviceType + ".service.store.cache.dir", "/tmp");
-		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong("ranger.plugin." + serviceType + ".service.store.pollIntervalMs", 30 * 1000);
-
-		RangerAdminClient admin = new RangerAdminRESTClient();
+		RangerAdminClient admin = getAdminClient(propertyPrefix);
 
 		refresher = new PolicyRefresher(policyEngine, serviceType, serviceName, admin, pollingIntervalMs, cacheDir);
 		refresher.startRefresher();
@@ -218,6 +206,31 @@ public class RangerBasePlugin {
 				}
 			}
 		}
+
+		return ret;
+	}
+
+	private RangerAdminClient getAdminClient(String propertyPrefix) {
+		RangerAdminClient ret = null;
+
+		String policySourceImpl = RangerConfiguration.getInstance().get(propertyPrefix + ".source.impl");
+
+		if(!StringUtils.isEmpty(policySourceImpl)) {
+			try {
+				@SuppressWarnings("unchecked")
+				Class<RangerAdminClient> adminClass = (Class<RangerAdminClient>)Class.forName(policySourceImpl);
+				
+				ret = adminClass.newInstance();
+			} catch (Exception excp) {
+				LOG.error("failed to instantiate policy source of type '" + policySourceImpl + "'. Will use policy source of type '" + RangerAdminRESTClient.class.getName() + "'", excp);
+			}
+		}
+
+		if(ret == null) {
+			ret = new RangerAdminRESTClient();
+		}
+
+		ret.init(propertyPrefix);
 
 		return ret;
 	}

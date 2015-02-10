@@ -22,11 +22,6 @@
 		<value>true</value>
 	</property>	
 	
-	<property>
-		<name>xasecure.audit.repository.name</name>
-		<value>hivedev</value>
-	</property>	
-	
 
 	<!-- DB audit provider configuration -->
 	<property>
