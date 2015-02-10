@@ -51,6 +51,7 @@ public class HadoopConfigHolder  {
 	
 	
 	private String datasourceName ;
+  private String defaultConfigFile ;
 	private String userName ;
 	private String keyTabFile ;
 	private String password ;
@@ -72,14 +73,19 @@ public class HadoopConfigHolder  {
 		}
 		return ret ;
 	}
-	
-	public static HadoopConfigHolder getInstance(String aDatasourceName, Map<String,String> connectionProperties) {
+
+  public static HadoopConfigHolder getInstance(String aDatasourceName, Map<String,String> connectionProperties) {
+    return getInstance(aDatasourceName, connectionProperties, null);
+  }
+
+	public static HadoopConfigHolder getInstance(String aDatasourceName, Map<String,String> connectionProperties,
+                                               String defaultConfigFile) {
 		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName) ;
 		if (ret == null) {
 			synchronized(HadoopConfigHolder.class) {
 				HadoopConfigHolder temp = ret ;
 				if (temp == null) {
-					ret = new HadoopConfigHolder(aDatasourceName,connectionProperties) ;
+					ret = new HadoopConfigHolder(aDatasourceName,connectionProperties, defaultConfigFile) ;
 					dataSource2HadoopConfigHolder.put(aDatasourceName, ret) ;
 				}
 			}
@@ -104,10 +110,16 @@ public class HadoopConfigHolder  {
 		initLoginInfo();
 		initClassLoader() ;
 	}
-	
-	private HadoopConfigHolder(String aDatasourceName, Map<String,String> connectionProperties) {
+
+  private HadoopConfigHolder(String aDatasourceName, Map<String,String> connectionProperties) {
+   this(aDatasourceName, connectionProperties, null);
+  }
+
+	private HadoopConfigHolder(String aDatasourceName, Map<String,String> connectionProperties,
+                             String defaultConfigFile) {
 		datasourceName = aDatasourceName;
 		this.connectionProperties = connectionProperties ;
+    this.defaultConfigFile = defaultConfigFile;
 		initConnectionProp() ;
 		initLoginInfo();
 		initClassLoader() ;
@@ -131,12 +143,13 @@ public class HadoopConfigHolder  {
 		if (resourcemapProperties == null) {
 			initResourceMap();
 		}
-		
+
 		if (resourcemapProperties != null) {
-			return resourcemapProperties.getProperty(key);
+      String rn = resourcemapProperties.getProperty(key);
+      return ( rn != null)  ? rn : defaultConfigFile;
 		}
 		else {
-			return null;
+			return defaultConfigFile;
 		}
 	}
 

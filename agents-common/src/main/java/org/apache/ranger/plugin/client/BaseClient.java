@@ -34,22 +34,29 @@ import org.apache.hadoop.security.SecureClientLogin;
 
 public abstract class BaseClient {
 	private static final Log LOG = LogFactory.getLog(BaseClient.class) ;
-	
-	private String serviceName ;
+
+
+  private String serviceName ;
+  private String defaultConfigFile ;
 	private Subject loginSubject ;
 	private HadoopConfigHolder configHolder;
 	
 	protected Map<String,String> connectionProperties ;
 	
-	public BaseClient(String serivceName) {
-		this.serviceName = serivceName ;
-		init() ;
-		login() ;
+	public BaseClient(String serviceName) {
+    this.serviceName = serviceName ;
+    init() ;
+    login() ;
 	}
-	
-	public BaseClient(String serivceName, Map<String,String> connectionProperties) {
+
+  public BaseClient(String svcName, Map<String,String> connectionProperties) {
+    this(svcName, connectionProperties, null);
+  }
+
+	public BaseClient(String serivceName, Map<String,String> connectionProperties, String defaultConfigFile) {
 		this.serviceName = serivceName ;
 		this.connectionProperties = connectionProperties ;
+    this.defaultConfigFile = defaultConfigFile ;
 		init() ;
 		login() ;
 	}
@@ -60,7 +67,7 @@ public abstract class BaseClient {
 			configHolder = HadoopConfigHolder.getInstance(serviceName) ;
 		}
 		else {
-			configHolder = HadoopConfigHolder.getInstance(serviceName,connectionProperties) ;
+			configHolder = HadoopConfigHolder.getInstance(serviceName,connectionProperties, defaultConfigFile) ;
 		}
 	}
 	
