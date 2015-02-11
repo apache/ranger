@@ -38,7 +38,6 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 
 	private BlockingQueue<AuditEventBase> mQueue = null;
 	private Thread  mThread           = null;
-	private boolean mStopThread       = false;
 	private String  mName             = null;
 	private int     mMaxQueueSize     = 10 * 1024;
 	private int     mMaxFlushInterval = 5000; // 5 seconds
@@ -109,13 +108,12 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 
 	@Override
 	public void stop() {
-		mStopThread = true;
+		mThread.interrupt();
 
 		try {
 			mThread.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (InterruptedException excp) {
+			LOG.error("AsyncAuditProvider.stop(): failed while waiting for thread to exit", excp);
 		}
 
 		super.stop();
@@ -132,7 +130,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 	public void run() {
 		LOG.info("==> AsyncAuditProvider.run()");
 
-		while (!mStopThread) {
+		while (true) {
 			AuditEventBase event = null;
 			try {
 				event = dequeueEvent();
@@ -142,6 +140,8 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 				} else {
 					flush();
 				}
+			} catch (InterruptedException excp) {
+				break;
 			} catch (Exception excp) {
 				logFailedEvent(event, excp);
 			}
@@ -167,31 +167,27 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		}
 	}
 
-	private AuditEventBase dequeueEvent() {
+	private AuditEventBase dequeueEvent() throws InterruptedException {
 		AuditEventBase ret = mQueue.poll();
 
-		try {
-			while(ret == null && !mStopThread) {
-				logSummaryIfRequired();
+		while(ret == null) {
+			logSummaryIfRequired();
 
-				if (mMaxFlushInterval > 0 && isFlushPending()) {
-					long timeTillNextFlush = getTimeTillNextFlush();
+			if (mMaxFlushInterval > 0 && isFlushPending()) {
+				long timeTillNextFlush = getTimeTillNextFlush();
 
-					if (timeTillNextFlush <= 0) {
-						break; // force flush
-					}
-
-					ret = mQueue.poll(timeTillNextFlush, TimeUnit.MILLISECONDS);
-				} else {
-					// Let's wake up for summary logging
-					long waitTime = intervalLogDurationMS - (System.currentTimeMillis() - lastIntervalLogTime);
-					waitTime = waitTime <= 0 ? intervalLogDurationMS : waitTime;
-
-					ret = mQueue.poll(waitTime, TimeUnit.MILLISECONDS);
+				if (timeTillNextFlush <= 0) {
+					break; // force flush
 				}
+
+				ret = mQueue.poll(timeTillNextFlush, TimeUnit.MILLISECONDS);
+			} else {
+				// Let's wake up for summary logging
+				long waitTime = intervalLogDurationMS - (System.currentTimeMillis() - lastIntervalLogTime);
+				waitTime = waitTime <= 0 ? intervalLogDurationMS : waitTime;
+
+				ret = mQueue.poll(waitTime, TimeUnit.MILLISECONDS);
 			}
-		} catch(InterruptedException excp) {
-			LOG.error("AsyncAuditProvider.dequeueEvent()", excp);
 		}
 
 		if(ret != null) {
