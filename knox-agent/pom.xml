@@ -33,14 +33,73 @@
   </parent>
   <dependencies>
     <dependency>
-	<groupId>org.apache.knox</groupId>
-	<artifactId>gateway-spi</artifactId>
-    <version>0.5.0</version>
+	 <groupId>org.apache.knox</groupId>
+	 <artifactId>gateway-spi</artifactId>
+     <version>0.5.0</version>
     </dependency>
     <dependency>
-	<groupId>javax.servlet</groupId>
-	<artifactId>javax.servlet-api</artifactId>
-	<version>${javax.servlet.version}</version>
+	 <groupId>javax.servlet</groupId>
+	 <artifactId>javax.servlet-api</artifactId>
+	 <version>${javax.servlet.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.calcite</groupId>
+      <artifactId>calcite-core</artifactId>
+      <version>${calcite.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.calcite</groupId>
+      <artifactId>calcite-avatica</artifactId>
+      <version>${calcite.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tez</groupId>
+      <artifactId>tez-api</artifactId>
+      <version>${tez.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tez</groupId>
+      <artifactId>tez-runtime-library</artifactId>
+      <version>${tez.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tez</groupId>
+      <artifactId>tez-runtime-internals</artifactId>
+      <version>${tez.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tez</groupId>
+      <artifactId>tez-mapreduce</artifactId>
+      <version>${tez.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>${hadoop.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs</artifactId>
+        <version>${hadoop.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-server</artifactId>
+        <version>${hbase.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-common</artifactId>
+        <version>${hive.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-service</artifactId>
+        <version>${hive.version}</version>
     </dependency>
     <dependency>
       <groupId>security_plugins.ranger-plugins-common</groupId>
