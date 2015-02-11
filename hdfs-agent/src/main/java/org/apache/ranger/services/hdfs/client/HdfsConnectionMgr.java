@@ -36,7 +36,7 @@ public class HdfsConnectionMgr {
 	protected Map<String, HdfsClient> 	hdfdsConnectionCache = null;
 	protected Map<String, Boolean> 		repoConnectStatusMap = null;
 
-	private static Logger logger = Logger.getLogger(HdfsConnectionMgr.class);
+	private static Logger LOG = Logger.getLogger(HdfsConnectionMgr.class);
 	
 	public HdfsConnectionMgr(){
 		hdfdsConnectionCache = new HashMap<String, HdfsClient>();
@@ -54,7 +54,7 @@ public class HdfsConnectionMgr {
 									.getServiceByName(serviceName)
 									.getType();
 		} catch (Exception ex) {
-			logger.error("Service could not be found for the Service Name : " + serviceName , ex);
+			LOG.error("Service could not be found for the Service Name : " + serviceName , ex);
 		}
 		if (serviceType != null) {
 			// get it from the cache
@@ -72,7 +72,7 @@ public class HdfsConnectionMgr {
 						try {
 							hdfsClient = TimedEventUtil.timedTask(connectHDFS, 10, TimeUnit.SECONDS);
 						} catch(Exception e){
-							logger.error("Error establishing connection for HDFS repository : "
+							LOG.error("Error establishing connection for HDFS repository : "
 									+ serviceName, e);
 						}
 						
@@ -88,7 +88,7 @@ public class HdfsConnectionMgr {
 						try {
 							hdfsClient = TimedEventUtil.timedTask(connectHDFS, 5, TimeUnit.SECONDS);
 						} catch(Exception e){
-							logger.error("Error establishing connection for HDFS repository : "
+							LOG.error("Error establishing connection for HDFS repository : "
 									+ serviceName + " using configuration : " + configs, e);
 						}
 					}	
@@ -103,7 +103,7 @@ public class HdfsConnectionMgr {
 				}
 			}
 		} else {
-			logger.error("Serice not found with name "+serviceName, new Throwable());
+			LOG.error("Serice not found with name "+serviceName, new Throwable());
 		}
 
 		return hdfsClient;

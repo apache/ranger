@@ -457,7 +457,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.validateConfig(" + serviceName + "): " + ret);
+			LOG.debug("<== ServiceREST.lookupResource(" + serviceName + "): " + ret);
 		}
 
 		return ret;

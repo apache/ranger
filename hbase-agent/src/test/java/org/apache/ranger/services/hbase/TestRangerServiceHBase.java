@@ -1,5 +1,3 @@
-package org.apache.ranger.services.hdfs;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,6 +17,7 @@ package org.apache.ranger.services.hdfs;
  * under the License.
  */
 
+package org.apache.ranger.services.hbase;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -27,23 +26,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.ServiceStoreFactory;
-import org.apache.ranger.services.hdfs.RangerServiceHdfs;
+import org.apache.ranger.services.hbase.RangerServiceHBase;
+import org.apache.ranger.services.hbase.client.HBaseClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 
-public class TestRangerServiceHdfs {
-	static final String 	sdName		  =  "svcDef-Hdfs";
-	static final String 	serviceName   =  "Hdfsdev";
+public class TestRangerServiceHBase {
+	static ServiceStore svcStore    	  = null;
+	static final String 	sdName		  =  "svcDef-HBase";
+	static final String 	serviceName   =  "HBaseDef";
 	HashMap<String, Object> responseData  =  null;
 	Map<String, String> 	configs 	  =  null;
-	RangerServiceHdfs		svcHdfs		  =  null;
+	RangerServiceHBase 		svcHBase	  =  null;
 	RangerServiceDef 		sd 			  =  null;
 	RangerService			svc			  =  null;
 	ResourceLookupContext   lookupContext =  null;
@@ -54,14 +57,16 @@ public class TestRangerServiceHdfs {
 		configs 	= new HashMap<String,String>();
 		lookupContext = new ResourceLookupContext();
 		
-		buildHdfsConnectionConfig();
+		buildHbaseConnectionConfig();
 		buildLookupContext();
-
-		sd		 = new RangerServiceDef(sdName, "org.apache.ranger.service.hdfs.RangerServiceHdfs", "TestService", "test servicedef description", null, null, null, null, null);
-		svc   	 = new RangerService(sdName, serviceName, "unit test hdfs resource lookup and validateConfig",configs);
-		svcHdfs = new RangerServiceHdfs();
-		svcHdfs.init(sd, svc);
-		svcHdfs.init();
+		
+		svcStore = ServiceStoreFactory.instance().getServiceStore();
+				
+		sd		 = new RangerServiceDef(sdName, "org.apache.ranger.services.hbase.RangerServiceHBase", "TestService", "test servicedef description", null, null, null, null, null);
+		svc   	 = new RangerService(sdName, serviceName, "unit test hbase resource lookup and validateConfig", configs);
+		svcHBase = new RangerServiceHBase();
+		svcHBase.init(sd, svc);
+		svcHBase.init();
 	}
 	
 	@Test
@@ -71,13 +76,16 @@ public class TestRangerServiceHdfs {
 		String errorMessage = null;
 		
 		try { 
-			ret = svcHdfs.validateConfig();
+			ret = svcHBase.validateConfig();
 		}catch (Exception e) {
 			errorMessage = e.getMessage();
+			if ( e instanceof HadoopException) {
+				errorMessage = "HadoopException";
+			}
 		}
-		System.out.println(errorMessage);
+		
 		if ( errorMessage != null) {
-			assertTrue(errorMessage.contains("listFilesInternal"));
+			assertTrue(errorMessage.contains("HadoopException"));
 		} else {
 			assertNotNull(ret);
 		}
@@ -87,39 +95,43 @@ public class TestRangerServiceHdfs {
 	@Test
 	public void	testLookUpResource() {
 		List<String> ret 	= new ArrayList<String>();
+		List<String> mockresult = new ArrayList<String>(){{add("iemployee");add("idepartment");}};
 		String errorMessage = null;
+		HBaseClient hbaseClient = new HBaseClient("hbasedev", configs);
 		try {
-			ret = svcHdfs.lookupResource(lookupContext);
-		}catch (Exception e) {
+			Mockito.when(hbaseClient.getTableList("iem", null)).thenReturn(mockresult);
+			ret = svcHBase.lookupResource(lookupContext);
+		}catch (Throwable e) {
 			errorMessage = e.getMessage();
+			if ( e instanceof HadoopException) {
+				errorMessage = "HadoopException";
+			}
 		}
-		System.out.println(errorMessage);
+		
 		if ( errorMessage != null) {
-			assertNotNull(errorMessage);
+			assertTrue(errorMessage.contains("HadoopException"));
 		} else {
 			assertNotNull(ret);
 		}
-		
 	}
 	
-	public void buildHdfsConnectionConfig() {
-		configs.put("username", "hdfsuser");
+	public void buildHbaseConnectionConfig() {
+		configs.put("username", "hbaseuser");
 		configs.put("password", "*******");
-		configs.put("fs.default.name", "hdfs://localhost:8020");
-		configs.put("hadoop.security.authorization","");
-		configs.put("hadoop.security.auth_to_local","");
-		configs.put("dfs.datanode.kerberos.principa","");
-		configs.put("dfs.namenode.kerberos.principal","");
-		configs.put("dfs.secondary.namenode.kerberos.principal","");
-		configs.put("commonNameForCertificate","");
-		configs.put("isencrypted","true");
+		configs.put("hadoop.security.authentication", "simple");
+		configs.put("hbase.master.kerberos.principal", "hbase/_HOST@EXAMPLE.COM");
+		configs.put("hbase.security.authentication", "simple");
+		configs.put("hbase.zookeeper.property.clientPort", "2181");
+		configs.put("hbase.zookeeper.quorum", "localhost");
+		configs.put("zookeeper.znode.parent","/hbase-unsecure");
+		configs.put("isencrypted", "true");
 	}
 
 	public void buildLookupContext() {
 		Map<String, List<String>> resourceMap = new HashMap<String,List<String>>();
 		resourceMap.put(null, null);
-		lookupContext.setUserInput("app");
-		lookupContext.setResourceName(null);
+		lookupContext.setUserInput("iem");
+		lookupContext.setResourceName("table");
 		lookupContext.setResources(resourceMap);
 	}
 	
@@ -131,4 +143,3 @@ public class TestRangerServiceHdfs {
 	}
 	
 }
-

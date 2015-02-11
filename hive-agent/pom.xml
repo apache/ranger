@@ -67,7 +67,6 @@
       <version>${tez.version}</version>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
@@ -87,6 +86,11 @@
 	  <groupId>org.apache.hive</groupId>
 	  <artifactId>hive-exec</artifactId>
 	  <version>${hive.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${gson.version}</version>
     </dependency>
     <dependency>
 	  <groupId>org.apache.hive</groupId>

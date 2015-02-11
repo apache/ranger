@@ -1,5 +1,3 @@
-package org.apache.ranger.services.hdfs;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,31 +17,34 @@ package org.apache.ranger.services.hdfs;
  * under the License.
  */
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+package org.apache.ranger.services.hive.client;
+
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.ServiceStoreFactory;
-import org.apache.ranger.services.hdfs.RangerServiceHdfs;
+import org.apache.ranger.services.hive.RangerServiceHive;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 
-public class TestRangerServiceHdfs {
-	static final String 	sdName		  =  "svcDef-Hdfs";
-	static final String 	serviceName   =  "Hdfsdev";
+public class TestRangerServiceHive {
+	
+	static final String 	sdName		  =  "svcDef-Hive";
+	static final String 	serviceName   =  "HiveDef";
 	HashMap<String, Object> responseData  =  null;
 	Map<String, String> 	configs 	  =  null;
-	RangerServiceHdfs		svcHdfs		  =  null;
+	RangerServiceHive 		svcHive		  =  null;
 	RangerServiceDef 		sd 			  =  null;
 	RangerService			svc			  =  null;
 	ResourceLookupContext   lookupContext =  null;
@@ -54,14 +55,14 @@ public class TestRangerServiceHdfs {
 		configs 	= new HashMap<String,String>();
 		lookupContext = new ResourceLookupContext();
 		
-		buildHdfsConnectionConfig();
+		buildHbaseConnectionConfig();
 		buildLookupContext();
-
-		sd		 = new RangerServiceDef(sdName, "org.apache.ranger.service.hdfs.RangerServiceHdfs", "TestService", "test servicedef description", null, null, null, null, null);
-		svc   	 = new RangerService(sdName, serviceName, "unit test hdfs resource lookup and validateConfig",configs);
-		svcHdfs = new RangerServiceHdfs();
-		svcHdfs.init(sd, svc);
-		svcHdfs.init();
+				
+		sd		= new RangerServiceDef(sdName, "org.apache.ranger.services.hive.RangerServiceHive", "TestHiveService", "test servicedef description", null, null, null, null, null);
+		svc   	= new RangerService(sdName, serviceName, "unit test hive resource lookup and validateConfig", configs);
+		svcHive = new RangerServiceHive();
+		svcHive.init(sd, svc);
+		svcHive.init();
 	}
 	
 	@Test
@@ -71,13 +72,16 @@ public class TestRangerServiceHdfs {
 		String errorMessage = null;
 		
 		try { 
-			ret = svcHdfs.validateConfig();
+			ret = svcHive.validateConfig();
 		}catch (Exception e) {
 			errorMessage = e.getMessage();
+			if ( e instanceof HadoopException) {
+				errorMessage = "HadoopException";
+			}
 		}
-		System.out.println(errorMessage);
+		
 		if ( errorMessage != null) {
-			assertTrue(errorMessage.contains("listFilesInternal"));
+			assertTrue(errorMessage.contains("HadoopException"));
 		} else {
 			assertNotNull(ret);
 		}
@@ -89,41 +93,36 @@ public class TestRangerServiceHdfs {
 		List<String> ret 	= new ArrayList<String>();
 		String errorMessage = null;
 		try {
-			ret = svcHdfs.lookupResource(lookupContext);
+			ret = svcHive.lookupResource(lookupContext);
 		}catch (Exception e) {
 			errorMessage = e.getMessage();
+			if ( e instanceof HadoopException) {
+				errorMessage = "HadoopException";
+			}
 		}
-		System.out.println(errorMessage);
 		if ( errorMessage != null) {
-			assertNotNull(errorMessage);
+			assertTrue(errorMessage.contains("HadoopException"));
 		} else {
-			assertNotNull(ret);
+			assertNull(ret);
 		}
 		
 	}
 	
-	public void buildHdfsConnectionConfig() {
-		configs.put("username", "hdfsuser");
+	public void buildHbaseConnectionConfig() {
+		configs.put("username", "hiveuser");
 		configs.put("password", "*******");
-		configs.put("fs.default.name", "hdfs://localhost:8020");
-		configs.put("hadoop.security.authorization","");
-		configs.put("hadoop.security.auth_to_local","");
-		configs.put("dfs.datanode.kerberos.principa","");
-		configs.put("dfs.namenode.kerberos.principal","");
-		configs.put("dfs.secondary.namenode.kerberos.principal","");
-		configs.put("commonNameForCertificate","");
-		configs.put("isencrypted","true");
+		configs.put("jdbc.driverClassName", "org.apache.hive.jdbc.HiveDriver");
+		configs.put("jdbc.url ", "jdbc:hive2://localhost:10000/default");
 	}
 
 	public void buildLookupContext() {
 		Map<String, List<String>> resourceMap = new HashMap<String,List<String>>();
-		resourceMap.put(null, null);
-		lookupContext.setUserInput("app");
-		lookupContext.setResourceName(null);
+		resourceMap.put("database", null);
+		lookupContext.setUserInput("x");
+		lookupContext.setResourceName("database");
 		lookupContext.setResources(resourceMap);
 	}
 	
-			
 	@After
 	public void tearDown() {
 		sd  = null;
@@ -131,4 +130,3 @@ public class TestRangerServiceHdfs {
 	}
 	
 }
-

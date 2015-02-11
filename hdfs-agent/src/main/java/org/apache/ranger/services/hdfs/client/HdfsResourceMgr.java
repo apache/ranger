@@ -32,25 +32,25 @@ import org.apache.ranger.plugin.util.TimedEventUtil;
 
 public class HdfsResourceMgr {
 
-	public static final String PATH   = "path";
-	public static final Logger logger = Logger.getLogger(HdfsResourceMgr.class);
-	
+	public static final Logger LOG 	= Logger.getLogger(HdfsResourceMgr.class);
+	public static final String PATH	= "path";
+
 	public static HashMap<String, Object> testConnection(String serviceName, Map<String, String> configs) throws Exception {
 		HashMap<String, Object> ret = null;
 		
-		if(logger.isDebugEnabled()) {
-			logger.debug("<== HdfsResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== HdfsResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
 		}	
 		
 		try {
 			ret = HdfsClient.testConnection(serviceName, configs);
 		} catch (Exception e) {
-		  logger.error("<== HdfsResourceMgr.testConnection Error: " + e) ;
+			LOG.error("<== HdfsResourceMgr.testConnection Error: " + e) ;
 		  throw e;
 		}
 		
-		if(logger.isDebugEnabled()) {
-			logger.debug("<== HdfsResourceMgr.HdfsResourceMgr Result : "+ ret  ) ;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== HdfsResourceMgr.testConnection Result : "+ ret  ) ;
 		}	
 		return ret;
 	}
@@ -71,8 +71,8 @@ public class HdfsResourceMgr {
 		
 		if (serviceName != null && userInput != null) {
 			try {
-				if(logger.isDebugEnabled()) {
-					logger.debug("<== HdfsResourceMgr.HdfsResourceMgr UserInput: "+ userInput  + "configs: " + configs + "context: "  + context) ;
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("<== HdfsResourceMgr.getHdfsResources() UserInput: "+ userInput  + "configs: " + configs + "context: "  + context) ;
 				}
 				
 				String wildCardToMatch;
@@ -107,20 +107,20 @@ public class HdfsResourceMgr {
 					};
 
 					resultList = TimedEventUtil.timedTask(callableObj, 5,TimeUnit.SECONDS); 
-					if(logger.isDebugEnabled()) {
-						logger.debug("Resource dir : " + userInput
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Resource dir : " + userInput
 							+ " wild card to match : " + wildCardToMatch
 							+ "\n Matching resources : " + resultList);
 					}
 				}
 			} catch (Exception e) {
-				logger.error("Unable to get hdfs resources.", e);
+				LOG.error("Unable to get hdfs resources.", e);
 				throw e;
 			}
 
 		}
-		if(logger.isDebugEnabled()) {
-			logger.debug("<== HdfsResourceMgr.HdfsResourceMgr Result : "+ resultList  ) ;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== HdfsResourceMgr.getHdfsResources() Result : "+ resultList  ) ;
 		}	
 		return resultList;
     }

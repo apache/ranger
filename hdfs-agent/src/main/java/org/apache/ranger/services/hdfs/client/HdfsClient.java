@@ -190,11 +190,11 @@ public class HdfsClient extends BaseClient {
 	}
 
 	public static HashMap<String, Object> testConnection(String serviceName,
-			Map<String, String> connectionProperties) {
+			Map<String, String> configs) {
 
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 		boolean connectivityStatus = false;
-		HdfsClient connectionObj = new HdfsClient(serviceName, connectionProperties);
+		HdfsClient connectionObj = new HdfsClient(serviceName, configs);
 		if (connectionObj != null) {
 			List<String> testResult = connectionObj.listFiles("/", null,null);
 			if (testResult != null && testResult.size() != 0) {
