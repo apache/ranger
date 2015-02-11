@@ -37,6 +37,17 @@ import com.sun.jersey.api.client.ClientResponse;
 public class RESTResponse {
 	private static Logger LOG = Logger.getLogger(RESTResponse.class);
 
+	/**
+	 * values for statusCode
+	 */
+	public static final int STATUS_SUCCESS         = 0;
+	public static final int STATUS_ERROR           = 1;
+	public static final int STATUS_VALIDATION      = 2;
+	public static final int STATUS_WARN            = 3;
+	public static final int STATUS_INFO            = 4;
+	public static final int STATUS_PARTIAL_SUCCESS = 5;
+	public static final int ResponseStatus_MAX     = 5;
+
 	private int           httpStatusCode;
 	private int           statusCode;
 	private String        msgDesc;

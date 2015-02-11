@@ -45,12 +45,12 @@ public class HdfsClient extends BaseClient {
 
 	private static final Log LOG = LogFactory.getLog(HdfsClient.class) ;
 
-	public HdfsClient(String serviceName) {
+  public HdfsClient(String serviceName) {
 		super(serviceName) ;
 	}
 	
 	public HdfsClient(String serviceName, Map<String,String> connectionProperties) {
-		super(serviceName,connectionProperties) ;
+		super(serviceName,connectionProperties, "hdfs-client") ;
 	}
 	
 	private List<String> listFilesInternal(String baseDir, String fileMatching, final List<String> pathList) {

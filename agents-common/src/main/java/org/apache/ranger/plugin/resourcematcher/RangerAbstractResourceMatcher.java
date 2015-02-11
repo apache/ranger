@@ -155,6 +155,10 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			} else {
 				ret = optIgnoreCase ? StringUtils.equalsIgnoreCase(resource, policyValue) : StringUtils.equals(resource, policyValue);
 			}
+
+			if(policyIsExcludes) {
+				ret = !ret;
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
