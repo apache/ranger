@@ -90,16 +90,15 @@ import org.apache.hadoop.hbase.security.access.TablePermission;
 import org.apache.hadoop.hbase.security.access.UserPermission;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
-import org.apache.ranger.admin.client.RangerAdminRESTClient;
-import org.apache.ranger.admin.client.datatype.GrantRevokeData;
-import org.apache.ranger.admin.client.datatype.GrantRevokeData.PermMap;
+import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.PolicyRefresher;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -112,8 +111,7 @@ import com.google.protobuf.Service;
 
 public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocessorBase implements AccessControlService.Interface, CoprocessorService {
 	private static final Log LOG = LogFactory.getLog(RangerAuthorizationCoprocessor.class.getName());
-	private static final String repositoryName          = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_REPOSITORY_NAME_PROP);
-	private static final boolean UpdateRangerPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
+	private static boolean UpdateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	private static final String GROUP_PREFIX = "@";
 		
 	private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
@@ -130,9 +128,9 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	 * These are package level only for testability and aren't meant to be exposed outside via getters/setters or made available to derived classes.
 	 */
 	final HbaseFactory _factory = HbaseFactory.getInstance();
-	final RangerPolicyEngine _authorizer = _factory.getPolicyEngine();
 	final HbaseUserUtils _userUtils = _factory.getUserUtils();
 	final HbaseAuthUtils _authUtils = _factory.getAuthUtils();
+	private static volatile RangerHBasePlugin hbasePlugin = null;
 	
 	// Utilities Methods 
 	protected byte[] getTableName(RegionCoprocessorEnvironment e) {
@@ -323,7 +321,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		User user = getActiveUser();
 		// let's create a session that would be reused.  Set things on it that won't change.
 		HbaseAuditHandler auditHandler = _factory.getAuditHandler(); 
-		AuthorizationSession session = new AuthorizationSession(_authorizer)
+		AuthorizationSession session = new AuthorizationSession(hbasePlugin.getPolicyEngine())
 				.operation(operation)
 				.remoteAddress(getRemoteAddress())
 				.auditHandler(auditHandler)
@@ -506,7 +504,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		User user = getActiveUser();
 		
 		HbaseAuditHandler auditHandler = _factory.getAuditHandler(); 
-		AuthorizationSession session = new AuthorizationSession(_authorizer)
+		AuthorizationSession session = new AuthorizationSession(hbasePlugin.getPolicyEngine())
 			.operation(operation)
 			.otherInformation(otherInformation)
 			.remoteAddress(getRemoteAddress())
@@ -562,7 +560,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		// if write access is desired to metatables then global create access is sufficient
 		if (_authUtils.isWriteAccess(access) && isAccessForMetaTables(regionServerEnv)) {
 			String createAccess = _authUtils.getAccess(Action.CREATE);
-			AuthorizationSession session = new AuthorizationSession(_authorizer)
+			AuthorizationSession session = new AuthorizationSession(hbasePlugin.getPolicyEngine())
 				.operation(operation)
 				.remoteAddress(getRemoteAddress())
 				.user(user)
@@ -870,6 +868,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	private static final String MASTER_COPROCESSOR_TYPE = "master";
 	private static final String REGIONAL_COPROCESSOR_TYPE = "regional";
 	private static final String REGIONAL_SERVER_COPROCESSOR_TYPE = "regionalServer";
+
 	@Override
 	public void start(CoprocessorEnvironment env) throws IOException {
 		String appType = "unknown";
@@ -898,9 +897,26 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				}
 			}
 		}
+
 		// create and initialize the plugin class
-		new RangerBasePlugin("hbase", appType) {}
-			.init(_authorizer);
+		RangerHBasePlugin plugin = hbasePlugin;
+
+		if(plugin == null) {
+			synchronized(RangerAuthorizationCoprocessor.class) {
+				plugin = hbasePlugin;
+				
+				if(plugin == null) {
+					plugin = new RangerHBasePlugin(appType);
+
+					plugin.init();
+
+					UpdateRangerPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
+
+					hbasePlugin = plugin;
+				}
+			}
+		}
+		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Start of Coprocessor: [" + coprocessorType + "] with superUserList [" + superUserList + "]");
 		}
@@ -985,16 +1001,20 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		boolean isSuccess = false;
 
 		if(UpdateRangerPoliciesOnGrantRevoke) {
-			GrantRevokeData grData = null;
+			GrantRevokeRequest grData = null;
 	
 			try {
 				grData = createGrantData(request);
-	
-				RangerAdminRESTClient xaAdmin = new RangerAdminRESTClient();
-	
-			    // TODO: xaAdmin.grantPrivilege(grData);
-	
-			    isSuccess = true;
+
+				RangerHBasePlugin plugin    = hbasePlugin;
+				PolicyRefresher   refresher = plugin == null ? null : plugin.getPolicyRefresher();
+				RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+
+				if(admin != null) {
+					admin.grantAccess(plugin.getServiceName(), grData);
+
+					isSuccess = true;
+				}
 			} catch(IOException excp) {
 				LOG.warn("grant() failed", excp);
 	
@@ -1004,7 +1024,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	
 				ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
 			} finally {
-				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
+//				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
 	
 				// TODO - Auditing of grant-revoke to be sorted out.
 //				if(accessController.isAudited(tableName)) {
@@ -1027,16 +1047,20 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		boolean isSuccess = false;
 
 		if(UpdateRangerPoliciesOnGrantRevoke) {
-			GrantRevokeData grData = null;
+			GrantRevokeRequest grData = null;
 	
 			try {
 				grData = createRevokeData(request);
 	
-				RangerAdminRESTClient xaAdmin = new RangerAdminRESTClient();
-	
-			    // TODO: xaAdmin.revokePrivilege(grData);
-	
-			    isSuccess = true;
+				RangerHBasePlugin plugin    = hbasePlugin;
+				PolicyRefresher   refresher = plugin == null ? null : plugin.getPolicyRefresher();
+				RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+
+				if(admin != null) {
+					admin.revokeAccess(plugin.getServiceName(), grData);
+
+					isSuccess = true;
+				}
 			} catch(IOException excp) {
 				LOG.warn("revoke() failed", excp);
 	
@@ -1046,7 +1070,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	
 				ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
 			} finally {
-				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
+//				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
 	
 				// TODO Audit of grant revoke to be sorted out
 //				if(accessController.isAudited(tableName)) {
@@ -1079,7 +1103,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	    return AccessControlProtos.AccessControlService.newReflectiveService(this);
 	}
 
-	private GrantRevokeData createGrantData(AccessControlProtos.GrantRequest request) throws Exception {
+	private GrantRevokeRequest createGrantData(AccessControlProtos.GrantRequest request) throws Exception {
 		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.UserPermission up   = request.getUserPermission();
 		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
 
@@ -1104,7 +1128,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 		switch(perm.getType()) {
 			case Global:
-				tableName = colFamily = qualifier = "*";
+				tableName = colFamily = qualifier = WILDCARD;
 			break;
 
 			case Table:
@@ -1123,21 +1147,49 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			throw new Exception("grant(): table/columnFamily/columnQualifier not specified");
 		}
 
-		PermMap permMap = new PermMap();
+		tableName = StringUtil.isEmpty(tableName) ? WILDCARD : tableName;
+		colFamily = StringUtil.isEmpty(colFamily) ? WILDCARD : colFamily;
+		qualifier = StringUtil.isEmpty(qualifier) ? WILDCARD : qualifier;
+
+		User   activeUser = getActiveUser();
+		String grantor    = activeUser != null ? activeUser.getShortName() : null;
+
+		Map<String, String> mapResource = new HashMap<String, String>();
+		mapResource.put("table", tableName);
+		mapResource.put("column-family", colFamily);
+		mapResource.put("column", qualifier);
+
+		GrantRevokeRequest ret = new GrantRevokeRequest();
+
+		ret.setGrantor(grantor);
+		ret.setDelegateAdmin(Boolean.FALSE);
+		ret.setEnableAudit(Boolean.TRUE);
+		ret.setReplaceExistingPermissions(Boolean.TRUE);
+		ret.setResource(mapResource);
 
 		if(userName.startsWith(GROUP_PREFIX)) {
-			permMap.addGroup(userName.substring(GROUP_PREFIX.length()));
+			ret.getGroups().add(userName.substring(GROUP_PREFIX.length()));
 		} else {
-			permMap.addUser(userName);
+			ret.getUsers().add(userName);
 		}
 
 		for (int i = 0; i < actions.length; i++) {
 			switch(actions[i].code()) {
 				case 'R':
+					ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_READ);
+				break;
+
 				case 'W':
+					ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_WRITE);
+				break;
+
 				case 'C':
+					ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_CREATE);
+				break;
+
 				case 'A':
-					permMap.addPerm(actions[i].name());
+					ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_ADMIN);
+					ret.setDelegateAdmin(Boolean.TRUE);
 				break;
 
 				default:
@@ -1145,17 +1197,10 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			}
 		}
 
-		User   activeUser = getActiveUser();
-		String grantor    = activeUser != null ? activeUser.getShortName() : null;
-
-		GrantRevokeData grData = new GrantRevokeData();
-
-		grData.setHBaseData(grantor, repositoryName,  tableName,  qualifier, colFamily, permMap);
-
-		return grData;
+		return ret;
 	}
 
-	private GrantRevokeData createRevokeData(AccessControlProtos.RevokeRequest request) throws Exception {
+	private GrantRevokeRequest createRevokeData(AccessControlProtos.RevokeRequest request) throws Exception {
 		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.UserPermission up   = request.getUserPermission();
 		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
 
@@ -1175,7 +1220,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 		switch(perm.getType()) {
 			case Global :
-				tableName = colFamily = qualifier = "*";
+				tableName = colFamily = qualifier = WILDCARD;
 			break;
 
 			case Table :
@@ -1194,27 +1239,51 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			throw new Exception("revoke(): table/columnFamily/columnQualifier not specified");
 		}
 
-		PermMap permMap = new PermMap();
-
-		if(userName.startsWith(GROUP_PREFIX)) {
-			permMap.addGroup(userName.substring(GROUP_PREFIX.length()));
-		} else {
-			permMap.addUser(userName);
-		}
-
-		// revoke removes all permissions
-		permMap.addPerm(Permission.Action.READ.name());
-		permMap.addPerm(Permission.Action.WRITE.name());
-		permMap.addPerm(Permission.Action.CREATE.name());
-		permMap.addPerm(Permission.Action.ADMIN.name());
+		tableName = StringUtil.isEmpty(tableName) ? WILDCARD : tableName;
+		colFamily = StringUtil.isEmpty(colFamily) ? WILDCARD : colFamily;
+		qualifier = StringUtil.isEmpty(qualifier) ? WILDCARD : qualifier;
 
 		User   activeUser = getActiveUser();
 		String grantor    = activeUser != null ? activeUser.getShortName() : null;
 
-		GrantRevokeData grData = new GrantRevokeData();
+		Map<String, String> mapResource = new HashMap<String, String>();
+		mapResource.put("table", tableName);
+		mapResource.put("column-family", colFamily);
+		mapResource.put("column", qualifier);
 
-		grData.setHBaseData(grantor, repositoryName,  tableName,  qualifier, colFamily, permMap);
+		GrantRevokeRequest ret = new GrantRevokeRequest();
 
-		return grData;
+		ret.setGrantor(grantor);
+		ret.setDelegateAdmin(Boolean.FALSE);
+		ret.setEnableAudit(Boolean.TRUE);
+		ret.setReplaceExistingPermissions(Boolean.TRUE);
+		ret.setResource(mapResource);
+
+		if(userName.startsWith(GROUP_PREFIX)) {
+			ret.getGroups().add(userName.substring(GROUP_PREFIX.length()));
+		} else {
+			ret.getUsers().add(userName);
+		}
+
+		// revoke removes all permissions
+		ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_READ);
+		ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_WRITE);
+		ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_CREATE);
+		ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_ADMIN);
+
+		return ret;
 	}
 }
+
+
+class RangerHBasePlugin extends RangerBasePlugin {
+	public RangerHBasePlugin(String appType) {
+		super("hbase", appType);
+	}
+
+	public void init() {
+		super.init();
+	}
+}
+
+

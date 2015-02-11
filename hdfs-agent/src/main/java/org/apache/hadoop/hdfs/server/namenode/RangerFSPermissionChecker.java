@@ -66,7 +66,7 @@ public class RangerFSPermissionChecker {
 		access2ActionListMapper.put(FsAction.EXECUTE,       Sets.newHashSet(EXECUTE_ACCCESS_TYPE));
 	}
 
-	private static RangerHdfsPlugin                    rangerPlugin        = null;
+	private static volatile RangerHdfsPlugin           rangerPlugin        = null;
 	private static ThreadLocal<RangerHdfsAuditHandler> currentAuditHandler = new ThreadLocal<RangerHdfsAuditHandler>();
 
 
@@ -98,15 +98,18 @@ public class RangerFSPermissionChecker {
 				aPathName = RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH;
 			}
 
-			if (rangerPlugin == null) {
-				synchronized(RangerFSPermissionChecker.class) {
-					RangerHdfsPlugin temp = rangerPlugin ;
-					if (temp == null) {
-						try {
-							temp = new RangerHdfsPlugin();
-							temp.init();
+			RangerHdfsPlugin plugin = rangerPlugin;
 
-							rangerPlugin = temp;
+			if (plugin == null) {
+				synchronized(RangerFSPermissionChecker.class) {
+					plugin = rangerPlugin ;
+
+					if (plugin == null) {
+						try {
+							plugin = new RangerHdfsPlugin();
+							plugin.init();
+
+							rangerPlugin = plugin;
 						}
 						catch(Throwable t) {
 							LOG.error("Unable to create Authorizer", t);
@@ -172,7 +175,7 @@ public class RangerFSPermissionChecker {
 }
 
 class RangerHdfsPlugin extends RangerBasePlugin {
-	private static boolean hadoopAuthEnabled = false;
+	private static boolean hadoopAuthEnabled = RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT;
 
 	public RangerHdfsPlugin() {
 		super("hdfs", "hdfs");

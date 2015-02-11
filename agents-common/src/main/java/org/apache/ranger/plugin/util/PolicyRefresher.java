@@ -45,7 +45,6 @@ public class PolicyRefresher extends Thread {
 	private long               pollingIntervalMs = 30 * 1000;
 	private String             cacheFile         = null;
 
-	private boolean shutdownFlag     = false;
 	private long    lastKnownVersion = -1;
 	private Gson    gson             = null;
 
@@ -120,13 +119,17 @@ public class PolicyRefresher extends Thread {
 	public void startRefresher() {
 		loadFromCache();
 
-		shutdownFlag = false;
-
 		super.start();
 	}
 
 	public void stopRefresher() {
-		shutdownFlag = true;
+		super.interrupt();
+
+	    try {
+	        super.join();
+	      } catch (InterruptedException excp) {
+	        LOG.warn("PolicyRefresher(serviceName=" + serviceName + "): error while waiting for thread to exit", excp);
+	      }
 	}
 
 	public void run() {
@@ -134,7 +137,7 @@ public class PolicyRefresher extends Thread {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").run()");
 		}
 
-		while(! shutdownFlag) {
+		while(true) {
 			try {
 				ServicePolicies svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
 
@@ -167,10 +170,10 @@ public class PolicyRefresher extends Thread {
 
 			try {
 				Thread.sleep(pollingIntervalMs);
-			} catch(Exception excp) {
-				LOG.error("PolicyRefresher(serviceName=" + serviceName + ").run(): error while sleep. exiting thread", excp);
+			} catch(InterruptedException excp) {
+				LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
 
-				throw new RuntimeException(excp);
+				break;
 			}
 		}
 

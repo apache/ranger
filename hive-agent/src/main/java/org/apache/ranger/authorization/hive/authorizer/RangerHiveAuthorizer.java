@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -64,7 +63,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 	private static final char COLUMN_SEP = ',';
 
-	private static RangerHivePlugin hivePlugin = null ;
+	private static volatile RangerHivePlugin hivePlugin = null ;
 
 
 	public RangerHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
@@ -75,9 +74,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		LOG.debug("RangerHiveAuthorizer.RangerHiveAuthorizer()");
 
-		if(hivePlugin == null) {
+		RangerHivePlugin plugin = hivePlugin;
+		
+		if(plugin == null) {
 			synchronized(RangerHiveAuthorizer.class) {
-				if(hivePlugin == null) {
+				plugin = hivePlugin;
+
+				if(plugin == null) {
 					String appType = "unknown";
 
 					if(sessionContext != null) {
@@ -92,10 +95,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						}
 					}
 
-					RangerHivePlugin temp = new RangerHivePlugin(appType);
-					temp.init();
+					plugin = new RangerHivePlugin(appType);
+					plugin.init();
 
-					hivePlugin = temp;
+					hivePlugin = plugin;
 				}
 			}
 		}
@@ -535,7 +538,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 				case GRANT_PRIVILEGE:
 				case REVOKE_PRIVILEGE:
-					accessType = HiveAccessType.ADMIN;
+					accessType = HiveAccessType.NONE; // access check will be performed at the ranger-admin side
 				break;
 
 				case ADD:

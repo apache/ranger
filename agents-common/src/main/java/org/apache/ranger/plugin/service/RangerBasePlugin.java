@@ -89,7 +89,7 @@ public class RangerBasePlugin {
 
 		serviceName = RangerConfiguration.getInstance().get(propertyPrefix + ".service.name");
 
-		RangerAdminClient admin = getAdminClient(propertyPrefix);
+		RangerAdminClient admin = createAdminClient(propertyPrefix);
 
 		refresher = new PolicyRefresher(policyEngine, serviceType, serviceName, admin, pollingIntervalMs, cacheDir);
 		refresher.startRefresher();
@@ -170,47 +170,30 @@ public class RangerBasePlugin {
 		return null;
 	}
 
-	public boolean grantAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) {
-		boolean ret = false;
+	public void grantAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) throws Exception {
+		PolicyRefresher   refresher = this.refresher;
+		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
 
-		PolicyRefresher refresher = this.refresher;
-
-		if(refresher != null) {
-			RangerAdminClient admin = refresher.getRangerAdminClient();
-			
-			if(admin != null) {
-				try {
-					admin.grantAccess(serviceName, request);
-				} catch(Exception excp) {
-					LOG.error("grantAccess() failed", excp);
-				}
-			}
+		if(admin == null) {
+			throw new Exception("ranger-admin client is null");
 		}
 
-		return ret;
+		admin.grantAccess(serviceName, request);
 	}
 
-	public boolean revokeAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) {
-		boolean ret = false;
+	public void revokeAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) throws Exception {
+		PolicyRefresher   refresher = this.refresher;
+		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
 
-		PolicyRefresher refresher = this.refresher;
-
-		if(refresher != null) {
-			RangerAdminClient admin = refresher.getRangerAdminClient();
-			
-			if(admin != null) {
-				try {
-					admin.revokeAccess(serviceName, request);
-				} catch(Exception excp) {
-					LOG.error("revokeAccess() failed", excp);
-				}
-			}
+		if(admin == null) {
+			throw new Exception("ranger-admin client is null");
 		}
 
-		return ret;
+		admin.revokeAccess(serviceName, request);
 	}
 
-	private RangerAdminClient getAdminClient(String propertyPrefix) {
+
+	private RangerAdminClient createAdminClient(String propertyPrefix) {
 		RangerAdminClient ret = null;
 
 		String policySourceImpl = RangerConfiguration.getInstance().get(propertyPrefix + ".source.impl");

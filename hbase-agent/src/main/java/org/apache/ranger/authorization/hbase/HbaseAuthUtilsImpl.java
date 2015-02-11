@@ -39,7 +39,18 @@ public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
 
 	@Override
 	public String getAccess(Action action) {
-		return action.toString().toLowerCase();
+		switch(action) {
+			case READ:
+				return ACCESS_TYPE_READ;
+			case WRITE:
+				return ACCESS_TYPE_WRITE;
+			case CREATE:
+				return ACCESS_TYPE_CREATE;
+			case ADMIN:
+				return ACCESS_TYPE_ADMIN;
+			default:
+				return action.name().toLowerCase();
+		}
 	}
 
 	@Override

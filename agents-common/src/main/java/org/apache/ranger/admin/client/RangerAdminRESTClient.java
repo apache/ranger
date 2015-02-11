@@ -24,6 +24,7 @@ import com.sun.jersey.api.client.WebResource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
@@ -91,10 +92,16 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		WebResource    webResource = createWebResource(REST_URL_SERVICE_GRANT_ACCESS + serviceName);
 		ClientResponse response    = webResource.accept(REST_EXPECTED_MIME_TYPE).type(REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
 
-		if(response == null || response.getStatus() != 200) {
-			RESTResponse resp = RESTResponse.fromClientResponse(response);
+		if(response != null && response.getStatus() != 200) {
+			LOG.error("grantAccess() failed: HTTP status=" + response.getStatus());
 
-			throw new Exception(resp.getMessage());
+			if(response.getStatus() == 401) {
+				throw new AccessControlException();
+			}
+
+			throw new Exception("HTTP " + response.getStatus());
+		} else if(response == null) {
+			throw new Exception("unknown error");
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -111,10 +118,16 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		WebResource    webResource = createWebResource(REST_URL_SERVICE_REVOKE_ACCESS + serviceName);
 		ClientResponse response    = webResource.accept(REST_EXPECTED_MIME_TYPE).type(REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
 
-		if(response == null || response.getStatus() != 200) {
-			RESTResponse resp = RESTResponse.fromClientResponse(response);
+		if(response != null && response.getStatus() != 200) {
+			LOG.error("revokeAccess() failed: HTTP status=" + response.getStatus());
 
-			throw new Exception(resp.getMessage());
+			if(response.getStatus() == 401) {
+				throw new AccessControlException();
+			}
+
+			throw new Exception("HTTP " + response.getStatus());
+		} else if(response == null) {
+			throw new Exception("unknown error");
 		}
 
 		if(LOG.isDebugEnabled()) {
