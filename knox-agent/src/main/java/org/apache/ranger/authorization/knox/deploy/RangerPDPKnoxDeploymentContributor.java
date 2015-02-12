@@ -40,7 +40,8 @@ public class RangerPDPKnoxDeploymentContributor extends ProviderDeploymentContri
 
   @Override
   public String getName() {
-    return "RangerPDPKnox";
+	// This MUST match a corresponding change in the topology file.  For upgrade purposes this name remains as is, i.e. XASecure* and not Ranger*.
+    return "XASecurePDPKnox";
   }
 
   @Override
