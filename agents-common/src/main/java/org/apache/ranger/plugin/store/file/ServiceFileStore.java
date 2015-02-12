@@ -36,6 +36,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -52,9 +53,12 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceFileStore.class);
 
-	private long nextServiceDefId = 0;
-	private long nextServiceId    = 0;
-	private long nextPolicyId     = 0;
+	public static final String PROPERTY_SERVICE_FILE_STORE_DIR = "ranger.service.store.file.dir";
+
+	private String dataDir          = null;
+	private long   nextServiceDefId = 0;
+	private long   nextServiceId    = 0;
+	private long   nextPolicyId     = 0;
 
 	static Map<String, Long> legacyServiceDefs = new HashMap<String, Long>();
 
@@ -71,6 +75,20 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceFileStore.ServiceFileStore()");
 		}
 
+		dataDir = RangerConfiguration.getInstance().get(PROPERTY_SERVICE_FILE_STORE_DIR, "file:///etc/ranger/data");
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceFileStore.ServiceFileStore()");
+		}
+	}
+
+	public ServiceFileStore(String dataDir) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceFileStore.ServiceFileStore()");
+		}
+
+		this.dataDir = dataDir;
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.ServiceFileStore()");
 		}
@@ -82,7 +100,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceFileStore.init()");
 		}
 
-		super.initStore();
+		super.initStore(dataDir);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.init()");

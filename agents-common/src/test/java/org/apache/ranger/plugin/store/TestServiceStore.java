@@ -30,11 +30,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.store.ServiceStoreFactory;
+import org.apache.ranger.plugin.store.file.ServiceFileStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 
 public class TestServiceStore {
 	static ServiceStore svcStore = null;
@@ -46,7 +47,10 @@ public class TestServiceStore {
 
 	@BeforeClass
 	public static void setupTest() throws Exception {
-		svcStore = ServiceStoreFactory.instance().getServiceStore();
+		String fileStoreDir = "file://" + System.getProperty("java.io.tmpdir");;
+
+		svcStore = new ServiceFileStore(fileStoreDir);
+		svcStore.init();
 
 		// cleanup if the test service and service-def if they already exist
 		List<RangerService> services = svcStore.getServices(filter);

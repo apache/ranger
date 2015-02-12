@@ -37,7 +37,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -52,14 +51,14 @@ public class BaseFileStore {
 	private Gson   gsonBuilder = null;
 	private String dataDir     = null;
 
-	protected static String FILE_PREFIX_SERVICE_DEF = "ranger-servicedef-";
-	protected static String FILE_PREFIX_SERVICE     = "ranger-service-";
-	protected static String FILE_PREFIX_POLICY      = "ranger-policy-";
-	protected static String FILE_SUFFIX_JSON        = ".json";
+	protected static final String FILE_PREFIX_SERVICE_DEF = "ranger-servicedef-";
+	protected static final String FILE_PREFIX_SERVICE     = "ranger-service-";
+	protected static final String FILE_PREFIX_POLICY      = "ranger-policy-";
+	protected static final String FILE_SUFFIX_JSON        = ".json";
 
 
-	protected void initStore() {
-		dataDir = RangerConfiguration.getInstance().get("ranger.service.store.file.dir", "file:///etc/ranger/data");
+	protected void initStore(String dataDir) {
+		this.dataDir = dataDir;
 
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
@@ -345,6 +344,13 @@ public class BaseFileStore {
 		obj.setCreateTime(new Date());
 		obj.setUpdateTime(obj.getCreateTime());
 		obj.setVersion(new Long(1));
+	}
+
+	protected void preCreate(RangerService service) {
+		preCreate((RangerBaseModelObject)service);
+
+		service.setPolicyVersion(new Long(0));
+		service.setPolicyUpdateTime(service.getCreateTime());
 	}
 
 	protected void postCreate(RangerBaseModelObject obj) {
