@@ -28,7 +28,7 @@ define(function(require) {
 			var samelevelFieldCreated = [];
 			_.each(configs, function(v, k,config) {
 				if (v != null) {
-					var formObj = {};
+					var formObj = {}, fieldName;
 					switch (v.type) {
 						case 'string':
 							if($.inArray(v.level, samelevelFieldCreated) >= 0){
@@ -47,6 +47,9 @@ define(function(require) {
 								formObj.name = v.name;
 								formObj.level = v.level;
 								formObj.editorAttrs = {'data-placeholder': v.label };
+								formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
+								
+								
 								//check whether resourceType drop down is created for same level or not 
 								var optionsAttrs = _.filter(config,function(field){ if(field.level == v.level) return field;})
 								if(optionsAttrs.length > 1){
@@ -55,9 +58,12 @@ define(function(require) {
 									formObj['sameLevelOpts'] = optionsTitle;
 									samelevelFieldCreated.push(v.level);
 
-									v.name='sameLevel'+v.level;
-									v.label = '';
+									fieldName = 'sameLevel'+v.level;
+									formObj.title = '';
+									
+									formObj['formView'] = form;
 								}
+								
 							}else{
 								formObj.type = 'Text';
 							}
@@ -108,10 +114,12 @@ define(function(require) {
 							
 							
 							break;
+						case 'password':formObj.type = 'Password';break;
 						default:formObj.type = 'Text';break;
 					}
-
-					formObj.title = v.label || v.name;
+					if(_.isUndefined(formObj.title)){
+						formObj.title = v.label || v.name;
+					}
 					formObj.validators = [];
 					if (_.has(v, 'mandatory') && v.mandatory && v.type != 'bool') {
 						formObj.validators.push('required');
@@ -124,8 +132,10 @@ define(function(require) {
 					}
 					
 					formObj['class'] = 'serviceConfig';
-					var name = v.name;
-					attrs[name] = formObj;
+					if(_.isUndefined(fieldName)){
+						fieldName = v.name;
+					}
+					attrs[fieldName] = formObj;
 				}
 			});
 			return attrs;

@@ -285,8 +285,8 @@ body {
 .toggle-xa .toggle-slide .toggle-off,
 .toggle-xa .toggle-slide .toggle-blob {
   color: rgba(0, 0, 0, 0.7);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 .toggle-xa .toggle-slide .toggle-on {
   background: #3ea211;
@@ -1740,4 +1740,14 @@ margin-top: -29px;
 .policy-form .help-inline {
 	position: relative;
 	top: 10px;
+}
+.hideResource{
+	display:none;
+}
+.btn-mini {
+	padding: 0px 8px;
+	font-size: 11.05px;
+}
+.label-ranger {
+	background-color: #3C9C11;
 }

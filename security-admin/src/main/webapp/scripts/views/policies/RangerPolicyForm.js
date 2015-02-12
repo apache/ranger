@@ -22,7 +22,6 @@ define(function(require){
     'use strict';
 
 	var Backbone		= require('backbone');
-
 	var XAEnums			= require('utils/XAEnums');
 	var localization	= require('utils/XALangSupport');
 	var XAUtil			= require('utils/XAUtils');
@@ -53,6 +52,9 @@ define(function(require){
 		* intialize a new RangerPolicyForm Form View 
 		* @constructs
 		*/
+		templateData : function(){
+			return { 'id' : this.model.id };
+		},
 		initialize: function(options) {
 			console.log("initialized a RangerPolicyForm Form View");
 			_.extend(this, _.pick(options, 'rangerServiceDefModel', 'rangerService'));
@@ -61,6 +63,7 @@ define(function(require){
 
 			this.initializeCollection();
 			this.bindEvents();
+			this.defaultValidator={}
 		},
 		initializeCollection: function(){
 			this.formInputList 		= XAUtil.makeCollForGroupPermission(this.model);
@@ -73,6 +76,7 @@ define(function(require){
 			this.on('isEnabled:change', function(form, fieldEditor){
 				this.evIsEnabledChange(form, fieldEditor);
 			});
+			this.on('policyForm:parentChildHideShow',this.renderParentChildHideShow);
 		},
 
 		/** fields for the form
@@ -85,9 +89,6 @@ define(function(require){
 			var attrs = {};
 			var basicSchema = ['id', 'name','isEnabled']
 			var schemaNames = ['description', 'isAuditEnabled'];
-			if(this.model.isNew()){
-				basicSchema.shift();
-			}
 			
 			var formDataType = new BackboneFormDataType();
 			attrs = formDataType.getFormElements(this.rangerServiceDefModel.get('resources'),this.rangerServiceDefModel.get('enums'), attrs, this);
@@ -110,6 +111,51 @@ define(function(require){
 				this.setUpSwitches();
 			}
 			this.$el.find('.field-isEnabled').find('.control-label').remove();
+			//checkParent
+			this.renderParentChildHideShow();
+		},
+		renderParentChildHideShow : function(onChangeOfSameLevelType) {
+			var formDiv = this.$el.find('.policy-form');
+			if(!this.model.isNew() && !onChangeOfSameLevelType){
+				_.each(this.selectedResourceTypes, function(val, sameLevelName) {
+					if(formDiv.find('.field-'+sameLevelName).length > 0){
+						formDiv.find('.field-'+sameLevelName).attr('data-name','field-'+val)
+					}
+				});
+			}
+			var resources = formDiv.find('.control-group');
+			_.each(resources, function(rsrc){ 
+				var parent = $(rsrc).attr('parent')
+				if( !_.isUndefined(parent) && ! _.isEmpty(parent)){
+					console.log(formDiv.find())
+					var selector = "div[data-name='field-"+parent+"']"
+					if(formDiv.find(selector).length > 0 && !formDiv.find(selector).hasClass('hideResource')){
+							$(rsrc).removeClass('hideResource');
+					}else{
+						$(rsrc).addClass('hideResource');
+					}
+				}
+			},this);
+			
+			_.each(this.fields, function(obj, key){
+				if(obj.$el.hasClass('hideResource')){
+					if($.inArray('required',obj.editor.validators) >= 0){
+						this.defaultValidator[key] = obj.editor.validators;
+						obj.editor.validators=[];
+						var label = obj.$el.find('label').html();
+						obj.$el.find('label').html(label.replace('*', ''));
+					}
+				}else{
+					if(!_.isUndefined(this.defaultValidator[key])){
+						obj.editor.validators = this.defaultValidator[key];
+						if($.inArray('required',obj.editor.validators) >= 0){
+							var label = obj.$el.find('label').html();
+							obj.$el.find('label').html(label+"*");
+						}
+					}
+				}
+			}, this);
+//			alert();
 		},
 		evAuditChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
@@ -119,12 +165,15 @@ define(function(require){
 		},
 		setupForm : function() {
 			if(!this.model.isNew()){
+				this.selectedResourceTypes = {};
 				_.each(this.model.get('resources'),function(obj,key){
 					var resourceDef = _.findWhere(this.rangerServiceDefModel.get('resources'),{'name':key})
 					var sameLevelResourceDef = _.where(this.rangerServiceDefModel.get('resources'), {'level': resourceDef.level});
 					if(sameLevelResourceDef.length > 1){
 						obj['resourceType'] = key;
 						this.model.set('sameLevel'+resourceDef.level, obj)
+						//parentShowHide
+						this.selectedResourceTypes['sameLevel'+resourceDef.level]=key;
 					}else{
 						this.model.set(resourceDef.name, obj)
 					}
@@ -171,11 +220,18 @@ define(function(require){
 			var that = this, resources = [];
 
 			var resources = {};
+			//set sameLevel fieldAttr value with resource name
+			_.each(this.model.attributes, function(val, key) {
+                if(key.indexOf("sameLevel") >= 0){ 
+                	this.model.set(val.resourceType,val);
+                	that.model.unset(key);
+                }
+			},this);
 			_.each(this.rangerServiceDefModel.get('resources'),function(obj){
 				if(!_.isNull(obj)){
-					var rPolicyResource = new RangerPolicyResource();
 					var tmpObj =  that.model.get(obj.name);
 					if(!_.isUndefined(tmpObj) && _.isObject(tmpObj)){
+						var rPolicyResource = new RangerPolicyResource();
 						rPolicyResource.set('values',tmpObj.resource.split(','));
 						if(!_.isUndefined(tmpObj.isRecursive)){
 							rPolicyResource.set('isRecursive', tmpObj.isRecursive)
@@ -183,21 +239,13 @@ define(function(require){
 						if(!_.isUndefined(tmpObj.isExcludes)){
 							rPolicyResource.set('isExcludes', tmpObj.isExcludes)
 						}
+						resources[obj.name] = rPolicyResource;
+						that.model.unset(obj.name);
 					}
-					if(rPolicyResource.has('values')){
-						if(!_.isUndefined(tmpObj) && !_.isUndefined(tmpObj.resourceType)){
-							resources[tmpObj.resourceType] = rPolicyResource;
-						}else{
-							if(_.isUndefined(resources[obj.name])){
-								resources[obj.name] = rPolicyResource;
-							}
-						}
-					}
-					that.model.unset(obj.name);
 				}
 			});
+			
 			this.model.set('resources',resources);
-			this.model.unset('isRecursive');
 			this.model.unset('path');
 			
 			//Set UserGroups Permission

@@ -701,13 +701,15 @@ define(function(require) {
 	    $.extend(PolicyConditions.prototype, {   
 	        render: function() {
 	           this.$input = this.$tpl.find('input');
+	           var pluginOpts = {tags : true,width :'220px',multiple: true,minimumInputLength: 1,tokenSeparators: [",", ";"],}
+	           this.$input.select2(pluginOpts);
 	        },
 	        
 	       value2str: function(value) {
 	           var str = '';
 	           if(value) {
 	               for(var k in value) {
-	                   str = str + k + ':' + value[k] + ';';  
+	                   str = str + k + ':' + value[k].toString() + ';';  
 	               }
 	           }
 	           return str;
@@ -715,7 +717,7 @@ define(function(require) {
 	       
 	       value2input: function(value) {
 	    	   _.each(value, function(val,name){
-    		      this.$input.filter('[name='+name+']').val(value[name]);
+	    		   this.$input.filter('[name='+name+']').select2('val',value[name]);
 	    	   },this);
 	       },       
 	           
@@ -723,7 +725,7 @@ define(function(require) {
 	    	   var obj={};
 	    	   _.each(this.$input,function(input){ 
 	    		   var name = input.name;
-	    		   var val = this.$input.filter('[name="'+name+'"]').val() 
+	    		   var val = this.$input.filter('[name="'+name+'"]').select2('val'); 
 	    		   obj[name] = val;
 	    	   },this);
 	    	   

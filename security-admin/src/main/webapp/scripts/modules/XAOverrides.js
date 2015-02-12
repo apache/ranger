@@ -361,7 +361,7 @@
 			  initialize: function(options) {
 			    Form.editors.Base.prototype.initialize.call(this, options);
 			    _.extend(this, _.pick(this.schema,'excludeSupport','recursiveSupport','select2Opts','resourcesAtSameLevel','sameLevelOpts','level',
-			    		'initilializePathPlugin', 'validators','name'));
+			    		'initilializePathPlugin', 'validators','name','formView'));
 
 			    this.template = this.getTemplate();
 //			    this.resourceObj = { 'level' : this.level};
@@ -377,7 +377,7 @@
 				    		return optionsHtml += "<option value='"+option+"'>"+option+"</option>";
 				    		
 				    	},this);
-				    	selectTemplate = '<select data-js="resourceType" class="btn dropdown-toggle" style="margin-right: 18px;margin-left: -116px;width: 100px;height: 29px;font-family: Tahoma;font-size: 14px;border-radius: 10px;border: 2px #cccccc solid;">\
+				    	selectTemplate = '<select data-js="resourceType" class="btn dropdown-toggle" style="margin-right: 31px;margin-left: -130px;width: 100px;height: 29px;font-family: Tahoma;font-size: 14px;border-radius: 10px;border: 2px #cccccc solid;">\
 				    		'+optionsHtml+'\
 				    		</select>';
 				    	
@@ -454,7 +454,7 @@
 			  		this.$recursiveSupport.toggles({
 			  			on: isRecursive,
 			  			text : {on : 'recursive', off : 'nonrecursive' },
-			  			width: 122,
+			  			width: 105
 //			  			height: 20
 			  		}).on('toggle', function (e, active) {
 			  		    that.value.isRecursive = active;
@@ -464,6 +464,7 @@
 			  	if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
 			  		if(!_.isNull(this.value) && !_.isEmpty(this.value)){
 			  			this.$resourceType.val(this.value.resourceType);
+			  			//
 			  		}
 			  		this.$resourceType.on('change', function(e) {
 			  			if(!_.isUndefined(that.select2Opts)){
@@ -476,18 +477,25 @@
 							  that.$resource.val('');
 						  }
 			  			//reset values
-			  			that.value.isExcludes = true;
+			  			that.value.isExcludes = false;
 			  			that.value.isRecursive = true;
 			  			that.$excludeSupport.trigger('toggleOn');
 			  			that.$recursiveSupport.trigger('toggleOn');
 			  			($(e.currentTarget).addClass('dirtyField'))
+			  			
+			  			//resource are shown if parent is selected or showned
+			  			that.$el.parents('.control-group').attr('data-name', 'field-'+this.value);
+			  			that.formView.trigger('policyForm:parentChildHideShow',true);
 					});
 			  	}
 			    return this;
 			  },
 			
 			  getValue: function() {
-				  
+				  //checkParent
+				  if(this.$el.parents('.control-group').hasClass('hideResource')){
+					  return null;
+				  }
 				  if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
 					  this.value['resourceType'] = this.$resourceType.val();  
 				  }

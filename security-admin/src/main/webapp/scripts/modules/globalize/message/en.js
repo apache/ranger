@@ -298,14 +298,10 @@ define(function(require) {
 				searchByResourcePath		:'Search by resource path'
 			},
 			dialogMsg :{
-				preventNavPolicyForm : 'HDFS policy form edit is in progress. Kindly save/cancel changes before navigating away!',
-				preventNavHivePolicyForm : 'HIVE policy form edit is in progress. Kindly save/cancel changes before navigating away!',
-				preventNavHbasePolicyForm : 'HBASE policy form edit is in progress. Kindly save/cancel changes before navigating away!',
-				preventNavKnoxPolicyForm : 'KNOX policy form edit is in progress. Kindly save/cancel changes before navigating away!',
-				preventNavStormPolicyForm : 'STORM policy form edit is in progress. Kindly save/cancel changes before navigating away!',
-				preventNavRepositoryForm : 'Repository form edit is in progress. Kindly save/cancel changes before navigating away!',
-				preventNavUserForm : 'User form edit is in progress. Kindly save/cancel changes before navigating away!',
-				preventNavGroupForm : 'Group form edit is in progress. Kindly save/cancel changes before navigating away!'
+				preventNavPolicyForm : 'Policy form edit is in progress. Please save/cancel changes before navigating away!',
+				preventNavRepositoryForm : 'Repository form edit is in progress. Please save/cancel changes before navigating away!',
+				preventNavUserForm : 'User form edit is in progress. Please save/cancel changes before navigating away!',
+				preventNavGroupForm : 'Group form edit is in progress. Please save/cancel changes before navigating away!'
 				
 			},	
 			validationMessages : {

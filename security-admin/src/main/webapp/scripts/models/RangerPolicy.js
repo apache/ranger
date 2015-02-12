@@ -54,19 +54,11 @@ define(function(require){
 
 			// Overwrite your schema definition here
 			return _.extend(attrs,{
-				id : {
-					type		: 'Text',
-					title		: 'Policy ID *',
-					validators	: ['required'],
-					editorAttrs 	:{ 'disabled' : "true"},
-
-				},
 				name : {
 					type		: 'Text',
 					title		: 'Policy Name *',
 					validators	: ['required'],
 					editorAttrs 	:{ maxlength: 255},
-
 				},
 				description : {
 					type		: 'TextArea',
@@ -80,13 +72,6 @@ define(function(require){
 					offText		: 'disabled',
 					width		: '80',
 					switchOn	: true
-				},
-				isRecursive : {
-					type		: 'Switch',
-					title		: localization.tt('lbl.includesAllPathsRecursively'),
-					onText 		: 'YES',
-					offText		: 'NO',
-					switchOn	: false,
 				},
 				isAuditEnabled : {
 					type		: 'Switch',

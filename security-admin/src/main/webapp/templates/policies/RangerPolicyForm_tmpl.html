@@ -19,8 +19,13 @@
 		<p class="formHeader">
 			Policy Details : 
 		</p>
-		
-	<b data-fieldsets class="policy-form"></b>
+		{{#if id}}
+			<div class="control-group field-id">
+				<label class="control-label" for="c1836_id">Policy ID</label>
+				<div class="controls"><label class="label label-ranger" style="margin-top: 5px; margin-left: 9px;">{{id}}</label></div>
+			</div>
+		{{/if}}
+		<b data-fieldsets class="policy-form"></b>
 	
 	</fieldset>
 	 <fieldset>
