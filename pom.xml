@@ -78,7 +78,6 @@
   <module>agents-audit</module>
   <module>agents-common</module>
   <module>agents-cred</module>
-  <module>agents-impl</module>
   <module>agents-installer</module>
   <module>credentialbuilder</module>
   <module>embeddedwebserver</module>
