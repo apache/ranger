@@ -35,10 +35,8 @@ public class RangerServiceHBase extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceHBase.class);
 	
-	RangerService		service;
-	RangerServiceDef	serviceDef;
 	Map<String, String> configs;
-	String			    serviceName;
+	String			    service;
 	
 	public RangerServiceHBase() {
 		super();
@@ -54,11 +52,11 @@ public class RangerServiceHBase extends RangerBaseService {
 	public HashMap<String,Object> validateConfig() throws Exception {
 		HashMap<String, Object> ret = new HashMap<String, Object>();
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceHBase.validateConfig() Service: (" + service + " )");
+			LOG.debug("==> RangerServiceHBase.validateConfig() Service: (" + service + " )");
 		}
 		if ( configs != null) {
 			try  {
-				ret = HBaseResourceMgr.testConnection(service.getName(), service.getConfigs());
+				ret = HBaseResourceMgr.testConnection(service, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceHBase.validateConfig() Error:" + e);
 				throw e;
@@ -74,15 +72,14 @@ public class RangerServiceHBase extends RangerBaseService {
 	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
 		
 		List<String> 	   ret 		= new ArrayList<String>();
-		String			   svc 	    = service.getName();
 			
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceHBase.lookupResource() Service : " + svc + " Context: (" + context + ")");
+			LOG.debug("==> RangerServiceHBase.lookupResource() Service : " + service + " Context: (" + context + ")");
 		}
 		
 		if (context != null) {
 			try {
-				ret  = HBaseResourceMgr.getHBaseResource(service.getName(),service.getConfigs(),context);
+				ret  = HBaseResourceMgr.getHBaseResource(service, configs,context);
 			} catch (Exception e) {
 			  LOG.error( "<==RangerServiceHBase.lookupResource() Error : " + e);
 			  throw e;
@@ -95,10 +92,8 @@ public class RangerServiceHBase extends RangerBaseService {
 	}
 	
 	public void init() {
-		service		 = getService();
-		serviceDef	 = getServiceDef();
-		serviceName  = service.getName();
-		configs 	 = service.getConfigs();
+		service  = getService().getName();
+		configs  = getService().getConfigs();
 	}
 	
 }

@@ -35,10 +35,8 @@ public class RangerServiceHive extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceHive.class);
 	
-	RangerService		service;
-	RangerServiceDef	serviceDef;
 	Map<String, String> configs;
-	String			    serviceName;
+	String			    service;
 	
 	public RangerServiceHive() {
 		super();
@@ -54,11 +52,11 @@ public class RangerServiceHive extends RangerBaseService {
 	public HashMap<String,Object> validateConfig() throws Exception {
 		HashMap<String, Object> ret = new HashMap<String, Object>();
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceHive.validateConfig Service: (" + service + " )");
+			LOG.debug("==> RangerServiceHive.validateConfig Service: (" + service + " )");
 		}
 		if ( configs != null) {
 			try  {
-				ret = HiveResourceMgr.testConnection(service.getName(), service.getConfigs());
+				ret = HiveResourceMgr.testConnection(service, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceHive.validateConfig Error:" + e);
 				throw e;
@@ -75,11 +73,11 @@ public class RangerServiceHive extends RangerBaseService {
 		
 		List<String> ret = new ArrayList<String>();
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceHive.lookupResource Context: (" + context + ")");
+			LOG.debug("==> RangerServiceHive.lookupResource Context: (" + context + ")");
 		}
 		if (context != null) {
 			try {
-				ret  = HiveResourceMgr.getHiveResources(service.getName(),service.getConfigs(),context);
+				ret  = HiveResourceMgr.getHiveResources(service, configs,context);
 			} catch (Exception e) {
 			  LOG.error( "<==RangerServiceHive.lookupResource Error : " + e);
 			  throw e;
@@ -92,10 +90,8 @@ public class RangerServiceHive extends RangerBaseService {
 	}
 	
 	public void init() {
-		service		 = getService();
-		serviceDef	 = getServiceDef();
-		serviceName  = service.getName();
-		configs 	 = service.getConfigs();
+		service  = getService().getName();
+		configs  = getService().getConfigs();
 	}
 	
 }

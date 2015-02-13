@@ -35,10 +35,8 @@ public class RangerServiceKnox extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceKnox.class);
 	
-	RangerService		service;
-	RangerServiceDef	serviceDef;
 	Map<String, String> configs;
-	String			    serviceName;
+	String			    service;
 	
 	public RangerServiceKnox() {
 		super();
@@ -58,7 +56,7 @@ public class RangerServiceKnox extends RangerBaseService {
 		}
 		if ( configs != null) {
 			try  {
-				ret = KnoxResourceMgr.validateConfig(service.getName(), service.getConfigs());
+				ret = KnoxResourceMgr.validateConfig(service, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceKnox.validateConfig Error:" + e);
 				throw e;
@@ -79,7 +77,7 @@ public class RangerServiceKnox extends RangerBaseService {
 		}
 		if (context != null) {
 			try {
-				ret  = KnoxResourceMgr.getKnoxResources(service.getName(),service.getConfigs(),context);
+				ret  = KnoxResourceMgr.getKnoxResources(service, configs,context);
 						
 			} catch (Exception e) {
 			  LOG.error( "<== RangerServiceKnox.lookupResource Error : " + e);
@@ -93,10 +91,8 @@ public class RangerServiceKnox extends RangerBaseService {
 	}
 	
 	public void init() {
-		service		 = getService();
-		serviceDef	 = getServiceDef();
-		serviceName  = service.getName();
-		configs 	 = service.getConfigs();
+		service  = getService().getName();
+		configs  = getService().getConfigs();
 	}
 	
 }

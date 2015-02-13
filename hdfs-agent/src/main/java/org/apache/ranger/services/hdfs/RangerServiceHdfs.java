@@ -35,10 +35,8 @@ public class RangerServiceHdfs extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceHdfs.class);
 	
-	RangerService		service;
-	RangerServiceDef	serviceDef;
 	Map<String, String> configs;
-	String			    serviceName;
+	String			    service;
 	
 	public RangerServiceHdfs() {
 		super();
@@ -60,7 +58,7 @@ public class RangerServiceHdfs extends RangerBaseService {
 		
 		if ( configs != null) {
 			try  {
-				ret = HdfsResourceMgr.testConnection(service.getName(), service.getConfigs());
+				ret = HdfsResourceMgr.testConnection(service, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceHdfs.validateConfig Error:" + e);
 				throw e;
@@ -84,7 +82,7 @@ public class RangerServiceHdfs extends RangerBaseService {
 		
 		if (context != null) {
 			try {
-				ret  = HdfsResourceMgr.getHdfsResources(service.getName(),service.getConfigs(),context);
+				ret  = HdfsResourceMgr.getHdfsResources(service, configs,context);
 			} catch (Exception e) {
 			  LOG.error( "<==RangerServiceHdfs.lookupResource Error : " + e);
 			  throw e;
@@ -99,10 +97,8 @@ public class RangerServiceHdfs extends RangerBaseService {
 	}
 	
 	public void init() {
-		service		 = getService();
-		serviceDef	 = getServiceDef();
-		serviceName  = service.getName();
-		configs 	 = service.getConfigs();
+		service  = getService().getName();
+		configs  = getService().getConfigs();
 	}
 	
 }
