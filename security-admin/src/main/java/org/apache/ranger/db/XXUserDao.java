@@ -20,6 +20,8 @@
  package org.apache.ranger.db;
 
 
+import java.util.List;
+
 import javax.persistence.NoResultException;
 
 import org.apache.log4j.Logger;
@@ -47,5 +49,19 @@ public class XXUserDao extends BaseDao<XXUser> {
 			// ignore
 		}
 		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> findByPolicyItemId(Long polItemId) {
+		if (polItemId == null) {
+			return null;
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXUser.findByPolicyItemId")
+					.setParameter("polItemId", polItemId).getResultList();
+		} catch (NoResultException e) {
+			return null;
+		}
 	}
 }

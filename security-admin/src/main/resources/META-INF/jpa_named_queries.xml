@@ -183,4 +183,171 @@
 		</query>
 	</named-query>
 	
+	<named-query name="XXUser.findByPolicyItemId">
+		<query>select obj.name from XXUser obj, XXPolicyItemUserPerm polItemUser 
+		where polItemUser.policyItemId = :polItemId and polItemUser.userId = obj.id </query>
+	</named-query>
+
+	<named-query name="XXGroup.findByPolicyItemId">
+		<query>select obj.name from XXGroup obj, XXPolicyItemGroupPerm polItemGrp 
+		where polItemGrp.policyItemId = :polItemId and polItemGrp.groupId = obj.id </query>
+	</named-query>
+	
+
+	<!-- XXPolicyItem -->
+	<named-query name="XXPolicyItem.findByPolicyId">
+		<query>select obj from XXPolicyItem obj where obj.policyId = :policyId</query>
+	</named-query>
+
+	<!-- XXPolicy -->
+	<named-query name="XXPolicy.findByName">
+		<query>select obj from XXPolicy obj where obj.name = :polName</query>
+	</named-query>
+	
+	<named-query name="XXPolicy.findByServiceId">
+		<query>select obj from XXPolicy obj where obj.service = :serviceId</query>
+	</named-query>
+
+	<!-- XXServiceDef -->
+	<named-query name="XXServiceDef.findByName">
+		<query>select obj from XXServiceDef obj where obj.name = :name</query>
+	</named-query>
+
+	<!-- XXResourceDef -->
+	<named-query name="XXResourceDef.findByNameAndDefId">
+		<query>select obj from XXResourceDef obj where obj.name = :name and obj.defId = :defId</query>
+	</named-query>
+	
+	<named-query name="XXResourceDef.findByServiceDefId">
+		<query>select obj from XXResourceDef obj where obj.defId = :serviceDefId</query>
+	</named-query>
+	
+	<named-query name="XXResourceDef.findByPolicyId">
+		<query>select obj from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef, 
+				XXService xSvc where obj.defId = xSvcDef.id and xSvcDef.id = xSvc.type
+				and xSvc.id = xPol.service and xPol.id = :policyId</query>
+	</named-query>
+	
+	<named-query name="XXResourceDef.findByNameAndPolicyId">
+		<query>select obj from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef, 
+				XXService xSvc where obj.defId = xSvcDef.id and xSvcDef.id = xSvc.type
+				and xSvc.id = xPol.service and xPol.id = :policyId and obj.name = :name</query>
+	</named-query>
+
+	<!-- XXAccessTypeDefGrants -->
+	<named-query name="XXAccessTypeDefGrants.findImpliedGrantsByATDId">
+		<query>select obj.impliedGrant from XXAccessTypeDefGrants obj where obj.atdId = :atdId</query>
+	</named-query>
+
+	<!-- XXEnumElementDef -->
+	<named-query name="XXEnumElementDef.findByEnumDefId">
+		<query>select obj from XXEnumElementDef obj where obj.enumDefId = :enumDefId</query>
+	</named-query>
+
+	<!-- XXServiceConfigDef -->
+	<named-query name="XXServiceConfigDef.findByServiceDefId">
+		<query>select obj from XXServiceConfigDef obj where obj.defId = :serviceDefId</query>
+	</named-query>
+	
+	<named-query name="XXServiceConfigDef.findByServiceDefName">
+		<query>select obj from XXServiceConfigDef obj, XXServiceDef svcDef 
+				where obj.defId = svcDef.id and svcDef.name = :serviceDef</query>
+	</named-query>
+	
+
+	<!-- XXAccessTypeDef -->
+	<named-query name="XXAccessTypeDef.findByServiceDefId">
+		<query>select obj from XXAccessTypeDef obj where obj.defId = :serviceDefId</query>
+	</named-query>
+	
+	<named-query name="XXAccessTypeDef.findByNameAndServiceId">
+		<query>select obj from XXAccessTypeDef obj, XXService xSvc where 
+				obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
+	</named-query>
+
+	<!-- XXPolicyConditionDef -->
+	<named-query name="XXPolicyConditionDef.findByServiceDefId">
+		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId</query>
+	</named-query>
+	
+	<named-query name="XXPolicyConditionDef.findByPolicyItemId">
+		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
+		where xPolItemCond.policyItemId = :polItemId and obj.id = xPolItemCond.type</query>
+	</named-query>
+	
+	<named-query name="XXPolicyConditionDef.findByPolicyItemIdAndName">
+		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
+				where xPolItemCond.policyItemId = :polItemId and obj.name = :name 
+				and obj.id = xPolItemCond.type 
+		</query>
+	</named-query>
+	
+
+	<!-- XXEnumDef -->
+	<named-query name="XXEnumDef.findByServiceDefId">
+		<query>select obj from XXEnumDef obj where obj.defId = :serviceDefId</query>
+	</named-query>
+	
+	<!-- XXServiceConfigMap -->
+	<named-query name="XXServiceConfigMap.findByServiceId">
+		<query>select obj from XXServiceConfigMap obj where obj.serviceId = :serviceId</query>
+	</named-query>
+	
+	<named-query name="XXServiceConfigMap.findByServiceAndConfigKey">
+		<query>select obj from XXServiceConfigMap obj where 
+			obj.serviceId = :serviceId and obj.configKey = :configKey</query>
+	</named-query>
+	
+	<!-- XXService -->
+	<named-query name="XXService.findByName">
+		<query>select obj from XXService obj where obj.name = :name</query>
+	</named-query>
+
+	<!-- XXPolicyResource -->
+	<named-query name="XXPolicyResource.findByResDefIdAndPolicyId">
+		<query>select obj from XXPolicyResource obj where 
+				obj.policyId = :polId and obj.resDefId = :resDefId</query>
+	</named-query>
+	
+	<named-query name="XXPolicyResource.findByPolicyId">
+		<query>select obj from XXPolicyResource obj where obj.policyId = :policyId</query>
+	</named-query>
+	
+	<!-- XXPolicyResourceMap -->
+	<named-query name="XXPolicyResourceMap.findByPolicyResId">
+		<query>select obj from XXPolicyResourceMap obj where obj.resourceId = :polResId</query>
+	</named-query>
+	
+	<!-- XXPolicyItemAccess -->
+	<named-query name="XXPolicyItemAccess.findByPolicyItemId">
+		<query>select obj from XXPolicyItemAccess obj where obj.policyItemId = :polItemId</query>
+	</named-query>
+	
+	<!-- XXPolicyItemCondition -->
+	<named-query name="XXPolicyItemCondition.findByPolicyItemId">
+		<query>select obj from XXPolicyItemCondition obj where obj.policyItemId = :polItemId </query>
+	</named-query>
+	
+	<named-query name="XXPolicyItemCondition.findByPolicyItemAndDefId">
+		<query>select obj from XXPolicyItemCondition obj where 
+				obj.policyItemId = :polItemId and obj.type = :polCondDefId</query>
+	</named-query>
+	
+	<!-- XXPolicyItemGroupPerm -->
+	<named-query name="XXPolicyItemGroupPerm.findByPolicyItemId">
+		<query>select obj from XXPolicyItemGroupPerm obj where obj.policyItemId = :polItemId</query>
+	</named-query>
+	
+	<!-- XXPolicyItemUserPerm -->
+	<named-query name="XXPolicyItemUserPerm.findByPolicyItemId">
+		<query>select obj from XXPolicyItemUserPerm obj where obj.policyItemId = :polItemId</query>
+	</named-query>
+
+	<!-- XXDataHist -->
+	<named-query name="XXDataHist.findLatestByObjectClassTypeAndObjectId">
+		<query>select obj from XXDataHist obj where obj.objectId = :objectId 
+                               and obj.objectClassType = :classType ORDER BY obj.id</query>
+	</named-query>
+	
+	
 </entity-mappings>
