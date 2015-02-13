@@ -23,6 +23,8 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroup;
 
@@ -49,7 +51,6 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 		return groupList;
 	}
 
-	@SuppressWarnings("unchecked")
 	public XXGroup findByGroupName(String groupName) {
 		if (groupName == null) {
 			return null;
@@ -64,6 +65,20 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 
 		}
 		return null;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<String> findByPolicyItemId(Long polItemId) {
+		if (polItemId == null) {
+			return null;
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXGroup.findByPolicyItemId")
+					.setParameter("polItemId", polItemId).getResultList();
+		} catch (NoResultException e) {
+			return null;
+		}
 	}
 
 }

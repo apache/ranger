@@ -429,11 +429,101 @@ public class AppConstants extends RangerCommonEnums {
 	 * CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE".
 	 */
 	public static final int CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE = 1014;
+	/**
+	 * CLASS_TYPE_XA_ACCESS_TYPE_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_ACCESS_TYPE_DEF".
+	 */
+	public static final int CLASS_TYPE_XA_ACCESS_TYPE_DEF = 1015;
+	/**
+	 * CLASS_TYPE_XA_ACCESS_TYPE_DEF_GRANTS is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_ACCESS_TYPE_DEF_GRANTS".
+	 */
+	public static final int CLASS_TYPE_XA_ACCESS_TYPE_DEF_GRANTS = 1016;
+	/**
+	 * CLASS_TYPE_XA_DATA_HIST is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_DATA_HIST".
+	 */
+	public static final int CLASS_TYPE_XA_DATA_HIST = 1017;
+	/**
+	 * CLASS_TYPE_XA_ENUM_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_ENUM_DEF".
+	 */
+	public static final int CLASS_TYPE_XA_ENUM_DEF = 1018;
+	/**
+	 * CLASS_TYPE_XA_ENUM_DEF_ELEMENT is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_ENUM_DEF_ELEMENT".
+	 */
+	public static final int CLASS_TYPE_XA_ENUM_ELEMENT_DEF = 1019;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY = 1020;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_CONDITION_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_CONDITION_DEF".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_CONDITION_DEF = 1021;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_ITEM is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_ITEM".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_ITEM = 1022;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_ITEM_ACCESS is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_ITEM_ACCESS".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_ITEM_ACCESS = 1023;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_CONDITION is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_CONDITION".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_ITEM_CONDITION = 1024;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_ITEM_GRP_PERM is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_ITEM_GRP_PERM".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_ITEM_GRP_PERM = 1025;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_ITEM_USER_PERM is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_ITEM_USER_PERM".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_ITEM_USER_PERM = 1026;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_RESOURCE is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_RESOURCE".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_RESOURCE = 1027;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_RESOURCE_MAP is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_RESOURCE_MAP".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_RESOURCE_MAP = 1028;
+	/**
+	 * CLASS_TYPE_XA_RESOURCE_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_RESOURCE_DEF".
+	 */
+	public static final int CLASS_TYPE_XA_RESOURCE_DEF = 1029;
+	/**
+	 * CLASS_TYPE_XA_SERVICE is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_SERVICE".
+	 */
+	public static final int CLASS_TYPE_XA_SERVICE = 1030;
+	/**
+	 * CLASS_TYPE_XA_SERVICE_CONFIG_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_SERVICE_CONFIG_DEF".
+	 */
+	public static final int CLASS_TYPE_XA_SERVICE_CONFIG_DEF = 1031;
+	/**
+	 * CLASS_TYPE_XA_SERVICE_CONFIG_MAP is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_SERVICE_CONFIG_MAP".
+	 */
+	public static final int CLASS_TYPE_XA_SERVICE_CONFIG_MAP = 1032;
+	/**
+	 * CLASS_TYPE_XA_SERVICE_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_SERVICE_DEF".
+	 */
+	public static final int CLASS_TYPE_XA_SERVICE_DEF = 1033;
 
 	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1014;
+	public static final int ClassTypes_MAX = 1033;
+	
+	/***************************************************************
+	 * Enum values for Default SortOrder
+	 **************************************************************/
+	public static final int DEFAULT_SORT_ORDER = 0;
+	
+	/***************************************************************
+	 * Enum values for STATUS of XXDataHist object
+	 **************************************************************/
+	public static final int HIST_OBJ_STATUS_UNKNOWN = 0;
+	public static final int HIST_OBJ_STATUS_CREATED = 1;
+	public static final int HIST_OBJ_STATUS_UPDATED = 2;
+	public static final int HIST_OBJ_STATUS_DELETED = 3;
+	public static final int MAX_HIST_OBJ_STATUS = 3;
 
 
 
@@ -719,6 +809,66 @@ public class AppConstants extends RangerCommonEnums {
 		}
 		if( elementValue == 1013 ) {
 			return "Access Audit"; //CLASS_TYPE_XA_ACCESS_AUDIT
+		}
+		if( elementValue == 1014 ) {
+			return "Trx Log Attribute"; //CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE
+		}
+		if( elementValue == 1015 ) {
+			return "XA AccessType Def"; //CLASS_TYPE_XA_ACCESS_TYPE_DEF 
+		}
+		if( elementValue == 1016 ) {
+			return "XA AccessType Def Grants"; //CLASS_TYPE_XA_ACCESS_TYPE_DEF_GRANTS
+		}
+		if( elementValue == 1017 ) {
+			return "XA Data History"; //CLASS_TYPE_XA_DATA_HIST
+		}
+		if( elementValue == 1018 ) {
+			return "XA Enum Defination"; //CLASS_TYPE_XA_ENUM_DEF
+		}
+		if( elementValue == 1019 ) {
+			return "XA EnumElement Def"; //CLASS_TYPE_XA_ENUM_DEF_ELEMENT
+		}
+		if( elementValue == 1020 ) {
+			return "Ranger Policy"; //CLASS_TYPE_RANGER_POLICY
+		}
+		if( elementValue == 1021 ) {
+			return "RangerPolicy Condition Def"; //CLASS_TYPE_RANGER_POLICY_CONDITION_DEF
+		}
+		if( elementValue == 1022 ) {
+			return "RangerPolicy Item"; //CLASS_TYPE_RANGER_POLICY_ITEM
+		}
+		if( elementValue == 1023 ) {
+			return "RangerPolicy Item Access"; //CLASS_TYPE_RANGER_POLICY_ITEM_ACCESS
+		}
+		if( elementValue == 1024 ) {
+			return "RangerPolicyItem Condition "; //CLASS_TYPE_RANGER_POLICY_CONDITION
+		}
+		if( elementValue == 1025 ) {
+			return "RangerPolicy ItemGrp Map"; //CLASS_TYPE_RANGER_POLICY_ITEM_GRP_PERM
+		}
+		if( elementValue == 1026 ) {
+			return "RangerPolicy ItemUser Map"; //CLASS_TYPE_RANGER_POLICY_ITEM_USER_PERM 
+		}
+		if( elementValue == 1027 ) {
+			return "RangerPolicy Resource"; //CLASS_TYPE_RANGER_POLICY_RESOURCE
+		}
+		if( elementValue == 1028 ) {
+			return "RangerPolicy Resource Map"; //CLASS_TYPE_RANGER_POLICY_RESOURCE_MAP
+		}
+		if( elementValue == 1029 ) {
+			return "XA Resource Def"; //CLASS_TYPE_XA_RESOURCE_DEF
+		}
+		if( elementValue == 1030 ) {
+			return "XA Service"; //CLASS_TYPE_XA_SERVICE
+		}
+		if( elementValue == 1031 ) {
+			return "XA Service Config Def"; //CLASS_TYPE_XA_SERVICE_CONFIG_DEF
+		}
+		if( elementValue == 1032 ) {
+			return "XA Service Config Map"; //CLASS_TYPE_XA_SERVICE_CONFIG_MAP
+		}
+		if( elementValue == 1033 ) {
+			return "XA Service Def"; //CLASS_TYPE_XA_SERVICE_DEF
 		}
 		return null;
 	}

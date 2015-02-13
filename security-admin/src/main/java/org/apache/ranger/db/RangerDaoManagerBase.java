@@ -86,6 +86,65 @@ public abstract class RangerDaoManagerBase {
 			return getXXAccessAudit();
 		}
 
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY) {
+			return getXXPolicy();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_SERVICE) {
+			return getXXService();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_ITEM) {
+			return getXXPolicyItem();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_SERVICE_DEF) {
+			return getXXServiceDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_SERVICE_CONFIG_DEF) {
+			return getXXServiceConfigDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_RESOURCE_DEF) {
+			return getXXResourceDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_ACCESS_TYPE_DEF) {
+			return getXXAccessTypeDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_ACCESS_TYPE_DEF_GRANTS) {
+			return getXXAccessTypeDefGrants();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_CONDITION_DEF) {
+			return getXXPolicyConditionDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_ENUM_DEF) {
+			return getXXEnumDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_ENUM_ELEMENT_DEF) {
+			return getXXEnumElementDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_SERVICE_CONFIG_MAP) {
+			return getXXServiceConfigMap();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_RESOURCE) {
+			return getXXPolicyResource();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_RESOURCE_MAP) {
+			return getXXPolicyResourceMap();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_ITEM_ACCESS) {
+			return getXXPolicyItemAccess();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_ITEM_CONDITION) {
+			return getXXPolicyItemCondition();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_ITEM_USER_PERM) {
+			return getXXPolicyItemUserPerm();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_ITEM_GRP_PERM) {
+			return getXXPolicyItemGroupPerm();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_DATA_HIST) {
+			return getXXDataHist();
+		}
+		
+		
 		logger.error("No DaoManager found for classType=" + classType, new Throwable());
 		return null;
 	}
@@ -139,7 +198,64 @@ public abstract class RangerDaoManagerBase {
 		if (className.equals("XXAccessAudit")) {
 			return getXXAccessAudit();
 		}
-
+		if (className.equals("XXPolicy")) {
+			return getXXPolicy();
+		}
+		if (className.equals("XXService")) {
+			return getXXService();
+		}
+		if (className.equals("XXPolicyItem")) {
+			return getXXPolicyItem();
+		}
+		if (className.equals("XXServiceDef")) {
+			return getXXServiceDef();
+		}
+		if (className.equals("XXServiceConfigDef")) {
+			return getXXServiceConfigDef();
+		}
+		if (className.equals("XXResourceDef")) {
+			return getXXResourceDef();
+		}
+		if (className.equals("XXAccessTypeDef")) {
+			return getXXAccessTypeDef();
+		}
+		if (className.equals("XXAccessTypeDefGrants")) {
+			return getXXAccessTypeDefGrants();
+		}
+		if (className.equals("XXPolicyConditionDef")) {
+			return getXXPolicyConditionDef();
+		}
+		if (className.equals("XXEnumDef")) {
+			return getXXEnumDef();
+		}
+		if (className.equals("XXEnumElementDef")) {
+			return getXXEnumElementDef();
+		}
+		if (className.equals("XXServiceConfigMap")) {
+			return getXXServiceConfigMap();
+		}
+		if (className.equals("XXPolicyResource")) {
+			return getXXPolicyResource();
+		}
+		if (className.equals("XXPolicyResourceMap")) {
+			return getXXPolicyResourceMap();
+		}
+		if (className.equals("XXPolicyItemAccess")) {
+			return getXXPolicyItemAccess();
+		}
+		if (className.equals("XXPolicyItemCondition")) {
+			return getXXPolicyItemCondition();
+		}
+		if (className.equals("XXPolicyItemUserPerm")) {
+			return getXXPolicyItemUserPerm();
+		}
+		if (className.equals("XXPolicyItemGroupPerm")) {
+			return getXXPolicyItemGroupPerm();
+		}
+		if (className.equals("XXDataHist")) {
+			return getXXDataHist();
+		}
+		
 		logger.error("No DaoManager found for className=" + className, new Throwable());
 		return null;
 	}
@@ -208,6 +324,81 @@ public abstract class RangerDaoManagerBase {
 		return new XXAccessAuditDao(this);
 	}
 
+	public XXPolicyDao getXXPolicy() {
+		return new XXPolicyDao(this);
+	}
+
+	public XXServiceDao getXXService() {
+		return new XXServiceDao(this);
+	}
+
+	public XXPolicyItemDao getXXPolicyItem() {
+		return new XXPolicyItemDao(this);
+	}
+
+	public XXServiceDefDao getXXServiceDef() {
+		return new XXServiceDefDao(this);
+	}
+
+	public XXServiceConfigDefDao getXXServiceConfigDef() {
+		return new XXServiceConfigDefDao(this);
+	}
+
+	public XXResourceDefDao getXXResourceDef() {
+		return new XXResourceDefDao(this);
+	}
+
+	public XXAccessTypeDefDao getXXAccessTypeDef() {
+		return new XXAccessTypeDefDao(this);
+	}
+
+	public XXAccessTypeDefGrantsDao getXXAccessTypeDefGrants() {
+		return new XXAccessTypeDefGrantsDao(this);
+	}
+
+	public XXPolicyConditionDefDao getXXPolicyConditionDef() {
+		return new XXPolicyConditionDefDao(this);
+	}
+
+	public XXEnumDefDao getXXEnumDef() {
+		return new XXEnumDefDao(this);
+	}
+
+	public XXEnumElementDefDao getXXEnumElementDef() {
+		return new XXEnumElementDefDao(this);
+	}
+	
+	public XXServiceConfigMapDao getXXServiceConfigMap() {
+		return new XXServiceConfigMapDao(this);
+	}
+	
+	public XXPolicyResourceDao getXXPolicyResource() {
+		return new XXPolicyResourceDao(this);
+	}
+	
+	public XXPolicyResourceMapDao getXXPolicyResourceMap() {
+		return new XXPolicyResourceMapDao(this);
+	}
+	
+	public XXPolicyItemAccessDao getXXPolicyItemAccess() {
+		return new XXPolicyItemAccessDao(this);
+	}
+
+	public XXPolicyItemConditionDao getXXPolicyItemCondition() {
+		return new XXPolicyItemConditionDao(this);
+	}
+	
+	public XXPolicyItemUserPermDao getXXPolicyItemUserPerm() {
+		return new XXPolicyItemUserPermDao(this);
+	}
+	
+	public XXPolicyItemGroupPermDao getXXPolicyItemGroupPerm() {
+		return new XXPolicyItemGroupPermDao(this);
+	}
+
+	public XXDataHistDao getXXDataHist() {
+		return new XXDataHistDao(this);
+	}
 
 }
 

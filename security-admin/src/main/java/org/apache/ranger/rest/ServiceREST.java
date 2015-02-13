@@ -56,8 +56,6 @@ import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -66,9 +64,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.ServiceMgr;
+import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 
@@ -76,6 +77,7 @@ import org.apache.ranger.entity.XXPolicyExportAudit;
 @Path("plugins")
 @Component
 @Scope("request")
+@Transactional(propagation = Propagation.REQUIRES_NEW)
 public class ServiceREST {
 	private static final Log LOG = LogFactory.getLog(ServiceREST.class);
 
@@ -88,10 +90,10 @@ public class ServiceREST {
 	@Autowired
 	AssetMgr assetMgr;
 
-	private ServiceStore svcStore = null;
+	@Autowired
+	ServiceDBStore svcStore;
 
 	public ServiceREST() {
-		svcStore = ServiceStoreFactory.instance().getServiceStore();
 	}
 
 
