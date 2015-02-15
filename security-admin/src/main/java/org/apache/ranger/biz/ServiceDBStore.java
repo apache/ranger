@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -72,6 +74,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.store.LegacyServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.service.RangerAuditFields;
@@ -82,7 +85,12 @@ import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 
@@ -119,32 +127,62 @@ public class ServiceDBStore implements ServiceStore {
 	
 	@Autowired
 	RangerDataHistService dataHistService;
-	
-	static Map<String, Long> legacyServiceDefs = new HashMap<String, Long>();
 
-	static {
-		legacyServiceDefs.put("hdfs",  new Long(1));
-		legacyServiceDefs.put("hbase", new Long(2));
-		legacyServiceDefs.put("hive",  new Long(3));
-		legacyServiceDefs.put("knox",  new Long(5));
-		legacyServiceDefs.put("storm", new Long(6));
-	}
-	
+    @Autowired
+    @Qualifier(value = "transactionManager")
+    PlatformTransactionManager txManager;
 
+	private static volatile boolean legacyServiceDefsInitDone = false;
+	
 	@Override
 	public void init() throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDefDBStore.init()");
 		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDefDBStore.init()");
+		}
 	}
 
+	@PostConstruct
+	public void initStore() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDefDBStore.initStore()");
+		}
+
+		if(! legacyServiceDefsInitDone) {
+			synchronized(ServiceDBStore.class) {
+				if(!legacyServiceDefsInitDone) {
+					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+
+					final ServiceDBStore dbStore = this;
+
+					txTemplate.execute(new TransactionCallback<Object>() {
+						@Override
+	                    public Object doInTransaction(TransactionStatus status) {
+							LegacyServiceDefsUtil.instance().init(dbStore);
+
+							return null;
+	                    }
+					});
+
+					legacyServiceDefsInitDone = true;
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDefDBStore.initStore()");
+		}
+	}
 
 	@Override
-	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef)
-			throws Exception {
+	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDefDBStore.createServiceDef(" + serviceDef + ")");
 		}
+
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(
 				serviceDef.getName());
 		if (xServiceDef != null) {
@@ -158,6 +196,11 @@ public class ServiceDBStore implements ServiceStore {
 		List<RangerAccessTypeDef> accessTypes = serviceDef.getAccessTypes();
 		List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
 		List<RangerEnumDef> enums = serviceDef.getEnums();
+
+		// following fields will be auto populated
+		serviceDef.setId(null);
+		serviceDef.setCreateTime(null);
+		serviceDef.setUpdateTime(null);
 		
 		serviceDef = serviceDefService.create(serviceDef);
 		Long serviceDefId = serviceDef.getId();
@@ -222,6 +265,11 @@ public class ServiceDBStore implements ServiceStore {
 		}
 		RangerServiceDef createdServiceDef = serviceDefService.getPopulatedViewObject(createdSvcDef);
 		dataHistService.createObjectDataHistory(createdServiceDef, RangerDataHistService.ACTION_CREATE);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDefDBStore.createServiceDef(" + serviceDef + "): " + createdServiceDef);
+		}
+
 		return createdServiceDef;
 	}
 
@@ -231,12 +279,29 @@ public class ServiceDBStore implements ServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDefDBStore.updateServiceDef(" + serviceDef + ")");
 		}
-		return null;
+
+		RangerServiceDef ret = null;
+
+		// TODO: updateServiceDef()
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDefDBStore.updateServiceDef(" + serviceDef + "): " + ret);
+		}
+
+		return ret;
 	}
 
 	@Override
 	public void deleteServiceDef(Long servceId) throws Exception {
-		
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDefDBStore.deleteServiceDef(" + servceId + ")");
+		}
+
+		// TODO: updateServiceDef()
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDefDBStore.deleteServiceDef(" + servceId + ")");
+		}
 	}
 
 	@Override
@@ -244,7 +309,16 @@ public class ServiceDBStore implements ServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDefDBStore.getServiceDef(" + id + ")");
 		}
-		return serviceDefService.read(id);
+		
+		RangerServiceDef ret = null;
+
+		ret = serviceDefService.read(id);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDefDBStore.getServiceDef(" + id + "): " + ret);
+		}
+
+		return ret;
 	}
 
 	@Override
@@ -253,18 +327,36 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDefDBStore.getServiceDefByName(" + name + ")");
 		}
 		
+		RangerServiceDef ret = null;
+		
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(name);
-		return serviceDefService.getPopulatedViewObject(xServiceDef);
+
+		if(xServiceDef != null) {
+			serviceDefService.getPopulatedViewObject(xServiceDef);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("== ServiceDefDBStore.getServiceDefByName(" + name + "): " + ret);
+		}
+
+		return  ret;
 	}
 
 	@Override
 	public List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.getServiceDefs()");
+			LOG.debug("==> ServiceDBStore.getServiceDefs(" + filter + ")");
 		}
-		List<RangerServiceDef> serviceDefList = serviceDefService.getServiceDefs(filter);
 
-		return serviceDefList;
+		List<RangerServiceDef> ret = null;
+
+		ret = serviceDefService.getServiceDefs(filter);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServiceDefs(" + filter + "): " + ret);
+		}
+
+		return ret;
 	}
 
 	@Override
@@ -460,7 +552,7 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDBStore.getServiceByName()");
 		}
 		XXService xService = daoMgr.getXXService().findByName(name);
-		return svcService.getPopulatedViewObject(xService);
+		return xService == null ? null : svcService.getPopulatedViewObject(xService);
 	}
 
 	@Override

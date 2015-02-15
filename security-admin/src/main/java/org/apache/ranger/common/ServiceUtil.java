@@ -34,6 +34,7 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.store.LegacyServiceDefsUtil;
 import org.apache.ranger.view.VXAsset;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXDataObject;
@@ -55,11 +56,11 @@ public class ServiceUtil {
 	RangerDaoManager xaDaoMgr;
 
 	static {
-		mapServiceTypeToAssetType.put("hdfs",  new Integer(RangerCommonEnums.ASSET_HDFS));
-		mapServiceTypeToAssetType.put("hbase", new Integer(RangerCommonEnums.ASSET_HBASE));
-		mapServiceTypeToAssetType.put("hive",  new Integer(RangerCommonEnums.ASSET_HIVE));
-		mapServiceTypeToAssetType.put("knox",  new Integer(RangerCommonEnums.ASSET_KNOX));
-		mapServiceTypeToAssetType.put("storm", new Integer(RangerCommonEnums.ASSET_STORM));
+		mapServiceTypeToAssetType.put(LegacyServiceDefsUtil.LEGACY_SERVICEDEF_HDFS_NAME,  new Integer(RangerCommonEnums.ASSET_HDFS));
+		mapServiceTypeToAssetType.put(LegacyServiceDefsUtil.LEGACY_SERVICEDEF_HBASE_NAME, new Integer(RangerCommonEnums.ASSET_HBASE));
+		mapServiceTypeToAssetType.put(LegacyServiceDefsUtil.LEGACY_SERVICEDEF_HIVE_NAME,  new Integer(RangerCommonEnums.ASSET_HIVE));
+		mapServiceTypeToAssetType.put(LegacyServiceDefsUtil.LEGACY_SERVICEDEF_KNOX_NAME,  new Integer(RangerCommonEnums.ASSET_KNOX));
+		mapServiceTypeToAssetType.put(LegacyServiceDefsUtil.LEGACY_SERVICEDEF_STORM_NAME, new Integer(RangerCommonEnums.ASSET_STORM));
 
 		mapAccessTypeToPermType.put("Unknown", 0);
 		mapAccessTypeToPermType.put("Reset", 1);

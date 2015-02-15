@@ -45,6 +45,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
+import org.apache.ranger.plugin.store.LegacyServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -59,16 +60,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	private long   nextServiceDefId = 0;
 	private long   nextServiceId    = 0;
 	private long   nextPolicyId     = 0;
-
-	static Map<String, Long> legacyServiceDefs = new HashMap<String, Long>();
-
-	static {
-		legacyServiceDefs.put("hdfs",  new Long(1));
-		legacyServiceDefs.put("hbase", new Long(2));
-		legacyServiceDefs.put("hive",  new Long(3));
-		legacyServiceDefs.put("knox",  new Long(5));
-		legacyServiceDefs.put("storm", new Long(6));
-	}
 
 	public ServiceFileStore() {
 		if(LOG.isDebugEnabled()) {
@@ -101,6 +92,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		super.initStore(dataDir);
+
+		LegacyServiceDefsUtil.instance().init(this);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.init()");
@@ -154,14 +147,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			throw new Exception(serviceDef.getId() + ": service-def does not exist");
 		}
 
-		if(isLegacyServiceDef(existing)) {
-			String msg = existing.getName() + ": is an in-built service-def. Update not allowed";
-
-			LOG.warn(msg);
-
-			throw new Exception(msg);
-		}
-
 		String existingName = existing.getName();
 
 		boolean renamed = !StringUtils.equalsIgnoreCase(serviceDef.getName(), existingName);
@@ -206,14 +191,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		if(existing == null) {
 			throw new Exception("service-def does not exist. id=" + id);
-		}
-
-		if(isLegacyServiceDef(existing)) {
-			String msg = existing.getName() + ": is an in-built service-def. Update not allowed";
-
-			LOG.warn(msg);
-
-			throw new Exception(msg);
 		}
 
 		// TODO: deleting service-def would require deleting services that refer to this service-def
@@ -853,18 +830,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		return ret;
 	}
 
-	private boolean isLegacyServiceDef(RangerServiceDef sd) {
-		return sd == null ? false : (isLegacyServiceDef(sd.getName()) || isLegacyServiceDef(sd.getId()));
-	}
-
-	private boolean isLegacyServiceDef(String name) {
-		return name == null ? false : legacyServiceDefs.containsKey(name);
-	}
-
-	private boolean isLegacyServiceDef(Long id) {
-		return id == null ? false : legacyServiceDefs.containsValue(id);
-	}
-
 	private List<RangerServiceDef> getAllServiceDefs() throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDefFileStore.getAllServiceDefs()");
@@ -873,36 +838,12 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		List<RangerServiceDef> ret = new ArrayList<RangerServiceDef>();
 
 		try {
-			// load definitions for legacy services from embedded resources
-			String[] legacyServiceDefResources = {
-					"/service-defs/ranger-servicedef-hdfs.json",
-					"/service-defs/ranger-servicedef-hive.json",
-					"/service-defs/ranger-servicedef-hbase.json",
-					"/service-defs/ranger-servicedef-knox.json",
-					"/service-defs/ranger-servicedef-storm.json",
-			};
-			
-			for(String resource : legacyServiceDefResources) {
-				RangerServiceDef sd = loadFromResource(resource, RangerServiceDef.class);
-				
-				if(sd != null) {
-					ret.add(sd);
-				}
-			}
-			nextServiceDefId = getMaxId(ret) + 1;
-
 			// load service definitions from file system
 			List<RangerServiceDef> sds = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE_DEF, RangerServiceDef.class);
 			
 			if(sds != null) {
 				for(RangerServiceDef sd : sds) {
 					if(sd != null) {
-						if(isLegacyServiceDef(sd)) {
-							LOG.warn("Found in-built service-def '" + sd.getName() + "'  under " + getDataDir() + ". Ignorning");
-
-							continue;
-						}
-						
 						// if the ServiceDef is already found, remove the earlier definition
 						for(int i = 0; i < ret.size(); i++) {
 							RangerServiceDef currSd = ret.get(i);
