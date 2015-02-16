@@ -332,7 +332,7 @@ public class ServiceDBStore implements ServiceStore {
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(name);
 
 		if(xServiceDef != null) {
-			serviceDefService.getPopulatedViewObject(xServiceDef);
+			ret = serviceDefService.getPopulatedViewObject(xServiceDef);
 		}
 
 		if (LOG.isDebugEnabled()) {
