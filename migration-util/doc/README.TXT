@@ -32,7 +32,7 @@ Steps to Add Ranger in a Ambari HDP cluster:
 --------------------------------------------
   * In order to know about usage of the script, Execute the command:
         python import_ranger_to_ambari.py
-  * Migration script locates the existing config in post-install properties files used by the service.  
+  * Migration script locates the existing config in post-install properties files used by the service.
   * This script will collect required configs from the independently installed Ranger service configurations 
     and post it to the specified  Ambari Server. 
   * Set appropriate values in the respective install.properties template file, only if required.
@@ -43,6 +43,11 @@ Steps to Add Ranger in a Ambari HDP cluster:
        For Ranger Hive plugin, ranger_hive_plugin_install.properties
        For Ranger Knox plugin, ranger_knox_plugin_install.properties
        For Ranger Storm plugin, ranger_storm_plugin_install.properties
+   * For script to use proper values, mandatory properties to be filled by user are as follows :
+     1) During Ranger_Admin installation migration, the db root username and password are mandatory,
+           which can be set in the ranger_admin_install.properties
+     2) During HBase and Hive Plugin migration,a flag called UPDATE_XAPOLICIES_ON_GRANT_REVOKE is used to save policies during grant-revoke operations.
+        Hence this flag should be set by user in ranger_hbase_plugin_install.properties or ranger_hive_plugin_install.properties respectively.
 
 To import Ranger (Admin and User-Sync) service and plugins we need to run the python script using command line as shown below, 
 with valid input parameters, from the host where specific Ranger component has been installed / enabled :

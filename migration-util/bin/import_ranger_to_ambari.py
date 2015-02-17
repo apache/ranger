@@ -72,8 +72,8 @@ def create_ranger_service_in_ambari():
       print('Ranger service created successfully in Ambari.')
       return True
     elif(response_code == 409 and response is not None):
-      print('Ranger service is alread created in Ambari.')
-      return False
+      print('Ranger service is already created in Ambari.')
+      return True
     else:
       print('Ranger service creation failed in Ambari.')
       return False
@@ -92,7 +92,7 @@ def create_ranger_service_components_in_ambari(ranger_service_component_name):
       return True
     elif (response_code == 409 and response is not None) :
       print('Ranger service component : ' + ranger_service_component_name + ',  is already present in Ambari.')
-      return False
+      return True
     else:
       print('Ranger service component creation for : ' + ranger_service_component_name + ',  failed in Ambari.')
       return False
@@ -108,9 +108,13 @@ def register_ranger_admin_host_in_ambari():
     if response_code == 201 and response is not None:
       print('Ranger admin host registered successfully in Ambari.')
       return True
+    elif(response_code == 409 and response is not None):
+      print('Ranger admin host is already registered Ambari.')
+      return True
     else:
       print('Ranger admin host registration failed in Ambari.')
-      return False
+    return False
+
 
 def register_ranger_usersync_host_in_ambari():
   print('adding Ranger servcie components in Ambari')
@@ -125,7 +129,7 @@ def register_ranger_usersync_host_in_ambari():
       return True
     elif(response_code == 409 and response is not None):
       print('Ranger usersync host is already registered Ambari.')
-      return False
+      return True
     else:
       print('Ranger usersync host registration failed in Ambari.')
       return False
@@ -141,7 +145,6 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
   date_time_stamp = getDateTimeNow()
 
   if(add_admin_or_usersync == 1):
-    ranger_service_properties_from_file = get_db_flavour(ranger_service_properties_from_file)
     advanced_admin_properties['DB_FLAVOR'] = ranger_service_properties_from_file['DB_FLAVOR']
     advanced_admin_properties['SQL_COMMAND_INVOKER'] = ranger_service_properties_from_file['SQL_COMMAND_INVOKER']
     advanced_admin_properties['SQL_CONNECTOR_JAR'] = ranger_service_properties_from_file['SQL_CONNECTOR_JAR']
@@ -149,11 +152,11 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
     advanced_admin_properties['db_root_password'] = ranger_service_properties_from_file['db_root_password']
     advanced_admin_properties['db_host'] = ranger_service_properties_from_file['db_host']
     advanced_admin_properties['db_name'] = ranger_service_properties_from_file['db_name']
-    advanced_admin_properties['db_user'] = ranger_service_properties_from_file['db_user']
-    advanced_admin_properties['db_password'] = ranger_service_properties_from_file['db_password']
+    advanced_admin_properties['db_user'] = ranger_service_properties_from_file['jdbc.user']
+    advanced_admin_properties['db_password'] = ranger_service_properties_from_file['jdbc.password']
     advanced_admin_properties['audit_db_name'] = ranger_service_properties_from_file['audit_db_name']
-    advanced_admin_properties['audit_db_user'] = ranger_service_properties_from_file['audit_db_user']
-    advanced_admin_properties['audit_db_password'] = ranger_service_properties_from_file['audit_db_password']
+    advanced_admin_properties['audit_db_user'] = ranger_service_properties_from_file['auditDB.jdbc.user']
+    advanced_admin_properties['audit_db_password'] = ranger_service_properties_from_file['auditDB.jdbc.password']
     advanced_admin_properties['policymgr_external_url'] = ranger_service_properties_from_file['xa.webapp.url.root']
     advanced_admin_properties['policymgr_http_enabled'] = ranger_service_properties_from_file['http.enabled']
     advanced_admin_properties['authentication_method'] = ranger_service_properties_from_file['authentication_method']
@@ -186,7 +189,7 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
     advanced_ranger_env_properties['admin_password'] = 'admin'
 
 
-    ranger_config_data = '[{"Clusters":{"desired_config":[{"type":"admin-properties","tag":"' + str(date_time_stamp) + '","properties":' + json.dumps(advanced_admin_properties) + ', "properties_attributes": {"final": "true"}},{"type":"ranger-site","tag":"' + str(date_time_stamp) + '","properties":' + json.dumps(advanced_ranger_site_properties) + ', "properties_attributes": {"final": "false"}},{"type":"ranger-env","tag":"' + str(date_time_stamp) + '","properties":' + json.dumps(advanced_ranger_env_properties) + ', "properties_attributes": {"final": "false"}}]}}]'
+    ranger_config_data = '[{"Clusters":{"desired_config":[{"type":"admin-properties", "service_config_version_note": "Initial configuration for Ranger service" ,"tag":"' + str(date_time_stamp) + '","properties":' + json.dumps(advanced_admin_properties) + ', "properties_attributes": {"final": "true"}},{"type":"ranger-site", "service_config_version_note": "Initial configuration for Ranger service" ,"tag":"' + str(date_time_stamp) + '","properties":' + json.dumps(advanced_ranger_site_properties) + ', "properties_attributes": {"final": "false"}},{"type":"ranger-env", "service_config_version_note": "Initial configuration for Ranger service" ,"tag":"' + str(date_time_stamp) + '","properties":' + json.dumps(advanced_ranger_env_properties) + ', "properties_attributes": {"final": "false"}}]}}]'
 
 
   if(add_admin_or_usersync == 2):
@@ -207,7 +210,7 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
     advanced_user_sync_properties['SYNC_LDAP_GROUPNAME_CASE_CONVERSION'] = ranger_service_properties_from_file['ldapGroupSync.groupname.caseConversion']
     advanced_user_sync_properties['logdir'] = ranger_service_properties_from_file['logdir']
 
-    ranger_config_data = '[{"Clusters":{"desired_config":[{"type":"usersync-properties","tag":"' + str(date_time_stamp) + '","properties":' + json.dumps(advanced_user_sync_properties) + ', "properties_attributes": {"final": "false"}}]}}]'
+    ranger_config_data = '[{"Clusters":{"desired_config":[{"type":"usersync-properties", "service_config_version_note": "Initial configuration for Ranger service" ,"tag":"' + str(date_time_stamp) + '","properties":' + json.dumps(advanced_user_sync_properties) + ', "properties_attributes": {"final": "false"}}]}}]'
 
   ranger_config_request_url = ambari_cluster_url
   request_result = call_ambari_api(ranger_config_request_url,'PUT',ambari_username_password,str(ranger_config_data))
@@ -221,25 +224,6 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
       print('Ranger advanced configuration add failed in Ambari.')
       return False
 
-def get_db_flavour(ranger_admin_properties_from_file):
-  print('inside get_db_flavour getting db flavor, library and command invoker')
-  install_properties_db_flavour = ranger_admin_properties_from_file['DB_FLAVOR']
-  print( 'install_properties_db_flavour = ' + install_properties_db_flavour)
-  xa_system_properties_db_dialect = ranger_admin_properties_from_file['jdbc.dialect']
-  print( 'xa_system_properties_db_dialect = ' + xa_system_properties_db_dialect)
-  xa_system_properties_url = ranger_admin_properties_from_file['jdbc.url']
-  print( 'xa_system_properties_url = ' + xa_system_properties_url)
-  if('mysql'.lower() in xa_system_properties_db_dialect.lower() and 'mysql'.lower() in xa_system_properties_url.lower()):
-    print('db dialect and jdbc url are set as MYSQL setting db_flavour and sql command invoker as mysql')
-    ranger_admin_properties_from_file['DB_FLAVOR'] =  'MYSQL'
-    ranger_admin_properties_from_file['SQL_COMMAND_INVOKER'] = 'mysql'
-    ranger_admin_properties_from_file['SQL_CONNECTOR_JAR'] = '/usr/share/java/mysql-connector-java.jar'
-  if('oracle'.lower() in xa_system_properties_db_dialect and 'oracle'.lower() in xa_system_properties_url.lower()):
-    print('db dialect and jdbc url are set as Oracle setting db_flavour and sql command invoker as oracle')
-    ranger_admin_properties_from_file['DB_FLAVOR'] =  'ORACLE'
-    ranger_admin_properties_from_file['SQL_COMMAND_INVOKER'] = 'sqlplus'
-    ranger_admin_properties_from_file['SQL_CONNECTOR_JAR'] = '/usr/share/java/ojdbc6.jar'
-  return ranger_admin_properties_from_file
 
 
 def call_ranger_installed():
@@ -255,7 +239,7 @@ def call_ranger_installed():
       return True
     if (response_code == 409 and response is not None):
       print('Ranger is already installed in Ambari.')
-      return False
+      return True
     if response_code == 202 and response is not None:
       print('Ranger state changed to install posted in Ambari, checking for updated status waiting for 30 seconds')
       parsed_response = json.loads(response)
@@ -379,6 +363,69 @@ def get_additional_properties_for_admin(ranger_admin_properties_from_file):
   ranger_admin_properties_from_file = import_properties_from_file(ranger_webserver_properties_path,ranger_admin_properties_from_file)
   ranger_admin_properties_from_file = import_properties_from_file(ranger_ldap_properties_path,ranger_admin_properties_from_file)
   ranger_admin_properties_from_file = import_properties_from_file(ranger_system_properties_path,ranger_admin_properties_from_file)
+
+  print('Getting db flavor, library and command invoker')
+  install_properties_db_flavour = ranger_admin_properties_from_file['DB_FLAVOR']
+  print( 'install_properties_db_flavour = ' + install_properties_db_flavour)
+  xa_system_properties_db_dialect = ranger_admin_properties_from_file['jdbc.dialect']
+  print( 'xa_system_properties_db_dialect = ' + xa_system_properties_db_dialect)
+  xa_system_properties_url = ranger_admin_properties_from_file['jdbc.url']
+  print( 'xa_system_properties_url = ' + xa_system_properties_url)
+  if('mysql'.lower() in xa_system_properties_db_dialect.lower() and 'mysql'.lower() in xa_system_properties_url.lower()):
+    print('db dialect and jdbc url are set as MYSQL setting db_flavour and sql command invoker as mysql')
+    ranger_admin_properties_from_file['DB_FLAVOR'] =  'MYSQL'
+    ranger_admin_properties_from_file['SQL_COMMAND_INVOKER'] = 'mysql'
+    ranger_admin_properties_from_file['SQL_CONNECTOR_JAR'] = '/usr/share/java/mysql-connector-java.jar'
+  elif('oracle'.lower() in xa_system_properties_db_dialect and 'oracle'.lower() in xa_system_properties_url.lower()):
+    print('db dialect and jdbc url are set as Oracle setting db_flavour and sql command invoker as oracle')
+    ranger_admin_properties_from_file['DB_FLAVOR'] =  'ORACLE'
+    ranger_admin_properties_from_file['SQL_COMMAND_INVOKER'] = 'sqlplus'
+    ranger_admin_properties_from_file['SQL_CONNECTOR_JAR'] = '/usr/share/java/ojdbc6.jar'
+  else:
+    print('Found unsupported DB_FLAVOUR, please configure as MYSQL or ORACLE, which are supported for now.exitting for now')
+    sys.exit(1)
+
+  xa_system_properties_jdbc_url = ranger_admin_properties_from_file['jdbc.url']
+  print('Found jdbc url configured as : ' + str(xa_system_properties_jdbc_url) + ' , getting db host from configured jdbc url')
+  xa_database_host_name = xa_system_properties_jdbc_url.split(':')
+  xa_database_host = xa_database_host_name[3].split('/')[2]
+  xa_database_name = xa_database_host_name[3].split('/')[3]
+  print('Found db host as : ' + str(xa_database_host))
+  print('Found db name as : ' + str(xa_database_name))
+  ranger_admin_properties_from_file['db_host']  = xa_database_host
+  ranger_admin_properties_from_file['db_name']  = xa_database_name
+
+  xa_system_properties_audit_jdbc_url = ranger_admin_properties_from_file['auditDB.jdbc.url']
+  print('Found audit jdbc url configured as : ' + str(xa_system_properties_audit_jdbc_url) + ' , getting db host from configured jdbc url')
+  xa_audit_database_host_name = xa_system_properties_audit_jdbc_url.split(':')
+
+  xa_audit_database_host = xa_audit_database_host_name[3].split('/')[2]
+  xa_audit_database_name = xa_audit_database_host_name[3].split('/')[3]
+  print('Found xa_audit_database_name as : ' + str(xa_audit_database_name))
+  ranger_admin_properties_from_file['audit_db_host']  = xa_audit_database_host
+  ranger_admin_properties_from_file['audit_db_name']  = xa_audit_database_name
+
+  xa_db_password = ''
+  xa_audit_db_password = ''
+
+  libpath= os.path.join(hdp_version_dir,'ranger-admin','cred','lib','*')
+  aliasKey='policydb.jdbc.password'
+  aliasValue = ''
+  filepath = os.path.join(hdp_version_dir , 'ranger-admin','ews','webapp','WEB-INF','classes','conf','.jceks' ,'rangeradmin.jceks')
+
+  getorcreateorlist = 'get'
+
+  statuscode,value = call_keystore(libpath, aliasKey, aliasValue, filepath, getorcreateorlist)
+  if statuscode == 0:
+    xa_db_password = value.strip()
+
+  aliasKey='auditdb.jdbc.password'
+  statuscode,value = call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreateorlist)
+  if statuscode == 0:
+    xa_audit_db_password = value.strip()
+
+  ranger_admin_properties_from_file['jdbc.password'] = xa_db_password
+  ranger_admin_properties_from_file['auditDB.jdbc.password'] = xa_audit_db_password
   return ranger_admin_properties_from_file
 
 def get_additional_properties_for_usersync(ranger_usersync_properties_from_file):
@@ -688,13 +735,13 @@ def get_hive_plugin_configuration():
     hive_plugin_install_properties = import_properties_from_xml(xasecure_policy_ssl_xml_path, hive_plugin_install_properties)
     return flag_hive_plugin_installed,hive_plugin_install_properties,hive_server2_xml_properties
   else:
-    print'hive plugin is present and installed to ranger, configuring to setup in ambari.'
+    print('hive plugin is present and installed to ranger, configuring to setup in ambari.')
     return False,None,None
 
 def get_hbase_plugin_configuration():
   flag_hbase_plugin_installed,hbase_plugin_install_properties =  get_plugin_details('hbase')
   if flag_hbase_plugin_installed:
-    print'hbase plugin is present and installed to ranger, configuring to setup in ambari.'
+    print('hbase plugin is present and installed to ranger, configuring to setup in ambari.')
     base_hbase_conf_path = '/etc/hbase/conf/'
     hbase_site_xml_path = os.path.join(base_hbase_conf_path,'hbase-site.xml')
     hbase_site_xml_properties = import_properties_from_xml(hbase_site_xml_path, hbase_plugin_install_properties)
@@ -706,7 +753,7 @@ def get_hbase_plugin_configuration():
     hbase_plugin_install_properties = import_properties_from_xml(xasecure_policy_ssl_xml_path, hbase_plugin_install_properties)
     return hbase_plugin_install_properties,hbase_plugin_install_properties,hbase_site_xml_properties
   else:
-    print'hbase plugin is present and installed to ranger, configuring to setup in ambari.'
+    print('hbase plugin is present and installed to ranger, configuring to setup in ambari.')
     return False,None,None
 
 
@@ -723,14 +770,14 @@ def get_knox_plugin_configuration():
     knox_plugin_install_properties = import_properties_from_xml(xasecure_policy_ssl_xml_path, knox_plugin_install_properties)
     return knox_plugin_install_properties,knox_plugin_install_properties
   else:
-    print'knox plugin is present and installed to ranger, configuring to setup in ambari.'
+    print('knox plugin is present and installed to ranger, configuring to setup in ambari.')
     return False,None
 
 
 def get_storm_plugin_configuration():
   flag_storm_plugin_installed,storm_plugin_install_properties =  get_plugin_details('storm')
   if flag_storm_plugin_installed:
-    print'storm plugin is present and installed to ranger, configuring to setup in ambari.'
+    print('storm plugin is present and installed to ranger, configuring to setup in ambari.')
     base_knox_conf_path = '/etc/storm/conf/'
     xasecure_audit_xml_path = os.path.join(base_knox_conf_path,'xasecure-audit.xml')
     storm_plugin_install_properties = import_properties_from_xml(xasecure_audit_xml_path, storm_plugin_install_properties)
@@ -741,7 +788,7 @@ def get_storm_plugin_configuration():
 
     return storm_plugin_install_properties,storm_plugin_install_properties
   else:
-    print'storm plugin is present and installed to ranger, configuring to setup in ambari.'
+    print('storm plugin is present and installed to ranger, configuring to setup in ambari.')
     return False,None
 
 
@@ -749,7 +796,7 @@ def get_storm_plugin_configuration():
 
 
 def get_plugin_details(component_name):
-  print'getting ranger plugin details for ' + component_name
+  print('getting ranger plugin details for ' + component_name)
   flag_plugin_properties_present = False
   plugin_install_properties = dict()
   component_modified_name = 'ranger_' + component_name + '_plugin_install.properties'
@@ -757,17 +804,17 @@ def get_plugin_details(component_name):
     print component_name + ' is installed, reading properties'
     plugin_install_properties = import_properties_from_file(component_modified_name)
     if plugin_install_properties is not None and len(plugin_install_properties) != 0:
-      print'plugin properties imported adding to existing configuration.'
+      print('plugin properties imported adding to existing configuration.')
       flag_plugin_installed =  check_plugin_enabled(component_name, plugin_install_properties)
       if flag_plugin_installed:
         flag_plugin_properties_present = True
       else:
         flag_plugin_properties_present = False
     else:
-      print 'plugin properties is None hence setting flag to false'
+      print('plugin properties is None hence setting flag to false')
       flag_plugin_properties_present = False
   else:
-    print component_name + ' is not found installed not configuring properties for the same'
+    print( component_name + ' is not found installed not configuring properties for the same')
   return flag_plugin_properties_present,plugin_install_properties
 
 
@@ -776,7 +823,7 @@ def check_plugin_enabled(component_name,component_plugin_install_properties):
   flag_plugin_installed = False
   repo_base_path = os.path.join('/etc/ranger',component_plugin_install_properties['REPOSITORY_NAME'])
   if os.path.exists(repo_base_path):
-    print 'Plugin is installed for component ' + component_name
+    print('Plugin is installed for component ' + component_name)
     flag_plugin_installed = True
   return flag_plugin_installed
 
@@ -785,11 +832,6 @@ def check_plugin_enabled(component_name,component_plugin_install_properties):
 
 def call_ambari_api(ambari_url,method, username_password,data):
   try:
-#     print('calling ambari api for given request')
-#     print('ambari_url = ' + str(ambari_url))
-#     print('method = ' + str(method))
-#     print('username_password = ' + str(username_password))
-#     print('data = ' + str(data))
     url = ambari_url    
     base64string = base64.encodestring('{0}'.format(username_password)).replace('\n', '')
     headers = {"X-Requested-By": "ambari"}
@@ -803,18 +845,18 @@ def call_ambari_api(ambari_url,method, username_password,data):
     if isinstance(e, urllib2.HTTPError):
       print("HTTP Code: {0}".format(e.code))
       print("HTTP Data: {0}".format(e.read()))
-      return None
+      return e
     else:
       print("Error: {0}".format(e.reason))
-      return None
+      return e
   except httplib.BadStatusLine:
     print("Ambari service is not reachable, please restart the service and then try again")
-    return None
+    return e
 
 
 def import_properties_from_file(install_properties_path , properties_from_file = None):
   if properties_from_file is None:
-    print 'properties_from_file is none initializing to dict'
+    print('properties_from_file is none initializing to dict')
     properties_from_file = dict()
   install_properties_file =  open(install_properties_path)
   for each_line in install_properties_file.read().split('\n'):
@@ -832,7 +874,7 @@ def import_properties_from_file(install_properties_path , properties_from_file =
 
 
 def import_properties_from_xml(xml_path,properties_from_xml = None):
-  print 'getting values from file : ' + str(xml_path)
+  print('getting values from file : ' + str(xml_path))
   xml = ET.parse(xml_path)
   root = xml.getroot()
   if properties_from_xml is None:
@@ -867,7 +909,7 @@ def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreateorlist):
         statuscode = p.returncode
         return statuscode, output
     else:
-        print 'proper command not received for input need get or create'
+        print('proper command not received for input need get or create')
 
 
 
@@ -908,7 +950,7 @@ if __name__ == '__main__':
     print('Found hdp_version = ' + str(hdp_version) )
     hdp_version_dir = os.path.join(hdp_dir,hdp_version)
     if function_to_call is not None and len(function_to_call) > 0:
-      print'Found first argument as : ' + function_to_call
+      print('Found first argument as : ' + function_to_call)
       function_to_call = int(function_to_call)
       if function_to_call == 1:
         print('Porting Ranger Admin installation details to Ambari.')
@@ -935,7 +977,7 @@ if __name__ == '__main__':
         print ('Unsupported option passed for installation, please pass proper supported option')
 
   else:
-    print 'Usage :' \
+    print('Usage :' \
           '\n python import_ranger_to_ambari.py  {install option eg. 1} { ambari server url (eg.  http://100.100.100.100:8080) } {ambari server username password (eg. demo_user:demo_pass) } {cluster name (eg. ambari_cluster)} {FQDN of host having Ranger Admin or Ranger Usersync or plugins installe (eg. ambari.server.com)} ' \
           '\n Actual call will be like : python ranger_port_script.py 1 http://100.100.100.100:8080 demo_user:demo_pass ambari_cluster ambari.server.com'\
           '\n Pass first parameter as 1 for Ranger integration with Ambari.' \
@@ -944,7 +986,7 @@ if __name__ == '__main__':
           '\n Pass first parameter as 4 for Ranger Hive Plugin integration with Ambari.'\
           '\n Pass first parameter as 5 for Ranger Hbase Plugin integration with Ambari.'\
           '\n Pass first parameter as 6 for Ranger Knox Plugin integration with Ambari.'\
-          '\n Pass first parameter as 7 for Ranger Storm Plugin integration with Ambari.'
+          '\n Pass first parameter as 7 for Ranger Storm Plugin integration with Ambari.')
 
   sys.exit(0)
 
