@@ -28,9 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -116,26 +114,11 @@ public class RangerIpMatcherTest {
 		assertNull(matcher.extractIp(null));
 
 		RangerAccessRequest request = mock(RangerAccessRequest.class);
-		when(request.getContext()).thenReturn(null);
+		when(request.getClientIPAddress()).thenReturn(null);
 		assertNull(matcher.extractIp(request));
 		
-		Map<String, Object> context = new HashMap<String, Object>();
-		when(request.getContext()).thenReturn(context);
-		assertNull(matcher.extractIp(request));
-
-		// context does not contain the condition name we are looking for
-		context.put("!" + RangerIpMatcher.ConditionName, "value");
-		assertNull(matcher.extractIp(request));
-		
-		// value for the condition name itself isnull
-		context.clear();
-		context.put(RangerIpMatcher.ConditionName, null);
-		assertNull(matcher.extractIp(request));
-		
-		// get back what you put in
-		context.clear();
-		context.put(RangerIpMatcher.ConditionName, "aValue");
-		assertEquals("aValue", matcher.extractIp(request));
+		when(request.getClientIPAddress()).thenReturn("anIp"); // note ip address is merely a string.  It can be any string.
+		assertEquals("anIp", matcher.extractIp(request));
 	}
 	
 	@Test
@@ -257,10 +240,8 @@ public class RangerIpMatcherTest {
 	}
 	
 	RangerAccessRequest createRequest(String requestIp) {
-		Map<String, Object> context = new HashMap<String, Object>();
-		context.put(RangerIpMatcher.ConditionName, requestIp);
 		RangerAccessRequest request = mock(RangerAccessRequest.class);
-		when(request.getContext()).thenReturn(context);
+		when(request.getClientIPAddress()).thenReturn(requestIp);
 		return request;
 	}
 }
