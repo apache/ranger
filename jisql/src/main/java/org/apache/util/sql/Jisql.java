@@ -396,6 +396,7 @@ public class Jisql {
                     } 
                     if(connectString.toLowerCase().startsWith("jdbc:oracle") && inputFileName!=null){
 	                    if (trimmedLine.startsWith("/") ||trimmedLine.length()<2) {
+	                        commandTerminator=";";
 	                        continue;
 	                    }
                     }
@@ -644,8 +645,9 @@ public class Jisql {
             throw new Exception("user name must exist");
 
         if ((password == null) && (passwordFileName == null)) {
-            Console console = System.console();
-            password = new String( console.readPassword("Password (hit enter for no password): ") );
+            password="";
+            //Console console = System.console();
+            //password = new String( console.readPassword("Password (hit enter for no password): ") );
         }
         else if (password == null) {
             File passwordFile = null;

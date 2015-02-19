@@ -25,5 +25,4 @@ BEGIN
       execute immediate 'ALTER TABLE  x_resource ADD CONSTRAINT x_resource_UK_policy_name UNIQUE(policy_name)';
       commit;
   end if;
-end;
-/
+end;/

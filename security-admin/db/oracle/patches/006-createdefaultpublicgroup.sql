@@ -25,5 +25,4 @@ BEGIN
 		commit;
 	end if;
   end if;
-end;
-/
+end;/

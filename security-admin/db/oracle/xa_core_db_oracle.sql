@@ -13,106 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-/* create or replace procedure */
-commit;
-CREATE OR REPLACE PROCEDURE sp_dropobject(ObjName IN varchar2,ObjType IN varchar2)
-IS
-v_counter integer;
-BEGIN
-if (ObjType = 'TABLE') then
-    select count(*) into v_counter from user_tables where table_name = upper(ObjName);
-    if (v_counter > 0) then
-      execute immediate 'drop table ' || ObjName || ' cascade constraints';
-    end if;
-end if;
-  if (ObjType = 'PROCEDURE') then
-    select count(*) into v_counter from User_Objects where object_type = 'PROCEDURE' and OBJECT_NAME = upper(ObjName);
-      if (v_counter > 0) then
-        execute immediate 'DROP PROCEDURE ' || ObjName;
-      end if;
-  end if;
-  if (ObjType = 'FUNCTION') then
-    select count(*) into v_counter from User_Objects where object_type = 'FUNCTION' and OBJECT_NAME = upper(ObjName);
-      if (v_counter > 0) then
-        execute immediate 'DROP FUNCTION ' || ObjName;
-      end if;
-  end if;
-  if (ObjType = 'TRIGGER') then
-    select count(*) into v_counter from User_Triggers where TRIGGER_NAME = upper(ObjName);
-      if (v_counter > 0) then
-        execute immediate 'DROP TRIGGER ' || ObjName;
-      end if;
-  end if;
-  if (ObjType = 'VIEW') then
-    select count(*) into v_counter from User_Views where VIEW_NAME = upper(ObjName);
-      if (v_counter > 0) then
-        execute immediate 'DROP VIEW ' || ObjName;
-      end if;
-  end if;
-  if (ObjType = 'SEQUENCE') then
-    select count(*) into v_counter from user_sequences where sequence_name = upper(ObjName);
-      if (v_counter > 0) then
-        execute immediate 'DROP SEQUENCE ' || ObjName;
-      end if;
-  end if;
-  if (ObjType = 'INDEX') then
-    select count(*) into v_counter from user_indexes where index_name = upper(ObjName);
-      if (v_counter > 0) then
-        execute immediate 'DROP INDEX ' || ObjName;
-      end if;
-  end if;
-  if (ObjType = 'CONSTRAINT') then
-    select count(*) into v_counter from user_constraints where constraint_name = upper(ObjName);
-      if (v_counter > 0) then
-        execute immediate 'DROP CONSTRAINT ' || ObjName;
-      end if;
-  end if;
-END;
-/
-/* sequence */
-call sp_dropobject('SEQ_GEN_IDENTITY','SEQUENCE');
-call sp_dropobject('X_ACCESS_AUDIT_SEQ','SEQUENCE');
-call sp_dropobject('X_ASSET_SEQ','SEQUENCE');
-call sp_dropobject('X_AUDIT_MAP_SEQ','SEQUENCE');
-call sp_dropobject('X_AUTH_SESS_SEQ','SEQUENCE');
-call sp_dropobject('X_CRED_STORE_SEQ','SEQUENCE');
-call sp_dropobject('X_DB_BASE_SEQ','SEQUENCE');
-call sp_dropobject('X_GROUP_SEQ','SEQUENCE');
-call sp_dropobject('X_GROUP_GROUPS_SEQ','SEQUENCE');
-call sp_dropobject('X_GROUP_USERS_SEQ','SEQUENCE');
-call sp_dropobject('X_PERM_MAP_SEQ','SEQUENCE');
-call sp_dropobject('X_POLICY_EXPORT_SEQ','SEQUENCE');
-call sp_dropobject('X_PORTAL_USER_SEQ','SEQUENCE');
-call sp_dropobject('X_PORTAL_USER_ROLE_SEQ','SEQUENCE');
-call sp_dropobject('X_RESOURCE_SEQ','SEQUENCE');
-call sp_dropobject('X_TRX_LOG_SEQ','SEQUENCE');
-call sp_dropobject('X_USER_SEQ','SEQUENCE');
-call sp_dropobject('X_DB_VERSION_H_SEQ','SEQUENCE');
-call sp_dropobject('V_TRX_LOG_SEQ','SEQUENCE');
-call sp_dropobject('XA_ACCESS_AUDIT_SEQ','SEQUENCE');
-commit;
-
-/* drop table */
-call sp_dropobject('vx_trx_log','VIEW');
-call sp_dropobject('x_perm_map','TABLE');
-call sp_dropobject('x_audit_map','TABLE');
-call sp_dropobject('x_trx_log','TABLE');
-call sp_dropobject('x_resource','TABLE');
-call sp_dropobject('x_policy_export_audit','TABLE');
-call sp_dropobject('x_group_users','TABLE');
-call sp_dropobject('x_user','TABLE');
-call sp_dropobject('x_group_groups','TABLE');
-call sp_dropobject('X_GROUP','TABLE');
-call sp_dropobject('x_db_base','TABLE');
-call sp_dropobject('x_cred_store','TABLE');
-call sp_dropobject('x_auth_sess','TABLE');
-call sp_dropobject('x_asset','TABLE');
-call sp_dropobject('xa_access_audit','TABLE');
-call sp_dropobject('x_portal_user_role','TABLE');
-call sp_dropobject('x_portal_user','TABLE');
-
-commit;
-/* create sequences */
+-- create sequences
 CREATE SEQUENCE SEQ_GEN_IDENTITY START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ASSET_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -136,7 +37,7 @@ CREATE SEQUENCE XA_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 commit;
 
 
-/* create tables */
+-- create tables
 CREATE TABLE x_portal_user (
 	id NUMBER(20) NOT NULL,
 	create_time DATE DEFAULT NULL NULL ,
@@ -531,7 +432,7 @@ CREATE INDEX x_user_up_time ON  x_user(update_time);
 
 CREATE OR REPLACE PUBLIC SYNONYM xa_access_audit FOR xa_access_audit;
 CREATE OR REPLACE PUBLIC SYNONYM XA_ACCESS_AUDIT_SEQ FOR XA_ACCESS_AUDIT_SEQ;
-
+commit;
 insert into x_portal_user (
        id,CREATE_TIME, UPDATE_TIME,
        FIRST_NAME, LAST_NAME, PUB_SCR_NAME,
@@ -541,7 +442,7 @@ X_PORTAL_USER_SEQ.NEXTVAL, SYSDATE, SYSDATE,
  'Admin', '', 'Admin',
  'admin', 'ceb4f32325eda6142bd65215f4c0f371', '', 1
 );
-
+commit;
 insert into x_portal_user_role (
       id, CREATE_TIME, UPDATE_TIME,
        USER_ID, USER_ROLE, STATUS
@@ -549,32 +450,9 @@ insert into x_portal_user_role (
 X_PORTAL_USER_ROLE_SEQ.NEXTVAL, SYSDATE, SYSDATE,
  1, 'ROLE_SYS_ADMIN', 1
 );
-
+commit;
 insert into x_user (id,CREATE_TIME, UPDATE_TIME,user_name, status,descr) values (
 X_USER_SEQ.NEXTVAL, SYSDATE, SYSDATE,'admin', 0,'Administrator');
-
-INSERT INTO x_group (ID,ADDED_BY_ID, CREATE_TIME, DESCR, GROUP_TYPE, GROUP_NAME, STATUS, UPDATE_TIME, UPD_BY_ID) VALUES (X_GROUP_SEQ.nextval,1, sys_extract_utc(systimestamp), 'public group', 0, 'public', 0, sys_extract_utc(systimestamp), 1);
 commit;
-
-
-
-CREATE OR REPLACE TRIGGER x_auth_sess_trigger
-  BEFORE INSERT
-  ON x_auth_sess
-  FOR EACH ROW
-  -- Optionally restrict this trigger to fire only when really needed
-  WHEN (new.id is null)
-DECLARE
-  v_id x_auth_sess.id%TYPE;
-BEGIN
-  -- Select a new value from the sequence into a local variable. As
-  -- commented, this step is optional. You can directly select into :new.qname_id
-  SELECT  x_auth_sess_seq.nextval INTO v_id FROM DUAL;
-
-  -- :new references the record that you are about to insert into qname. Hence,
-  -- you can overwrite the value of :new.qname_id (qname.qname_id) with the value
-  -- obtained from your sequence, before inserting
-  :new.id := v_id;
-END my_trigger;
-/
+INSERT INTO x_group (ID,ADDED_BY_ID, CREATE_TIME, DESCR, GROUP_TYPE, GROUP_NAME, STATUS, UPDATE_TIME, UPD_BY_ID) VALUES (X_GROUP_SEQ.nextval,1, sys_extract_utc(systimestamp), 'public group', 0, 'public', 0, sys_extract_utc(systimestamp), 1);
 commit;

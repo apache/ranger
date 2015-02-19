@@ -72,7 +72,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	 * </ul>
 	 *
 	 */
-	@Column(name = "level")
+	@Column(name = "res_level")
 	protected Integer level;
 
 	/**

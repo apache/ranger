@@ -34,8 +34,8 @@ public class XXEnumElementDef extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Id
-	@SequenceGenerator(name = "x_enum_def_element_SEQ", sequenceName = "x_enum_def_element_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_enum_def_element_SEQ")
+	@SequenceGenerator(name = "x_enum_element_def_SEQ", sequenceName = "x_enum_element_def_SEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_enum_element_def_SEQ")
 	@Column(name = "id")
 	protected Long id;
 

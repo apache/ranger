@@ -60,6 +60,11 @@
   		<groupId>org.mockito</groupId>
   		<artifactId>mockito-core</artifactId>
   	</dependency>
+	<dependency>
+		<groupId>org.codehaus.jackson</groupId>
+		<artifactId>jackson-jaxrs</artifactId>
+		<version>${codehaus.jackson.version}</version>
+	</dependency>
     <dependency>
 	<groupId>security_plugins.ranger-plugins-audit</groupId>
 	<artifactId>ranger-plugins-audit</artifactId>

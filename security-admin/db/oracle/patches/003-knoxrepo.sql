@@ -45,5 +45,4 @@ Select count(*) into v_column_exists
       execute immediate 'ALTER TABLE  x_perm_map ADD  ip_address CLOB DEFAULT NULL NULL';
       commit;
   end if;
-end;
-/
+end;/

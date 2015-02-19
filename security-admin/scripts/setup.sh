@@ -171,6 +171,15 @@ check_db_version() {
     fi
 }
 
+check_python_command() {
+		if is_command ${PYTHON_COMMAND_INVOKER} ; then
+			log "[I] '${PYTHON_COMMAND_INVOKER}' command found"
+		else
+			log "[E] '${PYTHON_COMMAND_INVOKER}' command not found"
+		exit 1;
+		fi
+}
+
 check_db_connector() {
     if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
@@ -446,7 +455,7 @@ upgrade_db() {
 	log "[I] - starting upgradedb ... "
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
     then
-		DBVERSION_CATALOG_CREATION=db/create_dbversion_catalog.sql
+		DBVERSION_CATALOG_CREATION=db/mysql/create_dbversion_catalog.sql
 		if [ -f ${DBVERSION_CATALOG_CREATION} ]
 		then
 			log "[I] Verifying database version catalog table .... "
@@ -457,7 +466,7 @@ upgrade_db() {
 
 		dt=`date '+%s'`
 		tempFile=/tmp/sql_${dt}_$$.sql
-		sqlfiles=`ls -1 db/patches/*.sql 2> /dev/null | awk -F/ '{ print $NF }' | awk -F- '{ print $1, $0 }' | sort -k1 -n | awk '{ printf("db/patches/%s\n",$2) ; }'`
+		sqlfiles=`ls -1 db/mysql/patches/*.sql 2> /dev/null | awk -F/ '{ print $NF }' | awk -F- '{ print $1, $0 }' | sort -k1 -n | awk '{ printf("db/mysql/patches/%s\n",$2) ; }'`
 		for sql in ${sqlfiles}
 		do
 			if [ -f ${sql} ]
@@ -685,20 +694,10 @@ import_db(){
 }
 
 copy_db_connector(){
-	if [ "${DB_FLAVOR}" == "MYSQL" ]
-	then
-		log "[I] Copying MYSQL Connector to $app_home/WEB-INF/lib ";
-	    cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/classes/lib
-		check_ret_status $? "Copying MYSQL Connector to $app_home/WEB-INF/lib failed"
-		log "[I] Copying MYSQL Connector to $app_home/WEB-INF/lib DONE";
-	fi
-	if [ "${DB_FLAVOR}" == "ORACLE" ]
-    then
-        log "[I] Copying ORACLE Connector to $app_home/WEB-INF/lib ";
-        cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/classes/lib
-        check_ret_status $? "Copying ORACLE Connector to $app_home/WEB-INF/lib failed"
-        log "[I] Copying ORACLE Connector to $app_home/WEB-INF/lib DONE";
-    fi
+	log "[I] Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib ";
+    cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/lib
+	check_ret_status $? "Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib failed"
+	log "[I] Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib DONE";
 }
 
 update_properties() {
@@ -1241,7 +1240,7 @@ execute_java_patches(){
 	then
 		dt=`date '+%s'`
 		tempFile=/tmp/sql_${dt}_$$.sql
-		mysqlexec="${SQL_COMMAND_INVOKER} -u ${db_root_user} --password="${db_root_password}" -h ${DB_HOST} ${db_name}"
+		#mysqlexec="${SQL_COMMAND_INVOKER} -u ${db_root_user} --password="${db_root_password}" -h ${DB_HOST} ${db_name}"
 		javaFiles=`ls -1 $app_home/WEB-INF/classes/org/apache/ranger/patch/Patch*.class 2> /dev/null | awk -F/ '{ print $NF }' | awk -F_J '{ print $2, $0 }' | sort -k1 -n | awk '{ printf("%s\n",$2) ; }'`
 		for javaPatch in ${javaFiles}
 		do
@@ -1250,9 +1249,11 @@ execute_java_patches(){
 				version=`echo ${className} | awk -F'_' '{ print $2 }'`
 				if [ "${version}" != "" ]
 				then
-					c=`${mysqlexec} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
+					#c=`${mysqlexec} -B --skip-column-names -e "select count(id) from x_db_version_h where version = '${version}' and active = 'Y'"`
+					c=`$JAVA_HOME/bin/java -cp $SQL_CONNECTOR_JAR:jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://$DB_HOST/$db_name -u ${db_user} -p "${db_password}" -noheader -trim -delimiter '' -c \; -query "select version from x_db_version_h where version = '${version}' and active = 'Y';"`
 					check_ret_status $? "DBVerionCheck - ${version} Failed."
-					if [ ${c} -eq 0 ]
+					#if [ ${c} -eq 0 ]
+					if [ "${c}" != "${version}" ]
 					then
 						log "[I] patch ${javaPatch} is being applied..";
 						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" org.apache.ranger.patch.${className}`
@@ -1260,7 +1261,8 @@ execute_java_patches(){
 						touch ${tempFile}
 						echo >> ${tempFile}
 						echo "insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ( '${version}', now(), user(), now(), user()) ;" >> ${tempFile}
-						${mysqlexec} < ${tempFile}
+						#${mysqlexec} < ${tempFile}
+						c=`$JAVA_HOME/bin/java -cp $SQL_CONNECTOR_JAR:jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://$DB_HOST/$db_name -u ${db_user} -p "${db_password}" -noheader -trim -delimiter '' -c \; -input ${tempFile}`
 						check_ret_status $? "Update patch - ${javaPatch} has failed."
 						rm -f ${tempFile}
 						log "[I] patch ${javaPatch} has been applied!!";
@@ -1283,7 +1285,8 @@ execute_java_patches(){
 				version=`echo ${className} | awk -F'_' '{ print $2 }'`
 				if [ "${version}" != "" ]
 				then
-					result2=`${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}" <<< "select version from x_db_version_h where version = '${version}' and active = 'Y';"`
+					#result2=`${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}" <<< "select version from x_db_version_h where version = '${version}' and active = 'Y';"`
+					result2=`$JAVA_HOME/bin/java -cp $SQL_CONNECTOR_JAR:jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@$DB_HOST -u ${db_user} -p "${db_password}" -noheader -trim -delimiter '' -c \; -query "select version from x_db_version_h where version = '${version}' and active = 'Y';"`
 					#does not contains record so insert
 					if test "${result2#*$version}" == "$result2"
 					then
@@ -1293,7 +1296,8 @@ execute_java_patches(){
 						touch ${tempFile}
 						echo >> ${tempFile}
 						echo "insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by) values ( X_DB_VERSION_H_SEQ.nextval,'${version}', sysdate, '${db_user}', sysdate, '${db_user}') ;" >> ${tempFile}
-						result3=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}"  @$tempFile`
+						#result3=`echo "exit"|${SQL_COMMAND_INVOKER} -L -S "${db_user}"/"\"${db_password}\""@"${DB_HOST}"  @$tempFile`
+						result3=`$JAVA_HOME/bin/java -cp $SQL_CONNECTOR_JAR:jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@$DB_HOST -u ${db_user} -p "${db_password}" -noheader -trim -delimiter '' -c \; -input ${tempFile}`
 						if test "${result3#*$strError}" == "$result3"
 						then
 							log "[I] patch ${javaPatch} has been applied!!";
@@ -1320,17 +1324,19 @@ log "[I] hostname=`hostname`"
 init_variables
 get_distro
 check_java_version
-check_db_version
+#check_db_version
 check_db_connector
 setup_unix_user_group
 setup_install_files
 sanity_check_files
-check_db_admin_password
-create_db_user
+#check_db_admin_password
+#create_db_user
 copy_db_connector
-import_db
-upgrade_db
-create_audit_db_user
+#import_db
+#upgrade_db
+#create_audit_db_user
+check_python_command
+$PYTHON_COMMAND_INVOKER db_setup.py
 update_properties
 do_authentication_setup
 execute_java_patches

@@ -25,5 +25,4 @@ BEGIN
       execute immediate 'ALTER TABLE x_group ADD group_src NUMBER(10) DEFAULT 0 NOT NULL';
       commit;
   end if;
-end;
-/
+end;/
