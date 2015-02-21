@@ -284,9 +284,6 @@ public class AssetMgr extends AssetMgrBase {
 			}
 		}
 		
-		// set the resourceType based on the resource as there is issue with resourceType coming from UI 
-		// when resource is UDF
-		vXResource.setResourceType(xPolicyService.getResourceType(vXResource));
 		
 		vXResource = xResourceService.createResource(vXResource);
 		
@@ -311,7 +308,7 @@ public class AssetMgr extends AssetMgrBase {
 
 	@Override
 	public VXResource updateXResource(VXResource vXResource) {
-	
+
 		UserSessionBase currentUserSession = ContextUtil
 				.getCurrentUserSession();
 		if (currentUserSession == null) {
@@ -456,12 +453,7 @@ public class AssetMgr extends AssetMgrBase {
 		List<XXTrxLog> trxLogList = xResourceService.getTransactionLog(
 				vXResource, xResouce, "update");
 
-		// set the resourceType based on the resource as there is issue with resourceType coming from UI 
-		// when resource is UDF
-		vXResource.setResourceType(xPolicyService.getResourceType(vXResource));
-		
 		VXResource resource = super.updateXResource(vXResource);
-		
 
 		List<VXPermMap> newPermMapList = vXResource.getPermMapList();
 		searchCriteria = new SearchCriteria();
