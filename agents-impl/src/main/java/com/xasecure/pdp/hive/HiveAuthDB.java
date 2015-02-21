@@ -218,10 +218,6 @@ public class HiveAuthDB {
 		boolean ret = false;
 
 		for (HiveAuthRule rule : allRuleList) {
-			if(rule.isUdf()) {
-				continue;
-			}
-
 			ret = rule.isMatched(database, ugi.getShortUserName(), ugi.getGroupNames(), accessType);
 
 			if(ret) {
@@ -240,10 +236,6 @@ public class HiveAuthDB {
 		boolean ret = false;
 
 		for (HiveAuthRule rule : tblRuleList) {
-			if(rule.isUdf()) {
-				continue;
-			}
-
 			ret = rule.isMatched(database, tableOrView, ugi.getShortUserName(), ugi.getGroupNames(), accessType);
 
 			if(ret) {
