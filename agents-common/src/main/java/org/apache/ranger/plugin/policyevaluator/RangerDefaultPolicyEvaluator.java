@@ -121,16 +121,21 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						if (result.containsKey(conditionName)) {
 							continue;
 						}
-						String evaluatorClassName = getEvaluatorName(serviceDef, conditionName);
-						if (Strings.isNullOrEmpty(evaluatorClassName)) {
-							LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't get condition evaluator class name for condition[" + conditionName + "]!  Disabling all checks for this condition.");
+						RangerPolicyConditionDef conditionDef = getConditionDef(serviceDef, conditionName);
+						if (conditionDef == null) {
+							LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't get condition Definition for condition[" + conditionName + "]!  Disabling all checks for this condition.");
 						} else {
-							RangerConditionEvaluator anEvaluator = newConditionEvauator(evaluatorClassName);
-							if (anEvaluator == null) {
-								LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't instantiate condition evaluator for class[" + evaluatorClassName + "].  All checks for condition[" + conditionName + "] disabled.");
+							String evaluatorClassName = conditionDef.getEvaluator();
+							if (Strings.isNullOrEmpty(evaluatorClassName)) {
+								LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't get condition evaluator class name for condition[" + conditionName + "]!  Disabling all checks for this condition.");
 							} else {
-								anEvaluator.init(condition);
-								result.put(conditionName, anEvaluator);
+								RangerConditionEvaluator anEvaluator = newConditionEvauator(evaluatorClassName);
+								if (anEvaluator == null) {
+									LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't instantiate condition evaluator for class[" + evaluatorClassName + "].  All checks for condition[" + conditionName + "] disabled.");
+								} else {
+									anEvaluator.init(conditionDef, condition);
+									result.put(conditionName, anEvaluator);
+								}
 							}
 						}
 					}
@@ -144,13 +149,12 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return result;
 	}
 
-	// TODO this should be cached in the policyengine to avoid repeated processing for every policy 
-	String getEvaluatorName(RangerServiceDef serviceDef, String conditionName) {
+	RangerPolicyConditionDef getConditionDef(RangerServiceDef serviceDef, String conditionName) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerDefaultPolicyEvaluator.initializeConditionEvaluators(%s, %s)", serviceDef, conditionName));
 		}
 		
-		String evaluatorName = null;
+		RangerPolicyConditionDef result = null;
 		if (Strings.isNullOrEmpty(conditionName)) {
 			LOG.debug("initializeConditionEvaluators: Condition name was null or empty!");
 		}
@@ -160,21 +164,21 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("initializeConditionEvaluators: Policy conditions collection of the service def is empty!  Ok, skipping.");
 		} else {
 			Iterator<RangerPolicyConditionDef> iterator = serviceDef.getPolicyConditions().iterator();
-			while (iterator.hasNext() && evaluatorName == null) {
+			while (iterator.hasNext() && result == null) {
 				RangerPolicyConditionDef conditionDef = iterator.next();
 				String name = conditionDef.getName();
 				if (conditionName.equals(name)) {
-					evaluatorName = conditionDef.getEvaluator();
+					result = conditionDef;
 				}
 			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerDefaultPolicyEvaluator.initializeConditionEvaluators(%s -> %s)", conditionName, evaluatorName));
+			LOG.debug(String.format("<== RangerDefaultPolicyEvaluator.initializeConditionEvaluators(%s -> %s)", conditionName, result));
 		}
-		return evaluatorName;
+		return result;
 	}
-	
+
 	RangerConditionEvaluator newConditionEvauator(String className) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerDefaultPolicyEvaluator.newConditionEvauator(%s)", className));

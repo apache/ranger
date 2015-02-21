@@ -30,6 +30,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 /**
@@ -46,11 +47,12 @@ public class RangerIpMatcher implements RangerConditionEvaluator {
 	public static final String ConditionName = "ip-range";
 	
 	@Override
-	public void init(final RangerPolicyItemCondition condition) {
+	public void init(final RangerPolicyConditionDef conditionDef, final RangerPolicyItemCondition condition) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerIpMatcher.init(" + condition + ")");
 		}
 
+		// NOTE: this evaluator does not use conditionDef!
 		if (condition == null) {
 			LOG.debug("init: null policy condition! Will match always!");
 			_allowAny = true;

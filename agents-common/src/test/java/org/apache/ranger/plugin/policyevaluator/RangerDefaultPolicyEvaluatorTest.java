@@ -46,6 +46,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+
 public class RangerDefaultPolicyEvaluatorTest {
 
 	@Before
@@ -70,34 +72,42 @@ public class RangerDefaultPolicyEvaluatorTest {
 	}
 	
 	@Test
-	public void test_getEvaluatorName() {
+	public void test_getConditionEvaluator() {
 
-		// null policy passing has reasonable response
+		// null service def and/or policy has reasonable response
 		RangerDefaultPolicyEvaluator evaluator = new RangerDefaultPolicyEvaluator();
-		String className = evaluator.getEvaluatorName(null, "aCondition");
-		assertNull(className);
-		// null policy condition def collection should behave sensibly
+		RangerPolicyConditionDef conditionDef = evaluator.getConditionDef(null, null);
+		assertNull(conditionDef);
+
+		conditionDef = evaluator.getConditionDef(null, "aCondition");
+		assertNull(conditionDef);
+		
 		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
+		conditionDef = evaluator.getConditionDef(null, null);
+		assertNull(conditionDef);
+
+		// null policy condition def collection should behave sensibly
 		when(serviceDef.getPolicyConditions()).thenReturn(null);
-		className = evaluator.getEvaluatorName(serviceDef, "aCondition");
-		assertNull(className);
+		conditionDef = evaluator.getConditionDef(serviceDef, "aCondition");
+		assertNull(conditionDef);
 		
 		// so should an service def with empty list of policy conditions.
 		when(serviceDef.getPolicyConditions()).thenReturn(new ArrayList<RangerServiceDef.RangerPolicyConditionDef>());
-		className = evaluator.getEvaluatorName(serviceDef, "aCondition");
-		assertNull(className);
+		conditionDef = evaluator.getConditionDef(serviceDef, "aCondition");
+		assertNull(conditionDef);
 		
 		// if service has a condition then sensible answer should come back
-		Map<String, String> pairs = new HashMap<String, String>();
-		pairs.put("type1", "com.company.SomeEvaluator");
-		pairs.put("type2", "com.company.AnotherEvaluator");
-		serviceDef = getMockServiceDef(pairs);
-		className = evaluator.getEvaluatorName(serviceDef, "type1");
-		assertEquals("com.company.SomeEvaluator", className);
-		className = evaluator.getEvaluatorName(serviceDef, "type2");
-		assertEquals("com.company.AnotherEvaluator", className);
-		className = evaluator.getEvaluatorName(serviceDef, "type3");
-		assertNull(className);
+		RangerPolicyConditionDef aConditionDef = getMockPolicyConditionDef("type1", "com.company.SomeEvaluator", null);
+		RangerPolicyConditionDef anotherConditionDef = getMockPolicyConditionDef("type2", "com.company.AnotherEvaluator", "key1");
+		List<RangerPolicyConditionDef> conditionDefs = Lists.newArrayList(aConditionDef, anotherConditionDef);
+		
+		serviceDef = getMockServiceDef(conditionDefs);
+		conditionDef = evaluator.getConditionDef(serviceDef, "type1");
+		assertEquals(aConditionDef, conditionDef);
+		conditionDef = evaluator.getConditionDef(serviceDef, "type2");
+		assertEquals(anotherConditionDef, conditionDef);
+		conditionDef = evaluator.getConditionDef(serviceDef, "type3");
+		assertNull(conditionDef);
 	}
 	
 	@Test
@@ -163,11 +173,11 @@ public class RangerDefaultPolicyEvaluatorTest {
 		 * Resulting map should contain a union of conditions in it and each pointing to correct evaluator object.
 		 */
 		// first create a service with right condition-name and evaluator names
-		Map<String, String> conditionEvaluatorMap = new HashMap<String, String>();
-		conditionEvaluatorMap.put("c1", "org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluatorTest$Evaluator1");
-		conditionEvaluatorMap.put("c2", "org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluatorTest$Evaluator2");
-		conditionEvaluatorMap.put("c3", "org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluatorTest$Evaluator3");
-		conditionEvaluatorMap.put("c4", "org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluatorTest$Evaluator4");
+		Map<String, String[]> conditionEvaluatorMap = new HashMap<String, String[]>();
+		conditionEvaluatorMap.put("c1", new String[] { "org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluatorTest$Evaluator1", null });
+		conditionEvaluatorMap.put("c2", new String[] { "org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluatorTest$Evaluator2", null });
+		conditionEvaluatorMap.put("c3", new String[] { "org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluatorTest$Evaluator3", null });
+		conditionEvaluatorMap.put("c4", new String[] { "org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluatorTest$Evaluator4", null });
 		RangerServiceDef serviceDef = getMockServiceDef(conditionEvaluatorMap);
 		// create policy items each with overlapping but dissimilar sets of conditions in them.
 		RangerPolicyItem anItem = getMockPolicyItem(new String[] {"c1", "c2"});
@@ -199,7 +209,7 @@ public class RangerDefaultPolicyEvaluatorTest {
 	static class AlwaysPass implements RangerConditionEvaluator {
 
 		@Override
-		public void init(RangerPolicyItemCondition condition) {
+		public void init(RangerPolicyConditionDef conditionDef, RangerPolicyItemCondition condition) {
 			// empty body!
 		}
 		@Override
@@ -212,7 +222,7 @@ public class RangerDefaultPolicyEvaluatorTest {
 	static class AlwaysFail implements RangerConditionEvaluator {
 
 		@Override
-		public void init(RangerPolicyItemCondition condition) {
+		public void init(RangerPolicyConditionDef conditionDef, RangerPolicyItemCondition condition) {
 			// empty body
 		}
 
@@ -308,22 +318,45 @@ public class RangerDefaultPolicyEvaluatorTest {
 		return policyItem;
 	}
 
-	RangerServiceDef getMockServiceDef(Map<String, String> pairs) {
+	RangerServiceDef getMockServiceDef(List<RangerPolicyConditionDef> conditionDefs) {
+		// create a service def
+		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
+		when(serviceDef.getPolicyConditions()).thenReturn(conditionDefs);
+		return serviceDef;
+	}
+	
+	RangerServiceDef getMockServiceDef(Map<String, String[]> pairs) {
 		// create a service def
 		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
 		if (pairs == null) {
 			return serviceDef;
 		}
-		List<RangerPolicyConditionDef> conditions = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
-		// null policy condition def collection should behave sensibly
-		for (Map.Entry<String, String> anEntry : pairs.entrySet()) {
-			RangerPolicyConditionDef aCondition = mock(RangerPolicyConditionDef.class);
-			when(aCondition.getName()).thenReturn(anEntry.getKey());
-			when(aCondition.getEvaluator()).thenReturn(anEntry.getValue());
-			conditions.add(aCondition);
-		}
+		List<RangerPolicyConditionDef> conditions = getMockPolicyConditionDefs(pairs);
 		when(serviceDef.getPolicyConditions()).thenReturn(conditions);
 		return serviceDef;
+	}
+	
+	// takes in a map of condition name to a an two element array where 1st element is evaluator-class-name and second is evaluator-options if any
+	List<RangerPolicyConditionDef> getMockPolicyConditionDefs(Map<String, String[]> pairs) {
+		List<RangerPolicyConditionDef> conditions = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
+		// null policy condition def collection should behave sensibly
+		for (Map.Entry<String, String[]> anEntry : pairs.entrySet()) {
+			RangerPolicyConditionDef aCondition = mock(RangerPolicyConditionDef.class);
+			when(aCondition.getName()).thenReturn(anEntry.getKey());
+			when(aCondition.getEvaluator()).thenReturn(anEntry.getValue()[0]);
+			when(aCondition.getEvaluatorOptions()).thenReturn(anEntry.getValue()[1]);
+			conditions.add(aCondition);
+		}
+		return conditions;
+	}
+	
+	RangerPolicyConditionDef getMockPolicyConditionDef(String name, String evaluatorClassName, String evaluatorOption) {
+		// null policy condition def collection should behave sensibly
+		RangerPolicyConditionDef aCondition = mock(RangerPolicyConditionDef.class);
+		when(aCondition.getName()).thenReturn(name);
+		when(aCondition.getEvaluator()).thenReturn(evaluatorClassName);
+		when(aCondition.getEvaluatorOptions()).thenReturn(evaluatorOption);
+		return aCondition;
 	}
 	
 	RangerPolicyItem createPolicyItemForConditions(String[] conditions) {

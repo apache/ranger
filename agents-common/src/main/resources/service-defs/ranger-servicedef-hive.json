@@ -55,16 +55,16 @@
   [
     {
     	"name":"country",
-    	"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerCountryMatcher",
-    	"evaluatorOptions":"",
+    	"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerSimpleMatcher",
+    	"evaluatorOptions":"COUNTRY",
     	"label":"Countries",
     	"description":"Countries"
     }
     ,
     {
     	"name":"project",
-    	"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerProjectMatcher",
-    	"evaluatorOptions":"",
+    	"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerSimpleMatcher",
+    	"evaluatorOptions":"PROJECT",
     	"label":"Projects",
     	"description":"Projects"
     }

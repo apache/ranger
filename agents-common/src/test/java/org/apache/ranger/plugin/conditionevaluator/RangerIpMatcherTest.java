@@ -245,12 +245,12 @@ public class RangerIpMatcherTest {
 		RangerIpMatcher matcher = new RangerIpMatcher();
 
 		if (ipArray == null) {
-			matcher.init(null);
+			matcher.init(null, null);
 		} else {
 			RangerPolicyItemCondition condition = mock(RangerPolicyItemCondition.class);
 			List<String> addresses = Arrays.asList(ipArray);
 			when(condition.getValues()).thenReturn(addresses);
-			matcher.init(condition);
+			matcher.init(null, condition);
 		}
 		
 		return matcher;
