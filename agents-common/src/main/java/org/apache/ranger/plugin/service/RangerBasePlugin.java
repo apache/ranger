@@ -20,7 +20,9 @@
 package org.apache.ranger.plugin.service;
 
 import java.util.Collection;
+import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +30,8 @@ import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerAuditHandler;
+import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
@@ -55,20 +59,24 @@ public class RangerBasePlugin {
 		return serviceType;
 	}
 
+	public RangerServiceDef getServiceDef() {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		return policyEngine != null ? policyEngine.getServiceDef() : null;
+	}
+
+	public int getServiceDefId() {
+		RangerServiceDef serviceDef = getServiceDef();
+
+		return serviceDef != null && serviceDef.getId() != null ? serviceDef.getId().intValue() : -1;
+	}
+
 	public String getAuditAppType() {
 		return auditAppType;
 	}
 
 	public String getServiceName() {
 		return serviceName;
-	}
-
-	public PolicyRefresher getPolicyRefresher() {
-		return refresher;
-	}
-
-	public RangerPolicyEngine getPolicyEngine() {
-		return policyEngine;
 	}
 
 	public void init() {
@@ -126,11 +134,12 @@ public class RangerBasePlugin {
 		return null;
 	}
 
-
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
+			enrichRequest(request);
+
 			return policyEngine.isAccessAllowed(request);
 		}
 
@@ -142,6 +151,8 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
+			enrichRequests(requests);
+
 			return policyEngine.isAccessAllowed(requests);
 		}
 
@@ -153,6 +164,8 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
+			enrichRequest(request);
+
 			return policyEngine.isAccessAllowed(request, auditHandler);
 		}
 
@@ -164,7 +177,19 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
+			enrichRequests(requests);
+
 			return policyEngine.isAccessAllowed(requests, auditHandler);
+		}
+
+		return null;
+	}
+
+	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.createAccessResult(request);
 		}
 
 		return null;
@@ -216,5 +241,37 @@ public class RangerBasePlugin {
 		ret.init(propertyPrefix);
 
 		return ret;
+	}
+
+	private void enrichRequest(RangerAccessRequest request) {
+		if(request == null) {
+			return;
+		}
+
+		RangerPolicyEngine          policyEngine = this.policyEngine;
+		List<RangerContextEnricher> enrichers    = policyEngine != null ? policyEngine.getContextEnrichers() : null;
+
+		if(! CollectionUtils.isEmpty(enrichers)) {
+			for(RangerContextEnricher enricher : enrichers) {
+				enricher.enrich(request);
+			}
+		}
+	}
+
+	private void enrichRequests(Collection<RangerAccessRequest> requests) {
+		if(CollectionUtils.isEmpty(requests)) {
+			return;
+		}
+
+		RangerPolicyEngine          policyEngine = this.policyEngine;
+		List<RangerContextEnricher> enrichers    = policyEngine != null ? policyEngine.getContextEnrichers() : null;
+
+		if(! CollectionUtils.isEmpty(enrichers)) {
+			for(RangerContextEnricher enricher : enrichers) {
+				for(RangerAccessRequest request : requests) {
+					enricher.enrich(request);
+				}
+			}
+		}
 	}
 }

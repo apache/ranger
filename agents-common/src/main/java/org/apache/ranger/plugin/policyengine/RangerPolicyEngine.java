@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.ranger.plugin.audit.RangerAuditHandler;
+import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
@@ -35,6 +36,8 @@ public interface RangerPolicyEngine {
 	String getServiceName();
 
 	RangerServiceDef getServiceDef();
+
+	List<RangerContextEnricher> getContextEnrichers();
 
 	void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies);
 

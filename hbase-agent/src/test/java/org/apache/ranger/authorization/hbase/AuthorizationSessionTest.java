@@ -24,8 +24,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.apache.hadoop.hbase.security.User;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -73,8 +72,8 @@ public class AuthorizationSessionTest {
 
 	@Test
 	public void testIsBuildable() {
-		RangerPolicyEngine engine = new RangerPolicyEngineImpl();
-		AuthorizationSession session = new AuthorizationSession(engine);
+		RangerBasePlugin plugin = new RangerBasePlugin("hbase", "hbase");
+		AuthorizationSession session = new AuthorizationSession(plugin);
 		try {
 			session.verifyBuildable();
 			Assert.fail("Should have thrown exception");
@@ -138,12 +137,12 @@ public class AuthorizationSessionTest {
 
 	@Test
 	public void testAuthorize() {
-		RangerPolicyEngine engine = new RangerPolicyEngineImpl();
+		RangerBasePlugin plugin = new RangerBasePlugin("hbase", "hbase");
 		
 		User user = mock(User.class);
 		when(user.getShortName()).thenReturn("user1");
 		when(user.getGroupNames()).thenReturn(new String[] { "users" } );
-		AuthorizationSession session = new AuthorizationSession(engine);
+		AuthorizationSession session = new AuthorizationSession(plugin);
 		session.access("read")
 			.user(user)
 			.table(":meta:")

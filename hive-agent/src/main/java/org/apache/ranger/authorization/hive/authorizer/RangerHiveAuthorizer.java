@@ -648,12 +648,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		String serviceName = null;
 
 		if(hivePlugin != null) {
-			if(hivePlugin.getPolicyEngine() != null &&
-			   hivePlugin.getPolicyEngine().getServiceDef() != null &&
-			   hivePlugin.getPolicyEngine().getServiceDef().getId() != null ) {
-				serviceType = hivePlugin.getPolicyEngine().getServiceDef().getId().intValue();
-			}
-
+			serviceType = hivePlugin.getServiceDefId();
 			serviceName = hivePlugin.getServiceName();
 		}
 

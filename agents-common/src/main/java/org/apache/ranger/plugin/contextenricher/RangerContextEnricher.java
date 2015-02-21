@@ -17,13 +17,14 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.conditionevaluator;
+package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-public interface RangerConditionEvaluator {
+public interface RangerContextEnricher {
+	void init(RangerContextEnricherDef enricherDef);
 
-	void init(RangerPolicyItemCondition condition);
-	boolean isMatched(RangerAccessRequest request);
+	void enrich(RangerAccessRequest request);
 }

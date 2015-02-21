@@ -30,8 +30,8 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -44,7 +44,7 @@ public class AuthorizationSession {
 	final HbaseUserUtils _userUtils = _factory.getUserUtils();
 	final HbaseAuthUtils _authUtils = _factory.getAuthUtils();
 	// immutable state
-	final RangerPolicyEngine _authorizer;
+	final RangerBasePlugin _authorizer;
 	// Mutable state: Use supplied state information
 	String _operation;
 	String _otherInformation;
@@ -62,7 +62,7 @@ public class AuthorizationSession {
 	RangerAccessRequest _request;
 	RangerAccessResult _result;
 	
-	public AuthorizationSession(RangerPolicyEngine authorizer) {
+	public AuthorizationSession(RangerBasePlugin authorizer) {
 		_authorizer = authorizer;
 	}
 

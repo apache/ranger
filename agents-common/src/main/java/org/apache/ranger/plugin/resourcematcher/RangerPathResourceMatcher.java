@@ -19,9 +19,7 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-// import java.util.List;
 
-// import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -36,10 +34,8 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 	public static final String OPTION_PATH_SEPERATOR       = "pathSeperatorChar";
 	public static final char   DEFAULT_PATH_SEPERATOR_CHAR = org.apache.hadoop.fs.Path.SEPARATOR_CHAR;
 
-	private static final String SPECIAL_WILDCARD_CHARS = "?.*";
-
-	private boolean policyIsRecursive     = false;
-	private char    pathSeperatorChar     = DEFAULT_PATH_SEPERATOR_CHAR;
+	private boolean policyIsRecursive = false;
+	private char    pathSeperatorChar = DEFAULT_PATH_SEPERATOR_CHAR;
 
 	@Override
 	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource) {

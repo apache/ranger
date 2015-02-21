@@ -98,7 +98,6 @@ import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
-import org.apache.ranger.plugin.util.PolicyRefresher;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -321,7 +320,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		User user = getActiveUser();
 		// let's create a session that would be reused.  Set things on it that won't change.
 		HbaseAuditHandler auditHandler = _factory.getAuditHandler(); 
-		AuthorizationSession session = new AuthorizationSession(hbasePlugin.getPolicyEngine())
+		AuthorizationSession session = new AuthorizationSession(hbasePlugin)
 				.operation(operation)
 				.remoteAddress(getRemoteAddress())
 				.auditHandler(auditHandler)
@@ -504,7 +503,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		User user = getActiveUser();
 		
 		HbaseAuditHandler auditHandler = _factory.getAuditHandler(); 
-		AuthorizationSession session = new AuthorizationSession(hbasePlugin.getPolicyEngine())
+		AuthorizationSession session = new AuthorizationSession(hbasePlugin)
 			.operation(operation)
 			.otherInformation(otherInformation)
 			.remoteAddress(getRemoteAddress())
@@ -560,7 +559,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		// if write access is desired to metatables then global create access is sufficient
 		if (_authUtils.isWriteAccess(access) && isAccessForMetaTables(regionServerEnv)) {
 			String createAccess = _authUtils.getAccess(Action.CREATE);
-			AuthorizationSession session = new AuthorizationSession(hbasePlugin.getPolicyEngine())
+			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
 				.operation(operation)
 				.remoteAddress(getRemoteAddress())
 				.user(user)
@@ -1006,12 +1005,10 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			try {
 				grData = createGrantData(request);
 
-				RangerHBasePlugin plugin    = hbasePlugin;
-				PolicyRefresher   refresher = plugin == null ? null : plugin.getPolicyRefresher();
-				RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+				RangerHBasePlugin plugin = hbasePlugin;
 
-				if(admin != null) {
-					admin.grantAccess(plugin.getServiceName(), grData);
+				if(plugin != null) {
+					plugin.grantAccess(grData, _factory.getAuditHandler());
 
 					isSuccess = true;
 				}
@@ -1052,12 +1049,10 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			try {
 				grData = createRevokeData(request);
 	
-				RangerHBasePlugin plugin    = hbasePlugin;
-				PolicyRefresher   refresher = plugin == null ? null : plugin.getPolicyRefresher();
-				RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+				RangerHBasePlugin plugin = hbasePlugin;
 
-				if(admin != null) {
-					admin.revokeAccess(plugin.getServiceName(), grData);
+				if(plugin != null) {
+					plugin.revokeAccess(grData, _factory.getAuditHandler());
 
 					isSuccess = true;
 				}

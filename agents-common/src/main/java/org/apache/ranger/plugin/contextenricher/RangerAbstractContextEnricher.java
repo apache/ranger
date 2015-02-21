@@ -1,0 +1,147 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.ranger.plugin.contextenricher;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
+
+
+public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
+	private static final Log LOG = LogFactory.getLog(RangerAbstractContextEnricher.class);
+
+	public final static String OPTIONS_SEP        = ";";
+	public final static String OPTION_NV_SEP      = "=";
+
+	private String                   optionsString  = null;
+	private Map<String, String>      options        = null;
+
+	@Override
+	public void init(RangerContextEnricherDef enricherDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
+		}
+
+		this.optionsString  = enricherDef.getEnricherOptions();
+		options             = new HashMap<String, String>();
+
+		if(optionsString != null) {
+			for(String optionString : optionsString.split(OPTIONS_SEP)) {
+				if(StringUtils.isEmpty(optionString)) {
+					continue;
+				}
+
+				String[] nvArr = optionString.split(OPTION_NV_SEP);
+
+				String name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
+				String value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
+
+				if(StringUtils.isEmpty(name)) {
+					continue;
+				}
+
+				options.put(name, value);
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
+		}
+	}
+
+	public String getOption(String name) {
+		String ret = null;
+
+		if(options != null && name != null) {
+			ret = options.get(name);
+		}
+
+		return ret;
+	}
+
+	public String getOption(String name, String defaultValue) {
+		String ret = getOption(name);
+
+		if(StringUtils.isEmpty(ret)) {
+			ret = defaultValue;
+		}
+
+		return ret;
+	}
+
+	public boolean getBooleanOption(String name) {
+		String val = getOption(name);
+
+		boolean ret = StringUtils.isEmpty(val) ? false : Boolean.parseBoolean(val);
+
+		return ret;
+	}
+
+	public boolean getBooleanOption(String name, boolean defaultValue) {
+		String strVal = getOption(name);
+
+		boolean ret = StringUtils.isEmpty(strVal) ? defaultValue : Boolean.parseBoolean(strVal);
+
+		return ret;
+	}
+
+	public char getCharOption(String name, char defaultValue) {
+		String strVal = getOption(name);
+
+		char ret = StringUtils.isEmpty(strVal) ? defaultValue : strVal.charAt(0);
+
+		return ret;
+	}
+
+	public Properties readProperties(String fileName) {
+		Properties ret = null;
+		
+		InputStream inStr = null;
+
+		try {
+			inStr = new FileInputStream(fileName);
+
+			Properties prop = new Properties();
+
+			prop.load(inStr);
+
+			ret = prop;
+		} catch(Exception excp) {
+			LOG.error("failed to load properties from file '" + fileName + "'", excp);
+		} finally {
+			if(inStr != null) {
+				try {
+					inStr.close();
+				} catch(Exception excp) {
+					// ignore
+				}
+			}
+		}
+
+		return ret;
+	}
+}

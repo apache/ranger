@@ -23,11 +23,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.audit.RangerAuditHandler;
+import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
@@ -37,6 +41,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	private String                      serviceName         = null;
 	private RangerServiceDef            serviceDef          = null;
+	private List<RangerContextEnricher> contextEnrichers    = null;
 	private List<RangerPolicyEvaluator> policyEvaluators    = null;
 	private RangerAuditHandler          defaultAuditHandler = null;
 
@@ -62,12 +67,31 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public List<RangerContextEnricher> getContextEnrichers() {
+		return contextEnrichers;
+	}
+
+	@Override
 	public void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.setPolicies(" + serviceName + ", " + serviceDef + ", policies.count=" + (policies == null ? 0 : policies.size()) + ")");
 		}
 
 		if(serviceName != null && serviceDef != null && policies != null) {
+			List<RangerContextEnricher> contextEnrichers = new ArrayList<RangerContextEnricher>();
+
+			if(!CollectionUtils.isEmpty(serviceDef.getContextEnrichers())) {
+				for(RangerContextEnricherDef enricherDef : serviceDef.getContextEnrichers()) {
+					if(enricherDef == null) {
+						continue;
+					}
+					
+					RangerContextEnricher contextEnricher = getContextEnricher(enricherDef);
+					
+					contextEnrichers.add(contextEnricher);
+				}
+			}
+
 			List<RangerPolicyEvaluator> evaluators = new ArrayList<RangerPolicyEvaluator>();
 
 			for(RangerPolicy policy : policies) {
@@ -94,6 +118,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			this.serviceName      = serviceName;
 			this.serviceDef       = serviceDef;
+			this.contextEnrichers = contextEnrichers;
 			this.policyEvaluators = evaluators;
 		} else {
 			LOG.error("RangerPolicyEngineImpl.setPolicies(): invalid arguments - null serviceDef/policies");
@@ -199,6 +224,38 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	private RangerContextEnricher getContextEnricher(RangerContextEnricherDef enricherDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.getContextEnricher(" + enricherDef + ")");
+		}
+
+		RangerContextEnricher ret = null;
+
+		String name    = enricherDef != null ? enricherDef.getName()     : null;
+		String clsName = enricherDef != null ? enricherDef.getEnricher() : null;
+
+		if(! StringUtils.isEmpty(clsName)) {
+			try {
+				@SuppressWarnings("unchecked")
+				Class<RangerContextEnricher> enricherClass = (Class<RangerContextEnricher>)Class.forName(clsName);
+
+				ret = enricherClass.newInstance();
+			} catch(Exception excp) {
+				LOG.error("failed to instantiate context enricher '" + clsName + "' for '" + name + "'", excp);
+			}
+		}
+
+		if(ret != null) {
+			ret.init(enricherDef);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.getContextEnricher(" + enricherDef + "): " + ret);
 		}
 
 		return ret;

@@ -42,12 +42,12 @@
     {
     	"name":"country-provider",
     	"enricher":"org.apache.ranger.plugin.contextenricher.RangerCountryProvider",
-    	"enricherOptions":""
+    	"enricherOptions":"contextName=COUNTRY;dataFile=/etc/ranger/data/userCountry.properties"
     },
     {
     	"name":"project-provider",
     	"enricher":"org.apache.ranger.plugin.contextenricher.RangerProjectProvider",
-    	"enricherOptions":""
+    	"enricherOptions":"contextName=PROJECT;dataFile=/etc/ranger/data/userProject.properties"
     }
   ]
   ,
