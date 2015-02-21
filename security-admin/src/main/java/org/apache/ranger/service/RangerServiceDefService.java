@@ -3,6 +3,7 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
 import org.apache.ranger.entity.XXPolicyConditionDef;
@@ -11,6 +12,7 @@ import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -79,6 +81,16 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 				policyConditions.add(policyCondition);
 			}
 			serviceDef.setPolicyConditions(policyConditions);
+		}
+		
+		List<XXContextEnricherDef> xContextEnrichers = daoMgr.getXXContextEnricherDef().findByServiceDefId(serviceDefId);
+		if(!stringUtil.isEmpty(xContextEnrichers)) {
+			List<RangerContextEnricherDef> contextEnrichers = new ArrayList<RangerServiceDef.RangerContextEnricherDef>();
+			for(XXContextEnricherDef xContextEnricherDef : xContextEnrichers) {
+				RangerContextEnricherDef contextEnricher = populateXXToRangerContextEnricherDef(xContextEnricherDef);
+				contextEnrichers.add(contextEnricher);
+			}
+			serviceDef.setContextEnrichers(contextEnrichers);
 		}
 		
 		List<XXEnumDef> xEnumList = daoMgr.getXXEnumDef().findByServiceDefId(serviceDefId);
