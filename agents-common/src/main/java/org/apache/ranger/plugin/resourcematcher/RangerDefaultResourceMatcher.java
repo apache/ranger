@@ -20,29 +20,14 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
 
 public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultResourceMatcher.class);
-
-
-	@Override
-	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource, String optionsString) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
-		}
-
-		super.init(resourceDef, policyResource,  optionsString);
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
-		}
-	}
 
 	@Override
 	public boolean isMatch(String resource) {
@@ -58,7 +43,7 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 			}
 
 			for(String policyValue : policyValues) {
-				ret = optWildCard ? resource.matches(policyValue) : StringUtils.equals(resource, policyValue);
+				ret = optWildCard ? FilenameUtils.wildcardMatch(resource, policyValue) : StringUtils.equals(resource, policyValue);
 
 				if(ret) {
 					break;

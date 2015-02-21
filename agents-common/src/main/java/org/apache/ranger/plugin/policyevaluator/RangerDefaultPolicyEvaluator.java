@@ -545,7 +545,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if(ret != null) {
-			ret.init(resourceDef, resource,  options);
+			ret.initOptions(options);
+			ret.init(resourceDef, resource);
 		}
 
 		if(LOG.isDebugEnabled()) {

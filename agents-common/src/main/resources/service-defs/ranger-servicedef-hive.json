@@ -37,7 +37,44 @@
     {"name":"lock",  "label":"Lock"},
     {"name":"all",   "label":"All"}
   ],
+  "contextEnrichers":
+  [
+    {
+    	"name":"country-provider",
+    	"enricher":"org.apache.ranger.plugin.contextenricher.RangerCountryProvider",
+    	"enricherOptions":""
+    },
+    {
+    	"name":"project-provider",
+    	"enricher":"org.apache.ranger.plugin.contextenricher.RangerProjectProvider",
+    	"enricherOptions":""
+    }
+  ]
+  ,
   "policyConditions":
   [
+    {
+    	"name":"country",
+    	"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerCountryMatcher",
+    	"evaluatorOptions":"",
+    	"label":"Countries",
+    	"description":"Countries"
+    }
+    ,
+    {
+    	"name":"project",
+    	"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerProjectMatcher",
+    	"evaluatorOptions":"",
+    	"label":"Projects",
+    	"description":"Projects"
+    }
+    ,
+    {
+    	"name":"timeOfDay",
+    	"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerTimeOfDayMatcher",
+    	"evaluatorOptions":"",
+    	"label":"Time of Day",
+    	"description":"Time of Day"
+    }
   ]
 }

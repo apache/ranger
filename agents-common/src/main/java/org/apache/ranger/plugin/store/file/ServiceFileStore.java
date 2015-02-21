@@ -31,6 +31,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.PredicateUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -45,7 +46,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
-import org.apache.ranger.plugin.store.LegacyServiceDefsUtil;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -93,7 +94,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		super.initStore(dataDir);
 
-		LegacyServiceDefsUtil.instance().init(this);
+		EmbeddedServiceDefsUtil.instance().init(this);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.init()");
@@ -1516,7 +1517,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 									isMatch = true;
 								} else {
 									for(String policyResourceValue : policyResource.getValues()) {
-										if(val.matches(RangerAbstractResourceMatcher.getWildCardPattern(policyResourceValue))) {
+										if(FilenameUtils.wildcardMatch(val, policyResourceValue)) {
 											isMatch = true;
 											break;
 										}

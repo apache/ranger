@@ -26,6 +26,7 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
+import org.apache.ranger.db.XXContextEnricherDefDao;
 import org.apache.ranger.db.XXEnumDefDao;
 import org.apache.ranger.db.XXEnumElementDefDao;
 import org.apache.ranger.db.XXPolicyConditionDefDao;
@@ -41,6 +42,7 @@ import org.apache.ranger.db.XXServiceConfigDefDao;
 import org.apache.ranger.db.XXServiceConfigMapDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXAccessTypeDefGrants;
+import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXEnumDef;
 import org.apache.ranger.entity.XXEnumElementDef;
@@ -69,12 +71,13 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.apache.ranger.plugin.store.LegacyServiceDefsUtil;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.service.RangerAuditFields;
@@ -161,7 +164,7 @@ public class ServiceDBStore implements ServiceStore {
 					txTemplate.execute(new TransactionCallback<Object>() {
 						@Override
 	                    public Object doInTransaction(TransactionStatus status) {
-							LegacyServiceDefsUtil.instance().init(dbStore);
+							EmbeddedServiceDefsUtil.instance().init(dbStore);
 
 							return null;
 	                    }
@@ -195,6 +198,7 @@ public class ServiceDBStore implements ServiceStore {
 		List<RangerResourceDef> resources = serviceDef.getResources();
 		List<RangerAccessTypeDef> accessTypes = serviceDef.getAccessTypes();
 		List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
+		List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers();
 		List<RangerEnumDef> enums = serviceDef.getEnums();
 
 		// following fields will be auto populated
@@ -249,6 +253,15 @@ public class ServiceDBStore implements ServiceStore {
 			xPolicyCondition = xxPolCondDao.create(xPolicyCondition);
 		}
 		
+		XXContextEnricherDefDao xxContextEnricherDao = daoMgr.getXXContextEnricherDef();
+		for (RangerContextEnricherDef contextEnricher : contextEnrichers) {
+			XXContextEnricherDef xContextEnricher = new XXContextEnricherDef();
+			xContextEnricher = serviceDefService
+					.populateRangerContextEnricherDefToXX(contextEnricher,
+							xContextEnricher, createdSvcDef);
+			xContextEnricher = xxContextEnricherDao.create(xContextEnricher);
+		}
+		
 		XXEnumDefDao xxEnumDefDao = daoMgr.getXXEnumDef();
 		for(RangerEnumDef vEnum : enums) {
 			XXEnumDef xEnum = new XXEnumDef();
@@ -297,7 +310,7 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDefDBStore.deleteServiceDef(" + servceId + ")");
 		}
 
-		// TODO: updateServiceDef()
+		// TODO: deleteServiceDef()
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.deleteServiceDef(" + servceId + ")");
@@ -573,6 +586,12 @@ public class ServiceDBStore implements ServiceStore {
 		if(service == null) {
 			throw new Exception("service does not exist - name=" + policy.getService());
 		}
+
+		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(service.getType());
+
+		if(xServiceDef == null) {
+			throw new Exception("service-def does not exist - name=" + service.getType());
+		}
 		
 		XXPolicy existing = daoMgr.getXXPolicy().findByName(policy.getName());
 
@@ -587,7 +606,7 @@ public class ServiceDBStore implements ServiceStore {
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
 		createNewResourcesForPolicy(policy, xCreatedPolicy, resources);
-		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, policyItems);
+		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, policyItems, xServiceDef);
 		
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
@@ -618,6 +637,13 @@ public class ServiceDBStore implements ServiceStore {
 		if(service == null) {
 			throw new Exception("service does not exist - name=" + policy.getService());
 		}
+
+		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(service.getType());
+
+		if(xServiceDef == null) {
+			throw new Exception("service-def does not exist - name=" + service.getType());
+		}
+
 		if(! StringUtils.equalsIgnoreCase(existing.getService(), policy.getService())) {
 			throw new Exception("policy id=" + policy.getId() + " already exists in service " + existing.getService() + ". It can not be moved to service " + policy.getService());
 		}
@@ -640,7 +666,7 @@ public class ServiceDBStore implements ServiceStore {
 		deleteExistingPolicyItems(policy);
 		
 		createNewResourcesForPolicy(policy, newUpdPolicy, newResources);
-		createNewPolicyItemsForPolicy(policy, newUpdPolicy, newPolicyItems);
+		createNewPolicyItemsForPolicy(policy, newUpdPolicy, newPolicyItems, xServiceDef);
 		
 		handlePolicyUpdate(service);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
@@ -905,7 +931,7 @@ public class ServiceDBStore implements ServiceStore {
 		service = updateService(service);
 	}
 	
-	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems) {
+	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems, XXServiceDef xServiceDef) {
 		
 		for (RangerPolicyItem policyItem : policyItems) {
 			XXPolicyItem xPolicyItem = new XXPolicyItem();
@@ -969,8 +995,8 @@ public class ServiceDBStore implements ServiceStore {
 			List<RangerPolicyItemCondition> conditions = policyItem.getConditions();
 			for(RangerPolicyItemCondition condition : conditions) {
 				XXPolicyConditionDef xPolCond = daoMgr
-						.getXXPolicyConditionDef().findByPolicyItemIdAndName(
-								xPolicyItem.getId(), condition.getType());
+						.getXXPolicyConditionDef().findByServiceDefIdAndName(
+								xServiceDef.getId(), condition.getType());
 				
 				if(xPolCond == null) {
 					LOG.info("PolicyCondition is not valid, condition: "

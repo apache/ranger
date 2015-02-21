@@ -31,26 +31,28 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 /*
- * This utility class deals with service-def for legacy services hdfs/hbase/hive/knox/storm.
- * If any of service-defs don't exist in the given service store, they will be created in
- * the store using the definitions embedded in ranger-plugins-common.jar.
+ * This utility class deals with service-defs embedded in ranger-plugins-common
+ * library (hdfs/hbase/hive/knox/storm/..). If any of these service-defs
+ * don't exist in the given service store, they will be created in the store
+ * using the embedded definitions.
  * 
- * init() method should be called from ServiceStore implementations to initialize legacy service-defs.
+ * init() method should be called from ServiceStore implementations to
+ * initialize embedded service-defs.
  */
-public class LegacyServiceDefsUtil {
-	private static final Log LOG = LogFactory.getLog(LegacyServiceDefsUtil.class);
+public class EmbeddedServiceDefsUtil {
+	private static final Log LOG = LogFactory.getLog(EmbeddedServiceDefsUtil.class);
 
 
-	public static final String LEGACY_SERVICEDEF_HDFS_NAME  = "hdfs";
-	public static final String LEGACY_SERVICEDEF_HBASE_NAME = "hbase";
-	public static final String LEGACY_SERVICEDEF_HIVE_NAME  = "hive";
-	public static final String LEGACY_SERVICEDEF_KNOX_NAME  = "knox";
-	public static final String LEGACY_SERVICEDEF_STORM_NAME = "storm";
-	public static final String PROPERTY_CREATE_LEGACY_SERVICE_DEFS = "ranger.service.store.create.legacy.service-defs";
+	public static final String EMBEDDED_SERVICEDEF_HDFS_NAME  = "hdfs";
+	public static final String EMBEDDED_SERVICEDEF_HBASE_NAME = "hbase";
+	public static final String EMBEDDED_SERVICEDEF_HIVE_NAME  = "hive";
+	public static final String EMBEDDED_SERVICEDEF_KNOX_NAME  = "knox";
+	public static final String EMBEDDED_SERVICEDEF_STORM_NAME = "storm";
+	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
-	private static LegacyServiceDefsUtil instance = new LegacyServiceDefsUtil();
+	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
-	private boolean          createLegacyServiceDefs = true;
+	private boolean          createEmbeddedServiceDefs = true;
 	private RangerServiceDef hdfsServiceDef  = null;
 	private RangerServiceDef hBaseServiceDef = null;
 	private RangerServiceDef hiveServiceDef  = null;
@@ -61,32 +63,32 @@ public class LegacyServiceDefsUtil {
 
 
 	/* private constructor to restrict instantiation of this singleton utility class */
-	private LegacyServiceDefsUtil() {
+	private EmbeddedServiceDefsUtil() {
 	}
 
-	public static LegacyServiceDefsUtil instance() {
+	public static EmbeddedServiceDefsUtil instance() {
 		return instance;
 	}
 
 	public void init(ServiceStore store) {
-		LOG.info("==> LegacyServiceDefsUtil.init()");
+		LOG.info("==> EmbeddedServiceDefsUtil.init()");
 
 		try {
-			createLegacyServiceDefs = RangerConfiguration.getInstance().getBoolean(PROPERTY_CREATE_LEGACY_SERVICE_DEFS, true);
+			createEmbeddedServiceDefs = RangerConfiguration.getInstance().getBoolean(PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS, true);
 
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 
-			hdfsServiceDef  = getOrCreateServiceDef(store, LEGACY_SERVICEDEF_HDFS_NAME);
-			hBaseServiceDef = getOrCreateServiceDef(store, LEGACY_SERVICEDEF_HBASE_NAME);
-			hiveServiceDef  = getOrCreateServiceDef(store, LEGACY_SERVICEDEF_HIVE_NAME);
-			knoxServiceDef  = getOrCreateServiceDef(store, LEGACY_SERVICEDEF_KNOX_NAME);
-			stormServiceDef = getOrCreateServiceDef(store, LEGACY_SERVICEDEF_STORM_NAME);
+			hdfsServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HDFS_NAME);
+			hBaseServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HBASE_NAME);
+			hiveServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HIVE_NAME);
+			knoxServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KNOX_NAME);
+			stormServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_STORM_NAME);
 		} catch(Throwable excp) {
-			LOG.fatal("LegacyServiceDefsUtil.init(): failed", excp);
+			LOG.fatal("EmbeddedServiceDefsUtil.init(): failed", excp);
 		}
 
 
-		LOG.info("<== LegacyServiceDefsUtil.init()");
+		LOG.info("<== EmbeddedServiceDefsUtil.init()");
 	}
 
 	public long getHdfsServiceDefId() {
@@ -116,33 +118,33 @@ public class LegacyServiceDefsUtil {
 
 	private RangerServiceDef getOrCreateServiceDef(ServiceStore store, String serviceDefName) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> LegacyServiceDefsUtil.getOrCreateServiceDef(" + serviceDefName + ")");
+			LOG.debug("==> EmbeddedServiceDefsUtil.getOrCreateServiceDef(" + serviceDefName + ")");
 		}
 
 		RangerServiceDef ret = null;
 
 		try {
 			ret = store.getServiceDefByName(serviceDefName);
-			if(ret == null && createLegacyServiceDefs) {
-				ret = loadLegacyServiceDef(serviceDefName);
+			if(ret == null && createEmbeddedServiceDefs) {
+				ret = loadEmbeddedServiceDef(serviceDefName);
 
-				LOG.info("creating legacy service-def " + serviceDefName);
+				LOG.info("creating embedded service-def " + serviceDefName);
 				store.createServiceDef(ret);
 			}
 		} catch(Exception excp) {
-			LOG.fatal("LegacyServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);
+			LOG.fatal("EmbeddedServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== LegacyServiceDefsUtil.getOrCreateServiceDef(" + serviceDefName + "): " + ret);
+			LOG.debug("<== EmbeddedServiceDefsUtil.getOrCreateServiceDef(" + serviceDefName + "): " + ret);
 		}
 
 		return ret;
 	}
 
-	private RangerServiceDef loadLegacyServiceDef(String serviceType) throws Exception {
+	private RangerServiceDef loadEmbeddedServiceDef(String serviceType) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> LegacyServiceDefsUtil.loadLegacyServiceDef(" + serviceType + ")");
+			LOG.debug("==> EmbeddedServiceDefsUtil.loadEmbeddedServiceDef(" + serviceType + ")");
 		}
 
 		RangerServiceDef ret = null;
@@ -156,7 +158,7 @@ public class LegacyServiceDefsUtil {
 		ret = gsonBuilder.fromJson(reader, RangerServiceDef.class);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> LegacyServiceDefsUtil.loadLegacyServiceDef(" + serviceType + ")");
+			LOG.debug("==> EmbeddedServiceDefsUtil.loadEmbeddedServiceDef(" + serviceType + ")");
 		}
 
 		return ret;

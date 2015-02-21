@@ -360,6 +360,10 @@ public abstract class RangerDaoManagerBase {
 		return new XXPolicyConditionDefDao(this);
 	}
 
+	public XXContextEnricherDefDao getXXContextEnricherDef() {
+		return new XXContextEnricherDefDao(this);
+	}
+
 	public XXEnumDefDao getXXEnumDef() {
 		return new XXEnumDefDao(this);
 	}

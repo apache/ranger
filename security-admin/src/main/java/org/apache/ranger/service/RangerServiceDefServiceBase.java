@@ -10,6 +10,7 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.entity.XXAccessTypeDef;
+import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXEnumDef;
 import org.apache.ranger.entity.XXEnumElementDef;
@@ -19,6 +20,7 @@ import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
@@ -200,6 +202,28 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		vObj.setDescription(xObj.getDescription());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setRbKeyDescription(xObj.getRbkeydescription());
+		return vObj;
+	}
+	
+	public XXContextEnricherDef populateRangerContextEnricherDefToXX(RangerContextEnricherDef vObj, XXContextEnricherDef xObj, XXServiceDef serviceDef) {
+		if(serviceDef == null) {
+			LOG.error("RangerServiceDefServiceBase.populateRangerContextEnricherDefToXX, serviceDef can not be null");
+			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+		}
+		xObj = (XXContextEnricherDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
+		xObj.setDefid(serviceDef.getId());
+		xObj.setName(vObj.getName());
+		xObj.setEnricher(vObj.getEnricher());
+		xObj.setEnricherOptions(vObj.getEnricherOptions());
+		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+		return xObj;
+	}
+	
+	public RangerContextEnricherDef populateXXToRangerContextEnricherDef(XXContextEnricherDef xObj) {
+		RangerContextEnricherDef vObj = new RangerContextEnricherDef();
+		vObj.setName(xObj.getName());
+		vObj.setEnricher(xObj.getEnricher());
+		vObj.setEnricherOptions(xObj.getEnricherOptions());
 		return vObj;
 	}
 	

@@ -270,6 +270,10 @@
 		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId</query>
 	</named-query>
 	
+	<named-query name="XXPolicyConditionDef.findByServiceDefIdAndName">
+		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name = :name</query>
+	</named-query>
+	
 	<named-query name="XXPolicyConditionDef.findByPolicyItemId">
 		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
 		where xPolItemCond.policyItemId = :polItemId and obj.id = xPolItemCond.type</query>
@@ -280,6 +284,15 @@
 				where xPolItemCond.policyItemId = :polItemId and obj.name = :name 
 				and obj.id = xPolItemCond.type 
 		</query>
+	</named-query>
+
+	<!-- XXContextEnricherDef -->
+	<named-query name="XXContextEnricherDef.findByServiceDefId">
+		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId</query>
+	</named-query>
+	
+	<named-query name="XXContextEnricherDef.findByServiceDefIdAndName">
+		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId and obj.name = :name</query>
 	</named-query>
 	
 

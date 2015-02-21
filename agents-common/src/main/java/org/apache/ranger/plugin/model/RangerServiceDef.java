@@ -51,11 +51,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	private List<RangerResourceDef>        resources        = null;
 	private List<RangerAccessTypeDef>      accessTypes      = null;
 	private List<RangerPolicyConditionDef> policyConditions = null;
+	private List<RangerContextEnricherDef> contextEnrichers = null;
 	private List<RangerEnumDef>            enums            = null;
 
 
 	public RangerServiceDef() {
-		this(null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null);
 	}
 
 	/**
@@ -67,9 +68,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param resources
 	 * @param accessTypes
 	 * @param policyConditions
+	 * @param contextEnrichers
 	 * @param enums
 	 */
-	public RangerServiceDef(String name, String implClass, String label, String description, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerEnumDef> enums) {
+	public RangerServiceDef(String name, String implClass, String label, String description, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
 		super();
 
 		setName(name);
@@ -80,6 +82,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		setResources(resources);
 		setAccessTypes(accessTypes);
 		setPolicyConditions(policyConditions);
+		setContextEnrichers(contextEnrichers);
 		setEnums(enums);
 	}
 
@@ -297,6 +300,34 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 	/**
+	 * @return the contextEnrichers
+	 */
+	public List<RangerContextEnricherDef> getContextEnrichers() {
+		return contextEnrichers;
+	}
+
+	/**
+	 * @param contextEnrichers the contextEnrichers to set
+	 */
+	public void setContextEnrichers(List<RangerContextEnricherDef> contextEnrichers) {
+		if(this.contextEnrichers == null) {
+			this.contextEnrichers = new ArrayList<RangerContextEnricherDef>();
+		}
+
+		if(this.contextEnrichers == contextEnrichers) {
+			return;
+		}
+
+		this.contextEnrichers.clear();
+
+		if(contextEnrichers != null) {
+			for(RangerContextEnricherDef contextEnricher : contextEnrichers) {
+				this.contextEnrichers.add(contextEnricher);
+			}
+		}
+	}
+
+	/**
 	 * @return the enums
 	 */
 	public List<RangerEnumDef> getEnums() {
@@ -380,6 +411,16 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			for(RangerPolicyConditionDef policyCondition : policyConditions) {
 				if(policyCondition != null) {
 					policyCondition.toString(sb);
+				}
+			}
+		}
+		sb.append("} ");
+
+		sb.append("contextEnrichers={");
+		if(contextEnrichers != null) {
+			for(RangerContextEnricherDef contextEnricher : contextEnrichers) {
+				if(contextEnricher != null) {
+					contextEnricher.toString(sb);
 				}
 			}
 		}
@@ -1362,6 +1403,86 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
 			sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
+			sb.append("}");
+
+			return sb;
+		}
+	}
+
+	public static class RangerContextEnricherDef implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private String name            = null;
+		private String enricher        = null;
+		private String enricherOptions = null;
+
+
+		public RangerContextEnricherDef() {
+			this(null, null, null);
+		}
+
+		public RangerContextEnricherDef(String name, String enricher, String enricherOptions) {
+			setName(name);
+			setEnricher(enricher);
+			setEnricherOptions(enricherOptions);
+		}
+
+		/**
+		 * @return the name
+		 */
+		public String getName() {
+			return name;
+		}
+
+		/**
+		 * @param name the name to set
+		 */
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		/**
+		 * @return the enricher
+		 */
+		public String getEnricher() {
+			return enricher;
+		}
+
+		/**
+		 * @param enricher the enricher to set
+		 */
+		public void setEnricher(String enricher) {
+			this.enricher = enricher;
+		}
+
+		/**
+		 * @return the evaluator
+		 */
+		public String getEnricherOptions() {
+			return enricherOptions;
+		}
+
+		/**
+		 * @param evaluator the evaluator to set
+		 */
+		public void setEnricherOptions(String enricherOptions) {
+			this.enricherOptions = enricherOptions;
+		}
+
+		@Override
+		public String toString( ) {
+			StringBuilder sb = new StringBuilder();
+
+			toString(sb);
+
+			return sb.toString();
+		}
+
+		public StringBuilder toString(StringBuilder sb) {
+			sb.append("RangerContextEnricherDef={");
+			sb.append("name={").append(name).append("} ");
+			sb.append("enricher={").append(enricher).append("} ");
+			sb.append("enricherOptions={").append(enricherOptions).append("} ");
 			sb.append("}");
 
 			return sb;

@@ -35,12 +35,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 public abstract class RangerAbstractResourceMatcher implements RangerResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractResourceMatcher.class);
 
-	public final String WILDCARD_PATTERN = ".*";
+	public final static String WILDCARD_ASTERISK = "*";
 
-	public final String OPTIONS_SEP        = ";";
-	public final String OPTION_NV_SEP      = "=";
-	public final String OPTION_IGNORE_CASE = "ignoreCase";
-	public final String OPTION_WILD_CARD   = "wildCard";
+	public final static String OPTIONS_SEP        = ";";
+	public final static String OPTION_NV_SEP      = "=";
+	public final static String OPTION_IGNORE_CASE = "ignoreCase";
+	public final static String OPTION_WILD_CARD   = "wildCard";
 
 	private RangerResourceDef    resourceDef    = null;
 	private RangerPolicyResource policyResource = null;
@@ -55,13 +55,11 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	protected boolean      isMatchAny       = false;
 
 	@Override
-	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource, String optionsString) {
+	public void initOptions(String optionsString) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
+			LOG.debug("==> RangerAbstractResourceMatcher.initOptions(" + optionsString + ")");
 		}
 
-		this.resourceDef    = resourceDef;
-		this.policyResource = policyResource;
 		this.optionsString  = optionsString;
 
 		options = new HashMap<String, String>();
@@ -88,6 +86,20 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		optIgnoreCase = getBooleanOption(OPTION_IGNORE_CASE, true);
 		optWildCard   = getBooleanOption(OPTION_WILD_CARD, true);
 
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractResourceMatcher.initOptions(" + optionsString + ")");
+		}
+	}
+
+	@Override
+	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ")");
+		}
+
+		this.resourceDef    = resourceDef;
+		this.policyResource = policyResource;
+
 		policyValues     = new ArrayList<String>();
 		policyIsExcludes = policyResource == null ? false : policyResource.getIsExcludes();
 
@@ -101,11 +113,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 					policyValue = policyValue.toLowerCase();
 				}
 
-				if(optWildCard) {
-					policyValue = getWildCardPattern(policyValue);
-				}
-
-				if(policyValue.equals(WILDCARD_PATTERN)) {
+				if(StringUtils.containsOnly(policyValue, WILDCARD_ASTERISK)) {
 					isMatchAny = true;
 				}
 
@@ -118,7 +126,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ", " + optionsString + ")");
+			LOG.debug("<== RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ")");
 		}
 	}
 
@@ -151,7 +159,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			String policyValue = policyValues.get(0);
 			
 			if(isMatchAny) {
-				ret = StringUtils.equals(resource, "*");
+				ret = StringUtils.containsOnly(resource, WILDCARD_ASTERISK);
 			} else {
 				ret = optIgnoreCase ? StringUtils.equalsIgnoreCase(resource, policyValue) : StringUtils.equals(resource, policyValue);
 			}
@@ -205,13 +213,12 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		return ret;
 	}
 
-	public static String getWildCardPattern(String policyValue) {
-		if (policyValue != null) {
-			policyValue = policyValue.replaceAll("\\?", "\\.") 
-									 .replaceAll("\\*", ".*") ;
-		}
+	public char getCharOption(String name, char defaultValue) {
+		String strVal = getOption(name);
 
-		return policyValue ;
+		char ret = StringUtils.isEmpty(strVal) ? defaultValue : strVal.charAt(0);
+
+		return ret;
 	}
 
 	@Override

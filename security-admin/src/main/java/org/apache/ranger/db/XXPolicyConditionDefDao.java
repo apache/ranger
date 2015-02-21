@@ -28,6 +28,21 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
 		}
 	}
 
+	public XXPolicyConditionDef findByServiceDefIdAndName(Long serviceDefId, String name) {
+		if (serviceDefId == null) {
+			return null;
+		}
+		try {
+			XXPolicyConditionDef retList = getEntityManager()
+					.createNamedQuery("XXPolicyConditionDef.findByServiceDefIdAndName", tClass)
+					.setParameter("serviceDefId", serviceDefId)
+					.setParameter("name", name).getSingleResult();
+			return retList;
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
 	public List<XXPolicyConditionDef> findByPolicyItemId(Long polItemId) {
 		if(polItemId == null) {
 			return new ArrayList<XXPolicyConditionDef>();
