@@ -34,7 +34,7 @@ Steps to Add Ranger in a Ambari HDP cluster:
         python import_ranger_to_ambari.py
   * Migration script locates the existing config in post-install properties files used by the service.
   * This script will collect required configs from the independently installed Ranger service configurations 
-    and post it to the specified  Ambari Server. 
+    and after verification from the user, post it to the specified  Ambari Server.
   * Set appropriate values in the respective install.properties template file, only if required.
        For Ranger Admin service, ranger_admin_install.properties
        For Ranger Usersync service, ranger_usersync_install.properties
@@ -44,9 +44,10 @@ Steps to Add Ranger in a Ambari HDP cluster:
        For Ranger Knox plugin, ranger_knox_plugin_install.properties
        For Ranger Storm plugin, ranger_storm_plugin_install.properties
    * For script to use proper values, mandatory properties to be filled by user are as follows :
-     1) During Ranger_Admin installation migration, the db root username and password are mandatory,
+     1) During Ranger_Admin installation migration, the authentication_method , db_root_username and db_root_password are mandatory,
            which can be set in the ranger_admin_install.properties
-     2) During HBase and Hive Plugin migration,a flag called UPDATE_XAPOLICIES_ON_GRANT_REVOKE is used to save policies during grant-revoke operations.
+     2) During Hdfs , Knox and Storm Plugin Migration parameter repository_name is mandatory and should be filled in ranger_hdfs_plugin_install.properties , ranger_knox_plugin_install.properties or ranger_storm_plugin_install.properties before running script for installing the particular component.
+     3) During HBase and Hive Plugin migration,parameters repository name and UPDATE_XAPOLICIES_ON_GRANT_REVOKE is used to save policies during grant-revoke operations.
         Hence this flag should be set by user in ranger_hbase_plugin_install.properties or ranger_hive_plugin_install.properties respectively.
 
 To import Ranger (Admin and User-Sync) service and plugins we need to run the python script using command line as shown below, 
