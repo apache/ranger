@@ -1,0 +1,35 @@
+{
+  "id":7,
+  "name":"yarn",
+  "implClass":"org.apache.ranger.services.yarn.RangerServiceYarn",
+  "label":"YARN",
+  "description":"YARN",
+  "guid":"5b710438-edcf-4e20-834c-a9a267b5b963",
+  "createTime":"20141208-22:55:47.095--0800",
+  "updateTime":"20141208-22:55:47.095--0800",
+  "version":1,
+  "enums":
+  [
+  ],
+  "configs":
+  [
+    {"name":"username",      "type":"string",  "mandatory":true, "label":"Username"},
+    {"name":"password",      "type":"password","mandatory":true, "label":"Password"},
+    {"name":"yarn.url",      "type":"string",  "mandatory":true, "defaultValue":"","label":"YARN REST URL"},
+    {"name":"certificate.cn","type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
+  ],
+  "resources":
+  [
+    {"name":"queue","type":"string","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true;pathSeperatorChar=.","label":"Queue","description":"Queue"}
+  ],
+  "accessTypes":
+  [
+    {"name":"submit-app","label":"submit-app"},
+    {"name":"admin-queue","label":"admin-queue"},
+    {"name":"admin","label":"admin"}
+  ],
+  "policyConditions":
+  [
+    {"name":"ip-range","evaluator":"org.apache.ranger.knox.IpRangeCondition","evaluatorOptions":"","label":"IP Address Range","description":"IP Address Range"}
+  ]
+}

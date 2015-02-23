@@ -136,7 +136,7 @@ public class GrantRevokeRequest implements Serializable {
 	 * @param accessTypes the accessTypes to set
 	 */
 	public void setAccessTypes(Set<String> accessTypes) {
-		this.accessTypes = accessTypes == null ? new HashSet<String>() : groups;
+		this.accessTypes = accessTypes == null ? new HashSet<String>() : accessTypes;
 	}
 
 	/**

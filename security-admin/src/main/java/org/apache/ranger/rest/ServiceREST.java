@@ -111,6 +111,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.createServiceDef(serviceDef);
 		} catch(Exception excp) {
+			LOG.error("createServiceDef(" + serviceDef + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -135,6 +137,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.updateServiceDef(serviceDef);
 		} catch(Exception excp) {
+			LOG.error("updateServiceDef(" + serviceDef + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -157,6 +161,8 @@ public class ServiceREST {
 		try {
 			svcStore.deleteServiceDef(id);
 		} catch(Exception excp) {
+			LOG.error("deleteServiceDef(" + id + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -178,6 +184,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getServiceDef(id);
 		} catch(Exception excp) {
+			LOG.error("getServiceDef(" + id + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -205,6 +213,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getServiceDefByName(name);
 		} catch(Exception excp) {
+			LOG.error("getServiceDefByName(" + name + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -234,6 +244,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getServiceDefs(filter);
 		} catch(Exception excp) {
+			LOG.error("getServiceDefs() failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -259,6 +271,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.createService(service);
 		} catch(Exception excp) {
+			LOG.error("createService(" + service + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -283,6 +297,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.updateService(service);
 		} catch(Exception excp) {
+			LOG.error("updateService(" + service + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -305,6 +321,8 @@ public class ServiceREST {
 		try {
 			svcStore.deleteService(id);
 		} catch(Exception excp) {
+			LOG.error("deleteService(" + id + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -326,6 +344,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getService(id);
 		} catch(Exception excp) {
+			LOG.error("getService(" + id + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -353,6 +373,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getServiceByName(name);
 		} catch(Exception excp) {
+			LOG.error("getServiceByName(" + name + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -382,6 +404,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getServices(filter);
 		} catch(Exception excp) {
+			LOG.error("getServices() failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -407,6 +431,8 @@ public class ServiceREST {
 			
 			ret = new Long(services == null ? 0 : services.size());
 		} catch(Exception excp) {
+			LOG.error("countServices() failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -430,6 +456,8 @@ public class ServiceREST {
 		try {
 			ret = serviceMgr.validateConfig(service);
 		} catch(Exception excp) {
+			LOG.error("validateConfig(" + service + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -453,7 +481,7 @@ public class ServiceREST {
 		try {
 			ret = serviceMgr.lookupResource(serviceName,context);
 		} catch(Exception excp) {
-			LOG.error("lookupResource() failed", excp);
+			LOG.error("lookupResource(" + serviceName + ", " + context + ") failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -626,7 +654,7 @@ public class ServiceREST {
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Exception excp) {
-			LOG.error("grantAccess() failed", excp);
+			LOG.error("grantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -713,7 +741,7 @@ public class ServiceREST {
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Exception excp) {
-			LOG.error("revokeAccess() failed", excp);
+			LOG.error("revokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
@@ -741,6 +769,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.createPolicy(policy);
 		} catch(Exception excp) {
+			LOG.error("createPolicy(" + policy + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -764,6 +794,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.updatePolicy(policy);
 		} catch(Exception excp) {
+			LOG.error("updatePolicy(" + policy + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -785,6 +817,8 @@ public class ServiceREST {
 		try {
 			svcStore.deletePolicy(id);
 		} catch(Exception excp) {
+			LOG.error("deletePolicy(" + id + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -806,6 +840,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getPolicy(id);
 		} catch(Exception excp) {
+			LOG.error("getPolicy(" + id + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -835,6 +871,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getPolicies(filter);
 		} catch(Exception excp) {
+			LOG.error("getPolicies() failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -860,6 +898,8 @@ public class ServiceREST {
 			
 			ret = new Long(services == null ? 0 : services.size());
 		} catch(Exception excp) {
+			LOG.error("countPolicies() failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -885,6 +925,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getServicePolicies(serviceId, filter);
 		} catch(Exception excp) {
+			LOG.error("getServicePolicies(" + serviceId + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -914,6 +956,8 @@ public class ServiceREST {
 		try {
 			ret = svcStore.getServicePolicies(serviceName, filter);
 		} catch(Exception excp) {
+			LOG.error("getServicePolicies(" + serviceName + ") failed", excp);
+
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
@@ -951,6 +995,8 @@ public class ServiceREST {
 				logMsg   = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
 			}
 		} catch(Exception excp) {
+			LOG.error("getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed", excp);
+
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
 		} finally {

@@ -441,86 +441,78 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.updateService()");
 		}
-		
-		UserSessionBase usb = ContextUtil.getCurrentUserSession();
-		if (usb != null && usb.isUserAdmin()) {
 			
-			XXService existing = daoMgr.getXXService().getById(service.getId());
+		XXService existing = daoMgr.getXXService().getById(service.getId());
 
-			if(existing == null) {
-				throw restErrorUtil.createRESTException(
-						"no service exists with ID=" + service.getId(),
-						MessageEnums.DATA_NOT_FOUND);
-			}
-			
-			String existingName = existing.getName();
-
-			boolean renamed = !StringUtils.equalsIgnoreCase(service.getName(), existingName);
-			
-			if(renamed) {
-				XXService newNameService = daoMgr.getXXService().findByName(service.getName());
-
-				if(newNameService != null) {
-					throw restErrorUtil.createRESTException("another service already exists with name '"
-							+ service.getName() + "'. ID=" + newNameService.getId(), MessageEnums.DATA_NOT_UPDATABLE);
-				}
-			}
-			
-			Map<String, String> configs = service.getConfigs();
-			Map<String, String> validConfigs = validateRequiredConfigParams(
-					service, configs);
-			if (validConfigs == null) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("==> ConfigParams cannot be null, ServiceDefDBStore.createService(" + service + ")");
-				}
-				throw restErrorUtil.createRESTException(
-						"ConfigParams cannot be null.",
-						MessageEnums.ERROR_CREATING_OBJECT);
-			}
-			service = svcService.update(service);
-			XXService xUpdService = daoMgr.getXXService().getById(service.getId());
-			
-			List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
-			for(XXServiceConfigMap dbConfigMap : dbConfigMaps) {
-				daoMgr.getXXServiceConfigMap().remove(dbConfigMap);
-			}
-			
-			VXUser vXUser = null;
-			XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
-			for (Entry<String, String> configMap : validConfigs.entrySet()) {
-				String configKey = configMap.getKey();
-				String configValue = configMap.getValue();
-				
-				if(StringUtils.equalsIgnoreCase(configKey, "username")) {
-					String userName = stringUtil.getValidUserName(configValue);
-					XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
-					if (xxUser != null) {
-						vXUser = xUserService.populateViewBean(xxUser);
-					} else {
-						vXUser = new VXUser();
-						vXUser.setName(userName);
-						vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
-						vXUser = xUserMgr.createXUser(vXUser);
-					}
-				}
-
-				XXServiceConfigMap xConfMap = new XXServiceConfigMap();
-				xConfMap = (XXServiceConfigMap) rangerAuditFields.populateAuditFields(xConfMap, xUpdService);
-				xConfMap.setServiceId(service.getId());
-				xConfMap.setConfigkey(configKey);
-				xConfMap.setConfigvalue(configValue);
-				xConfMap = xConfMapDao.create(xConfMap);
-			}
-			RangerService updService = svcService.getPopulatedViewObject(xUpdService);
-			dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
-			return updService;
-		} else {
-			LOG.debug("User id : " + usb.getUserId() + " doesn't have admin access to update repository.");
+		if(existing == null) {
 			throw restErrorUtil.createRESTException(
-							"Sorry, you don't have permission to perform the operation",
-							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-
+					"no service exists with ID=" + service.getId(),
+					MessageEnums.DATA_NOT_FOUND);
 		}
+		
+		String existingName = existing.getName();
+
+		boolean renamed = !StringUtils.equalsIgnoreCase(service.getName(), existingName);
+		
+		if(renamed) {
+			XXService newNameService = daoMgr.getXXService().findByName(service.getName());
+
+			if(newNameService != null) {
+				throw restErrorUtil.createRESTException("another service already exists with name '"
+						+ service.getName() + "'. ID=" + newNameService.getId(), MessageEnums.DATA_NOT_UPDATABLE);
+			}
+		}
+		
+		Map<String, String> configs = service.getConfigs();
+		Map<String, String> validConfigs = validateRequiredConfigParams(
+				service, configs);
+		if (validConfigs == null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> ConfigParams cannot be null, ServiceDefDBStore.createService(" + service + ")");
+			}
+			throw restErrorUtil.createRESTException(
+					"ConfigParams cannot be null.",
+					MessageEnums.ERROR_CREATING_OBJECT);
+		}
+		service = svcService.update(service);
+		XXService xUpdService = daoMgr.getXXService().getById(service.getId());
+		
+		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
+		for(XXServiceConfigMap dbConfigMap : dbConfigMaps) {
+			daoMgr.getXXServiceConfigMap().remove(dbConfigMap);
+		}
+		
+		VXUser vXUser = null;
+		XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
+		for (Entry<String, String> configMap : validConfigs.entrySet()) {
+			String configKey = configMap.getKey();
+			String configValue = configMap.getValue();
+			
+			if(StringUtils.equalsIgnoreCase(configKey, "username")) {
+				String userName = stringUtil.getValidUserName(configValue);
+				XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+				if (xxUser != null) {
+					vXUser = xUserService.populateViewBean(xxUser);
+				} else {
+					vXUser = new VXUser();
+					vXUser.setName(userName);
+					vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+					vXUser = xUserMgr.createXUser(vXUser);
+				}
+			}
+
+			XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+			xConfMap = (XXServiceConfigMap) rangerAuditFields.populateAuditFields(xConfMap, xUpdService);
+			xConfMap.setServiceId(service.getId());
+			xConfMap.setConfigkey(configKey);
+			xConfMap.setConfigvalue(configValue);
+			xConfMap = xConfMapDao.create(xConfMap);
+		}
+
+		RangerService updService = svcService.getPopulatedViewObject(xUpdService);
+		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
+
+		return updService;
 	}
 
 	@Override
@@ -619,13 +611,7 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.updatePolicy(" + policy + ")");
 		}
-		UserSessionBase currentUserSession = ContextUtil
-				.getCurrentUserSession();
-		if (currentUserSession == null) {
-			throw restErrorUtil.createRESTException("Policy updation not "
-					+ "allowed",MessageEnums.OPER_NO_PERMISSION);
-		}
-		
+
 		RangerPolicy existing = getPolicy(policy.getId());
 
 		if(existing == null) {

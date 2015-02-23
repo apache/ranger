@@ -48,6 +48,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_HIVE_NAME  = "hive";
 	public static final String EMBEDDED_SERVICEDEF_KNOX_NAME  = "knox";
 	public static final String EMBEDDED_SERVICEDEF_STORM_NAME = "storm";
+	public static final String EMBEDDED_SERVICEDEF_YARN_NAME  = "yarn";
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
@@ -58,6 +59,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef hiveServiceDef  = null;
 	private RangerServiceDef knoxServiceDef  = null;
 	private RangerServiceDef stormServiceDef = null;
+	private RangerServiceDef yarnServiceDef  = null;
 
 	private Gson gsonBuilder = null;
 
@@ -83,10 +85,10 @@ public class EmbeddedServiceDefsUtil {
 			hiveServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HIVE_NAME);
 			knoxServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KNOX_NAME);
 			stormServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_STORM_NAME);
+			yarnServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_YARN_NAME);
 		} catch(Throwable excp) {
 			LOG.fatal("EmbeddedServiceDefsUtil.init(): failed", excp);
 		}
-
 
 		LOG.info("<== EmbeddedServiceDefsUtil.init()");
 	}
@@ -109,6 +111,10 @@ public class EmbeddedServiceDefsUtil {
 
 	public long getStormServiceDefId() {
 		return getId(stormServiceDef);
+	}
+
+	public long getYarnServiceDefId() {
+		return getId(yarnServiceDef);
 	}
 
 
