@@ -19,8 +19,8 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>ranger-kms</artifactId>
   <version>0.4.0</version>
-  <name>Key Management Systems</name>
-  <description>Key Management Systems</description>
+  <name>Key Management Service</name>
+  <description>Key Management Service</description>
   <packaging>jar</packaging>
   <parent>
 	<groupId>org.apache.ranger</groupId>
