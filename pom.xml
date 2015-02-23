@@ -75,6 +75,7 @@
 
   <modules>
   <module>jisql</module>
+  <module>kms</module>
   <module>agents-audit</module>
   <module>agents-common</module>
   <module>agents-cred</module>
@@ -352,6 +353,7 @@
              <descriptor>src/main/assembly/usersync.xml</descriptor>
              <descriptor>src/main/assembly/ranger-src.xml</descriptor>
              <descriptor>src/main/assembly/migration-util.xml</descriptor>
+             <descriptor>src/main/assembly/kms.xml</descriptor>
            </descriptors>
          </configuration>
       </plugin>

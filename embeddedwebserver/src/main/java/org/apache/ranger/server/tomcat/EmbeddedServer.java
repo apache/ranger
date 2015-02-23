@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -41,6 +42,8 @@ public class EmbeddedServer {
 	private static final Logger LOG = Logger.getLogger(EmbeddedServer.class.getName()) ;
 	
 	private static final String DEFAULT_CONFIG_FILENAME = "ranger_webserver.properties" ;
+	
+	private static final String DEFAULT_WEBAPPS_ROOT_FOLDER = "webapps" ;
 	
 	private static String configFile = DEFAULT_CONFIG_FILENAME ;
 	
@@ -116,6 +119,12 @@ public class EmbeddedServer {
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols ) ;
 			
 			server.getService().addConnector(ssl); 
+
+			//
+			// Making this as a default connector
+			//
+			server.setConnector(ssl);
+			
 		}
 
 		
@@ -153,9 +162,30 @@ public class EmbeddedServer {
 				webapp_dir = catalina_base + File.separator + "webapp";
 				LOG.info("Deriving webapp folder from catalina.base property. folder=" + webapp_dir);
 			}
-			LOG.info("Webapp folder=" + webapp_dir);
-			Context webappCtx = server.addWebapp("/",  new File(webapp_dir).getAbsolutePath()) ;
+			
+			String webContextName = getConfig("xa.webapp.contextName", "/")  ;
+			if (webContextName != null) {
+				if (! webContextName.startsWith("/")) {
+					LOG.info("Context Name [" + webContextName + "] is being loaded as [ /" + webContextName  + "]");
+					webContextName = "/" + webContextName ;
+				}
+			}
+			
+			File wad = new File (webapp_dir) ;
+			if (wad.isDirectory()) {
+				LOG.info("Webapp file =" + webapp_dir + ", webAppName = " + webContextName);
+			}
+			else if (wad.isFile()) {
+				File webAppDir = new File(DEFAULT_WEBAPPS_ROOT_FOLDER) ;
+				if (! webAppDir.exists()) {
+					webAppDir.mkdirs() ;
+				}
+				LOG.info("Webapp file =" + webapp_dir + ", webAppName = " + webContextName);
+			}
+			LOG.info("Adding webapp [" + webContextName + "] = path [" + webapp_dir + "] .....") ;
+			Context webappCtx = server.addWebapp(webContextName,  new File(webapp_dir).getAbsolutePath()) ;
 			webappCtx.init() ;
+			LOG.info("Finished init of webapp [" + webContextName + "] = path [" + webapp_dir + "].") ;
 		} catch (ServletException e1) {
 			LOG.severe("Tomcat Server failed to add webapp:" + e1.toString()) ;
 			e1.printStackTrace();
@@ -167,6 +197,8 @@ public class EmbeddedServer {
 		try {
 			server.start(); 
 			server.getServer().await();
+			shutdownServer() ;			
+			
 		} catch (LifecycleException e) {
 			LOG.severe("Tomcat Server failed to start:" + e.toString()) ;
 			e.printStackTrace(); 
@@ -233,8 +265,33 @@ public class EmbeddedServer {
 		
 		return ret ;
 		
-		
-		
+	}
+	
+	
+	public void shutdownServer() {
+		int timeWaitForShutdownInSeconds = getIntConfig("service.waitTimeForFoceShutdownInSeconds", 120) ;
+		if (timeWaitForShutdownInSeconds > 0) {
+			long endTime = System.currentTimeMillis()  + (timeWaitForShutdownInSeconds * 1000L) ;
+			LOG.info("Will wait for all threads to shutdown gracefully. Final shutdown Time: " + new Date(endTime)) ;
+			while (System.currentTimeMillis() < endTime) {
+				int activeCount = Thread.activeCount() ;
+				if (activeCount == 0) {
+				    LOG.info("Number of active threads = " + activeCount + ".");
+					break ;
+				}
+				else {
+					LOG.info("Number of active threads = " + activeCount + ". Waiting for all threads to shutdown ...");
+					try {
+						Thread.sleep(5000L);
+					} catch (InterruptedException e) {
+						LOG.warning("shutdownServer process is interrupted with exception: " +  e);
+						break ;
+					}
+				}
+			}
+		}
+	    LOG.info("Shuting down the Server.") ;
+		System.exit(0);
 	}
 
 }
