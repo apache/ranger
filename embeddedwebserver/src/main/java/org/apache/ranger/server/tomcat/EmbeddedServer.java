@@ -169,6 +169,8 @@ public class EmbeddedServer {
 					LOG.info("Context Name [" + webContextName + "] is being loaded as [ /" + webContextName  + "]");
 					webContextName = "/" + webContextName ;
 				}
+			} else {
+				webContextName = "/";
 			}
 			
 			File wad = new File (webapp_dir) ;
