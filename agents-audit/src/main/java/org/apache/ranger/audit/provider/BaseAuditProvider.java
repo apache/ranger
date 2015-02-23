@@ -20,7 +20,6 @@ package org.apache.ranger.audit.provider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
-
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,13 +29,18 @@ public abstract class BaseAuditProvider implements AuditProvider {
 	private static final Log LOG = LogFactory.getLog(BaseAuditProvider.class);
 
 	private static final String AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP = "xasecure.audit.log.failure.report.min.interval.ms";
+	public static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT     = 10 * 1024;
+	public static final int AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT =  5 * 1000;
 
 	private int   mLogFailureReportMinIntervalInMs = 60 * 1000;
 
 	private AtomicLong mFailedLogLastReportTime       = new AtomicLong(0);
 	private AtomicLong mFailedLogCountSinceLastReport = new AtomicLong(0);
 	private AtomicLong mFailedLogCountLifeTime        = new AtomicLong(0);
+	private int maxQueueSize     =  AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT;
+	private int maxFlushInterval = AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT;
 
+	
 
 	public BaseAuditProvider() {
 	}
@@ -46,6 +50,7 @@ public abstract class BaseAuditProvider implements AuditProvider {
 		LOG.info("BaseAuditProvider.init()");
 
 		mLogFailureReportMinIntervalInMs = getIntProperty(props, AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP, 60 * 1000);
+
 	}
 
 	public void logFailedEvent(AuditEventBase event) {
@@ -74,6 +79,23 @@ public abstract class BaseAuditProvider implements AuditProvider {
 			}
 		}
  	}
+
+	
+	public int getMaxQueueSize() {
+		return maxQueueSize;
+	}
+
+	public void setMaxQueueSize(int maxQueueSize) {
+		this.maxQueueSize = maxQueueSize;
+	}
+
+	public int getMaxFlushInterval() {
+		return maxFlushInterval;
+	}
+
+	public void setMaxFlushInterval(int maxFlushInterval) {
+		this.maxFlushInterval = maxFlushInterval;
+	}
 
 	public static Map<String, String> getPropertiesWithPrefix(Properties props, String prefix) {
 		Map<String, String> prefixedProperties = new HashMap<String, String>();
