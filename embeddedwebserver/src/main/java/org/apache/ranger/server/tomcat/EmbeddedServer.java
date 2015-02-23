@@ -269,7 +269,7 @@ public class EmbeddedServer {
 	
 	
 	public void shutdownServer() {
-		int timeWaitForShutdownInSeconds = getIntConfig("service.waitTimeForFoceShutdownInSeconds", 120) ;
+		int timeWaitForShutdownInSeconds = getIntConfig("service.waitTimeForForceShutdownInSeconds", 120) ;
 		if (timeWaitForShutdownInSeconds > 0) {
 			long endTime = System.currentTimeMillis()  + (timeWaitForShutdownInSeconds * 1000L) ;
 			LOG.info("Will wait for all threads to shutdown gracefully. Final shutdown Time: " + new Date(endTime)) ;
