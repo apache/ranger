@@ -1,8 +1,15 @@
 *.class
 *.iml
-.settings
+.settings/
 .metadata
 .classpath
 .project
 /target/
 winpkg/target
+agents-audit/.settings/
+agents-common/.settings/
+agents-cred/.settings/
+hdfs-agent/.settings/
+hive-agent/.settings/
+knox-agent/.settings/
+security-admin/.settings/
