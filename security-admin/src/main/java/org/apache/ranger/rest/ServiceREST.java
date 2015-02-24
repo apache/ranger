@@ -622,7 +622,10 @@ public class ServiceREST {
 	
 				if(! CollectionUtils.isEmpty(resourceNames)) {
 					for(String resourceName : resourceNames) {
-						policyResources.put(resourceName, new RangerPolicyResource(resource.getValue(resourceName)));
+						RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
+						policyResource.setIsRecursive(grantRequest.getIsRecursive());
+
+						policyResources.put(resourceName, policyResource);
 					}
 				}
 				policy.setResources(policyResources);

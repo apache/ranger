@@ -21,7 +21,6 @@
 package org.apache.ranger.authorization.yarn.authorizer;
 
 import java.net.InetAddress;
-import java.security.Permissions;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,7 +30,6 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections.SetUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -162,6 +160,7 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 			request.setDelegateAdmin(Boolean.FALSE);
 			request.setEnableAudit(Boolean.TRUE);
 			request.setReplaceExistingPermissions(Boolean.FALSE);
+			request.setIsRecursive(Boolean.TRUE);
 
 			for(Map.Entry<AccessType, AccessControlList> e : permission.entrySet()) {
 				AccessType        accessType = e.getKey();
@@ -169,21 +168,24 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 				
 				Set<String> accessTypes = new HashSet<String>();
 				accessTypes.add(getRangerAccessType(accessType));
+				request.setAccessTypes(accessTypes);
 
 				if(acl.isAllAllowed()) {
 					Set<String> publicGroup = new HashSet<String>();
 					publicGroup.add(RangerPolicyEngine.GROUP_PUBLIC);
 
-					request.setAccessTypes(accessTypes);
 					request.setUsers(null);
 					request.setGroups(publicGroup);
+				} else if(CollectionUtils.isEmpty(acl.getUsers()) && CollectionUtils.isEmpty(acl.getGroups())) {
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("grantAccess(): empty users and groups - skipped");
+					}
+
+					continue;
 				} else {
-					request.setAccessTypes(accessTypes);
 					request.setUsers(getSet(acl.getUsers()));
 					request.setGroups(getSet(acl.getGroups()));
 				}
-
-				LOG.error("==> grantAccess(" + request + ")");
 
 				try {
 					plugin.grantAccess(request, plugin.getDefaultAuditHandler());

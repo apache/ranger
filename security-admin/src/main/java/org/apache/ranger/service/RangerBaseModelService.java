@@ -102,7 +102,9 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		if (entityObj.getAddedByUserId() != null) {
 			XXPortalUser tUser = daoMgr.getXXPortalUser().getById(
 					entityObj.getUpdatedByUserId());
-			if (!stringUtil.isEmpty(tUser.getPublicScreenName())) {
+			if(tUser == null) {
+				// nothing to do
+			} else if (!stringUtil.isEmpty(tUser.getPublicScreenName())) {
 				vObj.setCreatedBy(tUser.getPublicScreenName());
 			} else {
 				if (!stringUtil.isEmpty(tUser.getFirstName())) {
@@ -120,7 +122,9 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		if (entityObj.getUpdatedByUserId() != null) {
 			XXPortalUser tUser = daoMgr.getXXPortalUser().getById(
 					entityObj.getUpdatedByUserId());
-			if (!stringUtil.isEmpty(tUser.getPublicScreenName())) {
+			if(tUser == null) {
+				// nothing to do
+			} else if (!stringUtil.isEmpty(tUser.getPublicScreenName())) {
 				vObj.setUpdatedBy(tUser.getPublicScreenName());
 			} else {
 				if (!stringUtil.isEmpty(tUser.getFirstName())) {

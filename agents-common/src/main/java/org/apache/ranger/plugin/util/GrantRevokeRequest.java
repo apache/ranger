@@ -51,13 +51,14 @@ public class GrantRevokeRequest implements Serializable {
 	private Boolean             delegateAdmin              = Boolean.FALSE;
 	private Boolean             enableAudit                = Boolean.TRUE;
 	private Boolean             replaceExistingPermissions = Boolean.FALSE;
+	private Boolean             isRecursive                = Boolean.FALSE;
 
 
 	public GrantRevokeRequest() {
-		this(null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null);
 	}
 
-	public GrantRevokeRequest(String grantor, Map<String, String> resource, Set<String> users, Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions) {
+	public GrantRevokeRequest(String grantor, Map<String, String> resource, Set<String> users, Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions, Boolean isRecursive) {
 		setGrantor(grantor);
 		setResource(resource);
 		setUsers(users);
@@ -67,6 +68,7 @@ public class GrantRevokeRequest implements Serializable {
 		setAccessTypes(accessTypes);
 		setEnableAudit(enableAudit);
 		setReplaceExistingPermissions(replaceExistingPermissions);
+		setIsRecursive(isRecursive);
 	}
 
 	/**
@@ -181,6 +183,20 @@ public class GrantRevokeRequest implements Serializable {
 		this.replaceExistingPermissions = replaceExistingPermissions == null ? Boolean.FALSE : replaceExistingPermissions;
 	}
 
+	/**
+	 * @return the isRecursive
+	 */
+	public Boolean getIsRecursive() {
+		return isRecursive;
+	}
+
+	/**
+	 * @param isRecursive the isRecursive to set
+	 */
+	public void setIsRecursive(Boolean isRecursive) {
+		this.isRecursive = isRecursive == null ? Boolean.FALSE : isRecursive;
+	}
+
 
 	@Override
 	public String toString( ) {
@@ -231,6 +247,7 @@ public class GrantRevokeRequest implements Serializable {
 		sb.append("delegateAdmin={").append(delegateAdmin).append("} ");
 		sb.append("enableAudit={").append(enableAudit).append("} ");
 		sb.append("replaceExistingPermissions={").append(replaceExistingPermissions).append("} ");
+		sb.append("isRecursive={").append(isRecursive).append("} ");
 
 		sb.append("}");
 

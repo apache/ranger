@@ -75,6 +75,7 @@
 
   <modules>
   <module>jisql</module>
+  <module>kms</module>
   <module>agents-audit</module>
   <module>agents-common</module>
   <module>agents-cred</module>

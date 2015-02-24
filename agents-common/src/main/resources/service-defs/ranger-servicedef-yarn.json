@@ -13,23 +13,70 @@
   ],
   "configs":
   [
-    {"name":"username",      "type":"string",  "mandatory":true, "label":"Username"},
-    {"name":"password",      "type":"password","mandatory":true, "label":"Password"},
-    {"name":"yarn.url",      "type":"string",  "mandatory":true, "defaultValue":"","label":"YARN REST URL"},
-    {"name":"certificate.cn","type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
+    {
+      "name":"username",
+      "type":"string",
+      "mandatory":true,
+      "label":"Username"
+    },
+    {
+      "name":"password",
+      "type":"password",
+      "mandatory":true,
+      "label":"Password"
+    },
+    {
+      "name":"yarn.url",
+      "type":"string",
+      "mandatory":true,
+      "defaultValue":"",
+      "label":"YARN REST URL"
+    },
+    {
+      "name":"certificate.cn",
+      "type":"string",
+      "mandatory":false,
+      "label":"Common Name for Certificate"
+    }
   ],
   "resources":
   [
-    {"name":"queue","type":"string","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true;pathSeperatorChar=.","label":"Queue","description":"Queue"}
+    {
+      "name":"queue",
+      "type":"string",
+      "level":1,
+      "mandatory":true,
+      "lookupSupported":true,
+      "recursiveSupported":true,
+      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+      "matcherOptions":"wildCard=true;ignoreCase=true;pathSeperatorChar=.",
+      "label":"Queue",
+      "description":"Queue"
+    }
   ],
   "accessTypes":
   [
-    {"name":"submit-app","label":"submit-app"},
-    {"name":"admin-queue","label":"admin-queue"},
-    {"name":"admin","label":"admin"}
+    {
+      "name":"submit-app",
+      "label":"submit-app"
+    },
+    {
+      "name":"admin-queue",
+      "label":"admin-queue"
+    },
+    {
+      "name":"admin",
+      "label":"admin"
+    }
   ],
   "policyConditions":
   [
-    {"name":"ip-range","evaluator":"org.apache.ranger.knox.IpRangeCondition","evaluatorOptions":"","label":"IP Address Range","description":"IP Address Range"}
+    {
+      "name":"ip-range",
+      "evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+      "evaluatorOptions":"",
+      "label":"IP Address Range",
+      "description":"IP Address Range"
+    }
   ]
 }
