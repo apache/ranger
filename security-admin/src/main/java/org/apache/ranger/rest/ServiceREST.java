@@ -59,6 +59,7 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.rest.RangerValidator.Action;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -92,6 +93,10 @@ public class ServiceREST {
 
 	@Autowired
 	ServiceDBStore svcStore;
+	
+	// this indirection for validation via a factory exists only for testability
+	// TODO move the instantiation to DI framework?
+	RangerValidatorFactory validatorFactory = new RangerValidatorFactory(); 
 
 	public ServiceREST() {
 	}
@@ -269,6 +274,9 @@ public class ServiceREST {
 		RangerService ret = null;
 
 		try {
+			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore, Action.CREATE);
+			validator.validate(service);
+			
 			ret = svcStore.createService(service);
 		} catch(Exception excp) {
 			LOG.error("createService(" + service + ") failed", excp);
@@ -295,6 +303,8 @@ public class ServiceREST {
 		RangerService ret = null;
 
 		try {
+			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore, Action.UPDATE);
+			validator.validate(service);
 			ret = svcStore.updateService(service);
 		} catch(Exception excp) {
 			LOG.error("updateService(" + service + ") failed", excp);
@@ -319,6 +329,8 @@ public class ServiceREST {
 		}
 
 		try {
+			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore, Action.DELETE);
+			validator.validate(id);
 			svcStore.deleteService(id);
 		} catch(Exception excp) {
 			LOG.error("deleteService(" + id + ") failed", excp);

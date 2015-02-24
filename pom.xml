@@ -166,6 +166,7 @@
 		<velocity.version>1.7</velocity.version>
 		<powermock.version>1.5.6</powermock.version>
 		<aspectj.version>1.8.2</aspectj.version>
+		<findbugs.plugin.version>3.0.0</findbugs.plugin.version>
 		<distMgmtStagingId>apache.staging.https</distMgmtStagingId>
     	<distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
     	<distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>
@@ -389,34 +390,6 @@
         <artifactId>maven-release-plugin</artifactId>
         <version>2.5</version>
       </plugin>
-	    <!--This plugin's configuration is used to store Eclipse 
-            m2e settings only. It has no influence on the Maven build itself. 
-        -->
-        <plugin>
-            <groupId>org.eclipse.m2e</groupId>
-            <artifactId>lifecycle-mapping</artifactId>
-            <version>1.0.0</version>
-            <configuration>
-                <lifecycleMappingMetadata>
-                    <pluginExecutions>
-                        <pluginExecution>
-                            <pluginExecutionFilter>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-antrun-plugin</artifactId>
-                                <versionRange>[1.0,)</versionRange>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                            </pluginExecutionFilter>
-                            <action>
-                                <execute />
-                            </action>
-                        </pluginExecution>
-                    </pluginExecutions>
-                </lifecycleMappingMetadata>
-            </configuration>
-        </plugin>
-	
     </plugins>
     
     </pluginManagement>
@@ -496,6 +469,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
+        <version>${findbugs.plugin.version}</version>
 <!--
         <configuration>
           <excludeFilterFile>${basedir}/dev-support/findbugsExcludeFile.xml

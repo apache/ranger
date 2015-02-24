@@ -26,7 +26,6 @@
 		<version>0.4.0</version>
 	</parent>
 	<artifactId>ranger-util</artifactId>
-	<version>0.4.0</version>
 	<name>ranger-util</name>
 	<description>Common Utilities of Ranger</description>
 	<dependencies>
