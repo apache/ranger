@@ -62,5 +62,10 @@
 	<artifactId>log4j</artifactId>
 	<version>${log4j.version}</version>
     </dependency>
+    <dependency>
+	<groupId>org.apache.kafka</groupId>
+	<artifactId>kafka_2.10</artifactId>
+	<version>0.8.2.0</version>
+</dependency>
   </dependencies>
 </project>

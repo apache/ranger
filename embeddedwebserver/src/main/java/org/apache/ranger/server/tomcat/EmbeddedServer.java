@@ -164,13 +164,12 @@ public class EmbeddedServer {
 			}
 			
 			String webContextName = getConfig("xa.webapp.contextName", "/")  ;
-			if (webContextName != null) {
-				if (! webContextName.startsWith("/")) {
-					LOG.info("Context Name [" + webContextName + "] is being loaded as [ /" + webContextName  + "]");
-					webContextName = "/" + webContextName ;
-				}
-			} else {
-				webContextName = "/";
+			if (webContextName == null) {
+				webContextName = "/" ;
+			}
+			else if (! webContextName.startsWith("/")) {
+				LOG.info("Context Name [" + webContextName + "] is being loaded as [ /" + webContextName  + "]");
+				webContextName = "/" + webContextName ;
 			}
 			
 			File wad = new File (webapp_dir) ;
@@ -219,7 +218,7 @@ public class EmbeddedServer {
 	
 	protected String getConfig(String key, String defaultValue) {
 		String ret = getConfig(key) ;
-		if (key == null) {
+		if (ret == null) {
 			ret = defaultValue ;
 		}
 		return ret;
@@ -271,7 +270,7 @@ public class EmbeddedServer {
 	
 	
 	public void shutdownServer() {
-		int timeWaitForShutdownInSeconds = getIntConfig("service.waitTimeForForceShutdownInSeconds", 120) ;
+		int timeWaitForShutdownInSeconds = getIntConfig("service.waitTimeForForceShutdownInSeconds", 0) ;
 		if (timeWaitForShutdownInSeconds > 0) {
 			long endTime = System.currentTimeMillis()  + (timeWaitForShutdownInSeconds * 1000L) ;
 			LOG.info("Will wait for all threads to shutdown gracefully. Final shutdown Time: " + new Date(endTime)) ;

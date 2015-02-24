@@ -25,6 +25,7 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
+import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
 
 
 /*
@@ -41,6 +42,7 @@ public class AuditProviderFactory {
 	private static final String AUDIT_DB_IS_ENABLED_PROP    = "xasecure.audit.db.is.enabled" ;
 	private static final String AUDIT_HDFS_IS_ENABLED_PROP  = "xasecure.audit.hdfs.is.enabled";
 	private static final String AUDIT_LOG4J_IS_ENABLED_PROP = "xasecure.audit.log4j.is.enabled" ;
+	private static final String AUDIT_KAFKA_IS_ENABLED_PROP = "xasecure.audit.kafka.is.enabled";
 	
 	private static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT     = 10 * 1024;
 	private static final int AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT =  5 * 1000;
@@ -96,8 +98,9 @@ public class AuditProviderFactory {
 		boolean isAuditToDbEnabled    = BaseAuditProvider.getBooleanProperty(props, AUDIT_DB_IS_ENABLED_PROP, false);
 		boolean isAuditToHdfsEnabled  = BaseAuditProvider.getBooleanProperty(props, AUDIT_HDFS_IS_ENABLED_PROP, false);
 		boolean isAuditToLog4jEnabled = BaseAuditProvider.getBooleanProperty(props, AUDIT_LOG4J_IS_ENABLED_PROP, false);
+		boolean isAuditToKafkaEnabled  = BaseAuditProvider.getBooleanProperty(props, AUDIT_KAFKA_IS_ENABLED_PROP, false);
 
-		if(!isEnabled || !(isAuditToDbEnabled || isAuditToHdfsEnabled || isAuditToLog4jEnabled)) {
+		if(!isEnabled || !(isAuditToDbEnabled || isAuditToHdfsEnabled || isAuditToKafkaEnabled || isAuditToLog4jEnabled)) {
 			LOG.info("AuditProviderFactory: Audit not enabled..");
 
 			mProvider = getDefaultProvider();
@@ -141,6 +144,19 @@ public class AuditProviderFactory {
 			}
 		}
 
+		if(isAuditToKafkaEnabled) {
+			LOG.info("KafkaAuditProvider is enabled");
+			KafkaAuditProvider kafkaProvider = new KafkaAuditProvider();
+			kafkaProvider.init(props);
+			
+			if( kafkaProvider.isAsync()) {
+				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("MyKafkaAuditProvider", kafkaProvider.getMaxQueueSize(), kafkaProvider.getMaxFlushInterval(), kafkaProvider);
+				providers.add(asyncProvider);
+			} else {
+				providers.add(kafkaProvider);
+			}
+		}
+		
 		if(isAuditToLog4jEnabled) {
 			Log4jAuditProvider log4jProvider = new Log4jAuditProvider();
 

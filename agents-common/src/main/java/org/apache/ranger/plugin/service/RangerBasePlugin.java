@@ -219,11 +219,23 @@ public class RangerBasePlugin {
 
 
 	private RangerAdminClient createAdminClient(String propertyPrefix) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.createAdminClient(" + propertyPrefix + ")");
+		}
+
 		RangerAdminClient ret = null;
 
-		String policySourceImpl = RangerConfiguration.getInstance().get(propertyPrefix + ".source.impl");
+		String propertyName = propertyPrefix + ".policy.source.impl";
+		String policySourceImpl = RangerConfiguration.getInstance().get(propertyName);
 
-		if(!StringUtils.isEmpty(policySourceImpl)) {
+		if(StringUtils.isEmpty(policySourceImpl)) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("Value for property[%s] was null or empty. Unxpected! Will use policy source of type[%s]", propertyName, RangerAdminRESTClient.class.getName()));
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("Value for property[%s] was [%s].", propertyName, policySourceImpl));
+			}
 			try {
 				@SuppressWarnings("unchecked")
 				Class<RangerAdminClient> adminClass = (Class<RangerAdminClient>)Class.forName(policySourceImpl);
@@ -240,6 +252,9 @@ public class RangerBasePlugin {
 
 		ret.init(propertyPrefix);
 
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.createAdminClient(" + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
+		}
 		return ret;
 	}
 

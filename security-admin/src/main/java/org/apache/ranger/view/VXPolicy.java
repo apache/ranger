@@ -90,7 +90,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 */
 	protected String tableType;
 	/**
-	 * Resource Status
+	 * Resource ColumnType
 	 */
 	protected String columnType;
 	/**
