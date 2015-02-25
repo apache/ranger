@@ -600,6 +600,7 @@ public class ServiceDBStore implements ServiceStore {
 		createNewResourcesForPolicy(policy, xCreatedPolicy, resources);
 		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, policyItems, xServiceDef);
 		
+		handlePolicyUpdate(service);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 		

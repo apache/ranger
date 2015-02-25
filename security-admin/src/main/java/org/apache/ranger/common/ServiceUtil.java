@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXUser;
@@ -45,7 +47,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ServiceUtil {
-	
+	static final Logger LOG = Logger.getLogger(ServiceUtil.class);
+
 	static Map<String, Integer> mapServiceTypeToAssetType = new HashMap<String, Integer>();
 	static Map<String, Integer> mapAccessTypeToPermType   = new HashMap<String, Integer>();
 	
@@ -119,15 +122,21 @@ public class ServiceUtil {
 			return null;
 		}
 
-		VXAsset ret = new VXAsset();
+		VXAsset ret = null;
 
-		rangerObjectToDataObject(service, ret);
-
-		ret.setAssetType(toAssetType(service.getType()));
-		ret.setName(service.getName());
-		ret.setDescription(service.getDescription());
-		ret.setActiveStatus(service.getIsEnabled() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
-		ret.setConfig(jsonUtil.readMapToString(service.getConfigs()));
+		Integer assetType = toAssetType(service.getType());
+		
+		if(assetType != null) {
+			ret = new VXAsset();
+	
+			rangerObjectToDataObject(service, ret);
+	
+			ret.setAssetType(toAssetType(service.getType()));
+			ret.setName(service.getName());
+			ret.setDescription(service.getDescription());
+			ret.setActiveStatus(service.getIsEnabled() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
+			ret.setConfig(jsonUtil.readMapToString(service.getConfigs()));
+		}
 
 		return ret;
 	}
@@ -188,6 +197,8 @@ public class ServiceUtil {
 			List<RangerPolicyItemAccess> accessList = new ArrayList<RangerPolicyItemAccess>();
 			String                       ipAddress  = null;
 
+			RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+
 			for(VXPermMap permMap : entry.getValue()) {
 				if(permMap.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
 					String userName = getUserName(permMap);
@@ -203,13 +214,17 @@ public class ServiceUtil {
 					}					
 				} 
 
-				accessList.add(new RangerPolicyItemAccess(toAccessType(permMap.getPermType())));
+				String accessType = toAccessType(permMap.getPermType());
+				
+				if(StringUtils.equalsIgnoreCase(accessType, "Admin")) {
+					policyItem.setDelegateAdmin(Boolean.TRUE);
+				} else {
+					accessList.add(new RangerPolicyItemAccess(accessType));
+				}
 
 				ipAddress = permMap.getIpAddress();
 			}
 			
-			RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
-
 			policyItem.setUsers(userList);
 			policyItem.setGroups(groupList);
 			policyItem.setAccesses(accessList);

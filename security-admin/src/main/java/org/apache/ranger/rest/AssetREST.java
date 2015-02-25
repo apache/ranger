@@ -239,10 +239,14 @@ public class AssetREST {
 		List<RangerService> services = serviceREST.getServices(request);
 
 		if(services != null) {
-			List<VXAsset> assets = new ArrayList<VXAsset>(services.size());
+			List<VXAsset> assets = new ArrayList<VXAsset>();
 
 			for(RangerService service : services) {
-				assets.add(serviceUtil.toVXAsset(service));
+				VXAsset asset = serviceUtil.toVXAsset(service);
+				
+				if(asset != null) {
+					assets.add(asset);
+				}
 			}
 
 			ret.setVXAssets(assets);
