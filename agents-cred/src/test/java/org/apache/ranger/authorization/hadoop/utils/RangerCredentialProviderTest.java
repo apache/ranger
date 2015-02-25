@@ -34,7 +34,9 @@ import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 
 public class RangerCredentialProviderTest {
-	private final String keystoreFile = new File(System.getProperty("user.home")+"/testkeystore.jceks").toURI().getPath();
+	
+	private final File ksFile =  new File(System.getProperty("user.home")+"/testkeystore.jceks") ;
+	private final String keystoreFile = ksFile.toURI().getPath();
 	private String[] argsCreate = {"create", "TestCredential001", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
 	private String[] argsDelete = {"delete", "TestCredential001", "-provider", "jceks://file@/" + keystoreFile};
 	private String url = "jceks://file@/" + keystoreFile;
@@ -44,6 +46,19 @@ public class RangerCredentialProviderTest {
 	@Before
 	public void setup() throws Exception {
 		int ret;
+		//
+		// adding a delete before creating a keystore
+		//
+		try {
+			if (ksFile != null) {
+				if (ksFile.exists()) {
+					ksFile.delete() ;
+				}
+			}
+		}
+		catch(Throwable t) {
+		}
+		
 		Configuration conf = new Configuration();
 		CredentialShell cs = new CredentialShell();
 		cs.setConf(conf);
