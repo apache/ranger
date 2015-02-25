@@ -65,7 +65,6 @@ public class GrantRevokeRequest implements Serializable {
 		setGroups(groups);
 		setAccessTypes(accessTypes);
 		setDelegateAdmin(delegateAdmin);
-		setAccessTypes(accessTypes);
 		setEnableAudit(enableAudit);
 		setReplaceExistingPermissions(replaceExistingPermissions);
 		setIsRecursive(isRecursive);
