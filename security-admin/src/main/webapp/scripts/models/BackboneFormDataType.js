@@ -35,35 +35,37 @@ define(function(require) {
 								return;
 							}
 							if(v.excludesSupported || v.recursiveSupported || v.lookupSupported){
+								var resourceOpts = {};
 								formObj.type = 'Resource';
-								if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
-									var options = {'containerCssClass' : v.name,
-											lookupURL : "service/plugins/services/lookupResource/"+form.rangerService.get('name')
-											};
-									formObj['select2Opts'] =  form.getPlugginAttr(true, options);
-								}
 								formObj['excludeSupport']= v.excludesSupported;
 								formObj['recursiveSupport'] = v.recursiveSupported;
 								formObj.name = v.name;
-								formObj.level = v.level;
-								formObj.editorAttrs = {'data-placeholder': v.label };
+//								formObj.level = v.level;
+								//checkParentHideShow field
 								formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
+								formObj['resourceOpts'] = {'data-placeholder': v.label };
 								
-								
-								//check whether resourceType drop down is created for same level or not 
+								if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
+									var opts = { 
+													'type' : v.name,
+													'lookupURL' 		: "service/plugins/services/lookupResource/"+form.rangerService.get('name')
+												};
+									resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
+									formObj['resourceOpts'] = resourceOpts; 
+								}
+								//same level resources check 
 								var optionsAttrs = _.filter(config,function(field){ if(field.level == v.level) return field;})
 								if(optionsAttrs.length > 1){
-									formObj['resourcesAtSameLevel'] = true;
 									var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
 									formObj['sameLevelOpts'] = optionsTitle;
 									samelevelFieldCreated.push(v.level);
-
 									fieldName = 'sameLevel'+v.level;
-									formObj.title = '';
-									
+									formObj['title'] = '';
+									formObj['resourcesAtSameLevel'] = true;
+
+									// formView is used to listen form events
 									formObj['formView'] = form;
 								}
-								
 							}else{
 								formObj.type = 'Text';
 							}
@@ -94,28 +96,24 @@ define(function(require) {
 							});
 							break;
 						case 'path' : 
-							/*formObj.type = 'Text';
-							form.initilializePathPlugin = true;
-							form.pathFieldName = v.name;*/
 							formObj.type = 'Resource';
+							formObj['excludeSupport']= v.excludesSupported;
+							formObj['recursiveSupport'] = v.recursiveSupported;
+							formObj['name'] = v.name;
+							formObj['editorAttrs'] = {'data-placeholder': v.label };
 							if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
-								var options = {'containerCssClass' : v.name,
-										lookupURL : "service/plugins/services/lookupResource/"+form.rangerService.get('name')
+								var options = {
+										'containerCssClass' : v.name,
+										'lookupURL' : "service/plugins/services/lookupResource/"+form.rangerService.get('name')
 										};
 								form.pathFieldName = v.name;
 								form.initilializePathPlugin = true;
 							}
-							formObj['excludeSupport']= v.excludesSupported;
-							formObj['recursiveSupport'] = v.recursiveSupported;
 							formObj['initilializePathPlugin'] = true;
-							formObj.name = v.name;
-							formObj.level = v.level;
-							formObj.editorAttrs = {'data-placeholder': v.label };
-							
-							
 							break;
 						case 'password':formObj.type = 'Password';break;
-						default:formObj.type = 'Text';break;
+						default:formObj.type = 'Text';
+						break;
 					}
 					if(_.isUndefined(formObj.title)){
 						formObj.title = v.label || v.name;

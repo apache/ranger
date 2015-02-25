@@ -138,7 +138,6 @@ define(function(require) {
 				var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group': 'user';
 				that.checkDirtyFieldForDropDown(e);
 				
-				that.toggleAddButton(e);
 				if(e.removed != undefined){
 					var gNameArr = [];
 					if(that.model.get(name+'Name') != undefined)
@@ -148,11 +147,13 @@ define(function(require) {
 					}else{
 						that.model.unset(name+'Name');
 					}
+					that.toggleAddButton(e);
 					return;
 				}
 				if(!_.isUndefined(e.added)){
-						var nameList = _.map($(e.currentTarget).select2("data"), function(obj){return obj.text});
-						that.model.set(name+'Name',nameList.toString());
+					var nameList = _.map($(e.currentTarget).select2("data"), function(obj){return obj.text});
+					that.model.set(name+'Name',nameList.toString());
+					that.toggleAddButton(e);
 				}
 			});
 		},
@@ -391,19 +392,31 @@ define(function(require) {
 			XAUtil.checkDirtyField(permList, perms, this.$el);
 		},
 		toggleAddButton : function(e){
-			var temp = [];
+			var grpTemp = [], usrTemp = [];
 			this.collection.each(function(m){
-				if(!_.isUndefined(m.get('groupId'))){
-					temp.push.apply(temp, m.get('groupId').split(','));
+				if(!_.isUndefined(m.get('groupName')) && !_.isNull(m.get('groupName'))){
+					grpTemp.push.apply(grpTemp, m.get('groupName').split(','));
 				}
+				if(!_.isUndefined(m.get('userName')) && !_.isNull(m.get('userName'))){
+					usrTemp.push.apply(usrTemp, m.get('userName').split(','));
+				}	
 			});
 			if(!_.isUndefined(e)){
-				if( !_.isUndefined(e.added) && ((temp.length + 1) == this.groupList.length)) 
-					$('[data-action="addGroup"]').hide();
+				if( !_.isUndefined(e.added)){
+					if((grpTemp.length ) == this.groupList.length && ((usrTemp.length) == this.userList.length)){
+						$('[data-action="addGroup"]').hide();
+					}else{
+						$('[data-action="addGroup"]').show();
+					}
+				} 
 				if(!_.isUndefined(e.removed))
 					$('[data-action="addGroup"]').show();
 			}else{
-				$('[data-action="addGroup"]').show();
+				if((grpTemp.length ) == this.groupList.length && ((usrTemp.length) == this.userList.length)){
+					$('[data-action="addGroup"]').hide();
+				}else{
+					$('[data-action="addGroup"]').show();
+				}
 			}
 		},
 		policyCondtionChange :function(e){
@@ -464,24 +477,28 @@ define(function(require) {
 				this.collection.add(new Backbone.Model());
 		},
 		onRender : function(){
-			this.toggleAddButton();
+//			this.toggleAddButton();
 		},
 		addNew : function(){
 			var that =this;
-			if(this.groupList.length > this.collection.length){
+			if(this.groupList.length > this.collection.length || (this.userList.length > this.collection.length)){
 				this.collection.add(new Backbone.Model());
-				this.toggleAddButton();
+//				this.toggleAddButton();
 			}
 		},
 		toggleAddButton : function(){
-			var groupIds=[];
+			var groupNames=[], userNames=[];
 			this.collection.each(function(m){
-				if(!_.isUndefined(m.get('groupId'))){
-					var temp = m.get('groupId').split(',');
-					groupIds.push.apply(groupIds,temp);
+				if(!_.isUndefined(m.get('groupName'))){
+					var temp = m.get('groupName').split(',');
+					groupNames.push.apply(groupNames,temp);
+				}
+				if(!_.isUndefined(m.get('userName'))){
+					var temp = m.get('userName').split(',');
+					userNames.push.apply(userNames,temp);
 				}
 			});
-			if(groupIds.length == this.groupList.length)
+			if(groupNames.length == this.groupList.length && userNames.length == this.userList.length )
 				this.$('button[data-action="addGroup"]').hide();
 			else
 				this.$('button[data-action="addGroup"]').show();

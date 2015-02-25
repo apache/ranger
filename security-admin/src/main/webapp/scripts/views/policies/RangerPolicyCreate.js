@@ -122,13 +122,68 @@ define(function(require){
 			this.rForm.$el.dirtyFields();
 			XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavPolicyForm'),this.rForm.$el);
 		},
+		popupCallBack : function(msg,validateObj){
+			var that = this;
+			XAUtil.alertPopup({
+				msg :msg,
+				callback : function(){
+				//	if(validateObj.auditLoggin)
+				//		that.savePolicy();
+				}
+			});
+		},
 		onSave: function(){
 			var that = this, valid = false;
 			var errors = this.form.commit({validate : false});
 			if(! _.isEmpty(errors)){
 				return;
 			}
-			this.savePolicy();
+			var validateObj = this.form.formValidation();
+			valid = (validateObj.groupSet && validateObj.permSet) || (validateObj.userSet && validateObj.userPerm);
+			if(!valid){
+				if(validateObj.groupSet && (!validateObj.permSet)){
+					this.popupCallBack(localization.tt('msg.addGroupPermission'),validateObj);
+				}else if((!validateObj.groupSet) && (validateObj.permSet)) {
+					this.popupCallBack(localization.tt('msg.addGroup'),validateObj);
+						
+				}else if(validateObj.userSet && (!validateObj.userPerm)){
+					this.popupCallBack(localization.tt('msg.addUserPermission'),validateObj);
+				}else if((!validateObj.userSet) && (validateObj.userPerm)) {
+					this.popupCallBack(localization.tt('msg.addUser'),validateObj);
+						
+				}else if((!validateObj.auditLoggin) && (!validateObj.groupPermSet)){
+					XAUtil.alertPopup({
+						msg :localization.tt('msg.yourAuditLogginIsOff'),
+						callback : function(){
+							/*if(!that.model.isNew()){
+								that.model.destroy({success: function(model, response) {
+									XAUtil.notifySuccess('Success', localization.tt('msg.policyDeleteMsg'));
+									App.appRouter.navigate("#!/hdfs/"+that.assetModel.id+"/policies",{trigger: true});
+								}});
+							}else{
+								XAUtil.notifyError('Error', localization.tt('msg.policyNotAddedMsg'));
+								App.appRouter.navigate("#!/hdfs/"+that.assetModel.id+"/policies",{trigger: true});
+							}*/
+						}
+					});
+				}else{
+					this.savePolicy();
+				}
+			}else{
+				if(validateObj.groupSet && (!validateObj.permSet)){
+					this.popupCallBack(localization.tt('msg.addGroupPermission'),validateObj);
+				}else if((!validateObj.groupSet) && (validateObj.permSet)) {
+					this.popupCallBack(localization.tt('msg.addGroup'),validateObj);
+						
+				}else if(validateObj.userSet && (!validateObj.userPerm)){
+					this.popupCallBack(localization.tt('msg.addUserPermission'),validateObj);
+				}else if((!validateObj.userSet) && (validateObj.userPerm)) {
+					this.popupCallBack(localization.tt('msg.addUser'),validateObj);
+						
+				}else{
+					this.savePolicy();
+				}
+			}
 		},
 		savePolicy : function(){
 			var that = this;

@@ -27,6 +27,7 @@ define(function(require){
 	
 	var localization	= require('utils/XALangSupport');
 	var BackboneFormDataType	= require('models/BackboneFormDataType');
+	var ConfigurationList		= require('views/service/ConfigurationList')
 
 	require('backbone-forms');
 	require('backbone-forms.list');
@@ -58,6 +59,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a ServiceForm Form View");
 			_.extend(this, _.pick(options, 'rangerServiceDefModel'));
+			this.extraConfigColl = new Backbone.Collection();
 			this.setupFormForEditMode();
     		Backbone.Form.prototype.initialize.call(this, options);
 
@@ -100,10 +102,13 @@ define(function(require){
 			if(!this.model.isNew()){
 				_.each(this.model.get('configs'),function(value, name){
 					var configObj = _.findWhere(this.rangerServiceDefModel.get('configs'),{'name' : name });
-					if(configObj.type == 'bool'){
+					if(!_.isUndefined(configObj) && configObj.type == 'bool'){
 						this.model.set(name, this.getStringFromBoolean(configObj, value))
 					}else{
 						this.model.set(name, value)
+						if(_.isUndefined(configObj)){
+							this.extraConfigColl.add(new Backbone.Model({'name' : name, 'value' : value}))
+						}
 					}
 				},this);
 			}
@@ -125,6 +130,10 @@ define(function(require){
 		},
 		/** all custom field rendering */
 		renderCustomFields: function(){
+			this.$('.extraServiceConfigs').html(new ConfigurationList({
+				collection : this.extraConfigColl,
+				model 	   : this.model,
+			}).render().el);
 		},
 
 		/** all post render plugin initialization */
@@ -150,6 +159,7 @@ define(function(require){
 					that.model.unset(obj.name);
 				}
 			});
+			this.extraConfigColl.each(function(obj){ config[obj.get('name')] = obj.get('value');})
 			this.model.set('configs',config);
 			
 			//Set service type

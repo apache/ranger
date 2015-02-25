@@ -87,7 +87,7 @@ define(function(require){
 		},
 		getSchema : function(){
 			var attrs = {};
-			var basicSchema = ['id', 'name','isEnabled']
+			var basicSchema = ['name','isEnabled']
 			var schemaNames = ['description', 'isAuditEnabled'];
 			
 			var formDataType = new BackboneFormDataType();
@@ -110,52 +110,12 @@ define(function(require){
 			if(!this.model.isNew()){
 				this.setUpSwitches();
 			}
-			this.$el.find('.field-isEnabled').find('.control-label').remove();
 			//checkParent
 			this.renderParentChildHideShow();
-		},
-		renderParentChildHideShow : function(onChangeOfSameLevelType) {
-			var formDiv = this.$el.find('.policy-form');
-			if(!this.model.isNew() && !onChangeOfSameLevelType){
-				_.each(this.selectedResourceTypes, function(val, sameLevelName) {
-					if(formDiv.find('.field-'+sameLevelName).length > 0){
-						formDiv.find('.field-'+sameLevelName).attr('data-name','field-'+val)
-					}
-				});
-			}
-			var resources = formDiv.find('.control-group');
-			_.each(resources, function(rsrc){ 
-				var parent = $(rsrc).attr('parent')
-				if( !_.isUndefined(parent) && ! _.isEmpty(parent)){
-					console.log(formDiv.find())
-					var selector = "div[data-name='field-"+parent+"']"
-					if(formDiv.find(selector).length > 0 && !formDiv.find(selector).hasClass('hideResource')){
-							$(rsrc).removeClass('hideResource');
-					}else{
-						$(rsrc).addClass('hideResource');
-					}
-				}
-			},this);
 			
-			_.each(this.fields, function(obj, key){
-				if(obj.$el.hasClass('hideResource')){
-					if($.inArray('required',obj.editor.validators) >= 0){
-						this.defaultValidator[key] = obj.editor.validators;
-						obj.editor.validators=[];
-						var label = obj.$el.find('label').html();
-						obj.$el.find('label').html(label.replace('*', ''));
-					}
-				}else{
-					if(!_.isUndefined(this.defaultValidator[key])){
-						obj.editor.validators = this.defaultValidator[key];
-						if($.inArray('required',obj.editor.validators) >= 0){
-							var label = obj.$el.find('label').html();
-							obj.$el.find('label').html(label+"*");
-						}
-					}
-				}
-			}, this);
-//			alert();
+			//to show error msg on below the field(only for policy name)
+			this.fields.isEnabled.$el.find('.control-label').removeClass();
+			this.fields.name.$el.find('.help-inline').removeClass('help-inline').addClass('help-block margin-left-5')
 		},
 		evAuditChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
@@ -215,7 +175,48 @@ define(function(require){
 			});
 
 		},
-	
+		renderParentChildHideShow : function(onChangeOfSameLevelType) {
+			var formDiv = this.$el.find('.policy-form');
+			if(!this.model.isNew() && !onChangeOfSameLevelType){
+				_.each(this.selectedResourceTypes, function(val, sameLevelName) {
+					if(formDiv.find('.field-'+sameLevelName).length > 0){
+						formDiv.find('.field-'+sameLevelName).attr('data-name','field-'+val)
+					}
+				});
+			}
+			//hide form fields if it's parent is hidden
+			var resources = formDiv.find('.control-group');
+			_.each(resources, function(rsrc){ 
+				var parent = $(rsrc).attr('parent')
+				if( !_.isUndefined(parent) && ! _.isEmpty(parent)){
+					var selector = "div[data-name='field-"+parent+"']"
+					if(formDiv.find(selector).length > 0 && !formDiv.find(selector).hasClass('hideResource')){
+							$(rsrc).removeClass('hideResource');
+					}else{
+						$(rsrc).addClass('hideResource');
+					}
+				}
+			},this);
+			//remove validation of fields if it's hidden
+			_.each(this.fields, function(obj, key){
+				if(obj.$el.hasClass('hideResource')){
+					if($.inArray('required',obj.editor.validators) >= 0){
+						this.defaultValidator[key] = obj.editor.validators;
+						obj.editor.validators=[];
+						var label = obj.$el.find('label').html();
+						obj.$el.find('label').html(label.replace('*', ''));
+					}
+				}else{
+					if(!_.isUndefined(this.defaultValidator[key])){
+						obj.editor.validators = this.defaultValidator[key];
+						if($.inArray('required',obj.editor.validators) >= 0){
+							var label = obj.$el.find('label').html();
+							obj.$el.find('label').html(label+"*");
+						}
+					}
+				}
+			}, this);
+		},
 		beforeSave : function(){
 			var that = this, resources = [];
 
@@ -327,9 +328,11 @@ define(function(require){
 						var url = "service/plugins/services/lookupResource/"+that.rangerService.get('name');
 						var context ={
 							'userInput' : extractLast( request.term ),
-							'resourceName' : null,
-							'resources' : { null:null }
+							'resourceName' : that.pathFieldName,
+							'resources' : {}
 						};
+						var val = that.fields[that.pathFieldName].editor.getValue();
+						context.resources[that.pathFieldName] = _.isNull(val) || _.isEmpty(val) ? [] : val.resource.split(","); 
 						var p = $.ajax({
 							url : url,
 							type : "POST",
@@ -415,7 +418,7 @@ define(function(require){
 				
 				
 				return {
-					containerCssClass : options.containerCssClass,
+					containerCssClass : options.type,
 					closeOnSelect : true,
 					tags:true,
 					multiple: true,
@@ -448,14 +451,7 @@ define(function(require){
 						},
 						cache: false,
 						data: function (term, page) {
-//							return _.extend(that.getDataParams(type, term));
-							var context ={
-									'userInput' : term,
-									'resourceName' : null,
-									'resources' : { null:null }
-								};
-							return JSON.stringify(context);
-							
+							return that.getDataParams(term, options);
 						},
 						results: function (data, page) { 
 							var results = [];
@@ -498,23 +494,74 @@ define(function(require){
 				};	
 			}
 		},
-		evResourceTypeChange : function(form, fieldEditor){
-			var that = this;
-			var name = fieldEditor.$el.val();
-			var sameLevel = _.findWhere(this.sameLevelType, {'name' : fieldEditor.key});
-			form.$el.find('[data-editors="'+sameLevel.options+'"]').children().hide();
-			this.fields[name].editor.$el.select2('val','');
-			this.fields[name].editor.$el.show();
-			form.$el.find('.'+name).show();
-			
-			_.each(sameLevel.options.split(','), function(nm){
-				if(name != nm){
-					var index = this.fields.database.editor.validators.indexOf("required");
-					this.fields[nm].editor.validators.splice(index,1);
-					this.fields[nm].editor.$el.select2('val','');
+		getDataParams : function(term, options) {
+			var resources = {},resourceName = options.type;
+			var isParent = true, name = options.type, val = null,isCurrentSameLevelField = true;
+			while(isParent){
+				var currentResource = _.findWhere(this.rangerServiceDefModel.get('resources'), {'name': name });
+				//same level type
+				if(_.isUndefined(this.fields[currentResource.name])){
+					var sameLevelName = 'sameLevel'+currentResource.level;
+					name = this.fields[sameLevelName].editor.$resourceType.val()
+					val = this.fields[sameLevelName].getValue();
+					if(isCurrentSameLevelField){
+						resourceName = name;
+					}
+				}else{
+					val = this.fields[name].getValue();
 				}
-			}, this);
+				resources[name] = _.isNull(val) ? [] : val.resource.split(','); 
+				if(!_.isEmpty(currentResource.parent)){
+					name = currentResource.parent;
+				}else{
+					isParent = false;
+				}
+				isCurrentSameLevelField = false;
+			}
+			var context ={
+					'userInput' : term,
+					'resourceName' : resourceName,
+					'resources' : resources
+				};
+			return JSON.stringify(context);
+		},
+		formValidation : function(){
+			var groupSet = false,permSet = false,groupPermSet = false;
+			var userSet=false, userPerm = false, userPermSet =false,breakFlag =false;
+			console.log('validation called..');
+			this.formInputList.each(function(m){
+				if(_.isEmpty(m.attributes)) return;
+				if(m.has('groupName') || m.has('userName') || m.has('accesses') ){
+					if(! breakFlag){
+						groupSet = m.has('groupName') ? true : false;
+						userSet = m.has('userName') ? true : false;
+						permSet = m.has('accesses') ? true : false; 
+						if(groupSet && permSet){
+							groupPermSet = true;
+							userPermSet = false;
+						}else if(userSet && permSet){
+							userPermSet = true;
+							groupPermSet = false;
+						}else{
+							breakFlag=true;
+						}
+					}
+				}
+			});
 			
+			var auditStatus = this.fields.isAuditEnabled.editor.getValue();
+			var obj = { groupPermSet	: groupPermSet , groupSet : groupSet,	
+						userSet 		: userSet, isUsers:userPermSet,
+						auditLoggin : auditStatus 
+					};
+			if(groupSet || userSet){
+				obj['permSet'] = groupSet ? permSet : false;
+				obj['userPerm'] = userSet ? permSet : false;
+			}else{
+				obj['permSet'] = permSet;
+				obj['userPerm'] = userSet;
+			}
+			return obj;
 		},
 	});
 

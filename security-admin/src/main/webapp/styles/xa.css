@@ -1684,8 +1684,8 @@ td.html-cell.renderable:last-child {
 	margin-bottom: 0 !important;
 }
 .policy-form .field-isEnabled{
-float: left;
-margin-bottom: 0 !important;
+margin-left: 413px;
+margin-bottom: 12px !important;
 }
 .policy-form .field-isEnabled .controls{
 	margin-left:30px;
@@ -1750,4 +1750,17 @@ margin-top: -29px;
 }
 .label-ranger {
 	background-color: #3C9C11;
+}
+.sameLevelDropdown{
+	margin-right: 31px;
+	margin-left: -130px;
+	width: 100px;
+	height: 29px;
+	font-family: Tahoma;
+	font-size: 14px;
+	border-radius: 10px;
+	border: 2px #cccccc solid;
+}
+.margin-left-5{
+	margin-left:5px;
 }

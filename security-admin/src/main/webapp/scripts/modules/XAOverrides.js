@@ -347,73 +347,53 @@
 	   *
 	   */
 	  Form.editors.Resource = Form.editors.Base.extend({
-			ui : {
+		  ui : {
 				'resource' : '[data-js="resource"]',
 				'excludeSupport' : '[data-js="include"]',
 				'recursiveSupport' : '[data-js="recursive"]',
 				'resourceType' : '[data-js="resourceType"]',
-			},
-			  events: {
-			    'click':  function(event) {
-			},
+		  },
+		  events: {
+			  'click':  function(event) {
 			  },
-			
-			  initialize: function(options) {
-			    Form.editors.Base.prototype.initialize.call(this, options);
-			    _.extend(this, _.pick(this.schema,'excludeSupport','recursiveSupport','select2Opts','resourcesAtSameLevel','sameLevelOpts','level',
-			    		'initilializePathPlugin', 'validators','name','formView'));
-
-			    this.template = this.getTemplate();
-//			    this.resourceObj = { 'level' : this.level};
-			    if(_.isUndefined(this.value) || _.isNull(this.value)){
+		  },
+		  initialize: function(options) {
+		    Form.editors.Base.prototype.initialize.call(this, options);
+		    //default options
+		    this.excludeSupport 		= false;
+		    this.recursiveSupport 		= false;
+		    this.resourcesAtSameLevel 	= false;
+		    this.initilializePathPlugin = false;
+		    this.resourceOpts = {};
+		    _.extend(this, _.pick(this.schema,'excludeSupport','recursiveSupport','resourceOpts','resourcesAtSameLevel','sameLevelOpts',
+		    									'initilializePathPlugin', 'validators','name','formView'));
+		    this.template = this.getTemplate();
+		  },
+		  initializeElements : function() {
+			  this.$resource = this.$el.find(this.ui.resource)
+			  this.$excludeSupport = this.$el.find(this.ui.excludeSupport)
+			  this.$recursiveSupport = this.$el.find(this.ui.recursiveSupport)
+			  this.$resourceType = this.$el.find(this.ui.resourceType)
+			  if(_.isUndefined(this.value) || _.isNull(this.value)){
 			    	this.value = {};
-			    }
-			  },
-			  getTemplate : function() {
-				  var optionsHtml="", selectTemplate = '',excludeSupportToggleDiv='', recursiveSupportToggleDiv='';
-				  this.preserveResourceValues = {};
-				    if(!_.isUndefined(this.resourcesAtSameLevel) && this.resourcesAtSameLevel){
-				    	_.each(this.sameLevelOpts, function(option){ 
-				    		return optionsHtml += "<option value='"+option+"'>"+option+"</option>";
-				    		
-				    	},this);
-				    	selectTemplate = '<select data-js="resourceType" class="btn dropdown-toggle" style="margin-right: 31px;margin-left: -130px;width: 100px;height: 29px;font-family: Tahoma;font-size: 14px;border-radius: 10px;border: 2px #cccccc solid;">\
-				    		'+optionsHtml+'\
-				    		</select>';
-				    	
-				    }
-				    if(!_.isUndefined(this.excludeSupport) && this.excludeSupport){
-				    	excludeSupportToggleDiv = '<div class="toggle-xa include-toggle" data-js="include"><div  class="toggle"></div></div>';
-				    }
-				    if(!_.isUndefined(this.recursiveSupport) && this.recursiveSupport){
-				    	kclass = !_.isEmpty(excludeSupportToggleDiv) ?  'recursive-toggle' : 'include-toggle';
-				    	if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){
-				    		kclass = "recursive-toggle-path";
-				    	}
-				    	recursiveSupportToggleDiv = '<div class="toggle-xa '+kclass+'" data-js="recursive"><div  class="toggle"></div></div>';
-				    }
-				    return _.template(selectTemplate+'<input data-js="resource" maxlength="255" type="text">'+excludeSupportToggleDiv+''+recursiveSupportToggleDiv);
-			  },
-			
-			  /**
-			   * Adds the editor to the DOM
-			   */
-			  render: function() {
-				var that = this, dirtyFieldValue = null;
-				var XAUtil = require('utils/XAUtils');
-			  	this.$el.html( this.template );
-			  	this.$resource = this.$el.find(this.ui.resource)
-			    this.$excludeSupport = this.$el.find(this.ui.excludeSupport)
-			    this.$recursiveSupport = this.$el.find(this.ui.recursiveSupport)
-			    this.$resourceType = this.$el.find(this.ui.resourceType)
-
-			    if(!_.isNull(this.value) && !_.isEmpty(this.value)){
+			  }
+		  },
+		  /**
+		   * Adds the editor to the DOM
+		   */
+		  render: function() {
+			//render template
+		  	this.$el.html( this.template );
+		  	this.initializeElements();
+		  	this.renderResource();
+		  	this.renderToggles();
+		  	this.renderSameLevelResource();
+		    return this;
+		  },
+		  renderResource : function() {
+			  var that = this;
+			  if(!_.isNull(this.value) && !_.isEmpty(this.value)){
 			    	this.$resource.val(this.value.values.toString())
-			    	
-			    	//check dirty field value for resource
-			    	this.$resource.on('change', function(e) {
-//			    		that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
-			    	});
 			    	//to preserve resources values to text field
 			    	if(!_.isUndefined(this.value.resourceType)){
 			    		this.preserveResourceValues[this.value.resourceType] = this.value.values.toString();	
@@ -421,17 +401,26 @@
 			    		this.preserveResourceValues[this.name] = this.value.values.toString(); 
 			    	}
 			    }
-			    if(!_.isUndefined(this.select2Opts)){
-			    	this.$resource.select2(this.select2Opts).on('change',function(e){
+			  	//check dirtyField for input
+			  	this.$resource.on('change', function(e) {
+			  		if(_.isUndefined(that.resourceOpts.select2Opts)){
+			  			that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
+			  		}
+			  	});
+			  	//create select2 if select2Opts is specified
+			    if(!_.isUndefined(this.resourceOpts.select2Opts)){
+			    	this.$resource.select2(this.resourceOpts.select2Opts).on('change',function(e){
 			    		console.log(e)
 			    		that.preserveResourceValues[that.$resourceType.val()] = e.currentTarget.value;
-			    		//check dirty field value for resource
-//			    		dirtyFieldValue = XAUtil.checkDirtyFieldForSelect2($(e.currentTarget), dirtyFieldValue, that)
+			    		//check dirty field value for select2 resource field
 			    		that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
 		    			
 			    	});
 			    }
-			  	var isExcludes = false, isRecursive = true;
+		  },
+		  renderToggles	: function() {
+			  var XAUtil = require('utils/XAUtils');
+			  var that = this, isExcludes = false, isRecursive = true;
 			  	if(this.excludeSupport){
 			  		if(!_.isNull(this.value)){
 			  			this.value.isExcludes = _.isUndefined(this.value.isExcludes) ? false : this.value.isExcludes;
@@ -455,27 +444,26 @@
 			  			on: isRecursive,
 			  			text : {on : 'recursive', off : 'nonrecursive' },
 			  			width: 105
-//			  			height: 20
+//				  		height: 20
 			  		}).on('toggle', function (e, active) {
 			  		    that.value.isRecursive = active;
 			  		    XAUtil.checkDirtyFieldForToggle($(e.currentTarget))
 			  		});
 			  	}
-			  	if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
+		  },
+		  renderSameLevelResource : function() {
+			  var that = this, dirtyFieldValue = null
+			  if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
 			  		if(!_.isNull(this.value) && !_.isEmpty(this.value)){
 			  			this.$resourceType.val(this.value.resourceType);
-			  			//
 			  		}
 			  		this.$resourceType.on('change', function(e) {
-			  			if(!_.isUndefined(that.select2Opts)){
-			  				if(!_.isUndefined(that.preserveResourceValues[e.currentTarget.value])){
-			  					that.$resource.select2('val', that.preserveResourceValues[e.currentTarget.value].split(','))
-			  				}else{
-			  					that.$resource.select2('val', '')
-			  				}
-						  }else{
-							  that.$resource.val('');
-						  }
+		  				if(!_.isUndefined(that.preserveResourceValues[e.currentTarget.value])){
+		  					var val = _.isEmpty(that.preserveResourceValues[e.currentTarget.value]) ? '' : that.preserveResourceValues[e.currentTarget.value].split(','); 
+		  					that.$resource.select2('val', val)
+		  				}else{
+		  					that.$resource.select2('val', '')
+		  				}
 			  			//reset values
 			  			that.value.isExcludes = false;
 			  			that.value.isRecursive = true;
@@ -488,62 +476,74 @@
 			  			that.formView.trigger('policyForm:parentChildHideShow',true);
 					});
 			  	}
-			    return this;
-			  },
-			
-			  getValue: function() {
-				  //checkParent
-				  if(this.$el.parents('.control-group').hasClass('hideResource')){
-					  return null;
-				  }
-				  if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
-					  this.value['resourceType'] = this.$resourceType.val();  
-				  }
-				  this.value['resource'] = this.$resource.val();
-				  //for validation
-				  if(!_.isUndefined(this.validators) && ($.inArray('required',this.validators) != -1)){
-					  if(_.isEmpty(this.value.resource))
-						  return null;
-				  }
-				  return this.value;
-				  //return this.$el.find('.active').text() == "ON" ? true : false;
-			  },
-			
-			  setValue: function(val) {
-				  return true;
-			  },
-			  checkDirtyFieldForSelect2 : function($el,that,value) {
-				  var defaultResourceValue = _.isUndefined(that.value.values) ? [] : that.value.values;  
-//		    		that.value.values = this.value;
-		    		
-		    		if($el.hasClass('dirtyField')){
-		    			var tmpValue={};
-		    			if(_.isEmpty(value)){
-		    				tmpValue.values = []
-		    			}else{
-		    				tmpValue.values = value.split(',');
-		    			}	
-		    			tmpValue.isExcludes = that.value.isExcludes;
-		    			tmpValue.isRecursive = that.value.isRecursive;
-		    			if(_.isEqual(tmpValue, dirtyFieldValue)){
-		    				$el.removeClass('dirtyField');
-		    			}
-		    			
-		    		}else if(!$el.hasClass('dirtyField')){
-		    			$el.addClass('dirtyField');
-	    				if(!_.isNull(that.value)){
-	    					that.value.values = defaultResourceValue;
-	    					if(_.isUndefined(that.value.isExcludes)){
-	    						that.value.isExcludes = that.excludeSupport ? true : false;
-	    					}
-	    					if(_.isUndefined(that.value.isRecursive)){
-	    						that.value.isRecursive = that.RecursiveSupport ? true : false;
-	    					}
-	    				}
-		    			dirtyFieldValue =  that.value
-		    		}
+		  },
+		  getValue: function() {
+			  //checkParent
+			  if(this.$el.parents('.control-group').hasClass('hideResource')){
+				  return null;
 			  }
-			
+			  this.value['resource'] = this.$resource.val();
+			  //validation
+			  if(!_.isUndefined(this.validators) && ($.inArray('required',this.validators) != -1)){
+				  if(_.isEmpty(this.value.resource))
+					  return null;
+			  }
+			  if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
+				  this.value['resourceType'] = this.$resourceType.val();  
+			  }
+			  return this.value;
+		  },
+		
+		  setValue: function(val) {
+			  return true;
+		  },
+		  checkDirtyFieldForSelect2 : function($el,that,value) {
+			  var defaultResourceValue = _.isUndefined(that.value.values) ? [] : that.value.values;  
+	    		
+			  if($el.hasClass('dirtyField')){
+				  var tmpValue={};
+				  tmpValue.values = _.isEmpty(value) ? [] : value.split(','); 
+				  tmpValue.isExcludes = that.value.isExcludes;
+				  tmpValue.isRecursive = that.value.isRecursive;
+				  if(_.isEqual(tmpValue, dirtyFieldValue)){
+					  $el.removeClass('dirtyField');
+				  }
+			  }else if(!$el.hasClass('dirtyField')){
+				  $el.addClass('dirtyField');
+    			  if(!_.isNull(that.value)){
+    				  that.value.values = defaultResourceValue;
+    				  if(_.isUndefined(that.value.isExcludes)){
+    					  that.value.isExcludes = that.excludeSupport ? true : false;
+    				  }
+    				  if(_.isUndefined(that.value.isRecursive)){
+    					  that.value.isRecursive = that.RecursiveSupport ? true : false;
+    				  }
+    			  }
+    			  dirtyFieldValue =  that.value
+			  }
+		  	},
+		  	getTemplate : function() {
+				  var optionsHtml="", selectTemplate = '',excludeSupportToggleDiv='', recursiveSupportToggleDiv='';
+				  this.preserveResourceValues = {};
+				    if(this.resourcesAtSameLevel){
+				    	_.each(this.sameLevelOpts, function(option){ return optionsHtml += "<option value='"+option+"'>"+option+"</option>"; },this);
+				    	selectTemplate = '<select data-js="resourceType" class="btn dropdown-toggle sameLevelDropdown" >\
+				    						'+optionsHtml+'\
+				    					</select>';
+				    }
+				    if(this.excludeSupport){
+				    	excludeSupportToggleDiv = '<div class="toggle-xa include-toggle" data-js="include"><div  class="toggle"></div></div>';
+				    }
+				    if(this.recursiveSupport){
+				    	kclass = !_.isEmpty(excludeSupportToggleDiv) ?  'recursive-toggle' : 'include-toggle';
+				    	if(this.initilializePathPlugin){
+				    		kclass = "recursive-toggle-path";
+				    	}
+				    	recursiveSupportToggleDiv = '<div class="toggle-xa '+kclass+'" data-js="recursive"><div  class="toggle"></div></div>';
+				    }
+				    return _.template(selectTemplate+'<input data-js="resource" type="text">'+
+				    					excludeSupportToggleDiv+''+recursiveSupportToggleDiv);
+			  },
 			});
 	  
 	  

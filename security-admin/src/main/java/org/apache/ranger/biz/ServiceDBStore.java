@@ -880,8 +880,9 @@ public class ServiceDBStore implements ServiceStore {
 		}
 		Map<String, String> validConfigs = new HashMap<String, String>();
 		for(Entry<String, String> config : configs.entrySet()) {
-			String confKey = config.getKey();
-			String confValue = config.getValue();
+			validConfigs.put(config.getKey(), config.getValue());
+			/*String confKey = ;
+			String confValue = ;
 
 			boolean found = false;
 			for(XXServiceConfigDef xConfDef : svcConfDefList) {
@@ -891,11 +892,10 @@ public class ServiceDBStore implements ServiceStore {
 				}
 			}
 			if(found) {
-				validConfigs.put(confKey, confValue);
 			} else {
 				LOG.info("Ignoring this config parameter:" + confKey
 						+ ", as its not valid conf param for service");
-			}
+			}*/
 		}
 		return validConfigs;
 	}
