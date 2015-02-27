@@ -81,26 +81,26 @@
 
   	<fileSet>
 		<outputDirectory>/ews/webapp/config</outputDirectory>
-		<directoryMode>0500</directoryMode>
+		<directoryMode>755</directoryMode>
 		<directory>kms/config/kms-webapp</directory>
-		<fileMode>0400</fileMode>
+		<fileMode>400</fileMode>
   	</fileSet>
 	
   	<fileSet>
 		<outputDirectory>/ews/conf</outputDirectory>
-		<directoryMode>0500</directoryMode>
+		<directoryMode>755</directoryMode>
 		<directory>kms/config/webserver</directory>
-		<fileMode>0400</fileMode>
+		<fileMode>400</fileMode>
   	</fileSet>
 
   	<fileSet>
 		<outputDirectory>/scripts</outputDirectory>
-		<directoryMode>0500</directoryMode>
+		<directoryMode>755</directoryMode>
 		<directory>kms/scripts</directory>
 		<includes>
 			<include>ranger-*</include>
 		</includes>
-		<fileMode>0544</fileMode>
+		<fileMode>544</fileMode>
   	</fileSet>
 
 

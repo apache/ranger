@@ -34,49 +34,51 @@ public class SampleKeyProvider extends KeyProvider {
 
 	@Override
 	public KeyVersion getKeyVersion(String versionName) throws IOException {
+		KeyVersion version = null ;
 		// TODO Auto-generated method stub
-		return null;
+		return version ;
 	}
 
 	@Override
 	public List<String> getKeys() throws IOException {
+		List<String> keys = null ;
 		// TODO Auto-generated method stub
-		return null;
+		return keys;
 	}
 
 	@Override
 	public List<KeyVersion> getKeyVersions(String name) throws IOException {
+		List<KeyVersion> keys = null ;
 		// TODO Auto-generated method stub
-		return null;
+		return keys;
 	}
 
 	@Override
 	public Metadata getMetadata(String name) throws IOException {
+		Metadata metadata = null ;
 		// TODO Auto-generated method stub
-		
-		new KeyProvider.Metadata(null) ;
-		
-		return null;
+		return metadata ;
 	}
 
 	@Override
 	public KeyVersion createKey(String name, byte[] material, Options options)
 			throws IOException {
+		KeyVersion version = null ;
 		// TODO Auto-generated method stub
-		return null;
+		return version;
 	}
 
 	@Override
 	public void deleteKey(String name) throws IOException {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public KeyVersion rollNewVersion(String name, byte[] material)
 			throws IOException {
+		KeyVersion version = null ;
 		// TODO Auto-generated method stub
-		return null;
+		return version;
 	}
 
 	@Override
@@ -84,7 +86,6 @@ public class SampleKeyProvider extends KeyProvider {
 		// TODO Auto-generated method stub
 		
 	}
-
 	
 
 }
