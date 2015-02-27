@@ -7,7 +7,8 @@ Pre-requisites:
   * Ranger service is manually installed outside Ambari.
   * If user had Ambari 1.7.0 installed, Ambari needs to be upgraded to 2.0.0, before this script is run.
   * Ranger service is expected to be up and running.
-  * Whichever component plugin needs to be imported, that plugin needs to be installed as well as enabled independently by the user. 
+  * Whichever component plugin needs to imported, that component should be up and running in Ambari server.
+  * Whichever component plugin needs to be imported, that plugin needs to be installed as well as enabled independently by the user.
   * The installation folder paths for each component is as follows :
       * For Ranger Admin service: /usr/hdp/<hdp_vers>/ranger-admin
       * For Ranger Usersync service: /usr/hdp/<hdp_vers>/ranger-usersync
@@ -35,20 +36,11 @@ Steps to Add Ranger in a Ambari HDP cluster:
   * Migration script locates the existing config in post-install properties files used by the service.
   * This script will collect required configs from the independently installed Ranger service configurations 
     and after verification from the user, post it to the specified  Ambari Server.
-  * Set appropriate values in the respective install.properties template file, only if required.
+  * Set appropriate values in the <component>_install.properties template file, only if required.
        For Ranger Admin service, ranger_admin_install.properties
-       For Ranger Usersync service, ranger_usersync_install.properties
-       For Ranger Hbase plugin, ranger_hbase_plugin_install.properties
-       For Ranger Hdfs plugin, ranger_hdfs_plugin_install.properties
-       For Ranger Hive plugin, ranger_hive_plugin_install.properties
-       For Ranger Knox plugin, ranger_knox_plugin_install.properties
-       For Ranger Storm plugin, ranger_storm_plugin_install.properties
-   * For script to use proper values, mandatory properties to be filled by user are as follows :
-     1) During Ranger_Admin installation migration, the authentication_method , db_root_username and db_root_password are mandatory,
+  * For script to use proper values, mandatory properties to be filled by user are as follows :
+     1) During Ranger_Admin installation migration db_root_username and db_root_password are mandatory,
            which can be set in the ranger_admin_install.properties
-     2) During Hdfs , Knox and Storm Plugin Migration parameter repository_name is mandatory and should be filled in ranger_hdfs_plugin_install.properties , ranger_knox_plugin_install.properties or ranger_storm_plugin_install.properties before running script for installing the particular component.
-     3) During HBase and Hive Plugin migration,parameters repository name and UPDATE_XAPOLICIES_ON_GRANT_REVOKE is used to save policies during grant-revoke operations.
-        Hence this flag should be set by user in ranger_hbase_plugin_install.properties or ranger_hive_plugin_install.properties respectively.
 
 To import Ranger (Admin and User-Sync) service and plugins we need to run the python script using command line as shown below, 
 with valid input parameters, from the host where specific Ranger component has been installed / enabled :
