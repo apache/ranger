@@ -81,10 +81,14 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		xObj.setSubtype(vObj.getSubType());
 		xObj.setIsMandatory(vObj.getMandatory());
 		xObj.setDefaultvalue(vObj.getDefaultValue());
+		xObj.setValidationRegEx(vObj.getValidationRegEx());
+		xObj.setValidationMessage(vObj.getValidationMessage());
+		xObj.setUiHint(vObj.getUiHint());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setDescription(vObj.getDescription());
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
 		xObj.setRbkeydescription(vObj.getRbKeyDescription());
+		xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
 		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 		return xObj;
 	}
@@ -96,10 +100,14 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		vObj.setSubType(xObj.getSubtype());
 		vObj.setMandatory(xObj.getIsMandatory());
 		vObj.setDefaultValue(xObj.getDefaultvalue());
+		vObj.setValidationRegEx(xObj.getValidationRegEx());
+		vObj.setValidationMessage(xObj.getValidationMessage());
+		vObj.setUiHint(xObj.getUiHint());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setDescription(xObj.getDescription());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setRbKeyDescription(xObj.getRbkeydescription());
+		vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
 		return vObj;
 	}
 	
@@ -119,10 +127,14 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		xObj.setExcludessupported(vObj.getExcludesSupported());
 		xObj.setMatcher(vObj.getMatcher());
 		xObj.setMatcheroptions(vObj.getMatcherOptions());
+		xObj.setValidationRegEx(vObj.getValidationRegEx());
+		xObj.setValidationMessage(vObj.getValidationMessage());
+		xObj.setUiHint(vObj.getUiHint());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setDescription(vObj.getDescription());
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
 		xObj.setRbkeydescription(vObj.getRbKeyDescription());
+		xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
 		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 		return xObj;
 	}
@@ -138,10 +150,14 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		vObj.setExcludesSupported(xObj.getExcludessupported());
 		vObj.setMatcher(xObj.getMatcher());
 		vObj.setMatcherOptions(xObj.getMatcheroptions());
+		vObj.setValidationRegEx(xObj.getValidationRegEx());
+		vObj.setValidationMessage(xObj.getValidationMessage());
+		vObj.setUiHint(xObj.getUiHint());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setDescription(xObj.getDescription());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setRbKeyDescription(xObj.getRbkeydescription());
+		vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
 		
 		XXResourceDef parent = daoMgr.getXXResourceDef().getById(xObj.getParent());
 		String parentName = (parent != null) ? parent.getName() : null;
@@ -185,10 +201,14 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		xObj.setName(vObj.getName());
 		xObj.setEvaluator(vObj.getEvaluator());
 		xObj.setEvaluatoroptions(vObj.getEvaluatorOptions());
+		xObj.setValidationRegEx(vObj.getValidationRegEx());
+		xObj.setValidationMessage(vObj.getValidationMessage());
+		xObj.setUiHint(vObj.getUiHint());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setDescription(vObj.getDescription());
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
 		xObj.setRbkeydescription(vObj.getRbKeyDescription());
+		xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
 		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 		return xObj;
 	}
@@ -198,10 +218,14 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		vObj.setName(xObj.getName());
 		vObj.setEvaluator(xObj.getEvaluator());
 		vObj.setEvaluatorOptions(xObj.getEvaluatoroptions());
+		vObj.setValidationRegEx(xObj.getValidationRegEx());
+		vObj.setValidationMessage(xObj.getValidationMessage());
+		vObj.setUiHint(xObj.getUiHint());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setDescription(xObj.getDescription());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setRbKeyDescription(xObj.getRbkeydescription());
+		vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
 		return vObj;
 	}
 	

@@ -1,50 +1,214 @@
 {
-  "id":2,
-  "name":"hbase",
-  "implClass":"org.apache.ranger.services.hbase.RangerServiceHBase",
-  "label":"HBase",
-  "description":"HBase",
-  "guid":"d6cea1f0-2509-4791-8fc1-7b092399ba3b",
-  "createTime":"20141208-22:50:22.426--0800",
-  "updateTime":"20141208-22:50:22.426--0800",
-  "version":1,
-  "enums":
-  [
-    {
-      "name":"authnType",
-      "elements":
-      [
-        {"name":"simple",  "label":"Simple"},
-        {"name":"kerberos","label":"Kerberos"}
-      ],
-      "defaultIndex":0
-    }
-  ],
-  "configs":
-  [
-    {"name":"username",                           "type":"string",  "subType":"",         "mandatory":true, "label":"Username"},
-    {"name":"password",                           "type":"password","subType":"",         "mandatory":true, "label":"Password"},
-    {"name":"hadoop.security.authentication",     "type":"enum",    "subType":"authnType","mandatory":true, "defaultValue":"simple"},
-    {"name":"hbase.master.kerberos.principal",    "type":"string",  "subType":"",         "mandatory":false,"defaultValue":""},
-    {"name":"hbase.security.authentication",      "type":"enum",    "subType":"authnType","mandatory":true, "defaultValue":"simple"},
-    {"name":"hbase.zookeeper.property.clientPort","type":"int",     "subType":"",         "mandatory":true, "defaultValue":"2181"},
-    {"name":"hbase.zookeeper.quorum",             "type":"string",  "subType":"",         "mandatory":true, "defaultValue":""},
-    {"name":"zookeeper.znode.parent",             "type":"string",  "subType":"",         "mandatory":true, "defaultValue":"/hbase"}
-  ],
-  "resources":
-  [
-    {"name":"table",        "type":"string","level":1,"parent":"",             "mandatory":true,"lookupSupported":true, "recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Table","description":"HBase Table"},
-    {"name":"column-family","type":"string","level":2,"parent":"table",        "mandatory":true,"lookupSupported":true, "recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Column-family","description":"HBase Column-family"},
-    {"name":"column",       "type":"string","level":3,"parent":"column-family","mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"HBase Column","description":"HBase Column"}
-  ],
-  "accessTypes":
-  [
-    {"name":"read",  "label":"Read"},
-    {"name":"write", "label":"Write"},
-    {"name":"create","label":"Create"},
-    {"name":"admin", "label":"Admin","impliedGrants":["read","write","create"]}
-  ],
-  "policyConditions":
-  [
-  ]
+	"id": 2,
+	"name": "hbase",
+	"implClass": "org.apache.ranger.services.hbase.RangerServiceHBase",
+	"label": "HBase",
+	"description": "HBase",
+	"guid": "d6cea1f0-2509-4791-8fc1-7b092399ba3b",
+	"createTime": "20141208-22:50:22.426--0800",
+	"updateTime": "20141208-22:50:22.426--0800",
+	"version": 1,
+	"resources": 
+	[
+		{
+			"name": "table",
+			"type": "string",
+			"level": 1,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "HBase Table",
+			"description": "HBase Table"
+		},
+
+		{
+			"name": "column-family",
+			"type": "string",
+			"level": 2,
+			"parent": "table",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "HBase Column-family",
+			"description": "HBase Column-family"
+		},
+
+		{
+			"name": "column",
+			"type": "string",
+			"level": 3,
+			"parent": "column-family",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "HBase Column",
+			"description": "HBase Column"
+		}
+	],
+
+	"accessTypes": 
+	[
+		{
+			"name": "read",
+			"label": "Read"
+		},
+
+		{
+			"name": "write",
+			"label": "Write"
+		},
+
+		{
+			"name": "create",
+			"label": "Create"
+		},
+
+		{
+			"name": "admin",
+			"label": "Admin",
+			"impliedGrants": 
+			[
+				"read",
+				"write",
+				"create"
+			]
+		}
+	],
+
+	"configs": 
+	[
+		{
+			"name": "username",
+			"type": "string",
+			"subType": "",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Username"
+		},
+
+		{
+			"name": "password",
+			"type": "password",
+			"subType": "",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Password"
+		},
+
+		{
+			"name": "hadoop.security.authentication",
+			"type": "enum",
+			"subType": "authnType",
+			"mandatory": true,
+			"defaultValue": "simple",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		},
+
+		{
+			"name": "hbase.master.kerberos.principal",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"defaultValue": ""
+		},
+
+		{
+			"name": "hbase.security.authentication",
+			"type": "enum",
+			"subType": "authnType",
+			"mandatory": true,
+			"defaultValue": "simple",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		},
+
+		{
+			"name": "hbase.zookeeper.property.clientPort",
+			"type": "int",
+			"subType": "",
+			"mandatory": true,
+			"defaultValue": "2181",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		},
+
+		{
+			"name": "hbase.zookeeper.quorum",
+			"type": "string",
+			"subType": "",
+			"mandatory": true,
+			"defaultValue": "",
+			"validationRegEx":"",
+			"validationMessage": ""
+		},
+
+		{
+			"name": "zookeeper.znode.parent",
+			"type": "string",
+			"subType": "",
+			"mandatory": true,
+			"defaultValue": "/hbase",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		}
+	],
+
+	"enums": 
+	[
+		{
+			"name": "authnType",
+			"elements": 
+			[
+				{
+					"name": "simple",
+					"label": "Simple"
+				},
+
+				{
+					"name": "kerberos",
+					"label": "Kerberos"
+				}
+			],
+
+			"defaultIndex": 0
+		}
+	],
+
+	"contextEnrichers": 
+	[
+		
+	],
+
+	"policyConditions": 
+	[
+		
+	]
 }

@@ -1,60 +1,226 @@
 {
-  "id":1,
-  "name":"hdfs",
-  "implClass":"org.apache.ranger.services.hdfs.RangerServiceHdfs",
-  "label":"HDFS Repository",
-  "description":"HDFS Repository",
-  "guid":"0d047247-bafe-4cf8-8e9b-d5d377284b2d",
-  "createTime":"20141208-22:04:25.233--0800",
-  "updateTime":"20141208-22:04:25.233--0800",
-  "version":1,
-  "enums":
-  [
-    {
-      "name":"authnType",
-      "elements":
-      [
-        {"name":"simple",  "label":"Simple"},
-        {"name":"kerberos","label":"Kerberos"}
-      ],
-      "defaultIndex":0
-    },
-    {
-      "name":"rpcProtection",
-      "elements":
-      [
-        {"name":"authentication","label":"Authentication"},
-        {"name":"integrity",     "label":"Integrity"},
-        {"name":"privacy",       "label":"Privacy"}
-      ],
-      "defaultIndex":0
-    }
-  ],
-  "configs":
-  [
-    {"name":"username",                                "type":"string",  "subType":"",             "mandatory":true, "label":"Username"},
-    {"name":"password",                                "type":"password","subType":"",             "mandatory":true, "label":"Password"},
-    {"name":"fs.default.name",                         "type":"string",  "subType":"",             "mandatory":true, "label":"Namenode URL"},
-    {"name":"hadoop.security.authorization",           "type":"bool",    "subType":"YesTrue:NoFalse",    "mandatory":true, "defaultValue":"false"},
-    {"name":"hadoop.security.authentication",          "type":"enum",    "subType":"authnType",    "mandatory":true, "defaultValue":"simple"},
-    {"name":"hadoop.security.auth_to_local",           "type":"string",  "subType":"",             "mandatory":false},
-    {"name":"dfs.datanode.kerberos.principal",         "type":"string",  "subType":"",             "mandatory":false},
-    {"name":"dfs.namenode.kerberos.principal",          "type":"string", "subType":"",             "mandatory":false},
-    {"name":"dfs.secondary.namenode.kerberos.principal","type":"string", "subType":"",             "mandatory":false},
-    {"name":"hadoop.rpc.protection",                    "type":"enum",   "subType":"rpcProtection","mandatory":false,"defaultValue":"authentication"},
-    {"name":"certificate.cn",                           "type":"string", "subType":"",             "mandatory":false,"label":"Common Name for Certificate"}
-  ],
-  "resources":
-  [
-    {"name":"path","type":"path","level":1,"parent":"","mandatory":true,"lookupSupported":true,"recursiveSupported":true,"excludesSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Resource Path","description":"HDFS file or directory path"}
-  ],
-  "accessTypes":
-  [
-    {"name":"read","label":"Read"},
-    {"name":"write","label":"Write"},
-    {"name":"execute","label":"Execute"}
-  ],
-  "policyConditions":
-  [
-  ]
+	"id": 1,
+	"name": "hdfs",
+	"implClass": "org.apache.ranger.services.hdfs.RangerServiceHdfs",
+	"label": "HDFS Repository",
+	"description": "HDFS Repository",
+	"guid": "0d047247-bafe-4cf8-8e9b-d5d377284b2d",
+	"createTime": "20141208-22:04:25.233--0800",
+	"updateTime": "20141208-22:04:25.233--0800",
+	"version": 1,
+	"resources": 
+	[
+		{
+			"name": "path",
+			"type": "path",
+			"level": 1,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": true,
+			"excludesSupported": false,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Resource Path",
+			"description": "HDFS file or directory path"
+		}
+	],
+
+	"accessTypes": 
+	[
+		{
+			"name": "read",
+			"label": "Read"
+		},
+
+		{
+			"name": "write",
+			"label": "Write"
+		},
+
+		{
+			"name": "execute",
+			"label": "Execute"
+		}
+	],
+
+	"configs": 
+	[
+		{
+			"name": "username",
+			"type": "string",
+			"subType": "",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Username"
+		},
+
+		{
+			"name": "password",
+			"type": "password",
+			"subType": "",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Password"
+		},
+
+		{
+			"name": "fs.default.name",
+			"type": "string",
+			"subType": "",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Namenode URL"
+		},
+
+		{
+			"name": "hadoop.security.authorization",
+			"type": "bool",
+			"subType": "YesTrue:NoFalse",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Authorization Enabled",
+			"defaultValue": "false"
+		},
+
+		{
+			"name": "hadoop.security.authentication",
+			"type": "enum",
+			"subType": "authnType",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Authentication Type",
+			"defaultValue": "simple"
+		},
+
+		{
+			"name": "hadoop.security.auth_to_local",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		},
+
+		{
+			"name": "dfs.datanode.kerberos.principal",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		},
+
+		{
+			"name": "dfs.namenode.kerberos.principal",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		},
+
+		{
+			"name": "dfs.secondary.namenode.kerberos.principal",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		},
+
+		{
+			"name": "hadoop.rpc.protection",
+			"type": "enum",
+			"subType": "rpcProtection",
+			"mandatory": false,
+			"label": "RPC Protection Type",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"defaultValue": "authentication"
+		},
+
+		{
+			"name": "certificate.cn",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Common Name for Certificate"
+		}
+	],
+
+	"enums": 
+	[
+		{
+			"name": "authnType",
+			"elements": 
+			[
+				{
+					"name": "simple",
+					"label": "Simple"
+				},
+
+				{
+					"name": "kerberos",
+					"label": "Kerberos"
+				}
+			],
+
+			"defaultIndex": 0
+		},
+
+		{
+			"name": "rpcProtection",
+			"elements": 
+			[
+				{
+					"name": "authentication",
+					"label": "Authentication"
+				},
+
+				{
+					"name": "integrity",
+					"label": "Integrity"
+				},
+
+				{
+					"name": "privacy",
+					"label": "Privacy"
+				}
+			],
+
+			"defaultIndex": 0
+		}
+	],
+
+	"contextEnrichers": 
+	[
+		
+	],
+
+	"policyConditions": 
+	[
+		
+	]
 }

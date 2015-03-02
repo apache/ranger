@@ -21,6 +21,7 @@ package org.apache.ranger.entity;
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
 
+
 @Entity
 @Cacheable
 @XmlRootElement
@@ -77,6 +78,33 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	protected String evaluatorOptions;
 
 	/**
+	 * validationRegEx of the XXPolicyConditionDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "validation_reg_ex")
+	protected String validationRegEx;
+
+	/**
+	 * validationMessage of the XXPolicyConditionDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "validation_message")
+	protected String validationMessage;
+
+	/**
+	 * uiHint of the XXPolicyConditionDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "ui_hint")
+	protected String uiHint;
+
+	/**
 	 * label of the XXPolicyConditionDef
 	 * <ul>
 	 * </ul>
@@ -111,6 +139,15 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	 */
 	@Column(name = "rb_key_description")
 	protected String rbKeyDescription;
+
+	/**
+	 * rbKeyValidationMessage of the XXPolicyConditionDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "rb_key_validation_message")
+	protected String rbKeyValidationMessage;
 
 	/**
 	 * order of the XXPolicyConditionDef
@@ -222,6 +259,48 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	}
 
 	/**
+	 * @return the validationRegEx
+	 */
+	public String getValidationRegEx() {
+		return validationRegEx;
+	}
+
+	/**
+	 * @param validationRegEx the validationRegEx to set
+	 */
+	public void setValidationRegEx(String validationRegEx) {
+		this.validationRegEx = validationRegEx;
+	}
+
+	/**
+	 * @return the validationMessage
+	 */
+	public String getValidationMessage() {
+		return validationMessage;
+	}
+
+	/**
+	 * @param validationMessage the validationMessage to set
+	 */
+	public void setValidationMessage(String validationMessage) {
+		this.validationMessage = validationMessage;
+	}
+
+	/**
+	 * @return the uiHint
+	 */
+	public String getUiHint() {
+		return uiHint;
+	}
+
+	/**
+	 * @param uiHint the uiHint to set
+	 */
+	public void setUiHint(String uiHint) {
+		this.uiHint = uiHint;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> label</b> . You
 	 * cannot set null to the attribute.
 	 * 
@@ -302,6 +381,20 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	}
 
 	/**
+	 * @return the rbKeyValidationMessage
+	 */
+	public String getRbKeyValidationMessage() {
+		return rbKeyValidationMessage;
+	}
+
+	/**
+	 * @param rbKeyValidationMessage the rbKeyValidationMessage to set
+	 */
+	public void setRbKeyValidationMessage(String rbKeyValidationMessage) {
+		this.rbKeyValidationMessage = rbKeyValidationMessage;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
 	 * 
@@ -376,6 +469,14 @@ public class XXPolicyConditionDef extends XXDBBase implements
 		} else if (!id.equals(other.id)) {
 			return false;
 		}
+
+		if(!equals(validationRegEx, other.validationRegEx) ||
+		   !equals(validationMessage, other.validationMessage) ||
+		   !equals(uiHint, other.uiHint) ||
+		   !equals(rbKeyValidationMessage, other.rbKeyValidationMessage)) {
+			return false;
+		}
+
 		if (label == null) {
 			if (other.label != null) {
 				return false;
@@ -424,7 +525,11 @@ public class XXPolicyConditionDef extends XXDBBase implements
 		return "XXPolicyConditionDef [id=" + id + ", defId=" + defId
 				+ ", name=" + name + ", evaluator=" + evaluator
 				+ ", evaluatorOptions=" + evaluatorOptions + ", label=" + label
+				+ ", validationRegEx=" + validationRegEx
+				+ ", validationMessage=" + validationMessage
+				+ ", uiHint=" + uiHint
 				+ ", description=" + description + ", rbKeyLabel=" + rbKeyLabel
+				+ ", rbKeyValidationMessage=" + rbKeyValidationMessage
 				+ ", rbKeyDescription=" + rbKeyDescription + ", order=" + order
 				+ "]";
 	}

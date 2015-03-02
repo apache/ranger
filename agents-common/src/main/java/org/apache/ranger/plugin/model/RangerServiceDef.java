@@ -629,33 +629,39 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerServiceConfigDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String  name             = null;
-		private String  type             = null;
-		private String  subType          = null;
-		private Boolean mandatory        = null;
-		private String  defaultValue     = null;
-		private String  validationRegEx  = null;
-		private String  label            = null;
-		private String  description      = null;
-		private String  rbKeyLabel       = null;
-		private String  rbKeyDescription = null;
+		private String  name              = null;
+		private String  type              = null;
+		private String  subType           = null;
+		private Boolean mandatory         = null;
+		private String  defaultValue      = null;
+		private String  validationRegEx   = null;
+		private String  validationMessage = null;
+		private String  uiHint            = null;
+		private String  label             = null;
+		private String  description       = null;
+		private String  rbKeyLabel        = null;
+		private String  rbKeyDescription  = null;
+		private String  rbKeyValidationMessage = null;
 
 
 		public RangerServiceConfigDef() {
-			this(null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerServiceConfigDef(String name, String type, String subType, Boolean mandatory, String defaultValue, String validationRegEx, String label, String description, String rbKeyLabel, String rbKeyDescription) {
+		public RangerServiceConfigDef(String name, String type, String subType, Boolean mandatory, String defaultValue, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
 			setName(name);
 			setType(type);
 			setSubType(subType);
 			setMandatory(mandatory);
 			setDefaultValue(defaultValue);
 			setValidationRegEx(validationRegEx);
+			setValidationMessage(validationMessage);
+			setUiHint(uiHint);
 			setLabel(label);
 			setDescription(description);
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
+			setRbKeyValidationMessage(rbKeyValidationMessage);
 		}
 
 		/**
@@ -743,6 +749,34 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
+		 * @return the validationMessage
+		 */
+		public String getValidationMessage() {
+			return validationMessage;
+		}
+
+		/**
+		 * @param validationMessage the validationMessage to set
+		 */
+		public void setValidationMessage(String validationMessage) {
+			this.validationMessage = validationMessage;
+		}
+
+		/**
+		 * @return the uiHint
+		 */
+		public String getUiHint() {
+			return uiHint;
+		}
+
+		/**
+		 * @param uiHint the uiHint to set
+		 */
+		public void setUiHint(String uiHint) {
+			this.uiHint = uiHint;
+		}
+
+		/**
 		 * @return the label
 		 */
 		public String getLabel() {
@@ -798,6 +832,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.rbKeyDescription = rbKeyDescription;
 		}
 
+		/**
+		 * @return the rbKeyValidationMessage
+		 */
+		public String getRbKeyValidationMessage() {
+			return rbKeyValidationMessage;
+		}
+
+		/**
+		 * @param rbKeyValidationMessage the rbKeyValidationMessage to set
+		 */
+		public void setRbKeyValidationMessage(String rbKeyValidationMessage) {
+			this.rbKeyValidationMessage = rbKeyValidationMessage;
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -815,10 +863,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("mandatory={").append(mandatory).append("} ");
 			sb.append("defaultValue={").append(defaultValue).append("} ");
 			sb.append("validationRegEx={").append(validationRegEx).append("} ");
+			sb.append("validationMessage={").append(validationMessage).append("} ");
+			sb.append("uiHint={").append(uiHint).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
 			sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
+			sb.append("rbKeyValidationMessage={").append(rbKeyValidationMessage).append("} ");
 			sb.append("}");
 
 			return sb;
@@ -840,17 +891,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private String  matcher            = null;
 		private String  matcherOptions     = null;
 		private String  validationRegEx    = null;
+		private String  validationMessage  = null;
+		private String  uiHint             = null;
 		private String  label              = null;
 		private String  description        = null;
 		private String  rbKeyLabel         = null;
 		private String  rbKeyDescription   = null;
+		private String rbKeyValidationMessage = null;
 
 
 		public RangerResourceDef() {
-			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String validationRegEx, String label, String description, String rbKeyLabel, String rbKeyDescription) {
+		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
 			setName(name);
 			setType(type);
 			setLevel(level);
@@ -862,10 +916,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setMatcher(matcher);
 			setMatcher(matcherOptions);
 			setValidationRegEx(validationRegEx);
+			setValidationMessage(validationMessage);
+			setUiHint(uiHint);
 			setLabel(label);
 			setDescription(description);
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
+			setRbKeyValidationMessage(rbKeyValidationMessage);
 		}
 
 		/**
@@ -1023,6 +1080,34 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
+		 * @return the validationMessage
+		 */
+		public String getValidationMessage() {
+			return validationMessage;
+		}
+
+		/**
+		 * @param validationMessage the validationMessage to set
+		 */
+		public void setValidationMessage(String validationMessage) {
+			this.validationMessage = validationMessage;
+		}
+
+		/**
+		 * @return the uiHint
+		 */
+		public String getUiHint() {
+			return uiHint;
+		}
+
+		/**
+		 * @param uiHint the uiHint to set
+		 */
+		public void setUiHint(String uiHint) {
+			this.uiHint = uiHint;
+		}
+
+		/**
 		 * @return the label
 		 */
 		public String getLabel() {
@@ -1078,6 +1163,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.rbKeyDescription = rbKeyDescription;
 		}
 
+		/**
+		 * @return the rbKeyValidationMessage
+		 */
+		public String getRbKeyValidationMessage() {
+			return rbKeyValidationMessage;
+		}
+
+		/**
+		 * @param rbKeyValidationMessage the rbKeyValidationMessage to set
+		 */
+		public void setRbKeyValidationMessage(String rbKeyValidationMessage) {
+			this.rbKeyValidationMessage = rbKeyValidationMessage;
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -1100,10 +1199,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("matcher={").append(matcher).append("} ");
 			sb.append("matcherOptions={").append(matcherOptions).append("} ");
 			sb.append("validationRegEx={").append(validationRegEx).append("} ");
+			sb.append("validationMessage={").append(validationMessage).append("} ");
+			sb.append("uiHint={").append(uiHint).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
 			sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
+			sb.append("rbKeyValidationMessage={").append(rbKeyValidationMessage).append("} ");
 			sb.append("}");
 
 			return sb;
@@ -1236,40 +1338,39 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerPolicyConditionDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String name             = null;
-		private String evaluator        = null;
-		private String evaluatorOptions = null;
-		private String validationRegEx  = null;
-		private String label            = null;
-		private String description      = null;
-		private String rbKeyLabel       = null;
-		private String rbKeyDescription = null;
+		private String name              = null;
+		private String evaluator         = null;
+		private String evaluatorOptions  = null;
+		private String validationRegEx   = null;
+		private String validationMessage = null;
+		private String uiHint            = null;
+		private String label             = null;
+		private String description       = null;
+		private String rbKeyLabel        = null;
+		private String rbKeyDescription  = null;
+		private String rbKeyValidationMessage = null;
 
 
 		public RangerPolicyConditionDef() {
-			this(null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null);
 		}
 
 		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions) {
-			this(name, evaluator, evaluatorOptions, null, null, null, null);
+			this(name, evaluator, evaluatorOptions, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions, String label) {
-			this(name, evaluator, evaluatorOptions, label, null, null, null);
-		}
-
-		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions, String label, String description) {
-			this(name, evaluator, evaluatorOptions, label, description, null, null);
-		}
-
-		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions, String label, String description, String rbKeyLabel, String rbKeyDescription) {
+		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions, String validationRegEx, String vaidationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
 			setName(name);
 			setEvaluator(evaluator);
 			setEvaluatorOptions(evaluatorOptions);
+			setValidationRegEx(validationRegEx);
+			setValidationMessage(validationMessage);
+			setUiHint(uiHint);
 			setLabel(label);
 			setDescription(description);
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
+			setRbKeyValidationMessage(rbKeyValidationMessage);
 		}
 
 		/**
@@ -1329,6 +1430,34 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
+		 * @return the validationMessage
+		 */
+		public String getValidationMessage() {
+			return validationMessage;
+		}
+
+		/**
+		 * @param validationMessage the validationMessage to set
+		 */
+		public void setValidationMessage(String validationMessage) {
+			this.validationMessage = validationMessage;
+		}
+
+		/**
+		 * @return the uiHint
+		 */
+		public String getUiHint() {
+			return uiHint;
+		}
+
+		/**
+		 * @param uiHint the uiHint to set
+		 */
+		public void setUiHint(String uiHint) {
+			this.uiHint = uiHint;
+		}
+
+		/**
 		 * @return the label
 		 */
 		public String getLabel() {
@@ -1384,6 +1513,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.rbKeyDescription = rbKeyDescription;
 		}
 
+		/**
+		 * @return the rbKeyValidationMessage
+		 */
+		public String getRbKeyValidationMessage() {
+			return rbKeyValidationMessage;
+		}
+
+		/**
+		 * @param rbKeyValidationMessage the rbKeyValidationMessage to set
+		 */
+		public void setRbKeyValidationMessage(String rbKeyValidationMessage) {
+			this.rbKeyValidationMessage = rbKeyValidationMessage;
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -1399,10 +1542,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("evaluator={").append(evaluator).append("} ");
 			sb.append("evaluatorOptions={").append(evaluatorOptions).append("} ");
 			sb.append("validationRegEx={").append(validationRegEx).append("} ");
+			sb.append("validationMessage={").append(validationMessage).append("} ");
+			sb.append("uiHint={").append(uiHint).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
 			sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
+			sb.append("rbKeyValidationMessage={").append(rbKeyValidationMessage).append("} ");
 			sb.append("}");
 
 			return sb;

@@ -1,45 +1,162 @@
 {
-  "id":6,
-  "name":"storm",
-  "implClass":"org.apache.ranger.services.storm.RangerServiceStorm",
-  "label":"Storm",
-  "description":"Storm",
-  "guid":"2a60f427-edcf-4e20-834c-a9a267b5b963",
-  "createTime":"20141208-22:55:47.095--0800",
-  "updateTime":"20141208-22:55:47.095--0800",
-  "version":1,
-  "enums":
-  [
-  ],
-  "configs":
-  [
-    {"name":"username",      "type":"string",  "mandatory":true, "label":"Username"},
-    {"name":"password",      "type":"password","mandatory":true, "label":"Password"},
-    {"name":"nimbus.url",    "type":"string",  "mandatory":true, "label":"Nimbus URL","defaultValue":""},
-    {"name":"certificate.cn","type":"string",  "mandatory":false,"label":"Common Name for Certificate"}
-  ],
-  "resources":
-  [
-    {"name":"topology","type":"string","level":1,"mandatory":true,"lookupSupported":true,"recursiveSupported":false,"excludesSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":"wildCard=true;ignoreCase=true","label":"Storm Topology","description":"Storm Topology"}
-  ],
-  "accessTypes":
-  [
-    {"name":"submitTopology",      "label":"Submit Topology"},
-    {"name":"fileUpload",          "label":"File Upload"},
-    {"name":"getNimbusConf",      "label":"Get Nimbus Conf"},
-    {"name":"getClusterInfo",     "label":"Get Cluster Info"},
-    {"name":"fileDownload",        "label":"File Download"},
-    {"name":"killTopology",        "label":"Kill Topology"},
-    {"name":"rebalance",            "label":"Rebalance"},
-    {"name":"activate",             "label":"Activate"},
-    {"name":"deactivate",           "label":"Deactivate"},
-    {"name":"getTopologyConf",    "label":"Get Topology Conf"},
-    {"name":"getTopology",         "label":"Get Topology"},
-    {"name":"getUserTopology",    "label":"Get User Topology"},
-    {"name":"getTopologyInfo",    "label":"Get Topology Info"},
-    {"name":"uploadNewCredentials","label":"Upload New Credential"}
-  ],
-  "policyConditions":
-  [
-  ]
+	"id": 6,
+	"name": "storm",
+	"implClass": "org.apache.ranger.services.storm.RangerServiceStorm",
+	"label": "Storm",
+	"description": "Storm",
+	"guid": "2a60f427-edcf-4e20-834c-a9a267b5b963",
+	"createTime": "20141208-22:55:47.095--0800",
+	"updateTime": "20141208-22:55:47.095--0800",
+	"version": 1,
+	"resources": 
+	[
+		{
+			"name": "topology",
+			"type": "string",
+			"level": 1,
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Storm Topology",
+			"description": "Storm Topology"
+		}
+	],
+
+	"accessTypes": 
+	[
+		{
+			"name": "submitTopology",
+			"label": "Submit Topology"
+		},
+
+		{
+			"name": "fileUpload",
+			"label": "File Upload"
+		},
+
+		{
+			"name": "getNimbusConf",
+			"label": "Get Nimbus Conf"
+		},
+
+		{
+			"name": "getClusterInfo",
+			"label": "Get Cluster Info"
+		},
+
+		{
+			"name": "fileDownload",
+			"label": "File Download"
+		},
+
+		{
+			"name": "killTopology",
+			"label": "Kill Topology"
+		},
+
+		{
+			"name": "rebalance",
+			"label": "Rebalance"
+		},
+
+		{
+			"name": "activate",
+			"label": "Activate"
+		},
+
+		{
+			"name": "deactivate",
+			"label": "Deactivate"
+		},
+
+		{
+			"name": "getTopologyConf",
+			"label": "Get Topology Conf"
+		},
+
+		{
+			"name": "getTopology",
+			"label": "Get Topology"
+		},
+
+		{
+			"name": "getUserTopology",
+			"label": "Get User Topology"
+		},
+
+		{
+			"name": "getTopologyInfo",
+			"label": "Get Topology Info"
+		},
+
+		{
+			"name": "uploadNewCredentials",
+			"label": "Upload New Credential"
+		}
+	],
+
+	"configs": 
+	[
+		{
+			"name": "username",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Username"
+		},
+
+		{
+			"name": "password",
+			"type": "password",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Password"
+		},
+
+		{
+			"name": "nimbus.url",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Nimbus URL",
+			"defaultValue": ""
+		},
+
+		{
+			"name": "certificate.cn",
+			"type": "string",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Common Name for Certificate"
+		}
+	],
+
+	"enums": 
+	[
+		
+	],
+
+	"contextEnrichers": 
+	[
+		
+	],
+
+	"policyConditions": 
+	[
+		
+	]
 }
