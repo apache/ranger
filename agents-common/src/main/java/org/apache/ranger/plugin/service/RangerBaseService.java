@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -29,11 +30,18 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 public abstract class RangerBaseService {
 	private RangerServiceDef serviceDef;
 	private RangerService    service;
-
+	
+	protected Map<String, String>   configs;
+	protected String 			    serviceName;
+	protected String 				serviceType;
+	
 
 	public void init(RangerServiceDef serviceDef, RangerService service) {
-		this.serviceDef = serviceDef;
-		this.service    = service;
+		this.serviceDef    = serviceDef;
+		this.service       = service;
+		this.configs	   = service.getConfigs();
+		this.serviceName   = service.getName();
+		this.serviceType   = service.getType();
 	}
 
 	/**
@@ -50,7 +58,35 @@ public abstract class RangerBaseService {
 		return service;
 	}
 
+	public Map<String, String> getConfigs() {
+		return configs;
+	}
+
+	public void setConfigs(Map<String, String> configs) {
+		this.configs = configs;
+	}
+
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	public String getServiceType() {
+		return serviceType;
+	}
+
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+		
 	public abstract HashMap<String, Object> validateConfig() throws Exception;
 	
 	public abstract List<String> lookupResource(ResourceLookupContext context) throws Exception;
+	
+	
+	
+	
 }

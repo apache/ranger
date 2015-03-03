@@ -55,7 +55,7 @@ public class HBaseResourceMgr {
 		return ret;
 	}
 	
-	public static List<String> getHBaseResource(String serviceName, Map<String, String> configs,ResourceLookupContext context) throws Exception{
+	public static List<String> getHBaseResource(String serviceName, String serviceType, Map<String, String> configs,ResourceLookupContext context) throws Exception{
 		
 		String 					  userInput 		= context.getUserInput();
 		String 					  resource		    = context.getResourceName();
@@ -95,7 +95,7 @@ public class HBaseResourceMgr {
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \""+ userInput  + "\" configs: " + configs + " context: "  + context) ;
 				}
-				final HBaseClient hBaseClient = new HBaseConnectionMgr().getHBaseConnection(serviceName,configs);
+				final HBaseClient hBaseClient = new HBaseConnectionMgr().getHBaseConnection(serviceName,serviceType,configs);
 				Callable<List<String>> callableObj = null;
 				
 				if ( hBaseClient != null) {

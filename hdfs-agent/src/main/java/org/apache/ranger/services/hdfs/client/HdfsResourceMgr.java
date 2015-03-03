@@ -55,7 +55,7 @@ public class HdfsResourceMgr {
 		return ret;
 	}
 	
-	public static List<String> getHdfsResources(String serviceName, Map<String, String> configs,ResourceLookupContext context) throws Exception {
+	public static List<String> getHdfsResources(String serviceName, String serviceType, Map<String, String> configs,ResourceLookupContext context) throws Exception {
 		
 		List<String> resultList 			  = null;
 		String userInput 					  = context.getUserInput();
@@ -76,7 +76,7 @@ public class HdfsResourceMgr {
 				}
 				
 				String wildCardToMatch;
-				final HdfsClient hdfsClient = new HdfsConnectionMgr().getHadoopConnection(serviceName, configs);
+				final HdfsClient hdfsClient = new HdfsConnectionMgr().getHadoopConnection(serviceName, serviceType, configs);
 				if (hdfsClient != null) {
 					Integer lastIndex = userInput.lastIndexOf("/");
 					if (lastIndex < 0) {

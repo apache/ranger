@@ -44,19 +44,9 @@ public class HBaseConnectionMgr {
 		repoConnectStatusMap = new HashMap<String, Boolean>();
 	}
 
-	public HBaseClient getHBaseConnection(final String serviceName, final Map<String,String> configs) {
+	public HBaseClient getHBaseConnection(final String serviceName, final String serviceType, final Map<String,String> configs) {
 		
 		HBaseClient client = null;
-		String serviceType = null;
-		try {
-			serviceType = ServiceStoreFactory
-									.instance()
-									.getServiceStore()
-									.getServiceByName(serviceName)
-									.getType();
-		} catch (Exception ex) {
-			LOG.error("Service could not be found for the Service Name : " + serviceName , ex);
-		}
 		if (serviceType != null) {
 			// get it from the cache
 			synchronized (hbaseConnectionCache) {
@@ -122,7 +112,7 @@ public class HBaseConnectionMgr {
 				
 				  if(testConnect == null){
 						hbaseConnectionCache.remove(serviceType);
-						client = getHBaseConnection(serviceName,configs);
+						client = getHBaseConnection(serviceName,serviceType,configs);
 				  }
 			 }
 			 repoConnectStatusMap.put(serviceType, true);

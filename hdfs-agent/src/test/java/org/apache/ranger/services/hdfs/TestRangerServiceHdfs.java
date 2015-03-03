@@ -59,7 +59,6 @@ public class TestRangerServiceHdfs {
 		svc   	 = new RangerService(sdName, serviceName, "unit test hdfs resource lookup and validateConfig",configs);
 		svcHdfs = new RangerServiceHdfs();
 		svcHdfs.init(sd, svc);
-		svcHdfs.init();
 	}
 	
 	@Test

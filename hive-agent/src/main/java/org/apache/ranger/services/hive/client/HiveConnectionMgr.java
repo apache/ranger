@@ -45,18 +45,8 @@ public class HiveConnectionMgr {
 	 }
 	 
 
-	 public HiveClient getHiveConnection(final String serviceName, final Map<String,String> configs) {
+	 public HiveClient getHiveConnection(final String serviceName, final String serviceType, final Map<String,String> configs) {
 			HiveClient hiveClient  = null;
-			String 	   serviceType = null;
-			try {
-				serviceType = ServiceStoreFactory
-										.instance()
-										.getServiceStore()
-										.getServiceByName(serviceName)
-										.getType();
-			} catch (Exception ex) {
-				LOG.error("Service could not be found for the Service Name : " + serviceName , ex);
-			}
 			
 			if (serviceType != null) {
 				// get it from the cache
@@ -88,7 +78,7 @@ public class HiveConnectionMgr {
 							List<String> testConnect = hiveClient.getDatabaseList("*",null);
 						} catch(Exception e) {
 							hiveConnectionCache.remove(serviceType);
-							hiveClient = getHiveConnection(serviceName,configs);
+							hiveClient = getHiveConnection(serviceName,serviceType,configs);
 						}
 					}
 				}

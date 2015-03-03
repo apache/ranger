@@ -44,18 +44,8 @@ public class HdfsConnectionMgr {
 	}
 	
 	
-	public HdfsClient getHadoopConnection(final String serviceName, final Map<String,String> configs) {
+	public HdfsClient getHadoopConnection(final String serviceName, final String serviceType, final Map<String,String> configs) {
 		HdfsClient hdfsClient = null;
-		String serviceType 	  = null;
-		try {
-			serviceType = ServiceStoreFactory
-									.instance()
-									.getServiceStore()
-									.getServiceByName(serviceName)
-									.getType();
-		} catch (Exception ex) {
-			LOG.error("Service could not be found for the Service Name : " + serviceName , ex);
-		}
 		if (serviceType != null) {
 			// get it from the cache
 			synchronized (hdfdsConnectionCache) {
@@ -98,7 +88,7 @@ public class HdfsConnectionMgr {
 					List<String> testConnect = hdfsClient.listFiles("/", "*",null);
 					if(testConnect == null){
 						hdfdsConnectionCache.put(serviceType, hdfsClient);
-						hdfsClient = getHadoopConnection(serviceName,configs);
+						hdfsClient = getHadoopConnection(serviceName,serviceType,configs);
 					}
 				}
 			}

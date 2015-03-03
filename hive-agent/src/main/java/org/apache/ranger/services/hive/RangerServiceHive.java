@@ -35,9 +35,6 @@ public class RangerServiceHive extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceHive.class);
 	
-	Map<String, String> configs;
-	String			    service;
-	
 	public RangerServiceHive() {
 		super();
 	}
@@ -45,18 +42,18 @@ public class RangerServiceHive extends RangerBaseService {
 	@Override
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		super.init(serviceDef, service);
-		init();
 	}
 
 	@Override
 	public HashMap<String,Object> validateConfig() throws Exception {
 		HashMap<String, Object> ret = new HashMap<String, Object>();
+		String 	serviceName  	    = getServiceName();
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceHive.validateConfig Service: (" + service + " )");
+			LOG.debug("==> RangerServiceHive.validateConfig Service: (" + serviceName + " )");
 		}
 		if ( configs != null) {
 			try  {
-				ret = HiveResourceMgr.testConnection(service, configs);
+				ret = HiveResourceMgr.testConnection(serviceName, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceHive.validateConfig Error:" + e);
 				throw e;
@@ -71,13 +68,16 @@ public class RangerServiceHive extends RangerBaseService {
 	@Override
 	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
 		
-		List<String> ret = new ArrayList<String>();
+		List<String> ret 		   = new ArrayList<String>();
+		String 	serviceName  	   = getServiceName();
+		String	serviceType		   = getServiceType();
+		Map<String,String> configs = getConfigs();
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceHive.lookupResource Context: (" + context + ")");
 		}
 		if (context != null) {
 			try {
-				ret  = HiveResourceMgr.getHiveResources(service, configs,context);
+				ret  = HiveResourceMgr.getHiveResources(serviceName, serviceType, configs,context);
 			} catch (Exception e) {
 			  LOG.error( "<==RangerServiceHive.lookupResource Error : " + e);
 			  throw e;
@@ -88,11 +88,5 @@ public class RangerServiceHive extends RangerBaseService {
 		}
 		return ret;
 	}
-	
-	public void init() {
-		service  = getService().getName();
-		configs  = getService().getConfigs();
-	}
-	
 }
 

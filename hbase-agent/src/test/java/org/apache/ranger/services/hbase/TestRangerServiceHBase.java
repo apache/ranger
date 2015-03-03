@@ -61,7 +61,6 @@ public class TestRangerServiceHBase {
 		svc   	 = new RangerService(sdName, serviceName, "unit test hbase resource lookup and validateConfig", configs);
 		svcHBase = new RangerServiceHBase();
 		svcHBase.init(sd, svc);
-		svcHBase.init();
 	}
 	
 	@Test

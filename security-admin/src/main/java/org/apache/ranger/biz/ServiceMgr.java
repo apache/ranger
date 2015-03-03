@@ -29,7 +29,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.plugin.store.ServiceStoreFactory;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.stereotype.Component;
@@ -40,9 +40,10 @@ public class ServiceMgr {
 	private static final Log LOG = LogFactory.getLog(ServiceMgr.class);
 	
 	
-	public List<String> lookupResource(String serviceName, ResourceLookupContext context ) throws Exception {
+	public List<String> lookupResource(String serviceName, ResourceLookupContext context, ServiceStore svcStore) throws Exception {
 		List<String> 	  ret = null;
-		RangerBaseService svc = getRangerServiceByName(serviceName);
+		
+		RangerBaseService svc = getRangerServiceByName(serviceName, svcStore);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceMgr.lookupResource for Service: (" + svc + "Context: " + context + ")");
@@ -64,10 +65,10 @@ public class ServiceMgr {
 		return ret;
 	}
 	
-	public VXResponse validateConfig(RangerService service) throws Exception {
+	public VXResponse validateConfig(RangerService service, ServiceStore svcStore) throws Exception {
 		
 		VXResponse ret 			= new VXResponse();
-		RangerBaseService svc 	= getRangerServiceByService(service);
+		RangerBaseService svc 	= getRangerServiceByService(service, svcStore);
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceMgr.validateConfig for Service: (" + svc + ")");
@@ -91,29 +92,35 @@ public class ServiceMgr {
 	}
 
 	
-  public RangerBaseService getRangerServiceByName(String serviceName) throws Exception{
-
-		RangerService service = ServiceStoreFactory.instance().getServiceStore().getServiceByName(serviceName);
-
-		RangerBaseService svc = getRangerServiceByService(service);
-		
+  public RangerBaseService getRangerServiceByName(String serviceName, ServiceStore svcStore) throws Exception{
+	    RangerBaseService   svc 	= null;
+	   	RangerService     	service = svcStore.getServiceByName(serviceName);
+	  	
+	  	if ( service != null) {
+	  		svc = getRangerServiceByService(service, svcStore);
+	  	}	
 		return svc;
-		
 	}
 	
-	public RangerBaseService getRangerServiceByService(RangerService service) throws Exception{
+	public RangerBaseService getRangerServiceByService(RangerService service, ServiceStore svcStore) throws Exception{
 		
-		String serviceType 			= service.getType();
+		RangerServiceDef 	serviceDef 	= null;
+		RangerBaseService	ret 		= null;
 		
-		RangerServiceDef serviceDef = ServiceStoreFactory.instance().getServiceStore().getServiceDefByName(serviceType);
+		String	serviceType = service.getType();
 		
-		RangerBaseService  ret 		= (RangerBaseService) Class.forName(serviceDef.getImplClass()).newInstance();
-		
+		if (serviceType != null) {
+			serviceDef  = svcStore.getServiceDefByName(serviceType);
+			if ( serviceDef != null) {	
+				ret  = (RangerBaseService) Class.forName(serviceDef.getImplClass()).newInstance();
+			}
+			
+			ret.init(serviceDef, service);	
+		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceMgr.getRangerServiceByService ServiceType: " + serviceType + "ServiceDef: " + serviceDef + "Service Class: " + serviceDef.getImplClass());
-		}
-		
-		ret.init(serviceDef, service);
+		}		
 		
 		return ret;
 	}

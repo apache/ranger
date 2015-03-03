@@ -59,7 +59,7 @@ public class HiveResourceMgr {
 		return ret;
 	}
 
-	public static List<String> getHiveResources(String serviceName, Map<String, String> configs,ResourceLookupContext context) throws Exception  {
+	public static List<String> getHiveResources(String serviceName, String serviceType, Map<String, String> configs,ResourceLookupContext context) throws Exception  {
 		
 		String 					  	userInput    = context.getUserInput();
 		String 					  	resource	 = context.getResourceName();
@@ -112,7 +112,7 @@ public class HiveResourceMgr {
 																				  + tableList + " columnList: " + columnList ) ;
 				}
 				
-				final HiveClient hiveClient = new HiveConnectionMgr().getHiveConnection(serviceName, configs);
+				final HiveClient hiveClient = new HiveConnectionMgr().getHiveConnection(serviceName, serviceType, configs);
 				
 				Callable<List<String>> callableObj = null;
 				final String finalDbName;

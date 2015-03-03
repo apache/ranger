@@ -60,7 +60,6 @@ public class TestRangerServiceHive {
 		svc   	= new RangerService(sdName, serviceName, "unit test hive resource lookup and validateConfig", configs);
 		svcHive = new RangerServiceHive();
 		svcHive.init(sd, svc);
-		svcHive.init();
 	}
 	
 	@Test

@@ -35,9 +35,6 @@ public class RangerServiceKnox extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceKnox.class);
 	
-	Map<String, String> configs;
-	String			    service;
-	
 	public RangerServiceKnox() {
 		super();
 	}
@@ -45,18 +42,18 @@ public class RangerServiceKnox extends RangerBaseService {
 	@Override
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		super.init(serviceDef, service);
-		init();
 	}
 
 	@Override
 	public HashMap<String,Object> validateConfig() throws Exception {
 		HashMap<String, Object> ret = new HashMap<String, Object>();
+		String 	serviceName  	    = getServiceName();
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKnox.validateConfig Service: (" + service + " )");
+			LOG.debug("==> RangerServiceKnox.validateConfig Service: (" + serviceName + " )");
 		}
 		if ( configs != null) {
 			try  {
-				ret = KnoxResourceMgr.validateConfig(service, configs);
+				ret = KnoxResourceMgr.validateConfig(serviceName, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceKnox.validateConfig Error:" + e);
 				throw e;
@@ -72,12 +69,14 @@ public class RangerServiceKnox extends RangerBaseService {
 	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
 		
 		List<String> ret = new ArrayList<String>();
+		String 	serviceName  	   = getServiceName();
+		Map<String,String> configs = getConfigs();
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceKnox.lookupResource Context: (" + context + ")");
 		}
 		if (context != null) {
 			try {
-				ret  = KnoxResourceMgr.getKnoxResources(service, configs,context);
+				ret  = KnoxResourceMgr.getKnoxResources(serviceName, configs, context);
 						
 			} catch (Exception e) {
 			  LOG.error( "<== RangerServiceKnox.lookupResource Error : " + e);
@@ -89,10 +88,5 @@ public class RangerServiceKnox extends RangerBaseService {
 		}
 		return ret;
 	}
-	
-	public void init() {
-		service  = getService().getName();
-		configs  = getService().getConfigs();
-	}
-	
+
 }

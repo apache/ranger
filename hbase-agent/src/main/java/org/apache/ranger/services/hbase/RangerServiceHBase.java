@@ -35,9 +35,6 @@ public class RangerServiceHBase extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceHBase.class);
 	
-	Map<String, String> configs;
-	String			    service;
-	
 	public RangerServiceHBase() {
 		super();
 	}
@@ -45,18 +42,20 @@ public class RangerServiceHBase extends RangerBaseService {
 	@Override
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		super.init(serviceDef, service);
-		init();
 	}
 
 	@Override
 	public HashMap<String,Object> validateConfig() throws Exception {
 		HashMap<String, Object> ret = new HashMap<String, Object>();
+		
+		String serviceName = getServiceName();
+		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceHBase.validateConfig() Service: (" + service + " )");
+			LOG.debug("==> RangerServiceHBase.validateConfig() Service: (" + serviceName + " )");
 		}
 		if ( configs != null) {
 			try  {
-				ret = HBaseResourceMgr.testConnection(service, configs);
+				ret = HBaseResourceMgr.testConnection(serviceName, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceHBase.validateConfig() Error:" + e);
 				throw e;
@@ -71,15 +70,18 @@ public class RangerServiceHBase extends RangerBaseService {
 	@Override
 	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
 		
-		List<String> 	   ret 		= new ArrayList<String>();
-			
+		List<String> ret 		   = new ArrayList<String>();
+		String 	serviceName 	   = getServiceName();
+		String	serviceType		   = getServiceType();
+		Map<String,String> configs = getConfigs();
+		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceHBase.lookupResource() Service : " + service + " Context: (" + context + ")");
+			LOG.debug("==> RangerServiceHBase.lookupResource() Service : " + serviceName + " Context: (" + context + ")");
 		}
 		
 		if (context != null) {
 			try {
-				ret  = HBaseResourceMgr.getHBaseResource(service, configs,context);
+				ret  = HBaseResourceMgr.getHBaseResource(serviceName,serviceType,configs,context);
 			} catch (Exception e) {
 			  LOG.error( "<==RangerServiceHBase.lookupResource() Error : " + e);
 			  throw e;
@@ -90,11 +92,6 @@ public class RangerServiceHBase extends RangerBaseService {
 		}
 		return ret;
 	}
-	
-	public void init() {
-		service  = getService().getName();
-		configs  = getService().getConfigs();
-	}
-	
+
 }
 

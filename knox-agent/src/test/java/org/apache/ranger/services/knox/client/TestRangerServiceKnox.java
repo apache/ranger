@@ -63,7 +63,6 @@ public class TestRangerServiceKnox {
 		svc   	 = new RangerService(sdName, serviceName, "unit test Knox resource lookup and validateConfig", configs);
 		svcKnox  = new RangerServiceKnox();
 		svcKnox.init(sd, svc);
-		svcKnox.init();
 	}
 	
 	@Test

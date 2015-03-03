@@ -454,7 +454,7 @@ public class ServiceREST {
 		VXResponse ret = new VXResponse();
 
 		try {
-			ret = serviceMgr.validateConfig(service);
+			ret = serviceMgr.validateConfig(service, svcStore);
 		} catch(Exception excp) {
 			LOG.error("validateConfig(" + service + ") failed", excp);
 
@@ -479,7 +479,7 @@ public class ServiceREST {
 		List<String> ret = new ArrayList<String>();
 
 		try {
-			ret = serviceMgr.lookupResource(serviceName,context);
+			ret = serviceMgr.lookupResource(serviceName,context, svcStore);
 		} catch(Exception excp) {
 			LOG.error("lookupResource(" + serviceName + ", " + context + ") failed", excp);
 
