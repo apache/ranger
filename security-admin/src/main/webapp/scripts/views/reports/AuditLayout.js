@@ -1140,10 +1140,7 @@ define(function(require) {
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue,model) {
 							return _.isUndefined(rawValue) ? '--': 
-								/*'<div data-id="'+model.id+'" data-container="body" data-toggle="popover" data-placement="right" data-content="'+rawValue+'" style="cursor:pointer;">\
-									'+rawValue+'</div>';*/
-							'<span title="'+rawValue
-							+'" class="showMore">'+rawValue+'</span>';
+							'<span title="'+XAUtils.escapeHtmlChar(rawValue) +'" class="showMore">'+XAUtils.escapeHtmlChar(rawValue)+'</span>';
 						}
 					})
 				},
