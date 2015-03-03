@@ -80,18 +80,20 @@ class BaseDB(object):
 		self.import_db_file(db_name, root_user, db_user, db_password, db_root_password, DBVERSION_CATALOG_CREATION)
 		log("\nBaseline DB upgraded successfully\n", "info")
 
-
 	def apply_patches(self, db_name, root_user, db_user, db_password ,db_root_password, PATCHES_PATH):
 		#first get all patches and then apply each patch
-		files = os.listdir(PATCHES_PATH)
-		# files: coming from os.listdir() sorted alphabetically, thus not numerically
-		if files:
-			sorted_files = sorted(files, key=lambda x: str(x.split('.')[0]))
-			for filename in sorted_files:
-				currentPatch = PATCHES_PATH + "/"+filename
-				self.import_db_patches(db_name, root_user, db_user, db_password ,db_root_password, currentPatch)
-		else:
+		if not os.path.exists(PATCHES_PATH):
 			log("No Patches to apply.","info")
+		else:
+			files = os.listdir(PATCHES_PATH)
+			# files: coming from os.listdir() sorted alphabetically, thus not numerically
+			if files:
+				sorted_files = sorted(files, key=lambda x: str(x.split('.')[0]))
+				for filename in sorted_files:
+					currentPatch = PATCHES_PATH + "/"+filename
+					self.import_db_patches(db_name, root_user, db_user, db_password ,db_root_password, currentPatch)
+			else:
+				log("No Patches to apply.","info")
 	
 	def create_auditdb_user(self, xa_db_host , audit_db_host , db_name ,audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, file_name , TABLE_NAME):
 		log("----------------- Create Audit User ------------", "info")
@@ -627,7 +629,7 @@ class OracleConf(BaseDB):
 		output = check_output(shlex.split(query))
 		if output.strip(TABLE_NAME.upper() + ' |'):
 			log("Table " + TABLE_NAME +" already exists in Tablespace " + db_name + "\n","info")
-			return True 
+			return True
 		else:
 			log("Table " + TABLE_NAME +" does not exist in Tablespace " + db_name + "\n","info")
 			return False
@@ -664,6 +666,186 @@ class OracleConf(BaseDB):
 
 
 
+class PostgresConf(BaseDB):
+        # Constructor
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN):
+                self.host = host
+                self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+                self.JAVA_BIN = JAVA_BIN
+                BaseDB.init_logfiles(self)
+
+	def get_jisql_cmd(self, user, password, db_name):
+                #TODO: User array for forming command
+                jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,self.host, db_name, user, password)
+                return jisql_cmd
+
+
+	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password):
+                get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
+                query = get_cmd + " -query \"SELECT rolname FROM pg_roles WHERE rolname='%s';\"" %(db_user)
+                output = check_output(shlex.split(query))
+                if output.strip(db_user+" |"):
+			log( "Postgres User: " + db_user + " already exists!", "debug")
+                else:
+			log("User does not exists, Creating User : " + db_user, "info")
+                        query = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, db_password)
+                        ret = subprocess.check_call(shlex.split(query))
+                        if ret == 0:
+                                log("Postgres user " + db_user + " created", "info")
+                        else:
+                                log("Postgres user " +db_user+" creation failed\n", "info")
+                                sys.exit(1)
+
+
+        def verify_db(self, root_user, db_root_password, db_name):
+                log("\nVerifying Database: " + db_name + "\n", "debug")
+                get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
+                query = get_cmd + " -query \"SELECT datname FROM pg_database where datname='%s';\"" %(db_name)
+                output = check_output(shlex.split(query))
+                if output.strip(db_name + " |"):
+                        return True
+                else:
+                        return False
+
+	def import_file_to_db(self, root_user, db_name, db_user, db_password, db_root_password, file_name):
+                log ("\nImporting to Database: " + db_name,"debug");
+                if self.verify_db(root_user, db_root_password, db_name):
+                        log("\nDatabase: "+db_name + " already exists. Ignoring import_db\n","info")
+                else:
+                        log("\nDatabase does not exist. Creating database : " + db_name,"info")
+                        get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
+                        query = get_cmd + " -query \"create database %s with OWNER %s;\"" %(db_name, db_user)
+                        ret = subprocess.check_call(shlex.split(query))
+                        if ret != 0:
+                                log("\nDatabase creation failed!!","info")
+                                sys.exit(1)
+                        else:
+                                log("Creating database : " + db_name + " succeeded", "info")
+				self.import_db_file(db_name, root_user, db_user, db_password, db_root_password, file_name)
+
+
+        def import_db_file(self, db_name, root_user, db_user, db_password, db_root_password, file_name):
+                name = basename(file_name)
+                if os.path.isfile(file_name):
+                        log("Importing db schema to database : " + db_name + " from file: " + name,"info")
+                        get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
+                        query = get_cmd + " -input %s" %file_name
+                        ret = subprocess.check_call(shlex.split(query))
+                        if ret == 0:
+                                log(name + " DB schema imported successfully\n","info")
+                        else:
+                                log(name + " DB Schema import failed!\n","info")
+                                sys.exit(1)
+                else:
+                    log("\nDB Schema file " + name+ " not found\n","info")
+                    sys.exit(1)
+
+	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password , True):
+		log ("GRANTING PRIVILEGES TO user '"+db_user+"' on db '"+db_name+"'" , "info")
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
+		query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE %s to %s;\"" %(db_name, db_user)
+		ret = subprocess.check_call(shlex.split(query))
+		if ret != 0:
+			log ("Ganting privileges on tables in schema public failed", "info")
+			sys.exit(1)
+
+		query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO %s;\"" %(db_user)
+		ret = subprocess.check_call(shlex.split(query))
+		if ret != 0:
+			log ("Ganting privileges on schema public failed", "info")
+			sys.exit(1)
+
+		query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO %s;\"" %(db_user)
+		ret = subprocess.check_call(shlex.split(query))
+		if ret != 0:
+			log ("Ganting privileges on database "+db_name+ " failed", "info")
+			sys.exit(1)
+
+		query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO %s;\"" %(db_user)
+		ret = subprocess.check_call(shlex.split(query))
+		if ret != 0:
+			log ("Ganting privileges on database "+db_name+ " failed", "info")
+			sys.exit(1)
+		log ("GRANTING PRIVILEGES TO user '"+db_user+"' on db '"+db_name+"' Done" , "info")
+
+
+        def grant_audit_db_user(self, audit_db_root_user, audit_db_name , db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password):
+		log("Granting Permission to " + audit_db_user, "info")
+                get_cmd = self.get_jisql_cmd(audit_db_root_user, audit_db_root_password, audit_db_name)
+                log("\nGranting Select privileges to Postgres Audit user '" + audit_db_user + "'", "info")
+                query = get_cmd + " -query 'GRANT ALL ON XA_ACCESS_AUDIT_SEQ TO %s;'" % (audit_db_user)
+                ret = subprocess.check_call(shlex.split(query))
+                if ret != 0:
+			log("\nGranting Select privileges to Postgres user '" + audit_db_user + "' FAILED\n", "info")
+                        sys.exit(1)
+
+		log("\nGranting insert privileges to Postgres Audit user '" + audit_db_user + "'\n", "info")
+		query = get_cmd + " -query 'GRANT INSERT ON XA_ACCESS_AUDIT TO %s;'" % (audit_db_user)
+                ret = subprocess.check_call(shlex.split(query))
+                if ret != 0:
+			log("\nGranting insert privileges to Postgres user '" + audit_db_user + "' FAILED\n", "info")
+                        sys.exit(1)
+
+
+        def import_db_patches(self, db_name, root_user, db_user, db_password, db_root_password, file_name):
+                name = basename(file_name)
+                if os.path.isfile(file_name):
+                        version = name.split('-')[0]
+                        log("Executing patch on : " + db_name + " from file: " + name,"info")
+                        get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+                        output = check_output(shlex.split(query))
+                        if output.strip(version + " |"):
+                                log("Patch "+ name  +" is already Applied" ,"info")
+                        else:
+                                get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
+                                query = get_cmd + " -input %s" %file_name
+                                ret = subprocess.check_call(shlex.split(query))
+                                if ret == 0:
+                                        log(name + " Patch Applied\n","info")
+                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), user(), now(), user()) ;\"" %(version)
+                                        ret = subprocess.check_call(shlex.split(query))
+                                        if ret == 0:
+                                                log("Patch version updated", "info")
+                                        else:
+                                                log("Updating Patch version failed", "info")
+                                                sys.exit(1)
+                                else:
+                                        log(name + "\n Import failed!\n","info")
+                                        sys.exit(1)
+                else:
+                    log("\nImport " +name + " file not found\n","info")
+                    sys.exit(1)
+
+
+        def check_table(self, db_name, root_user, db_root_password, TABLE_NAME):
+                if self.verify_db(root_user, db_root_password, db_name):
+			log("Database: " + db_name + " exists","info")
+                        log("Verifying table " + TABLE_NAME +" in database " + db_name, "debug")
+                        get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
+                        query = get_cmd + " -query \"select * from (select table_name from information_schema.tables where table_catalog='%s' and table_name = '%s') as temp;\"" %(db_name , TABLE_NAME)
+                        output = check_output(shlex.split(query))
+                        if output.strip(TABLE_NAME +" |"):
+                                log("\nTable " + TABLE_NAME +" already exists in database " + db_name + "\n","info")
+                                return True
+                        else:
+                                log("\nTable " + TABLE_NAME +" does not exist in database " + db_name + "\n","info")
+                                return False
+                else:
+                        log("Database does not exist \n","info")
+                        return False
+
+
+	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, file_name, TABLE_NAME):
+		self.create_rangerdb_user(audit_db_root_user, db_user, db_password, audit_db_root_password)
+		self.create_rangerdb_user(audit_db_root_user, audit_db_user, audit_db_password, audit_db_root_password)
+		output = self.check_table(audit_db_name, audit_db_root_user, audit_db_root_password, TABLE_NAME)
+		if output == False:
+			self.import_file_to_db(audit_db_root_user, audit_db_name ,db_user, db_password, audit_db_root_password, file_name)
+		self.grant_xa_db_user(audit_db_root_user, audit_db_name, db_user, db_password, audit_db_root_password, True)
+		self.grant_audit_db_user(audit_db_root_user, audit_db_name ,db_user, audit_db_user, db_password,audit_db_password, audit_db_root_password)
+
+
 def main():
 	populate_global_dict()
 	JAVA_BIN=globalDict['JAVA_BIN']
@@ -685,6 +867,11 @@ def main():
 	oracle_audit_file = globalDict['oracle_audit_file'] 
 	oracle_patches = 'db/oracle/patches'
 	
+	postgres_dbversion_catalog = 'db/postgres/create_dbversion_catalog.sql'
+	postgres_core_file = globalDict['postgres_core_file']
+	postgres_audit_file = globalDict['postgres_audit_file']
+	postgres_patches = 'db/postgres/patches'
+
 	db_name = globalDict['db_name']
 	db_user = globalDict['db_user']
 	db_password = globalDict['db_password']
@@ -717,6 +904,12 @@ def main():
 		xa_db_version_file = os.path.join(os.getcwd(),oracle_dbversion_catalog)
 		xa_db_core_file = os.path.join(os.getcwd(),oracle_core_file)
 		xa_patch_file = os.path.join(os.getcwd(),oracle_patches)
+	elif XA_DB_FLAVOR == "POSTGRES":
+		POSTGRES_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		xa_sqlObj = PostgresConf(xa_db_host,POSTGRES_CONNECTOR_JAR,JAVA_BIN)
+		xa_db_version_file = os.path.join(os.getcwd(),postgres_dbversion_catalog)
+		xa_db_core_file = os.path.join(os.getcwd(),postgres_core_file)
+		xa_patch_file = os.path.join(os.getcwd(),postgres_patches)
 	else:
 		log ("--------- NO SUCH FLAVOUR ---------", "info")
 		sys.exit(1)
@@ -731,6 +924,10 @@ def main():
 		audit_db_root_user = audit_db_root_user+" AS SYSDBA"
 		audit_sqlObj = OracleConf(audit_db_host,ORACLE_CONNECTOR_JAR,JAVA_BIN)
 		audit_db_file = os.path.join(os.getcwd(),oracle_audit_file)
+	elif AUDIT_DB_FLAVOR == "POSTGRES":
+		POSTGRES_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		audit_sqlObj = PostgresConf(audit_db_host,POSTGRES_CONNECTOR_JAR,JAVA_BIN)
+		audit_db_file = os.path.join(os.getcwd(),postgres_audit_file)
 	else:
 		log ("--------- NO SUCH FLAVOUR ---------", "info")
 		sys.exit(1)
@@ -754,4 +951,3 @@ def main():
 	audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, audit_db_file, xa_access_audit)
 
 main()
-

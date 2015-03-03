@@ -350,6 +350,10 @@ then
 	then
     	export XAAUDIT_DB_JDBC_URL="jdbc:oracle:thin:\@//${audit_db_hostname}"
     	export XAAUDIT_DB_JDBC_DRIVER="oracle.jdbc.OracleDriver"
+    elif [ "${db_flavor}" = "POSTGRES" ]
+	then
+		export XAAUDIT_DB_JDBC_URL="jdbc:postgresql://${audit_db_hostname}/${audit_db_name}"
+		export XAAUDIT_DB_JDBC_DRIVER="org.postgresql.Driver"
     else
         echo "Audit is not specified with a valid db_flavor: [${db_flavor}]. Ignoring audit ..."
         export XAAUDIT_DB_JDBC_URL="jdbc:${db_flavor}://${audit_db_hostname}/${audit_db_name}"

@@ -181,24 +181,12 @@ check_python_command() {
 }
 
 check_db_connector() {
-    if [ "${DB_FLAVOR}" == "MYSQL" ]
-	then
-		log "[I] Checking MYSQL CONNECTOR FILE : ${SQL_CONNECTOR_JAR}"
-		if test -f "$SQL_CONNECTOR_JAR"; then
-			log "[I] MYSQL CONNECTOR FILE : $SQL_CONNECTOR_JAR file found"
-		else
-			log "[E] MYSQL CONNECTOR FILE : $SQL_CONNECTOR_JAR does not exists" ; exit 1;
-		fi
+	log "[I] Checking ${DB_FLAVOR} CONNECTOR FILE : ${SQL_CONNECTOR_JAR}"
+	if test -f "$SQL_CONNECTOR_JAR"; then
+		log "[I] ${DB_FLAVOR} CONNECTOR FILE : $SQL_CONNECTOR_JAR file found"
+	else
+		log "[E] ${DB_FLAVOR} CONNECTOR FILE : $SQL_CONNECTOR_JAR does not exists" ; exit 1;
 	fi
-    if [ "${DB_FLAVOR}" == "ORACLE" ]
-    then
-        log "[I] Checking ORACLE CONNECTOR FILE : ${SQL_CONNECTOR_JAR}"
-        if test -f "${SQL_CONNECTOR_JAR}"; then
-			log "[I] ORACLE CONNECTOR FILE : ${SQL_CONNECTOR_JAR} file found"
-        else
-			log "[E] ORACLE CONNECTOR FILE : ${SQL_CONNECTOR_JAR} does not exists" ; exit 1;
-		fi
-    fi
 }
 check_java_version() {
 	#Check for JAVA_HOME
@@ -252,6 +240,14 @@ sanity_check_files() {
 			log "[I] ${oracle_core_file} file found"
         else
             log "[E] ${oracle_core_file} does not exists" ; exit 1;
+        fi
+    fi
+    if [ "${DB_FLAVOR}" == "POSTGRES" ]
+    then
+        if test -f ${postgres_core_file}; then
+			log "[I] ${postgres_core_file} file found"
+        else
+            log "[E] ${postgres_core_file} does not exists" ; exit 1;
         fi
     fi
 }
@@ -762,6 +758,32 @@ update_properties() {
 
 		propertyName=auditDB.jdbc.driver
 		newPropertyValue="oracle.jdbc.OracleDriver"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+	fi
+	if [ "${DB_FLAVOR}" == "POSTGRES" ]
+	then
+		propertyName=jdbc.url
+		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.url
+		newPropertyValue="jdbc:postgresql://${DB_HOST}/${audit_db_name}"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=jdbc.driver
+		newPropertyValue="org.postgresql.Driver"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.driver
+		newPropertyValue="org.postgresql.Driver"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
 	fi
 	propertyName=xa.webapp.url.root
