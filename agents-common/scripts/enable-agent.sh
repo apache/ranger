@@ -354,7 +354,11 @@ then
 	then
 		export XAAUDIT_DB_JDBC_URL="jdbc:postgresql://${audit_db_hostname}/${audit_db_name}"
 		export XAAUDIT_DB_JDBC_DRIVER="org.postgresql.Driver"
-    else
+	elif [ "${db_flavor}" = "SQLSERVER" ]
+	then
+		export XAAUDIT_DB_JDBC_URL="jdbc:sqlserver://${audit_db_hostname};databaseName=${audit_db_name}"
+		export XAAUDIT_DB_JDBC_DRIVER="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+	else
         echo "Audit is not specified with a valid db_flavor: [${db_flavor}]. Ignoring audit ..."
         export XAAUDIT_DB_JDBC_URL="jdbc:${db_flavor}://${audit_db_hostname}/${audit_db_name}"
         export XAAUDIT_DB_JDBC_DRIVER="com.unknown.driver.${db_flavor}"

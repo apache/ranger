@@ -300,7 +300,18 @@ then
 	newPropertyValue="org.postgresql.Driver"
 	updatePropertyToFile $propertyName $newPropertyValue $to_file
 fi
+if [ "${DB_FLAVOR}" == "SQLSERVER" ]
+then
+	audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+	audit_db_name=`grep '^XAAUDIT.DB.DATABASE_NAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+	propertyName=XAAUDIT.DB.JDBC_URL
+	newPropertyValue="jdbc:sqlserver://${audit_db_hostname};databaseName=${audit_db_name}"
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
 
+	propertyName=XAAUDIT.DB.JDBC_DRIVER
+	newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+fi
 for f in ${install_dir}/installer/conf/*-changes.cfg
 do
 	if [ -f ${f} ]

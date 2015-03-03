@@ -250,6 +250,14 @@ sanity_check_files() {
             log "[E] ${postgres_core_file} does not exists" ; exit 1;
         fi
     fi
+    if [ "${DB_FLAVOR}" == "SQLSERVER" ]
+    then
+        if test -f ${sqlserver_core_file}; then
+			log "[I] ${sqlserver_core_file} file found"
+        else
+            log "[E] ${sqlserver_core_file} does not exists" ; exit 1;
+        fi
+    fi
 }
 
 create_rollback_point() {
@@ -784,6 +792,32 @@ update_properties() {
 
 		propertyName=auditDB.jdbc.driver
 		newPropertyValue="org.postgresql.Driver"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+	fi
+	if [ "${DB_FLAVOR}" == "SQLSERVER" ]
+	then
+		propertyName=jdbc.url
+		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.url
+		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${audit_db_name}"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=jdbc.driver
+		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+		updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+		propertyName=auditDB.jdbc.driver
+		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
 	fi
 	propertyName=xa.webapp.url.root

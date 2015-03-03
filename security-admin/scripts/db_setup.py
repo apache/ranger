@@ -845,6 +845,172 @@ class PostgresConf(BaseDB):
 		self.grant_xa_db_user(audit_db_root_user, audit_db_name, db_user, db_password, audit_db_root_password, True)
 		self.grant_audit_db_user(audit_db_root_user, audit_db_name ,db_user, audit_db_user, db_password,audit_db_password, audit_db_root_password)
 
+class SqlServerConf(BaseDB):
+        # Constructor
+        def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN):
+		self.host = host
+		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_BIN = JAVA_BIN
+		BaseDB.init_logfiles(self)
+
+        def get_jisql_cmd(self, user, password, db_name):
+                #TODO: User array for forming command
+				jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -u %s -p %s -noheader -trim"%(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,self.host, db_name, user, password)
+				return jisql_cmd
+
+
+        def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password):
+                get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+#                query = get_cmd + " -c \; -query \"SELECT name FROM sys.database_principals WHERE name = N'%s';\"" %(db_user)
+                query = get_cmd + " -c \; -query \"select loginname from master.dbo.syslogins where loginname = '%s';\"" %(db_user)
+                output = subprocess.check_output(shlex.split(query))
+#		print query
+#		print output
+#		sys.exit(1)
+                if output.strip(db_user +" |"):
+					log( "SQLServer User: " + db_user + " already exists!", "debug")
+                else:
+					log("User does not exists, Creating Login User : " + db_user, "info")
+					query = get_cmd + " -c \; -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\"" %(db_user,db_password)
+					ret = subprocess.check_call(shlex.split(query))
+					if ret == 0:
+						log("SQLServer user " + db_user + " created", "info")
+					else:
+						log("SQLServer user " +db_user+" creation failed\n", "info")
+						sys.exit(1)
+		'''
+							log("Creating User : " + db_user, "info")
+	                        query = get_cmd + " -c \; -query \"CREATE USER %s for LOGIN %s WITH DEFAULT_SCHEMA=[dbo];\"" %(db_user,db_user)
+#	                        query = get_cmd + " -c \; -query \"CREATE USER %s for LOGIN %s EXEC sp_addrolemember N'db_owner', N'%s';\"" %(db_user,db_user, db_user)
+							ret = subprocess.check_call(shlex.split(query))
+#          		        print query
+#				print ret
+#				sys.exit(1)
+			                if ret == 0:
+								log("SQLServer user " + db_user + " created", "info")
+							else:
+								log("SQLServer user " +db_user+" creation failed\n", "info")
+								sys.exit(1)
+		'''
+
+        def verify_db(self, root_user, db_root_password, db_name):
+                log("Verifying Database: " + db_name + "\n", "debug")
+                get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+                query = get_cmd + " -c \; -query \"SELECT name from sys.databases where name='%s';\"" %(db_name)
+                output = subprocess.check_output(shlex.split(query))
+                if output.strip(db_name + " |"):
+                        return True
+                else:
+                        return False
+
+
+        def import_file_to_db(self, root_user, db_name, db_user, db_password, db_root_password, file_name):
+                log ("Importing to Database: " + db_name,"debug");
+                if self.verify_db(root_user, db_root_password, db_name):
+                        log("Database : " + db_name + " already exists. Ignoring import_db\n","info")
+                else:
+                        log("Database does not exist. Creating database : " + db_name,"info")
+                        get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+                        query = get_cmd + " -c \; -query \"create database %s;\"" %(db_name)
+                        ret = subprocess.check_call(shlex.split(query))
+                        if ret != 0:
+                                log("\nDatabase creation failed!!","info")
+                                sys.exit(1)
+                        else:
+                                log("Creating database : " + db_name + " succeeded", "info")
+				'''
+				status = 0
+				status = status + 1
+				if status == 1:
+				'''
+				self.create_user(root_user, db_name ,db_user, db_password, db_root_password)
+				self.import_db_file(db_name, root_user, db_user, db_password, db_root_password, file_name)
+
+
+	def create_user(self, root_user, db_name ,db_user, db_password, db_root_password):
+#		if flag == True:
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+                query = get_cmd + " -c \; -query \"SELECT name FROM sys.database_principals WHERE name = N'%s';\"" %(db_user)
+		output = subprocess.check_output(shlex.split(query))
+
+		if output.strip(db_user + " |"):
+			log("","info")
+		else:
+			query = get_cmd + " -c \; -query \"USE %s CREATE USER %s for LOGIN %s;\"" %(db_name ,db_user, db_user)
+			ret = subprocess.check_call(shlex.split(query))
+			if ret != 0:
+				log("\nDatabase creation failed!!","info")
+				sys.exit(1)
+
+
+        def import_db_file(self, db_name, root_user, db_user, db_password, db_root_password, file_name):
+                name = basename(file_name)
+                if os.path.isfile(file_name):
+                        log("Importing db schema to database : " + db_name + " from file: " + name,"info")
+                        get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
+#                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                        query = get_cmd + " -input %s" %file_name
+                        ret = subprocess.check_call(shlex.split(query))
+                        if ret == 0:
+                                log(name + " DB schema imported successfully\n","info")
+                        else:
+                                log(name + " DB Schema import failed!\n","info")
+                                sys.exit(1)
+                else:
+                    log("\nDB Schema file " + name+ " not found\n","info")
+                    sys.exit(1)
+
+
+	def check_table(self, db_name, root_user, db_root_password, TABLE_NAME):
+		if self.verify_db(root_user, db_root_password, db_name):
+			log("Verifying table '" + TABLE_NAME +"' in database '" + db_name + "'", "debug")
+			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
+			query = get_cmd + " -c \; -query \"SELECT TABLE_NAME FROM information_schema.tables where table_name = '%s';\"" %(TABLE_NAME)
+			output = subprocess.check_output(shlex.split(query))
+			if output.strip(TABLE_NAME + " |"):
+				log("Table '" + TABLE_NAME + "' already exists in  database '" + db_name + "'\n","info")
+				return True
+			else:
+				log("Table '" + TABLE_NAME + "' does not exist in database '" + db_name + "'\n","info")
+				return False
+		else:
+			log("Database " + db_name +" does not exist\n","info")
+			return False
+
+        def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, True):
+                log ("Granting Permission to Admin user '" + db_user + "' on db '" + db_name + "'" , "info")
+                get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+	        query = get_cmd + " -c \; -query \"ALTER LOGIN [%s] WITH DEFAULT_DATABASE=[%s];\"" %(db_user, db_name)
+                ret = subprocess.check_call(shlex.split(query))
+		if ret != 0:
+			sys.exit(1)
+	        query = get_cmd + " -c \; -query \" USE %s EXEC sp_addrolemember N'db_owner', N'%s';\"" %(db_name, db_user)
+#                query = get_cmd + " -c \; -query \" USE %s GRANT ALL PRIVILEGES to %s;\"" %(db_name , db_user)
+                ret = subprocess.check_call(shlex.split(query))
+		if ret != 0:
+			sys.exit(1)
+
+
+	def grant_audit_db_user(self, audit_db_root_user, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password,TABLE_NAME):
+		log("Granting Permission to Audit user '" + audit_db_user + "' on db '" + audit_db_name + "'","info")
+		get_cmd = self.get_jisql_cmd(audit_db_root_user, audit_db_root_password, 'msdb')
+		query = get_cmd + " -c \; -query \"USE %s GRANT SELECT,INSERT to %s;\"" %(audit_db_name ,audit_db_user)
+		ret = subprocess.check_call(shlex.split(query))
+		if ret != 0 :
+			sys.exit(1)
+		else:
+			log("Permission Granted to Audit user " + audit_db_user , "info")
+
+	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, file_name, TABLE_NAME):
+                self.create_rangerdb_user(audit_db_root_user, db_user, db_password, audit_db_root_password)
+                self.create_rangerdb_user(audit_db_root_user, audit_db_user, audit_db_password, audit_db_root_password)
+                output = self.check_table(audit_db_name, audit_db_root_user, audit_db_root_password, TABLE_NAME)
+                if output == False:
+                        self.import_file_to_db(audit_db_root_user, audit_db_name ,db_user, db_password, audit_db_root_password, file_name)
+                        self.create_user(audit_db_root_user, audit_db_name ,audit_db_user, audit_db_password, audit_db_root_password)
+                self.grant_xa_db_user(audit_db_root_user, audit_db_name, db_user, db_password, audit_db_root_password, True)
+                self.grant_audit_db_user(audit_db_root_user, audit_db_name ,db_user, audit_db_user, db_password,audit_db_password, audit_db_root_password,TABLE_NAME)
+
 
 def main():
 	populate_global_dict()
@@ -871,6 +1037,11 @@ def main():
 	postgres_core_file = globalDict['postgres_core_file']
 	postgres_audit_file = globalDict['postgres_audit_file']
 	postgres_patches = 'db/postgres/patches'
+
+	sqlserver_dbversion_catalog = 'db/sqlserver/create_dbversion_catalog.sql'
+	sqlserver_core_file = globalDict['sqlserver_core_file']
+	sqlserver_audit_file = globalDict['sqlserver_audit_file']
+	sqlserver_patches = 'db/sqlserver/patches'
 
 	db_name = globalDict['db_name']
 	db_user = globalDict['db_user']
@@ -910,6 +1081,12 @@ def main():
 		xa_db_version_file = os.path.join(os.getcwd(),postgres_dbversion_catalog)
 		xa_db_core_file = os.path.join(os.getcwd(),postgres_core_file)
 		xa_patch_file = os.path.join(os.getcwd(),postgres_patches)
+	elif XA_DB_FLAVOR == "SQLSERVER":
+		SQLSERVER_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		xa_sqlObj = SqlServerConf(xa_db_host,SQLSERVER_CONNECTOR_JAR,JAVA_BIN)
+		xa_db_version_file = os.path.join(os.getcwd(),sqlserver_dbversion_catalog)
+		xa_db_core_file = os.path.join(os.getcwd(),sqlserver_core_file)
+		xa_patch_file = os.path.join(os.getcwd(),sqlserver_patches)
 	else:
 		log ("--------- NO SUCH FLAVOUR ---------", "info")
 		sys.exit(1)
@@ -928,6 +1105,10 @@ def main():
 		POSTGRES_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
 		audit_sqlObj = PostgresConf(audit_db_host,POSTGRES_CONNECTOR_JAR,JAVA_BIN)
 		audit_db_file = os.path.join(os.getcwd(),postgres_audit_file)
+	elif AUDIT_DB_FLAVOR == "SQLSERVER":
+		SQLSERVER_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		audit_sqlObj = SqlServerConf(audit_db_host,SQLSERVER_CONNECTOR_JAR,JAVA_BIN)
+		audit_db_file = os.path.join(os.getcwd(),sqlserver_audit_file)
 	else:
 		log ("--------- NO SUCH FLAVOUR ---------", "info")
 		sys.exit(1)
