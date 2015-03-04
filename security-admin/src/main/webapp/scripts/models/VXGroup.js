@@ -23,6 +23,7 @@ define(function(require){
 
 	var VXGroupBase		= require('model_bases/VXGroupBase');
 	var localization	= require('utils/XALangSupport');
+	var XAEnums         = require('utils/XAEnums');
 	
 	var VXGroup = VXGroupBase.extend(
 	/** @lends VXGroup.prototype */
@@ -35,7 +36,19 @@ define(function(require){
 		initialize: function() {
 			this.modelName = 'VXGroup';
 			this.bindErrorEvents();
-			
+			this.toView();
+		},
+
+		toView : function(){
+			if(!_.isUndefined(this.get('isVisible'))){
+				var visible = (this.get('isVisible') == XAEnums.VisibilityStatus.STATUS_VISIBLE.value);
+				this.set('isVisible', visible);
+			}
+		},
+
+		toServer : function(){
+			var visible = this.get('isVisible') ? XAEnums.VisibilityStatus.STATUS_VISIBLE.value : XAEnums.VisibilityStatus.STATUS_HIDDEN.value;
+			this.set('isVisible', visible);
 		},
 		/**
 		 * @function schema

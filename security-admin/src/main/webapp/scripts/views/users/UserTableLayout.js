@@ -57,6 +57,7 @@ define(function(require){
     		visualSearch: '.visual_search',
     		btnShowMore : '[data-id="showMore"]',
 			btnShowLess : '[data-id="showLess"]',
+    		btnSave		: '[data-id="save"]'
     	},
 
 		/** ui events hash */
@@ -65,6 +66,7 @@ define(function(require){
 			events['click '+this.ui.tab+' li a']  = 'onTabChange';
 			events['click ' + this.ui.btnShowMore]  = 'onShowMore';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
+			events['click ' + this.ui.btnSave]  = 'onSave';
 			return events;
 		},
 
@@ -77,13 +79,30 @@ define(function(require){
 
 			_.extend(this, _.pick(options, 'groupList','tab'));
 			this.showUsers = this.tab == 'usertab' ? true : false;
+
+			this.chgFlags = [];
+			this.showUsers = true;
+
+			if(_.isUndefined(this.groupList)){
+				this.groupList = new VXGroupList();
+			}
+
 			this.bindEvents();
 		},
 
 		/** all events binding here */
 		bindEvents : function(){
+			var that = this;
+            this.listenTo(this.collection,"backgrid:selected", this.onModelChange);
+            this.listenTo(this.groupList,"backgrid:selected", this.onModelChange);
 			/*this.listenTo(this.model, "change:foo", this.modelChanged, this);*/
 			/*this.listenTo(communicator.vent,'someView:someEvent', this.someEventHandler, this)'*/
+			this.collection.on('change', function(){
+				that.preventNavigation();
+			});
+			this.groupList.on('change', function(){
+				that.preventNavigation();
+			});
 		},
 
 		/** on render callback */
@@ -95,17 +114,84 @@ define(function(require){
 				this.renderUserTab();
 			this.addVisualSearch();
 		},
+
+		preventNavigation : function(){
+            XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavUserList'),this.rTableList.$el);
+			this.rTableList.$el.find('table').addClass('dirtyField');
+			//this.ui.btnSave.removeClass('disabled');
+		},
+
+		allowNavigation : function(){
+			XAUtil.allowNavigation();
+			this.rTableList.$el.find('table').removeClass('dirtyField');
+			//this.ui.btnSave.addClass('disabled');
+		},
+
+		onModelChange : function(model, selected){
+			/*var that = this;
+			if(! (model.id in that.chgFlags)){
+				that.chgFlags[model.id] = true;
+			} else {
+                that.chgFlags[model.id] ^= true;
+            }
+
+			if (_.some(that.chgFlags)){
+                that.preventNavigation();
+			} else {
+                that.allowNavigation();
+			}*/
+		},
 		onTabChange : function(e){
+			var that = this;
+			this.chgFlags = [];
 			this.showUsers = $(e.currentTarget).attr('href') == '#users' ? true : false;
-			if(this.showUsers){
+			if(this.showUsers){				
 				this.renderUserTab();
 				this.addVisualSearch();
 			}
-			else{
+			else{				
 				this.renderGroupTab();
 				this.addVisualSearch();
 			}
 			$(this.rUserDetail.el).hide();
+		},
+		onSave : function(e){
+			var that = this;
+			var updateReq = {};
+			var collection = this.showUsers ? this.collection : this.groupList;
+
+			collection.changed_models().each(function(m){
+				m.toServer();
+				updateReq[m.get('id')] = m.get('isVisible');
+			});
+
+			var clearCache = function(coll){
+                _.each(Backbone.fetchCache._cache, function(url, val){
+                   var urlStr = coll.url;
+                   if((val.indexOf(urlStr) != -1)){
+                       Backbone.fetchCache.clearItem(val);
+                   }
+                });
+                coll.fetch({reset: true, cache : false});
+			}
+			if(this.showUsers){
+				collection.setUsersVisibility(updateReq, {
+					success : function(){
+						that.chgFlags = [];
+						that.allowNavigation();
+						clearCache(collection);
+					}
+				});
+			} else {
+			    collection.setGroupsVisibility(updateReq, {
+					success : function(){
+						that.chgFlags = [];
+						that.allowNavigation();
+						clearCache(collection);
+					}
+                });
+			}
+
 		},
 		renderUserTab : function(){
 			var that = this;
@@ -141,10 +227,26 @@ define(function(require){
 		},
 		renderUserListTable : function(){
 			var that = this;
-			/*var tableRow = Backgrid.Row.extend({
+			var tableRow = Backgrid.Row.extend({
+
+				render: function () {
+    				tableRow.__super__.render.apply(this, arguments);
+    				if (this.model.get("isVisible") == 0) {
+      					this.el.classList.add("tr-inactive");
+    				}
+    				return this;
+				},				
 				events: {
-					'click' : 'onClick'
+					'change' : 'onClickCheckbox'
 				},
+				onClickCheckbox: function(e) {
+					if (this.model.get("isVisible") == 0) {
+						this.el.classList.add("tr-inactive");						
+					} else {
+						this.el.classList.remove("tr-inactive");
+					};
+				},
+				/*
 				initialize : function(){
 					var that = this;
 					var args = Array.prototype.slice.apply(arguments);
@@ -180,14 +282,14 @@ define(function(require){
 						  console.log('error..');
 					  }
 				   });
-				}
-			});*/
+				} */
+			});
 			this.rTableList.show(new XATableLayout({
 				columns: this.getColumns(),
 				collection: this.collection,
 				includeFilter : false,
 				gridOpts : {
-//					row: tableRow,
+					row: tableRow,
 					header : XABackgrid,
 					emptyText : 'No Users found!'
 				}
@@ -198,6 +300,16 @@ define(function(require){
 		getColumns : function(){
 			var cols = {
 				
+				isVisible : {
+					label : localization.tt("lbl.isVisible"),
+					//cell : Backgrid.SelectCell.extend({className: 'cellWidth-1'}),
+					cell: "select-row",
+				    headerCell: "select-all",
+					click : false,
+					drag : false,
+					editable : false,
+					sortable : false
+				},
 				name : {
 					label	: localization.tt("lbl.userName"),
 					href: function(model){
@@ -205,8 +317,7 @@ define(function(require){
 					},
 					editable:false,
 					sortable:false,
-					cell :'uri'
-						
+					cell :'uri'						
 				},
 				emailAddress : {
 					label	: localization.tt("lbl.emailAddress"),
@@ -364,6 +475,16 @@ define(function(require){
 		getGroupColumns : function(){
 			var cols = {
 				
+                isVisible : {
+					label : localization.tt("lbl.isVisible"),
+					//cell : Backgrid.SelectCell.extend({className: 'cellWidth-1'}),
+					cell: "select-row",
+				    headerCell: "select-all",
+					click : false,
+					drag : false,
+					editable : false,
+					sortable : false
+				},
 				name : {
 					label	: localization.tt("lbl.groupName"),
 					href: function(model){
@@ -392,7 +513,7 @@ define(function(require){
 					drag : false,
 					editable:false,
 					sortable:false,
-				}
+				},
 				/*status : {
 					label : localization.tt("lbl.status"),
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
@@ -419,10 +540,12 @@ define(function(require){
 			if(this.showUsers){
 				placeholder = localization.tt('h.searchForYourUser');	
 				coll = this.collection;
-				searchOpt = ['User Name','Email Address','Role','User Source'];//,'Start Date','End Date','Today'];
+				searchOpt = ['User Name','Email Address','Visibility', 'Role','User Source'];//,'Start Date','End Date','Today'];
 				var userRoleList = _.map(XAEnums.UserRoles,function(obj,key){return {label:obj.label,value:key};});
-				serverAttrName  = [{text : "User Name", label :"name"},{text : "Email Address", label :"emailAddress"},
+				serverAttrName  = [	{text : "User Name", label :"name"},
+									{text : "Email Address", label :"emailAddress"},
 				                   {text : "Role", label :"userRoleList", 'multiple' : true, 'optionsArr' : userRoleList},
+				                   	{text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus)},
 				                   {text : "User Source", label :"userSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.UserTypes)},
 								];
 				                  // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
@@ -430,18 +553,20 @@ define(function(require){
 			}else{
 				placeholder = localization.tt('h.searchForYourGroup');
 				coll = this.groupList;
-				searchOpt = ['Group Name','Group Source'];//,'Start Date','End Date','Today'];
+				searchOpt = ['Group Name','Group Source', 'Visibility'];//,'Start Date','End Date','Today'];
 				serverAttrName  = [{text : "Group Name", label :"name"},
+				                   {text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus)},
 				                   {text : "Group Source", label :"groupSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.GroupTypes)},];
 				
 				                   //{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                   //{text : 'Today',label :'today'}];
 
 			}
+			var query = (!_.isUndefined(coll.VSQuery)) ? coll.VSQuery : '';
 			var pluginAttr = {
 				      placeholder :placeholder,
 				      container : this.ui.visualSearch,
-				      query     : '',
+				      query     : query,
 				      callbacks :  { 
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
@@ -454,6 +579,9 @@ define(function(require){
 									case 'Group Source':
 										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.GroupTypes));
 										break;		
+									case 'Visibility':
+										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.VisibilityStatus));
+										break;
 									/*case 'Start Date' :
 										setTimeout(function () { XAUtil.displayDatepicker(that.ui.visualSearch, callback); }, 0);
 										break;
@@ -489,6 +617,7 @@ define(function(require){
 
 		/** on close */
 		onClose: function(){
+			XAUtil.allowNavigation();
 		}
 
 	});

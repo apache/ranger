@@ -86,6 +86,16 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 	 */
 	@Column(name="STATUS"  , nullable=false )
 	protected int status = RangerConstants.STATUS_DISABLED;
+	
+	/**
+	 * IsVisible
+	 * <ul>
+	 * <li>This attribute is of type enum CommonEnums::ActiveVisiblility
+	 * </ul>
+	 *
+	 */
+	@Column(name="IS_VISIBLE"  , nullable=false )
+	protected Integer isVisible ;
 
 	/**
 	 * Type of group
@@ -117,6 +127,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 		status = RangerConstants.STATUS_DISABLED;
 		groupType = AppConstants.XA_GROUP_UNKNOWN;
 		groupSource = RangerCommonEnums.GROUP_INTERNAL;
+		isVisible = RangerCommonEnums.IS_VISIBLE;
 	}
 
 	@Override
@@ -181,6 +192,20 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * @return the isVisible
+	 */
+	public Integer getIsVisible() {
+		return isVisible;
+	}
+	
+	/**
+	 * @param isVisible the isVisible to set
+	 */
+	public void setIsVisible(Integer isVisible) {
+		this.isVisible = isVisible;
+	}
+	
+	/**
 	 * This method sets the value to the member attribute <b>groupType</b>.
 	 * You cannot set null to the attribute.
 	 * @param groupType Value to set member attribute <b>groupType</b>
@@ -227,6 +252,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 		str += "name={" + name + "} ";
 		str += "description={" + description + "} ";
 		str += "status={" + status + "} ";
+		str += "isvisible={" + isVisible + "} ";
 		str += "groupType={" + groupType + "} ";
 		str += "credStoreId={" + credStoreId + "} ";
 		str += "groupSrc={" + groupSource + "} ";

@@ -145,6 +145,13 @@ define(function(require){
 		initializePlugins: function(){
 		},
 
+        getGridObj : function(){
+			if (this.rTableList.currentView){
+                return this.rTableList.currentView;
+			}
+			return null;
+		},
+
 		renderTable : function(){
 			var that = this;
 			this.rTableList.show(new Backgrid.Grid(this.gridOpts));

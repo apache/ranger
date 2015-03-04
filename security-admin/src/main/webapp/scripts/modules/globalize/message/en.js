@@ -142,6 +142,8 @@ define(function(require) {
 				accountStatus					: 'Account Status',
 				ActiveStatus_STATUS_ENABLED 	: 'Enabled',
 				ActiveStatus_STATUS_DISABLED 	: 'Disabled',
+				VisibilityStatus_IS_VISIBLE     : 'Visible',
+				VisibilityStatus_IS_HIDDEN      : 'Hidden',
 				commonNameForCertificate 		: 'Common Name For Certificate',
 				status							: 'Status',
 				userListing						: 'User List',
@@ -206,6 +208,7 @@ define(function(require) {
 				topologyName					: 'Topology Name',
 				serivceName						: 'Service Name',
 				ipAddress						: 'IP Address',
+				isVisible                       : 'Visible',
 				delegatedAdmin					: 'Delegate Admin',
 				policyId						: 'Policy ID'
 			},
@@ -213,8 +216,8 @@ define(function(require) {
 				add							: 'Add',
 				save						: 'Save',
 				cancel 						: 'Cancel',
-				addMore						: 'Add More..'
-				
+				addMore						: 'Add More..',
+				setVisibility               : 'Set Visibility' 
 				
 			},
 			// h1, h2, h3, fieldset, title
@@ -301,7 +304,8 @@ define(function(require) {
 				preventNavPolicyForm : 'Policy form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavRepositoryForm : 'Repository form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavUserForm : 'User form edit is in progress. Please save/cancel changes before navigating away!',
-				preventNavGroupForm : 'Group form edit is in progress. Please save/cancel changes before navigating away!'
+				preventNavGroupForm : 'Group form edit is in progress. Please save/cancel changes before navigating away!',
+				preventNavUserList : 'Some Users/Groups have been edited. Kindly save your changes before navigating away!'
 				
 			},	
 			validationMessages : {

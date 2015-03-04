@@ -43,6 +43,7 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 	@Override
 	protected XXUser mapViewToEntityBean(VXUser vObj, XXUser mObj, int OPERATION_CONTEXT) {
 		mObj.setName( vObj.getName());
+		mObj.setIsVisible(vObj.getIsVisible());
 		mObj.setDescription( vObj.getDescription());
 		mObj.setCredStoreId( vObj.getCredStoreId());
 		return mObj;
@@ -52,6 +53,7 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 	@Override
 	protected VXUser mapEntityToViewBean(VXUser vObj, XXUser mObj) {
 		vObj.setName( mObj.getName());
+		vObj.setIsVisible(mObj.getIsVisible());
 		vObj.setDescription( mObj.getDescription());
 		vObj.setCredStoreId( mObj.getCredStoreId());
 		return vObj;

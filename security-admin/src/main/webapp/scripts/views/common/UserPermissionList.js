@@ -229,7 +229,7 @@ define(function(require) {
 					url: "service/xusers/users",
 					dataType: 'json',
 					data: function (term, page) {
-						return {name : term};
+						return {name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
 					},
 					results: function (data, page) { 
 						var results = [],selectedVals=[];

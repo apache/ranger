@@ -525,6 +525,7 @@ define(function(require) {
 		
 		var callbackCommon = {
 	        search       : function(query, searchCollection) {
+	        					collection.VSQuery = query;
 	        					search(searchCollection, serverAttrName, searchOpt,collection);
 	        			   },
 	        facetMatches :  function(callback) {
