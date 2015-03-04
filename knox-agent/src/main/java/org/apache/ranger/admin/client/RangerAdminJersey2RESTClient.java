@@ -57,14 +57,18 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	HostnameVerifier _hv;
 	String _baseUrl = null;
 	String _sslConfigFileName = null;
+	String _serviceName = null;
+	String _pluginId = null;
 	
 	
 	@Override
-	public void init(String configPropertyPrefix) {
+	public void init(String serviceName, String appId, String configPropertyPrefix) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminJersey2RESTClient.init(" + configPropertyPrefix + ")");
 		}
 
+		_serviceName = serviceName;
+		_pluginId = _utils.getPluginId(serviceName, appId);
 		_baseUrl = _utils.getPolicyRestUrl(configPropertyPrefix);
 		_sslConfigFileName = _utils.getSsslConfigFileName(configPropertyPrefix);
 		_isSSL = _utils.isSsl(_baseUrl);
@@ -81,15 +85,16 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public ServicePolicies getServicePoliciesIfUpdated(String serviceName,
-			long lastKnownVersion) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
+			LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ")");
 		}
 
 		ServicePolicies servicePolicies = null;
-		String url = _utils.getUrlForPolicyUpdate(_baseUrl, serviceName, lastKnownVersion);
+		String url = _utils.getUrlForPolicyUpdate(_baseUrl, _serviceName);
 		Response response = _client.target(url)
+				.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
+				.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
 				.request(MediaType.APPLICATION_JSON_TYPE)
 				.get();
 		int httpResponseCode = response == null ? -1 : response.getStatus();
@@ -123,21 +128,21 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): " + servicePolicies);
+			LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + "): " + servicePolicies);
 		}
 		return servicePolicies;
 	}
 
 	@Override
-	public void grantAccess(String serviceName, GrantRevokeRequest request)
-			throws Exception {
+	public void grantAccess(GrantRevokeRequest request) throws Exception {
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + serviceName + ", " + request + ")");
+			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
 
-		String url = _utils.getUrlForGrantAccess(_baseUrl, serviceName);
+		String url = _utils.getUrlForGrantAccess(_baseUrl, _serviceName);
 		Response response = _client.target(url)
+				.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
 				.request(MediaType.APPLICATION_JSON_TYPE)
 				.get();
 		int httpResponseCode = response == null ? -1 : response.getStatus();
@@ -159,20 +164,20 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.grantAccess(" + serviceName + ", " + request + ")");
+			LOG.debug("<== RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
 	}
 
 	@Override
-	public void revokeAccess(String serviceName, GrantRevokeRequest request)
-			throws Exception {
+	public void revokeAccess(GrantRevokeRequest request) throws Exception {
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + serviceName + ", " + request + ")");
+			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
 
-		String url = _utils.getUrlForRevokeAccess(_baseUrl, serviceName);
+		String url = _utils.getUrlForRevokeAccess(_baseUrl, _serviceName);
 		Response response = _client.target(url)
+				.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
 				.request(MediaType.APPLICATION_JSON_TYPE)
 				.get();
 		int httpResponseCode = response == null ? -1 : response.getStatus();
@@ -194,7 +199,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.grantAccess(" + serviceName + ", " + request + ")");
+			LOG.debug("<== RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
 	}
 

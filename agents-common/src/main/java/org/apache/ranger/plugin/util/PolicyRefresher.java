@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,7 +51,7 @@ public class PolicyRefresher extends Thread {
 
 
 
-	public PolicyRefresher(RangerPolicyEngine policyEngine, String serviceType, String serviceName, RangerAdminClient rangerAdmin, long pollingIntervalMs, String cacheDir) {
+	public PolicyRefresher(RangerPolicyEngine policyEngine, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, long pollingIntervalMs, String cacheDir) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").PolicyRefresher()");
 		}
@@ -60,7 +61,16 @@ public class PolicyRefresher extends Thread {
 		this.serviceName       = serviceName;
 		this.rangerAdmin       = rangerAdmin;
 		this.pollingIntervalMs = pollingIntervalMs;
-		this.cacheFile         = cacheDir == null ? null : (cacheDir + File.separator + String.format("%s_%s.json", serviceType, serviceName));
+
+		if(StringUtils.isEmpty(appId)) {
+			appId = serviceType;
+		}
+
+		String cacheFilename = String.format("%s_%s.json", appId, serviceName);
+		cacheFilename = cacheFilename.replace(File.separatorChar,  '_');
+		cacheFilename = cacheFilename.replace(File.pathSeparatorChar,  '_');
+
+		this.cacheFile = cacheDir == null ? null : (cacheDir + File.separator + cacheFilename);
 
         try {
         	this.gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
@@ -139,7 +149,7 @@ public class PolicyRefresher extends Thread {
 
 		while(true) {
 			try {
-				ServicePolicies svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+				ServicePolicies svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(lastKnownVersion);
 
 				boolean isUpdated = svcPolicies != null;
 

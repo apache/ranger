@@ -44,15 +44,15 @@ public class RangerBasePlugin {
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
 
 	private String             serviceType  = null;
-	private String             auditAppType = null;
+	private String             appId        = null;
 	private String             serviceName  = null;
 	private PolicyRefresher    refresher    = null;
 	private RangerPolicyEngine policyEngine = null;
 
 
-	public RangerBasePlugin(String serviceType, String auditAppType) {
-		this.serviceType  = serviceType;
-		this.auditAppType = auditAppType;
+	public RangerBasePlugin(String serviceType, String appId) {
+		this.serviceType = serviceType;
+		this.appId       = appId;
 	}
 
 	public String getServiceType() {
@@ -71,8 +71,8 @@ public class RangerBasePlugin {
 		return serviceDef != null && serviceDef.getId() != null ? serviceDef.getId().intValue() : -1;
 	}
 
-	public String getAuditAppType() {
-		return auditAppType;
+	public String getAppId() {
+		return appId;
 	}
 
 	public String getServiceName() {
@@ -89,7 +89,7 @@ public class RangerBasePlugin {
 		cleanup();
 
 		RangerConfiguration.getInstance().addResourcesForServiceType(serviceType);
-		RangerConfiguration.getInstance().initAudit(auditAppType);
+		RangerConfiguration.getInstance().initAudit(appId);
 
 		String propertyPrefix    = "ranger.plugin." + serviceType;
 		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
@@ -99,7 +99,7 @@ public class RangerBasePlugin {
 
 		RangerAdminClient admin = createAdminClient(propertyPrefix);
 
-		refresher = new PolicyRefresher(policyEngine, serviceType, serviceName, admin, pollingIntervalMs, cacheDir);
+		refresher = new PolicyRefresher(policyEngine, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);
 		refresher.startRefresher();
 		this.policyEngine = policyEngine;
 	}
@@ -203,7 +203,7 @@ public class RangerBasePlugin {
 			throw new Exception("ranger-admin client is null");
 		}
 
-		admin.grantAccess(serviceName, request);
+		admin.grantAccess(request);
 	}
 
 	public void revokeAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) throws Exception {
@@ -214,7 +214,7 @@ public class RangerBasePlugin {
 			throw new Exception("ranger-admin client is null");
 		}
 
-		admin.revokeAccess(serviceName, request);
+		admin.revokeAccess(request);
 	}
 
 
@@ -250,7 +250,7 @@ public class RangerBasePlugin {
 			ret = new RangerAdminRESTClient();
 		}
 
-		ret.init(propertyPrefix);
+		ret.init(serviceName, appId, propertyPrefix);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAdminRESTClient.createAdminClient(" + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);

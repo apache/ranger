@@ -35,6 +35,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
@@ -988,9 +989,9 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/policies/download/{serviceName}/{lastKnownVersion}")
+	@Path("/policies/download/{serviceName}")
 	@Produces({ "application/json", "application/xml" })
-	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @PathParam("lastKnownVersion") Long lastKnownVersion, @Context HttpServletRequest request) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @QueryParam("lastKnownVersion") Long lastKnownVersion, @QueryParam("pluginId") String pluginId, @Context HttpServletRequest request) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
 		}
@@ -1015,7 +1016,7 @@ public class ServiceREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
 		} finally {
-			createPolicyDownloadAudit(serviceName, lastKnownVersion, ret, httpCode, request);
+			createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, ret, httpCode, request);
 		}
 
 		if(httpCode != HttpServletResponse.SC_OK) {
@@ -1062,10 +1063,9 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, ServicePolicies policies, int httpRespCode, HttpServletRequest request) {
+	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, ServicePolicies policies, int httpRespCode, HttpServletRequest request) {
 		try {
-			String  agentId   = request.getParameter("agentId");
-			String  ipAddress = request.getHeader("X-FORWARDED-FOR");  
+			String ipAddress = request.getHeader("X-FORWARDED-FOR");  
 
 			if (ipAddress == null) {  
 				ipAddress = request.getRemoteAddr();
@@ -1074,7 +1074,7 @@ public class ServiceREST {
 			XXPolicyExportAudit policyExportAudit = new XXPolicyExportAudit();
 
 			policyExportAudit.setRepositoryName(serviceName);
-			policyExportAudit.setAgentId(agentId);
+			policyExportAudit.setAgentId(pluginId);
 			policyExportAudit.setClientIP(ipAddress);
 			policyExportAudit.setRequestedEpoch(lastKnownVersion);
 			policyExportAudit.setHttpRetCode(httpRespCode);

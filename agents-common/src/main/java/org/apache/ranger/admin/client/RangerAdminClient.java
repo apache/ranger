@@ -25,11 +25,11 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 
 
 public interface RangerAdminClient {
-	void init(String configPropertyPrefix);
+	void init(String serviceName, String appId, String configPropertyPrefix);
 
-	ServicePolicies getServicePoliciesIfUpdated(String serviceName, long lastKnownVersion) throws Exception;
+	ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion) throws Exception;
 
-	void grantAccess(String serviceName, GrantRevokeRequest request) throws Exception;
+	void grantAccess(GrantRevokeRequest request) throws Exception;
 
-	void revokeAccess(String serviceName, GrantRevokeRequest request) throws Exception;
+	void revokeAccess(GrantRevokeRequest request) throws Exception;
 }

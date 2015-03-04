@@ -20,6 +20,9 @@
 package org.apache.ranger.plugin.util;
 
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,10 +35,20 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 public class RangerRESTUtils {
 
 	private static final Log LOG = LogFactory.getLog(RangerRESTUtils.class);
-	static final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
-	static final String REST_URL_SERVICE_GRANT_ACCESS              = "/service/plugins/services/grant/";
-	static final String REST_URL_SERVICE_REVOKE_ACCESS             = "/service/plugins/services/revoke/";
-	
+
+	public static final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
+	public static final String REST_URL_SERVICE_GRANT_ACCESS              = "/service/plugins/services/grant/";
+	public static final String REST_URL_SERVICE_REVOKE_ACCESS             = "/service/plugins/services/revoke/";
+
+	public static final String REST_EXPECTED_MIME_TYPE = "application/json" ;
+	public static final String REST_MIME_TYPE_JSON     = "application/json" ;
+
+	public static final String REST_PARAM_LAST_KNOWN_POLICY_VERSION = "lastKnownVersion";
+	public static final String REST_PARAM_PLUGIN_ID                 = "pluginId";
+
+	private static final int MAX_PLUGIN_ID_LEN = 255 ;
+
+
 	public String getPolicyRestUrl(String propertyPrefix) {
 		String url = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
 		
@@ -56,8 +69,8 @@ public class RangerRESTUtils {
 		return sslConfigFileName;
 	}
 	
-	public String getUrlForPolicyUpdate(String baseUrl, String serviceName, long lastKnownVersion) {
-		String url = baseUrl + REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName + "/" + lastKnownVersion;
+	public String getUrlForPolicyUpdate(String baseUrl, String serviceName) {
+		String url = baseUrl + REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName;
 		
 		return url;
 	}
@@ -77,4 +90,27 @@ public class RangerRESTUtils {
 		
 		return url;
 	}
+
+    public String getPluginId(String serviceName, String appId) {
+        String hostName = null;
+
+        try {
+            hostName = InetAddress.getLocalHost().getHostName() ;
+        } catch (UnknownHostException e) {
+            LOG.error("ERROR: Unable to find hostname for the agent ", e);
+            hostName = "unknownHost" ;
+        }
+
+        String ret  = hostName + "-" + serviceName ;
+
+        if(! StringUtils.isEmpty(appId)) {
+        	ret = appId + "@" + ret;
+        }
+
+        if (ret.length() > MAX_PLUGIN_ID_LEN ) {
+        	ret = ret.substring(0,MAX_PLUGIN_ID_LEN) ;
+        }
+
+        return ret  ;
+    }
 }
