@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.services.hbase.client.HBaseClient;
-import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.apache.ranger.plugin.util.TimedEventUtil;
 
 

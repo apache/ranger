@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.TimedEventUtil;
-import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.apache.ranger.services.hive.client.HiveClient;
 
 

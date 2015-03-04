@@ -32,7 +32,6 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.store.ServiceStoreFactory;
 import org.apache.ranger.services.knox.RangerServiceKnox;
 import org.junit.After;
 import org.junit.Before;
