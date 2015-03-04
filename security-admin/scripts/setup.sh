@@ -1287,8 +1287,11 @@ setup_install_files(){
 	fi
 
 	# Copy ranger-admin-services to /usr/bin
-	ln -sf ${INSTALL_DIR}/ews/ranger-admin-services.sh /usr/bin/ranger-admin
-	chmod ug+rx /usr/bin/ranger-admin	
+	if [ ! \( -e /usr/bin/ranger-admin \) ]
+	then
+		ln -sf ${INSTALL_DIR}/ews/ranger-admin-services.sh /usr/bin/ranger-admin
+		chmod ug+rx /usr/bin/ranger-admin	
+	fi
 }
 
 execute_java_patches(){
