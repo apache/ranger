@@ -151,15 +151,16 @@ public class RangerCredentialProviderTest {
 		CredentialShell cs = new CredentialShell() ;
 		
 		try {
-			Field interactiveField = cs.getClass().getField(fieldName) ;
+			Field interactiveField = cs.getClass().getDeclaredField(fieldName) ;
 			
 			if (interactiveField != null) {
 				interactiveField.setAccessible(true);
 				ret = interactiveField.getBoolean(cs) ;
-				
+				System.out.println("FOUND value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "] = [" + ret + "]") ;
 			}
 		} catch (Throwable e) {
 			System.out.println("Unable to find the value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "]. Skiping -f option") ;
+			e.printStackTrace();
 			ret = false;
 		}
 		
