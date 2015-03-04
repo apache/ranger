@@ -18,20 +18,19 @@
 
 package org.apache.ranger.authorization.hadoop.utils;
 
-import java.io.File;
-import java.util.List;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.After;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.alias.CredentialShell;
 import org.apache.hadoop.security.alias.CredentialProvider;
-import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.apache.hadoop.security.alias.CredentialShell;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class RangerCredentialProviderTest {
 	
@@ -42,6 +41,15 @@ public class RangerCredentialProviderTest {
 	private String url = "jceks://file@/" + keystoreFile;
 	RangerCredentialProvider cp = null;
 	List<CredentialProvider> providers = null;
+	
+	
+	public RangerCredentialProviderTest() {
+		if ( isCredentialShellInteractiveEnabled() ) {
+			argsCreate = new String[] {"create", "TestCredential001", "-f",  "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
+			argsDelete = new String[] {"delete", "TestCredential001", "-f" , "-provider", "jceks://file@/" + keystoreFile};
+		}
+	}
+	
 	
 	@Before
 	public void setup() throws Exception {
@@ -133,6 +141,31 @@ public class RangerCredentialProviderTest {
 				System.out.println("Thread [" + t + "] => {" + t.getClass().getName() + "}") ;
 			}
 		}
+	}
+	
+	private static boolean isCredentialShellInteractiveEnabled() {
+		boolean ret = false ;
+		
+		String fieldName = "interactive" ;
+		
+		CredentialShell cs = new CredentialShell() ;
+		
+		try {
+			Field interactiveField = cs.getClass().getField(fieldName) ;
+			
+			if (interactiveField != null) {
+				interactiveField.setAccessible(true);
+				ret = interactiveField.getBoolean(cs) ;
+				
+			}
+		} catch (Throwable e) {
+			System.out.println("Unable to find the value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "]. Skiping -f option") ;
+			ret = false;
+		}
+		
+		return ret ;
+		
+		
 	}
 
 }
