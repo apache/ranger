@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -112,5 +113,19 @@ public class SearchFilter {
 
 	public boolean isEmpty() {
 		return MapUtils.isEmpty(params);
+	}
+	
+	@Override
+	public boolean equals(Object object) {
+		if (object == null || !(object instanceof SearchFilter)) {
+			return false;
+		}
+		SearchFilter that = (SearchFilter)object;
+		return Objects.equals(params, that.params);
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(params);
 	}
 }

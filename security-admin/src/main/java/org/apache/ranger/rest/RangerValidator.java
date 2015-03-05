@@ -19,75 +19,100 @@
 
 package org.apache.ranger.rest;
 
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.SearchFilter;
 
 public abstract class RangerValidator {
 	
 	private static final Log LOG = LogFactory.getLog(RangerValidator.class);
 
 	ServiceStore _store;
-	boolean _valid = true;
-	List<ValidationFailureDetails> _failures;
-	Action _action;
 
 	public enum Action {
 		CREATE, UPDATE, DELETE;
 	};
 	
-	protected RangerValidator(ServiceStore store, Action action) {
+	protected RangerValidator(ServiceStore store) {
 		if (store == null) {
 			throw new IllegalArgumentException("ServiceValidator(): store is null!");
 		}
 		_store = store;
-		if (action == null) {
-			throw new IllegalArgumentException("ServiceValidator(): action is null!");
-		}
-		_action = action;
 	}
 
-	protected List<ValidationFailureDetails> getFailures() {
-		if (_valid) {
-			LOG.warn("getFailureDetails: called while _valid == true");
+	public void validate(Long id, Action action) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.validate(" + id + ")");
 		}
-		return _failures;
+
+		List<ValidationFailureDetails> failures = new ArrayList<ValidationFailureDetails>();
+		if (isValid(id, action, failures)) {
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerValidator.validate(" + id + "): valid");
+			}
+		} else {
+			String message = serializeFailures(failures);
+			LOG.debug("<== RangerValidator.validate(" + id + "): invalid, reason[" + message + "]");
+			throw new Exception(message);
+		}
 	}
 	
-	String getFailureMessage() {
-		if (_valid) {
-			LOG.warn("getFailureDetails: called while validator is true!");
-		}
-		if (_failures == null) {
-			LOG.warn("getFailureDetails: called while list of failures is null!");
-			return null;
-		}
-		StringBuilder builder = new StringBuilder();
-		for (ValidationFailureDetails aFailure : _failures) {
-			builder.append(aFailure.toString());
-			builder.append(";");
-		}
-		return builder.toString();
+	/**
+	 * This method is expected to be overridden by sub-classes.  Default implementation provided to not burden implementers from having to implement methods that they know would never be called. 
+	 * @param id
+	 * @param action
+	 * @param failures
+	 * @return
+	 */
+	boolean isValid(Long id, Action action, List<ValidationFailureDetails> failures) {
+		failures.add(new ValidationFailureDetailsBuilder()
+				.isAnInternalError()
+				.becauseOf("unimplemented method called")
+				.build());
+		return false;
 	}
 
-	void addFailure(ValidationFailureDetails aFailure) {
-		if (_failures == null) {
-			_failures = new ArrayList<ValidationFailureDetails>();
+	String serializeFailures(List<ValidationFailureDetails> failures) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getFailureMessage()");
 		}
-		_failures.add(aFailure);
-		_valid = false;
+
+		String message = null;
+		if (CollectionUtils.isEmpty(failures)) {
+			LOG.warn("serializeFailures: called while list of failures is null/empty!");
+		} else {
+			StringBuilder builder = new StringBuilder();
+			for (ValidationFailureDetails aFailure : failures) {
+				builder.append(aFailure.toString());
+				builder.append(";");
+			}
+			message = builder.toString();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.serializeFailures(): " + message);
+		}
+		return message;
 	}
-	
+
 	Set<String> getServiceConfigParameters(RangerService service) {
 		if (service == null || service.getConfigs() == null) {
 			return new HashSet<String>();
@@ -98,7 +123,7 @@ public abstract class RangerValidator {
 
 	Set<String> getRequiredParameters(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceValidator.getRequiredParameters(" + serviceDef + ")");
+			LOG.debug("==> RangerValidator.getRequiredParameters(" + serviceDef + ")");
 		}
 
 		Set<String> result;
@@ -119,7 +144,7 @@ public abstract class RangerValidator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceValidator.getRequiredParameters(" + serviceDef + "): " + result);
+			LOG.debug("<== RangerValidator.getRequiredParameters(" + serviceDef + "): " + result);
 		}
 		return result;
 	}
@@ -127,7 +152,7 @@ public abstract class RangerValidator {
 	RangerServiceDef getServiceDef(String type) {
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceValidator.getServiceDef(" + type + ")");
+			LOG.debug("==> RangerValidator.getServiceDef(" + type + ")");
 		}
 		RangerServiceDef result = null;
 		try {
@@ -137,7 +162,25 @@ public abstract class RangerValidator {
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceValidator.getServiceDef(" + type + "): " + result);
+			LOG.debug("<== RangerValidator.getServiceDef(" + type + "): " + result);
+		}
+		return result;
+	}
+
+	RangerService getService(Long id) {
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getService(" + id + ")");
+		}
+		RangerService result = null;
+		try {
+			result = _store.getService(id);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving service from service store!", e);
+		}
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getService(" + id + "): " + result);
 		}
 		return result;
 	}
@@ -145,7 +188,7 @@ public abstract class RangerValidator {
 	RangerService getService(String name) {
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceValidator.getService(" + name + ")");
+			LOG.debug("==> RangerValidator.getService(" + name + ")");
 		}
 		RangerService result = null;
 		try {
@@ -155,8 +198,201 @@ public abstract class RangerValidator {
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceValidator.getService(" + name + "): " + result);
+			LOG.debug("<== RangerValidator.getService(" + name + "): " + result);
 		}
 		return result;
+	}
+
+	RangerPolicy getPolicy(Long id) {
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getPolicy(" + id + ")");
+		}
+		RangerPolicy result = null;
+		try {
+			result = _store.getPolicy(id);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving policy from service store!", e);
+		}
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getPolicy(" + id + "): " + result);
+		}
+		return result;
+	}
+
+	List<RangerPolicy> getPolicies(final String policyName, final String serviceName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getPolicies(" + policyName + ", " + serviceName + ")");
+		}
+
+		List<RangerPolicy> policies = null;
+		try {
+			SearchFilter filter = new SearchFilter();
+			filter.setParam(SearchFilter.POLICY_NAME, policyName);
+			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+			
+			policies = _store.getPolicies(filter);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving service from service store!", e);
+		}
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getPolicies(" + policyName + ", " + serviceName + "): " + policies);
+		}
+		return policies;
+	}
+
+	Set<String> getAccessTypes(RangerServiceDef serviceDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getAccessTypes(" + serviceDef + ")");
+		}
+
+		Set<String> accessTypes = new HashSet<String>();
+		if (serviceDef == null) {
+			LOG.warn("serviceDef passed in was null!");
+		} else if (CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
+			LOG.warn("AccessTypeDef collection on serviceDef was null!");
+		} else {
+			for (RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
+				if (accessTypeDef == null) {
+					LOG.warn("Access type def was null!");
+				} else {
+					String accessType = accessTypeDef.getName();
+					if (StringUtils.isBlank(accessType)) {
+						LOG.warn("Access type def name was null/empty/blank!");
+					} else {
+						accessTypes.add(accessType);
+					}
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getAccessTypes(" + serviceDef + "): " + accessTypes);
+		}
+		return accessTypes;
+	}
+	
+	/**
+	 * This function exists to encapsulates the current behavior of code which treats and unspecified audit preference to mean audit is enabled.
+	 * @param policy
+	 * @return
+	 */
+	boolean getIsAuditEnabled(RangerPolicy policy) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getIsAuditEnabled(" + policy + ")");
+		}
+
+		boolean isEnabled = false;
+		if (policy == null) {
+			LOG.warn("policy was null!");
+		} else if (policy.getIsAuditEnabled() == null) {
+			isEnabled = true;
+		} else {
+			isEnabled = policy.getIsAuditEnabled();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getIsAuditEnabled(" + policy + "): " + isEnabled);
+		}
+		return isEnabled;
+	}
+	
+	Set<String> getMandatoryResourceNames(RangerServiceDef serviceDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getMandatoryResourceNames(" + serviceDef + ")");
+		}
+
+		Set<String> resourceNames = new HashSet<String>();
+		if (serviceDef == null) {
+			LOG.warn("serviceDef passed in was null!");
+		} else if (CollectionUtils.isEmpty(serviceDef.getResources())) {
+			LOG.warn("ResourceDef collection on serviceDef was null!");
+		} else {
+			for (RangerResourceDef resourceTypeDef : serviceDef.getResources()) {
+				if (resourceTypeDef == null) {
+					LOG.warn("resource type def was null!");
+				} else {
+					Boolean mandatory = resourceTypeDef.getMandatory();
+					if (mandatory != null && mandatory == true) {
+						String resourceName = resourceTypeDef.getName();
+						if (StringUtils.isBlank(resourceName)) {
+							LOG.warn("Resource def name was null/empty/blank!");
+						} else {
+							resourceNames.add(resourceName);
+						}
+					}
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getMandatoryResourceNames(" + serviceDef + "): " + resourceNames);
+		}
+		return resourceNames;
+	}
+
+	Set<String> getAllResourceNames(RangerServiceDef serviceDef) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getAllResourceNames(" + serviceDef + ")");
+		}
+
+		Set<String> resourceNames = new HashSet<String>();
+		if (serviceDef == null) {
+			LOG.warn("serviceDef passed in was null!");
+		} else if (CollectionUtils.isEmpty(serviceDef.getResources())) {
+			LOG.warn("ResourceDef collection on serviceDef was null!");
+		} else {
+			for (RangerResourceDef resourceTypeDef : serviceDef.getResources()) {
+				if (resourceTypeDef == null) {
+					LOG.warn("resource type def was null!");
+				} else {
+					String resourceName = resourceTypeDef.getName();
+					if (StringUtils.isBlank(resourceName)) {
+						LOG.warn("Resource def name was null/empty/blank!");
+					} else {
+						resourceNames.add(resourceName);
+					}
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getAllResourceNames(" + serviceDef + "): " + resourceNames);
+		}
+		return resourceNames;
+	}
+	
+	Set<String> getPolicyResources(RangerPolicy policy) {
+		if (policy == null || policy.getResources() == null || policy.getResources().isEmpty()) {
+			return new HashSet<String>();
+		} else {
+			return policy.getResources().keySet();
+		}
+	}
+
+	Map<String, String> getValidationRegExes(RangerServiceDef serviceDef) {
+		if (serviceDef == null || CollectionUtils.isEmpty(serviceDef.getResources())) {
+			return new HashMap<String, String>();
+		} else {
+			Map<String, String> result = new HashMap<String, String>();
+			for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+				if (resourceDef == null) {
+					LOG.warn("A resource def in resource def collection is null");
+				} else {
+					String name = resourceDef.getName();
+					String regEx = resourceDef.getValidationRegEx();
+					if (StringUtils.isBlank(name)) {
+						LOG.warn("resource name is null/empty/blank");
+					} else if (StringUtils.isBlank(regEx)) {
+						LOG.debug("validation regex is null/empty/blank");
+					} else {
+						result.put(name, regEx);
+					}
+				}
+			}
+			return result;
+		}
 	}
 }

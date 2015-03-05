@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,122 +47,88 @@ public class TestRangerServiceValidator {
 	public void before() {
 		_store = mock(ServiceStore.class);
 		_action = Action.CREATE; // by default we set action to create
-		_validator = new RangerServiceValidator(_store, _action);
+		_validator = new RangerServiceValidator(_store);
 	}
 
+	void checkFailure_isValid(RangerServiceValidator validator, RangerService service, Action action, List<ValidationFailureDetails> failures, String errorType, String field) {
+		checkFailure_isValid(validator, service, action, failures, errorType, field, null);
+	}
+	
+	void checkFailure_isValid(RangerServiceValidator validator, RangerService service, Action action, List<ValidationFailureDetails> failures, String errorType, String field, String subField) {
+		failures.clear();
+		assertFalse(validator.isValid(service, action, failures));
+		switch (errorType) {
+		case "missing":
+			_utils.checkFailureForMissingValue(failures, field, subField);
+			break;
+		case "semantic":
+			_utils.checkFailureForSemanticError(failures, field, subField);
+			break;
+		case "internal error":
+			_utils.checkFailureForInternalError(failures);
+			break;
+		default:
+			fail("Unsupported errorType[" + errorType + "]");
+			break;
+		}
+	}
+	
 	@Test
 	public void testIsValid_failures() throws Exception {
 		RangerService service = mock(RangerService.class);
-		List<ValidationFailureDetails> failures;
-		// create/update/delete: null, empty of blank name renders a service invalid
-		for (Action action : cud) {
-			_validator = new RangerServiceValidator(_store, action);
-			when(service.getName()).thenReturn(null);
-			assertFalse(_validator.isValid(service));
-			// let's verify the sort of error information that is returned (for one of these)
-			failures = _validator.getFailures();
-			// assert that among the failure reason is one about field name being missing.
-			boolean found = false;
-			for (ValidationFailureDetails f : failures) {
-				if ("name".equals(f.getFieldName()) && 
-						f._internalError == false && 
-						f._missing == true &&
-						f._semanticError == false) {
-					found = true;
-				}
-			}
-			assertTrue("Matching failure located", found);
-			// let's assert behavior for other flavors of this condition, too.
-			when(service.getName()).thenReturn("");
-			assertFalse(_validator.isValid(service));
-			when(service.getName()).thenReturn("  "); // spaces
-			assertFalse(_validator.isValid(service));
-		}
-		
-		// Create/update: null, empty or blank type is also invalid
-		for (Action action : cu) {
-			_validator = new RangerServiceValidator(_store, action);
-			when(service.getName()).thenReturn("aName");
-			when(service.getType()).thenReturn(null);
-			assertFalse(_validator.isValid(service));
-			when(service.getType()).thenReturn("");
-			assertFalse(_validator.isValid(service));
-			when(service.getType()).thenReturn("	"); // a tab
-			assertFalse(_validator.isValid(service));
-			// let's verify the error information returned (for the last scenario)
-			failures = _validator.getFailures();
-			boolean found = false;
-			for (ValidationFailureDetails f : failures) {
-				if ("type".equals(f._fieldName) && 
-						f._missing == true && 
-						f._semanticError == false) {
-					found = true;
-				}
-			}
-			assertTrue("Matching failure located", found);
-		}
+		// passing in a null service to the check itself is an error
+		assertFalse(_validator.isValid((RangerService)null, _action, _failures));
+		_utils.checkFailureForMissingValue(_failures, "service");
 
-		// Create/update: if non-empty, the type should also exist!
+		// id is required for update
+		when(service.getId()).thenReturn(null);
+		// let's verify the failure and the sort of error information that is returned (for one of these)
+		// assert that among the failure reason is one about id being missing.
+		checkFailure_isValid(_validator, service, Action.UPDATE, _failures, "missing", "id");
+		when(service.getId()).thenReturn(7L);
+
 		for (Action action : cu) {
-			_validator = new RangerServiceValidator(_store, action);
-			when(service.getName()).thenReturn("aName");
-			when(service.getType()).thenReturn("aType");
-			when(_store.getServiceDefByName("aType")).thenReturn(null);
-			assertFalse(_validator.isValid(service));
-			// let's verify the error information returned (for the last scenario)
-			failures = _validator.getFailures();
-			boolean found = false;
-			for (ValidationFailureDetails f : failures) {
-				if ("type".equals(f._fieldName) && 
-						f._missing == false && 
-						f._semanticError == true) {
-					found = true;
-				}
+			// null, empty of blank name renders a service invalid
+			for (String name : new String[] { null, "", " 	" }) { // spaces and tabs
+				when(service.getName()).thenReturn(name);
+				checkFailure_isValid(_validator, service, action, _failures, "missing", "name");
 			}
-			assertTrue("Matching failure located", found);
+			// same is true for the type
+			for (String type : new String[] { null, "", "    " }) {
+				when(service.getType()).thenReturn(type);
+				checkFailure_isValid(_validator, service, action, _failures, "missing", "type");
+			}
 		}
-		
-		// Create: if service already exists then that such a service should be considered invalid by create
 		when(service.getName()).thenReturn("aName");
+
+		// if non-empty, then the type should exist!
+		when(_store.getServiceDefByName("null-type")).thenReturn(null);
+		when(_store.getServiceDefByName("throwing-type")).thenThrow(new Exception());
+		for (Action action : cu) {
+			for (String type : new String[] { "null-type", "throwing-type" }) {
+				when(service.getType()).thenReturn(type);
+				checkFailure_isValid(_validator, service, action, _failures, "semantic", "type");
+			}
+		}
 		when(service.getType()).thenReturn("aType");
 		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
 		when(_store.getServiceDefByName("aType")).thenReturn(serviceDef);
-		// test both when service exists and when it doesn't -- the result is opposite for the two cases
-		RangerService existingService = mock(RangerService.class);
-		when(_store.getServiceByName("aName")).thenReturn(existingService);
+		
+		// Create: No service should exist matching its id and/or name
+		RangerService anExistingService = mock(RangerService.class);
+		when(_store.getServiceByName("aName")).thenReturn(anExistingService);
+		checkFailure_isValid(_validator, service, Action.CREATE, _failures, "semantic", "name");
 
-		_validator = new RangerServiceValidator(_store, Action.CREATE);
-		assertFalse(_validator.isValid(service));
-		
-		// check the error returned: it is a semantic error about service's name
-		failures = _validator.getFailures();
-		boolean found = false;
-		for (ValidationFailureDetails f : failures) {
-			if ("name".equals(f._fieldName) && 
-					f._missing == false && 
-					f._semanticError == true) {
-				found = true;
-			}
-		}
-		assertTrue("Matching failure located", found);
-		
-		// Update: Exact inverse is true, i.e. service must exist!
-		when(_store.getServiceByName("anotherName")).thenReturn(null);
-		when(service.getName()).thenReturn("anotherName");
-		
-		_validator = new RangerServiceValidator(_store, Action.UPDATE);
-		assertFalse(_validator.isValid(service));
-		// check the error returned: it is a semantic error about service's name
-		failures = _validator.getFailures();
-		found = false;
-		for (ValidationFailureDetails f : failures) {
-			if ("name".equals(f._fieldName) && 
-					f._missing == false && 
-					f._semanticError == true) {
-				found = true;
-			}
-		}
-		assertTrue("Matching failure located", found);
+		// Update: service should exist matching its id and name specified should not belong to a different service
+		when(_store.getService(7L)).thenReturn(null);
+		when(_store.getServiceByName("aName")).thenReturn(anExistingService);
+		checkFailure_isValid(_validator, service, Action.UPDATE, _failures, "semantic", "id");
+
+		when(_store.getService(7L)).thenReturn(anExistingService);
+		RangerService anotherExistingService = mock(RangerService.class);
+		when(anotherExistingService.getId()).thenReturn(49L);
+		when(_store.getServiceByName("aName")).thenReturn(anotherExistingService);
+		checkFailure_isValid(_validator, service, Action.UPDATE, _failures, "semantic", "id/name");
 	}
 	
 	@Test
@@ -190,21 +157,7 @@ public class TestRangerServiceValidator {
 		when(_store.getServiceByName("aService")).thenReturn(null);
 		for (Action action : cu) {
 			// it should be invalid
-			_validator = new RangerServiceValidator(_store, action);
-			assertFalse(_validator.isValid(service));
-			// check the error message
-			List<ValidationFailureDetails> failures = _validator.getFailures();
-			boolean found = false;
-			for (ValidationFailureDetails f : failures) {
-				if ("configuration".equals(f.getFieldName()) &&
-						"param2".equals(f._subFieldName) &&
-						f._missing == true &&
-						f._internalError == false && 
-						f._semanticError == false) {
-					found = true;
-				}
-			}
-			assertTrue(found);
+			checkFailure_isValid(_validator, service, action, _failures, "missing", "configuration", "param2");
 		}
 	}
 
@@ -230,33 +183,56 @@ public class TestRangerServiceValidator {
 		Map<String, String> configMap = _utils.createMap(configs);  
 		when(service.getConfigs()).thenReturn(configMap);
 		// wire then into the store
-		try {
-			// service does not exists
-			when(_store.getServiceByName("aName")).thenReturn(null);
-			// service def exists
-			when(_store.getServiceDefByName("aType")).thenReturn(serviceDef);
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail("Unexpected error encountered while mocking!");
-		}
-		_validator = new RangerServiceValidator(_store, Action.CREATE);
-		assertTrue(_validator.isValid(service));
-		// for update to work the only additional requirement is that service should exist
+		// service does not exists
+		when(_store.getServiceByName("aName")).thenReturn(null);
+		// service def exists
+		when(_store.getServiceDefByName("aType")).thenReturn(serviceDef);
+
+		assertTrue(_validator.isValid(service, Action.CREATE, _failures));
+
+		// for update to work the only additional requirement is that id is required and service should exist
+		// if name is not null and it points to a service then it should match the id
+		when(service.getId()).thenReturn(7L);
 		RangerService existingService = mock(RangerService.class);
+		when(existingService.getId()).thenReturn(7L);
+		when(_store.getService(7L)).thenReturn(existingService);
 		when(_store.getServiceByName("aName")).thenReturn(existingService);
-		_validator = new RangerServiceValidator(_store, Action.UPDATE);
-		assertTrue(_validator.isValid(service));
+		assertTrue(_validator.isValid(service, Action.UPDATE, _failures));
+		// name need not point to a service for update to work, of course.
+		when(_store.getServiceByName("aName")).thenReturn(null);
+		assertTrue(_validator.isValid(service, Action.UPDATE, _failures));
 	}
 
-	ValidationFailureDetails getFailure(List<ValidationFailureDetails> failures) {
-		if (failures == null || failures.size() == 0) {
-			return null;
-		} else {
-			return failures.iterator().next();
-		}
+	@Test
+	public void test_isValid_withId_errorConditions() throws Exception {
+		// api that takes in long is only supported for delete currently
+		assertFalse(_validator.isValid(1L, Action.CREATE, _failures));
+		_utils.checkFailureForInternalError(_failures);
+		// passing in a null id is a failure!
+		_validator = new RangerServiceValidator(_store);
+		_failures.clear(); assertFalse(_validator.isValid((Long)null, Action.DELETE, _failures));
+		_utils.checkFailureForMissingValue(_failures, "id");
+		// if service with that id does not exist then that, too, is a failure
+		when(_store.getService(1L)).thenReturn(null);
+		when(_store.getService(2L)).thenThrow(new Exception());
+		_failures.clear(); assertFalse(_validator.isValid(1L, Action.DELETE, _failures));
+		_utils.checkFailureForSemanticError(_failures, "id");
+
+		_failures.clear(); assertFalse(_validator.isValid(2L, Action.DELETE, _failures));
+		_utils.checkFailureForSemanticError(_failures, "id");
 	}
+	
+	@Test
+	public void test_isValid_withId_happyPath() throws Exception {
+		_validator = new RangerServiceValidator(_store);
+		RangerService service = mock(RangerService.class);
+		when(_store.getService(1L)).thenReturn(service);
+		assertTrue(_validator.isValid(1L, Action.DELETE, _failures));
+	}
+	
 	private ServiceStore _store;
 	private RangerServiceValidator _validator;
 	private Action _action;
 	private ValidationTestUtils _utils = new ValidationTestUtils();
+	private List<ValidationFailureDetails> _failures = new ArrayList<ValidationFailureDetails>();
 }

@@ -19,11 +19,15 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.rest.RangerValidator.Action;
 
 public class RangerValidatorFactory {
-	RangerServiceValidator getServiceValidator(ServiceStore store, Action action) {
-		return new RangerServiceValidator(store, action);
+	public RangerServiceValidator getServiceValidator(ServiceStore store) {
+		return new RangerServiceValidator(store);
+	}
+
+	public RangerPolicyValidator getPolicyValidator(ServiceDBStore store) {
+		return new RangerPolicyValidator(store);
 	}
 }

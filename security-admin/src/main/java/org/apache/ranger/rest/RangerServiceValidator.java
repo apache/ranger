@@ -19,6 +19,8 @@
 
 package org.apache.ranger.rest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -34,135 +36,147 @@ public class RangerServiceValidator extends RangerValidator {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceValidator.class);
 
-	public RangerServiceValidator(ServiceStore store, Action action) {
-		super(store, action);
+	public RangerServiceValidator(ServiceStore store) {
+		super(store);
 	}
 
-	public void validate(RangerService service) throws Exception {
+	public void validate(RangerService service, Action action) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerValidator.validate(" + service + ")");
 		}
 
-		if (isValid(service)) {
+		List<ValidationFailureDetails> failures = new ArrayList<ValidationFailureDetails>();
+		if (isValid(service, action, failures)) {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerValidator.validate(" + service + "): valid");
 			}
 		} else {
-			String message = getFailureMessage();
+			String message = serializeFailures(failures);
 			LOG.debug("<== RangerValidator.validate(" + service + "): invalid, reason[" + message + "]");
 			throw new Exception(message);
 		}
 	}
 	
-	public void validate(long id) throws Exception {
-		if (isValid(id)) {
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerValidator.validate(" + id + "): valid");
-			}
-		} else {
-			String message = getFailureMessage();
-			LOG.debug("<== RangerValidator.validate(" + id + "): invalid, reason[" + message + "]");
-			throw new Exception(message);
-		}
-	}
-	
-	boolean isValid(Long id) {
+	boolean isValid(Long id, Action action, List<ValidationFailureDetails> failures) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceValidator.isValid(" + id + ")");
 		}
 
-		if (_action != Action.DELETE) {
-			addFailure(new ValidationFailureDetailsBuilder()
+		boolean valid = true;
+		if (action != Action.DELETE) {
+			failures.add(new ValidationFailureDetailsBuilder()
 				.isAnInternalError()
 				.becauseOf("isValid(Long) is only supported for DELETE")
 				.build());
+			valid = false;
 		} else if (id == null) {
-			addFailure(new ValidationFailureDetailsBuilder()
+			failures.add(new ValidationFailureDetailsBuilder()
 				.field("id")
 				.isMissing()
 				.build());
-		} else {
-			boolean found = false;
-			try {
-				if (_store.getService(id) != null) {
-					found = true;
-				}
-			} catch (Exception e) {
-				LOG.debug("Encountred exception while retrieving service from service store!", e);
-			}
-			if (!found) {
-				addFailure(new ValidationFailureDetailsBuilder()
-					.field("id")
-					.isSemanticallyIncorrect()
-					.becauseOf("no service found for id[" + id + "]")
-					.build());
-			}
+			valid = false;
+		} else if (getService(id) == null) {
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field("id")
+				.isSemanticallyIncorrect()
+				.becauseOf("no service found for id[" + id + "]")
+				.build());
+			valid = false;
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceValidator.isValid(" + id + "): " + _valid);
+			LOG.debug("<== RangerServiceValidator.isValid(" + id + "): " + valid);
 		}
-		return _valid;
+		return valid;
 	}
 	
-	boolean isValid(RangerService service) {
+	boolean isValid(RangerService service, Action action, List<ValidationFailureDetails> failures) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceValidator.isValid(" + service + ")");
 		}
+		if (!(action == Action.CREATE || action == Action.UPDATE)) {
+			throw new IllegalArgumentException("isValid(RangerService, ...) is only supported for CREATE/UPDATE");
+		}
 		
+		boolean valid = true;
 		if (service == null) {
 			String message = "service object passed in was null";
 			LOG.debug(message);
-			addFailure(new ValidationFailureDetailsBuilder()
+			failures.add(new ValidationFailureDetailsBuilder()
 				.field("service")
 				.isMissing()
 				.becauseOf(message)
 				.build());
+			valid = false;
 		} else {
+			Long id = service.getId();
+			if (action == Action.UPDATE) { // id is ignored for CREATE
+				if (id == null) {
+					String message = "service id was null/empty/blank"; 
+					LOG.debug(message);
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("id")
+						.isMissing()
+						.becauseOf(message)
+						.build());
+					valid = false;
+				} else if (getService(id) == null) {
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("id")
+						.isSemanticallyIncorrect()
+						.becauseOf("no service exists with id[" + id +"]")
+						.build());
+					valid = false;
+				}
+			}
 			String name = service.getName();
-			String type = service.getType();
 			boolean nameSpecified = StringUtils.isNotBlank(name);
-			boolean typeSpecified = StringUtils.isNotBlank(type);
-			RangerService existingService = null;
 			RangerServiceDef serviceDef = null;
 			if (!nameSpecified) {
-				String message = "service name was null/empty/blank"; 
+				String message = "service name was null/empty/blank[" + name + "]"; 
 				LOG.debug(message);
-				addFailure(new ValidationFailureDetailsBuilder()
+				failures.add(new ValidationFailureDetailsBuilder()
 					.field("name")
 					.isMissing()
 					.becauseOf(message)
 					.build());
+				valid = false;
 			} else {
-				existingService = getService(name);
-				if (existingService != null && _action == Action.CREATE) {
-					addFailure(new ValidationFailureDetailsBuilder()
+				RangerService otherService = getService(name);
+				if (otherService != null && action == Action.CREATE) {
+					failures.add(new ValidationFailureDetailsBuilder()
 						.field("name")
 						.isSemanticallyIncorrect()
-						.becauseOf("service with the same name already exists")
+						.becauseOf("service already exists with name[" + name + "]")
 						.build());
-				} else if (existingService == null && _action == Action.UPDATE) {
-					addFailure(new ValidationFailureDetailsBuilder()
-						.field("name")
+					valid = false;
+				} else if (otherService != null && otherService.getId() !=null && otherService.getId() != id) {
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("id/name")
 						.isSemanticallyIncorrect()
-						.becauseOf("service with the same name doesn't exist")
+						.becauseOf("id/name conflict: service already exists with name[" + name + "], its id is [" + otherService.getId() + "]")
 						.build());
+					valid = false;
 				}
 			}
+			String type = service.getType();
+			boolean typeSpecified = StringUtils.isNotBlank(type);
 			if (!typeSpecified) {
-				addFailure(new ValidationFailureDetailsBuilder()
+				failures.add(new ValidationFailureDetailsBuilder()
 					.field("type")
 					.isMissing()
 					.becauseOf("service def was null/empty/blank")
 					.build());
+				valid = false;
 			} else {
 				serviceDef = getServiceDef(type);
 				if (serviceDef == null) {
-					addFailure(new ValidationFailureDetailsBuilder()
+					failures.add(new ValidationFailureDetailsBuilder()
 						.field("type")
 						.isSemanticallyIncorrect()
-						.becauseOf("service def not found")
+						.becauseOf("service def not found for type[" + type + "]")
 						.build());
+					valid = false;
 				}
 			}
 			if (nameSpecified && serviceDef != null) {
@@ -170,19 +184,20 @@ public class RangerServiceValidator extends RangerValidator {
 				Set<String> inputParameters = getServiceConfigParameters(service);
 				Set<String> missingParameters = Sets.difference(reqiredParameters, inputParameters);
 				if (!missingParameters.isEmpty()) {
-					addFailure(new ValidationFailureDetailsBuilder()
+					failures.add(new ValidationFailureDetailsBuilder()
 						.field("configuration")
 						.subField(missingParameters.iterator().next()) // we return any one parameter!
 						.isMissing()
 						.becauseOf("required configuration parameter is missing")
 						.build());
+					valid = false;
 				}
 			}
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceValidator.isValid(" + service + "): " + _valid);
+			LOG.debug("<== RangerServiceValidator.isValid(" + service + "): " + valid);
 		}
-		return _valid;
+		return valid;
 	}
 }

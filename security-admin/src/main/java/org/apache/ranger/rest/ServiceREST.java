@@ -45,6 +45,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.admin.client.datatype.RESTResponse;
+import org.apache.ranger.biz.AssetMgr;
+import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.ServiceMgr;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.ServiceUtil;
+import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -68,15 +75,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.ranger.admin.client.datatype.RESTResponse;
-import org.apache.ranger.biz.AssetMgr;
-import org.apache.ranger.biz.ServiceMgr;
-import org.apache.ranger.biz.ServiceDBStore;
-import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.ServiceUtil;
-import org.apache.ranger.entity.XXPolicyExportAudit;
 
 
 @Path("plugins")
@@ -281,8 +279,8 @@ public class ServiceREST {
 		RangerService ret = null;
 
 		try {
-			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore, Action.CREATE);
-			validator.validate(service);
+			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
+			validator.validate(service, Action.CREATE);
 			
 			ret = svcStore.createService(service);
 		} catch(Exception excp) {
@@ -310,8 +308,8 @@ public class ServiceREST {
 		RangerService ret = null;
 
 		try {
-			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore, Action.UPDATE);
-			validator.validate(service);
+			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
+			validator.validate(service, Action.UPDATE);
 			ret = svcStore.updateService(service);
 		} catch(Exception excp) {
 			LOG.error("updateService(" + service + ") failed", excp);
@@ -336,8 +334,8 @@ public class ServiceREST {
 		}
 
 		try {
-			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore, Action.DELETE);
-			validator.validate(id);
+			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
+			validator.validate(id, Action.DELETE);
 			svcStore.deleteService(id);
 		} catch(Exception excp) {
 			LOG.error("deleteService(" + id + ") failed", excp);
@@ -795,6 +793,8 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		try {
+			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+			validator.validate(policy, Action.CREATE);
 			ret = svcStore.createPolicy(policy);
 		} catch(Exception excp) {
 			LOG.error("createPolicy(" + policy + ") failed", excp);
@@ -820,6 +820,8 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		try {
+			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+			validator.validate(policy, Action.UPDATE);
 			ret = svcStore.updatePolicy(policy);
 		} catch(Exception excp) {
 			LOG.error("updatePolicy(" + policy + ") failed", excp);
@@ -843,6 +845,8 @@ public class ServiceREST {
 		}
 
 		try {
+			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+			validator.validate(id, Action.DELETE);
 			svcStore.deletePolicy(id);
 		} catch(Exception excp) {
 			LOG.error("deletePolicy(" + id + ") failed", excp);
