@@ -37,6 +37,7 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.rest.RangerValidator.Action;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +52,7 @@ public class TestServiceRESTForValidation {
 		// inject out store in it
 		_store = mock(ServiceDBStore.class);
 		_serviceRest.svcStore = _store;
+		
 		// and our validator factory
 		_factory = mock(RangerValidatorFactory.class);
 		_serviceValidator = mock(RangerServiceValidator.class);
@@ -58,6 +60,9 @@ public class TestServiceRESTForValidation {
 		_policyValidator = mock(RangerPolicyValidator.class);
 		when(_factory.getPolicyValidator(_store)).thenReturn(_policyValidator);
 		_serviceRest.validatorFactory = _factory;
+		_serviceDefValidator = mock(RangerServiceDefValidator.class);
+		when(_factory.getServiceDefValidator(_store)).thenReturn(_serviceDefValidator);
+
 		// and other things that are needed for service rest to work correctly
 		_restErrorUtil = mock(RESTErrorUtil.class);
 		WebApplicationException webApplicationException = new WebApplicationException();
@@ -85,7 +90,7 @@ public class TestServiceRESTForValidation {
 			// 
 			_serviceRest.updateService(_service);
 			verify(_serviceValidator).validate(_service, Action.UPDATE);
-
+	
 			_serviceRest.deleteService(3L);
 			verify(_serviceValidator).validate(3L, Action.DELETE);
 		} catch (Throwable t) {
@@ -93,7 +98,7 @@ public class TestServiceRESTForValidation {
 			fail("Unexpected exception thrown!");
 		}
 	}
-
+	
 	@Test
 	public final void testService_storeFailure() throws Exception {
 		/*
@@ -283,14 +288,120 @@ public class TestServiceRESTForValidation {
 			fail("Unexpected exception!");
 		}
 	}
+
+	@Test
+	public final void testServiceDef_happyPath() throws Exception {
+		/*
+		 * Creation should succeed if neither validator nor dbstore throw exception.
+		 * - by default mocks return null for unspecified methods, so no additional mocking needed.
+		 * - We just assert that validator is called with right set of arguments.
+		 * - db store would also have been excercised but that is not the focus of this test, so we don't assert about it!!
+		 */
+		try {
+			_serviceRest.createServiceDef(_serviceDef);
+			verify(_serviceDefValidator).validate(_serviceDef, Action.CREATE);
+			// 
+			_serviceRest.updateServiceDef(_serviceDef);
+			verify(_serviceDefValidator).validate(_serviceDef, Action.UPDATE);
+
+			_serviceRest.deleteServiceDef(3L);
+			verify(_serviceDefValidator).validate(3L, Action.DELETE);
+		} catch (Throwable t) {
+			t.printStackTrace();
+			fail("Unexpected exception thrown!");
+		}
+	}
 	
-	RangerValidatorFactory _factory;
-	RangerServiceValidator _serviceValidator;
-	RangerPolicyValidator _policyValidator;
-	ServiceDBStore _store;
-	ServiceREST _serviceRest;
-	RangerService _service;
-	RangerPolicy _policy;
-	Exception _exception;
-	RESTErrorUtil _restErrorUtil;
+	@Test
+	public void testServiveDef_validatorFailure() throws Exception {
+		
+		doThrow(_exception).when(_serviceDefValidator).validate(_serviceDef, Action.CREATE);
+		try {
+			_serviceRest.createServiceDef(_serviceDef);
+			fail("Should have thrown exception!");
+		} catch (WebApplicationException t) {
+			verify(_serviceDefValidator).validate(_serviceDef, Action.CREATE);
+			verify(_store, never()).createServiceDef(_serviceDef);
+		} catch (Throwable t) {
+			LOG.debug(t);
+			fail("Unexpected exception!");
+		}
+
+		doThrow(_exception).when(_serviceDefValidator).validate(_serviceDef, Action.UPDATE);
+		try {
+			_serviceRest.updateServiceDef(_serviceDef);
+			fail("Should have thrown exception!");
+		} catch (WebApplicationException t) {
+			verify(_serviceDefValidator).validate(_serviceDef, Action.UPDATE);
+			verify(_store, never()).updateServiceDef(_serviceDef);
+		} catch (Throwable t) {
+			LOG.debug(t);
+			fail("Unexpected exception!");
+		}
+
+		doThrow(_exception).when(_serviceDefValidator).validate(4L, Action.DELETE);
+		try {
+			_serviceRest.deleteServiceDef(4L);
+			fail("Should have thrown exception!");
+		} catch (WebApplicationException t) {
+			verify(_serviceDefValidator).validate(4L, Action.DELETE);
+			verify(_store, never()).deleteServiceDef(4L);
+		} catch (Throwable t) {
+			LOG.debug(t);
+			fail("Unexpected exception!");
+		}
+	}
+	
+	@Test
+	public void testServiceDef_storeFailure() throws Exception {
+		doThrow(_exception).when(_store).createServiceDef(_serviceDef);
+		try {
+			_serviceRest.createServiceDef(_serviceDef);
+			fail("Should have thrown exception!");
+		} catch (WebApplicationException e) {
+			verify(_serviceDefValidator).validate(_serviceDef, Action.CREATE);
+			verify(_store).createServiceDef(_serviceDef);
+		} catch (Throwable t) {
+			LOG.debug(t);
+			fail("Unexpected exception!");
+		}
+		
+		doThrow(_exception).when(_store).updateServiceDef(_serviceDef);
+		try {
+			_serviceRest.updateServiceDef(_serviceDef);
+			fail("Should have thrown exception!");
+		} catch (WebApplicationException e) {
+			verify(_serviceDefValidator).validate(_serviceDef, Action.UPDATE);
+			verify(_store).updateServiceDef(_serviceDef);
+		} catch (Throwable t) {
+			LOG.debug(t);
+			fail("Unexpected exception!");
+		}
+		
+		doThrow(_exception).when(_store).deleteServiceDef(5L);
+		try {
+			_serviceRest.deleteServiceDef(5L);
+			fail("Should have thrown exception!");
+		} catch (WebApplicationException e) {
+			verify(_serviceDefValidator).validate(5L, Action.DELETE);
+			verify(_store).deleteServiceDef(5L);
+		} catch (Throwable t) {
+			LOG.debug(t);
+			fail("Unexpected exception!");
+		}
+	}
+
+	private RangerValidatorFactory _factory;
+	private RangerServiceValidator _serviceValidator;
+	private RangerPolicyValidator _policyValidator;
+	private RangerServiceDefValidator _serviceDefValidator;
+
+	private ServiceDBStore _store;
+	private ServiceREST _serviceRest;
+	private Exception _exception;
+	private RESTErrorUtil _restErrorUtil;
+
+	private RangerService _service;
+	private RangerPolicy _policy;
+	private RangerServiceDef _serviceDef;
 }

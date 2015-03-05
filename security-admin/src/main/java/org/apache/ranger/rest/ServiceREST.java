@@ -119,6 +119,8 @@ public class ServiceREST {
 		RangerServiceDef ret = null;
 
 		try {
+			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+			validator.validate(serviceDef, Action.CREATE);
 			ret = svcStore.createServiceDef(serviceDef);
 		} catch(Exception excp) {
 			LOG.error("createServiceDef(" + serviceDef + ") failed", excp);
@@ -145,6 +147,8 @@ public class ServiceREST {
 		RangerServiceDef ret = null;
 
 		try {
+			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+			validator.validate(serviceDef, Action.UPDATE);
 			ret = svcStore.updateServiceDef(serviceDef);
 		} catch(Exception excp) {
 			LOG.error("updateServiceDef(" + serviceDef + ") failed", excp);
@@ -169,6 +173,8 @@ public class ServiceREST {
 		}
 
 		try {
+			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+			validator.validate(id, Action.DELETE);
 			svcStore.deleteServiceDef(id);
 		} catch(Exception excp) {
 			LOG.error("deleteServiceDef(" + id + ") failed", excp);

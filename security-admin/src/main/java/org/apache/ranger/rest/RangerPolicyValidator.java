@@ -29,7 +29,7 @@ public class RangerPolicyValidator extends RangerValidator {
 
 	public void validate(RangerPolicy policy, Action action) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerValidator.validate(%s, %s)", policy, action));
+			LOG.debug(String.format("==> RangerPolicyValidator.validate(%s, %s)", policy, action));
 		}
 
 		List<ValidationFailureDetails> failures = new ArrayList<ValidationFailureDetails>();
@@ -42,7 +42,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			}
 		} finally {
 			if(LOG.isDebugEnabled()) {
-				LOG.debug(String.format("<== RangerValidator.validate(%s, %s): %s, reason[%s]", policy, action, valid, message));
+				LOG.debug(String.format("<== RangerPolicyValidator.validate(%s, %s): %s, reason[%s]", policy, action, valid, message));
 			}
 		}
 	}
@@ -151,7 +151,7 @@ public class RangerPolicyValidator extends RangerValidator {
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("id/name")
 							.isSemanticallyIncorrect()
-							.becauseOf("id/name conflict: policy already exists with name[" + policyName + "], its id is[" + policies.iterator().next().getId() + "]")
+							.becauseOf("id/name conflict: another policy already exists with name[" + policyName + "], its id is[" + policies.iterator().next().getId() + "]")
 							.build());
 						valid = false;
 					}
@@ -396,17 +396,15 @@ public class RangerPolicyValidator extends RangerValidator {
 					.becauseOf("policy items access type's name was null/empty/blank")
 					.build());
 				valid = false;
-			} else {
-				if (!accessTypes.contains(accessType)) {
-					String message = String.format("access type[%s] not among valid types for service[%s]", accessType, accessTypes);
-					LOG.debug(message);
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("policy item access type")
-						.isSemanticallyIncorrect()
-						.becauseOf(message)
-						.build());
-					valid = false;
-				}
+			} else if (!accessTypes.contains(accessType.toLowerCase())) {
+				String message = String.format("access type[%s] not among valid types for service[%s]", accessType, accessTypes);
+				LOG.debug(message);
+				failures.add(new ValidationFailureDetailsBuilder()
+					.field("policy item access type")
+					.isSemanticallyIncorrect()
+					.becauseOf(message)
+					.build());
+				valid = false;
 			}
 			Boolean isAllowed = access.getIsAllowed();
 			// it can be null (which is treated as allowed) but not false

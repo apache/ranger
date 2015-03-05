@@ -45,20 +45,20 @@ public class TestRangerPolicyValidator {
 				"groups", new String[] {"group1", "group2"},
 				"accesses", new String[] { "r", "w" },
 				"isAllowed", new Boolean[] { true, true }),
-			ImmutableMap.of(   // no users
+			ImmutableMap.of(   // no users, access type different case
 				"groups", new String[] {"group3", "group4"},
-				"accesses", new String[]{"w", "x"}, 
+				"accesses", new String[]{"W", "x"}, 
 				"isAllowed", new Boolean[] { true, true }),
 			ImmutableMap.of(   // no groups
 				"users", new String[] {"user3" ," user4"}, 
 				"accesses", new String[] { "r", "x" },
 				"isAllowed", new Boolean[] { true, true }),
-			ImmutableMap.of( // isallowed on access types is null
+			ImmutableMap.of( // isallowed on access types is null, case is different from that in definition
 				"users", new String[] {"user7" ," user6"},
 				"accesses", new String[] { "a" },
 				"isAllowed", new Boolean[] { null, null })
 	};
-	String[] accessTypes = new String[] { "r", "w", "x", "a" };
+	String[] accessTypes = new String[] { "r", "w", "x", "A" };  // mix of lower and upper case
 	String[] accessTypes_bad = new String[] { "r", "w", "xx", }; // two missing (x, a), one new that isn't on bad (xx)
 	
 	final Object[][] resourceDefData = new Object[][] {
@@ -69,7 +69,8 @@ public class TestRangerPolicyValidator {
 	
 	final Map<String, String[]> policyResourceMap_good = ImmutableMap.of(
 			"db", new String[] { "db1", "db2" },
-			"tbl", new String[] { "tbl1", "tbl2" } );
+			"TBL", new String[] { "tbl1", "tbl2" } ); // case should not matter
+	
 	final Map<String, String[]> policyResourceMap_bad = ImmutableMap.of(
 			"db", new String[] { "db1", "db2" },            // mandatory "tbl" missing
 			"col", new String[] { "col12", "col 1" },       // wrong format of value for "col"
@@ -424,9 +425,9 @@ public class TestRangerPolicyValidator {
 	public void test_isValidPolicyItemAccess_happyPath() {
 		
 		RangerPolicyItemAccess access = mock(RangerPolicyItemAccess.class);
-		when(access.getType()).thenReturn("anAccess"); // valid
+		when(access.getType()).thenReturn("an-Access"); // valid
 
-		Set<String> validAccesses = Sets.newHashSet(new String[] { "anAccess", "anotherAccess" });
+		Set<String> validAccesses = Sets.newHashSet(new String[] { "an-access", "another-access" });  // valid accesses should be lower-cased
 		
 		// both null or true access types are the same and valid
 		for (Boolean allowed : new Boolean[] { null, true } ) {

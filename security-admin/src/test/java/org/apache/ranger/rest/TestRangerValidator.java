@@ -26,25 +26,31 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.rest.RangerValidator.Action;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.Maps;
 
 public class TestRangerValidator {
 
@@ -238,13 +244,14 @@ public class TestRangerValidator {
 		assertTrue(accessTypes.isEmpty());
 		
 		// access type defs with null empty blank names are skipped, spaces within names are preserved
-		String[] names = new String[] { null, "", "a", "  ", "b ", "		", " c" };
+		String[] names = new String[] { null, "", "a", "  ", "b ", "		", " C", "	D	" };
 		accessTypeDefs.addAll(_utils.createAccessTypeDefs(names));
 		accessTypes = _validator.getAccessTypes(serviceDef);
-		assertEquals(3, accessTypes.size());
+		assertEquals(4, accessTypes.size());
 		assertTrue(accessTypes.contains("a"));
 		assertTrue(accessTypes.contains("b "));
 		assertTrue(accessTypes.contains(" c"));
+		assertTrue(accessTypes.contains("	d	"));
 	}
 	
 	@Test
@@ -270,22 +277,24 @@ public class TestRangerValidator {
 		
 		// access type defs with null empty blank names are skipped, spaces within names are preserved
 		Object[][] data = {
-				{ "a", true }, // all good
-				null,          // this should put a null element in the resource def!
-				{ "b", null }, // mandatory field is null, i.e. false
-				{ "c", false }, // mandatory field false
-				{ "d", true }, // all good
+				{ "a", true },  // all good
+				null,           // this should put a null element in the resource def!
+				{ "b", null },  // mandatory field is null, i.e. false
+				{ "c", false }, // non-mandatory field false - upper case
+				{ "D", true },  // resource specified in upper case
+				{ "E", false }, // all good
 		};
 		resourceDefs.addAll(_utils.createResourceDefs(data));
 		accessTypes = _validator.getMandatoryResourceNames(serviceDef);
 		assertEquals(2, accessTypes.size());
 		assertTrue(accessTypes.contains("a"));
-		assertTrue(accessTypes.contains("d"));
+		assertTrue(accessTypes.contains("d")); // name should come back lower case
 		
 		accessTypes = _validator.getAllResourceNames(serviceDef);
-		assertEquals(4, accessTypes.size());
+		assertEquals(5, accessTypes.size());
 		assertTrue(accessTypes.contains("b"));
 		assertTrue(accessTypes.contains("c"));
+		assertTrue(accessTypes.contains("e"));
 	}
 
 	@Test
@@ -327,6 +336,137 @@ public class TestRangerValidator {
 		assertEquals("regex3", regExMap.get("f"));
 	}
 
+	@Test
+	public void test_getPolicyResources() {
+		
+		Set<String> result;
+		RangerPolicy policy = null;
+		// null policy
+		result = _validator.getPolicyResources(null);
+		assertTrue(result != null);
+		assertTrue(result.isEmpty());
+		// null resource map
+		policy = mock(RangerPolicy.class);
+		when(policy.getResources()).thenReturn(null);
+		result = _validator.getPolicyResources(null);
+		assertTrue(result != null);
+		assertTrue(result.isEmpty());
+		// empty resource map
+		Map<String, RangerPolicyResource> input = Maps.newHashMap();
+		when(policy.getResources()).thenReturn(input);
+		result = _validator.getPolicyResources(policy);
+		assertTrue(result != null);
+		assertTrue(result.isEmpty());
+		// known resource map
+		input.put("r1", mock(RangerPolicyResource.class));
+		input.put("R2", mock(RangerPolicyResource.class));
+		result = _validator.getPolicyResources(policy);
+		assertEquals(2, result.size());
+		assertTrue("r1", result.contains("r1"));
+		assertTrue("R2", result.contains("r2")); // result should lowercase the resource-names
+	}
+
+	@Test
+	public void test_getIsAuditEnabled() {
+		// null policy
+		RangerPolicy policy = null;
+		boolean result = _validator.getIsAuditEnabled(policy);
+		assertFalse(result);
+		// null isAuditEnabled Boolean is supposed to be TRUE!!
+		policy = mock(RangerPolicy.class);
+		when(policy.getIsAuditEnabled()).thenReturn(null);
+		result = _validator.getIsAuditEnabled(policy);
+		assertTrue(result);
+		// non-null value
+		when(policy.getIsAuditEnabled()).thenReturn(Boolean.FALSE);
+		result = _validator.getIsAuditEnabled(policy);
+		assertFalse(result);
+
+		when(policy.getIsAuditEnabled()).thenReturn(Boolean.TRUE);
+		result = _validator.getIsAuditEnabled(policy);
+		assertTrue(result);
+	}
+
+	@Test
+	public void test_getPolicies() throws Exception {
+
+		// returns null when store returns null
+		String policyName = "aPolicy";
+		String serviceName = "aService";
+		SearchFilter filter = new SearchFilter();
+		filter.setParam(SearchFilter.POLICY_NAME, policyName);
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+		
+		when(_store.getPolicies(filter)).thenReturn(null);
+		List<RangerPolicy> result = _validator.getPolicies(policyName, serviceName);
+		// validate store is queried with both parameters
+		verify(_store).getPolicies(filter);
+		assertNull(result);
+
+		// returns null if store throws an exception
+		when(_store.getPolicies(filter)).thenThrow(new Exception());
+		result = _validator.getPolicies(policyName, serviceName);
+		assertNull(result);
+	}
+	
+	@Test
+	public void test_getServiceDef_byId() throws Exception {
+		// if service store returns null or throws an exception then service is deemed invalid
+		when(_store.getServiceDef(1L)).thenReturn(null);
+		when(_store.getServiceDef(2L)).thenThrow(new Exception());
+		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
+		when(_store.getServiceDef(3L)).thenReturn(serviceDef);
+		
+		assertNull(_validator.getServiceDef(1L));
+		assertNull(_validator.getServiceDef(2L));
+		assertTrue(_validator.getServiceDef(3L) != null);
+	}
+
+	@Test
+	public void test_getEnumDefaultIndex() {
+		RangerEnumDef enumDef = mock(RangerEnumDef.class);
+		assertEquals(-1, _validator.getEnumDefaultIndex(null));
+		when(enumDef.getDefaultIndex()).thenReturn(null);
+		assertEquals(0, _validator.getEnumDefaultIndex(enumDef));
+		when(enumDef.getDefaultIndex()).thenReturn(-5);
+		assertEquals(-5, _validator.getEnumDefaultIndex(enumDef));
+	}
+	
+	@Test
+	public void test_getImpliedGrants() {
+		
+		// passing in null gets back a null
+		Collection<String> result = _validator.getImpliedGrants(null);
+		assertNull(result);
+		
+		// null or empty implied grant collection gets back an empty collection
+		RangerAccessTypeDef accessTypeDef = mock(RangerAccessTypeDef.class);
+		when(accessTypeDef.getImpliedGrants()).thenReturn(null);
+		result = _validator.getImpliedGrants(accessTypeDef);
+		assertTrue(result.isEmpty());
+		
+		List<String> impliedGrants = new ArrayList<String>();
+		when(accessTypeDef.getImpliedGrants()).thenReturn(impliedGrants);
+		result = _validator.getImpliedGrants(accessTypeDef);
+		assertTrue(result.isEmpty());
+
+		// null/empty values come back as is
+		impliedGrants = Arrays.asList(new String[] { null, "", " ", "		" });
+		when(accessTypeDef.getImpliedGrants()).thenReturn(impliedGrants);
+		result = _validator.getImpliedGrants(accessTypeDef);
+		assertEquals(4, result.size());
+		
+		// non-empty values get lower cased
+		impliedGrants = Arrays.asList(new String[] { "a", "B", "C	", " d " });
+		when(accessTypeDef.getImpliedGrants()).thenReturn(impliedGrants);
+		result = _validator.getImpliedGrants(accessTypeDef);
+		assertEquals(4, result.size());
+		assertTrue(result.contains("a"));
+		assertTrue(result.contains("b"));
+		assertTrue(result.contains("c	"));
+		assertTrue(result.contains(" d "));
+	}
+	
 	private RangerValidatorForTest _validator;
 	private ServiceStore _store;
 	private ValidationTestUtils _utils = new ValidationTestUtils();

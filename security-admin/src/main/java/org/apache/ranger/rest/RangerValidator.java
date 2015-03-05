@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -145,6 +147,24 @@ public abstract class RangerValidator {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerValidator.getRequiredParameters(" + serviceDef + "): " + result);
+		}
+		return result;
+	}
+
+	RangerServiceDef getServiceDef(Long id) {
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getServiceDef(" + id + ")");
+		}
+		RangerServiceDef result = null;
+		try {
+			result = _store.getServiceDef(id);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving service def from service store!", e);
+		}
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getServiceDef(" + id + "): " + result);
 		}
 		return result;
 	}
@@ -262,7 +282,7 @@ public abstract class RangerValidator {
 					if (StringUtils.isBlank(accessType)) {
 						LOG.warn("Access type def name was null/empty/blank!");
 					} else {
-						accessTypes.add(accessType);
+						accessTypes.add(accessType.toLowerCase());
 					}
 				}
 			}
@@ -299,6 +319,11 @@ public abstract class RangerValidator {
 		return isEnabled;
 	}
 	
+	/**
+	 * Returns names of resource types set to lower-case to allow for case-insensitive comparison. 
+	 * @param serviceDef
+	 * @return
+	 */
 	Set<String> getMandatoryResourceNames(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerValidator.getMandatoryResourceNames(" + serviceDef + ")");
@@ -320,7 +345,7 @@ public abstract class RangerValidator {
 						if (StringUtils.isBlank(resourceName)) {
 							LOG.warn("Resource def name was null/empty/blank!");
 						} else {
-							resourceNames.add(resourceName);
+							resourceNames.add(resourceName.toLowerCase());
 						}
 					}
 				}
@@ -352,7 +377,7 @@ public abstract class RangerValidator {
 					if (StringUtils.isBlank(resourceName)) {
 						LOG.warn("Resource def name was null/empty/blank!");
 					} else {
-						resourceNames.add(resourceName);
+						resourceNames.add(resourceName.toLowerCase());
 					}
 				}
 			}
@@ -364,11 +389,20 @@ public abstract class RangerValidator {
 		return resourceNames;
 	}
 	
+	/**
+	 * Returns the resource-types defined on the policy converted to lowe-case
+	 * @param policy
+	 * @return
+	 */
 	Set<String> getPolicyResources(RangerPolicy policy) {
 		if (policy == null || policy.getResources() == null || policy.getResources().isEmpty()) {
 			return new HashSet<String>();
 		} else {
-			return policy.getResources().keySet();
+			Set<String> result = new HashSet<String>();
+			for (String name : policy.getResources().keySet()) {
+				result.add(name.toLowerCase());
+			}
+			return result;
 		}
 	}
 
@@ -395,4 +429,35 @@ public abstract class RangerValidator {
 			return result;
 		}
 	}
+	
+	int getEnumDefaultIndex(RangerEnumDef enumDef) {
+		int index;
+		if (enumDef == null) {
+			index = -1;
+		} else if (enumDef.getDefaultIndex() == null) {
+			index = 0;
+		} else {
+			index = enumDef.getDefaultIndex();
+		}
+		return index;
+	}
+
+	Collection<String> getImpliedGrants(RangerAccessTypeDef def) {
+		if (def == null) {
+			return null;
+		} else if (CollectionUtils.isEmpty(def.getImpliedGrants())) {
+			return new ArrayList<String>();
+		} else {
+			List<String> result = new ArrayList<String>(def.getImpliedGrants().size());
+			for (String name : def.getImpliedGrants()) {
+				if (StringUtils.isBlank(name)) {
+					result.add(name); // could be null!
+				} else {
+					result.add(name.toLowerCase());
+				}
+			}
+			return result;
+		}
+	}
+
 }

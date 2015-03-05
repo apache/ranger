@@ -42,18 +42,21 @@ public class RangerServiceValidator extends RangerValidator {
 
 	public void validate(RangerService service, Action action) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerValidator.validate(" + service + ")");
+			LOG.debug(String.format("==> RangerServiceValidator.validate(%s, %s)", service, action));
 		}
 
 		List<ValidationFailureDetails> failures = new ArrayList<ValidationFailureDetails>();
-		if (isValid(service, action, failures)) {
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerValidator.validate(" + service + "): valid");
+		boolean valid = isValid(service, action, failures);
+		String message = "";
+		try {
+			if (!valid) {
+				message = serializeFailures(failures);
+				throw new Exception(message);
 			}
-		} else {
-			String message = serializeFailures(failures);
-			LOG.debug("<== RangerValidator.validate(" + service + "): invalid, reason[" + message + "]");
-			throw new Exception(message);
+		} finally {
+			if(LOG.isDebugEnabled()) {
+				LOG.debug(String.format("<== RangerServiceValidator.validate(%s, %s): %s, reason[%s]", service, action, valid, message));
+			}
 		}
 	}
 	
@@ -66,7 +69,7 @@ public class RangerServiceValidator extends RangerValidator {
 		if (action != Action.DELETE) {
 			failures.add(new ValidationFailureDetailsBuilder()
 				.isAnInternalError()
-				.becauseOf("isValid(Long) is only supported for DELETE")
+				.becauseOf("unsupported action[" + action + "]; isValid(Long) is only supported for DELETE")
 				.build());
 			valid = false;
 		} else if (id == null) {
@@ -133,7 +136,7 @@ public class RangerServiceValidator extends RangerValidator {
 			boolean nameSpecified = StringUtils.isNotBlank(name);
 			RangerServiceDef serviceDef = null;
 			if (!nameSpecified) {
-				String message = "service name was null/empty/blank[" + name + "]"; 
+				String message = "service name[" + name + "] was null/empty/blank"; 
 				LOG.debug(message);
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("name")
@@ -147,14 +150,14 @@ public class RangerServiceValidator extends RangerValidator {
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("name")
 						.isSemanticallyIncorrect()
-						.becauseOf("service already exists with name[" + name + "]")
+						.becauseOf("service with the name[" + name + "] already exists")
 						.build());
 					valid = false;
 				} else if (otherService != null && otherService.getId() !=null && otherService.getId() != id) {
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("id/name")
 						.isSemanticallyIncorrect()
-						.becauseOf("id/name conflict: service already exists with name[" + name + "], its id is [" + otherService.getId() + "]")
+						.becauseOf("id/name conflict: another service already exists with name[" + name + "], its id is [" + otherService.getId() + "]")
 						.build());
 					valid = false;
 				}
@@ -165,7 +168,7 @@ public class RangerServiceValidator extends RangerValidator {
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("type")
 					.isMissing()
-					.becauseOf("service def was null/empty/blank")
+					.becauseOf("service def [" + type + "] was null/empty/blank")
 					.build());
 				valid = false;
 			} else {
@@ -174,7 +177,7 @@ public class RangerServiceValidator extends RangerValidator {
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("type")
 						.isSemanticallyIncorrect()
-						.becauseOf("service def not found for type[" + type + "]")
+						.becauseOf("service def named[" + type + "] not found")
 						.build());
 					valid = false;
 				}
@@ -188,7 +191,7 @@ public class RangerServiceValidator extends RangerValidator {
 						.field("configuration")
 						.subField(missingParameters.iterator().next()) // we return any one parameter!
 						.isMissing()
-						.becauseOf("required configuration parameter is missing")
+						.becauseOf("required configuration parameter is missing; missing parameters: " + missingParameters)
 						.build());
 					valid = false;
 				}

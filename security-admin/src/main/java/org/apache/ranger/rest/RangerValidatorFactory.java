@@ -30,4 +30,8 @@ public class RangerValidatorFactory {
 	public RangerPolicyValidator getPolicyValidator(ServiceDBStore store) {
 		return new RangerPolicyValidator(store);
 	}
+
+	public RangerServiceDefValidator getServiceDefValidator(ServiceDBStore store) {
+		return new RangerServiceDefValidator(store);
+	}
 }

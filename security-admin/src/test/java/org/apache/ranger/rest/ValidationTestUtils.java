@@ -37,6 +37,8 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 
@@ -117,6 +119,30 @@ public class ValidationTestUtils {
 			defs.add(def);
 		}
 		return defs;
+	}
+
+
+	List<RangerAccessTypeDef> createAccessTypeDefs(Object[][] data) {
+		if (data == null) {
+			return null;
+		}
+		List<RangerAccessTypeDef> result = new ArrayList<RangerAccessTypeDef>();
+		if (data.length == 0) {
+			return result;
+		}
+		for (Object[] entry : data) {
+			String accessType = (String)entry[0];
+			String[] impliedAccessArray = (String[])entry[1];
+			List<String> impliedAccesses = null;
+			if (impliedAccessArray != null) {
+				impliedAccesses = Arrays.asList(impliedAccessArray);
+			}
+			RangerAccessTypeDef aTypeDef = mock(RangerAccessTypeDef.class);
+			when(aTypeDef.getName()).thenReturn(accessType);
+			when(aTypeDef.getImpliedGrants()).thenReturn(impliedAccesses);
+			result.add(aTypeDef);
+		}
+		return result;
 	}
 
 	RangerServiceDef createServiceDefWithAccessTypes(String[] accesses) {
@@ -248,5 +274,39 @@ public class ValidationTestUtils {
 			resourceMap.put(key, policyResource);
 		}
 		return resourceMap;
+	}
+
+	List<RangerEnumElementDef> createEnumElementDefs(String[] input) {
+		if (input == null) {
+			return null;
+		}
+		List<RangerEnumElementDef> output = new ArrayList<RangerEnumElementDef>();
+		for (String elementName : input) {
+			RangerEnumElementDef aDef = mock(RangerEnumElementDef.class);
+			when(aDef.getName()).thenReturn(elementName);
+			output.add(aDef);
+		}
+		return output;
+	}
+
+	List<RangerEnumDef> createEnumDefs(Map<String, String[]> input) {
+		if (input == null) {
+			return null;
+		}
+		List<RangerEnumDef> defs = new ArrayList<RangerEnumDef>();
+		for (Map.Entry<String, String[]> entry : input.entrySet()) {
+			RangerEnumDef enumDef = mock(RangerEnumDef.class);
+			String enumName = entry.getKey();
+			if ("null".equals(enumName)) { // special handling to process null hint in enum-name
+				enumName = null;
+			}
+			when(enumDef.getName()).thenReturn(enumName);
+			List<RangerEnumElementDef> elements = createEnumElementDefs(entry.getValue());
+			when(enumDef.getElements()).thenReturn(elements);
+			// by default set default index to last element
+			when(enumDef.getDefaultIndex()).thenReturn(elements.size() - 1);
+			defs.add(enumDef);
+		}
+		return defs;
 	}
 }
