@@ -1220,9 +1220,9 @@ define(function(require) {
 							fromRaw: function (rawValue, model) {
 								var html = rawValue;
 								if(rawValue > 400)
-									html = '<label class="label label-yellow">'+rawValue+'</label>';
+									html = '<label class="label btn-danger">'+rawValue+'</label>';
 								else
-									html = '<label class="label">'+rawValue+'</label>';
+									html = '<label class="label btn-success">'+rawValue+'</label>';
 								return html;
 							}
 						})

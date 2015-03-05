@@ -93,7 +93,6 @@
   <module>ugsync</module>
   <module>unixauthclient</module>
   <module>unixauthservice</module>
-  <module>ranger-util</module>
   </modules>
   <properties>
         <javac.source.version>1.7</javac.source.version>
@@ -181,6 +180,7 @@
           </activation>
          <modules>
             <module>unixauthnative</module>
+            <module>ranger-util</module>
           </modules>
       </profile>
   </profiles>
