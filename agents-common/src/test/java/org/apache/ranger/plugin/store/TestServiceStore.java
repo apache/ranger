@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.store;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.List;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -47,7 +48,21 @@ public class TestServiceStore {
 
 	@BeforeClass
 	public static void setupTest() throws Exception {
-		String fileStoreDir = "file://" + System.getProperty("java.io.tmpdir");;
+		
+		
+		File file = File.createTempFile("fileStore", "dir") ;
+		
+		if (file.exists()) {
+			file.delete() ;
+		}
+		
+		file.deleteOnExit(); 
+		
+		file.mkdirs() ;
+		
+		String fileStoreDir =  file.getAbsolutePath() ;
+		
+		System.out.println("Using fileStoreDirectory as [" + fileStoreDir + "]") ;
 
 		svcStore = new ServiceFileStore(fileStoreDir);
 		svcStore.init();
@@ -235,17 +250,27 @@ public class TestServiceStore {
 		policies = svcStore.getPolicies(filter);
 		assertEquals("getPolicies(filter=origPolicyName) failed", 1, policies == null ? 0 : policies.size());
 		filter = null;
+		
+		String osName = System.getProperty("os.name") ;
+		boolean windows = (osName != null && osName.toLowerCase().startsWith("windows")) ;
 
-		svcStore.deletePolicy(policy.getId());
-		policies = svcStore.getPolicies(filter);
-		assertEquals("deletePolicy() failed", initPolicyCount, policies == null ? 0 : policies.size());
+		if (! windows ) {
 
-		svcStore.deleteService(svc.getId());
-		services = svcStore.getServices(filter);
-		assertEquals("deleteService() failed", initServiceCount, services == null ? 0 : services.size());
-
-		svcStore.deleteServiceDef(sd.getId());
-		sds = svcStore.getServiceDefs(filter);
-		assertEquals("deleteServiceDef() failed", initSdCount, sds == null ? 0 : sds.size());
+			svcStore.deletePolicy(policy.getId());
+			
+			policies = svcStore.getPolicies(filter);
+			
+			assertEquals("deletePolicy() failed", initPolicyCount, policies == null ? 0 : policies.size());
+			
+	
+			svcStore.deleteService(svc.getId());
+			services = svcStore.getServices(filter);
+			assertEquals("deleteService() failed", initServiceCount, services == null ? 0 : services.size());
+	
+			svcStore.deleteServiceDef(sd.getId());
+			sds = svcStore.getServiceDefs(filter);
+			assertEquals("deleteServiceDef() failed", initSdCount, sds == null ? 0 : sds.size());
+		
+		}
 	}
 }
