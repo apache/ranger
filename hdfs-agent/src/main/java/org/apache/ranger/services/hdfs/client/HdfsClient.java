@@ -192,15 +192,26 @@ public class HdfsClient extends BaseClient {
 	public static HashMap<String, Object> testConnection(String serviceName,
 			Map<String, String> configs) {
 
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
-		boolean connectivityStatus = false;
-		HdfsClient connectionObj = new HdfsClient(serviceName, configs);
-		if (connectionObj != null) {
-			List<String> testResult = connectionObj.listFiles("/", null,null);
-			if (testResult != null && testResult.size() != 0) {
-				connectivityStatus = true;
-			}
-		}
+    HashMap<String, Object> responseData = new HashMap<String, Object>();
+    boolean connectivityStatus = false;
+
+    String validateConfigsMsg = null;
+    try {
+      validateConnectionConfigs(configs);
+    } catch (IllegalArgumentException e)  {
+      validateConfigsMsg = e.getMessage();
+    }
+
+    if (validateConfigsMsg == null) {
+		  HdfsClient connectionObj = new HdfsClient(serviceName, configs);
+		  if (connectionObj != null) {
+		  	List<String> testResult = connectionObj.listFiles("/", null,null);
+			  if (testResult != null && testResult.size() != 0) {
+			  	connectivityStatus = true;
+			  }
+		  }
+    }
+
 		if (connectivityStatus) {
 			String successMsg = "TestConnection Successful";
 			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
@@ -209,11 +220,67 @@ public class HdfsClient extends BaseClient {
 			String failureMsg = "Unable to retrieve any files using given parameters, "
 					+ "You can still save the repository and start creating policies, "
 					+ "but you would not be able to use autocomplete for resource names. "
-					+ "Check xa_portal.log for more info.";
-			generateResponseDataMap(connectivityStatus, failureMsg, failureMsg,
+					+ "Check xa_portal.log for more info. ";
+      String additionalMsg = (validateConfigsMsg != null)  ?
+        validateConfigsMsg : failureMsg;
+			generateResponseDataMap(connectivityStatus, failureMsg, additionalMsg,
 					null, null, responseData);
 		}
 		return responseData;
 	}
+
+  public static void validateConnectionConfigs(Map<String, String> configs)
+      throws IllegalArgumentException {
+
+    // username
+    String username = configs.get("username") ;
+    if ((username == null || username.isEmpty()))  {
+      throw new IllegalArgumentException("Value for username not specified");
+    }
+
+    // password
+    String password = configs.get("password") ;
+    if ((password == null || password.isEmpty()))  {
+      throw new IllegalArgumentException("Value for password not specified");
+    }
+
+    // hadoop.security.authentication
+    String authentication = configs.get("hadoop.security.authentication") ;
+    if ((authentication == null || authentication.isEmpty()))  {
+      throw new IllegalArgumentException("Value for hadoop.security.authentication not specified");
+    }
+
+    String fsDefaultName = configs.get("fs.default.name") ;
+    fsDefaultName = (fsDefaultName == null) ? "" : fsDefaultName.trim();
+    String dfsNameservices = configs.get("dfs.nameservices");
+    dfsNameservices = (dfsNameservices == null) ? "" : dfsNameservices.trim();
+
+    if (fsDefaultName.isEmpty() && dfsNameservices.isEmpty())  {
+      throw new IllegalArgumentException("Value for neither fs.default.name nor dfs.nameservices is specified");
+    }
+
+    if (!fsDefaultName.isEmpty() && !dfsNameservices.isEmpty())  {
+      throw new IllegalArgumentException("Value for both fs.default.name and dfs.nameservices are specified. They are mutually exclusive");
+    }
+
+    if (!dfsNameservices.isEmpty()) {
+      String dfsNameNodes = configs.get("dfs.ha.namenodes." + dfsNameservices);
+      dfsNameNodes = (dfsNameNodes == null) ? "" : dfsNameNodes.trim();
+      if (dfsNameNodes.isEmpty())  {
+        throw new IllegalArgumentException("Value for " + "dfs.ha.namenodes." + dfsNameservices + " not specified");
+      }
+      String[] dfsNameNodeElements = dfsNameNodes.split(",");
+      System.out.println("elements: " + dfsNameNodeElements);
+      for (String dfsNameNodeElement : dfsNameNodeElements)  {
+        String nameNodeUrlKey = "dfs.namenode.rpc-address." +
+            dfsNameservices + "." + dfsNameNodeElement.trim();
+        String nameNodeUrl =  configs.get(nameNodeUrlKey);
+        nameNodeUrl = (nameNodeUrl == null) ? "" : nameNodeUrl.trim();
+        if (nameNodeUrl.isEmpty())  {
+          throw new IllegalArgumentException("Value for " + nameNodeUrlKey + " not specified");
+        }
+      }
+    }
+  }
 
 }
