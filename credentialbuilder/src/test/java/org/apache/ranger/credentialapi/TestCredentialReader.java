@@ -45,46 +45,11 @@ public class TestCredentialReader {
     assertTrue(password,"PassworD123".equals(password));
     //delete after use
     
-    String[] argsdeleteCommand = null ;
-    
-    if (isCredentialShellInteractiveEnabled()) {
-    	argsdeleteCommand = new String[] {"delete", "TestCredential2", "-f", "-provider", "jceks://file@/" + keystoreFile};
-    }
-    else {
-    	argsdeleteCommand = new String[] {"delete", "TestCredential2", "-provider", "jceks://file@/" + keystoreFile};
-    }
+    String[] argsdeleteCommand = new String[] {"delete", "TestCredential2", "-provider", "jceks://file@/" + keystoreFile};
     
 	buildks buildksOBJ=new buildks();
-	buildksOBJ.deleteCredential(argsdeleteCommand);
+	buildksOBJ.deleteCredential(argsdeleteCommand, true);
     
   }
-  
-	private static boolean isCredentialShellInteractiveEnabled() {
-		boolean ret = false ;
-		
-		String fieldName = "interactive" ;
-		
-		CredentialShell cs = new CredentialShell() ;
-		
-		try {
-			Field interactiveField = cs.getClass().getDeclaredField(fieldName) ;
-			
-			if (interactiveField != null) {
-				interactiveField.setAccessible(true);
-				ret = interactiveField.getBoolean(cs) ;
-				System.out.println("FOUND value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "] = [" + ret + "]") ;
-			}
-		} catch (Throwable e) {
-			System.out.println("Unable to find the value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "]. Skiping -f option") ;
-			e.printStackTrace();
-			ret = false;
-		}
-		
-		return ret ;
-		
-	}
-  
-  
- 
   
 }

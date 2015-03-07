@@ -48,18 +48,10 @@ public class Testbuildks {
     assertTrue(pw.equals("PassworD123"));
     boolean getCredentialPassed = pw.equals("PassworD123");
 
-    String[] argsDeleteCommand = null ;
-    
-    if (isCredentialShellInteractiveEnabled()) {
-        argsDeleteCommand = new String[] {"delete", "TestCredential1", "-f", "-provider", "jceks://file@/" +keystoreFile };
-    	
-    }
-    else {
-        argsDeleteCommand = new String[] {"delete", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
-    	
-    }
-    
-    int rc3=buildksOBJ.deleteCredential(argsDeleteCommand);
+    String[] argsDeleteCommand = new String[] {"delete", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
+	boolean  isSilentMode      = true;
+
+    int rc3=buildksOBJ.deleteCredential(argsDeleteCommand, isSilentMode);
     assertEquals(0, rc3);
     assertTrue(rc3==0);
    
@@ -89,32 +81,5 @@ public class Testbuildks {
 	  Testbuildks tTestbuildks=new Testbuildks();
 	  tTestbuildks.testBuildKSsuccess();
   }*/  
-  
-  
-	private static boolean isCredentialShellInteractiveEnabled() {
-		boolean ret = false ;
-		
-		String fieldName = "interactive" ;
-		
-		CredentialShell cs = new CredentialShell() ;
-		
-		try {
-			Field interactiveField = cs.getClass().getDeclaredField(fieldName) ;
-			
-			if (interactiveField != null) {
-				interactiveField.setAccessible(true);
-				ret = interactiveField.getBoolean(cs) ;
-				System.out.println("FOUND value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "] = [" + ret + "]") ;
-			}
-		} catch (Throwable e) {
-			System.out.println("Unable to find the value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "]. Skiping -f option") ;
-			e.printStackTrace();
-			ret = false;
-		}
-		
-		return ret ;
-		
-	}
-
   
 }

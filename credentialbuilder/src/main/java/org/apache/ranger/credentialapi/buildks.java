@@ -21,6 +21,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.alias.CredentialShell;
@@ -92,12 +93,13 @@ public class buildks {
 	    	}else{
 	    		try{
 	    			System.out.println("Alias already exist!! will try to delete first.");
+	    			boolean isSilentMode = true;
 	    			String argsDelete[]=new String[4];
 	    			argsDelete[0]="delete";
 	    			argsDelete[1]=alias;
 	    			argsDelete[2]=providerOption;
 	    			argsDelete[3]=providerPath;
-	    			returnCode=deleteCredential(argsDelete);
+	    			returnCode=deleteCredential(argsDelete, isSilentMode);
 	    			if(returnCode==0){
 	    	    		returnCode=createKeyStore(args);
 	    	    	}
@@ -249,11 +251,23 @@ public class buildks {
 		return returnCode;
 	}	
 	
-	public int deleteCredential(String args[]){
+	public int deleteCredential(String args[], boolean isSilentMode){
 		int returnCode=-1;
 		try{	    		    	
 	    	if(args!=null && args.length==4)
 	    	{
+		        // for non-interactive, insert argument "-f" if needed
+		        if(isSilentMode && isCredentialShellInteractiveEnabled()) {
+			        String[] updatedArgs = new String[5];
+			        updatedArgs[0] = args[0];
+			        updatedArgs[1] = args[1];
+			        updatedArgs[2] = "-f";
+			        updatedArgs[3] = args[2];
+			        updatedArgs[4] = args[3];
+
+			        args = updatedArgs;
+			    }
+
 	    		//display command which need to be executed or entered
 	    		displayCommand(args);
 	    	}else{  
@@ -429,5 +443,30 @@ public class buildks {
 			return false;
 		}
 		return isValid;
+	}
+  
+	private static boolean isCredentialShellInteractiveEnabled() {
+		boolean ret = false ;
+		
+		String fieldName = "interactive" ;
+		
+		CredentialShell cs = new CredentialShell() ;
+		
+		try {
+			Field interactiveField = cs.getClass().getDeclaredField(fieldName) ;
+			
+			if (interactiveField != null) {
+				interactiveField.setAccessible(true);
+				ret = interactiveField.getBoolean(cs) ;
+				System.out.println("FOUND value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "] = [" + ret + "]") ;
+			}
+		} catch (Throwable e) {
+			System.out.println("Unable to find the value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "]. Skiping -f option") ;
+			e.printStackTrace();
+			ret = false;
+		}
+		
+		return ret ;
+		
 	}
 }
