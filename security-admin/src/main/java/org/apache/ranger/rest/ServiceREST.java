@@ -72,7 +72,10 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 
 
@@ -94,6 +97,9 @@ public class ServiceREST {
 
 	@Autowired
 	ServiceDBStore svcStore;
+	
+	@Autowired
+	ServiceUtil serviceUtil;
 	
 	// this indirection for validation via a factory exists only for testability
 	// TODO move the instantiation to DI framework?
@@ -515,167 +521,170 @@ public class ServiceREST {
 		}
 
 		RESTResponse ret = new RESTResponse();
+			
+		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 
-		try {
-			String         userName   = grantRequest.getGrantor();
-			Set<String>    userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger database
-			RangerResource resource   = new RangerResourceImpl(grantRequest.getResource());
-
-			boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
-
-			if(!isAdmin) {
-				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
-			}
-
-			RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+			try {
+				String         userName   = grantRequest.getGrantor();
+				Set<String>    userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger database
+				RangerResource resource   = new RangerResourceImpl(grantRequest.getResource());
 	
-			if(policy != null) {
-				boolean policyUpdated = false;
-
-				// replace all existing privileges for users and groups
-				if(grantRequest.getReplaceExistingPermissions()) {
-					List<RangerPolicyItem> policyItems = policy.getPolicyItems();
-
-					int numOfItems = policyItems.size();
+				boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
 	
-					for(int i = 0; i < numOfItems; i++) {
-						RangerPolicyItem policyItem = policyItems.get(i);
-	
-						if(CollectionUtils.containsAny(policyItem.getUsers(), grantRequest.getUsers())) {
-							policyItem.getUsers().removeAll(grantRequest.getUsers());
-
-							policyUpdated = true;
-						}
-
-						if(CollectionUtils.containsAny(policyItem.getGroups(), grantRequest.getGroups())) {
-							policyItem.getGroups().removeAll(grantRequest.getGroups());
-
-							policyUpdated = true;
-						}
-
-						if(CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
-							policyItems.remove(i);
-							numOfItems--;
-							i--;
-
-							policyUpdated = true;
-						}
-					}
-
-					if(compactPolicy(policy)) {
-						policyUpdated = true;
-					}
+				if(!isAdmin) {
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
 				}
-
-				for(String user : grantRequest.getUsers()) {
-					RangerPolicyItem policyItem = getPolicyItemForUser(policy, user);
-					
-					if(policyItem != null) {
-						if(addAccesses(policyItem, grantRequest.getAccessTypes())) {
+	
+				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+		
+				if(policy != null) {
+					boolean policyUpdated = false;
+	
+					// replace all existing privileges for users and groups
+					if(grantRequest.getReplaceExistingPermissions()) {
+						List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+	
+						int numOfItems = policyItems.size();
+		
+						for(int i = 0; i < numOfItems; i++) {
+							RangerPolicyItem policyItem = policyItems.get(i);
+		
+							if(CollectionUtils.containsAny(policyItem.getUsers(), grantRequest.getUsers())) {
+								policyItem.getUsers().removeAll(grantRequest.getUsers());
+	
+								policyUpdated = true;
+							}
+	
+							if(CollectionUtils.containsAny(policyItem.getGroups(), grantRequest.getGroups())) {
+								policyItem.getGroups().removeAll(grantRequest.getGroups());
+	
+								policyUpdated = true;
+							}
+	
+							if(CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
+								policyItems.remove(i);
+								numOfItems--;
+								i--;
+	
+								policyUpdated = true;
+							}
+						}
+	
+						if(compactPolicy(policy)) {
 							policyUpdated = true;
 						}
-					} else {
-						policyItem = new RangerPolicyItem();
+					}
+	
+					for(String user : grantRequest.getUsers()) {
+						RangerPolicyItem policyItem = getPolicyItemForUser(policy, user);
 						
+						if(policyItem != null) {
+							if(addAccesses(policyItem, grantRequest.getAccessTypes())) {
+								policyUpdated = true;
+							}
+						} else {
+							policyItem = new RangerPolicyItem();
+							
+							policyItem.getUsers().add(user);
+							addAccesses(policyItem, grantRequest.getAccessTypes());
+							policy.getPolicyItems().add(policyItem);
+	
+							policyUpdated = true;
+						}
+	
+						if(grantRequest.getDelegateAdmin()) {
+							if(!policyItem.getDelegateAdmin()) {
+								policyItem.setDelegateAdmin(Boolean.TRUE);
+		
+								policyUpdated = true;
+							}
+						}
+					}
+	
+					for(String group : grantRequest.getGroups()) {
+						RangerPolicyItem policyItem = getPolicyItemForGroup(policy, group);
+						
+						if(policyItem != null) {
+							if(addAccesses(policyItem, grantRequest.getAccessTypes())) {
+								policyUpdated = true;
+							}
+						} else {
+							policyItem = new RangerPolicyItem();
+							
+							policyItem.getGroups().add(group);
+							addAccesses(policyItem, grantRequest.getAccessTypes());
+							policy.getPolicyItems().add(policyItem);
+	
+							policyUpdated = true;
+						}
+	
+						if(grantRequest.getDelegateAdmin()) {
+							if(!policyItem.getDelegateAdmin()) {
+								policyItem.setDelegateAdmin(Boolean.TRUE);
+		
+								policyUpdated = true;
+							}
+						}
+					}
+	
+					if(policyUpdated) {
+						updatePolicy(policy);
+					}
+				} else {
+					policy = new RangerPolicy();
+					policy.setService(serviceName);
+					policy.setName("grant-" + System.currentTimeMillis()); // TODO: better policy name
+					policy.setDescription("created by grant");
+					policy.setIsAuditEnabled(grantRequest.getEnableAudit());
+					policy.setCreatedBy(userName);
+		
+					Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+					Set<String>                       resourceNames   = resource.getKeys();
+		
+					if(! CollectionUtils.isEmpty(resourceNames)) {
+						for(String resourceName : resourceNames) {
+							RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
+							policyResource.setIsRecursive(grantRequest.getIsRecursive());
+	
+							policyResources.put(resourceName, policyResource);
+						}
+					}
+					policy.setResources(policyResources);
+		
+					for(String user : grantRequest.getUsers()) {
+						RangerPolicyItem policyItem = new RangerPolicyItem();
+			
 						policyItem.getUsers().add(user);
-						addAccesses(policyItem, grantRequest.getAccessTypes());
-						policy.getPolicyItems().add(policyItem);
-
-						policyUpdated = true;
-					}
-
-					if(grantRequest.getDelegateAdmin()) {
-						if(!policyItem.getDelegateAdmin()) {
-							policyItem.setDelegateAdmin(Boolean.TRUE);
-	
-							policyUpdated = true;
+						for(String accessType : grantRequest.getAccessTypes()) {
+							policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
 						}
+						policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
+						policy.getPolicyItems().add(policyItem);
 					}
-				}
-
-				for(String group : grantRequest.getGroups()) {
-					RangerPolicyItem policyItem = getPolicyItemForGroup(policy, group);
 					
-					if(policyItem != null) {
-						if(addAccesses(policyItem, grantRequest.getAccessTypes())) {
-							policyUpdated = true;
-						}
-					} else {
-						policyItem = new RangerPolicyItem();
-						
+					for(String group : grantRequest.getGroups()) {
+						RangerPolicyItem policyItem = new RangerPolicyItem();
+			
 						policyItem.getGroups().add(group);
-						addAccesses(policyItem, grantRequest.getAccessTypes());
-						policy.getPolicyItems().add(policyItem);
-
-						policyUpdated = true;
-					}
-
-					if(grantRequest.getDelegateAdmin()) {
-						if(!policyItem.getDelegateAdmin()) {
-							policyItem.setDelegateAdmin(Boolean.TRUE);
-	
-							policyUpdated = true;
+						for(String accessType : grantRequest.getAccessTypes()) {
+							policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
 						}
+						policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
+						policy.getPolicyItems().add(policyItem);
 					}
-				}
-
-				if(policyUpdated) {
-					updatePolicy(policy);
-				}
-			} else {
-				policy = new RangerPolicy();
-				policy.setService(serviceName);
-				policy.setName("grant-" + System.currentTimeMillis()); // TODO: better policy name
-				policy.setDescription("created by grant");
-				policy.setIsAuditEnabled(grantRequest.getEnableAudit());
-				policy.setCreatedBy(userName);
-	
-				Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
-				Set<String>                       resourceNames   = resource.getKeys();
-	
-				if(! CollectionUtils.isEmpty(resourceNames)) {
-					for(String resourceName : resourceNames) {
-						RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
-						policyResource.setIsRecursive(grantRequest.getIsRecursive());
-
-						policyResources.put(resourceName, policyResource);
-					}
-				}
-				policy.setResources(policyResources);
-	
-				for(String user : grantRequest.getUsers()) {
-					RangerPolicyItem policyItem = new RangerPolicyItem();
 		
-					policyItem.getUsers().add(user);
-					for(String accessType : grantRequest.getAccessTypes()) {
-						policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
-					}
-					policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-					policy.getPolicyItems().add(policyItem);
+					createPolicy(policy);
 				}
-				
-				for(String group : grantRequest.getGroups()) {
-					RangerPolicyItem policyItem = new RangerPolicyItem();
-		
-					policyItem.getGroups().add(group);
-					for(String accessType : grantRequest.getAccessTypes()) {
-						policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
-					}
-					policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-					policy.getPolicyItems().add(policyItem);
-				}
+			} catch(WebApplicationException excp) {
+				throw excp;
+			} catch(Exception excp) {
+				LOG.error("grantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
 	
-				createPolicy(policy);
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 			}
-		} catch(WebApplicationException excp) {
-			throw excp;
-		} catch(Exception excp) {
-			LOG.error("grantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
-
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+	
+			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 		}
-
-		ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.grantAccess(" + serviceName + ", " + grantRequest + "): " + ret);
@@ -694,47 +703,33 @@ public class ServiceREST {
 
 		RESTResponse ret = new RESTResponse();
 
-		try {
-			String         userName   = revokeRequest.getGrantor();
-			Set<String>    userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger databas
-			RangerResource resource   = new RangerResourceImpl(revokeRequest.getResource());
+		if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
 
-			boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
-			
-			if(!isAdmin) {
-				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
-			}
-
-			RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
-			
-			if(policy != null) {
-				boolean policyUpdated = false;
-
-				for(String user : revokeRequest.getUsers()) {
-					RangerPolicyItem policyItem = getPolicyItemForUser(policy, user);
-					
-					if(policyItem != null) {
-						if(removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
-							policyUpdated = true;
-						}
-					}
-
-					if(revokeRequest.getDelegateAdmin()) { // remove delegate?
-						if(policyItem.getDelegateAdmin()) {
-							policyItem.setDelegateAdmin(Boolean.FALSE);
-							policyUpdated = true;
-						}
-					}
+			try {
+				String         userName   = revokeRequest.getGrantor();
+				Set<String>    userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger databas
+				RangerResource resource   = new RangerResourceImpl(revokeRequest.getResource());
+	
+				boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
+				
+				if(!isAdmin) {
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
 				}
-
-				for(String group : revokeRequest.getGroups()) {
-					RangerPolicyItem policyItem = getPolicyItemForGroup(policy, group);
-					
-					if(policyItem != null) {
-						if(removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
-							policyUpdated = true;
+	
+				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+				
+				if(policy != null) {
+					boolean policyUpdated = false;
+	
+					for(String user : revokeRequest.getUsers()) {
+						RangerPolicyItem policyItem = getPolicyItemForUser(policy, user);
+						
+						if(policyItem != null) {
+							if(removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
+								policyUpdated = true;
+							}
 						}
-
+	
 						if(revokeRequest.getDelegateAdmin()) { // remove delegate?
 							if(policyItem.getDelegateAdmin()) {
 								policyItem.setDelegateAdmin(Boolean.FALSE);
@@ -742,27 +737,44 @@ public class ServiceREST {
 							}
 						}
 					}
+	
+					for(String group : revokeRequest.getGroups()) {
+						RangerPolicyItem policyItem = getPolicyItemForGroup(policy, group);
+						
+						if(policyItem != null) {
+							if(removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
+								policyUpdated = true;
+							}
+	
+							if(revokeRequest.getDelegateAdmin()) { // remove delegate?
+								if(policyItem.getDelegateAdmin()) {
+									policyItem.setDelegateAdmin(Boolean.FALSE);
+									policyUpdated = true;
+								}
+							}
+						}
+					}
+	
+					if(compactPolicy(policy)) {
+						policyUpdated = true;
+					}
+	
+					if(policyUpdated) {
+						updatePolicy(policy);
+					}
+				} else {
+					// nothing to revoke!
 				}
-
-				if(compactPolicy(policy)) {
-					policyUpdated = true;
-				}
-
-				if(policyUpdated) {
-					updatePolicy(policy);
-				}
-			} else {
-				// nothing to revoke!
+			} catch(WebApplicationException excp) {
+				throw excp;
+			} catch(Exception excp) {
+				LOG.error("revokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
+	
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 			}
-		} catch(WebApplicationException excp) {
-			throw excp;
-		} catch(Exception excp) {
-			LOG.error("revokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
-
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+	
+			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 		}
-
-		ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.revokeAccess(" + serviceName + ", " + revokeRequest + "): " + ret);

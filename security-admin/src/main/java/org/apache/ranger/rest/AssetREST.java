@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
@@ -38,6 +39,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.PropertiesUtil;
@@ -48,6 +50,7 @@ import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.service.AbstractBaseResourceService;
@@ -625,28 +628,32 @@ public class AssetREST {
 	@Path("/resources/grant")
 	@Produces({ "application/xml", "application/json" })	
 	public VXPolicy grantPermission(@Context HttpServletRequest request,VXPolicy vXPolicy) {
-		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
-		X509Certificate[] certchain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-		String ipAddress = request.getHeader("X-FORWARDED-FOR");  
-		if (ipAddress == null) {  
-			ipAddress = request.getRemoteAddr();
+		
+		RESTResponse ret = null;
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> AssetREST.grantPermission(" + vXPolicy + ")");
 		}
-		boolean isSecure = request.isSecure();
-		String repository=null;
-		if(vXPolicy!=null){
-			repository=vXPolicy.getRepositoryName();
-			vXPolicy.setOwner(vXPolicy.getGrantor());	
-			vXPolicy.setUpdatedBy(vXPolicy.getGrantor());
+		
+		if ( vXPolicy != null) {
+			String		  serviceName = vXPolicy.getRepositoryName();
+			GrantRevokeRequest grantRevokeRequest = serviceUtil.toGrantRevokeRequest(vXPolicy);
+			try {
+				ret = serviceREST.grantAccess(serviceName, grantRevokeRequest, request);
+			} catch (Exception e) {
+				  logger.error( HttpServletResponse.SC_BAD_REQUEST + "Grant Access Failed for the request " + vXPolicy ); 
+				  throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Grant Access Failed for the request " + e.getMessage(), true);
+			}
+		} else {
+			 logger.error( HttpServletResponse.SC_BAD_REQUEST + "Bad Request parameter " + vXPolicy ); 
+			 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Bad Request parameter " , true);
 		}
-		boolean isValidAuthentication=assetMgr.isValidHttpsAuthentication(repository,certchain,httpEnabled,ipAddress,isSecure);
-		if(isValidAuthentication){			
-			VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
-			vXResource=assetMgr.grantXResource(vXResource,vXPolicy);
-			vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
-			xResourceService.updateResource(vXResource);
-			vXPolicy=xPolicyService.mapXAToPublicObject(vXResource);	
-			vXPolicy.syncResponseWithJsonRequest();			
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== AssetREST.grantPermission(" + ret + ")");
 		}
+		
+		// TO DO Current Grant REST doesn't return a policy so returning a null value. Has to be replace with VXpolicy.
 		return vXPolicy;
 	}
 	
@@ -654,27 +661,29 @@ public class AssetREST {
 	@Path("/resources/revoke")
 	@Produces({ "application/xml", "application/json" })	
 	public VXPolicy revokePermission(@Context HttpServletRequest request,VXPolicy vXPolicy) {
-		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
-		X509Certificate[] certchain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-		String ipAddress = request.getHeader("X-FORWARDED-FOR");  
-		if (ipAddress == null) {  
-			ipAddress = request.getRemoteAddr();
+		
+		RESTResponse ret = null;
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> AssetREST.revokePermission(" + vXPolicy + ")");
 		}
-		boolean isSecure = request.isSecure();
-		String repository=null;
-		if(vXPolicy!=null){
-			repository=vXPolicy.getRepositoryName();
-			vXPolicy.setOwner(vXPolicy.getGrantor());	
-			vXPolicy.setUpdatedBy(vXPolicy.getGrantor());
+		
+		if ( vXPolicy != null) {
+			String		  serviceName = vXPolicy.getRepositoryName();
+			GrantRevokeRequest grantRevokeRequest = serviceUtil.toGrantRevokeRequest(vXPolicy);
+			try {
+				 ret = serviceREST.revokeAccess(serviceName, grantRevokeRequest, request);
+			} catch (Exception e) {
+				  logger.error( HttpServletResponse.SC_BAD_REQUEST + "Revoke Access Failed for the request " + vXPolicy ); 
+				  throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Grant Access Failed for the request " + e.getMessage(), true);
+			}
+		} else {
+			 logger.error( HttpServletResponse.SC_BAD_REQUEST + "Bad Request parameter " + vXPolicy ); 
+			 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Bad Request parameter " , true);
 		}
-		boolean isValidAuthentication=assetMgr.isValidHttpsAuthentication(repository,certchain,httpEnabled,ipAddress,isSecure);
-		if(isValidAuthentication){		
-			VXResource vXResource = xPolicyService.mapPublicToXAObject(vXPolicy,AbstractBaseResourceService.OPERATION_CREATE_CONTEXT);
-			vXResource=assetMgr.revokeXResource(vXResource);
-			vXResource.setPermMapList(xPolicyService.updatePermGroup(vXResource));
-			xResourceService.updateResource(vXResource);
-			vXPolicy=xPolicyService.mapXAToPublicObject(vXResource);			
-			vXPolicy.syncResponseWithJsonRequest();		
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== AssetREST.revokePermission(" + ret + ")");
 		}
 		return vXPolicy;
 	}
