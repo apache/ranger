@@ -30,166 +30,189 @@ import javassist.CtMethod;
 import javassist.NotFoundException;
 
 public class HadoopAuthClassTransformer implements ClassFileTransformer {
-
-	byte[] transformedClassByteCode = null ;
+	volatile byte[] transformedClassByteCode = null;
 	
 	@Override
 	public byte[] transform(ClassLoader aClassLoader, String aClassName, Class<?> aClassBeingRedefined, ProtectionDomain aProtectionDomain, byte[] aClassFileBuffer) throws IllegalClassFormatException {
+		byte[] ret = aClassFileBuffer;
 
-		byte[] byteCode = aClassFileBuffer;
 		if (aClassName.equals("org/apache/hadoop/hdfs/server/namenode/FSPermissionChecker")) {
-			System.out.println("Injection code is Invoked in JVM [" + Runtime.getRuntime() + "] for class [" + aClassBeingRedefined + "] ....");
-			try {
-				if (transformedClassByteCode == null) {
-					ClassPool cp = ClassPool.getDefault();
-					String curClassName = aClassName.replaceAll("/", ".");
-					CtClass curClass = cp.get(curClassName);
-					
-					
-					CtClass inodeClass = null, snapShotClass = null, fsActionClass = null  ;
-					String paramClassName = null ;
-					
-					try {
-						paramClassName = "org.apache.hadoop.hdfs.server.namenode.INode" ;
-						inodeClass = cp.get(paramClassName) ;
-					} catch (javassist.NotFoundException nfe) {
-						System.err.println("Unable to find Class for [" + paramClassName + "]" + nfe) ;
-						inodeClass = null ;
-					}
+			if (transformedClassByteCode == null) {
+				byte[] injectedClassCode = injectFSPermissionCheckerHooks(aClassLoader, aClassName, aClassBeingRedefined, aProtectionDomain, aClassFileBuffer);
 
-
-					try {
-						paramClassName = "org.apache.hadoop.fs.permission.FsAction" ;
-						fsActionClass = cp.get(paramClassName) ;
-					} catch (javassist.NotFoundException nfe) {
-						System.err.println("Unable to find Class for [" + paramClassName + "]" + nfe) ;
-						fsActionClass = null ;
-					}
-					
-					try {
-						paramClassName = "org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot" ;
-						snapShotClass = cp.get(paramClassName) ;
-					} catch (javassist.NotFoundException nfe) {
-						System.err.println("Unable to find Class for [" + paramClassName + "]" + nfe) ;
-						snapShotClass = null ;
-					}
-					
-					boolean injected = false ;
-					boolean injected_cm = false ;
-					boolean withIntParamInMiddle = false ;
-
-					
-					try {
-						
-						CtClass[] paramArgs = null ;
-						
-						if (inodeClass != null && fsActionClass != null) {
-
-							CtMethod checkMethod = null ;
-							
-							if (snapShotClass != null) {
-								paramArgs = new CtClass[] { inodeClass, snapShotClass, fsActionClass } ;
-								try {
-									checkMethod = curClass.getDeclaredMethod("check", paramArgs);
-								}
-								catch(NotFoundException SSnfe) {
-									System.out.println("Unable to find check method with snapshot class. Trying to find check method without snapshot support.") ;
-									snapShotClass = null;
-									paramArgs = new CtClass[] { inodeClass, CtClass.intType,  fsActionClass } ;
-									checkMethod = curClass.getDeclaredMethod("check", paramArgs);
-									withIntParamInMiddle = true ;
-									System.out.println("Found method check() - without snapshot support") ;
-								}
-							}
-							else {
-								System.out.println("Snapshot class was already null ... Trying to find check method") ;
-								paramArgs = new CtClass[] { inodeClass, fsActionClass } ;
-								checkMethod = curClass.getDeclaredMethod("check", paramArgs);
-								System.out.println("Found method check() - without snapshot support") ;
-							}
-						
-							if (checkMethod != null) {
-								checkMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,true) ;");
-								CtClass throwable = ClassPool.getDefault().get("java.lang.Throwable");
-								checkMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,false) ; throw $e; }", throwable);
-
-								if (snapShotClass == null && (!withIntParamInMiddle)) {
-									checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(ugi,$1,$2) ) { return ; } }");
-								}
-								else {
-									checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(ugi,$1,$3) ) { return ; } }");
-								}
-
-								System.out.println("Injection of code is successfull ....");
-							}
-							else {
-								System.out.println("Injection failed. Unable to identify check() method on class: [" + curClass.getName() + "]. Continue without Injection ...") ; 
-							}
-							
-							injected = true ;
-						}
-					} catch (NotFoundException nfex) {
-						nfex.printStackTrace();
-						System.out.println("Unable to find the check() method with expected params in [" + aClassName + "] ....");
-						for (CtMethod m : curClass.getDeclaredMethods()) {
-							System.err.println("Found Method: " + m);
-						}
-					}
-					
-					
-					try {
-						
-						CtMethod checkMethod = curClass.getDeclaredMethod("checkPermission");
-						
-						if (checkMethod != null) {
-							checkMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1) ;");
-							CtClass throwable = ClassPool.getDefault().get("org.apache.hadoop.security.AccessControlException");
-							checkMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1); throw $e; }", throwable);	
-							checkMethod.insertBefore("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPre($1) ;");
-							injected_cm = true ;
-						}
-
-					} catch (NotFoundException nfe) {
-						nfe.printStackTrace();
-						System.out.println("Unable to find the checkPermission() method with expected params in [" + aClassName + "] ....");
-						for (CtMethod m : curClass.getDeclaredMethods()) {
-							System.err.println("Found Method: " + m);
-						}
-					}
-					
-					System.out.println("Injected: " + injected + ", Injected_CheckMethod: " + injected_cm ) ;
-					
-					if (injected) {
-						byteCode = curClass.toBytecode();
-						if (transformedClassByteCode == null) {
-							synchronized(HadoopAuthClassTransformer.class) {
-								byte[] temp = transformedClassByteCode ;
-								if (temp == null) {
-									transformedClassByteCode = byteCode;
-								}
+				if(injectedClassCode != null) {
+					if(transformedClassByteCode == null) {
+						synchronized(HadoopAuthClassTransformer.class) {
+							byte[] temp = transformedClassByteCode;
+							if (temp == null) {
+								transformedClassByteCode = injectedClassCode;
 							}
 						}
 					}
-					
 				}
-				else {
-					byteCode = transformedClassByteCode;
-					System.out.println("Injection of code (using existing bytecode) is successfull ....");
-				}
-			} catch (NotFoundException e) {
-				System.err.println("Class Not Found Exception for class Name: " + aClassName + " Exception: " + e);
-				e.printStackTrace();
-			} catch (CannotCompileException e) {
-				System.err.println("Can not compile Exception for class Name: " + aClassName + " Exception: " + e);
-				e.printStackTrace();
-			} catch (IOException e) {
-				System.err.println("IO Exception for class Name: " + aClassName + " Exception: " + e);
-				e.printStackTrace();
 			}
-		
+
+			if(transformedClassByteCode != null) {
+				ret = transformedClassByteCode;
+			}
 		}
-		
-		return byteCode;
+
+		return ret;
 	}
 
+	private static byte[] injectFSPermissionCheckerHooks(ClassLoader aClassLoader, String aClassName, Class<?> aClassBeingRedefined, ProtectionDomain aProtectionDomain, byte[] aClassFileBuffer) throws IllegalClassFormatException {
+		byte[] ret = null;
+
+		System.out.println("Injection code is Invoked in JVM [" + Runtime.getRuntime() + "] for class [" + aClassName + "] ....");
+		try {
+			CtClass curClass          = getCtClass(aClassName.replaceAll("/", "."));
+			CtClass stringClass       = getCtClass("java.lang.String");
+			CtClass throwable         = getCtClass("java.lang.Throwable");
+			CtClass fsActionClass     = getCtClass("org.apache.hadoop.fs.permission.FsAction");
+			CtClass fsDirClass        = getCtClass("org.apache.hadoop.hdfs.server.namenode.FSDirectory");
+			CtClass inodeClass        = getCtClass("org.apache.hadoop.hdfs.server.namenode.INode");
+			CtClass inodesInPathClass = getCtClass("org.apache.hadoop.hdfs.server.namenode.INodesInPath");
+			CtClass accCtrlExcp       = getCtClass("org.apache.hadoop.security.AccessControlException");
+
+			boolean is3ParamsCheckMethod = false;
+
+			CtMethod checkMethod           = null;
+			CtMethod checkPermissionMethod = null;
+
+			if (checkMethod == null && curClass != null && inodeClass != null && fsActionClass != null) {
+				try {
+					System.out.print("looking for check(INode, int, FsAction)...");
+
+					CtClass[] paramArgs = new CtClass[] { inodeClass, CtClass.intType, fsActionClass };
+
+					checkMethod = curClass.getDeclaredMethod("check", paramArgs);
+
+					is3ParamsCheckMethod = true;
+
+					System.out.println("found");
+				} catch(NotFoundException nfe) {
+					System.out.println("not found");
+				}
+			}
+
+			if (checkMethod == null && curClass != null && inodeClass != null && fsActionClass != null) {
+				try {
+					System.out.print("looking for check(INode, FsAction)...");
+
+					CtClass[] paramArgs = new CtClass[] { inodeClass, fsActionClass };
+
+					checkMethod = curClass.getDeclaredMethod("check", paramArgs);
+
+					is3ParamsCheckMethod = false;
+
+					System.out.println("found");
+				} catch(NotFoundException nfe) {
+					System.out.println("not found");
+				}
+			}
+
+			if(checkPermissionMethod == null && curClass != null && inodesInPathClass != null && fsActionClass != null) {
+				try {
+					System.out.print("looking for checkPermission(INodesInPath, boolean, FsAction, FsAction, FsAction, FsAction, boolean)...");
+
+					CtClass[] paramArgs = new CtClass[] { inodesInPathClass,
+														  CtClass.booleanType,
+														  fsActionClass,
+														  fsActionClass,
+														  fsActionClass,
+														  fsActionClass,
+														  CtClass.booleanType
+														};
+
+					checkPermissionMethod = curClass.getDeclaredMethod("checkPermission", paramArgs);
+
+					System.out.println("found");
+				} catch (NotFoundException nfe) {
+					System.out.println("not found");
+				}
+			}
+
+			if(checkPermissionMethod == null && curClass != null && stringClass != null && fsDirClass != null && fsActionClass != null) {
+				try {
+					System.out.print("looking for checkPermission(String, FSDirectory, boolean, FsAction, FsAction, FsAction, FsAction, boolean, boolean)...");
+
+					CtClass[] paramArgs = new CtClass[] { stringClass,
+														  fsDirClass,
+														  CtClass.booleanType,
+														  fsActionClass,
+														  fsActionClass,
+														  fsActionClass,
+														  fsActionClass,
+														  CtClass.booleanType,
+														  CtClass.booleanType
+														};
+
+					checkPermissionMethod = curClass.getDeclaredMethod("checkPermission", paramArgs);
+
+					System.out.println("found");
+				} catch(NotFoundException nfe) {
+					System.out.println("not found");
+				}
+			}
+
+			if (checkMethod != null) {
+				System.out.print("injecting check() hooks...");
+
+				checkMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,true);");
+				checkMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,false); throw $e; }", throwable);
+
+				if (is3ParamsCheckMethod) {
+					checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(user,groups,$1,$3) ) { return; } }");
+				}
+				else {
+					checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(user,groups,$1,$2) ) { return; } }");
+				}
+
+				System.out.println("done");
+
+				if (checkPermissionMethod != null) {
+					System.out.print("injecting checkPermission() hooks...");
+
+					checkPermissionMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1);");
+					checkPermissionMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1); throw $e; }", accCtrlExcp);	
+					checkPermissionMethod.insertBefore("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPre($1);");
+
+					System.out.println("done");
+				}
+
+				ret = curClass.toBytecode();
+			} else {
+				System.out.println("Unable to identify check() method on class: [" + aClassName + "]. Found following methods:");
+
+				for (CtMethod m : curClass.getDeclaredMethods()) {
+					System.err.println("  found Method: " + m);
+				}
+
+				System.out.println("Injection failed. Continue without Injection");
+			}
+		} catch (CannotCompileException e) {
+			System.err.println("Can not compile Exception for class Name: " + aClassName + " Exception: " + e);
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("IO Exception for class Name: " + aClassName + " Exception: " + e);
+			e.printStackTrace();
+		}
+
+		return ret;
+	}
+
+	private static CtClass getCtClass(String className) {
+		CtClass ret = null;
+
+		try {
+			ClassPool cp = ClassPool.getDefault();
+
+			ret = cp.get(className);
+		} catch (javassist.NotFoundException nfe) {
+			System.err.println("Unable to find Class for [" + className + "]" + nfe);
+			ret = null;
+		}
+
+		return ret;
+	}
 }

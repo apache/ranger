@@ -45,6 +45,22 @@ public class TestRangerFSPermissionChecker {
 			fail("Unexpected exception!");
 		} 
 	}
+
+	@Test
+	public void nullUserGroupsToCheckReturnsFalse() {
+		String      user   = null;
+		Set<String> groups = null;
+		INode       inode  = null;
+		FsAction    access = null;
+
+		try {
+			boolean result = RangerFSPermissionChecker.check(user, groups, inode, access);
+
+			assertFalse(result);
+		} catch (RangerAccessControlException e) {
+			fail("Unexpected exception!");
+		}
+	}
 	
 	@Test
 	public void authorizeAccess() {

@@ -22,6 +22,7 @@ define(function(require){
 	'use strict';	
 
 	var VXUserBase	= require('model_bases/VXUserBase');
+	var XAEnums     = require('utils/XAEnums');
 
 	var VXUser = VXUserBase.extend(
 	/** @lends VXUser.prototype */
@@ -34,6 +35,19 @@ define(function(require){
 		initialize: function() {
 			this.modelName = 'VXUser';
 			this.bindErrorEvents();
+			this.toView();
+		},
+
+		toView : function(){
+			if(!_.isUndefined(this.get('isVisible'))){
+				var visible = (this.get('isVisible') == XAEnums.VisibilityStatus.STATUS_VISIBLE.value);
+				this.set('isVisible', visible);
+			}
+		},
+
+		toServer : function(){
+			var visible = this.get('isVisible') ? XAEnums.VisibilityStatus.STATUS_VISIBLE.value : XAEnums.VisibilityStatus.STATUS_HIDDEN.value;
+			this.set('isVisible', visible);
 		},
 		
 		/** This models toString() */

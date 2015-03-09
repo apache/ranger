@@ -29,6 +29,7 @@ import java.util.Collection;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -77,6 +78,7 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 	protected Collection<String> groupNameList;
 	
 	protected int status;
+	protected Integer isVisible;
 	protected int userSource;
 	/**
 	 * List of roles for this user
@@ -87,6 +89,7 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXUser ( ) {
+		isVisible = RangerCommonEnums.IS_VISIBLE;
 	}
 
 	/**
@@ -235,11 +238,17 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 		return status;
 	}
 
-	public void setStatus(int status) {
+	public void setStatus(Integer status) {
 		this.status = status;
 	}
 	
+	public Integer getIsVisible() {
+		return isVisible;
+	}
 	
+	public void setIsVisible(Integer isVisible) {
+		this.isVisible = isVisible;
+	}
 
 	public int getUserSource() {
 		return userSource;
@@ -289,6 +298,7 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 		str += "password={" + password + "} ";
 		str += "description={" + description + "} ";
 		str += "credStoreId={" + credStoreId + "} ";
+		str += "isVisible={" + isVisible + "} ";
 		str += "groupIdList={" + groupIdList + "} ";
 		str += "groupNameList={" + groupNameList + "} ";
 		str += "}";

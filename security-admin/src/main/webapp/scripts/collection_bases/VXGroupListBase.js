@@ -41,7 +41,18 @@ define(function(require){
 			this.modelName = 'VXGroup';
 			this.modelAttrName = 'vXGroups';
 			this.bindErrorEvents();
+            this._changes = { };
+			this.on('change', this._onChange);
 		},
+
+		_onChange : function(m){
+            this._changes[m.id] = m;
+		},
+
+		changed_models: function() {
+            return _.chain(this._changes).values();
+        },
+
 		/*************************
 		 * Non - CRUD operations
 		 *************************/
@@ -56,7 +67,20 @@ define(function(require){
 			}, options);
 
 			return this.constructor.nonCrudOperation.call(this, url, 'GET', options);
-		}
+		},
+
+		setGroupsVisibility : function(postData , options){
+			var url = XAGlobals.baseURL  + 'xusers/secure/groups/visibility';
+
+			options = _.extend({
+				data : JSON.stringify(postData),
+				contentType : 'application/json',
+				dataType : 'json'
+			}, options);
+
+			return this.constructor.nonCrudOperation.call(this, url, 'PUT', options);
+		},
+
 	},{
 		// static class members
 		/**

@@ -1764,3 +1764,18 @@ margin-top: -29px;
 .margin-left-5{
 	margin-left:5px;
 }
+.tr-inactive {
+  background-color: #F5F5F5;
+}
+.tr-inactive a {
+  color: #CCC;
+}
+.tr-inactive td span.label{
+  background-color: #BCBCBC;
+  color: #fff;
+  font-weight: normal;
+  text-shadow: none;
+}
+td.select-row-cell {
+  text-align: center;
+}

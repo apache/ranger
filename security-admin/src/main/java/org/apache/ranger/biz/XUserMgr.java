@@ -20,10 +20,17 @@
  package org.apache.ranger.biz;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
@@ -35,6 +42,8 @@ import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupList;
@@ -63,6 +72,9 @@ public class XUserMgr extends XUserMgrBase {
 
 	@Autowired
 	RangerBizUtil xaBizUtil;
+	
+	@Autowired
+	XGroupService xGroupService;
 
 	static final Logger logger = Logger.getLogger(XUserMgr.class);
 
@@ -472,4 +484,23 @@ public class XUserMgr extends XUserMgrBase {
 		return vXGroup;
 	}
 
+	public void modifyUserVisibility(HashMap<Long, Integer> visibilityMap) {			
+		Set<Long> keys = visibilityMap.keySet();
+		for (Long key : keys) {
+			XXUser xUser = daoManager.getXXUser().getById(key);
+			VXUser vObj = xUserService.populateViewBean(xUser);
+			vObj.setIsVisible(visibilityMap.get(key));
+			vObj = xUserService.updateResource(vObj);
+		}
+	}
+	
+	public void modifyGroupsVisibility(HashMap<Long, Integer> groupVisibilityMap) {			
+		Set<Long> keys = groupVisibilityMap.keySet();
+		for (Long key : keys) {		
+			XXGroup xGroup = daoManager.getXXGroup().getById(key);
+			VXGroup vObj = xGroupService.populateViewBean(xGroup);
+			vObj.setIsVisible(groupVisibilityMap.get(key));
+			vObj = xGroupService.updateResource(vObj);
+		}
+	}
 }

@@ -69,16 +69,21 @@ public class RangerFSPermissionChecker {
 	private static volatile RangerHdfsPlugin           rangerPlugin        = null;
 	private static ThreadLocal<RangerHdfsAuditHandler> currentAuditHandler = new ThreadLocal<RangerHdfsAuditHandler>();
 
-
 	public static boolean check(UserGroupInformation ugi, INode inode, FsAction access) throws RangerAccessControlException {
 		if (ugi == null || inode == null || access == null) {
 			return false;
 		}
 
-		String      path      = inode.getFullPathName();
-		String      pathOwner = inode.getUserName();
-		String      user      = ugi.getShortUserName();
-		Set<String> groups    = Sets.newHashSet(ugi.getGroupNames());
+		return check(ugi.getShortUserName(), Sets.newHashSet(ugi.getGroupNames()), inode, access);
+	}
+
+	public static boolean check(String user, Set<String> groups, INode inode, FsAction access) throws RangerAccessControlException {
+		if (user == null || inode == null || access == null) {
+			return false;
+		}
+
+		String path      = inode.getFullPathName();
+		String pathOwner = inode.getUserName();
 
 		boolean accessGranted =  AuthorizeAccessForUser(path, pathOwner, access, user, groups);
 
@@ -141,6 +146,18 @@ public class RangerFSPermissionChecker {
 		return accessGranted;
 	}
 
+	public static void checkPermissionPre(INodesInPath inodesInPath) {
+		String pathToBeValidated = getPath(inodesInPath);
+
+		checkPermissionPre(pathToBeValidated);
+	}
+
+	public static void checkPermissionPost(INodesInPath inodesInPath) {
+		String pathToBeValidated = getPath(inodesInPath);
+
+		checkPermissionPost(pathToBeValidated);
+	}
+
 	public static void checkPermissionPre(String pathToBeValidated) {
 		RangerHdfsAuditHandler auditHandler = new RangerHdfsAuditHandler(pathToBeValidated);
 		
@@ -171,6 +188,13 @@ public class RangerFSPermissionChecker {
 
 	private static RangerHdfsAuditHandler getCurrentAuditHandler() {
 		return currentAuditHandler.get();
+	}
+
+	private static String getPath(INodesInPath inodesInPath) {
+		int   length = inodesInPath.length();
+		INode last   = length > 0 ? inodesInPath.getLastINode() : null;
+
+		return last == null ? org.apache.hadoop.fs.Path.SEPARATOR : last.getFullPathName();
 	}
 }
 

@@ -19,6 +19,9 @@
 
  package org.apache.ranger.rest;
 
+import java.util.HashMap;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -156,6 +159,12 @@ public class XUserREST {
 		return xUserMgr.updateXGroup(vXGroup);
 	}
 
+	@PUT
+	@Path("/secure/groups/visibility")
+	@Produces({ "application/xml", "application/json" })
+	public void modifyGroupsVisibility(HashMap<Long, Integer> groupVisibilityMap){
+		 xUserMgr.modifyGroupsVisibility(groupVisibilityMap);
+	}
 	
 	@DELETE
 	@Path("/groups/{id}")
@@ -181,6 +190,7 @@ public class XUserREST {
 				request, xGroupService.sortFields);
 		searchUtil.extractString(request, searchCriteria, "name", "group name", 
 				StringUtil.VALIDATION_NAME);
+		searchUtil.extractInt(request, searchCriteria, "isVisible", "Group Visibility");
 		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", 
 				StringUtil.VALIDATION_NAME);
 		return xUserMgr.searchXGroups(searchCriteria);
@@ -246,6 +256,13 @@ public class XUserREST {
 		return xUserMgr.updateXUser(vXUser);
 	}
 
+	@PUT
+	@Path("/secure/users/visibility")
+	@Produces({ "application/xml", "application/json" })
+	public void modifyUserVisibility(HashMap<Long, Integer> visibilityMap){
+		 xUserMgr.modifyUserVisibility(visibilityMap);
+	}
+
 	@DELETE
 	@Path("/users/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
@@ -274,6 +291,7 @@ public class XUserREST {
 		searchUtil.extractString(request, searchCriteria, "emailAddress", "Email Address",
 				null);		
 		searchUtil.extractInt(request, searchCriteria, "userSource", "User Source");
+		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
 		searchUtil.extractString(request, searchCriteria, "userRoleList", "User Role",
 				null);
 		return xUserMgr.searchXUsers(searchCriteria);

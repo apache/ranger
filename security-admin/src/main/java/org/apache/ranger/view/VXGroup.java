@@ -62,10 +62,16 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
 	protected Long credStoreId;
 
 	/**
+	 * Group visibility
+	 */
+	protected Integer isVisible;
+	
+	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXGroup ( ) {
 		groupType = AppConstants.XA_GROUP_UNKNOWN;
+		isVisible = RangerCommonEnums.IS_VISIBLE;
 	}
 
 	/**
@@ -136,6 +142,20 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
 		return this.credStoreId;
 	}
 
+	/**
+	 * @return the isVisible
+	 */
+	public Integer getIsVisible() {
+		return isVisible;
+	}
+
+	/**
+	 * @param isVisible the isVisible to set
+	 */
+	public void setIsVisible(Integer isVisible) {
+		this.isVisible = isVisible;
+	}
+
 	@Override
 	public int getMyClassType( ) {
 	    return AppConstants.CLASS_TYPE_XA_GROUP;
@@ -163,6 +183,7 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
 		str += "description={" + description + "} ";
 		str += "groupType={" + groupType + "} ";
 		str += "credStoreId={" + credStoreId + "} ";
+		str += "isVisible={" + isVisible + "} ";
 		str += "groupSrc={" + groupSource + "} ";
 		str += "}";
 		return str;

@@ -651,4 +651,267 @@
 		 */
 		
 		(function(e){function t(t,n,r){var i=n.data("dF").dirtyFieldsDataProperty;var s=e.inArray(t,i);if(r=="dirty"&&s==-1){i.push(t);n.data("dF").dirtyFieldsDataProperty=i}else if(r=="clean"&&s>-1){i.splice(s,1);n.data("dF").dirtyFieldsDataProperty=i}}function n(t){if(t.data("dF").dirtyFieldsDataProperty.length>0){t.addClass(t.data("dF").dirtyFormClass);if(e.isFunction(t.data("dF").formChangeCallback)){t.data("dF").formChangeCallback.call(t,true,t.data("dF").dirtyFieldsDataProperty)}}else{t.removeClass(t.data("dF").dirtyFormClass);if(e.isFunction(t.data("dF").formChangeCallback)){t.data("dF").formChangeCallback.call(t,false,t.data("dF").dirtyFieldsDataProperty)}}}function r(t,n,r,i){if(i.data("dF").denoteDirtyFields){var s=i.data("dF").fieldOverrides;var o=n.attr("id");var u=false;for(var a in s){if(o==a){if(r=="changed"){e("#"+s[a]).addClass(i.data("dF").dirtyFieldClass)}else{e("#"+s[a]).removeClass(i.data("dF").dirtyFieldClass)}u=true}}if(u==false){var f=i.data("dF")[t];var l=f.split("-");switch(l[0]){case"next":if(r=="changed"){n.next(l[1]).addClass(i.data("dF").dirtyFieldClass)}else{n.next(l[1]).removeClass(i.data("dF").dirtyFieldClass)}break;case"previous":if(r=="changed"){n.prev(l[1]).addClass(i.data("dF").dirtyFieldClass)}else{n.prev(l[1]).removeClass(i.data("dF").dirtyFieldClass)}break;case"closest":if(r=="changed"){n.closest(l[1]).addClass(i.data("dF").dirtyFieldClass)}else{n.closest(l[1]).removeClass(i.data("dF").dirtyFieldClass)}break;case"self":if(r=="changed"){n.addClass(i.data("dF").dirtyFieldClass)}else{n.removeClass(i.data("dF").dirtyFieldClass)}break;default:if(l[0]=="id"||l[0]=="name"){switch(l[1]){case"class":if(r=="changed"){e("."+n.attr(l[0]),i).addClass(i.data("dF").dirtyFieldClass)}else{e("."+n.attr(l[0]),i).removeClass(i.data("dF").dirtyFieldClass)}break;case"title":if(r=="changed"){e("*[title='"+n.attr(l[0])+"']",i).addClass(i.data("dF").dirtyFieldClass)}else{e("*[title='"+n.attr(l[0])+"']",i).removeClass(i.data("dF").dirtyFieldClass)}break;case"for":if(r=="changed"){e("label[for='"+n.attr(l[0])+"']",i).addClass(i.data("dF").dirtyFieldClass)}else{e("label[for='"+n.attr(l[0])+"']",i).removeClass(i.data("dF").dirtyFieldClass)}break}}break}}}}function i(i,s){var o=i.attr("name");var u=false;if(s.data("dF").trimText){var a=jQuery.trim(i.val())}else{var a=i.val()}if(i.hasClass(s.data("dF").ignoreCaseClass)){var a=a.toUpperCase();var f=i.data(s.data("dF").startingValueDataProperty).toUpperCase()}else{var f=i.data(s.data("dF").startingValueDataProperty)}if(a!=f){r("textboxContext",i,"changed",s);t(o,s,"dirty");u=true}else{r("textboxContext",i,"unchanged",s);t(o,s,"clean")}if(e.isFunction(s.data("dF").fieldChangeCallback)){s.data("dF").fieldChangeCallback.call(i,i.data(s.data("dF").startingValueDataProperty),u)}if(s.data("dF").denoteDirtyForm){n(s)}}function s(i,s){var o=i.attr("name");var u=false;if(s.data("dF").denoteDirtyOptions==false&&i.attr("multiple")!=true){if(i.hasClass(s.data("dF").ignoreCaseClass)){var a=i.val().toUpperCase();var f=i.data(s.data("dF").startingValueDataProperty).toUpperCase()}else{var a=i.val();var f=i.data(s.data("dF").startingValueDataProperty)}if(a!=f){r("selectContext",i,"changed",s);t(o,s,"dirty");u=true}else{r("selectContext",i,"unchanged",s);t(o,s,"clean")}}else{var l=false;i.children("option").each(function(t){var n=e(this);var r=n.is(":selected");if(r!=n.data(s.data("dF").startingValueDataProperty)){if(s.data("dF").denoteDirtyOptions){n.addClass(s.data("dF").dirtyOptionClass)}l=true}else{if(s.data("dF").denoteDirtyOptions){n.removeClass(s.data("dF").dirtyOptionClass)}}});if(l){r("selectContext",i,"changed",s);t(o,s,"dirty");u=true}else{r("selectContext",i,"unchanged",s);t(o,s,"clean")}}if(e.isFunction(s.data("dF").fieldChangeCallback)){s.data("dF").fieldChangeCallback.call(i,i.data(s.data("dF").startingValueDataProperty),u)}if(s.data("dF").denoteDirtyForm){n(s)}}function o(i,s){var o=i.attr("name");var u=false;var a=i.attr("type");e(":"+a+"[name='"+o+"']",s).each(function(t){var n=e(this);var i=n.is(":checked");if(i!=n.data(s.data("dF").startingValueDataProperty)){r("checkboxRadioContext",n,"changed",s);u=true}else{r("checkboxRadioContext",n,"unchanged",s)}});if(u){t(o,s,"dirty")}else{t(o,s,"clean")}if(e.isFunction(s.data("dF").fieldChangeCallback)){s.data("dF").fieldChangeCallback.call(i,i.data(s.data("dF").startingValueDataProperty),u)}if(s.data("dF").denoteDirtyForm){n(s)}}e.fn.dirtyFields=function(t){var n=e.extend({},e.fn.dirtyFields.defaults,t);return this.each(function(){var t=e(this);t.data("dF",n);t.data("dF").dirtyFieldsDataProperty=new Array;e("input[type='text'],input[type='file'],input[type='password'],textarea",t).not("."+t.data("dF").exclusionClass).each(function(n){e.fn.dirtyFields.configureField(e(this),t,"text")});e("select",t).not("."+t.data("dF").exclusionClass).each(function(n){e.fn.dirtyFields.configureField(e(this),t,"select")});e(":checkbox,:radio",t).not("."+t.data("dF").exclusionClass).each(function(n){e.fn.dirtyFields.configureField(e(this),t,"checkRadio")});e.fn.dirtyFields.setStartingValues(t)})};e.fn.dirtyFields.defaults={checkboxRadioContext:"next-span",denoteDirtyOptions:false,denoteDirtyFields:true,denoteDirtyForm:false,dirtyFieldClass:"dirtyField",dirtyFieldsDataProperty:"dirtyFields",dirtyFormClass:"dirtyForm",dirtyOptionClass:"dirtyOption",exclusionClass:"dirtyExclude",fieldChangeCallback:"",fieldOverrides:{none:"none"},formChangeCallback:"",ignoreCaseClass:"dirtyIgnoreCase",preFieldChangeCallback:"",selectContext:"id-for",startingValueDataProperty:"startingValue",textboxContext:"id-for",trimText:false};e.fn.dirtyFields.configureField=function(t,n,r,u){if(!t.hasClass(n.data("dF").exclusionClass)){if(typeof u!="undefined"){n.data("dF").fieldOverrides[t.attr("id")]=u}switch(r){case"text":t.change(function(){if(e.isFunction(n.data("dF").preFieldChangeCallback)){if(n.data("dF").preFieldChangeCallback.call(t,t.data(n.data("dF").startingValueDataProperty))==false){return false}}i(t,n)});break;case"select":t.change(function(){if(e.isFunction(n.data("dF").preFieldChangeCallback)){if(n.data("dF").preFieldChangeCallback.call(t,t.data(n.data("dF").startingValueDataProperty))==false){return false}}s(t,n)});break;case"checkRadio":t.change(function(){if(e.isFunction(n.data("dF").preFieldChangeCallback)){if(n.data("dF").preFieldChangeCallback.call(t,t.data(n.data("dF").startingValueDataProperty))==false){return false}}o(t,n)});break}}};e.fn.dirtyFields.formSaved=function(t){e.fn.dirtyFields.setStartingValues(t);e.fn.dirtyFields.markContainerFieldsClean(t)};e.fn.dirtyFields.markContainerFieldsClean=function(t){var n=new Array;t.data("dF").dirtyFieldsDataProperty=n;e("."+t.data("dF").dirtyFieldClass,t).removeClass(t.data("dF").dirtyFieldClass);if(t.data("dF").denoteDirtyOptions){e("."+t.data("dF").dirtyOptionClass,t).removeClass(t.data("dF").dirtyOptionClass)}if(t.data("dF").denoteDirtyForm){t.removeClass(t.data("dF").dirtyFormClass)}};e.fn.dirtyFields.setStartingValues=function(t,n){e("input[type='text'],input[type='file'],input[type='password'],:checkbox,:radio,textarea",t).not("."+t.data("dF").exclusionClass).each(function(n){var r=e(this);if(r.attr("type")=="radio"||r.attr("type")=="checkbox"){e.fn.dirtyFields.setStartingCheckboxRadioValue(r,t)}else{e.fn.dirtyFields.setStartingTextValue(r,t)}});e("select",t).not("."+t.data("dF").exclusionClass).each(function(n){e.fn.dirtyFields.setStartingSelectValue(e(this),t)})};e.fn.dirtyFields.setStartingTextValue=function(t,n){return t.not("."+n.data("dF").exclusionClass).each(function(){var t=e(this);t.data(n.data("dF").startingValueDataProperty,t.val())})};e.fn.dirtyFields.setStartingCheckboxRadioValue=function(t,n){return t.not("."+n.data("dF").exclusionClass).each(function(){var t=e(this);var r;if(t.is(":checked")){t.data(n.data("dF").startingValueDataProperty,true)}else{t.data(n.data("dF").startingValueDataProperty,false)}})};e.fn.dirtyFields.setStartingSelectValue=function(t,n){return t.not("."+n.data("dF").exclusionClass).each(function(){var t=e(this);if(n.data("dF").denoteDirtyOptions==false&&t.attr("multiple")!=true){t.data(n.data("dF").startingValueDataProperty,t.val())}else{var r=new Array;t.children("option").each(function(t){var i=e(this);if(i.is(":selected")){i.data(n.data("dF").startingValueDataProperty,true);r.push(i.val())}else{i.data(n.data("dF").startingValueDataProperty,false)}});t.data(n.data("dF").startingValueDataProperty,r)}})};e.fn.dirtyFields.rollbackTextValue=function(t,n,r){if(typeof r=="undefined"){r=true}return t.not("."+n.data("dF").exclusionClass).each(function(){var t=e(this);t.val(t.data(n.data("dF").startingValueDataProperty));if(r){i(t,n)}})};e.fn.dirtyFields.updateTextState=function(t,n){return t.not("."+n.data("dF").exclusionClass).each(function(){i(e(this),n)})};e.fn.dirtyFields.rollbackCheckboxRadioState=function(t,n,r){if(typeof r=="undefined"){r=true}return t.not("."+n.data("dF").exclusionClass).each(function(){var t=e(this);if(t.data(n.data("dF").startingValueDataProperty)){t.attr("checked",true)}else{t.attr("checked",false)}if(r){o(t,n)}})};e.fn.dirtyFields.updateCheckboxRadioState=function(t,n){return t.not("."+n.data("dF").exclusionClass).each(function(){o(e(this),n)})};e.fn.dirtyFields.rollbackSelectState=function(t,n,r){if(typeof r=="undefined"){r=true}return t.not("."+n.data("dF").exclusionClass).each(function(){var t=e(this);if(n.data("dF").denoteDirtyOptions==false&&t.attr("multiple")!=true){t.val(t.data(n.data("dF").startingValueDataProperty))}else{t.children("option").each(function(t){var r=e(this);if(r.data(n.data("dF").startingValueDataProperty)){r.attr("selected",true)}else{r.attr("selected",false)}})}if(r){s(t,n)}})};e.fn.dirtyFields.updateSelectState=function(t,n){return t.not("."+n.data("dF").exclusionClass).each(function(){s(e(this),n)})};e.fn.dirtyFields.rollbackForm=function(t){e("input[type='text'],input[type='file'],input[type='password'],:checkbox,:radio,textarea",t).not("."+t.data("dF").exclusionClass).each(function(n){$object=e(this);if($object.attr("type")=="radio"||$object.attr("type")=="checkbox"){e.fn.dirtyFields.rollbackCheckboxRadioState($object,t,false)}else{e.fn.dirtyFields.rollbackTextValue($object,t,false)}});e("select",t).not("."+t.data("dF").exclusionClass).each(function(n){e.fn.dirtyFields.rollbackSelectState(e(this),t,false)});e.fn.dirtyFields.markContainerFieldsClean(t)};e.fn.dirtyFields.updateFormState=function(t){e("input[type='text'],input[type='file'],input[type='password'],:checkbox,:radio,textarea",t).not("."+t.data("dF").exclusionClass).each(function(n){$object=e(this);if($object.attr("type")=="radio"||$object.attr("type")=="checkbox"){e.fn.dirtyFields.updateCheckboxRadioState($object,t)}else{e.fn.dirtyFields.updateTextState($object,t)}});e("select",t).not("."+t.data("dF").exclusionClass).each(function(n){$object=e(this);e.fn.dirtyFields.updateSelectState($object,t)})};e.fn.dirtyFields.getDirtyFieldNames=function(e){return e.data("dF").dirtyFieldsDataProperty};})(jQuery)
+
+		var SelectRowCell = Backgrid.Extension.SelectRowCell = Backbone.View.extend({
+
+		    /** @property */
+		    className: "select-row-cell",
+
+		    /** @property */
+		    tagName: "td",
+
+		    /** @property */
+		    events: {
+		      "keydown input[type=checkbox]": "onKeydown",
+		      "change input[type=checkbox]": "onChange",
+		      "click input[type=checkbox]": "enterEditMode"
+		    },
+
+		    /**
+		       Initializer. If the underlying model triggers a `select` event, this cell
+		       will change its checked value according to the event's `selected` value.
+		       @param {Object} options
+		       @param {Backgrid.Column} options.column
+		       @param {Backbone.Model} options.model
+		    */
+		    initialize: function (options) {
+
+		      this.column = options.column;
+		      if (!(this.column instanceof Backgrid.Column)) {
+		        this.column = new Backgrid.Column(this.column);
+		      }
+
+		      var column = this.column, model = this.model, $el = this.$el;
+		      this.listenTo(column, "change:renderable", function (column, renderable) {
+		        $el.toggleClass("renderable", renderable);
+		      });
+
+		      if (Backgrid.callByNeed(column.renderable(), column, model)) $el.addClass("renderable");
+
+		      this.listenTo(model, "backgrid:select", function (model, selected) {
+		        this.checkbox().prop("checked", selected).change();
+		      });
+		    },
+
+		    /**
+		       Returns the checkbox.
+		     */
+		    checkbox: function () {
+		      return this.$el.find("input[type=checkbox]");
+		    },
+
+		    /**
+		       Focuses the checkbox.
+		    */
+		    enterEditMode: function () {
+		      this.checkbox().focus();
+		    },
+
+		    /**
+		       Unfocuses the checkbox.
+		    */
+		    exitEditMode: function () {
+		      this.checkbox().blur();
+		    },
+
+		    /**
+		       Process keyboard navigation.
+		    */
+		    onKeydown: function (e) {
+		      var command = new Backgrid.Command(e);
+		      if (command.passThru()) return true; // skip ahead to `change`
+		      if (command.cancel()) {
+		        e.stopPropagation();
+		        this.checkbox().blur();
+		      }
+		      else if (command.save() || command.moveLeft() || command.moveRight() ||
+		               command.moveUp() || command.moveDown()) {
+		        e.preventDefault();
+		        e.stopPropagation();
+		        this.model.trigger("backgrid:edited", this.model, this.column, command);
+		      }
+		    },
+
+		    /**
+		       When the checkbox's value changes, this method will trigger a Backbone
+		       `backgrid:selected` event with a reference of the model and the
+		       checkbox's `checked` value.
+		    */
+		    onChange: function () {
+		      var checked = this.checkbox().prop("checked");
+		      this.$el.parent().toggleClass("selected", checked);
+		      this.model.set('isVisible', checked)
+		      this.model.trigger("backgrid:selected", this.model, checked);
+		    },
+
+		    /**
+		       Renders a checkbox in a table cell.
+		    */
+		    render: function () {
+		    	var val;
+		    	if(_.has(this, 'model'))
+		    		val = (this.model.get(this.column.get('name'))) ? 'checked' : '';
+		      this.$el.empty().append('<input tabindex="-1" type="checkbox" '+ val +'/>');
+		      this.delegateEvents();
+		      return this;
+		    }
+
+		  });
+
+		  /**
+		     Renders a checkbox to select all rows on the current page.
+		     @class Backgrid.Extension.SelectAllHeaderCell
+		     @extends Backgrid.Extension.SelectRowCell
+		  */
+		  var SelectAllHeaderCell = Backgrid.Extension.SelectAllHeaderCell = SelectRowCell.extend({
+
+		    /** @property */
+		    className: "select-all-header-cell",
+
+		    /** @property */
+		    tagName: "th",
+
+		    /**
+		       Initializer. When this cell's checkbox is checked, a Backbone
+		       `backgrid:select` event will be triggered for each model for the current
+		       page in the underlying collection. If a `SelectRowCell` instance exists
+		       for the rows representing the models, they will check themselves. If any
+		       of the SelectRowCell instances trigger a Backbone `backgrid:selected`
+		       event with a `false` value, this cell will uncheck its checkbox. In the
+		       event of a Backbone `backgrid:refresh` event, which is triggered when the
+		       body refreshes its rows, which can happen under a number of conditions
+		       such as paging or the columns were reset, this cell will still remember
+		       the previously selected models and trigger a Backbone `backgrid:select`
+		       event on them such that the SelectRowCells can recheck themselves upon
+		       refreshing.
+		       @param {Object} options
+		       @param {Backgrid.Column} options.column
+		       @param {Backbone.Collection} options.collection
+		    */
+		    initialize: function (options) {
+
+		      this.column = options.column;
+		      if (!(this.column instanceof Backgrid.Column)) {
+		        this.column = new Backgrid.Column(this.column);
+		      }
+
+		      var collection = this.collection;
+		      var selectedModels = this.selectedModels = {};
+		      this.listenTo(collection.fullCollection || collection,
+		                    "backgrid:selected", function (model, selected) {
+		        if (selected) selectedModels[model.id || model.cid] = 1;
+		        else {
+		          delete selectedModels[model.id || model.cid];
+		          this.checkbox().prop("checked", false);
+		        }
+		        if (_.keys(selectedModels).length === (collection.fullCollection|| collection).length) {
+		          this.checkbox().prop("checked", true);
+		        }
+		      });
+
+		      this.listenTo(collection.fullCollection || collection, "remove", function (model) {
+		        delete selectedModels[model.id || model.cid];
+		        if ((collection.fullCollection || collection).length === 0) {
+		          this.checkbox().prop("checked", false);
+		        }
+		      });
+
+		      this.listenTo(collection, "backgrid:refresh", function () {
+		        if ((collection.fullCollection || collection).length === 0) {
+		          this.checkbox().prop("checked", false);
+		        }
+		        else {
+		          var checked = this.checkbox().prop("checked");
+		          for (var i = 0; i < collection.length; i++) {
+		            var model = collection.at(i);
+		            if (checked || selectedModels[model.id || model.cid]) {
+		              model.trigger("backgrid:select", model, true);
+		            }
+		          }
+		        }
+		      });
+
+		      var column = this.column, $el = this.$el;
+		      this.listenTo(column, "change:renderable", function (column, renderable) {
+		        $el.toggleClass("renderable", renderable);
+		      });
+
+		      if (Backgrid.callByNeed(column.renderable(), column, collection)) $el.addClass("renderable");
+		    },
+
+		    /**
+		       Propagates the checked value of this checkbox to all the models of the
+		       underlying collection by triggering a Backbone `backgrid:select` event on
+		       the models on the current page, passing each model and the current
+		       `checked` value of the checkbox in each event.
+		       A `backgrid:selected` event will also be triggered with the current
+		       `checked` value on all the models regardless of whether they are on the
+		       current page.
+		       This method triggers a 'backgrid:select-all' event on the collection
+		       afterwards.
+		    */
+		    onChange: function () {
+		      var checked = this.checkbox().prop("checked");
+
+		      var collection = this.collection;
+		      collection.each(function (model) {
+		        model.trigger("backgrid:select", model, checked);
+		      });
+
+		      if (collection.fullCollection) {
+		        collection.fullCollection.each(function (model) {
+		          if (!collection.get(model.cid)) {
+		            model.trigger("backgrid:selected", model, checked);
+		          }
+		        });
+		      }
+
+		      this.collection.trigger("backgrid:select-all", this.collection, checked);
+		    }
+
+		  });
+
+		  /**
+		     Convenient method to retrieve a list of selected models. This method only
+		     exists when the `SelectAll` extension has been included. Selected models
+		     are retained across pagination.
+		     @member Backgrid.Grid
+		     @return {Array.<Backbone.Model>}
+		  */
+		  Backgrid.Grid.prototype.getSelectedModels = function () {
+		    var selectAllHeaderCell;
+		    var headerCells = this.header.row.cells;
+		    for (var i = 0, l = headerCells.length; i < l; i++) {
+		      var headerCell = headerCells[i];
+		      if (headerCell instanceof SelectAllHeaderCell) {
+		        selectAllHeaderCell = headerCell;
+		        break;
+		      }
+		    }
+
+		    var result = [];
+		    if (selectAllHeaderCell) {
+		      var selectedModels = selectAllHeaderCell.selectedModels;
+		      var collection = this.collection.fullCollection || this.collection;
+		      for (var modelId in selectedModels) {
+		        result.push(collection.get(modelId));
+		      }
+		    }
+
+		    return result;
+		  };
+
+		  /**
+		     Convenient method to deselect the selected models. This method is only
+		     available when the `SelectAll` extension has been included.
+		     @member Backgrid.Grid
+		   */
+		  Backgrid.Grid.prototype.clearSelectedModels = function () {
+		    var selectedModels = this.getSelectedModels();
+		    for (var i = 0, l = selectedModels.length; i < l; i++) {
+		      var model = selectedModels[i];
+		      model.trigger("backgrid:select", model, false);
+		    }
+		  };
+
 });

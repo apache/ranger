@@ -18,6 +18,7 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.ranger.common.ContextUtil;
@@ -30,6 +31,7 @@ import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.service.XGroupService;
@@ -59,7 +61,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestXUserMgr {
 
-	private static Long userId = 1L;
+	private static Long userId = 10L;
+	
+	private static Integer emptyValue;
 
 	@InjectMocks
 	XUserMgr xUserMgr = new XUserMgr();
@@ -166,7 +170,75 @@ public class TestXUserMgr {
 	}
 
 	@Test
-	public void test13CreateXGroup() {
+	public void test13ModifyUserVisibilitySetOne() {
+		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+		XXUser xxUser = Mockito.mock(XXUser.class);
+		VXUser vxUser = vxUser();
+		
+		Mockito.when(xUserService.updateResource(vxUser)).thenReturn(vxUser);		
+		HashMap<Long, Integer> visibilityMap = new HashMap<Long, Integer>();
+		Integer value = 1;
+		visibilityMap.put(userId, value);
+		
+		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(xxUserDao.getById(userId)).thenReturn(xxUser);
+		Mockito.when(xUserService.populateViewBean(xxUser)).thenReturn(vxUser);
+		
+		xUserMgr.modifyUserVisibility(visibilityMap);
+		Assert.assertEquals(value, vxUser.getIsVisible());
+		Assert.assertEquals(userId, vxUser.getId());
+		Mockito.verify(xUserService).updateResource(vxUser);
+		Mockito.verify(daoManager).getXXUser();
+		Mockito.verify(xUserService).populateViewBean(xxUser);
+	}
+	
+	@Test
+	public void test14ModifyUserVisibilitySetZero() {
+		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+		XXUser xxUser = Mockito.mock(XXUser.class);
+		VXUser vxUser = vxUser();
+		
+		Mockito.when(xUserService.updateResource(vxUser)).thenReturn(vxUser);		
+		HashMap<Long, Integer> visibilityMap = new HashMap<Long, Integer>();
+		Integer value = 0;
+		visibilityMap.put(userId, value);
+		
+		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(xxUserDao.getById(userId)).thenReturn(xxUser);
+		Mockito.when(xUserService.populateViewBean(xxUser)).thenReturn(vxUser);
+		
+		xUserMgr.modifyUserVisibility(visibilityMap);		
+		Assert.assertEquals(value, vxUser.getIsVisible());
+		Assert.assertEquals(userId, vxUser.getId());
+		Mockito.verify(xUserService).updateResource(vxUser);
+		Mockito.verify(daoManager).getXXUser();
+		Mockito.verify(xUserService).populateViewBean(xxUser);
+	}
+	
+	@Test
+	public void test15ModifyUserVisibilitySetEmpty() {
+		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+		XXUser xxUser = Mockito.mock(XXUser.class);
+		VXUser vxUser = vxUser();
+		
+		Mockito.when(xUserService.updateResource(vxUser)).thenReturn(vxUser);		
+		HashMap<Long, Integer> visibilityMap = new HashMap<Long, Integer>();
+		visibilityMap.put(userId, emptyValue);
+		
+		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(xxUserDao.getById(userId)).thenReturn(xxUser);
+		Mockito.when(xUserService.populateViewBean(xxUser)).thenReturn(vxUser);
+		
+		xUserMgr.modifyUserVisibility(visibilityMap);		
+		Assert.assertEquals(emptyValue, vxUser.getIsVisible());
+		Assert.assertEquals(userId, vxUser.getId());
+		Mockito.verify(xUserService).updateResource(vxUser);
+		Mockito.verify(daoManager).getXXUser();
+		Mockito.verify(xUserService).populateViewBean(xxUser);
+	}
+
+	@Test
+	public void test16CreateXGroup() {
 		setup();
 		VXGroup vXGroup = new VXGroup();
 		vXGroup.setId(userId);
@@ -195,7 +267,7 @@ public class TestXUserMgr {
 	}
 
 	@Test
-	public void test14UpdateXGroup() {
+	public void test17UpdateXGroup() {
 		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
 		setup();
 		VXGroup vXGroup = new VXGroup();
@@ -220,7 +292,84 @@ public class TestXUserMgr {
 	}
 
 	@Test
-	public void test15createXGroupUser() {
+	public void test18ModifyGroupsVisibilitySetOne() {
+		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);		
+		VXGroup vXGroup = new VXGroup();
+		vXGroup.setId(userId);
+		vXGroup.setDescription("group test");
+		vXGroup.setName("grouptest");
+
+		XXGroup xxGroup = new XXGroup();		
+		HashMap<Long, Integer> groupVisibilityMap = new HashMap<Long, Integer>();
+		Integer value = 1;
+		groupVisibilityMap.put(userId, value);
+		
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(xxGroupDao.getById(vXGroup.getId())).thenReturn(xxGroup);
+		Mockito.when(xGroupService.populateViewBean(xxGroup)).thenReturn(vXGroup);
+		Mockito.when(xGroupService.updateResource(vXGroup)).thenReturn(vXGroup);
+	
+		xUserMgr.modifyGroupsVisibility(groupVisibilityMap);
+		Assert.assertEquals(value, vXGroup.getIsVisible());
+		Assert.assertEquals(userId, vXGroup.getId());		
+		Mockito.verify(daoManager).getXXGroup();
+		Mockito.verify(xGroupService).populateViewBean(xxGroup);
+		Mockito.verify(xGroupService).updateResource(vXGroup);
+	}
+	
+	@Test
+	public void test19ModifyGroupsVisibilitySetZero() {
+		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);		
+		VXGroup vXGroup = new VXGroup();
+		vXGroup.setId(userId);
+		vXGroup.setDescription("group test");
+		vXGroup.setName("grouptest");
+
+		XXGroup xxGroup = new XXGroup();		
+		HashMap<Long, Integer> groupVisibilityMap = new HashMap<Long, Integer>();
+		Integer value = 0;
+		groupVisibilityMap.put(userId, value);
+		
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(xxGroupDao.getById(vXGroup.getId())).thenReturn(xxGroup);
+		Mockito.when(xGroupService.populateViewBean(xxGroup)).thenReturn(vXGroup);
+		Mockito.when(xGroupService.updateResource(vXGroup)).thenReturn(vXGroup);
+	
+		xUserMgr.modifyGroupsVisibility(groupVisibilityMap);
+		Assert.assertEquals(value, vXGroup.getIsVisible());
+		Assert.assertEquals(userId, vXGroup.getId());		
+		Mockito.verify(daoManager).getXXGroup();
+		Mockito.verify(xGroupService).populateViewBean(xxGroup);
+		Mockito.verify(xGroupService).updateResource(vXGroup);
+	}
+	
+	@Test
+	public void test20ModifyGroupsVisibilitySetEmpty() {
+		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);		
+		VXGroup vXGroup = new VXGroup();
+		vXGroup.setId(userId);
+		vXGroup.setDescription("group test");
+		vXGroup.setName("grouptest");
+
+		XXGroup xxGroup = new XXGroup();		
+		HashMap<Long, Integer> groupVisibilityMap = new HashMap<Long, Integer>();
+		groupVisibilityMap.put(userId, emptyValue);
+		
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(xxGroupDao.getById(vXGroup.getId())).thenReturn(xxGroup);
+		Mockito.when(xGroupService.populateViewBean(xxGroup)).thenReturn(vXGroup);
+		Mockito.when(xGroupService.updateResource(vXGroup)).thenReturn(vXGroup);
+	
+		xUserMgr.modifyGroupsVisibility(groupVisibilityMap);
+		Assert.assertEquals(emptyValue, vXGroup.getIsVisible());
+		Assert.assertEquals(userId, vXGroup.getId());		
+		Mockito.verify(daoManager).getXXGroup();
+		Mockito.verify(xGroupService).populateViewBean(xxGroup);
+		Mockito.verify(xGroupService).updateResource(vXGroup);
+	}
+	
+	@Test
+	public void test21createXGroupUser() {
 		VXGroupUser vxGroupUser = new VXGroupUser();
 		vxGroupUser.setId(userId);
 		vxGroupUser.setName("group user test");
@@ -263,13 +412,13 @@ public class TestXUserMgr {
 	}
 
 	@Test
-	public void test16GetXUserGroups() {
+	public void test22GetXUserGroups() {
 		VXGroupList dbVXGroupList = xUserMgr.getXUserGroups(userId);
 		Assert.assertNotNull(dbVXGroupList);
 	}
 
 	@Test
-	public void test17GetXGroupUsers() {
+	public void test23GetXGroupUsers() {
 		VXUserList dbVXUserList = xUserMgr.getXGroupUsers(userId);VXGroup vXGroup = new VXGroup();
 		vXGroup.setId(userId);
 		vXGroup.setDescription("group test");
@@ -278,7 +427,7 @@ public class TestXUserMgr {
 	}
 
 	@Test
-	public void test18GetXUserByUserName() {
+	public void test24GetXUserByUserName() {
 		VXUser vxUser = vxUser();
 		String userName = "test";
 
@@ -295,7 +444,7 @@ public class TestXUserMgr {
 	}
 
 	@Test
-	public void test19CreateXUserWithOutLogin(){
+	public void test25CreateXUserWithOutLogin(){
 		VXUser vxUser = vxUser();
 	
 		Mockito.when(xUserService.createXUserWithOutLogin(vxUser))
@@ -314,7 +463,7 @@ public class TestXUserMgr {
 	}
 	
 	@Test
-	public void test20CreateXGroupWithoutLogin(){
+	public void test26CreateXGroupWithoutLogin(){
 
 		VXGroup vXGroup = new VXGroup();
 		vXGroup.setId(userId);
@@ -334,7 +483,7 @@ public class TestXUserMgr {
 	}
 	
 	@Test
-	public void test21DeleteXGroup() {
+	public void test27DeleteXGroup() {
 		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
 
 		VXGroupUserList vxGroupUserList = new VXGroupUserList();
@@ -352,7 +501,7 @@ public class TestXUserMgr {
 	}
 
 	@Test
-	public void test22DeleteXUser() {
+	public void test28DeleteXUser() {
 		XXGroupUserDao xxGroupDao = Mockito.mock(XXGroupUserDao.class);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		VXGroupUserList vxGroupUserList = new VXGroupUserList();
@@ -373,7 +522,7 @@ public class TestXUserMgr {
 	}
 
 	@Test
-	public void test23deleteXGroupAndXUser() {
+	public void test29deleteXGroupAndXUser() {
 		VXUser vxUser = vxUser();
 		VXGroup vxGroup = new VXGroup();
 		VXGroupUserList vxGroupUserList = new VXGroupUserList();
@@ -397,7 +546,7 @@ public class TestXUserMgr {
 	}
 	
 	@Test
-	public void test24CreateVXUserGroupInfo(){
+	public void test30CreateVXUserGroupInfo(){
 	
 		VXUserGroupInfo vXUserGroupInfo = new VXUserGroupInfo();
 		VXUser vXUser = new VXUser();

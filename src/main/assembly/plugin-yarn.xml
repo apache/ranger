@@ -56,6 +56,7 @@
                         <include>commons-cli:commons-cli</include>
                         <include>commons-collections:commons-collections</include>
                         <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
+                        <include>commons-io:commons-io:jar:${commons.io.version}</include>
                         <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                         <include>commons-logging:commons-logging</include>
                         <include>com.google.guava:guava:jar:${guava.version}</include>

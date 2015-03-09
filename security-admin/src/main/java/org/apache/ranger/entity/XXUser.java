@@ -34,6 +34,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 
 
@@ -88,6 +89,15 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 	protected int status = RangerConstants.STATUS_DISABLED;
 
 	/**
+	 * Status
+	 * <ul>
+	 * <li>This attribute is of type enum CommonEnums::ActiveStatus
+	 * </ul>
+	 *
+	 */
+	@Column(name="IS_VISIBLE"  , nullable=false )
+	protected Integer isVisible ;
+	/**
 	 * Id of the credential store
 	 * <ul>
 	 * </ul>
@@ -102,6 +112,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 	 */
 	public XXUser ( ) {
 		status = RangerConstants.STATUS_DISABLED;
+		isVisible = RangerCommonEnums.IS_VISIBLE;
 	}
 
 	@Override
@@ -166,6 +177,23 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b>isVisible</b>.
+	 * You cannot set null to the attribute.
+	 * @param status Value to set member attribute <b>isVisible</b>
+	 */
+	public void setIsVisible(Integer isVisible) {
+		this.isVisible = isVisible;
+	}
+	
+	/**
+	 * Returns the value for the member attribute <b>isVisible</b>
+	 * @return int - value of member attribute <b>isVisible</b>.
+	 */
+	public Integer getIsVisible() {
+		return isVisible;
+	}
+	
+	/**
 	 * This method sets the value to the member attribute <b>credStoreId</b>.
 	 * You cannot set null to the attribute.
 	 * @param credStoreId Value to set member attribute <b>credStoreId</b>
@@ -194,6 +222,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 		str += "name={" + name + "} ";
 		str += "description={" + description + "} ";
 		str += "status={" + status + "} ";
+		str += "isvisible={" + isVisible + "} ";
 		str += "credStoreId={" + credStoreId + "} ";
 		str += "}";
 		return str;

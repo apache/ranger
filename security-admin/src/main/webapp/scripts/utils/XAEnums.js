@@ -73,6 +73,11 @@ define(function(require) {
 		ACT_STATUS_NO_LOGIN:{value:7, label:'No login privilege', rbkey:'xa.enum.ActivationStatus.ACT_STATUS_NO_LOGIN', tt: 'lbl.ActivationStatus_ACT_STATUS_NO_LOGIN'}
 	});
 
+	XAEnums.VisibilityStatus = mergeParams(XAEnums.VisibilityStatus, {
+		STATUS_HIDDEN:{value:0, label:'Hidden', rbkey:'xa.enum.VisibilityStatus.IS_HIDDEN', tt: 'lbl.VisibilityStatus_IS_HIDDEN'},
+		STATUS_VISIBLE:{value:1, label:'Visible', rbkey:'xa.enum.VisibilityStatus.IS_VISIBLE', tt: 'lbl.VisibilityStatus_IS_VISIBLE'}
+	});
+
 	XAEnums.ActiveStatus = mergeParams(XAEnums.ActiveStatus, {
 		STATUS_DISABLED:{value:0, label:'Disabled', rbkey:'xa.enum.ActiveStatus.STATUS_DISABLED', tt: 'lbl.ActiveStatus_STATUS_DISABLED'},
 		STATUS_ENABLED:{value:1, label:'Enabled', rbkey:'xa.enum.ActiveStatus.STATUS_ENABLED', tt: 'lbl.ActiveStatus_STATUS_ENABLED'},

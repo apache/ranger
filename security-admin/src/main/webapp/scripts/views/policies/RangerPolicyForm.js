@@ -151,7 +151,7 @@ define(function(require){
 			var that = this;
 			var accessType = this.rangerServiceDefModel.get('accessTypes').filter(function(val) { return val !== null; });
 			this.userList = new VXUserList();
-			var params = {sortBy : 'name'};
+			var params = {sortBy : 'name', isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
 			this.userList.setPageSize(100,{fetch:false});
 			this.userList.fetch({
 				cache :true,

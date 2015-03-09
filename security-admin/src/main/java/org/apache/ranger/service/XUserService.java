@@ -107,6 +107,9 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				"XXPortalUser xXPortalUser, XXPortalUserRole xXPortalUserRole", 
 				"xXPortalUser.id=xXPortalUserRole.userId and xXPortalUser.loginId = obj.name "));
 		
+		searchFields.add(new SearchField("isVisible", "obj.isVisible",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL ));
+
 		
 		createdByUserId = new Long(PropertiesUtil.getIntProperty(
 				"xa.xuser.createdByUserId", 1));
@@ -198,6 +201,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	@Override
 	public VXUser populateViewBean(XXUser xUser) {
 		VXUser vObj = super.populateViewBean(xUser);
+		vObj.setIsVisible(xUser.getIsVisible());
 		String userName = vObj.getName();
 		populateUserAttributes(userName, vObj);
 		populateGroupList(xUser.getId(), vObj);
