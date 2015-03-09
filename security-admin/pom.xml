@@ -346,6 +346,36 @@
                 </exclusion>
             </exclusions>
 		</dependency>
+		<dependency>
+			<groupId>security_plugins.ranger-hdfs-plugin</groupId>
+			<artifactId>ranger-hdfs-plugin</artifactId>
+        	<version>${project.version}</version>
+   		</dependency>
+   		<dependency>
+			<groupId>security_plugins.ranger-hbase-plugin</groupId>
+			<artifactId>ranger-hbase-plugin</artifactId>
+        	<version>${project.version}</version>
+   		</dependency>
+   		<dependency>
+			<groupId>security_plugins.ranger-hive-plugin</groupId>
+			<artifactId>ranger-hive-plugin</artifactId>
+        	<version>${project.version}</version>
+   		</dependency>
+   		<dependency>
+			<groupId>security_plugins.ranger-knox-plugin</groupId>
+			<artifactId>ranger-knox-plugin</artifactId>
+        	<version>${project.version}</version>
+   		</dependency>
+   		<dependency>
+			<groupId>security_plugins.ranger-storm-plugin</groupId>
+			<artifactId>ranger-storm-plugin</artifactId>
+        	<version>${project.version}</version>
+   		</dependency>
+   		<dependency>
+			<groupId>security_plugins.ranger-yarn-plugin</groupId>
+			<artifactId>ranger-yarn-plugin</artifactId>
+        	<version>${project.version}</version>
+   		</dependency>
 		<!--  
 		<dependency>
 		<groupId>org.apache.ranger</groupId>
