@@ -362,16 +362,6 @@
         	<version>${project.version}</version>
    		</dependency>
    		<dependency>
-			<groupId>security_plugins.ranger-knox-plugin</groupId>
-			<artifactId>ranger-knox-plugin</artifactId>
-        	<version>${project.version}</version>
-   		</dependency>
-   		<dependency>
-			<groupId>security_plugins.ranger-storm-plugin</groupId>
-			<artifactId>ranger-storm-plugin</artifactId>
-        	<version>${project.version}</version>
-   		</dependency>
-   		<dependency>
 			<groupId>security_plugins.ranger-yarn-plugin</groupId>
 			<artifactId>ranger-yarn-plugin</artifactId>
         	<version>${project.version}</version>
