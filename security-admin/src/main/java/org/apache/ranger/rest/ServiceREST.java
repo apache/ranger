@@ -793,8 +793,8 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		try {
-			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-			validator.validate(policy, Action.CREATE);
+//			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+//			validator.validate(policy, Action.CREATE);
 			ret = svcStore.createPolicy(policy);
 		} catch(Exception excp) {
 			LOG.error("createPolicy(" + policy + ") failed", excp);
@@ -820,8 +820,8 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		try {
-			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-			validator.validate(policy, Action.UPDATE);
+//			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+//			validator.validate(policy, Action.UPDATE);
 			ret = svcStore.updatePolicy(policy);
 		} catch(Exception excp) {
 			LOG.error("updatePolicy(" + policy + ") failed", excp);
