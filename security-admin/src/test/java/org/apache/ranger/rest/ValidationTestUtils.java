@@ -41,8 +41,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-
-import com.google.common.collect.Lists;
+import org.apache.ranger.rest.ValidationFailureDetails;
 
 public class ValidationTestUtils {
 	
@@ -220,7 +219,13 @@ public class ValidationTestUtils {
 				String name = null;
 				Boolean mandatory = null;
 				String regExPattern = null;
+				Boolean isExcludesSupported = null;
+				Boolean isRecursiveSupported = null;
 				switch(row.length) {
+				case 5:
+					isRecursiveSupported = (Boolean)row[4];
+				case 4:
+					isExcludesSupported = (Boolean)row[3];
 				case 3:
 					regExPattern = (String)row[2];
 				case 2:
@@ -232,6 +237,38 @@ public class ValidationTestUtils {
 				when(aDef.getName()).thenReturn(name);
 				when(aDef.getMandatory()).thenReturn(mandatory);
 				when(aDef.getValidationRegEx()).thenReturn(regExPattern);
+				when(aDef.getExcludesSupported()).thenReturn(isExcludesSupported);
+				when(aDef.getRecursiveSupported()).thenReturn(isRecursiveSupported);
+			}
+			defs.add(aDef);
+		}
+		return defs;
+	}
+
+	List<RangerResourceDef> createResourceDefs2(Object[][] data) {
+		// if data itself is null then return null back
+		if (data == null) {
+			return null;
+		}
+		List<RangerResourceDef> defs = new ArrayList<RangerResourceDef>();
+		for (Object[] row : data) {
+			RangerResourceDef aDef = null;
+			if (row != null) {
+				String name = null;
+				Boolean isExcludesSupported = null;
+				Boolean isRecursiveSupported = null;
+				switch(row.length) {
+				case 3:
+					isRecursiveSupported = (Boolean)row[2]; // note: falls through to next case
+				case 2:
+					isExcludesSupported = (Boolean)row[1]; // note: falls through to next case
+				case 1:
+					name = (String)row[0];
+				}
+				aDef = mock(RangerResourceDef.class);
+				when(aDef.getName()).thenReturn(name);
+				when(aDef.getExcludesSupported()).thenReturn(isExcludesSupported);
+				when(aDef.getRecursiveSupported()).thenReturn(isRecursiveSupported);
 			}
 			defs.add(aDef);
 		}
@@ -258,22 +295,21 @@ public class ValidationTestUtils {
 		return defs;
 	}
 
-	Map<String, RangerPolicyResource> createPolicyResourceMap(Map<String, String[]> input) {
+	Map<String, RangerPolicyResource> createPolicyResourceMap2(Object[][] input) {
 		if (input == null) {
 			return null;
 		}
-		Map<String, RangerPolicyResource> resourceMap = new HashMap<String, RangerPolicyResource>();
-		for (Map.Entry<String, String[]> entry : input.entrySet()) {
-			String key = entry.getKey();
-			String[] inputValues = entry.getValue();
-			RangerPolicyResource policyResource = mock(RangerPolicyResource.class);
-			if (inputValues != null) {
-				List<String> values = Lists.newArrayList(inputValues);
-				when(policyResource.getValues()).thenReturn(values);
-			}
-			resourceMap.put(key, policyResource);
+		Map<String, RangerPolicyResource> result = new HashMap<String, RangerPolicyResource>(input.length);
+		for (Object[] row : input) {
+			String resourceName = (String)row[0];
+			Boolean isExcludes = (Boolean)row[1];
+			Boolean isRecursive = (Boolean)row[2];
+			RangerPolicyResource aResource = mock(RangerPolicyResource.class);
+			when(aResource.getIsExcludes()).thenReturn(isExcludes);
+			when(aResource.getIsRecursive()).thenReturn(isRecursive);
+			result.put(resourceName, aResource);
 		}
-		return resourceMap;
+		return result;
 	}
 
 	List<RangerEnumElementDef> createEnumElementDefs(String[] input) {
@@ -308,5 +344,28 @@ public class ValidationTestUtils {
 			defs.add(enumDef);
 		}
 		return defs;
+	}
+
+	Map<String, RangerPolicyResource> createPolicyResourceMap(Object[][] input) {
+		if (input == null) {
+			return null;
+		}
+		Map<String, RangerPolicyResource> result = new HashMap<String, RangerPolicyResource>(input.length);
+		for (Object[] row : input) {
+			String resourceName = (String)row[0];
+			String[] valuesArray = (String[])row[1];
+			Boolean isExcludes = (Boolean)row[2];
+			Boolean isRecursive = (Boolean)row[3];
+			RangerPolicyResource aResource = mock(RangerPolicyResource.class);
+			if (valuesArray == null) {
+				when(aResource.getValues()).thenReturn(null);
+			} else {
+				when(aResource.getValues()).thenReturn(Arrays.asList(valuesArray));
+			}
+			when(aResource.getIsExcludes()).thenReturn(isExcludes);
+			when(aResource.getIsRecursive()).thenReturn(isRecursive);
+			result.put(resourceName, aResource);
+		}
+		return result;
 	}
 }

@@ -19,7 +19,6 @@
 
 package org.apache.ranger.rest;
 
-import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 
 public class RangerValidatorFactory {
@@ -27,11 +26,11 @@ public class RangerValidatorFactory {
 		return new RangerServiceValidator(store);
 	}
 
-	public RangerPolicyValidator getPolicyValidator(ServiceDBStore store) {
+	public RangerPolicyValidator getPolicyValidator(ServiceStore store) {
 		return new RangerPolicyValidator(store);
 	}
 
-	public RangerServiceDefValidator getServiceDefValidator(ServiceDBStore store) {
+	public RangerServiceDefValidator getServiceDefValidator(ServiceStore store) {
 		return new RangerServiceDefValidator(store);
 	}
 }

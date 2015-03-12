@@ -34,6 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -458,6 +459,22 @@ public abstract class RangerValidator {
 			}
 			return result;
 		}
+	}
+
+	/**
+	 * Returns a copy of the policy resource map where all keys (resource-names) are lowercase
+	 * @param input
+	 * @return
+	 */
+	Map<String, RangerPolicyResource> getPolicyResourceWithLowerCaseKeys(Map<String, RangerPolicyResource> input) {
+		if (input == null) {
+			return null;
+		}
+		Map<String, RangerPolicyResource> output = new HashMap<String, RangerPolicyResource>(input.size());
+		for (Map.Entry<String, RangerPolicyResource> entry : input.entrySet()) {
+			output.put(entry.getKey().toLowerCase(), entry.getValue());
+		}
+		return output;
 	}
 
 }
