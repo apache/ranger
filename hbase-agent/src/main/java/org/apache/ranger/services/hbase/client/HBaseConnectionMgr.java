@@ -58,7 +58,7 @@ public class HBaseConnectionMgr {
 								HBaseClient hBaseClient=null;
 								if(serviceName!=null){
 									try{
-										hBaseClient=new HBaseClient(serviceName);
+										hBaseClient=new HBaseClient(serviceName, configs);
 									}catch(Exception ex){
 										LOG.error("Error connecting HBase repository : ", ex);
 									}

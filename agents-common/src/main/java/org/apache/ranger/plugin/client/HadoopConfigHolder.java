@@ -21,9 +21,7 @@
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,8 +55,9 @@ public class HadoopConfigHolder  {
 	private String password ;
 	private boolean isKerberosAuth ;
 	
-	private HadoopClassLoader classLoader ;
-	private Map<String,String>  connectionProperties; 
+	private Map<String,String>  connectionProperties;
+
+  private static Set<String> rangerInternalPropertyKeys = new HashSet<String>();
 	
 	public static HadoopConfigHolder getInstance(String aDatasourceName) {
 		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName) ;
@@ -108,7 +107,6 @@ public class HadoopConfigHolder  {
 			init() ;
 		}
 		initLoginInfo();
-		initClassLoader() ;
 	}
 
   private HadoopConfigHolder(String aDatasourceName, Map<String,String> connectionProperties) {
@@ -122,7 +120,6 @@ public class HadoopConfigHolder  {
     this.defaultConfigFile = defaultConfigFile;
 		initConnectionProp() ;
 		initLoginInfo();
-		initClassLoader() ;
 	}
 	
 	private void initConnectionProp() {
@@ -160,6 +157,13 @@ public class HadoopConfigHolder  {
 			if (in != null) {
 				try {
 					resourcemapProperties.load(in);
+          for (Map.Entry<Object, Object> entry : resourcemapProperties.entrySet() ) {
+            String key = (String)entry.getKey();
+            String value = (String)entry.getValue();
+            if (RANGER_SECTION_NAME.equals(value))  {
+              rangerInternalPropertyKeys.add(key);
+            }
+          }
 				} catch (IOException e) {
 					throw new HadoopException("Unable to load resource map properties from [" + RESOURCEMAP_PROP_FILE + "]", e);
 				}
@@ -261,11 +265,7 @@ public class HadoopConfigHolder  {
 					
 		}
 	}
-	
-	private void initClassLoader() {
-		classLoader = new HadoopClassLoader(this) ;
-	}
-	
+
 	
 	public Properties getRangerSection() {
 		Properties prop = this.getProperties(RANGER_SECTION_NAME) ;
@@ -317,7 +317,7 @@ public class HadoopConfigHolder  {
 		return datasourceName ;
 	}
 	
-	public boolean hasResourceExists(String aResourceName) {
+	public boolean hasResourceExists(String aResourceName) {    // dilli
 		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(datasourceName) ;
 		return (resourceName2PropertiesMap != null && resourceName2PropertiesMap.containsKey(aResourceName)) ;
  	}
@@ -359,15 +359,14 @@ public class HadoopConfigHolder  {
 		return password;
 	}
 
-	public HadoopClassLoader getClassLoader() {
-		return classLoader;
-	}
-
 	public boolean isKerberosAuthentication() {
 		return isKerberosAuth;
 	}
 
-  
+  public Set<String> getRangerInternalPropertyKeys() {
+    return rangerInternalPropertyKeys;
+
+  }
 	
 
 }

@@ -75,7 +75,7 @@
 			"name": "fs.default.name",
 			"type": "string",
 			"subType": "",
-			"mandatory": false,
+			"mandatory": true,
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",

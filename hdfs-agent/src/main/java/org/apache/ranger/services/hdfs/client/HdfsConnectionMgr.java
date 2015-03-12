@@ -54,7 +54,7 @@ public class HdfsConnectionMgr {
 						final Callable<HdfsClient> connectHDFS = new Callable<HdfsClient>() {
 							@Override
 							public HdfsClient call() throws Exception {
-								return new HdfsClient(serviceName);
+								return new HdfsClient(serviceName, configs);
 							}
 						};
 						

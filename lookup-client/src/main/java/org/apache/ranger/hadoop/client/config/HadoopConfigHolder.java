@@ -56,8 +56,7 @@ public class HadoopConfigHolder  {
 	private String password ;
 	private boolean isKerberosAuth ;
 	
-	private HadoopClassLoader classLoader ;
-	private HashMap<String,String>  connectionProperties; 
+	private HashMap<String,String>  connectionProperties;
 	
 	public static HadoopConfigHolder getInstance(String aDatasourceName) {
 		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName) ;
@@ -102,7 +101,6 @@ public class HadoopConfigHolder  {
 			init() ;
 		}
 		initLoginInfo();
-		initClassLoader() ;
 	}
 	
 	private HadoopConfigHolder(String aDatasourceName, HashMap<String,String> connectionProperties) {
@@ -110,7 +108,6 @@ public class HadoopConfigHolder  {
 		this.connectionProperties = connectionProperties ;
 		initConnectionProp() ;
 		initLoginInfo();
-		initClassLoader() ;
 	}
 	
 	private void initConnectionProp() {
@@ -248,12 +245,7 @@ public class HadoopConfigHolder  {
 					
 		}
 	}
-	
-	private void initClassLoader() {
-		classLoader = new HadoopClassLoader(this) ;
-	}
-	
-	
+
 	public Properties getRangerSection() {
 		Properties prop = this.getProperties(RANGER_SECTION_NAME) ;
 		if (prop == null) {
@@ -346,15 +338,8 @@ public class HadoopConfigHolder  {
 		return password;
 	}
 
-	public HadoopClassLoader getClassLoader() {
-		return classLoader;
-	}
-
 	public boolean isKerberosAuthentication() {
 		return isKerberosAuth;
 	}
-
-  
-	
 
 }

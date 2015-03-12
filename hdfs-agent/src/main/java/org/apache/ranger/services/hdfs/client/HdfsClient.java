@@ -23,10 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.security.auth.Subject;
 
@@ -44,30 +41,39 @@ import org.apache.ranger.plugin.client.HadoopException;
 public class HdfsClient extends BaseClient {
 
 	private static final Log LOG = LogFactory.getLog(HdfsClient.class) ;
+  private Configuration conf;
+  private static List<String> rangerInternalPropertyKeys = Arrays.asList("username",
+    "password", "keytabfile");
 
-  public HdfsClient(String serviceName) {
-		super(serviceName) ;
-	}
-	
 	public HdfsClient(String serviceName, Map<String,String> connectionProperties) {
 		super(serviceName,connectionProperties, "hdfs-client") ;
+    conf = new Configuration() ;
+    Set<String> rangerInternalPropertyKeys = getConfigHolder().getRangerInternalPropertyKeys();
+    for (Map.Entry<String, String> entry: connectionProperties.entrySet())  {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      if (rangerInternalPropertyKeys.contains(key)) {
+         // skip
+      }  else {
+        conf.set(key, value);
+      }
+    }
+
 	}
 	
 	private List<String> listFilesInternal(String baseDir, String fileMatching, final List<String> pathList) {
 		List<String> fileList = new ArrayList<String>() ;
-		ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check xa_portal.log for more info.";
 		try {
-			Thread.currentThread().setContextClassLoader(getConfigHolder().getClassLoader());
 			String dirPrefix = (baseDir.endsWith("/") ? baseDir : (baseDir + "/")) ;
 			String filterRegEx = null;
 			if (fileMatching != null && fileMatching.trim().length() > 0) {
 				filterRegEx = fileMatching.trim() ;
 			}
 			
-			Configuration conf = new Configuration() ;
+
 			UserGroupInformation.setConfiguration(conf);
 			
 			FileSystem fs = null ;
@@ -147,9 +153,6 @@ public class HdfsClient extends BaseClient {
 			}
 			throw hdpException;
 		}
-		finally {
-			Thread.currentThread().setContextClassLoader(prevCl);
-		}
 		return fileList ;
 	}
 
@@ -177,7 +180,7 @@ public class HdfsClient extends BaseClient {
 		String baseDir = args[1] ;
 		String fileNameToMatch = (args.length == 2 ? null : args[2]) ;
 		
-		HdfsClient fs = new HdfsClient(repositoryName) ;
+		HdfsClient fs = new HdfsClient(repositoryName, null) ;
 		List<String> fsList = fs.listFiles(baseDir, fileNameToMatch,null) ;
 		if (fsList != null && fsList.size() > 0) {
 			for(String s : fsList) {
@@ -252,25 +255,25 @@ public class HdfsClient extends BaseClient {
 
     String fsDefaultName = configs.get("fs.default.name") ;
     fsDefaultName = (fsDefaultName == null) ? "" : fsDefaultName.trim();
+    if (fsDefaultName.isEmpty())  {
+      throw new IllegalArgumentException("Value for neither fs.default.name is specified");
+    }
+
     String dfsNameservices = configs.get("dfs.nameservices");
     dfsNameservices = (dfsNameservices == null) ? "" : dfsNameservices.trim();
-
-    if (fsDefaultName.isEmpty() && dfsNameservices.isEmpty())  {
-      throw new IllegalArgumentException("Value for neither fs.default.name nor dfs.nameservices is specified");
-    }
-
-    if (!fsDefaultName.isEmpty() && !dfsNameservices.isEmpty())  {
-      throw new IllegalArgumentException("Value for both fs.default.name and dfs.nameservices are specified. They are mutually exclusive");
-    }
-
     if (!dfsNameservices.isEmpty()) {
+      String proxyProvider = configs.get("dfs.client.failover.proxy.provider." + dfsNameservices);
+      proxyProvider =   (proxyProvider == null) ? "" : proxyProvider.trim();
+      if (proxyProvider.isEmpty())  {
+        throw new IllegalArgumentException("Value for " + "dfs.client.failover.proxy.provider." + dfsNameservices + " not specified");
+      }
+
       String dfsNameNodes = configs.get("dfs.ha.namenodes." + dfsNameservices);
       dfsNameNodes = (dfsNameNodes == null) ? "" : dfsNameNodes.trim();
       if (dfsNameNodes.isEmpty())  {
-        throw new IllegalArgumentException("Value for " + "dfs.ha.namenodes." + dfsNameservices + " not specified");
+        throw new IllegalArgumentException("Value for " + "dfs.ha.namenodes." + proxyProvider + " not specified");
       }
       String[] dfsNameNodeElements = dfsNameNodes.split(",");
-      System.out.println("elements: " + dfsNameNodeElements);
       for (String dfsNameNodeElement : dfsNameNodeElements)  {
         String nameNodeUrlKey = "dfs.namenode.rpc-address." +
             dfsNameservices + "." + dfsNameNodeElement.trim();

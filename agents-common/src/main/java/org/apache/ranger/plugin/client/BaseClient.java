@@ -43,12 +43,6 @@ public abstract class BaseClient {
 	
 	protected Map<String,String> connectionProperties ;
 	
-	public BaseClient(String serviceName) {
-    this.serviceName = serviceName ;
-    init() ;
-    login() ;
-	}
-
   public BaseClient(String svcName, Map<String,String> connectionProperties) {
     this(svcName, connectionProperties, null);
   }
@@ -78,7 +72,7 @@ public abstract class BaseClient {
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check xa_portal.log for more info.";
 		try {
-			Thread.currentThread().setContextClassLoader(configHolder.getClassLoader());
+			//Thread.currentThread().setContextClassLoader(configHolder.getClassLoader());
 			String userName = configHolder.getUserName() ;
 			if (userName == null) {
 				String msgDesc = "Unable to find login username for hadoop environment, ["

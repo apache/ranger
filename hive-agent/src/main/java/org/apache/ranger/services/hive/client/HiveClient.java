@@ -51,7 +51,7 @@ public class HiveClient extends BaseClient implements Closeable {
 	
 
 	public HiveClient(String serviceName) {
-		super(serviceName) ;
+		super(serviceName, null) ;
 		initHive() ;
 	}
 	

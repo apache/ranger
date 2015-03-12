@@ -48,7 +48,7 @@ public class HdfsClientTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testNeietherNnNorHaSpecified()  throws IllegalArgumentException {
+  public void testFsDefaultNameNotSpecified()  throws IllegalArgumentException {
     Map configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
@@ -57,15 +57,15 @@ public class HdfsClientTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-	public void testBothNnAndHaSpecified()  throws IllegalArgumentException {
+  public void testProxyProviderNotSpecified()  throws IllegalArgumentException {
     Map configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
-    configs.put("fs.default.name", "hdfs://node-2.example.com:8020");
+    configs.put("fs.default.name", "hdfs://hwqe-1425428405");
     configs.put("dfs.nameservices", "hwqe-1425428405");
     HdfsClient.validateConnectionConfigs(configs);
-	}
+  }
 
   @Test(expected = IllegalArgumentException.class)
 	public void testNnElementsNotSpecified()  throws IllegalArgumentException {
@@ -73,7 +73,10 @@ public class HdfsClientTest {
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
+    configs.put("fs.default.name", "hdfs://hwqe-1425428405");
     configs.put("dfs.nameservices", "hwqe-1425428405");
+    configs.put("dfs.client.failover.proxy.provider.hwqe-1425428405",
+      "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
     HdfsClient.validateConnectionConfigs(configs);
 	}
 
@@ -83,7 +86,10 @@ public class HdfsClientTest {
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
+    configs.put("fs.default.name", "hdfs://hwqe-1425428405");
     configs.put("dfs.nameservices", "hwqe-1425428405");
+    configs.put("dfs.client.failover.proxy.provider.hwqe-1425428405",
+      "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
     configs.put("dfs.ha.namenodes.hwqe-1425428405", "nn1,nn2");
     HdfsClient.validateConnectionConfigs(configs);
 	}
@@ -94,7 +100,10 @@ public class HdfsClientTest {
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
+    configs.put("fs.default.name", "hdfs://hwqe-1425428405");
     configs.put("dfs.nameservices", "hwqe-1425428405");
+    configs.put("dfs.client.failover.proxy.provider.hwqe-1425428405",
+      "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
     configs.put("dfs.ha.namenodes.hwqe-1425428405", "nn1,nn2");
     configs.put("dfs.namenode.rpc-address.hwqe-1425428405.nn2", "node-2.example.com:8020");
     HdfsClient.validateConnectionConfigs(configs);
@@ -106,7 +115,10 @@ public class HdfsClientTest {
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
+    configs.put("fs.default.name", "hdfs://hwqe-1425428405");
     configs.put("dfs.nameservices", "hwqe-1425428405");
+    configs.put("dfs.client.failover.proxy.provider.hwqe-1425428405",
+      "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
     configs.put("dfs.ha.namenodes.hwqe-1425428405", "nn1,nn2");
     configs.put("dfs.namenode.rpc-address.hwqe-1425428405.nn1", "node-1.example.com:8020");
     HdfsClient.validateConnectionConfigs(configs);
@@ -144,8 +156,11 @@ public class HdfsClientTest {
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
-    // configs.put("fs.default.name", "hdfs://node-2.example.com:8020");
+    configs.put("fs.default.name", "hdfs://node-2.example.com:8020");
+    configs.put("fs.default.name", "hdfs://hwqe-1425428405");
     configs.put("dfs.nameservices", "hwqe-1425428405");
+    configs.put("dfs.client.failover.proxy.provider.hwqe-1425428405",
+      "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
     configs.put("dfs.ha.namenodes.hwqe-1425428405", "nn1,nn2");
     configs.put("dfs.namenode.rpc-address.hwqe-1425428405.nn1", "node-1.example.com:8020");
     configs.put("dfs.namenode.rpc-address.hwqe-1425428405.nn2", "node-2.example.com:8020");
