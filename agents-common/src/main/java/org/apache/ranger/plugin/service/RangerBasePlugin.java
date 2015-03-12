@@ -33,9 +33,11 @@ import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
+import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 
@@ -196,25 +198,55 @@ public class RangerBasePlugin {
 	}
 
 	public void grantAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) throws Exception {
-		PolicyRefresher   refresher = this.refresher;
-		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
-
-		if(admin == null) {
-			throw new Exception("ranger-admin client is null");
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
 
-		admin.grantAccess(request);
+		PolicyRefresher   refresher = this.refresher;
+		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+		boolean           isSuccess = false;
+
+		try {
+			if(admin == null) {
+				throw new Exception("ranger-admin client is null");
+			}
+
+			admin.grantAccess(request);
+
+			isSuccess = true;
+		} finally {
+			auditGrantRevoke(request, "grant", isSuccess, auditHandler);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.grantAccess(" + request + ")");
+		}
 	}
 
 	public void revokeAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) throws Exception {
-		PolicyRefresher   refresher = this.refresher;
-		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
-
-		if(admin == null) {
-			throw new Exception("ranger-admin client is null");
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.revokeAccess(" + request + ")");
 		}
 
-		admin.revokeAccess(request);
+		PolicyRefresher   refresher = this.refresher;
+		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+		boolean           isSuccess = false;
+
+		try {
+			if(admin == null) {
+				throw new Exception("ranger-admin client is null");
+			}
+
+			admin.revokeAccess(request);
+
+			isSuccess = true;
+		} finally {
+			auditGrantRevoke(request, "revoke", isSuccess, auditHandler);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.revokeAccess(" + request + ")");
+		}
 	}
 
 
@@ -286,6 +318,27 @@ public class RangerBasePlugin {
 				for(RangerAccessRequest request : requests) {
 					enricher.enrich(request);
 				}
+			}
+		}
+	}
+
+	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAuditHandler auditHandler) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(request != null && auditHandler != null && policyEngine != null) {
+			RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
+	
+			accessRequest.setResource(new RangerResourceImpl(request.getResource()));
+			accessRequest.setUser(request.getGrantor());
+			accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
+			accessRequest.setAction(action);
+
+			RangerAccessResult accessResult = policyEngine.isAccessAllowed(accessRequest, null);
+
+			if(accessResult != null && accessResult.getIsAudited()) {
+				accessResult.setIsAllowed(isSuccess);
+
+				auditHandler.logAudit(accessResult);
 			}
 		}
 	}

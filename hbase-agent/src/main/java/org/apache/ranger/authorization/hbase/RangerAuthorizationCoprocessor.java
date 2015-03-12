@@ -90,11 +90,12 @@ import org.apache.hadoop.hbase.security.access.TablePermission;
 import org.apache.hadoop.hbase.security.access.UserPermission;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
-import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
@@ -881,7 +882,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		} else if (env instanceof RegionCoprocessorEnvironment) {
 			regionEnv = (RegionCoprocessorEnvironment) env;
 			coprocessorType = REGIONAL_COPROCESSOR_TYPE;
-			appType = "hbseRegional";
+			appType = "hbaseRegional";
 		}
 
 		if (superUserList == null) {
@@ -1008,29 +1009,24 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				RangerHBasePlugin plugin = hbasePlugin;
 
 				if(plugin != null) {
-					plugin.grantAccess(grData, _factory.getAuditHandler());
+					RangerAuditHandler auditHandler = new RangerDefaultAuditHandler();
+
+					plugin.grantAccess(grData, auditHandler);
 
 					isSuccess = true;
 				}
+			} catch(AccessControlException excp) {
+				LOG.warn("grant() failed", excp);
+
+				ResponseConverter.setControllerException(controller, new AccessDeniedException(excp));
 			} catch(IOException excp) {
 				LOG.warn("grant() failed", excp);
-	
+
 				ResponseConverter.setControllerException(controller, excp);
 			} catch (Exception excp) {
 				LOG.warn("grant() failed", excp);
-	
+
 				ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
-			} finally {
-//				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
-	
-				// TODO - Auditing of grant-revoke to be sorted out.
-//				if(accessController.isAudited(tableName)) {
-//					byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
-//					byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
-//	
-//					// Note: failed return from REST call will be logged as 'DENIED'
-//					auditEvent("grant", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
-//				}
 			}
 		}
 
@@ -1045,36 +1041,31 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 		if(UpdateRangerPoliciesOnGrantRevoke) {
 			GrantRevokeRequest grData = null;
-	
+
 			try {
 				grData = createRevokeData(request);
-	
+
 				RangerHBasePlugin plugin = hbasePlugin;
 
 				if(plugin != null) {
-					plugin.revokeAccess(grData, _factory.getAuditHandler());
+					RangerAuditHandler auditHandler = new RangerDefaultAuditHandler();
+
+					plugin.revokeAccess(grData, auditHandler);
 
 					isSuccess = true;
 				}
+			} catch(AccessControlException excp) {
+				LOG.warn("revoke() failed", excp);
+
+				ResponseConverter.setControllerException(controller, new AccessDeniedException(excp));
 			} catch(IOException excp) {
 				LOG.warn("revoke() failed", excp);
-	
+
 				ResponseConverter.setControllerException(controller, excp);
 			} catch (Exception excp) {
 				LOG.warn("revoke() failed", excp);
-	
+
 				ResponseConverter.setControllerException(controller, new CoprocessorException(excp.getMessage()));
-			} finally {
-//				byte[] tableName = grData == null ? null : StringUtil.getBytes(grData.getTables());
-	
-				// TODO Audit of grant revoke to be sorted out
-//				if(accessController.isAudited(tableName)) {
-//					byte[] colFamily = grData == null ? null : StringUtil.getBytes(grData.getColumnFamilies());
-//					byte[] qualifier = grData == null ? null : StringUtil.getBytes(grData.getColumns());
-//	
-//					// Note: failed return from REST call will be logged as 'DENIED'
-//					auditEvent("revoke", tableName, colFamily, qualifier, null, null, getActiveUser(), isSuccess ? accessGrantedFlag : accessDeniedFlag);
-//				}
 			}
 		}
 
