@@ -46,6 +46,11 @@ public class SearchFilter {
 	public static final String SORT_BY         = "sortBy";
 
 	private Map<String, String> params = null;
+	int startIndex = 0;
+	int maxRows = Integer.MAX_VALUE;
+	boolean getCount = true;
+	String sortBy = null;
+	String sortType = null;
 
 	public SearchFilter() {
 		this(null);
@@ -115,6 +120,46 @@ public class SearchFilter {
 		return MapUtils.isEmpty(params);
 	}
 	
+	public int getStartIndex() {
+		return startIndex;
+	}
+	
+	public void setStartIndex(int startIndex) {
+		this.startIndex = startIndex;
+	}
+
+	public int getMaxRows() {
+		return maxRows;
+	}
+
+	public void setMaxRows(int maxRows) {
+		this.maxRows = maxRows;
+	}
+	
+	public boolean isGetCount() {
+		return getCount;
+	}
+
+	public void setGetCount(boolean getCount) {
+		this.getCount = getCount;
+	}
+	
+	public String getSortBy() {
+		return sortBy;
+	}
+
+	public void setSortBy(String sortBy) {
+		this.sortBy = sortBy;
+	}
+	
+	public String getSortType() {
+		return sortType;
+	}
+
+	public void setSortType(String sortType) {
+		this.sortType = sortType;
+	}
+
 	@Override
 	public boolean equals(Object object) {
 		if (object == null || !(object instanceof SearchFilter)) {

@@ -362,5 +362,9 @@
                                and obj.objectClassType = :classType ORDER BY obj.id</query>
 	</named-query>
 	
+	<!-- XXTrxLog -->
+	<named-query name="XXTrxLog.findLogForMaxIdOfClassType">
+		<query>select MAX(obj.objectId) from XXTrxLog obj where obj.objectClassType = :classType</query>
+	</named-query>
 	
 </entity-mappings>

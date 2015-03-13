@@ -52,5 +52,16 @@ public class XXTrxLogDao extends BaseDao<XXTrxLog> {
 		
 		return xTrxLogList;
 	}
+
+	public Long findMaxObjIdOfClassType(int classType) {
+		
+		try {
+			return (Long) getEntityManager().createNamedQuery("XXTrxLog.findLogForMaxIdOfClassType")
+					.setParameter("classType", classType)
+					.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
 }
 

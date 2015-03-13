@@ -25,6 +25,7 @@ package org.apache.ranger.common;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -107,6 +108,27 @@ public class JSONUtil {
 		}
 		return jsonString;
 	}
+	
+	public String readListToString(List<?> list) {
+		ObjectMapper mapper = new ObjectMapper();
+		String jsonString = null;
+		try {
+			jsonString = mapper.writeValueAsString(list);
+		} catch (JsonParseException e) {
+			throw restErrorUtil.createRESTException(
+					"Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		} catch (JsonMappingException e) {
+			throw restErrorUtil.createRESTException(
+					"Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		} catch (IOException e) {
+			throw restErrorUtil.createRESTException(
+					"Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		}
+		return jsonString;
+	}
 
 	public String writeObjectAsString(ViewBaseBean vObj) {
 		ObjectMapper mapper = new ObjectMapper();
@@ -129,5 +151,5 @@ public class JSONUtil {
 					MessageEnums.INVALID_INPUT_DATA);
 		}
 	}
-
+	
 }

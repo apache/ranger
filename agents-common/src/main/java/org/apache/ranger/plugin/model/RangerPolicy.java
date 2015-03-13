@@ -370,6 +370,47 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((isExcludes == null) ? 0 : isExcludes.hashCode());
+			result = prime * result
+					+ ((isRecursive == null) ? 0 : isRecursive.hashCode());
+			result = prime * result
+					+ ((values == null) ? 0 : values.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerPolicyResource other = (RangerPolicyResource) obj;
+			if (isExcludes == null) {
+				if (other.isExcludes != null)
+					return false;
+			} else if (!isExcludes.equals(other.isExcludes))
+				return false;
+			if (isRecursive == null) {
+				if (other.isRecursive != null)
+					return false;
+			} else if (!isRecursive.equals(other.isRecursive))
+				return false;
+			if (values == null) {
+				if (other.values != null)
+					return false;
+			} else if (!values.equals(other.values))
+				return false;
+			return true;
+		}
+		
 	}
 
 	public static class RangerPolicyItem implements java.io.Serializable {
@@ -561,6 +602,60 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((accesses == null) ? 0 : accesses.hashCode());
+			result = prime * result
+					+ ((conditions == null) ? 0 : conditions.hashCode());
+			result = prime * result
+					+ ((delegateAdmin == null) ? 0 : delegateAdmin.hashCode());
+			result = prime * result
+					+ ((groups == null) ? 0 : groups.hashCode());
+			result = prime * result + ((users == null) ? 0 : users.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerPolicyItem other = (RangerPolicyItem) obj;
+			if (accesses == null) {
+				if (other.accesses != null)
+					return false;
+			} else if (!accesses.equals(other.accesses))
+				return false;
+			if (conditions == null) {
+				if (other.conditions != null)
+					return false;
+			} else if (!conditions.equals(other.conditions))
+				return false;
+			if (delegateAdmin == null) {
+				if (other.delegateAdmin != null)
+					return false;
+			} else if (!delegateAdmin.equals(other.delegateAdmin))
+				return false;
+			if (groups == null) {
+				if (other.groups != null)
+					return false;
+			} else if (!groups.equals(other.groups))
+				return false;
+			if (users == null) {
+				if (other.users != null)
+					return false;
+			} else if (!users.equals(other.users))
+				return false;
+			return true;
+		}
+		
 	}
 
 	public static class RangerPolicyItemAccess implements java.io.Serializable {
@@ -627,6 +722,39 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((isAllowed == null) ? 0 : isAllowed.hashCode());
+			result = prime * result + ((type == null) ? 0 : type.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerPolicyItemAccess other = (RangerPolicyItemAccess) obj;
+			if (isAllowed == null) {
+				if (other.isAllowed != null)
+					return false;
+			} else if (!isAllowed.equals(other.isAllowed))
+				return false;
+			if (type == null) {
+				if (other.type != null)
+					return false;
+			} else if (!type.equals(other.type))
+				return false;
+			return true;
+		}
+		
 	}
 
 	public static class RangerPolicyItemCondition implements java.io.Serializable {
@@ -700,5 +828,38 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((type == null) ? 0 : type.hashCode());
+			result = prime * result
+					+ ((values == null) ? 0 : values.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerPolicyItemCondition other = (RangerPolicyItemCondition) obj;
+			if (type == null) {
+				if (other.type != null)
+					return false;
+			} else if (!type.equals(other.type))
+				return false;
+			if (values == null) {
+				if (other.values != null)
+					return false;
+			} else if (!values.equals(other.values))
+				return false;
+			return true;
+		}
+		
 	}
 }

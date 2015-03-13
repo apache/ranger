@@ -3,6 +3,10 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.SearchField.DATA_TYPE;
+import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
@@ -25,6 +29,19 @@ import org.springframework.stereotype.Service;
 @Scope("singleton")
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
 
+	public RangerServiceDefService() {
+		super();
+
+		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.STATUS, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
+		
+		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
+		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE_ID, "obj.id"));
+		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE, "obj.name"));
+	}
+
 	@Override
 	protected void validateForCreate(RangerServiceDef vObj) {
 		// TODO Auto-generated method stub
@@ -37,6 +54,7 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 		// TODO Auto-generated method stub
 
 	}
+	
 
 	@Override
 	protected RangerServiceDef populateViewBean(XXServiceDef xServiceDef) {
@@ -105,7 +123,7 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 		return serviceDef;
 	}
 	
-	public List<RangerServiceDef> getServiceDefs(SearchFilter filter) {
+	public List<RangerServiceDef> getAllServiceDefs() {
 		List<XXServiceDef> xxServiceDefList = daoMgr.getXXServiceDef().getAll();
 		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
 		

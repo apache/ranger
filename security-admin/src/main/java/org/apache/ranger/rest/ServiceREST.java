@@ -1062,11 +1062,15 @@ public class ServiceREST {
 
 
 	private SearchFilter getSearchFilter(HttpServletRequest request) {
-		if(request == null || MapUtils.isEmpty(request.getParameterMap())) {
+		if(request == null) {
 			return null;
 		}
-
+		
 		SearchFilter ret = new SearchFilter();
+
+		if(MapUtils.isEmpty(request.getParameterMap())) {
+			ret.setParams(new HashMap<String, String>());
+		}
 
 		ret.setParam(SearchFilter.LOGIN_USER, request.getParameter(SearchFilter.LOGIN_USER));
 		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter(SearchFilter.SERVICE_TYPE));
@@ -1079,6 +1083,8 @@ public class ServiceREST {
 		ret.setParam(SearchFilter.USER, request.getParameter(SearchFilter.USER));
 		ret.setParam(SearchFilter.GROUP, request.getParameter(SearchFilter.GROUP));
 		ret.setParam(SearchFilter.SORT_BY, request.getParameter(SearchFilter.SORT_BY));
+		ret.setParam(SearchFilter.START_INDEX, request.getParameter(SearchFilter.START_INDEX));
+		ret.setParam(SearchFilter.PAGE_SIZE, request.getParameter(SearchFilter.PAGE_SIZE));
 		
 		for(Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
 			String   name   = e.getKey();
@@ -1094,7 +1100,7 @@ public class ServiceREST {
 
 	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, ServicePolicies policies, int httpRespCode, HttpServletRequest request) {
 		try {
-			String ipAddress = request.getHeader("X-FORWARDED-FOR");  
+			String ipAddress = request.getHeader("X-FORWARDED-FOR");
 
 			if (ipAddress == null) {  
 				ipAddress = request.getRemoteAddr();

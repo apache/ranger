@@ -2,20 +2,32 @@ package org.apache.ranger.service;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerSearchUtil;
+import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.common.view.VList;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerBaseModelService<T extends XXDBBase, V extends RangerBaseModelObject> {
@@ -30,12 +42,26 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 
 	@Autowired
 	protected RESTErrorUtil restErrorUtil;
+	
+	@Autowired
+	protected RangerSearchUtil searchUtil;
+	
+	@Autowired
+	RangerBizUtil bizUtil;
 
 	public static final int OPERATION_CREATE_CONTEXT = 1;
 	public static final int OPERATION_UPDATE_CONTEXT = 2;
+	public static final int OPERATION_DELETE_CONTEXT = 3;
 
 	protected Class<T> tEntityClass;
 	protected Class<V> tViewClass;
+	private Boolean populateExistingBaseFields;
+	protected String tClassName;
+	
+	public List<SortField> sortFields = new ArrayList<SortField>();
+	public List<SearchField> searchFields = new ArrayList<SearchField>();
+	protected final String countQueryStr;
+	protected String queryStr;
 
 	BaseDao<T> entityDao;
 
@@ -56,6 +82,15 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		} else {
 			LOG.fatal("Cannot find class for template", new Throwable());
 		}
+		
+		if (tEntityClass != null) {
+			tClassName = tEntityClass.getName();
+		}
+
+		populateExistingBaseFields = false;
+		
+		countQueryStr = "SELECT COUNT(obj) FROM " + tEntityClass.getName() + " obj ";
+		queryStr = "SELECT obj FROM " + tClassName + " obj ";
 	}
 
 	protected abstract T mapViewToEntityBean(V viewBean, T t,
@@ -154,10 +189,32 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		if (operationContext == OPERATION_CREATE_CONTEXT) {
 			entityObj = createEntityObject();
 
-			createTime = DateUtil.getUTCDate();
-			updTime = DateUtil.getUTCDate();
-			createdById = ContextUtil.getCurrentUserId();
-			updById = ContextUtil.getCurrentUserId();
+			if(!populateExistingBaseFields) {
+				createTime = DateUtil.getUTCDate();
+				updTime = DateUtil.getUTCDate();
+				createdById = ContextUtil.getCurrentUserId();
+				updById = ContextUtil.getCurrentUserId();
+			} else if(populateExistingBaseFields) {
+				createTime = vObj.getCreateTime() != null ? vObj.getCreateTime() : DateUtil.getUTCDate();
+				updTime = vObj.getUpdateTime() != null ? vObj.getUpdateTime() : DateUtil.getUTCDate();
+
+				// If this is the case then vObj.createdBy and vObj.updatedBy must be loginId of user.
+				XXPortalUser createdByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getCreatedBy());
+				XXPortalUser updByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
+
+				if(createdByUser != null) {
+					createdById = createdByUser.getId();
+				} else {
+					createdById = ContextUtil.getCurrentUserId();
+				}
+
+				if(updByUser != null) {
+					updById = updByUser.getId();
+				} else {
+					updById = ContextUtil.getCurrentUserId();
+				}
+				entityObj.setId(vObj.getId());
+			}
 		} else if (operationContext == OPERATION_UPDATE_CONTEXT) {
 			entityObj = getDao().getById(vObj.getId());
 
@@ -275,6 +332,74 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 			LOG.info("Delete ignored for non-existent Object, id=" + id);
 		}
 		return resource;
+	}
+
+	public Boolean getPopulateExistingBaseFields() {
+		return populateExistingBaseFields;
+	}
+
+	public void setPopulateExistingBaseFields(Boolean populateExistingBaseFields) {
+		this.populateExistingBaseFields = populateExistingBaseFields;
+	}
+	
+	/*
+	 * Search Operations 
+	 * 
+	 */
+	
+	protected List<T> searchResources(SearchFilter searchCriteria,
+			List<SearchField> searchFieldList, List<SortField> sortFieldList,
+			VList vList) {
+
+		// Get total count of the rows which meet the search criteria
+		long count = -1;
+		if (searchCriteria.isGetCount()) {
+			count = getCountForSearchQuery(searchCriteria, searchFieldList);
+			if (count == 0) {
+				return Collections.emptyList();
+			}
+		}
+		
+		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
+
+		String q = queryStr;
+		Query query = createQuery(q, sortClause, searchCriteria, searchFieldList, false);
+
+		List<T> resultList = getDao().executeQueryInSecurityContext(tEntityClass, query);		
+
+		if (vList != null) {
+			vList.setPageSize(query.getMaxResults());
+			vList.setSortBy(searchCriteria.getSortBy());
+			vList.setSortType(searchCriteria.getSortType());
+			vList.setStartIndex(query.getFirstResult());
+			vList.setTotalCount(count);
+		}
+		return resultList;
+	}
+	
+	protected long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {
+
+		String q = countQueryStr;
+		Query query = createQuery(q, null, searchCriteria, searchFieldList, true);
+		Long count = getDao().executeCountQueryInSecurityContext(tEntityClass, query);
+
+		if (count == null) {
+			return 0;
+		}
+		return count.longValue();
+	}
+	
+	protected Query createQuery(String searchString, String sortString, SearchFilter searchCriteria, 
+			List<SearchField> searchFieldList, boolean isCountQuery) {
+		
+		EntityManager em = getDao().getEntityManager();
+		Query query = searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, 
+				searchFieldList, getClassType(), false, isCountQuery);
+		return query;
+	}
+	
+	protected int getClassType() {
+		return bizUtil.getClassType(tEntityClass);
 	}
 	
 }

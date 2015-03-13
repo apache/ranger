@@ -542,6 +542,46 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((defaultIndex == null) ? 0 : defaultIndex.hashCode());
+			result = prime * result
+					+ ((elements == null) ? 0 : elements.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerEnumDef other = (RangerEnumDef) obj;
+			if (defaultIndex == null) {
+				if (other.defaultIndex != null)
+					return false;
+			} else if (!defaultIndex.equals(other.defaultIndex))
+				return false;
+			if (elements == null) {
+				if (other.elements != null)
+					return false;
+			} else if (!elements.equals(other.elements))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			return true;
+		}
+		
 	}
 
 
@@ -623,6 +663,45 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((label == null) ? 0 : label.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			result = prime * result
+					+ ((rbKeyLabel == null) ? 0 : rbKeyLabel.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerEnumElementDef other = (RangerEnumElementDef) obj;
+			if (label == null) {
+				if (other.label != null)
+					return false;
+			} else if (!label.equals(other.label))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			if (rbKeyLabel == null) {
+				if (other.rbKeyLabel != null)
+					return false;
+			} else if (!rbKeyLabel.equals(other.rbKeyLabel))
+				return false;
+			return true;
+		}
+		
 	}
 
 
@@ -874,6 +953,123 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((defaultValue == null) ? 0 : defaultValue.hashCode());
+			result = prime * result
+					+ ((description == null) ? 0 : description.hashCode());
+			result = prime * result + ((label == null) ? 0 : label.hashCode());
+			result = prime * result
+					+ ((mandatory == null) ? 0 : mandatory.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			result = prime
+					* result
+					+ ((rbKeyDescription == null) ? 0 : rbKeyDescription
+							.hashCode());
+			result = prime * result
+					+ ((rbKeyLabel == null) ? 0 : rbKeyLabel.hashCode());
+			result = prime
+					* result
+					+ ((rbKeyValidationMessage == null) ? 0
+							: rbKeyValidationMessage.hashCode());
+			result = prime * result
+					+ ((subType == null) ? 0 : subType.hashCode());
+			result = prime * result + ((type == null) ? 0 : type.hashCode());
+			result = prime * result
+					+ ((uiHint == null) ? 0 : uiHint.hashCode());
+			result = prime
+					* result
+					+ ((validationMessage == null) ? 0 : validationMessage
+							.hashCode());
+			result = prime
+					* result
+					+ ((validationRegEx == null) ? 0 : validationRegEx
+							.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerServiceConfigDef other = (RangerServiceConfigDef) obj;
+			if (defaultValue == null) {
+				if (other.defaultValue != null)
+					return false;
+			} else if (!defaultValue.equals(other.defaultValue))
+				return false;
+			if (description == null) {
+				if (other.description != null)
+					return false;
+			} else if (!description.equals(other.description))
+				return false;
+			if (label == null) {
+				if (other.label != null)
+					return false;
+			} else if (!label.equals(other.label))
+				return false;
+			if (mandatory == null) {
+				if (other.mandatory != null)
+					return false;
+			} else if (!mandatory.equals(other.mandatory))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			if (rbKeyDescription == null) {
+				if (other.rbKeyDescription != null)
+					return false;
+			} else if (!rbKeyDescription.equals(other.rbKeyDescription))
+				return false;
+			if (rbKeyLabel == null) {
+				if (other.rbKeyLabel != null)
+					return false;
+			} else if (!rbKeyLabel.equals(other.rbKeyLabel))
+				return false;
+			if (rbKeyValidationMessage == null) {
+				if (other.rbKeyValidationMessage != null)
+					return false;
+			} else if (!rbKeyValidationMessage
+					.equals(other.rbKeyValidationMessage))
+				return false;
+			if (subType == null) {
+				if (other.subType != null)
+					return false;
+			} else if (!subType.equals(other.subType))
+				return false;
+			if (type == null) {
+				if (other.type != null)
+					return false;
+			} else if (!type.equals(other.type))
+				return false;
+			if (uiHint == null) {
+				if (other.uiHint != null)
+					return false;
+			} else if (!uiHint.equals(other.uiHint))
+				return false;
+			if (validationMessage == null) {
+				if (other.validationMessage != null)
+					return false;
+			} else if (!validationMessage.equals(other.validationMessage))
+				return false;
+			if (validationRegEx == null) {
+				if (other.validationRegEx != null)
+					return false;
+			} else if (!validationRegEx.equals(other.validationRegEx))
+				return false;
+			return true;
+		}
+		
 	}
 
 
@@ -1210,6 +1406,164 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((description == null) ? 0 : description.hashCode());
+			result = prime
+					* result
+					+ ((excludesSupported == null) ? 0 : excludesSupported
+							.hashCode());
+			result = prime * result + ((label == null) ? 0 : label.hashCode());
+			result = prime * result + ((level == null) ? 0 : level.hashCode());
+			result = prime
+					* result
+					+ ((lookupSupported == null) ? 0 : lookupSupported
+							.hashCode());
+			result = prime * result
+					+ ((mandatory == null) ? 0 : mandatory.hashCode());
+			result = prime * result
+					+ ((matcher == null) ? 0 : matcher.hashCode());
+			result = prime
+					* result
+					+ ((matcherOptions == null) ? 0 : matcherOptions.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			result = prime * result
+					+ ((parent == null) ? 0 : parent.hashCode());
+			result = prime
+					* result
+					+ ((rbKeyDescription == null) ? 0 : rbKeyDescription
+							.hashCode());
+			result = prime * result
+					+ ((rbKeyLabel == null) ? 0 : rbKeyLabel.hashCode());
+			result = prime
+					* result
+					+ ((rbKeyValidationMessage == null) ? 0
+							: rbKeyValidationMessage.hashCode());
+			result = prime
+					* result
+					+ ((recursiveSupported == null) ? 0 : recursiveSupported
+							.hashCode());
+			result = prime * result + ((type == null) ? 0 : type.hashCode());
+			result = prime * result
+					+ ((uiHint == null) ? 0 : uiHint.hashCode());
+			result = prime
+					* result
+					+ ((validationMessage == null) ? 0 : validationMessage
+							.hashCode());
+			result = prime
+					* result
+					+ ((validationRegEx == null) ? 0 : validationRegEx
+							.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerResourceDef other = (RangerResourceDef) obj;
+			if (description == null) {
+				if (other.description != null)
+					return false;
+			} else if (!description.equals(other.description))
+				return false;
+			if (excludesSupported == null) {
+				if (other.excludesSupported != null)
+					return false;
+			} else if (!excludesSupported.equals(other.excludesSupported))
+				return false;
+			if (label == null) {
+				if (other.label != null)
+					return false;
+			} else if (!label.equals(other.label))
+				return false;
+			if (level == null) {
+				if (other.level != null)
+					return false;
+			} else if (!level.equals(other.level))
+				return false;
+			if (lookupSupported == null) {
+				if (other.lookupSupported != null)
+					return false;
+			} else if (!lookupSupported.equals(other.lookupSupported))
+				return false;
+			if (mandatory == null) {
+				if (other.mandatory != null)
+					return false;
+			} else if (!mandatory.equals(other.mandatory))
+				return false;
+			if (matcher == null) {
+				if (other.matcher != null)
+					return false;
+			} else if (!matcher.equals(other.matcher))
+				return false;
+			if (matcherOptions == null) {
+				if (other.matcherOptions != null)
+					return false;
+			} else if (!matcherOptions.equals(other.matcherOptions))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			if (parent == null) {
+				if (other.parent != null)
+					return false;
+			} else if (!parent.equals(other.parent))
+				return false;
+			if (rbKeyDescription == null) {
+				if (other.rbKeyDescription != null)
+					return false;
+			} else if (!rbKeyDescription.equals(other.rbKeyDescription))
+				return false;
+			if (rbKeyLabel == null) {
+				if (other.rbKeyLabel != null)
+					return false;
+			} else if (!rbKeyLabel.equals(other.rbKeyLabel))
+				return false;
+			if (rbKeyValidationMessage == null) {
+				if (other.rbKeyValidationMessage != null)
+					return false;
+			} else if (!rbKeyValidationMessage
+					.equals(other.rbKeyValidationMessage))
+				return false;
+			if (recursiveSupported == null) {
+				if (other.recursiveSupported != null)
+					return false;
+			} else if (!recursiveSupported.equals(other.recursiveSupported))
+				return false;
+			if (type == null) {
+				if (other.type != null)
+					return false;
+			} else if (!type.equals(other.type))
+				return false;
+			if (uiHint == null) {
+				if (other.uiHint != null)
+					return false;
+			} else if (!uiHint.equals(other.uiHint))
+				return false;
+			if (validationMessage == null) {
+				if (other.validationMessage != null)
+					return false;
+			} else if (!validationMessage.equals(other.validationMessage))
+				return false;
+			if (validationRegEx == null) {
+				if (other.validationRegEx != null)
+					return false;
+			} else if (!validationRegEx.equals(other.validationRegEx))
+				return false;
+			return true;
+		}
+		
 	}
 
 
@@ -1332,6 +1686,52 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((impliedGrants == null) ? 0 : impliedGrants.hashCode());
+			result = prime * result + ((label == null) ? 0 : label.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			result = prime * result
+					+ ((rbKeyLabel == null) ? 0 : rbKeyLabel.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerAccessTypeDef other = (RangerAccessTypeDef) obj;
+			if (impliedGrants == null) {
+				if (other.impliedGrants != null)
+					return false;
+			} else if (!impliedGrants.equals(other.impliedGrants))
+				return false;
+			if (label == null) {
+				if (other.label != null)
+					return false;
+			} else if (!label.equals(other.label))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			if (rbKeyLabel == null) {
+				if (other.rbKeyLabel != null)
+					return false;
+			} else if (!rbKeyLabel.equals(other.rbKeyLabel))
+				return false;
+			return true;
+		}
+		
 	}
 
 
@@ -1553,6 +1953,112 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((description == null) ? 0 : description.hashCode());
+			result = prime * result
+					+ ((evaluator == null) ? 0 : evaluator.hashCode());
+			result = prime
+					* result
+					+ ((evaluatorOptions == null) ? 0 : evaluatorOptions
+							.hashCode());
+			result = prime * result + ((label == null) ? 0 : label.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			result = prime
+					* result
+					+ ((rbKeyDescription == null) ? 0 : rbKeyDescription
+							.hashCode());
+			result = prime * result
+					+ ((rbKeyLabel == null) ? 0 : rbKeyLabel.hashCode());
+			result = prime
+					* result
+					+ ((rbKeyValidationMessage == null) ? 0
+							: rbKeyValidationMessage.hashCode());
+			result = prime * result
+					+ ((uiHint == null) ? 0 : uiHint.hashCode());
+			result = prime
+					* result
+					+ ((validationMessage == null) ? 0 : validationMessage
+							.hashCode());
+			result = prime
+					* result
+					+ ((validationRegEx == null) ? 0 : validationRegEx
+							.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerPolicyConditionDef other = (RangerPolicyConditionDef) obj;
+			if (description == null) {
+				if (other.description != null)
+					return false;
+			} else if (!description.equals(other.description))
+				return false;
+			if (evaluator == null) {
+				if (other.evaluator != null)
+					return false;
+			} else if (!evaluator.equals(other.evaluator))
+				return false;
+			if (evaluatorOptions == null) {
+				if (other.evaluatorOptions != null)
+					return false;
+			} else if (!evaluatorOptions.equals(other.evaluatorOptions))
+				return false;
+			if (label == null) {
+				if (other.label != null)
+					return false;
+			} else if (!label.equals(other.label))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			if (rbKeyDescription == null) {
+				if (other.rbKeyDescription != null)
+					return false;
+			} else if (!rbKeyDescription.equals(other.rbKeyDescription))
+				return false;
+			if (rbKeyLabel == null) {
+				if (other.rbKeyLabel != null)
+					return false;
+			} else if (!rbKeyLabel.equals(other.rbKeyLabel))
+				return false;
+			if (rbKeyValidationMessage == null) {
+				if (other.rbKeyValidationMessage != null)
+					return false;
+			} else if (!rbKeyValidationMessage
+					.equals(other.rbKeyValidationMessage))
+				return false;
+			if (uiHint == null) {
+				if (other.uiHint != null)
+					return false;
+			} else if (!uiHint.equals(other.uiHint))
+				return false;
+			if (validationMessage == null) {
+				if (other.validationMessage != null)
+					return false;
+			} else if (!validationMessage.equals(other.validationMessage))
+				return false;
+			if (validationRegEx == null) {
+				if (other.validationRegEx != null)
+					return false;
+			} else if (!validationRegEx.equals(other.validationRegEx))
+				return false;
+			return true;
+		}
+		
 	}
 
 	public static class RangerContextEnricherDef implements java.io.Serializable {
@@ -1633,5 +2139,47 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			return sb;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((enricher == null) ? 0 : enricher.hashCode());
+			result = prime
+					* result
+					+ ((enricherOptions == null) ? 0 : enricherOptions
+							.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerContextEnricherDef other = (RangerContextEnricherDef) obj;
+			if (enricher == null) {
+				if (other.enricher != null)
+					return false;
+			} else if (!enricher.equals(other.enricher))
+				return false;
+			if (enricherOptions == null) {
+				if (other.enricherOptions != null)
+					return false;
+			} else if (!enricherOptions.equals(other.enricherOptions))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			return true;
+		}
+		
 	}
 }

@@ -21,8 +21,6 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +29,6 @@ import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -80,8 +77,8 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -153,8 +150,12 @@ public class ServiceDBStore implements ServiceStore {
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
+    
+    @Autowired
+    RangerBizUtil bizUtil;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
+	private Boolean populateExistingBaseFields = false;
 	
 	@Override
 	public void init() throws Exception {
@@ -382,7 +383,7 @@ public class ServiceDBStore implements ServiceStore {
 
 		List<RangerServiceDef> ret = null;
 
-		ret = serviceDefService.getServiceDefs(filter);
+		ret = serviceDefService.searchRangerServiceDefs(filter);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServiceDefs(" + filter + "): " + ret);
@@ -396,7 +397,8 @@ public class ServiceDBStore implements ServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDefDBStore.createService(" + service + ")");
 		}
-		
+
+		boolean createDefaultPolicy = true;
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
 		if (usb != null && usb.isUserAdmin()) {
 			Map<String, String> configs = service.getConfigs();
@@ -411,7 +413,14 @@ public class ServiceDBStore implements ServiceStore {
 						MessageEnums.ERROR_CREATING_OBJECT);
 			}
 
-			service = svcService.create(service);
+			if(populateExistingBaseFields) {
+				svcService.setPopulateExistingBaseFields(true);
+				service = svcService.create(service);
+				svcService.setPopulateExistingBaseFields(false);
+				createDefaultPolicy = false;
+			} else {
+				service = svcService.create(service);
+			}
 			XXService xCreatedService = daoMgr.getXXService().getById(service.getId());
 			VXUser vXUser = null;
 
@@ -419,7 +428,7 @@ public class ServiceDBStore implements ServiceStore {
 			for (Entry<String, String> configMap : validConfigs.entrySet()) {
 				String configKey = configMap.getKey();
 				String configValue = configMap.getValue();
-				
+
 				if(StringUtils.equalsIgnoreCase(configKey, "username")) {
 					String userName = stringUtil.getValidUserName(configValue);
 					XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
@@ -443,8 +452,13 @@ public class ServiceDBStore implements ServiceStore {
 			RangerService createdService = svcService.getPopulatedViewObject(xCreatedService);
 			dataHistService.createObjectDataHistory(createdService, RangerDataHistService.ACTION_CREATE);
 			
-			createDefaultPolicy(xCreatedService, vXUser);
-			
+			List<XXTrxLog> trxLogList = svcService.getTransactionLog(createdService, RangerServiceService.OPERATION_CREATE_CONTEXT);
+			bizUtil.createTrxLog(trxLogList);
+
+			if (createDefaultPolicy) {
+				createDefaultPolicy(xCreatedService, vXUser);
+			}
+
 			return createdService;
 		} else {
 			LOG.debug("User id : " + usb.getUserId() + " doesn't have admin access to create repository.");
@@ -483,16 +497,16 @@ public class ServiceDBStore implements ServiceStore {
 		}
 		
 		Map<String, String> configs = service.getConfigs();
-		Map<String, String> validConfigs = validateRequiredConfigParams(
-				service, configs);
+		Map<String, String> validConfigs = validateRequiredConfigParams(service, configs);
 		if (validConfigs == null) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> ConfigParams cannot be null, ServiceDefDBStore.createService(" + service + ")");
 			}
-			throw restErrorUtil.createRESTException(
-					"ConfigParams cannot be null.",
-					MessageEnums.ERROR_CREATING_OBJECT);
+			throw restErrorUtil.createRESTException("ConfigParams cannot be null.", MessageEnums.ERROR_CREATING_OBJECT);
 		}
+		
+		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+		
 		service = svcService.update(service);
 		XXService xUpdService = daoMgr.getXXService().getById(service.getId());
 		
@@ -530,6 +544,7 @@ public class ServiceDBStore implements ServiceStore {
 
 		RangerService updService = svcService.getPopulatedViewObject(xUpdService);
 		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
+		bizUtil.createTrxLog(trxLogList);
 
 		return updService;
 	}
@@ -560,6 +575,9 @@ public class ServiceDBStore implements ServiceStore {
 		
 		svcService.delete(service);
 		dataHistService.createObjectDataHistory(service, RangerDataHistService.ACTION_DELETE);
+		
+		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
+		bizUtil.createTrxLog(trxLogList);
 	}
 
 	@Override
@@ -584,9 +602,9 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServices()");
 		}
-		List<RangerService> serviceList = svcService.getServices(filter);
+		List<RangerService> ret = svcService.searchRangerPolicies(filter);
 
-		return serviceList;
+		return ret;
 	}
 
 	@Override
@@ -609,19 +627,29 @@ public class ServiceDBStore implements ServiceStore {
 		if(existing != null) {
 			throw new Exception("policy already exists: ServiceName=" + policy.getService() + "; PolicyName=" + policy.getName() + ". ID=" + existing.getId());
 		}
-		
+
 		Map<String, RangerPolicyResource> resources = policy.getResources();
 		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
 
-		policy = policyService.create(policy);
+		if(populateExistingBaseFields) {
+			policyService.setPopulateExistingBaseFields(true);
+			policy = policyService.create(policy);
+			policyService.setPopulateExistingBaseFields(false);
+		} else {
+			policy = policyService.create(policy);
+		}
+
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
 		createNewResourcesForPolicy(policy, xCreatedPolicy, resources);
 		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, policyItems, xServiceDef);
-		
+
 		handlePolicyUpdate(service);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
+
+		 List<XXTrxLog> trxLogList = policyService.getTransactionLog(createdPolicy, RangerPolicyService.OPERATION_CREATE_CONTEXT);
+		 bizUtil.createTrxLog(trxLogList);
 		
 		return createdPolicy;
 	}
@@ -632,7 +660,8 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDBStore.updatePolicy(" + policy + ")");
 		}
 
-		RangerPolicy existing = getPolicy(policy.getId());
+		XXPolicy xxExisting = daoMgr.getXXPolicy().getById(policy.getId());
+		RangerPolicy existing = policyService.getPopulatedViewObject(xxExisting);
 
 		if(existing == null) {
 			throw new Exception("no policy exists with ID=" + policy.getId());
@@ -665,6 +694,8 @@ public class ServiceDBStore implements ServiceStore {
 		Map<String, RangerPolicyResource> newResources = policy.getResources();
 		List<RangerPolicyItem> newPolicyItems = policy.getPolicyItems();
 		
+		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
+		
 		policy = policyService.update(policy);
 		XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
@@ -677,6 +708,8 @@ public class ServiceDBStore implements ServiceStore {
 		handlePolicyUpdate(service);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
 		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
+		
+		bizUtil.createTrxLog(trxLogList);
 		
 		return updPolicy;
 	}
@@ -700,6 +733,8 @@ public class ServiceDBStore implements ServiceStore {
 			throw new Exception("service does not exist - name='" + policy.getService());
 		}
 		
+		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, RangerPolicyService.OPERATION_DELETE_CONTEXT);
+		
 		deleteExistingPolicyItems(policy);
 		deleteExistingPolicyResources(policy);
 		
@@ -707,6 +742,8 @@ public class ServiceDBStore implements ServiceStore {
 		handlePolicyUpdate(service);
 		
 		dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
+		
+		bizUtil.createTrxLog(trxLogList);
 		
 		LOG.info("Policy Deleted Successfully. PolicyName : " +policyName);
 	}
@@ -722,12 +759,7 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDBStore.getPolicies()");
 		}
 
-		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
-		List<XXPolicy> policyList = daoMgr.getXXPolicy().getAll();
-		for (XXPolicy xPolicy : policyList) {
-			RangerPolicy policy = policyService.getPopulatedViewObject(xPolicy);
-			ret.add(policy);
-		}
+		List<RangerPolicy> ret = policyService.searchRangerPolicies(filter);
 
 		return ret;
 	}
@@ -737,15 +769,16 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceId + ")");
 		}
+		
+		RangerService service = getService(serviceId);
 
-		List<XXPolicy> servicePolicyList = daoMgr.getXXPolicy().findByServiceId(serviceId);
-		List<RangerPolicy> servicePolicies = new ArrayList<RangerPolicy>();
-		for(XXPolicy xPolicy : servicePolicyList) {
-			RangerPolicy servicePolicy = policyService.getPopulatedViewObject(xPolicy);
-			servicePolicies.add(servicePolicy);
+		if(service == null) {
+			throw new Exception("service does not exist - id='" + serviceId);
 		}
+		
+		List<RangerPolicy> ret = getServicePolicies(service.getName(), filter);
 
-		return servicePolicies;
+		return ret;
 	}
 
 	@Override
@@ -757,19 +790,19 @@ public class ServiceDBStore implements ServiceStore {
 		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 
 		try {
-			XXService service = daoMgr.getXXService().findByName(serviceName);
-
-			if(service == null) {
-				return ret;
+			if(filter == null) {
+				filter = new SearchFilter();
 			}
 
-			List<XXPolicy> policyList = daoMgr.getXXPolicy().findByServiceId(service.getId());
-			for (XXPolicy xPolicy : policyList) {
-				RangerPolicy policy = policyService.getPopulatedViewObject(xPolicy);
-				ret.add(policy);
-			}
+			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+			ret = getPolicies(filter);
 		} catch(Exception excp) {
 			LOG.error("ServiceDBStore.getServicePolicies(" + serviceName + "): failed to read policies", excp);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
 		}
 
 		return ret;
@@ -813,11 +846,6 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
-
-		if(ret != null && ret.getPolicies() != null) {
-			Collections.sort(ret.getPolicies(), idComparator);
-		}
-
 		return ret;
 	}
 	
@@ -874,7 +902,6 @@ public class ServiceDBStore implements ServiceStore {
 			policy.setPolicyItems(policyItems);
 		}
 		policy = createPolicy(policy);
-		handlePolicyUpdate(svcService.getPopulatedViewObject(createdService));
 	}
 
 
@@ -1116,13 +1143,12 @@ public class ServiceDBStore implements ServiceStore {
 		return true;
 	}
 
-	private final static Comparator<RangerBaseModelObject> idComparator = new Comparator<RangerBaseModelObject>() {
-		@Override
-		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
-			Long val1 = (o1 != null) ? o1.getId() : null;
-			Long val2 = (o2 != null) ? o2.getId() : null;
+	public Boolean getPopulateExistingBaseFields() {
+		return populateExistingBaseFields;
+	}
 
-			return ObjectUtils.compare(val1, val2);
-		}
-	};
+	public void setPopulateExistingBaseFields(Boolean populateExistingBaseFields) {
+		this.populateExistingBaseFields = populateExistingBaseFields;
+	}
+
 }
