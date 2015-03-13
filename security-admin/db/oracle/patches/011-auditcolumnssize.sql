@@ -13,30 +13,27 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+
 DECLARE
-	v_column_exists number := 0;
+	v_column_exists number:=0;
 BEGIN
   Select count(*) into v_column_exists
     from user_tab_cols
-    where column_name = upper('is_visible')
-      and table_name = upper('x_user');
+    where column_name = upper('REQUEST_DATA')
+      and table_name = upper('XA_ACCESS_AUDIT') and DATA_TYPE='VARCHAR2' and DATA_LENGTH=2000;
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE x_user ADD is_visible NUMBER(11) DEFAULT 1 NOT NULL';
+  if (v_column_exists = 1) then
+      execute immediate 'ALTER TABLE XA_ACCESS_AUDIT modify(REQUEST_DATA VARCHAR(4000) DEFAULT NULL)';
       commit;
   end if;
-end;/
-
-DECLARE
-	v_column_exists number := 0;
-BEGIN
+  v_column_exists:=0;
   Select count(*) into v_column_exists
     from user_tab_cols
-    where column_name = upper('is_visible')
-      and table_name = upper('x_group');
+    where column_name = upper('RESOURCE_PATH')
+      and table_name = upper('XA_ACCESS_AUDIT') and DATA_TYPE='VARCHAR2' and DATA_LENGTH=2000;
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE x_group ADD is_visible NUMBER(11) DEFAULT 1 NOT NULL';
+  if (v_column_exists = 1) then
+      execute immediate 'ALTER TABLE XA_ACCESS_AUDIT modify(RESOURCE_PATH VARCHAR(4000) DEFAULT NULL)';
       commit;
   end if;
 end;/

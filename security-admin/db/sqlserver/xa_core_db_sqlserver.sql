@@ -411,8 +411,8 @@ CREATE TABLE [dbo].[xa_access_audit](
 	[event_time] [datetime2] DEFAULT NULL NULL,
 	[request_user] [varchar](255) DEFAULT NULL NULL,
 	[action] [varchar](2000) DEFAULT NULL NULL,
-	[request_data] [varchar](2000) DEFAULT NULL NULL,
-	[resource_path] [varchar](2000) DEFAULT NULL NULL,
+	[request_data] [varchar](4000) DEFAULT NULL NULL,
+	[resource_path] [varchar](4000) DEFAULT NULL NULL,
 	[resource_type] [varchar](255) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED 
 (
@@ -533,6 +533,7 @@ CREATE TABLE [dbo].[x_group](
 	[group_type] [int] DEFAULT 0 NOT NULL,
 	[cred_store_id] [bigint] DEFAULT NULL NULL,
 	[group_src] [int] DEFAULT 0 NOT NULL,
+	[is_visible] [int] DEFAULT 1 NOT NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
@@ -577,7 +578,8 @@ CREATE TABLE [dbo].[x_user](
 	[user_name] [varchar](1024) NOT NULL,
 	[descr] [varchar](4000) NOT NULL,
 	[status] [int] DEFAULT 0 NOT NULL,
-	[cred_store_id] [bigint]DEFAULT NULL NULL,
+	[cred_store_id] [bigint] DEFAULT NULL NULL,
+	[is_visible] [int] DEFAULT 1 NOT NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
@@ -1839,10 +1841,14 @@ CREATE TABLE [dbo].[x_service_config_def] (
 	[sub_type] [varchar](1024) DEFAULT NULL NULL,
 	[is_mandatory] [tinyint] DEFAULT 0 NOT NULL,
 	[default_value] [varchar](1024) DEFAULT NULL NULL,
+	[validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
+	[validation_message] [varchar](1024) DEFAULT NULL NULL,
+	[ui_hint] [varchar](1024) DEFAULT NULL NULL,
 	[label] [varchar](1024) DEFAULT NULL NULL,
 	[description] [varchar](1024) DEFAULT NULL NULL,
 	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,
-	[rb_key_decription] [varchar](1024) DEFAULT NULL NULL,
+	[rb_key_description] [varchar](1024) DEFAULT NULL NULL,
+	[rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
 	[sort_order] [tinyint] DEFAULT 0  NULL,
 	PRIMARY KEY CLUSTERED 
 (
@@ -1874,10 +1880,14 @@ CREATE TABLE [dbo].[x_resource_def] (
 	[excludes_supported] [tinyint] DEFAULT 0 NOT NULL,
 	[matcher] [varchar](1024) DEFAULT NULL NULL,
 	[matcher_options] [varchar](1024) DEFAULT NULL NULL,
+	[validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
+	[validation_message] [varchar](1024) DEFAULT NULL NULL,
+	[ui_hint] [varchar](1024) DEFAULT NULL NULL,
 	[label] [varchar](1024) DEFAULT NULL NULL,  
 	[description] [varchar](1024) DEFAULT NULL NULL,  
 	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,  
 	[rb_key_description] [varchar](1024) DEFAULT NULL NULL, 
+	[rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
 	[sort_order] [tinyint] DEFAULT 0  NULL, 
 	PRIMARY KEY CLUSTERED 
 (
@@ -1947,10 +1957,14 @@ CREATE TABLE [dbo].[x_policy_condition_def] (
 	[name] [varchar](1024) DEFAULT NULL NULL,  
 	[evaluator] [varchar](1024) DEFAULT NULL NULL,
 	[evaluator_options] [varchar](1024) DEFAULT NULL NULL,
+	[validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
+	[validation_message] [varchar](1024) DEFAULT NULL NULL,
+	[ui_hint] [varchar](1024) DEFAULT NULL NULL,
 	[label] [varchar](1024) DEFAULT NULL NULL,  
 	[description] [varchar](1024) DEFAULT NULL NULL,  
 	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,  
 	[rb_key_description] [varchar](1024) DEFAULT NULL NULL,  
+	[rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
 	[sort_order] [tinyint] DEFAULT 0  NULL,
 	PRIMARY KEY CLUSTERED 
 (

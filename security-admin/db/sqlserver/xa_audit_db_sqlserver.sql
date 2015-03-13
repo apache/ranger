@@ -40,8 +40,8 @@ CREATE TABLE [dbo].[xa_access_audit](
 	[event_time] [datetime2] DEFAULT NULL NULL,
 	[request_user] [varchar](255) DEFAULT NULL NULL,
 	[action] [varchar](2000) DEFAULT NULL NULL,
-	[request_data] [varchar](2000) DEFAULT NULL NULL,
-	[resource_path] [varchar](2000) DEFAULT NULL NULL,
+	[request_data] [varchar](4000) DEFAULT NULL NULL,
+	[resource_path] [varchar](4000) DEFAULT NULL NULL,
 	[resource_type] [varchar](255) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED 
 (

@@ -216,6 +216,24 @@ CONSTRAINT x_policy_cond_def_FK_added_by FOREIGN KEY (added_by_id) REFERENCES x_
 CONSTRAINT x_policy_cond_def_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 commit;
+CREATE TABLE x_context_enricher_def(
+id NUMBER(20) NOT NULL,
+guid varchar(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL,
+upd_by_id NUMBER(20) DEFAULT NULL,
+def_id NUMBER(20) NOT NULL,
+name varchar(1024) DEFAULT NULL NULL,
+enricher varchar(1024) DEFAULT NULL NULL,
+enricher_options varchar(1024) DEFAULT NULL NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
+primary key (id),
+CONSTRAINT x_cont_enr_def_FK_defid FOREIGN KEY (def_id) REFERENCES x_service_def (id),
+CONSTRAINT x_cont_enr_def_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_cont_enr_def_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
 CREATE TABLE x_enum_def (
 id NUMBER(20) NOT NULL,
 guid VARCHAR(1024) DEFAULT NULL NULL,
