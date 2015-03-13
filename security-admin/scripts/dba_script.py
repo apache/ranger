@@ -20,6 +20,7 @@ import shlex
 import logging
 import subprocess
 import fileinput
+import getpass
 from os.path import basename
 from subprocess import Popen,PIPE
 from datetime import date
@@ -29,7 +30,7 @@ def check_output(query):
 	p = subprocess.Popen(query, stdout=subprocess.PIPE)
 	output = p.communicate ()[0]
 	return output
-
+	
 def log(msg,type):
 	if type == 'info':
 		logging.info(" %s",msg)
@@ -41,7 +42,7 @@ def log(msg,type):
 		logging.exception(" %s",msg)
 	if type == 'error':
 		logging.error(" %s",msg)
-
+'''
 def populate_global_dict():
 	global globalDict
 	read_config_file = open(os.path.join(os.getcwd(),'install.properties'))
@@ -58,7 +59,7 @@ def populate_global_dict():
 					value = ''
 			value = value.strip()
 			globalDict[key] = value
-
+'''
 
 class BaseDB(object):
 
@@ -71,32 +72,7 @@ class BaseDB(object):
 	def create_db(self, root_user, db_root_password, db_name, db_user, db_password):
 		log("[I] ---------- Verifying database ----------", "info")
 
-	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
-		log("[I] ---------- Verifying table ----------", "info")
-
-	def import_db_file(self, db_name, db_user, db_password, file_name):
-		log("[I] ---------- Importing db schema ----------", "info")
-
-	def upgrade_db(self, db_name, db_user, db_password, DBVERSION_CATALOG_CREATION):
-		self.import_db_file(db_name, db_user, db_password, DBVERSION_CATALOG_CREATION)
-		log("[I] Baseline DB upgraded successfully", "info")
-
-	def apply_patches(self, db_name, db_user, db_password, PATCHES_PATH):
-		#first get all patches and then apply each patch
-		if not os.path.exists(PATCHES_PATH):
-			log("[I] No patches to apply!","info")
-		else:
-			# files: coming from os.listdir() sorted alphabetically, thus not numerically
-			files = os.listdir(PATCHES_PATH)
-			if files:
-				sorted_files = sorted(files, key=lambda x: str(x.split('.')[0]))
-				for filename in sorted_files:
-					currentPatch = PATCHES_PATH + "/"+filename
-					self.import_db_patches(db_name, db_user, db_password, currentPatch)
-			else:
-				log("[I] No patches to apply!","info")
-
-	def create_auditdb_user(self, xa_db_host , audit_db_host , db_name ,audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, file_name, TABLE_NAME):
+	def create_auditdb_user(self, xa_db_host , audit_db_host , db_name ,audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE):
 		log("[I] ----------------- Create audit user ------------", "info")
 
 
@@ -153,7 +129,7 @@ class MysqlConf(BaseDB):
 								log("[E] Creating MySQL user " + db_user +" failed","error")
 								sys.exit(1)
 					else:
-						query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, db_password)
+						query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user,host,db_password)
 						ret = subprocess.check_call(shlex.split(query))
 						if ret == 0:
 							if self.verify_user(root_user, db_root_password, host, db_user, get_cmd):
@@ -199,19 +175,6 @@ class MysqlConf(BaseDB):
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, is_revoke):
 		hosts_arr =["%", "localhost"]
-		for host in hosts_arr:
-			get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
-			if self.verify_user(root_user, db_root_password, host, db_user, get_cmd):
-				log("[I] MySQL user " + db_user + " exists for host " + host, "info")
-			else:
-				log("[I] MySQL user " + db_user + " does not exists for host " + host, "error")
-				sys.exit(E)
-			if self.verify_db(root_user, db_root_password, db_name):
-				log("[I] Database "+db_name + " exists!","info")
-			else:
-				log("[I] Database "+db_name + " does not exists!","error")
-				sys.exit(E)
-
 		if is_revoke:
 			for host in hosts_arr:
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
@@ -244,100 +207,7 @@ class MysqlConf(BaseDB):
 				sys.exit(1)
 
 
-	def grant_audit_db_user(self, audit_root_user, audit_db_name, audit_db_user, audit_db_password, audit_db_root_password,TABLE_NAME, is_revoke):
-		hosts_arr =["%", "localhost"]
-		if is_revoke == True:
-			for host in hosts_arr:
-				get_cmd = self.get_jisql_cmd(audit_root_user, audit_db_root_password, 'mysql')
-				query = get_cmd + " -query \"REVOKE ALL PRIVILEGES,GRANT OPTION FROM '%s'@'%s';\"" %(audit_db_user, host)
-				ret = subprocess.check_call(shlex.split(query))
-				if ret == 0:
-					query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
-					ret = subprocess.check_call(shlex.split(query))
-					if ret != 0:
-						sys.exit(1)
-				else:
-					sys.exit(1)
-
-		for host in hosts_arr:
-			log("[I] ---------------Granting privileges TO '"+ audit_db_user + "' on '" + audit_db_name+"'-------------" , "info")
-			get_cmd = self.get_jisql_cmd(audit_root_user, audit_db_root_password, 'mysql')
-			query = get_cmd + " -query \"GRANT INSERT ON %s.%s TO '%s'@'%s';\"" %(audit_db_name,TABLE_NAME,audit_db_user,host)
-			ret = subprocess.check_call(shlex.split(query))
-			if ret == 0:
-				get_cmd = self.get_jisql_cmd(audit_root_user, audit_db_root_password, 'mysql')
-				query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
-				ret = subprocess.check_call(shlex.split(query))
-				if ret == 0:
-					log("[I] Granting privileges to '" + audit_db_user+"' done on '"+ audit_db_name+"'", "info")
-				else:
-					log("[E] Granting privileges to '" +audit_db_user+"' failed on '" + audit_db_name+"'", "error")
-					sys.exit(1)
-			else:
-				log("[E] Granting privileges to '" + audit_db_user+"' failed on '" + audit_db_name+"'", "error")
-				sys.exit(1)
-
-
-	def import_db_file(self, db_name, db_user, db_password, file_name):
-		name = basename(file_name)
-		if os.path.isfile(file_name):
-			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			query = get_cmd + " -input %s" %file_name
-			ret = subprocess.check_call(shlex.split(query))
-			if ret == 0:
-				log("[I] "+name + " DB schema imported successfully","info")
-			else:
-				log("[E] "+name + " DB schema import failed!","error")
-				sys.exit(1)
-		else:
-			log("[E] DB schema file " + name+ " not found","error")
-			sys.exit(1)
-
-
-	def import_db_patches(self, db_name, db_user, db_password, file_name):
-		name = basename(file_name)
-		if os.path.isfile(file_name):
-			version = name.split('-')[0]
-			log("[I] Executing patch on  " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
-			output = check_output(shlex.split(query))
-			if output.strip(version + " |"):
-				log("[I] Patch "+ name  +" is already applied" ,"info")
-			else:
-				get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-				query = get_cmd + " -input %s" %file_name
-				ret = subprocess.check_call(shlex.split(query))
-				if ret == 0:
-					log("[I] "+name + " patch applied","info")
-					query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), user(), now(), user()) ;\"" %(version)
-					ret = subprocess.check_call(shlex.split(query))
-					if ret == 0:
-						log("[I] Patch version updated", "info")
-					else:
-						log("[E] Updating patch version failed", "error")
-						sys.exit(1)
-				else:
-					log("[E] "+name + " import failed!","error")
-					sys.exit(1)
-		else:
-			log("[I] Import " +name + " file not found","error")
-			sys.exit(1)
-
-
-	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
-		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		query = get_cmd + " -query \"show tables like '%s';\"" %(TABLE_NAME)
-		output = check_output(shlex.split(query))
-		if output.strip(TABLE_NAME + " |"):
-			log("[I] Table " + TABLE_NAME +" already exists in database '" + db_name + "'","info")
-			return True
-		else:
-			log("[I] Table " + TABLE_NAME +" does not exist in database " + db_name + "","info")
-			return False
-
-	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, file_name, TABLE_NAME, DBA_MODE):
+	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE):
 		if DBA_MODE == "TRUE" :
 			log("[I] --------- Setup audit user ---------","info")
 			self.create_rangerdb_user(audit_db_root_user, audit_db_user, audit_db_password, audit_db_root_password)
@@ -355,22 +225,8 @@ class MysqlConf(BaseDB):
 					sys.exit(1)
 			self.create_db(audit_db_root_user, audit_db_root_password, audit_db_name, db_user, db_password)
 			self.grant_xa_db_user(audit_db_root_user, audit_db_name, db_user, db_password, audit_db_root_password, False)
-
-		log("[I] --------- Check admin user connection ---------","info")
-		self.check_connection(audit_db_name, db_user, db_password)
-		#log("[I] --------- Check audit user connection ---------","info")
-		#self.check_connection(audit_db_name, audit_db_user, audit_db_password)
-		log("[I] --------- Check audit table exists --------- ","info")
-		output = self.check_table(audit_db_name, db_user, db_password, TABLE_NAME)
-		if output == False:
-			self.import_db_file(audit_db_name ,db_user, db_password, file_name)
-		if DBA_MODE == "TRUE":
-			if audit_db_user == db_user:
-				is_revoke = False
-			else:
-				is_revoke = True
-			self.grant_audit_db_user(audit_db_root_user, audit_db_name, audit_db_user, audit_db_password, audit_db_root_password,TABLE_NAME, is_revoke)
-
+		
+	
 
 class OracleConf(BaseDB):
 	# Constructor
@@ -432,6 +288,7 @@ class OracleConf(BaseDB):
 				else:
 					log("[E] Creating Oracle user '" + db_user + "' failed", "error")
 					sys.exit(1)
+
 
 	def verify_tablespace(self, root_user, db_root_password, db_name):
 		log("[I] Verifying tablespace " + db_name, "info")
@@ -496,20 +353,7 @@ class OracleConf(BaseDB):
 			sys.exit(1)
 
 
-	def import_audit_file_to_db(self, audit_db_root_user, db_name ,audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password, file_name, TABLE_NAME):
-		#Verifying Users
-		if self.verify_user(audit_db_root_user, db_user, audit_db_root_password):
-			log("[I] User " +db_user + " already exists.", "info")
-		else:
-			log("[E] User does not exist " + db_user, "error")
-			sys.exit(1)
-
-		if self.verify_user(audit_db_root_user, audit_db_user, audit_db_root_password):
-			log("[I] User " +audit_db_user + " already exists.", "info")
-		else:
-			log("[E] User does not exist " + audit_db_user, "error")
-			sys.exit(1)
-
+	def create_auditdb(self, audit_db_root_user, db_name ,audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password):
 		if self.verify_tablespace(audit_db_root_user, audit_db_root_password, audit_db_name):
 			log("[I] Tablespace " + audit_db_name + " already exists.","info")
 			status1 = True
@@ -567,17 +411,6 @@ class OracleConf(BaseDB):
 
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, invoke):
-		if self.verify_user(root_user, db_user, db_root_password):
-			pass
-		else:
-			log("[E] User does not exist " + db_user, "error")
-			sys.exit(1)
-		if self.verify_tablespace(root_user, db_root_password, db_name):
-			pass
-		else:
-			log("[E] Tablespace " + db_name + " does not exists.","error")
-			sys.exit(1)
-
 		get_cmd = self.get_jisql_cmd(root_user ,db_root_password)
 		query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'" % (db_user)
 		ret = subprocess.check_call(shlex.split(query))
@@ -589,102 +422,7 @@ class OracleConf(BaseDB):
 			sys.exit(1)
 
 
-	def grant_audit_db_user(self, audit_db_root_user, audit_db_name ,db_user,audit_db_user,db_password,audit_db_password, audit_db_root_password):
-		get_cmd = self.get_jisql_cmd(audit_db_root_user, audit_db_root_password)
-		query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'" % (db_user)
-		ret = subprocess.check_call(shlex.split(query))
-		if ret == 0:
-			log("[I] Granted permission to " + db_user, "info")
-			return True
-		else:
-			log("[E] Granting Oracle user '" + db_user + "' failed", "error")
-			sys.exit(1)
-		query = get_cmd + " -c \; -query 'GRANT CREATE SESSION TO %s;'" % (audit_db_user)
-		ret = subprocess.check_call(shlex.split(query))
-		if ret != 0:
-			sys.exit(1)
-		query = get_cmd + " -c \; -query 'GRANT SELECT ON %s.XA_ACCESS_AUDIT_SEQ TO %s;'" % (db_user,audit_db_user)
-		ret = subprocess.check_call(shlex.split(query))
-		if ret != 0:
-			sys.exit(1)
-		query = get_cmd + " -c \; -query 'GRANT INSERT ON %s.XA_ACCESS_AUDIT TO %s;'" % (db_user,audit_db_user)
-		ret = subprocess.check_call(shlex.split(query))
-		if ret != 0:
-			sys.exit(1)
-
-
-	def import_db_file(self, db_name, db_user, db_password, file_name):
-		name = basename(file_name)
-		if os.path.isfile(file_name):
-			log("[I] Importing script " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password)
-			query = get_cmd + " -input %s -c \;" %file_name
-			ret = subprocess.check_call(shlex.split(query))
-			if ret == 0:
-				log("[I] "+name + " imported successfully","info")
-			else:
-				log("[E] "+name + " import failed!","error")
-				sys.exit(1)
-		else:
-			log("[E] Import " +name + " sql file not found","error")
-			sys.exit(1)
-
-	def import_db_patches(self, db_name, db_user, db_password, file_name):
-		if os.path.isfile(file_name):
-			name = basename(file_name)
-			version = name.split('-')[0]
-			log("[I] Executing patch on " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password)
-			query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
-			output = check_output(shlex.split(query))
-			if output.strip(version +" |"):
-				log("[I] Patch "+ name  +" is already applied" ,"info")
-			else:
-				get_cmd = self.get_jisql_cmd(db_user, db_password)
-				query = get_cmd + " -input %s -c /" %file_name
-				ret = subprocess.check_call(shlex.split(query))
-				if ret == 0:
-					log("[I] "+name + " patch applied","info")
-					query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s');\"" %(version, db_user, db_user)
-					ret = subprocess.check_call(shlex.split(query))
-					if ret == 0:
-						log("[I] Patch version updated", "info")
-					else:
-						log("[E] Updating patch version failed", "error")
-						sys.exit(1)
-				else:
-					log("[E] "+name + " Import failed!","error")
-					sys.exit(1)
-		else:
-			log("[I] Patch file not found","error")
-			sys.exit(1)
-
-
-
-	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
-		get_cmd = self.get_jisql_cmd(db_user ,db_password)
-		query = get_cmd + " -c \; -query 'select default_tablespace from user_users;'"
-		output = check_output(shlex.split(query)).strip()
-		output = output.strip(' |')
-		db_name = db_name.upper()
-		if output == db_name:
-			log("[I] User name " + db_user + " and tablespace " + db_name + " already exists.","info")
-			log("[I] Verifying table " + TABLE_NAME +" in tablespace " + db_name, "info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password)
-			query = get_cmd + " -c \; -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\"" %(db_name ,TABLE_NAME)
-			output = check_output(shlex.split(query))
-			if output.strip(TABLE_NAME.upper() + ' |'):
-				log("[I] Table " + TABLE_NAME +" already exists in tablespace " + db_name + "","info")
-				return True
-			else:
-				log("[I] Table " + TABLE_NAME +" does not exist in tablespace " + db_name + "","info")
-				return False
-		else:
-			log("[E] "+db_user + " user already assigned to some other tablespace , provide different DB name.","error")
-			sys.exit(1)
-
-
-	def create_auditdb_user(self, xa_db_host , audit_db_host , db_name ,audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, file_name, TABLE_NAME, DBA_MODE):
+	def create_auditdb_user(self, xa_db_host , audit_db_host , db_name ,audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE):
 		if DBA_MODE == "TRUE":
 			log("[I] --------- Setup audit user ---------","info")
 			#self.create_rangerdb_user(audit_db_root_user, db_user, db_password, audit_db_root_password)
@@ -731,20 +469,10 @@ class OracleConf(BaseDB):
 							sys.exit(1)
 					else:
 						log("[I] Creating audit user " + audit_db_user + " failed!", "info")
-			self.import_audit_file_to_db(audit_db_root_user, db_name ,audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password, file_name, TABLE_NAME)
-		log("[I] --------- Check admin user connection ---------","info")
-		self.check_connection(db_name, db_user, db_password)
-		log("[I] --------- Check audit user connection ---------","info")
-		self.check_connection(audit_db_name, audit_db_user, audit_db_password)
-		log("[I] --------- Check table ---------","info")
-		if self.check_table(db_name, db_user, db_password, TABLE_NAME):
-			pass
-		else:
-			self.import_db_file(audit_db_name, db_user, db_password ,file_name)
-
+			
+			self.create_auditdb(audit_db_root_user, db_name ,audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password)
 		if DBA_MODE == "TRUE":
 			self.grant_xa_db_user(audit_db_root_user, audit_db_name, db_user, db_password, audit_db_root_password, True)
-			self.grant_audit_db_user(audit_db_root_user, audit_db_name ,db_user, audit_db_user, db_password,audit_db_password, audit_db_root_password)
 
 
 class PostgresConf(BaseDB):
@@ -833,23 +561,6 @@ class PostgresConf(BaseDB):
 					sys.exit(1)
 
 
-	def import_db_file(self, db_name, db_user, db_password, file_name):
-		name = basename(file_name)
-		if os.path.isfile(file_name):
-			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			query = get_cmd + " -input %s" %file_name
-			ret = subprocess.check_call(shlex.split(query))
-			if ret == 0:
-				log("[I] "+name + " DB schema imported successfully","info")
-			else:
-				log("[E] "+name + " DB schema import failed!","error")
-				sys.exit(1)
-		else:
-			log("[E] DB schema file " + name+ " not found","error")
-			sys.exit(1)
-
-
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password , True):
 		log("[I] Granting privileges TO user '"+db_user+"' on db '"+db_name+"'" , "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
@@ -879,85 +590,16 @@ class PostgresConf(BaseDB):
 		log("[I] Granting privileges TO user '"+db_user+"' on db '"+db_name+"' Done" , "info")
 
 
-	def grant_audit_db_user(self, audit_db_root_user, audit_db_name , db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password):
-		log("[I] Granting permission to " + audit_db_user, "info")
-		get_cmd = self.get_jisql_cmd(audit_db_root_user, audit_db_root_password, audit_db_name)
-		log("[I] Granting select and usage privileges to Postgres audit user '" + audit_db_user + "' on XA_ACCESS_AUDIT_SEQ", "info")
-		query = get_cmd + " -query 'GRANT SELECT,USAGE ON XA_ACCESS_AUDIT_SEQ TO %s;'" % (audit_db_user)
-		ret = subprocess.check_call(shlex.split(query))
-		if ret != 0:
-			log("[E] Granting select privileges to Postgres user '" + audit_db_user + "' failed", "error")
-			sys.exit(1)
-
-		log("[I] Granting insert privileges to Postgres audit user '" + audit_db_user + "' on XA_ACCESS_AUDIT table", "info")
-		query = get_cmd + " -query 'GRANT INSERT ON XA_ACCESS_AUDIT TO %s;'" % (audit_db_user)
-		ret = subprocess.check_call(shlex.split(query))
-		if ret != 0:
-			log("[E] Granting insert privileges to Postgres user '" + audit_db_user + "' failed", "error")
-			sys.exit(1)
-
-
-	def import_db_patches(self, db_name, db_user, db_password, file_name):
-		name = basename(file_name)
-		if os.path.isfile(file_name):
-			version = name.split('-')[0]
-			log("[I] Executing patch on " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
-			output = check_output(shlex.split(query))
-			if output.strip(version + " |"):
-				log("[I] Patch "+ name  +" is already applied" ,"info")
-			else:
-				query = get_cmd + " -input %s" %file_name
-				ret = subprocess.check_call(shlex.split(query))
-				if ret == 0:
-					log("[I] "+name + " patch applied","info")
-					query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), user(), now(), user()) ;\"" %(version)
-					ret = subprocess.check_call(shlex.split(query))
-					if ret == 0:
-						log("[I] Patch version updated", "info")
-					else:
-						log("[E] Updating patch version failed", "error")
-						sys.exit(1)
-				else:
-					log("[E] "+name + " import failed!","error")
-					sys.exit(1)
-		else:
-			log("[E] Import " +name + " file not found","error")
-			sys.exit(1)
-
-
-	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
-		log("[I] Verifying table " + TABLE_NAME +" in database " + db_name, "info")
-		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		query = get_cmd + " -query \"select * from (select table_name from information_schema.tables where table_catalog='%s' and table_name = '%s') as temp;\"" %(db_name , TABLE_NAME)
-		output = check_output(shlex.split(query))
-		if output.strip(TABLE_NAME +" |"):
-			log("[I] Table " + TABLE_NAME +" already exists in database " + db_name, "info")
-			return True
-		else:
-			log("[I] Table " + TABLE_NAME +" does not exist in database " + db_name, "info")
-			return False
-
-
-	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, file_name, TABLE_NAME, DBA_MODE):
+	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE):
 		if DBA_MODE == "TRUE":
 			log("[I] --------- Setup audit user ---------","info")
 			self.create_rangerdb_user(audit_db_root_user, db_user, db_password, audit_db_root_password)
 			self.create_rangerdb_user(audit_db_root_user, audit_db_user, audit_db_password, audit_db_root_password)
 			self.create_db(audit_db_root_user, audit_db_root_password, audit_db_name, db_user, db_password)
 
-		log("[I] --------- Check admin user connection ---------","info")
-		self.check_connection(audit_db_name, db_user, db_password)
-		log("[I] --------- Check audit user connection ---------","info")
-		self.check_connection(audit_db_name, audit_db_user, audit_db_password)
-		log("[I] --------- Check table ---------","info")
-		output = self.check_table(audit_db_name, audit_db_user, audit_db_password, TABLE_NAME)
-		if output == False:
-			self.import_db_file(audit_db_name, db_user, db_password, file_name)
 		if DBA_MODE == "TRUE":
 			self.grant_xa_db_user(audit_db_root_user, audit_db_name, db_user, db_password, audit_db_root_password, True)
-			self.grant_audit_db_user(audit_db_root_user, audit_db_name ,db_user, audit_db_user, db_password,audit_db_password, audit_db_root_password)
+
 
 class SqlServerConf(BaseDB):
 	# Constructor
@@ -1067,33 +709,6 @@ class SqlServerConf(BaseDB):
 				log("[E] Database creation failed!!","error")
 				sys.exit(1)
 
-	def import_db_file(self, db_name, db_user, db_password, file_name):
-		name = basename(file_name)
-		if os.path.isfile(file_name):
-			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			query = get_cmd + " -input %s" %file_name
-			ret = subprocess.check_call(shlex.split(query))
-			if ret == 0:
-				log("[I] "+name + " DB schema imported successfully","info")
-			else:
-				log("[E] "+name + " DB Schema import failed!","error")
-				sys.exit(1)
-		else:
-			log("[I] DB Schema file " + name+ " not found","error")
-			sys.exit(1)
-
-	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
-		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		query = get_cmd + " -c \; -query \"SELECT TABLE_NAME FROM information_schema.tables where table_name = '%s';\"" %(TABLE_NAME)
-		output = check_output(shlex.split(query))
-		if output.strip(TABLE_NAME + " |"):
-			log("[I] Table '" + TABLE_NAME + "' already exists in  database '" + db_name + "'","info")
-			return True
-		else:
-			log("[I] Table '" + TABLE_NAME + "' does not exist in database '" + db_name + "'","info")
-			return False
-
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, True):
 		log("[I] Granting permission to admin user '" + db_user + "' on db '" + db_name + "'" , "info")
@@ -1109,47 +724,7 @@ class SqlServerConf(BaseDB):
 			sys.exit(1)
 
 
-	def grant_audit_db_user(self, audit_db_root_user, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password,TABLE_NAME):
-		log("[I] Granting permission to audit user '" + audit_db_user + "' on db '" + audit_db_name + "'","info")
-		get_cmd = self.get_jisql_cmd(audit_db_root_user, audit_db_root_password, 'msdb')
-		query = get_cmd + " -c \; -query \"USE %s GRANT SELECT,INSERT to %s;\"" %(audit_db_name ,audit_db_user)
-		ret = subprocess.check_call(shlex.split(query))
-		if ret != 0 :
-			sys.exit(1)
-		else:
-			log("[I] Permission granted to audit user " + audit_db_user , "info")
-
-	def import_db_patches(self, db_name, db_user, db_password, file_name):
-		name = basename(file_name)
-		if os.path.isfile(file_name):
-			version = name.split('-')[0]
-			log("[I] Executing patch on " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
-			output = check_output(shlex.split(query))
-			if output.strip(version + " |"):
-				log("[I] Patch "+ name  +" is already applied" ,"info")
-			else:
-				query = get_cmd + " -input %s" %file_name
-				ret = subprocess.check_call(shlex.split(query))
-				if ret == 0:
-					log("[I] "+name + " patch applied","info")
-					query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), user(), now(), user()) ;\"" %(version)
-					ret = subprocess.check_call(shlex.split(query))
-					if ret == 0:
-						log("[I] Patch version updated", "info")
-					else:
-						log("[E] Updating patch version failed", "error")
-						sys.exit(1)
-				else:
-					log("[E] "+name + " import failed!","error")
-					sys.exit(1)
-		else:
-			log("[E] Import " +name + " file not found","error")
-			sys.exit(1)
-
-
-	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, file_name, TABLE_NAME, DBA_MODE):
+	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE):
 		if DBA_MODE == "TRUE":
 			log("[I] --------- Setup audit user --------- ","info")
 			self.create_rangerdb_user(audit_db_root_user, db_user, db_password, audit_db_root_password)
@@ -1159,91 +734,156 @@ class SqlServerConf(BaseDB):
 			self.create_user(xa_db_root_user, audit_db_name ,db_user, db_password, xa_db_root_password)
 			self.grant_xa_db_user(audit_db_root_user, audit_db_name, db_user, db_password, audit_db_root_password, True)
 
-		log("[I] --------- Check admin user connection --------- ","info")
-		self.check_connection(audit_db_name, db_user, db_password)
-		log("[I] --------- Check audit user connection --------- ","info")
-		self.check_connection(audit_db_name, audit_db_user, audit_db_password)
-		log("[I] --------- Check audit table exists --------- ","info")
-		output = self.check_table(audit_db_name, db_user, db_password, TABLE_NAME)
-		if output == False:
-			self.import_db_file(audit_db_name ,db_user, db_password, file_name)
-		if DBA_MODE == "TRUE":
-			self.grant_audit_db_user(audit_db_root_user, audit_db_name ,db_user, audit_db_user, db_password,audit_db_password, audit_db_root_password,TABLE_NAME)
-
 
 def main():
-	populate_global_dict()
+	#populate_global_dict()
 
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
-	if 'DBA_MODE' in globalDict :
-		DBA_MODE = globalDict['DBA_MODE']
-		DBA_MODE = DBA_MODE.upper()
-		if DBA_MODE == "FALSE" or DBA_MODE == "TRUE":
-			pass
-		else:
-			log("[E] --------- DBA_MODE should be TRUE or FALSE --------- ","error")
-			sys.exit(1)
+	DBA_MODE = 'TRUE'
+
+	#JAVA_BIN=globalDict['JAVA_BIN']
+	if os.environ['JAVA_HOME'] == "":
+		log("[E] --------- JAVA_HOME environment property not defined, aborting installation! ---------", "error")
+		sys.exit(1)
+	JAVA_BIN=os.environ['JAVA_HOME']+'/bin/java'
+	while os.path.isfile(JAVA_BIN) == False:
+		log("Enter java executable path: :","info")
+		JAVA_BIN=raw_input()
+
+	#XA_DB_FLAVOR=globalDict['DB_FLAVOR']
+	#AUDIT_DB_FLAVOR=globalDict['DB_FLAVOR']
+	XA_DB_FLAVOR=''
+	while XA_DB_FLAVOR == "":
+		log("Enter db flavour{MYSQL|ORACLE|POSTGRES|SQLSERVER} :","info")
+		XA_DB_FLAVOR=raw_input()
+	AUDIT_DB_FLAVOR = XA_DB_FLAVOR
+	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
+	AUDIT_DB_FLAVOR = AUDIT_DB_FLAVOR.upper()
+
+	CONNECTOR_JAR=''
+	if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "ORACLE" or XA_DB_FLAVOR == "POSTGRES" or XA_DB_FLAVOR == "SQLSERVER":
+		log("Enter JDBC connector file for :"+XA_DB_FLAVOR,"info")
+		CONNECTOR_JAR=raw_input()
+		while os.path.isfile(CONNECTOR_JAR) == False:
+			log("JDBC connector file "+CONNECTOR_JAR+" does not exist, Please enter connector path :","error")
+			CONNECTOR_JAR=raw_input()
 	else:
-		DBA_MODE = "FALSE"
+		log("[E] --------- NO SUCH SUPPORTED DB FLAVOUR!! ---------", "error")
+		sys.exit(1)
 
-	log("[I] --------- DBA_MODE is :" + DBA_MODE +" --------- ","info")
-
-	JAVA_BIN=globalDict['JAVA_BIN']
-	XA_DB_FLAVOR=globalDict['DB_FLAVOR']
-	AUDIT_DB_FLAVOR=globalDict['DB_FLAVOR']
-	XA_DB_FLAVOR.upper()
-	AUDIT_DB_FLAVOR.upper()
-
-	xa_db_host = globalDict['db_host']
-	audit_db_host = globalDict['db_host']
+	#xa_db_host = globalDict['db_host']
+	#audit_db_host = globalDict['db_host']
+	xa_db_host=''
+	while xa_db_host == "":
+		log("Enter DB Host :","info")
+		xa_db_host=raw_input()
+	audit_db_host=xa_db_host
 
 	mysql_dbversion_catalog = 'db/mysql/create_dbversion_catalog.sql'
-	mysql_core_file = globalDict['mysql_core_file']
-	mysql_audit_file = globalDict['mysql_audit_file']
+	#mysql_core_file = globalDict['mysql_core_file']
+	mysql_core_file = 'db/mysql/xa_core_db.sql'
+	#mysql_audit_file = globalDict['mysql_audit_file']
+	mysql_audit_file = 'db/mysql/xa_audit_db.sql'
 	mysql_patches = 'db/mysql/patches'
 
 	oracle_dbversion_catalog = 'db/oracle/create_dbversion_catalog.sql'
-	oracle_core_file = globalDict['oracle_core_file'] 
-	oracle_audit_file = globalDict['oracle_audit_file'] 
+	#oracle_core_file = globalDict['oracle_core_file'] 
+	oracle_core_file = 'db/oracle/xa_core_db_oracle.sql'
+	#oracle_audit_file = globalDict['oracle_audit_file'] 
+	oracle_audit_file = 'db/oracle/xa_audit_db_oracle.sql' 
 	oracle_patches = 'db/oracle/patches'
 
 	postgres_dbversion_catalog = 'db/postgres/create_dbversion_catalog.sql'
-	postgres_core_file = globalDict['postgres_core_file']
-	postgres_audit_file = globalDict['postgres_audit_file']
+	#postgres_core_file = globalDict['postgres_core_file']
+	postgres_core_file = 'db/postgres/xa_core_db_postgres.sql'
+	#postgres_audit_file = globalDict['postgres_audit_file']
+	postgres_audit_file = 'db/postgres/xa_audit_db_postgres.sql'
 	postgres_patches = 'db/postgres/patches'
 
 	sqlserver_dbversion_catalog = 'db/sqlserver/create_dbversion_catalog.sql'
-	sqlserver_core_file = globalDict['sqlserver_core_file']
-	sqlserver_audit_file = globalDict['sqlserver_audit_file']
+	#sqlserver_core_file = globalDict['sqlserver_core_file']
+	sqlserver_core_file = 'db/sqlserver/xa_core_db_sqlserver.sql'
+	#sqlserver_audit_file = globalDict['sqlserver_audit_file']
+	sqlserver_audit_file = 'db/sqlserver/xa_audit_db_sqlserver.sql'
 	sqlserver_patches = 'db/sqlserver/patches'
 
-	db_name = globalDict['db_name']
-	db_user = globalDict['db_user']
-	db_password = globalDict['db_password']
-	xa_db_root_user = globalDict['db_root_user']
-	xa_db_root_password = globalDict['db_root_password']
+	#db_name = globalDict['db_name']
+	#db_user = globalDict['db_user']
+	#db_password = globalDict['db_password']
+	#xa_db_root_user = globalDict['db_root_user']
+	#xa_db_root_password = globalDict['db_root_password']
+
+	xa_db_root_user=''
+	while xa_db_root_user == "":
+		log("Enter db root user:","info")
+		xa_db_root_user=raw_input()
+	
+	log("Enter db root password:","info")
+	xa_db_root_password = getpass.getpass("Enter db root password:")
+
+	db_name = ''
+	while db_name == "":
+		log("Enter DB Name :","info")
+		db_name=raw_input()
+
+	db_user=''
+	while db_user == "":
+		log("Enter db user name:","info")
+		db_user=raw_input()
+
+	db_password=''
+	while db_password == "":
+		log("Enter db user password:","info")
+		db_password = getpass.getpass("Enter db user password:")
+
 
 	x_db_version = 'x_db_version_h'
 	xa_access_audit = 'xa_access_audit'
 	x_user = 'x_portal_user'
 
-	audit_db_name = globalDict['audit_db_name']
-	audit_db_user = globalDict['audit_db_user']
-	audit_db_password = globalDict['audit_db_password']
-	audit_db_root_user = globalDict['db_root_user'] 
-	audit_db_root_password = globalDict['db_root_password']
+	#audit_db_name = globalDict['audit_db_name']
+	#audit_db_user = globalDict['audit_db_user']
+	#audit_db_password = globalDict['audit_db_password']
+	#audit_db_root_user = globalDict['db_root_user'] 
+	#audit_db_root_password = globalDict['db_root_password']
+	#print "Enter audit_db_root_password :"
+	audit_db_name=''
+	while audit_db_name == "":
+		log("Enter audit db name:","info")
+		audit_db_name = raw_input()
+
+	audit_db_user=''
+	while audit_db_user == "":
+		log("Enter audit user name:","info")
+		audit_db_user = raw_input()
+
+	audit_db_password=''
+	while audit_db_password == "":		
+		log("Enter audit db user password:","info")		
+		audit_db_password = getpass.getpass("Enter audit db user password:")
+
+	audit_db_root_user = xa_db_root_user	
+	audit_db_root_password = xa_db_root_password
+#	log("Enter audit db root user:","info")
+#	audit_db_root_user = raw_input()
+#	log("Enter db root password:","info")
+#	xa_db_root_password = raw_input()
 
 	if XA_DB_FLAVOR == "MYSQL":
-		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		#MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		#MYSQL_CONNECTOR_JAR='/usr/share/java/mysql-connector-java.jar'
+		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_version_file = os.path.join(os.getcwd(),mysql_dbversion_catalog)
 		xa_db_core_file = os.path.join(os.getcwd(),mysql_core_file)
 		xa_patch_file = os.path.join(os.getcwd(),mysql_patches)
 		
 	elif XA_DB_FLAVOR == "ORACLE":
-		ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+#		ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		#ORACLE_CONNECTOR_JAR='/usr/share/java/ojdbc6.jar'
+		ORACLE_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_db_root_user = xa_db_root_user+" AS SYSDBA"
 		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_version_file = os.path.join(os.getcwd(),oracle_dbversion_catalog)
@@ -1251,14 +891,18 @@ def main():
 		xa_patch_file = os.path.join(os.getcwd(),oracle_patches)
 
 	elif XA_DB_FLAVOR == "POSTGRES":
-		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+#		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		#POSTGRES_CONNECTOR_JAR='/usr/share/java/postgresql.jar'
+		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_version_file = os.path.join(os.getcwd(),postgres_dbversion_catalog)
 		xa_db_core_file = os.path.join(os.getcwd(),postgres_core_file)
 		xa_patch_file = os.path.join(os.getcwd(),postgres_patches)
 
 	elif XA_DB_FLAVOR == "SQLSERVER":
-		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+#		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		#SQLSERVER_CONNECTOR_JAR='/usr/share/java/sqljdbc4-2.0.jar'
+		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_version_file = os.path.join(os.getcwd(),sqlserver_dbversion_catalog)
 		xa_db_core_file = os.path.join(os.getcwd(),sqlserver_core_file)
@@ -1268,23 +912,31 @@ def main():
 		sys.exit(1)
 
 	if AUDIT_DB_FLAVOR == "MYSQL":
-		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+#		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		#MYSQL_CONNECTOR_JAR='/usr/share/java/mysql-connector-java.jar'
+		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = MysqlConf(audit_db_host,MYSQL_CONNECTOR_JAR,JAVA_BIN)
 		audit_db_file = os.path.join(os.getcwd(),mysql_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "ORACLE":
-		ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		#ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		#ORACLE_CONNECTOR_JAR='/usr/share/java/ojdbc6.jar'
+		ORACLE_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_db_root_user = audit_db_root_user+" AS SYSDBA"
 		audit_sqlObj = OracleConf(audit_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(os.getcwd(),oracle_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "POSTGRES":
-		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		#POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		#POSTGRES_CONNECTOR_JAR='/usr/share/java/postgresql.jar'
+		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = PostgresConf(audit_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(os.getcwd(),postgres_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "SQLSERVER":
-		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		#SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		#SQLSERVER_CONNECTOR_JAR='/usr/share/java/sqljdbc4-2.0.jar'
+		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = SqlServerConf(audit_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(os.getcwd(),sqlserver_audit_file)
 	else:
@@ -1300,24 +952,8 @@ def main():
 		log("[I] --------- Granting permission to Ranger Admin db user ---------","info")
 		xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, True)
 
-	log("[I] --------- Verifying Ranger DB connection ---------","info")
-	xa_sqlObj.check_connection(db_name, db_user, db_password)
-	log("[I] --------- Verifying Ranger DB tables ---------","info")
-	if xa_sqlObj.check_table(db_name, db_user, db_password, x_user):
-		pass
-	else:
-		log("[I] --------- Importing Ranger Core DB Schema ---------","info")
-		xa_sqlObj.import_db_file(db_name, db_user, db_password, xa_db_core_file)
-	log("[I] --------- Verifying upgrade history table ---------","info")
-	output = xa_sqlObj.check_table(db_name, db_user, db_password, x_db_version)
-	if output == False:
-		log("[I] --------- Creating version history table ---------","info")
-		xa_sqlObj.upgrade_db(db_name, db_user, db_password, xa_db_version_file)
-	log("[I] --------- Applying patches ---------","info")
-	xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
-
-	# Ranger Admin DB Host AND Ranger Audit DB Host are Different OR Same
-	#log("[I] --------- Verifying/Creating audit user --------- ","info")
-	audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, audit_db_file, xa_access_audit, DBA_MODE)
-
+		# Ranger Admin DB Host AND Ranger Audit DB Host are Different OR Same
+		log("[I] --------- Verifying/Creating audit user --------- ","info")
+		audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE)
+		log("[I] --------- Ranger Policy Manager DB and User Creation Process Completed..  --------- ","info")
 main()

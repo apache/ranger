@@ -17,7 +17,7 @@
 #
 # Ranger Admin Setup Script
 #
-# This script will install policymanager webapplication under tomcat and also, initialize the database with xasecure users/tables.
+# This script will install policymanager webapplication under tomcat and also, initialize the database with ranger users/tables.
 
 PROPFILE=$PWD/install.properties
 propertyValue=''
@@ -419,7 +419,7 @@ check_db_user_password() {
 		then
 			log "[E] Unable to continue as user, ${muser} does not have a non-empty password."
 		fi
-		printf "Please enter password for the XASecure schema owner (${muser}): "
+		printf "Please enter password for the Ranger schema owner (${muser}): "
 		trap 'stty echo; exit 1' 2 3 15
 		stty -echo
 		read db_password
@@ -444,7 +444,7 @@ check_audit_user_password() {
 		then
 			log "[E] Unable to continue as user, ${muser} does not have a non-empty password."
 		fi
-		printf "Please enter password for the XASecure Audit Table owner (${muser}): "
+		printf "Please enter password for the Ranger Audit Table owner (${muser}): "
 		trap 'stty echo; exit 1' 2 3 15
 		stty -echo
 		read audit_db_password
@@ -1377,7 +1377,7 @@ execute_java_patches(){
 	fi
 }
 init_logfiles
-log " --------- Running XASecure PolicyManager Web Application Install Script --------- "
+log " --------- Running Ranger PolicyManager Web Application Install Script --------- "
 log "[I] uname=`uname`"
 log "[I] hostname=`hostname`"
 init_variables
@@ -1396,8 +1396,12 @@ copy_db_connector
 #create_audit_db_user
 check_python_command
 $PYTHON_COMMAND_INVOKER db_setup.py
+if [ "$?" == "0" ]
+then
 update_properties
 do_authentication_setup
 execute_java_patches
-
-echo "Installation of XASecure PolicyManager Web Application is completed."
+else
+	exit 1
+fi
+echo "Installation of Ranger PolicyManager Web Application is completed."

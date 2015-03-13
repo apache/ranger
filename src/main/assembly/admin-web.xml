@@ -171,6 +171,7 @@
 			<include>setup_authentication.sh</include>
 			<include>set_globals.sh</include>
 			<include>db_setup.py</include>
+			<include>dba_script.py</include>
 		</includes>
 		<fileMode>544</fileMode>
 	</fileSet>
