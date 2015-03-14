@@ -1022,34 +1022,37 @@ public class ServiceREST {
 		int             httpCode = HttpServletResponse.SC_OK;
 		String          logMsg   = null;
 
-		try {
-			ret = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
-
-			if(ret == null) {
-				httpCode = HttpServletResponse.SC_NOT_MODIFIED;
-				logMsg   = "No change since last update";
-			} else {
-				httpCode = HttpServletResponse.SC_OK;
-				logMsg   = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
+		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
+			
+			try {
+				ret = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+	
+				if(ret == null) {
+					httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+					logMsg   = "No change since last update";
+				} else {
+					httpCode = HttpServletResponse.SC_OK;
+					logMsg   = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
+				}
+			} catch(Exception excp) {
+				LOG.error("getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed", excp);
+	
+				httpCode = HttpServletResponse.SC_BAD_REQUEST;
+				logMsg   = excp.getMessage();
+			} finally {
+				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, ret, httpCode, request);
 			}
-		} catch(Exception excp) {
-			LOG.error("getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed", excp);
-
-			httpCode = HttpServletResponse.SC_BAD_REQUEST;
-			logMsg   = excp.getMessage();
-		} finally {
-			createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, ret, httpCode, request);
-		}
-
-		if(httpCode != HttpServletResponse.SC_OK) {
-			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
-			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
-		}
-
+	
+			if(httpCode != HttpServletResponse.SC_OK) {
+				boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+				throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+			}
+		 }
+ 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
-
+   
 		return ret;
 	}
 
