@@ -183,6 +183,7 @@ public class RangerServiceValidator extends RangerValidator {
 				}
 			}
 			if (nameSpecified && serviceDef != null) {
+				// check if required parameters were specified
 				Set<String> reqiredParameters = getRequiredParameters(serviceDef);
 				Set<String> inputParameters = getServiceConfigParameters(service);
 				Set<String> missingParameters = Sets.difference(reqiredParameters, inputParameters);

@@ -33,6 +33,8 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.rest.RangerServiceValidator;
+import org.apache.ranger.rest.ValidationFailureDetails;
 import org.apache.ranger.rest.RangerValidator.Action;
 import org.junit.Before;
 import org.junit.Test;

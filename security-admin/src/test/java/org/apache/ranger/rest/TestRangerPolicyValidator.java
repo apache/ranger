@@ -21,6 +21,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.rest.RangerPolicyValidator;
+import org.apache.ranger.rest.ValidationFailureDetails;
 import org.apache.ranger.rest.RangerValidator.Action;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,20 +63,25 @@ public class TestRangerPolicyValidator {
 	String[] accessTypes = new String[] { "r", "w", "x", "A" };  // mix of lower and upper case
 	String[] accessTypes_bad = new String[] { "r", "w", "xx", }; // two missing (x, a), one new that isn't on bad (xx)
 	
-	final Object[][] resourceDefData = new Object[][] {
-			{ "db", true, "db\\d+" },        // valid: db1, db22, db983, etc.; invalid: db, db12x, ttx11, etc.
-			{ "tbl", true, null },           // anything goes
-			{ "col", false, "col\\d{1,2}" }  // valid: col1, col47, etc.; invalid: col, col238, col1, etc.
+	private final Object[][] resourceDefData = new Object[][] {
+			// { name, mandatory, reg-exp, excludesSupported, recursiveSupported }
+			{ "db", true, "db\\d+", null, null }, // valid values: db1, db22, db983, etc.; invalid: db, db12x, ttx11, etc.; null => false for excludes and recursive
+			{ "tbl", true, null, true, true }, // regex == null => anything goes; excludes == true, recursive == true
+			{ "col", false, "col\\d{1,2}", false, true }  // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true 
 	};
 	
-	final Map<String, String[]> policyResourceMap_good = ImmutableMap.of(
-			"db", new String[] { "db1", "db2" },
-			"TBL", new String[] { "tbl1", "tbl2" } ); // case should not matter
+	private final Object[][] policyResourceMap_good = new Object[][] {
+			// resource-name, values, excludes, recursive
+			{ "db", new String[] { "db1", "db2" }, null, null },
+			{ "TBL", new String[] { "tbl1", "tbl2" }, true, false } // case should not matter
+	};
 	
-	final Map<String, String[]> policyResourceMap_bad = ImmutableMap.of(
-			"db", new String[] { "db1", "db2" },            // mandatory "tbl" missing
-			"col", new String[] { "col12", "col 1" },       // wrong format of value for "col"
-			"extra", new String[] { "extra1", "extra2" } ); // spurious "extra" specified
+	private final Object[][] policyResourceMap_bad = new Object[][] {
+			// resource-name, values, excludes, recursive
+			{ "db", new String[] { "db1", "db2" }, null, true },        // mandatory "tbl" missing; recursive==true specified when resource-def does not support it (null) 
+			{"col", new String[] { "col12", "col 1" }, true, true },    // wrong format of value for "col"; excludes==true specified when resource-def does not allow it (false)
+			{"extra", new String[] { "extra1", "extra2" }, null, null } // spurious "extra" specified
+	};
 
 	@Test
 	public final void testIsValid_long() throws Exception {
@@ -332,6 +339,8 @@ public class TestRangerPolicyValidator {
 			_utils.checkFailureForMissingValue(_failures, "resources", "tbl"); // for missing resource: tbl
 			_utils.checkFailureForSemanticError(_failures, "resources", "extra"); // for spurious resource: "extra"
 			_utils.checkFailureForSemanticError(_failures, "resource-values", "col"); // for spurious resource: "extra"
+			_utils.checkFailureForSemanticError(_failures, "isRecursive", "db"); // for specifying it as true when def did not allow it
+			_utils.checkFailureForSemanticError(_failures, "isExcludes", "col"); // for specifying it as true when def did not allow it
 		}
 	}
 	
@@ -461,6 +470,49 @@ public class TestRangerPolicyValidator {
 		when(access.getType()).thenReturn("newAccessType"); // invalid
 		_failures.clear(); assertFalse(_validator.isValidPolicyItemAccess(access, _failures, validAccesses));
 		_utils.checkFailureForSemanticError(_failures, "policy item access type");
+	}
+	
+	final Object[][] resourceDef_happyPath = new Object[][] {
+			// { "resource-name", "isExcludes", "isRecursive" }
+			{ "db", true, true },
+			{ "tbl", null, true },
+			{ "col", true, false },
+	};
+	
+	private Object[][] policyResourceMap_happyPath = new Object[][] {
+			// { "resource-name", "isExcludes", "isRecursive" }
+			{ "db", null, true },    // null should be treated as false
+			{ "tbl", false, false }, // set to false where def is null and def is true  
+			{ "col", true, null}     // set to null where def is false
+	};
+	
+	@Test
+	public final void test_isValidResourceFlags_happyPath() {
+		// passing null values effectively bypasses the filter
+		assertTrue(_validator.isValidResourceFlags(null, _failures, null, "a-service-def", "a-policy"));
+		// so does passing in empty collections
+		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap2(policyResourceMap_happyPath);
+		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs2(resourceDef_happyPath);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		assertTrue(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy"));
+	}
+
+	private Object[][] policyResourceMap_failures = new Object[][] {
+			// { "resource-name", "isExcludes", "isRecursive" }
+			{ "db", true, true },    // ok: def has true for both  
+			{ "tbl", true, null },   // excludes: def==false, policy==true  
+			{ "col", false, true }    // recursive: def==null (i.e. false), policy==true
+	};
+	
+	@Test
+	public final void test_isValidResourceFlags_failures() {
+		// passing true when def says false/null
+		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs2(resourceDef_happyPath);
+		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap2(policyResourceMap_failures);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		assertFalse(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy"));
+		_utils.checkFailureForSemanticError(_failures, "isExcludes", "tbl");
+		_utils.checkFailureForSemanticError(_failures, "isRecursive", "col");
 	}
 
 	private ValidationTestUtils _utils = new ValidationTestUtils();

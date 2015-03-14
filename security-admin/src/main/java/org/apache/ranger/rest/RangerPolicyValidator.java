@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -15,6 +15,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 
 import com.google.common.collect.Sets;
@@ -226,10 +227,8 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = false;
 				}
 				Map<String, RangerPolicyResource> resourceMap = policy.getResources();
-				// errors about if empty resource collection is ok or not has already happened above, this check is still needed 
-				if (resourceMap != null && !resourceMap.isEmpty()) {
-					valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
-				}
+				valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
+				valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDefName, policyName) && valid;
 			}
 		}
 		
@@ -239,6 +238,75 @@ public class RangerPolicyValidator extends RangerValidator {
 		return valid;
 	}
 	
+	boolean isValidResourceFlags(final Map<String, RangerPolicyResource> inputPolicyResources, final List<ValidationFailureDetails> failures,
+			final List<RangerResourceDef> resourceDefs, final String serviceDefName, final String policyName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerPolicyValidator.isValidResourceFlags(%s, %s, %s, %s, %s)", inputPolicyResources, failures, resourceDefs, serviceDefName, policyName));
+		}
+
+		boolean valid = true;
+		if (inputPolicyResources == null) {
+			LOG.debug("isValidResourceFlags: resourceMap is null");
+		} else if (resourceDefs == null) {
+			LOG.debug("isValidResourceFlags: service Def is null");
+		} else {
+			Map<String, RangerPolicyResource> policyResources = getPolicyResourceWithLowerCaseKeys(inputPolicyResources);
+			for (RangerResourceDef resourceDef : resourceDefs) {
+				if (resourceDef == null) {
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("resource-def")
+						.isAnInternalError()
+						.becauseOf("a resource-def on resource def collection of service-def[" + serviceDefName + "] was null")
+						.build());
+					valid = false;
+				} else if (StringUtils.isBlank(resourceDef.getName())) {
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("resource-def-name")
+						.isAnInternalError()
+						.becauseOf("name of a resource-def on resource def collection of service-def[" + serviceDefName + "] was null")
+						.build());
+					valid = false;
+				} else {
+					String resourceName = resourceDef.getName().toLowerCase();
+					RangerPolicyResource policyResource = policyResources.get(resourceName);
+					if (policyResource == null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("a policy-resource object for resource[" + resourceName + "] on policy [" + policyName + "] was null");
+						}
+					} else {
+						boolean excludesSupported = Boolean.TRUE.equals(resourceDef.getExcludesSupported()); // could be null
+						boolean policyIsExcludes = Boolean.TRUE.equals(policyResource.getIsExcludes()); // could be null
+						if (policyIsExcludes && !excludesSupported) {
+							failures.add(new ValidationFailureDetailsBuilder()
+								.field("isExcludes")
+								.subField(resourceName)
+								.isSemanticallyIncorrect()
+								.becauseOf("isExcludes specified as [" + policyIsExcludes + "] for resource [" + resourceName + "] which doesn't support isExcludes")
+								.build());
+							valid = false;
+						}
+						boolean recursiveSupported = Boolean.TRUE.equals(resourceDef.getRecursiveSupported());
+						boolean policyIsRecursive = Boolean.TRUE.equals(policyResource.getIsRecursive());
+						if (policyIsRecursive && !recursiveSupported) {
+							failures.add(new ValidationFailureDetailsBuilder()
+								.field("isRecursive")
+								.subField(resourceName)
+								.isSemanticallyIncorrect()
+								.becauseOf("isRecursive specified as [" + policyIsRecursive + "] for resource [" + resourceName + "] which doesn't support isRecursive")
+								.build());
+							valid = false;
+						}
+					}
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceFlags(%s, %s, %s, %s, %s): %s", inputPolicyResources, failures, resourceDefs, serviceDefName, policyName, valid));
+		}
+		return valid;
+	}
+
 	boolean isValidResourceValues(Map<String, RangerPolicyResource> resourceMap, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerPolicyValidator.isValidResourceValues(%s, %s, %s)", resourceMap, failures, serviceDef));

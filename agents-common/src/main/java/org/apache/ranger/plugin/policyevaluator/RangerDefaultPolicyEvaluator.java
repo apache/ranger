@@ -19,13 +19,7 @@
 
 package org.apache.ranger.plugin.policyevaluator;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-
+import com.google.common.base.Strings;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -47,7 +41,7 @@ import org.apache.ranger.plugin.policyengine.RangerResource;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
-import com.google.common.base.Strings;
+import java.util.*;
 
 
 public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator {
@@ -92,7 +86,13 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
-	/**
+    public Map<String, RangerConditionEvaluator> getConditionEvaluators() {
+        return conditionEvaluators;
+    }
+    public int computePriority() { return 0;}
+
+
+    /**
 	 * Non-private only for testability.
 	 * @param policy
 	 * @param serviceDef
@@ -129,7 +129,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 							if (Strings.isNullOrEmpty(evaluatorClassName)) {
 								LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't get condition evaluator class name for condition[" + conditionName + "]!  Disabling all checks for this condition.");
 							} else {
-								RangerConditionEvaluator anEvaluator = newConditionEvauator(evaluatorClassName);
+								RangerConditionEvaluator anEvaluator = newConditionEvaluator(evaluatorClassName);
 								if (anEvaluator == null) {
 									LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't instantiate condition evaluator for class[" + evaluatorClassName + "].  All checks for condition[" + conditionName + "] disabled.");
 								} else {
@@ -179,9 +179,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return result;
 	}
 
-	RangerConditionEvaluator newConditionEvauator(String className) {
+	RangerConditionEvaluator newConditionEvaluator(String className) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerDefaultPolicyEvaluator.newConditionEvauator(%s)", className));
+			LOG.debug(String.format("==> RangerDefaultPolicyEvaluator.newConditionEvaluator(%s)", className));
 		}
 
 		RangerConditionEvaluator evaluator = null;
@@ -195,91 +195,134 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerDefaultPolicyEvaluator.newConditionEvauator(%s)", evaluator == null ? null : evaluator.toString()));
+			LOG.debug(String.format("<== RangerDefaultPolicyEvaluator.newConditionEvaluator(%s)", evaluator == null ? null : evaluator.toString()));
 		}
 		return evaluator;
 	}
 
 	@Override
-	public void evaluate(RangerAccessRequest request, RangerAccessResult result) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
-		}
+    public void evaluate(RangerAccessRequest request, RangerAccessResult result) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
+        }
+        RangerPolicy policy = getPolicy();
 
-		RangerPolicy policy = getPolicy();
+        if (policy != null && request != null && result != null) {
 
-		if(policy != null && request != null && result != null) {
-			boolean isResourceMatch     = isMatch(request.getResource());
-			boolean isResourceHeadMatch = isResourceMatch || matchResourceHead(request.getResource());
-			String  accessType          = request.getAccessType();
+            String accessType = request.getAccessType();
+            if (StringUtils.isEmpty(accessType)) {
+                accessType = RangerPolicyEngine.ANY_ACCESS;
+            }
+            boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
 
-			if(StringUtils.isEmpty(accessType)) {
-				accessType = RangerPolicyEngine.ANY_ACCESS;
-			}
+            boolean isMatchAttempted = false;
+            boolean matchResult = false;
+            boolean headMatchResult = false;
 
-			boolean isAnyAccess   = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
-			boolean isAdminAccess = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
+            if (!result.getIsAuditedDetermined()) {
+                // Need to match request.resource first. If it matches (or head matches), then only more progress can be made
+                matchResult = isMatch(request.getResource());
+                isMatchAttempted = true;
 
-			if(isResourceMatch || (isResourceHeadMatch && isAnyAccess)) {
-				if(policy.getIsAuditEnabled()) {
-					result.setIsAudited(true);
-				}
+                if (matchResult) {
+                    // Do all stuff.
+                    if (policy.getIsAuditEnabled()) {
+                        result.setIsAudited(true);
+                    }
+                }
+            }
 
-				for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-					if(isAdminAccess) {
-						if(policyItem.getDelegateAdmin()) {
-							result.setIsAllowed(true);
-							result.setPolicyId(policy.getId());
-							break;
-						}
+            if (!result.getIsAccessDetermined()) {
+                if (!isMatchAttempted) {
+                    // Need to match request.resource first. If it matches (or head matches), then only more progress can be made
+                    matchResult = isMatch(request.getResource());
+                    isMatchAttempted = true;
+                }
 
-						continue;
-					}
+                // Try head match only if it is useful
+                if (isAnyAccess) {
+                    headMatchResult = matchResult || matchResourceHead(request.getResource());
+                }
 
-					if(CollectionUtils.isEmpty(policyItem.getAccesses())) {
-						continue;
-					}
+                if (matchResult || (isAnyAccess && headMatchResult)) {
+                    // A match was found earlier
+                    evaluatePolicyItemsForAccess(request, result);
+                }
+            }
+        }
 
-					boolean isUserGroupMatch = matchUserGroup(policyItem, request.getUser(), request.getUserGroups());
-
-					if(! isUserGroupMatch) {
-						continue;
-					}
-
-					boolean isCustomConditionsMatch = matchCustomConditions(policyItem, request, conditionEvaluators);
-
-					if(! isCustomConditionsMatch) {
-						continue;
-					}
-
-					if(isAnyAccess) {
-						for(RangerPolicyItemAccess access : policyItem.getAccesses()) {
-							if(access.getIsAllowed()) {
-								result.setIsAllowed(true);
-								result.setPolicyId(policy.getId());
-								break;
-							}
-						}
-					} else {
-						RangerPolicyItemAccess access = getAccess(policyItem, accessType);
-
-						if(access != null && access.getIsAllowed()) {
-							result.setIsAllowed(true);
-							result.setPolicyId(policy.getId());
-						}
-					}
-
-					if(result.getIsAllowed()) {
-						break;
-					}
-				}
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
+        if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
 		}
 	}
+
+    protected void evaluatePolicyItemsForAccess(RangerAccessRequest request, RangerAccessResult result) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItemsForAccess()");
+        }
+        String accessType = request.getAccessType();
+        if (StringUtils.isEmpty(accessType)) {
+            accessType = RangerPolicyEngine.ANY_ACCESS;
+        }
+        boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
+        boolean isAdminAccess = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
+
+        for (RangerPolicy.RangerPolicyItem policyItem : getPolicy().getPolicyItems()) {
+
+            boolean isUserGroupMatch = matchUserGroup(policyItem, request.getUser(), request.getUserGroups());
+
+            if (!isUserGroupMatch) {
+                continue;
+            }
+            // This is only for Grant and Revoke access requests sent by the component. For those cases
+            // Our plugin will fill in the accessType as ADMIN_ACCESS.
+
+            if (isAdminAccess) {
+                if (policyItem.getDelegateAdmin()) {
+                    result.setIsAllowed(true);
+                    result.setPolicyId(getPolicy().getId());
+                    break;
+                }
+                continue;
+            }
+
+            if (CollectionUtils.isEmpty(policyItem.getAccesses())) {
+                continue;
+            }
+
+            boolean accessAllowed = false;
+            if (isAnyAccess) {
+                for (RangerPolicy.RangerPolicyItemAccess access : policyItem.getAccesses()) {
+                    if (access.getIsAllowed()) {
+                        accessAllowed = true;
+                        break;
+                    }
+                }
+            } else {
+                RangerPolicy.RangerPolicyItemAccess access = getAccess(policyItem, accessType);
+
+                if (access != null && access.getIsAllowed()) {
+                    accessAllowed = true;
+                }
+            }
+            if (accessAllowed == false) {
+                continue;
+            }
+
+            boolean isCustomConditionsMatch = matchCustomConditions(policyItem, request, getConditionEvaluators());
+
+            if (!isCustomConditionsMatch) {
+                continue;
+            }
+
+            result.setIsAllowed(true);
+            result.setPolicyId(getPolicy().getId());
+            break;
+        }
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerDefaultPolicyEvaluator.evaluatePolicyItemsForAccess()");
+        }
+    }
 
 	@Override
 	public boolean isMatch(RangerResource resource) {
@@ -554,7 +597,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.createResourceMatcher(" + resourceDef + ", " + resource + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyEvaluator.createResourceMatcher(" + resourceDef + ", " + resource + "): " + ret);
 		}
 
 		return ret;

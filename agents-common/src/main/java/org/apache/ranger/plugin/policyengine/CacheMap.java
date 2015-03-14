@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,21 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.ranger.plugin.policyengine;
 
-package org.apache.ranger.rest;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import org.apache.ranger.plugin.store.ServiceStore;
 
-public class RangerValidatorFactory {
-	public RangerServiceValidator getServiceValidator(ServiceStore store) {
-		return new RangerServiceValidator(store);
-	}
+public class CacheMap<K, V> extends LinkedHashMap<K, V> {
+    private static final float RANGER_CACHE_DEFAULT_LOAD_FACTOR = 0.75f;
 
-	public RangerPolicyValidator getPolicyValidator(ServiceStore store) {
-		return new RangerPolicyValidator(store);
-	}
+    protected int maxCapacity;
 
-	public RangerServiceDefValidator getServiceDefValidator(ServiceStore store) {
-		return new RangerServiceDefValidator(store);
-	}
+    public CacheMap(int maxCapacity) {
+        super(maxCapacity, CacheMap.RANGER_CACHE_DEFAULT_LOAD_FACTOR, true); // true for access-order
+
+        this.maxCapacity = maxCapacity;
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Map.Entry eldest) {
+        return size() > maxCapacity;
+    }
 }

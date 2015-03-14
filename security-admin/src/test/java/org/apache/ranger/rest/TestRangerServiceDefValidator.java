@@ -15,6 +15,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.rest.RangerServiceDefValidator;
+import org.apache.ranger.rest.ValidationFailureDetails;
 import org.apache.ranger.rest.RangerValidator.Action;
 import org.junit.Before;
 import org.junit.Test;
