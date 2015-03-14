@@ -1,4 +1,4 @@
-package org.apache.ranger.rest;
+package org.apache.ranger.plugin.model.validation;
 
 
 import static org.junit.Assert.assertFalse;
@@ -14,10 +14,10 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
+import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.rest.RangerServiceDefValidator;
-import org.apache.ranger.rest.ValidationFailureDetails;
-import org.apache.ranger.rest.RangerValidator.Action;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.rest;
+package org.apache.ranger.plugin.model.validation;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -32,10 +32,10 @@ import java.util.Map;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
+import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.rest.RangerServiceValidator;
-import org.apache.ranger.rest.ValidationFailureDetails;
-import org.apache.ranger.rest.RangerValidator.Action;
 import org.junit.Before;
 import org.junit.Test;
 

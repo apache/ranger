@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.rest;
+package org.apache.ranger.plugin.model.validation;
 
 public class ValidationFailureDetailsBuilder {
 	private String _fieldName;

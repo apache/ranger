@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.rest;
+package org.apache.ranger.plugin.model.validation;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -41,7 +41,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.apache.ranger.rest.ValidationFailureDetails;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 
 public class ValidationTestUtils {
 	

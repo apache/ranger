@@ -1,4 +1,4 @@
-package org.apache.ranger.rest;
+package org.apache.ranger.plugin.model.validation;
 
 import java.util.ArrayList;
 import java.util.Collection;

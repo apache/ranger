@@ -38,8 +38,12 @@ import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
+import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
+import org.apache.ranger.plugin.model.validation.RangerValidatorFactory;
+import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.rest.ServiceREST;
-import org.apache.ranger.rest.RangerValidator.Action;
 import org.junit.Before;
 import org.junit.Test;
 
