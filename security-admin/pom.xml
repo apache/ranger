@@ -323,49 +323,6 @@
     		<artifactId>jackson-mapper-asl</artifactId>
     		<version>${codehaus.jackson.version}</version>
 		</dependency>
-		<dependency>
-		<groupId>org.apache.ranger</groupId>
-    		<artifactId>lookup-client</artifactId>
-    		<version>${project.version}</version>
-           <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>tomcat</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.geronimo.specs</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-		</dependency>
-		<dependency>
-			<groupId>security_plugins.ranger-hdfs-plugin</groupId>
-			<artifactId>ranger-hdfs-plugin</artifactId>
-        	<version>${project.version}</version>
-   		</dependency>
-   		<dependency>
-			<groupId>security_plugins.ranger-hbase-plugin</groupId>
-			<artifactId>ranger-hbase-plugin</artifactId>
-        	<version>${project.version}</version>
-   		</dependency>
-   		<dependency>
-			<groupId>security_plugins.ranger-hive-plugin</groupId>
-			<artifactId>ranger-hive-plugin</artifactId>
-        	<version>${project.version}</version>
-   		</dependency>
-   		<dependency>
-			<groupId>security_plugins.ranger-yarn-plugin</groupId>
-			<artifactId>ranger-yarn-plugin</artifactId>
-        	<version>${project.version}</version>
-   		</dependency>
 		<!--  
 		<dependency>
 		<groupId>org.apache.ranger</groupId>

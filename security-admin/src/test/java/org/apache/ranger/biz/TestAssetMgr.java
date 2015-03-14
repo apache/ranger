@@ -111,9 +111,6 @@ public class TestAssetMgr {
 	@Mock
 	RangerBizUtil xaBizUtil;
 	
-	@Mock 
-	AssetConnectionMgr assetConnectionMgr;
-	
 	@Mock
 	XPolicyService xPolicyService;
 	

@@ -49,6 +49,135 @@
 
     <moduleSet>
      <binaries>
+        <includeDependencies>true</includeDependencies>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/hdfs</outputDirectory>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <dependencySets>
+          <dependencySet>
+            <includes>
+              <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop-common.version}</include>
+              <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
+              <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
+            </includes>
+          </dependencySet>
+        </dependencySets>
+     </binaries>
+     <includes>
+       <include>security_plugins.ranger-hdfs-plugin:ranger-hdfs-plugin</include>
+     </includes>
+    </moduleSet>
+
+    <moduleSet>
+     <binaries>
+        <includeDependencies>true</includeDependencies>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/hive</outputDirectory>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <dependencySets>
+          <dependencySet>
+            <includes>
+              <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
+            </includes>
+          </dependencySet>
+        </dependencySets>
+     </binaries>
+     <includes>
+       <include>security_plugins.ranger-hive-plugin:ranger-hive-plugin</include>
+     </includes>
+    </moduleSet>
+
+    <moduleSet>
+     <binaries>
+        <includeDependencies>true</includeDependencies>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/hbase</outputDirectory>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <dependencySets>
+          <dependencySet>
+            <includes>
+              <include>org.apache.hbase:hbase-server:jar:${hbase.version}</include>
+              <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop-common.version}</include>
+              <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
+              <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
+            </includes>
+          </dependencySet>
+        </dependencySets>
+     </binaries>
+     <includes>
+       <include>security_plugins.ranger-hbase-plugin:ranger-hbase-plugin</include>
+     </includes>
+    </moduleSet>
+
+    <moduleSet>
+     <binaries>
+        <includeDependencies>true</includeDependencies>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/knox</outputDirectory>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <dependencySets>
+          <dependencySet>
+            <includes>
+              <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
+              <include>commons-collections:commons-collections:jar:${commons.collections.version}</include>
+              <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
+              <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
+            </includes>
+          </dependencySet>
+        </dependencySets>
+     </binaries>
+     <includes>
+       <include>security_plugins.ranger-knox-plugin:ranger-knox-plugin</include>
+     </includes>
+    </moduleSet>
+
+    <moduleSet>
+     <binaries>
+        <includeDependencies>true</includeDependencies>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/storm</outputDirectory>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <dependencySets>
+          <dependencySet>
+            <includes>
+              <include>org.apache.storm:storm-core:jar:0.9.2-incubating</include>
+            </includes>
+          </dependencySet>
+        </dependencySets>
+     </binaries>
+     <includes>
+       <include>security_plugins.ranger-storm-plugin:ranger-storm-plugin</include>
+     </includes>
+    </moduleSet>
+
+    <moduleSet>
+     <binaries>
+        <includeDependencies>true</includeDependencies>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/yarn</outputDirectory>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <dependencySets>
+          <dependencySet>
+            <includes>
+              <include>org.apache.hadoop:hadoop-yarn-api:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-yarn-common:jar:${hadoop.version}</include>
+            </includes>
+          </dependencySet>
+        </dependencySets>
+     </binaries>
+     <includes>
+       <include>security_plugins.ranger-yarn-plugin:ranger-yarn-plugin</include>
+     </includes>
+    </moduleSet>
+
+    <moduleSet>
+     <binaries>
         <includeDependencies>false</includeDependencies>
         <outputDirectory>/ews/lib</outputDirectory>
         <unpack>false</unpack>

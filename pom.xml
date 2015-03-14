@@ -88,7 +88,6 @@
   <module>knox-agent</module>
   <module>storm-agent</module>
   <module>plugin-yarn</module>
-  <module>lookup-client</module>
   <module>security-admin</module>
   <module>ugsync</module>
   <module>unixauthclient</module>

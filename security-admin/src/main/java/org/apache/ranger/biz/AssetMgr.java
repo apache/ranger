@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -50,7 +48,6 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.TimedEventUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
@@ -62,11 +59,6 @@ import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.hadoop.client.HadoopFS;
-import org.apache.ranger.hadoop.client.exceptions.HadoopException;
-import org.apache.ranger.hbase.client.HBaseClient;
-import org.apache.ranger.hive.client.HiveClient;
-import org.apache.ranger.knox.client.KnoxClient;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XGroupService;
@@ -74,14 +66,12 @@ import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XTrxLogService;
 import org.apache.ranger.service.XUserService;
-import org.apache.ranger.storm.client.StormClient;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXAsset;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
 import org.apache.ranger.view.VXLong;
-import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXPolicy;
@@ -116,9 +106,6 @@ public class AssetMgr extends AssetMgrBase {
 
 	@Autowired
 	JSONUtil jsonUtil;
-
-	@Autowired
-	AssetConnectionMgr assetConnectionMgr;
 
 	@Autowired
 	RangerBizUtil msBizUtil;
@@ -725,62 +712,6 @@ public class AssetMgr extends AssetMgrBase {
 		return file;
 	}
 
-	public VXStringList getHdfsResources(final String dataSourceName,
-			String baseDir) {
-		if (dataSourceName != null && baseDir != null) {
-			List<String> strList = new ArrayList<String>();
-			try {
-				String wildCardToMatch;
-				final HadoopFS hdfsClient = assetConnectionMgr
-						.getHadoopConnection(dataSourceName);
-
-				if (hdfsClient != null) {
-					Integer lastIndex = baseDir.lastIndexOf("/");
-					if (lastIndex < 0) {
-						wildCardToMatch = baseDir + "*";
-						baseDir = "/";
-					} else if (lastIndex == 0 && baseDir.length() == 1) {
-						wildCardToMatch = null;
-						baseDir = "/";
-					} else if ((lastIndex + 1) == baseDir.length()) {
-						wildCardToMatch = null;
-						baseDir = baseDir.substring(0, lastIndex + 1);
-					} else {
-						wildCardToMatch = baseDir.substring(lastIndex + 1)
-								+ "*";
-						baseDir = baseDir.substring(0, lastIndex + 1);
-					}
-
-					final String finalBaseDir = baseDir;
-					final String finalWildCardToMatch = wildCardToMatch;
-					final Callable<List<String>> callableObj = new Callable<List<String>>() {
-
-						@Override
-						public List<String> call() throws Exception {
-							return hdfsClient.listFiles(finalBaseDir,
-									finalWildCardToMatch);
-						}
-
-					};
-
-					strList = TimedEventUtil.timedTask(callableObj, 5,
-							TimeUnit.SECONDS); // If
-					// strList = hdfsClient.listFiles(finalBaseDir,
-					// finalWildCardToMatch);
-					logger.debug("Resource dir : " + baseDir
-							+ " wild card to match : " + wildCardToMatch
-							+ "\n Matching resources : " + strList);
-				}
-			} catch (Exception e) {
-				logger.error("Unable to get hdfs resources.", e);
-			}
-
-			return msBizUtil.mapStringListToVStringList(strList);
-		} else {
-			return new VXStringList();
-		}
-	}
-
 	public String getLatestRepoPolicy(VXAsset xAsset, List<VXResource> xResourceList, Long updatedTime,
 			X509Certificate[] certchain, boolean httpEnabled, String epoch,
 			String ipAddress, boolean isSecure, String count, String agentId) {
@@ -1090,77 +1021,6 @@ public class AssetMgr extends AssetMgrBase {
 		return updatedPolicyStr;
 	}
 
-	public VXStringList getHiveResources(final String dataSourceName,
-			String databaseName, String tableName, String columnName) {
-
-		List<String> resultList = new ArrayList<String>();
-		if (dataSourceName != null) {
-			final HiveClient hiveClient = assetConnectionMgr
-					.getHiveConnection(dataSourceName);
-
-			try {
-				final Callable<List<String>> callableObj;
-				final String finalDbName;
-				final String finalColName;
-				final String finalTableName;
-
-				if (hiveClient != null && databaseName != null
-						&& !databaseName.isEmpty()) {
-					if (tableName != null && !tableName.isEmpty()) {
-						if (columnName != null && !columnName.isEmpty()) {
-							columnName += "*";
-							finalColName = columnName;
-							finalDbName = databaseName;
-							finalTableName = tableName;
-
-							callableObj = new Callable<List<String>>() {
-								@Override
-								public List<String> call() {
-									return hiveClient.getColumnList(
-											finalDbName, finalTableName,
-											finalColName);
-								}
-							};
-						} else {
-							tableName += "*";
-							finalTableName = tableName;
-							finalDbName = databaseName;
-							callableObj = new Callable<List<String>>() {
-
-								@Override
-								public List<String> call() {
-									return hiveClient.getTableList(finalDbName,
-											finalTableName);
-								}
-							
-							};
-						}
-					} else {
-						databaseName += "*";
-						finalDbName = databaseName;
-						callableObj = new Callable<List<String>>() {
-							@Override
-							public List<String> call() {
-								return hiveClient.getDatabaseList(finalDbName);
-							}
-						};
-
-					}
-
-					synchronized (hiveClient) {
-						resultList = TimedEventUtil.timedTask(callableObj, 5,
-								TimeUnit.SECONDS);
-					}
-
-				}
-			} catch (Exception e) {
-				logger.error("Unable to get hive resources.", e);
-			}
-		}
-
-		return msBizUtil.mapStringListToVStringList(resultList);
-	}
-
 	@Override
 	public VXAsset createXAsset(VXAsset vXAsset) {
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
@@ -1331,8 +1191,6 @@ public class AssetMgr extends AssetMgrBase {
 			vXAsset = (VXAsset) xAssetService.updateResource(vXAsset);
 			// update default policy permission and user
 			updateDefaultPolicy(vXAsset, vXAsset.getConfig());
-			// TODO this should reset the connection
-			assetConnectionMgr.destroyConnection(vXAsset);
 			// TODO : Log in transaction log table
 			xaBizUtil.createTrxLog(trxLogList);
 			return vXAsset;
@@ -1375,292 +1233,6 @@ public class AssetMgr extends AssetMgrBase {
 					"serverMsg.modelMgrBaseDeleteModel",
 					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
 		}
-	}
-
-	public VXStringList getHBaseResources(final String dataSourceName,
-			String tableName, String columnFamilies) {
-
-		List<String> resultList = new ArrayList<String>();
-		if (dataSourceName != null) {
-			final HBaseClient hBaseClient = assetConnectionMgr
-					.getHBaseConnection(dataSourceName);
-
-			try {
-				final Callable<List<String>> callableObj;
-				if (hBaseClient != null && tableName != null
-						&& !tableName.isEmpty()) {
-					final String finalColFamilies;
-					final String finalTableName;
-
-					if (columnFamilies != null && !columnFamilies.isEmpty()) {
-						if (!columnFamilies.endsWith("*")) {
-							columnFamilies += "*";
-						}
-
-						columnFamilies = columnFamilies.replaceAll("\\*",
-								".\\*");
-						finalColFamilies = columnFamilies;
-						finalTableName = tableName;
-
-						callableObj = new Callable<List<String>>() {
-							@Override
-							public List<String> call() {
-								return hBaseClient.getColumnFamilyList(
-										finalTableName, finalColFamilies);
-							}
-						};
-
-					} else {
-						if (!tableName.endsWith("*")) {
-							tableName += "*";
-						}
-
-						tableName = tableName.replaceAll("\\*", ".\\*");
-						finalTableName = tableName;
-
-						callableObj = new Callable<List<String>>() {
-							@Override
-							public List<String> call() {
-								return hBaseClient.getTableList(finalTableName);
-							}
-						};
-
-					}
-					resultList = TimedEventUtil.timedTask(callableObj, 5,
-							TimeUnit.SECONDS);
-				}
-
-			} catch (Exception e) {
-				logger.error("Unable to get hbase resources.", e);
-			}
-		}
-
-		return msBizUtil.mapStringListToVStringList(resultList);
-	}
-	
-	public VXStringList getKnoxResources(
-			String knoxUrl,String knoxAdminUser, String knoxAdminPassword, 
-			String topologyName, String serviceName) {
-		List<String> resultList = new ArrayList<String>();
-		if (knoxUrl == null || knoxUrl.isEmpty()) {
-			logger.error("Unable to get knox resources: knoxUrl is empty");
-			return msBizUtil.mapStringListToVStringList(resultList);
-		} else if (knoxAdminUser == null || knoxAdminUser.isEmpty()) {
-			logger.error("Unable to get knox resources: knoxAdminUser is empty");
-			return msBizUtil.mapStringListToVStringList(resultList);
-		} else if (knoxAdminPassword == null || knoxAdminPassword.isEmpty()) {
-			logger.error("Unable to get knox resources: knoxAdminPassword is empty");
-			return msBizUtil.mapStringListToVStringList(resultList);
-		}
-
-		final KnoxClient knoxClient = assetConnectionMgr
-				.getKnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
-		VXStringList knoxResources = getKnoxResources(knoxClient, topologyName, serviceName);
-		return  knoxResources;
-	}
-	
-	public VXStringList getKnoxResources(final String dataSourceName,
-			String topologyName, String serviceName) {
-		List<String> resultList = new ArrayList<String>();
-		if (dataSourceName == null || dataSourceName.isEmpty()) {
-			logger.error("Unable to get knox resources: dataSourceName is null");
-			return msBizUtil.mapStringListToVStringList(resultList);
-		}
-
-		final KnoxClient knoxClient = assetConnectionMgr
-				.getKnoxClient(dataSourceName);
-		VXStringList knoxResources = getKnoxResources(knoxClient, topologyName, serviceName);
-		return  knoxResources;
-	}
-	
-	
-	public VXStringList getKnoxResources(final KnoxClient knoxClient,
-			String topologyName, String serviceName) {
-
-		List<String> resultList = new ArrayList<String>();
-
-		try {
-			if (knoxClient == null) {
-				logger.error("Unable to get knox resources: knoxClient is null");
-				return msBizUtil.mapStringListToVStringList(resultList);
-			}
-
-			final Callable<List<String>> callableObj;
-			if (serviceName != null)  {
-				final String finalServiceNameMatching = serviceName.trim();
-				final String finalTopologyName = topologyName;
-				callableObj = new Callable<List<String>>() {
-					@Override
-					public List<String> call() {
-						return knoxClient.getServiceList(finalTopologyName,
-								finalServiceNameMatching);
-					}
-				};
-
-			} else {
-				final String finalTopologyNameMatching = (topologyName == null) ?
-						"" : topologyName.trim();
-				callableObj = new Callable<List<String>>() {
-					@Override
-					public List<String> call() {
-						return knoxClient.getTopologyList(finalTopologyNameMatching);
-					}
-				};
-			}
-			resultList = TimedEventUtil.timedTask(callableObj, 5,
-					TimeUnit.SECONDS);
-
-		} catch (Exception e) {
-			logger.error("Unable to get knox resources.", e);
-		}
-
-		return msBizUtil.mapStringListToVStringList(resultList);
-	}
-
-	public VXResponse testConfig(VXAsset vXAsset) {
-		
-		if (vXAsset.getActiveStatus() == RangerCommonEnums.STATUS_DELETED) {
-			logger.error("Trying to test Asset which is soft deleted");
-			throw restErrorUtil.createRESTException(
-					"Repository not found, Repository Name : " + vXAsset.getName(),
-					MessageEnums.DATA_NOT_FOUND, vXAsset.getId(), null,
-					"Repository not exist for this Id : " + vXAsset.getId());
-		}
-		
-		int assetType = vXAsset.getAssetType();
-		
-		VXResponse testResponse = new VXResponse();
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
-		
-		HashMap<String, String> configMap = (HashMap<String, String>) jsonUtil
-				.jsonToMap(vXAsset.getConfig());
-		String password = configMap.get("password");
-		String hiddenPasswordString = PropertiesUtil.getProperty(
-				"xa.password.hidden", "*****");
-
-		if (password != null && password.equals(hiddenPasswordString)) {
-			String assetName = vXAsset.getName();
-			if (assetName != null) {
-				XXAsset existingVXAsset = rangerDaoManager.getXXAsset()
-						.findByAssetName(assetName);
-				if (existingVXAsset != null
-						&& existingVXAsset.getConfig() != null) {
-					String existingConfig = existingVXAsset.getConfig();
-					existingConfig=xAssetService.getConfigWithDecryptedPassword(existingConfig);
-					HashMap<String, String> existingConfigMap = (HashMap<String, String>) jsonUtil
-							.jsonToMap(existingConfig);
-					String existingPassword = existingConfigMap.get("password");
-					if (existingPassword != null) {
-						configMap.put("password", existingPassword);
-					}
-				}
-			}
-		}
-
-		try {
-			String dataSource = vXAsset.getName();
-			if (assetType == AppConstants.ASSET_HDFS) {
-				// HadoopFS connectionObj = new HadoopFS(vXAsset.getName(),
-				// configMap);
-				// if (connectionObj != null) {
-				// List<String> testResult = connectionObj
-				// .listFiles("/", null);
-				// if (testResult != null && testResult.size() != 0) {
-				// connectivityStatus = true;
-				// }
-				// }
-				responseData = HadoopFS.testConnection(dataSource, configMap);
-			} else if (assetType == AppConstants.ASSET_HIVE) {
-				// HiveClient connectionObj = new HiveClient(vXAsset.getName(),
-				// configMap);
-				// if (connectionObj != null) {
-				// List<String> testResult = connectionObj
-				// .getDatabaseList("*");
-				// if (testResult != null && testResult.size() != 0) {
-				// connectivityStatus = true;
-				// }
-				// }
-				// connectionObj.close();
-				responseData = HiveClient.testConnection(dataSource, configMap);
-			} else if (assetType == AppConstants.ASSET_HBASE) {
-				// HBaseClient connectionObj = new
-				// HBaseClient(vXAsset.getName(),
-				// configMap);
-				// if (connectionObj != null) {
-				// connectivityStatus = connectionObj.getHBaseStatus();
-				// } else {
-				// Log.error("testConfig: Not able to create HBaseClient");
-				// }
-				responseData = HBaseClient
-						.testConnection(dataSource, configMap);
-			} else if (assetType == AppConstants.ASSET_KNOX) {
-				// KnoxClient knoxClient = assetConnectionMgr.getKnoxClient(
-				// vXAsset.getName(), configMap);
-				// VXStringList vxStringList = getKnoxResources(knoxClient, "",
-				// null);
-				// if (vxStringList != null && (vxStringList.getListSize() !=
-				// 0)) {
-				// connectivityStatus = true;
-				// }
-				responseData = KnoxClient.testConnection(dataSource, configMap);
-			} else if (assetType == AppConstants.ASSET_STORM) {
-				responseData = StormClient.testConnection(dataSource, configMap);
-			} else {
-				throw restErrorUtil.createRESTException(
-						"Invalid repository type.",
-						MessageEnums.INVALID_INPUT_DATA);
-			}
-			testResponse = generateResponseForTestConn(responseData, "");
-
-		} catch (Exception e) {
-
-			String msg = "Unable to connect repository with given config for "
-					+ vXAsset.getName();
-			HashMap<String, Object> respData = new HashMap<String, Object>();
-			String message = "";
-			if (e instanceof HadoopException) {
-				respData = ((HadoopException) e).responseData;
-				message = (respData != null && respData.get("message") != null) ? respData.get(
-						"message").toString() : msg;
-			}
-			if(respData == null) {
-				respData = new HashMap<String, Object>();
-			}
-			testResponse = generateResponseForTestConn(respData, message);
-			logger.error(msg, e);
-		}
-		return testResponse;
-	}
-
-	private VXResponse generateResponseForTestConn(
-			HashMap<String, Object> responseData, String msg) {
-		VXResponse vXResponse = new VXResponse();
-
-		Long objId = (responseData.get("objectId") != null) ? Long
-				.parseLong(responseData.get("objectId").toString()) : null;
-		boolean connectivityStatus = (responseData.get("connectivityStatus") != null) ? Boolean
-				.parseBoolean(responseData.get("connectivityStatus").toString())
-				: false;
-		int statusCode = (connectivityStatus) ? VXResponse.STATUS_SUCCESS
-				: VXResponse.STATUS_ERROR;
-		String message = (responseData.get("message") != null) ? responseData
-				.get("message").toString() : msg;
-		String description = (responseData.get("description") != null) ? responseData
-				.get("description").toString() : msg;
-		String fieldName = (responseData.get("fieldName") != null) ? responseData
-				.get("fieldName").toString() : null;
-
-		VXMessage vXMsg = new VXMessage();
-		List<VXMessage> vXMsgList = new ArrayList<VXMessage>();
-		vXMsg.setFieldName(fieldName);
-		vXMsg.setMessage(message);
-		vXMsg.setObjectId(objId);
-		vXMsgList.add(vXMsg);
-
-		vXResponse.setMessageList(vXMsgList);
-		vXResponse.setMsgDesc(description);
-		vXResponse.setStatusCode(statusCode);
-		return vXResponse;
 	}
 
 	private void createResourcePathForHive(VXResource vXResource) {
@@ -3117,32 +2689,6 @@ public class AssetMgr extends AssetMgrBase {
 		
 		return vXResource;
 	}
-	
-    public VXStringList getStormResources(final String dataSourceName,String topologyName) {
-        VXStringList ret = null ;
-        XXAsset asset = rangerDaoManager.getXXAsset().findByAssetName(dataSourceName);
-        String config = asset.getConfig() ;
-        if(!stringUtil.isEmpty(config)){
-			config=xAssetService.getConfigWithDecryptedPassword(config);
-		}
-        if (config == null || config.trim().isEmpty()) {
-                logger.error("Connection Config is empty");
-
-        } else {
-                final HashMap<String, String> configMap = (HashMap<String, String>) jsonUtil.jsonToMap(config);
-                String url = configMap.get("nimbus.url");
-                String username = configMap.get("username");
-                String password = configMap.get("password");
-                ret = getStormResources(url, username, password,topologyName) ;
-        }
-        return ret ;
-    }
-
-    public VXStringList getStormResources(String url, String username, String password,String topologyName) {
-        final StormClient stormClient = AssetConnectionMgr.getStormClient(url, username, password);
-        List<String> toplogyList = stormClient.getTopologyList(topologyName) ;
-        return msBizUtil.mapStringListToVStringList(toplogyList) ;
-    }
     
 	@Override
 	public VXLong getXResourceSearchCount(SearchCriteria searchCriteria) {
