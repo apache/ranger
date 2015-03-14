@@ -59,15 +59,15 @@ public class RangerDefaultPolicyEvaluatorTest {
 	}
 
 	@Test
-	public void test_newConditionEvauator() {
+	public void test_newConditionEvaulator() {
 		RangerDefaultPolicyEvaluator evaluator = new RangerDefaultPolicyEvaluator();
-		RangerConditionEvaluator ipMatcher = evaluator.newConditionEvauator("org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher");
+		RangerConditionEvaluator ipMatcher = evaluator.newConditionEvaluator("org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher");
 		assertTrue(ipMatcher.getClass().equals(RangerIpMatcher.class));
 		
 		// bogus value will lead to null object from coming back
-		ipMatcher = evaluator.newConditionEvauator("org.apache.ranger.plugin.conditionevaluator.RangerIpMatcha");
+		ipMatcher = evaluator.newConditionEvaluator("org.apache.ranger.plugin.conditionevaluator.RangerIpMatcha");
 		assertNull(ipMatcher);
-		ipMatcher = evaluator.newConditionEvauator("RangerIpMatcher");
+		ipMatcher = evaluator.newConditionEvaluator("RangerIpMatcher");
 		assertNull(ipMatcher);
 	}
 	

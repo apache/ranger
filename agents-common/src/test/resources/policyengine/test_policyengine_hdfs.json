@@ -23,7 +23,7 @@
     }
     ,
     {"id":2,"name":"allow-read-to-all under /public/","isEnabled":true,"isAuditEnabled":false,
-     "resources":{"path":{"values":["/public/"],"isRecursive":true}},
+     "resources":{"path":{"values":["/public/*"],"isRecursive":true}},
      "policyItems":[
        {"accesses":[{"type":"read","isAllowed":true},{"type":"execute","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
      ]
