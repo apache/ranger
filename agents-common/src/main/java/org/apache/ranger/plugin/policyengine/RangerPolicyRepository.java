@@ -98,10 +98,8 @@ public class RangerPolicyRepository {
             if (evaluator != null) {
                 policyEvaluators.add(evaluator);
             }
-
-            Collections.sort(policyEvaluators);
-
         }
+        Collections.sort(policyEvaluators);
 
         String propertyName = "ranger.plugin." + serviceName + ".policyengine.auditcachesize";
 

@@ -34,7 +34,7 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
     private static final Log LOG = LogFactory.getLog(RangerPolicyEvaluatorFacade.class);
 
     RangerDefaultPolicyEvaluator delegate  =   null;
-    int computedPriority            =   0;
+    int computedPolicyEvalOrder            =   0;
     boolean useCachePolicyEngine         = false;
 
     RangerPolicyEvaluatorFacade(boolean useCachePolicyEngine) {
@@ -53,7 +53,7 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
             LOG.debug("==> RangerPolicyEvaluatorFacade.init(), useCachePolicyEngine:" + useCachePolicyEngine);
         }
         delegate.init(policy, serviceDef);
-        computedPriority = computePriority();
+        computedPolicyEvalOrder = computePolicyEvalOrder();
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyEvaluatorFacade.init(), useCachePolicyEngine:" + useCachePolicyEngine);
         }
@@ -91,7 +91,7 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
         }
         int result;
 
-        if (this.getComputedPriority() == other.getComputedPriority()) {
+        if (this.getComputedPolicyEvalOrder() == other.getComputedPolicyEvalOrder()) {
             Map<String, RangerConditionEvaluator> myConditionEvaluators = this.delegate.getConditionEvaluators();
             Map<String, RangerConditionEvaluator> otherConditionEvaluators = other.delegate.getConditionEvaluators();
 
@@ -100,8 +100,8 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
 
             result = Integer.compare(myConditionEvaluatorCount, otherConditionEvaluatorCount);
         } else {
-            int myComputedPriority = this.getComputedPriority();
-            int otherComputedPriority = other.getComputedPriority();
+            int myComputedPriority = this.getComputedPolicyEvalOrder();
+            int otherComputedPriority = other.getComputedPolicyEvalOrder();
             result = Integer.compare(myComputedPriority, otherComputedPriority);
         }
         if(LOG.isDebugEnabled()) {
@@ -111,17 +111,17 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
         return result;
     }
 
-    private int getComputedPriority() {
-        return computedPriority;
+    private int getComputedPolicyEvalOrder() {
+        return computedPolicyEvalOrder;
     }
 
-    private int computePriority() {
+    private int computePolicyEvalOrder() {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyEvaluatorFacade.computePriority()");
+            LOG.debug("==> RangerPolicyEvaluatorFacade.computePolicyEvalOrder()");
         }
-        int result = delegate.computePriority();
+        int result = delegate.computePolicyEvalOrder();
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<==RangerPolicyEvaluatorFacade.computePriority(), result:" + result);
+            LOG.debug("<==RangerPolicyEvaluatorFacade.computePolicyEvalOrder(), result:" + result);
         }
         return result;
     }

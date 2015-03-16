@@ -89,8 +89,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
     public Map<String, RangerConditionEvaluator> getConditionEvaluators() {
         return conditionEvaluators;
     }
-    public int computePriority() { return 0;}
-
+    public int computePolicyEvalOrder() { return 0;}
 
     /**
 	 * Non-private only for testability.

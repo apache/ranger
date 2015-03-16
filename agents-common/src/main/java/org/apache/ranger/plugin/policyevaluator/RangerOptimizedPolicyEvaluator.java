@@ -97,9 +97,9 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     }
 
     @Override
-    public int computePriority() {
+    public int computePolicyEvalOrder() {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerOptimizedPolicyEvaluator.computePriority()");
+            LOG.debug("==> RangerOptimizedPolicyEvaluator.computePolicyEvalOrder()");
         }
         RangerServiceDef serviceDef = getServiceDef();
         RangerPolicy policy = getPolicy();
@@ -194,7 +194,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         priorityLevel -= Math.round(((float)RANGER_POLICY_EVAL_ALL_ACCESS_TYPES_PREMIUM * accessPerms.size()) / serviceDef.getAccessTypes().size());
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerOptimizedPolicyEvaluator.computePriority(), policyName:" + policy.getName() + ", priority:" + priorityLevel);
+            LOG.debug("<== RangerOptimizedPolicyEvaluator.computePolicyEvalOrder(), policyName:" + policy.getName() + ", priority:" + priorityLevel);
         }
         return priorityLevel;
     }
@@ -227,13 +227,13 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerOptimizedPolicyEvaluator.checkIfHasAllPerms()");
         }
-
         boolean result = true;
 
         List<RangerServiceDef.RangerAccessTypeDef> serviceAccessTypes = getServiceDef().getAccessTypes();
         for (RangerServiceDef.RangerAccessTypeDef serviceAccessType : serviceAccessTypes) {
             if(! accessPerms.contains(serviceAccessType.getName())) {
-                return false;
+		result = false;
+                break;
             }
         }
 

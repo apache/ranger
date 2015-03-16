@@ -39,7 +39,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private RangerPolicyRepository policyRepository    = null;
 	private RangerAuditHandler     defaultAuditHandler = null;
 
-
 	public RangerPolicyEngineImpl() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl()");
@@ -63,7 +62,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	@Override
 	public List<RangerContextEnricher> getContextEnrichers() {
 
-		return policyRepository == null ? null : getContextEnrichers();
+		return policyRepository == null ? null : policyRepository.getContextEnrichers();
 	}
 
 	@Override

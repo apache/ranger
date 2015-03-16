@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.policyengine;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-
 public class CacheMap<K, V> extends LinkedHashMap<K, V> {
     private static final float RANGER_CACHE_DEFAULT_LOAD_FACTOR = 0.75f;
 
