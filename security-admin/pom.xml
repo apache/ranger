@@ -382,6 +382,11 @@
         	</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-hdfs</artifactId>
+			<version>${hadoop.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.ranger</groupId>
 			<artifactId>unixauthclient</artifactId>
 			<version>${project.version}</version>
@@ -396,12 +401,6 @@
 			<artifactId>spring-test</artifactId>
 			<version>${springframework.test.version}</version>
 		</dependency>
-                <dependency>
-                       <groupId>org.apache.hive</groupId>
-                       <artifactId>hive-jdbc</artifactId>
-                       <version>${hive.version}</version>
-                       <scope>runtime</scope>
-                </dependency>
   </dependencies>
   <build>
   <pluginManagement>

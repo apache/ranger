@@ -54,15 +54,6 @@
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <dependencySets>
-          <dependencySet>
-            <includes>
-              <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop-common.version}</include>
-              <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
-              <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
-            </includes>
-          </dependencySet>
-        </dependencySets>
      </binaries>
      <includes>
        <include>security_plugins.ranger-hdfs-plugin:ranger-hdfs-plugin</include>
@@ -79,7 +70,11 @@
         <dependencySets>
           <dependencySet>
             <includes>
+              <include>org.apache.hive:hive-common:jar:${hive.version}</include>
+              <include>org.apache.hive:hive-service:jar:${hive.version}</include>
+              <include>org.apache.hive:hive-exec:jar:${hive.version}</include>
               <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
+              <include>org.apache.hive:hive-metastore:jar:${hive.version}</include>
             </includes>
           </dependencySet>
         </dependencySets>
@@ -88,6 +83,7 @@
        <include>security_plugins.ranger-hive-plugin:ranger-hive-plugin</include>
      </includes>
     </moduleSet>
+
 
     <moduleSet>
      <binaries>
@@ -99,10 +95,11 @@
         <dependencySets>
           <dependencySet>
             <includes>
+              <include>org.apache.hbase:hbase-common:jar:${hbase.version}</include>
+              <include>org.apache.hbase:hbase-client:jar:${hbase.version}</include>
+              <include>org.apache.hbase:hbase-protocol:jar:${hbase.version}</include>
               <include>org.apache.hbase:hbase-server:jar:${hbase.version}</include>
-              <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop-common.version}</include>
-              <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
-              <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
+              <include>org.htrace:htrace-core</include>
             </includes>
           </dependencySet>
         </dependencySets>
