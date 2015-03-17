@@ -213,17 +213,17 @@
 	
 	<!-- Ranger audit provider configuration -->
 	<property>
-		<name>xasecure.audit.ranger.is.enabled</name>
+		<name>xasecure.audit.solr.is.enabled</name>
 		<value>false</value>
 	</property>	
 	
 	<property>
-		<name>xasecure.audit.ranger.async.max.queue.size</name>
+		<name>xasecure.audit.solr.async.max.queue.size</name>
 		<value>1</value>
 	</property>	
 
 	<property>
-		<name>xasecure.audit.ranger.async.max.flush.interval.ms</name>
+		<name>xasecure.audit.solr.async.max.flush.interval.ms</name>
 		<value>1000</value>
 	</property>	
 	
