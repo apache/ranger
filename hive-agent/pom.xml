@@ -98,6 +98,11 @@
 	  <version>${hive.version}</version>
     </dependency>
     <dependency>
+	  <groupId>org.apache.hive</groupId>
+	  <artifactId>hive-jdbc</artifactId>
+	  <version>1.1.0</version>
+    </dependency>
+    <dependency>
 	  <groupId>org.apache.hadoop</groupId>
 	  <artifactId>hadoop-hdfs</artifactId>
 	  <version>${hadoop.version}</version>

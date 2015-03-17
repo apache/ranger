@@ -50,7 +50,7 @@
     <moduleSet>
      <binaries>
         <includeDependencies>true</includeDependencies>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/hdfs</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/lib/ranger-plugins/hdfs</outputDirectory>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
@@ -63,7 +63,7 @@
     <moduleSet>
      <binaries>
         <includeDependencies>true</includeDependencies>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/hive</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/lib/ranger-plugins/hive</outputDirectory>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
@@ -73,7 +73,7 @@
               <include>org.apache.hive:hive-common:jar:${hive.version}</include>
               <include>org.apache.hive:hive-service:jar:${hive.version}</include>
               <include>org.apache.hive:hive-exec:jar:${hive.version}</include>
-              <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
+              <include>org.apache.hive:hive-jdbc</include>
               <include>org.apache.hive:hive-metastore:jar:${hive.version}</include>
             </includes>
           </dependencySet>
@@ -88,7 +88,7 @@
     <moduleSet>
      <binaries>
         <includeDependencies>true</includeDependencies>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/hbase</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/lib/ranger-plugins/hbase</outputDirectory>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
@@ -112,7 +112,7 @@
     <moduleSet>
      <binaries>
         <includeDependencies>true</includeDependencies>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/knox</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/lib/ranger-plugins/knox</outputDirectory>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
@@ -135,7 +135,7 @@
     <moduleSet>
      <binaries>
         <includeDependencies>true</includeDependencies>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/storm</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/lib/ranger-plugins/storm</outputDirectory>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
@@ -155,7 +155,7 @@
     <moduleSet>
      <binaries>
         <includeDependencies>true</includeDependencies>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/yarn</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/lib/ranger-plugins/yarn</outputDirectory>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
