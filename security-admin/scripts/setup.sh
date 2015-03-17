@@ -129,8 +129,13 @@ init_variables(){
 	getPropertyFromFile 'db_root_password' $PROPFILE db_user
 	getPropertyFromFile 'db_user' $PROPFILE db_user
 	getPropertyFromFile 'db_password' $PROPFILE db_password
-	getPropertyFromFile 'audit_db_user' $PROPFILE audit_db_user
-	getPropertyFromFile 'audit_db_password' $PROPFILE audit_db_password
+	if [ "${audit_store}" == "solr" ]
+	then
+	    getPropertyFromFile 'audit_solr_url' $PROPFILE audit_solr_url
+	else
+	    getPropertyFromFile 'audit_db_user' $PROPFILE audit_db_user
+	    getPropertyFromFile 'audit_db_password' $PROPFILE audit_db_password
+	fi
 }
 
 wait_for_tomcat_shutdown() {
@@ -820,6 +825,19 @@ update_properties() {
 		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
 	fi
+
+	if [ "${audit_store}" == "solr" ]
+        then
+                propertyName=xa.audit.solr.url
+                newPropertyValue=${audit_solr_url}
+                updatePropertyToFile $propertyName $newPropertyValue $to_file
+        fi
+
+        propertyName=xa.audit.db.type
+        newPropertyValue=${audit_store}
+        updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+
 	propertyName=xa.webapp.url.root
 	newPropertyValue="${policymgr_external_url}"
 	updatePropertyToFile $propertyName $newPropertyValue $to_file
@@ -878,41 +896,43 @@ update_properties() {
 	fi
 
 	###########
-	audit_db_password_alias=auditDB.jdbc.password
-
-	echo "Starting configuration for Audit DB credentials:"
-
-	if [ "${keystore}" != "" ]
+	if [ "${audit_store}" != "solr" ]
 	then
+	    audit_db_password_alias=auditDB.jdbc.password
+
+	    echo "Starting configuration for Audit DB credentials:"
+
+	    if [ "${keystore}" != "" ]
+	    then
 		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
 
 		propertyName=auditDB.jdbc.credential.alias
 		newPropertyValue="${audit_db_password_alias}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-
+		
 		propertyName=auditDB.jdbc.credential.provider.path
 		newPropertyValue="${keystore}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-
+		
 		propertyName=auditDB.jdbc.password
 		newPropertyValue="_"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-	else
+	    else
 		propertyName=auditDB.jdbc.password
 		newPropertyValue="${audit_db_password}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
-	fi
+	    fi
 
-	if test -f $keystore; then
+	    if test -f $keystore; then
 		chown -R ${unix_user}:${unix_group} ${keystore}
 		#echo "$keystore found."
-	else
+	    else
 		#echo "$keystore not found. so use clear text password"
 		propertyName=auditDB.jdbc.password
 		newPropertyValue="${audit_db_password}"
 		updatePropertyToFile $propertyName $newPropertyValue $to_file
+	    fi
 	fi
-
 }
 
 create_audit_db_user(){

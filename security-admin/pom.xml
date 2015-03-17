@@ -244,6 +244,11 @@
       		</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.ranger</groupId>
+			<artifactId>ranger_solrj</artifactId>
+			<version>${ranger.solrj.version}</version>
+		</dependency>		
+		<dependency>
 		    <groupId>junit</groupId>
 		    <artifactId>junit</artifactId>
 		</dependency>

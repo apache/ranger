@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.biz;
+package org.apache.ranger.biz;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -83,15 +83,17 @@ public class RangerBizUtil {
 	Map<String, Integer> classTypeMappings = new HashMap<String, Integer>();
 	private int maxFirstNameLength;
 	int maxDisplayNameLength = 150;
-	boolean defaultAutoApprove = true;
-	boolean showBlockedContent = true;
 	public final String EMPTY_CONTENT_DISPLAY_NAME = "...";
 	boolean enableResourceAccessControl;
 	private Random random;
 	private static final String PATH_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst0123456789-_.";
 	private static char[] PATH_CHAR_SET = PATH_CHARS.toCharArray();
 	private static int PATH_CHAR_SET_LEN = PATH_CHAR_SET.length;
-	
+	public static final String AUDIT_STORE_RDBMS = "DB";
+	public static final String AUDIT_STORE_SOLR = "solr";
+
+	String auditDBType = AUDIT_STORE_RDBMS;
+
 	static String fileSeparator = PropertiesUtil.getProperty(
 			"xa.file.separator", "/");
 
@@ -100,19 +102,20 @@ public class RangerBizUtil {
 				"xa.user.firstname.maxlength", "16"));
 		maxDisplayNameLength = PropertiesUtil.getIntProperty(
 				"xa.bookmark.name.maxlen", maxDisplayNameLength);
-		showBlockedContent = PropertiesUtil.getBooleanProperty(
-				"xa.content.show_blocked", showBlockedContent);
-		defaultAutoApprove = PropertiesUtil.getBooleanProperty(
-				"xa.mod.default", defaultAutoApprove);
 
 		groupEditableClasses = new HashSet<Class<?>>(
 				Arrays.asList(groupEditableClassesList));
 		enableResourceAccessControl = PropertiesUtil.getBooleanProperty(
 				"xa.resource.accessControl.enabled", true);
+		auditDBType = PropertiesUtil.getProperty("xa.audit.db.type",
+				auditDBType).toLowerCase();
+
+		logger.info("Audit datasource is " + auditDBType);
 		random = new Random();
 	}
 
-	public <T extends XXDBBase> List<? extends XXDBBase> getParentObjects(T object) {
+	public <T extends XXDBBase> List<? extends XXDBBase> getParentObjects(
+			T object) {
 		List<XXDBBase> parentObjectList = null;
 		// if (checkParentAcess.contains(object.getMyClassType())) {
 		// parentObjectList = new ArrayList<MBase>();
@@ -216,8 +219,8 @@ public class RangerBizUtil {
 	}
 
 	public String getDisplayNameForClassName(XXDBBase obj) {
-		String classTypeDisplayName = RangerConstants.getLabelFor_ClassTypes(obj
-				.getMyClassType());
+		String classTypeDisplayName = RangerConstants
+				.getLabelFor_ClassTypes(obj.getMyClassType());
 		if (classTypeDisplayName == null) {
 			logger.error(
 					"Error get name for class type. obj=" + obj.toString(),
@@ -254,7 +257,8 @@ public class RangerBizUtil {
 	 * @param userProfile
 	 * @return
 	 */
-	public String generatePublicName(VXPortalUser userProfile, XXPortalUser gjUser) {
+	public String generatePublicName(VXPortalUser userProfile,
+			XXPortalUser gjUser) {
 		return generatePublicName(userProfile.getFirstName(),
 				userProfile.getLastName());
 	}
@@ -298,7 +302,8 @@ public class RangerBizUtil {
 
 	public XXDBBase getMObject(VXDataObject vXDataObject) {
 		if (vXDataObject != null) {
-			return getMObject(vXDataObject.getMyClassType(), vXDataObject.getId());
+			return getMObject(vXDataObject.getMyClassType(),
+					vXDataObject.getId());
 		}
 		return null;
 	}
@@ -308,8 +313,8 @@ public class RangerBizUtil {
 			return null;
 		}
 		if (objClassType == RangerConstants.CLASS_TYPE_USER_PROFILE) {
-			return userMgr.mapXXPortalUserVXPortalUser(daoManager.getXXPortalUser().getById(
-					objId));
+			return userMgr.mapXXPortalUserVXPortalUser(daoManager
+					.getXXPortalUser().getById(objId));
 		}
 		try {
 			AbstractBaseResourceService<?, ?> myService = AbstractBaseResourceService
@@ -426,9 +431,10 @@ public class RangerBizUtil {
 							xResourceList, xUserId, permission, reqTableType,
 							reqColumnType, false);
 					if (!matchFound) {
-						vXResponse.setMsgDesc("You're not permitted to perform "
-								+ "the action for resource path : "
-								+ resourceName);
+						vXResponse
+								.setMsgDesc("You're not permitted to perform "
+										+ "the action for resource path : "
+										+ resourceName);
 						vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
 						return vXResponse;
 					}
@@ -438,9 +444,10 @@ public class RangerBizUtil {
 					boolean matchFound = matchHivePolicy(resourceName,
 							xResourceList, xUserId, permission);
 					if (!matchFound) {
-						vXResponse.setMsgDesc("You're not permitted to perform "
-								+ "the action for resource path : "
-								+ resourceName);
+						vXResponse
+								.setMsgDesc("You're not permitted to perform "
+										+ "the action for resource path : "
+										+ resourceName);
 						vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
 						return vXResponse;
 					}
@@ -477,34 +484,34 @@ public class RangerBizUtil {
 			vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
 			return vXResponse;
 		} else if (assetType == AppConstants.ASSET_KNOX) {
-				String[] requestResNameList = resourceNames.split(",");
-				for (String resourceName : requestResNameList) {
-					boolean matchFound = matchKnoxPolicy(resourceName,
-							xResourceList, vXResponse, xUserId, permission);
-					if (!matchFound) {
-						vXResponse.setMsgDesc("You're not permitted to perform "
-								+ "the action for resource path : " + resourceName);
-						vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
-						return vXResponse;
-					}
+			String[] requestResNameList = resourceNames.split(",");
+			for (String resourceName : requestResNameList) {
+				boolean matchFound = matchKnoxPolicy(resourceName,
+						xResourceList, vXResponse, xUserId, permission);
+				if (!matchFound) {
+					vXResponse.setMsgDesc("You're not permitted to perform "
+							+ "the action for resource path : " + resourceName);
+					vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
+					return vXResponse;
 				}
-				vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
-				return vXResponse;	
-        } else if (assetType == AppConstants.ASSET_STORM) {
-            String[] requestResNameList = resourceNames.split(",");
-            for (String resourceName : requestResNameList) {
-                boolean matchFound = matchStormPolicy(resourceName,
-                        xResourceList, vXResponse, xUserId, permission);
-                if (!matchFound) {
-                    vXResponse.setMsgDesc("You're not permitted to perform "
-                            + "the action for resource path : " + resourceName);
-                    vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
-                    return vXResponse;
-                }
-            }
-            vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
-            return vXResponse;
-        }
+			}
+			vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
+			return vXResponse;
+		} else if (assetType == AppConstants.ASSET_STORM) {
+			String[] requestResNameList = resourceNames.split(",");
+			for (String resourceName : requestResNameList) {
+				boolean matchFound = matchStormPolicy(resourceName,
+						xResourceList, vXResponse, xUserId, permission);
+				if (!matchFound) {
+					vXResponse.setMsgDesc("You're not permitted to perform "
+							+ "the action for resource path : " + resourceName);
+					vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
+					return vXResponse;
+				}
+			}
+			vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
+			return vXResponse;
+		}
 		return vXResponse;
 	}
 
@@ -619,21 +626,26 @@ public class RangerBizUtil {
 	 * @return
 	 */
 	public boolean matchHbasePolicy(String resourceName,
-			List<XXResource> xResourceList, VXResponse vXResponse, Long xUserId,
-			int permission) {
-		if(stringUtil.isEmpty(resourceName) || xResourceList==null || xUserId==null){
+			List<XXResource> xResourceList, VXResponse vXResponse,
+			Long xUserId, int permission) {
+		if (stringUtil.isEmpty(resourceName) || xResourceList == null
+				|| xUserId == null) {
 			return false;
 		}
 
-		String[] splittedResources = stringUtil.split(resourceName, fileSeparator);
+		String[] splittedResources = stringUtil.split(resourceName,
+				fileSeparator);
 		if (splittedResources.length < 1 || splittedResources.length > 3) {
 			logger.debug("Invalid resourceName name : " + resourceName);
 			return false;
 		}
 
-		String tblName    = splittedResources.length > 0 ? splittedResources[0] : StringUtil.WILDCARD_ASTERISK;
-		String colFamName = splittedResources.length > 1 ? splittedResources[1] : StringUtil.WILDCARD_ASTERISK;
-		String colName    = splittedResources.length > 2 ? splittedResources[2] : StringUtil.WILDCARD_ASTERISK;
+		String tblName = splittedResources.length > 0 ? splittedResources[0]
+				: StringUtil.WILDCARD_ASTERISK;
+		String colFamName = splittedResources.length > 1 ? splittedResources[1]
+				: StringUtil.WILDCARD_ASTERISK;
+		String colName = splittedResources.length > 2 ? splittedResources[2]
+				: StringUtil.WILDCARD_ASTERISK;
 
 		boolean policyMatched = false;
 		// check all resources whether Hbase policy is enabled in any resource
@@ -643,29 +655,38 @@ public class RangerBizUtil {
 				continue;
 			}
 			Long resourceId = xResource.getId();
-			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission, resourceId);
+			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission,
+					resourceId);
 			// if permission is enabled then load Tables,column family and
 			// columns list from resource
-			if (! hasPermission) {
+			if (!hasPermission) {
 				continue;
 			}
 
 			// 1. does the policy match the table?
-			String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null : stringUtil.split(xResource.getTables(), ",");
+			String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null
+					: stringUtil.split(xResource.getTables(), ",");
 
-			boolean matchFound = (xTables == null || xTables.length == 0) ? true : matchPath(tblName, xTables);
+			boolean matchFound = (xTables == null || xTables.length == 0) ? true
+					: matchPath(tblName, xTables);
 
-			if(matchFound) {
+			if (matchFound) {
 				// 2. does the policy match the column?
-				String[] xColumnFamilies = stringUtil.isEmpty(xResource.getColumnFamilies()) ? null : stringUtil.split(xResource.getColumnFamilies(), ",");
+				String[] xColumnFamilies = stringUtil.isEmpty(xResource
+						.getColumnFamilies()) ? null : stringUtil.split(
+						xResource.getColumnFamilies(), ",");
 
-				matchFound = (xColumnFamilies == null || xColumnFamilies.length == 0) ? true : matchPath(colFamName, xColumnFamilies);
-				
-				if(matchFound) {
+				matchFound = (xColumnFamilies == null || xColumnFamilies.length == 0) ? true
+						: matchPath(colFamName, xColumnFamilies);
+
+				if (matchFound) {
 					// 3. does the policy match the columnFamily?
-					String[] xColumns = stringUtil.isEmpty(xResource.getColumns()) ? null : stringUtil.split(xResource.getColumns(), ",");
+					String[] xColumns = stringUtil.isEmpty(xResource
+							.getColumns()) ? null : stringUtil.split(
+							xResource.getColumns(), ",");
 
-					matchFound = (xColumns == null || xColumns.length == 0) ? true : matchPath(colName, xColumns);
+					matchFound = (xColumns == null || xColumns.length == 0) ? true
+							: matchPath(colName, xColumns);
 				}
 			}
 
@@ -699,19 +720,24 @@ public class RangerBizUtil {
 			List<XXResource> xResourceList, Long xUserId, int permission,
 			int reqTableType, int reqColumnType, boolean isUdfPolicy) {
 
-		if(stringUtil.isEmpty(resourceName) || xResourceList==null || xUserId==null){
+		if (stringUtil.isEmpty(resourceName) || xResourceList == null
+				|| xUserId == null) {
 			return false;
 		}
 
-		String[] splittedResources = stringUtil.split(resourceName, fileSeparator);// get list of resources
+		String[] splittedResources = stringUtil.split(resourceName,
+				fileSeparator);// get list of resources
 		if (splittedResources.length < 1 || splittedResources.length > 3) {
 			logger.debug("Invalid resource name : " + resourceName);
 			return false;
 		}
-		
-		String dbName  = splittedResources.length > 0 ? splittedResources[0] : StringUtil.WILDCARD_ASTERISK;
-		String tblName = splittedResources.length > 1 ? splittedResources[1] : StringUtil.WILDCARD_ASTERISK;
-		String colName = splittedResources.length > 2 ? splittedResources[2] : StringUtil.WILDCARD_ASTERISK;
+
+		String dbName = splittedResources.length > 0 ? splittedResources[0]
+				: StringUtil.WILDCARD_ASTERISK;
+		String tblName = splittedResources.length > 1 ? splittedResources[1]
+				: StringUtil.WILDCARD_ASTERISK;
+		String colName = splittedResources.length > 2 ? splittedResources[2]
+				: StringUtil.WILDCARD_ASTERISK;
 
 		boolean policyMatched = false;
 		for (XXResource xResource : xResourceList) {
@@ -720,21 +746,24 @@ public class RangerBizUtil {
 			}
 
 			Long resourceId = xResource.getId();
-			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission, resourceId);
+			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission,
+					resourceId);
 
-			if (! hasPermission) {
+			if (!hasPermission) {
 				continue;
 			}
 
 			// 1. does the policy match the database?
-			String[] xDatabases = stringUtil.isEmpty(xResource.getDatabases()) ? null : stringUtil.split(xResource.getDatabases(), ",");
+			String[] xDatabases = stringUtil.isEmpty(xResource.getDatabases()) ? null
+					: stringUtil.split(xResource.getDatabases(), ",");
 
-			boolean matchFound = (xDatabases == null || xDatabases.length == 0) ? true : matchPath(dbName, xDatabases);
+			boolean matchFound = (xDatabases == null || xDatabases.length == 0) ? true
+					: matchPath(dbName, xDatabases);
 
-			if (! matchFound) {
+			if (!matchFound) {
 				continue;
 			}
-			
+
 			// Type(either UDFs policy or non-UDFs policy) of current policy
 			// should be of same as type of policy being iterated
 			if (!stringUtil.isEmpty(xResource.getUdfs()) && !isUdfPolicy) {
@@ -743,9 +772,10 @@ public class RangerBizUtil {
 
 			if (isUdfPolicy) {
 				// 2. does the policy match the UDF?
-				String[] xUdfs = stringUtil.isEmpty(xResource.getUdfs()) ? null : stringUtil.split(xResource.getUdfs(), ",");
-				
-				if(! matchPath(tblName, xUdfs)) {
+				String[] xUdfs = stringUtil.isEmpty(xResource.getUdfs()) ? null
+						: stringUtil.split(xResource.getUdfs(), ",");
+
+				if (!matchPath(tblName, xUdfs)) {
 					continue;
 				} else {
 					policyMatched = true;
@@ -753,11 +783,13 @@ public class RangerBizUtil {
 				}
 			} else {
 				// 2. does the policy match the table?
-				String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null : stringUtil.split(xResource.getTables(), ",");
+				String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null
+						: stringUtil.split(xResource.getTables(), ",");
 
-				matchFound = (xTables == null || xTables.length == 0) ? true : matchPath(tblName, xTables);
+				matchFound = (xTables == null || xTables.length == 0) ? true
+						: matchPath(tblName, xTables);
 
-				if(xResource.getTableType() == AppConstants.POLICY_EXCLUSION) {
+				if (xResource.getTableType() == AppConstants.POLICY_EXCLUSION) {
 					matchFound = !matchFound;
 				}
 
@@ -766,11 +798,13 @@ public class RangerBizUtil {
 				}
 
 				// 3. does current policy match the column?
-				String[] xColumns = stringUtil.isEmpty(xResource.getColumns()) ? null : stringUtil.split(xResource.getColumns(), ",");
+				String[] xColumns = stringUtil.isEmpty(xResource.getColumns()) ? null
+						: stringUtil.split(xResource.getColumns(), ",");
 
-				matchFound = (xColumns == null || xColumns.length == 0) ? true : matchPath(colName, xColumns);
+				matchFound = (xColumns == null || xColumns.length == 0) ? true
+						: matchPath(colName, xColumns);
 
-				if(xResource.getColumnType() == AppConstants.POLICY_EXCLUSION) {
+				if (xResource.getColumnType() == AppConstants.POLICY_EXCLUSION) {
 					matchFound = !matchFound;
 				}
 
@@ -784,6 +818,7 @@ public class RangerBizUtil {
 		}
 		return policyMatched;
 	}
+
 	/**
 	 * returns true if user is having required permission on given Hbase
 	 * resource
@@ -796,8 +831,8 @@ public class RangerBizUtil {
 	 * @return
 	 */
 	private boolean matchKnoxPolicy(String resourceName,
-			List<XXResource> xResourceList, VXResponse vXResponse, Long xUserId,
-			int permission) {
+			List<XXResource> xResourceList, VXResponse vXResponse,
+			Long xUserId, int permission) {
 
 		String[] splittedResources = stringUtil.split(resourceName,
 				fileSeparator);
@@ -817,11 +852,12 @@ public class RangerBizUtil {
 			Long resourceId = xResource.getId();
 			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission,
 					resourceId);
-			// if permission is enabled then load Topologies,services list from resource
+			// if permission is enabled then load Topologies,services list from
+			// resource
 			if (hasPermission) {
 				String[] xTopologies = (xResource.getTopologies() == null || xResource
-						.getTopologies().equalsIgnoreCase("")) ? null : stringUtil
-						.split(xResource.getTopologies(), ",");
+						.getTopologies().equalsIgnoreCase("")) ? null
+						: stringUtil.split(xResource.getTopologies(), ",");
 				String[] xServices = (xResource.getServices() == null || xResource
 						.getServices().equalsIgnoreCase("")) ? null
 						: stringUtil.split(xResource.getServices(), ",");
@@ -833,30 +869,31 @@ public class RangerBizUtil {
 					// check whether given table resource matches with any
 					// existing topology resource
 					if (index == 0) {
-						if(xTopologies!=null){
-						for (String xTopology : xTopologies) {
-							if (matchPath(splittedResources[index], xTopology)) {
-								matchFound = true;
-								continue;
+						if (xTopologies != null) {
+							for (String xTopology : xTopologies) {
+								if (matchPath(splittedResources[index],
+										xTopology)) {
+									matchFound = true;
+									continue;
+								}
 							}
 						}
-						}
-						if(!matchFound) {
+						if (!matchFound) {
 							break;
 						}
 					} // check whether given service resource matches with
 						// any existing service resource
 					else if (index == 1) {
-						if(xServices!=null){
-						for (String xService : xServices) {
-							if (matchPath(splittedResources[index],
-									xService)) {
-								matchFound = true;
-								continue;
+						if (xServices != null) {
+							for (String xService : xServices) {
+								if (matchPath(splittedResources[index],
+										xService)) {
+									matchFound = true;
+									continue;
+								}
 							}
 						}
-						}
-						if(!matchFound) {
+						if (!matchFound) {
 							break;
 						}
 					}
@@ -870,85 +907,84 @@ public class RangerBizUtil {
 		return policyMatched;
 	}
 
- 	/**
- 	 * returns true if user is having required permission on given STORM
- 	 * resource
- 	 * 
- 	 * @param resourceName
- 	 * @param xResourceList
- 	 * @param vXResponse
- 	 * @param xUserId
- 	 * @param permission
- 	 * @return
- 	 */
- 	private boolean matchStormPolicy(String resourceName,
- 			List<XXResource> xResourceList, VXResponse vXResponse, Long xUserId,
- 			int permission) {
- 
- 		String[] splittedResources = stringUtil.split(resourceName,
- 				fileSeparator);
- 		int numberOfResources = splittedResources.length;
- 		if (numberOfResources < 1 || numberOfResources > 3) {
- 			logger.debug("Invalid policy name : " + resourceName);
- 			return false;
- 		}
- 
- 		boolean policyMatched = false;
- 		// check all resources whether Knox policy is enabled in any resource
- 		// of provided resource list
- 		for (XXResource xResource : xResourceList) {
- 			if (xResource.getResourceStatus() != AppConstants.STATUS_ENABLED) {
- 				continue;
- 			}
- 			Long resourceId = xResource.getId();
- 			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission,
- 					resourceId);
- 			// if permission is enabled then load Topologies,services list from resource
- 			if (hasPermission) {
- 				String[] xTopologies = (xResource.getTopologies() == null || xResource
- 						.getTopologies().equalsIgnoreCase("")) ? null : stringUtil
- 						.split(xResource.getTopologies(), ",");
- 				/*String[] xServices = (xResource.getServices() == null || xResource
- 						.getServices().equalsIgnoreCase("")) ? null
- 						: stringUtil.split(xResource.getServices(), ",");*/
- 
- 				boolean matchFound = false;
- 
- 				for (int index = 0; index < numberOfResources; index++) {
- 					matchFound = false;
- 					// check whether given table resource matches with any
- 					// existing topology resource
- 					if (index == 0) {
- 						if(xTopologies!=null){
- 						for (String xTopology : xTopologies) {
- 							if (matchPath(splittedResources[index], xTopology)) {
- 								matchFound = true;
- 								continue;
- 							}
- 						}
- 						}
- 					} // check whether given service resource matches with
- 						// any existing service resource
- 					/*else if (index == 1) {
- 						if(xServices!=null){
- 						for (String xService : xServices) {
- 							if (matchPath(splittedResources[index],
- 									xService)) {
- 								matchFound = true;
- 								continue;
- 							}
- 						}
- 						}
- 					}*/
- 				}
- 				if (matchFound) {
- 					policyMatched = true;
- 					break;
- 				}
- 			}
- 		}
- 		return policyMatched;
- 	}
+	/**
+	 * returns true if user is having required permission on given STORM
+	 * resource
+	 * 
+	 * @param resourceName
+	 * @param xResourceList
+	 * @param vXResponse
+	 * @param xUserId
+	 * @param permission
+	 * @return
+	 */
+	private boolean matchStormPolicy(String resourceName,
+			List<XXResource> xResourceList, VXResponse vXResponse,
+			Long xUserId, int permission) {
+
+		String[] splittedResources = stringUtil.split(resourceName,
+				fileSeparator);
+		int numberOfResources = splittedResources.length;
+		if (numberOfResources < 1 || numberOfResources > 3) {
+			logger.debug("Invalid policy name : " + resourceName);
+			return false;
+		}
+
+		boolean policyMatched = false;
+		// check all resources whether Knox policy is enabled in any resource
+		// of provided resource list
+		for (XXResource xResource : xResourceList) {
+			if (xResource.getResourceStatus() != AppConstants.STATUS_ENABLED) {
+				continue;
+			}
+			Long resourceId = xResource.getId();
+			boolean hasPermission = checkUsrPermForPolicy(xUserId, permission,
+					resourceId);
+			// if permission is enabled then load Topologies,services list from
+			// resource
+			if (hasPermission) {
+				String[] xTopologies = (xResource.getTopologies() == null || xResource
+						.getTopologies().equalsIgnoreCase("")) ? null
+						: stringUtil.split(xResource.getTopologies(), ",");
+				/*
+				 * String[] xServices = (xResource.getServices() == null ||
+				 * xResource .getServices().equalsIgnoreCase("")) ? null :
+				 * stringUtil.split(xResource.getServices(), ",");
+				 */
+
+				boolean matchFound = false;
+
+				for (int index = 0; index < numberOfResources; index++) {
+					matchFound = false;
+					// check whether given table resource matches with any
+					// existing topology resource
+					if (index == 0) {
+						if (xTopologies != null) {
+							for (String xTopology : xTopologies) {
+								if (matchPath(splittedResources[index],
+										xTopology)) {
+									matchFound = true;
+									continue;
+								}
+							}
+						}
+					} // check whether given service resource matches with
+						// any existing service resource
+					/*
+					 * else if (index == 1) { if(xServices!=null){ for (String
+					 * xService : xServices) { if
+					 * (matchPath(splittedResources[index], xService)) {
+					 * matchFound = true; continue; } } } }
+					 */
+				}
+				if (matchFound) {
+					policyMatched = true;
+					break;
+				}
+			}
+		}
+		return policyMatched;
+	}
 
 	/**
 	 * returns path without meta characters
@@ -1027,8 +1063,11 @@ public class RangerBizUtil {
 		for (XXPermMap permMap : permMapList) {
 			if (permMap.getPermType() == permission) {
 				if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_GROUP) {
-					// check whether permission is enabled for public group or a group to which user belongs
-					matchFound = (publicGroupId != null && publicGroupId == permMap.getGroupId()) || isGroupInList(permMap.getGroupId(), userGroups);
+					// check whether permission is enabled for public group or a
+					// group to which user belongs
+					matchFound = (publicGroupId != null && publicGroupId == permMap
+							.getGroupId())
+							|| isGroupInList(permMap.getGroupId(), userGroups);
 				} else if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
 					// check whether permission is enabled to user
 					matchFound = permMap.getUserId().equals(xUserId);
@@ -1040,9 +1079,10 @@ public class RangerBizUtil {
 		}
 		return matchFound;
 	}
-	
+
 	public Long getPublicGroupId() {
-		XXGroup xXGroupPublic = daoManager.getXXGroup().findByGroupName(RangerConstants.GROUP_PUBLIC);
+		XXGroup xXGroupPublic = daoManager.getXXGroup().findByGroupName(
+				RangerConstants.GROUP_PUBLIC);
 
 		return xXGroupPublic != null ? xXGroupPublic.getId() : null;
 	}
@@ -1194,7 +1234,7 @@ public class RangerBizUtil {
 	 */
 	private boolean matchPath(String pathToCheckFragment,
 			String wildCardPathFragment) {
-		if(pathToCheckFragment == null || wildCardPathFragment == null) {
+		if (pathToCheckFragment == null || wildCardPathFragment == null) {
 			return false;
 		}
 
@@ -1220,7 +1260,7 @@ public class RangerBizUtil {
 			}
 		}
 	}
-	
+
 	private boolean matchPath(String pathToCheck, String[] wildCardPaths) {
 		if (pathToCheck != null && wildCardPaths != null) {
 			for (String wildCardPath : wildCardPaths) {
@@ -1229,7 +1269,7 @@ public class RangerBizUtil {
 				}
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -1306,6 +1346,14 @@ public class RangerBizUtil {
 			logger.error("Property : xa.db.flavor or jdbc.dialect, not found");
 			return AppConstants.DB_FLAVOR_UNKNOWN;
 		}
+	}
+
+	public String getAuditDBType() {
+		return auditDBType;
+	}
+
+	public void setAuditDBType(String auditDBType) {
+		this.auditDBType = auditDBType;
 	}
 
 }

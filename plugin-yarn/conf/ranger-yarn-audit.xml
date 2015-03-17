@@ -184,4 +184,52 @@
 		<name>xasecure.audit.log4j.async.max.flush.interval.ms</name>
 		<value>30000</value>
 	</property>	
+	
+	<!-- Kafka audit provider configuration -->
+	<property>
+		<name>xasecure.audit.kafka.is.enabled</name>
+		<value>false</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.kafka.async.max.queue.size</name>
+		<value>1</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.kafka.async.max.flush.interval.ms</name>
+		<value>1000</value>
+	</property>	
+	
+	<property>
+		<name>xasecure.audit.kafka.broker_list</name>
+		<value>localhost:9092</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.kafka.topic_name</name>
+		<value>ranger_audits</value>
+	</property>	
+	
+	<!-- Ranger audit provider configuration -->
+	<property>
+		<name>xasecure.audit.ranger.is.enabled</name>
+		<value>false</value>
+	</property>	
+	
+	<property>
+		<name>xasecure.audit.ranger.async.max.queue.size</name>
+		<value>1</value>
+	</property>	
+
+	<property>
+		<name>xasecure.audit.ranger.async.max.flush.interval.ms</name>
+		<value>1000</value>
+	</property>	
+	
+	<property>
+		<name>xasecure.audit.solr.solr_url</name>
+		<value>http://localhost:6083/solr/ranger_audits</value>
+	</property>	
+
 </configuration>

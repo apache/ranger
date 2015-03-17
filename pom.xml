@@ -88,6 +88,7 @@
   <module>knox-agent</module>
   <module>storm-agent</module>
   <module>plugin-yarn</module>
+  <module>ranger_solrj</module>
   <module>security-admin</module>
   <module>ugsync</module>
   <module>unixauthclient</module>
@@ -129,6 +130,9 @@
 		<hamcrest.all.version>1.3</hamcrest.all.version>
 		<hbase.version>0.99.2</hbase.version>
 		<hive.version>1.2.0-SNAPSHOT</hive.version>
+		<httpcomponent.httpmime.version>4.2.5</httpcomponent.httpmime.version>
+		<httpcomponent.httpclient.version>4.2.5</httpcomponent.httpclient.version>
+		<httpcomponent.httpcore.version>4.2.5</httpcomponent.httpcore.version>
 		<calcite.version>0.9.2-incubating</calcite.version>
 		<tez.version>0.5.2</tez.version>
 		<javassist.version>3.12.1.GA</javassist.version>
@@ -138,16 +142,20 @@
 		<jersey-bundle.version>1.17.1</jersey-bundle.version>
 		<jersey-client.version>2.6</jersey-client.version>
 		<junit.version>4.11</junit.version>
+		<kafka.version>0.8.2.0</kafka.version>
 		<mockito.version>1.8.4</mockito.version>
 		<hamcrest-version>1.3</hamcrest-version>
 		<knox.gateway.version>0.5.0</knox.gateway.version>
 		<local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
 		<log4j.version>1.2.17</log4j.version>
 		<mysql-connector-java.version>5.1.31</mysql-connector-java.version>
+		<noggit.version>0.6</noggit.version>
 		<owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
 		<slf4j-api.version>1.7.5</slf4j-api.version>
+		<!--<solr.version>5.0.0</solr.version>-->
+		<ranger.solrj.version>0.4.0</ranger.solrj.version>
 		<springframework.spring.version>2.5.6</springframework.spring.version>
 		<!--
 		<springframework.spring.version>3.1.3.RELEASE</springframework.spring.version>
@@ -162,6 +170,7 @@
 		<tomcat.commons.el.version>5.5.23</tomcat.commons.el.version>
 		<tomcat.embed.version>7.0.55</tomcat.embed.version>
 		<velocity.version>1.7</velocity.version>
+		<zookeeper.version>3.4.6</zookeeper.version>
 		<powermock.version>1.5.6</powermock.version>
 		<aspectj.version>1.8.2</aspectj.version>
 		<findbugs.plugin.version>3.0.0</findbugs.plugin.version>

@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
 import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
+import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
 
 
 /*
@@ -43,6 +44,7 @@ public class AuditProviderFactory {
 	private static final String AUDIT_HDFS_IS_ENABLED_PROP  = "xasecure.audit.hdfs.is.enabled";
 	private static final String AUDIT_LOG4J_IS_ENABLED_PROP = "xasecure.audit.log4j.is.enabled" ;
 	private static final String AUDIT_KAFKA_IS_ENABLED_PROP = "xasecure.audit.kafka.is.enabled";
+	private static final String AUDIT_SOLR_IS_ENABLED_PROP = "xasecure.audit.solr.is.enabled";
 	
 	private static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT     = 10 * 1024;
 	private static final int AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT =  5 * 1000;
@@ -99,8 +101,9 @@ public class AuditProviderFactory {
 		boolean isAuditToHdfsEnabled  = BaseAuditProvider.getBooleanProperty(props, AUDIT_HDFS_IS_ENABLED_PROP, false);
 		boolean isAuditToLog4jEnabled = BaseAuditProvider.getBooleanProperty(props, AUDIT_LOG4J_IS_ENABLED_PROP, false);
 		boolean isAuditToKafkaEnabled  = BaseAuditProvider.getBooleanProperty(props, AUDIT_KAFKA_IS_ENABLED_PROP, false);
+		boolean isAuditToSolrEnabled  = BaseAuditProvider.getBooleanProperty(props, AUDIT_SOLR_IS_ENABLED_PROP, false);
 
-		if(!isEnabled || !(isAuditToDbEnabled || isAuditToHdfsEnabled || isAuditToKafkaEnabled || isAuditToLog4jEnabled)) {
+		if(!isEnabled || !(isAuditToDbEnabled || isAuditToHdfsEnabled || isAuditToKafkaEnabled || isAuditToLog4jEnabled || isAuditToSolrEnabled)) {
 			LOG.info("AuditProviderFactory: Audit not enabled..");
 
 			mProvider = getDefaultProvider();
@@ -111,6 +114,7 @@ public class AuditProviderFactory {
 		List<AuditProvider> providers = new ArrayList<AuditProvider>();
 
 		if(isAuditToDbEnabled) {
+			LOG.info("DbAuditProvider is enabled");
 			DbAuditProvider dbProvider = new DbAuditProvider();
 
 			boolean isAuditToDbAsync = BaseAuditProvider.getBooleanProperty(props, DbAuditProvider.AUDIT_DB_IS_ASYNC_PROP, false);
@@ -128,6 +132,8 @@ public class AuditProviderFactory {
 		}
 
 		if(isAuditToHdfsEnabled) {
+			LOG.info("HdfsAuditProvider is enabled");
+
 			HdfsAuditProvider hdfsProvider = new HdfsAuditProvider();
 
 			boolean isAuditToHdfsAsync = BaseAuditProvider.getBooleanProperty(props, HdfsAuditProvider.AUDIT_HDFS_IS_ASYNC_PROP, false);
@@ -156,7 +162,20 @@ public class AuditProviderFactory {
 				providers.add(kafkaProvider);
 			}
 		}
-		
+
+		if(isAuditToSolrEnabled) {
+			LOG.info("SolrAuditProvider is enabled");
+			SolrAuditProvider solrProvider = new SolrAuditProvider();
+			solrProvider.init(props);
+			
+			if( solrProvider.isAsync()) {
+				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("MySolrAuditProvider", solrProvider.getMaxQueueSize(), solrProvider.getMaxFlushInterval(), solrProvider);
+				providers.add(asyncProvider);
+			} else {
+				providers.add(solrProvider);
+			}
+		}
+
 		if(isAuditToLog4jEnabled) {
 			Log4jAuditProvider log4jProvider = new Log4jAuditProvider();
 

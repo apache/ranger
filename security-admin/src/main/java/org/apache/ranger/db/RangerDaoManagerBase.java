@@ -321,6 +321,9 @@ public abstract class RangerDaoManagerBase {
 	}
 
 	public XXAccessAuditDao getXXAccessAudit() {
+		//Load appropriate class based on audit store
+		//TODO: Need to fix this, currently hard coding Solr
+		
 		return new XXAccessAuditDao(this);
 	}
 

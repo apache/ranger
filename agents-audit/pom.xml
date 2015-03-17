@@ -63,9 +63,29 @@
 	<version>${log4j.version}</version>
     </dependency>
     <dependency>
-	<groupId>org.apache.kafka</groupId>
-	<artifactId>kafka_2.10</artifactId>
-	<version>0.8.2.0</version>
-</dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka_2.10</artifactId>
+      <version>${kafka.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ranger</groupId>
+      <artifactId>ranger_solrj</artifactId>
+      <version>${ranger.solrj.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpcomponent.httpclient.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+      <version>${httpcomponent.httpmime.version}</version>
+    </dependency>	
+    <dependency>
+      <groupId>org.noggit</groupId>
+      <artifactId>noggit</artifactId>
+      <version>${noggit.version}</version>
+    </dependency>    
   </dependencies>
 </project>

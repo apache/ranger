@@ -40,7 +40,7 @@ public abstract class BaseAuditProvider implements AuditProvider {
 	private int maxQueueSize     =  AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT;
 	private int maxFlushInterval = AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT;
 
-	
+	protected Properties props = null;
 
 	public BaseAuditProvider() {
 	}
@@ -48,7 +48,8 @@ public abstract class BaseAuditProvider implements AuditProvider {
 	@Override
 	public void init(Properties props) {
 		LOG.info("BaseAuditProvider.init()");
-
+		this.props = props;
+		
 		mLogFailureReportMinIntervalInMs = getIntProperty(props, AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP, 60 * 1000);
 
 	}

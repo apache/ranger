@@ -48,6 +48,12 @@
                     <include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
                     <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
                     <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
+		    <include>org.apache.ranger:ranger_solrj:jar:${ranger.solrj.version}</include>
+		    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponent.httpclient.version}</include>
+		    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponent.httpcore.version}</include>
+		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
+		    <include>org.noggit:noggit:jar:${noggit.version}</include>
+		    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                 </includes>
             </dependencySet>
             <dependencySet>

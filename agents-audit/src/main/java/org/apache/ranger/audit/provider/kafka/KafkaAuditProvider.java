@@ -117,7 +117,7 @@ public class KafkaAuditProvider extends BaseAuditProvider {
 			}
 		} catch (Throwable t) {
 			LOG.error("Error sending message to Kafka topic. topic=" + topic
-					+ ", message=" + message);
+					+ ", message=" + message, t);
 		}
 	}
 

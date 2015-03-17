@@ -17,9 +17,46 @@
  * under the License.
  */
 
- package org.apache.ranger.biz;
+package org.apache.ranger.biz;
+
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.solr.SolrAccessAuditsService;
+import org.apache.ranger.view.VXAccessAudit;
+import org.apache.ranger.view.VXAccessAuditList;
+import org.apache.ranger.view.VXLong;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class XAuditMgr extends XAuditMgrBase {
 
-}
+	@Autowired
+	SolrAccessAuditsService solrAccessAuditsService;
 
+	@Autowired
+	RangerBizUtil rangerBizUtil;
+
+	@Override
+	public VXAccessAudit getXAccessAudit(Long id) {
+		// TODO Auto-generated method stub
+		return super.getXAccessAudit(id);
+	}
+
+	@Override
+	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
+		if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
+			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
+		} else {
+			return super.searchXAccessAudits(searchCriteria);
+		}
+	}
+
+	@Override
+	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
+		if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
+			return solrAccessAuditsService
+					.getXAccessAuditSearchCount(searchCriteria);
+		} else {
+			return super.getXAccessAuditSearchCount(searchCriteria);
+		}
+	}
+
+}

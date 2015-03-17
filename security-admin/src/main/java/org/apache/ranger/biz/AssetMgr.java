@@ -66,6 +66,7 @@ import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XTrxLogService;
 import org.apache.ranger.service.XUserService;
+import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXAsset;
@@ -133,6 +134,9 @@ public class AssetMgr extends AssetMgrBase {
 	
 	@Autowired
 	XUserMgr xUserMgr;
+
+	@Autowired
+	SolrAccessAuditsService solrAccessAuditsService;
 
 	@Autowired
 	@Qualifier(value = "transactionManager")
@@ -1776,7 +1780,12 @@ public class AssetMgr extends AssetMgrBase {
 		}else if(!searchCriteria.getSortType().equalsIgnoreCase("asc")&& !searchCriteria.getSortType().equalsIgnoreCase("desc")){
 			searchCriteria.setSortType("desc");
 		}
-		return xAccessAuditService.searchXAccessAudits(searchCriteria);
+		if (xaBizUtil.getAuditDBType().equalsIgnoreCase(RangerBizUtil.AUDIT_STORE_SOLR)) {
+			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
+		} else {
+			return xAccessAuditService.searchXAccessAudits(searchCriteria);
+		}
+		//return xAccessAuditService.searchXAccessAudits(searchCriteria);
 	}
 
 	public VXTrxLogList getTransactionReport(String transactionId) {
