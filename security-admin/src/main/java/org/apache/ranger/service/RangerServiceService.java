@@ -18,6 +18,7 @@ import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceConfigMap;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -43,8 +44,6 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		trxLogAttrs.put("description", new VTrxLogAttr("description", "Service Description", false));
 		trxLogAttrs.put("isEnabled", new VTrxLogAttr("isEnabled", "Service Status", false));
 		trxLogAttrs.put("configs", new VTrxLogAttr("configs", "Connection Configurations", false));
-		trxLogAttrs.put("policyVersion", new VTrxLogAttr("policyVersion", "Policy Version", false));
-		trxLogAttrs.put("policyUpdateTime", new VTrxLogAttr("policyUpdateTime", "Policy Update Time", false));
 	}
 	
 	public RangerServiceService() {
@@ -246,6 +245,11 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_SERVICE);
 		xTrxLog.setObjectId(vObj.getId());
 		xTrxLog.setObjectName(objectName);
+		
+		XXServiceDef parentObj = daoMgr.getXXServiceDef().findByName(vObj.getType());
+		xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_SERVICE_DEF);
+		xTrxLog.setParentObjectId(parentObj.getId());
+		xTrxLog.setParentObjectName(parentObj.getName());
 
 		return xTrxLog;
 	}

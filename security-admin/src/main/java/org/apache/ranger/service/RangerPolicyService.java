@@ -26,6 +26,7 @@ import org.apache.ranger.entity.XXPolicyItemCondition;
 import org.apache.ranger.entity.XXPolicyResource;
 import org.apache.ranger.entity.XXPolicyResourceMap;
 import org.apache.ranger.entity.XXResourceDef;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -343,6 +344,11 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
 		xTrxLog.setObjectId(vObj.getId());
 		xTrxLog.setObjectName(objectName);
+		
+		XXService parentObj = daoMgr.getXXService().findByName(vObj.getName());
+		xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_SERVICE);
+		xTrxLog.setParentObjectId(parentObj.getId());
+		xTrxLog.setParentObjectName(parentObj.getName());
 
 		return xTrxLog;
 	}
