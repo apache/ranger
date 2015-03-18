@@ -37,7 +37,6 @@
                     <include>com.google.code.gson:gson*</include>
 					<include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
-		    <include>org.apache.ranger:ranger_solrj:jar:${ranger.solrj.version}</include>
 		    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponent.httpclient.version}</include>
 		    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponent.httpcore.version}</include>
 		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
@@ -50,6 +49,7 @@
         <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
+	<include>org.apache.ranger:ranger_solrj</include>
 	<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
 	<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
 	<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl</include>

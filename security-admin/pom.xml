@@ -246,7 +246,7 @@
 		<dependency>
 			<groupId>org.apache.ranger</groupId>
 			<artifactId>ranger_solrj</artifactId>
-			<version>${ranger.solrj.version}</version>
+			<version>${project.version}</version>
 		</dependency>		
 		<dependency>
 		    <groupId>junit</groupId>
