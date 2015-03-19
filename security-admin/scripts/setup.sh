@@ -833,7 +833,7 @@ update_properties() {
                 updatePropertyToFile $propertyName $newPropertyValue $to_file
         fi
 
-        propertyName=xa.audit.db.type
+        propertyName=xa.audit.store
         newPropertyValue=${audit_store}
         updatePropertyToFile $propertyName $newPropertyValue $to_file
 

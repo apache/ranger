@@ -107,7 +107,7 @@ public class RangerBizUtil {
 				Arrays.asList(groupEditableClassesList));
 		enableResourceAccessControl = PropertiesUtil.getBooleanProperty(
 				"xa.resource.accessControl.enabled", true);
-		auditDBType = PropertiesUtil.getProperty("xa.audit.db.type",
+		auditDBType = PropertiesUtil.getProperty("xa.audit.store",
 				auditDBType).toLowerCase();
 
 		logger.info("Audit datasource is " + auditDBType);
