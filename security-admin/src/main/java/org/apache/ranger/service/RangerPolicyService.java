@@ -345,7 +345,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		xTrxLog.setObjectId(vObj.getId());
 		xTrxLog.setObjectName(objectName);
 		
-		XXService parentObj = daoMgr.getXXService().findByName(vObj.getName());
+		XXService parentObj = daoMgr.getXXService().findByName(vObj.getService());
 		xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_SERVICE);
 		xTrxLog.setParentObjectId(parentObj.getId());
 		xTrxLog.setParentObjectName(parentObj.getName());
