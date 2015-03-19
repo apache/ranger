@@ -49,6 +49,7 @@
 					<include>org.apache.commons:commons-csv</include>
 					<include>org.apache.ranger:credentialbuilder</include>
 					<include>org.apache.ranger:ranger-util</include>
+					<include>commons-io:commons-io:jar:${commons.io.version}</include>
 				</includes>
 				<unpack>false</unpack>
   			</dependencySet>
