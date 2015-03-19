@@ -473,10 +473,10 @@ define(function(require) {
 		addSearchForAgentTab : function(){
 			var that = this;
 			//var searchOpt = _.pluck(this.getAgentColumns(), 'label');
-			var searchOpt = ["Export Date", "Repository Name", "Agent Id", "Agent IP", "Http Response Code"];
+			var searchOpt = ["Export Date", "Repository Name", "Plugin Id", "Plugin IP", "Http Response Code"];
 			searchOpt = _.without(searchOpt,'Export Date');
 			searchOpt = _.union(searchOpt, ['Start Date','End Date']);//'Today'
-			var serverAttrName  = [{text : "Agent Id", label :"agentId"}, {text : "Agent IP", label :"clientIP"},
+			var serverAttrName  = [{text : "Plugin Id", label :"agentId"}, {text : "Plugin IP", label :"clientIP"},
 			                       {text : "Repository Name", label :"repositoryName"},{text : "Http Response Code", label :"httpRetCode"},
 			                       {text : "Export Date", label :"createDate"},
 			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
@@ -1167,7 +1167,7 @@ define(function(require) {
 				gridOpts : {
 					row : 	Backgrid.Row.extend({}),
 					header : XABackgrid,
-					emptyText : 'No agent found!'
+					emptyText : 'No plugin found!'
 				}
 			}));	
 		},

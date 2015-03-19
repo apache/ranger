@@ -528,6 +528,12 @@ define(function(require) {
 	        					collection.VSQuery = query;
 	        					search(searchCollection, serverAttrName, searchOpt,collection);
 	        			   },
+			clearSearch: function(callback) {
+				_.each(serverAttrName, function(attr) {
+					delete collection.queryParams[attr.label];
+				});
+				callback();
+			},
 	        facetMatches :  function(callback) {
 	        				//	console.log(visualSearch);
 	        					var searchOptTemp = $.extend(true, [], searchOpt);
