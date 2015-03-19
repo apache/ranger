@@ -669,6 +669,7 @@ def port_ranger_hbase_plugin_to_ambari():
 		advanced_ranger_hbase_plugin_properties = dict()
 
 		advanced_ranger_hbase_plugin_properties['policy_user'] = 'ambari-qa'
+		advanced_ranger_hbase_plugin_properties['common.name.for.certificate'] = '-'
 		advanced_ranger_hbase_plugin_properties['ranger-hbase-plugin-enabled'] = 'Yes'
 		advanced_ranger_hbase_plugin_properties['REPOSITORY_CONFIG_USERNAME'] = 'hbase'
 		advanced_ranger_hbase_plugin_properties['REPOSITORY_CONFIG_PASSWORD'] = 'hbase'

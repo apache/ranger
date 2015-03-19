@@ -178,6 +178,17 @@
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":""
+		},
+		
+		{
+			"name": "certificate.cn",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Common Name for Certificate"
 		}
 	],
 
