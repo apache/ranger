@@ -33,9 +33,17 @@ define(function(require){
 		
     	template: ErrorView_tmpl,
         templateHelpers :function(){
+        	var msg = '', moreInfo = '';
+        	if(this.status == 401){
+        		msg = 'Access Denied (401)'
+            	moreInfo = "Sorry, you don't have enough privileges to view this page.";
+            }else{
+        		msg = 'Page not found (404).'
+            	moreInfo = "Sorry, this page isn't here or has moved.";
+            }
         	return {
-        		restrictedAccess :this.restrictedAccess || false,
-        		pageNotFound :this.pageNotFound || false
+        		'msg' : msg,
+        		'moreInfo' : moreInfo
         	};
         },
     	/** ui selector cache */
@@ -59,7 +67,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a ErrorView ItemView");
 
-			_.extend(this, _.pick(options, 'restrictedAccess','pageNotFound'));
+			_.extend(this, _.pick(options, 'status'));
 
 			this.bindEvents();
 		},
@@ -76,7 +84,7 @@ define(function(require){
 			$('#r_breadcrumbs').hide();
 		},
 		goBackClick : function(){
-			
+			history.back();
 		},
 
 		/** all post render plugin initialization */

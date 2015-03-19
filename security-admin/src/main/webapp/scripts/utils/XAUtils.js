@@ -402,12 +402,13 @@ define(function(require) {
 		var App		= require('App');
 		var vError = require('views/common/ErrorView');
         if (error.status == 404 ) {
-           // trigger event or route to login here.
         	App.rContent.show(new vError({
-        		pageNotFound :true
+        		status : error.status
         	}));
         }else if (error.status == 401 ) {
-        	window.location.replace('login.jsp');
+        	App.rContent.show(new vError({
+        		status : error.status
+        	}));
         }
     };
     XAUtils.select2Focus  =  function(event) {
@@ -778,6 +779,20 @@ define(function(require) {
 	XAUtils.getRangerServiceDef = function(name) {
 		return "service/plugins/definitions/name/"+name;
 	};
-	
+	XAUtils.filterAllowedActions = function(controller) {
+		var SessionMgr	= require('mgrs/SessionMgr');
+		var XAGlobals	= require('utils/XAGlobals');
+		var that = this;
+		if(!SessionMgr.isSystemAdmin()){
+			_.each(XAGlobals.DenyControllerActions, function(routeMethodName) {
+				if(!_.isUndefined(controller[routeMethodName])){
+					controller[routeMethodName] = function(){ 
+						that.defaultErrorHandler(undefined, {'status':401}); 
+					};
+				}
+			});
+		}
+		return controller;
+	};
     return XAUtils;
 });

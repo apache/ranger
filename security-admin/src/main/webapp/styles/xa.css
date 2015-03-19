@@ -1779,3 +1779,7 @@ margin-top: -29px;
 td.select-row-cell {
   text-align: center;
 }
+.ranger-notifications {
+	right: 33px!important;
+	top: 41px!important;
+}

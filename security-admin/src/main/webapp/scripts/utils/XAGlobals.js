@@ -62,6 +62,8 @@ define(function(require){
 	XAGlobals.hardcoded.HDFSAssetId = 1;
 	XAGlobals.hardcoded.HBaseAssetId = 2;
 	XAGlobals.hardcoded.HiveAssetId = 3;
+	XAGlobals.DenyControllerActions = ['userManagerAction','userCreateAction','userEditAction','groupCreateAction',
+	                                   'groupEditAction','auditReportAction','loginSessionDetail','serviceCreateAction','serviceEditAction'];
 	
 	return XAGlobals;
 });

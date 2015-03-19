@@ -346,6 +346,11 @@ define(function(require) {
 			   }));
 		   });
 	   },
+	   /**************** ERROR PAGE ******************************/
+	   pageNotFoundAction	: function() {
+		   var XAUtils			= require('utils/XAUtils');
+		   XAUtils.defaultErrorHandler(undefined, { 'status' : 404 });
+	   },
 	   
 	});
 });

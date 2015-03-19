@@ -49,9 +49,9 @@ define(function(require){
         
 		breadCrumbs :function(){
 			if(this.model.isNew())
-				return [XALinks.get('RepositoryManager'), XALinks.get('ServiceCreate', {model:this.model})];
+				return [XALinks.get('ServiceManager'), XALinks.get('ServiceCreate', {model:this.model})];
 			else
-				return [XALinks.get('RepositoryManager'), XALinks.get('ServiceEdit',{model:this.model})];
+				return [XALinks.get('ServiceManager'), XALinks.get('ServiceEdit',{model:this.model})];
 		},        
 
 		/** Layout sub regions */
