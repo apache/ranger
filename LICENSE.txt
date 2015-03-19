@@ -503,3 +503,5 @@ OTHER DEALINGS IN THE SOFTWARE.
 This product includes Bootstrap Datepicker (http://www.eyecon.ro/bootstrap-datepicker - Apache License - 2.0), Copyright 2012 Stefan Petre.  
 This product includes bootstrap-transition.js v2.3.2 (http://twbs.github.com/bootstrap/javascript.html#transitions - Apache License - 2.0), Copyright 2013 Twitter, Inc.  
 This product includes Select2 3.4.3 (http://ivaynberg.github.io/select2/ - Apache License - 2.0), Copyright 2012 Igor Vaynberg.  
+This product includes bootstrap-notify v1.0 (http://goodybag.github.io/bootstrap-notify/ - Apache License - 2.0), Copyright 2012 Goodybag, Inc.
+.  
