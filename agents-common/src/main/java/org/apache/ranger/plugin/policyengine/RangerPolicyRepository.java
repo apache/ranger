@@ -43,7 +43,7 @@ public class RangerPolicyRepository {
     private RangerServiceDef serviceDef                         = null;
     // Not used at this time
     private boolean useCachePolicyEngine                                = false;
-    private Map<String, RangerAccessData<Boolean>> accessAuditCache     = null;
+    private Map<String, Boolean> accessAuditCache     = null;
 
     private static int RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE = 64*1024;
 
@@ -65,7 +65,6 @@ public class RangerPolicyRepository {
     }
 
     void init(RangerServiceDef serviceDef, List<RangerPolicy> policies) {
-
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyRepository.init(" + serviceDef + ", policies.count=" + (policies == null ? 0 : policies.size()) + ")");
         }
@@ -105,7 +104,7 @@ public class RangerPolicyRepository {
 
         int auditResultCacheSize = RangerConfiguration.getInstance().getInt(propertyName, RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE);
 
-        accessAuditCache = new CacheMap<String, RangerAccessData<Boolean>>(auditResultCacheSize);
+        accessAuditCache = new CacheMap<String, Boolean>(auditResultCacheSize);
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.init(" + serviceDef + ", policies.count=" + (policies == null ? 0 : policies.size()) + ")");
@@ -159,33 +158,45 @@ public class RangerPolicyRepository {
         return ret;
     }
 
-    synchronized void retrieveAuditEnabled(RangerAccessRequest request, RangerAccessResult ret) {
+    boolean setAuditEnabledFromCache(RangerAccessRequest request, RangerAccessResult result) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyRepository.retrieveAuditEnabled()");
+            LOG.debug("==> RangerPolicyRepository.setAuditEnabledFromCache()");
         }
-        RangerAccessData<Boolean> value = accessAuditCache.get(request.getResource().toString());
+
+        Boolean value = null;
+
+        synchronized (accessAuditCache) {
+	        value = accessAuditCache.get(request.getResource().getAsString(getServiceDef()));
+        }
+
         if ((value != null)) {
-            ret.setIsAudited(value.getAccessDetails());
+            result.setIsAudited(value);
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyRepository.retrieveAuditEnabled()");
+            LOG.debug("<== RangerPolicyRepository.setAuditEnabledFromCache()");
         }
+
+        return value != null;
     }
 
-    synchronized void storeAuditEnabled(RangerAccessRequest request, RangerAccessResult ret) {
+     void storeAuditEnabledInCache(RangerAccessRequest request, RangerAccessResult ret) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyRepository.storeAuditEnabled()");
+            LOG.debug("==> RangerPolicyRepository.storeAuditEnabledInCache()");
         }
-        RangerAccessData<Boolean> lookup = accessAuditCache.get(request.getResource().toString());
-        if ((lookup == null && ret.getIsAuditedDetermined() == true)) {
-            RangerAccessData<Boolean> value = new RangerAccessData<Boolean>(request.toString());
-            value.setAccessDetails(ret.getIsAudited());
-            accessAuditCache.put(request.getResource().toString(), value);
+
+        if ((ret.getIsAuditedDetermined() == true)) {
+            String strResource = request.getResource().getAsString(getServiceDef());
+
+            Boolean value = ret.getIsAudited() ? Boolean.TRUE : Boolean.FALSE;
+
+            synchronized(accessAuditCache) {
+	            accessAuditCache.put(strResource, value);
+	        }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyRepository.storeAuditEnabled()");
+            LOG.debug("<== RangerPolicyRepository.storeAuditEnabledInCache()");
         }
     }
 

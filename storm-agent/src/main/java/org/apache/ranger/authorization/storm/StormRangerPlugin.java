@@ -10,7 +10,7 @@ import org.apache.ranger.authorization.storm.StormRangerPlugin.StormConstants.Re
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.collect.Sets;
@@ -52,7 +52,7 @@ public class StormRangerPlugin extends RangerBasePlugin {
 		request.setAccessType(_operation);
 		request.setClientIPAddress(_clientIp);
 		// build resource and connect stuff into request
-		RangerResourceImpl resource = new RangerResourceImpl();
+		RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
 		resource.setValue(ResourceName.Topology, _topology);
 		request.setResource(resource);
 		

@@ -22,7 +22,6 @@
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -64,12 +63,10 @@ public class RangerSearchUtil extends SearchUtil {
 	private StringBuilder buildWhereClause(SearchFilter searchCriteria, List<SearchField> searchFields) {
 		return buildWhereClause(searchCriteria, searchFields, false, false);
 	}
-	
+
 	private StringBuilder buildWhereClause(SearchFilter searchCriteria,
 			List<SearchField> searchFields, boolean isNativeQuery,
 			boolean excludeWhereKeyword) {
-
-		Map<String, String> paramList = searchCriteria.getParams();
 
 		StringBuilder whereClause = new StringBuilder(excludeWhereKeyword ? "" : "WHERE 1 = 1 ");
 
@@ -83,7 +80,7 @@ public class RangerSearchUtil extends SearchUtil {
 			}
 
 			if (searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
-				Integer paramVal = restErrorUtil.parseInt(paramList.get(searchField.getClientFieldName()),
+				Integer paramVal = restErrorUtil.parseInt(searchCriteria.getParam(searchField.getClientFieldName()),
 						"Invalid value for " + searchField.getClientFieldName(),
 						MessageEnums.INVALID_INPUT_DATA, null, searchField.getClientFieldName());
 				
@@ -99,7 +96,7 @@ public class RangerSearchUtil extends SearchUtil {
 					}
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.STRING) {
-				String strFieldValue = paramList.get(searchField.getClientFieldName());
+				String strFieldValue = searchCriteria.getParam(searchField.getClientFieldName());
 				if (strFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")");
@@ -113,7 +110,7 @@ public class RangerSearchUtil extends SearchUtil {
 					}
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.BOOLEAN) {
-				Boolean boolFieldValue = restErrorUtil.parseBoolean(paramList.get(searchField.getClientFieldName()),
+				Boolean boolFieldValue = restErrorUtil.parseBoolean(searchCriteria.getParam(searchField.getClientFieldName()),
 						"Invalid value for " + searchField.getClientFieldName(),
 						MessageEnums.INVALID_INPUT_DATA, null, searchField.getClientFieldName());
 				
@@ -128,7 +125,7 @@ public class RangerSearchUtil extends SearchUtil {
 					}
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.DATE) {
-				Date fieldValue = restErrorUtil.parseDate(paramList.get(searchField.getClientFieldName()), 
+				Date fieldValue = restErrorUtil.parseDate(searchCriteria.getParam(searchField.getClientFieldName()), 
 						"Invalid value for " + searchField.getClientFieldName(), MessageEnums.INVALID_INPUT_DATA, 
 						null, searchField.getClientFieldName(), null);
 				if (fieldValue != null) {
@@ -168,12 +165,10 @@ public class RangerSearchUtil extends SearchUtil {
 	
 	protected void resolveQueryParams(Query query, SearchFilter searchCriteria, List<SearchField> searchFields) {
 
-		Map<String, String> paramList = searchCriteria.getParams();
-
 		for (SearchField searchField : searchFields) {
 
 			if (searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
-				Integer paramVal = restErrorUtil.parseInt(paramList.get(searchField.getClientFieldName()),
+				Integer paramVal = restErrorUtil.parseInt(searchCriteria.getParam(searchField.getClientFieldName()),
 						"Invalid value for " + searchField.getClientFieldName(),
 						MessageEnums.INVALID_INPUT_DATA, null, searchField.getClientFieldName());
 				
@@ -182,7 +177,7 @@ public class RangerSearchUtil extends SearchUtil {
 					query.setParameter(searchField.getClientFieldName(), intFieldValue);
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.STRING) {
-				String strFieldValue = paramList.get(searchField.getClientFieldName());
+				String strFieldValue = searchCriteria.getParam(searchField.getClientFieldName());
 				if (strFieldValue != null) {
 					if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
 						query.setParameter(searchField.getClientFieldName(), strFieldValue.trim().toLowerCase());
@@ -191,7 +186,7 @@ public class RangerSearchUtil extends SearchUtil {
 					}
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.BOOLEAN) {
-				Boolean boolFieldValue = restErrorUtil.parseBoolean(paramList.get(searchField.getClientFieldName()),
+				Boolean boolFieldValue = restErrorUtil.parseBoolean(searchCriteria.getParam(searchField.getClientFieldName()),
 						"Invalid value for " + searchField.getClientFieldName(),
 						MessageEnums.INVALID_INPUT_DATA, null, searchField.getClientFieldName());
 				
@@ -199,7 +194,7 @@ public class RangerSearchUtil extends SearchUtil {
 					query.setParameter(searchField.getClientFieldName(), boolFieldValue);
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.DATE) {
-				Date fieldValue = restErrorUtil.parseDate(paramList.get(searchField.getClientFieldName()), 
+				Date fieldValue = restErrorUtil.parseDate(searchCriteria.getParam(searchField.getClientFieldName()), 
 						"Invalid value for " + searchField.getClientFieldName(), MessageEnums.INVALID_INPUT_DATA, 
 						null, searchField.getClientFieldName(), null);
 				if (fieldValue != null) {

@@ -22,6 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CacheMap<K, V> extends LinkedHashMap<K, V> {
+    private static final long serialVersionUID = 1L;
+
     private static final float RANGER_CACHE_DEFAULT_LOAD_FACTOR = 0.75f;
 
     protected int maxCapacity;

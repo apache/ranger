@@ -24,7 +24,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 
 public interface RangerPolicyEvaluator {
 	void init(RangerPolicy policy, RangerServiceDef serviceDef);
@@ -35,7 +35,7 @@ public interface RangerPolicyEvaluator {
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
 
-	boolean isMatch(RangerResource resource);
+	boolean isMatch(RangerAccessResource resource);
 
-	boolean isSingleAndExactMatch(RangerResource resource);
+	boolean isSingleAndExactMatch(RangerAccessResource resource);
 }

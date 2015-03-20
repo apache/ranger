@@ -64,8 +64,8 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerResource;
-import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
@@ -533,9 +533,9 @@ public class ServiceREST {
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 
 			try {
-				String         userName   = grantRequest.getGrantor();
-				Set<String>    userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger database
-				RangerResource resource   = new RangerResourceImpl(grantRequest.getResource());
+				String               userName   = grantRequest.getGrantor();
+				Set<String>          userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger database
+				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
 	
 				boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
 	
@@ -714,9 +714,9 @@ public class ServiceREST {
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
 
 			try {
-				String         userName   = revokeRequest.getGrantor();
-				Set<String>    userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger databas
-				RangerResource resource   = new RangerResourceImpl(revokeRequest.getResource());
+				String               userName   = revokeRequest.getGrantor();
+				Set<String>          userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger databas
+				RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
 	
 				boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
 				
@@ -1120,7 +1120,7 @@ public class ServiceREST {
 		}
 	}
 
-	private boolean isAdminForResource(String userName, Set<String> userGroups, String serviceName, RangerResource resource) throws Exception {
+	private boolean isAdminForResource(String userName, Set<String> userGroups, String serviceName, RangerAccessResource resource) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.isAdminForResource(" + userName + ", " + serviceName + ", " + resource + ")");
 		}
@@ -1165,7 +1165,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerResource resource) throws Exception {
+	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerAccessResource resource) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + serviceName + ", " + resource + ")");
 		}
@@ -1191,7 +1191,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private boolean isMatch(RangerPolicy policy, RangerResource resource) throws Exception {
+	private boolean isMatch(RangerPolicy policy, RangerAccessResource resource) throws Exception {
 		boolean ret = false;
 
 		String        serviceName = policy.getService();
@@ -1216,7 +1216,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private boolean isSingleAndExactMatch(RangerPolicy policy, RangerResource resource) throws Exception {
+	private boolean isSingleAndExactMatch(RangerPolicy policy, RangerAccessResource resource) throws Exception {
 		boolean ret = false;
 
 		String        serviceName = policy.getService();

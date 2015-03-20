@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,21 +19,26 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.Map;
+import java.util.Set;
 
-public class RangerAccessData<T> {
-    private String accessFDN    = null;
-    private T accessDetails    = null;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 
-    public RangerAccessData(String accessFDN) {
-        this.accessFDN = accessFDN;
-    }
-    public String getAccessFDN() {
-        return accessFDN;
-    }
-    public T getAccessDetails() {
-        return accessDetails;
-    }
-    public void setAccessDetails(T accessDetails) {
-        this.accessDetails = accessDetails;
-    }
+
+public interface RangerAccessResource {
+	public static final String RESOURCE_SEP = "/";
+
+	public abstract String getOwnerUser();
+
+	public abstract boolean exists(String name);
+
+	public abstract String getValue(String name);
+
+	public Set<String> getKeys();
+
+	public String getLeafName(RangerServiceDef serviceDef);
+
+	public String getAsString(RangerServiceDef serviceDef);
+
+	public Map<String, String> getAsMap();
 }

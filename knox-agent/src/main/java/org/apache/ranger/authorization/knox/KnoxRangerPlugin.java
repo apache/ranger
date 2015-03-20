@@ -27,7 +27,7 @@ import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.Resou
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 public class KnoxRangerPlugin extends RangerBasePlugin {
@@ -85,7 +85,7 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 		
 		RangerAccessRequest build() {
 			// build resource
-			RangerResourceImpl resource = new RangerResourceImpl();
+			RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
 			resource.setValue(ResourceName.Service, _service);
 			resource.setValue(ResourceName.Topology, _topology);
 			// build request

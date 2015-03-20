@@ -37,7 +37,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
-import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 
@@ -328,7 +328,7 @@ public class RangerBasePlugin {
 		if(request != null && auditHandler != null && policyEngine != null) {
 			RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
 	
-			accessRequest.setResource(new RangerResourceImpl(request.getResource()));
+			accessRequest.setResource(new RangerAccessResourceImpl(request.getResource()));
 			accessRequest.setUser(request.getGrantor());
 			accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
 			accessRequest.setAction(action);

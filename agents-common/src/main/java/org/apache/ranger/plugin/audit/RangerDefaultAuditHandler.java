@@ -28,16 +28,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 
 
 public class RangerDefaultAuditHandler implements RangerAuditHandler {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
-
-	private static final String RESOURCE_SEP = "/";
 
 
 	public RangerDefaultAuditHandler() {
@@ -84,9 +81,10 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 		RangerAccessRequest request = result != null ? result.getAccessRequest() : null;
 
 		if(request != null && result != null && result.getIsAudited()) {
-			RangerServiceDef serviceDef   = result.getServiceDef();
-			String           resourceType = getResourceName(request.getResource(), serviceDef);
-			String           resourcePath = getResourceValueAsString(request.getResource(), serviceDef);
+			RangerServiceDef     serviceDef   = result.getServiceDef();
+			RangerAccessResource resource     = request.getResource();
+			String               resourceType = resource == null ? null : resource.getLeafName(serviceDef);
+			String               resourcePath = resource == null ? null : resource.getAsString(serviceDef);
 
 			ret = createAuthzAuditEvent();
 
@@ -179,53 +177,5 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 
 	public AuthzAuditEvent createAuthzAuditEvent() {
 		return new AuthzAuditEvent();
-	}
-
-	public String getResourceName(RangerResource resource, RangerServiceDef serviceDef) {
-		String ret = null;
-
-		if(resource != null && serviceDef != null && serviceDef.getResources() != null) {
-			List<RangerResourceDef> resourceDefs = serviceDef.getResources();
-
-			for(int idx = resourceDefs.size() - 1; idx >= 0; idx--) {
-				RangerResourceDef resourceDef = resourceDefs.get(idx);
-
-				if(resourceDef == null || !resource.exists(resourceDef.getName())) {
-					continue;
-				}
-
-				ret = resourceDef.getName();
-
-				break;
-			}
-		}
-		
-		return ret;
-	}
-
-	public String getResourceValueAsString(RangerResource resource, RangerServiceDef serviceDef) {
-		String ret = null;
-
-		if(resource != null && serviceDef != null && serviceDef.getResources() != null) {
-			StringBuilder sb = new StringBuilder();
-
-			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-				if(resourceDef == null || !resource.exists(resourceDef.getName())) {
-					continue;
-				}
-
-				if(sb.length() > 0) {
-					sb.append(RESOURCE_SEP);
-				}
-
-				sb.append(resource.getValue(resourceDef.getName()));
-			}
-
-			if(sb.length() > 0) {
-				ret = sb.toString();
-			}
-		}
-
-		return ret;
 	}
 }

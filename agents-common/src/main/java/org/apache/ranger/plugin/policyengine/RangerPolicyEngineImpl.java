@@ -166,7 +166,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<RangerPolicyEvaluatorFacade> evaluators = policyRepository.getPolicyEvaluators();
 
 			if(evaluators != null) {
-				policyRepository.retrieveAuditEnabled(request, ret);
+				boolean foundInCache = policyRepository.setAuditEnabledFromCache(request, ret);
+
 				for(RangerPolicyEvaluator evaluator : evaluators) {
 					evaluator.evaluate(request, ret);
 
@@ -175,7 +176,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						break;
 					}
 				}
-				policyRepository.storeAuditEnabled(request, ret);
+
+				if(! foundInCache) {
+					policyRepository.storeAuditEnabledInCache(request, ret);
+				}
 
 			}
 		}

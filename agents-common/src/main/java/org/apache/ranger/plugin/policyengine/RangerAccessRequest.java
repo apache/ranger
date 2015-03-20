@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 public interface RangerAccessRequest {
-	RangerResource getResource();
+	RangerAccessResource getResource();
 
 	String getAccessType();
 

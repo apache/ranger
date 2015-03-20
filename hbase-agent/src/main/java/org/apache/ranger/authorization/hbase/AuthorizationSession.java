@@ -30,7 +30,7 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.base.Objects;
@@ -156,7 +156,7 @@ public class AuthorizationSession {
 		// session can be reused so reset its state
 		zapAuthorizationState();
 		// TODO get this via a factory instead
-		RangerResourceImpl resource = new RangerResourceImpl();
+		RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
 		// policy engine should deal sensibly with null/empty values, if any
 		resource.setValue("table", _table);
 		resource.setValue("column-family", _columnFamily);

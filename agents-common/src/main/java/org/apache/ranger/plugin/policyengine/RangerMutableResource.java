@@ -20,7 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 
-public interface RangerMutableResource extends RangerResource {
+public interface RangerMutableResource extends RangerAccessResource {
 	void setOwnerUser(String ownerUser);
 
 	void setValue(String type, String value);

@@ -36,8 +36,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerResource;
-import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -62,7 +62,7 @@ public class TestPolicyEngine {
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
 									   .setPrettyPrinting()
 									   .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
-									   .registerTypeAdapter(RangerResource.class,  new RangerResourceDeserializer())
+									   .registerTypeAdapter(RangerAccessResource.class,  new RangerResourceDeserializer())
 									   .create();
 	}
 
@@ -165,11 +165,11 @@ public class TestPolicyEngine {
 		}
 	}
 	
-	static class RangerResourceDeserializer implements JsonDeserializer<RangerResource> {
+	static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
 		@Override
-		public RangerResource deserialize(JsonElement jsonObj, Type type,
+		public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
 				JsonDeserializationContext context) throws JsonParseException {
-			return gsonBuilder.fromJson(jsonObj, RangerResourceImpl.class);
+			return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
 		}
 	}
 }
