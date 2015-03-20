@@ -39,14 +39,8 @@ define(function(require){
 		 */
 		initialize : function() {
 			this.modelName = 'RangerPolicy';
-			this.modelAttrName = 'RangerPolicies';
+			this.modelAttrName = 'policies';
 			this.bindErrorEvents();
-		},
-			/**
-		 * override the parseRecords of PageableCollection for our use
-		 */
-		parseRecords : function(resp, options){
-			return resp;
 		}
 	},{
 		// static class members

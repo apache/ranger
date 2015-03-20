@@ -32,6 +32,7 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -60,6 +61,7 @@ import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXAccessTypeDefGrants;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDBBase;
+import org.apache.ranger.entity.XXDataHist;
 import org.apache.ranger.entity.XXEnumDef;
 import org.apache.ranger.entity.XXEnumElementDef;
 import org.apache.ranger.entity.XXGroup;
@@ -102,6 +104,9 @@ import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.RangerPolicyList;
+import org.apache.ranger.view.RangerServiceDefList;
+import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -225,6 +230,9 @@ public class ServiceDBStore implements ServiceStore {
 		serviceDef.setId(null);
 		serviceDef.setCreateTime(null);
 		serviceDef.setUpdateTime(null);
+		
+		// While creating, value of version should be 1.
+		serviceDef.setVersion(new Long(1));
 		
 		serviceDef = serviceDefService.create(serviceDef);
 		Long serviceDefId = serviceDef.getId();
@@ -377,19 +385,32 @@ public class ServiceDBStore implements ServiceStore {
 
 	@Override
 	public List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception {
-		if(LOG.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServiceDefs(" + filter + ")");
 		}
 
-		List<RangerServiceDef> ret = null;
+		RangerServiceDefList svcDefList = serviceDefService.searchRangerServiceDefs(filter);
+		List<RangerServiceDef> ret = svcDefList.getServiceDefs();
 
-		ret = serviceDefService.searchRangerServiceDefs(filter);
-
-		if(LOG.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServiceDefs(" + filter + "): " + ret);
 		}
 
 		return ret;
+	}
+
+	public RangerServiceDefList getPaginatedServiceDefs(SearchFilter filter) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPaginatedServiceDefs(" + filter + ")");
+		}
+
+		RangerServiceDefList svcDefList = serviceDefService.searchRangerServiceDefs(filter);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPaginatedServiceDefs(" + filter + ")");
+		}
+
+		return svcDefList;
 	}
 
 	@Override
@@ -413,6 +434,9 @@ public class ServiceDBStore implements ServiceStore {
 						MessageEnums.ERROR_CREATING_OBJECT);
 			}
 
+			// While creating, value of version should be 1.
+			service.setVersion(new Long(1));
+			
 			if(populateExistingBaseFields) {
 				svcService.setPopulateExistingBaseFields(true);
 				service = svcService.create(service);
@@ -506,7 +530,16 @@ public class ServiceDBStore implements ServiceStore {
 		}
 		
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+	
+		Long version = service.getVersion();
+		if(version == null) {
+			version = new Long(1);
+			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
+		} else {
+			version = new Long(version.longValue() + 1);
+		}
 		
+		service.setVersion(version);
 		service = svcService.update(service);
 		XXService xUpdService = daoMgr.getXXService().getById(service.getId());
 		
@@ -573,7 +606,17 @@ public class ServiceDBStore implements ServiceStore {
 			configDao.remove(configMap);
 		}
 		
+		Long version = service.getVersion();
+		if(version == null) {
+			version = new Long(1);
+			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
+		} else {
+			version = new Long(version.longValue() + 1);
+		}
+		service.setVersion(version);
+		
 		svcService.delete(service);
+		
 		dataHistService.createObjectDataHistory(service, RangerDataHistService.ACTION_DELETE);
 		
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
@@ -602,9 +645,22 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServices()");
 		}
-		List<RangerService> ret = svcService.searchRangerPolicies(filter);
+		RangerServiceList serviceList = svcService.searchRangerServices(filter);
+		List<RangerService> ret = serviceList.getServices();
 
 		return ret;
+	}
+
+	public RangerServiceList getPaginatedServices(SearchFilter filter) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPaginatedServices()");
+		}
+		RangerServiceList serviceList = svcService.searchRangerServices(filter);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getPaginatedServices()");
+		}
+		return serviceList;
 	}
 
 	@Override
@@ -631,6 +687,8 @@ public class ServiceDBStore implements ServiceStore {
 		Map<String, RangerPolicyResource> resources = policy.getResources();
 		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
 
+		policy.setVersion(new Long(1));
+		
 		if(populateExistingBaseFields) {
 			policyService.setPopulateExistingBaseFields(true);
 			policy = policyService.create(policy);
@@ -696,6 +754,16 @@ public class ServiceDBStore implements ServiceStore {
 		
 		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
 		
+		Long version = policy.getVersion();
+		if(version == null) {
+			version = new Long(1);
+			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
+		} else {
+			version = new Long(version.longValue() + 1);
+		}
+		
+		policy.setVersion(version);
+		
 		policy = policyService.update(policy);
 		XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
@@ -733,6 +801,16 @@ public class ServiceDBStore implements ServiceStore {
 			throw new Exception("service does not exist - name='" + policy.getService());
 		}
 		
+		Long version = policy.getVersion();
+		if(version == null) {
+			version = new Long(1);
+			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
+		} else {
+			version = new Long(version.longValue() + 1);
+		}
+		
+		policy.setVersion(version);
+		
 		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, RangerPolicyService.OPERATION_DELETE_CONTEXT);
 		
 		deleteExistingPolicyItems(policy);
@@ -759,9 +837,28 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDBStore.getPolicies()");
 		}
 
-		List<RangerPolicy> ret = policyService.searchRangerPolicies(filter);
+		RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
+		List<RangerPolicy> ret = policyList.getPolicies();
 
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getPolicies()");
+		}
+		
 		return ret;
+	}
+
+	public RangerPolicyList getPaginatedPolicies(SearchFilter filter) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPaginatedPolicies()");
+		}
+
+		RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getPaginatedPolicies()");
+		}
+
+		return policyList;
 	}
 
 	@Override
@@ -778,6 +875,25 @@ public class ServiceDBStore implements ServiceStore {
 		
 		List<RangerPolicy> ret = getServicePolicies(service.getName(), filter);
 
+		return ret;
+	}
+
+	public RangerPolicyList getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceId + ")");
+		}
+
+		RangerService service = getService(serviceId);
+
+		if (service == null) {
+			throw new Exception("service does not exist - id='" + serviceId);
+		}
+
+		RangerPolicyList ret = getPaginatedServicePolicies(service.getName(), filter);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getPaginatedServicePolicies(" + serviceId + ")");
+		}
 		return ret;
 	}
 
@@ -803,6 +919,33 @@ public class ServiceDBStore implements ServiceStore {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	public RangerPolicyList getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceName + ")");
+		}
+
+		RangerPolicyList ret = null;
+
+		try {
+			if (filter == null) {
+				filter = new SearchFilter();
+			}
+
+			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+			ret = getPaginatedPolicies(filter);
+		} catch (Exception excp) {
+			LOG.error("ServiceDBStore.getPaginatedServicePolicies(" + serviceName + "): failed to read policies", excp);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getPaginatedServicePolicies(" + serviceName + "): count="
+					+ ((ret == null) ? 0 : ret.getListSize()));
 		}
 
 		return ret;
@@ -870,7 +1013,7 @@ public class ServiceDBStore implements ServiceStore {
 			
 			String value;
 			if("path".equalsIgnoreCase(resDef.getName())) {
-				value = "/*/*";
+				value = "/*";
 			} else {
 				value = "*";
 			}
@@ -1149,6 +1292,16 @@ public class ServiceDBStore implements ServiceStore {
 
 	public void setPopulateExistingBaseFields(Boolean populateExistingBaseFields) {
 		this.populateExistingBaseFields = populateExistingBaseFields;
+	}
+
+	public RangerPolicy getPolicyFromEventTime(Date eventTime, Long policyId) {
+
+		XXDataHist xDataHist = daoMgr.getXXDataHist().findObjByEventTimeClassTypeAndId(eventTime,
+				AppConstants.CLASS_TYPE_RANGER_POLICY, policyId);
+		String content = xDataHist.getContent();
+		RangerPolicy policy = (RangerPolicy) dataHistService.writeJsonToJavaObject(content, RangerPolicy.class);
+
+		return policy;
 	}
 
 }

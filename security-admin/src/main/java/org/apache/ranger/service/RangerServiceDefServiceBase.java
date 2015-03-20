@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.view.RangerServiceDefList;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V extends RangerServiceDef>
@@ -302,17 +303,20 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		return vObj;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public List<RangerServiceDef> searchRangerServiceDefs(SearchFilter searchFilter) {
+	public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
 		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
-		
-		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields, null);
-		for(XXServiceDef xSvcDef : xSvcDefList) {
+		RangerServiceDefList retList = new RangerServiceDefList();
+
+		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields, retList);
+		for (XXServiceDef xSvcDef : xSvcDefList) {
 			serviceDefList.add(populateViewBean((T) xSvcDef));
 		}
-		
-		return serviceDefList;
+
+		retList.setServiceDefs(serviceDefList);
+
+		return retList;
 	}
-	
+
 }

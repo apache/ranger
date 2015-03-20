@@ -8,10 +8,9 @@ import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.view.RangerPolicyList;
 
 public abstract class RangerPolicyServiceBase<T extends XXPolicy, V extends RangerPolicy> extends RangerBaseModelService<T, V> {
 	
@@ -52,17 +51,19 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicy, V extends Rang
 		vObj.setIsAuditEnabled(xObj.getIsAuditEnabled());
 		return vObj;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public List<RangerPolicy> searchRangerPolicies(SearchFilter searchFilter) {
+	public RangerPolicyList searchRangerPolicies(SearchFilter searchFilter) {
 		List<RangerPolicy> policyList = new ArrayList<RangerPolicy>();
+		RangerPolicyList retList = new RangerPolicyList();
 		
-		List<XXPolicy> xPolList = (List<XXPolicy>) searchResources(searchFilter, searchFields, sortFields, null);
-		for(XXPolicy xPol : xPolList) {
+		List<XXPolicy> xPolList = (List<XXPolicy>) searchResources(searchFilter, searchFields, sortFields, retList);
+		for (XXPolicy xPol : xPolList) {
 			policyList.add(populateViewBean((T) xPol));
 		}
-		
-		return policyList;
+		retList.setPolicies(policyList);
+
+		return retList;
 	}
-	
+
 }

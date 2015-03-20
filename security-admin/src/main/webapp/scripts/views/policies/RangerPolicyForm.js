@@ -455,14 +455,14 @@ define(function(require){
 						},
 						results: function (data, page) { 
 							var results = [];
-							if(data.length > 0){
-								results = data.map(function(m, i){	return {id : m, text: m};	});
-							}
-							/*if(!_.isUndefined(data)){
+							if(!_.isUndefined(data)){
+								if(_.isArray(data) && data.length > 0){
+									results = data.map(function(m, i){	return {id : m, text: m};	});
+								}
 								if(data.resultSize != "0"){
 									results = data.vXStrings.map(function(m, i){	return {id : m.value, text: m.value};	});
 								}
-							}*/
+							}
 							return { 
 								results : results
 							};

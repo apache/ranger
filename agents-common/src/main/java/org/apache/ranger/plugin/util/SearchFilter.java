@@ -39,6 +39,8 @@ public class SearchFilter {
 	public static final String USER            = "user";          // search
 	public static final String GROUP           = "group";         // search
 	public static final String RESOURCE_PREFIX = "resource:";     // search
+	public static final String POL_RESOURCE    = "polResource";   // search
+	public static final String POLICY_NAME_PARTIAL = "policyNamePartial";    // search, sort
 	public static final String CREATE_TIME     = "createTime";    // sort
 	public static final String UPDATE_TIME     = "updateTime";    // sort
 	public static final String START_INDEX     = "startIndex";

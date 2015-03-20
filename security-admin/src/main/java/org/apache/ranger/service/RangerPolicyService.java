@@ -88,6 +88,10 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		searchFields.add(new SearchField(SearchFilter.GROUP, "xGrp.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, 
 				"XXGroup xGrp, XXPolicyItem xPolItem, XXPolicyItemGroupPerm grpPerm", "obj.id = xPolItem.policyId "
 						+ "and grpPerm.policyItemId = xPolItem.id and xGrp.id = grpPerm.groupId"));
+		searchFields.add(new SearchField(SearchFilter.POL_RESOURCE, "resMap.value", DATA_TYPE.STRING,
+				SEARCH_TYPE.PARTIAL, "XXPolicyResourceMap resMap, XXPolicyResource polRes",
+				"resMap.resourceId = polRes.id and polRes.policyId = obj.id"));
+		searchFields.add(new SearchField(SearchFilter.POLICY_NAME_PARTIAL, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
 		
 		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
 		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));

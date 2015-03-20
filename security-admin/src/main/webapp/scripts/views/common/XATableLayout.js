@@ -122,16 +122,19 @@ define(function(require){
 			this.listenTo(this.collection, "sync reset", this.showHidePager);
 			
             this.listenTo(this.collection, 'request', function(){
-				$(this.rTableSpinner.el).addClass('loading');
+//				$(this.rTableSpinner.el).addClass('loading');
+				this.$el.find(this.rTableSpinner.el).addClass('loading');
 			},this);
             this.listenTo(this.collection, 'sync error', function(){
-				$(this.rTableSpinner.el).removeClass('loading');
+//				$(this.rTableSpinner.el).removeClass('loading');
+				this.$el.find(this.rTableSpinner.el).removeClass('loading');
 			},this);
 		},
 
 		/** on render callback */
 		onRender: function() {
 			this.initializePlugins();
+			
 			this.renderTable();
 			if(this.includePagination) {
 				this.renderPagination();
@@ -171,9 +174,10 @@ define(function(require){
 		},
 		showHidePager : function(){
 			if(this.collection.state && this.collection.state.totalRecords > XAGlobals.settings.PAGE_SIZE)	{
-				$(this.rPagination.el).show();
+				this.$el.find(this.rPagination.el).show()
+				//$(this.rPagination.el).show();
 			} else {
-				$(this.rPagination.el).hide();
+				this.$el.find(this.rPagination.el).hide();
 			}
 		},
 		renderFilter : function(){

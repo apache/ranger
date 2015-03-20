@@ -262,19 +262,16 @@ define(function(require) {
 					if(that.model.has('accesses')){
 							perms = that.model.get('accesses');
 					}
-					//reset isAllowed flag in accesssItems to set newly isAllowed
-					_.each(that.accessItems, function(item){ item.isAllowed = false });
 					
-					_.each(that.accessTypes, function(obj) {
-						if(_.contains(values, obj.name)){
-							var type = obj.name
-							_.each(that.accessItems, function(item){ if(item.type == type) item.isAllowed = true });
+					var items=[];
+					_.each(that.accessItems, function(item){ 
+						if($.inArray( item.type, values) >= 0){
+							item.isAllowed = true;
+							items.push(item) ;
 						}
-					});
+					},this);
 					// Save form data to model
-					
-					if(!_.isEmpty(that.accessItems))
-						that.model.set('accesses', that.accessItems);
+					that.model.set('accesses', items);
 					
 					$(this).html(valArr.join(" "));
 					that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');

@@ -122,5 +122,22 @@ public class RangerDataHistService {
 					MessageEnums.INVALID_INPUT_DATA);
 		}
 	}
-	
+
+	public Object writeJsonToJavaObject(String json, Class<?> tClass) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			return mapper.readValue(json, tClass);
+		} catch (JsonParseException e) {
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		} catch (JsonMappingException e) {
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		} catch (IOException e) {
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		}
+	}
+
 }
