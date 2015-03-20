@@ -74,6 +74,23 @@ get_distro(){
 	log "[I] Found distribution : $DIST_NAME"
 
 }
+#Get Properties from File without erroring out if property is not there
+#$1 -> propertyName $2 -> fileName $3 -> variableName $4 -> failIfNotFound
+getPropertyFromFileNoExit(){
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation
+	if  test -z "$validateProperty" ; then 
+            log "[E] '$1' not found in $2 file while getting....!!"; 
+            if [ $4 == "true" ] ; then
+                exit 1; 
+            else 
+                value=""
+            fi
+        else
+	    value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`
+        fi
+	#echo 'value:'$value
+	eval $3="'$value'"
+}
 #Get Properties from File
 #$1 -> propertyName $2 -> fileName $3 -> variableName
 getPropertyFromFile(){
@@ -185,6 +202,15 @@ check_python_command() {
 		fi
 }
 
+run_dba_steps(){
+	getPropertyFromFileNoExit 'setup_mode' $PROPFILE setup_mode false
+	if [ "x${setup_mode}x" == "xSeparateDBAx" ]; then
+		log "[I] Setup mode is set to SeparateDBA. Not Running DBA steps. Please run dba_script.py before running setup..!";
+	else
+		log "[I] Setup mode is not set. Running DBA steps..";
+                python dba_script.py -q
+        fi
+}
 check_db_connector() {
 	log "[I] Checking ${DB_FLAVOR} CONNECTOR FILE : ${SQL_CONNECTOR_JAR}"
 	if test -f "$SQL_CONNECTOR_JAR"; then
@@ -1415,6 +1441,7 @@ copy_db_connector
 #upgrade_db
 #create_audit_db_user
 check_python_command
+run_dba_steps
 $PYTHON_COMMAND_INVOKER db_setup.py
 if [ "$?" == "0" ]
 then

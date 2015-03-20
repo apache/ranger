@@ -42,7 +42,7 @@ def log(msg,type):
 		logging.exception(" %s",msg)
 	if type == 'error':
 		logging.error(" %s",msg)
-'''
+
 def populate_global_dict():
 	global globalDict
 	read_config_file = open(os.path.join(os.getcwd(),'install.properties'))
@@ -59,7 +59,6 @@ def populate_global_dict():
 					value = ''
 			value = value.strip()
 			globalDict[key] = value
-'''
 
 class BaseDB(object):
 
@@ -735,51 +734,72 @@ class SqlServerConf(BaseDB):
 			self.grant_xa_db_user(audit_db_root_user, audit_db_name, db_user, db_password, audit_db_root_password, True)
 
 
-def main():
-	#populate_global_dict()
+def main(argv):
+        
+        quiteMode = False
+        if len(argv) > 1 and str(argv[1]) == "-q":
+           #print str(argv)
+           quiteMode = True
+	   populate_global_dict()
 
+        print "Running DBA setup script. QuiteMode:" + str(quiteMode)
+        
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 	DBA_MODE = 'TRUE'
 
-	#JAVA_BIN=globalDict['JAVA_BIN']
-	if os.environ['JAVA_HOME'] == "":
+        if (quiteMode):
+	    JAVA_BIN=globalDict['JAVA_BIN']
+	else:
+            if os.environ['JAVA_HOME'] == "":
 		log("[E] --------- JAVA_HOME environment property not defined, aborting installation! ---------", "error")
 		sys.exit(1)
-	JAVA_BIN=os.environ['JAVA_HOME']+'/bin/java'
-	while os.path.isfile(JAVA_BIN) == False:
-		log("Enter java executable path: :","info")
-		JAVA_BIN=raw_input()
-
-	#XA_DB_FLAVOR=globalDict['DB_FLAVOR']
-	#AUDIT_DB_FLAVOR=globalDict['DB_FLAVOR']
-	XA_DB_FLAVOR=''
-	while XA_DB_FLAVOR == "":
-		log("Enter db flavour{MYSQL|ORACLE|POSTGRES|SQLSERVER} :","info")
-		XA_DB_FLAVOR=raw_input()
-	AUDIT_DB_FLAVOR = XA_DB_FLAVOR
-	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
+	    JAVA_BIN=os.environ['JAVA_HOME']+'/bin/java'
+	    while os.path.isfile(JAVA_BIN) == False:
+                log("Enter java executable path: :","info")
+                JAVA_BIN=raw_input()
+        #print "Using Java:" + str(JAVA_BIN)
+       
+        if (quiteMode):
+	    XA_DB_FLAVOR=globalDict['DB_FLAVOR']
+	    AUDIT_DB_FLAVOR=globalDict['DB_FLAVOR']
+        else:
+ 	    XA_DB_FLAVOR=''
+	    while XA_DB_FLAVOR == "":
+	        log("Enter db flavour{MYSQL|ORACLE|POSTGRES|SQLSERVER} :","info")
+                XA_DB_FLAVOR=raw_input()
+	    AUDIT_DB_FLAVOR = XA_DB_FLAVOR
+        XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
 	AUDIT_DB_FLAVOR = AUDIT_DB_FLAVOR.upper()
+        #print "XA_DB_FLAVOR:" + str(XA_DB_FLAVOR)
+        #print "AUDIT_DB_FLAVOR:" + str(AUDIT_DB_FLAVOR)
 
-	CONNECTOR_JAR=''
-	if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "ORACLE" or XA_DB_FLAVOR == "POSTGRES" or XA_DB_FLAVOR == "SQLSERVER":
-		log("Enter JDBC connector file for :"+XA_DB_FLAVOR,"info")
-		CONNECTOR_JAR=raw_input()
-		while os.path.isfile(CONNECTOR_JAR) == False:
-			log("JDBC connector file "+CONNECTOR_JAR+" does not exist, Please enter connector path :","error")
-			CONNECTOR_JAR=raw_input()
+        if (quiteMode):
+            CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+        else:
+	    #CONNECTOR_JAR=''
+	    if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "ORACLE" or XA_DB_FLAVOR == "POSTGRES" or XA_DB_FLAVOR == "SQLSERVER":
+	        log("Enter JDBC connector file for :"+XA_DB_FLAVOR,"info")
+                CONNECTOR_JAR=raw_input()
+                while os.path.isfile(CONNECTOR_JAR) == False:
+	            log("JDBC connector file "+CONNECTOR_JAR+" does not exist, Please enter connector path :","error")
+	            CONNECTOR_JAR=raw_input()
+            else:
+                log("[E] --------- NO SUCH SUPPORTED DB FLAVOUR!! ---------", "error")
+                sys.exit(1)
+
+        if (quiteMode):
+	    xa_db_host = globalDict['db_host']
+	    audit_db_host = globalDict['db_host']
 	else:
-		log("[E] --------- NO SUCH SUPPORTED DB FLAVOUR!! ---------", "error")
-		sys.exit(1)
-
-	#xa_db_host = globalDict['db_host']
-	#audit_db_host = globalDict['db_host']
-	xa_db_host=''
-	while xa_db_host == "":
-		log("Enter DB Host :","info")
-		xa_db_host=raw_input()
-	audit_db_host=xa_db_host
+            xa_db_host=''
+	    while xa_db_host == "":
+	        log("Enter DB Host :","info")
+	        xa_db_host=raw_input()
+	    audit_db_host=xa_db_host
+        #print "xa_db_host:" + str(xa_db_host)
+        #print "audit_db_host:" + str(audit_db_host)
 
 	mysql_dbversion_catalog = 'db/mysql/create_dbversion_catalog.sql'
 	#mysql_core_file = globalDict['mysql_core_file']
@@ -809,63 +829,76 @@ def main():
 	sqlserver_audit_file = 'db/sqlserver/xa_audit_db_sqlserver.sql'
 	sqlserver_patches = 'db/sqlserver/patches'
 
-	#db_name = globalDict['db_name']
-	#db_user = globalDict['db_user']
-	#db_password = globalDict['db_password']
-	#xa_db_root_user = globalDict['db_root_user']
-	#xa_db_root_password = globalDict['db_root_password']
-
-	xa_db_root_user=''
-	while xa_db_root_user == "":
-		log("Enter db root user:","info")
-		xa_db_root_user=raw_input()
+        
+        if (quiteMode):
+	    xa_db_root_user = globalDict['db_root_user']
+	    xa_db_root_password = globalDict['db_root_password']
+        else: 
+	    xa_db_root_user=''
+	    while xa_db_root_user == "":
+                log("Enter db root user:","info")
+                xa_db_root_user=raw_input()
 	
-	log("Enter db root password:","info")
-	xa_db_root_password = getpass.getpass("Enter db root password:")
+	    log("Enter db root password:","info")
+	    xa_db_root_password = getpass.getpass("Enter db root password:")
 
-	db_name = ''
-	while db_name == "":
-		log("Enter DB Name :","info")
-		db_name=raw_input()
+        if (quiteMode):
+	    db_name = globalDict['db_name']
+	else:
+            db_name = ''
+            while db_name == "":
+                log("Enter DB Name :","info")
+                db_name=raw_input()
 
-	db_user=''
-	while db_user == "":
-		log("Enter db user name:","info")
-		db_user=raw_input()
+        if (quiteMode):
+	    db_user = globalDict['db_user']
+        else: 
+	    db_user=''
+	    while db_user == "":
+                log("Enter db user name:","info")
+                db_user=raw_input()
 
-	db_password=''
-	while db_password == "":
-		log("Enter db user password:","info")
-		db_password = getpass.getpass("Enter db user password:")
-
+        if (quiteMode):
+	    db_password = globalDict['db_password']
+        else:
+	    db_password=''
+	    while db_password == "":
+                log("Enter db user password:","info")
+                db_password = getpass.getpass("Enter db user password:")
 
 	x_db_version = 'x_db_version_h'
 	xa_access_audit = 'xa_access_audit'
 	x_user = 'x_portal_user'
 
-	#audit_db_name = globalDict['audit_db_name']
-	#audit_db_user = globalDict['audit_db_user']
-	#audit_db_password = globalDict['audit_db_password']
-	#audit_db_root_user = globalDict['db_root_user'] 
-	#audit_db_root_password = globalDict['db_root_password']
-	#print "Enter audit_db_root_password :"
-	audit_db_name=''
-	while audit_db_name == "":
-		log("Enter audit db name:","info")
-		audit_db_name = raw_input()
+        if (quiteMode):
+	    audit_db_name = globalDict['audit_db_name']
+        else:
+            audit_db_name=''
+            while audit_db_name == "":
+                log("Enter audit db name:","info")
+                audit_db_name = raw_input()
 
-	audit_db_user=''
-	while audit_db_user == "":
-		log("Enter audit user name:","info")
-		audit_db_user = raw_input()
+        if (quiteMode):
+	    audit_db_user = globalDict['audit_db_user']
+        else:
+            audit_db_user=''
+            while audit_db_user == "":
+                log("Enter audit user name:","info")
+                audit_db_user = raw_input()
 
-	audit_db_password=''
-	while audit_db_password == "":		
-		log("Enter audit db user password:","info")		
-		audit_db_password = getpass.getpass("Enter audit db user password:")
+        if (quiteMode):
+	    audit_db_password = globalDict['audit_db_password']
+        else:
+            audit_db_password=''
+            while audit_db_password == "":		
+                log("Enter audit db user password:","info")		
+                audit_db_password = getpass.getpass("Enter audit db user password:")
 
 	audit_db_root_user = xa_db_root_user	
 	audit_db_root_password = xa_db_root_password
+	#audit_db_root_user = globalDict['db_root_user'] 
+	#audit_db_root_password = globalDict['db_root_password']
+	#print "Enter audit_db_root_password :"
 #	log("Enter audit db root user:","info")
 #	audit_db_root_user = raw_input()
 #	log("Enter db root password:","info")
@@ -956,4 +989,4 @@ def main():
 		log("[I] --------- Verifying/Creating audit user --------- ","info")
 		audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE)
 		log("[I] --------- Ranger Policy Manager DB and User Creation Process Completed..  --------- ","info")
-main()
+main(sys.argv)
