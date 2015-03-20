@@ -283,57 +283,102 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 			}
 
-			for(RangerHiveAccessRequest request : requests) {
-	            RangerHiveResource resource = (RangerHiveResource)request.getResource();
-	            RangerAccessResult result   = null;
-
-	            if(resource.getObjectType() == HiveObjectType.COLUMN && StringUtils.contains(resource.getColumn(), COLUMN_SEP)) {
-	            	List<RangerAccessRequest> colRequests = new ArrayList<RangerAccessRequest>();
-
-	            	String[] columns = StringUtils.split(resource.getColumn(), COLUMN_SEP);
-
-	            	for(String column : columns) {
-                        if (column != null) {
-	                        column = column.trim();
-                        }
-			            if(StringUtils.isEmpty(column)) {
-				            continue;
-			            }
-
-	                	RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTable(), column);
-
-	            		RangerHiveAccessRequest colRequest = request.copy();
-	            		colRequest.setResource(colResource);
-
-	            		colRequests.add(colRequest);
-	            	}
-
-	            	Collection<RangerAccessResult> colResults = hivePlugin.isAccessAllowed(colRequests, auditHandler);
-
-	            	if(colResults != null) {
-		            	for(RangerAccessResult colResult : colResults) {
-		            		result = colResult;
-
-		            		if(!result.getIsAllowed()) {
-		            			break;
-		            		}
-		            	}
-	            	}
-	            } else {
-		            result = hivePlugin.isAccessAllowed(request, auditHandler);
-	            }
-
-				if(result != null && !result.getIsAllowed()) {
-					String path = resource != null ? resource.getAsString(result.getServiceDef()) : null;
+			if (isMetaDataOperation(hiveOpType)) {
+				RangerHiveResource resource = getHiveResource(hiveOpType);
+				RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, context, sessionContext);
+				RangerAccessResult result = hivePlugin.isAccessAllowed(request);
+				if (result == null) {
+					LOG.error("Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
+					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege",
+							 user, hiveOpType));
+				} else if (!result.getIsAllowed()) {
+					String path = resource.getAsString(result.getServiceDef());
+					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", 
+							user, hiveOpType.name(), path));
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(String.format("[%s] allowed on resource[%s]: request[%s], result[%s]", hiveOpType, resource, request, result));
+					}
+					if (result.getIsAudited()) {
+						auditHandler.logAuditEventForFiltering(result, hiveOpType);
+					}
+				}
+			} else {
+				for(RangerHiveAccessRequest request : requests) {
+		            RangerHiveResource resource = (RangerHiveResource)request.getResource();
+		            RangerAccessResult result   = null;
 	
-					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
-														 user, request.getHiveAccessType().name(), path));
+		            if(resource.getObjectType() == HiveObjectType.COLUMN && StringUtils.contains(resource.getColumn(), COLUMN_SEP)) {
+		            	List<RangerAccessRequest> colRequests = new ArrayList<RangerAccessRequest>();
+	
+		            	String[] columns = StringUtils.split(resource.getColumn(), COLUMN_SEP);
+	
+		            	for(String column : columns) {
+	                        if (column != null) {
+		                        column = column.trim();
+	                        }
+		            		if(StringUtils.isEmpty(column.trim())) {
+		            			continue;
+		            		}
+	
+		                	RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTable(), column);
+	
+		            		RangerHiveAccessRequest colRequest = request.copy();
+		            		colRequest.setResource(colResource);
+	
+		            		colRequests.add(colRequest);
+		            	}
+	
+		            	Collection<RangerAccessResult> colResults = hivePlugin.isAccessAllowed(colRequests, auditHandler);
+	
+		            	if(colResults != null) {
+			            	for(RangerAccessResult colResult : colResults) {
+			            		result = colResult;
+	
+			            		if(!result.getIsAllowed()) {
+			            			break;
+			            		}
+			            	}
+		            	}
+		            } else {
+			            result = hivePlugin.isAccessAllowed(request, auditHandler);
+		            }
+	
+					if(result != null && !result.getIsAllowed()) {
+						String path = resource != null ? resource.getAsString(result.getServiceDef()) : null;
+		
+						throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
+															 user, request.getHiveAccessType().name(), path));
+					}
 				}
 			}
 		} finally {
 			auditHandler.flushAudit();
 		}
 	}
+
+	boolean isMetaDataOperation(HiveOperationType hiveOpType) {
+		boolean result;
+		
+		switch (hiveOpType) {
+		/*
+		 * Uncomment this part when hive bug is resolved.
+		 * 
+		case SHOWTABLES:
+			result = true;
+			break;
+		 *	
+		 */
+		case SHOWDATABASES: // we don't want to authorize for show databases either since any call with _any privilages runs into a problem.
+		case SHOWTABLES:    // currently does not work since we don't get the database name in the context to do this check correctly. 
+		case DESCDATABASE:  // currently does not work since we don't get the database name in the context to do this check correctly.  
+		default:
+			result = false;
+			break;
+		}
+		return result;
+	}
+
 
 	/**
 	 * Check if user has privileges to do this action on these objects
@@ -347,13 +392,116 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	public List<HivePrivilegeObject> filterListCmdObjects(List<HivePrivilegeObject> objs,
 														  HiveAuthzContext          context)
 		      throws HiveAuthzPluginException, HiveAccessControlException {
+		
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> filterListCmdObjects(%s, %s)", objs, context));
+		}
+		
 		List<HivePrivilegeObject> ret = null;
 
-		// TODO: only the objects the user has access-to should be added to 'ret'
-		ret = objs;
+		// bail out early if nothing is there to validate!
+		if (objs == null) { 
+			LOG.debug("filterListCmdObjects: meta objects list was null!");
+		} else if (objs.isEmpty()) {
+			LOG.debug("filterListCmdObjects: meta objects list was empty!");
+			ret = objs;
+		} else if (getCurrentUserGroupInfo() == null) {
+			/*
+			 * This is null for metastore and there doesn't seem to be a way to tell if one is running as metastore or hiveserver2! 
+			 */
+			LOG.warn("filterListCmdObjects: user information not available");
+			ret = objs;
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("filterListCmdObjects: number of input objects[" + objs.size() + "]");
+			}
+			// get user/group info
+			UserGroupInformation ugi = getCurrentUserGroupInfo(); // we know this can't be null since we checked it above!
+			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
+			String user = ugi.getShortUserName();
+			Set<String> groups = Sets.newHashSet(ugi.getGroupNames());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("filterListCmdObjects: user[%s], groups%s", user, groups));
+			}
+			
+			if (ret == null) { // if we got any items to filter then we can't return back a null.  We must return back a list even if its empty.
+				ret = new ArrayList<HivePrivilegeObject>(objs.size());
+			}
+			for (HivePrivilegeObject privilegeObject : objs) {
+				if (LOG.isDebugEnabled()) {
+					HivePrivObjectActionType actionType = privilegeObject.getActionType();
+					HivePrivilegeObjectType objectType = privilegeObject.getType();
+					String objectName = privilegeObject.getObjectName();
+					String dbName = privilegeObject.getDbname();
+					List<String> columns = privilegeObject.getColumns();
+					List<String> partitionKeys = privilegeObject.getPartKeys();
+					String commandString = context.getCommandString();
+					String ipAddress = context.getIpAddress();
 
+					final String format = "filterListCmdObjects: actionType[%s], objectType[%s], objectName[%s], dbName[%s], columns[%s], partitionKeys[%s]; context: commandString[%s], ipAddress[%s]";
+					LOG.debug(String.format(format, actionType, objectType, objectName, dbName, columns, partitionKeys, commandString, ipAddress));
+				}
+				
+				RangerHiveResource resource = createHiveResource(privilegeObject);
+				RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, context, sessionContext);
+				RangerAccessResult result = hivePlugin.isAccessAllowed(request);
+				if (result == null) {
+					LOG.error("filterListCmdObjects: Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
+				} else if (!result.getIsAllowed()) {
+					if (!LOG.isDebugEnabled()) {
+						String path = resource.getAsString(result.getServiceDef()); 
+						LOG.debug(String.format("filterListCmdObjects: Permission denied: user [%s] does not have [%s] privilege on [%s]", user, request.getHiveAccessType().name(), path));
+					}
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(String.format("filterListCmdObjects: resource[%s]: allowed!: request[%s], result[%s]", resource, request, result));
+					}
+					ret.add(privilegeObject);
+				}
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("filterListCmdObjects: number of output objects[%d]", ret == null ? 0: ret.size()));
+			LOG.debug(String.format("<== filterListCmdObjects(%s, %s): %s", objs, context, ret));
+		}
+		
 		return ret;
 	}
+	
+	RangerHiveResource getHiveResource(HiveOperationType hiveOperationType) {
+		RangerHiveResource hiveResource;
+		switch (hiveOperationType) {
+		case SHOWDATABASES:
+		case SHOWTABLES:
+			// any database
+			hiveResource = new RangerHiveResource(HiveObjectType.DATABASE, null);
+			break;
+		default:
+			hiveResource = null;
+		}
+		return hiveResource;
+	}
+
+	RangerHiveResource createHiveResource(HivePrivilegeObject privilegeObject) {
+		RangerHiveResource resource = null;
+
+		HivePrivilegeObjectType objectType = privilegeObject.getType();
+		String objectName = privilegeObject.getObjectName();
+		String dbName = privilegeObject.getDbname();
+
+		switch(objectType) {
+		case DATABASE:
+			resource = new RangerHiveResource(HiveObjectType.DATABASE, objectName);
+			break;
+		case TABLE_OR_VIEW:
+			resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, objectName);
+			break;
+		default:
+			LOG.warn("RangerHiveAuthorizer.getHiveResource: unexpected objectType:" + objectType);
+		}
+		return resource;
+	}
+
 
 	private RangerHiveResource getHiveResource(HiveOperationType   hiveOpType,
 											   HivePrivilegeObject hiveObj) {

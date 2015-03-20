@@ -2,3 +2,4 @@
 /target/
 /bin/
 .settings/
+gen/

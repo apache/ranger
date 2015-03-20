@@ -19,7 +19,14 @@
 
 package org.apache.ranger.plugin.policyevaluator;
 
-import com.google.common.base.Strings;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -35,13 +42,14 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
-import java.util.*;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 
 
 public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator {
@@ -271,7 +279,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
     protected void evaluatePolicyItemsForAccess(RangerAccessRequest request, RangerAccessResult result) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItemsForAccess()");
+            LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItemsForAccess(" + request + ", " + result + ")");
         }
         String accessType = request.getAccessType();
         if (StringUtils.isEmpty(accessType)) {
@@ -333,7 +341,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             break;
         }
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerDefaultPolicyEvaluator.evaluatePolicyItemsForAccess()");
+            LOG.debug("<== RangerDefaultPolicyEvaluator.evaluatePolicyItemsForAccess(" + request + ", " + result + ")");
         }
     }
 
@@ -437,46 +445,53 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.matchResourceHead(" + resource + ")");
 		}
-
-		boolean ret = false;
-
-		RangerServiceDef serviceDef = getServiceDef();
-
-		if(serviceDef != null && serviceDef.getResources() != null) {
-			int numMatched   = 0;
-			int numUnmatched = 0;
-
-			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-				String                resourceName  = resourceDef.getName();
-				String                resourceValue = resource == null ? null : resource.getValue(resourceName);
-				RangerResourceMatcher matcher       = matchers == null ? null : matchers.get(resourceName);
-
-				if(numUnmatched > 0) { // no further values are expected in the resource
-					if(! StringUtils.isEmpty(resourceValue)) {
-						break;
-					}
-
-					numUnmatched++;
-					continue;
-				} else {
-					boolean isMatch = false;
-
-					// when no value exists for a resourceName, consider it a match only if (policy doesn't have a matcher OR matcher allows no-value resource)
-					if(StringUtils.isEmpty(resourceValue)) {
-						isMatch = matcher == null || matcher.isMatch(resourceValue);
-					} else {
-						isMatch = matcher != null && matcher.isMatch(resourceValue);
-					}
-
-					if(isMatch) {
-						numMatched++;
-					} else {
-						numUnmatched++;
+		boolean ret; 
+		
+		if (resource == null || CollectionUtils.isEmpty(resource.getKeys())) { // sanity-check, firewalling
+			LOG.debug("matchResourceHead: resource was null/empty!");
+			ret = true; // null resource matches anything
+		} else if (getServiceDef() == null) { // sanity-check, firewalling
+			LOG.debug("matchResourceHead: service-def was null!");
+			ret = false; // null policy can never match a non-empty resource 
+		} else if (getPolicy() == null || getPolicy().getResources() == null) {
+			LOG.debug("matchResourceHead: policy or its resources were null!");
+			ret = false; // null policy can never match a non-empty resource 
+		} else if (matchers == null || matchers.size() != getPolicy().getResources().size()) { // sanity-check, firewalling
+			LOG.debug("matchResourceHead: matchers could be found for some of the policy resources");
+			ret = false; // empty policy can never match a non-empty resources and can't be evaluated meaningfully in matchers are absent
+		} else {
+			if (!Sets.difference(resource.getKeys(), matchers.keySet()).isEmpty()) { // e.g. avoid using udf policy for resource that has more than db specified and vice-versa
+				LOG.debug("matchResourceHead: resource/policy resource-keys mismatch. policy is incompatible with resource; can't match.");
+				ret = false;
+			} else {
+				Set<String> policyResourceNames = matchers.keySet();
+				boolean skipped = false;
+				boolean matched = true;
+				Iterator<RangerResourceDef> iterator = getServiceDef().getResources().iterator();
+				while (iterator.hasNext() && matched) {
+					RangerResourceDef resourceDef = iterator.next();
+					String resourceName = resourceDef.getName();
+					// we only work with resources that are relevant to this policy
+					if (policyResourceNames.contains(resourceName)) {
+						String resourceValue = resource.getValue(resourceName);
+						if (StringUtils.isEmpty(resourceValue)) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Skipping matching for " + resourceName + " since it is null/empty on resource");
+							}
+							skipped = true; // once we skip a level all lower levels must be skippable, too
+						} else if (skipped == true) {
+							LOG.debug("matchResourceHead: found a lower level resource when a higer level resource was absent!");
+							matched = false;
+						} else if (!matchers.get(resourceName).isMatch(resourceValue)) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("matchResourceHead: matcher for " + resourceName + " failed");
+							}
+							matched = false;
+						}
 					}
 				}
+				ret = matched;
 			}
-
-			ret = (numMatched > 0) && serviceDef.getResources().size() == (numMatched + numUnmatched);
 		}
 
 		if(LOG.isDebugEnabled()) {

@@ -39,7 +39,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 	public RangerHiveAccessRequest(RangerHiveResource      resource,
 								   String                  user,
 								   Set<String>             userGroups,
-								   HiveOperationType       hiveOpType,
+								   String                  hiveOpTypeName,
 								   HiveAccessType          accessType,
 								   HiveAuthzContext        context,
 								   HiveAuthzSessionContext sessionContext) {
@@ -47,7 +47,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		this.setUser(user);
 		this.setUserGroups(userGroups);
 		this.setAccessTime(StringUtil.getUTCDate());
-		this.setAction(hiveOpType.name());
+		this.setAction(hiveOpTypeName);
 		
 		if(context != null) {
 			this.setClientIPAddress(context.getIpAddress());
@@ -68,6 +68,20 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		} else {
 			this.setAccessType(accessType.name().toLowerCase());
 		}
+	}
+
+	public RangerHiveAccessRequest(RangerHiveResource      resource,
+			   String                  user,
+			   Set<String>             userGroups,
+			   HiveOperationType       hiveOpType,
+			   HiveAccessType          accessType,
+			   HiveAuthzContext        context,
+			   HiveAuthzSessionContext sessionContext) {
+		this(resource, user, userGroups, hiveOpType.name(), accessType, context, sessionContext);
+	}
+
+	public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> groups, HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
+		this(resource, user, groups, "OTHER", HiveAccessType.USE, context, sessionContext);
 	}
 
 	public HiveAccessType getHiveAccessType() {

@@ -90,8 +90,7 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>${gson.version}</version>
-    </dependency>
+      </dependency>
     <dependency>
 	  <groupId>org.apache.hive</groupId>
 	  <artifactId>hive-metastore</artifactId>

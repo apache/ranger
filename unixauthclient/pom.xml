@@ -43,8 +43,7 @@
       <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
-        <version>${gson.version}</version>
-      </dependency>
+        </dependency>
       <dependency>
         <groupId>com.sun.jersey</groupId>
         <artifactId>jersey-bundle</artifactId>
