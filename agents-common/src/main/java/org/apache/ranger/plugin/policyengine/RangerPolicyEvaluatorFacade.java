@@ -19,11 +19,14 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
@@ -33,13 +36,19 @@ import java.util.Map;
 public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Comparable<RangerPolicyEvaluatorFacade> {
     private static final Log LOG = LogFactory.getLog(RangerPolicyEvaluatorFacade.class);
 
-    RangerDefaultPolicyEvaluator delegate  =   null;
-    int computedPolicyEvalOrder            =   0;
+    RangerDefaultPolicyEvaluator delegate = null;
+    int computedPolicyEvalOrder           = 0;
 
-    RangerPolicyEvaluatorFacade(boolean useCachePolicyEngine) {
+    RangerPolicyEvaluatorFacade() {
         super();
 
-        delegate = new RangerOptimizedPolicyEvaluator();
+        String evaluatorType = RangerConfiguration.getInstance().get("ranger.policyengine.evaluator.type", "cached");
+
+        if(StringUtils.isEmpty(evaluatorType) || StringUtils.equalsIgnoreCase(evaluatorType, "cached")) {
+            delegate = new RangerCachedPolicyEvaluator();
+        } else {
+            delegate = new RangerOptimizedPolicyEvaluator();
+        }
     }
 
     RangerPolicyEvaluator getPolicyEvaluator() {
@@ -78,12 +87,12 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
 
     @Override
     public boolean isMatch(RangerAccessResource resource) {
-        return false;
+        return delegate.isMatch(resource);
     }
 
     @Override
     public boolean isSingleAndExactMatch(RangerAccessResource resource) {
-        return false;
+        return delegate.isSingleAndExactMatch(resource);
     }
 
     @Override
@@ -121,10 +130,13 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyEvaluatorFacade.computePolicyEvalOrder()");
         }
+
         int result = delegate.computePolicyEvalOrder();
+
         if(LOG.isDebugEnabled()) {
             LOG.debug("<==RangerPolicyEvaluatorFacade.computePolicyEvalOrder(), result:" + result);
         }
+
         return result;
     }
 }

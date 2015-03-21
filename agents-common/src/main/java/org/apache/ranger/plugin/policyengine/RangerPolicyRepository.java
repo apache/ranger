@@ -42,7 +42,6 @@ public class RangerPolicyRepository {
     private List<RangerContextEnricher> contextEnrichers        = null;
     private RangerServiceDef serviceDef                         = null;
     // Not used at this time
-    private boolean useCachePolicyEngine                                = false;
     private Map<String, Boolean> accessAuditCache     = null;
 
     private static int RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE = 64*1024;
@@ -149,7 +148,7 @@ public class RangerPolicyRepository {
 
         RangerPolicyEvaluatorFacade ret = null;
 
-        ret = new RangerPolicyEvaluatorFacade(useCachePolicyEngine);
+        ret = new RangerPolicyEvaluatorFacade();
         ret.init(policy, serviceDef);
 
         if(LOG.isDebugEnabled()) {
@@ -230,7 +229,6 @@ public class RangerPolicyRepository {
                 }
             }
         }
-        sb.append("useCachePolicyEngine={").append(useCachePolicyEngine).append("} ");
 
         sb.append("} ");
 
