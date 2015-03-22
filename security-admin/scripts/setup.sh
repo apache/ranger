@@ -129,6 +129,8 @@ init_variables(){
 
 	XAPOLICYMGR_DIR=$PWD
 
+	RANGER_ADMIN_INITD=ranger-admin-initd
+
 	RANGER_ADMIN=ranger-admin
 
 	INSTALL_DIR=${XAPOLICYMGR_DIR}
@@ -1273,9 +1275,9 @@ setup_install_files(){
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
 	fi
 
-	if [ ! -f /etc/init.d/${RANGER_ADMIN} ]; then
+	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
-	    mv ${INSTALL_DIR}/ews/${RANGER_ADMIN} /etc/init.d/${RANGER_ADMIN}
+	    cp ${INSTALL_DIR}/ews/${RANGER_ADMIN_INITD} /etc/init.d/${RANGER_ADMIN}
 
 	    chmod ug+rx /etc/init.d/${RANGER_ADMIN}
 
