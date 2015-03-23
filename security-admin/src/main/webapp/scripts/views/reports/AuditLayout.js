@@ -39,6 +39,8 @@ define(function(require) {
 	var RangerService			= require('models/RangerService');
 	var AuditlayoutTmpl 		= require('hbs!tmpl/reports/AuditLayout_tmpl');
 	var vOperationDiffDetail	= require('views/reports/OperationDiffDetail');
+	var RangerPolicy = require('models/RangerPolicy');
+	var RangerPolicyRO			= require('views/policies/RangerPolicyRO');
 
 	require('moment');
 	require('bootstrap-datepicker');
@@ -713,14 +715,49 @@ define(function(require) {
 		},
 
 		renderBigDataTable : function(){
+			var that = this , self = this;
 			
+			var TableRow = Backgrid.Row.extend({
+				events: {
+					'click' : 'onClick'
+				},
+				initialize : function(){
+					var that = this;
+					var args = Array.prototype.slice.apply(arguments);
+					Backgrid.Row.prototype.initialize.apply(this, args);
+				},
+				onClick: function (e) {
+					var self = this;
+					var policyId = this.model.get('policyId');
+					var	serviceDef = that.serviceDefList.findWhere({'id':this.model.get('repoType')});
+					var eventTime = this.model.get('eventTime');
+
+					var policy = new RangerPolicy({
+						id: policyId
+					});
+					var view = new RangerPolicyRO({
+						policy: policy,
+						serviceDef: serviceDef,
+						eventTime : eventTime
+					});
+					var modal = new Backbone.BootstrapModal({
+						animate : true, 
+						content		: view,
+						title: localization.tt("h.policy")+': '+policy.get('name'),
+						okText :localization.tt("lbl.ok"),
+						allowCancel : false,
+						escape : true
+					}).open();
+				}
+			});
+
 			this.ui.tableList.removeClass("clickable");
 			this.rTableList.show(new XATableLayout({
 				columns: this.getColumns(),
 				collection: this.accessAuditList,
 				includeFilter : false,
 				gridOpts : {
-					row: Backgrid.Row.extend({}),
+					row: TableRow,
 					header : XABackgrid,
 					emptyText : 'No Access Audit found!'
 				}
@@ -744,7 +781,8 @@ define(function(require) {
 								  cache : false,
 								  async : false
 								});
-								var href = '#!/service/'+rangerService.get('id')+'/policies/'+model.get('policyId')+'/edit';
+								// var href = '#!/service/'+rangerService.get('id')+'/policies/'+model.get('policyId')+'/edit';
+								var href = 'javascript:void(0)';
 								return '<a href="'+href+'" title="'+rawValue+'">'+rawValue+'</a>';
 							}
 						}),

@@ -1496,7 +1496,7 @@ public class ServiceREST {
 		Long policyId = Long.parseLong(policyIdStr);
 
 		Date eventTime = restErrorUtil.parseDate(eventTimeStr, "Invalid value for" + "Event Time",
-				MessageEnums.INVALID_INPUT_DATA, null, "eventTime", "MM/dd/yyyy");
+				MessageEnums.INVALID_INPUT_DATA, null, "eventTime", "MM/dd/yyyy hh:mm:ss");
 
 		RangerPolicy policy = svcStore.getPolicyFromEventTime(eventTime, policyId);
 

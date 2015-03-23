@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -637,6 +638,12 @@ table.backgrid thead tr a {
 
 table.backgrid thead tr:hover {
   background: transparent;
+}
+
+.table-read-only tr th:last-child, table.table-read-only tr td:last-child {
+  border: 1px solid #dddddd !important;
+  color: #4F4F4F !important;
+  background-color: inherit !important;
 }
 
 .r-path {

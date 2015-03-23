@@ -1298,6 +1298,13 @@ public class ServiceDBStore implements ServiceStore {
 
 		XXDataHist xDataHist = daoMgr.getXXDataHist().findObjByEventTimeClassTypeAndId(eventTime,
 				AppConstants.CLASS_TYPE_RANGER_POLICY, policyId);
+
+		if (xDataHist == null) {
+			String errMsg = "No policy history found for given time: " + eventTime;
+			LOG.error(errMsg);
+			throw restErrorUtil.createRESTException(errMsg, MessageEnums.DATA_NOT_FOUND);
+		}
+
 		String content = xDataHist.getContent();
 		RangerPolicy policy = (RangerPolicy) dataHistService.writeJsonToJavaObject(content, RangerPolicy.class);
 
