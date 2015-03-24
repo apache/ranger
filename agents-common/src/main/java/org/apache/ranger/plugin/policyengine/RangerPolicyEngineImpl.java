@@ -56,11 +56,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	@Override
 	public RangerServiceDef getServiceDef() {
+		RangerPolicyRepository policyRepository = getPolicyRepository();
+
 		return policyRepository == null ? null : policyRepository.getServiceDef();
 	}
 
 	@Override
 	public List<RangerContextEnricher> getContextEnrichers() {
+		RangerPolicyRepository policyRepository = getPolicyRepository();
 
 		return policyRepository == null ? null : policyRepository.getContextEnrichers();
 	}
@@ -72,9 +75,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if (serviceName != null && serviceDef != null && policies != null) {
-			policyRepository = new RangerPolicyRepository(serviceName);
+			RangerPolicyRepository policyRepository = new RangerPolicyRepository(serviceName);
 			policyRepository.init(serviceDef, policies);
+
 			this.serviceName = serviceName;
+			setPolicyRepository(policyRepository);
 		} else {
 			LOG.error("RangerPolicyEngineImpl.setPolicies ->Invalid arguments: serviceName, serviceDef, or policies is null");
 		}
@@ -96,7 +101,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	@Override
 	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
-		return policyRepository == null ? null : new RangerAccessResult(serviceName, policyRepository.getServiceDef(), request);
+		RangerPolicyRepository policyRepository = getPolicyRepository();
+
+		return new RangerAccessResult(serviceName, policyRepository == null ? null : policyRepository.getServiceDef(), request);
 	}
 
 	@Override
@@ -160,6 +167,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + ")");
 		}
 
+		RangerPolicyRepository policyRepository = getPolicyRepository();
+
 		RangerAccessResult ret = createAccessResult(request);
 
 		if(policyRepository != null && ret != null && request != null) {
@@ -191,6 +200,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
+	private RangerPolicyRepository getPolicyRepository() {
+		return this.policyRepository;
+	}
+
+	private void setPolicyRepository(RangerPolicyRepository policyRepository) {
+		this.policyRepository = policyRepository;
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -201,6 +218,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	public StringBuilder toString(StringBuilder sb) {
+		RangerPolicyRepository policyRepository = getPolicyRepository();
+
 		sb.append("RangerPolicyEngineImpl={");
 
 		sb.append("serviceName={").append(serviceName).append("} ");
