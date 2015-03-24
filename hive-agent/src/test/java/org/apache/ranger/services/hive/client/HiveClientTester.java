@@ -20,6 +20,8 @@
 package org.apache.ranger.services.hive.client;
  
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -40,7 +42,21 @@ public class HiveClientTester  {
 		try {
 			
 			Properties conf = new Properties() ;
-			conf.load(HiveClientTester.class.getClassLoader().getResourceAsStream(args[1]));
+			
+			InputStream in = HiveClientTester.class.getClassLoader().getResourceAsStream(args[1]) ;
+			try {
+				conf.load(in);
+			}
+			finally {
+				if (in != null) {
+					try {
+						in.close();
+					}
+					catch(IOException ioe) {
+						// Ignore IOException when closing the stream
+					}
+				}
+			}
 			
 			HashMap<String,String> prop = new HashMap<String,String>() ;
 			for(Object key : conf.keySet()) {

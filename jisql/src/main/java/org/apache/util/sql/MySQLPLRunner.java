@@ -31,7 +31,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -311,7 +310,21 @@ public class MySQLPLRunner {
     	
     	
     	// Executing SQL Script
-    	scriptRunner.runScript(new FileReader(aSQLScriptFilePath));
+     	FileReader reader = new FileReader(aSQLScriptFilePath) ;
+     	
+     	try {
+     		scriptRunner.runScript(reader);
+     	}
+     	finally {
+     		if (reader != null) {
+     			try {
+     			reader.close();
+     			}
+     			catch(IOException ioe) {
+     				// Ignore IOException when reader is getting closed
+     			}
+     		}
+     	}
 
     	
     	  }

@@ -19,6 +19,8 @@
 
  package org.apache.ranger.hbase.client;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -42,8 +44,20 @@ public class HBaseClientTester {
 		LOG.info("Starting ...");
 
 		Properties conf = new Properties();
-		
-		conf.load(HBaseClientTester.class.getClassLoader().getResourceAsStream(args[1]));
+		InputStream in = HBaseClientTester.class.getClassLoader().getResourceAsStream(args[1]) ;
+		try {
+		conf.load(in);
+		}
+		finally {
+			if (in != null) {
+				try {
+				in.close();
+				}
+				catch(IOException ioe) {
+					// Ignore IOE when closing stream
+				}
+			}
+		}
 
 		HashMap<String, String> prop = new HashMap<String, String>();
 		for (Object key : conf.keySet()) {

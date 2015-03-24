@@ -22,6 +22,7 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Properties;
@@ -169,7 +170,17 @@ public class UserGroupSyncConfig  {
 		try {
 			InputStream in = getFileInputStream(CONFIG_FILE) ;
 			if (in != null) {
-				prop.load(in) ;
+				try {
+					prop.load(in) ;
+				}
+				finally {
+					try {
+						in.close() ;
+					}
+					catch(IOException ioe) {
+						// Ignore IOE when closing stream
+					}
+				}
 			}
 		} catch (Throwable e) {
 			throw new RuntimeException("Unable to load configuration file [" + CONFIG_FILE + "]", e) ;

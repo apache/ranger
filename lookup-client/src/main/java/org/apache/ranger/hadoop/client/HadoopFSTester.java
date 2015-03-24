@@ -19,6 +19,8 @@
 
  package org.apache.ranger.hadoop.client;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -37,7 +39,20 @@ public class HadoopFSTester {
 		String fileNameToMatch = (args.length == 3 ? null : args[3]) ;
 
 		Properties conf = new Properties() ;
-		conf.load(HadoopFSTester.class.getClassLoader().getResourceAsStream(propFile));
+		InputStream in = HadoopFSTester.class.getClassLoader().getResourceAsStream(propFile) ;
+		try {
+			conf.load(in);
+		}
+		finally {
+			if (in != null) {
+				try {
+					in.close() ;
+				}
+				catch(IOException ioe) {
+					// Ignore IOE when closing stream
+				}
+			}
+		}
 		
 		HashMap<String,String> prop = new HashMap<String,String>() ;
 		for(Object key : conf.keySet()) {

@@ -145,8 +145,18 @@ public class RemoteUnixLoginModule implements LoginModule {
 			try {
 				in = getFileInputStream(val) ;
 				if (in != null) {
-					config = new Properties() ;
-					config.load(in);
+					try {
+						config = new Properties() ;
+						config.load(in);
+					}
+					finally {
+						try {
+							in.close();
+						}
+						catch(IOException ioe) {
+							// Ignore IOException when closing streams
+						}
+					}
 				}
 				
 			}

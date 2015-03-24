@@ -82,6 +82,16 @@ public class EmbeddedServer {
 			LOG.severe("Unable to load config  file [" + cfgFile + "]");
 			ioe.printStackTrace(); 
 		}
+		finally {
+			if (in != null) {
+				try {
+					in.close() ;
+				}
+				catch(IOException ioe) {
+					// Ignore IOE when the stream is closed.
+				}
+			}
+		}
 		serverConfigProperties.list(System.out);
 	}
 	
