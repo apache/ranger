@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.ranger.authorization.utils.StringUtil;
+
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private RangerAccessResource resource        = null;
@@ -131,7 +133,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	public void setAccessTime(Date accessTime) {
-		this.accessTime = (accessTime == null) ? new Date() : accessTime;
+		this.accessTime = (accessTime == null) ? StringUtil.getUTCDate() : accessTime;
 	}
 
 	public void setClientIPAddress(String clientIPAddress) {
