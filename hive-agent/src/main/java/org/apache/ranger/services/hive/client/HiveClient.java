@@ -189,21 +189,29 @@ public class HiveClient extends BaseClient implements Closeable {
 						}
 						finally {
 							close(stat) ;
+                            stat = null;
 						}
 						
 						sql = "show tables " ;
 						if (tableNameMatching != null && ! tableNameMatching.isEmpty()) {
 							sql = sql + " like \"" + tableNameMatching  + "\"" ;
 						}
-						stat =  con.createStatement()  ;
-						rs = stat.executeQuery(sql) ;
-						while (rs.next()) {
-							String tblName = rs.getString(1);
-							if ( tblList != null && tblList.contains(tblName)) {
-								continue;
-							}
-							ret.add(tblName);
-						}
+                        try {
+                            stat = con.createStatement();
+                            rs = stat.executeQuery(sql);
+                            while (rs.next()) {
+                                String tblName = rs.getString(1);
+                                if (tblList != null && tblList.contains(tblName)) {
+                                    continue;
+                                }
+                                ret.add(tblName);
+                            }
+                        } finally {
+                            close(rs);
+                            close(stat);
+                            rs = null;
+                            stat = null;
+                        }
 					 }
 				}
 			} catch (SQLTimeoutException sqlt) {
@@ -227,9 +235,6 @@ public class HiveClient extends BaseClient implements Closeable {
 					LOG.debug("<== HiveClient.getTblList() Error : " + sqle) ;
 				}
 				throw hdpException;
-			} finally {
-				close(rs) ;
-				close(stat) ;
 			}
 			
 		}

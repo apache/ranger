@@ -507,6 +507,16 @@ public class Jisql {
         			// Ignore IOE when closing streams
         		}
         	}
+            if (statement != null) {
+                try {
+                    if (!statement.isClosed()) {
+                        statement.close();
+                    }
+
+                } catch (SQLException sqle) {
+                    // Ignore
+                }
+            }
         }
     }
 

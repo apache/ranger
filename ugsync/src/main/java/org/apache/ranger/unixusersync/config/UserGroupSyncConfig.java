@@ -146,18 +146,19 @@ public class UserGroupSyncConfig  {
 
 	private Properties prop = new Properties() ;
 	
-	private static UserGroupSyncConfig me = null ;
+	private static volatile UserGroupSyncConfig me = null ;
 	
 	public static UserGroupSyncConfig getInstance() {
-		if (me == null) {
+        UserGroupSyncConfig result = me;
+		if (result == null) {
 			synchronized(UserGroupSyncConfig.class) {
-				UserGroupSyncConfig temp = me ;
-				if (temp == null) {
-					me = new UserGroupSyncConfig() ;
+				result = me ;
+				if (result == null) {
+					me = result = new UserGroupSyncConfig() ;
 				}
 			}
 		}
-		return me ;
+		return result ;
 	}
 	
 	

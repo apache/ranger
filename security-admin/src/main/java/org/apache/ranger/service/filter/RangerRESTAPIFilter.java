@@ -45,26 +45,25 @@ import com.sun.jersey.spi.container.ContainerResponse;
 
 public class RangerRESTAPIFilter extends LoggingFilter {
 	Logger logger = Logger.getLogger(RangerRESTAPIFilter.class);
-	static boolean initDone = false;
+	static volatile boolean initDone = false;
 
 	boolean logStdOut = true;
 	HashMap<String, String> regexPathMap = new HashMap<String, String>();
 	HashMap<String, Pattern> regexPatternMap = new HashMap<String, Pattern>();
 	List<String> regexList = new ArrayList<String>();
 	List<String> loggedRestPathErrors = new ArrayList<String>();
-	private final Object lock = new Object();
 
 	void init() {
 		if (initDone) {
 			return;
 		}
-		synchronized (lock) {
+		synchronized (RangerRESTAPIFilter.class) {
 			if (initDone) {
 				return;
 			}
 
 			logStdOut = PropertiesUtil.getBooleanProperty(
-					"xa.restapi.log.enabled", initDone);
+					"xa.restapi.log.enabled", false);
 
 			// Build hash map
 			try {

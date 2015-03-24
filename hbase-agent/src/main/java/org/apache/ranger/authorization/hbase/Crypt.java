@@ -36,22 +36,23 @@ public class Crypt {
 	private static final String CIPHER_ALGO = "AES/CBC/PKCS5Padding";
 	private static final String CIPHER_INIT_ALGO = "AES";
 	
-	private static Crypt me = null ;
+	private static volatile Crypt me = null ;
 	
 	private Cipher encrypter = null;
 	private Cipher descrypter = null;
 
 
 	public static Crypt getInstance() {
-		if (me == null) {
+        Crypt result = me;
+		if (result == null) {
 			synchronized (Crypt.class) {
-				Crypt other = me ;
-				if (other == null) {
-					me = new Crypt() ;
+				result = me ;
+				if (result == null) {
+					me = result = new Crypt() ;
 				}
 			}
 		}
-		return me ;
+		return result ;
 	}
 	
 	private Crypt() {
