@@ -1363,7 +1363,7 @@ execute_java_patches(){
 					if [ "${c}" != "${version}" ]
 					then
 						log "[I] patch ${javaPatch} is being applied..";
-						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" org.apache.ranger.patch.${className}`
+						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF:$SQL_CONNECTOR_JAR" org.apache.ranger.patch.${className}`
 						check_ret_status $? "Unable to apply patch:$javaPatch. $msg"
 						touch ${tempFile}
 						echo >> ${tempFile}

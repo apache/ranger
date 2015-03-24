@@ -19,14 +19,15 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		super(daoManager);
 	}
 
-	public XXPolicy findByName(String polName) {
-		if (polName == null) {
+	public XXPolicy findByNameAndServiceId(String polName, Long serviceId) {
+		if (polName == null || serviceId == null) {
 			return null;
 		}
 		try {
 			XXPolicy xPol = getEntityManager()
-					.createNamedQuery("XXPolicy.findByName", tClass)
-					.setParameter("polName", polName).getSingleResult();
+					.createNamedQuery("XXPolicy.findByNameAndServiceId", tClass)
+					.setParameter("polName", polName).setParameter("serviceId", serviceId)
+					.getSingleResult();
 			return xPol;
 		} catch (NoResultException e) {
 			return null;

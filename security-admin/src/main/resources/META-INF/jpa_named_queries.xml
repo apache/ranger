@@ -200,8 +200,8 @@
 	</named-query>
 
 	<!-- XXPolicy -->
-	<named-query name="XXPolicy.findByName">
-		<query>select obj from XXPolicy obj where obj.name = :polName</query>
+	<named-query name="XXPolicy.findByNameAndServiceId">
+		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId</query>
 	</named-query>
 	
 	<named-query name="XXPolicy.findByServiceId">

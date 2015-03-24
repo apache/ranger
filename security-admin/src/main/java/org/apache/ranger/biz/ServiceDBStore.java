@@ -421,7 +421,7 @@ public class ServiceDBStore implements ServiceStore {
 
 		boolean createDefaultPolicy = true;
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
-		if (usb != null && usb.isUserAdmin()) {
+		if (usb != null && usb.isUserAdmin() || populateExistingBaseFields) {
 			Map<String, String> configs = service.getConfigs();
 			Map<String, String> validConfigs = validateRequiredConfigParams(
 					service, configs);
@@ -485,7 +485,7 @@ public class ServiceDBStore implements ServiceStore {
 
 			return createdService;
 		} else {
-			LOG.debug("User id : " + usb.getUserId() + " doesn't have admin access to create repository.");
+			LOG.debug("Logged in user doesn't have admin access to create repository.");
 			throw restErrorUtil.createRESTException(
 							"Sorry, you don't have permission to perform the operation",
 							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
@@ -678,7 +678,7 @@ public class ServiceDBStore implements ServiceStore {
 			throw new Exception("service-def does not exist - name=" + service.getType());
 		}
 		
-		XXPolicy existing = daoMgr.getXXPolicy().findByName(policy.getName());
+		XXPolicy existing = daoMgr.getXXPolicy().findByNameAndServiceId(policy.getName(), service.getId());
 
 		if(existing != null) {
 			throw new Exception("policy already exists: ServiceName=" + policy.getService() + "; PolicyName=" + policy.getName() + ". ID=" + existing.getId());
@@ -743,7 +743,7 @@ public class ServiceDBStore implements ServiceStore {
 		boolean renamed = !StringUtils.equalsIgnoreCase(policy.getName(), existing.getName());
 		
 		if(renamed) {
-			XXPolicy newNamePolicy = daoMgr.getXXPolicy().findByName(policy.getName());
+			XXPolicy newNamePolicy = daoMgr.getXXPolicy().findByNameAndServiceId(policy.getName(), service.getId());
 
 			if(newNamePolicy != null) {
 				throw new Exception("another policy already exists with name '" + policy.getName() + "'. ID=" + newNamePolicy.getId());
