@@ -188,17 +188,23 @@ define(function(require) {'use strict';
 		getColumns : function(coll){
 			var that = this;
 			var cols = {
-				name : {
+				id : {
 					cell : "uri",
 					href: function(model){
 						var rangerService = new RangerService();
 						rangerService.urlRoot += '/name/'+model.get('service'); 
 						rangerService.fetch({
-						  cache : true,
+						  cache : false,
 						  async : false
 						});
 						return '#!/service/'+rangerService.get('id')+'/policies/'+model.id+'/edit';
 					},
+					label	: localization.tt("lbl.policyId"),
+					editable: false,
+					sortable : false
+				},
+				name : {
+					cell : 'string',
 					label	: localization.tt("lbl.policyName"),
 					editable: false,
 					sortable : false
@@ -280,9 +286,10 @@ define(function(require) {'use strict';
 			this.ui.userGroup.select2({
 				closeOnSelect : true,
 				placeholder : 'Select Group',
-			//	maximumSelectionSize : 1,
+				maximumSelectionSize : 1,
 				width :'220px',
 				tokenSeparators: [",", " "],
+				allowClear: true,
 				// tags : this.groupArr,
 				initSelection : function (element, callback) {
 					var data = [];
@@ -328,7 +335,7 @@ define(function(require) {'use strict';
 			var that = this;
 			var arr = [];
 			this.userArr = this.userList.map(function(m){
-				return { id : m.id , text : m.get('name')};
+				return { id : m.get('name') , text : m.get('name')};
 			});
 			this.ui.userName.select2({
 //				multiple: true,
@@ -338,12 +345,13 @@ define(function(require) {'use strict';
 //				maximumSelectionSize : 1,
 				width :'220px',
 				tokenSeparators: [",", " "],
+				allowClear: true,
 				// tags : this.userArr, 
 				initSelection : function (element, callback) {
 					var data = [];
 					$(element.val().split(",")).each(function () {
 						var obj = _.findWhere(that.userArr,{id:this});	
-						data.push({id: this, text: obj.text});
+						data.push({id: obj.text, text: obj.text});
 					});
 					callback(data);
 				},
@@ -358,7 +366,7 @@ define(function(require) {'use strict';
 						if(!_.isEmpty(that.ui.userName.select2('val')))
 							selectedVals = that.ui.userName.select2('val');
 						if(data.resultSize != "0"){
-							results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+							results = data.vXUsers.map(function(m, i){	return {id : m.name, text: m.name};	});
 							if(!_.isEmpty(selectedVals))
 								results = XAUtil.filterResultByIds(results, selectedVals);
 							return {results : results};

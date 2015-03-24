@@ -794,5 +794,8 @@ define(function(require) {
 		}
 		return controller;
 	};
+	XAUtils.getRangerServiceByName = function(name) {
+		return "service/plugins/services/name/"+name;
+	};
     return XAUtils;
 });

@@ -48,28 +48,28 @@
 			</div>
 		</div>
 	{{/if}}	
- 	
-	<h5>Group  :</h5>
-	<div class="diff">
-		<div class="diff-left">
-			<h3>Fields</h3>
-			<ol class="attr">
-				<li class="change-row">Groups</li>
-			</ol>
+ 	{{#if isGroup}}
+		<h5>Group  :</h5>
+		<div class="diff">
+			<div class="diff-left">
+				<h3>Fields</h3>
+				<ol class="attr">
+					<li class="change-row">Groups</li>
+				</ol>
+			</div>
+			<div class="diff-right" data-id="diff">
+				<h3>New Value</h3>
+				<ol class="unstyled data">
+					<li class="change-row">
+						{{#each newGroupList}}
+							{{./this}} 
+							<span>,</span>
+						{{/each}}
+					</li>
+				</ol>
+			</div>
 		</div>
-		<div class="diff-right" data-id="diff">
-			<h3>New Value</h3>
-			<ol class="unstyled data">
-				<li class="change-row">
-					{{#each newGroupList}}
-						{{./this}} 
-						<span>,</span>
-					{{/each}}
-				</li>
-			</ol>
-		</div>
-	</div>
-
+	{{/if}}
 
 {{else}}
 	<h4>{{tt 'msg.userDoesNotExistAnymore'}}</h4>

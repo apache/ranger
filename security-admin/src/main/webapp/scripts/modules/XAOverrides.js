@@ -478,16 +478,24 @@
 			  	}
 		  },
 		  getValue: function() {
+			  var that = this;
 			  //checkParent
 			  if(this.$el.parents('.control-group').hasClass('hideResource')){
 				  return null;
 			  }
 			  this.value['resource'] = this.$resource.val();
 			  //validation
-			  if(!_.isUndefined(this.validators) && ($.inArray('required',this.validators) != -1)){
-				  if(_.isEmpty(this.value.resource))
-					  return null;
-			  }
+			  
+			  
+			  if(!_.isUndefined(this.validators)){
+				  if(($.inArray('required',this.validators) != -1)){
+					  if(_.isEmpty(this.value.resource))
+						  return null;
+				  }
+			  } 
+			  
+			  
+			  
 			  if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
 				  this.value['resourceType'] = this.$resourceType.val();  
 			  }

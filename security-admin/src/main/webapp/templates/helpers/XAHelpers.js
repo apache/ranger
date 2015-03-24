@@ -397,6 +397,35 @@
 		}
 	    return html;
 	});
+	Handlebars.registerHelper('highlightForPlugableServiceModel', function(newValue, oldValue, hightlightValue, attrName) {
+		if(attrName != 'Policy Resources'){
+			return hightlightValue == 'old' ? _.escape(oldValue) : _.escape(newValue);
+		}
+		newValue = newValue.split(',')
+		oldValue = oldValue.split(',')
+		var html='';
+		if(hightlightValue == 'new'){
+			_.each(newValue, function(val) {
+				if($.inArray(val, oldValue) < 0){
+					html += '<span class="add-text">'+_.escape(val)+'</span>';
+				}else{
+					html += '<span>'+_.escape(val)+'</span>';
+				}
+				html+='<span>,</span>';
+			});
+		}else{
+			_.each(oldValue, function(val) {
+				if($.inArray(val, newValue) < 0){
+					html += '<span class="delete-text">'+_.escape(val)+'</span>';
+				}else{
+					html += '<span>'+_.escape(val)+'</span>';
+				}
+				html+='<span>,</span>';
+				
+			});
+		}
+	    return html;
+	});
 	Handlebars.registerHelper('highlightUsersForArr', function(val, arr, hightlightValue) {
 		var html = val;
 		if(hightlightValue == 'new'){
@@ -502,7 +531,9 @@
 		}
 		return tr;
 	});
-	
+	Handlebars.registerHelper('capitaliseLetter', function(str) {
+		return str.toUpperCase();
+	});
 
 	return HHelpers;
 });

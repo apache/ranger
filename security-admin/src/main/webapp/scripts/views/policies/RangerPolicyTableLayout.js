@@ -32,6 +32,7 @@ define(function(require){
 	var XATableLayout	= require('views/common/XATableLayout');
 	var localization	= require('utils/XALangSupport');
 	var vFolderInfo = require('views/folders/FolderInfo');
+	var RangerService		= require('models/RangerService');
 	var RangerServiceDef	= require('models/RangerServiceDef');
 	var RangerPolicy 		= require('models/RangerPolicy');
 	var RangerPolicyTableLayoutTmpl = require('hbs!tmpl/policies/RangerPolicyTableLayout_tmpl');
@@ -140,7 +141,7 @@ define(function(require){
 				collection: this.collection,
 				includeFilter : false,
 				gridOpts : {
-//					row: TableRow,
+					row: Backgrid.Row.extend({}),
 					header : XABackgrid,
 					emptyText : 'No Policies found!'
 				},
@@ -150,11 +151,17 @@ define(function(require){
 		getColumns : function(){
 			var that = this;
 			var cols = {
-				name : {
+				id : {
 					cell : "uri",
 					href: function(model){
 						return '#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit';
 					},
+					label	: localization.tt("lbl.policyId"),
+					editable: false,
+					sortable : false
+				},
+				name : {
+					cell : 'string',
 					label	: localization.tt("lbl.policyName"),
 					editable: false,
 					sortable : false

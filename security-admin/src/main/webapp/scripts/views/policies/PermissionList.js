@@ -478,10 +478,10 @@ define(function(require) {
 		},
 		addNew : function(){
 			var that =this;
-			if(this.groupList.length > this.collection.length || (this.userList.length > this.collection.length)){
+//			if(this.groupList.length > this.collection.length && (this.userList.length > this.collection.length)){
 				this.collection.add(new Backbone.Model());
 //				this.toggleAddButton();
-			}
+//			}
 		},
 		toggleAddButton : function(){
 			var groupNames=[], userNames=[];

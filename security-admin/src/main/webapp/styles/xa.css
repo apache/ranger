@@ -1405,6 +1405,7 @@ ul.tabs > li > a {
   top: 0;
 }
 .diff ol {
+  min-width: 250px;
   display: table-cell;
   margin: 0;
   padding: 0;

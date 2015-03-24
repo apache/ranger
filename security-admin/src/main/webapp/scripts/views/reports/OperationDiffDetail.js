@@ -135,7 +135,8 @@ define(function(require){
 			});
 		},
 		getTemplateForView : function(){
-			if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value){
+			if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value
+					|| this.classType == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value){
 				this.templateType=XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value;
 				if(this.action == 'create'){
 					this.template = AssetOperationDiff_tmpl;
@@ -212,7 +213,6 @@ define(function(require){
 				if(attrName == "IP Address")
 					type = 'ipAddress';
 				if(m.get('attributeName') == 'Permission Type' || m.get('attributeName') == "IP Address"){
-//				if(m.get('attributeName') == 'Permission Type'){
 					if(m.get('parentObjectClassType') == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value){
 						if(m.get('action') != 'delete'){
 							if(m.get('action') == 'create'){
@@ -278,7 +278,6 @@ define(function(require){
 				
 				if(_.isUndefined(m.get('attributeName')))
 					modelColl.push(m);
-				//if(m.get('attributeName') == 'Column Type')
 			});
 			
 			this.newGroupPermList 		= _.groupBy(this.newGroupPermList, 'groupName');
@@ -288,15 +287,7 @@ define(function(require){
 			
 			this.removeUnwantedElement();
 			this.createEqualLengthArr();
-			console.log('UserList');
-			console.log(this.userList);
-			console.log('GroupList');
-			console.log(this.groupList);
 			
-			console.log(this.newGroupPermList);
-			console.log(this.previousGroupPermList);
-			console.log(this.newUserPermList);
-			console.log(this.previousUserPermList);
 			if(!_.isEmpty(this.newGroupPermList) || !_.isEmpty(this.previousGroupPermList))
 				this.isGroupPerm = true;
 			if(!_.isEmpty(this.newUserPermList) || !_.isEmpty(this.previousUserPermList))
@@ -370,13 +361,6 @@ define(function(require){
 					if(!m.has('attributeName'))
 						modelArr.push(m);
 				}
-				//TODO
-			/*	if(m.get('action') == 'update'){
-					if(m.get('previousValue') == 'null'){
-						m.set('previousValue', '');	
-					}
-						
-				}*/
 			});
 			if(!_.isEmpty(this.newGroupList) || !_.isEmpty(this.previousGroupList))
 				this.isGroup = true;
