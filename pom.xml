@@ -175,6 +175,28 @@
 		<powermock.version>1.5.6</powermock.version>
 		<aspectj.version>1.8.2</aspectj.version>
 		<findbugs.plugin.version>3.0.0</findbugs.plugin.version>
+		<hadoop.minikdc.version>2.3.0</hadoop.minikdc.version>
+		<jersey-server.version>1.9</jersey-server.version> 		
+		<asm.all.version>3.2</asm.all.version>
+		<mortbay.jetty.version>6.1.26</mortbay.jetty.version>
+		<metrics.core.version>3.0.2</metrics.core.version>
+	      	<curator.test.version>2.7.0</curator.test.version>
+		<servlet.api.version>2.5</servlet.api.version>
+		<httpcomponents.httpclient.version>4.2.5</httpcomponents.httpclient.version>
+		<xz.version>1.0</xz.version>
+		<xmlenc.version>0.52</xmlenc.version>
+		<snappy-java.version>1.0.4.1</snappy-java.version>
+		<protobuf-java.version>2.5.0</protobuf-java.version>
+		<paranamer.version>2.3</paranamer.version>
+		<netty.version>3.6.2.Final</netty.version>
+		<jsr305.version>1.3.9</jsr305.version>
+		<jsch.version>0.1.42</jsch.version>
+		<jline.version>0.9.94</jline.version>
+		<jettison.version>1.1</jettison.version>
+		<jaxb-impl.version>2.2.3-1</jaxb-impl.version>
+		<jaxb-api.version>2.2.2</jaxb-api.version>
+		<jackson.version>1.9.13</jackson.version>
+		<sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
 		<distMgmtStagingId>apache.staging.https</distMgmtStagingId>
     	<distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
     	<distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>

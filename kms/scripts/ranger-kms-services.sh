@@ -71,7 +71,7 @@ fi
 
 KMS_CONF_DIR=${RANGER_KMS_EWS_DIR}/webapp/config/
 
-JAVA_OPTS="${JAVA_OPTS} -Dcatalina.base=${RANGER_KMS_EWS_DIR} -Dkms.config.dir=${KMS_CONF_DIR} -Dkms.log.dir=${TOMCAT_LOG_DIR} -cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_LIB_DIR}/*:${JAVA_HOME}/lib/* "
+JAVA_OPTS="${JAVA_OPTS} -Dcatalina.base=${RANGER_KMS_EWS_DIR} -Dkms.config.dir=${KMS_CONF_DIR} -Dkms.log.dir=${TOMCAT_LOG_DIR} -cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_LIB_DIR}/*:${RANGER_KMS_EWS_DIR}/webapp/lib/*:${JAVA_HOME}/lib/* "
 
 if [ "${action^^}" == "START" ]; then
 	echo "+ java -D${PROC_NAME} ${JAVA_OPTS} ${START_CLASS_NAME} ${KMS_CONFIG_FILENAME} "
