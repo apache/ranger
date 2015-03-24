@@ -196,15 +196,15 @@
 	</fileSet>
 	<fileSet>
 		<outputDirectory>/ews/webapp/config</outputDirectory>
-		<directoryMode>0500</directoryMode>
+		<directoryMode>0700</directoryMode>
 		<directory>kms/config/kms-webapp</directory>
-		<fileMode>0400</fileMode>
+		<fileMode>0700</fileMode>
   	</fileSet>	
   	<fileSet>
 		<outputDirectory>/ews/conf</outputDirectory>
-		<directoryMode>0500</directoryMode>
+		<directoryMode>0700</directoryMode>
 		<directory>kms/config/webserver</directory>
-		<fileMode>0400</fileMode>
+		<fileMode>0700</fileMode>
   	</fileSet>
   </fileSets>
 </assembly>
