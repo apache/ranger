@@ -39,7 +39,7 @@ stop)
 restart)
 	echo "Stopping Apache Ranger Kms."
 	${BIN_PATH}/${MOD_NAME} stop
-	echo "Stopping Apache Ranger Kms."
+	echo "Starting Apache Ranger Kms."
 	${BIN_PATH}/${MOD_NAME} start
 	;;
 *)

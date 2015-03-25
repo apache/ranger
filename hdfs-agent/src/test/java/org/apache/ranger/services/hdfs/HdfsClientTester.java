@@ -19,6 +19,8 @@
 
  package org.apache.ranger.services.hdfs;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -39,7 +41,21 @@ public class HdfsClientTester {
 		String fileNameToMatch = (args.length == 3 ? null : args[3]) ;
 
 		Properties conf = new Properties() ;
-		conf.load(HdfsClientTester.class.getClassLoader().getResourceAsStream(propFile));
+		
+		InputStream in = HdfsClientTester.class.getClassLoader().getResourceAsStream(propFile) ;
+		try {
+			conf.load(in);
+		}
+		finally {
+			if (in != null) {
+				try {
+				in.close() ;
+				}
+				catch(IOException ioe) {
+					// Ignore IOException created during close
+				}
+			}
+		}
 		
 		HashMap<String,String> prop = new HashMap<String,String>() ;
 		for(Object key : conf.keySet()) {

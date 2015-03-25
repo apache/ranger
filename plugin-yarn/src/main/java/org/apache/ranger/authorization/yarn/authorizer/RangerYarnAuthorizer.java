@@ -22,15 +22,12 @@ package org.apache.ranger.authorization.yarn.authorizer;
 
 import java.net.InetAddress;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -43,7 +40,7 @@ import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 
@@ -155,7 +152,7 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 			RangerYarnResource resource = new RangerYarnResource(entity);
 
 			GrantRevokeRequest request = new GrantRevokeRequest();
-			request.setResource(resource.getResourceAsMap());
+			request.setResource(resource.getAsMap());
 			request.setGrantor(ugi.getShortUserName());
 			request.setDelegateAdmin(Boolean.FALSE);
 			request.setEnableAudit(Boolean.TRUE);
@@ -249,44 +246,11 @@ class RangerYarnPlugin extends RangerBasePlugin {
 	}
 }
 
-class RangerYarnResource implements RangerResource {
-	private static final String      KEY_QUEUE  = "queue";
-	private static final Set<String> KEYS_QUEUE = Sets.newHashSet(KEY_QUEUE);
-
-	private String queue = null;
+class RangerYarnResource extends RangerAccessResourceImpl {
+	private static final String KEY_QUEUE = "queue";
 
 	public RangerYarnResource(PrivilegedEntity entity) {
-		this.queue = entity != null ? entity.getName() : null;
-	}
-
-	@Override
-	public String getOwnerUser() {
-		return null;
-	}
-
-	@Override
-	public boolean exists(String name) {
-		return !StringUtils.isEmpty(queue) && StringUtils.equals(name, KEY_QUEUE);
-	}
-
-	@Override
-	public String getValue(String name) {
-		return StringUtils.equals(name, KEY_QUEUE) ? queue : null;
-	}
-
-	@Override
-	public Set<String> getKeys() {
-		return StringUtils.isEmpty(queue) ? Collections.<String>emptySet() : KEYS_QUEUE;
-	}
-
-	public Map<String, String> getResourceAsMap() {
-		Map<String, String> ret = new HashMap<String, String>();
-
-		if(!StringUtils.isEmpty(queue)) {
-			ret.put(KEY_QUEUE, queue);
-		}
-
-		return ret;
+		setValue(KEY_QUEUE, entity != null ? entity.getName() : null);
 	}
 }
 

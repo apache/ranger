@@ -1,0 +1,91 @@
+{{!-- 
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--}}
+<div class="diff-content">
+	<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
+	<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
+	<!-- <label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label> -->
+	<label class="no-margin label-size13-weightbold"> Deleted Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
+	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{objectCreatedBy}}</label>
+
+{{#if collection.length}}
+	<h5>Policy Details :</h5>
+	<div class="diff">
+		<div class="diff-left">
+			<h3>Fields</h3>
+			<ol class="attr">
+			{{#each collection}}
+				<li class="change-row">{{./this.attributes.attributeName}}</li>
+			{{/each}}	
+			</ol>
+		</div>
+	 	<div class="diff-left">
+			<h3>Old Value</h3>
+			<ol class="unstyled data">
+			{{#each collection}}
+					<li class="change-row">{{./this.attributes.previousValue}}</li>
+			{{/each}}	
+			</ol>
+		</div>  
+	</div>
+{{/if}}	
+
+{{#if oldPolicyItems}}
+	<h5>Users/Groups Permissions :</h5>
+	<div class="diff diff-perms">
+		<div class="diff-right" data-id="diff">
+			<h3>Old Value</h3>
+			{{#each oldPolicyItems}}
+				<ol class="unstyled data">
+							<li class="change-row"><i>Groups</i>:
+								{{#if_eq this.groups compare=0}}
+									&lt;empty&gt; 
+								{{else}}
+									{{#each this.groups}}  
+											<span class="groupname">{{this}}</span><span>,</span>
+									{{/each}}
+								{{/if_eq}}
+							</li>
+							<li class="change-row"><i>Users</i>:
+								{{#if_eq this.users compare=0}}
+									&lt;empty&gt;	 
+								{{else}}
+									{{#each this.users}}  
+											<span class="username">{{this}}</span><span>,</span>
+									{{/each}}
+								{{/if_eq}}
+							</li>
+							<li class="change-row"><i>Permissions</i>:
+								{{#each this.permissions}}
+									<span class="perm">{{this}}</span> <span>,</span>
+								{{/each}}
+							</li>
+							{{#if this.conditions}}
+								<li class="change-row">
+									<i>Conditions</i>:
+										{{#each this.conditions}}
+											<span class="condition">{{this.type}} : [{{this.values}}]</span><span>,</span>
+										{{/each}}
+								</li>
+							{{/if}}	
+							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
+					</ol><br/>
+		{{/each}}
+		</div>
+	</div>
+{{/if}}	
+
+</div>

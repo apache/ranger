@@ -22,6 +22,7 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -125,9 +126,22 @@ public class UnixAuthenticationService {
 
 	//TODO: add more validation code
 	private void init() throws Throwable {
-		InputStream in = getFileInputStream("unixauthservice.properties") ;
 		Properties prop = new Properties() ;
-		prop.load(in);
+		InputStream in = getFileInputStream("unixauthservice.properties") ;
+
+		if (in != null) {
+			try {
+				prop.load(in);
+			}
+			finally {
+				try {
+					in.close();
+				}
+				catch(IOException ioe) {
+					// Ignore IOE when closing streams
+				}
+			}
+		}
 		keyStorePath = prop.getProperty(SSL_KEYSTORE_PATH_PARAM) ;
 		keyStorePathPassword = prop.getProperty(SSL_KEYSTORE_PATH_PASSWORD_PARAM) ;
 		trustStorePath  = prop.getProperty(SSL_TRUSTSTORE_PATH_PARAM) ;

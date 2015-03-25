@@ -33,7 +33,7 @@ public class RangerConfiguration extends Configuration {
 	
 	private static final Logger LOG = Logger.getLogger(RangerConfiguration.class) ;
 	
-	private static RangerConfiguration config = null;
+	private static volatile RangerConfiguration config = null;
 	
 	private RangerConfiguration() {
 		super(false) ;
@@ -88,15 +88,16 @@ public class RangerConfiguration extends Configuration {
 	
 
 	public static RangerConfiguration getInstance() {
-		if (config == null) {
+        RangerConfiguration result = config;
+		if (result == null) {
 			synchronized (RangerConfiguration.class) {
-				RangerConfiguration temp = config;
-				if (temp == null) {
-					config = new RangerConfiguration();
+				result = config;
+				if (result == null) {
+					config = result = new RangerConfiguration();
 				}
 			}
 		}
-		return config;
+		return result;
 	}
 
 	public void initAudit(String appType) {

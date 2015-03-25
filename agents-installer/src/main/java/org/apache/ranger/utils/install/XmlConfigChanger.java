@@ -425,7 +425,19 @@ public class XmlConfigChanger {
 	private void loadInstallProperties() throws IOException {
 		if (propFile != null) {
 			FileInputStream in = new FileInputStream(propFile) ;
+			try {
 			installProperties.load(in);
+			}
+			finally {
+				if (in != null) {
+					try {
+						in.close();
+					}
+					catch(IOException ioe) {
+						// Ignore IOException during close of stream
+					}
+				}
+			}
 		}
 		// To support environment variable, we will add all environment variables to the Properties
 		installProperties.putAll(System.getenv());

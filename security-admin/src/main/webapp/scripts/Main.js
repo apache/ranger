@@ -24,13 +24,17 @@
 	'routers/Router',
 	'controllers/Controller',
 	'modules/XAOverrides',
+	'utils/XAUtils',
 	'hbs!tmpl/common/loading_tmpl'
 ],
-function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides,loadingHTML ) {
+function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides, XAUtils, loadingHTML ) {
     'use strict';
 
+    var controller = new AppController();
+    //deny some routes access for normal users
+    controller = XAUtils.filterAllowedActions(controller);
 	App.appRouter = new AppRouter({
-		controller: new AppController()
+		controller: controller
 	});
 	App.appRouter.on('beforeroute', function(event) {
 		$(App.rContent.$el).html(loadingHTML);

@@ -31,14 +31,17 @@ define(function(require) {
 	var XATableLayout	= require('views/common/XATableLayout');
 	var localization	= require('utils/XALangSupport');
 	
-	var VXAuthSession			= require('collections/VXAuthSessionList');
-	var VXTrxLogList   			= require('collections/VXTrxLogList');
-	var VXAssetList 			= require('collections/VXAssetList');
-	var VXPolicyExportAuditList = require('collections/VXPolicyExportAuditList');
-	var RangerServiceDefList 	= require('collections/RangerServiceDefList');
-	var RangerService			= require('models/RangerService');
-	var AuditlayoutTmpl 		= require('hbs!tmpl/reports/AuditLayout_tmpl');
-	var vOperationDiffDetail	= require('views/reports/OperationDiffDetail');
+	var VXAuthSession				= require('collections/VXAuthSessionList');
+	var VXTrxLogList   				= require('collections/VXTrxLogList');
+	var VXAssetList 				= require('collections/VXAssetList');
+	var VXPolicyExportAuditList 	= require('collections/VXPolicyExportAuditList');
+	var RangerServiceDefList 		= require('collections/RangerServiceDefList');
+	var RangerService				= require('models/RangerService');
+	var AuditlayoutTmpl 			= require('hbs!tmpl/reports/AuditLayout_tmpl');
+	var vOperationDiffDetail		= require('views/reports/OperationDiffDetail');
+	var RangerPolicy 				= require('models/RangerPolicy');
+	var RangerPolicyRO				= require('views/policies/RangerPolicyRO');
+	var vPlugableServiceDiffDetail	= require('views/reports/PlugableServiceDiffDetail');
 
 	require('moment');
 	require('bootstrap-datepicker');
@@ -63,7 +66,6 @@ define(function(require) {
 
 		/** Layout sub regions */
 		regions : {
-			//'rAuditTable'	: 'div[data-id="r_auditTable"]',
 			'rTableList'	: 'div[data-id="r_tableLists"]'
 		},
 
@@ -88,8 +90,6 @@ define(function(require) {
 		events : function() {
 			var events = {};
 			events['click ' + this.ui.refresh]         = 'onRefresh';
-			//events['blur ' + this.ui.resourceName ]  = 'onSearch';
-			//events['change ' + this.ui.selectRepo ]  = 'onChangeRepository';
 			events['click ' + this.ui.searchBtn]  	   = 'onSearch';
 			events['click '+this.ui.tab+' a']		   = 'onTabChange';
 			return events;
@@ -114,7 +114,6 @@ define(function(require) {
 		/** all events binding here */
 		bindEvents : function() {
 			/*this.listenTo(this.model, "change:foo", this.modelChanged, this);*/
-			/*this.listenTo(communicator.vent,'someView:someEvent', this.someEventHandler, this)'*/
 			//this.listenTo(this.collection, "change:foo", this.render, this);
 		},
 		initializeCollection : function(){
@@ -122,15 +121,12 @@ define(function(require) {
 			this.collection.fetch({
 				reset : true,
 				cache : false
-				//data : params,
 			});
 		},
 		initializePolling : function(){
 			this.timerId = setInterval(function(){
 //				that.onRefresh(this.accessAuditList);
 				console.log('polling collection..');
-				//that.initializeCollection();
-				//that.onSearch();
 			},XAGlobals.settings.AUDIT_REPORT_POLLING);
 		},
 		initializeServiceDefColl : function() {
@@ -207,7 +203,6 @@ define(function(require) {
 			var that = this, tab;
 			if(!_.isUndefined(e))
 				tab = $(e.currentTarget).attr('href');
-				//tab = $(e.currentTarget).find('a').attr('href');
 			else
 				tab = this.currentTab;
 			this.$el.parents('body').find('.datepicker').remove();
@@ -216,7 +211,6 @@ define(function(require) {
 				this.currentTab = '#bigData';
 				this.ui.visualSearch.show();
 				this.ui.visualSearch.parents('.well').show();
-//				this.accessAuditList = new VXAccessAuditList();
 				this.renderBigDataTable();
 				this.modifyTableForSubcolumns();
 				if(this.accessAuditList.length <= 0){
@@ -242,12 +236,10 @@ define(function(require) {
 				this.currentTab = '#loginSession';
 				this.authSessionList = new VXAuthSession();
 				this.renderLoginSessionTable();
-				//var params = { sortBy : 'id',sortType: 'desc' };
 				//Setting SortBy as id and sortType as desc = 1
 				this.authSessionList.setSorting('id',1); 
 				this.authSessionList.fetch({
 					cache:false,
-				//	data:params
 				});
 				this.addSearchForLoginSessionTab();
 				break;
@@ -294,6 +286,8 @@ define(function(require) {
 						_.each(XAEnums.ClassTypes, function(obj){
 							if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) ||
 									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) ||
+									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) ||
+									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value) ||
 									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value) || 
 									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
 								auditList.push({label :obj.label, value :obj.value+''});
@@ -342,7 +336,6 @@ define(function(require) {
 		},
 		addSearchForAdminTab : function(){
 			var that = this;
-			//var searchOpt = _.pluck(this.getAdminTableColumns(), 'label');
 			var searchOpt = ["Operation", "Audit Type", "User", "Date", "Actions", "Session Id"];
 			searchOpt = _.without(searchOpt,'Date','Operation');
 			searchOpt = _.union(searchOpt, ['Start Date','End Date']);//'Today'
@@ -358,6 +351,8 @@ define(function(require) {
 			_.each(XAEnums.ClassTypes, function(obj){
 				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) ||
 						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) ||
+						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) ||
+						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value) ||
 						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value) || 
 						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
 					auditList.push({label :obj.label, value :obj.label+''});
@@ -410,10 +405,8 @@ define(function(require) {
 		},
 		addSearchForLoginSessionTab : function(){
 			var that = this;
-			//var searchOpt = _.pluck(this.getLoginSessionColumns(), 'label');
 			var searchOpt = ["Session Id", "Login Id", "Result", "Login Type", "IP", "User Agent", "Login Time"];
 			searchOpt = _.without(searchOpt,'Login Time');
-			//var searchOpt = ["Session Id", "Login Id", "Result", "Login Type", "IP", "User Agent", "Login Time"]
 			searchOpt = _.union(searchOpt, ['Start Date','End Date']);//'Today'
 			var serverAttrName  = [{text : "Session Id", label :"id"}, {text : "Login Id", label :"loginId"},
 			                       {text : "Result", label :"authStatus",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthStatus)},
@@ -472,11 +465,10 @@ define(function(require) {
 		},
 		addSearchForAgentTab : function(){
 			var that = this;
-			//var searchOpt = _.pluck(this.getAgentColumns(), 'label');
-			var searchOpt = ["Export Date", "Repository Name", "Agent Id", "Agent IP", "Http Response Code"];
+			var searchOpt = ["Export Date", "Repository Name", "Plugin Id", "Plugin IP", "Http Response Code"];
 			searchOpt = _.without(searchOpt,'Export Date');
 			searchOpt = _.union(searchOpt, ['Start Date','End Date']);//'Today'
-			var serverAttrName  = [{text : "Agent Id", label :"agentId"}, {text : "Agent IP", label :"clientIP"},
+			var serverAttrName  = [{text : "Plugin Id", label :"agentId"}, {text : "Plugin IP", label :"clientIP"},
 			                       {text : "Repository Name", label :"repositoryName"},{text : "Http Response Code", label :"httpRetCode"},
 			                       {text : "Export Date", label :"createDate"},
 			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
@@ -557,21 +549,32 @@ define(function(require) {
 						XAUtils.blockUI('unblock');
 						fullTrxLogListForTrxId = new VXTrxLogList(coll.vXTrxLogs);
 						
-						var view = new vOperationDiffDetail({
-							collection : fullTrxLogListForTrxId,
-							classType : self.model.get('objectClassType'),
-							objectName : self.model.get('objectName'),
-							objectId   : self.model.get('objectId'),
-							objectCreatedDate : objectCreatedDate,
-							userName :self.model.get('owner'),
-							action : action
-							
-						});
+						//diff view to support new plugable service model
+						if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value){
+							var view = new vPlugableServiceDiffDetail({
+								collection : fullTrxLogListForTrxId,
+								classType : self.model.get('objectClassType'),
+								objectName : self.model.get('objectName'),
+								objectId   : self.model.get('objectId'),
+								objectCreatedDate : objectCreatedDate,
+								userName :self.model.get('owner'),
+								action : action
+							});
+						}else{
+							var view = new vOperationDiffDetail({
+								collection : fullTrxLogListForTrxId,
+								classType : self.model.get('objectClassType'),
+								objectName : self.model.get('objectName'),
+								objectId   : self.model.get('objectId'),
+								objectCreatedDate : objectCreatedDate,
+								userName :self.model.get('owner'),
+								action : action
+							});
+						}
 						var modal = new Backbone.BootstrapModal({
 							animate : true, 
 							content		: view,
 							title: localization.tt("h.operationDiff")+' : '+action,
-							//	cancelText : localization.tt("lbl.done"),
 							okText :localization.tt("lbl.ok"),
 							allowCancel : true,
 							escape : true
@@ -584,7 +587,6 @@ define(function(require) {
 					
 				}
 			});
-//			this.ui.refreshTable.hide();
 			this.ui.tableList.addClass("clickable");
 			this.rTableList.show(new XATableLayout({
 				columns: this.getAdminTableColumns(),
@@ -600,12 +602,14 @@ define(function(require) {
 		getAdminTableColumns : function(){
 			var auditList = [];
 			_.each(XAEnums.ClassTypes, function(obj){
-								if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) ||
-										(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) ||
-										(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value) || 
-										(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
-									auditList.push({text :obj.label, id :obj.value});
-							});
+				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) ||
+					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) ||
+					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) ||
+					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value) ||
+					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value) || 
+					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
+				auditList.push({text :obj.label, id :obj.value});
+			});
 			console.log(auditList);
 			var cols = {
 				operation : {
@@ -618,22 +622,20 @@ define(function(require) {
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							rawValue = model.get('objectClassType');
-							var action = model.get('action');
-							var name = model.get('objectName');
-							var html = '';
-							var label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue);
-							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value)
-								html = 	'Repository '+action+'d '+'<b>'+name+'</b>';//'<a tabindex="-1" href="javascript:;" title="'+name+'">'+name+'</a>';
-							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value)
-								html = 	'Policy '+action+'d '+'<b>'+name+'</b>';//'<a tabindex="-1" href="javascript:;" title="'+name+'">'+name+'</a>';
+							var action = model.get('action'), name = model.get('objectName'),
+								label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue), html = '';
+							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
+								html = 	'Repository '+action+'d '+'<b>'+name+'</b>';
+							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value|| rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value)
+								html = 	'Policy '+action+'d '+'<b>'+name+'</b>';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
-								html = 	'User '+action+'d '+'<b>'+name+'</b>';//'<a tabindex="-1" href="javascript:;" title="'+name+'">'+name+'</a>';
+								html = 	'User '+action+'d '+'<b>'+name+'</b>';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value)
-								html = 	'Group '+action+'d '+'<b>'+name+'</b>';//'<a tabindex="-1" href="javascript:;" title="'+name+'">'+name+'</a>';
+								html = 	'Group '+action+'d '+'<b>'+name+'</b>';
 							if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value)
-								html = 	'User profile '+action+'d '+'<b>'+name+'</b>';//'<a tabindex="-1" href="javascript:;" title="'+name+'">'+name+'</a>';
+								html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
 							if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value)
-								html = 	'User profile '+action+'d '+'<b>'+name+'</b>';//'<a tabindex="-1" href="javascript:;" title="'+name+'">'+name+'</a>';
+								html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
 							return html;
 						}
 					})
@@ -667,8 +669,8 @@ define(function(require) {
 					drag : false,
 					//sortable:false,
 					editable:false,
-                                        sortType: 'toggle',
-                                        direction: 'descending',
+                    sortType: 'toggle',
+                    direction: 'descending',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							return Globalize.format(new Date(model.get('createDate')),  "MM/dd/yyyy hh:mm:ss tt");
@@ -713,14 +715,49 @@ define(function(require) {
 		},
 
 		renderBigDataTable : function(){
+			var that = this , self = this;
 			
+			var TableRow = Backgrid.Row.extend({
+				events: {
+					'click' : 'onClick'
+				},
+				initialize : function(){
+					var that = this;
+					var args = Array.prototype.slice.apply(arguments);
+					Backgrid.Row.prototype.initialize.apply(this, args);
+				},
+				onClick: function (e) {
+					var self = this;
+					var policyId = this.model.get('policyId');
+					var	serviceDef = that.serviceDefList.findWhere({'id':this.model.get('repoType')});
+					var eventTime = this.model.get('eventTime');
+
+					var policy = new RangerPolicy({
+						id: policyId
+					});
+					var view = new RangerPolicyRO({
+						policy: policy,
+						serviceDef: serviceDef,
+						eventTime : eventTime
+					});
+					var modal = new Backbone.BootstrapModal({
+						animate : true, 
+						content		: view,
+						title: localization.tt("h.policy")+': '+policy.get('name'),
+						okText :localization.tt("lbl.ok"),
+						allowCancel : false,
+						escape : true
+					}).open();
+				}
+			});
+
 			this.ui.tableList.removeClass("clickable");
 			this.rTableList.show(new XATableLayout({
 				columns: this.getColumns(),
 				collection: this.accessAuditList,
 				includeFilter : false,
 				gridOpts : {
-					row: Backgrid.Row.extend({}),
+					row: TableRow,
 					header : XABackgrid,
 					emptyText : 'No Access Audit found!'
 				}
@@ -744,7 +781,7 @@ define(function(require) {
 								  cache : false,
 								  async : false
 								});
-								var href = '#!/service/'+rangerService.get('id')+'/policies/'+model.get('policyId')+'/edit';
+								var href = 'javascript:void(0)';
 								return '<a href="'+href+'" title="'+rawValue+'">'+rawValue+'</a>';
 							}
 						}),
@@ -753,13 +790,13 @@ define(function(require) {
 						sortable : false
 					},
 					eventTime : {
-						label : 'Event Time',// localization.tt("lbl.eventTime"),
+						label : 'Event Time',
 						cell: "String",
 						click : false,
 						drag : false,
 						editable:false,
-                                                sortType: 'toggle',
-                                                direction: 'descending',
+                        sortType: 'toggle',
+                        direction: 'descending',
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
 								return Globalize.format(new Date(rawValue),  "MM/dd/yyyy hh:mm:ss tt");
@@ -767,7 +804,7 @@ define(function(require) {
 						})
 					},
 					requestUser : {
-						label : 'User',//localization.tt("lbl.repositoryName"),
+						label : 'User',
 						cell: "String",
 						click : false,
 						drag : false,
@@ -775,7 +812,7 @@ define(function(require) {
 						editable:false
 					},
 					repoName : {
-						label : 'Name / Type',//localization.tt("lbl.repositoryName"),
+						label : 'Name / Type',
 						cell: "html",
 						click : false,
 						drag : false,
@@ -796,33 +833,6 @@ define(function(require) {
 							}
 						})
 					},
-					/*repoType : {
-						label : '',//localization.tt("lbl.repoType"),
-						cell: "html",
-						click : false,
-						drag : false,
-						sortable:false,
-						editable:false,
-						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-							fromRaw: function (rawValue) {
-								var html='';
-								_.each(_.toArray(XAEnums.AssetType),function(m){
-									if(parseInt(rawValue) == m.value){
-										html = 	'<label class="label label-info">'+m.label+'</label>';
-									}	
-								});
-								return rawValue;
-							}
-						}),
-					},*/
-					/*policyType : {
-							label : '',//localization.tt("lbl.resourceType"),
-							cell: "String",
-							click : false,
-							drag : false,
-							sortable:false,
-							editable:false,
-						},*/
 					resourcePath : {
 						label : localization.tt("lbl.resourceName"),
 						cell: "html",
@@ -861,8 +871,6 @@ define(function(require) {
 											html = 	'<label class="label label-success">'+label+'</label>';
 										else 
 											html = 	'<label class="label label-important">'+label+'</label>';
-										//else
-										//	html = 	'<label class="label">'+label+'</label>';
 									}	
 								});
 								return html;
@@ -877,177 +885,25 @@ define(function(require) {
 						sortable:false,
 						editable:false
 					},
-					/*policyId : {
-						label : 'Policy ID',//localization.tt("lbl.resourceId"),
-						cell: "string",
-						click : false,
-						drag : false,
-			//			sortable:false,
-						editable:false
-						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-							fromRaw: function (rawValue, model) {
-								return '<div>'+rawValue+'</div>\
-								<div style="border-top: 1px solid #ddd;">'+model.get('resourceType')+'</div>';
-							}
-						}),
-					},*/
 					clientIP : {
-						label : 'Client IP',//localization.tt("lbl.ip"),
+						label : 'Client IP',
 						cell: "string",
 						click : false,
 						drag : false,
 						sortable:false,
 						editable:false
-						/*formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-							fromRaw: function (rawValue, model) {
-								return '<div>'+rawValue+'</div>\
-								<div style="border-top: 1px solid #ddd;">'+model.get('clientType')+'</div>';
-							}
-						}),*/
 					}
-				/*agentId : {
-					label : 'ID IP',//localization.tt("lbl.id"),
-					cell: "html",
-					click : false,
-					drag : false,
-					sortable:false,
-					editable:false,
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue, model) {
-							return '<div>'+rawValue+'</div>\
-							<div style="border-top: 1px solid #ddd;">'+model.get('agentIp')+'</div>';
-						}
-					}),
-					
-				},*/
-				/*agentIp : {
-					label : localization.tt("lbl.ip"),
-					cell: "String",
-					click : false,
-					drag : false,
-					sortable:false,
-					editable:false,
-				},*/
-			/*	clientId : {
-					label : 'ID Type',//localization.tt("lbl.clientId"),
-					cell: "html",
-					click : false,
-					drag : false,
-					sortable:false,
-					editable:false,
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue, model) {
-							return '<div>'+rawValue+'</div>\
-							<div style="border-top: 1px solid #ddd;">'+model.get('clientType')+'</div>';
-						}
-					}),
-				},*/
-				/*clientType : {
-					label : '',//localization.tt("lbl.clientType"),
-					cell: "String",
-					click : false,
-					drag : false,
-					sortable:false,
-					editable:false,
-				},*/
-			/*	auditType : {
-					label : '',//localization.tt("lbl.auditType"),
-					cell: "html",
-					click : false,
-					drag : false,
-					sortable:false,
-					editable:false,
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							var html='';
-							_.each(_.toArray(XAEnums.XAAuditType),function(m){
-								if(parseInt(rawValue) == m.value){
-									html = 	'<label class="label label-success">'+m.label+'</label>';
-								}	
-							});
-							return html;
-						}
-					}),
-				},
-				sessionId : {
-					label : '',//localization.tt("lbl.sessionId"),
-					cell: "String",
-					click : false,
-					drag : false,
-					sortable:false,
-					editable:false,
-				},*/
-				
 			};
 			return this.accessAuditList.constructor.getTableCols(cols, this.accessAuditList);
 		},
 		renderLoginSessionTable : function(){
 			var that = this;
 			this.ui.tableList.removeClass("clickable");
-			
-			/*var TableRow = Backgrid.Row.extend({
-				events: {
-					'click' : 'onClick',
-					'mouseenter' : 'onClick',
-					'mouseleave' : 'onMouseLeave'
-				},
-				initialize : function(){
-					var that = this;
-					var args = Array.prototype.slice.apply(arguments);
-					Backgrid.Row.prototype.initialize.apply(this, args);
-				},
-				onClick: function (e,s,a) {
-					var self = this;
-					if($(e.target).is('.icon-edit,.icon-trash,a,code'))
-						return;
-					this.$('[data-id="'+this.model.id+'"]').popover('show');
-					if(!$('.popover').is('div'))
-						this.$('[data-id="'+this.model.id+'"]').popover('show');
-					else
-						this.$('[data-id="'+this.model.id+'"]').popover('hide');
-				//	this.$el.parent('tbody').find('tr').removeClass('tr-active');
-				//	this.$el.toggleClass('tr-active');
-					if($(e.target).has('showMore')){
-						if($(e.target).is('span') && $(e.target).text() != '--'){
-							var text = $(e.target).text();
-							var popoverHTML = '<div type="button" class="btn btn-default" data-container="body" data-toggle="popover" data-placement="right" data-content="'+text+'">\
-							  Popover on right\
-							</div>';
-							$(e.target).parent().append(popoverHTML);
-							$('[data-toggle="popover"]').popover({
-								  trigger: 'hover'
-							});
-							
-						}else if($(e.target).is('td') && $(e.target).text() != '--'){
-							var text = $(e.target).find('span').text();
-							$(e.target).find('span').css('position','relative');
-							tooltip.setAttribute( "class", "tooltips" );
-							tooltip.innerText = $(e.target).find('span').attr("title");
-							//tooltip.style.display = "inline";
-							$(tooltip).attr('style','position:absolute;display:block;').css("top", Y).css("left", X);
-							$(e.target).append(tooltip);
-						}
-					}
-				},
-				onMouseLeave : function(e){
-					var self = this;
-				//	this.$('[data-toggle="popover"]').popover('hide');
-//					this.$('[data-id="'+this.model.id+'"]').popover('hide');
-					if($(e.target).is('.icon-edit,.icon-trash,a,code'))
-						return;
-				//	this.$el.parent('tbody').find('tr').removeClass('tr-active');
-				//	this.$el.toggleClass('tr-active');
-				//	if($(e.target).has('td'))
-				//		$('.tooltips').remove();
-				}
-			});
-			*/
 			this.rTableList.show(new XATableLayout({
 				columns: this.getLoginSessionColumns(),
 				collection:this.authSessionList,
 				includeFilter : false,
 				gridOpts : {
-//					row :TableRow,//Backgrid.Row.extend({}),
 					row :Backgrid.Row.extend({}),
 					header : XABackgrid,
 					emptyText : 'No login session found!!'
@@ -1119,7 +975,6 @@ define(function(require) {
 									label=  m.label;
 								}	
 							});
-							//return '<label class="label label-info">'+label+'</label>';
 							return label;
 						}
 					})
@@ -1167,7 +1022,7 @@ define(function(require) {
 				gridOpts : {
 					row : 	Backgrid.Row.extend({}),
 					header : XABackgrid,
-					emptyText : 'No agent found!'
+					emptyText : 'No plugin found!'
 				}
 			}));	
 		},
@@ -1177,8 +1032,6 @@ define(function(require) {
 						cell : 'string',
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
-								//var date = new Date(model.get('createDate')).toString();
-								//var timezone = date.replace(/^.*GMT.*\(/, "").replace(/\)$/, "");
 								return Globalize.format(new Date(model.get('createDate')),  "MM/dd/yyyy hh:mm:ss tt");
 							}
 						}),
@@ -1264,10 +1117,8 @@ define(function(require) {
 				
 		},
 		onSearch : function(e){
-			//var param = {};
 			this.setCurrentTabCollection();
 			var resourceName= this.ui.resourceName.val();
-			//var assetType 	= this.ui.selectRepo.select2('val');
 			var startDate 	= this.ui.startDate.val();
 			var endDate  	= this.ui.endDate.val();
 			var params = { 'startDate' : startDate , 'endDate' : endDate };

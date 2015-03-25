@@ -66,7 +66,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		auditEvent.setRepositoryType(result.getServiceType());
 		auditEvent.setRepositoryName(result.getServiceName()) ;
 		auditEvent.setRequestData(request.getRequestData());
-		auditEvent.setResourcePath(getResourceValueAsString(resource, result.getServiceDef()));
+		auditEvent.setResourcePath(resource != null ? resource.getAsString(result.getServiceDef()) : null);
 
 		addAuthzAuditEvent(auditEvent);
 	}
@@ -106,15 +106,16 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 				auditEvent.setRepositoryType(result.getServiceType());
 				auditEvent.setRepositoryName(result.getServiceName()) ;
 				auditEvent.setRequestData(request.getRequestData());
-				auditEvent.setResourcePath(getResourceValueAsString(resource, result.getServiceDef()));
+
+				auditEvent.setResourcePath(resource != null ? resource.getAsString(result.getServiceDef()) : null);
 			} else if(result.getIsAllowed()){
 				auditEvent.setResourcePath(auditEvent.getResourcePath() + "," + resource.getColumn());
 			} else {
-				auditEvent.setResourcePath(getResourceValueAsString(resource, result.getServiceDef()));
+				auditEvent.setResourcePath(resource != null ? resource.getAsString(result.getServiceDef()) : null);
 			}
 			
 			if(!result.getIsAllowed()) {
-				auditEvent.setResourcePath(getResourceValueAsString(resource, result.getServiceDef()));
+				auditEvent.setResourcePath(resource != null ? resource.getAsString(result.getServiceDef()) : null);
 
 				break;
 			}

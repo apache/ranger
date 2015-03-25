@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <!-- Encryption key Password -->
+  
+  <property>
+	<name>ranger.db.encrypt.key.password</name>
+    <value>Str0ngPassw0rd</value>
+    <description>
+    	Password used for encrypting Master Key
+    </description>
+  </property>
+  
+   <!-- db Details -->
+  
+  <property>
+    <name>ranger.db.ks.database.flavor</name>
+    <value>MYSQL</value>
+    <description>
+      ULR for Database
+    </description>
+  </property>
+  
+  <property>
+    <name>ranger.db.ks.core.file</name>
+    <value>db/mysql/kms_core_db.sql</value>
+    <description>
+      ULR for Database
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.db.ks.javax.persistence.jdbc.url</name>
+    <value>jdbc:log4jdbc:mysql://localhost:3306/rangerkms</value>
+    <description>
+      ULR for Database
+    </description>
+  </property>
+    
+  <property>
+    <name>ranger.db.root.user</name>
+    <value>root</value>
+    <description>
+      Database root user name used for operation
+    </description>
+  </property>
+  
+  <property>
+    <name>ranger.db.root.password</name>
+    <value>root</value>
+    <description>
+      Database root user name used for operation
+    </description>
+  </property>
+  
+  <property>
+    <name>ranger.db.host</name>
+    <value>localhost</value>
+    <description>
+      Database root user name used for operation
+    </description>
+  </property>
+  
+  <property>
+    <name>ranger.db.ks.name</name>
+    <value>rangerkms</value>
+    <description>
+      Driver used for database
+    </description>    
+  </property>
+  
+  <property>
+    <name>ranger.db.ks.javax.persistence.jdbc.user</name>
+    <value>kmsadmin</value>
+    <description>
+      Database user name used for operation
+    </description>
+  </property>
+  
+  <property>
+    <name>ranger.db.ks.javax.persistence.jdbc.password</name>
+    <value>kmsadmin</value>
+    <description>
+      Database user's password 
+    </description>
+  </property>
+  
+  <property>
+    <name>ranger.db.ks.javax.persistence.jdbc.dialect</name>
+    <value>org.eclipse.persistence.platform.database.MySQLPlatform</value>
+    <description>
+      Dialect used for database
+    </description>    
+  </property>
+  
+  <property>
+    <name>ranger.db.ks.javax.persistence.jdbc.driver</name>
+    <value>net.sf.log4jdbc.DriverSpy</value>
+    <description>
+      Driver used for database
+    </description>    
+  </property>
+  
+  <property>
+    <name>ranger.db.ks.sql.connector.jar</name>
+    <value>/usr/share/java/mysql-connector-java.jar</value>
+    <description>
+      Driver used for database
+    </description>    
+  </property>  
+  
+  <property>
+    <name>ranger.db.ks.java.bin</name>
+    <value>java</value>
+    <description>
+      ULR for Database
+    </description>
+  </property>
+    
+</configuration>

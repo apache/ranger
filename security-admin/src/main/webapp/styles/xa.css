@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -637,6 +638,12 @@ table.backgrid thead tr a {
 
 table.backgrid thead tr:hover {
   background: transparent;
+}
+
+.table-read-only tr th:last-child, table.table-read-only tr td:last-child {
+  border: 1px solid #dddddd !important;
+  color: #4F4F4F !important;
+  background-color: inherit !important;
 }
 
 .r-path {
@@ -1398,6 +1405,7 @@ ul.tabs > li > a {
   top: 0;
 }
 .diff ol {
+  min-width: 250px;
   display: table-cell;
   margin: 0;
   padding: 0;
@@ -1778,4 +1786,8 @@ margin-top: -29px;
 }
 td.select-row-cell {
   text-align: center;
+}
+.ranger-notifications {
+	right: 33px!important;
+	top: 41px!important;
 }

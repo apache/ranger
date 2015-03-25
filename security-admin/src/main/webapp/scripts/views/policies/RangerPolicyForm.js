@@ -104,7 +104,7 @@ define(function(require){
 			Backbone.Form.prototype.render.call(this, options);
 			//initialize path plugin for hdfs component : resourcePath
 			if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){ 
-				this.initializePathPlugins();
+				this.initializePathPlugins(this.pathPluginOpts);
 			}
 			this.renderCustomFields();
 			if(!this.model.isNew()){
@@ -294,7 +294,7 @@ define(function(require){
 			return policyItemList;
 		},
 		/** all post render plugin initialization */
-		initializePathPlugins: function(){
+		initializePathPlugins: function(options){
 			var that= this,defaultValue = [];
 			if(!this.model.isNew() && _.isUndefined(this.model.get('path'))){
 				defaultValue = this.model.get('path').values;
@@ -306,22 +306,7 @@ define(function(require){
 				return split( term ).pop();
 			}
 
-			this.fields[that.pathFieldName].editor.$el.find('[data-js="resource"]').bind( "keydown", function( event ) {
-				// don't navigate away from the field on tab when selecting an item
-				/*if ( event.keyCode === $.ui.keyCode.TAB && $( this ).data( "ui-autocomplete" ).menu.active ) {
-					event.preventDefault();
-				}
-				//TODO FIXME This is not working. We need a way so that when user enters  and presses ENTER
-				// the text box should contain /app/billing* . Currently the '*' is getting removed.
-				if ( event.keyCode === $.ui.keyCode.ENTER ) {
-					event.preventDefault();
-					event.stopPropagation();
-					$(this).tagit("createTag", "brand-new-tag");
-					//$(this).autocomplete('close');
-					//$(this).val($(this).val() + ', ');
-					
-				}*/
-			}).tagit({
+			this.fields[that.pathFieldName].editor.$el.find('[data-js="resource"]').tagit({
 				autocomplete : {
 					cache: false,
 					source: function( request, response ) {
@@ -394,14 +379,12 @@ define(function(require){
 		        	that.fields[that.pathFieldName].$el.find('.help-inline').html('');
 					var tags =  [];
 			        console.log(ui.tag);
-				if(ui.tagLabel.lastIndexOf('/') < 0 || 
-			        		ui.tagLabel.lastIndexOf('/') == ui.tagLabel.length -1 && ui.tagLabel.lastIndexOf('/') != 0){
-			        	tags = ui.tagLabel.substr(0,ui.tagLabel.lastIndexOf('/'));
+			        if(!_.isUndefined(options.regExpValidation) && !options.regExpValidation.regexp.test(ui.tagLabel)){
 			        	that.fields[that.pathFieldName].$el.addClass('error');
-			        	that.fields[that.pathFieldName].$el.find('.help-inline').html('Please enter valid resource path : ' + ui.tagLabel);
+			        	that.fields[that.pathFieldName].$el.find('.help-inline').html(options.regExpValidation.message);
 			        	return false;
 			        }
-					}
+				}
 			}).on('change',function(e){
 				//check dirty field for tagit input type : `path`
 				XAUtil.checkDirtyField($(e.currentTarget).val(), defaultValue.toString(), $(e.currentTarget))
@@ -411,7 +394,7 @@ define(function(require){
 		},
 		getPlugginAttr :function(autocomplete, options){
 			var that =this;
-			var type = options.containerCssClass;
+			var type = options.containerCssClass, validRegExpString = true;
 			if(!autocomplete)
 				return{tags : true,width :'220px',multiple: true,minimumInputLength: 1, 'containerCssClass' : type};
 			else {
@@ -436,10 +419,14 @@ define(function(require){
 						if ($(data).filter(function() {
 							return this.text.localeCompare(term) === 0;
 						}).length === 0) {
-							return {
-								id : term,
-								text: term
-							};
+							if(!_.isUndefined(options.regExpValidation) && !options.regExpValidation.regexp.test(term)){
+									validRegExpString = false; 
+							}else{
+								return {
+									id : term,
+									text: term
+								};
+							}
 						}
 					},
 					ajax: {
@@ -455,14 +442,14 @@ define(function(require){
 						},
 						results: function (data, page) { 
 							var results = [];
-							if(data.length > 0){
-								results = data.map(function(m, i){	return {id : m, text: m};	});
-							}
-							/*if(!_.isUndefined(data)){
+							if(!_.isUndefined(data)){
+								if(_.isArray(data) && data.length > 0){
+									results = data.map(function(m, i){	return {id : m, text: m};	});
+								}
 								if(data.resultSize != "0"){
 									results = data.vXStrings.map(function(m, i){	return {id : m.value, text: m.value};	});
 								}
-							}*/
+							}
 							return { 
 								results : results
 							};
@@ -484,12 +471,10 @@ define(function(require){
 						return result.text;
 					},
 					formatNoMatches : function(term){
-						switch (type){
-							case  that.type.DATABASE :return localization.tt("msg.enterAlteastOneCharactere");
-							case  that.type.TABLE :return localization.tt("msg.enterAlteastOneCharactere");
-							case  that.type.COLUMN :return localization.tt("msg.enterAlteastOneCharactere");
-							default : return "No Matches found";
+						if(!validRegExpString && !_.isUndefined(options.regExpValidation)){
+							return options.regExpValidation.message;
 						}
+						return "No Matches found";
 					}
 				};	
 			}

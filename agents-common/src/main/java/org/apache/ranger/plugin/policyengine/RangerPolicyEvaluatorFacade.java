@@ -19,11 +19,14 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
@@ -33,14 +36,19 @@ import java.util.Map;
 public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Comparable<RangerPolicyEvaluatorFacade> {
     private static final Log LOG = LogFactory.getLog(RangerPolicyEvaluatorFacade.class);
 
-    RangerDefaultPolicyEvaluator delegate  =   null;
-    int computedPolicyEvalOrder            =   0;
-    boolean useCachePolicyEngine         = false;
+    RangerDefaultPolicyEvaluator delegate = null;
+    int computedPolicyEvalOrder           = 0;
 
-    RangerPolicyEvaluatorFacade(boolean useCachePolicyEngine) {
+    RangerPolicyEvaluatorFacade() {
         super();
-        this.useCachePolicyEngine = useCachePolicyEngine;
-        delegate = new RangerOptimizedPolicyEvaluator();
+
+        String evaluatorType = RangerConfiguration.getInstance().get("ranger.policyengine.evaluator.type", "cached");
+
+        if(StringUtils.isEmpty(evaluatorType) || StringUtils.equalsIgnoreCase(evaluatorType, "cached")) {
+            delegate = new RangerCachedPolicyEvaluator();
+        } else {
+            delegate = new RangerOptimizedPolicyEvaluator();
+        }
     }
 
     RangerPolicyEvaluator getPolicyEvaluator() {
@@ -50,12 +58,15 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
     @Override
     public void init(RangerPolicy policy, RangerServiceDef serviceDef) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyEvaluatorFacade.init(), useCachePolicyEngine:" + useCachePolicyEngine);
+            LOG.debug("==> RangerPolicyEvaluatorFacade.init()");
         }
+
         delegate.init(policy, serviceDef);
+
         computedPolicyEvalOrder = computePolicyEvalOrder();
+
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyEvaluatorFacade.init(), useCachePolicyEngine:" + useCachePolicyEngine);
+            LOG.debug("<== RangerPolicyEvaluatorFacade.init()");
         }
     }
 
@@ -75,13 +86,13 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
     }
 
     @Override
-    public boolean isMatch(RangerResource resource) {
-        return false;
+    public boolean isMatch(RangerAccessResource resource) {
+        return delegate.isMatch(resource);
     }
 
     @Override
-    public boolean isSingleAndExactMatch(RangerResource resource) {
-        return false;
+    public boolean isSingleAndExactMatch(RangerAccessResource resource) {
+        return delegate.isSingleAndExactMatch(resource);
     }
 
     @Override
@@ -89,21 +100,21 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyEvaluatorFacade.compareTo()");
         }
+
         int result;
 
         if (this.getComputedPolicyEvalOrder() == other.getComputedPolicyEvalOrder()) {
-            Map<String, RangerConditionEvaluator> myConditionEvaluators = this.delegate.getConditionEvaluators();
+            Map<String, RangerConditionEvaluator> myConditionEvaluators    = this.delegate.getConditionEvaluators();
             Map<String, RangerConditionEvaluator> otherConditionEvaluators = other.delegate.getConditionEvaluators();
 
-            int myConditionEvaluatorCount = myConditionEvaluators == null ? 0 : myConditionEvaluators.size();
+            int myConditionEvaluatorCount    = myConditionEvaluators == null ? 0 : myConditionEvaluators.size();
             int otherConditionEvaluatorCount = otherConditionEvaluators == null ? 0 : otherConditionEvaluators.size();
 
             result = Integer.compare(myConditionEvaluatorCount, otherConditionEvaluatorCount);
         } else {
-            int myComputedPriority = this.getComputedPolicyEvalOrder();
-            int otherComputedPriority = other.getComputedPolicyEvalOrder();
-            result = Integer.compare(myComputedPriority, otherComputedPriority);
+            result = Integer.compare(computedPolicyEvalOrder, other.computedPolicyEvalOrder);
         }
+
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyEvaluatorFacade.compareTo(), result:" + result);
         }
@@ -119,10 +130,13 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyEvaluatorFacade.computePolicyEvalOrder()");
         }
+
         int result = delegate.computePolicyEvalOrder();
+
         if(LOG.isDebugEnabled()) {
             LOG.debug("<==RangerPolicyEvaluatorFacade.computePolicyEvalOrder(), result:" + result);
         }
+
         return result;
     }
 }

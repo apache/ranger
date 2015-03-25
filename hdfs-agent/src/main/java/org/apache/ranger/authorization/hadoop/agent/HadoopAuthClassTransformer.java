@@ -37,23 +37,23 @@ public class HadoopAuthClassTransformer implements ClassFileTransformer {
 		byte[] ret = aClassFileBuffer;
 
 		if (aClassName.equals("org/apache/hadoop/hdfs/server/namenode/FSPermissionChecker")) {
-			if (transformedClassByteCode == null) {
+            byte[] result = transformedClassByteCode;
+            if (result == null) {
+
 				byte[] injectedClassCode = injectFSPermissionCheckerHooks(aClassLoader, aClassName, aClassBeingRedefined, aProtectionDomain, aClassFileBuffer);
 
 				if(injectedClassCode != null) {
-					if(transformedClassByteCode == null) {
-						synchronized(HadoopAuthClassTransformer.class) {
-							byte[] temp = transformedClassByteCode;
-							if (temp == null) {
-								transformedClassByteCode = injectedClassCode;
-							}
-						}
-					}
-				}
+                    synchronized (HadoopAuthClassTransformer.class) {
+                        result = transformedClassByteCode;
+                        if (result == null) {
+                            transformedClassByteCode = result = injectedClassCode;
+                        }
+                    }
+                }
 			}
 
-			if(transformedClassByteCode != null) {
-				ret = transformedClassByteCode;
+			if(result != null) {
+				ret = result;
 			}
 		}
 

@@ -37,7 +37,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
@@ -324,7 +324,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
     }
 
 	@Override
-	public boolean isMatch(RangerResource resource) {
+	public boolean isMatch(RangerAccessResource resource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isMatch(" + resource + ")");
 		}
@@ -370,7 +370,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	public boolean isSingleAndExactMatch(RangerResource resource) {
+	public boolean isSingleAndExactMatch(RangerAccessResource resource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isSingleAndExactMatch(" + resource + ")");
 		}
@@ -415,7 +415,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	protected boolean matchResourceHead(RangerResource resource) {
+	protected boolean matchResourceHead(RangerAccessResource resource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.matchResourceHead(" + resource + ")");
 		}

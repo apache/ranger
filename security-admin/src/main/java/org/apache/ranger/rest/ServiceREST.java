@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +41,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,7 +48,10 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConfigUtil;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -64,14 +66,20 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerResource;
-import org.apache.ranger.plugin.policyengine.RangerResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.service.RangerPolicyService;
+import org.apache.ranger.service.RangerServiceDefService;
+import org.apache.ranger.service.RangerServiceService;
+import org.apache.ranger.view.RangerPolicyList;
+import org.apache.ranger.view.RangerServiceDefList;
+import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -102,6 +110,21 @@ public class ServiceREST {
 	
 	@Autowired
 	ServiceUtil serviceUtil;
+	
+	@Autowired
+	RangerConfigUtil configUtil;
+	
+	@Autowired
+	RangerPolicyService policyService;
+	
+	@Autowired
+	RangerServiceService svcService;
+	
+	@Autowired
+	RangerServiceDefService serviceDefService;
+	
+	@Autowired
+	RangerSearchUtil searchUtil;
 	
 	// this indirection for validation via a factory exists only for testability
 	// TODO move the instantiation to DI framework?
@@ -250,7 +273,7 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/definitions")
+	@Path("/definitions/unpaginated")
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerServiceDef> getServiceDefs(@Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
@@ -259,7 +282,7 @@ public class ServiceREST {
 
 		List<RangerServiceDef> ret = null;
 
-		SearchFilter filter = getSearchFilter(request);
+		SearchFilter filter = searchUtil.getSearchFilter(request, serviceDefService.sortFields);
 
 		try {
 			ret = svcStore.getServiceDefs(filter);
@@ -417,7 +440,7 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/services")
+	@Path("/services/unpaginated")
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerService> getServices(@Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
@@ -426,7 +449,7 @@ public class ServiceREST {
 
 		List<RangerService> ret = null;
 
-		SearchFilter filter = getSearchFilter(request);
+		SearchFilter filter = searchUtil.getSearchFilter(request, svcService.sortFields);
 
 		try {
 			ret = svcStore.getServices(filter);
@@ -533,9 +556,9 @@ public class ServiceREST {
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 
 			try {
-				String         userName   = grantRequest.getGrantor();
-				Set<String>    userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger database
-				RangerResource resource   = new RangerResourceImpl(grantRequest.getResource());
+				String               userName   = grantRequest.getGrantor();
+				Set<String>          userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger database
+				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
 	
 				boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
 	
@@ -714,9 +737,9 @@ public class ServiceREST {
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
 
 			try {
-				String         userName   = revokeRequest.getGrantor();
-				Set<String>    userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger databas
-				RangerResource resource   = new RangerResourceImpl(revokeRequest.getResource());
+				String               userName   = revokeRequest.getGrantor();
+				Set<String>          userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger databas
+				RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
 	
 				boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
 				
@@ -899,7 +922,7 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/policies")
+	@Path("/policies/unpaginated")
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerPolicy> getPolicies(@Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
@@ -908,7 +931,8 @@ public class ServiceREST {
 
 		List<RangerPolicy> ret = null;
 
-		SearchFilter filter = getSearchFilter(request);
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+		
 
 		try {
 			ret = svcStore.getPolicies(filter);
@@ -953,7 +977,7 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/policies/service/{id}")
+	@Path("/policies/service/unpaginated/{id}")
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerPolicy> getServicePolicies(@PathParam("id") Long serviceId, @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
@@ -962,7 +986,7 @@ public class ServiceREST {
 
 		List<RangerPolicy> ret = null;
 
-		SearchFilter filter = getSearchFilter(request);
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
 			ret = svcStore.getServicePolicies(serviceId, filter);
@@ -984,7 +1008,7 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/policies/service/name/{name}")
+	@Path("/policies/service/unpaginated/name/{name}")
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerPolicy> getServicePolicies(@PathParam("name") String serviceName, @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
@@ -993,7 +1017,7 @@ public class ServiceREST {
 
 		List<RangerPolicy> ret = null;
 
-		SearchFilter filter = getSearchFilter(request);
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
 			ret = svcStore.getServicePolicies(serviceName, filter);
@@ -1060,44 +1084,6 @@ public class ServiceREST {
 		return ret;
 	}
 
-
-	private SearchFilter getSearchFilter(HttpServletRequest request) {
-		if(request == null) {
-			return null;
-		}
-		
-		SearchFilter ret = new SearchFilter();
-
-		if(MapUtils.isEmpty(request.getParameterMap())) {
-			ret.setParams(new HashMap<String, String>());
-		}
-
-		ret.setParam(SearchFilter.LOGIN_USER, request.getParameter(SearchFilter.LOGIN_USER));
-		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter(SearchFilter.SERVICE_TYPE));
-		ret.setParam(SearchFilter.SERVICE_TYPE_ID, request.getParameter(SearchFilter.SERVICE_TYPE_ID));
-		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter(SearchFilter.SERVICE_NAME));
-		ret.setParam(SearchFilter.SERVICE_ID, request.getParameter(SearchFilter.SERVICE_ID));
-		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter(SearchFilter.POLICY_NAME));
-		ret.setParam(SearchFilter.POLICY_ID, request.getParameter(SearchFilter.POLICY_ID));
-		ret.setParam(SearchFilter.STATUS, request.getParameter(SearchFilter.STATUS));
-		ret.setParam(SearchFilter.USER, request.getParameter(SearchFilter.USER));
-		ret.setParam(SearchFilter.GROUP, request.getParameter(SearchFilter.GROUP));
-		ret.setParam(SearchFilter.SORT_BY, request.getParameter(SearchFilter.SORT_BY));
-		ret.setParam(SearchFilter.START_INDEX, request.getParameter(SearchFilter.START_INDEX));
-		ret.setParam(SearchFilter.PAGE_SIZE, request.getParameter(SearchFilter.PAGE_SIZE));
-		
-		for(Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
-			String   name   = e.getKey();
-			String[] values = e.getValue();
-			
-			if(!StringUtils.isEmpty(name) && !ArrayUtils.isEmpty(values) && name.startsWith(SearchFilter.RESOURCE_PREFIX)) {
-				ret.setParam(name, values[0]);
-			}
-		}
-
-		return ret;
-	}
-
 	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, ServicePolicies policies, int httpRespCode, HttpServletRequest request) {
 		try {
 			String ipAddress = request.getHeader("X-FORWARDED-FOR");
@@ -1120,7 +1106,7 @@ public class ServiceREST {
 		}
 	}
 
-	private boolean isAdminForResource(String userName, Set<String> userGroups, String serviceName, RangerResource resource) throws Exception {
+	private boolean isAdminForResource(String userName, Set<String> userGroups, String serviceName, RangerAccessResource resource) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.isAdminForResource(" + userName + ", " + serviceName + ", " + resource + ")");
 		}
@@ -1165,7 +1151,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerResource resource) throws Exception {
+	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerAccessResource resource) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + serviceName + ", " + resource + ")");
 		}
@@ -1191,7 +1177,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private boolean isMatch(RangerPolicy policy, RangerResource resource) throws Exception {
+	private boolean isMatch(RangerPolicy policy, RangerAccessResource resource) throws Exception {
 		boolean ret = false;
 
 		String        serviceName = policy.getService();
@@ -1216,7 +1202,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private boolean isSingleAndExactMatch(RangerPolicy policy, RangerResource resource) throws Exception {
+	private boolean isSingleAndExactMatch(RangerPolicy policy, RangerAccessResource resource) throws Exception {
 		boolean ret = false;
 
 		String        serviceName = policy.getService();
@@ -1347,4 +1333,178 @@ public class ServiceREST {
 
 		return ret;
 	}
+
+	@GET
+	@Path("/definitions")
+	@Produces({ "application/json", "application/xml" })
+	public RangerServiceDefList getPaginatedServiceDefs(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPaginatedServiceDefs()");
+		}
+
+		RangerServiceDefList ret = null;
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, serviceDefService.sortFields);
+
+		try {
+			ret = svcStore.getPaginatedServiceDefs(filter);
+		} catch (Exception excp) {
+			LOG.error("getServiceDefs() failed", excp);
+
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPaginatedServiceDefs(): count=" + (ret == null ? 0 : ret.getListSize()));
+		}
+		return ret;
+	}
+
+	@GET
+	@Path("/services")
+	@Produces({ "application/json", "application/xml" })
+	public RangerServiceList getPaginatedServices(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPaginatedServices()");
+		}
+
+		RangerServiceList ret = null;
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, svcService.sortFields);
+
+		try {
+			ret = svcStore.getPaginatedServices(filter);
+		} catch (Exception excp) {
+			LOG.error("getServices() failed", excp);
+
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPaginatedServices(): count=" + (ret == null ? 0 : ret.getListSize()));
+		}
+		return ret;
+	}
+
+	@GET
+	@Path("/policies")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicyList getPaginatedPolicies(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPaginatedPolicies()");
+		}
+
+		RangerPolicyList ret = null;
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
+		try {
+			ret = svcStore.getPaginatedPolicies(filter);
+		} catch (Exception excp) {
+			LOG.error("getPolicies() failed", excp);
+
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPaginatedPolicies(): count=" + (ret == null ? 0 : ret.getListSize()));
+		}
+		return ret;
+	}
+
+	@GET
+	@Path("/policies/service/{id}")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicyList getPaginatedServicePolicies(@PathParam("id") Long serviceId,
+			@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceId + ")");
+		}
+
+		RangerPolicyList ret = null;
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
+		try {
+			ret = svcStore.getPaginatedServicePolicies(serviceId, filter);
+		} catch (Exception excp) {
+			LOG.error("getServicePolicies(" + serviceId + ") failed", excp);
+
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if (ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count="
+					+ (ret == null ? 0 : ret.getListSize()));
+		}
+		return ret;
+	}
+
+	@GET
+	@Path("/policies/service/name/{name}")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicyList getPaginatedServicePolicies(@PathParam("name") String serviceName,
+			@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceName + ")");
+		}
+
+		RangerPolicyList ret = null;
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
+		try {
+			ret = svcStore.getPaginatedServicePolicies(serviceName, filter);
+		} catch (Exception excp) {
+			LOG.error("getServicePolicies(" + serviceName + ") failed", excp);
+
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if (ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count="
+					+ (ret == null ? 0 : ret.getListSize()));
+		}
+
+		return ret;
+	}
+
+	@GET
+	@Path("/policies/eventTime")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicy getPolicyFromEventTime(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyFromEventTime()");
+		}
+
+		String eventTimeStr = request.getParameter("eventTime");
+		String policyIdStr = request.getParameter("policyId");
+
+		if (StringUtils.isEmpty(eventTimeStr) || StringUtils.isEmpty(policyIdStr)) {
+			throw restErrorUtil.createRESTException("EventTime or policyId cannot be null or empty string.",
+					MessageEnums.INVALID_INPUT_DATA);
+		}
+
+		Long policyId = Long.parseLong(policyIdStr);
+
+		Date eventTime = restErrorUtil.parseDate(eventTimeStr, "Invalid value for" + "Event Time",
+				MessageEnums.INVALID_INPUT_DATA, null, "eventTime", "MM/dd/yyyy hh:mm:ss");
+
+		RangerPolicy policy = svcStore.getPolicyFromEventTime(eventTime, policyId);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyFromEventTime()");
+		}
+
+		return policy;
+	}
+
 }

@@ -18,7 +18,7 @@
 
   <property>
     <name>hadoop.kms.key.provider.uri</name>
-    <value>jceks://file@/${user.home}/kms.keystore</value>
+    <value>dbks://http@localhost:9292/kms</value>
     <description>
       URI of the backing KeyProvider for the KMS.
     </description>
@@ -31,7 +31,7 @@
       If using the JavaKeyStoreProvider, the password for the keystore file.
     </description>
   </property>
-
+  
   <!-- KMS Cache -->
 
   <property>
@@ -168,6 +168,11 @@
     <description>
       The Kerberos service principal used to connect to Zookeeper.
     </description>
+  </property>
+  
+  <property>
+  	<name>hadoop.kms.security.authorization.manager</name>
+  	<value></value>
   </property>
 
 </configuration>

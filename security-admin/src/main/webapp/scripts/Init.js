@@ -74,8 +74,10 @@
    	   'bootstrap-datepicker' : {
    		   deps: ['bootstrap']
    	   } ,
-
-       pnotify :	{ deps: ['jquery'], exports: 'pnotify' },
+       
+       'bootstrap-notify' :	{
+    	   deps: ['jquery','bootstrap'],
+       },
        moment  :	{ deps: ['jquery'], exports: 'moment' },
        'localstorage' :{
             deps : ['backbone','underscore','jquery']
@@ -126,13 +128,14 @@
 		'Backbone.BootstrapModal'	: '../libs/bower/backbone.bootstrap-modal/js/backbone.bootstrap-modal',
 		'bootstrap-editable'		: '../libs/bower/x-editable/js/bootstrap-editable',
 		'bootstrap-datepicker'		: '../libs/other/datepicker/js/bootstrap-datepicker',
+		'bootstrap-notify'			: '../libs/bower/bootstrap-notify/js/bootstrap-notify',
+		
 		
 		'jquery.cookie'				: '../libs/other/jquery-cookie/js/jquery.cookie',
         'jquery-toggles'			: '../libs/bower/jquery-toggles/js/toggles.min',
         'tag-it'					: '../libs/bower/tag-it/js/tag-it',
         'select2'					: '../libs/bower/select2/select2',
         'bootbox'					: '../libs/bower/bootbox/js/bootbox',
-        'pnotify'					: '../libs/bower/pines-notify/js/jquery.pnotify.min',
         'moment'					: '../libs/bower/moment/js/moment-with-langs.min',
         'visualsearch'				: '../libs/other/visualsearch/js/visualsearch',
         'globalize'               	: '../libs/bower/globalize/lib/globalize',

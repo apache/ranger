@@ -50,9 +50,9 @@ define(function(require){
     	breadCrumbs :function(){
 	    	
     		if(this.model.isNew())
-    			return [XALinks.get('RepositoryManager'),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyCreate')];
+    			return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyCreate')];
     		else
-    			return [XALinks.get('RepositoryManager'),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyEdit')];
+    			return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyEdit')];
     	} ,        
 
 		/** Layout sub regions */

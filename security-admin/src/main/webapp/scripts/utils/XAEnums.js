@@ -78,6 +78,21 @@ define(function(require) {
 		STATUS_VISIBLE:{value:1, label:'Visible', rbkey:'xa.enum.VisibilityStatus.IS_VISIBLE', tt: 'lbl.VisibilityStatus_IS_VISIBLE'}
 	});
 
+	XAEnums.AuditStatus = mergeParams(XAEnums.AuditStatus, {
+		AUDIT_ENABLED:{value:true, label:'Yes', rbkey:'xa.enum.AuditStatus.ENABLED', tt: 'lbl.AuditStatus_ENABLED'},
+		AUDIT_DISABLED:{value:false, label:'No', rbkey:'xa.enum.AuditStatus.DISABLED', tt: 'lbl.AuditStatus_DISABLED'}
+	});
+
+	XAEnums.RecursiveStatus = mergeParams(XAEnums.RecursiveStatus, {
+		STATUS_RECURSIVE:{value:true, label:'recursive', rbkey:'xa.enum.RecursiveStatus.RECURSIVE', tt: 'lbl.RecursiveStatus_RECURSIVE'},
+		STATUS_NONRECURSIVE:{value:false, label:'nonrecursive', rbkey:'xa.enum.RecursiveStatus.NONRECURSIVE', tt: 'lbl.RecursiveStatus_NONRECURSIVE'}
+	});
+
+	XAEnums.ExcludeStatus = mergeParams(XAEnums.ExcludeStatus, {
+		STATUS_EXCLUDE:{value:true, label:'exclude', rbkey:'xa.enum.ExcludeStatus.EXCLUDE', tt: 'lbl.ExcludeStatus_EXCLUDE'},
+		STATUS_INCLUDE:{value:false, label:'include', rbkey:'xa.enum.ExcludeStatus.INCLUDE', tt: 'lbl.ExcludeStatus_INCLUDE'}
+	});
+
 	XAEnums.ActiveStatus = mergeParams(XAEnums.ActiveStatus, {
 		STATUS_DISABLED:{value:0, label:'Disabled', rbkey:'xa.enum.ActiveStatus.STATUS_DISABLED', tt: 'lbl.ActiveStatus_STATUS_DISABLED'},
 		STATUS_ENABLED:{value:1, label:'Enabled', rbkey:'xa.enum.ActiveStatus.STATUS_ENABLED', tt: 'lbl.ActiveStatus_STATUS_ENABLED'},
@@ -149,7 +164,10 @@ define(function(require) {
 		CLASS_TYPE_XA_POLICY_EXPORT_AUDIT:{value:1009, label:'XA Policy Export Audit', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT', modelName:'VXPolicyExportAudit', type:'vXPolicyExportAudit', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_POLICY_EXPORT_AUDIT'},
 		CLASS_TYPE_TRX_LOG:{value:1010, label:'Transaction log', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_TRX_LOG', tt: 'lbl.ClassTypes_CLASS_TYPE_TRX_LOG'},
 		CLASS_TYPE_XA_ACCESS_AUDIT:{value:1011, label:'Access Audit', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_ACCESS_AUDIT', modelName:'VXAccessAudit', type:'vXAccessAudit', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_ACCESS_AUDIT'},
-		CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE:{value:1012, label:'Transaction log attribute', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE'}
+		CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE:{value:1012, label:'Transaction log attribute', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE'},
+		CLASS_TYPE_RANGER_POLICY:{value:1020, label:'Ranger Policy', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_POLICY', modelName:'VXRangerPolicy', type:'vXResource', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_POLICY'},
+		CLASS_TYPE_RANGER_SERVICE:{value:1030, label:'Ranger Service', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_SERVICE', modelName:'VXRangerService', type:'vXRangerService', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_SERVICE'},
+		
 	});
 
 	XAEnums.DataType = mergeParams(XAEnums.DataType, {

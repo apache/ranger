@@ -299,7 +299,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	            			continue;
 	            		}
 
-	            		RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTableOrUdf(), column);
+	                	RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTable(), column);
 
 	            		RangerHiveAccessRequest colRequest = request.copy();
 	            		colRequest.setResource(colResource);
@@ -323,7 +323,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	            }
 
 				if(result != null && !result.getIsAllowed()) {
-					String path = auditHandler.getResourceValueAsString(request.getResource(), result.getServiceDef());
+					String path = resource != null ? resource.getAsString(result.getServiceDef()) : null;
 	
 					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
 														 user, request.getHiveAccessType().name(), path));
@@ -710,7 +710,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		ret.setReplaceExistingPermissions(Boolean.FALSE);
 
 		String database = StringUtils.isEmpty(resource.getDatabase()) ? "*" : resource.getDatabase();
-		String table    = StringUtils.isEmpty(resource.getTableOrUdf()) ? "*" : resource.getTableOrUdf();
+		String table    = StringUtils.isEmpty(resource.getTable()) ? "*" : resource.getTable();
 		String column   = StringUtils.isEmpty(resource.getColumn()) ? "*" : resource.getColumn();
 
 		Map<String, String> mapResource = new HashMap<String, String>();

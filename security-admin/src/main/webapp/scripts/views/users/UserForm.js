@@ -63,8 +63,7 @@ define(function(require){
 				name : {
 					type		: 'Text',
 					title		: localization.tt("lbl.userName") +' *',
-					//validators  : ['required'],
-					validators  : ['required',{type:'regexp',regexp:/^[a-z][a-z0-9,._'-]+$/i,message :'Please enter valid name'}],
+					validators  : ['required',{type:'regexp',regexp:/^[a-z0-9][a-z0-9,._'-]+$/i,message :"Name should start with alpha/numeric letters and can have special characters ,._'-"}],
 					editorAttrs :{'maxlength': 32}
 				},
 				password : {
@@ -84,13 +83,12 @@ define(function(require){
 				firstName : { 
 					type		: 'Text',
 					title		: localization.tt("lbl.firstName")+' *',
-					validators  : ['required',{type:'regexp',regexp:/^[a-z][a-z0-9]+$/i,message :'Please enter valid name'}]
+					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-z0-9- ]*[a-zA-Z0-9]+$/,message :'First name to start with alphabets & can have hyphen,space.'}]
 				},
 				lastName : { 
 					type		: 'Text',
 					title		: localization.tt("lbl.lastName"),
-					validators  : [{type:'regexp',regexp:/^[a-z][a-z0-9]+$/i,message :'Please enter valid name'}]
-				///^[a-zA-z][a-z ,.'-]+$/i
+					validators  : [{type:'regexp',regexp:/^[a-zA-Z][a-z0-9- ]*[a-zA-Z0-9]+$/,message :'Last name to start with alphabets & can have hyphen,space.'}]
 				},
 				emailAddress : {
 					type		: 'Text',
@@ -108,13 +106,6 @@ define(function(require){
 				}
 			};	
 		},
-		/*userRoleListChange : function(form, fieldEditor){
-			if(fieldEditor.getValue() == 1){
-				this.model.set('userRoleList',["ROLE_USER"]);
-			}else{
-				this.model.set('userRoleList',["ROLE_SYS_ADMIN"]);
-			}
-		},*/
 		/** on render callback */
 		render: function(options) {
 			var that = this;
@@ -189,8 +180,8 @@ define(function(require){
 				this.fields.password.$el.hide();
 				this.fields.passwordConfirm.$el.hide();
 				
-				this.fields.password.editor.validators = [];//this.removeElementFromArr(this.fields.password.editor.validators , 'required');
-				this.fields.passwordConfirm.editor.validators = [];//this.removeElementFromArr(this.fields.passwordConfirm.editor.validators , 'required');
+				this.fields.password.editor.validators = [];
+				this.fields.passwordConfirm.editor.validators = [];
 				//Remove validation checks for external users
 				if(this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
 					this.fields.firstName.editor.validators = [];
@@ -209,14 +200,6 @@ define(function(require){
 				var groupArr = this.$('[data-customfields="groupIdList"]').find('.tags').editable('getValue', true);
 				if(_.isNumber(groupArr))
 					groupArr = groupArr.toString().split(',');
-				/*if(_.isEmpty(groupArr) ){
-					this.$('[data-customfields="groupIdList"]').find('.control-group').addClass('error');
-					this.$('[data-customfields="groupIdList"]').find('[data-error="groupIdList"]').show();
-					return false;
-				}else{
-					this.$('[data-customfields="groupIdList"]').find('.control-group').removeClass('error');
-					this.$('[data-customfields="groupIdList"]').find('[data-error="groupIdList"]').hide();				
-				}*/
 				this.model.set('groupIdList',groupArr);
 				this.model.set('status',XAEnums.ActivationStatus.ACT_STATUS_ACTIVE.value);
 				this.model.unset('passwordConfirm');

@@ -47,7 +47,7 @@
 					{{#compare ./this.attributes.previousValue "eq" ''}}
 		 					<li>--</li>		
 					{{else}}
-		 					<li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'old'}}}</li>
+		 					<li class="change-row">{{{highlightNewForObj ./this.attributes.newValue ./this.attributes.previousValue 'old'}}}</li>
 					{{/compare}}
 				{{else}}
 						<li>--</li>
@@ -63,7 +63,7 @@
 					{{#compare ./this.attributes.newValue "eq" ''}}
   						<li>--</li>		
 					{{else}}
-  						<li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'new'}}}</li>
+  						<li class="change-row">{{{highlightNewForObj ./this.attributes.newValue ./this.attributes.previousValue 'new'}}}</li>
 					{{/compare}}
 				{{else}}
 					<li>--</li>

@@ -53,7 +53,10 @@ function(Backbone){
 			
 			"!/service/:serviceId/policies"			: "policyManageAction",
 			"!/service/:serviceId/policies/create"	: "RangerPolicyCreateAction",
-			"!/service/:serviceId/policies/:id/edit": "RangerPolicyEditAction"
+			"!/service/:serviceId/policies/:id/edit": "RangerPolicyEditAction",
+			
+			/*************** ERROR PAGE ****************************************/
+			"*actions"					: "pageNotFoundAction"
 			
 		}
 	});

@@ -83,6 +83,20 @@ define(function(require){
 			});
 		},
 
+		/** need to pass eventTime in queryParams(opt.data) */
+		fetchByEventTime : function(opt){
+			var queryParams = opt.data;
+			queryParams.policyId = this.get('id');
+			if(_.isUndefined(queryParams.eventTime)){
+				throw('eventTime can not be undefined');
+			}else{
+				queryParams.eventTime = Globalize.format(new Date(queryParams.eventTime),  "MM/dd/yyyy hh:mm:ss")
+			}
+
+			opt.url = 'service/plugins/policies/eventTime';
+			return this.fetch(opt);
+		},
+
 		/** This models toString() */
 		toString : function(){
 			return this.get('name');

@@ -74,6 +74,23 @@ get_distro(){
 	log "[I] Found distribution : $DIST_NAME"
 
 }
+#Get Properties from File without erroring out if property is not there
+#$1 -> propertyName $2 -> fileName $3 -> variableName $4 -> failIfNotFound
+getPropertyFromFileNoExit(){
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation
+	if  test -z "$validateProperty" ; then 
+            log "[E] '$1' not found in $2 file while getting....!!"; 
+            if [ $4 == "true" ] ; then
+                exit 1; 
+            else 
+                value=""
+            fi
+        else
+	    value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`
+        fi
+	#echo 'value:'$value
+	eval $3="'$value'"
+}
 #Get Properties from File
 #$1 -> propertyName $2 -> fileName $3 -> variableName
 getPropertyFromFile(){
@@ -111,6 +128,8 @@ init_variables(){
 	VERSION=`cat ${PWD}/version`
 
 	XAPOLICYMGR_DIR=$PWD
+
+	RANGER_ADMIN_INITD=ranger-admin-initd
 
 	RANGER_ADMIN=ranger-admin
 
@@ -185,6 +204,15 @@ check_python_command() {
 		fi
 }
 
+run_dba_steps(){
+	getPropertyFromFileNoExit 'setup_mode' $PROPFILE setup_mode false
+	if [ "x${setup_mode}x" == "xSeparateDBAx" ]; then
+		log "[I] Setup mode is set to SeparateDBA. Not Running DBA steps. Please run dba_script.py before running setup..!";
+	else
+		log "[I] Setup mode is not set. Running DBA steps..";
+                python dba_script.py -q
+        fi
+}
 check_db_connector() {
 	log "[I] Checking ${DB_FLAVOR} CONNECTOR FILE : ${SQL_CONNECTOR_JAR}"
 	if test -f "$SQL_CONNECTOR_JAR"; then
@@ -1247,9 +1275,9 @@ setup_install_files(){
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
 	fi
 
-	if [ ! -f /etc/init.d/${RANGER_ADMIN} ]; then
+	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
-	    mv ${INSTALL_DIR}/ews/${RANGER_ADMIN} /etc/init.d/${RANGER_ADMIN}
+	    cp ${INSTALL_DIR}/ews/${RANGER_ADMIN_INITD} /etc/init.d/${RANGER_ADMIN}
 
 	    chmod ug+rx /etc/init.d/${RANGER_ADMIN}
 
@@ -1335,7 +1363,7 @@ execute_java_patches(){
 					if [ "${c}" != "${version}" ]
 					then
 						log "[I] patch ${javaPatch} is being applied..";
-						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF/" org.apache.ranger.patch.${className}`
+						msg=`$JAVA_HOME/bin/java -cp "$app_home/WEB-INF/classes/conf:$app_home/WEB-INF/classes/lib/*:$app_home/WEB-INF/:$app_home/META-INF/:$app_home/WEB-INF/lib/*:$app_home/WEB-INF/classes/:$app_home/WEB-INF/classes/META-INF:$SQL_CONNECTOR_JAR" org.apache.ranger.patch.${className}`
 						check_ret_status $? "Unable to apply patch:$javaPatch. $msg"
 						touch ${tempFile}
 						echo >> ${tempFile}
@@ -1415,6 +1443,7 @@ copy_db_connector
 #upgrade_db
 #create_audit_db_user
 check_python_command
+run_dba_steps
 $PYTHON_COMMAND_INVOKER db_setup.py
 if [ "$?" == "0" ]
 then

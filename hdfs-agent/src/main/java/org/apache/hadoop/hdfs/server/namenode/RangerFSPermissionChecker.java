@@ -42,7 +42,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.collect.Sets;
@@ -216,40 +217,13 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 	}
 }
 
-class RangerHdfsResource implements RangerResource {
+class RangerHdfsResource extends RangerAccessResourceImpl {
 	private static final String KEY_PATH = "path";
 
-	private static final Set<String> KEYS_PATH = Sets.newHashSet(KEY_PATH);
-
-	private String path  = null;
-	private String owner = null;
 
 	public RangerHdfsResource(String path, String owner) {
-		this.path  = path;
-		this.owner = owner;
-	}
-
-	@Override
-	public String getOwnerUser() {
-		return owner;
-	}
-
-	@Override
-	public boolean exists(String name) {
-		return StringUtils.equalsIgnoreCase(name, KEY_PATH);
-	}
-
-	@Override
-	public String getValue(String name) {
-		if(StringUtils.equalsIgnoreCase(name, KEY_PATH)) {
-			return path;
-		}
-
-		return null;
-	}
-
-	public Set<String> getKeys() {
-		return KEYS_PATH;
+		super.setValue(KEY_PATH, path);
+		super.setOwnerUser(owner);
 	}
 }
 
@@ -313,8 +287,9 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 		RangerAccessRequest request      = result.getAccessRequest();
 		RangerServiceDef    serviceDef   = result.getServiceDef();
-		String              resourceType = getResourceName(request.getResource(), serviceDef);
-		String              resourcePath = getResourceValueAsString(request.getResource(), serviceDef);
+		RangerAccessResource      resource     = request.getResource();
+		String              resourceType = resource != null ? resource.getLeafName(serviceDef) : null;
+		String              resourcePath = resource != null ? resource.getAsString(serviceDef) : null;
 
 		auditEvent.setUser(request.getUser());
 		auditEvent.setResourcePath(pathToBeValidated);

@@ -25,6 +25,26 @@ define(function(require) {
 	var FormDataType = Backbone.Model.extend({
 		type : [ 'string', 'boolean', 'int' ],
 		getFormElements : function(configs, enums, attrs, form) {
+			//Helpers
+			var getValidators = function(formObj, v){
+				formObj.validators = [];
+				if (_.has(v, 'mandatory') && v.mandatory && v.type != 'bool') {
+					formObj.validators.push('required');
+					formObj.title = formObj.title + " *"
+				}
+				if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx) && !v.lookupSupported){
+					formObj.validators.push({'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage});
+				}
+				return formObj;
+			};
+			var setDefaultValueToModel = function(form, v) {
+				if(_.has(v, 'defaultValue') && !_.isEmpty(v.defaultValue) && v.type != 'bool'){
+					form.model.set(v.name, v.defaultValue)
+				}
+				return form;
+			};
+			
+			
 			var samelevelFieldCreated = [];
 			_.each(configs, function(v, k,config) {
 				if (v != null) {
@@ -50,6 +70,9 @@ define(function(require) {
 													'type' : v.name,
 													'lookupURL' 		: "service/plugins/services/lookupResource/"+form.rangerService.get('name')
 												};
+									if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
+										opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};
+									}
 									resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
 									formObj['resourceOpts'] = resourceOpts; 
 								}
@@ -106,7 +129,12 @@ define(function(require) {
 										'containerCssClass' : v.name,
 										'lookupURL' : "service/plugins/services/lookupResource/"+form.rangerService.get('name')
 										};
+								//to support regexp level validation
+								if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
+									options['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};
+								}
 								form.pathFieldName = v.name;
+								form.pathPluginOpts = options;
 								form.initilializePathPlugin = true;
 							}
 							formObj['initilializePathPlugin'] = true;
@@ -118,17 +146,10 @@ define(function(require) {
 					if(_.isUndefined(formObj.title)){
 						formObj.title = v.label || v.name;
 					}
-					formObj.validators = [];
-					if (_.has(v, 'mandatory') && v.mandatory && v.type != 'bool') {
-						formObj.validators.push('required');
-						formObj.title = formObj.title + " *"
-					}
+					formObj = getValidators(formObj, v);
 					if(form.model.isNew()){
-						if(_.has(v, 'defaultValue') && !_.isEmpty(v.defaultValue) && v.type != 'bool'){
-							form.model.set(v.name, v.defaultValue)
-						}
-					}
-					
+						form = setDefaultValueToModel(form, v)
+					}	
 					formObj['class'] = 'serviceConfig';
 					if(_.isUndefined(fieldName)){
 						fieldName = v.name;
@@ -137,8 +158,7 @@ define(function(require) {
 				}
 			});
 			return attrs;
-
-		}
+		},
 	});
 	return FormDataType;
 

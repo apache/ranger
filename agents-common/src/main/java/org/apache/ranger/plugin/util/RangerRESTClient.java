@@ -100,7 +100,7 @@ public class RangerRESTClient {
 	private String mTrustStoreType  = null;
 
 	private Gson   gsonBuilder = null;
-	private Client client      = null;
+	private volatile Client client      = null;
 
 	public RangerRESTClient() {
 		this(RangerConfiguration.getInstance().get(RANGER_PROP_POLICYMGR_URL),
@@ -150,15 +150,18 @@ public class RangerRESTClient {
 	}
 
 	public Client getClient() {
-		if(client == null) {
+        // result saves on access time when client is built at the time of the call
+        Client result = client;
+		if(result == null) {
 			synchronized(this) {
-				if(client == null) {
-					client = buildClient();
+                result = client;
+				if(result == null) {
+					client = result = buildClient();
 				}
 			}
 		}
 
-		return client;
+		return result;
 	}
 
 	private Client buildClient() {

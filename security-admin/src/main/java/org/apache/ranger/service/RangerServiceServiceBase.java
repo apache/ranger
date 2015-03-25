@@ -10,6 +10,7 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.view.RangerServiceList;
 
 public abstract class RangerServiceServiceBase<T extends XXService, V extends RangerService> extends RangerBaseModelService<T, V> {
 	
@@ -49,17 +50,18 @@ public abstract class RangerServiceServiceBase<T extends XXService, V extends Ra
 		vObj.setPolicyUpdateTime(xObj.getPolicyUpdateTime());
 		return vObj;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public List<RangerService> searchRangerPolicies(SearchFilter searchFilter) {
+	public RangerServiceList searchRangerServices(SearchFilter searchFilter) {
 		List<RangerService> serviceList = new ArrayList<RangerService>();
-		
-		List<XXService> xSvcList = (List<XXService>) searchResources(searchFilter, searchFields, sortFields, null);
-		for(XXService xSvc : xSvcList) {
+		RangerServiceList retList = new RangerServiceList();
+
+		List<XXService> xSvcList = (List<XXService>) searchResources(searchFilter, searchFields, sortFields, retList);
+		for (XXService xSvc : xSvcList) {
 			serviceList.add(populateViewBean((T) xSvc));
 		}
-		
-		return serviceList;
+		retList.setServices(serviceList);
+		return retList;
 	}
-	
+
 }

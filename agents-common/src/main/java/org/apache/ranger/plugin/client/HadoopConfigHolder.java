@@ -157,15 +157,25 @@ public class HadoopConfigHolder  {
 			if (in != null) {
 				try {
 					resourcemapProperties.load(in);
-          for (Map.Entry<Object, Object> entry : resourcemapProperties.entrySet() ) {
-            String key = (String)entry.getKey();
-            String value = (String)entry.getValue();
-            if (RANGER_SECTION_NAME.equals(value))  {
-              rangerInternalPropertyKeys.add(key);
-            }
-          }
+		          for (Map.Entry<Object, Object> entry : resourcemapProperties.entrySet() ) {
+		            String key = (String)entry.getKey();
+		            String value = (String)entry.getValue();
+		            if (RANGER_SECTION_NAME.equals(value))  {
+		              rangerInternalPropertyKeys.add(key);
+		            }
+		          }
 				} catch (IOException e) {
 					throw new HadoopException("Unable to load resource map properties from [" + RESOURCEMAP_PROP_FILE + "]", e);
+				}
+				finally {
+					if (in != null) {
+						try {
+							in.close() ;
+						}
+						catch(IOException ioe) {
+							// Ignore IOException during close of stream
+						}
+					}
 				}
 			}
 			else {

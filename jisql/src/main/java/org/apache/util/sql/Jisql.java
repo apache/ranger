@@ -31,8 +31,10 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+
 import org.apache.util.outputformatter.JisqlFormatter;
 
 /**
@@ -291,8 +293,20 @@ public class Jisql {
             else {
             	if(connectString.toLowerCase().startsWith("jdbc:mysql") && inputFileName!=null){
             		MySQLPLRunner scriptRunner = new MySQLPLRunner(connection, false, true,printDebug);
-            		scriptRunner.setDelimiter(commandTerminator,false);                 	
-                	scriptRunner.runScript(new FileReader(inputFileName));
+            		scriptRunner.setDelimiter(commandTerminator,false);
+            		FileReader reader = new FileReader(inputFileName) ;
+            		try {
+                	scriptRunner.runScript(reader);
+            		}
+            		finally {
+            			if (reader != null) {
+            				try {
+								reader.close();
+							} catch (IOException ioe) {
+								// Ignore error during closing of the reader stream
+							}
+            			}
+            		}
             	}else{
             		doIsql();
             	}
@@ -358,6 +372,9 @@ public class Jisql {
         statement = connection.createStatement();
         connection.clearWarnings();
         String trimmedLine=null;
+        
+        try {
+        
         while (true) {
             int linecount = 1;
             query = new StringBuffer();
@@ -479,6 +496,27 @@ public class Jisql {
 
             if (inputQuery != null)
                 return;
+        }
+        }
+        finally {
+        	if (reader != null) {
+        		try {
+        			reader.close();
+        		}
+        		catch(IOException ioe) {
+        			// Ignore IOE when closing streams
+        		}
+        	}
+            if (statement != null) {
+                try {
+                    if (!statement.isClosed()) {
+                        statement.close();
+                    }
+
+                } catch (SQLException sqle) {
+                    // Ignore
+                }
+            }
         }
     }
 

@@ -31,6 +31,7 @@ import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.NamingEnumeration;
 import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.Control;
@@ -274,10 +275,42 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 				while (userSearchResultEnum.hasMore()) {
 					// searchResults contains all the user entries
 					final SearchResult userEntry = userSearchResultEnum.next();
-					String userName = (String) userEntry.getAttributes()
-						.get(userNameAttribute).get();
-				
-				
+
+          if (userEntry == null)  {
+            if (LOG.isInfoEnabled())  {
+              LOG.info("userEntry null, skipping sync for the entry");
+            }
+            continue;
+          }
+
+          Attributes attributes =   userEntry.getAttributes();
+          if (attributes == null)  {
+            if (LOG.isInfoEnabled())  {
+              LOG.info("attributes  missing for entry " + userEntry.getNameInNamespace() +
+                ", skipping sync");
+            }
+            continue;
+          }
+
+          Attribute userNameAttr  = attributes.get(userNameAttribute);
+          if (userNameAttr == null)  {
+            if (LOG.isInfoEnabled())  {
+              LOG.info(userNameAttribute + " missing for entry " + userEntry.getNameInNamespace() +
+                ", skipping sync");
+            }
+            continue;
+          }
+
+					String userName = (String) userNameAttr.get();
+
+          if (userName == null || userName.trim().isEmpty())  {
+            if (LOG.isInfoEnabled())  {
+              LOG.info(userNameAttribute + " empty for entry " + userEntry.getNameInNamespace() +
+                ", skipping sync");
+            }
+            continue;
+          }
+
 					if (userNameCaseConversionFlag) {
 						if (userNameLowerCaseFlag) {
 							userName = userName.toLowerCase() ;

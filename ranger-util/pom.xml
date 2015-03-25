@@ -23,10 +23,10 @@
 	<parent>
 		<groupId>org.apache.ranger</groupId>
 		<artifactId>ranger</artifactId>
-		<version>0.4.0</version>
+		<version>0.5.0</version>
 	</parent>
 	<artifactId>ranger-util</artifactId>
-	<name>ranger-util</name>
+	<name>Ranger Util</name>
 	<description>Common Utilities of Ranger</description>
 	<dependencies>
 		<dependency>
@@ -96,11 +96,11 @@
 						<phase>generate-sources</phase>
 						<configuration>
 							<target>
-								<exec executable="bash" failonerror="true">
-									<arg value="${project.basedir}/src/scripts/saveVersion.sh" />
+								<exec executable="python" failonerror="true">
+									<arg value="${project.basedir}/src/scripts/saveVersion.py" />
 									<arg value="${project.version}" />
 									<arg value="${ranger.version.shortname}" />
-									<arg value="${project.basedir}/src" />
+									<arg value="${project.basedir}" />
 								</exec>
 							</target>
 						</configuration>

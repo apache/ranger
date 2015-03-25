@@ -58,10 +58,10 @@ define(function(require) {
 	   userAccessReportAction : function(){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Analytics.value });
 		   var view				= require('views/reports/UserAccessLayout');
-		   var VXResourceList 	= require('collections/VXResourceList');
+		   var RangerPolicyList 	= require('collections/RangerPolicyList');
 		   var VXGroupList		= require('collections/VXGroupList');
 		   var VXUserList		= require('collections/VXUserList');
-		   var resourceList 	= new VXResourceList([],{
+		   var policyList 	= new RangerPolicyList([],{
 			   queryParams : {
 				   //'resourceType' : XAEnums.AssetType.ASSET_HDFS.value,
 				   //'assetId' : assetId 
@@ -70,29 +70,23 @@ define(function(require) {
 		   var that 		= this;
 		   this.groupList 	= new VXGroupList();
 		   this.userList 	= new VXUserList();
-		   resourceList.setPageSize(200, {fetch : false});
-		   resourceList.fetch({
-			   async:false,
-			   cache : false
-		   }).done(function(){
-				that.groupList.fetch({
-						async:false,
-						cache:false
-					}).done(function(){
-					that.userList.fetch({
-						async:false,
-						cache:false
-					}).done(function(){
-						if(App.rContent.currentView)
-							   App.rContent.currentView.close();
-						App.rContent.show(new view({
-							collection : resourceList,
-							groupList :that.groupList,
-							userList :that.userList
-						}));
-					});
+		   that.groupList.fetch({
+					async:false,
+					cache:false
+				}).done(function(){
+				that.userList.fetch({
+					async:false,
+					cache:false
+				}).done(function(){
+					if(App.rContent.currentView)
+						   App.rContent.currentView.close();
+					App.rContent.show(new view({
+						collection : policyList,
+						groupList :that.groupList,
+						userList :that.userList
+					}));
 				});
-		   });
+			});
 	   },
 	   auditReportAction : function(tab){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Audit.value });
@@ -230,7 +224,7 @@ define(function(require) {
 		   var view 				= require('views/policymanager/ServiceLayout');
 		   var RangerServiceDefList	= require('collections/RangerServiceDefList');
 		   var collection 			= new RangerServiceDefList();
-		   collection.queryParams.sortBy = 'id';
+		   collection.queryParams.sortBy = 'serviceTypeId';
 		   collection.fetch({
 			   cache : false,
 			   async:false
@@ -345,6 +339,11 @@ define(function(require) {
 				   rangerService :rangerService
 			   }));
 		   });
+	   },
+	   /**************** ERROR PAGE ******************************/
+	   pageNotFoundAction	: function() {
+		   var XAUtils			= require('utils/XAUtils');
+		   XAUtils.defaultErrorHandler(undefined, { 'status' : 404 });
 	   },
 	   
 	});

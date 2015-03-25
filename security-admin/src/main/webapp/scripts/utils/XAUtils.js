@@ -25,7 +25,7 @@ define(function(require) {
 	var XAEnums		= require('utils/XAEnums');
 	var localization	= require('utils/XALangSupport');
 	var XAUtils = {};
-	require('pnotify');
+	require('bootstrap-notify');
 	
 	// ///////////////////////////////////////////////////////
 	// Enum utility methods
@@ -154,40 +154,56 @@ define(function(require) {
 
 	/**
 	 * Notify Info the given title / text
-	 * @param {string} title - The title
 	 * @param {string} text - The text
+	 * @param {string} type - The type
+	 * @param {object} text - Plugin options
 	 */
-	XAUtils.notifyInfo = function(title, text) {
-		$.pnotify({
-			pnotify_title : title,
-			pnotify_text : text
-		});
+	XAUtils.notifyInfo = function(type, text, options) {
+		var html = '<div style="width: 245px;"><div style="min-height: 16px;"><div><span class="icon-exclamation-sign"></span>\
+			</div><h4 style="margin-top: -19px;margin-left: 15px;">Info</h4><div>'+text+'</div></div></div>';
+		if(_.isUndefined(options)){
+			options = {
+				message: { html: html, text: text },
+				type:'info'
+			};
+		}
+		$('.top-right').notify(options).show();
 	};
 
 	/**
-	 * Notify Error the given title / text
-	 * @param {string} title - The title
+	 * Notify Info the given title / text
 	 * @param {string} text - The text
+	 * @param {string} type - The type
+	 * @param {object} text - Plugin options
 	 */
-	XAUtils.notifyError = function(title, text) {
-		$.pnotify({
-			pnotify_title : title,
-			pnotify_text : text,
-			pnotify_type : 'error'
-		});
+	XAUtils.notifyError = function(type, text, options) {
+		var html = '<div style="width: 245px;"><div style="min-height: 16px;"><div><span class="icon-warning-sign"></span>\
+			</div><h4 style="margin-top: -19px;margin-left: 15px;">Error</h4><div>'+text+'</div></div></div>';
+		if(_.isUndefined(options)){
+			options = {
+				message: { html: html, text: text },
+				type:'error'
+			};
+		}
+		$('.top-right').notify(options).show();
 	};
 	
 	/**
-	 * Notify Success the given title / text
-	 * @param {string} title - The title
+	 * Notify Info the given title / text
 	 * @param {string} text - The text
+	 * @param {string} type - The type
+	 * @param {object} text - Plugin options
 	 */
-	XAUtils.notifySuccess = function(title, text) {
-		$.pnotify({
-			pnotify_title : title,
-			pnotify_text : text,
-			pnotify_type : 'success'
-		});
+	XAUtils.notifySuccess = function(type, text, options) {
+		var html = '<div style="width: 245px;"><div style="min-height: 16px;"><div><span class="icon-ok-sign"></span>\
+							</div><h4 style="margin-top: -19px;margin-left: 15px;">Success</h4><div>'+text+'</div></div></div>'; 
+		if(_.isUndefined(options)){
+			options = {
+				message: { html:html},
+				type:'success',
+			};
+		}
+		$('.top-right').notify(options).show();
 	};
 	
 	
@@ -386,12 +402,13 @@ define(function(require) {
 		var App		= require('App');
 		var vError = require('views/common/ErrorView');
         if (error.status == 404 ) {
-           // trigger event or route to login here.
         	App.rContent.show(new vError({
-        		pageNotFound :true
+        		status : error.status
         	}));
         }else if (error.status == 401 ) {
-        	window.location.replace('login.jsp');
+        	App.rContent.show(new vError({
+        		status : error.status
+        	}));
         }
     };
     XAUtils.select2Focus  =  function(event) {
@@ -528,6 +545,12 @@ define(function(require) {
 	        					collection.VSQuery = query;
 	        					search(searchCollection, serverAttrName, searchOpt,collection);
 	        			   },
+			clearSearch: function(callback) {
+				_.each(serverAttrName, function(attr) {
+					delete collection.queryParams[attr.label];
+				});
+				callback();
+			},
 	        facetMatches :  function(callback) {
 	        				//	console.log(visualSearch);
 	        					var searchOptTemp = $.extend(true, [], searchOpt);
@@ -756,6 +779,23 @@ define(function(require) {
 	XAUtils.getRangerServiceDef = function(name) {
 		return "service/plugins/definitions/name/"+name;
 	};
-	
+	XAUtils.filterAllowedActions = function(controller) {
+		var SessionMgr	= require('mgrs/SessionMgr');
+		var XAGlobals	= require('utils/XAGlobals');
+		var that = this;
+		if(!SessionMgr.isSystemAdmin()){
+			_.each(XAGlobals.DenyControllerActions, function(routeMethodName) {
+				if(!_.isUndefined(controller[routeMethodName])){
+					controller[routeMethodName] = function(){ 
+						that.defaultErrorHandler(undefined, {'status':401}); 
+					};
+				}
+			});
+		}
+		return controller;
+	};
+	XAUtils.getRangerServiceByName = function(name) {
+		return "service/plugins/services/name/"+name;
+	};
     return XAUtils;
 });

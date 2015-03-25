@@ -25,25 +25,27 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.ranger.authorization.utils.StringUtil;
+
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
-	private RangerResource      resource        = null;
-	private String              accessType      = null;
-	private String              user            = null;
-	private Set<String>         userGroups      = null;
-	private Date                accessTime      = null;
-	private String              clientIPAddress = null;
-	private String              clientType      = null;
-	private String              action          = null;
-	private String              requestData     = null;
-	private String              sessionId       = null;
-	private Map<String, Object> context         = null;
+	private RangerAccessResource resource        = null;
+	private String               accessType      = null;
+	private String               user            = null;
+	private Set<String>          userGroups      = null;
+	private Date                 accessTime      = null;
+	private String               clientIPAddress = null;
+	private String               clientType      = null;
+	private String               action          = null;
+	private String               requestData     = null;
+	private String               sessionId       = null;
+	private Map<String, Object>  context         = null;
 
 	public RangerAccessRequestImpl() {
 		this(null, null, null, null);
 	}
 
-	public RangerAccessRequestImpl(RangerResource resource, String accessType, String user, Set<String> userGroups) {
+	public RangerAccessRequestImpl(RangerAccessResource resource, String accessType, String user, Set<String> userGroups) {
 		setResource(resource);
 		setAccessType(accessType);
 		setUser(user);
@@ -60,7 +62,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public RangerResource getResource() {
+	public RangerAccessResource getResource() {
 		return resource;
 	}
 
@@ -114,7 +116,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		return context;
 	}
 
-	public void setResource(RangerResource resource) {
+	public void setResource(RangerAccessResource resource) {
 		this.resource = resource;
 	}
 
@@ -131,7 +133,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	public void setAccessTime(Date accessTime) {
-		this.accessTime = (accessTime == null) ? new Date() : accessTime;
+		this.accessTime = (accessTime == null) ? StringUtil.getUTCDate() : accessTime;
 	}
 
 	public void setClientIPAddress(String clientIPAddress) {
