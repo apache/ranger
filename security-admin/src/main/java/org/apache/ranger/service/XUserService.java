@@ -261,10 +261,8 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
 	public List<XXTrxLog> getTransactionLog(VXUser vObj, VXPortalUser mObj,
 			String action) {
-		if (vObj == null
-				&& (action == null || !action.equalsIgnoreCase("update"))) {
-			return null;
-		}
+		if (vObj == null || action == null || (action.equalsIgnoreCase("update") && mObj == null))
+	    		return null;
 
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 		try {

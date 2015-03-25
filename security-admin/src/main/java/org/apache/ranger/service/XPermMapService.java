@@ -299,9 +299,9 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 
 	@Override
 	protected VXPermMap mapEntityToViewBean(VXPermMap vObj, XXPermMap mObj) {
-		super.mapEntityToViewBean(vObj, mObj);
 		if(mObj!=null && vObj!=null){
-			XXPortalUser xXPortalUser=null;
+            super.mapEntityToViewBean(vObj, mObj);
+            XXPortalUser xXPortalUser=null;
 			if(stringUtil.isEmpty(vObj.getOwner())){
 				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());	
 				if(xXPortalUser!=null){

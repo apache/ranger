@@ -1047,13 +1047,15 @@ public class AssetMgr extends AssetMgrBase {
 			xaBizUtil.createTrxLog(trxLogList);
 			return createdVXAsset;
 		} else {
-			logger.debug("User id : " + usb.getUserId() + " doesn't have "
-					+ "admin access to create repository.");
-			throw restErrorUtil
-					.createRESTException(
-							"Sorry, you don't have permission to perform the operation",
-							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		}
+                logger.debug("User id : " + (usb != null ? usb.getUserId() : "<UNKNOWN>") + " doesn't have "
+                        + "admin access to create repository.");
+
+                throw restErrorUtil
+                        .createRESTException(
+                                "Sorry, you don't have permission to perform the operation",
+                                MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+
+        }
 	}
 
 	private void createDefaultPolicy(VXAsset vXAsset, String config) {

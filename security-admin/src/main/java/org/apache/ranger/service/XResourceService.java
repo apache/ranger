@@ -275,7 +275,7 @@ public class XResourceService extends
 						+ "resource path.", MessageEnums.INVALID_INPUT_DATA);
 			}
 		}
-		if (!vObj.getName().equalsIgnoreCase(mObj.getName()) || 
+		if (vObj != null && mObj != null && !vObj.getName().equalsIgnoreCase(mObj.getName()) ||
 				vObj.getIsRecursive()!=mObj.getIsRecursive() || 
 				vObj.getResourceType() != mObj.getResourceType()) {
 			validateForCreate(vObj);
@@ -340,8 +340,8 @@ public class XResourceService extends
 				vXResource.getAssetId());
 		if (xxAsset != null) {
 			vXResource.setAssetName(xxAsset.getName());
-		}
-		vXResource.setAssetType(xxAsset.getAssetType());
+            vXResource.setAssetType(xxAsset.getAssetType());
+        }
 	}
 
 	private void populateAuditList(VXResource vXResource) {
@@ -451,22 +451,22 @@ public class XResourceService extends
 
 	@Override
 	protected VXResource mapEntityToViewBean(VXResource vObj, XXResource mObj) {
-		super.mapEntityToViewBean(vObj, mObj);
-		vObj.setUdfs(mObj.getUdfs());
-		populateAssetProperties(vObj);
-		if(mObj!=null && vObj!=null){			
+        if(mObj!=null && vObj!=null){
+            super.mapEntityToViewBean(vObj, mObj);
+		    vObj.setUdfs(mObj.getUdfs());
+		    populateAssetProperties(vObj);
 			XXPortalUser xXPortalUser= null;
 			if(stringUtil.isEmpty(vObj.getOwner())){
-				xXPortalUser=rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());		
+				xXPortalUser=rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
 				if(xXPortalUser!=null){
 					vObj.setOwner(xXPortalUser.getLoginId());
 				}
 			}
 			if(stringUtil.isEmpty(vObj.getUpdatedBy())){
-				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
+				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
 				if(xXPortalUser!=null){
 					vObj.setUpdatedBy(xXPortalUser.getLoginId());
-				}	
+				}
 			}
 		}
 		return vObj;

@@ -366,8 +366,7 @@ public class StormClient {
 			}
 
 			if (topologyName != null) {
-				String finalTopologyNameMatching = (topologyName == null) ? ""
-						: topologyName.trim();
+				String finalTopologyNameMatching = topologyName.trim();
 				resultList = stormClient
 						.getTopologyList(finalTopologyNameMatching,stormTopologyList);
 				if (resultList != null) {

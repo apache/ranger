@@ -143,9 +143,9 @@ public class XAuditMapService extends
 
 	@Override
 	protected XXAuditMap mapViewToEntityBean(VXAuditMap vObj, XXAuditMap mObj, int OPERATION_CONTEXT) {
-		super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
 		if(vObj!=null && mObj!=null){
-			XXPortalUser xXPortalUser=null;
+            super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
+            XXPortalUser xXPortalUser=null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
 					xXPortalUser=rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	

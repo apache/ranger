@@ -1038,8 +1038,7 @@ public class UserMgr {
 			if (!session.isUserAdmin()) {
 				throw restErrorUtil.create403RESTException("User "
 						+ "creation denied. LoggedInUser="
-						+ (session != null ? session.getXXPortalUser().getId()
-								: "Not Logged In")
+						+ session.getXXPortalUser().getId()
 						+ " ,isn't permitted to perform the action.");
 
 			}

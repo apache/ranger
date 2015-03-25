@@ -108,7 +108,7 @@ public class SearchGroup {
 	 */
 	public void resolveValues(Query query, String prefix) {
 		if ((values == null || values.size() == 0)
-				&& (searchGroups == null || searchGroups.size() == 0)) {
+				|| (searchGroups == null || searchGroups.size() == 0)) {
 			return;
 		}
 
