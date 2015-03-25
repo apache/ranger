@@ -52,7 +52,7 @@ define(function(require){
 		/** all events binding here */
 		bindEvents : function(){
 			this.on('userRoleList:change', function(form, fieldEditor){
-//    			this.userRoleListChange(form, fieldEditor);
+				//this.userRoleListChange(form, fieldEditor);
     		});
 		},
 		/** fields for the form
@@ -83,12 +83,12 @@ define(function(require){
 				firstName : { 
 					type		: 'Text',
 					title		: localization.tt("lbl.firstName")+' *',
-					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-z0-9- ]*[a-zA-Z0-9]+$/,message :'First name to start with alphabets & can have hyphen,space.'}]
+					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-z0-9- ]*[a-zA-Z0-9]+$/,message :'First name should start with alphabets & can have hyphen, space.'}]
 				},
 				lastName : { 
 					type		: 'Text',
 					title		: localization.tt("lbl.lastName"),
-					validators  : [{type:'regexp',regexp:/^[a-zA-Z][a-z0-9- ]*[a-zA-Z0-9]+$/,message :'Last name to start with alphabets & can have hyphen,space.'}]
+					validators  : [{type:'regexp',regexp:/^[a-zA-Z][a-z0-9- ]*[a-zA-Z0-9]+$/,message :'Last name should start with alphabets & can have hyphen, space.'}]
 				},
 				emailAddress : {
 					type		: 'Text',
@@ -198,14 +198,16 @@ define(function(require){
 		beforeSaveUserDetail : function(){
 			if(this.model.get('userSource') != XAEnums.UserSource.XA_USER.value){
 				var groupArr = this.$('[data-customfields="groupIdList"]').find('.tags').editable('getValue', true);
-				if(_.isNumber(groupArr))
+				if(_.isNumber(groupArr)){
 					groupArr = groupArr.toString().split(',');
+				}
 				this.model.set('groupIdList',groupArr);
 				this.model.set('status',XAEnums.ActivationStatus.ACT_STATUS_ACTIVE.value);
 				this.model.unset('passwordConfirm');
 			}
-			if(!this.model.isNew())
+			if(!this.model.isNew()){
 				this.model.unset('password');
+			}
 			//FOR USER ROLE
 			if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_USER.value){
 				this.model.set('userRoleList',["ROLE_USER"]);

@@ -525,7 +525,7 @@
 					</div>'
 				}
 				tr += '<tr><td><div>\
-						<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies">'+serv.attributes.name+'</a>'+serviceOperationDiv+'\
+						<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
 					  </div></td></tr>';
 			});
 		}

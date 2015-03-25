@@ -622,7 +622,7 @@ define(function(require) {
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							rawValue = model.get('objectClassType');
-							var action = model.get('action'), name = model.get('objectName'),
+							var action = model.get('action'), name = _.escape(model.get('objectName')),
 								label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue), html = '';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
 								html = 	'Repository '+action+'d '+'<b>'+name+'</b>';
@@ -824,8 +824,9 @@ define(function(require) {
 								var repoType = model.get('repoType');
 								that.serviceDefList.each(function(m){
 									if(parseInt(repoType) == m.id){
+										rawValue = _.escape(rawValue);
 										html =  '<div title="'+rawValue+'">'+rawValue+'</div>\
-										<div title="'+rawValue+'" style="border-top: 1px solid #ddd;">'+m.get('name')+'</div>';
+										<div title="'+rawValue+'" style="border-top: 1px solid #ddd;">'+_.escape(m.get('name'))+'</div>';
 										return ;
 									}	
 								});
@@ -842,6 +843,7 @@ define(function(require) {
 						editable:false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue) {
+								rawValue = _.escape(rawValue);
 								return _.isUndefined(rawValue) ? '--': '<span title="'+rawValue+'">'+rawValue+'</span>';  
 							}
 						})
@@ -995,7 +997,7 @@ define(function(require) {
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue,model) {
 							return _.isUndefined(rawValue) ? '--': 
-							'<span title="'+XAUtils.escapeHtmlChar(rawValue) +'" class="showMore">'+XAUtils.escapeHtmlChar(rawValue)+'</span>';
+								'<span title="'+_.escape(rawValue) +'" class="showMore">'+_.escape(rawValue)+'</span>';
 						}
 					})
 				},
@@ -1047,6 +1049,7 @@ define(function(require) {
 						sortable:false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
+								rawValue = _.escape(rawValue);
 								return '<span title="'+rawValue+'">'+rawValue+'</span>';
 							}
 						}),

@@ -416,6 +416,7 @@ define(function(require){
 						callback(data);
 					},
 					createSearchChoice: function(term, data) {
+						term = _.escape(term);					
 						if ($(data).filter(function() {
 							return this.text.localeCompare(term) === 0;
 						}).length === 0) {
