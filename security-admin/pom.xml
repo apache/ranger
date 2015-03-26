@@ -412,19 +412,6 @@
 	<plugins>
 		<plugin>
 			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-war-plugin</artifactId>
-			<version>2.4</version>
-			<configuration>
-				<packagingExcludes>
-            WEB-INF/lib/spring-*.SEC03.jar,
-            WEB-INF/lib/spring-*.RC3.jar,
-            WEB-INF/lib/spring-2.*.jar
-				</packagingExcludes>
-			</configuration>
-		</plugin>
-
-		<plugin>
-			<groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-surefire-plugin</artifactId>
 			<version>2.9</version>
 			<configuration>
@@ -445,6 +432,63 @@
 
 	</plugins>
 </pluginManagement>
+
+	<plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-war-plugin</artifactId>
+			<version>2.4</version>
+			<executions>
+				<execution>
+					<id>prepare</id>
+					<phase>prepare-package</phase>
+					<goals>
+						<goal>exploded</goal>
+					</goals>
+				</execution>
+				<execution> 
+					<id>default-war</id>
+					<phase>package</phase>
+					<goals>
+						<goal>war</goal>
+					</goals>
+					<configuration>
+						<packagingExcludes>
+							WEB-INF/lib/spring-*.SEC03.jar,
+							WEB-INF/lib/spring-*.RC3.jar,
+							WEB-INF/lib/spring-2.*.jar
+						</packagingExcludes>
+						<warSourceDirectory>${project.build.directory}/${project.build.finalName}</warSourceDirectory>
+					</configuration>
+				</execution>
+			</executions>
+		</plugin>
+		<plugin>
+			<groupId>com.google.code.maven-replacer-plugin</groupId>
+			<artifactId>replacer</artifactId>
+			<version>1.5.2</version>
+			<executions>
+				<execution>
+					<phase>prepare-package</phase>
+					<goals>
+						<goal>replace</goal>
+					</goals>
+					<configuration>
+						<includes>
+							<include>security-admin/target/${project.build.finalName}/index.html</include>
+							<include>security-admin/target/${project.build.finalName}/scripts/Init.js</include>
+						</includes>
+						<replacements>
+							<replacement>
+								<token>build.version</token>
+								<value>${project.version}</value>
+							</replacement>
+						</replacements>
+					</configuration>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins> 
 
 	<resources>
 		<resource>
