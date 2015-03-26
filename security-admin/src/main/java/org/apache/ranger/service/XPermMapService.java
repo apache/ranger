@@ -150,7 +150,7 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 	}
 	
 	public List<XXTrxLog> getTransactionLog(VXPermMap vObj, VXPermMap mObj, String action){
-		if(vObj == null && (action == null || !action.equalsIgnoreCase("update"))){
+		if(vObj == null || action == null || (action.equalsIgnoreCase("update") && mObj == null)){
 			return null;
 		}
 		

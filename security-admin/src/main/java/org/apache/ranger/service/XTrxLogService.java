@@ -438,22 +438,22 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 
 	@Override
 	protected VXTrxLog mapEntityToViewBean(VXTrxLog vObj, XXTrxLog mObj) {
-		super.mapEntityToViewBean(vObj, mObj);
-		if(mObj!=null && vObj!=null){
-			XXPortalUser xXPortalUser=null;
-			if(stringUtil.isEmpty(vObj.getOwner())){
-				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());	
-				if(xXPortalUser!=null){
-					vObj.setOwner(xXPortalUser.getLoginId());
-				}
-			}
-			if(stringUtil.isEmpty(vObj.getUpdatedBy())){
-				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
-				if(xXPortalUser!=null){
-					vObj.setUpdatedBy(xXPortalUser.getLoginId());
-				}
-			}
-		}
-		return vObj;
+        if(mObj!=null && vObj!=null){
+            super.mapEntityToViewBean(vObj, mObj);
+            XXPortalUser xXPortalUser=null;
+            if(stringUtil.isEmpty(vObj.getOwner())){
+                xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+                if(xXPortalUser!=null){
+                    vObj.setOwner(xXPortalUser.getLoginId());
+                }
+            }
+            if(stringUtil.isEmpty(vObj.getUpdatedBy())){
+                xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+                if(xXPortalUser!=null){
+                    vObj.setUpdatedBy(xXPortalUser.getLoginId());
+                }
+            }
+        }
+        return vObj;
 	}
 }

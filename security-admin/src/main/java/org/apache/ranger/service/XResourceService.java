@@ -424,9 +424,9 @@ public class XResourceService extends
 
 	@Override
 	protected XXResource mapViewToEntityBean(VXResource vObj, XXResource mObj, int OPERATION_CONTEXT) {
-		super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
-		mObj.setUdfs(vObj.getUdfs());
-		if(vObj!=null && mObj!=null){
+        if(vObj!=null && mObj!=null){
+		    super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
+		    mObj.setUdfs(vObj.getUdfs());
 			XXPortalUser xXPortalUser= null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
@@ -951,7 +951,7 @@ public class XResourceService extends
 	}
 	
 	public List<XXTrxLog> getTransactionLog(VXResource vObj, XXResource mObj, String action){
-		if(vObj == null && (action == null || !action.equalsIgnoreCase("update"))){
+		if(vObj == null || action == null || (action.equalsIgnoreCase("update") && mObj == null)) {
 			return null;
 		}
 

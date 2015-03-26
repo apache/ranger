@@ -280,7 +280,7 @@ public class UserGroupSyncConfig  {
 	public long getSleepTimeInMillisBetweenCycle() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM) ;
 		if (val == null) {
-			if (LGSYNC_SOURCE_CLASS.equals(getUserGroupSource())) {
+			if (LGSYNC_SOURCE_CLASS.equals(getUserGroupSource().getClass().getName())) {
 				return UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE ;
 			} else {
 				return UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE ;
@@ -389,9 +389,9 @@ public class UserGroupSyncConfig  {
 		}
 		
 		val = val.trim().toLowerCase();
-		if (val.equals(0) || val.startsWith("base")) {
+		if (val.equals("0") || val.startsWith("base")) {
 			return 0; // object scope
-		} else if (val.equals(1) || val.startsWith("one")) {
+		} else if (val.equals("1") || val.startsWith("one")) {
 			return 1; // one level scope
 		} else {
 			return 2; // subtree scope

@@ -117,33 +117,35 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 	@Override
 	protected XXAsset mapViewToEntityBean(VXAsset vObj, XXAsset mObj,
 			int OPERATION_CONTEXT) {
-		String oldConfig = (mObj != null) ? mObj.getConfig() : null;
-		super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
-		String config = vObj.getConfig();
-		if (config != null && !config.isEmpty()) {
-			Map<String, String> configMap = jsonUtil.jsonToMap(config);
-			Entry<String, String> passwordEntry = getPasswordEntry(configMap);
-			if (passwordEntry != null) {
-				// If "*****" then get password from db and update
-				String password = passwordEntry.getValue();
-				if (password != null) {
-					if (password.equals(hiddenPasswordString)) {
-						if (oldConfig != null && !oldConfig.isEmpty()) {
-							Map<String, String> oldConfigMap = jsonUtil
-									.jsonToMap(oldConfig);
-							Entry<String, String> oldPasswordEntry 
-									= getPasswordEntry(oldConfigMap);
-							if (oldPasswordEntry != null) {
-								configMap.put(oldPasswordEntry.getKey(),
-										oldPasswordEntry.getValue());
-							}
-						}
-					}
-					config = jsonUtil.readMapToString(configMap);
-				}
-			}
-		}
-		mObj.setConfig(config);
+        if (vObj != null && mObj != null) {
+            String oldConfig = (mObj != null) ? mObj.getConfig() : null;
+            super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
+            String config = vObj.getConfig();
+            if (config != null && !config.isEmpty()) {
+                Map<String, String> configMap = jsonUtil.jsonToMap(config);
+                Entry<String, String> passwordEntry = getPasswordEntry(configMap);
+                if (passwordEntry != null) {
+                    // If "*****" then get password from db and update
+                    String password = passwordEntry.getValue();
+                    if (password != null) {
+                        if (password.equals(hiddenPasswordString)) {
+                            if (oldConfig != null && !oldConfig.isEmpty()) {
+                                Map<String, String> oldConfigMap = jsonUtil
+                                        .jsonToMap(oldConfig);
+                                Entry<String, String> oldPasswordEntry
+                                        = getPasswordEntry(oldConfigMap);
+                                if (oldPasswordEntry != null) {
+                                    configMap.put(oldPasswordEntry.getKey(),
+                                            oldPasswordEntry.getValue());
+                                }
+                            }
+                        }
+                        config = jsonUtil.readMapToString(configMap);
+                    }
+                }
+            }
+            mObj.setConfig(config);
+        }
 		return mObj;
 	}
 

@@ -78,7 +78,7 @@ public class XAuditMapService extends
 	}
 
 	public List<XXTrxLog> getTransactionLog(VXAuditMap vObj, VXAuditMap mObj, String action){
-		if(vObj == null && (action == null || !action.equalsIgnoreCase("update"))){
+		if(vObj == null || action == null || (action.equalsIgnoreCase("update") && mObj == null)){
 			return null;
 		}
 		

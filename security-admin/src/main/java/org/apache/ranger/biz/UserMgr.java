@@ -1081,8 +1081,11 @@ public class UserMgr {
 								MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);*/
 			}
 		}
-
-		return mapXXPortalUserToVXPortalUserForDefaultAccount(xXPortalUser);
+        if (xXPortalUser != null) {
+            return mapXXPortalUserToVXPortalUserForDefaultAccount(xXPortalUser);
+        }else {
+            return null;
+        }
 	}
 
 	private VXPortalUser mapXXPortalUserToVXPortalUserForDefaultAccount(XXPortalUser user) {

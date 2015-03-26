@@ -44,6 +44,10 @@ public class RangerClientUserGroupMapping {
 	    while ((strLine = br.readLine()) != null)  {
 	    	
 	    	ListRangerUser userList = ListRangerUser.parseUser(strLine);
+
+            if (userList == null) {
+                continue;
+            }
 		 
 	    	HashMap<String, String> map = new HashMap<String, String>();
          

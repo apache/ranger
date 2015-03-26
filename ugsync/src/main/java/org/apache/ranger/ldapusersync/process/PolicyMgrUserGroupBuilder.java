@@ -126,7 +126,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 
 	
-	public void init() throws Throwable {
+	public synchronized void init() throws Throwable {
 		recordsToPullPerCall = config.getMaxRecordsPerAPICall() ;
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL() ;
 		isMockRun = config.isMockRunEnabled() ;
@@ -164,24 +164,28 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	
 	private void rebuildUserGroupMap() {
-		
-		for(XUserInfo user : xuserList) {
-			addUserToList(user);
+
+        List<XUserInfo> newUsers = new ArrayList<XUserInfo>();
+        for(XUserInfo user : xuserList) {
+			addUserToList(user, newUsers);
 		}
-		
+        xuserList.addAll(newUsers);
+
+        List<XGroupInfo> newGroups = new ArrayList<XGroupInfo>();
 		for(XGroupInfo group : xgroupList) {
-			addGroupToList(group);
+			addGroupToList(group, newGroups);
 		}
-		
+        xgroupList.addAll(newGroups);
+
 		for(XUserGroupInfo ug : xusergroupList) {
 			addUserGroupToList(ug);
 		}
 	}
 	
 	
-	private void addUserToList(XUserInfo aUserInfo) {
+	private void addUserToList(XUserInfo aUserInfo, List<XUserInfo> newUsers) {
 		if (! xuserList.contains(aUserInfo)) {
-			xuserList.add(aUserInfo) ;
+            newUsers.add(aUserInfo);
 		}
 		
 		String userId = aUserInfo.getId() ;
@@ -198,10 +202,10 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 	
 
-	private void addGroupToList(XGroupInfo aGroupInfo) {
+	private void addGroupToList(XGroupInfo aGroupInfo, List<XGroupInfo> newGroups) {
 		
 		if (! xgroupList.contains(aGroupInfo) ) {
-			xgroupList.add(aGroupInfo) ;
+            newGroups.add(aGroupInfo);
 		}
 
 		if (aGroupInfo.getName() != null) {
@@ -437,7 +441,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	    ret = gson.fromJson(response, XUserInfo.class) ;
 
 	    if (ret != null) {
-	    	addUserToList(ret);
+	    	addUserToList(ret, xuserList);
 	    }
 		
 		return ret ;
@@ -467,7 +471,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	    ret = gson.fromJson(response, XGroupInfo.class) ;
 	    
 	    if (ret != null) {
-	    	addGroupToList(ret);
+	    	addGroupToList(ret, xgroupList);
 	    }
 		
 		return ret ;

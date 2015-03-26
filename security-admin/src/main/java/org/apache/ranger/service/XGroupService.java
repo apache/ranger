@@ -154,7 +154,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	}
 
 	public List<XXTrxLog> getTransactionLog(VXGroup vObj, XXGroup mObj, String action){
-		if(vObj == null && (action == null || !action.equalsIgnoreCase("update"))){
+		if(vObj == null || action == null || (action.equalsIgnoreCase("update") && mObj == null)){
 			return null;
 		}
 		

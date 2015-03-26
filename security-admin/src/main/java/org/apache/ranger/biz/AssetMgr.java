@@ -68,22 +68,7 @@ import org.apache.ranger.service.XTrxLogService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.util.RestUtil;
-import org.apache.ranger.view.VXAccessAuditList;
-import org.apache.ranger.view.VXAsset;
-import org.apache.ranger.view.VXAuditMap;
-import org.apache.ranger.view.VXAuditMapList;
-import org.apache.ranger.view.VXLong;
-import org.apache.ranger.view.VXPermMap;
-import org.apache.ranger.view.VXPermMapList;
-import org.apache.ranger.view.VXPolicy;
-import org.apache.ranger.view.VXPolicyExportAuditList;
-import org.apache.ranger.view.VXResource;
-import org.apache.ranger.view.VXResourceList;
-import org.apache.ranger.view.VXResponse;
-import org.apache.ranger.view.VXStringList;
-import org.apache.ranger.view.VXTrxLog;
-import org.apache.ranger.view.VXTrxLogList;
-import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.*;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1756,39 +1741,42 @@ public class AssetMgr extends AssetMgrBase {
 
 	public VXAccessAuditList getAccessLogs(SearchCriteria searchCriteria) {
 
-		if (searchCriteria != null && searchCriteria.getParamList() != null
-				&& searchCriteria.getParamList().size() > 0) {
-			int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
-			java.util.Date temp = null;
-			DateUtil dateUtil = new DateUtil();
-			if (searchCriteria.getParamList().containsKey("startDate")) {
-				temp = (java.util.Date) searchCriteria.getParamList().get(
-						"startDate");
-				temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
-				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
-				searchCriteria.getParamList().put("startDate", temp);
-			}
-			if (searchCriteria.getParamList().containsKey("endDate")) {
-				temp = (java.util.Date) searchCriteria.getParamList().get(
-						"endDate");
-				temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
-				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
-				searchCriteria.getParamList().put("endDate", temp);
-			}
+        if (searchCriteria == null) {
+            searchCriteria = new SearchCriteria();
+        }
+        if (searchCriteria.getParamList() != null
+                && searchCriteria.getParamList().size() > 0) {
+            int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
+            java.util.Date temp = null;
+            DateUtil dateUtil = new DateUtil();
+            if (searchCriteria.getParamList().containsKey("startDate")) {
+                temp = (java.util.Date) searchCriteria.getParamList().get(
+                        "startDate");
+                temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
+                temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+                searchCriteria.getParamList().put("startDate", temp);
+            }
+            if (searchCriteria.getParamList().containsKey("endDate")) {
+                temp = (java.util.Date) searchCriteria.getParamList().get(
+                        "endDate");
+                temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
+                temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+                searchCriteria.getParamList().put("endDate", temp);
+            }
 
-		}
-		if(searchCriteria.getSortType()==null){
-			searchCriteria.setSortType("desc");
-		}else if(!searchCriteria.getSortType().equalsIgnoreCase("asc")&& !searchCriteria.getSortType().equalsIgnoreCase("desc")){
-			searchCriteria.setSortType("desc");
-		}
-		if (xaBizUtil.getAuditDBType().equalsIgnoreCase(RangerBizUtil.AUDIT_STORE_SOLR)) {
-			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
-		} else {
-			return xAccessAuditService.searchXAccessAudits(searchCriteria);
-		}
-		//return xAccessAuditService.searchXAccessAudits(searchCriteria);
-	}
+        }
+        if (searchCriteria.getSortType() == null) {
+            searchCriteria.setSortType("desc");
+        } else if (!searchCriteria.getSortType().equalsIgnoreCase("asc") && !searchCriteria.getSortType().equalsIgnoreCase("desc")) {
+            searchCriteria.setSortType("desc");
+        }
+        if (xaBizUtil.getAuditDBType().equalsIgnoreCase(RangerBizUtil.AUDIT_STORE_SOLR)) {
+            return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else {
+            return xAccessAuditService.searchXAccessAudits(searchCriteria);
+        }
+    }
+
 
 	public VXTrxLogList getTransactionReport(String transactionId) {
 		List<XXTrxLog> xTrxLogList = rangerDaoManager.getXXTrxLog()
@@ -1854,30 +1842,29 @@ public class AssetMgr extends AssetMgrBase {
 	@Override
 	public VXPolicyExportAuditList searchXPolicyExportAudits(
 			SearchCriteria searchCriteria) {
-		if (searchCriteria != null && searchCriteria.getParamList() != null
-				&& searchCriteria.getParamList().size() > 0) {
+        if (searchCriteria != null && searchCriteria.getParamList() != null
+                && searchCriteria.getParamList().size() > 0) {
 
-			int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
-			java.util.Date temp = null;
-			DateUtil dateUtil = new DateUtil();
-			if (searchCriteria.getParamList().containsKey("startDate")) {
-				temp = (java.util.Date) searchCriteria.getParamList().get(
-						"startDate");
-				temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
-				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
-				searchCriteria.getParamList().put("startDate", temp);
-			}
-			if (searchCriteria.getParamList().containsKey("endDate")) {
-				temp = (java.util.Date) searchCriteria.getParamList().get(
-						"endDate");
-				temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
-				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
-				searchCriteria.getParamList().put("endDate", temp);
-			}
-		}
-	
-		return xPolicyExportAuditService.searchXPolicyExportAudits(searchCriteria);
-	}
+            int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
+            java.util.Date temp = null;
+            DateUtil dateUtil = new DateUtil();
+            if (searchCriteria.getParamList().containsKey("startDate")) {
+                temp = (java.util.Date) searchCriteria.getParamList().get(
+                        "startDate");
+                temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
+                temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+                searchCriteria.getParamList().put("startDate", temp);
+            }
+            if (searchCriteria.getParamList().containsKey("endDate")) {
+                temp = (java.util.Date) searchCriteria.getParamList().get(
+                        "endDate");
+                temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
+                temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+                searchCriteria.getParamList().put("endDate", temp);
+            }
+        }
+        return xPolicyExportAuditService.searchXPolicyExportAudits(searchCriteria);
+    }
 	
 	public VXAsset getXAsset(Long id){
 		UserSessionBase currentUserSession = ContextUtil

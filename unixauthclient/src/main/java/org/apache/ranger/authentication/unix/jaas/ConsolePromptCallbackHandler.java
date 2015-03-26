@@ -42,13 +42,23 @@ public class ConsolePromptCallbackHandler implements CallbackHandler {
 		          NameCallback nc = (NameCallback)cb ;
 		          System.out.print(nc.getPrompt());
 		          System.out.flush();
-		          nc.setName(reader.readLine());
+                  String line = null;
+
+                  while (line == null) {
+                    line = reader.readLine();
+                  }
+		          nc.setName(line);
 			}
 			else if (cb instanceof PasswordCallback) {
 		          PasswordCallback pc = (PasswordCallback)cb;
 		          System.out.print(pc.getPrompt());
 		          System.out.flush();
-		          pc.setPassword(reader.readLine().toCharArray());				
+
+                  String line = null;
+                  while (line == null) {
+                    line = reader.readLine();
+                  }
+		          pc.setPassword(line.toCharArray());
 			}
 			else {
 				System.out.println("Unknown callbacl [" + cb.getClass().getName() + "]") ;

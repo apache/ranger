@@ -147,21 +147,22 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 	 * @return
 	 */
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
-		VXAccessAuditList returnList = new VXAccessAuditList();
-		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
+        VXAccessAuditList returnList = new VXAccessAuditList();
+        List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
 
-		List<XXAccessAudit> resultList = (List<XXAccessAudit>)searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+        List<XXAccessAudit> resultList = (List<XXAccessAudit>) searchResources(searchCriteria,
+                searchFields, sortFields, returnList);
 
-		// Iterate over the result list and create the return list
-		for (XXAccessAudit gjXAccessAudit : resultList) {
-			VXAccessAudit vXAccessAudit = populateViewBean(gjXAccessAudit);
-			xAccessAuditList.add(vXAccessAudit);
-		}
+        // Iterate over the result list and create the return list
+        for (XXAccessAudit gjXAccessAudit : resultList) {
+            VXAccessAudit vXAccessAudit = populateViewBean(gjXAccessAudit);
+            xAccessAuditList.add(vXAccessAudit);
+        }
 
-		returnList.setVXAccessAudits(xAccessAuditList);
-		return returnList;
-	}
+
+        returnList.setVXAccessAudits(xAccessAuditList);
+        return returnList;
+    }
 	
 	public VXAccessAudit populateViewBean(XXAccessAudit gjXAccessAudit) {
 		VXAccessAudit vXAccessAudit = new VXAccessAudit();

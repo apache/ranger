@@ -146,7 +146,7 @@ public abstract class BaseLoader {
 	long currTime =  DateUtil.getUTCDate().getTime();
 	String retStr = formatTimeTaken(currTime - startTime);
 	if (currTime - startTime > 0 && countSoFar > 0) {
-	    double rateSoFar = countSoFar * 1000 / (currTime - startTime);
+	    double rateSoFar = (double)(countSoFar * 1000) / (currTime - startTime);
 	    retStr = retStr + " " + ". Rate so far for " + countSoFar + " is "
 		    + twoDForm.format(rateSoFar);
 
