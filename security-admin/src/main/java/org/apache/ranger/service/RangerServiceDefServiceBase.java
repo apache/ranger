@@ -1,6 +1,7 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -341,11 +342,31 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	private Map<String, String> jsonStringToMap(String jsonStr) {
 		Map<String, String> ret = null;
 
-		if(jsonStr != null) {
+		if(!StringUtils.isEmpty(jsonStr)) {
 			try {
 				ret = jsonUtil.jsonToMap(jsonStr);
 			} catch(Exception excp) {
-				LOG.warn("jsonStringToMap() failed to convert string: " + jsonStr, excp);
+				// fallback to earlier format: "name1=value1;name2=value2"
+				for(String optionString : jsonStr.split(";")) {
+					if(StringUtils.isEmpty(optionString)) {
+						continue;
+					}
+
+					String[] nvArr = optionString.split("=");
+
+					String name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
+					String value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
+
+					if(StringUtils.isEmpty(name)) {
+						continue;
+					}
+
+					if(ret == null) {
+						ret = new HashMap<String, String>();
+					}
+
+					ret.put(name, value);
+				}
 			}
 		}
 

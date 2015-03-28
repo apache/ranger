@@ -34,9 +34,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractContextEnricher.class);
 
-	public final static String OPTIONS_SEP        = ";";
-	public final static String OPTION_NV_SEP      = "=";
-
 	private Map<String, String> options = null;
 
 	@Override

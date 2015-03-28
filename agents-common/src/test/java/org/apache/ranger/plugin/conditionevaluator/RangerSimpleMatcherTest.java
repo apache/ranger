@@ -39,7 +39,7 @@ import org.junit.Test;
 public class RangerSimpleMatcherTest {
 
 	final Map<String, String> _conditionOptions = new HashMap<String, String>();
-	
+
 	{
 		_conditionOptions.put(RangerSimpleMatcher.CONTEXT_NAME, RangerSimpleMatcher.CONTEXT_NAME);
 	}
