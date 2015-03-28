@@ -13,14 +13,14 @@
 		{
 			"name": "database",
 			"type": "string",
-			"level": 1,
+			"level": 10,
 			"parent": "",
 			"mandatory": true,
 			"lookupSupported": true,
 			"recursiveSupported": false,
 			"excludesSupported": true,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
@@ -31,14 +31,14 @@
 		{
 			"name": "table",
 			"type": "string",
-			"level": 2,
+			"level": 20,
 			"parent": "database",
 			"mandatory": true,
 			"lookupSupported": true,
 			"recursiveSupported": false,
 			"excludesSupported": true,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
@@ -49,14 +49,14 @@
 		{
 			"name": "udf",
 			"type": "string",
-			"level": 2,
+			"level": 20,
 			"parent": "database",
 			"mandatory": true,
 			"lookupSupported": true,
 			"recursiveSupported": false,
 			"excludesSupported": true,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
@@ -67,14 +67,14 @@
 		{
 			"name": "column",
 			"type": "string",
-			"level": 3,
+			"level": 30,
 			"parent": "table",
 			"mandatory": true,
 			"lookupSupported": true,
 			"recursiveSupported": false,
 			"excludesSupported": true,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions": "wildCard=true;ignoreCase=true",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
@@ -186,52 +186,9 @@
 
 	"contextEnrichers": 
 	[
-		{
-			"name": "country-provider",
-			"enricher": "org.apache.ranger.plugin.contextenricher.RangerCountryProvider",
-			"enricherOptions": "contextName=COUNTRY;dataFile=/etc/ranger/data/userCountry.properties"
-		},
-
-		{
-			"name": "project-provider",
-			"enricher": "org.apache.ranger.plugin.contextenricher.RangerProjectProvider",
-			"enricherOptions": "contextName=PROJECT;dataFile=/etc/ranger/data/userProject.properties"
-		}
 	],
 
 	"policyConditions": 
 	[
-		{
-			"name": "country",
-			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerSimpleMatcher",
-			"evaluatorOptions": "COUNTRY",
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Countries",
-			"description": "Countries"
-		},
-
-		{
-			"name": "project",
-			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerSimpleMatcher",
-			"evaluatorOptions": "PROJECT",
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Projects",
-			"description": "Projects"
-		},
-
-		{
-			"name": "timeOfDay",
-			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerTimeOfDayMatcher",
-			"evaluatorOptions": "",
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Time of Day",
-			"description": "Time of Day"
-		}
 	]
 }

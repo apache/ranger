@@ -38,7 +38,12 @@ import org.junit.Test;
 
 public class RangerSimpleMatcherTest {
 
-	final String _conditionOption = "key1";
+	final Map<String, String> _conditionOptions = new HashMap<String, String>();
+	
+	{
+		_conditionOptions.put(RangerSimpleMatcher.CONTEXT_NAME, RangerSimpleMatcher.CONTEXT_NAME);
+	}
+
 	@Test
 	public void testIsMatched_happyPath() {
 		// this documents some unexpected behavior of the ip matcher
@@ -89,7 +94,7 @@ public class RangerSimpleMatcherTest {
 		assertTrue(matcher.isMatched(request));
 
 		// If evaluator option on the condition def is non-null then it starts to evaluate for real
-		when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOption);
+		when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOptions);
 		matcher.init(conditionDef, policyItemCondition);
 		assertTrue(matcher.isMatched(request));
 	}
@@ -105,7 +110,8 @@ public class RangerSimpleMatcherTest {
 			when(condition.getValues()).thenReturn(addresses);
 			
 			RangerPolicyConditionDef conditionDef = mock(RangerPolicyConditionDef.class);
-			when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOption);
+
+			when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOptions);
 			matcher.init(conditionDef, condition);
 		}
 		
@@ -114,7 +120,7 @@ public class RangerSimpleMatcherTest {
 	
 	RangerAccessRequest createRequest(String value) {
 		Map<String, Object> context = new HashMap<String, Object>();
-		context.put(_conditionOption, value);
+		context.put(RangerSimpleMatcher.CONTEXT_NAME, value);
 		RangerAccessRequest request = mock(RangerAccessRequest.class);
 		when(request.getContext()).thenReturn(context);
 		return request;

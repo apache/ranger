@@ -2,12 +2,14 @@ package org.apache.ranger.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
+import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXContextEnricherDef;
@@ -36,6 +38,9 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 
 	@Autowired
 	RangerAuditFields<XXDBBase> rangerAuditFields;
+
+	@Autowired
+	JSONUtil jsonUtil;
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -128,7 +133,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		xObj.setRecursivesupported(vObj.getRecursiveSupported());
 		xObj.setExcludessupported(vObj.getExcludesSupported());
 		xObj.setMatcher(vObj.getMatcher());
-		xObj.setMatcheroptions(vObj.getMatcherOptions());
+		xObj.setMatcheroptions(mapToJsonString(vObj.getMatcherOptions()));
 		xObj.setValidationRegEx(vObj.getValidationRegEx());
 		xObj.setValidationMessage(vObj.getValidationMessage());
 		xObj.setUiHint(vObj.getUiHint());
@@ -151,7 +156,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		vObj.setRecursiveSupported(xObj.getRecursivesupported());
 		vObj.setExcludesSupported(xObj.getExcludessupported());
 		vObj.setMatcher(xObj.getMatcher());
-		vObj.setMatcherOptions(xObj.getMatcheroptions());
+		vObj.setMatcherOptions(jsonStringToMap(xObj.getMatcheroptions()));
 		vObj.setValidationRegEx(xObj.getValidationRegEx());
 		vObj.setValidationMessage(xObj.getValidationMessage());
 		vObj.setUiHint(xObj.getUiHint());
@@ -202,7 +207,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		xObj.setDefid(serviceDef.getId());
 		xObj.setName(vObj.getName());
 		xObj.setEvaluator(vObj.getEvaluator());
-		xObj.setEvaluatoroptions(vObj.getEvaluatorOptions());
+		xObj.setEvaluatoroptions(mapToJsonString(vObj.getEvaluatorOptions()));
 		xObj.setValidationRegEx(vObj.getValidationRegEx());
 		xObj.setValidationMessage(vObj.getValidationMessage());
 		xObj.setUiHint(vObj.getUiHint());
@@ -219,7 +224,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		RangerPolicyConditionDef vObj = new RangerPolicyConditionDef();
 		vObj.setName(xObj.getName());
 		vObj.setEvaluator(xObj.getEvaluator());
-		vObj.setEvaluatorOptions(xObj.getEvaluatoroptions());
+		vObj.setEvaluatorOptions(jsonStringToMap(xObj.getEvaluatoroptions()));
 		vObj.setValidationRegEx(xObj.getValidationRegEx());
 		vObj.setValidationMessage(xObj.getValidationMessage());
 		vObj.setUiHint(xObj.getUiHint());
@@ -240,7 +245,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		xObj.setDefid(serviceDef.getId());
 		xObj.setName(vObj.getName());
 		xObj.setEnricher(vObj.getEnricher());
-		xObj.setEnricherOptions(vObj.getEnricherOptions());
+		xObj.setEnricherOptions(mapToJsonString(vObj.getEnricherOptions()));
 		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 		return xObj;
 	}
@@ -249,7 +254,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		RangerContextEnricherDef vObj = new RangerContextEnricherDef();
 		vObj.setName(xObj.getName());
 		vObj.setEnricher(xObj.getEnricher());
-		vObj.setEnricherOptions(xObj.getEnricherOptions());
+		vObj.setEnricherOptions(jsonStringToMap(xObj.getEnricherOptions()));
 		return vObj;
 	}
 	
@@ -319,4 +324,31 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 		return retList;
 	}
 
+	private String mapToJsonString(Map<String, String> map) {
+		String ret = null;
+
+		if(map != null) {
+			try {
+				ret = jsonUtil.readMapToString(map);
+			} catch(Exception excp) {
+				LOG.warn("mapToJsonString() failed to convert map: " + map, excp);
+			}
+		}
+
+		return ret;
+	}
+
+	private Map<String, String> jsonStringToMap(String jsonStr) {
+		Map<String, String> ret = null;
+
+		if(jsonStr != null) {
+			try {
+				ret = jsonUtil.jsonToMap(jsonStr);
+			} catch(Exception excp) {
+				LOG.warn("jsonStringToMap() failed to convert string: " + jsonStr, excp);
+			}
+		}
+
+		return ret;
+	}
 }

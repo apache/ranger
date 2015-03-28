@@ -21,7 +21,9 @@ package org.apache.ranger.plugin.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -581,7 +583,6 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 				return false;
 			return true;
 		}
-		
 	}
 
 
@@ -701,7 +702,6 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 				return false;
 			return true;
 		}
-		
 	}
 
 
@@ -1069,38 +1069,37 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 				return false;
 			return true;
 		}
-		
 	}
 
 
 	public static class RangerResourceDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String  name               = null;
-		private String  type               = null;
-		private Integer level              = null;
-		private String  parent             = null;
-		private Boolean mandatory          = null;
-		private Boolean lookupSupported    = null;
-		private Boolean recursiveSupported = null;
-		private Boolean excludesSupported  = null;
-		private String  matcher            = null;
-		private String  matcherOptions     = null;
-		private String  validationRegEx    = null;
-		private String  validationMessage  = null;
-		private String  uiHint             = null;
-		private String  label              = null;
-		private String  description        = null;
-		private String  rbKeyLabel         = null;
-		private String  rbKeyDescription   = null;
-		private String rbKeyValidationMessage = null;
+		private String              name                   = null;
+		private String              type                   = null;
+		private Integer             level                  = null;
+		private String              parent                 = null;
+		private Boolean             mandatory              = null;
+		private Boolean             lookupSupported        = null;
+		private Boolean             recursiveSupported     = null;
+		private Boolean             excludesSupported      = null;
+		private String              matcher                = null;
+		private Map<String, String> matcherOptions         = null;
+		private String              validationRegEx        = null;
+		private String              validationMessage      = null;
+		private String              uiHint                 = null;
+		private String              label                  = null;
+		private String              description            = null;
+		private String              rbKeyLabel             = null;
+		private String              rbKeyDescription       = null;
+		private String              rbKeyValidationMessage = null;
 
 
 		public RangerResourceDef() {
 			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, String matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, Map<String, String> matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
 			setName(name);
 			setType(type);
 			setLevel(level);
@@ -1110,7 +1109,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setRecursiveSupported(recursiveSupported);
 			setExcludesSupported(excludesSupported);
 			setMatcher(matcher);
-			setMatcher(matcherOptions);
+			setMatcherOptions(matcherOptions);
 			setValidationRegEx(validationRegEx);
 			setValidationMessage(validationMessage);
 			setUiHint(uiHint);
@@ -1250,15 +1249,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		/**
 		 * @return the matcher
 		 */
-		public String getMatcherOptions() {
+		public Map<String, String> getMatcherOptions() {
 			return matcherOptions;
 		}
 
 		/**
 		 * @param matcher the matcher to set
 		 */
-		public void setMatcherOptions(String matcherOptions) {
-			this.matcherOptions = matcherOptions;
+		public void setMatcherOptions(Map<String, String> matcherOptions) {
+			this.matcherOptions = matcherOptions == null ? new HashMap<String, String>() : matcherOptions;
 		}
 
 		/**
@@ -1731,35 +1730,34 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 				return false;
 			return true;
 		}
-		
 	}
 
 
 	public static class RangerPolicyConditionDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String name              = null;
-		private String evaluator         = null;
-		private String evaluatorOptions  = null;
-		private String validationRegEx   = null;
-		private String validationMessage = null;
-		private String uiHint            = null;
-		private String label             = null;
-		private String description       = null;
-		private String rbKeyLabel        = null;
-		private String rbKeyDescription  = null;
-		private String rbKeyValidationMessage = null;
+		private String              name                   = null;
+		private String              evaluator              = null;
+		private Map<String, String> evaluatorOptions       = null;
+		private String              validationRegEx        = null;
+		private String              validationMessage      = null;
+		private String              uiHint                 = null;
+		private String              label                  = null;
+		private String              description            = null;
+		private String              rbKeyLabel             = null;
+		private String              rbKeyDescription       = null;
+		private String              rbKeyValidationMessage = null;
 
 
 		public RangerPolicyConditionDef() {
 			this(null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions) {
+		public RangerPolicyConditionDef(String name, String evaluator, Map<String, String> evaluatorOptions) {
 			this(name, evaluator, evaluatorOptions, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evaluator, String evaluatorOptions, String validationRegEx, String vaidationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+		public RangerPolicyConditionDef(String name, String evaluator, Map<String, String> evaluatorOptions, String validationRegEx, String vaidationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
 			setName(name);
 			setEvaluator(evaluator);
 			setEvaluatorOptions(evaluatorOptions);
@@ -1804,15 +1802,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		/**
 		 * @return the evaluator
 		 */
-		public String getEvaluatorOptions() {
+		public Map<String, String> getEvaluatorOptions() {
 			return evaluatorOptions;
 		}
 
 		/**
 		 * @param evaluator the evaluator to set
 		 */
-		public void setEvaluatorOptions(String evaluatorOptions) {
-			this.evaluatorOptions = evaluatorOptions;
+		public void setEvaluatorOptions(Map<String, String> evaluatorOptions) {
+			this.evaluatorOptions = evaluatorOptions == null ? new HashMap<String, String>() : evaluatorOptions;
 		}
 
 		/**
@@ -2058,22 +2056,21 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 				return false;
 			return true;
 		}
-		
 	}
 
 	public static class RangerContextEnricherDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String name            = null;
-		private String enricher        = null;
-		private String enricherOptions = null;
+		private String              name            = null;
+		private String              enricher        = null;
+		private Map<String, String> enricherOptions = null;
 
 
 		public RangerContextEnricherDef() {
 			this(null, null, null);
 		}
 
-		public RangerContextEnricherDef(String name, String enricher, String enricherOptions) {
+		public RangerContextEnricherDef(String name, String enricher, Map<String, String> enricherOptions) {
 			setName(name);
 			setEnricher(enricher);
 			setEnricherOptions(enricherOptions);
@@ -2110,15 +2107,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		/**
 		 * @return the evaluator
 		 */
-		public String getEnricherOptions() {
+		public Map<String, String> getEnricherOptions() {
 			return enricherOptions;
 		}
 
 		/**
 		 * @param evaluator the evaluator to set
 		 */
-		public void setEnricherOptions(String enricherOptions) {
-			this.enricherOptions = enricherOptions;
+		public void setEnricherOptions(Map<String, String> enricherOptions) {
+			this.enricherOptions = enricherOptions == null ? new HashMap<String, String>() : enricherOptions;
 		}
 
 		@Override
@@ -2180,6 +2177,5 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 				return false;
 			return true;
 		}
-		
 	}
 }

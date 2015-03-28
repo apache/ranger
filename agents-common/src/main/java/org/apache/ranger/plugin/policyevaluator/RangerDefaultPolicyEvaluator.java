@@ -573,7 +573,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		String resName = resourceDef != null ? resourceDef.getName() : null;
 		String clsName = resourceDef != null ? resourceDef.getMatcher() : null;
-		String options = resourceDef != null ? resourceDef.getMatcherOptions() : null;
 
 		if(! StringUtils.isEmpty(clsName)) {
 			try {
@@ -591,7 +590,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if(ret != null) {
-			ret.initOptions(options);
 			ret.init(resourceDef, resource);
 		}
 

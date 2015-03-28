@@ -13,12 +13,12 @@
 		{
 			"name": "queue",
 			"type": "string",
-			"level": 1,
+			"level": 10,
 			"mandatory": true,
 			"lookupSupported": true,
 			"recursiveSupported": true,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
-			"matcherOptions": "wildCard=true;ignoreCase=true;pathSeperatorChar=.",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true, "pathSeparatorChar":"." },
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
@@ -36,12 +36,11 @@
 
 		{
 			"name": "admin-queue",
-			"label": "admin-queue"
-		},
-
-		{
-			"name": "admin",
-			"label": "admin"
+			"label": "admin-queue",
+			"impliedGrants":
+			[
+				"submit-app"
+			]
 		}
 	],
 
@@ -104,7 +103,7 @@
 		{
 			"name": "ip-range",
 			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
-			"evaluatorOptions": "",
+			"evaluatorOptions": { },
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",

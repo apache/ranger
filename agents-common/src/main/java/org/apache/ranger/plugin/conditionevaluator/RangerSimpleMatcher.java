@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -34,8 +35,11 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 public class RangerSimpleMatcher implements RangerConditionEvaluator {
 
 	private static final Log LOG = LogFactory.getLog(RangerSimpleMatcher.class);
+
+	public static final String CONTEXT_NAME = "CONTEXT_NAME";
+
 	private boolean _allowAny = false;
-	private String ConditionName = null;
+	private String _contextName = null;
 	private List<String> _values = new ArrayList<String>();
 	
 	@Override
@@ -53,11 +57,14 @@ public class RangerSimpleMatcher implements RangerConditionEvaluator {
 		} else if (CollectionUtils.isEmpty(condition.getValues())) {
 			LOG.debug("init: empty conditions collection on policy condition!  Will match always!");
 			_allowAny = true;
-		} else if (StringUtils.isEmpty(conditionDef.getEvaluatorOptions())) {
+		} else if (MapUtils.isEmpty(conditionDef.getEvaluatorOptions())) {
 			LOG.debug("init: Evaluator options were empty.  Can't determine what value to use from context.  Will match always.");
 			_allowAny = true;
+		} else if (StringUtils.isEmpty(conditionDef.getEvaluatorOptions().get(CONTEXT_NAME))) {
+			LOG.debug("init: CONTEXT_NAME is not specified in evaluator options.  Can't determine what value to use from context.  Will match always.");
+			_allowAny = true;
 		} else {
-			ConditionName = conditionDef.getEvaluatorOptions();
+			_contextName = conditionDef.getEvaluatorOptions().get(CONTEXT_NAME);
 			for (String value : condition.getValues()) {
 				_values.add(value);
 			}
@@ -66,7 +73,6 @@ public class RangerSimpleMatcher implements RangerConditionEvaluator {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerSimpleMatcher.init(" + condition + "): countries[" + _values + "]");
 		}
-
 	}
 
 	@Override
@@ -80,7 +86,7 @@ public class RangerSimpleMatcher implements RangerConditionEvaluator {
 		if (_allowAny) {
 			LOG.debug("isMatched: allowAny flag is true.  Matched!");
 		} else {
-			String requestValue = extractValue(request, ConditionName);
+			String requestValue = extractValue(request, _contextName);
 			if (requestValue == null) {
 				LOG.debug("isMatched: couldn't get value from request.  Ok.  Implicitly matched!");
 			} else {

@@ -98,7 +98,11 @@ public class RangerDefaultPolicyEvaluatorTest {
 		
 		// if service has a condition then sensible answer should come back
 		RangerPolicyConditionDef aConditionDef = getMockPolicyConditionDef("type1", "com.company.SomeEvaluator", null);
-		RangerPolicyConditionDef anotherConditionDef = getMockPolicyConditionDef("type2", "com.company.AnotherEvaluator", "key1");
+
+		Map<String, String> evaluatorOptions = new HashMap<String, String>();
+		evaluatorOptions.put("key1", "key1");
+
+		RangerPolicyConditionDef anotherConditionDef = getMockPolicyConditionDef("type2", "com.company.AnotherEvaluator", evaluatorOptions);
 		List<RangerPolicyConditionDef> conditionDefs = Lists.newArrayList(aConditionDef, anotherConditionDef);
 		
 		serviceDef = getMockServiceDef(conditionDefs);
@@ -344,18 +348,23 @@ public class RangerDefaultPolicyEvaluatorTest {
 			RangerPolicyConditionDef aCondition = mock(RangerPolicyConditionDef.class);
 			when(aCondition.getName()).thenReturn(anEntry.getKey());
 			when(aCondition.getEvaluator()).thenReturn(anEntry.getValue()[0]);
-			when(aCondition.getEvaluatorOptions()).thenReturn(anEntry.getValue()[1]);
+
+			Map<String, String> evaluatorOptions = new HashMap<String, String>();
+			evaluatorOptions.put(anEntry.getValue()[1], anEntry.getValue()[1]);
+
+			when(aCondition.getEvaluatorOptions()).thenReturn(evaluatorOptions);
+
 			conditions.add(aCondition);
 		}
 		return conditions;
 	}
 	
-	RangerPolicyConditionDef getMockPolicyConditionDef(String name, String evaluatorClassName, String evaluatorOption) {
+	RangerPolicyConditionDef getMockPolicyConditionDef(String name, String evaluatorClassName, Map<String, String> evaluatorOptions) {
 		// null policy condition def collection should behave sensibly
 		RangerPolicyConditionDef aCondition = mock(RangerPolicyConditionDef.class);
 		when(aCondition.getName()).thenReturn(name);
 		when(aCondition.getEvaluator()).thenReturn(evaluatorClassName);
-		when(aCondition.getEvaluatorOptions()).thenReturn(evaluatorOption);
+		when(aCondition.getEvaluatorOptions()).thenReturn(evaluatorOptions);
 		return aCondition;
 	}
 	
