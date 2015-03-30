@@ -216,15 +216,26 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
             boolean isMatchAttempted = false;
             boolean matchResult = false;
+            boolean isHeadMatchAttempted = false;
             boolean headMatchResult = false;
 
             if (!result.getIsAuditedDetermined()) {
                 // Need to match request.resource first. If it matches (or head matches), then only more progress can be made
-                matchResult = isMatch(request.getResource());
-                isMatchAttempted = true;
+                if (!isMatchAttempted) {
+                    matchResult = isMatch(request.getResource());
+                    isMatchAttempted = true;
+                }
 
-                if (matchResult) {
-                    // Do all stuff.
+                // Try head match only if match was not found and ANY access was requested
+                if (!matchResult) {
+                    if (isAnyAccess && !isHeadMatchAttempted) {
+                        headMatchResult = matchResourceHead(request.getResource());
+                        isHeadMatchAttempted = true;
+                    }
+                }
+
+                if (matchResult || headMatchResult) {
+                    // We are done for determining if audit is needed for this policy
                     if (policy.getIsAuditEnabled()) {
                         result.setIsAudited(true);
                     }
@@ -232,19 +243,22 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             }
 
             if (!result.getIsAccessDetermined()) {
+                // Try Match only if it was not attempted as part of evaluating Audit requirement
                 if (!isMatchAttempted) {
-                    // Need to match request.resource first. If it matches (or head matches), then only more progress can be made
                     matchResult = isMatch(request.getResource());
-                    isMatchAttempted = true;
+	                isMatchAttempted = true;
                 }
 
-                // Try head match only if it is useful
-                if (isAnyAccess) {
-                    headMatchResult = matchResult || matchResourceHead(request.getResource());
+                // Try Head Match only if no match was found so far AND a head match was not attempted as part of evaluating
+                // Audit requirement
+                if (!matchResult) {
+                    if (isAnyAccess && !isHeadMatchAttempted) {
+                        headMatchResult = matchResourceHead(request.getResource());
+	                    isHeadMatchAttempted = true;
+                    }
                 }
-
-                if (matchResult || (isAnyAccess && headMatchResult)) {
-                    // A match was found earlier
+                // Go further to evaluate access only if match or head match was found at this point
+                if (matchResult || headMatchResult) {
                     evaluatePolicyItemsForAccess(request, result);
                 }
             }
