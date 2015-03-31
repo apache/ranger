@@ -28,23 +28,49 @@ LINUX_USER=ranger
 BIN_PATH=/usr/bin
 MOD_NAME=ranger-admin
 
+pid=`ps -ef | grep java | grep -- '-Dproc_rangeradmin' | grep -v grep | awk '{ print $2 }'`
+
 case $1 in
 start)
-	echo "Starting Apache Ranger Admin."
-	/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} start"
+	if [ "${pid}" != "" ]
+	then
+		echo "Ranger Admin Service is already running"
+		exit 1
+	else
+		echo "Starting Apache Ranger Admin."
+		/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} start"
+	fi
 	;;
 stop)
-	echo "Stopping Apache Ranger Admin."
-	/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} stop"
+	if [ "${pid}" != "" ]
+	then
+		echo "Stopping Apache Ranger Admin."
+		/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} stop"
+	else
+		echo "Ranger Admin Service is NOT running"
+		exit 1
+	fi
 	;;
 restart)
-	echo "Stopping Apache Ranger Admin."
-	/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} stop"
-	sleep 10
+	if [ "${pid}" != "" ]
+	then
+		echo "Stopping Apache Ranger Admin."
+		/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} stop"
+		sleep 10
+	fi
 	echo "Starting Apache Ranger Admin."
 	/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} start"
 	;;
+status)
+	if [ "${pid}" != "" ]
+	then
+		echo "Ranger Admin Service is  running [pid={$pid}]"
+	else
+		echo "Ranger Admin Service is  NOT running." 
+
+	fi
+	;;
 *)
-	echo "Invalid argument [$1]; Only start|stop|restart are supported."
+	echo "Invalid argument [$1]; Only start|stop|restart|status are supported."
     exit 1
 esac
