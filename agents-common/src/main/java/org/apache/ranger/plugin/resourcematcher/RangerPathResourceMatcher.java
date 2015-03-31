@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.resourcematcher;
 
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,8 +44,8 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 			LOG.debug("==> RangerPathResourceMatcher.init(" + resourceDef + ", " + policyResource + ")");
 		}
 
-		policyIsRecursive     = policyResource == null ? false : policyResource.getIsRecursive();
-		pathSeparatorChar     = getCharOption(OPTION_PATH_SEPERATOR, DEFAULT_PATH_SEPERATOR_CHAR);
+		policyIsRecursive = policyResource == null ? false : policyResource.getIsRecursive();
+		pathSeparatorChar = getCharOption(OPTION_PATH_SEPERATOR, DEFAULT_PATH_SEPERATOR_CHAR);
 
 		super.init(resourceDef, policyResource);
 
@@ -108,27 +109,31 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 		boolean ret = false;
 
 		if (! StringUtils.isEmpty(pathToCheck)) {
-			StringBuilder sb = new StringBuilder();
-			
-			if(pathToCheck.charAt(0) == pathSeparatorChar) {
-				sb.append(pathSeparatorChar); // preserve the initial seperator
-			}
+			String[] pathElements = StringUtils.split(pathToCheck, pathSeparatorChar);
 
-			for(String p : StringUtils.split(pathToCheck, pathSeparatorChar)) {
-				sb.append(p);
+			if(! ArrayUtils.isEmpty(pathElements)) {
+				StringBuilder sb = new StringBuilder();
 
-				boolean matchFound = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath) ;
-				
-				if (matchFound) {
-					ret = true ;
-
-					break;
+				if(pathToCheck.charAt(0) == pathSeparatorChar) {
+					sb.append(pathSeparatorChar); // preserve the initial pathSeparatorChar
 				}
 
-				sb.append(pathSeparatorChar) ;
-			}
+				for(String p : pathElements) {
+					sb.append(p);
 
-			sb = null;
+					ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath) ;
+
+					if (ret) {
+						break;
+					}
+
+					sb.append(pathSeparatorChar) ;
+				}
+
+				sb = null;
+			} else { // pathToCheck consists of only pathSeparatorChar
+				ret = FilenameUtils.wildcardMatch(pathToCheck, wildcardPath) ;
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
