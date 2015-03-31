@@ -102,10 +102,12 @@ public class KnoxClient {
 						Iterator<JsonNode> elements = topologyNode.getElements();
 						while (elements.hasNext()) {
 							JsonNode element = elements.next();
-							String topologyName = element.get("name").getValueAsText();
-							LOG.debug("Found Knox topologyName: " + topologyName);
-							if (topologyName.startsWith(topologyNameMatching)) {
-								topologyList.add(topologyName);
+							if (element != null) {
+								String topologyName = element.get("name").getValueAsText();
+								LOG.debug("Found Knox topologyName: " + topologyName);
+								if (topologyName != null && topologyName.startsWith(topologyNameMatching)) {
+									topologyList.add(topologyName);
+								}
 							}
 						}
 					} else {
@@ -183,14 +185,16 @@ public class KnoxClient {
 						
 						JsonNode rootNode = objectMapper.readTree(jsonString);
 						JsonNode topologyNode = rootNode.findValue("topology");
-						JsonNode servicesNode = topologyNode.get("services");
-						Iterator<JsonNode> services = servicesNode.getElements();
-						while (services.hasNext()) {
-							JsonNode service = services.next();
-							String serviceName = service.get("role").getValueAsText();
-							LOG.debug("Knox serviceName: " + serviceName);
-							if (serviceName.startsWith(serviceNameMatching)) {
-								serviceList.add(serviceName);
+						if (topologyNode != null) {
+							JsonNode servicesNode = topologyNode.get("services");
+							Iterator<JsonNode> services = servicesNode.getElements();
+							while (services.hasNext()) {
+								JsonNode service = services.next();
+								String serviceName = service.get("role").getValueAsText();
+								LOG.debug("Knox serviceName: " + serviceName);
+								if (serviceName != null && serviceName.startsWith(serviceNameMatching)) {
+									serviceList.add(serviceName);
+								}
 							}
 						}
 					} else {

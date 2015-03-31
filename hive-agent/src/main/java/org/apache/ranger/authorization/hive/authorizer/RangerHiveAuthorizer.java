@@ -293,11 +293,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	            	String[] columns = StringUtils.split(resource.getColumn(), COLUMN_SEP);
 
 	            	for(String column : columns) {
-	            		column = column == null ? null : column.trim();
-
-	            		if(StringUtils.isEmpty(column.trim())) {
-	            			continue;
-	            		}
+                        if (column != null) {
+	                        column = column.trim();
+                        }
+			            if(StringUtils.isEmpty(column)) {
+				            continue;
+			            }
 
 	                	RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTable(), column);
 

@@ -344,7 +344,10 @@ public class UserGroupSyncConfig  {
 	
 	public String getLdapBindPassword() {
 		//update credential from keystore
-		if(prop!=null && prop.containsKey(LGSYNC_LDAP_BIND_KEYSTORE) &&  prop.containsKey(LGSYNC_LDAP_BIND_ALIAS)){	
+		if (prop == null) {
+			return null;
+		}
+		if(prop.containsKey(LGSYNC_LDAP_BIND_KEYSTORE) &&  prop.containsKey(LGSYNC_LDAP_BIND_ALIAS)){
 			String path=prop.getProperty(LGSYNC_LDAP_BIND_KEYSTORE);
 			String alias=prop.getProperty(LGSYNC_LDAP_BIND_ALIAS);
 			if(path!=null && alias!=null){

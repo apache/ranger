@@ -275,9 +275,10 @@ public class XResourceService extends
 						+ "resource path.", MessageEnums.INVALID_INPUT_DATA);
 			}
 		}
-		if (vObj != null && mObj != null && !vObj.getName().equalsIgnoreCase(mObj.getName()) ||
+		if ((vObj != null && mObj != null) &&
+				(!vObj.getName().equalsIgnoreCase(mObj.getName()) ||
 				vObj.getIsRecursive()!=mObj.getIsRecursive() || 
-				vObj.getResourceType() != mObj.getResourceType()) {
+				vObj.getResourceType() != mObj.getResourceType())) {
 			validateForCreate(vObj);
 		}
 		
@@ -892,7 +893,11 @@ public class XResourceService extends
 				vxPermMap = perm.getValue();
 				break;
 			}
-			
+
+			if (vxPermMap == null) {
+				continue;
+			}
+
 			if (map.size() > 0 && map.get(AppConstants.XA_PERM_TYPE_READ) == null) {
 				vxPermMap.setPermType(AppConstants.XA_PERM_TYPE_READ);
 				map.put(AppConstants.XA_PERM_TYPE_READ, vxPermMap);
@@ -912,6 +917,10 @@ public class XResourceService extends
 			for (Entry<Integer, VXPermMap> perm : map.entrySet()) {
 				vxPermMap = perm.getValue();
 				break;
+			}
+
+			if (vxPermMap == null) {
+				continue;
 			}
 
 			if (map.size() > 0 && map.get(AppConstants.XA_PERM_TYPE_READ) == null) {

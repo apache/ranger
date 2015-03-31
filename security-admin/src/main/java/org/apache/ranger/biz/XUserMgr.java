@@ -485,21 +485,21 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public void modifyUserVisibility(HashMap<Long, Integer> visibilityMap) {			
-		Set<Long> keys = visibilityMap.keySet();
-		for (Long key : keys) {
-			XXUser xUser = daoManager.getXXUser().getById(key);
+		Set<Map.Entry<Long, Integer>> entries = visibilityMap.entrySet();
+		for (Map.Entry<Long, Integer> entry : entries) {
+			XXUser xUser = daoManager.getXXUser().getById(entry.getKey());
 			VXUser vObj = xUserService.populateViewBean(xUser);
-			vObj.setIsVisible(visibilityMap.get(key));
+			vObj.setIsVisible(entry.getValue());
 			vObj = xUserService.updateResource(vObj);
 		}
 	}
 	
 	public void modifyGroupsVisibility(HashMap<Long, Integer> groupVisibilityMap) {			
-		Set<Long> keys = groupVisibilityMap.keySet();
-		for (Long key : keys) {		
-			XXGroup xGroup = daoManager.getXXGroup().getById(key);
+		Set<Map.Entry<Long, Integer>> entries = groupVisibilityMap.entrySet();
+		for (Map.Entry<Long, Integer> entry : entries) {
+			XXGroup xGroup = daoManager.getXXGroup().getById(entry.getKey());
 			VXGroup vObj = xGroupService.populateViewBean(xGroup);
-			vObj.setIsVisible(groupVisibilityMap.get(key));
+			vObj.setIsVisible(entry.getValue());
 			vObj = xGroupService.updateResource(vObj);
 		}
 	}

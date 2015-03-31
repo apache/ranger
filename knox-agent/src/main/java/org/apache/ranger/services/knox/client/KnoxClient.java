@@ -102,14 +102,18 @@ public class KnoxClient {
 						Iterator<JsonNode> elements = topologyNode.getElements();
 						while (elements.hasNext()) {
 							JsonNode element = elements.next();
-							String topologyName = element.get("name").getValueAsText();
-							LOG.debug("Found Knox topologyName: " + topologyName);
-							if ( knoxTopologyList != null && knoxTopologyList.contains(topologyName)) {
-					        	continue;
-					        }
-							if (topologyName.startsWith(topologyNameMatching)) {
-								topologyList.add(topologyName);
+							JsonNode nameElement = element.get("name");
+							if (nameElement != null) {
+								String topologyName = nameElement.getValueAsText();
+								LOG.debug("Found Knox topologyName: " + topologyName);
+								if (knoxTopologyList != null && topologyName != null && knoxTopologyList.contains(topologyName)) {
+									continue;
+								}
+								if (topologyName != null && topologyName.startsWith(topologyNameMatching)) {
+									topologyList.add(topologyName);
+								}
 							}
+
 						}
 					} else {
 						LOG.error("Got invalid  REST response from: "+ knoxUrl + ", responsStatus: " + response.getStatus());
@@ -186,17 +190,24 @@ public class KnoxClient {
 						
 						JsonNode rootNode = objectMapper.readTree(jsonString);
 						JsonNode topologyNode = rootNode.findValue("topology");
-						JsonNode servicesNode = topologyNode.get("services");
-						Iterator<JsonNode> services = servicesNode.getElements();
-						while (services.hasNext()) {
-							JsonNode service = services.next();
-							String serviceName = service.get("role").getValueAsText();
-							LOG.debug("Knox serviceName: " + serviceName);
-							if ( knoxServiceList != null && knoxServiceList.contains(serviceName)) {
-					        	continue;
-					        }
-							if (serviceName.startsWith(serviceNameMatching)) {
-								serviceList.add(serviceName);
+						if (topologyNode != null) {
+							JsonNode servicesNode = topologyNode.get("services");
+							if (servicesNode != null) {
+								Iterator<JsonNode> services = servicesNode.getElements();
+								while (services.hasNext()) {
+									JsonNode service = services.next();
+									JsonNode serviceElement = service.get("role");
+									if (serviceElement != null) {
+										String serviceName = serviceElement.getValueAsText();
+										LOG.debug("Knox serviceName: " + serviceName);
+										if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))) {
+											continue;
+										}
+										if (serviceName.startsWith(serviceNameMatching)) {
+											serviceList.add(serviceName);
+										}
+									}
+								}
 							}
 						}
 					} else {

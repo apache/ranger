@@ -383,7 +383,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			Collection<String> resourceKeys = resource == null ? null : resource.getKeys();
 			Collection<String> policyKeys   = matchers == null ? null : matchers.keySet();
 
-			boolean keysMatch = CollectionUtils.isEqualCollection(resourceKeys, policyKeys);
+			boolean keysMatch = false;
+
+			if (resourceKeys != null && policyKeys != null) {
+				keysMatch = CollectionUtils.isEqualCollection(resourceKeys, policyKeys);
+			}
 
 			if(keysMatch) {
 				for(RangerResourceDef resourceDef : serviceDef.getResources()) {

@@ -431,6 +431,9 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
         while (groupSearchResultEnum.hasMore()) {
           final SearchResult groupEntry = groupSearchResultEnum.next();
+	        if (groupEntry.getAttributes().get(groupNameAttribute) == null) {
+		        continue;
+	        }
           String gName = (String) groupEntry.getAttributes()
             .get(groupNameAttribute).get();
           if (groupNameCaseConversionFlag) {

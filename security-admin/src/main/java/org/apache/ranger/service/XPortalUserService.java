@@ -81,8 +81,7 @@ public class XPortalUserService extends
 
 	public List<XXTrxLog> getTransactionLog(VXPortalUser vObj,
 			XXPortalUser xObj, String action) {
-		if (vObj == null
-				&& (action == null || !action.equalsIgnoreCase("update"))) {
+		if (vObj == null || action == null || (action.equalsIgnoreCase("update") && xObj == null)) {
 			return null;
 		}
 

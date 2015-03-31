@@ -256,9 +256,12 @@ public class PublicAPIs {
 		searchCriteria = serviceUtil.getMappedSearchParams(request,
 				searchCriteria);
 		List<RangerService> serviceList = serviceREST.getServices(request);
-		
-		VXRepositoryList ret = serviceUtil.rangerServiceListToPublicObjectList(serviceList);
-				
+
+		VXRepositoryList ret = null;
+
+		if (serviceList != null) {
+			ret = serviceUtil.rangerServiceListToPublicObjectList(serviceList);
+		}
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.searchRepositories(): count=" + (ret == null ? 0 : ret.getListSize()));
 		}
@@ -407,7 +410,11 @@ public class PublicAPIs {
 		
 		List<RangerPolicy> rangerPolicyList = serviceREST.getPolicies(request);
 		
-		VXPolicyList vXPolicyList = serviceUtil.rangerPolicyListToPublic(rangerPolicyList);
+		VXPolicyList vXPolicyList = null;
+
+		if (rangerPolicyList != null) {
+			vXPolicyList = serviceUtil.rangerPolicyListToPublic(rangerPolicyList);
+		}
 		
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.searchPolicies(): "  + vXPolicyList );

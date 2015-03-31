@@ -66,7 +66,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDef xObj) {
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
-		vObj.setName(xObj.getName());
+		vObj.setType(xObj.getName());
 		vObj.setImplClass(xObj.getImplclassname());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setDescription(xObj.getDescription());

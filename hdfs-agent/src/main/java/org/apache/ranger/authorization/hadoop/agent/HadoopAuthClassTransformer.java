@@ -155,40 +155,41 @@ public class HadoopAuthClassTransformer implements ClassFileTransformer {
 				}
 			}
 
-			if (checkMethod != null) {
-				System.out.print("injecting check() hooks...");
+			if (curClass != null) {
+				if (checkMethod != null) {
+					System.out.print("injecting check() hooks...");
 
-				checkMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,true);");
-				checkMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,false); throw $e; }", throwable);
+					checkMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,true);");
+					checkMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.logHadoopEvent($1,false); throw $e; }", throwable);
 
-				if (is3ParamsCheckMethod) {
-					checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(user,groups,$1,$3) ) { return; } }");
-				}
-				else {
-					checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(user,groups,$1,$2) ) { return; } }");
-				}
-
-				System.out.println("done");
-
-				if (checkPermissionMethod != null) {
-					System.out.print("injecting checkPermission() hooks...");
-
-					checkPermissionMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1);");
-					checkPermissionMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1); throw $e; }", accCtrlExcp);	
-					checkPermissionMethod.insertBefore("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPre($1);");
+					if (is3ParamsCheckMethod) {
+						checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(user,groups,$1,$3) ) { return; } }");
+					} else {
+						checkMethod.insertBefore("{ if ( org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.check(user,groups,$1,$2) ) { return; } }");
+					}
 
 					System.out.println("done");
+
+					if (checkPermissionMethod != null) {
+						System.out.print("injecting checkPermission() hooks...");
+
+						checkPermissionMethod.insertAfter("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1);");
+						checkPermissionMethod.addCatch("{ org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPost($1); throw $e; }", accCtrlExcp);
+						checkPermissionMethod.insertBefore("org.apache.hadoop.hdfs.server.namenode.RangerFSPermissionChecker.checkPermissionPre($1);");
+
+						System.out.println("done");
+					}
+
+					ret = curClass.toBytecode();
+				} else {
+					System.out.println("Unable to identify check() method on class: [" + aClassName + "]. Found following methods:");
+
+					for (CtMethod m : curClass.getDeclaredMethods()) {
+						System.err.println("  found Method: " + m);
+					}
+
+					System.out.println("Injection failed. Continue without Injection");
 				}
-
-				ret = curClass.toBytecode();
-			} else {
-				System.out.println("Unable to identify check() method on class: [" + aClassName + "]. Found following methods:");
-
-				for (CtMethod m : curClass.getDeclaredMethods()) {
-					System.err.println("  found Method: " + m);
-				}
-
-				System.out.println("Injection failed. Continue without Injection");
 			}
 		} catch (CannotCompileException e) {
 			System.err.println("Can not compile Exception for class Name: " + aClassName + " Exception: " + e);

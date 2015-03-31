@@ -167,7 +167,7 @@ public class ServiceMgr {
 	private static Map<String, Class<RangerBaseService>> serviceTypeClassMap = new HashMap<String, Class<RangerBaseService>>();
 
 	@SuppressWarnings("unchecked")
-	private Class<RangerBaseService> getClassForServiceType(RangerServiceDef serviceDef) {
+	private Class<RangerBaseService> getClassForServiceType(RangerServiceDef serviceDef) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceMgr.getClassForServiceType(" + serviceDef + ")");
 		}
@@ -201,6 +201,8 @@ public class ServiceMgr {
 							serviceTypeClassMap.put(serviceType, ret);
 						} catch (Exception excp) {
 							LOG.warn("ServiceMgr.getClassForServiceType(" + serviceType + "): failed to find service-class '" + clsName + "'. Resource lookup will not be available", excp);
+							//Let's propagate the error
+							throw new Exception(serviceType + " failed to find service class " + clsName + ". Resource lookup will not be available. Please make sure plugin jar is in the correct place.");
 						}
 					} else {
 						if(LOG.isDebugEnabled()) {

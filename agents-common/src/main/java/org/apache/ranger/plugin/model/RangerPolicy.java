@@ -45,6 +45,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 	private String                            service        = null;
 	private String                            name           = null;
+	private Integer                           policyType     = null;
 	private String                            description    = null;
 	private Boolean                           isAuditEnabled = null;
 	private Map<String, RangerPolicyResource> resources      = null;
@@ -55,21 +56,23 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param type
 	 */
 	public RangerPolicy() {
-		this(null, null, null, null, null);
+		this(null, null, null, null, null, null);
 	}
 
 	/**
-	 * @param type
+	 * @param service
 	 * @param name
+	 * @param policyType
 	 * @param description
 	 * @param resources
 	 * @param policyItems
 	 */
-	public RangerPolicy(String service, String name, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems) {
+	public RangerPolicy(String service, String name, Integer policyType, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems) {
 		super();
 
 		setService(service);
 		setName(name);
+		setPolicyType(policyType);
 		setDescription(description);
 		setIsAuditEnabled(null);
 		setResources(resources);
@@ -84,6 +87,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		setService(other.getService());
 		setName(other.getName());
+		setPolicyType(other.getPolicyType());
 		setDescription(other.getDescription());
 		setIsAuditEnabled(other.getIsAuditEnabled());
 		setResources(other.getResources());
@@ -116,6 +120,20 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 */
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	/**
+	 * @return the policyType
+	 */
+	public Integer getPolicyType() {
+		return policyType;
+	}
+
+	/**
+	 * @param policyType the policyType to set
+	 */
+	public void setPolicyType(Integer policyType) {
+		this.policyType = policyType;
 	}
 
 	/**
@@ -218,6 +236,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		sb.append("service={").append(service).append("} ");
 		sb.append("name={").append(name).append("} ");
+		sb.append("policyType={").append(policyType).append("} ");
 		sb.append("description={").append(description).append("} ");
 		sb.append("isAuditEnabled={").append(isAuditEnabled).append("} ");
 

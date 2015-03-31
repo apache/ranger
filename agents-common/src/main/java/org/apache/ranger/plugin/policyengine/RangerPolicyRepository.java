@@ -65,7 +65,7 @@ public class RangerPolicyRepository {
 
     void init(RangerServiceDef serviceDef, List<RangerPolicy> policies) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyRepository.init(" + serviceDef + ", policies.count=" + (policies == null ? 0 : policies.size()) + ")");
+            LOG.debug("==> RangerPolicyRepository.init(" + serviceDef + ", policies.count=" + policies.size() + ")");
         }
 
         this.serviceDef = serviceDef;
@@ -106,7 +106,7 @@ public class RangerPolicyRepository {
         accessAuditCache = new CacheMap<String, Boolean>(auditResultCacheSize);
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyRepository.init(" + serviceDef + ", policies.count=" + (policies == null ? 0 : policies.size()) + ")");
+            LOG.debug("<== RangerPolicyRepository.init(" + serviceDef + ", policies.count=" + policies.size() + ")");
         }
     }
 

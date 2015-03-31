@@ -118,7 +118,7 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 	protected XXAsset mapViewToEntityBean(VXAsset vObj, XXAsset mObj,
 			int OPERATION_CONTEXT) {
         if (vObj != null && mObj != null) {
-            String oldConfig = (mObj != null) ? mObj.getConfig() : null;
+            String oldConfig = mObj.getConfig();
             super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
             String config = vObj.getConfig();
             if (config != null && !config.isEmpty()) {
@@ -233,7 +233,7 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 	}
 
 	public List<XXTrxLog> getTransactionLog(VXAsset vObj, XXAsset mObj, String action){
-		if(vObj == null && (action == null || !action.equalsIgnoreCase("update"))){
+		if(vObj == null ||action == null || (action.equalsIgnoreCase("update") && mObj == null)){
 			return null;
 		}
 		
@@ -353,7 +353,7 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 						String password=passwordEntry.getValue();
 						String encryptPassword=PasswordUtils.encryptPassword(password);
 						String decryptPassword=PasswordUtils.decryptPassword(encryptPassword);
-						if(decryptPassword.equalsIgnoreCase(password)){
+						if(decryptPassword != null && decryptPassword.equalsIgnoreCase(password)){
 							configMap.put(passwordEntry.getKey(),
 									encryptPassword);
 							configMap.put("isencrypted", "true");

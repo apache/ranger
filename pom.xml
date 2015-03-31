@@ -87,6 +87,7 @@
   <module>hive-agent</module>
   <module>knox-agent</module>
   <module>storm-agent</module>
+  <module>plugin-solr</module>
   <module>plugin-yarn</module>
   <module>ranger_solrj</module>
   <module>security-admin</module>
@@ -130,7 +131,7 @@
 		<hadoop-common-kms.version>2.6.0</hadoop-common-kms.version>
 		<hadoop.version>3.0.0-SNAPSHOT</hadoop.version>
 		<hamcrest.all.version>1.3</hamcrest.all.version>
-		<hbase.version>0.99.2</hbase.version>
+		<hbase.version>1.1.0-SNAPSHOT</hbase.version>
 		<hive.version>1.2.0-SNAPSHOT</hive.version>
 		<storm.version>0.9.2-incubating</storm.version>
 		<httpcomponent.httpmime.version>4.2.5</httpcomponent.httpmime.version>
@@ -158,7 +159,7 @@
 		<security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
 		<slf4j-api.version>1.7.5</slf4j-api.version>
 		<!--<solr.version>5.0.0</solr.version>-->
-		<ranger.solrj.version>0.4.0</ranger.solrj.version>
+		<ranger.solrj.version>${project.version}</ranger.solrj.version>
 		<springframework.spring.version>2.5.6</springframework.spring.version>
 		<!--
 		<springframework.spring.version>3.1.3.RELEASE</springframework.spring.version>
@@ -364,6 +365,7 @@
              <descriptor>src/main/assembly/knox-agent.xml</descriptor>
              <descriptor>src/main/assembly/storm-agent.xml</descriptor>
              <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
+	     <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
              <descriptor>src/main/assembly/admin-web.xml</descriptor>
              <descriptor>src/main/assembly/usersync.xml</descriptor>
              <descriptor>src/main/assembly/migration-util.xml</descriptor>

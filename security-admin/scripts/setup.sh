@@ -238,9 +238,11 @@ check_java_version() {
                exit 1;
 	fi
 
-	$JAVA_BIN -version 2>&1 | grep -q $JAVA_VERSION_REQUIRED
-	if [ $? != 0 ] ; then
-		log "[E] Java 1.7 is required"
+	version=$("$JAVA_BIN" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+	major=`echo ${version} | cut -d. -f1`
+	minor=`echo ${version} | cut -d. -f2`
+	if [[ "${major}" == 1 && "${minor}" < 7 ]] ; then
+		log "[E] Java 1.7 is required, current java version is $version"
 		exit 1;
 	fi
 

@@ -153,7 +153,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		List<String> superusers = Lists.asList(currentUser, conf.getStrings(SUPERUSER_CONFIG_PROP, new String[0]));
 		User activeUser = getActiveUser();
 		if (!(superusers.contains(activeUser.getShortName()))) {
-			throw new AccessDeniedException("User '" + (user != null ? user.getShortName() : "null") + "is not system or super user.");
+			throw new AccessDeniedException("User '" + user.getShortName() + "is not system or super user.");
 		}
 	}
 	private boolean isSuperUser(User user) {

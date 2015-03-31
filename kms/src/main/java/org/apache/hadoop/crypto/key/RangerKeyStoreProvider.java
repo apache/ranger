@@ -208,7 +208,11 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	    	  e.printStackTrace();
 	        throw new IOException("Can't recover key " + key, e);
 	      }
-	      return new KeyVersion(getBaseName(versionName), versionName, key.getEncoded());
+		if (key == null) {
+			return null;
+		} else {
+			return new KeyVersion(getBaseName(versionName), versionName, key.getEncoded());
+		}
 	}
 
 	@Override

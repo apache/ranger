@@ -335,9 +335,11 @@ public class AuthorizationSession {
 
 	RangerAccessResult buildResult(boolean allowed, boolean audited, String reason) {
 		RangerAccessResult result = _authorizer.createAccessResult(_request);
-		result.setIsAllowed(allowed);
-		result.setReason(reason);
-		result.setIsAudited(audited);
+		if (result != null) {
+			result.setIsAllowed(allowed);
+			result.setReason(reason);
+			result.setIsAudited(audited);
+		}
 		return result;
 	}
 }

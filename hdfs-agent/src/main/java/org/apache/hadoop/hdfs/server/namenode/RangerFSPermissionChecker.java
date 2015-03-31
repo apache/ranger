@@ -133,7 +133,7 @@ public class RangerFSPermissionChecker {
 
 					RangerAccessResult result = rangerPlugin.isAccessAllowed(request, getCurrentAuditHandler());
 
-					isAllowed = result.getIsAllowed();
+					isAllowed = result != null && result.getIsAllowed();
 					
 					if(!isAllowed) {
 						break;

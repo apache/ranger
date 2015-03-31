@@ -333,7 +333,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 							break;
 						}
 					}
-					if (oldValue.equalsIgnoreCase(value)) {
+					if (oldValue == null || oldValue.equalsIgnoreCase(value)) {
 						continue;
 					}
 					if (fieldName.equalsIgnoreCase("emailAddress")) {

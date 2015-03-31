@@ -100,11 +100,11 @@ public class XRepositoryService extends
 			statusList.add(RangerCommonEnums.STATUS_DISABLED);
 			statusList.add(RangerCommonEnums.STATUS_ENABLED);
 		} else {
-			boolean status = restErrorUtil.parseBoolean(
+			Boolean status = restErrorUtil.parseBoolean(
 					request.getParameter("status"), "Invalid value for "
 							+ "status", MessageEnums.INVALID_INPUT_DATA, null,
 					"status");
-			int statusEnum = (status == false) ? AppConstants.STATUS_DISABLED
+			int statusEnum = (status == null || status == false) ? AppConstants.STATUS_DISABLED
 					: AppConstants.STATUS_ENABLED;
 			statusList.add(statusEnum);
 		}

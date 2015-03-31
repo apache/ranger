@@ -46,7 +46,7 @@ public class SolrMgr {
 
 	SolrClient solrClient = null;
 	Date lastConnectTime = null;
-	boolean initDone = false;
+	volatile boolean initDone = false;
 
 	public SolrMgr() {
 
@@ -61,27 +61,28 @@ public class SolrMgr {
 								.getProperty("xa.audit.solr.url");
 						if (solrURL == null || solrURL.isEmpty()) {
 							logger.fatal("Solr URL for Audit is empty");
-						}
-						try {
-							solrClient = new HttpSolrClient(solrURL);
-							if (solrClient == null) {
-								logger.fatal("Can't connect to Solr. URL="
-										+ solrURL);
-							} else {
-								initDone = true;
-								if (solrClient instanceof HttpSolrClient) {
-									HttpSolrClient httpSolrClient = (HttpSolrClient) solrClient;
-									httpSolrClient.setAllowCompression(true);
-									httpSolrClient.setConnectionTimeout(1000);
-									// httpSolrClient.setSoTimeout(10000);
-									httpSolrClient.setMaxRetries(1);
-									httpSolrClient.setRequestWriter(new BinaryRequestWriter());
+						} else {
+							try {
+								solrClient = new HttpSolrClient(solrURL);
+								if (solrClient == null) {
+									logger.fatal("Can't connect to Solr. URL="
+											+ solrURL);
+								} else {
+									if (solrClient instanceof HttpSolrClient) {
+										HttpSolrClient httpSolrClient = (HttpSolrClient) solrClient;
+										httpSolrClient.setAllowCompression(true);
+										httpSolrClient.setConnectionTimeout(1000);
+										// httpSolrClient.setSoTimeout(10000);
+										httpSolrClient.setMaxRetries(1);
+										httpSolrClient.setRequestWriter(new BinaryRequestWriter());
+									}
+									initDone = true;
 								}
+
+							} catch (Throwable t) {
+								logger.fatal("Can't connect to Solr server. URL="
+										+ solrURL, t);
 							}
-							
-						} catch (Throwable t) {
-							logger.fatal("Can't connect to Solr server. URL="
-									+ solrURL, t);
 						}
 					}
 				}

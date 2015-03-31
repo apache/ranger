@@ -19,6 +19,7 @@
 
 package org.apache.ranger.services.storm.client;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,10 @@ public class StormResourceMgr {
 
     public static List<String> getStormResources(String url, String username, String password,String topologyName, List<String> StormTopologyList) {
         final StormClient stormClient = StormConnectionMgr.getStormClient(url, username, password);
+	    if (stormClient == null) {
+		    LOG.error("Storm Client is null");
+		    return new ArrayList<String>();
+	    }
         List<String> topologyList = stormClient.getTopologyList(topologyName,StormTopologyList) ;
         return topologyList;
     }

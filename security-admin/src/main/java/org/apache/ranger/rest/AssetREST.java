@@ -256,7 +256,7 @@ public class AssetREST {
 		}
 
 		if(logger.isDebugEnabled()) {
-			logger.debug("<== AssetREST.searchXAssets(): count=" + (ret == null ? 0 : ret.getListSize()));
+			logger.debug("<== AssetREST.searchXAssets(): count=" +  ret.getListSize());
 		}
 
 		return ret;

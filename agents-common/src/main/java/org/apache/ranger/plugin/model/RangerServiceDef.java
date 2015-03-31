@@ -62,7 +62,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 	/**
-	 * @param name
+	 * @param type
 	 * @param implClass
 	 * @param label
 	 * @param description
@@ -73,10 +73,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param contextEnrichers
 	 * @param enums
 	 */
-	public RangerServiceDef(String name, String implClass, String label, String description, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
+	public RangerServiceDef(String type, String implClass, String label, String description, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
 		super();
 
-		setName(name);
+		setType(type);
 		setImplClass(implClass);
 		setLabel(label);
 		setDescription(description);
@@ -94,7 +94,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public void updateFrom(RangerServiceDef other) {
 		super.updateFrom(other);
 
-		setName(other.getName());
+		setType(other.getName());
 		setImplClass(other.getImplClass());
 		setLabel(other.getLabel());
 		setDescription(other.getDescription());
@@ -115,7 +115,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	/**
 	 * @param name the name to set
 	 */
-	public void setName(String name) {
+	public void setType(String name) {
 		this.name = name;
 	}
 
@@ -447,19 +447,35 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerEnumDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
+		private Long                       id           = null;
 		private String                     name         = null;
 		private List<RangerEnumElementDef> elements     = null;
 		private Integer                    defaultIndex = null;
 
 
 		public RangerEnumDef() {
-			this(null, null, null);
+			this(null, null, null, null);
 		}
 
-		public RangerEnumDef(String name, List<RangerEnumElementDef> elements, Integer defaultIndex) {
+		public RangerEnumDef(Long id, String name, List<RangerEnumElementDef> elements, Integer defaultIndex) {
+			setId(id);
 			setName(name);
 			setElements(elements);
 			setDefaultIndex(defaultIndex);
+		}
+
+		/**
+		 * @return the id
+		 */
+		public Long getId() {
+			return id;
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setId(Long id) {
+			this.id = id;
 		}
 
 		/**
@@ -529,6 +545,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerEnumDef={");
+			sb.append("id={").append(id).append("} ");
 			sb.append("name={").append(name).append("} ");
 			sb.append("elements={");
 			if(elements != null) {
@@ -549,6 +566,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
+			result = prime * result + ((id == null) ? 0 : id.hashCode());
 			result = prime * result
 					+ ((defaultIndex == null) ? 0 : defaultIndex.hashCode());
 			result = prime * result
@@ -566,6 +584,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			if (getClass() != obj.getClass())
 				return false;
 			RangerEnumDef other = (RangerEnumDef) obj;
+			if (id == null) {
+				if (other.id != null)
+					return false;
+			} else if (other.id == null || !id.equals(other.id))
+				return false;
+
 			if (defaultIndex == null) {
 				if (other.defaultIndex != null)
 					return false;
@@ -589,19 +613,35 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerEnumElementDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 		
+		private Long   id         = null;
 		private String name       = null;
 		private String label      = null;
 		private String rbKeyLabel = null;
 
 
 		public RangerEnumElementDef() {
-			this(null, null, null);
+			this(null, null, null, null);
 		}
 
-		public RangerEnumElementDef(String name, String label, String rbKeyLabel) {
+		public RangerEnumElementDef(Long id, String name, String label, String rbKeyLabel) {
+			setId(id);
 			setName(name);
 			setLabel(label);
 			setRbKeyLabel(rbKeyLabel);
+		}
+
+		/**
+		 * @return the id
+		 */
+		public Long getId() {
+			return id;
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setId(Long id) {
+			this.id = id;
 		}
 
 		/**
@@ -657,6 +697,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerEnumElementDef={");
+			sb.append("id={").append(id).append("} ");
 			sb.append("name={").append(name).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
@@ -669,6 +710,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
+			result = prime * result + ((id == null) ? 0 : id.hashCode());
 			result = prime * result + ((label == null) ? 0 : label.hashCode());
 			result = prime * result + ((name == null) ? 0 : name.hashCode());
 			result = prime * result
@@ -685,6 +727,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			if (getClass() != obj.getClass())
 				return false;
 			RangerEnumElementDef other = (RangerEnumElementDef) obj;
+			if (id == null) {
+				if (other.id != null) {
+					return false;
+				}
+			} else if (other.id == null || !id.equals(other.id)) {
+				return false;
+			}
+
 			if (label == null) {
 				if (other.label != null)
 					return false;
@@ -708,6 +758,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerServiceConfigDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
+		private Long    id                = null;
 		private String  name              = null;
 		private String  type              = null;
 		private String  subType           = null;
@@ -724,10 +775,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerServiceConfigDef() {
-			this(null, null, null, null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerServiceConfigDef(String name, String type, String subType, Boolean mandatory, String defaultValue, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+		public RangerServiceConfigDef(Long id, String name, String type, String subType, Boolean mandatory, String defaultValue, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+			setId(id);
 			setName(name);
 			setType(type);
 			setSubType(subType);
@@ -741,6 +793,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
 			setRbKeyValidationMessage(rbKeyValidationMessage);
+		}
+
+		/**
+		 * @return the id
+		 */
+		public Long getId() {
+			return id;
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setId(Long id) {
+			this.id = id;
 		}
 
 		/**
@@ -936,6 +1002,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerServiceConfigDef={");
+			sb.append("id={").append(name).append("} ");
 			sb.append("name={").append(name).append("} ");
 			sb.append("type={").append(type).append("} ");
 			sb.append("subType={").append(subType).append("} ");
@@ -1075,6 +1142,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerResourceDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
+		private Long                id                     = null;
 		private String              name                   = null;
 		private String              type                   = null;
 		private Integer             level                  = null;
@@ -1096,10 +1164,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerResourceDef() {
-			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerResourceDef(String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, Map<String, String> matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+		public RangerResourceDef(Long id, String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, Map<String, String> matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+			setId(id);
 			setName(name);
 			setType(type);
 			setLevel(level);
@@ -1118,6 +1187,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
 			setRbKeyValidationMessage(rbKeyValidationMessage);
+		}
+
+		/**
+		 * @return the id
+		 */
+		public Long getId() {
+			return id;
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setId(Long id) {
+			this.id = id;
 		}
 
 		/**
@@ -1383,6 +1466,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerResourceDef={");
+			sb.append("id={").append(id).append("} ");
 			sb.append("name={").append(name).append("} ");
 			sb.append("type={").append(type).append("} ");
 			sb.append("level={").append(level).append("} ");
@@ -1569,6 +1653,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerAccessTypeDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
+		private Long               id            = null;
 		private String             name          = null;
 		private String             label         = null;
 		private String             rbKeyLabel    = null;
@@ -1576,14 +1661,29 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerAccessTypeDef() {
-			this(null, null, null, null);
+			this(null, null, null, null, null);
 		}
 
-		public RangerAccessTypeDef(String name, String label, String rbKeyLabel, Collection<String> impliedGrants) {
+		public RangerAccessTypeDef(Long id, String name, String label, String rbKeyLabel, Collection<String> impliedGrants) {
+			setId(id);
 			setName(name);
 			setLabel(label);
 			setRbKeyLabel(rbKeyLabel);
 			setImpliedGrants(impliedGrants);
+		}
+
+		/**
+		 * @return the id
+		 */
+		public Long getId() {
+			return id;
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setId(Long id) {
+			this.id = id;
 		}
 
 		/**
@@ -1667,6 +1767,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerAccessTypeDef={");
+			sb.append("id={").append(id).append("} ");
 			sb.append("name={").append(name).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
@@ -1690,6 +1791,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
+			result = prime * result + ((id == null) ? 0 : id.hashCode());
 			result = prime * result
 					+ ((impliedGrants == null) ? 0 : impliedGrants.hashCode());
 			result = prime * result + ((label == null) ? 0 : label.hashCode());
@@ -1708,6 +1810,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			if (getClass() != obj.getClass())
 				return false;
 			RangerAccessTypeDef other = (RangerAccessTypeDef) obj;
+			if (id == null) {
+				if (other.id != null)
+					return false;
+			} else if (other.id == null || !id.equals(other.id))
+				return false;
+
 			if (impliedGrants == null) {
 				if (other.impliedGrants != null)
 					return false;
@@ -1736,6 +1844,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerPolicyConditionDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
+		private Long                id                     = null;
 		private String              name                   = null;
 		private String              evaluator              = null;
 		private Map<String, String> evaluatorOptions       = null;
@@ -1750,14 +1859,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 		public RangerPolicyConditionDef() {
-			this(null, null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evaluator, Map<String, String> evaluatorOptions) {
-			this(name, evaluator, evaluatorOptions, null, null, null, null, null, null, null, null);
+		public RangerPolicyConditionDef(Long id, String name, String evaluator, Map<String, String> evaluatorOptions) {
+			this(id, name, evaluator, evaluatorOptions, null, null, null, null, null, null, null, null);
 		}
 
-		public RangerPolicyConditionDef(String name, String evaluator, Map<String, String> evaluatorOptions, String validationRegEx, String vaidationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+		public RangerPolicyConditionDef(Long id, String name, String evaluator, Map<String, String> evaluatorOptions, String validationRegEx, String vaidationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+			setId(id);
 			setName(name);
 			setEvaluator(evaluator);
 			setEvaluatorOptions(evaluatorOptions);
@@ -1769,6 +1879,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
 			setRbKeyValidationMessage(rbKeyValidationMessage);
+		}
+
+		/**
+		 * @return the id
+		 */
+		public Long getId() {
+			return id;
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setId(Long id) {
+			this.id = id;
 		}
 
 		/**
@@ -1936,6 +2060,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerPolicyConditionDef={");
+			sb.append("id={").append(id).append("} ");
 			sb.append("name={").append(name).append("} ");
 			sb.append("evaluator={").append(evaluator).append("} ");
 			sb.append("evaluatorOptions={").append(evaluatorOptions).append("} ");
@@ -1956,6 +2081,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
+			result = prime * result
+					+ ((id == null) ? 0 : id.hashCode());
 			result = prime * result
 					+ ((description == null) ? 0 : description.hashCode());
 			result = prime * result
@@ -1998,6 +2125,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			if (getClass() != obj.getClass())
 				return false;
 			RangerPolicyConditionDef other = (RangerPolicyConditionDef) obj;
+			if (id == null) {
+				if (other.id != null)
+					return false;
+			} else if (other.id != null || !id.equals(other.id)) {
+				return false;
+			}
+
 			if (description == null) {
 				if (other.description != null)
 					return false;
@@ -2061,19 +2195,35 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerContextEnricherDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
+		private Long                id              = null;
 		private String              name            = null;
 		private String              enricher        = null;
 		private Map<String, String> enricherOptions = null;
 
 
 		public RangerContextEnricherDef() {
-			this(null, null, null);
+			this(null, null, null, null);
 		}
 
-		public RangerContextEnricherDef(String name, String enricher, Map<String, String> enricherOptions) {
+		public RangerContextEnricherDef(Long id, String name, String enricher, Map<String, String> enricherOptions) {
+			setId(id);
 			setName(name);
 			setEnricher(enricher);
 			setEnricherOptions(enricherOptions);
+		}
+
+		/**
+		 * @return the id
+		 */
+		public Long getId() {
+			return id;
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setId(Long id) {
+			this.id = id;
 		}
 
 		/**
@@ -2129,6 +2279,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public StringBuilder toString(StringBuilder sb) {
 			sb.append("RangerContextEnricherDef={");
+			sb.append("id={").append(id).append("} ");
 			sb.append("name={").append(name).append("} ");
 			sb.append("enricher={").append(enricher).append("} ");
 			sb.append("enricherOptions={").append(enricherOptions).append("} ");
@@ -2141,6 +2292,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
+			result = prime * result + ((id == null) ? 0 : id.hashCode());
 			result = prime * result
 					+ ((enricher == null) ? 0 : enricher.hashCode());
 			result = prime
@@ -2160,6 +2312,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			if (getClass() != obj.getClass())
 				return false;
 			RangerContextEnricherDef other = (RangerContextEnricherDef) obj;
+			if (id == null) {
+				if (other.id != null)
+					return false;
+			} else if (other.id == null || !id.equals(other.id))
+				return false;
+
 			if (enricher == null) {
 				if (other.enricher != null)
 					return false;

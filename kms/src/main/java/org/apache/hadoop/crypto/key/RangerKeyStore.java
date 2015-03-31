@@ -355,9 +355,8 @@ public class RangerKeyStore extends KeyStoreSpi {
         	}
 			
 			entries.clear();     
-			if (password != null) {
-				md = getPreKeyedHash(password);
-			}			
+			md = getPreKeyedHash(password);
+
 			byte computed[];
             computed = md.digest();
             for(XXRangerKeyStore rangerKey : rangerKeyDetails){
