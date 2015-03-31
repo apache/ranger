@@ -8,6 +8,7 @@ import time
 from xml.etree import ElementTree as ET
 import datetime
 from subprocess import Popen, PIPE
+import re
 
 
 def port_ranger_installation_to_ambari():
@@ -661,10 +662,6 @@ def port_ranger_hbase_plugin_to_ambari():
 	print('Trying to add ranger Hbase plugin.')
 	flag_hbase_plugin_installed, hbase_plugin_install_properties, hbase_site_xml_properties = get_hbase_plugin_configuration()
 	if flag_hbase_plugin_installed and hbase_plugin_install_properties is not None and hbase_site_xml_properties is not None:
-		hbase_site_xml_properties['hive.security.authorization.enabled'] = 'true'
-		hbase_site_xml_properties['hive.security.authorization.manager'] = 'com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory'
-		hbase_site_xml_properties['hive.security.authenticator.manager'] = 'org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator'
-		hbase_site_xml_properties['hive.conf.restricted.list'] = 'hive.security.authorization.enabled, hive.security.authorization.manager,hive.security.authenticator.manager'
 		print('Hbase plugin is installed and enabled, adding to configurations')
 		advanced_ranger_hbase_plugin_properties = dict()
 
@@ -1115,12 +1112,31 @@ def call_keystore(libpath, aliasKey, aliasValue, filepath, getorcreateorlist):
 
 
 def get_hdp_version():
-	print('getting hdp version installed for ranger')
-	ranger_admin_current_path = os.path.join(hdp_current_dir, 'ranger-admin')
-	ranger_admin_actual_path = os.path.realpath(ranger_admin_current_path)
-	hdp_version_obtained = ranger_admin_actual_path.split('/')[4]
-	return hdp_version_obtained
+	return_code = -1
+	hdp_output = ''
+	hdp_version = None
+	match = None
+	statuscode = -1
+	try:
+		command_to_run = 'hdp-select status hadoop-client'
+		output = Popen(command_to_run, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
+		return_code, error = output.communicate()
+		statuscode = output.returncode
+	except Exception, e:
+		print('Error : ' + str(e))
+	if statuscode == 0:
+		hdp_version = re.sub('hadoop-client - ', '', return_code)
+		hdp_version = hdp_version.rstrip()
+		match = re.match('[0-9]+.[0-9]+.[0-9]+.[0-9]+-[0-9]+', hdp_version)
+		print ('hdp_version = ' + hdp_version)
+	else:
+		print('Unable to determine the current version because of a non-zero return code of {0}'.format(str(return_code)))
 
+	if match is None:
+		print('Failed to get extracted version')
+		return None
+	else:
+		return hdp_version
 
 def getDateTimeNow():
 	return datetime.datetime.now().strftime("%Y%m%d%H%M%S")
