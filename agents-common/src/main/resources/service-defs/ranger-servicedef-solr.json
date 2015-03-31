@@ -1,0 +1,121 @@
+{
+	"name":"solr",
+	"implClass":"org.apache.ranger.services.solr.RangerServiceSolr",
+	"label":"SOLR",
+	"description":"Solr",
+	"resources":[
+		{
+			"name":"collection",
+			"type":"string",
+			"level":1,
+			"parent":"",
+			"mandatory":true,
+			"lookupSupported":true,
+			"recursiveSupported":false,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":"wildCard=true;ignoreCase=true",
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Solr Collection",
+			"description":"Solr Collection"
+		},
+		{
+			"name":"field",
+			"type":"string",
+			"level":2,
+			"parent":"collection",
+			"mandatory":true,
+			"lookupSupported":true,
+			"recursiveSupported":false,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":"wildCard=true;ignoreCase=true",
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Field",
+			"description":"Field"
+		}
+		
+	],
+	"accessTypes":[
+		{
+			"name":"create",
+			"label":"Create"
+		},
+		{
+			"name":"update",
+			"label":"Update"
+		},
+		{
+			"name":"query",
+			"label":"Query"
+		},
+		{
+			"name":"admin",
+			"label":"Admin"
+		}
+		
+	],
+	"configs":[
+		{
+			"name":"username",
+			"type":"string",
+			"mandatory":true,
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Username"
+		},
+		{
+			"name":"password",
+			"type":"password",
+			"mandatory":true,
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Password"
+		},
+		{
+			"name":"solr.url",
+			"type":"string",
+			"mandatory":true,
+			"defaultValue":"",
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Solr URL"
+		},
+		{
+			"name":"certificate.cn",
+			"type":"string",
+			"mandatory":false,
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Common Name for Certificate"
+		}
+		
+	],
+	"enums":[
+		
+	],
+	"contextEnrichers":[
+		
+	],
+	"policyConditions":[
+		{
+			"name":"ip-range",
+			"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+			"evaluatorOptions":"",
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"IP Address Range",
+			"description":"IP Address Range"
+		}
+		
+	]
+}
