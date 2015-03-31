@@ -59,7 +59,7 @@ public class ServiceSolrClient {
 			+ "resource names. Check server logs for more info.";
 
 	private static final String COLLECTION_KEY = "collection";
-	private static final String FIELD_KEY = "column";
+	private static final String FIELD_KEY = "field";
 	private static final long LOOKUP_TIMEOUT_SEC = 5;
 
 	public ServiceSolrClient(String serviceName, SolrClient solrClient,
