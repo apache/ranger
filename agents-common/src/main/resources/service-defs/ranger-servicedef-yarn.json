@@ -11,6 +11,7 @@
 	"resources": 
 	[
 		{
+			"id": 1,
 			"name": "queue",
 			"type": "string",
 			"level": 10,
@@ -30,11 +31,13 @@
 	"accessTypes": 
 	[
 		{
+			"id": 1,
 			"name": "submit-app",
 			"label": "submit-app"
 		},
 
 		{
+			"id": 2,
 			"name": "admin-queue",
 			"label": "admin-queue",
 			"impliedGrants":
@@ -47,6 +50,7 @@
 	"configs": 
 	[
 		{
+			"id": 1,
 			"name": "username",
 			"type": "string",
 			"mandatory": true,
@@ -57,6 +61,7 @@
 		},
 
 		{
+			"id": 2,
 			"name": "password",
 			"type": "password",
 			"mandatory": true,
@@ -67,6 +72,7 @@
 		},
 
 		{
+			"id": 3,
 			"name": "yarn.url",
 			"type": "string",
 			"mandatory": true,
@@ -78,6 +84,7 @@
 		},
 
 		{
+			"id": 4,
 			"name": "certificate.cn",
 			"type": "string",
 			"mandatory": false,
@@ -101,6 +108,7 @@
 	"policyConditions": 
 	[
 		{
+			"id": 1,
 			"name": "ip-range",
 			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
 			"evaluatorOptions": { },

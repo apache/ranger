@@ -11,6 +11,7 @@
 	"resources": 
 	[
 		{
+			"id": 1,
 			"name": "database",
 			"type": "string",
 			"level": 10,
@@ -29,6 +30,7 @@
 		},
 
 		{
+			"id": 2,
 			"name": "table",
 			"type": "string",
 			"level": 20,
@@ -47,6 +49,7 @@
 		},
 
 		{
+			"id": 3,
 			"name": "udf",
 			"type": "string",
 			"level": 20,
@@ -65,6 +68,7 @@
 		},
 
 		{
+			"id": 4,
 			"name": "column",
 			"type": "string",
 			"level": 30,
@@ -86,41 +90,49 @@
 	"accessTypes": 
 	[
 		{
+			"id": 1,
 			"name": "select",
 			"label": "select"
 		},
 
 		{
+			"id": 2,
 			"name": "update",
 			"label": "update"
 		},
 
 		{
+			"id": 3,
 			"name": "create",
 			"label": "Create"
 		},
 
 		{
+			"id": 4,
 			"name": "drop",
 			"label": "Drop"
 		},
 
 		{
+			"id": 5,
 			"name": "alter",
 			"label": "Alter"
 		},
 
 		{
+			"id": 6,
 			"name": "index",
 			"label": "Index"
 		},
 
 		{
+			"id": 7,
 			"name": "lock",
 			"label": "Lock"
 		},
 
 		{
+			"id": 8,
 			"name": "all",
 			"label": "All"
 		}
@@ -129,6 +141,7 @@
 	"configs": 
 	[
 		{
+			"id": 1,
 			"name": "username",
 			"type": "string",
 			"mandatory": true,
@@ -139,6 +152,7 @@
 		},
 
 		{
+			"id": 2,
 			"name": "password",
 			"type": "password",
 			"mandatory": true,
@@ -149,6 +163,7 @@
 		},
 
 		{
+			"id": 3,
 			"name": "jdbc.driverClassName",
 			"type": "string",
 			"mandatory": true,
@@ -159,6 +174,7 @@
 		},
 
 		{
+			"id": 4,
 			"name": "jdbc.url",
 			"type": "string",
 			"mandatory": true,
@@ -169,6 +185,7 @@
 		},
 
 		{
+			"id": 5,
 			"name": "certificate.cn",
 			"type": "string",
 			"mandatory": false,
