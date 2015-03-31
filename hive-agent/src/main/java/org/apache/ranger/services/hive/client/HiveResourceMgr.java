@@ -170,9 +170,13 @@ public class HiveResourceMgr {
 									}
 								};
 							}
-					synchronized (hiveClient) {
-						resultList = TimedEventUtil.timedTask(callableObj, 5,
-								TimeUnit.SECONDS);
+					if (callableObj != null) {
+						synchronized (hiveClient) {
+							resultList = TimedEventUtil.timedTask(callableObj, 5,
+									TimeUnit.SECONDS);
+						}
+					} else {
+						LOG.error("Could not initiate at timedTask");
 					}
 				 }
 			  } catch (Exception e) {

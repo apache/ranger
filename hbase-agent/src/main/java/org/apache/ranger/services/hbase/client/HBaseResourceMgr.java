@@ -135,8 +135,10 @@ public class HBaseResourceMgr {
 							};
 						}
 					}
-					resultList = TimedEventUtil.timedTask(callableObj, 5,
-							TimeUnit.SECONDS);
+					if (callableObj != null) {
+						resultList = TimedEventUtil.timedTask(callableObj, 5,
+								TimeUnit.SECONDS);
+					}
 					
 				}
 			} catch (Exception e) {

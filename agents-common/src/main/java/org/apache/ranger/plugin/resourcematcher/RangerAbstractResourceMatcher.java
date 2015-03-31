@@ -246,7 +246,15 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		sb.append("optionsString={").append(optionsString).append("} ");
 		sb.append("optIgnoreCase={").append(optIgnoreCase).append("} ");
 		sb.append("optWildCard={").append(optWildCard).append("} ");
-		sb.append("policyValues={").append(StringUtils.join(policyValues, ",")).append("} ");
+
+		sb.append("policyValues={");
+		if(policyValues != null) {
+			for(String value : policyValues) {
+				sb.append(value).append(",");
+			}
+		}
+		sb.append("} ");
+
 		sb.append("policyIsExcludes={").append(policyIsExcludes).append("} ");
 		sb.append("isMatchAny={").append(isMatchAny).append("} ");
 

@@ -29,14 +29,6 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
 
 	private static final Log LOG = LogFactory.getLog(HbaseAuthUtilsImpl.class.getName());
-
-	public String getNameSpace(NamespaceDescriptor ns) {
-		if (ns == null) {
-			// TODO log an error and Throw an error so the operation is denied?
-		}
-		return ns.getName();
-	}
-
 	@Override
 	public String getAccess(Action action) {
 		switch(action) {

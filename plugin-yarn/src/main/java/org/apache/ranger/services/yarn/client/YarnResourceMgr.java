@@ -82,7 +82,10 @@ public class YarnResourceMgr {
 
     public static List<String> getYarnResource(String url, String username, String password,String yarnQueueName, List<String> yarnQueueList) {
         final YarnClient yarnClient = YarnConnectionMgr.getYarnClient(url, username, password);
-        List<String> topologyList = yarnClient.getQueueList(yarnQueueName, yarnQueueList);
+        List<String> topologyList = null;
+	    if (yarnClient != null) {
+		    topologyList = yarnClient.getQueueList(yarnQueueName, yarnQueueList);
+	    }
         return topologyList;
     }
     

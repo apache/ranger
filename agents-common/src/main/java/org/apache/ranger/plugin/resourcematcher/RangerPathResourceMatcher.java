@@ -143,15 +143,6 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 
 		super.toString(sb);
 
-		sb.append("policyValues={");
-		if(policyValues != null) {
-			for(String value : policyValues) {
-				sb.append(value).append(",");
-			}
-		}
-		sb.append("} ");
-
-		sb.append("policyIsExcludes={").append(policyIsExcludes).append("} ");
 		sb.append("policyIsRecursive={").append(policyIsRecursive).append("} ");
 
 		sb.append("}");

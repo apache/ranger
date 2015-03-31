@@ -96,10 +96,8 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 					httpSession.setAttribute(AKA_SC_SESSION_KEY, context);					
 				}
 				String userAgent = httpRequest.getHeader(USER_AGENT);
-				if(httpRequest!=null){						
-					clientTimeOffset=RestUtil.getTimeOffset(httpRequest);	
-					
-				}
+				clientTimeOffset=RestUtil.getTimeOffset(httpRequest);
+
 				// Get the request specific info
 				RequestContext requestContext = new RequestContext();
 				String reqIP = testIP;

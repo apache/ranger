@@ -339,15 +339,24 @@ public class UserMgr {
 	 * @return
 	 */
 	public VXResponse changePassword(VXPasswordChange pwdChange) {
+		VXResponse ret = new VXResponse();
+
 		// First let's get the XXPortalUser for the current logged in user
 		String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
 		XXPortalUser gjUserCurrent = daoManager.getXXPortalUser()
 				.findByLoginId(currentUserLoginId);
 
+		if (gjUserCurrent == null) {
+			logger.info("changePassword(). Invalid user login id. userId="
+					+ currentUserLoginId);
+			throw restErrorUtil.createRESTException(
+					"serverMsg.userMgrInvalidUser",
+					MessageEnums.DATA_NOT_FOUND, null, null,
+					"" + currentUserLoginId);
+		}
+
 		String encryptedOldPwd = encrypt(gjUserCurrent.getLoginId(),
 				pwdChange.getOldPassword());
-
-		VXResponse ret = new VXResponse();
 
 		if (!stringUtil.equals(encryptedOldPwd, gjUserCurrent.getPassword())) {
 			logger.info("changePassword(). Invalid old password. userId="
@@ -573,10 +582,6 @@ public class UserMgr {
 			return;
 		}
 
-		// Is accessed by peer from the same account
-		boolean isPeer = false;
-		boolean isAccountAdmin = false;
-
 		// Admin
 		if (sess.isUserAdmin() || sess.getXXPortalUser().getId().equals(user.getId())) {
 			userProfile.setLoginId(user.getLoginId());
@@ -600,15 +605,11 @@ public class UserMgr {
 			}
 		}
 
-		if (sess.isUserAdmin() || sess.getXXPortalUser().getId().equals(user.getId())
-				|| isPeer) {
+		if (sess.isUserAdmin() || sess.getXXPortalUser().getId().equals(user.getId())) {
 			userProfile.setId(user.getId());
 			userProfile.setFirstName(user.getFirstName());
 			userProfile.setLastName(user.getLastName());
 			userProfile.setPublicScreenName(user.getPublicScreenName());
-			if (isAccountAdmin) {
-				userProfile.setEmailAddress(user.getEmailAddress());
-			}
 		}
 
 	}
@@ -1127,6 +1128,10 @@ public class UserMgr {
 	public XXPortalUser updateUserWithPass(VXPortalUser userProfile) {
 		String updatedPassword = userProfile.getPassword();
 		XXPortalUser xXPortalUser = this.updateUser(userProfile);
+
+		if (xXPortalUser == null) {
+			return null;
+		}
 
 		if (updatedPassword != null && !updatedPassword.isEmpty()) {
 			if (!stringUtil.validatePassword(updatedPassword,

@@ -255,8 +255,7 @@ public class YarnClient {
 			}
 
 			if (yanrQname != null) {
-				String finalyarnQueueName = (yanrQname == null) ? ""
-						: yanrQname.trim();
+				String finalyarnQueueName = yanrQname.trim();
 				resultList = yarnClient
 						.getQueueList(finalyarnQueueName,existingQueueName);
 				if (resultList != null) {

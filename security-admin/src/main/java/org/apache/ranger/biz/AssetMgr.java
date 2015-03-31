@@ -286,6 +286,10 @@ public class AssetMgr extends AssetMgrBase {
 					+ "allowed",MessageEnums.OPER_NO_PERMISSION);
 		}
 
+		if (vXResource == null) {
+			return null;
+		}
+
 		Long assetId = vXResource.getAssetId();
 		XXAsset xAsset = rangerDaoManager.getXXAsset().getById(assetId);
 		if (xAsset == null) {
@@ -378,7 +382,7 @@ public class AssetMgr extends AssetMgrBase {
 		int totalPoliciesCount=1;
 		String tempPolicyName=null;
 		vXResourceList=null;
-		if(vXResource!=null && (vXResource.getPolicyName()==null ||vXResource.getPolicyName().trim().isEmpty())){
+		if(vXResource.getPolicyName()==null || vXResource.getPolicyName().trim().isEmpty()){
 			searchCriteria=new SearchCriteria();
 			searchCriteria.getParamList().put("assetId", vXResource.getAssetId());
 			vXResourceList=xResourceService.searchXResourcesWithoutLogin(searchCriteria);
@@ -709,6 +713,11 @@ public class AssetMgr extends AssetMgrBase {
 			throw restErrorUtil.createRESTException("No Data Found.",
 					MessageEnums.DATA_NOT_FOUND);
 		}
+		if (xResourceList == null) {
+			logger.error("ResourceList is found");
+			throw restErrorUtil.createRESTException("No Data Found.",
+					MessageEnums.DATA_NOT_FOUND);
+		}
 		if(xAsset.getActiveStatus()==RangerCommonEnums.ACT_STATUS_DISABLED){
 			logger.error("Requested repository is disabled");
 			throw restErrorUtil.createRESTException("Unauthorized access.",
@@ -821,7 +830,7 @@ public class AssetMgr extends AssetMgrBase {
 		long epochTime = epoch != null ? Long.parseLong(epoch) : 0;
 
 		if(epochTime == updatedTime) {
-			int resourceListSz = (xResourceList == null) ? 0 : xResourceList.size() ;
+			int resourceListSz = xResourceList.size() ;
 			
 			if (policyCount == resourceListSz) {
 				policyExportAudit
@@ -1232,13 +1241,13 @@ public class AssetMgr extends AssetMgrBase {
 				.getDatabases().equalsIgnoreCase("")) ? null : stringUtil
 				.split(vXResource.getDatabases(), ",");
 		String[] tables = (vXResource.getTables() == null || vXResource
-				.getTables().equalsIgnoreCase("")) ? null : stringUtil.split(
+				.getTables().equalsIgnoreCase("")) ? new String[0] : stringUtil.split(
 				vXResource.getTables(), ",");
 		String[] udfs = (vXResource.getUdfs() == null || vXResource.getUdfs()
-				.equalsIgnoreCase("")) ? null : stringUtil.split(
+				.equalsIgnoreCase("")) ? new String[0] : stringUtil.split(
 				vXResource.getUdfs(), ",");
 		String[] columns = (vXResource.getColumns() == null || vXResource
-				.getColumns().equalsIgnoreCase("")) ? null : stringUtil.split(
+				.getColumns().equalsIgnoreCase("")) ? new String[0] : stringUtil.split(
 				vXResource.getColumns(), ",");
 
 		StringBuilder stringBuilder = new StringBuilder();
@@ -1279,6 +1288,7 @@ public class AssetMgr extends AssetMgrBase {
 					stringBuilder.append("/" + database + "/" + udf + ",");
 				}
 			}
+
 			break;
 
 		case AppConstants.RESOURCE_DB:
@@ -1310,10 +1320,10 @@ public class AssetMgr extends AssetMgrBase {
 				.getTables().equalsIgnoreCase("")) ? null : stringUtil.split(
 				vXResource.getTables(), ",");
 		String[] columnFamilies = (vXResource.getColumnFamilies() == null || vXResource
-				.getColumnFamilies().equalsIgnoreCase("")) ? null : stringUtil
+				.getColumnFamilies().equalsIgnoreCase("")) ? new String[0] : stringUtil
 				.split(vXResource.getColumnFamilies(), ",");
 		String[] columns = (vXResource.getColumns() == null || vXResource
-				.getColumns().equalsIgnoreCase("")) ? null : stringUtil.split(
+				.getColumns().equalsIgnoreCase("")) ? new String[0] : stringUtil.split(
 				vXResource.getColumns(), ",");
 
 		StringBuilder stringBuilder = new StringBuilder();
@@ -1377,7 +1387,7 @@ public class AssetMgr extends AssetMgrBase {
 				.getTopologies().equalsIgnoreCase("")) ? null : stringUtil.split(
 				vXResource.getTopologies(), ",");
 		String[] serviceNames = (vXResource.getServices() == null || vXResource
-				.getServices().equalsIgnoreCase("")) ? null : stringUtil
+				.getServices().equalsIgnoreCase("")) ? new String[0] : stringUtil
 				.split(vXResource.getServices(), ",");
 
 		StringBuilder stringBuilder = new StringBuilder();
@@ -1431,7 +1441,7 @@ public class AssetMgr extends AssetMgrBase {
 				vXResource.getTopologies(), ",");
 		
 		String[] serviceNames = (vXResource.getServices() == null || vXResource
-		                 .getServices().equalsIgnoreCase("")) ? null : stringUtil
+		                 .getServices().equalsIgnoreCase("")) ? new String[0] : stringUtil
 		                .split(vXResource.getServices(), ",");
 
 		StringBuilder stringBuilder = new StringBuilder();
@@ -1653,6 +1663,9 @@ public class AssetMgr extends AssetMgrBase {
 					.findByResourceNameAndAssetIdAndResourceType(resourceName,
 							assetId, AppConstants.RESOURCE_UNKNOWN);
 		}
+		if (xxResourceList == null) {
+			return null;
+		}
 		XXResource xxResource = null;
 		for (XXResource resource : xxResourceList) {
 			if (resource.getName().equals(resourceName)) {
@@ -1699,7 +1712,11 @@ public class AssetMgr extends AssetMgrBase {
 			throw restErrorUtil.create403RESTException("Permission Denied !");
 		}
 
-		if (searchCriteria != null && searchCriteria.getParamList() != null
+		if (searchCriteria == null) {
+			searchCriteria = new SearchCriteria();
+		}
+
+		if (searchCriteria.getParamList() != null
 				&& searchCriteria.getParamList().size() > 0) {
 			int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
 			java.util.Date temp = null;
@@ -1842,7 +1859,12 @@ public class AssetMgr extends AssetMgrBase {
 	@Override
 	public VXPolicyExportAuditList searchXPolicyExportAudits(
 			SearchCriteria searchCriteria) {
-        if (searchCriteria != null && searchCriteria.getParamList() != null
+
+		if (searchCriteria == null) {
+			searchCriteria = new SearchCriteria();
+		}
+
+        if (searchCriteria.getParamList() != null
                 && searchCriteria.getParamList().size() > 0) {
 
             int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();

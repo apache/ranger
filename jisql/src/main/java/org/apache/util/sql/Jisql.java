@@ -509,10 +509,7 @@ public class Jisql {
         	}
             if (statement != null) {
                 try {
-                    if (!statement.isClosed()) {
-                        statement.close();
-                    }
-
+                    statement.close();
                 } catch (SQLException sqle) {
                     // Ignore
                 }

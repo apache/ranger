@@ -100,8 +100,8 @@ public class RangerStormAuthorizer implements IAuthorizer {
 				String clientIp =  (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress() ) ;
 				RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName); 
 				RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
-				accessAllowed = result.getIsAllowed();
-				isAuditEnabled = result.getIsAudited();
+				accessAllowed = result != null && result.getIsAllowed();
+				isAuditEnabled = result != null && result.getIsAudited();
 				
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("User found from principal [" + userName + "], groups [" + StringUtil.toString(groups) + "]: verifying using [" + plugin.getClass().getName() + "], allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);

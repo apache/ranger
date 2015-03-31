@@ -113,8 +113,8 @@ public class RangerPDPKnoxFilter implements Filter {
 		
 		RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
 
-		boolean accessAllowed = result.getIsAllowed();
-		boolean audited = result.getIsAudited();
+		boolean accessAllowed = result != null && result.getIsAllowed();
+		boolean audited = result != null && result.getIsAudited();
 		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Access allowed: " + accessAllowed);

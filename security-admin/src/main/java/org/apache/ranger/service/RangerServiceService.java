@@ -112,7 +112,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 	}
 
 	public List<XXTrxLog> getTransactionLog(RangerService vObj, XXService mObj, int action) {
-		if (vObj == null && (action == 0 || action != OPERATION_UPDATE_CONTEXT)) {
+		if (vObj == null || action == 0 || (action == OPERATION_UPDATE_CONTEXT && mObj == null)) {
 			return null;
 		}
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
@@ -231,7 +231,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 					oldValue = jsonUtil.readMapToString(oldConfig);
 					value = jsonUtil.readMapToString(newConfig);
 				}
-				if (value.equalsIgnoreCase(oldValue)) {
+				if (oldValue == null || value.equalsIgnoreCase(oldValue)) {
 					return null;
 				}
 				xTrxLog.setPreviousValue(oldValue);

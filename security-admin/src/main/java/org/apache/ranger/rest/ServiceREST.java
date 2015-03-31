@@ -754,17 +754,19 @@ public class ServiceREST {
 	
 					for(String user : revokeRequest.getUsers()) {
 						RangerPolicyItem policyItem = getPolicyItemForUser(policy, user);
-						
-						if(policyItem != null) {
-							if(removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
+
+						if (policyItem != null) {
+							if (removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
 								policyUpdated = true;
 							}
-						}
-	
-						if(revokeRequest.getDelegateAdmin()) { // remove delegate?
-							if(policyItem.getDelegateAdmin()) {
-								policyItem.setDelegateAdmin(Boolean.FALSE);
-								policyUpdated = true;
+
+
+							if (revokeRequest.getDelegateAdmin()) { // remove delegate?
+								if (policyItem.getDelegateAdmin()) {
+									policyItem.setDelegateAdmin(Boolean.FALSE);
+									policyUpdated = true;
+								}
+
 							}
 						}
 					}
@@ -1001,7 +1003,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count=" + ret.size());
 		}
 
 		return ret;
@@ -1032,7 +1034,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count=" + ret.size());
 		}
 
 		return ret;
@@ -1439,7 +1441,7 @@ public class ServiceREST {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count="
-					+ (ret == null ? 0 : ret.getListSize()));
+					+ ret.getListSize());
 		}
 		return ret;
 	}
@@ -1471,7 +1473,7 @@ public class ServiceREST {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count="
-					+ (ret == null ? 0 : ret.getListSize()));
+					+ ret.getListSize());
 		}
 
 		return ret;

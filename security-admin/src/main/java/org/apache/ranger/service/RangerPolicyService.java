@@ -225,7 +225,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	}
 
 	public List<XXTrxLog> getTransactionLog(RangerPolicy vObj, XXPolicy mObj, int action) {
-		if (vObj == null && (action == 0 || action != OPERATION_UPDATE_CONTEXT)) {
+		if (vObj == null || action == 0 || (action == OPERATION_UPDATE_CONTEXT && mObj == null)) {
 			return null;
 		}
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
@@ -320,11 +320,15 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				}
 				RangerPolicy oldPolicy = populateViewBean(mObj);
 				if (fieldName.equalsIgnoreCase(POLICY_RESOURCE_CLASS_FIELD_NAME)) {
-					oldValue = processPolicyResourcesForTrxLog(oldPolicy.getResources());
+					if (oldPolicy != null) {
+						oldValue = processPolicyResourcesForTrxLog(oldPolicy.getResources());
+					}
 				} else if (fieldName.equalsIgnoreCase(POLICY_ITEM_CLASS_FIELD_NAME)) {
-					oldValue = processPolicyItemsForTrxLog(oldPolicy.getPolicyItems());
+					if (oldPolicy != null) {
+						oldValue = processPolicyItemsForTrxLog(oldPolicy.getPolicyItems());
+					}
 				}
-				if (value.equalsIgnoreCase(oldValue)) {
+				if (oldValue == null || value.equalsIgnoreCase(oldValue)) {
 					return null;
 				} else if (fieldName.equalsIgnoreCase(POLICY_RESOURCE_CLASS_FIELD_NAME)) {
 					// Compare old and new resources
@@ -428,8 +432,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				return false;
 			}
 			
-			for (String key : obj.keySet()) {
-				if (!obj.get(key).equals(oldObj.get(key))) {
+			for (Map.Entry<String, RangerPolicyResource> entry : obj.entrySet()) {
+				if (!entry.getValue().equals(oldObj.get(entry.getKey()))) {
 					return false;
 				}
 			}

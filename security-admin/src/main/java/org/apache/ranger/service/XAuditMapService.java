@@ -144,8 +144,8 @@ public class XAuditMapService extends
 	@Override
 	protected XXAuditMap mapViewToEntityBean(VXAuditMap vObj, XXAuditMap mObj, int OPERATION_CONTEXT) {
 		if(vObj!=null && mObj!=null){
-            super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
-            XXPortalUser xXPortalUser=null;
+			super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
+			XXPortalUser xXPortalUser=null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
 					xXPortalUser=rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
@@ -168,8 +168,8 @@ public class XAuditMapService extends
 
 	@Override
 	protected VXAuditMap mapEntityToViewBean(VXAuditMap vObj, XXAuditMap mObj) {
-		super.mapEntityToViewBean(vObj, mObj);
 		if(mObj!=null && vObj!=null){
+			super.mapEntityToViewBean(vObj, mObj);
 			XXPortalUser xXPortalUser=null;
 			if(stringUtil.isEmpty(vObj.getOwner())){
 				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());	

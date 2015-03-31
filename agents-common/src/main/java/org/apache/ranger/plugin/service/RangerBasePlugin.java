@@ -87,7 +87,7 @@ public class RangerBasePlugin {
 		init(policyEngine);
 	}
 
-	public synchronized void init(RangerPolicyEngine policyEngine) {
+	public void init(RangerPolicyEngine policyEngine) {
 		cleanup();
 
 		RangerConfiguration.getInstance().addResourcesForServiceType(serviceType);
@@ -106,7 +106,7 @@ public class RangerBasePlugin {
 		this.policyEngine = policyEngine;
 	}
 
-	public synchronized void cleanup() {
+	public void cleanup() {
 		PolicyRefresher refresher = this.refresher;
 
 		this.serviceName  = null;

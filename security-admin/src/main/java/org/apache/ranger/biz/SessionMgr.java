@@ -273,7 +273,10 @@ public class SessionMgr {
 	 */
 	public VXAuthSessionList searchAuthSessions(SearchCriteria searchCriteria) {
 
-		if (searchCriteria != null && searchCriteria.getParamList() != null
+		if (searchCriteria == null) {
+			searchCriteria = new SearchCriteria();
+		}
+		if (searchCriteria.getParamList() != null
 				&& searchCriteria.getParamList().size() > 0) {	
 			
 			int clientTimeOffsetInMinute=RestUtil.getClientTimeOffset();
