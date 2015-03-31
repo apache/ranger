@@ -7,14 +7,14 @@
 		{
 			"name":"collection",
 			"type":"string",
-			"level":1,
+			"level":10,
 			"parent":"",
 			"mandatory":true,
 			"lookupSupported":true,
 			"recursiveSupported":false,
 			"excludesSupported":true,
 			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions":"wildCard=true;ignoreCase=true",
+			"matcherOptions":{ "wildCard":true, "ignoreCase":true, "pathSeparatorChar":"." },
 			"validationRegEx":"",
 			"validationMessage":"",
 			"uiHint":"",
@@ -24,14 +24,14 @@
 		{
 			"name":"field",
 			"type":"string",
-			"level":2,
+			"level":20,
 			"parent":"collection",
 			"mandatory":true,
 			"lookupSupported":true,
 			"recursiveSupported":false,
 			"excludesSupported":true,
 			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions":"wildCard=true;ignoreCase=true",
+			"matcherOptions":{ "wildCard":true, "ignoreCase":true, "pathSeparatorChar":"." },
 			"validationRegEx":"",
 			"validationMessage":"",
 			"uiHint":"",
@@ -54,8 +54,8 @@
 			"label":"Query"
 		},
 		{
-			"name":"admin",
-			"label":"Admin"
+			"name":"solr_admin",
+			"label":"Solr Admin"
 		}
 		
 	],
