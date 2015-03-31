@@ -91,26 +91,21 @@ public class TestPolicyEngine {
 	}
 
 	private void runTests(InputStreamReader reader, String testName) {
-		try {
-			PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
+		PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
 
-			assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
+		assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
 
-			policyEngine.setPolicies(testCase.serviceName, testCase.serviceDef, testCase.policies);
+		policyEngine.setPolicies(testCase.serviceName, testCase.serviceDef, testCase.policies);
 
-			for(TestData test : testCase.tests) {
-				RangerAccessResult expected = test.result;
-				RangerAccessResult result   = policyEngine.isAccessAllowed(test.request, null);
+		for(TestData test : testCase.tests) {
+			RangerAccessResult expected = test.result;
+			RangerAccessResult result   = policyEngine.isAccessAllowed(test.request, null);
 
-				assertNotNull(test.name, result);
-				assertEquals(test.name, expected.getIsAllowed(), result.getIsAllowed());
-				assertEquals(test.name, expected.getIsAudited(), result.getIsAudited());
-				assertEquals(test.name, expected.getPolicyId(), result.getPolicyId());
-			}
-		} catch(Throwable excp) {
-			excp.printStackTrace();
+			assertNotNull("result was null! - " + test.name, result);
+			assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
+			assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
+			assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
 		}
-		
 	}
 
 	static class PolicyEngineTestCase {

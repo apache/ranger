@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +43,6 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 	private RangerResourceDef    resourceDef    = null;
 	private RangerPolicyResource policyResource = null;
-	private String               optionsString  = null;
 	private Map<String, String>  options        = null;
 
 	protected boolean      optIgnoreCase = false;
@@ -55,50 +53,18 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	protected boolean      isMatchAny       = false;
 
 	@Override
-	public void initOptions(String optionsString) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractResourceMatcher.initOptions(" + optionsString + ")");
-		}
-
-		this.optionsString  = optionsString;
-
-		options = new HashMap<String, String>();
-
-		if(optionsString != null) {
-			for(String optionString : optionsString.split(OPTIONS_SEP)) {
-				if(StringUtils.isEmpty(optionString)) {
-					continue;
-				}
-
-				String[] nvArr = optionString.split(OPTION_NV_SEP);
-
-				String name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
-				String value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
-
-				if(StringUtils.isEmpty(name)) {
-					continue;
-				}
-
-				options.put(name, value);
-			}
-		}
-
-		optIgnoreCase = getBooleanOption(OPTION_IGNORE_CASE, true);
-		optWildCard   = getBooleanOption(OPTION_WILD_CARD, true);
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractResourceMatcher.initOptions(" + optionsString + ")");
-		}
-	}
-
-	@Override
 	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ")");
 		}
 
+
+		this.options        = resourceDef.getMatcherOptions();
 		this.resourceDef    = resourceDef;
 		this.policyResource = policyResource;
+
+		optIgnoreCase = getBooleanOption(OPTION_IGNORE_CASE, true);
+		optWildCard   = getBooleanOption(OPTION_WILD_CARD, true);
 
 		policyValues     = new ArrayList<String>();
 		policyIsExcludes = policyResource == null ? false : policyResource.getIsExcludes();
@@ -138,11 +104,6 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	@Override
 	public RangerPolicyResource getPolicyResource() {
 		return policyResource;
-	}
-
-	@Override
-	public String getOptionsString() {
-		return optionsString;
 	}
 
 	@Override
@@ -243,7 +204,6 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			policyResource.toString(sb);
 		}
 		sb.append("} ");
-		sb.append("optionsString={").append(optionsString).append("} ");
 		sb.append("optIgnoreCase={").append(optIgnoreCase).append("} ");
 		sb.append("optWildCard={").append(optWildCard).append("} ");
 
