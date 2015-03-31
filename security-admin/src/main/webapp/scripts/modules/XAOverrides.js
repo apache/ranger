@@ -25,6 +25,20 @@
 	
 	require('backgrid');
 	require('jquery-toggles');
+
+	window.onbeforeunload = function(e) {
+		if (window._preventNavigation) {
+			var message = 'Are you sure you want to refresh the page? Unsaved changes will be lost.';
+			if (typeof e == 'undefined') {
+				e = window.event;
+			}
+			if (e) {
+				e.returnValue = message;
+			}
+			return message;
+		}
+	};
+	
 	/**
 	HtmlCell renders any html code
 

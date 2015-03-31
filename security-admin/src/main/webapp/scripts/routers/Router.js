@@ -19,9 +19,12 @@
 
  define([
 	'backbone',
-	'backbone.marionette'
+	'backbone.marionette',
+	'utils/XALangSupport',
+	'models/VAppState',
+	'utils/XAUtils'
 ],
-function(Backbone){
+function(Backbone, Marionette, localization, MAppState, XAUtil){
     'use strict';
 
 	return Backbone.Marionette.AppRouter.extend({
@@ -58,6 +61,43 @@ function(Backbone){
 			/*************** ERROR PAGE ****************************************/
 			"*actions"					: "pageNotFoundAction"
 			
+		},
+		route: function(route, name, callback) {
+			var router = this,
+				callbackArgs;
+			if (!callback) callback = this[name];
+			var proceedWithCallback = function() {
+				var currentFragment = Backbone.history.getFragment();
+				router.trigger('beforeroute', name);
+				callback.apply(router, callbackArgs);
+				MAppState.set('previousFragment', currentFragment);
+			};
+
+			var overrideCallback = function() {
+				callbackArgs = arguments;
+				if (window._preventNavigation) {
+					bootbox.dialog(window._preventNavigationMsg, [{
+						"label": "Stay on this page!",
+						"class": "btn-success btn-small",
+						"callback": function() {
+							router.navigate(MAppState.get('previousFragment'), {
+								trigger: false
+							});
+						}
+					}, {
+						"label": "Leave this page",
+						"class": "btn-danger btn-small",
+						"callback": function() {
+							XAUtil.allowNavigation();
+							proceedWithCallback();
+						}
+					}]);
+
+				} else {
+					proceedWithCallback();
+				}
+			};
+			return Backbone.Router.prototype.route.call(this, route, name, overrideCallback);
 		}
 	});
 });

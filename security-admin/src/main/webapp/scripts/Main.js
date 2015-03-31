@@ -37,7 +37,8 @@ function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides, 
 		controller: controller
 	});
 	App.appRouter.on('beforeroute', function(event) {
-		$(App.rContent.$el).html(loadingHTML);
+		if(!window._preventNavigation)
+			$(App.rContent.$el).html(loadingHTML);
 	});
 	// Start Marionette Application in desktop mode (default)
 	Backbone.fetchCache._cache = {};

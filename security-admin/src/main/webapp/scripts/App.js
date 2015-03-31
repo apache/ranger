@@ -44,6 +44,7 @@ define(function(require) {
 	/* Add initializers here */
 	App.addInitializer( function () {
 	//	Communicator.mediator.trigger("Application:Start");
+        window._preventNavigation = false;
         Backbone.history.start();
 	});
 

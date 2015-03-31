@@ -217,6 +217,8 @@ define(function(require) {
 				save						: 'Save',
 				cancel 						: 'Cancel',
 				addMore						: 'Add More..',
+				stayOnPage					: 'Stay on this page',
+				leavePage					: 'Leave this page',
 				setVisibility               : 'Set Visibility' 
 				
 			},

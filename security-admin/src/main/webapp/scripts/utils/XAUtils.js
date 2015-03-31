@@ -260,9 +260,11 @@ define(function(require) {
 	 * @param {String} msg - The msg to show
 	 * @param {function} callback - The callback to call
 	 */
-	XAUtils.preventNavigation = function(msg, $form, callback) {
-		$("body a, i[class^='icon-'],allowNav").on("click.blockNavigation", function(e) {
-			XAUtils.preventNavigationHandler(e, msg, $form, callback);
+	XAUtils.preventNavigation = function(msg, $form) {
+		window._preventNavigation = true;
+		window._preventNavigationMsg = msg;
+		$("body a, i[class^='icon-']").on("click.blockNavigation", function(e) {
+			XAUtils.preventNavigationHandler.call(this, e, msg, $form);
 		});
 	};
 
@@ -270,22 +272,32 @@ define(function(require) {
 	 * remove the block of preventNavigation
 	 */
 	XAUtils.allowNavigation = function() {
+		window._preventNavigation = false;
+		window._preventNavigationMsg = undefined;
 		$("body a, i[class^='icon-']").off('click.blockNavigation');
 	};
 
-	XAUtils.preventNavigationHandler = function(e, msg,$form,callback) {
+	XAUtils.preventNavigationHandler = function(e, msg, $form) {
 		var formChanged = false;
-		if(!_.isUndefined($form))
+		var target = this;
+		if (!_.isUndefined($form))
 			formChanged = $form.find('.dirtyField').length > 0 ? true : false;
 		if (!$(e.currentTarget).hasClass("_allowNav") && formChanged) {
-			
+
 			e.preventDefault();
 			e.stopImmediatePropagation();
-			XAUtils.alertPopup({
-				msg : msg,
-				title : "Warning",
-				callback : callback
-			});
+			bootbox.dialog(msg, [{
+				"label": localization.tt('btn.stayOnPage'),
+				"class": "btn-success btn-small",
+				"callback": function() {}
+			}, {
+				"label": localization.tt('btn.leavePage'),
+				"class": "btn-danger btn-small",
+				"callback": function() {
+					XAUtils.allowNavigation();
+					target.click();
+				}
+			}]);
 			return false;
 		}
 	};
