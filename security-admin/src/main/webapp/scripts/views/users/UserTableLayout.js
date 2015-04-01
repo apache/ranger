@@ -57,7 +57,9 @@ define(function(require){
     		visualSearch: '.visual_search',
     		btnShowMore : '[data-id="showMore"]',
 			btnShowLess : '[data-id="showLess"]',
-    		btnSave		: '[data-id="save"]'
+    		btnSave		: '[data-id="save"]',
+    		btnShowHide		: '[data-action="showHide"]',
+    		visibilityDropdown : '[data-id="visibilityDropdown"]'
     	},
 
 		/** ui events hash */
@@ -67,6 +69,8 @@ define(function(require){
 			events['click ' + this.ui.btnShowMore]  = 'onShowMore';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			events['click ' + this.ui.btnSave]  = 'onSave';
+			events['click ' + this.ui.visibilityDropdown +' li a']  = 'onVisibilityChange';
+			
 			return events;
 		},
 
@@ -93,16 +97,8 @@ define(function(require){
 		/** all events binding here */
 		bindEvents : function(){
 			var that = this;
-            this.listenTo(this.collection,"backgrid:selected", this.onModelChange);
-            this.listenTo(this.groupList,"backgrid:selected", this.onModelChange);
 			/*this.listenTo(this.model, "change:foo", this.modelChanged, this);*/
 			/*this.listenTo(communicator.vent,'someView:someEvent', this.someEventHandler, this)'*/
-			this.collection.on('change', function(){
-				that.preventNavigation();
-			});
-			this.groupList.on('change', function(){
-				that.preventNavigation();
-			});
 		},
 
 		/** on render callback */
@@ -113,33 +109,6 @@ define(function(require){
 			else
 				this.renderUserTab();
 			this.addVisualSearch();
-		},
-
-		preventNavigation : function(){
-            XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavUserList'),this.rTableList.$el);
-			this.rTableList.$el.find('table').addClass('dirtyField');
-			//this.ui.btnSave.removeClass('disabled');
-		},
-
-		allowNavigation : function(){
-			XAUtil.allowNavigation();
-			this.rTableList.$el.find('table').removeClass('dirtyField');
-			//this.ui.btnSave.addClass('disabled');
-		},
-
-		onModelChange : function(model, selected){
-			/*var that = this;
-			if(! (model.id in that.chgFlags)){
-				that.chgFlags[model.id] = true;
-			} else {
-                that.chgFlags[model.id] ^= true;
-            }
-
-			if (_.some(that.chgFlags)){
-                that.preventNavigation();
-			} else {
-                that.allowNavigation();
-			}*/
 		},
 		onTabChange : function(e){
 			var that = this;
@@ -155,14 +124,18 @@ define(function(require){
 			}
 			$(this.rUserDetail.el).hide();
 		},
-		onSave : function(e){
+		onVisibilityChange : function(e){
 			var that = this;
+			var status = $(e.currentTarget).attr('data-id') == 'visible' ? true : false;
 			var updateReq = {};
 			var collection = this.showUsers ? this.collection : this.groupList;
 
-			collection.changed_models().each(function(m){
-				m.toServer();
-				updateReq[m.get('id')] = m.get('isVisible');
+			_.each(collection.selected, function(m){
+				if( m.get('isVisible') != status ){
+					m.set('isVisible', status);
+					m.toServer();
+					updateReq[m.get('id')] = m.get('isVisible');
+				}
 			});
 
 			var clearCache = function(coll){
@@ -178,7 +151,6 @@ define(function(require){
 				collection.setUsersVisibility(updateReq, {
 					success : function(){
 						that.chgFlags = [];
-						that.allowNavigation();
 						clearCache(collection);
 					}
 				});
@@ -186,18 +158,17 @@ define(function(require){
 			    collection.setGroupsVisibility(updateReq, {
 					success : function(){
 						that.chgFlags = [];
-						that.allowNavigation();
 						clearCache(collection);
 					}
                 });
 			}
-
 		},
 		renderUserTab : function(){
 			var that = this;
 			if(_.isUndefined(this.collection)){
 				this.collection = new VXUserList();
 			}	
+			this.collection.selectNone();
 			this.renderUserListTable();
 			this.collection.fetch({
 				cache:true
@@ -214,6 +185,7 @@ define(function(require){
 			if(_.isUndefined(this.groupList)){
 				this.groupList = new VXGroupList();
 			}
+			this.groupList.selectNone();
 			this.renderGroupListTable();
 			this.groupList.fetch({
 				cache:true
@@ -228,61 +200,13 @@ define(function(require){
 		renderUserListTable : function(){
 			var that = this;
 			var tableRow = Backgrid.Row.extend({
-
 				render: function () {
     				tableRow.__super__.render.apply(this, arguments);
-    				if (this.model.get("isVisible") == 0) {
-      					this.el.classList.add("tr-inactive");
+    				if(!this.model.get('isVisible')){
+    					this.$el.addClass('tr-inactive');
     				}
     				return this;
-				},				
-				events: {
-					'change' : 'onClickCheckbox'
 				},
-				onClickCheckbox: function(e) {
-					if (this.model.get("isVisible") == 0) {
-						this.el.classList.add("tr-inactive");						
-					} else {
-						this.el.classList.remove("tr-inactive");
-					};
-				},
-				/*
-				initialize : function(){
-					var that = this;
-					var args = Array.prototype.slice.apply(arguments);
-					Backgrid.Row.prototype.initialize.apply(this, args);
-					this.listenTo(this.model, 'model:highlightBackgridRow', function(){
-						that.$el.addClass("alert");
-						$("html, body").animate({scrollTop: that.$el.position().top},"linear");
-						setTimeout(function () {
-							that.$el.removeClass("alert");
-						}, 1500);
-					}, this);
-				},
-				onClick: function (e) {
-				   if($(e.target).is('a'))
-					   return;
-				   this.$el.parent('tbody').find('tr').removeClass('tr-active');
-				   this.$el.toggleClass('tr-active');
-				   var groupList = new VXGroupList();
-				   var userModel = this.model;
-				   groupList.getGroupsForUser(this.model.id,{
-					  cache : false, 
-					  success :function(msResponse){
-						  var groupColl = msResponse.vXGroups ? msResponse.vXGroups : null; 
-						  if(that.rUserDetail){
-								$(that.rUserDetail.el).hide();
-								$(that.rUserDetail.el).html(new vUserInfo({
-									  model : userModel,
-									  groupList : new VXGroupList(groupColl)
-								  }).render().$el).slideDown();
-							}
-					  },
-					  error : function(){
-						  console.log('error..');
-					  }
-				   });
-				} */
 			});
 			this.rTableList.show(new XATableLayout({
 				columns: this.getColumns(),
@@ -300,7 +224,7 @@ define(function(require){
 		getColumns : function(){
 			var cols = {
 				
-				isVisible : {
+				select : {
 					label : localization.tt("lbl.isVisible"),
 					//cell : Backgrid.SelectCell.extend({className: 'cellWidth-1'}),
 					cell: "select-row",
@@ -374,41 +298,26 @@ define(function(require){
 							return '--';
 						}
 					}),
-					/*cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
-					label : localization.tt("lbl.groups"),
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							var html = '';
-							if(!_.isUndefined(rawValue)){
-								_.each(rawValue,function(name){
-									html += '<span class="label label-info">'+name+'</span>';
-								});
-								return html;
-							}else
-								return '--';
-						}
-					}),*/
 					editable : false,
 					sortable : false
 				},
-			/*	status : {
-					label : localization.tt("lbl.status"),
+				isVisible : {
+					label	: localization.tt("lbl.visibility"),
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							var status = model.has('status') ? 'Active' : 'Deactive';
-							if(model.has('status'))
-								return '<span class="label label-success">' +status + '</span>';
-							else
-								return '<span class="label label-important">' +status + '</span>';
-						//	return model.has('status') ? 'On' : 'Off';
+							if(!_.isUndefined(rawValue)){
+								if(rawValue)
+									return '<span class="label label-success">'+XAEnums.VisibilityStatus.STATUS_VISIBLE.label+'</span>';
+								else
+									return '<span class="label label-green">'+XAEnums.VisibilityStatus.STATUS_HIDDEN.label+'</span>';
+							}else
+								return '--';
 						}
 					}),
-					click : false,
-					drag : false,
 					editable:false,
-					sortable:false,
-				},*/
+					sortable:false
+				},
 				
 			};
 			return this.collection.constructor.getTableCols(cols, this.collection);
@@ -416,55 +325,22 @@ define(function(require){
 		
 		renderGroupListTable : function(){
 			var that = this;
-			/*var tableRow = Backgrid.Row.extend({
-				events: {
-					'click' : 'onClick'
+			
+			var tableRow = Backgrid.Row.extend({
+				render: function () {
+    				tableRow.__super__.render.apply(this, arguments);
+    				if(!this.model.get('isVisible')){
+    					this.$el.addClass('tr-inactive');
+    				}
+    				return this;
 				},
-				initialize : function(){
-					var that = this;
-					var args = Array.prototype.slice.apply(arguments);
-					Backgrid.Row.prototype.initialize.apply(this, args);
-					this.listenTo(this.model, 'model:highlightBackgridRow1', function(){
-						that.$el.addClass("alert");
-						$("html, body").animate({scrollTop: that.$el.position().top},"linear");
-						setTimeout(function () {
-							that.$el.removeClass("alert");
-						}, 1500);
-					}, this);
-				},
-				onClick: function (e) {
-				   if($(e.target).is('a'))
-					   return;
-				   this.$el.parent('tbody').find('tr').removeClass('tr-active');
-				   this.$el.toggleClass('tr-active');	
-				   var userList = new VXUserList();
-				   var gid = this.model.id;
-				   var groupModel = new VXGroup({id:gid});
-				   groupModel.fetch().done(function(msResponse){
-					   userList.getUsersOfGroup(gid,{
-						   success :function(msResponse){
-							   var userColl = msResponse.vXUsers ? msResponse.vXUsers : null; 
-							   if(that.rUserDetail){
-								   $(that.rUserDetail.el).hide();
-								   $(that.rUserDetail.el).html(new vUserInfo({
-									   model 	: groupModel,
-									   userList: new VXUserList(userColl)
-								   }).render().$el).slideDown(); 
-							   }
-						   },
-						   error : function(){
-							   console.log('error..');
-						   }
-					   });
-				   });
-				}
-			});*/
+			});
 			this.rTableList.show(new XATableLayout({
 				columns: this.getGroupColumns(),
 				collection: this.groupList,
 				includeFilter : false,
 				gridOpts : {
-//					row: tableRow,
+					row: tableRow,
 					header : XABackgrid,
 					emptyText : 'No Groups found!'
 				}
@@ -475,7 +351,7 @@ define(function(require){
 		getGroupColumns : function(){
 			var cols = {
 				
-                isVisible : {
+                select : {
 					label : localization.tt("lbl.isVisible"),
 					//cell : Backgrid.SelectCell.extend({className: 'cellWidth-1'}),
 					cell: "select-row",
@@ -514,23 +390,23 @@ define(function(require){
 					editable:false,
 					sortable:false,
 				},
-				/*status : {
-					label : localization.tt("lbl.status"),
+				isVisible : {
+					label	: localization.tt("lbl.visibility"),
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							var status = model.has('status') ? 'Active' : 'Deactive';
-							if(model.has('status'))
-								return '<span class="label label-success">' +status + '</span>';
-							else
-								return '<span class="label label-important">' +status + '</span>';
+							if(!_.isUndefined(rawValue)){
+								if(rawValue)
+									return '<span class="label label-success">'+XAEnums.VisibilityStatus.STATUS_VISIBLE.label+'</span>';
+								else
+									return '<span class="label label-green">'+XAEnums.VisibilityStatus.STATUS_HIDDEN.label+'</span>';
+							}else
+								return '--';
 						}
 					}),
-					click : false,
-					drag : false,
 					editable:false,
-					sortable:false,
-				}, */
+					sortable:false
+				}
 			};
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
 		},
@@ -548,8 +424,6 @@ define(function(require){
 				                   	{text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus)},
 				                   {text : "User Source", label :"userSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.UserTypes)},
 								];
-				                  // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-				                  // {text : 'Today',label :'today'}];
 			}else{
 				placeholder = localization.tt('h.searchForYourGroup');
 				coll = this.groupList;
@@ -557,9 +431,6 @@ define(function(require){
 				serverAttrName  = [{text : "Group Name", label :"name"},
 				                   {text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus)},
 				                   {text : "Group Source", label :"groupSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.GroupTypes)},];
-				
-				                   //{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-				                   //{text : 'Today',label :'today'}];
 
 			}
 			var query = (!_.isUndefined(coll.VSQuery)) ? coll.VSQuery : '';

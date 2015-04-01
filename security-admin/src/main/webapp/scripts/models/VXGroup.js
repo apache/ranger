@@ -35,6 +35,8 @@ define(function(require){
 		 */
 		initialize: function() {
 			this.modelName = 'VXGroup';
+			var selectable = new Backbone.Picky.Selectable(this);
+			_.extend(this, selectable);
 			this.bindErrorEvents();
 			this.toView();
 		},

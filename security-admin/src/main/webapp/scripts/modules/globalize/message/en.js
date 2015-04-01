@@ -142,6 +142,7 @@ define(function(require) {
 				accountStatus					: 'Account Status',
 				ActiveStatus_STATUS_ENABLED 	: 'Enabled',
 				ActiveStatus_STATUS_DISABLED 	: 'Disabled',
+				visibility						: 'Visibility',
 				VisibilityStatus_IS_VISIBLE     : 'Visible',
 				VisibilityStatus_IS_HIDDEN      : 'Hidden',
 				commonNameForCertificate 		: 'Common Name For Certificate',

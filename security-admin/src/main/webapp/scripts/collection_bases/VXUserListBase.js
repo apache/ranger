@@ -40,6 +40,8 @@ define(function(require){
 		initialize : function() {
 			this.modelName = 'VXUser';
 			this.modelAttrName = 'vXUsers';
+			var multiSelect = new Backbone.Picky.MultiSelect(this);
+			_.extend(this, multiSelect);
 			this.bindErrorEvents();
             this._changes = { };
 			this.on('change', this._onChange);

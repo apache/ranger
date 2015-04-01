@@ -14,14 +14,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<!-- <ul class="nav nav-tabs">
-  <li class="active" data-js="users">
-    <a data-toggle="tab" href="#users">Users</a>
-  </li>
-  <li data="groups" data-js="groups">
-  	<a data-toggle="tab" href="#groups">Groups</a>
-  </li>
-</ul> -->
   <ul class="nav nav-tabs tabs clearfix">
     <li data="groups" data-js="groups"> 
       <a data-toggle="tab" href="#groups">Groups</a> 
@@ -31,13 +23,8 @@
     </li>
   </ul>
 
-
-
-
 <h3 class="wrap-header bold"> {{tt 'lbl.userListing'}} </h3>
-
 <div class="wrap non-collapsible m-height ">
-
 	<div>
 		<div class="span9">
 			<div class="visual_search"></div>
@@ -45,14 +32,19 @@
 		<div class="clearfix">
 			<a href="#!/user/create" class="btn btn-primary btn-right" type="button" data-id="addNewUser"> {{tt 'lbl.addNewUser'}} </a>
 			<a href="#!/group/create" class="btn btn-primary btn-right" type="button" data-id="addNewGroup" style="display:none;"> {{tt 'lbl.addNewGroup'}} </a>
-            <a href="javascript:void(0)" class="_allowNav btn btn-primary btn-right" type="button" data-id="save" style="display:block;" > {{tt 'btn.setVisibility'}} </a>
+      <div class="btn-group btn-right">
+        <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+          {{tt 'btn.setVisibility'}}
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu" data-id="visibilityDropdown">
+          <li><a href="javascript:void(0);" data-id="visible">{{tt 'lbl.VisibilityStatus_IS_VISIBLE'}}</a></li>
+          <li><a href="javascript:void(0);" data-id="hidden">{{tt 'lbl.VisibilityStatus_IS_HIDDEN'}}</a></li>
+        </ul>
+      </div>
 		</div>
 		<div data-id="r_tableList" class="clickable">
           <b class="_prevNav"></b>
 		</div>
 	</div>
-
-	<!-- <div class="span3">
-		<div id="userDetail"></div>
-	</div> -->
 </div>
