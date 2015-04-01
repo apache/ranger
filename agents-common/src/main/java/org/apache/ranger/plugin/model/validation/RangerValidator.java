@@ -42,6 +42,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.RangerObjectFactory;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 public abstract class RangerValidator {
@@ -49,6 +50,7 @@ public abstract class RangerValidator {
 	private static final Log LOG = LogFactory.getLog(RangerValidator.class);
 
 	ServiceStore _store;
+	RangerObjectFactory _factory = new RangerObjectFactory();
 
 	public enum Action {
 		CREATE, UPDATE, DELETE;
@@ -242,15 +244,17 @@ public abstract class RangerValidator {
 		return result;
 	}
 
-	List<RangerPolicy> getPolicies(final String policyName, final String serviceName) {
+	List<RangerPolicy> getPolicies(final String serviceName, final String policyName) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerValidator.getPolicies(" + policyName + ", " + serviceName + ")");
+			LOG.debug("==> RangerValidator.getPolicies(" + serviceName + ", " + policyName + ")");
 		}
 
 		List<RangerPolicy> policies = null;
 		try {
 			SearchFilter filter = new SearchFilter();
-			filter.setParam(SearchFilter.POLICY_NAME, policyName);
+			if (StringUtils.isNotBlank(policyName)) {
+				filter.setParam(SearchFilter.POLICY_NAME, policyName);
+			}
 			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
 			
 			policies = _store.getPolicies(filter);
@@ -259,7 +263,8 @@ public abstract class RangerValidator {
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerValidator.getPolicies(" + policyName + ", " + serviceName + "): " + policies);
+			int count = policies == null ? 0 : policies.size();
+			LOG.debug("<== RangerValidator.getPolicies(" + serviceName + ", " + policyName + "): count[" + count + "], " + policies);
 		}
 		return policies;
 	}

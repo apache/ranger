@@ -3,10 +3,12 @@ package org.apache.ranger.plugin.model.validation;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,13 +21,13 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
-import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.RangerObjectFactory;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -38,6 +40,8 @@ public class TestRangerPolicyValidator {
 		_policy = mock(RangerPolicy.class);
 		_validator = new RangerPolicyValidator(_store);
 		_serviceDef = mock(RangerServiceDef.class);
+		_factory = mock(RangerObjectFactory.class);
+		_validator._factory = _factory;
 	}
 	
 	final Action[] cu = new Action[] { Action.CREATE, Action.UPDATE };
@@ -179,7 +183,13 @@ public class TestRangerPolicyValidator {
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_good);
 		when(_policy.getResources()).thenReturn(resourceMap);
-
+		// let's add some other policies in the store for this service that have a different signature
+		SearchFilter resourceDuplicationFilter = new SearchFilter();
+		resourceDuplicationFilter.setParam(SearchFilter.SERVICE_NAME, "service-name");
+		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(new RangerPolicyResourceSignature("policy"));
+		when(_factory.createPolicyResourceSignature(existingPolicy)).thenReturn(new RangerPolicyResourceSignature("policy-name-2"));
+		// we are reusing the same policies collection here -- which is fine
+		when(_store.getPolicies(resourceDuplicationFilter)).thenReturn(existingPolicies);
 		for (Action action : cu) {
 			if (action == Action.CREATE) {
 				when(_policy.getId()).thenReturn(7L);
@@ -277,17 +287,35 @@ public class TestRangerPolicyValidator {
 		
 		// policy must have service name on it and it should be valid
 		when(_policy.getName()).thenReturn("policy-name");
-		when(_store.getServiceByName("service-name")).thenReturn(null);
-		when(_store.getServiceByName("another-service-name")).thenThrow(new Exception());
-
 		for (Action action : cu) {
-			when(_policy.getService()).thenReturn("service-name");
+			when(_policy.getService()).thenReturn(null);
 			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
 			_utils.checkFailureForMissingValue(_failures, "service");
+
+			when(_policy.getService()).thenReturn("");
+			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
+			_utils.checkFailureForMissingValue(_failures, "service");
+		}
+		
+		// service name should be valid
+		when(_store.getServiceByName("service-name")).thenReturn(null);
+		when(_store.getServiceByName("another-service-name")).thenThrow(new Exception());
+		for (Action action : cu) {
+			when(_policy.getService()).thenReturn(null);
+			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
+			_utils.checkFailureForMissingValue(_failures, "service");
+
+			when(_policy.getService()).thenReturn(null);
+			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
+			_utils.checkFailureForMissingValue(_failures, "service");
+
+			when(_policy.getService()).thenReturn("service-name");
+			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
+			_utils.checkFailureForSemanticError(_failures, "service");
 
 			when(_policy.getService()).thenReturn("another-service-name");
 			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForMissingValue(_failures, "service");
+			_utils.checkFailureForSemanticError(_failures, "service");
 		}
 		
 		// policy must contain at least one policy item
@@ -331,7 +359,8 @@ public class TestRangerPolicyValidator {
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDefData);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		when(_store.getServiceDefByName("service-type")).thenReturn(_serviceDef);
-		// one mandtory is missing (tbl) and one unknown resource is specified (extra), and values of option resource don't conform to validation pattern (col)
+
+		// one mandatory is missing (tbl) and one unknown resource is specified (extra), and values of option resource don't conform to validation pattern (col)
 		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);
 		when(_policy.getResources()).thenReturn(policyResources);
 		for (Action action : cu) {
@@ -342,6 +371,28 @@ public class TestRangerPolicyValidator {
 			_utils.checkFailureForSemanticError(_failures, "isRecursive", "db"); // for specifying it as true when def did not allow it
 			_utils.checkFailureForSemanticError(_failures, "isExcludes", "col"); // for specifying it as true when def did not allow it
 		}
+		
+		// create the right resource def but let it clash with another policy with matching resource-def
+		policyResources = _utils.createPolicyResourceMap(policyResourceMap_good);
+		when(_policy.getResources()).thenReturn(policyResources);
+		filter = new SearchFilter(); filter.setParam(SearchFilter.SERVICE_NAME, "service-name");
+		when(_store.getPolicies(filter)).thenReturn(existingPolicies);
+		// we are doctoring the factory to always return the same signature
+		when(_factory.createPolicyResourceSignature(anyPolicy())).thenReturn(new RangerPolicyResourceSignature("blah"));
+		for (Action action : cu) {
+			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
+			_utils.checkFailureForSemanticError(_failures, "resources");
+		}
+	}
+	
+	RangerPolicy anyPolicy() {
+		return argThat(new ArgumentMatcher<RangerPolicy>() {
+
+			@Override
+			public boolean matches(Object argument) {
+				return true;
+			}
+		});
 	}
 	
 	@Test
@@ -480,10 +531,11 @@ public class TestRangerPolicyValidator {
 	};
 	
 	private Object[][] policyResourceMap_happyPath = new Object[][] {
-			// { "resource-name", "isExcludes", "isRecursive" }
-			{ "db", null, true },    // null should be treated as false
-			{ "tbl", false, false }, // set to false where def is null and def is true  
-			{ "col", true, null}     // set to null where def is false
+			// { "resource-name", "values" "isExcludes", "isRecursive" }
+			// values collection is null as it isn't relevant to the part being tested with this data
+			{ "db", null, null, true },    // null should be treated as false
+			{ "tbl", null, false, false }, // set to false where def is null and def is true  
+			{ "col", null, true, null}     // set to null where def is false
 	};
 	
 	@Test
@@ -491,34 +543,73 @@ public class TestRangerPolicyValidator {
 		// passing null values effectively bypasses the filter
 		assertTrue(_validator.isValidResourceFlags(null, _failures, null, "a-service-def", "a-policy"));
 		// so does passing in empty collections
-		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap2(policyResourceMap_happyPath);
+		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_happyPath);
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs2(resourceDef_happyPath);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		assertTrue(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy"));
 	}
 
 	private Object[][] policyResourceMap_failures = new Object[][] {
-			// { "resource-name", "isExcludes", "isRecursive" }
-			{ "db", true, true },    // ok: def has true for both  
-			{ "tbl", true, null },   // excludes: def==false, policy==true  
-			{ "col", false, true }    // recursive: def==null (i.e. false), policy==true
+			// { "resource-name", "values" "isExcludes", "isRecursive" }
+			// values collection is null as it isn't relevant to the part being tested with this data
+			{ "db", null, true, true },    // ok: def has true for both  
+			{ "tbl", null, true, null },   // excludes: def==false, policy==true  
+			{ "col", null, false, true }    // recursive: def==null (i.e. false), policy==true
 	};
 	
 	@Test
 	public final void test_isValidResourceFlags_failures() {
 		// passing true when def says false/null
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs2(resourceDef_happyPath);
-		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap2(policyResourceMap_failures);
+		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_failures);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		assertFalse(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy"));
 		_utils.checkFailureForSemanticError(_failures, "isExcludes", "tbl");
 		_utils.checkFailureForSemanticError(_failures, "isRecursive", "col");
 	}
 
+	@Test
+	public final void test_isPolicyResourceUnique() throws Exception {
+
+		RangerPolicy[] policies = new RangerPolicy[3];
+		RangerPolicyResourceSignature[] signatures = new RangerPolicyResourceSignature[3];
+		for (int i = 0; i < 3; i++) {
+			RangerPolicy policy = mock(RangerPolicy.class);
+			when(policy.getId()).thenReturn((long)i);
+			policies[i] = policy;
+			signatures[i] = new RangerPolicyResourceSignature("policy" + i);
+			when(_factory.createPolicyResourceSignature(policies[i])).thenReturn(signatures[i]);
+		}
+		
+		SearchFilter searchFilter = new SearchFilter();
+		String serviceName = "aService";
+		searchFilter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+		
+		List<RangerPolicy> existingPolicies = Arrays.asList(new RangerPolicy[] { policies[1], policies[2]} );
+		// all existing policies have distinct signatures
+		for (Action action : cu) {
+			when(_store.getPolicies(searchFilter)).thenReturn(existingPolicies);
+			assertTrue("No duplication: " + action, _validator.isPolicyResourceUnique(policies[0], _failures, action, serviceName));
+		}
+	
+		// Failure if signature matches an existing policy
+		// We change the signature of 3rd policy to be same as that of 1st so duplication check will fail
+		for (Action action : cu) {
+			when(_factory.createPolicyResourceSignature(policies[2])).thenReturn(new RangerPolicyResourceSignature("policy0"));
+			when(_store.getPolicies(searchFilter)).thenReturn(existingPolicies);
+			assertFalse("Duplication:" + action, _validator.isPolicyResourceUnique(policies[0], _failures, action, serviceName));
+		}
+
+		// update should exclude itself! - let's change id of 3rd policy to be the same as the 1st one.
+		when(policies[2].getId()).thenReturn((long)0);
+		assertTrue("No duplication if updating policy", _validator.isPolicyResourceUnique(policies[0], _failures, Action.UPDATE, serviceName));
+	}
+	
 	private ValidationTestUtils _utils = new ValidationTestUtils();
 	private List<ValidationFailureDetails> _failures = new ArrayList<ValidationFailureDetails>();
 	private ServiceStore _store;
 	private RangerPolicy _policy;
 	private RangerPolicyValidator _validator;
 	private RangerServiceDef _serviceDef;
+	private RangerObjectFactory _factory;
 }

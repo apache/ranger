@@ -1,6 +1,7 @@
 package org.apache.ranger.plugin.model.validation;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -133,7 +134,7 @@ public class RangerPolicyValidator extends RangerValidator {
 					.build());
 				valid = false;
 			} else {
-				List<RangerPolicy> policies = getPolicies(policyName, serviceName);
+				List<RangerPolicy> policies = getPolicies(serviceName, policyName);
 				if (CollectionUtils.isNotEmpty(policies)) {
 					if (policies.size() > 1) {
 						failures.add(new ValidationFailureDetailsBuilder()
@@ -171,8 +172,8 @@ public class RangerPolicyValidator extends RangerValidator {
 				if (service == null) {
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("service")
-						.isMissing()
-						.becauseOf("service name was null/empty/blank")
+						.isSemanticallyIncorrect()
+						.becauseOf("service does not exist")
 						.build());
 					valid = false;
 				}
@@ -202,38 +203,107 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = isValidPolicyItems(policyItems, failures, serviceDef) && valid;
 				}
 			}
-			if (serviceDef != null) {
-				Set<String> mandatoryResources = getMandatoryResourceNames(serviceDef);
-				Set<String> policyResources = getPolicyResources(policy);
-				Set<String> missingResources = Sets.difference(mandatoryResources, policyResources);
-				if (!missingResources.isEmpty()) {
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("resources")
-						.subField(missingResources.iterator().next()) // we return any one parameter!
-						.isMissing()
-						.becauseOf("required resources[" + missingResources + "] are missing")
-						.build());
-					valid = false;
-				}
-				Set<String> allResource = getAllResourceNames(serviceDef);
-				Set<String> unknownResources = Sets.difference(policyResources, allResource);
-				if (!unknownResources.isEmpty()) {
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("resources")
-						.subField(unknownResources.iterator().next()) // we return any one parameter!
-						.isSemanticallyIncorrect()
-						.becauseOf("resource[" + unknownResources + "] is not valid for service-def[" + serviceDefName + "]")
-						.build());
-					valid = false;
-				}
-				Map<String, RangerPolicyResource> resourceMap = policy.getResources();
-				valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
-				valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDefName, policyName) && valid;
-			}
+			valid = isValidResources(policy, failures, action, serviceDef, serviceName) && valid;
 		}
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("<== RangerPolicyValidator.isValid(%s, %s, %s): %s", policy, action, failures, valid));
+		}
+		return valid;
+	}
+	
+	boolean isValidResources(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action, final RangerServiceDef serviceDef, final String serviceName) {
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerPolicyValidator.isValidResources(%s, %s, %s, %s, %s)", policy, failures, action, serviceDef, serviceName));
+		}
+		
+		boolean valid = true;
+		if (serviceDef != null) { // following checks can't be done meaningfully otherwise
+			valid = isValidResourceNames(policy, failures, serviceDef);
+			Map<String, RangerPolicyResource> resourceMap = policy.getResources();
+			valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
+			valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName()) && valid;
+		}
+		if (StringUtils.isNotBlank(serviceName)) { // resource uniqueness check cannot be done meaningfully otherwise
+			valid = isPolicyResourceUnique(policy, failures, action, serviceName) && valid;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidResources(%s, %s, %s, %s, %s): %s", policy, failures, action, serviceDef, serviceName, valid));
+		}
+		return valid;
+	}
+	
+	boolean isPolicyResourceUnique(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action, final String serviceName) {
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerPolicyValidator.isPolicyResourceUnique(%s, %s, %s, %s)", policy, failures, action, serviceName));
+		}
+
+		boolean foundDuplicate = false;
+		RangerPolicyResourceSignature signature = _factory.createPolicyResourceSignature(policy);
+		List<RangerPolicy> policies = getPolicies(serviceName, null);
+		if (CollectionUtils.isNotEmpty(policies)) {
+			Iterator<RangerPolicy> iterator = policies.iterator();
+			while (iterator.hasNext() && !foundDuplicate) {
+				RangerPolicy otherPolicy = iterator.next();
+				if (otherPolicy.getId().equals(policy.getId()) && action == Action.UPDATE) {
+					LOG.debug("isPolicyResourceUnique: Skipping self during update!");
+				} else {
+					RangerPolicyResourceSignature otherSignature = _factory.createPolicyResourceSignature(otherPolicy);
+					if (signature.equals(otherSignature)) {
+						foundDuplicate = true;
+						failures.add(new ValidationFailureDetailsBuilder()
+							.field("resources")
+							.isSemanticallyIncorrect()
+							.becauseOf("found another policy[" + policy.getName() + "] with matching resources[" + policy.getResources() + "]!")
+							.build());
+					}
+				}
+			}
+		}
+
+		boolean valid = !foundDuplicate;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerPolicyValidator.isPolicyResourceUnique(%s, %s, %s, %s): %s", policy, failures, action, serviceName, valid));
+		}
+		return valid;
+	}
+
+	boolean isValidResourceNames(final RangerPolicy policy, final List<ValidationFailureDetails> failures, final RangerServiceDef serviceDef) {
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerPolicyValidator.isValidResourceNames(%s, %s, %s)", policy, failures, serviceDef));
+		}
+
+		boolean valid = true;
+		Set<String> mandatoryResources = getMandatoryResourceNames(serviceDef);
+		Set<String> policyResources = getPolicyResources(policy);
+		Set<String> missingResources = Sets.difference(mandatoryResources, policyResources);
+		if (!missingResources.isEmpty()) {
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field("resources")
+				.subField(missingResources.iterator().next()) // we return any one parameter!
+				.isMissing()
+				.becauseOf("required resources[" + missingResources + "] are missing")
+				.build());
+			valid = false;
+		}
+		Set<String> allResource = getAllResourceNames(serviceDef);
+		Set<String> unknownResources = Sets.difference(policyResources, allResource);
+		if (!unknownResources.isEmpty()) {
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field("resources")
+				.subField(unknownResources.iterator().next()) // we return any one parameter!
+				.isSemanticallyIncorrect()
+				.becauseOf("resource[" + unknownResources + "] is not valid for service-def[" + serviceDef.getName() + "]")
+				.build());
+			valid = false;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceNames(%s, %s, %s): %s", policy, failures, serviceDef, valid));
 		}
 		return valid;
 	}

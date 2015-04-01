@@ -401,15 +401,29 @@ public class TestRangerValidator {
 		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
 		
 		when(_store.getPolicies(filter)).thenReturn(null);
-		List<RangerPolicy> result = _validator.getPolicies(policyName, serviceName);
+		List<RangerPolicy> result = _validator.getPolicies(serviceName, policyName);
 		// validate store is queried with both parameters
 		verify(_store).getPolicies(filter);
 		assertNull(result);
 
 		// returns null if store throws an exception
 		when(_store.getPolicies(filter)).thenThrow(new Exception());
-		result = _validator.getPolicies(policyName, serviceName);
+		result = _validator.getPolicies(serviceName, policyName);
 		assertNull(result);
+		
+		// does not shove policy into search filter if policy name passed in is "blank"
+		filter = new SearchFilter();
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		RangerPolicy policy = mock(RangerPolicy.class);
+		policies.add(policy);
+		
+		when(_store.getPolicies(filter)).thenReturn(policies);
+		for (String aName : new String[]{ null, "", "  "}) {
+			result = _validator.getPolicies(serviceName, aName);
+			assertTrue(result.iterator().next() == policy);
+		}
 	}
 	
 	@Test
