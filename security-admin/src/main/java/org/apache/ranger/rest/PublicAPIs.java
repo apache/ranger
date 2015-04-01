@@ -17,55 +17,30 @@
  * under the License.
  */
 
- package org.apache.ranger.rest;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
+package org.apache.ranger.rest;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.biz.AssetMgr;
-import org.apache.ranger.biz.ServiceDBStore;
-import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerConstants;
-import org.apache.ranger.common.RangerSearchUtil;
-import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.common.ServiceUtil;
-import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.*;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XAssetService;
-import org.apache.ranger.service.XPolicyService;
-import org.apache.ranger.service.XRepositoryService;
-import org.apache.ranger.service.XResourceService;
-import org.apache.ranger.view.VXAsset;
-import org.apache.ranger.view.VXLong;
-import org.apache.ranger.view.VXPolicy;
-import org.apache.ranger.view.VXPolicyList;
-import org.apache.ranger.view.VXRepository;
-import org.apache.ranger.view.VXRepositoryList;
-import org.apache.ranger.view.VXResource;
-import org.apache.ranger.view.VXResponse;
+import org.apache.ranger.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import java.util.ArrayList;
+import java.util.List;
 
 @Path("public")
 @Component
@@ -79,22 +54,7 @@ public class PublicAPIs {
 	RangerSearchUtil searchUtil;
 
 	@Autowired
-	AssetMgr assetMgr;
-
-	@Autowired
 	XAssetService xAssetService;
-
-	@Autowired
-	RESTErrorUtil restErrorUtil;
-
-	@Autowired
-	XRepositoryService xRepositoryService;
-
-	@Autowired
-	XResourceService xResourceService;
-
-	@Autowired
-	XPolicyService xPolicyService;
 
 	@Autowired
 	RangerPolicyService policyService;
@@ -103,20 +63,11 @@ public class PublicAPIs {
 	StringUtil stringUtil;
 
 	@Autowired
-	RangerDaoManager xaDaoMgr;
-	
-	@Autowired
 	ServiceUtil serviceUtil;
 	
 	@Autowired
 	ServiceREST serviceREST;
 
-	@Autowired
-	AssetREST assetREST;
-
-	@Autowired
-	ServiceDBStore svcStore;
-	
 	
 	@GET
 	@Path("/api/repository/{id}")
@@ -191,8 +142,6 @@ public class PublicAPIs {
 		
 		return ret;
 	}
-	
-
 
 	
 	@DELETE
@@ -218,26 +167,6 @@ public class PublicAPIs {
 			logger.debug("<== PublicAPIs.deleteRepository(" + id + ")");
 		}
 	}
-	
-
-	/*// @POST
-	// @Path("/api/repository/testConfig")
-	// @Produces({ "application/xml", "application/json" })
-	public VXResponse testConfig(VXRepository vXRepository) {
-		VXAsset vXAsset = xRepositoryService.mapPublicToXAObject(vXRepository);
-		return assetMgr.testConfig(vXAsset);
-	}*/
-	
-	
-	// @POST
-	// @Path("/api/repository/testConfig")
-	// @Produces({ "application/xml", "application/json" })
-	public VXResponse testConfig(VXRepository vXRepository) {
-		VXAsset vXAsset = serviceUtil.publicObjecttoVXAsset(vXRepository);
-		return serviceREST.validateConfig(serviceUtil.toRangerService(vXAsset));
-	}
-	
-	
 	
 	@GET
 	@Path("/api/repository/")
@@ -380,7 +309,7 @@ public class PublicAPIs {
 		VXPolicy ret = serviceUtil.toVXPolicy(updatedPolicy, service);
 
 		if(logger.isDebugEnabled()) {
-			logger.debug("<== AssetREST.updatePolicy(" + policy + "): " + ret);
+			logger.debug("<== PublicAPIs.updatePolicy(" + policy + "): " + ret);
 		}
 	
 		return ret;
