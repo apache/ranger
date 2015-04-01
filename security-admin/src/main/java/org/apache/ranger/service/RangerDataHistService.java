@@ -49,7 +49,6 @@ public class RangerDataHistService {
 		
 		Long objectId = baseModelObj.getId();
 		String objectGuid = baseModelObj.getGuid();
-		Long version = baseModelObj.getVersion();
 		Date currentDate = DateUtil.getUTCDate();
 		
 		XXDataHist xDataHist = new XXDataHist();;
@@ -93,7 +92,6 @@ public class RangerDataHistService {
 								+ objectName, MessageEnums.DATA_NOT_UPDATABLE);
 			}
 			
-			prevHist.setVersion(version);
 			prevHist.setUpdateTime(currentDate);
 			prevHist.setToTime(currentDate);
 			prevHist.setObjectName(objectName);

@@ -735,19 +735,29 @@ define(function(require) {
 					var policy = new RangerPolicy({
 						id: policyId
 					});
+					var policyVersionList = policy.fetchVersions();
 					var view = new RangerPolicyRO({
 						policy: policy,
+						policyVersionList : policyVersionList,
 						serviceDef: serviceDef,
 						eventTime : eventTime
 					});
 					var modal = new Backbone.BootstrapModal({
 						animate : true, 
 						content		: view,
-						title: localization.tt("h.policy")+': '+policy.get('name'),
+						title: localization.tt("h.policyDetails"),
 						okText :localization.tt("lbl.ok"),
 						allowCancel : false,
 						escape : true
 					}).open();
+					var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
+					policyVerEl.append('<i id="preVer" class="icon-chevron-left '+ ((policy.get('version')>1) ? 'active' : '') +'"></i><text>Version '+ policy.get('version') +'</text>').find('#preVer').click(function(e){
+						view.previousVer(e);
+					});
+					var policyVerIndexAt = policyVersionList.indexOf(policy.get('version').toString());
+					policyVerEl.append('<i id="nextVer" class="icon-chevron-right '+ (!_.isUndefined(policyVersionList[++policyVerIndexAt])? 'active' : '')+'"></i>').find('#nextVer').click(function(e){
+						view.nextVer(e);
+					});
 				}
 			});
 

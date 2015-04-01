@@ -14,9 +14,21 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<div id="policyDetails">
+<div class="serviceInfo row-fluid">
+  <div class="pull-left">
+    <p>
+      <strong>{{tt 'lbl.serivceName'}} :</strong> {{PolicyDetails.service}}
+    </p>
+  </div>
+  <div class="pull-right">
+    <p>
+      <strong>{{tt 'lbl.serivceType'}} :</strong> {{PolicyDetails.serviceType}}
+    </p>
+  </div>
+</div>
+<div id="policyDetails" class="row-fluid">
   <p class="formHeader">
-    Policy Details : 
+    {{tt 'h.policyDetails'}} : 
   </p>
   <table class="table table-bordered table-condensed">
     <tbody>
@@ -25,7 +37,7 @@
           {{tt 'lbl.policyId'}}
         </td>
         <td>
-          <div class="controls"><label class="label label-ranger">{{PolicyDetails.id}}</label></div>
+          <div class="controls"><label class="label label-ranger" style="cursor: auto;">{{PolicyDetails.id}}</label></div>
         </td>
       </tr>
       <tr>
@@ -69,9 +81,9 @@
     </tbody>
   </table>
 </div>
-<div id="permissionsDetails">
+<div id="permissionsDetails" class="row-fluid">
   <p class="formHeader">
-    User and Group Permissions :
+    {{tt 'h.userGroupPermissions'}} :
   </p>
   <table class="table-permission table-condensed table-read-only" style="width:100%">
     <thead>
@@ -110,4 +122,22 @@
       {{/each}}
     </tbody>
   </table>
+</div>
+<div class="updateInfo row-fluid">
+  <div class="pull-left">
+    <p>
+      <strong>{{tt 'lbl.updatedBy'}} :</strong> {{PolicyDetails.updatedBy}}
+    </p>
+    <p>
+      <strong>{{tt 'lbl.updatedOn'}} :</strong> {{PolicyDetails.updateTime}}
+    </p>
+  </div>
+  <div class="pull-right">
+    <p>
+      <strong>{{tt 'lbl.createdBy'}} :</strong> {{PolicyDetails.createdBy}}
+    </p>
+    <p>
+      <strong>{{tt 'lbl.createdOn'}} :</strong> {{PolicyDetails.createTime}}
+    </p>
+  </div>
 </div>

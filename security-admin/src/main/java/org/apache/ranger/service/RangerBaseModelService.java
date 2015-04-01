@@ -228,13 +228,19 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 			if (createTime == null) {
 				createTime = DateUtil.getUTCDate();
 			}
-			updTime = DateUtil.getUTCDate();
 
 			createdById = entityObj.getAddedByUserId();
 			if (createdById == null) {
 				createdById = ContextUtil.getCurrentUserId();
 			}
-			updById = ContextUtil.getCurrentUserId();
+			
+			if(populateExistingBaseFields) {
+				updTime = entityObj.getUpdateTime();
+				updById = entityObj.getUpdatedByUserId();
+			} else {				
+				updTime = DateUtil.getUTCDate();
+				updById = ContextUtil.getCurrentUserId();
+			}
 		} else {
 			throw restErrorUtil.createRESTException(
 					"Error while populating EntityBean",

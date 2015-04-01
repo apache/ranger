@@ -207,6 +207,7 @@ define(function(require) {
 				selectServiceName				: 'Select Service Name',
 				topologyName					: 'Topology Name',
 				serivceName						: 'Service Name',
+				serivceType						: 'Service Type',
 				ipAddress						: 'IP Address',
 				isVisible                       : 'Visible',
 				delegatedAdmin					: 'Delegate Admin',
@@ -253,6 +254,8 @@ define(function(require) {
 				agents						: 'Plugins',
 				repository					: 'Repository',
 				policy						: 'Policy',
+				policyDetails				: 'Policy Details',
+				userGroupPermissions		: 'User and Group Permissions',
 				groups						: 'Groups',
 				admin						: 'Admin',
 				bigData						: 'Big Data',
@@ -294,6 +297,7 @@ define(function(require) {
 				userDoesNotExistAnymore   : 'User does not exist anymore..',
 				repoDoesNotExistAnymore   : 'Repository does not exist anymore..',
 				policyDisabledMsg		  : 'This policy is currently in disabled state.',
+				noRecordsFound			  : 'No Records Found',
 				
 				
 				

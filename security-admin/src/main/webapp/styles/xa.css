@@ -645,6 +645,38 @@ table.backgrid thead tr:hover {
   color: #4F4F4F !important;
   background-color: inherit !important;
 }
+.serviceInfo{
+  margin-top: -5px;
+}
+.updateInfo{
+  margin-top: 10px;
+}
+.updateInfo p {
+  margin-bottom: 0px;
+  margin-top: 0px;
+  font-size: 11px;
+}
+.policyVer{
+  font-size: 23px;
+  padding: 5px 0 0 3px;
+}
+.policyVer i{
+  color : #3C9C11 !important;
+  opacity: 0.4;
+  -webkit-user-select: none;
+}
+.policyVer i.active{
+  color : #3C9C11 !important;
+  cursor : pointer;
+  opacity: 1;
+}
+.policyVer text{
+  padding : 0 10px;
+  color : black;
+  font-size: 14px;
+  position: relative;
+  top: -3px;
+}
 
 .r-path {
   word-break: break-all;

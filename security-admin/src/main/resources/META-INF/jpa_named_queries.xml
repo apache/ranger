@@ -362,6 +362,16 @@
                                and obj.objectClassType = :classType ORDER BY obj.id</query>
 	</named-query>
 	
+	<named-query name="XXDataHist.getVersionListOfObject">
+		<query>select obj.version from XXDataHist obj where obj.objectId = :objId
+			and obj.objectClassType = :classType GROUP BY obj.version </query>
+	</named-query>
+	
+	<named-query name="XXDataHist.findObjectByVersionNumber">
+		<query>select obj from XXDataHist obj where obj.objectClassType = :classType and 
+		obj.objectId = :objId and obj.version = :version</query>
+	</named-query>
+	
 	<!-- XXTrxLog -->
 	<named-query name="XXTrxLog.findLogForMaxIdOfClassType">
 		<query>select MAX(obj.objectId) from XXTrxLog obj where obj.objectClassType = :classType</query>

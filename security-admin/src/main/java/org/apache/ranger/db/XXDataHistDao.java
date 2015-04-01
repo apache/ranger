@@ -1,6 +1,7 @@
 package org.apache.ranger.db;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
@@ -29,7 +30,7 @@ public class XXDataHistDao extends BaseDao<XXDataHist> {
 		}
 	}
 	
-	public XXDataHist findObjByEventTimeClassTypeAndId(Date eventTime, int classType, Long objId) {
+	public XXDataHist findObjByEventTimeClassTypeAndId(String eventTime, int classType, Long objId) {
 		if (eventTime == null || objId == null) {
 			return null;
 		}
@@ -39,6 +40,32 @@ public class XXDataHistDao extends BaseDao<XXDataHist> {
 			Query jpaQuery = getEntityManager().createNativeQuery(queryStr, tClass).setMaxResults(1);
 			
 			return (XXDataHist) jpaQuery.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Integer> getVersionListOfObject(Long objId, int classType) {
+		if (objId == null) {
+			return new ArrayList<Integer>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXDataHist.getVersionListOfObject")
+					.setParameter("objId", objId).setParameter("classType", classType).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<Integer>();
+		}
+	}
+
+	public XXDataHist findObjectByVersionNumber(Long objId, int classType, int versionNo) {
+		if (objId == null) {
+			return null;
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXDataHist.findObjectByVersionNumber", tClass)
+					.setParameter("objId", objId).setParameter("classType", classType)
+					.setParameter("version", versionNo).getSingleResult();
 		} catch (NoResultException e) {
 			return null;
 		}

@@ -89,12 +89,32 @@ define(function(require){
 			queryParams.policyId = this.get('id');
 			if(_.isUndefined(queryParams.eventTime)){
 				throw('eventTime can not be undefined');
-			}else{
-				queryParams.eventTime = Globalize.format(new Date(queryParams.eventTime),  "MM/dd/yyyy hh:mm:ss")
 			}
 
 			opt.url = 'service/plugins/policies/eventTime';
 			return this.fetch(opt);
+		},
+
+		fetchByVersion : function(versionNo, opt){
+			if(_.isUndefined(versionNo)){
+				throw('versionNo can not be undefined');
+			}
+			opt.url = 'service/plugins/policy/'+this.get('id')+'/version/'+versionNo;
+			return this.fetch(opt);
+		},
+
+		fetchVersions : function(){
+			var versionList;
+			var url = 'service/plugins/policy/'+this.get('id')+'/versionList';
+			$.ajax({
+				url : url,
+				async : false,
+				dataType : 'JSON',
+				success : function(data){
+					versionList = data.value.split(',');
+				},
+			});
+			return versionList;
 		},
 
 		/** This models toString() */

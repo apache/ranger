@@ -107,6 +107,7 @@ import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
+import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -538,9 +539,17 @@ public class ServiceDBStore implements ServiceStore {
 		} else {
 			version = new Long(version.longValue() + 1);
 		}
-		
+
 		service.setVersion(version);
-		service = svcService.update(service);
+
+		if(populateExistingBaseFields) {
+			svcService.setPopulateExistingBaseFields(true);
+			service = svcService.update(service);
+			svcService.setPopulateExistingBaseFields(false);
+		} else {
+			service = svcService.update(service);
+		}
+
 		XXService xUpdService = daoMgr.getXXService().getById(service.getId());
 		
 		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
@@ -677,7 +686,7 @@ public class ServiceDBStore implements ServiceStore {
 		if(xServiceDef == null) {
 			throw new Exception("service-def does not exist - name=" + service.getType());
 		}
-		
+
 		XXPolicy existing = daoMgr.getXXPolicy().findByNameAndServiceId(policy.getName(), service.getId());
 
 		if(existing != null) {
@@ -688,7 +697,7 @@ public class ServiceDBStore implements ServiceStore {
 		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
 
 		policy.setVersion(new Long(1));
-		
+
 		if(populateExistingBaseFields) {
 			policyService.setPopulateExistingBaseFields(true);
 			policy = policyService.create(policy);
@@ -701,14 +710,13 @@ public class ServiceDBStore implements ServiceStore {
 
 		createNewResourcesForPolicy(policy, xCreatedPolicy, resources);
 		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, policyItems, xServiceDef);
-
 		handlePolicyUpdate(service);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
-		 List<XXTrxLog> trxLogList = policyService.getTransactionLog(createdPolicy, RangerPolicyService.OPERATION_CREATE_CONTEXT);
-		 bizUtil.createTrxLog(trxLogList);
-		
+		List<XXTrxLog> trxLogList = policyService.getTransactionLog(createdPolicy, RangerPolicyService.OPERATION_CREATE_CONTEXT);
+		bizUtil.createTrxLog(trxLogList);
+
 		return createdPolicy;
 	}
 
@@ -1069,22 +1077,9 @@ public class ServiceDBStore implements ServiceStore {
 		}
 		Map<String, String> validConfigs = new HashMap<String, String>();
 		for(Entry<String, String> config : configs.entrySet()) {
-			validConfigs.put(config.getKey(), config.getValue());
-			/*String confKey = ;
-			String confValue = ;
-
-			boolean found = false;
-			for(XXServiceConfigDef xConfDef : svcConfDefList) {
-				if((xConfDef.getName()).equalsIgnoreCase(confKey)) {
-					found = true;
-					break;
-				}
+			if(!stringUtil.isEmpty(config.getValue())) {
+				validConfigs.put(config.getKey(), config.getValue());
 			}
-			if(found) {
-			} else {
-				LOG.info("Ignoring this config parameter:" + confKey
-						+ ", as its not valid conf param for service");
-			}*/
 		}
 		return validConfigs;
 	}
@@ -1294,7 +1289,7 @@ public class ServiceDBStore implements ServiceStore {
 		this.populateExistingBaseFields = populateExistingBaseFields;
 	}
 
-	public RangerPolicy getPolicyFromEventTime(Date eventTime, Long policyId) {
+	public RangerPolicy getPolicyFromEventTime(String eventTime, Long policyId) {
 
 		XXDataHist xDataHist = daoMgr.getXXDataHist().findObjByEventTimeClassTypeAndId(eventTime,
 				AppConstants.CLASS_TYPE_RANGER_POLICY, policyId);
@@ -1303,6 +1298,30 @@ public class ServiceDBStore implements ServiceStore {
 			String errMsg = "No policy history found for given time: " + eventTime;
 			LOG.error(errMsg);
 			throw restErrorUtil.createRESTException(errMsg, MessageEnums.DATA_NOT_FOUND);
+		}
+
+		String content = xDataHist.getContent();
+		RangerPolicy policy = (RangerPolicy) dataHistService.writeJsonToJavaObject(content, RangerPolicy.class);
+
+		return policy;
+	}
+
+	public VXString getPolicyVersionList(Long policyId) {
+		List<Integer> versionList = daoMgr.getXXDataHist().getVersionListOfObject(policyId,
+				AppConstants.CLASS_TYPE_RANGER_POLICY);
+
+		VXString vXString = new VXString();
+		vXString.setValue(StringUtils.join(versionList, ","));
+
+		return vXString;
+	}
+
+	public RangerPolicy getPolicyForVersionNumber(Long policyId, int versionNo) {
+		XXDataHist xDataHist = daoMgr.getXXDataHist().findObjectByVersionNumber(policyId,
+				AppConstants.CLASS_TYPE_RANGER_POLICY, versionNo);
+
+		if (xDataHist == null) {
+			throw restErrorUtil.createRESTException("No Policy found for given version.", MessageEnums.DATA_NOT_FOUND);
 		}
 
 		String content = xDataHist.getContent();

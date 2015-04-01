@@ -21,7 +21,6 @@ package org.apache.ranger.rest;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +80,7 @@ import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXResponse;
+import org.apache.ranger.view.VXString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -1497,16 +1497,27 @@ public class ServiceREST {
 
 		Long policyId = Long.parseLong(policyIdStr);
 
-		Date eventTime = restErrorUtil.parseDate(eventTimeStr, "Invalid value for" + "Event Time",
-				MessageEnums.INVALID_INPUT_DATA, null, "eventTime", "MM/dd/yyyy hh:mm:ss");
-
-		RangerPolicy policy = svcStore.getPolicyFromEventTime(eventTime, policyId);
+		RangerPolicy policy = svcStore.getPolicyFromEventTime(eventTimeStr, policyId);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getPolicyFromEventTime()");
 		}
 
 		return policy;
+	}
+
+	@GET
+	@Path("/policy/{policyId}/versionList")
+	public VXString getPolicyVersionList(@PathParam("policyId") Long policyId) {
+		return svcStore.getPolicyVersionList(policyId);
+	}
+
+	@GET
+	@Path("/policy/{policyId}/version/{versionNo}")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicy getPolicyForVersionNumber(@PathParam("policyId") Long policyId,
+			@PathParam("versionNo") int versionNo) {
+		return svcStore.getPolicyForVersionNumber(policyId, versionNo);
 	}
 
 }
