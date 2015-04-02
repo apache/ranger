@@ -196,7 +196,7 @@ public class ServiceSolrClient {
 		RESOURCE_TYPE lookupResource = RESOURCE_TYPE.COLLECTION;
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== HiveResourceMgr.getHiveResources()  UserInput: \""
+			LOG.debug("<== getResources() UserInput: \""
 					+ userInput + "\" resource : " + resource
 					+ " resourceMap: " + resourceMap);
 		}

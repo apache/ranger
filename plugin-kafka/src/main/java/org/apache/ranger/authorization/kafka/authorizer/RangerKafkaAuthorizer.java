@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,13 +18,16 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.util;
+package org.apache.ranger.authorization.kafka.authorizer;
 
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.validation.RangerPolicyResourceSignature;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-public class RangerObjectFactory {
-	public RangerPolicyResourceSignature createPolicyResourceSignature(RangerPolicy policy) {
-		return new RangerPolicyResourceSignature(policy);
-	}
+public class RangerKafkaAuthorizer /*KafkaAuthorizationPlugin*/ {
+
+	private static final Log LOG = LogFactory.getLog(RangerKafkaAuthorizer.class);
+
+    //private static volatile RangerKafkaPlugin kafkaPlugin = null;
+
+
 }
