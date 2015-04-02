@@ -295,23 +295,6 @@ public class ValidationTestUtils {
 		return defs;
 	}
 
-	Map<String, RangerPolicyResource> createPolicyResourceMap2(Object[][] input) {
-		if (input == null) {
-			return null;
-		}
-		Map<String, RangerPolicyResource> result = new HashMap<String, RangerPolicyResource>(input.length);
-		for (Object[] row : input) {
-			String resourceName = (String)row[0];
-			Boolean isExcludes = (Boolean)row[1];
-			Boolean isRecursive = (Boolean)row[2];
-			RangerPolicyResource aResource = mock(RangerPolicyResource.class);
-			when(aResource.getIsExcludes()).thenReturn(isExcludes);
-			when(aResource.getIsRecursive()).thenReturn(isRecursive);
-			result.put(resourceName, aResource);
-		}
-		return result;
-	}
-
 	List<RangerEnumElementDef> createEnumElementDefs(String[] input) {
 		if (input == null) {
 			return null;
