@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -94,8 +95,17 @@ public class ServiceMgr {
 
 				ret = generateResponseForTestConn(responseData, "");
 			} catch (Exception e) {
+				String msg = "Unable to connect repository with given config for " + svc.getServiceName();
+						
+				HashMap<String, Object> respData = new HashMap<String, Object>();
+				String message = "";
+				if (e instanceof HadoopException) {
+					respData = ((HadoopException) e).responseData;
+					message = (respData != null && respData.get("message") != null) ? respData.get(
+							"message").toString() : msg;
+				}
+				ret = generateResponseForTestConn(respData, message);
 				LOG.error("==> ServiceMgr.validateConfig Error:" + e);
-				throw e;
 			} finally {
 				Thread.currentThread().setContextClassLoader(clsLoader);
 			}
