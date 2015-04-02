@@ -32,6 +32,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
@@ -441,6 +442,36 @@ public class XUserMgr extends XUserMgrBase {
 			logger.debug("No groups found for user id : " + xUserId);
 		}
 		return vXGroupList;
+	}
+
+	public Set<String> getGroupsForUser(String userName) {
+		Set<String> ret = new HashSet<String>();
+
+		try {
+			VXUser user = getXUserByUserName(userName);
+
+			if(user != null) {
+				VXGroupList groups = getXUserGroups(user.getId());
+
+				if(groups != null && !CollectionUtils.isEmpty(groups.getList())) {
+					for(VXGroup group : groups.getList()) {
+						ret.add(group.getName());
+					}
+				} else {
+					if(logger.isDebugEnabled()) {
+						logger.debug("getGroupsForUser('" + userName + "'): no groups found for user");
+					}
+				}
+			} else {
+				if(logger.isDebugEnabled()) {
+					logger.debug("getGroupsForUser('" + userName + "'): user not found");
+				}
+			}
+		} catch(Exception excp) {
+			logger.error("getGroupsForUser('" + userName + "') failed", excp);
+		}
+
+		return ret;
 	}
 
 	public VXUserList getXGroupUsers(Long xGroupId) {

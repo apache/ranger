@@ -47,6 +47,7 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConfigUtil;
@@ -106,6 +107,9 @@ public class ServiceREST {
 	AssetMgr assetMgr;
 
 	@Autowired
+	XUserMgr userMgr;
+
+	@Autowired
 	ServiceDBStore svcStore;
 	
 	@Autowired
@@ -125,7 +129,7 @@ public class ServiceREST {
 	
 	@Autowired
 	RangerSearchUtil searchUtil;
-	
+
 	// this indirection for validation via a factory exists only for testability
 	// TODO move the instantiation to DI framework?
 	RangerValidatorFactory validatorFactory = new RangerValidatorFactory(); 
@@ -557,7 +561,7 @@ public class ServiceREST {
 
 			try {
 				String               userName   = grantRequest.getGrantor();
-				Set<String>          userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger database
+				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
 				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
 	
 				boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
@@ -738,7 +742,7 @@ public class ServiceREST {
 
 			try {
 				String               userName   = revokeRequest.getGrantor();
-				Set<String>          userGroups = Collections.<String>emptySet(); // TODO: get groups for the grantor from Ranger databas
+				Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
 				RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
 	
 				boolean isAdmin = isAdminForResource(userName, userGroups, serviceName, resource);
