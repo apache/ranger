@@ -112,13 +112,15 @@ public class EmbeddedServer {
 		server.setPort(serverPort);
 		server.getServer().setPort(shutdownPort);
 		server.getServer().setShutdown(shutdownCommand);
+
+		boolean isHttpsEnabled = Boolean.valueOf(getConfig("https.attrib.SSLEnabled", "false"));
 		
-		if (sslPort > 0) {
+		if ((sslPort > 0) && isHttpsEnabled) {
 			Connector ssl = new Connector() ;
 			ssl.setPort(sslPort) ;
 			ssl.setSecure(true);
 			ssl.setScheme("https") ;
-			ssl.setAttribute("SSLEnabled", getConfig("https.attrib.SSLEnabled", "true"));
+			ssl.setAttribute("SSLEnabled", "true") ;
 			ssl.setAttribute("sslProtocol", getConfig("https.attrib.sslProtocol", "TLS")) ;
 			ssl.setAttribute("clientAuth", getConfig("https.attrib.clientAuth", "false"));
 			ssl.setAttribute("keyAlias", getConfig("https.attrib.keyAlias") ) ;
