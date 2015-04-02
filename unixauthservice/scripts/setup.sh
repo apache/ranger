@@ -23,7 +23,7 @@ unix_user=ranger
 unix_group=ranger
 
 INSTALL_DIR=${INSTALL_BASE}
-
+pidf=/var/run/ranger
 curDt=`date '+%Y%m%d%H%M%S'`
 LOGFILE=setup.log.$curDt
 
@@ -32,6 +32,9 @@ log() {
    echo "${prefix} $@" >> $LOGFILE
    echo "${prefix} $@"
 }
+
+mkdir -p ${pidf}
+chown -R ${unix_user} ${pidf}
 
 # Ensure that the user is root
 MY_ID=`id -u`
@@ -240,6 +243,11 @@ then
 
 fi
 # END Grep configuration properties from install.properties
+
+# changing ownership for ranger-usersync install directory
+if [ -d ${INSTALL_DIR} ]; then
+    chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}
+fi
 
 
 # Create $INSTALL_DIR/conf/unixauthservice.properties
