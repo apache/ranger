@@ -1,0 +1,112 @@
+{
+	"name":"kafka",
+	"implClass":"org.apache.ranger.services.kafka.RangerServiceKafka",
+	"label":"Kafka",
+	"description":"Apache Kafka",
+	"resources":[
+		{
+			"id":1,
+			"name":"topic",
+			"type":"string",
+			"level":1,
+			"mandatory":true,
+			"lookupSupported":true,
+			"recursiveSupported":false,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Topic",
+			"description":"Topic"
+		}
+		
+	],
+	"accessTypes":[
+		{
+			"name":"publish",
+			"label":"Publish"
+		},
+		{
+			"name":"consume",
+			"label":"Consume"
+		},
+		{
+			"name":"create",
+			"label":"Create"
+		},
+		{
+			"name":"delete",
+			"label":"Delete"
+		},
+		{
+			"name":"configure",
+			"label":"Configure"
+		},
+		{
+			"name":"describe",
+			"label":"Describe"
+		},
+		{
+			"name":"replicate",
+			"label":"Replicate"
+		},
+		{
+			"name":"connect",
+			"label":"Connect"
+		}
+		
+	],
+	"configs":[
+		{
+			"name":"username",
+			"type":"string",
+			"mandatory":true,
+			"label":"Username"
+		},
+		{
+			"name":"password",
+			"type":"password",
+			"mandatory":true,
+			"label":"Password"
+		},
+		{
+			"name":"zookeeper.connect",
+			"type":"string",
+			"mandatory":true,
+			"defaultValue":"localhost:2181",
+			"label":"Zookeeper Connect String"
+		},
+		{
+			"name":"certificate.cn",
+			"type":"string",
+			"mandatory":false,
+			"label":"Common Name for Certificate"
+		}
+		
+	],
+	"enums":[
+		
+	],
+	"contextEnrichers":[
+		
+	],
+	"policyConditions":[
+		{
+			"id": 1,
+			"name": "ip-range",
+			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+			"evaluatorOptions": { },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "IP Address Range",
+			"description": "IP Address Range"
+		}
+		
+	]
+}
