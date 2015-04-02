@@ -45,6 +45,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.XUserMgr;
@@ -129,6 +130,9 @@ public class ServiceREST {
 	
 	@Autowired
 	RangerSearchUtil searchUtil;
+	
+    @Autowired
+    RangerBizUtil bizUtil;
 
 	// this indirection for validation via a factory exists only for testability
 	// TODO move the instantiation to DI framework?
@@ -830,10 +834,10 @@ public class ServiceREST {
 		}
 
 		RangerPolicy ret = null;
-
+		
 		try {
 //			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-//			validator.validate(policy, Action.CREATE);
+//			validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
 			ret = svcStore.createPolicy(policy);
 		} catch(Exception excp) {
 			LOG.error("createPolicy(" + policy + ") failed", excp);
@@ -860,7 +864,7 @@ public class ServiceREST {
 
 		try {
 //			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-//			validator.validate(policy, Action.UPDATE);
+//			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin());
 			ret = svcStore.updatePolicy(policy);
 		} catch(Exception excp) {
 			LOG.error("updatePolicy(" + policy + ") failed", excp);
