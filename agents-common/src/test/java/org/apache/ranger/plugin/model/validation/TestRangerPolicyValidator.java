@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.apache.ranger.plugin.model.validation;
 
 import static org.junit.Assert.assertFalse;
@@ -142,22 +161,24 @@ public class TestRangerPolicyValidator {
 		// null value for audit is treated as audit on.
 		for (Action action : cu) {
 			for (Boolean auditEnabled : new Boolean[] { null, true } ) {
-				when(_policy.getIsAuditEnabled()).thenReturn(auditEnabled);
-				if (action == Action.CREATE) {
-					when(_policy.getId()).thenReturn(7L);
-					when(_policy.getName()).thenReturn("policy-name-1");
-					assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, _failures));
-					assertTrue(_failures.isEmpty());
-				} else {
-					// update should work both when by-name is found or not, since nothing found by-name means name is being updated.
-					when(_policy.getId()).thenReturn(8L);
-					when(_policy.getName()).thenReturn("policy-name-1");
-					assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, _failures));
-					assertTrue(_failures.isEmpty());
-
-					when(_policy.getName()).thenReturn("policy-name-2");
-					assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, _failures));
-					assertTrue(_failures.isEmpty());
+				for (boolean isAdmin : new boolean[] { true, false }) {
+					when(_policy.getIsAuditEnabled()).thenReturn(auditEnabled);
+					if (action == Action.CREATE) {
+						when(_policy.getId()).thenReturn(7L);
+						when(_policy.getName()).thenReturn("policy-name-1");
+						assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, isAdmin, _failures));
+						assertTrue(_failures.isEmpty());
+					} else {
+						// update should work both when by-name is found or not, since nothing found by-name means name is being updated.
+						when(_policy.getId()).thenReturn(8L);
+						when(_policy.getName()).thenReturn("policy-name-1");
+						assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, isAdmin, _failures));
+						assertTrue(_failures.isEmpty());
+	
+						when(_policy.getName()).thenReturn("policy-name-2");
+						assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, isAdmin, _failures));
+						assertTrue(_failures.isEmpty());
+					}
 				}
 			}
 		}
@@ -166,15 +187,17 @@ public class TestRangerPolicyValidator {
 		when(_policy.getPolicyItems()).thenReturn(policyItems);
 		when(_policy.getIsAuditEnabled()).thenReturn(false);
 		for (Action action : cu) {
-			if (action == Action.CREATE) {
-				when(_policy.getId()).thenReturn(7L);
-				when(_policy.getName()).thenReturn("policy-name-1");
-			} else {
-				when(_policy.getId()).thenReturn(8L);
-				when(_policy.getName()).thenReturn("policy-name-2");
+			for (boolean isAdmin : new boolean[] { true, false}) {
+				if (action == Action.CREATE) {
+					when(_policy.getId()).thenReturn(7L);
+					when(_policy.getName()).thenReturn("policy-name-1");
+				} else {
+					when(_policy.getId()).thenReturn(8L);
+					when(_policy.getName()).thenReturn("policy-name-2");
+				}
+				assertTrue("" + action , _validator.isValid(_policy, action, isAdmin, _failures));
+				assertTrue(_failures.isEmpty());
 			}
-			assertTrue("" + action , _validator.isValid(_policy, action, _failures));
-			assertTrue(_failures.isEmpty());
 		}
 		
 		// above succeeded as service def did not have any resources on it, mandatory or otherwise.
@@ -198,7 +221,7 @@ public class TestRangerPolicyValidator {
 				when(_policy.getId()).thenReturn(8L);
 				when(_policy.getName()).thenReturn("policy-name-2");
 			}
-			assertTrue("" + action , _validator.isValid(_policy, action, _failures));
+			assertTrue("" + action , _validator.isValid(_policy, action, true, _failures)); // since policy resource has excludes admin privilages would be required
 			assertTrue(_failures.isEmpty());
 		}
 	}
@@ -208,21 +231,24 @@ public class TestRangerPolicyValidator {
 	}
 	
 	void checkFailure_isValid(Action action, String errorType, String field, String subField) {
-		_failures.clear();
-		assertFalse(_validator.isValid(_policy, action, _failures));
-		switch (errorType) {
-		case "missing":
-			_utils.checkFailureForMissingValue(_failures, field, subField);
-			break;
-		case "semantic":
-			_utils.checkFailureForSemanticError(_failures, field, subField);
-			break;
-		case "internal error":
-			_utils.checkFailureForInternalError(_failures);
-			break;
-		default:
-			fail("Unsupported errorType[" + errorType + "]");
-			break;
+		
+		for (boolean isAdmin : new boolean[] { true, false}) {
+			_failures.clear();
+			assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+			switch (errorType) {
+			case "missing":
+				_utils.checkFailureForMissingValue(_failures, field, subField);
+				break;
+			case "semantic":
+				_utils.checkFailureForSemanticError(_failures, field, subField);
+				break;
+			case "internal error":
+				_utils.checkFailureForInternalError(_failures);
+				break;
+			default:
+				fail("Unsupported errorType[" + errorType + "]");
+				break;
+			}
 		}
 	}
 	
@@ -282,40 +308,46 @@ public class TestRangerPolicyValidator {
 		existingPolicies.add(existingPolicy);
 		existingPolicy = mock(RangerPolicy.class);
 		existingPolicies.add(existingPolicy);
-		_failures.clear(); assertFalse(_validator.isValid(_policy, Action.UPDATE, _failures));
-		_utils.checkFailureForInternalError(_failures);
+		for (boolean isAdmin : new boolean[] { true, false }) {
+			_failures.clear(); assertFalse(_validator.isValid(_policy, Action.UPDATE, isAdmin, _failures));
+			_utils.checkFailureForInternalError(_failures);
+		}
 		
 		// policy must have service name on it and it should be valid
 		when(_policy.getName()).thenReturn("policy-name");
 		for (Action action : cu) {
-			when(_policy.getService()).thenReturn(null);
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForMissingValue(_failures, "service");
-
-			when(_policy.getService()).thenReturn("");
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForMissingValue(_failures, "service");
+			for (boolean isAdmin : new boolean[] { true, false }) {
+				when(_policy.getService()).thenReturn(null);
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForMissingValue(_failures, "service");
+	
+				when(_policy.getService()).thenReturn("");
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForMissingValue(_failures, "service");
+			}
 		}
 		
 		// service name should be valid
 		when(_store.getServiceByName("service-name")).thenReturn(null);
 		when(_store.getServiceByName("another-service-name")).thenThrow(new Exception());
 		for (Action action : cu) {
-			when(_policy.getService()).thenReturn(null);
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForMissingValue(_failures, "service");
-
-			when(_policy.getService()).thenReturn(null);
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForMissingValue(_failures, "service");
-
-			when(_policy.getService()).thenReturn("service-name");
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForSemanticError(_failures, "service");
-
-			when(_policy.getService()).thenReturn("another-service-name");
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForSemanticError(_failures, "service");
+			for (boolean isAdmin : new boolean[] { true, false }) {
+				when(_policy.getService()).thenReturn(null);
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForMissingValue(_failures, "service");
+	
+				when(_policy.getService()).thenReturn(null);
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForMissingValue(_failures, "service");
+	
+				when(_policy.getService()).thenReturn("service-name");
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForSemanticError(_failures, "service");
+	
+				when(_policy.getService()).thenReturn("another-service-name");
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForSemanticError(_failures, "service");
+			}
 		}
 		
 		// policy must contain at least one policy item
@@ -324,14 +356,16 @@ public class TestRangerPolicyValidator {
 		RangerService service = mock(RangerService.class);
 		when(_store.getServiceByName("service-name")).thenReturn(service);
 		for (Action action : cu) {
-			// when it is null
-			when(_policy.getPolicyItems()).thenReturn(null);
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForMissingValue(_failures, "policy items");
-			// or when it is not null but empty.
-			when(_policy.getPolicyItems()).thenReturn(policyItems);
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForMissingValue(_failures, "policy items");
+			for (boolean isAdmin : new boolean[] { true, false }) {
+				// when it is null
+				when(_policy.getPolicyItems()).thenReturn(null);
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForMissingValue(_failures, "policy items");
+				// or when it is not null but empty.
+				when(_policy.getPolicyItems()).thenReturn(policyItems);
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForMissingValue(_failures, "policy items");
+			}
 		}
 		
 		// these are known good policy items -- same as used above in happypath
@@ -341,18 +375,22 @@ public class TestRangerPolicyValidator {
 		when(service.getType()).thenReturn("service-type");
 		when(_store.getServiceDefByName("service-type")).thenReturn(null);
 		for (Action action : cu) {
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForInternalError(_failures, "policy service def");
+			for (boolean isAdmin : new boolean[] { true, false }) {
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForInternalError(_failures, "policy service def");
+			}
 		}
 		
 		// service-def should contain the right access types on it.
 		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes_bad);
 		when(_store.getServiceDefByName("service-type")).thenReturn(_serviceDef);
 		for (Action action : cu) {
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForSemanticError(_failures, "policy item access type");
+			for (boolean isAdmin : new boolean[] { true, false }) {
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForSemanticError(_failures, "policy item access type");
+			}
 		}
-
+		
 		// create the right service def with right resource defs - this is the same as in the happypath test above.
 		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes);
 		when(_store.getPolicies(filter)).thenReturn(null);
@@ -364,12 +402,14 @@ public class TestRangerPolicyValidator {
 		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);
 		when(_policy.getResources()).thenReturn(policyResources);
 		for (Action action : cu) {
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForMissingValue(_failures, "resources", "tbl"); // for missing resource: tbl
-			_utils.checkFailureForSemanticError(_failures, "resources", "extra"); // for spurious resource: "extra"
-			_utils.checkFailureForSemanticError(_failures, "resource-values", "col"); // for spurious resource: "extra"
-			_utils.checkFailureForSemanticError(_failures, "isRecursive", "db"); // for specifying it as true when def did not allow it
-			_utils.checkFailureForSemanticError(_failures, "isExcludes", "col"); // for specifying it as true when def did not allow it
+			for (boolean isAdmin : new boolean[] { true, false }) {
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForMissingValue(_failures, "resources", "tbl"); // for missing resource: tbl
+				_utils.checkFailureForSemanticError(_failures, "resources", "extra"); // for spurious resource: "extra"
+				_utils.checkFailureForSemanticError(_failures, "resource-values", "col"); // for spurious resource: "extra"
+				_utils.checkFailureForSemanticError(_failures, "isRecursive", "db"); // for specifying it as true when def did not allow it
+				_utils.checkFailureForSemanticError(_failures, "isExcludes", "col"); // for specifying it as true when def did not allow it
+			}
 		}
 		
 		// create the right resource def but let it clash with another policy with matching resource-def
@@ -380,8 +420,10 @@ public class TestRangerPolicyValidator {
 		// we are doctoring the factory to always return the same signature
 		when(_factory.createPolicyResourceSignature(anyPolicy())).thenReturn(new RangerPolicyResourceSignature("blah"));
 		for (Action action : cu) {
-			_failures.clear(); assertFalse(_validator.isValid(_policy, action, _failures));
-			_utils.checkFailureForSemanticError(_failures, "resources");
+			for (boolean isAdmin : new boolean[] { true, false }) {
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForSemanticError(_failures, "resources");
+			}
 		}
 	}
 	
@@ -540,20 +582,22 @@ public class TestRangerPolicyValidator {
 	
 	@Test
 	public final void test_isValidResourceFlags_happyPath() {
-		// passing null values effectively bypasses the filter
-		assertTrue(_validator.isValidResourceFlags(null, _failures, null, "a-service-def", "a-policy"));
-		// so does passing in empty collections
+
 		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_happyPath);
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs2(resourceDef_happyPath);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
-		assertTrue(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy"));
+		assertTrue(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy", true));
+
+		// Since one of the resource has excludes set to true, without admin privilages it should fail and contain appropriate error messages
+		assertFalse(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy", false));
+		_utils.checkFailureForSemanticError(_failures, "isExcludes", "isAdmin");
 	}
 
 	private Object[][] policyResourceMap_failures = new Object[][] {
 			// { "resource-name", "values" "isExcludes", "isRecursive" }
 			// values collection is null as it isn't relevant to the part being tested with this data
 			{ "db", null, true, true },    // ok: def has true for both  
-			{ "tbl", null, true, null },   // excludes: def==false, policy==true  
+			{ "tbl", null, true, null },   // excludes: definition does not allow excludes by resource has it set to true  
 			{ "col", null, false, true }    // recursive: def==null (i.e. false), policy==true
 	};
 	
@@ -563,9 +607,11 @@ public class TestRangerPolicyValidator {
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs2(resourceDef_happyPath);
 		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_failures);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
-		assertFalse(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy"));
+		// should not error out on 
+		assertFalse(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy", false));
 		_utils.checkFailureForSemanticError(_failures, "isExcludes", "tbl");
 		_utils.checkFailureForSemanticError(_failures, "isRecursive", "col");
+		_utils.checkFailureForSemanticError(_failures, "isExcludes", "isAdmin");
 	}
 
 	@Test
