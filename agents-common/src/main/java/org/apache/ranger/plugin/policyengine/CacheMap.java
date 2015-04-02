@@ -18,24 +18,36 @@
  */
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.map.ser.StdSerializers;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CacheMap<K, V> extends LinkedHashMap<K, V> {
     private static final long serialVersionUID = 1L;
+    private static final Log LOG = LogFactory.getLog(CacheMap.class);
+
 
     private static final float RANGER_CACHE_DEFAULT_LOAD_FACTOR = 0.75f;
 
-    protected int maxCapacity;
+    protected int initialCapacity;
 
-    public CacheMap(int maxCapacity) {
-        super(maxCapacity, CacheMap.RANGER_CACHE_DEFAULT_LOAD_FACTOR, true); // true for access-order
+    public CacheMap(int initialCapacity) {
+        super(initialCapacity, CacheMap.RANGER_CACHE_DEFAULT_LOAD_FACTOR, true); // true for access-order
 
-        this.maxCapacity = maxCapacity;
+        this.initialCapacity = initialCapacity;
     }
 
     @Override
     protected boolean removeEldestEntry(Map.Entry eldest) {
-        return size() > maxCapacity;
+        boolean result = size() > initialCapacity;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("CacheMap.removeEldestEntry(), result:"+ result);
+        }
+
+        return result;
     }
 }
