@@ -82,7 +82,7 @@
 			"label":"Zookeeper Connect String"
 		},
 		{
-			"name":"certificate.cn",
+			"name":"commonNameForCertificate",
 			"type":"string",
 			"mandatory":false,
 			"label":"Common Name for Certificate"
