@@ -1018,13 +1018,16 @@ public class ServiceDBStore implements ServiceStore {
 			RangerPolicyResource polRes = new RangerPolicyResource();
 			polRes.setIsExcludes(false);
 			polRes.setIsRecursive(false);
-			
-			String value;
+
+			String value = "*";
 			if("path".equalsIgnoreCase(resDef.getName())) {
 				value = "/*";
-			} else {
-				value = "*";
 			}
+
+			if(resDef.getRecursivesupported()) {
+				polRes.setIsRecursive(Boolean.TRUE);
+			}
+
 			polRes.setValue(value);
 			resources.put(resDef.getName(), polRes);
 		}
