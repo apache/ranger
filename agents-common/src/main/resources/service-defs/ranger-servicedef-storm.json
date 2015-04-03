@@ -159,7 +159,7 @@
 
 		{
 			"id": 4,
-			"name": "certificate.cn",
+			"name": "commonNameForCertificate",
 			"type": "string",
 			"mandatory": false,
 			"validationRegEx":"",

@@ -197,7 +197,7 @@
 		
 		{
 			"id": 9,
-			"name": "certificate.cn",
+			"name": "commonNameForCertificate",
 			"type": "string",
 			"subType": "",
 			"mandatory": false,
