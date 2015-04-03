@@ -133,6 +133,7 @@ public class YarnClient {
 							lret = null;
 						}
 					} else {
+						lret = null;
 						String msgDesc = "Unable to get a valid response for "
 								+ "expected mime type : [" + EXPECTED_MIME_TYPE
 								+ "] URL : " + url + " - got null response.";
@@ -143,12 +144,15 @@ public class YarnClient {
 						throw hdpException;
 					}
 				} catch (HadoopException he) {
+					lret = null;
 					throw he;
 				} catch (Throwable t) {
+					lret = null;
 					String msgDesc = "Exception while getting Yarn Queue List."
 							+ " URL : " + url;
 					HadoopException hdpException = new HadoopException(msgDesc,
 							t);
+					
 					LOG.error(msgDesc, t);
 
 					hdpException.generateResponseDataMap(false,
@@ -164,7 +168,6 @@ public class YarnClient {
 					if (client != null) {
 						client.destroy(); 
 					}
-				
 				}
 				return lret ;
 			}
@@ -172,10 +175,20 @@ public class YarnClient {
 		
 		try {
 			ret = timedTask(yarnQueueListGetter, 5, TimeUnit.SECONDS);
-		} catch ( Exception e) {
-			LOG.error("Unable to get Yarn Queue list from [" + yarnQUrl + "]", e) ;
+		} catch ( Throwable t) {
+			LOG.error("Unable to get Yarn Queue list from [" + yarnQUrl + "]", t) ;
+			String msgDesc = "Unable to get a valid response for "
+					+ "expected mime type : [" + EXPECTED_MIME_TYPE
+					+ "] URL : " + yarnQUrl;
+			HadoopException hdpException = new HadoopException(msgDesc,
+					t);
+			LOG.error(msgDesc, t);
+
+			hdpException.generateResponseDataMap(false,
+					BaseClient.getMessage(t), msgDesc + errMsg, null,
+					null);
+			throw hdpException;
 		}
-		
 		return ret;
 	}
 	
@@ -195,7 +208,10 @@ public class YarnClient {
 				configs);
 		strList = getYarnResource(yarnClient, "",null);
 
-		if (strList != null) {
+		if (strList != null && strList.size() > 0 ) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("TESTING list size" + strList.size() + " Yarn Queues");
+			}
 			connectivityStatus = true;
 		}
 
@@ -216,8 +232,7 @@ public class YarnClient {
 			Map<String, String> configs) {
 		YarnClient yarnClient = null;
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Getting YarnClient for datasource: " + serviceName
-					+ "configMap: " + configs);
+			LOG.debug("Getting YarnClient for datasource: " + serviceName);
 		}
 		String errMsg = errMessage;
 		if (configs == null || configs.isEmpty()) {
@@ -264,15 +279,17 @@ public class YarnClient {
 					}
 				}
 			}
-		} catch (HadoopException he) {
+		}
+		catch (HadoopException he) {
 			throw he;
-		} catch (Exception e) {
+		}
+		catch (Throwable t) {
 			String msgDesc = "getYarnResource: Unable to get Yarn resources.";
-			LOG.error(msgDesc, e);
+			LOG.error(msgDesc, t);
 			HadoopException hdpException = new HadoopException(msgDesc);
 
 			hdpException.generateResponseDataMap(false,
-					BaseClient.getMessage(e), msgDesc + errMsg, null, null);
+					BaseClient.getMessage(t), msgDesc + errMsg, null, null);
 			throw hdpException;
 		}
 		return resultList;
