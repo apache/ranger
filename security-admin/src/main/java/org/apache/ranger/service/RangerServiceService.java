@@ -58,7 +58,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.type", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.SERVICE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.STATUS, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
 		
 		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
 		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));

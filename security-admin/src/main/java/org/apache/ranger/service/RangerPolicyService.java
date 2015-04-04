@@ -79,7 +79,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				"XXService xSvc", "xSvc.id = obj.service"));
 		searchFields.add(new SearchField(SearchFilter.SERVICE_ID, "xSvc.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL, 
 				"XXService xSvc", "xSvc.id = obj.service"));
-		searchFields.add(new SearchField(SearchFilter.STATUS, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.POLICY_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.POLICY_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.USER, "xUser.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, 

@@ -46,6 +46,8 @@ import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XRepositoryService;
@@ -93,6 +95,9 @@ public class PublicAPIs {
 
 	@Autowired
 	XPolicyService xPolicyService;
+
+	@Autowired
+	RangerPolicyService policyService;
 
 	@Autowired
 	StringUtil stringUtil;
@@ -407,8 +412,10 @@ public class PublicAPIs {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.searchPolicies(): ");
 		}
-		
-		List<RangerPolicy> rangerPolicyList = serviceREST.getPolicies(request);
+
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, policyService.sortFields);
+
+		List<RangerPolicy> rangerPolicyList = serviceREST.getPolicies(filter);
 		
 		VXPolicyList vXPolicyList = null;
 

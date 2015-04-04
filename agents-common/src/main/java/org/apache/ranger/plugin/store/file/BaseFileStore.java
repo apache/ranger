@@ -41,11 +41,12 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.store.AbstractServiceStore;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public class BaseFileStore {
+public abstract class BaseFileStore extends AbstractServiceStore {
 	private static final Log LOG = LogFactory.getLog(BaseFileStore.class);
 
 	private Gson   gsonBuilder = null;

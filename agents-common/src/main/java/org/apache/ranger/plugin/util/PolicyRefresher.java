@@ -25,7 +25,6 @@ import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

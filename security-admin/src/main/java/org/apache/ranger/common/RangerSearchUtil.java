@@ -51,7 +51,6 @@ public class RangerSearchUtil extends SearchUtil {
 			ret.setParams(new HashMap<String, String>());
 		}
 
-		ret.setParam(SearchFilter.LOGIN_USER, request.getParameter(SearchFilter.LOGIN_USER));
 		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter(SearchFilter.SERVICE_TYPE));
 		ret.setParam(SearchFilter.SERVICE_TYPE_ID, request.getParameter(SearchFilter.SERVICE_TYPE_ID));
 		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter(SearchFilter.SERVICE_NAME));
@@ -59,7 +58,8 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter(SearchFilter.POLICY_NAME));
 		ret.setParam(SearchFilter.POLICY_NAME_PARTIAL, request.getParameter(SearchFilter.POLICY_NAME_PARTIAL));
 		ret.setParam(SearchFilter.POLICY_ID, request.getParameter(SearchFilter.POLICY_ID));
-		ret.setParam(SearchFilter.STATUS, request.getParameter(SearchFilter.STATUS));
+		ret.setParam(SearchFilter.IS_ENABLED, request.getParameter(SearchFilter.IS_ENABLED));
+		ret.setParam(SearchFilter.IS_RECURSIVE, request.getParameter(SearchFilter.IS_RECURSIVE));
 		ret.setParam(SearchFilter.USER, request.getParameter(SearchFilter.USER));
 		ret.setParam(SearchFilter.GROUP, request.getParameter(SearchFilter.GROUP));
 		ret.setParam(SearchFilter.POL_RESOURCE, request.getParameter(SearchFilter.POL_RESOURCE));
@@ -74,6 +74,39 @@ public class RangerSearchUtil extends SearchUtil {
 			}
 		}
 		
+		extractCommonCriteriasForFilter(request, ret, sortFields);
+
+		return ret;
+	}
+
+	public SearchFilter getSearchFilterFromLegacyRequest(HttpServletRequest request, List<SortField> sortFields) {
+		if (request == null) {
+			return null;
+		}
+
+		SearchFilter ret = new SearchFilter();
+
+		if (MapUtils.isEmpty(request.getParameterMap())) {
+			ret.setParams(new HashMap<String, String>());
+		}
+
+		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter("repositoryType"));
+		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter("repositoryName"));
+		ret.setParam(SearchFilter.SERVICE_ID, request.getParameter("repositoryId"));
+		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter("policyName"));
+		ret.setParam(SearchFilter.USER, request.getParameter("userName"));
+		ret.setParam(SearchFilter.GROUP, request.getParameter("groupName"));
+		ret.setParam(SearchFilter.IS_ENABLED, request.getParameter("isEnabled"));
+		ret.setParam(SearchFilter.IS_RECURSIVE, request.getParameter("isRecursive"));
+		ret.setParam(SearchFilter.RESOURCE_PREFIX + "path", request.getParameter("resourceName"));
+		ret.setParam(SearchFilter.RESOURCE_PREFIX + "database", request.getParameter("databases"));
+		ret.setParam(SearchFilter.RESOURCE_PREFIX + "table", request.getParameter("tables"));
+		ret.setParam(SearchFilter.RESOURCE_PREFIX + "udf", request.getParameter("udfs"));
+		ret.setParam(SearchFilter.RESOURCE_PREFIX + "column", request.getParameter("columns"));
+		ret.setParam(SearchFilter.RESOURCE_PREFIX + "column-family", request.getParameter("columnFamilies"));
+		ret.setParam(SearchFilter.RESOURCE_PREFIX + "topology", request.getParameter("topologies"));
+		ret.setParam(SearchFilter.RESOURCE_PREFIX + "service", request.getParameter("services"));
+
 		extractCommonCriteriasForFilter(request, ret, sortFields);
 
 		return ret;

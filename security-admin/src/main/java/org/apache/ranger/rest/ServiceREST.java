@@ -936,13 +936,26 @@ public class ServiceREST {
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerPolicy> getPolicies(@Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicies()");
+			LOG.debug("==> ServiceREST.getPolicies(request)");
+		}
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
+		List<RangerPolicy> ret = getPolicies(filter);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicies(request): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	public List<RangerPolicy> getPolicies(SearchFilter filter) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicies(filter)");
 		}
 
 		List<RangerPolicy> ret = null;
-
-		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
-		
 
 		try {
 			ret = svcStore.getPolicies(filter);
@@ -953,7 +966,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicies(): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== ServiceREST.getPolicies(filter): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;
