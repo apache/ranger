@@ -26,12 +26,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
 import com.google.common.collect.Lists;
@@ -47,14 +50,15 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	}
 	
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result, String accessType, String resourcePath) {
-		RangerHiveAccessRequest request  = (RangerHiveAccessRequest)result.getAccessRequest();
-		RangerHiveResource      resource = (RangerHiveResource)request.getResource();
+		RangerAccessRequest  request      = result.getAccessRequest();
+		RangerAccessResource resource     = request.getResource();
+		String               resourceType = resource != null ? resource.getLeafName(result.getServiceDef()) : null;
 
 		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 		auditEvent.setAclEnforcer(RangerModuleName);
 		auditEvent.setSessionId(request.getSessionId());
-		auditEvent.setResourceType("@" + StringUtil.toLower(resource.getObjectType().name())); // to be consistent with earlier release
-		auditEvent.setAccessType(request.getHiveAccessType().toString());
+		auditEvent.setResourceType("@" + resourceType); // to be consistent with earlier release
+		auditEvent.setAccessType(accessType);
 		auditEvent.setAction(request.getAction());
 		auditEvent.setUser(request.getUser());
 		auditEvent.setAccessResult((short)(result.getIsAllowed() ? 1 : 0));
@@ -65,17 +69,28 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		auditEvent.setRepositoryType(result.getServiceType());
 		auditEvent.setRepositoryName(result.getServiceName()) ;
 		auditEvent.setRequestData(request.getRequestData());
-		auditEvent.setResourcePath(resource != null ? resource.getAsString(result.getServiceDef()) : null);
-		
+		auditEvent.setResourcePath(resourcePath);
+
 		return auditEvent;
 	}
 	
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result) {
+		RangerAccessRequest  request  = result.getAccessRequest();
+		RangerAccessResource resource = request.getResource();
 
-		RangerHiveAccessRequest request  = (RangerHiveAccessRequest)result.getAccessRequest();
-		RangerHiveResource      resource = (RangerHiveResource)request.getResource();
-		String accessType = request.getHiveAccessType().toString();
+		String accessType = null;
+		if(request instanceof RangerHiveAccessRequest) {
+			RangerHiveAccessRequest hiveRequest = (RangerHiveAccessRequest)request;
+
+			accessType = hiveRequest.getHiveAccessType().toString();
+		}
+
+		if(StringUtils.isEmpty(accessType)) {
+			accessType = request.getAccessType();
+		}
+
 		String resourcePath = resource != null ? resource.getAsString(result.getServiceDef()) : null;
+
 		return createAuditEvent(result, accessType, resourcePath);
 	}
 

@@ -333,10 +333,16 @@ public class RangerBasePlugin {
 			accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
 			accessRequest.setAction(action);
 
+			// call isAccessAllowed() to determine if audit is enabled or not
 			RangerAccessResult accessResult = policyEngine.isAccessAllowed(accessRequest, null);
 
 			if(accessResult != null && accessResult.getIsAudited()) {
+				accessRequest.setAccessType(action);
 				accessResult.setIsAllowed(isSuccess);
+
+				if(! isSuccess) {
+					accessResult.setPolicyId(-1);
+				}
 
 				auditHandler.logAudit(accessResult);
 			}
