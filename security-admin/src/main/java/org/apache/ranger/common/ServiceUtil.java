@@ -367,7 +367,12 @@ public class ServiceUtil {
 	}
 
 	public static Integer toAssetType(String serviceType) {
-		Integer ret = mapServiceTypeToAssetType.get(serviceType);
+		
+		if(serviceType == null) {
+			return null;
+		}
+		
+		Integer ret = mapServiceTypeToAssetType.get(serviceType.toLowerCase());
 
 		return ret;
 	}
