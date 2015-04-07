@@ -172,7 +172,7 @@
   
   <property>
   	<name>hadoop.kms.security.authorization.manager</name>
-  	<value></value>
+  	<value>org.apache.ranger.authorization.kms.authorizer.RangerKmsAuthorizer</value>
   </property>
 
 </configuration>
