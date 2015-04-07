@@ -277,7 +277,7 @@ public class Jisql {
     }
 
     public void run() throws Exception {
-
+    	boolean isExit=false;
         try {
             driver = (Driver) Class.forName(driverName).newInstance();
             props = new Properties();
@@ -313,16 +313,23 @@ public class Jisql {
             }
         }
         catch (SQLException sqle) {
-            printAllExceptions(sqle);
+        	printAllExceptions(sqle);
+        	isExit=true;
+        }
+        catch (IOException ie) {
+        	isExit=true;
         }
         catch (ClassNotFoundException cnfe) {
+        	isExit=true;
             System.err.println("Cannot find the driver class \"" + driverName + "\" in the current classpath.");
         }
         catch (InstantiationException ie) {
+        	isExit=true;
             System.err.println("Cannot instantiate the driver class \"" + driverName + "\"");
             ie.printStackTrace(System.err);
         }
         catch (IllegalAccessException iae) {
+        	isExit=true;
             System.err.println("Cannot instantiate the driver class \"" + driverName + "\" because of an IllegalAccessException");
             iae.printStackTrace(System.err);
         }
@@ -333,6 +340,9 @@ public class Jisql {
                 }
                 catch (SQLException ignore) {
                     /* ignored */
+                }
+                if(isExit){
+                	System.exit(1);
                 }
             }
         }
@@ -347,7 +357,7 @@ public class Jisql {
      *             if an exception occurs.
      * 
      */
-    public void doIsql() throws SQLException {
+    public void doIsql() throws IOException, SQLException {
         BufferedReader reader = null;
         Statement statement = null;
         ResultSet resultSet = null;
@@ -359,9 +369,9 @@ public class Jisql {
                 reader = new BufferedReader(new FileReader(inputFileName));
             }
             catch (FileNotFoundException fnfe) {
-                System.err.println("Unable to open \"" + inputFileName + "\"");
+            	System.err.println("Unable to open file \"" + inputFileName + "\"");
                 fnfe.printStackTrace(System.err);
-                return;
+                throw fnfe;
             }
         }
         else {
@@ -489,6 +499,7 @@ public class Jisql {
                 printAllExceptions(sqle);
                 statement.cancel();
                 statement.clearWarnings();
+                throw sqle;
             }
             catch (Exception e) {
                 e.printStackTrace(System.err);

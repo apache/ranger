@@ -195,6 +195,8 @@ def populate_config_dict_from_env():
     conf_dict['RANGER_ADMIN_DB_HOST'] = os.getenv("RANGER_ADMIN_DB_HOST")
     conf_dict['RANGER_AUDIT_DB_HOST'] = os.getenv("RANGER_AUDIT_DB_HOST")
     conf_dict['MYSQL_BIN'] = 'mysql.exe'       #os.getenv("MYSQL_BIN")
+    conf_dict['XA_DB_FLAVOR'] = os.getenv("XA_DB_FLAVOR")
+    conf_dict['AUDIT_DB_FLAVOR'] = os.getenv("AUDIT_DB_FLAVOR")
     conf_dict['RANGER_ADMIN_DB_USERNAME'] = os.getenv("RANGER_ADMIN_DB_USERNAME")
     conf_dict['RANGER_ADMIN_DB_PASSWORD'] = os.getenv("RANGER_ADMIN_DB_PASSWORD")
     conf_dict['RANGER_ADMIN_DB_NAME'] = os.getenv("RANGER_ADMIN_DB_DBNAME")
@@ -259,13 +261,30 @@ def init_variables(switch):
     conf_dict['EWS_ROOT']   = EWS_ROOT
     conf_dict['WEBAPP_ROOT']= WEBAPP_ROOT
     conf_dict['INSTALL_DIR']= INSTALL_DIR
+    conf_dict['JAVA_BIN']='java'
+    conf_dict['DB_FLAVOR']=os.getenv("XA_DB_FLAVOR")
+    conf_dict['SQL_CONNECTOR_JAR']=os.getenv("SQL_CONNECTOR_JAR")
+    conf_dict['db_host']=os.getenv("RANGER_ADMIN_DB_HOST")
+    conf_dict['db_name']=os.getenv("RANGER_ADMIN_DB_DBNAME")
+    conf_dict['db_user']=os.getenv("RANGER_ADMIN_DB_USERNAME")
+    conf_dict['db_password']=os.getenv("RANGER_ADMIN_DB_PASSWORD")
+    conf_dict['audit_db_name']=os.getenv("RANGER_AUDIT_DB_DBNAME")
+    conf_dict['audit_db_user']=os.getenv("RANGER_AUDIT_DB_USERNAME")
+    conf_dict['audit_db_password']=os.getenv("RANGER_AUDIT_DB_PASSWORD")
 
     db_dir = os.path.join(conf_dict['RANGER_ADMIN_HOME'] , "db")
-    conf_dict['RANGER_DB_DIR']           = db_dir
-    conf_dict['db_core_file']           = os.path.join(db_dir, "xa_core_db.sql")
-    conf_dict['db_create_user_file']    = os.path.join(db_dir, "create_dev_user.sql")
-    conf_dict['db_audit_file']          = os.path.join(db_dir, "xa_audit_db.sql")
-    conf_dict['db_asset_file']          = os.path.join(db_dir, "reset_asset.sql")
+    conf_dict['mysql_core_file']=os.path.join(db_dir,'mysql','xa_core_db.sql')
+    conf_dict['mysql_audit_file']=os.path.join(db_dir,'mysql','xa_audit_db.sql')
+    conf_dict['oracle_core_file']=os.path.join(db_dir,'oracle','xa_core_db_oracle.sql')
+    conf_dict['oracle_audit_file']=os.path.join(db_dir,'oracle','xa_audit_db_oracle.sql')
+    conf_dict['postgres_core_file']=os.path.join(db_dir,'postgres','xa_core_db_postgres.sql')
+    conf_dict['postgres_audit_file']=os.path.join(db_dir,'postgres','xa_audit_db_postgres.sql')
+    conf_dict['sqlserver_core_file']=os.path.join(db_dir,'sqlserver','xa_core_db_sqlserver.sql')
+    conf_dict['sqlserver_audit_file']=os.path.join(db_dir,'sqlserver','xa_audit_db_sqlserver.sql')
+    #conf_dict['db_core_file']           = os.path.join(db_dir, "xa_core_db.sql")
+    #conf_dict['db_create_user_file']    = os.path.join(db_dir, "create_dev_user.sql")
+    #conf_dict['db_audit_file']          = os.path.join(db_dir, "xa_audit_db.sql")
+    #conf_dict['db_asset_file']          = os.path.join(db_dir, "reset_asset.sql")
 
     #log("config is : " , "debug")
     #for x in conf_dict:
@@ -336,7 +355,7 @@ def write_config_to_file():
     for key,value in conf_dict.items():
         if 'PASSWORD' in key :
             call_keystore(library_path,key,value,jceks_file_path,'create')
-            value = ''
+            value=''
         ModConfig(write_conf_to_file , key,value)
 
 
@@ -653,6 +672,8 @@ def update_properties():
     global conf_dict
     sys_conf_dict={}
 
+    XA_DB_FLAVOR = conf_dict["XA_DB_FLAVOR"]
+    AUDIT_DB_FLAVOR = conf_dict["AUDIT_DB_FLAVOR"]
     MYSQL_HOST = conf_dict["RANGER_ADMIN_DB_HOST"]
     WEBAPP_ROOT = conf_dict["WEBAPP_ROOT"]
     db_user = conf_dict["RANGER_ADMIN_DB_USERNAME"]
@@ -662,17 +683,13 @@ def update_properties():
     audit_db_user = conf_dict["RANGER_AUDIT_DB_USERNAME"]
     audit_db_password = conf_dict["RANGER_AUDIT_DB_PASSWORD"]
     audit_db_name = conf_dict["RANGER_AUDIT_DB_NAME"]
-
     update_xapolicymgr_properties()
-
     newPropertyValue=''
     to_file = os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "conf", "xa_system.properties")
-
     if os.path.isfile(to_file):
         log("to_file: " + to_file + " file found", "info")
     else:
         log("to_file: " + to_file + " does not exists", "warning")
-
     config = StringIO.StringIO()
     config.write('[dummysection]\n')
     config.write(open(to_file).read())
@@ -687,9 +704,39 @@ def update_properties():
         sys_conf_dict[option] = value
         cObj.set("dummysection",option, value)
 
-    log("MYSQL_HOST is : " + MYSQL_HOST,"debug")
+
+    log("SQL_HOST is : " + MYSQL_HOST,"debug")
     propertyName="jdbc.url"
-    newPropertyValue="jdbc:log4jdbc:mysql://" + MYSQL_HOST + ":3306/" + db_name
+    if XA_DB_FLAVOR == "MYSQL":
+        newPropertyValue="jdbc:log4jdbc:mysql://" + MYSQL_HOST + ":3306/" + db_name
+    elif XA_DB_FLAVOR == "ORACLE":
+        newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(db_user, db_password, MYSQL_HOST)
+    elif XA_DB_FLAVOR == "POSTGRES":
+        newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, db_name)
+    elif XA_DB_FLAVOR == "SQLSERVER":
+        newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" %(MYSQL_HOST, db_name)
+    cObj.set('dummysection',propertyName,newPropertyValue)
+
+    propertyName="jdbc.dialect"
+    if XA_DB_FLAVOR == "MYSQL":
+        newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
+    elif XA_DB_FLAVOR == "ORACLE":
+        newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
+    elif XA_DB_FLAVOR == "POSTGRES":
+        newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
+    elif XA_DB_FLAVOR == "SQLSERVER":
+        newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
+    cObj.set('dummysection',propertyName,newPropertyValue)
+
+    propertyName="jdbc.driver"
+    if XA_DB_FLAVOR == "MYSQL":
+        newPropertyValue="net.sf.log4jdbc.DriverSpy"
+    elif XA_DB_FLAVOR == "ORACLE":
+        newPropertyValue="oracle.jdbc.OracleDriver"
+    elif XA_DB_FLAVOR == "POSTGRES":
+        newPropertyValue="org.postgresql.Driver"
+    elif XA_DB_FLAVOR == "SQLSERVER":
+        newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
     cObj.set('dummysection',propertyName,newPropertyValue)
 
     propertyName="xa.webapp.url.root"
@@ -702,7 +749,36 @@ def update_properties():
     cObj.set('dummysection',propertyName,newPropertyValue)
 
     propertyName="auditDB.jdbc.url"
-    newPropertyValue="jdbc:log4jdbc:mysql://"+MYSQL_HOST+":3306/"+audit_db_name
+    if AUDIT_DB_FLAVOR == "MYSQL":
+        newPropertyValue="jdbc:log4jdbc:mysql://"+MYSQL_HOST+":3306/"+audit_db_name
+    elif AUDIT_DB_FLAVOR == "ORACLE":
+        newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(db_user, db_password, MYSQL_HOST)
+    elif AUDIT_DB_FLAVOR == "POSTGRES":
+        newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, db_name)
+    elif AUDIT_DB_FLAVOR == "SQLSERVER":
+        newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" % (MYSQL_HOST, audit_db_name)
+    cObj.set('dummysection',propertyName,newPropertyValue)
+
+    propertyName="auditDB.jdbc.dialect"
+    if AUDIT_DB_FLAVOR == "MYSQL":
+        newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
+    elif AUDIT_DB_FLAVOR == "ORACLE":
+        newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
+    elif AUDIT_DB_FLAVOR == "POSTGRES":
+        newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
+    elif AUDIT_DB_FLAVOR == "SQLSERVER":
+        newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
+    cObj.set('dummysection',propertyName,newPropertyValue)
+
+    propertyName="auditDB.jdbc.driver"
+    if AUDIT_DB_FLAVOR == "MYSQL":
+        newPropertyValue="net.sf.log4jdbc.DriverSpy"
+    elif AUDIT_DB_FLAVOR == "ORACLE":
+        newPropertyValue="oracle.jdbc.OracleDriver"
+    elif AUDIT_DB_FLAVOR == "POSTGRES":
+        newPropertyValue="org.postgresql.Driver"
+    elif AUDIT_DB_FLAVOR == "SQLSERVER":
+        newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
     cObj.set('dummysection',propertyName,newPropertyValue)
 
     propertyName="jdbc.user"

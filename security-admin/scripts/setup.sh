@@ -37,7 +37,7 @@ usage() {
 } 2>/dev/null
 
 log() {
-   local prefix="[$(date +%Y/%m/%d\ %H:%M:%S)]: "
+   local prefix="$(date +%Y-%m-%d\ %H:%M:%S,%3N) "
    echo "${prefix} $@" >> $LOGFILE
    echo "${prefix} $@"
 }
@@ -1451,8 +1451,10 @@ if [ "$?" == "0" ]
 then
 update_properties
 do_authentication_setup
-execute_java_patches
+$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
+#execute_java_patches
 else
+	log "[E] DB schema setup failed! Please contact Administrator."
 	exit 1
 fi
 echo "Installation of Ranger PolicyManager Web Application is completed."

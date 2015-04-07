@@ -24,7 +24,6 @@ app_type = 'ranger-admin'
 
 
 service_entry = '--service' in sys.argv
-configure_entry = '--configure' in sys.argv
 
 
 if service_entry:
@@ -32,16 +31,13 @@ if service_entry:
 		ranger_install.run_setup(cmd)
 		jdk_options = ranger_install.get_jdk_options()
 		class_path = ranger_install.get_ranger_classpath()
-		java_class = 'org.apache.ranger.server.tomcat.EmbededServer'
+		java_class = 'org.apache.ranger.server.tomcat.EmbeddedServer'
 		class_arguments = ''
-
 		from xml.dom.minidom import getDOMImplementation
 		dom = getDOMImplementation()
 		xmlDoc = dom.createDocument(None, 'service', None)
 		xmlDocRoot = xmlDoc.documentElement
 		arguments = ' '.join([''.join(jdk_options), '-cp', class_path, java_class, class_arguments])
-
-
 		def appendTextElement(name, value):
 			elem = xmlDoc.createElement(name)
 			elem.appendChild(xmlDoc.createTextNode(value))
@@ -63,13 +59,3 @@ if service_entry:
 	except:
 		print "######################## Ranger Setup failed! #######################"
 		sys.exit(1)
-
-
-if configure_entry:
-	try:
-		ranger_install.configure()
-	except:
-		print "######################## Ranger Configure failed! #######################"
-		sys.exit(1)
-
-	sys.exit(0)
