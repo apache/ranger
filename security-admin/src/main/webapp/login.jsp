@@ -70,7 +70,7 @@
 						<label><i class="icon-lock"></i> Password:</label>	
 						<input type="password" name="password" id="password" tabindex="2" autocomplete="off">
 					</div>
-					<span id="errorBox" class="help-inline" style="color:white;display:none;">The username or password you entered is incorrect..
+					<span id="errorBox" class="help-inline" style="color:white;display:none;"><span class="errorMsg"></span>
 						<i class="icon-warning-sign" style="color:#ae2817;"></i>
 					</span>
 					<span id="errorBoxUnsynced" class="help-inline" style="color:white;display:none;">User is not available in HDP Admin Tool. Please contact your Administrator.

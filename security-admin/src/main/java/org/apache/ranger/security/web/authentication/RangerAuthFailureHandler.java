@@ -79,10 +79,17 @@ ExceptionMappingAuthenticationFailureHandler {
 		response.setHeader("Cache-Control", "no-cache");
 		String jsonResp = "";
 		try {
+			String msg = exception.getMessage();
 			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-			vXResponse.setMsgDesc("Bad Credentials");
-
+			if(msg!=null && !msg.isEmpty()){
+				if(msg.equalsIgnoreCase("Bad credentials")){
+					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+					vXResponse.setMsgDesc("The username or password you entered is incorrect..");
+				}else{
+					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+					vXResponse.setMsgDesc("Unable to connect to DB..");
+				}
+			}
 			jsonResp = jsonUtil.writeObjectAsString(vXResponse);
 			response.getWriter().write(jsonResp);
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

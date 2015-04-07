@@ -84,6 +84,8 @@ function doLogin() {
 				$('#errorBox').hide();
 				$('#errorBoxUnsynced').show();
 			} else {
+				var resp = JSON.parse(jqXHR.responseText);
+				$('#errorBox .errorMsg').text(resp.msgDesc);
 				$('#errorBox').show();
 				$('#errorBoxUnsynced').hide();
 			}

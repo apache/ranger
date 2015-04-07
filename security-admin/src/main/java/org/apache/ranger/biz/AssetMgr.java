@@ -1753,6 +1753,9 @@ public class AssetMgr extends AssetMgrBase {
 		Long count=xTrxLogService
 				.searchXTrxLogsCount(searchCriteria);
 		vXTrxLogList.setTotalCount(count);
+		 
+		List<VXTrxLog> newList = validateXXTrxLogList(vXTrxLogList.getVXTrxLogs());
+		vXTrxLogList.setVXTrxLogs(newList);
 		return vXTrxLogList;
 	}
 
@@ -1799,9 +1802,22 @@ public class AssetMgr extends AssetMgrBase {
 		List<XXTrxLog> xTrxLogList = rangerDaoManager.getXXTrxLog()
 				.findByTransactionId(transactionId);
 		VXTrxLogList vXTrxLogList = new VXTrxLogList();
-		List<VXTrxLog> vXTrxLogs = vXTrxLogList.getVXTrxLogs();
-		for (XXTrxLog xTrxLog : xTrxLogList) {
-			VXTrxLog vXTrxLog = xTrxLogService.populateViewBean(xTrxLog);
+		List<VXTrxLog> trxLogList = new ArrayList<VXTrxLog>();
+		
+		for(XXTrxLog xTrxLog : xTrxLogList) {
+		        trxLogList.add(xTrxLogService.populateViewBean(xTrxLog));
+		}
+		
+		List<VXTrxLog> vXTrxLogs = validateXXTrxLogList(trxLogList);
+		vXTrxLogList.setVXTrxLogs(vXTrxLogs);
+		return vXTrxLogList;
+	}
+	public List<VXTrxLog> validateXXTrxLogList(List<VXTrxLog> xTrxLogList) {
+		
+		List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();
+		for (VXTrxLog xTrxLog : xTrxLogList) {
+			VXTrxLog vXTrxLog = new VXTrxLog();
+			vXTrxLog = xTrxLog;
 			if(vXTrxLog.getPreviousValue()==null || vXTrxLog.getPreviousValue().equalsIgnoreCase("null")){
 				vXTrxLog.setPreviousValue("");
 			}
@@ -1845,10 +1861,8 @@ public class AssetMgr extends AssetMgrBase {
 			}			
 			vXTrxLogs.add(vXTrxLog);
 		}
-		vXTrxLogList.setVXTrxLogs(vXTrxLogs);
-		return vXTrxLogList;
+		return vXTrxLogs;
 	}
-
 	/*
 	 * (non-Javadoc)
 	 * 

@@ -163,7 +163,6 @@ public class AuthSessionService extends
 		viewObj.setAuthStatus(resource.getAuthStatus());
 		viewObj.setAuthType(resource.getAuthType());
 		viewObj.setDeviceType(resource.getDeviceType());
-		viewObj.setExtSessionId(resource.getExtSessionId());
 		viewObj.setId(resource.getId());
 		viewObj.setRequestIP(resource.getRequestIP());
 
