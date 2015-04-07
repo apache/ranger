@@ -33,7 +33,7 @@ public class KMSConfiguration {
 
   public static final String KMS_CONFIG_DIR = "kms.config.dir";
   public static final String KMS_SITE_XML = "kms-site.xml";
-  public static final String KMS_ACLS_XML = "kms-acls.xml";
+  public static final String KMS_ACLS_XML = "dbks-site.xml";
 
   public static final String CONFIG_PREFIX = "hadoop.kms.";
 

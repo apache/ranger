@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+  <!-- Blacklist for authorization -->
+
+  <!--<property>
+    <name>hadoop.kms.blacklist.CREATE</name>
+    <value>hdfs</value>
+    <description>
+          Blacklist for create-key operations.
+    </description>
+  </property>-->
+
   <!-- Encryption key Password -->
   
   <property>
@@ -47,7 +57,7 @@
   
   <property>
     <name>ranger.db.root.password</name>
-    <value>root</value>
+    <value></value>
     <description>
       Database root user name used for operation
     </description>

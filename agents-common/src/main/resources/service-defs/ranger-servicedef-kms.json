@@ -1,0 +1,109 @@
+{
+	"name": "kms",
+	"implClass": "org.apache.ranger.services.kms.RangerServiceKMS",
+	"label": "KMS",
+	"description": "KMS",
+	"createTime": "20150329-11:03:47.095--0800",
+	"updateTime": "20150329-11:03:47.095--0800",
+	"version": 1,
+	"resources": 
+	[
+		{
+			"name": "keyname",
+			"type": "string",
+			"level": 1,
+			"mandatory": false,
+			"lookupSupported": true,
+			"recursiveSupported": true,
+			"label": "Key Name",
+			"description": "Key Name"
+		}
+	],
+
+	"accessTypes": 
+	[
+		{
+			"name": "create",
+			"label": "Create"
+		},
+
+		{
+			"name": "delete",
+			"label": "Delete"
+		},
+
+		{
+			"name": "rollover",
+			"label": "Rollover"
+		},
+		
+		{
+			"name": "setkeymaterial",
+			"label": "Set Key Material"
+		},	
+		
+		{
+			"name": "get",
+			"label": "Get"
+		},
+		
+		{
+			"name": "getkeys",
+			"label": "Get Keys"
+		},
+		
+		{
+			"name": "getmetadata",
+			"label": "Get Metadata"
+		},
+		
+		{
+			"name": "generateeek",
+			"label": "Generate EEK"
+		},
+		
+		{
+			"name": "decrypteek",
+			"label": "Decrypt EEK"
+		}	
+	],
+
+	"configs": 
+	[
+		{
+			"name": "provider",
+			"type": "string",
+			"mandatory": true,
+			"label": "KMS URL"
+		},
+		
+		{
+			"name": "username",
+			"type": "string",
+			"mandatory": true,
+			"label": "Username"
+		},
+
+		{
+			"name": "password",
+			"type": "password",
+			"mandatory": true,
+			"label": "Password"
+		}
+	],
+
+	"enums": 
+	[
+		
+	],
+
+	"contextEnrichers": 
+	[
+		
+	],
+
+	"policyConditions": 
+	[
+	
+	]
+}
