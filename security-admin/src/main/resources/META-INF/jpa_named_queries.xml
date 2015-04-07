@@ -207,6 +207,10 @@
 	<named-query name="XXPolicy.findByServiceId">
 		<query>select obj from XXPolicy obj where obj.service = :serviceId</query>
 	</named-query>
+	
+	<named-query name="XXPolicy.getMaxIdOfXXPolicy">
+		<query>select MAX(obj.id) from XXPolicy obj</query>
+	</named-query>
 
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
@@ -314,6 +318,10 @@
 	<!-- XXService -->
 	<named-query name="XXService.findByName">
 		<query>select obj from XXService obj where obj.name = :name</query>
+	</named-query>
+	
+	<named-query name="XXService.getMaxIdOfXXService">
+		<query>select MAX(obj.id) from XXService obj</query>
 	</named-query>
 
 	<!-- XXPolicyResource -->

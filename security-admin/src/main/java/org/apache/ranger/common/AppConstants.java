@@ -505,6 +505,14 @@ public class AppConstants extends RangerCommonEnums {
 	 * CLASS_TYPE_XA_SERVICE_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_SERVICE_DEF".
 	 */
 	public static final int CLASS_TYPE_XA_SERVICE_DEF = 1033;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_WITH_ASSIGNED_ID is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_WITH_ASSIGNED_ID".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_WITH_ASSIGNED_ID = 1037;
+	/**
+	 * CLASS_TYPE_RANGER_SERVICE_WITH_ASSIGNED_ID is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_SERVICE_WITH_ASSIGNED_ID".
+	 */
+	public static final int CLASS_TYPE_RANGER_SERVICE_WITH_ASSIGNED_ID = 1038;
 
 	/**
 	 * CLASS_TYPE_RANGER_MODULE_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_MODULE_DEF".

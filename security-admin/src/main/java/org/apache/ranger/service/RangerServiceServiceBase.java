@@ -6,17 +6,39 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.SearchField.DATA_TYPE;
+import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerServiceList;
 
-public abstract class RangerServiceServiceBase<T extends XXService, V extends RangerService> extends RangerBaseModelService<T, V> {
+public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extends RangerService> extends RangerBaseModelService<T, V> {
+	
+	public RangerServiceServiceBase() {
+		super();
+		
+		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "xSvcDef.name", DATA_TYPE.STRING, 
+				SEARCH_TYPE.FULL, "XXServiceDef xSvcDef", "obj.type = xSvcDef.id"));
+		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.type", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.SERVICE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
+		
+		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
+		sortFields.add(new SortField(SearchFilter.SERVICE_ID, "obj.id"));
+		sortFields.add(new SortField(SearchFilter.SERVICE_NAME, "obj.name"));
+		
+	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	protected XXService mapViewToEntityBean(RangerService vObj, XXService xObj, int OPERATION_CONTEXT) {
+	protected XXServiceBase mapViewToEntityBean(RangerService vObj, XXServiceBase xObj, int OPERATION_CONTEXT) {
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? GUIDUtil.genGUI() : vObj.getGuid();
 		
 		xObj.setGuid(guid);
@@ -39,7 +61,7 @@ public abstract class RangerServiceServiceBase<T extends XXService, V extends Ra
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected RangerService mapEntityToViewBean(RangerService vObj, XXService xObj) {
+	protected RangerService mapEntityToViewBean(RangerService vObj, XXServiceBase xObj) {
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xObj.getType());
 		vObj.setType(xServiceDef.getName());
 		vObj.setGuid(xObj.getGuid());

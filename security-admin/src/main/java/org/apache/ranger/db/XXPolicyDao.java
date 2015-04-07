@@ -47,4 +47,12 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 	}
 
+	public Long getMaxIdOfXXPolicy() {
+		try {
+			return (Long) getEntityManager().createNamedQuery("XXPolicy.getMaxIdOfXXPolicy").getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
 }

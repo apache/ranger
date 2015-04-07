@@ -98,11 +98,13 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
+import org.apache.ranger.service.RangerServiceWithAssignedIdService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
@@ -159,6 +161,12 @@ public class ServiceDBStore extends AbstractServiceStore {
     
     @Autowired
     RangerBizUtil bizUtil;
+    
+    @Autowired
+    RangerPolicyWithAssignedIdService assignedIdPolicyService;
+    
+    @Autowired
+    RangerServiceWithAssignedIdService svcServiceWithAssignedId;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -444,9 +452,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setVersion(new Long(1));
 			
 			if(populateExistingBaseFields) {
-				svcService.setPopulateExistingBaseFields(true);
-				service = svcService.create(service);
-				svcService.setPopulateExistingBaseFields(false);
+				svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
+				service = svcServiceWithAssignedId.create(service);
+				svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
 				createDefaultPolicy = false;
 			} else {
 				service = svcService.create(service);
@@ -548,9 +556,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		service.setVersion(version);
 
 		if(populateExistingBaseFields) {
-			svcService.setPopulateExistingBaseFields(true);
-			service = svcService.update(service);
-			svcService.setPopulateExistingBaseFields(false);
+			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
+			service = svcServiceWithAssignedId.update(service);
+			svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
 		} else {
 			service = svcService.update(service);
 		}
@@ -716,9 +724,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy.setVersion(new Long(1));
 
 		if(populateExistingBaseFields) {
-			policyService.setPopulateExistingBaseFields(true);
-			policy = policyService.create(policy);
-			policyService.setPopulateExistingBaseFields(false);
+			assignedIdPolicyService.setPopulateExistingBaseFields(true);
+			policy = assignedIdPolicyService.create(policy);
+			assignedIdPolicyService.setPopulateExistingBaseFields(false);
 		} else {
 			policy = policyService.create(policy);
 		}

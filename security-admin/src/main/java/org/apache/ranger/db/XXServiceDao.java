@@ -29,4 +29,12 @@ public class XXServiceDao extends BaseDao<XXService> {
 		}
 	}
 
+	public Long getMaxIdOfXXService() {
+		try {
+			return (Long) getEntityManager().createNamedQuery("XXService.getMaxIdOfXXService").getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
 }

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
@@ -62,6 +63,9 @@ public class PatchMigration_J10002 extends BaseLoader {
 
 	@Autowired
 	XPermMapService xPermMapService;
+	
+	@Autowired
+	RangerBizUtil bizUtil;
 
 	private static int policyCounter = 0;
 	private static int serviceCounter = 0;
@@ -93,6 +97,7 @@ public class PatchMigration_J10002 extends BaseLoader {
 		try {
 			migrateServicesToNewSchema();
 			migratePoliciesToNewSchema();
+			updateSequences();
 		} catch (Exception e) {
 			logger.error("Error whille migrating data.", e);
 		}
@@ -409,6 +414,50 @@ public class PatchMigration_J10002 extends BaseLoader {
 			policyItems.add(policyItem);
 		}
 		return policyItems;
+	}
+	
+	private void updateSequences() {
+		
+		if(RangerBizUtil.getDBFlavor() != AppConstants.DB_FLAVOR_ORACLE) {
+			return;
+		}
+		
+		List<String> queryList = new ArrayList<String>();
+		String policySequence = "X_POLICY_SEQ";
+		String svcSequence = "X_SERVICE_SEQ";
+		
+		if(serviceCounter > 0) {
+			
+			Long maxSvcId = daoMgr.getXXService().getMaxIdOfXXService();
+			
+			if(maxSvcId != null) {
+				String query1 = "ALTER SEQUENCE " + svcSequence + " INCREMENT BY " + maxSvcId;
+				String query2 = "select " + svcSequence + ".nextval from dual";
+				String query3 = "ALTER SEQUENCE " + svcSequence + " INCREMENT BY 1 NOCACHE NOCYCLE";
+				queryList.add(query1);
+				queryList.add(query2);
+				queryList.add(query3);
+			}
+		}
+		
+		if(policyCounter > 0) {
+			
+			Long maxPolId = daoMgr.getXXPolicy().getMaxIdOfXXPolicy();
+			
+			if(maxPolId != null) {				
+				String query1 = "ALTER SEQUENCE " + policySequence + " INCREMENT BY " + maxPolId;
+				String query2 = "select " + policySequence + ".nextval from dual";
+				String query3 = "ALTER SEQUENCE " + policySequence + " INCREMENT BY 1 NOCACHE NOCYCLE";
+				queryList.add(query1);
+				queryList.add(query2);
+				queryList.add(query3);
+			}
+		}
+		
+		for(String query : queryList) {
+			daoMgr.getEntityManager().createNativeQuery(query).executeUpdate();
+		}
+		
 	}
 
 }

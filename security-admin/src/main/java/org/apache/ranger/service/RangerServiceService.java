@@ -10,18 +10,13 @@ import java.util.Map.Entry;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SearchField.DATA_TYPE;
-import org.apache.ranger.common.SearchField.SEARCH_TYPE;
-import org.apache.ranger.common.SearchUtil;
-import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -52,18 +47,16 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		actionCreate = "create";
 		actionUpdate = "update";
 		actionDelete = "delete";
-		
-		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "xSvcDef.name", DATA_TYPE.STRING, 
-				SEARCH_TYPE.FULL, "XXServiceDef xSvcDef", "obj.type = xSvcDef.id"));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.type", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
-		
-		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
-		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
-		sortFields.add(new SortField(SearchFilter.SERVICE_ID, "obj.id"));
-		sortFields.add(new SortField(SearchFilter.SERVICE_NAME, "obj.name"));
+	}
+
+	@Override
+	protected XXService mapViewToEntityBean(RangerService vObj, XXService xObj, int OPERATION_CONTEXT) {
+		return (XXService)super.mapViewToEntityBean(vObj, (XXServiceBase)xObj, OPERATION_CONTEXT);
+	}
+
+	@Override
+	protected RangerService mapEntityToViewBean(RangerService vObj, XXService xObj) {
+		return super.mapEntityToViewBean(vObj, (XXServiceBase)xObj);
 	}
 	
 	@Override

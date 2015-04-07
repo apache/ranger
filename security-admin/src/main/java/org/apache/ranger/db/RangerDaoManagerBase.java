@@ -143,6 +143,12 @@ public abstract class RangerDaoManagerBase {
 		if (classType == AppConstants.CLASS_TYPE_XA_DATA_HIST) {
 			return getXXDataHist();
 		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_WITH_ASSIGNED_ID) {
+			return getXXPolicyWithAssignedId();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_SERVICE_WITH_ASSIGNED_ID) {
+			return getXXServiceWithAssignedId();
+		}
 		if (classType == AppConstants.CLASS_TYPE_RANGER_MODULE_DEF) {
 			return getXXModuleDef();
 		}
@@ -262,6 +268,12 @@ public abstract class RangerDaoManagerBase {
 		}
 		if (className.equals("XXDataHist")) {
 			return getXXDataHist();
+		}
+		if (className.equals("XXPolicyWithAssignedId")) {
+			return getXXPolicyWithAssignedId();
+		}
+		if (className.equals("XXServiceWithAssignedId")) {
+			return getXXServiceWithAssignedId();
 		}
 		if (className.equals("XXModuleDef")) {
 			return getXXModuleDef();
@@ -422,6 +434,14 @@ public abstract class RangerDaoManagerBase {
 
 	public XXDataHistDao getXXDataHist() {
 		return new XXDataHistDao(this);
+	}
+	
+	public XXPolicyWithAssignedIdDao getXXPolicyWithAssignedId() {
+		return new XXPolicyWithAssignedIdDao(this);
+	}
+	
+	public XXServiceWithAssignedIdDao getXXServiceWithAssignedId() {
+		return new XXServiceWithAssignedIdDao(this);
 	}
 
 	public XXModuleDefDao getXXModuleDef(){
