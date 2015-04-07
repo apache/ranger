@@ -76,7 +76,7 @@ public class YarnClient {
 		}
 		final String errMsg 			= errMessage;
 		
-		List<String> ret = new ArrayList<String>();
+		List<String> ret = null;
 		
 		Callable<List<String>> yarnQueueListGetter = new Callable<List<String>>() {
 			@Override

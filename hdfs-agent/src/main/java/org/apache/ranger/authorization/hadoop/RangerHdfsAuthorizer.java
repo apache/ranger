@@ -335,10 +335,14 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 				RangerAccessResult result = plugin.isAccessAllowed(request, auditHandler);
 
-				ret = result.getIsAllowed();
+				if (result == null) {
+					LOG.error("RangerAccessControlEnforcer: Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
+				} else {
+					ret = result.getIsAllowed();
 
-				if(! ret) {
-					break;
+					if (!ret) {
+						break;
+					}
 				}
 			}
 

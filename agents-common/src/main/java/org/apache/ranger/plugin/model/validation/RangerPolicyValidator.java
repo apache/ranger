@@ -168,7 +168,7 @@ public class RangerPolicyValidator extends RangerValidator {
 							.becauseOf("policy already exists with name[" + policyName + "]; its id is[" + policies.iterator().next().getId() + "]")
 							.build());
 						valid = false;
-					} else if (policies.iterator().next().getId() != id) { // size == 1 && action == UPDATE
+					} else if (!policies.iterator().next().getId().equals(id)) { // size == 1 && action == UPDATE
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("id/name")
 							.isSemanticallyIncorrect()

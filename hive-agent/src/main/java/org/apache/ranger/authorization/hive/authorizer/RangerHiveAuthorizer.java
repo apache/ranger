@@ -317,7 +317,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	                        if (column != null) {
 		                        column = column.trim();
 	                        }
-		            		if(StringUtils.isEmpty(column.trim())) {
+		            		if(StringUtils.isEmpty(column)) {
 		            			continue;
 		            		}
 	
@@ -345,7 +345,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		            }
 	
 					if(result != null && !result.getIsAllowed()) {
-						String path = resource != null ? resource.getAsString(result.getServiceDef()) : null;
+						String path = resource.getAsString(result.getServiceDef());
 		
 						throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
 															 user, request.getHiveAccessType().name(), path));
@@ -443,20 +443,24 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 				
 				RangerHiveResource resource = createHiveResource(privilegeObject);
-				RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, context, sessionContext);
-				RangerAccessResult result = hivePlugin.isAccessAllowed(request);
-				if (result == null) {
-					LOG.error("filterListCmdObjects: Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
-				} else if (!result.getIsAllowed()) {
-					if (!LOG.isDebugEnabled()) {
-						String path = resource.getAsString(result.getServiceDef()); 
-						LOG.debug(String.format("filterListCmdObjects: Permission denied: user [%s] does not have [%s] privilege on [%s]", user, request.getHiveAccessType().name(), path));
-					}
+				if (resource == null) {
+					LOG.error("filterListCmdObjects: RangerHiveResource returned by createHiveResource is null");
 				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(String.format("filterListCmdObjects: resource[%s]: allowed!: request[%s], result[%s]", resource, request, result));
+					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, context, sessionContext);
+					RangerAccessResult result = hivePlugin.isAccessAllowed(request);
+					if (result == null) {
+						LOG.error("filterListCmdObjects: Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
+					} else if (!result.getIsAllowed()) {
+						if (!LOG.isDebugEnabled()) {
+							String path = resource.getAsString(result.getServiceDef());
+							LOG.debug(String.format("filterListCmdObjects: Permission denied: user [%s] does not have [%s] privilege on [%s]", user, request.getHiveAccessType().name(), path));
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(String.format("filterListCmdObjects: resource[%s]: allowed!: request[%s], result[%s]", resource, request, result));
+						}
+						ret.add(privilegeObject);
 					}
-					ret.add(privilegeObject);
 				}
 			}
 		}

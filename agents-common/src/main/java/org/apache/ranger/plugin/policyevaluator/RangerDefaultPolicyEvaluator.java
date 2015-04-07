@@ -604,26 +604,31 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		RangerResourceMatcher ret = null;
 
-		String resName = resourceDef != null ? resourceDef.getName() : null;
-		String clsName = resourceDef != null ? resourceDef.getMatcher() : null;
+		if (resourceDef != null) {
+			String resName = resourceDef.getName();
+			String clsName = resourceDef.getMatcher();
 
-		if(! StringUtils.isEmpty(clsName)) {
-			try {
-				@SuppressWarnings("unchecked")
-				Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>)Class.forName(clsName);
+			if (!StringUtils.isEmpty(clsName)) {
+				try {
+					@SuppressWarnings("unchecked")
+					Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>) Class.forName(clsName);
 
-				ret = matcherClass.newInstance();
-			} catch(Exception excp) {
-				LOG.error("failed to instantiate resource matcher '" + clsName + "' for '" + resName + "'. Default resource matcher will be used", excp);
+					ret = matcherClass.newInstance();
+				} catch (Exception excp) {
+					LOG.error("failed to instantiate resource matcher '" + clsName + "' for '" + resName + "'. Default resource matcher will be used", excp);
+				}
 			}
-		}
 
-		if(ret == null) {
-			ret = new RangerDefaultResourceMatcher();
-		}
 
-		if(ret != null) {
-			ret.init(resourceDef, resource);
+			if (ret == null) {
+				ret = new RangerDefaultResourceMatcher();
+			}
+
+			if (ret != null) {
+				ret.init(resourceDef, resource);
+			}
+		} else {
+			LOG.error("RangerDefaultPolicyEvaluator: RangerResourceDef is null");
 		}
 
 		if(LOG.isDebugEnabled()) {
