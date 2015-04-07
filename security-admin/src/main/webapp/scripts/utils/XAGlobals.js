@@ -51,7 +51,8 @@ define(function(require){
 			Assets				: { value:6, valStr: 'Assets'},
 			Analytics			: { value:7, valStr: 'Analytics'},
 			Audit				: { value:8, valStr: 'Analytics'},
-			None				: { value:9, valStr: 'None'}
+			Permissions			: { value:9, valStr:'Permissions'},
+			None				: { value:10, valStr: 'None'}
 		};
 
 	XAGlobals.BooleanValue = {
@@ -65,5 +66,11 @@ define(function(require){
 	XAGlobals.DenyControllerActions = ['userManagerAction','userCreateAction','userEditAction','groupCreateAction',
 	                                   'groupEditAction','auditReportAction','loginSessionDetail','serviceCreateAction','serviceEditAction'];
 	
+	XAGlobals.ListOfModuleActions = {
+									  'Policy Manager':['serviceManagerAction','serviceCreateAction','serviceEditAction', 'policyManageAction','RangerPolicyCreateAction','RangerPolicyEditAction'],
+					  'Users/Groups' : ['userManagerAction','userCreateAction','userEditAction','groupCreateAction','groupEditAction'],
+					  'Analytics' : ['userAccessReportAction'],
+					  'Audit' : ['auditReportAction','loginSessionDetail']
+									};
 	return XAGlobals;
 });

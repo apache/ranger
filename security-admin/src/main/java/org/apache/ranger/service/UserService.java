@@ -32,9 +32,11 @@ import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
+import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResponse;
+import org.apache.ranger.view.VXUserPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,9 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 
 	@Autowired
 	RangerConfigUtil configUtil;
+
+	@Autowired
+	XUserPermissionService xUserPermissionService;
 
 	private static UserService instance = null;
 

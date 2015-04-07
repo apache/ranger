@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -33,6 +33,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.HTTPUtil;
 import org.apache.ranger.common.PropertiesUtil;
@@ -62,6 +63,9 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 	@Autowired
 	HTTPUtil httpUtil;
 
+	 @Autowired
+   XUserMgr xUserMgr;
+
 	String testIP = null;
 
 	public RangerSecurityContextFormationFilter() {
@@ -70,14 +74,14 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest,
 	 * javax.servlet.ServletResponse, javax.servlet.FilterChain)
 	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
-		
+
 		try {
 			Authentication auth = SecurityContextHolder.getContext()
 					.getAuthentication();
@@ -86,6 +90,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				// ignore
 			} else {
 				HttpServletRequest httpRequest = (HttpServletRequest) request;
+				String httpMethod=httpRequest.getMethod();
 				HttpSession httpSession = httpRequest.getSession(false);
 
 				// [1]get the context from session
@@ -93,7 +98,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				int clientTimeOffset = 0;
 				if (context == null) {
 					context = new RangerSecurityContext();
-					httpSession.setAttribute(AKA_SC_SESSION_KEY, context);					
+					httpSession.setAttribute(AKA_SC_SESSION_KEY, context);
 				}
 				String userAgent = httpRequest.getHeader(USER_AGENT);
 				clientTimeOffset=RestUtil.getTimeOffset(httpRequest);
@@ -109,21 +114,23 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				requestContext.setDeviceType(httpUtil
 						.getDeviceType(httpRequest));
 				requestContext.setServerRequestId(GUIDUtil.genGUI());
-				requestContext.setRequestURL(httpRequest.getRequestURI());				
-										
+				requestContext.setRequestURL(httpRequest.getRequestURI());
+
 				requestContext.setClientTimeOffsetInMinute(clientTimeOffset);
-				context.setRequestContext(requestContext);			
+				context.setRequestContext(requestContext);
 
 				RangerContextHolder.setSecurityContext(context);
 
 				UserSessionBase userSession = sessionMgr.processSuccessLogin(
 						XXAuthSession.AUTH_TYPE_PASSWORD, userAgent);
-				
+
 				if(userSession!=null && userSession.getClientTimeOffsetInMinute()==0){
 					userSession.setClientTimeOffsetInMinute(clientTimeOffset);
 				}
-				
+
 				context.setUserSession(userSession);
+
+				xUserMgr.checkPermissionRoleByGivenUrls(httpRequest.getRequestURL().toString(),httpMethod);
 			}
 			chain.doFilter(request, response);
 

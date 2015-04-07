@@ -204,6 +204,7 @@ define(function(require) {
 				groupSource						: 'Group Source',
 				policyName						: 'Policy Name',
 				allow							: 'Allow',
+				allowAccess							: 'Allow Access',
 				selectTopologyName				: 'Select Topology Name',
 				selectServiceName				: 'Select Service Name',
 				topologyName					: 'Topology Name',
@@ -212,7 +213,8 @@ define(function(require) {
 				ipAddress						: 'IP Address',
 				isVisible                       : 'Visible',
 				delegatedAdmin					: 'Delegate Admin',
-				policyId						: 'Policy ID'
+				policyId						: 'Policy ID',
+				moduleName						: 'Module Name'
 			},
 			btn : {
 				add							: 'Add',
@@ -267,10 +269,12 @@ define(function(require) {
 				searchForYourLoginSession 	:"Search for your login sessions...",
 				searchForYourAgent 			:"Search for your plugins...",
 				searchForPolicy				:"Search for your policy...",
+				searchForPermissions		:"Search for permissions...",
 				searchForYourUser 			:"Search for your users...",
 				searchForYourGroup 			:"Search for your groups...",
 				access						: 'Access',
-				policyCondition				: 'Policy Condtions'
+				policyCondition				: 'Policy Condtions',
+				permissions					: 'Permissions'
 				
 				
 			},

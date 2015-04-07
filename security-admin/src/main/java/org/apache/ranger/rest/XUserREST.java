@@ -45,9 +45,12 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.service.AuthSessionService;
 import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XGroupGroupService;
+import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XGroupUserService;
+import org.apache.ranger.service.XModuleDefService;
 import org.apache.ranger.service.XPermMapService;
+import org.apache.ranger.service.XUserPermissionService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
@@ -57,20 +60,28 @@ import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupGroup;
 import org.apache.ranger.view.VXGroupGroupList;
 import org.apache.ranger.view.VXGroupList;
+import org.apache.ranger.view.VXGroupPermission;
+import org.apache.ranger.view.VXGroupPermissionList;
 import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXModuleDef;
+import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
+import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserGroupInfo;
 import org.apache.ranger.view.VXUserList;
+import org.apache.ranger.view.VXUserPermission;
+import org.apache.ranger.view.VXUserPermissionList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @Path("xusers")
 @Component
@@ -88,6 +99,15 @@ public class XUserREST {
 
 	@Autowired
 	XGroupService xGroupService;
+
+	@Autowired
+	XModuleDefService xModuleDefService;
+
+	@Autowired
+	XUserPermissionService xUserPermissionService;
+
+	@Autowired
+	XGroupPermissionService xGroupPermissionService;
 
 	@Autowired
 	XUserService xUserService;
@@ -115,7 +135,7 @@ public class XUserREST {
 	
 	@Autowired
 	AuthSessionService authSessionService;
-	
+
 	// Handle XGroup
 	@GET
 	@Path("/groups/{id}")
@@ -635,4 +655,182 @@ public class XUserREST {
 		return sessionMgr.getAuthSessionBySessionId(authSessionId);
 	}
 
+	// Handle module permissions
+	@POST
+	@Path("/permission")
+	@Produces({ "application/xml", "application/json" })
+	public VXModuleDef createXModuleDefPermission(VXModuleDef vXModuleDef) {
+		return xUserMgr.createXModuleDefPermission(vXModuleDef);
+	}
+
+	@GET
+	@Path("/permission/{id}")
+	@Produces({ "application/xml", "application/json" })
+	public VXModuleDef getXModuleDefPermission(@PathParam("id") Long id) {
+		return xUserMgr.getXModuleDefPermission(id);
+	}
+
+	@PUT
+	@Path("/permission/{id}")
+	@Produces({ "application/xml", "application/json" })
+	public VXModuleDef updateXModuleDefPermission(VXModuleDef vXModuleDef) {
+		return xUserMgr.updateXModuleDefPermission(vXModuleDef);
+	}
+
+	@DELETE
+	@Path("/permission/{id}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteXModuleDefPermission(@PathParam("id") Long id,
+			@Context HttpServletRequest request) {
+		boolean force = true;
+		xUserMgr.deleteXModuleDefPermission(id, force);
+	}
+
+	@GET
+	@Path("/permission")
+	@Produces({ "application/xml", "application/json" })
+	public VXModuleDefList searchXModuleDef(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xModuleDefService.sortFields);
+
+		searchUtil.extractString(request, searchCriteria, "module",
+				"modulename", null);
+
+		searchUtil.extractString(request, searchCriteria, "moduleDefList",
+				"id", null);
+		searchUtil.extractString(request, searchCriteria, "userName",
+				"userName", null);
+		searchUtil.extractString(request, searchCriteria, "groupName",
+				"groupName", null);
+
+		return xUserMgr.searchXModuleDef(searchCriteria);
+	}
+
+	@GET
+	@Path("/permission/count")
+	@Produces({ "application/xml", "application/json" })
+	public VXLong countXModuleDef(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xModuleDefService.sortFields);
+		return xUserMgr.getXModuleDefSearchCount(searchCriteria);
+	}
+
+	// Handle user permissions
+	@POST
+	@Path("/permission/user")
+	@Produces({ "application/xml", "application/json" })
+	public VXUserPermission createXUserPermission(
+			VXUserPermission vXUserPermission) {
+		return xUserMgr.createXUserPermission(vXUserPermission);
+	}
+
+	@GET
+	@Path("/permission/user/{id}")
+	@Produces({ "application/xml", "application/json" })
+	public VXUserPermission getXUserPermission(@PathParam("id") Long id) {
+		return xUserMgr.getXUserPermission(id);
+	}
+
+	@PUT
+	@Path("/permission/user/{id}")
+	@Produces({ "application/xml", "application/json" })
+	public VXUserPermission updateXUserPermission(
+			VXUserPermission vXUserPermission) {
+		return xUserMgr.updateXUserPermission(vXUserPermission);
+	}
+
+	@DELETE
+	@Path("/permission/user/{id}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteXUserPermission(@PathParam("id") Long id,
+			@Context HttpServletRequest request) {
+		boolean force = true;
+		xUserMgr.deleteXUserPermission(id, force);
+	}
+
+	@GET
+	@Path("/permission/user")
+	@Produces({ "application/xml", "application/json" })
+	public VXUserPermissionList searchXUserPermission(
+			@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xUserPermissionService.sortFields);
+		searchUtil.extractString(request, searchCriteria, "id", "id",
+				StringUtil.VALIDATION_NAME);
+
+		searchUtil.extractString(request, searchCriteria, "userPermissionList",
+				"userId", StringUtil.VALIDATION_NAME);
+		return xUserMgr.searchXUserPermission(searchCriteria);
+	}
+
+	@GET
+	@Path("/permission/user/count")
+	@Produces({ "application/xml", "application/json" })
+	public VXLong countXUserPermission(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xUserPermissionService.sortFields);
+		return xUserMgr.getXUserPermissionSearchCount(searchCriteria);
+	}
+
+	// Handle group permissions
+	@POST
+	@Path("/permission/group")
+	@Produces({ "application/xml", "application/json" })
+	public VXGroupPermission createXGroupPermission(
+			VXGroupPermission vXGroupPermission) {
+		return xUserMgr.createXGroupPermission(vXGroupPermission);
+	}
+
+	@GET
+	@Path("/permission/group/{id}")
+	@Produces({ "application/xml", "application/json" })
+	public VXGroupPermission getXGroupPermission(@PathParam("id") Long id) {
+		return xUserMgr.getXGroupPermission(id);
+	}
+
+	@PUT
+	@Path("/permission/group/{id}")
+	@Produces({ "application/xml", "application/json" })
+	public VXGroupPermission updateXGroupPermission(
+			VXGroupPermission vXGroupPermission) {
+		return xUserMgr.updateXGroupPermission(vXGroupPermission);
+	}
+
+	@DELETE
+	@Path("/permission/group/{id}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteXGroupPermission(@PathParam("id") Long id,
+			@Context HttpServletRequest request) {
+		boolean force = true;
+		xUserMgr.deleteXGroupPermission(id, force);
+	}
+
+	@GET
+	@Path("/permission/group")
+	@Produces({ "application/xml", "application/json" })
+	public VXGroupPermissionList searchXGroupPermission(
+			@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xGroupPermissionService.sortFields);
+		searchUtil.extractString(request, searchCriteria, "id", "id",
+				StringUtil.VALIDATION_NAME);
+		searchUtil.extractString(request, searchCriteria,
+				"groupPermissionList", "groupId", StringUtil.VALIDATION_NAME);
+		return xUserMgr.searchXGroupPermission(searchCriteria);
+	}
+
+	@GET
+	@Path("/permission/group/count")
+	@Produces({ "application/xml", "application/json" })
+	public VXLong countXGroupPermission(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xGroupPermissionService.sortFields);
+		return xUserMgr.getXGroupPermissionSearchCount(searchCriteria);
+	}
+	@GET
+	@Path("/permission/existingusers/update")
+	@Produces({ "application/xml", "application/json" })
+	public List<VXPortalUser> existingusersupdate(@Context HttpServletRequest request) {
+		return xUserMgr.updateExistingUserExisting();
+	}
 }

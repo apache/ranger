@@ -20,6 +20,7 @@
  package org.apache.ranger.view;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -79,6 +80,9 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	 * List of roles for this user
 	 */
 	protected Collection<String> userRoleList;
+	protected Collection<Long> groupIdList;
+	protected List<VXUserPermission> userPermList;
+	protected List<VXGroupPermission> groupPermissions;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -261,6 +265,31 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	@Override
 	public int getMyClassType( ) {
 	    return AppConstants.CLASS_TYPE_USER_PROFILE;
+	}
+
+	public Collection<Long> getGroupIdList() {
+		return groupIdList;
+	}
+
+	public void setGroupIdList(Collection<Long> groupIdList) {
+		this.groupIdList = groupIdList;
+	}
+
+
+	public List<VXUserPermission> getUserPermList() {
+		return userPermList;
+	}
+
+	public void setUserPermList(List<VXUserPermission> userPermList) {
+		this.userPermList = userPermList;
+	}
+
+	public List<VXGroupPermission> getGroupPermissions() {
+		return groupPermissions;
+	}
+
+	public void setGroupPermissions(List<VXGroupPermission> groupPermissions) {
+		this.groupPermissions = groupPermissions;
 	}
 
 	/**

@@ -534,6 +534,17 @@
 	Handlebars.registerHelper('capitaliseLetter', function(str) {
 		return str.toUpperCase();
 	});
+	Handlebars.registerHelper('hasAccessToTab', function(tabName,options) {
+		var vxPortalUser = SessionMgr.getUserProfile();
+		var userModules = _.pluck(vxPortalUser.get('userPermList'), 'moduleName');
+		var groupModules = _.pluck(vxPortalUser.get('groupPermissions'), 'moduleName');
+		var moduleNames =  _.union(userModules,groupModules);
+		var returnFlag = _.contains(moduleNames, tabName);
+		if (returnFlag)
+			return options.fn(this);
+		else
+			return options.inverse(this);
+	});
 
 	return HHelpers;
 });

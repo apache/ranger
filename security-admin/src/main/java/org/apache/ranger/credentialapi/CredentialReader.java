@@ -31,7 +31,7 @@ public class CredentialReader {
 	public static String getDecryptedString(String CrendentialProviderPath,String alias) {
 		  String credential=null;
 		  try{
-			  if(CrendentialProviderPath==null || alias==null){
+			  if(CrendentialProviderPath==null || alias==null||CrendentialProviderPath.trim().isEmpty()||alias.trim().isEmpty()){
 				  return null;
 			  }		  		  
 			  char[] pass = null;

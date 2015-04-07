@@ -377,4 +377,99 @@
 		<query>select MAX(obj.objectId) from XXTrxLog obj where obj.objectClassType = :classType</query>
 	</named-query>
 	
+	<!-- XXUserPermission -->
+	<named-query name="XXUserPermission.findByUserPermissionId">
+		<query>SELECT obj FROM XXUserPermission obj
+			   WHERE obj.userId=:userId
+		 </query>
+	</named-query>
+	<named-query name="XXUserPermission.findByUserPermissionIdAndIsAllowed">
+		<query>SELECT obj FROM XXUserPermission obj
+			   WHERE obj.userId=:userId	AND Obj.isAllowed=:isAllowed
+		 </query>
+	</named-query>
+
+	<named-query name="XXUserPermission.findByModuleId">
+		<query>SELECT obj FROM XXUserPermission obj
+			   WHERE obj.moduleId=:moduleId	 AND Obj.isAllowed=:isAllowed
+		 </query>
+	</named-query>
+	<named-query name="XXUserPermissionUpdates.findByModuleId">
+		<query>SELECT obj FROM XXUserPermission obj
+			   WHERE obj.moduleId=:moduleId
+		 </query>
+	</named-query>
+
+	<!-- XXUserPermission -->
+	<named-query name="XXGroupPermission.findByGroupPermissionId">
+		<query>SELECT obj FROM XXGroupPermission obj
+			   WHERE obj.groupId=:groupId
+		 </query>
+	</named-query>
+
+	<named-query name="XXGroupPermission.findByModuleId">
+		<query>SELECT obj FROM XXGroupPermission obj
+			   WHERE obj.moduleId=:moduleId	AND Obj.isAllowed=:isAllowed
+		 </query>
+	</named-query>
+	<named-query name="XXGroupPermissionUpdates.findByModuleId">
+		<query>SELECT obj FROM XXGroupPermission obj
+			   WHERE obj.moduleId=:moduleId	AND Obj.isAllowed=:isAllowed
+		 </query>
+	</named-query>
+	<named-query name="XXGroupPermissionUpdate.findByModuleId">
+		<query>SELECT obj FROM XXGroupPermission obj
+			   WHERE obj.moduleId=:moduleId
+		 </query>
+	</named-query>
+
+	<named-query name="XXUserPermission.findByModuleIdAndUserId">
+		<query>SELECT XXUserPermObj
+				FROM XXUserPermission XXUserPermObj
+				WHERE XXUserPermObj.moduleId = :moduleId AND XXUserPermObj.userId =:userId
+		</query>
+	</named-query>
+	<named-query name="XXModuleDef.findModuleNamesWithIds">
+	<query>SELECT XXMObj
+				FROM XXModuleDef XXMObj
+		</query>
+</named-query>
+<named-query name="XXPortalUser.findByUserName">
+		<query>SELECT Obj FROM XXPortalUser obj
+			   WHERE obj.loginId=:loginId
+		</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.findByXUserId">
+		<query>SELECT xxPortalUser FROM XXPortalUser xxPortalUser,XXUser xxUser
+			   WHERE xxUser.id=:id and xxPortalUser.loginId=xxUser.name
+		</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.findAllXPortalUser">
+	<query>SELECT xxPortalUser FROM XXPortalUser xxPortalUser
+		</query>
+</named-query>
+	<!-- VXModuleDef -->
+	<named-query name="XXModuleDef.findByModuleId">
+		<query>SELECT obj FROM XXModuleDef obj
+			   WHERE obj.id=:id
+		 </query>
+	</named-query>
+
+	<named-query name="XXModuleDef.findByModuleName">
+		<query>SELECT Obj FROM XXModuleDef obj
+			   WHERE obj.module=:moduleName
+		</query>
+	</named-query>
+
+	<named-query name="XXGroupPermission.findByVXPoratUserId">
+	<query>SELECT distinct   gmp FROM  XXGroupUser xgu,XXUser xu,XXGroupPermission gmp, XXPortalUser xpu
+			WHERE xu.name=xpu.loginId  and xu.id=xgu.userId and xgu.parentGroupId=gmp.groupId  and xpu.id=:userId and gmp.isAllowed=:isAllowed
+		</query>
+</named-query>
+
+
+
+
 </entity-mappings>

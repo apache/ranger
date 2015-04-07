@@ -1822,4 +1822,7 @@ td.select-row-cell {
 .ranger-notifications {
 	right: 33px!important;
 	top: 41px!important;
+}table.table-permission.visible-border tr td:last-child {
+  border: 1px solid #dddddd;
+  padding-left: 0;
 }

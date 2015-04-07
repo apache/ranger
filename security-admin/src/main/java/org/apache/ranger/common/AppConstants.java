@@ -507,9 +507,22 @@ public class AppConstants extends RangerCommonEnums {
 	public static final int CLASS_TYPE_XA_SERVICE_DEF = 1033;
 
 	/**
+	 * CLASS_TYPE_RANGER_MODULE_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_MODULE_DEF".
+	 */
+	public static final int CLASS_TYPE_RANGER_MODULE_DEF = 1034;
+	/**
+	 * CLASS_TYPE_RANGER_USER_PERMISSION is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_USER_PERMISSION".
+	 */
+	public static final int CLASS_TYPE_RANGER_USER_PERMISSION = 1035;
+	/**
+	 * CLASS_TYPE_RANGER_GROUP_PERMISSION is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_GROUP_PERMISSION".
+	 */
+	public static final int CLASS_TYPE_RANGER_GROUP_PERMISSION = 1036;
+
+	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1033;
+	public static final int ClassTypes_MAX = 1036;
 	
 	/***************************************************************
 	 * Enum values for Default SortOrder

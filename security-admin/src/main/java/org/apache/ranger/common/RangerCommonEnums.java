@@ -27,6 +27,14 @@
 public class RangerCommonEnums {
 
 	/***************************************************************
+	 * Enum values for AllowedPermission
+	 **************************************************************/
+	/**
+	 * IS_ALLOWED is an element of enum AllowedPermission. Its value is "IS_ALLOWED".
+	 */
+	public static final int IS_ALLOWED = 1;
+
+	/***************************************************************
 	 * Enum values for VisibilityStatus
 	 **************************************************************/
 	/**

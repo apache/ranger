@@ -340,11 +340,67 @@ define(function(require) {
 			   }));
 		   });
 	   },
+	   /************PERMISSIONS LISTING *****************************************/
+	   modulePermissionsAction :function(){
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Permissions.value });
+		   var view 			= require('views/permissions/ModulePermsTableLayout');
+		   var ModulePermission	= require('models/VXModuleDef');
+		   var ModulePermissionList	= require('collections/VXModuleDefList');
+
+		   var modulePermission = new ModulePermission();
+		   var modulePermissionList = new ModulePermissionList();
+
+		   modulePermissionList.fetch({
+			   cache : false,
+		   });
+		   App.rContent.show(new view({
+			   collection : modulePermissionList
+		   }));
+
+	   },
+	   modulePermissionEditAction : function(moduleId){
+		   MAppState.set({
+				'currentTab' : XAGlobals.AppTabs.Permissions.value
+			});
+		   var view 				= require('views/permissions/ModulePermissionCreate');
+		   var ModulePermission		= require('models/VXModuleDef');
+		   var ModulePermissionList	= require('collections/VXModuleDefList');
+		   var modulePermission 	= new ModulePermission({id : moduleId});
+		   var that = this
+		   modulePermission.collection = new ModulePermissionList();
+		   modulePermission.fetch({cache : true}).done(function(){
+			   App.rContent.show(new view({
+				   model : modulePermission,
+				   groupList : that.groupList,
+				   userList : that.userList
+			   }));
+		   });
+	   },
+	   postLoginDefaultView : function(){
+                var SessionMgr  = require('mgrs/SessionMgr');
+                var XAGlobals   = require('utils/XAGlobals');
+                var XALinks             = require('modules/XALinks');
+                var vXPortalUser = SessionMgr.getUserProfile();
+                var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
+                if (_.contains(userModuleNames, 'Policy Manager')){
+                        location.hash = XALinks.get('ServiceManager').href;
+                }else if(_.contains(userModuleNames, 'Users/Groups')){
+                        location.hash = XALinks.get('Users').href;
+                }else if(_.contains(userModuleNames, 'Analytics')){
+                        location.hash = XALinks.get('UserAccessReport').href;
+                }else if(_.contains(userModuleNames, 'Audit')){
+                        location.hash = XALinks.get('AuditReport').href +'/bigData';
+		}else if(SessionMgr.isSystemAdmin()){
+			location.hash = XALinks.get('ModulePermissions').href;
+		}else{
+			//If a user doesnot has access to any tab - taking user to by default Profile page.
+			location.hash = XALinks.get('UserProfile').href;
+		}
+           },
 	   /**************** ERROR PAGE ******************************/
 	   pageNotFoundAction	: function() {
 		   var XAUtils			= require('utils/XAUtils');
 		   XAUtils.defaultErrorHandler(undefined, { 'status' : 404 });
 	   },
-	   
 	});
 });

@@ -64,7 +64,15 @@ public class RangerConstants extends RangerCommonEnums {
 	public static final String SENDGRID_BCC = "bcc";
 	public static final String SENDGRID_CC = "cc";
 	public static final String SENDGRID_REPLY_TO = "replyto";
-	
+
+	//Permission Names
+	public static final String MODULE_POLICY_MANAGER="Policy Manager";
+	public static final String MODULE_USER_GROUPS="Users/Groups";
+	public static final String MODULE_ANALYTICS="Analytics";
+	public static final String MODULE_AUDIT="Audit";
+	public static final String MODULE_PERMISSION="Permissions";
+	public static final String MODULE_KMS="KMS";
+
 	// User create validation errors
 	public enum ValidationUserProfile {
 
@@ -152,18 +160,18 @@ public class RangerConstants extends RangerCommonEnums {
 	public static final int EMAIL_TYPE_USER_ACCT_ADD = 2;
 	public static final int EMAIL_TYPE_DOCUMENT_CREATE = 3;
 	public static final int EMAIL_TYPE_DISCUSSION_CREATE = 4;
-	public static final int EMAIL_TYPE_NOTE_CREATE = 5;	
+	public static final int EMAIL_TYPE_NOTE_CREATE = 5;
 	public static final int EMAIL_TYPE_TASK_CREATE = 6;
 	public static final int EMAIL_TYPE_USER_PASSWORD = 7;
 	public static final int EMAIL_TYPE_USER_ACTIVATION = 8;
 	public static final int EMAIL_TYPE_USER_ROLE_UPDATED = 9;
 	public static final int EMAIL_TYPE_USER_GRP_ADD = 10;
-	
+
 	public static enum RBAC_PERM {
-		ALLOW_NONE, 
-		ALLOW_READ, 
-		ALLOW_WRITE, 
+		ALLOW_NONE,
+		ALLOW_READ,
+		ALLOW_WRITE,
 		ALLOW_DELETE
 	}
-	
+
 }

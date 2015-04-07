@@ -30,7 +30,7 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 	return Backbone.Marionette.AppRouter.extend({
 		/** Backbone routes hash */
 		appRoutes: {
-			""							: "serviceManagerAction",//"dashboardAction",
+			""							: "postLoginDefaultView",//"dashboardAction",
 			"!/policymanager"			: "serviceManagerAction",
 
 			/****** Analytics Report related **********************/
@@ -57,7 +57,10 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/service/:serviceId/policies"			: "policyManageAction",
 			"!/service/:serviceId/policies/create"	: "RangerPolicyCreateAction",
 			"!/service/:serviceId/policies/:id/edit": "RangerPolicyEditAction",
-			
+
+			/************PERMISSIONS VIEWS *****************************************/
+                        "!/permissions": "modulePermissionsAction",
+                        "!/permissions/:id/edit"        : "modulePermissionEditAction",
 			/*************** ERROR PAGE ****************************************/
 			"*actions"					: "pageNotFoundAction"
 			

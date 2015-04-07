@@ -409,7 +409,39 @@ define(function(require) {
 		return newGroupArr.length ? newGroupArr.join(' ') : '--';
 		
 	};
-	 
+
+	XAUtils.showGroupsOrUsers = function(rawValue, model, userOrGroups){
+		var showMoreLess = false, objArr = [];
+		if(!_.isArray(rawValue) && rawValue.length == 0)
+			return '--';
+		if(userOrGroups	== 'groups'){
+			_.each(rawValue,function(perm){
+				objArr = _.union(objArr, perm.groupName)
+			});
+		}else if(userOrGroups	== 'users'){
+			_.each(rawValue,function(perm){
+				objArr = _.union(objArr, perm.userName)
+			});
+		}
+
+		var newObjArr = _.map(objArr, function(name, i){
+			if(i >=  4){
+				return '<span class="label label-info" policy-'+userOrGroups+'-id="'+model.id+'" style="display:none;">' + name + '</span>';
+			}else if(i == 3 && objArr.length > 4){
+				showMoreLess = true;
+				return '<span class="label label-info" policy-'+userOrGroups+'-id="'+model.id+'">' + name + '</span>';
+			}else{
+				return '<span class="label label-info" policy-'+userOrGroups+'-id="'+model.id+'">' + name + '</span>';
+			}
+		});
+		if(showMoreLess){
+			newObjArr.push('<span class="pull-left"><a href="javascript:void(0);" data-id="showMore" class="" policy-'+userOrGroups+'-id="'+model.id+'"><code style=""> + More..</code></a></span><span class="pull-left" ><a href="javascript:void(0);" data-id="showLess" class="" policy-'+userOrGroups+'-id="'+model.id+'" style="display:none;"><code> - Less..</code></a></span>');
+		}
+		return newObjArr.length ? newObjArr.join(' ') : '--';
+
+	};
+
+
 	XAUtils.defaultErrorHandler = function(model, error) {
 		var App		= require('App');
 		var vError = require('views/common/ErrorView');
@@ -795,14 +827,28 @@ define(function(require) {
 		var SessionMgr	= require('mgrs/SessionMgr');
 		var XAGlobals	= require('utils/XAGlobals');
 		var that = this;
-		if(!SessionMgr.isSystemAdmin()){
-			_.each(XAGlobals.DenyControllerActions, function(routeMethodName) {
-				if(!_.isUndefined(controller[routeMethodName])){
-					controller[routeMethodName] = function(){ 
-						that.defaultErrorHandler(undefined, {'status':401}); 
-					};
-				}
+		var vXPortalUser = SessionMgr.getUserProfile();
+		var denyControllerActions= [];
+		var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
+		var groupModuleNames = _.pluck(vXPortalUser.get('groupPermissions'), 'moduleName');
+		var moduleNames = _.union(userModuleNames,groupModuleNames);
+		var denyModulesObj = _.omit(XAGlobals.ListOfModuleActions, moduleNames);
+		if(!_.isEmpty(denyModulesObj)){
+			_.each(denyModulesObj, function(deniedModule){
+				denyControllerActions.push(_.values(deniedModule));
 			});
+			denyControllerActions = _.flatten(denyControllerActions);
+		}
+
+		if(!_.isEmpty(denyControllerActions)){
+			 _.each(denyControllerActions, function(routeMethodName) {
+                 if(!_.isUndefined(controller[routeMethodName])){
+                     controller[routeMethodName] = function(){
+                             that.defaultErrorHandler(undefined, {'status':401});
+                     };
+             }
+         });
+
 		}
 		return controller;
 	};

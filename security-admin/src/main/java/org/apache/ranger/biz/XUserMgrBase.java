@@ -24,9 +24,12 @@ import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XGroupGroupService;
+import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XGroupUserService;
+import org.apache.ranger.service.XModuleDefService;
 import org.apache.ranger.service.XPermMapService;
+import org.apache.ranger.service.XUserPermissionService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
@@ -34,13 +37,16 @@ import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupGroup;
 import org.apache.ranger.view.VXGroupGroupList;
 import org.apache.ranger.view.VXGroupList;
+import org.apache.ranger.view.VXGroupPermissionList;
 import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
+import org.apache.ranger.view.VXUserPermissionList;
 import org.springframework.beans.factory.annotation.Autowired;
 public class XUserMgrBase {
 
@@ -61,6 +67,15 @@ public class XUserMgrBase {
 
 	@Autowired
 	XPermMapService xPermMapService;
+
+	@ Autowired
+	XModuleDefService xModuleDefService;
+
+	@ Autowired
+	XUserPermissionService xUserPermissionService;
+
+	@ Autowired
+	XGroupPermissionService xGroupPermissionService;
 
 	@Autowired
 	XAuditMapService xAuditMapService;
@@ -262,4 +277,30 @@ public class XUserMgrBase {
 				xAuditMapService.searchFields);
 	}
 
+	public VXModuleDefList searchXModuleDef(SearchCriteria searchCriteria) {
+		return xModuleDefService.searchModuleDef(searchCriteria);
+	}
+
+	public VXUserPermissionList searchXUserPermission(SearchCriteria searchCriteria) {
+		return xUserPermissionService.searchXUserPermission(searchCriteria);
+	}
+
+	public VXGroupPermissionList searchXGroupPermission(SearchCriteria searchCriteria) {
+		return xGroupPermissionService.searchXGroupPermission(searchCriteria);
+	}
+
+	public VXLong getXModuleDefSearchCount(SearchCriteria searchCriteria) {
+		return xModuleDefService.getSearchCount(searchCriteria,
+				xModuleDefService.searchFields);
+	}
+
+	public VXLong getXUserPermissionSearchCount(SearchCriteria searchCriteria) {
+		return xUserPermissionService.getSearchCount(searchCriteria,
+				xUserPermissionService.searchFields);
+	}
+
+	public VXLong getXGroupPermissionSearchCount(SearchCriteria searchCriteria){
+		return xGroupPermissionService.getSearchCount(searchCriteria,
+				xGroupPermissionService.searchFields);
+	}
 }

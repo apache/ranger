@@ -267,7 +267,23 @@ define(function(require) {
                     text : options.model.get('name') +' Policies',
                     title: options.model.get('name') +' Policies'
                 };
-			}
+			},
+			ModulePermissions :{
+				href : '#!/permissions',
+				text : 'h.permissions',
+				title: 'h.permissions'
+			},
+			ModulePermissionEdit : function(options){
+                var href = "javascript:void(0);";
+                if(_.has(options,'model')){
+                    href =  '#!/permissions/'+options.model.id+"/edit";
+                }
+                return {
+                    href : href,
+                    text : options.model.get('module'),
+                    title: options.model.get('module')
+                };
+			},
 	};      
        
 	

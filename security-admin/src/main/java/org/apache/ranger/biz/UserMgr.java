@@ -41,15 +41,21 @@ import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUserPermission;
+import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XPortalUserService;
+import org.apache.ranger.service.XUserPermissionService;
+import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXPasswordChange;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXUserPermission;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +100,12 @@ public class UserMgr {
 	
 	@Autowired
 	XPortalUserService xPortalUserService;
+
+	@Autowired
+	XUserPermissionService xUserPermissionService;
+
+	@Autowired
+	XGroupPermissionService xGroupPermissionService;
 
 	String publicRoles[] = new String[] { RangerConstants.ROLE_USER,
 			RangerConstants.ROLE_OTHER };
@@ -587,6 +599,7 @@ public class UserMgr {
 			userProfile.setLoginId(user.getLoginId());
 			userProfile.setStatus(user.getStatus());
 			userProfile.setUserRoleList(new ArrayList<String>());
+
 			String emailAddress = user.getEmailAddress();
 
 			if (emailAddress != null && stringUtil.validateEmail(emailAddress)) {
@@ -607,6 +620,25 @@ public class UserMgr {
 
 		if (sess.isUserAdmin() || sess.getXXPortalUser().getId().equals(user.getId())) {
 			userProfile.setId(user.getId());
+			List<XXUserPermission> xUserPermissions=daoManager.getXXUserPermission().findByUserPermissionIdAndIsAllowed(userProfile.getId());
+			List<XXGroupPermission> xxGroupPermissions=daoManager.getXXGroupPermission().findbyVXPoratUserId(userProfile.getId());
+
+	  List<VXGroupPermission> groupPermissions=new ArrayList<VXGroupPermission>();
+      List<VXUserPermission> vxUserPermissions=new ArrayList<VXUserPermission>();
+      for(XXGroupPermission xxGroupPermission:xxGroupPermissions)
+      {
+	  VXGroupPermission groupPermission=xGroupPermissionService.populateViewBean(xxGroupPermission);
+	  groupPermission.setModuleName(daoManager.getXXModuleDef().findByModuleId(groupPermission.getModuleId()).getModule());
+	  groupPermissions.add(groupPermission);
+      }
+      for(XXUserPermission xUserPermission: xUserPermissions)
+      {
+         VXUserPermission vXUserPermission=xUserPermissionService.populateViewBean(xUserPermission);
+         vXUserPermission.setModuleName(daoManager.getXXModuleDef().findByModuleId(vXUserPermission.getModuleId()).getModule());
+         vxUserPermissions.add(vXUserPermission);
+	}
+      userProfile.setGroupPermissions(groupPermissions);
+	userProfile.setUserPermList(vxUserPermissions);
 			userProfile.setFirstName(user.getFirstName());
 			userProfile.setLastName(user.getLastName());
 			userProfile.setPublicScreenName(user.getPublicScreenName());
@@ -663,6 +695,7 @@ public class UserMgr {
 		// Get total count first
 		Query query = createUserSearchQuery(countQueryStr, null, searchCriteria);
 		Long count = (Long) query.getSingleResult();
+		int resultSize=Integer.parseInt(count.toString());
 		if (count == null || count.longValue() == 0) {
 			return returnList;
 		}
@@ -725,6 +758,7 @@ public class UserMgr {
 			objectList.add(userProfile);
 		}
 
+		returnList.setResultSize(resultSize);
 		returnList.setPageSize(query.getMaxResults());
 		returnList.setSortBy(sortBy);
 		returnList.setSortType(querySortType);
