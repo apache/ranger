@@ -107,15 +107,27 @@ public class EmbeddedServer {
 		int sslPort = getIntConfig("https.service.port",-1) ;
 		int shutdownPort = getIntConfig("service.shutdownPort", DEFAULT_SHUTDOWN_PORT ) ;
 		String shutdownCommand = getConfig("service.shutdownCommand", DEFAULT_SHUTDOWN_COMMAND ) ;
-		
+
 		server.setHostname(hostName);
 		server.setPort(serverPort);
 		server.getServer().setPort(shutdownPort);
 		server.getServer().setShutdown(shutdownCommand);
 
 		boolean isHttpsEnabled = Boolean.valueOf(getConfig("https.attrib.SSLEnabled", "false"));
-		
-		if ((sslPort > 0) && isHttpsEnabled) {
+		boolean ajpEnabled = Boolean.valueOf(getConfig("ajp.enabled", "false"));
+
+		if (ajpEnabled) {
+
+			Connector ajpConnector = new Connector("org.apache.coyote.ajp.AjpNioProtocol");
+			ajpConnector.setPort(serverPort);
+			ajpConnector.setProperty("protocol", "AJP/1.3");
+
+			server.getService().addConnector(ajpConnector);
+
+			// Making this as a default connector
+			server.setConnector(ajpConnector);
+			LOG.info("Created AJP Connector");
+		} else if ((sslPort > 0) && isHttpsEnabled) {
 			Connector ssl = new Connector() ;
 			ssl.setPort(sslPort) ;
 			ssl.setSecure(true);
