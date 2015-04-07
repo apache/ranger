@@ -375,7 +375,7 @@ public class PublicAPIs {
 		
 		RangerPolicy  policy        = serviceUtil.toRangerPolicy(vXPolicy,service);
 
-		RangerPolicy  updatedPolicy = serviceREST.createPolicy(policy);
+		RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy);
 
 		VXPolicy ret = serviceUtil.toVXPolicy(updatedPolicy, service);
 
