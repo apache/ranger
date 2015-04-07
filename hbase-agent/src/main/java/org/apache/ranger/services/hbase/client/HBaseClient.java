@@ -245,11 +245,15 @@ public class HBaseClient extends BaseClient {
 						    LOG.info("getTableList: no exception: HbaseAvailability true");
 							admin = new HBaseAdmin(conf) ;
 							for (HTableDescriptor htd : admin.listTables(tableNameMatching)) {
-								String tableName = htd.getNameAsString();
-								if ( existingTableList != null && existingTableList.contains(tableName)) {
-									continue;
+								if (htd == null) {
+									LOG.error("getTableList: null HTableDescription received from HBaseAdmin.listTables");
 								} else {
-									tableList.add(htd.getNameAsString());
+									String tableName = htd.getNameAsString();
+									if (existingTableList != null && existingTableList.contains(tableName)) {
+										continue;
+									} else {
+										tableList.add(htd.getNameAsString());
+									}
 								}
 							}
 						} catch (ZooKeeperConnectionException zce) {
