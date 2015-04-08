@@ -19,6 +19,7 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.*;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
@@ -39,7 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
-import java.util.ArrayList;
+
+import java.util.HashMap;
 import java.util.List;
 
 @Path("public")
@@ -177,57 +179,42 @@ public class PublicAPIs {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.searchRepositories()");
 		}
-		
-		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-				request, xAssetService.sortFields);
-		searchUtil.extractString(request, searchCriteria, "name",
-				"Repository Name", null);
-		searchUtil.extractBoolean(request, searchCriteria, "status",
-				"Activation Status");
-		searchUtil.extractString(request, searchCriteria, "type",
-				"Repository Type", null);
 
-		searchCriteria = serviceUtil.getMappedSearchParams(request,
-				searchCriteria);
-		List<RangerService> serviceList = serviceREST.getServices(request);
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, policyService.sortFields);
+
+		List<RangerService> serviceList = serviceREST.getServices(filter);
 
 		VXRepositoryList ret = null;
 
 		if (serviceList != null) {
 			ret = serviceUtil.rangerServiceListToPublicObjectList(serviceList);
 		}
+
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.searchRepositories(): count=" + (ret == null ? 0 : ret.getListSize()));
 		}
-			
+
 		return ret;
 	}
 
-	
+
 	@GET
 	@Path("/api/repository/count")
 	@Produces({ "application/json", "application/xml" })
 	public VXLong countRepositories(@Context HttpServletRequest request) {
-		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-				request, xAssetService.sortFields);
-	
+
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.countRepositories()");
 		}
-		
-        ArrayList<Integer> valueList = new ArrayList<Integer>();
-        valueList.add(RangerConstants.STATUS_DISABLED);
-        valueList.add(RangerConstants.STATUS_ENABLED);
-        searchCriteria.addParam("status", valueList);
-        
+
         VXLong ret = new VXLong();
         
         ret.setValue(serviceREST.countServices(request));
-		
+
         if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.countRepositories(): count=" + ret);
 		}
-        
+
         return ret;
 	}	
 	
@@ -367,16 +354,16 @@ public class PublicAPIs {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.countPolicies(): ");
 		}
-		
+
 		Long policyCount = serviceREST.countPolicies(request);
 		
 		VXLong vXlong = new VXLong();
 		vXlong.setValue(policyCount);
-		
+
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.countPolicies(): "  + request );
 		}
-		
+
 		return vXlong;
 	}
 

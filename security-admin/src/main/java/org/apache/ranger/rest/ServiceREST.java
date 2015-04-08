@@ -474,6 +474,29 @@ public class ServiceREST {
 		return ret;
 	}
 
+	public List<RangerService> getServices(SearchFilter filter) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getServices():");
+		}
+
+		List<RangerService> ret = null;
+
+		try {
+			ret = svcStore.getServices(filter);
+		} catch(Exception excp) {
+			LOG.error("getServices() failed", excp);
+
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServices(): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+
 	@GET
 	@Path("/services/count")
 	@Produces({ "application/json", "application/xml" })

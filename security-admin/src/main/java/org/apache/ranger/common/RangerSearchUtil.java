@@ -79,6 +79,27 @@ public class RangerSearchUtil extends SearchUtil {
 		return ret;
 	}
 
+	public SearchFilter getSearchFilterFromLegacyRequestForRepositorySearch(HttpServletRequest request, List<SortField> sortFields) {
+		if (request == null) {
+			return null;
+		}
+
+		SearchFilter ret = new SearchFilter();
+
+		if (MapUtils.isEmpty(request.getParameterMap())) {
+			ret.setParams(new HashMap<String, String>());
+		}
+
+		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter("name"));
+		ret.setParam(SearchFilter.IS_ENABLED, request.getParameter("status"));
+		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter("type").toLowerCase());
+
+		extractCommonCriteriasForFilter(request, ret, sortFields);
+
+		return ret;
+	}
+
+
 	public SearchFilter getSearchFilterFromLegacyRequest(HttpServletRequest request, List<SortField> sortFields) {
 		if (request == null) {
 			return null;
@@ -90,7 +111,7 @@ public class RangerSearchUtil extends SearchUtil {
 			ret.setParams(new HashMap<String, String>());
 		}
 
-		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter("repositoryType"));
+		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter("repositoryType").toLowerCase());
 		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter("repositoryName"));
 		ret.setParam(SearchFilter.SERVICE_ID, request.getParameter("repositoryId"));
 		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter("policyName"));
