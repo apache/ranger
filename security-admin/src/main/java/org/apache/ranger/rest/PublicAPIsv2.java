@@ -79,7 +79,7 @@ public class PublicAPIsv2 {
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerServiceDef> searchServiceDefs(@Context HttpServletRequest request) {
-		return serviceREST.getServiceDefs(request);
+		return serviceREST.getServiceDefs(request).getServiceDefs();
 	}
 
 	@POST
@@ -190,7 +190,7 @@ public class PublicAPIsv2 {
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerService> searchServices(@Context HttpServletRequest request) {
-		return serviceREST.getServices(request);
+		return serviceREST.getServices(request).getServices();
 	}
 
 	@POST
@@ -312,7 +312,7 @@ public class PublicAPIsv2 {
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerPolicy> searchPolicies(@PathParam("servicename") String serviceName,
 	                                         @Context HttpServletRequest request) {
-		return serviceREST.getServicePolicies(serviceName, request);
+		return serviceREST.getServicePolicies(serviceName, request).getPolicies();
 	}
 
 	@POST

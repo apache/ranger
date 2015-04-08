@@ -239,7 +239,7 @@ public class AssetREST {
 
 		VXAssetList ret = new VXAssetList();
 
-		List<RangerService> services = serviceREST.getServices(request);
+		List<RangerService> services = serviceREST.getServices(request).getServices();
 
 		if(services != null) {
 			List<VXAsset> assets = new ArrayList<VXAsset>();
@@ -383,7 +383,8 @@ public class AssetREST {
 		String arg     = request.getParameter("assetId");
 		Long   assetId = (arg == null || arg.isEmpty()) ? null : Long.parseLong(arg);
 
-		List<RangerPolicy> policies = assetId != null ? serviceREST.getServicePolicies(assetId, request) : serviceREST.getPolicies(request);
+		List<RangerPolicy> policies = assetId != null ? serviceREST.getServicePolicies(assetId, request)
+				.getPolicies() : serviceREST.getPolicies(request).getPolicies();
 
 		if(policies != null) {
 			List<VXResource> resources = new ArrayList<VXResource>(policies.size());
@@ -515,7 +516,7 @@ public class AssetREST {
 		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
 
 		RangerService      service  = serviceREST.getServiceByName(repository);
-		List<RangerPolicy> policies = serviceREST.getServicePolicies(repository, request);
+		List<RangerPolicy> policies = serviceREST.getServicePolicies(repository, request).getPolicies();
 
 		long             policyUpdTime = (service != null && service.getPolicyUpdateTime() != null) ? service.getPolicyUpdateTime().getTime() : 0l;
 		VXAsset          vAsset        = serviceUtil.toVXAsset(service);

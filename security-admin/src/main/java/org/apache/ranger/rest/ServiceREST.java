@@ -20,7 +20,6 @@
 package org.apache.ranger.rest;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +88,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
 
 @Path("plugins")
 @Component
@@ -279,34 +277,32 @@ public class ServiceREST {
 
 		return ret;
 	}
-
+	
 	@GET
-	@Path("/definitions/unpaginated")
+	@Path("/definitions")
 	@Produces({ "application/json", "application/xml" })
-	public List<RangerServiceDef> getServiceDefs(@Context HttpServletRequest request) {
-		if(LOG.isDebugEnabled()) {
+	public RangerServiceDefList getServiceDefs(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServiceDefs()");
 		}
 
-		List<RangerServiceDef> ret = null;
+		RangerServiceDefList ret = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, serviceDefService.sortFields);
 
 		try {
-			ret = svcStore.getServiceDefs(filter);
-		} catch(Exception excp) {
+			ret = svcStore.getPaginatedServiceDefs(filter);
+		} catch (Exception excp) {
 			LOG.error("getServiceDefs() failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServiceDefs(): count=" + (ret == null ? 0 : ret.size()));
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServiceDefs(): count=" + (ret == null ? 0 : ret.getListSize()));
 		}
-
 		return ret;
 	}
-
 
 	@POST
 	@Path("/services")
@@ -448,29 +444,28 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/services/unpaginated")
+	@Path("/services")
 	@Produces({ "application/json", "application/xml" })
-	public List<RangerService> getServices(@Context HttpServletRequest request) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getServices():");
+	public RangerServiceList getServices(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getServices()");
 		}
 
-		List<RangerService> ret = null;
+		RangerServiceList ret = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, svcService.sortFields);
 
 		try {
-			ret = svcStore.getServices(filter);
-		} catch(Exception excp) {
+			ret = svcStore.getPaginatedServices(filter);
+		} catch (Exception excp) {
 			LOG.error("getServices() failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServices(): count=" + (ret == null ? 0 : ret.size()));
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServices(): count=" + (ret == null ? 0 : ret.getListSize()));
 		}
-
 		return ret;
 	}
 
@@ -508,7 +503,7 @@ public class ServiceREST {
 		Long ret = null;
 
 		try {
-			List<RangerService> services = getServices(request);
+			List<RangerService> services = getServices(request).getServices();
 			
 			ret = new Long(services == null ? 0 : services.size());
 		} catch(Exception excp) {
@@ -955,21 +950,28 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/policies/unpaginated")
+	@Path("/policies")
 	@Produces({ "application/json", "application/xml" })
-	public List<RangerPolicy> getPolicies(@Context HttpServletRequest request) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicies(request)");
+	public RangerPolicyList getPolicies(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicies()");
 		}
+
+		RangerPolicyList ret = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
-		List<RangerPolicy> ret = getPolicies(filter);
+		try {
+			ret = svcStore.getPaginatedPolicies(filter);
+		} catch (Exception excp) {
+			LOG.error("getPolicies() failed", excp);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicies(request): count=" + (ret == null ? 0 : ret.size()));
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicies(): count=" + (ret == null ? 0 : ret.getListSize()));
+		}
 		return ret;
 	}
 
@@ -1006,7 +1008,7 @@ public class ServiceREST {
 		Long ret = null;
 
 		try {
-			List<RangerPolicy> services = getPolicies(request);
+			List<RangerPolicy> services = getPolicies(request).getPolicies();
 			
 			ret = new Long(services == null ? 0 : services.size());
 		} catch(Exception excp) {
@@ -1023,62 +1025,65 @@ public class ServiceREST {
 	}
 
 	@GET
-	@Path("/policies/service/unpaginated/{id}")
+	@Path("/policies/service/{id}")
 	@Produces({ "application/json", "application/xml" })
-	public List<RangerPolicy> getServicePolicies(@PathParam("id") Long serviceId, @Context HttpServletRequest request) {
-		if(LOG.isDebugEnabled()) {
+	public RangerPolicyList getServicePolicies(@PathParam("id") Long serviceId,
+			@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceId + ")");
 		}
 
-		List<RangerPolicy> ret = null;
+		RangerPolicyList ret = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
-			ret = svcStore.getServicePolicies(serviceId, filter);
-		} catch(Exception excp) {
+			ret = svcStore.getPaginatedServicePolicies(serviceId, filter);
+		} catch (Exception excp) {
 			LOG.error("getServicePolicies(" + serviceId + ") failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
-		if(ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		if (ret == null) {
+			LOG.info("No Policies found for given service id: " + serviceId);
 		}
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count=" + ret.size());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count="
+					+ ret.getListSize());
 		}
-
 		return ret;
 	}
 
 	@GET
-	@Path("/policies/service/unpaginated/name/{name}")
+	@Path("/policies/service/name/{name}")
 	@Produces({ "application/json", "application/xml" })
-	public List<RangerPolicy> getServicePolicies(@PathParam("name") String serviceName, @Context HttpServletRequest request) {
-		if(LOG.isDebugEnabled()) {
+	public RangerPolicyList getServicePolicies(@PathParam("name") String serviceName,
+			@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceName + ")");
 		}
 
-		List<RangerPolicy> ret = null;
+		RangerPolicyList ret = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
-			ret = svcStore.getServicePolicies(serviceName, filter);
-		} catch(Exception excp) {
+			ret = svcStore.getPaginatedServicePolicies(serviceName, filter);
+		} catch (Exception excp) {
 			LOG.error("getServicePolicies(" + serviceName + ") failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
-		if(ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		if (ret == null) {
+			LOG.info("No Policies found for given service name: " + serviceName);
 		}
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count=" + ret.size());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count="
+					+ ret.getListSize());
 		}
 
 		return ret;
@@ -1159,7 +1164,7 @@ public class ServiceREST {
 
 		boolean ret = false;
 		
-		List<RangerPolicy> policies = getServicePolicies(serviceName, null);
+		List<RangerPolicy> policies = getServicePolicies(serviceName, null).getPolicies();
 
 		if(!CollectionUtils.isEmpty(policies)) {
 			for(RangerPolicy policy : policies) {
@@ -1204,7 +1209,7 @@ public class ServiceREST {
 
 		RangerPolicy ret = null;
 
-		List<RangerPolicy> policies = getServicePolicies(serviceName, null);
+		List<RangerPolicy> policies = getServicePolicies(serviceName, null).getPolicies();
 
 		if(!CollectionUtils.isEmpty(policies)) {
 			for(RangerPolicy policy : policies) {
@@ -1375,149 +1380,6 @@ public class ServiceREST {
 					ret = true;
 				}
 			}
-		}
-
-		return ret;
-	}
-
-	@GET
-	@Path("/definitions")
-	@Produces({ "application/json", "application/xml" })
-	public RangerServiceDefList getPaginatedServiceDefs(@Context HttpServletRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPaginatedServiceDefs()");
-		}
-
-		RangerServiceDefList ret = null;
-
-		SearchFilter filter = searchUtil.getSearchFilter(request, serviceDefService.sortFields);
-
-		try {
-			ret = svcStore.getPaginatedServiceDefs(filter);
-		} catch (Exception excp) {
-			LOG.error("getServiceDefs() failed", excp);
-
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPaginatedServiceDefs(): count=" + (ret == null ? 0 : ret.getListSize()));
-		}
-		return ret;
-	}
-
-	@GET
-	@Path("/services")
-	@Produces({ "application/json", "application/xml" })
-	public RangerServiceList getPaginatedServices(@Context HttpServletRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPaginatedServices()");
-		}
-
-		RangerServiceList ret = null;
-
-		SearchFilter filter = searchUtil.getSearchFilter(request, svcService.sortFields);
-
-		try {
-			ret = svcStore.getPaginatedServices(filter);
-		} catch (Exception excp) {
-			LOG.error("getServices() failed", excp);
-
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPaginatedServices(): count=" + (ret == null ? 0 : ret.getListSize()));
-		}
-		return ret;
-	}
-
-	@GET
-	@Path("/policies")
-	@Produces({ "application/json", "application/xml" })
-	public RangerPolicyList getPaginatedPolicies(@Context HttpServletRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPaginatedPolicies()");
-		}
-
-		RangerPolicyList ret = null;
-
-		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
-
-		try {
-			ret = svcStore.getPaginatedPolicies(filter);
-		} catch (Exception excp) {
-			LOG.error("getPolicies() failed", excp);
-
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPaginatedPolicies(): count=" + (ret == null ? 0 : ret.getListSize()));
-		}
-		return ret;
-	}
-
-	@GET
-	@Path("/policies/service/{id}")
-	@Produces({ "application/json", "application/xml" })
-	public RangerPolicyList getPaginatedServicePolicies(@PathParam("id") Long serviceId,
-			@Context HttpServletRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceId + ")");
-		}
-
-		RangerPolicyList ret = null;
-
-		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
-
-		try {
-			ret = svcStore.getPaginatedServicePolicies(serviceId, filter);
-		} catch (Exception excp) {
-			LOG.error("getServicePolicies(" + serviceId + ") failed", excp);
-
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if (ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count="
-					+ ret.getListSize());
-		}
-		return ret;
-	}
-
-	@GET
-	@Path("/policies/service/name/{name}")
-	@Produces({ "application/json", "application/xml" })
-	public RangerPolicyList getPaginatedServicePolicies(@PathParam("name") String serviceName,
-			@Context HttpServletRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceName + ")");
-		}
-
-		RangerPolicyList ret = null;
-
-		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
-
-		try {
-			ret = svcStore.getPaginatedServicePolicies(serviceName, filter);
-		} catch (Exception excp) {
-			LOG.error("getServicePolicies(" + serviceName + ") failed", excp);
-
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-		}
-
-		if (ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count="
-					+ ret.getListSize());
 		}
 
 		return ret;
