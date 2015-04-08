@@ -47,6 +47,15 @@ public abstract class XXPolicyBase extends XXDBBase {
 	protected String name;
 
 	/**
+	 * policyType of the XXPolicy
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "policy_type")
+	protected Integer policyType;
+
+	/**
 	 * description of the XXPolicy
 	 * <ul>
 	 * </ul>
@@ -208,6 +217,14 @@ public abstract class XXPolicyBase extends XXDBBase {
 		return this.isAuditEnabled;
 	}
 
+	public Integer getPolicyType() {
+		return policyType;
+	}
+
+	public void setPolicyType(Integer policyType) {
+		this.policyType = policyType;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -269,6 +286,13 @@ public abstract class XXPolicyBase extends XXDBBase {
 		} else if (!version.equals(other.version)) {
 			return false;
 		}
+		if (policyType == null) {
+			if (other.policyType != null) {
+				return false;
+			}
+		} else if (!policyType.equals(other.policyType)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -280,8 +304,8 @@ public abstract class XXPolicyBase extends XXDBBase {
 	@Override
 	public String toString() {
 		return "XXPolicyBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", service=" + service
-				+ ", name=" + name + ", description=" + description + ", isEnabled=" + isEnabled + ", isAuditEnabled="
-				+ isAuditEnabled + "]";
+				+ ", name=" + name + ", policyType=" + policyType + ", description=" + description + ", isEnabled="
+				+ isEnabled + ", isAuditEnabled=" + isAuditEnabled + "]";
 	}
 
 }

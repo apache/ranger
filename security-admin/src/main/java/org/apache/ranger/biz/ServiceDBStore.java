@@ -250,7 +250,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXServiceConfigDefDao xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
 		for(RangerServiceConfigDef config : configs) {
 			XXServiceConfigDef xConfig = new XXServiceConfigDef();
-			xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef);
+			xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef,
+					RangerServiceDefService.OPERATION_CREATE_CONTEXT);
 			xConfig = xxServiceConfigDao.create(xConfig);
 		}
 		
@@ -260,7 +261,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			Long parentId = (parent != null) ? parent.getId() : null;
 			
 			XXResourceDef xResource = new XXResourceDef();
-			xResource = serviceDefService.populateRangerResourceDefToXX(resource, xResource, createdSvcDef);
+			xResource = serviceDefService.populateRangerResourceDefToXX(resource, xResource, createdSvcDef,
+					RangerServiceDefService.OPERATION_CREATE_CONTEXT);
 			xResource.setParent(parentId);
 			xResource = xxResDefDao.create(xResource);
 		}
@@ -268,7 +270,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXAccessTypeDefDao xxATDDao = daoMgr.getXXAccessTypeDef();
 		for(RangerAccessTypeDef accessType : accessTypes) {
 			XXAccessTypeDef xAccessType = new XXAccessTypeDef();
-			xAccessType = serviceDefService.populateRangerAccessTypeDefToXX(accessType, xAccessType, createdSvcDef);
+			xAccessType = serviceDefService.populateRangerAccessTypeDefToXX(accessType, xAccessType, createdSvcDef,
+					RangerServiceDefService.OPERATION_CREATE_CONTEXT);
 			xAccessType = xxATDDao.create(xAccessType);
 			
 			Collection<String> impliedGrants = accessType.getImpliedGrants();
@@ -286,7 +289,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			XXPolicyConditionDef xPolicyCondition = new XXPolicyConditionDef();
 			xPolicyCondition = serviceDefService
 					.populateRangerPolicyConditionDefToXX(policyCondition,
-							xPolicyCondition, createdSvcDef);
+							xPolicyCondition, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
 			xPolicyCondition = xxPolCondDao.create(xPolicyCondition);
 		}
 		
@@ -295,21 +298,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 			XXContextEnricherDef xContextEnricher = new XXContextEnricherDef();
 			xContextEnricher = serviceDefService
 					.populateRangerContextEnricherDefToXX(contextEnricher,
-							xContextEnricher, createdSvcDef);
+							xContextEnricher, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
 			xContextEnricher = xxContextEnricherDao.create(xContextEnricher);
 		}
 		
 		XXEnumDefDao xxEnumDefDao = daoMgr.getXXEnumDef();
 		for(RangerEnumDef vEnum : enums) {
 			XXEnumDef xEnum = new XXEnumDef();
-			xEnum = serviceDefService.populateRangerEnumDefToXX(vEnum, xEnum, createdSvcDef);
+			xEnum = serviceDefService.populateRangerEnumDefToXX(vEnum, xEnum, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
 			xEnum = xxEnumDefDao.create(xEnum);
 			
 			List<RangerEnumElementDef> elements = vEnum.getElements();
 			XXEnumElementDefDao xxEnumEleDefDao = daoMgr.getXXEnumElementDef();
 			for(RangerEnumElementDef element : elements) {
 				XXEnumElementDef xElement = new XXEnumElementDef();
-				xElement = serviceDefService.populateRangerEnumElementDefToXX(element, xElement, xEnum);
+				xElement = serviceDefService.populateRangerEnumElementDefToXX(element, xElement, xEnum, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
 				xElement = xxEnumEleDefDao.create(xElement);
 			}
 		}

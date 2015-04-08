@@ -80,6 +80,7 @@ CREATE TABLE  `x_policy` (
 `version` bigint(20) DEFAULT NULL,
 `service` bigint(20) DEFAULT NULL,
 `name` varchar(512) DEFAULT NULL, 
+`policy_type` int(11) DEFAULT 0,
 `description` varchar(1024) DEFAULT NULL,
 `is_enabled` tinyint(1) NOT NULL DEFAULT '0',
 `is_audit_enabled` tinyint(1) NOT NULL DEFAULT '0',

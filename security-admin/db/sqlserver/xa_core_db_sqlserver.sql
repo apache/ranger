@@ -1809,6 +1809,7 @@ CREATE TABLE [dbo].[x_policy] (
 	[version] [bigint] DEFAULT NULL NULL,
 	[service] [bigint] DEFAULT NULL NULL,
 	[name] [varchar](512) DEFAULT NULL NULL, 
+	[policy_type] [int] DEFAULT 0 NULL,
 	[description] [varchar](1024) DEFAULT NULL NULL,
 	[is_enabled] [tinyint] DEFAULT 0 NOT NULL,
 	[is_audit_enabled] [tinyint] DEFAULT 0 NOT NULL,
