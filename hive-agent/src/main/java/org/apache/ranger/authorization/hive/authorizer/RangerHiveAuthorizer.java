@@ -757,8 +757,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             try {
                 Path       filePath   = new Path(uri);
                 FileSystem fs         = FileSystem.get(filePath.toUri(), conf);
-                Path       path       = FileUtils.getPathOrParentThatExists(fs, filePath);
-                FileStatus fileStatus = fs.getFileStatus(path);
+                // Path       path       = FileUtils.getPathOrParentThatExists(fs, filePath);
+                // FileStatus fileStatus = fs.getFileStatus(path);
+                FileStatus fileStatus = FileUtils.getPathOrParentThatExists(fs, filePath);
 
                 if (FileUtils.isOwnerOfFileHierarchy(fs, fileStatus, userName)) {
                     ret = true;
