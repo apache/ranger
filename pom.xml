@@ -506,12 +506,9 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
         <version>${findbugs.plugin.version}</version>
-<!--
         <configuration>
-          <excludeFilterFile>${basedir}/dev-support/findbugsExcludeFile.xml
-          </excludeFilterFile>
+          <includeFilterFile>./dev-support/findbugsIncludeFile.xml</includeFilterFile>
         </configuration>
--->
       </plugin>
     </plugins>
   </build>
