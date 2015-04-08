@@ -339,12 +339,18 @@ checkTests () {
 }
 
 cleanUpXml () {
-  cd $BASEDIR/conf
-  for file in `ls *.xml.template`
-    do
-      rm -f `basename $file .template`
-    done
-  cd $BASEDIR
+  if [ -d "${BASEDIR}/conf" ]
+  then
+  	cd $BASEDIR/conf
+  	for file in `ls *.xml.template`
+    	do
+      		if [ -f "${file}" ]
+			then
+				rm -f `basename ${file} .template`
+			fi
+    	done
+  	cd $BASEDIR
+  fi
 }
 
 ###############################################################################
@@ -744,8 +750,8 @@ $comment"
     echo ""
     ### Update Jira with a comment
     export USER=hudson
-    $JIRACLI -s https://issues.apache.org/jira -a addcomment -u hadoopqa -p $JIRA_PASSWD --comment "$comment" --issue $defect
-    $JIRACLI -s https://issues.apache.org/jira -a logout -u hadoopqa -p $JIRA_PASSWD
+    $JIRACLI -s https://issues.apache.org/jira -a addcomment -u rangerqa -p $JIRA_PASSWD --comment "$comment" --issue $defect
+    $JIRACLI -s https://issues.apache.org/jira -a logout -u rangerqa -p $JIRA_PASSWD
   fi
 }
 
