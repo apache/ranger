@@ -434,7 +434,6 @@
     </pluginManagement>
     <plugins>
 
-	<!--
     <plugin>
       <groupId>org.apache.rat</groupId>
       <artifactId>apache-rat-plugin</artifactId>
@@ -450,7 +449,6 @@
       <configuration>
         <excludeSubProjects>false</excludeSubProjects>
         <excludes>
-
 		  <exclude>**/dependency-reduced-pom.xml</exclude>
           <exclude>**/robots.txt</exclude>
           <exclude>**/MANIFEST.MF</exclude>
@@ -485,7 +483,6 @@
 
       </configuration>
     </plugin>
-	-->
 
       <plugin>
          <groupId>org.apache.maven.plugins</groupId>
