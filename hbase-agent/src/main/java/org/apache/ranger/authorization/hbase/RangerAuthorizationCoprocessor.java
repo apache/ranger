@@ -66,7 +66,7 @@ import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.ipc.RequestContext;
+import org.apache.hadoop.hbase.ipc.RpcServer;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
@@ -74,7 +74,8 @@ import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.AccessCont
 import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos.SnapshotDescription;
 import org.apache.hadoop.hbase.protobuf.generated.SecureBulkLoadProtos.CleanupBulkLoadRequest;
 import org.apache.hadoop.hbase.protobuf.generated.SecureBulkLoadProtos.PrepareBulkLoadRequest;
-import org.apache.hadoop.hbase.regionserver.HRegion;
+import org.apache.hadoop.hbase.protobuf.generated.QuotaProtos.Quotas;
+import org.apache.hadoop.hbase.regionserver.Region;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.regionserver.ScanType;
@@ -134,7 +135,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	
 	// Utilities Methods 
 	protected byte[] getTableName(RegionCoprocessorEnvironment e) {
-		HRegion region = e.getRegion();
+		Region region = e.getRegion();
 		byte[] tableName = null;
 		if (region != null) {
 			HRegionInfo regionInfo = region.getRegionInfo();
@@ -184,8 +185,8 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 
 	private User getActiveUser() {
-		User user = RequestContext.getRequestUser();
-		if (!RequestContext.isInRequestContext()) {
+		User user = RpcServer.getRequestUser();
+		if (user == null) {
 			// for non-rpc handling, fallback to system user
 			try {
 				user = User.getCurrent();
@@ -198,8 +199,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	
 	private String getRemoteAddress() {
-		RequestContext reqContext = RequestContext.get();
-		InetAddress    remoteAddr = reqContext != null ? reqContext.getRemoteAddress() : null;
+		InetAddress    remoteAddr = RpcServer.getRemoteAddress();
 		String         strAddr    = remoteAddr != null ? remoteAddr.getHostAddress() : null;
 
 		return strAddr;
@@ -207,13 +207,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 	// Methods that are used within the CoProcessor 
 	private void requireScannerOwner(InternalScanner s) throws AccessDeniedException {
-		if (RequestContext.isInRequestContext()) {
-			String requestUserName = RequestContext.getRequestUserName();
-			String owner = scannerOwners.get(s);
-			if (owner != null && !owner.equals(requestUserName)) {
-				throw new AccessDeniedException("User '" + requestUserName + "' is not the scanner owner!");
-			}
-		}
+     String requestUserName = RpcServer.getRequestUserName();
+     String owner = scannerOwners.get(s);
+     if (owner != null && !owner.equals(requestUserName)) {
+       throw new AccessDeniedException("User '"+ requestUserName +"' is not the scanner owner!");
+     }	
 	}
 
 	/**
@@ -792,7 +790,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	@Override
 	public void preOpen(ObserverContext<RegionCoprocessorEnvironment> e) throws IOException {
 		RegionCoprocessorEnvironment env = e.getEnvironment();
-		final HRegion region = env.getRegion();
+		final Region region = env.getRegion();
 		if (region == null) {
 			LOG.error("NULL region from RegionCoprocessorEnvironment in preOpen()");
 			return;
@@ -864,6 +862,37 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	public void preUnassign(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo, boolean force) throws IOException {
 		requirePermission("unassign", regionInfo.getTable().getName(), null, null, Action.ADMIN);
 	}
+
+  @Override
+  public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final Quotas quotas) throws IOException {
+    requireGlobalPermission("setUserQuota", null, Action.ADMIN);
+  }
+
+  @Override
+  public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final TableName tableName, final Quotas quotas) throws IOException {
+    requirePermission("setUserTableQuota", tableName.getName(), null, null, Action.ADMIN);
+  }
+
+  @Override
+  public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final String namespace, final Quotas quotas) throws IOException {
+    requireGlobalPermission("setUserNamespaceQuota", namespace, Action.ADMIN);
+  }
+
+  @Override
+  public void preSetTableQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final TableName tableName, final Quotas quotas) throws IOException {
+    requirePermission("setTableQuota", tableName.getName(), null, null, Action.ADMIN);
+  }
+
+  @Override
+  public void preSetNamespaceQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String namespace, final Quotas quotas) throws IOException {
+    requireGlobalPermission("setNamespaceQuota", namespace, Action.ADMIN);
+  }
+
 	private String coprocessorType = "unknown";
 	private static final String MASTER_COPROCESSOR_TYPE = "master";
 	private static final String REGIONAL_COPROCESSOR_TYPE = "regional";
@@ -971,7 +1000,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 	}
 	@Override
-	public void preMerge(ObserverContext<RegionServerCoprocessorEnvironment> ctx, HRegion regionA, HRegion regionB) throws IOException {
+	public void preMerge(ObserverContext<RegionServerCoprocessorEnvironment> ctx, Region regionA, Region regionB) throws IOException {
 		requirePermission("mergeRegions", regionA.getTableDesc().getTableName().getName(), null, null, Action.ADMIN);
 	}
 

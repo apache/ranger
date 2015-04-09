@@ -45,8 +45,9 @@ import org.apache.hadoop.hbase.coprocessor.RegionServerCoprocessorEnvironment;
 import org.apache.hadoop.hbase.coprocessor.RegionServerObserver;
 import org.apache.hadoop.hbase.master.RegionPlan;
 import org.apache.hadoop.hbase.protobuf.generated.AdminProtos.WALEntry;
+import org.apache.hadoop.hbase.protobuf.generated.QuotaProtos.Quotas;
 import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos.SnapshotDescription;
-import org.apache.hadoop.hbase.regionserver.HRegion;
+import org.apache.hadoop.hbase.regionserver.Region;
 import org.apache.hadoop.hbase.regionserver.wal.WALEdit;
 import org.apache.hadoop.hbase.replication.ReplicationEndpoint;
 
@@ -62,7 +63,7 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
 	@Override
 	public void preMergeCommit(
 			ObserverContext<RegionServerCoprocessorEnvironment> ctx,
-			HRegion regionA, HRegion regionB, List<Mutation> metaEntries)
+			Region regionA, Region regionB, List<Mutation> metaEntries)
 			throws IOException {
 		// Not applicable.  Expected to be empty
 	}
@@ -70,7 +71,7 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
 	@Override
 	public void postMergeCommit(
 			ObserverContext<RegionServerCoprocessorEnvironment> ctx,
-			HRegion regionA, HRegion regionB, HRegion mergedRegion)
+			Region regionA, Region regionB, Region mergedRegion)
 			throws IOException {
 		// Not applicable.  Expected to be empty
 	}
@@ -78,14 +79,14 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
 	@Override
 	public void preRollBackMerge(
 			ObserverContext<RegionServerCoprocessorEnvironment> ctx,
-			HRegion regionA, HRegion regionB) throws IOException {
+			Region regionA, Region regionB) throws IOException {
 		// Not applicable.  Expected to be empty
 	}
 
 	@Override
 	public void postRollBackMerge(
 			ObserverContext<RegionServerCoprocessorEnvironment> ctx,
-			HRegion regionA, HRegion regionB) throws IOException {
+			Region regionA, Region regionB) throws IOException {
 		// Not applicable.  Expected to be empty
 	}
 
@@ -385,7 +386,7 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
 	}
 
 	@Override
-	public void postMerge(ObserverContext<RegionServerCoprocessorEnvironment> c, HRegion regionA, HRegion regionB, HRegion mergedRegion) throws IOException {
+	public void postMerge(ObserverContext<RegionServerCoprocessorEnvironment> c, Region regionA, Region regionB, Region mergedRegion) throws IOException {
 		// Not applicable.  Expected to be empty
 	}
 
@@ -398,4 +399,45 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
 	public void postUnassign(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo, boolean force) throws IOException {
 		// Not applicable.  Expected to be empty
 	}
+
+  public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final Quotas quotas) throws IOException {
+  }
+
+  public void postSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final Quotas quotas) throws IOException {
+  }
+
+  public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final TableName tableName, final Quotas quotas) throws IOException {
+  }
+
+  public void postSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final TableName tableName, final Quotas quotas) throws IOException {
+  }
+
+  public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final String namespace, final Quotas quotas) throws IOException {
+  }
+
+  public void postSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String userName, final String namespace, final Quotas quotas) throws IOException {
+  }
+
+  public void preSetTableQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final TableName tableName, final Quotas quotas) throws IOException {
+  }
+
+  public void postSetTableQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final TableName tableName, final Quotas quotas) throws IOException {
+  }
+
+  public void preSetNamespaceQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String namespace, final Quotas quotas) throws IOException {
+  }
+
+  public void postSetNamespaceQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+      final String namespace, final Quotas quotas) throws IOException{
+  }
+
 }

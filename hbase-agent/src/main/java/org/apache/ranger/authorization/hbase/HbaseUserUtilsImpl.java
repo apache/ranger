@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hbase.ipc.RequestContext;
+import org.apache.hadoop.hbase.ipc.RpcServer;
 import org.apache.hadoop.hbase.security.User;
 
 public class HbaseUserUtilsImpl implements HbaseUserUtils {
@@ -61,12 +61,8 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
 	@Override
 	public User getUser() {
 		// current implementation does not use the request object!
-		User user;
-		if (RequestContext.isInRequestContext()) {
-			// this is the more common case
-			user = RequestContext.getRequestUser();
-		}
-		else {
+		User user = RpcServer.getRequestUser();
+		if (user == null) {
 			try {
 				user = User.getCurrent();
 			} catch (IOException e) {
