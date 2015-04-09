@@ -80,6 +80,15 @@ public abstract class XXPolicyBase extends XXDBBase {
 	 */
 	@Column(name = "description")
 	protected String description;
+	
+	/**
+	 * resource_signature of the XXPolicy
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "resource_signature")
+	protected String resourceSignature;
 
 	/**
 	 * isEnabled of the XXPolicy
@@ -193,6 +202,20 @@ public abstract class XXPolicyBase extends XXDBBase {
 	public String getDescription() {
 		return this.description;
 	}
+	
+	/**
+	 * @return the resourceSignature
+	 */
+	public String getResourceSignature() {
+		return resourceSignature;
+	}
+
+	/**
+	 * @param resourceSignature the resourceSignature to set
+	 */
+	public void setResourceSignature(String resourceSignature) {
+		this.resourceSignature = resourceSignature;
+	}
 
 	/**
 	 * This method sets the value to the member attribute <b> isEnabled</b> .
@@ -276,6 +299,13 @@ public abstract class XXPolicyBase extends XXDBBase {
 		} else if (!description.equals(other.description)) {
 			return false;
 		}
+		if (resourceSignature == null) {
+			if (other.resourceSignature != null) {
+				return false;
+			}
+		} else if (!resourceSignature.equals(other.resourceSignature)) {
+			return false;
+		}
 		if (isAuditEnabled != other.isAuditEnabled) {
 			return false;
 		}
@@ -320,9 +350,9 @@ public abstract class XXPolicyBase extends XXDBBase {
 	 */
 	@Override
 	public String toString() {
-		return "XXPolicyBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", service=" + service
-				+ ", name=" + name + ", policyType=" + policyType + ", description=" + description + ", isEnabled="
-				+ isEnabled + ", isAuditEnabled=" + isAuditEnabled + "]";
+		return "XXPolicyBase [guid=" + guid + ", version=" + version + ", service=" + service + ", name=" + name
+				+ ", policyType=" + policyType + ", description=" + description + ", resourceSignature="
+				+ resourceSignature + ", isEnabled=" + isEnabled + ", isAuditEnabled=" + isAuditEnabled + "]";
 	}
 
 }

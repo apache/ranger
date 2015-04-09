@@ -43,20 +43,21 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RangerPolicy extends RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String                            service        = null;
-	private String                            name           = null;
-	private Integer                           policyType     = null;
-	private String                            description    = null;
-	private Boolean                           isAuditEnabled = null;
-	private Map<String, RangerPolicyResource> resources      = null;
-	private List<RangerPolicyItem>            policyItems    = null;
+	private String                            service        	= null;
+	private String                            name           	= null;
+	private Integer                           policyType     	= null;
+	private String                            description    	= null;
+	private String							  resourceSignature = null;
+	private Boolean                           isAuditEnabled 	= null;
+	private Map<String, RangerPolicyResource> resources      	= null;
+	private List<RangerPolicyItem>            policyItems    	= null;
 
 
 	/**
 	 * @param type
 	 */
 	public RangerPolicy() {
-		this(null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null);
 	}
 
 	/**
@@ -66,14 +67,16 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param description
 	 * @param resources
 	 * @param policyItems
+	 * @param resourceSignature TODO
 	 */
-	public RangerPolicy(String service, String name, Integer policyType, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems) {
+	public RangerPolicy(String service, String name, Integer policyType, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature) {
 		super();
 
 		setService(service);
 		setName(name);
 		setPolicyType(policyType);
 		setDescription(description);
+		setResourceSignature(resourceSignature);
 		setIsAuditEnabled(null);
 		setResources(resources);
 		setPolicyItems(policyItems);
@@ -89,6 +92,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setName(other.getName());
 		setPolicyType(other.getPolicyType());
 		setDescription(other.getDescription());
+		setResourceSignature(other.getResourceSignature());
 		setIsAuditEnabled(other.getIsAuditEnabled());
 		setResources(other.getResources());
 		setPolicyItems(other.getPolicyItems());
@@ -148,6 +152,20 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 */
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	
+	/**
+	 * @return the resourceSignature
+	 */
+	public String getResourceSignature() {
+		return resourceSignature;
+	}
+
+	/**
+	 * @param resourceSignature the resourceSignature to set
+	 */
+	public void setResourceSignature(String resourceSignature) {
+		this.resourceSignature = resourceSignature;
 	}
 
 	/**
@@ -238,6 +256,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		sb.append("name={").append(name).append("} ");
 		sb.append("policyType={").append(policyType).append("} ");
 		sb.append("description={").append(description).append("} ");
+		sb.append("resourceSignature={").append(resourceSignature).append("} ");
 		sb.append("isAuditEnabled={").append(isAuditEnabled).append("} ");
 
 		sb.append("resources={");

@@ -211,6 +211,10 @@
 	<named-query name="XXPolicy.getMaxIdOfXXPolicy">
 		<query>select MAX(obj.id) from XXPolicy obj</query>
 	</named-query>
+	
+	<named-query name="XXPolicy.findByResourceSignature">
+		<query>select obj from XXPolicy obj where obj.resourceSignature = :resSignature</query>
+	</named-query>
 
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">

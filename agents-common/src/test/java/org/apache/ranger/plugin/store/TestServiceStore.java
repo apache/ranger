@@ -153,7 +153,7 @@ public class TestServiceStore {
 
 		int initPolicyCount = policies == null ? 0 : policies.size();
 
-		RangerPolicy policy = new RangerPolicy(updatedSvc.getName(), policyName, 0, "test policy description", null, null);
+		RangerPolicy policy = new RangerPolicy(updatedSvc.getName(), policyName, 0, "test policy description", null, null, null);
 		policy.getResources().put("path", new RangerPolicyResource("/demo/test/finance", Boolean.FALSE, Boolean.TRUE));
 
 		RangerPolicyItem item1 = new RangerPolicyItem();

@@ -71,5 +71,17 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 			return null;
 		}
 	}
+	
+	public List<XXPolicy> findByResourceSignature(String resSignature) {
+		if (resSignature == null) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicy.findByResourceSignature", tClass)
+					.setParameter("resSignature", resSignature).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
+	}
 
 }
