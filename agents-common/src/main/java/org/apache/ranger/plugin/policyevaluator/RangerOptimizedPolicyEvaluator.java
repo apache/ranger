@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -198,22 +197,17 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         }
         return priorityLevel;
     }
-    @Override
+
+	@Override
     protected void evaluatePolicyItemsForAccess(RangerAccessRequest request, RangerAccessResult result) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerOptimizedPolicyEvaluator.evaluatePolicyItemsForAccess()");
         }
-        String accessType = request.getAccessType();
-        if (StringUtils.isEmpty(accessType)) {
-            accessType = RangerPolicyEngine.ANY_ACCESS;
-        }
-        boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
-        boolean isAdminAccess = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
 
         if (hasPublicGroup || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups())) {
             // No need to reject based on users and groups
 
-            if (isAnyAccess || (isAdminAccess && delegateAdmin) || hasAllPerms || accessPerms.contains(accessType)) {
+            if (request.isAccessTypeAny() || (request.isAccessTypeDelegatedAdmin() && delegateAdmin) || hasAllPerms || accessPerms.contains(request.getAccessType())) {
                 // No need to reject based on aggregated access permissions
                 super.evaluatePolicyItemsForAccess(request, result);
             }

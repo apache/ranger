@@ -535,6 +535,23 @@ public class RangerBizUtil {
 	}
 
 	/**
+	 * return username of currently logged in user
+	 * 
+	 * @return
+	 */
+	public String getCurrentUserLoginId() {
+		String ret = null;
+
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+
+		if (currentUserSession != null) {
+			ret = currentUserSession.getLoginId();
+		}
+
+		return ret;
+	}
+
+	/**
 	 * returns current user's userID from active user sessions
 	 * 
 	 * @return

@@ -50,7 +50,7 @@ public class RangerPolicyRepository {
         super();
         this.serviceName = serviceName;
     }
-    String getRepositoryName() {
+    String getServiceName() {
         return serviceName;
     }
     List<RangerPolicyEvaluatorFacade> getPolicyEvaluators() {

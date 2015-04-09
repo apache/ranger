@@ -207,7 +207,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return evaluator;
 	}
 
-	@Override
+    @Override
     public void evaluate(RangerAccessRequest request, RangerAccessResult result) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
@@ -215,13 +215,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         RangerPolicy policy = getPolicy();
 
         if (policy != null && request != null && result != null) {
-
-            String accessType = request.getAccessType();
-            if (StringUtils.isEmpty(accessType)) {
-                accessType = RangerPolicyEngine.ANY_ACCESS;
-            }
-            boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
-
             boolean isMatchAttempted = false;
             boolean matchResult = false;
             boolean isHeadMatchAttempted = false;
@@ -236,7 +229,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
                 // Try head match only if match was not found and ANY access was requested
                 if (!matchResult) {
-                    if (isAnyAccess && !isHeadMatchAttempted) {
+                    if (request.isAccessTypeAny() && !isHeadMatchAttempted) {
                         headMatchResult = matchResourceHead(request.getResource());
                         isHeadMatchAttempted = true;
                     }
@@ -260,7 +253,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                 // Try Head Match only if no match was found so far AND a head match was not attempted as part of evaluating
                 // Audit requirement
                 if (!matchResult) {
-                    if (isAnyAccess && !isHeadMatchAttempted) {
+                    if (request.isAccessTypeAny() && !isHeadMatchAttempted) {
                         headMatchResult = matchResourceHead(request.getResource());
 	                    isHeadMatchAttempted = true;
                     }
@@ -281,12 +274,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItemsForAccess(" + request + ", " + result + ")");
         }
-        String accessType = request.getAccessType();
-        if (StringUtils.isEmpty(accessType)) {
-            accessType = RangerPolicyEngine.ANY_ACCESS;
-        }
-        boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
-        boolean isAdminAccess = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
 
         for (RangerPolicy.RangerPolicyItem policyItem : getPolicy().getPolicyItems()) {
 
@@ -298,7 +285,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             // This is only for Grant and Revoke access requests sent by the component. For those cases
             // Our plugin will fill in the accessType as ADMIN_ACCESS.
 
-            if (isAdminAccess) {
+            if (request.isAccessTypeDelegatedAdmin()) {
                 if (policyItem.getDelegateAdmin()) {
                     result.setIsAllowed(true);
                     result.setPolicyId(getPolicy().getId());
@@ -312,7 +299,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             }
 
             boolean accessAllowed = false;
-            if (isAnyAccess) {
+            if (request.isAccessTypeAny()) {
                 for (RangerPolicy.RangerPolicyItemAccess access : policyItem.getAccesses()) {
                     if (access.getIsAllowed()) {
                         accessAllowed = true;
@@ -320,7 +307,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                     }
                 }
             } else {
-                RangerPolicy.RangerPolicyItemAccess access = getAccess(policyItem, accessType);
+                RangerPolicy.RangerPolicyItemAccess access = getAccess(policyItem, request.getAccessType());
 
                 if (access != null && access.getIsAllowed()) {
                     accessAllowed = true;
@@ -392,6 +379,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
+	@Override
 	public boolean isSingleAndExactMatch(RangerAccessResource resource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isSingleAndExactMatch(" + resource + ")");
@@ -440,6 +428,22 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		return ret;
 	}
+
+	@Override
+	public boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + ")");
+		}
+
+		boolean ret = isAccessAllowedNoCustomConditionEval(user, userGroups, accessType) && isMatch(resources);
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
+		}
+
+		return ret;
+	}
+
 
 	protected boolean matchResourceHead(RangerAccessResource resource) {
 		if(LOG.isDebugEnabled()) {
@@ -633,6 +637,116 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.createResourceMatcher(" + resourceDef + ", " + resource + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	protected boolean isMatch(Map<String, RangerPolicyResource> resources) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isMatch(" + resources + ")");
+		}
+
+		boolean ret = false;
+
+		RangerServiceDef serviceDef = getServiceDef();
+
+		if(serviceDef != null && serviceDef.getResources() != null) {
+			Collection<String> resourceKeys = resources == null ? null : resources.keySet();
+			Collection<String> policyKeys   = matchers == null ? null : matchers.keySet();
+
+			boolean keysMatch = CollectionUtils.isEmpty(resourceKeys) || (policyKeys != null && policyKeys.containsAll(resourceKeys));
+
+			if(keysMatch) {
+				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+					String                resourceName   = resourceDef.getName();
+					RangerPolicyResource  resourceValues = resources == null ? null : resources.get(resourceName);
+					RangerResourceMatcher matcher        = matchers == null ? null : matchers.get(resourceName);
+
+					// when no value exists for a resourceName, consider it a match only if: policy doesn't have a matcher OR matcher allows no-value resource
+					if(resourceValues == null || CollectionUtils.isEmpty(resourceValues.getValues())) {
+						ret = matcher == null || matcher.isMatch(null);
+					} else if(matcher != null) {
+						for(String resourceValue : resourceValues.getValues()) {
+							ret = matcher.isMatch(resourceValue);
+
+							if(! ret) {
+								break;
+							}
+						}
+					}
+
+					if(! ret) {
+						break;
+					}
+				}
+			} else {
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("isMatch(): keysMatch=false. resourceKeys=" + resourceKeys + "; policyKeys=" + policyKeys);
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isMatch(" + resources + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	protected boolean isAccessAllowedNoCustomConditionEval(String user, Set<String> userGroups, String accessType) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowedNoCustomConditionEval(" + user + ", " + userGroups + ", " + accessType + ")");
+		}
+
+		boolean ret = false;
+
+		if (StringUtils.isEmpty(accessType)) {
+			accessType = RangerPolicyEngine.ANY_ACCESS;
+		}
+
+		boolean isAnyAccess   = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
+		boolean isAdminAccess = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
+
+		for (RangerPolicy.RangerPolicyItem policyItem : getPolicy().getPolicyItems()) {
+			if (isAdminAccess) {
+				if(! policyItem.getDelegateAdmin()) {
+					continue;
+				}
+			} else if (CollectionUtils.isEmpty(policyItem.getAccesses())) {
+				continue;
+			} else if (isAnyAccess) {
+				boolean accessAllowed = false;
+
+				for (RangerPolicy.RangerPolicyItemAccess access : policyItem.getAccesses()) {
+					if (access.getIsAllowed()) {
+						accessAllowed = true;
+						break;
+					}
+				}
+
+				if(! accessAllowed) {
+					continue;
+				}
+			} else {
+				RangerPolicy.RangerPolicyItemAccess access = getAccess(policyItem, accessType);
+				if (access == null || !access.getIsAllowed()) {
+					continue;
+				}
+			}
+
+			boolean isUserGroupMatch = matchUserGroup(policyItem, user, userGroups);
+
+			if (!isUserGroupMatch) {
+				continue;
+			}
+
+			ret = true;
+			break;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowedNoCustomConditionEval(" + user + ", " + userGroups + ", " + accessType + "): " + ret);
 		}
 
 		return ret;

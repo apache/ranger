@@ -28,6 +28,10 @@ public interface RangerAccessRequest {
 
 	String getAccessType();
 
+	boolean isAccessTypeAny();
+
+	boolean isAccessTypeDelegatedAdmin();
+
 	String getUser();
 
 	Set<String> getUserGroups();

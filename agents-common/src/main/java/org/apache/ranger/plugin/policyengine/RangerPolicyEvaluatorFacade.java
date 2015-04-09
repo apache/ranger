@@ -26,12 +26,14 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
 import java.util.Map;
+import java.util.Set;
 
 public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Comparable<RangerPolicyEvaluatorFacade> {
     private static final Log LOG = LogFactory.getLog(RangerPolicyEvaluatorFacade.class);
@@ -93,6 +95,11 @@ public class RangerPolicyEvaluatorFacade implements RangerPolicyEvaluator, Compa
     @Override
     public boolean isSingleAndExactMatch(RangerAccessResource resource) {
         return delegate.isSingleAndExactMatch(resource);
+    }
+
+    @Override
+    public boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType) {
+        return delegate.isAccessAllowed(resources, user, userGroups, accessType);
     }
 
     @Override

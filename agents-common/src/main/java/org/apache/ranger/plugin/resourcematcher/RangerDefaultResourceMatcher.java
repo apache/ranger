@@ -37,7 +37,9 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 
 		boolean ret = false;
 
-		if(resource != null) {
+		if(resource == null || isMatchAny) {
+			ret = isMatchAny;
+		} else {
 			if(optIgnoreCase) {
 				resource = resource.toLowerCase();
 			}
@@ -49,8 +51,6 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 					break;
 				}
 			}
-		} else {
-			ret = isMatchAny;
 		}
 
 		if(policyIsExcludes) {

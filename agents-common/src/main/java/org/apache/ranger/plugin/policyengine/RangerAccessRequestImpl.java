@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 
 
@@ -40,6 +41,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private String               requestData     = null;
 	private String               sessionId       = null;
 	private Map<String, Object>  context         = null;
+
+	private boolean isAccessTypeAny            = false;
+	private boolean isAccessTypeDelegatedAdmin = false;
 
 	public RangerAccessRequestImpl() {
 		this(null, null, null, null);
@@ -116,12 +120,28 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		return context;
 	}
 
+	@Override
+	public boolean isAccessTypeAny() {
+		return isAccessTypeAny;
+	}
+
+	@Override
+	public boolean isAccessTypeDelegatedAdmin() {
+		return isAccessTypeDelegatedAdmin;
+	}
+
 	public void setResource(RangerAccessResource resource) {
 		this.resource = resource;
 	}
 
 	public void setAccessType(String accessType) {
-		this.accessType = accessType;
+		if (StringUtils.isEmpty(accessType)) {
+			accessType = RangerPolicyEngine.ANY_ACCESS;
+		}
+
+		this.accessType            = accessType;
+		isAccessTypeAny            = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
+		isAccessTypeDelegatedAdmin = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
 	}
 
 	public void setUser(String user) {

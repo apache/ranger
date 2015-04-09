@@ -157,17 +157,17 @@ public class PolicyRefresher extends Thread {
 
 		        	if(!StringUtils.equals(serviceName, svcPolicies.getServiceName())) {
 		        		LOG.warn("PolicyRefresher(serviceName=" + serviceName + "): ignoring unexpected serviceName '" + svcPolicies.getServiceName() + "' in service-store");
+
+		        		svcPolicies.setServiceName(serviceName);
 		        	}
 
-		        	if(LOG.isDebugEnabled()) {
-						LOG.debug("PolicyRefresher(serviceName=" + serviceName + "): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
-					}
+					LOG.info("PolicyRefresher(serviceName=" + serviceName + "): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
 
 					saveToCache(svcPolicies);
 
-		        	lastKnownVersion = svcPolicies.getPolicyVersion() == null ? -1 : svcPolicies.getPolicyVersion().longValue();
+		        	lastKnownVersion = newVersion;
 
-					policyEngine.setPolicies(serviceName, svcPolicies.getServiceDef(), svcPolicies.getPolicies());
+					policyEngine.setPolicies(svcPolicies);
 				} else {
 					if(LOG.isDebugEnabled()) {
 						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion);
@@ -212,11 +212,13 @@ public class PolicyRefresher extends Thread {
 			        if(policies != null) {
 			        	if(!StringUtils.equals(serviceName, policies.getServiceName())) {
 			        		LOG.warn("ignoring unexpected serviceName '" + policies.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
+
+			        		policies.setServiceName(serviceName);
 			        	}
 
 			        	lastKnownVersion = policies.getPolicyVersion() == null ? -1 : policies.getPolicyVersion().longValue();
 
-			        	policyEngine.setPolicies(serviceName, policies.getServiceDef(), policies.getPolicies());
+			        	policyEngine.setPolicies(policies);
 			        }
 		        } catch (Exception excp) {
 		        	LOG.error("failed to load policies from cache file " + cacheFile.getAbsolutePath(), excp);

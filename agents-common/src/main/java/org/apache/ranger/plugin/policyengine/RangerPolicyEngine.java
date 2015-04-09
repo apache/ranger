@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.util.ServicePolicies;
 
 public interface RangerPolicyEngine {
 	public static final String GROUP_PUBLIC   = "public";
@@ -39,7 +39,9 @@ public interface RangerPolicyEngine {
 
 	List<RangerContextEnricher> getContextEnrichers();
 
-	void setPolicies(String serviceName, RangerServiceDef serviceDef, List<RangerPolicy> policies);
+	void setPolicies(ServicePolicies policies);
+
+	ServicePolicies getPolicies();
 
 	void setDefaultAuditHandler(RangerAuditHandler auditHandler);
 

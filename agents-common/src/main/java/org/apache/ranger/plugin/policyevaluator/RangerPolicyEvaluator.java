@@ -20,7 +20,11 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -38,4 +42,6 @@ public interface RangerPolicyEvaluator {
 	boolean isMatch(RangerAccessResource resource);
 
 	boolean isSingleAndExactMatch(RangerAccessResource resource);
+
+	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 }

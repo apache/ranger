@@ -161,7 +161,11 @@ public class TestPolicyEngine {
 		@Override
 		public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
 				JsonDeserializationContext context) throws JsonParseException {
-			return gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
+			RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
+
+			ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
+
+			return ret;
 		}
 	}
 	

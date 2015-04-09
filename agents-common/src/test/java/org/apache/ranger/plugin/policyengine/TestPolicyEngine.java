@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
+import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -95,7 +96,12 @@ public class TestPolicyEngine {
 
 		assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
 
-		policyEngine.setPolicies(testCase.serviceName, testCase.serviceDef, testCase.policies);
+		ServicePolicies servicePolicies = new ServicePolicies();
+		servicePolicies.setServiceName(testCase.serviceName);;
+		servicePolicies.setServiceDef(testCase.serviceDef);
+		servicePolicies.setPolicies(testCase.policies);
+
+		policyEngine.setPolicies(servicePolicies);
 
 		for(TestData test : testCase.tests) {
 			RangerAccessResult expected = test.result;
@@ -125,7 +131,11 @@ public class TestPolicyEngine {
 		@Override
 		public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
 				JsonDeserializationContext context) throws JsonParseException {
-			return gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
+			RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
+
+			ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
+
+			return ret;
 		}
 	}
 	
