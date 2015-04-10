@@ -827,10 +827,4 @@ public class XUserREST {
 				request, xGroupPermissionService.sortFields);
 		return xUserMgr.getXGroupPermissionSearchCount(searchCriteria);
 	}
-	@GET
-	@Path("/permission/existingusers/update")
-	@Produces({ "application/xml", "application/json" })
-	public List<VXPortalUser> existingusersupdate(@Context HttpServletRequest request) {
-		return xUserMgr.updateExistingUserExisting();
-	}
 }

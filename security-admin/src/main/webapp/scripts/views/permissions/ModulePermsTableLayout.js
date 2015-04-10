@@ -106,8 +106,7 @@ define(function(require){
 				collection: this.collection,
 				includeFilter : false,
 				gridOpts : {
-					//row: TableRow,
-					header : XABackgrid,
+					row: Backgrid.Row.extend({}),
 					emptyText : 'No permissions found!'
 				},
 			}));

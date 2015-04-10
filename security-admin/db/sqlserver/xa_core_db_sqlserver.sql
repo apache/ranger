@@ -2641,4 +2641,113 @@ insert into x_user (CREATE_TIME,UPDATE_TIME,user_name,status,descr) values (CURR
 GO
 insert into x_group (ADDED_BY_ID,CREATE_TIME,DESCR,GROUP_TYPE,GROUP_NAME,STATUS,UPDATE_TIME,UPD_BY_ID) values (1,CURRENT_TIMESTAMP,'public group',0,'public',0,CURRENT_TIMESTAMP,1);
 GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[x_modules_master] (
+	[id] [bigint] IDENTITY(1,1) NOT NULL,
+	[create_time] [datetime2] DEFAULT NULL NULL,
+	[update_time] [datetime2] DEFAULT NULL NULL,
+	[added_by_id] [bigint] DEFAULT NULL NULL,
+	[upd_by_id] [bigint] DEFAULT NULL NULL,
+	[module] [varchar](1024)NOT NULL,
+	[url] [varchar](1024)NOT NULL,
+	PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[x_user_module_perm] (
+	[id] [bigint] IDENTITY(1,1) NOT NULL,
+	[user_id] [bigint] DEFAULT NULL NULL,
+	[module_id] [bigint] DEFAULT NULL NULL,
+	[create_time] [datetime2] DEFAULT NULL NULL,
+	[update_time] [datetime2] DEFAULT NULL NULL,
+	[added_by_id] [bigint] DEFAULT NULL NULL,
+	[upd_by_id] [bigint] DEFAULT NULL NULL,
+	[is_allowed] [int] DEFAULT 1 NOT NULL,
+	PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[x_group_module_perm] (
+	[id] [bigint] IDENTITY(1,1) NOT NULL,
+	[group_id] [bigint] DEFAULT NULL NULL,
+	[module_id] [bigint] DEFAULT NULL NULL,
+	[create_time] [datetime2] DEFAULT NULL NULL,
+	[update_time] [datetime2] DEFAULT NULL NULL,
+	[added_by_id] [bigint] DEFAULT NULL NULL,
+	[upd_by_id] [bigint] DEFAULT NULL NULL,
+	[is_allowed] [int] DEFAULT 1 NOT NULL,
+	PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[x_user_module_perm]  WITH CHECK ADD  CONSTRAINT [x_user_module_perm_FK_moduleid] FOREIGN KEY([module_id])
+REFERENCES [dbo].[x_modules_master] ([id])
+GO
+ALTER TABLE [dbo].[x_user_module_perm]  WITH CHECK ADD  CONSTRAINT [x_user_module_perm_FK_userid] FOREIGN KEY([user_id])
+REFERENCES [dbo].[x_portal_user] ([id])
+GO
+ALTER TABLE [dbo].[x_group_module_perm]  WITH CHECK ADD  CONSTRAINT [x_grp_module_perm_FK_module_id] FOREIGN KEY([module_id])
+REFERENCES [dbo].[x_modules_master] ([id])
+GO
+ALTER TABLE [dbo].[x_group_module_perm]  WITH CHECK ADD  CONSTRAINT [x_grp_module_perm_FK_group_id] FOREIGN KEY([group_id])
+REFERENCES [dbo].[x_group] ([id])
+GO
+CREATE NONCLUSTERED INDEX [x_usr_module_perm_idx_moduleid] ON [x_user_module_perm]
+(
+   [module_id] ASC
+)
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [x_usr_module_perm_idx_userid] ON [x_user_module_perm]
+(
+   [user_id] ASC
+)
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [x_grp_module_perm_idx_groupid] ON [x_group_module_perm]
+(
+   [group_id] ASC
+)
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [x_grp_module_perm_idx_moduleid] ON [x_group_module_perm]
+(
+   [module_id] ASC
+)
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+GO
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,'Policy Manager','/policymanager');
+GO
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,'Users/Groups','/users/usertab');
+GO
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,'Analytics','/reports/userAccess');
+GO
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,'Audit','/reports/audit/bigData');
+GO
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,'Permissions','/permission');
+GO
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,'KMS','/kms');
 exit

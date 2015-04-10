@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+	license agreements. See the NOTICE file distributed with this work for additional 
+	information regarding copyright ownership. The ASF licenses this file to 
+	You under the Apache License, Version 2.0 (the "License"); you may not use 
+	this file except in compliance with the License. You may obtain a copy of 
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
+	by applicable law or agreed to in writing, software distributed under the 
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+	OF ANY KIND, either express or implied. See the License for the specific 
+	language governing permissions and limitations under the License. -->
 <entity-mappings version="1.0"
 	xmlns="http://java.sun.com/xml/ns/persistence/orm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd ">
@@ -80,7 +74,7 @@
 		<query>SELECT obj FROM XXAuditMap obj WHERE obj.resourceId = :resourceId
 		</query>
 	</named-query>
-	
+
 	<!-- XXGroup -->
 	<named-query name="XXGroup.findByUserId">
 		<query>SELECT obj FROM XXGroup obj, XXGroupUser groupUser 
@@ -113,7 +107,7 @@
 		<query>SELECT obj FROM XXResource obj WHERE obj.assetId = :assetId
 		</query>
 	</named-query>
-	
+
 	<named-query name="XXResource.findByAssetType">
 		<query>SELECT obj FROM XXResource obj, XXAsset xxAsset 
 				WHERE xxAsset.id = obj.assetId 
@@ -125,7 +119,7 @@
 		<query>SELECT obj FROM XXResource obj WHERE obj.name = :name
 		</query>
 	</named-query>
-	
+
 	<named-query name="XXResource.findByResourceNameAndAssetIdAndRecursiveFlag">
 		<query>SELECT obj FROM XXResource obj WHERE obj.name like :name and obj.assetId=:assetId
 		and obj.isRecursive=:isRecursive
@@ -145,8 +139,8 @@
 			   AND xAsset.name = :assetName
 		</query>
 	</named-query>
-	
-	
+
+
 	<named-query name="XXResource.findByAssetIdAndResourceStatus">
 		<query>SELECT obj FROM XXResource obj WHERE obj.assetId = :assetId and
 		 obj.resourceStatus = :resourceStatus
@@ -158,13 +152,13 @@
 			   WHERE obj.name=:name
 		</query>
 	</named-query>
-	
+
 	<named-query name="XXGroup.findByGroupName">
 		<query>SELECT Obj FROM XXGroup obj
 			   WHERE obj.name=:name
 		</query>
 	</named-query>
-	
+
 	<named-query name="XXGroupUser.deleteByGroupIdAndUserId">
 		<query>DELETE FROM  XXGroupUser  obj
 			   WHERE obj.parentGroupId=:parentGroupId 	
@@ -182,7 +176,7 @@
 		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
 		</query>
 	</named-query>
-	
+
 	<named-query name="XXUser.findByPolicyItemId">
 		<query>select obj.name from XXUser obj, XXPolicyItemUserPerm polItemUser 
 		where polItemUser.policyItemId = :polItemId and polItemUser.userId = obj.id </query>
@@ -192,7 +186,7 @@
 		<query>select obj.name from XXGroup obj, XXPolicyItemGroupPerm polItemGrp 
 		where polItemGrp.policyItemId = :polItemId and polItemGrp.groupId = obj.id </query>
 	</named-query>
-	
+
 
 	<!-- XXPolicyItem -->
 	<named-query name="XXPolicyItem.findByPolicyId">
@@ -203,11 +197,11 @@
 	<named-query name="XXPolicy.findByNameAndServiceId">
 		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId</query>
 	</named-query>
-	
+
 	<named-query name="XXPolicy.findByServiceId">
 		<query>select obj from XXPolicy obj where obj.service = :serviceId</query>
 	</named-query>
-	
+
 	<named-query name="XXPolicy.getMaxIdOfXXPolicy">
 		<query>select MAX(obj.id) from XXPolicy obj</query>
 	</named-query>
@@ -225,17 +219,17 @@
 	<named-query name="XXResourceDef.findByNameAndDefId">
 		<query>select obj from XXResourceDef obj where obj.name = :name and obj.defId = :defId</query>
 	</named-query>
-	
+
 	<named-query name="XXResourceDef.findByServiceDefId">
 		<query>select obj from XXResourceDef obj where obj.defId = :serviceDefId</query>
 	</named-query>
-	
+
 	<named-query name="XXResourceDef.findByPolicyId">
 		<query>select obj from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef, 
 				XXService xSvc where obj.defId = xSvcDef.id and xSvcDef.id = xSvc.type
 				and xSvc.id = xPol.service and xPol.id = :policyId</query>
 	</named-query>
-	
+
 	<named-query name="XXResourceDef.findByNameAndPolicyId">
 		<query>select obj from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef, 
 				XXService xSvc where obj.defId = xSvcDef.id and xSvcDef.id = xSvc.type
@@ -256,18 +250,18 @@
 	<named-query name="XXServiceConfigDef.findByServiceDefId">
 		<query>select obj from XXServiceConfigDef obj where obj.defId = :serviceDefId</query>
 	</named-query>
-	
+
 	<named-query name="XXServiceConfigDef.findByServiceDefName">
 		<query>select obj from XXServiceConfigDef obj, XXServiceDef svcDef 
 				where obj.defId = svcDef.id and svcDef.name = :serviceDef</query>
 	</named-query>
-	
+
 
 	<!-- XXAccessTypeDef -->
 	<named-query name="XXAccessTypeDef.findByServiceDefId">
 		<query>select obj from XXAccessTypeDef obj where obj.defId = :serviceDefId</query>
 	</named-query>
-	
+
 	<named-query name="XXAccessTypeDef.findByNameAndServiceId">
 		<query>select obj from XXAccessTypeDef obj, XXService xSvc where 
 				obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
@@ -277,16 +271,16 @@
 	<named-query name="XXPolicyConditionDef.findByServiceDefId">
 		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId</query>
 	</named-query>
-	
+
 	<named-query name="XXPolicyConditionDef.findByServiceDefIdAndName">
 		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name = :name</query>
 	</named-query>
-	
+
 	<named-query name="XXPolicyConditionDef.findByPolicyItemId">
 		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
 		where xPolItemCond.policyItemId = :polItemId and obj.id = xPolItemCond.type</query>
 	</named-query>
-	
+
 	<named-query name="XXPolicyConditionDef.findByPolicyItemIdAndName">
 		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
 				where xPolItemCond.policyItemId = :polItemId and obj.name = :name 
@@ -298,32 +292,32 @@
 	<named-query name="XXContextEnricherDef.findByServiceDefId">
 		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId</query>
 	</named-query>
-	
+
 	<named-query name="XXContextEnricherDef.findByServiceDefIdAndName">
 		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId and obj.name = :name</query>
 	</named-query>
-	
+
 
 	<!-- XXEnumDef -->
 	<named-query name="XXEnumDef.findByServiceDefId">
 		<query>select obj from XXEnumDef obj where obj.defId = :serviceDefId</query>
 	</named-query>
-	
+
 	<!-- XXServiceConfigMap -->
 	<named-query name="XXServiceConfigMap.findByServiceId">
 		<query>select obj from XXServiceConfigMap obj where obj.serviceId = :serviceId</query>
 	</named-query>
-	
+
 	<named-query name="XXServiceConfigMap.findByServiceAndConfigKey">
 		<query>select obj from XXServiceConfigMap obj where 
 			obj.serviceId = :serviceId and obj.configKey = :configKey</query>
 	</named-query>
-	
+
 	<!-- XXService -->
 	<named-query name="XXService.findByName">
 		<query>select obj from XXService obj where obj.name = :name</query>
 	</named-query>
-	
+
 	<named-query name="XXService.getMaxIdOfXXService">
 		<query>select MAX(obj.id) from XXService obj</query>
 	</named-query>
@@ -333,36 +327,36 @@
 		<query>select obj from XXPolicyResource obj where 
 				obj.policyId = :polId and obj.resDefId = :resDefId</query>
 	</named-query>
-	
+
 	<named-query name="XXPolicyResource.findByPolicyId">
 		<query>select obj from XXPolicyResource obj where obj.policyId = :policyId</query>
 	</named-query>
-	
+
 	<!-- XXPolicyResourceMap -->
 	<named-query name="XXPolicyResourceMap.findByPolicyResId">
 		<query>select obj from XXPolicyResourceMap obj where obj.resourceId = :polResId</query>
 	</named-query>
-	
+
 	<!-- XXPolicyItemAccess -->
 	<named-query name="XXPolicyItemAccess.findByPolicyItemId">
 		<query>select obj from XXPolicyItemAccess obj where obj.policyItemId = :polItemId</query>
 	</named-query>
-	
+
 	<!-- XXPolicyItemCondition -->
 	<named-query name="XXPolicyItemCondition.findByPolicyItemId">
 		<query>select obj from XXPolicyItemCondition obj where obj.policyItemId = :polItemId </query>
 	</named-query>
-	
+
 	<named-query name="XXPolicyItemCondition.findByPolicyItemAndDefId">
 		<query>select obj from XXPolicyItemCondition obj where 
 				obj.policyItemId = :polItemId and obj.type = :polCondDefId</query>
 	</named-query>
-	
+
 	<!-- XXPolicyItemGroupPerm -->
 	<named-query name="XXPolicyItemGroupPerm.findByPolicyItemId">
 		<query>select obj from XXPolicyItemGroupPerm obj where obj.policyItemId = :polItemId</query>
 	</named-query>
-	
+
 	<!-- XXPolicyItemUserPerm -->
 	<named-query name="XXPolicyItemUserPerm.findByPolicyItemId">
 		<query>select obj from XXPolicyItemUserPerm obj where obj.policyItemId = :polItemId</query>
@@ -373,28 +367,29 @@
 		<query>select obj from XXDataHist obj where obj.objectId = :objectId 
                                and obj.objectClassType = :classType ORDER BY obj.id</query>
 	</named-query>
-	
+
 	<named-query name="XXDataHist.getVersionListOfObject">
 		<query>select obj.version from XXDataHist obj where obj.objectId = :objId
 			and obj.objectClassType = :classType GROUP BY obj.version </query>
 	</named-query>
-	
+
 	<named-query name="XXDataHist.findObjectByVersionNumber">
 		<query>select obj from XXDataHist obj where obj.objectClassType = :classType and 
 		obj.objectId = :objId and obj.version = :version</query>
 	</named-query>
-	
+
 	<!-- XXTrxLog -->
 	<named-query name="XXTrxLog.findLogForMaxIdOfClassType">
 		<query>select MAX(obj.objectId) from XXTrxLog obj where obj.objectClassType = :classType</query>
 	</named-query>
-	
+
 	<!-- XXUserPermission -->
 	<named-query name="XXUserPermission.findByUserPermissionId">
 		<query>SELECT obj FROM XXUserPermission obj
 			   WHERE obj.userId=:userId
 		 </query>
 	</named-query>
+	
 	<named-query name="XXUserPermission.findByUserPermissionIdAndIsAllowed">
 		<query>SELECT obj FROM XXUserPermission obj
 			   WHERE obj.userId=:userId	AND Obj.isAllowed=:isAllowed
@@ -406,6 +401,7 @@
 			   WHERE obj.moduleId=:moduleId	 AND Obj.isAllowed=:isAllowed
 		 </query>
 	</named-query>
+	
 	<named-query name="XXUserPermissionUpdates.findByModuleId">
 		<query>SELECT obj FROM XXUserPermission obj
 			   WHERE obj.moduleId=:moduleId
@@ -424,11 +420,13 @@
 			   WHERE obj.moduleId=:moduleId	AND Obj.isAllowed=:isAllowed
 		 </query>
 	</named-query>
+	
 	<named-query name="XXGroupPermissionUpdates.findByModuleId">
 		<query>SELECT obj FROM XXGroupPermission obj
 			   WHERE obj.moduleId=:moduleId	AND Obj.isAllowed=:isAllowed
 		 </query>
 	</named-query>
+	
 	<named-query name="XXGroupPermissionUpdate.findByModuleId">
 		<query>SELECT obj FROM XXGroupPermission obj
 			   WHERE obj.moduleId=:moduleId
@@ -441,12 +439,14 @@
 				WHERE XXUserPermObj.moduleId = :moduleId AND XXUserPermObj.userId =:userId
 		</query>
 	</named-query>
+	
 	<named-query name="XXModuleDef.findModuleNamesWithIds">
-	<query>SELECT XXMObj
+		<query>SELECT XXMObj
 				FROM XXModuleDef XXMObj
 		</query>
-</named-query>
-<named-query name="XXPortalUser.findByUserName">
+	</named-query>
+	
+	<named-query name="XXPortalUser.findByUserName">
 		<query>SELECT Obj FROM XXPortalUser obj
 			   WHERE obj.loginId=:loginId
 		</query>
@@ -459,9 +459,10 @@
 	</named-query>
 
 	<named-query name="XXPortalUser.findAllXPortalUser">
-	<query>SELECT xxPortalUser FROM XXPortalUser xxPortalUser
+		<query>SELECT xxPortalUser FROM XXPortalUser xxPortalUser
 		</query>
-</named-query>
+	</named-query>
+	
 	<!-- VXModuleDef -->
 	<named-query name="XXModuleDef.findByModuleId">
 		<query>SELECT obj FROM XXModuleDef obj
@@ -476,12 +477,9 @@
 	</named-query>
 
 	<named-query name="XXGroupPermission.findByVXPoratUserId">
-	<query>SELECT distinct   gmp FROM  XXGroupUser xgu,XXUser xu,XXGroupPermission gmp, XXPortalUser xpu
-			WHERE xu.name=xpu.loginId  and xu.id=xgu.userId and xgu.parentGroupId=gmp.groupId  and xpu.id=:userId and gmp.isAllowed=:isAllowed
+		<query>SELECT distinct   gmp FROM  XXGroupUser xgu,XXUser xu,XXGroupPermission gmp, XXPortalUser xpu
+			   WHERE xu.name=xpu.loginId  and xu.id=xgu.userId and xgu.parentGroupId=gmp.groupId  and 
+			   xpu.id=:userId and gmp.isAllowed=:isAllowed
 		</query>
-</named-query>
-
-
-
-
+	</named-query>
 </entity-mappings>

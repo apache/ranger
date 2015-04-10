@@ -17,16 +17,18 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.security.web.authentication;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.JSONUtil;
@@ -37,70 +39,97 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
-
 /**
  * 
  *
  */
 public class RangerAuthenticationEntryPoint extends
-LoginUrlAuthenticationEntryPoint {
-    static Logger logger = Logger.getLogger(RangerAuthenticationEntryPoint.class);
-    static int ajaxReturnCode = -1;
-    
-    @Autowired
-    RangerConfigUtil configUtil;
-    
-    @Autowired
-    JSONUtil jsonUtil;
+		LoginUrlAuthenticationEntryPoint {
+	static Logger logger = Logger
+			.getLogger(RangerAuthenticationEntryPoint.class);
+	static int ajaxReturnCode = -1;
 
-    public RangerAuthenticationEntryPoint() {
-	super();
-	if (logger.isDebugEnabled()) {
-	    logger.debug("AjaxAwareAuthenticationEntryPoint(): constructor");
+	@Autowired
+	RangerConfigUtil configUtil;
+
+	@Autowired
+	JSONUtil jsonUtil;
+
+	public RangerAuthenticationEntryPoint() {
+		super();
+		if (logger.isDebugEnabled()) {
+			logger.debug("AjaxAwareAuthenticationEntryPoint(): constructor");
+		}
+
+		if (ajaxReturnCode < 0) {
+			ajaxReturnCode = PropertiesUtil.getIntProperty(
+					"xa.ajax.auth.required.code", 401);
+		}
 	}
 
-	if (ajaxReturnCode < 0) {
-	    ajaxReturnCode = PropertiesUtil.getIntProperty(
-		    "xa.ajax.auth.required.code", 401);
+	@Override
+	public void commence(HttpServletRequest request,
+			HttpServletResponse response, AuthenticationException authException)
+			throws IOException, ServletException {
+		HttpSession httpSession = request.getSession();
+		String ajaxRequestHeader = request.getHeader("X-Requested-With");
+		if (logger.isDebugEnabled()) {
+			logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
+		}
+
+		String requestURL = (request.getRequestURL() != null) ? request
+				.getRequestURL().toString() : "";
+		String servletPath = PropertiesUtil.getProperty(
+				"xa.servlet.mapping.url.pattern", "service");
+		String reqServletPath = configUtil.getWebAppRootURL() + "/"
+				+ servletPath;
+
+		response.setContentType("application/json;charset=UTF-8");
+		response.setHeader("Cache-Control", "no-cache");
+		// getting the current date in milliseconds
+		Date curentDate = new Date();
+		Long currentDateInMillis = (long) (((((curentDate.getHours() * 60) + curentDate
+				.getMinutes()) * 60) + curentDate.getSeconds()) * 1000);
+		// checking session timeout occurence
+		if (httpSession.getMaxInactiveInterval() * 60000 >= (currentDateInMillis - httpSession
+				.getLastAccessedTime())) {
+			ajaxRequestHeader = null;
+			VXResponse vXResponse = new VXResponse();
+
+			vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+			vXResponse.setMsgDesc("Session Timeout");
+
+			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			response.getWriter()
+					.write(jsonUtil.writeObjectAsString(vXResponse));
+
+		} else {
+			try {
+
+				VXResponse vXResponse = new VXResponse();
+
+				vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+				vXResponse.setMsgDesc("Authentication Failed");
+
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				response.getWriter().write(
+						jsonUtil.writeObjectAsString(vXResponse));
+			} catch (IOException e) {
+				logger.info("Error while writing JSON in HttpServletResponse");
+			}
+		}
+
+		if (ajaxRequestHeader != null
+				&& ajaxRequestHeader.equalsIgnoreCase("XMLHttpRequest")) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("commence() AJAX request. Authentication required. Returning "
+						+ ajaxReturnCode + ". URL=" + request.getRequestURI());
+			}
+			response.sendError(ajaxReturnCode, "");
+		} else if (!(requestURL.startsWith(reqServletPath))) {
+			super.commence(request, response, authException);
+		}
+
 	}
-    }
 
-    @Override
-    public void commence(HttpServletRequest request,
-	    HttpServletResponse response, AuthenticationException authException)
-    throws IOException, ServletException {
-	String ajaxRequestHeader = request.getHeader("X-Requested-With");
-	if (logger.isDebugEnabled()) {
-	    logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
-	}
-
-	String requestURL = (request.getRequestURL() != null) ? request.getRequestURL().toString() : "";
-	String servletPath = PropertiesUtil.getProperty("xa.servlet.mapping.url.pattern", "service");
-	String reqServletPath = configUtil.getWebAppRootURL() + "/" + servletPath;
-
-	response.setContentType("application/json;charset=UTF-8");
-	response.setHeader("Cache-Control", "no-cache");
-	try {
-
-		VXResponse vXResponse = new VXResponse();
-
-		vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-		vXResponse.setMsgDesc("Authentication Failed");
-
-		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-		response.getWriter().write(jsonUtil.writeObjectAsString(vXResponse));
-	} catch (IOException e) {
-		logger.info("Error while writing JSON in HttpServletResponse");
-	}
-	
-	if (ajaxRequestHeader != null && ajaxRequestHeader.equalsIgnoreCase("XMLHttpRequest")) {
-	    if (logger.isDebugEnabled()) {
-		logger.debug("commence() AJAX request. Authentication required. Returning "
-			+ ajaxReturnCode + ". URL=" + request.getRequestURI());
-	    }
-    	response.sendError(ajaxReturnCode, "");
-	} else if(!(requestURL.startsWith(reqServletPath))) {
-		super.commence(request, response, authException);
-	}
-    }
 }

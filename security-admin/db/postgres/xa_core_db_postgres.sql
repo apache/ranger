@@ -516,7 +516,7 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
 service BIGINT DEFAULT NULL NULL,
 name VARCHAR(512) DEFAULT NULL NULL,
-policy_type int(11) DEFAULT 0 NULL,
+policy_type int DEFAULT 0 NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
 resource_signature VARCHAR(128) DEFAULT NULL NULL,
 is_enabled BOOLEAN DEFAULT '0' NOT NULL,
@@ -907,4 +907,65 @@ INSERT INTO x_portal_user(CREATE_TIME,UPDATE_TIME,FIRST_NAME,LAST_NAME,PUB_SCR_N
 INSERT INTO x_portal_user_role(CREATE_TIME,UPDATE_TIME,USER_ID,USER_ROLE,STATUS)VALUES(current_timestamp,current_timestamp,1,'ROLE_SYS_ADMIN',1);
 INSERT INTO x_user(CREATE_TIME,UPDATE_TIME,user_name,status,descr)VALUES(current_timestamp,current_timestamp,'admin',0,'Administrator');
 INSERT INTO x_group(CREATE_TIME,DESCR,GROUP_SRC,GROUP_TYPE,GROUP_NAME,STATUS,UPDATE_TIME,UPD_BY_ID)VALUES(CURRENT_TIMESTAMP,'public group',0,0,'public',0,CURRENT_TIMESTAMP,1);
+COMMIT;
+
+DROP TABLE IF EXISTS x_modules_master CASCADE;
+DROP SEQUENCE IF EXISTS x_modules_master_seq;
+CREATE SEQUENCE x_modules_master_seq;
+CREATE TABLE x_modules_master(
+id BIGINT DEFAULT nextval('x_modules_master_seq'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+module VARCHAR(1024) NOT NULL,
+url VARCHAR(1024) NOT NULL,
+PRIMARY KEY(id)
+);
+
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Policy Manager','/policymanager');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Users/Groups','/users/usertab');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Analytics','/reports/userAccess');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Audit','/reports/audit/bigData');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Permissions','/permission');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'KMS','/kms');
+
+DROP TABLE IF EXISTS x_user_module_perm CASCADE;
+DROP SEQUENCE IF EXISTS x_user_module_perm_seq;
+CREATE SEQUENCE x_user_module_perm_seq;
+CREATE TABLE x_user_module_perm(
+id BIGINT DEFAULT nextval('x_user_module_perm_seq'::regclass),
+user_id BIGINT DEFAULT NULL NULL,
+module_id BIGINT DEFAULT NULL NULL,
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+is_allowed INT DEFAULT '1' NOT NULL,
+PRIMARY KEY(id),
+CONSTRAINT x_user_module_perm_FK_moduleid FOREIGN KEY (module_id) REFERENCES x_modules_master(id),
+CONSTRAINT x_user_module_perm_FK_userid FOREIGN KEY (user_id) REFERENCES x_portal_user(id) 
+);
+
+DROP TABLE IF EXISTS x_group_module_perm CASCADE;
+DROP SEQUENCE IF EXISTS x_group_module_perm_seq;
+CREATE SEQUENCE x_group_module_perm_seq;
+CREATE TABLE x_group_module_perm(
+id BIGINT DEFAULT nextval('x_group_module_perm_seq'::regclass),
+group_id BIGINT DEFAULT NULL NULL,
+module_id BIGINT DEFAULT NULL NULL,
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+is_allowed INT DEFAULT '1' NOT NULL,
+PRIMARY KEY(id),
+CONSTRAINT x_grp_module_perm_FK_module_id FOREIGN KEY (module_id) REFERENCES x_modules_master(id),
+CONSTRAINT x_grp_module_perm_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group(id) 
+);
+
+CREATE INDEX x_usr_module_perm_idx_moduleid ON x_user_module_perm(module_id);
+CREATE INDEX x_usr_module_perm_idx_userid ON x_user_module_perm(user_id);
+CREATE INDEX x_grp_module_perm_idx_groupid ON x_group_module_perm(group_id);
+CREATE INDEX x_grp_module_perm_idx_moduleid ON x_group_module_perm(module_id);
 COMMIT;

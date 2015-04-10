@@ -1065,26 +1065,9 @@ public class TestXUserMgr {
 		xUserMgr.deleteXGroupPermission(1L, true);
 		Mockito.verify(xGroupPermissionService).deleteResource(1L);
 	}
-
+	
 	@Test
-	public void test43updateExistingUserExisting() {
-		XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
-		VXPortalUser vXPortalUser = Mockito.mock(VXPortalUser.class);
-		XXPortalUser xXPortalUser = Mockito.mock(XXPortalUser.class);
-		List<XXPortalUser> portalUserList = new ArrayList<XXPortalUser>();
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
-		Mockito.when(xPortalUserDao.findAllXPortalUser()).thenReturn(
-				portalUserList);
-		Mockito.when(xPortalUserService.populateViewBean(xXPortalUser))
-				.thenReturn(vXPortalUser);
-		List<VXPortalUser> vObj = xUserMgr.updateExistingUserExisting();
-		Assert.assertNotNull(vObj);
-		Mockito.verify(daoManager).getXXPortalUser();
-		Mockito.verify(xPortalUserDao).findAllXPortalUser();
-	}
-
-	@Test
-	public void test44checkPermissionRoleByGivenUrls() {
+	public void test43checkPermissionRoleByGivenUrls() {
 		XXModuleDefDao value = Mockito.mock(XXModuleDefDao.class);
 		XXPortalUserRoleDao xPortalUserRoleDao = Mockito
 				.mock(XXPortalUserRoleDao.class);
@@ -1117,7 +1100,7 @@ public class TestXUserMgr {
 	}
 	
 	@Test
-	public void test45getGroupsForUser() {
+	public void test44getGroupsForUser() {
 		VXUser vxUser = vxUser();
 		String userName = "test";
 		Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(

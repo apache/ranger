@@ -49,27 +49,28 @@ public class XModuleDefService extends
 	@Autowired
 	XGroupPermissionService xGrpPermService;
 
-	public XModuleDefService(){
+	public XModuleDefService() {
 		searchFields.add(new SearchField("module", "obj.module",
-            SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-searchFields
-            .add(new SearchField(
-                            "userName",
-                            "portalUser.loginId",
-                            SearchField.DATA_TYPE.STRING,
-                            SearchField.SEARCH_TYPE.PARTIAL,
-                            " XXPortalUser portalUser,  XXUserPermission userPermission",
-                            "obj.id=userPermission.moduleId and portalUser.id=userPermission.userId and userPermission.isAllowed="
-                                            + RangerConstants.IS_ALLOWED));
-searchFields
-            .add(new SearchField(
-                            "groupName",
-                            "group.name",
-                            SearchField.DATA_TYPE.STRING,
-                            SearchField.SEARCH_TYPE.PARTIAL,
-                            "XXGroup group,XXGroupPermission groupModulePermission",
-                            "obj.id=groupModulePermission.moduleId and groupModulePermission.groupId=group.id and groupModulePermission.isAllowed="));
-}
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields
+				.add(new SearchField(
+						"userName",
+						"portalUser.loginId",
+						SearchField.DATA_TYPE.STRING,
+						SearchField.SEARCH_TYPE.PARTIAL,
+						" XXPortalUser portalUser,  XXUserPermission userPermission",
+						"obj.id=userPermission.moduleId and portalUser.id=userPermission.userId and userPermission.isAllowed="
+								+ RangerConstants.IS_ALLOWED));
+		searchFields
+				.add(new SearchField(
+						"groupName",
+						"group.name",
+						SearchField.DATA_TYPE.STRING,
+						SearchField.SEARCH_TYPE.PARTIAL,
+						"XXGroup group,XXGroupPermission groupModulePermission",
+						"obj.id=groupModulePermission.moduleId and groupModulePermission.groupId=group.id and groupModulePermission.isAllowed="
+								+ RangerConstants.IS_ALLOWED));
+	}
 
 	@Override
 	protected void validateForCreate(VXModuleDef vObj) {
