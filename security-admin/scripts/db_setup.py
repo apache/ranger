@@ -268,11 +268,11 @@ class MysqlConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = ""
-		app_home = os.path.join(os.getcwd(),"ews","webapp")
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 
 		if not os.path.exists(javaFiles):
-			log("[I] No patches to apply!","info")
+			log("[I] No java patches to apply!","info")
 		else:
 			files = os.listdir(javaFiles)
 			if files:
@@ -301,9 +301,9 @@ class MysqlConf(BaseDB):
 						query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'Y';\" -c ;" %(version)
 					output = check_output(query)
 					if output.strip(version + " |"):
-						log("[I] Patch "+ className  +" is already applied" ,"info")
+						log("[I] Java patch "+ className  +" is already applied" ,"info")
 					else:
-						log ("[I] patch "+ className +" is being applied..","info")
+						log ("[I] java patch "+ className +" is being applied..","info")
 						path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
 						if os_name == "LINUX":
@@ -319,11 +319,13 @@ class MysqlConf(BaseDB):
 								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', now(), user(), now(), user()) ;\" -c ;" %(version)
 								ret = subprocess.call(query)
 							if ret == 0:
-								log("[I] Patch version updated", "info")
+								log ("[I] java patch "+ className +" is applied..","info")
 							else:
-								log("[E] Updating patch version failed", "error")
+								log("[E] java patch "+ className +" failed", "error")
 								sys.exit(1)
-
+						else:
+							log("[E] applying java patch "+ className +" failed", "error")
+							sys.exit(1)
 class OracleConf(BaseDB):
 	# Constructor
 	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
@@ -490,11 +492,11 @@ class OracleConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = ""
-		app_home = os.path.join(os.getcwd(),"ews","webapp")
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 
 		if not os.path.exists(javaFiles):
-			log("[I] No patches to apply!","info")
+			log("[I] No java patches to apply!","info")
 		else:
 			files = os.listdir(javaFiles)
 			if files:
@@ -523,9 +525,9 @@ class OracleConf(BaseDB):
 						query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'Y';\" -c ;" %(version)
 					output = check_output(query)
 					if output.strip(version + " |"):
-						log("[I] Patch "+ className  +" is already applied" ,"info")
+						log("[I] java patch "+ className  +" is already applied" ,"info")
 					else:
-						log ("[I] patch "+ className +" is being applied..","info")
+						log ("[I] java patch "+ className +" is being applied..","info")
 						path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
 						if os_name == "LINUX":
@@ -541,10 +543,13 @@ class OracleConf(BaseDB):
 								query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by) values ( X_DB_VERSION_H_SEQ.nextval,'J%s', sysdate, '%s', sysdate, '%s');\" -c ;" %(version, db_user, db_user)
 								ret = subprocess.call(query)
 							if ret == 0:
-								log("[I] Patch version updated", "info")
+								log("[I] java patch "+ className +" applied", "info")
 							else:
-								log("[E] Updating patch version failed", "error")
+								log("[E] java patch "+ className +" failed", "error")
 								sys.exit(1)
+						else:
+							log("[E] java patch "+ className +" failed", "error")
+							sys.exit(1)
 
 class PostgresConf(BaseDB):
 	# Constructor
@@ -694,11 +699,11 @@ class PostgresConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = ""
-		app_home = os.path.join(os.getcwd(),"ews","webapp")
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 
 		if not os.path.exists(javaFiles):
-			log("[I] No patches to apply!","info")
+			log("[I] No java patches to apply!","info")
 		else:
 			files = os.listdir(javaFiles)
 			if files:
@@ -727,9 +732,9 @@ class PostgresConf(BaseDB):
 						query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'Y';\" -c ;" %(version)
 					output = check_output(query)
 					if output.strip(version + " |"):
-						log("[I] Patch "+ className  +" is already applied" ,"info")
+						log("[I] java patch "+ className  +" is already applied" ,"info")
 					else:
-						log ("[I] patch "+ className +" is being applied..","info")
+						log ("[I] java patch "+ className +" is being applied..","info")
 						path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
 						if os_name == "LINUX":
@@ -745,10 +750,13 @@ class PostgresConf(BaseDB):
 								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', now(), '%s@%s', now(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
 								ret = subprocess.call(query)
 							if ret == 0:
-								log("[I] Patch version updated", "info")
+								log("[I] java patch "+ className +" applied", "info")
 							else:
-								log("[E] Updating patch version failed", "error")
+								log("[E] java patch "+ className +" failed", "error")
 								sys.exit(1)
+						else:
+							log("[E] java patch "+ className +" failed", "error")
+							sys.exit(1)
 
 
 class SqlServerConf(BaseDB):
@@ -887,11 +895,11 @@ class SqlServerConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = ""
-		app_home = os.path.join(os.getcwd(),"ews","webapp")
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 
 		if not os.path.exists(javaFiles):
-			log("[I] No patches to apply!","info")
+			log("[I] No java patches to apply!","info")
 		else:
 			files = os.listdir(javaFiles)
 			if files:
@@ -920,9 +928,9 @@ class SqlServerConf(BaseDB):
 						query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'Y';\" -c ;" %(version)
 					output = check_output(query)
 					if output.strip(version + " |"):
-						log("[I] Patch "+ className  +" is already applied" ,"info")
+						log("[I] java patch "+ className  +" is already applied" ,"info")
 					else:
-						log ("[I] patch "+ className +" is being applied..","info")
+						log ("[I] java patch "+ className +" is being applied..","info")
 						path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
 						if os_name == "LINUX":
@@ -938,10 +946,13 @@ class SqlServerConf(BaseDB):
 								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', now(), '%s@%s', now(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
 								ret = subprocess.call(query)
 							if ret == 0:
-								log("[I] Patch version updated", "info")
+								log("[I] java patch "+ className  +" applied", "info")
 							else:
-								log("[E] Updating patch version failed", "error")
+								log("[E] java patch "+ className  +" failed", "error")
 								sys.exit(1)
+						else:
+							log("[E] java patch "+ className  +" failed", "error")
+							sys.exit(1)
 
 
 def main(argv):

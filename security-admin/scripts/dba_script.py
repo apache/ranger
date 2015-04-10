@@ -800,7 +800,7 @@ class PostgresConf(BaseDB):
 				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE %s to %s;\" -c ;" %(db_name, db_user)
 				ret = subprocess.call(query)
 			if ret != 0:
-				log("[E] Granting privileges on tables in schema public failed..", "error")
+				log("[E] Granting all privileges on database "+db_name+" to user "+db_user+" failed..", "error")
 				sys.exit(1)
 
 			if os_name == "LINUX":
@@ -810,28 +810,58 @@ class PostgresConf(BaseDB):
 				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO %s;\" -c ;" %(db_user)
 				ret = subprocess.call(query)
 			if ret != 0:
-				log("[E] Granting privileges on schema public failed..", "error")
+				log("[E] Granting all privileges on schema public to user "+db_user+" failed..", "error")
 				sys.exit(1)
 
 			if os_name == "LINUX":
-				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO %s;\"" %(db_user)
-				ret = subprocess.call(shlex.split(query))
+				query = get_cmd + " -query \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';\""
+				output = check_output(query)
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO %s;\" -c ;" %(db_user)
-				ret = subprocess.call(query)
-			if ret != 0:
-				log("[E] Granting privileges on database "+db_name+ " failed..", "error")
-				sys.exit(1)
+				query = get_cmd + " -query \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';\" -c ;"
+				output = check_output(query)
+			for each_line in output.split('\n'):
+				if len(each_line) == 0 : continue
+				if re.search(' |', each_line):
+					tablename , value = each_line.strip().split(" |",1)
+					tablename = tablename.strip()
+					if os_name == "LINUX":
+						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\"" %(tablename,db_user)
+						ret = subprocess.call(shlex.split(query1))
+						if ret != 0:
+							log("[E] Granting all privileges on tablename "+tablename+" to user "+db_user+" failed..", "error")
+							sys.exit(1)
+					elif os_name == "WINDOWS":
+						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\" -c ;" %(tablename,db_user)
+						ret = subprocess.call(query1)
+						if ret != 0:
+							log("[E] Granting all privileges on tablename "+tablename+" to user "+db_user+" failed..", "error")
+							sys.exit(1)
+
 
 			if os_name == "LINUX":
-				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO %s;\"" %(db_user)
-				ret = subprocess.call(shlex.split(query))
+				query = get_cmd + " -query \"SELECT sequence_name FROM information_schema.sequences where sequence_schema='public';\""
+				output = check_output(query)
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO %s;\" -c ;" %(db_user)
-				ret = subprocess.call(query)
-			if ret != 0:
-				log("[E] Granting privileges on database "+db_name+ " failed..", "error")
-				sys.exit(1)
+				query = get_cmd + " -query \"SELECT sequence_name FROM information_schema.sequences where sequence_schema='public';\" -c ;"
+				output = check_output(query)
+			for each_line in output.split('\n'):
+				if len(each_line) == 0 : continue
+				if re.search(' |', each_line):
+					sequence_name , value = each_line.strip().split(" |",1)
+					sequence_name = sequence_name.strip()
+					if os_name == "LINUX":
+						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\"" %(sequence_name,db_user)
+						ret = subprocess.call(shlex.split(query1))
+						if ret != 0:
+							log("[E] Granting all privileges on sequence "+sequence_name+" to user "+db_user+" failed..", "error")
+							sys.exit(1)
+					elif os_name == "WINDOWS":
+						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\" -c ;" %(sequence_name,db_user)
+						ret = subprocess.call(query1)
+						if ret != 0:
+							log("[E] Granting all privileges on sequence "+sequence_name+" to user "+db_user+" failed..", "error")
+							sys.exit(1)
+
 			log("[I] Granting privileges TO user '"+db_user+"' on db '"+db_name+"' Done" , "info")
 		else:
 			logFile("GRANT ALL PRIVILEGES ON DATABASE %s to %s;" %(db_name, db_user))
@@ -1109,9 +1139,9 @@ def main(argv):
 			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|SQLSERVER} :","info")
 			XA_DB_FLAVOR=raw_input()
 			AUDIT_DB_FLAVOR = XA_DB_FLAVOR
-			XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
-			AUDIT_DB_FLAVOR = AUDIT_DB_FLAVOR.upper()
 
+	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
+	AUDIT_DB_FLAVOR = AUDIT_DB_FLAVOR.upper()
 	log("[I] DB FLAVOR:" + str(XA_DB_FLAVOR),"info")
 
 	if (quiteMode):
