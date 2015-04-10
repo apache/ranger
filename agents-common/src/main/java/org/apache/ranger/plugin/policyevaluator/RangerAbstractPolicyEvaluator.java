@@ -20,10 +20,14 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
@@ -31,10 +35,11 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 	private RangerPolicy     policy     = null;
 	private RangerServiceDef serviceDef = null;
+	private int              evalOrder  = 0;
 
 
 	@Override
-	public void init(RangerPolicy policy, RangerServiceDef serviceDef) {
+	public void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
 		}
@@ -55,6 +60,40 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	@Override
 	public RangerServiceDef getServiceDef() {
 		return serviceDef;
+	}
+
+	@Override
+	public int getEvalOrder() {
+		return evalOrder;
+	}
+
+	@Override
+	public int compareTo(RangerPolicyEvaluator other) {
+		if(LOG.isDebugEnabled()) {
+		LOG.debug("==> RangerAbstractPolicyEvaluator.compareTo()");
+		}
+
+		int result = Integer.compare(this.getEvalOrder(), other.getEvalOrder());
+
+		if (result == 0) {
+			Map<String, RangerConditionEvaluator> myConditionEvaluators    = this.getConditionEvaluators();
+			Map<String, RangerConditionEvaluator> otherConditionEvaluators = other.getConditionEvaluators();
+
+			int myConditionEvaluatorCount    = myConditionEvaluators == null ? 0 : myConditionEvaluators.size();
+			int otherConditionEvaluatorCount = otherConditionEvaluators == null ? 0 : otherConditionEvaluators.size();
+
+			result = Integer.compare(myConditionEvaluatorCount, otherConditionEvaluatorCount);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractPolicyEvaluator.compareTo(), result:" + result);
+		}
+
+		return result;
+	}
+
+	public void setEvalOrder(int evalOrder) {
+		this.evalOrder = evalOrder;
 	}
 
 	@Override

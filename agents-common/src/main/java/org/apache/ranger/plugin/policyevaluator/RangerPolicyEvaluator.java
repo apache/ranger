@@ -23,25 +23,37 @@ package org.apache.ranger.plugin.policyevaluator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
-public interface RangerPolicyEvaluator {
-	void init(RangerPolicy policy, RangerServiceDef serviceDef);
+public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator> {
+	public static final String EVALUATOR_TYPE_DEFAULT   = "default";
+	public static final String EVALUATOR_TYPE_OPTIMIZED = "optimized";
+	public static final String EVALUATOR_TYPE_CACHED    = "cached";
+
+	void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options);
 
 	RangerPolicy getPolicy();
 
 	RangerServiceDef getServiceDef();
+
+	Map<String, RangerConditionEvaluator> getConditionEvaluators();
+
+	int getEvalOrder();
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
 
 	boolean isMatch(RangerAccessResource resource);
 
 	boolean isSingleAndExactMatch(RangerAccessResource resource);
+
+	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 }

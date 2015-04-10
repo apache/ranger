@@ -32,6 +32,7 @@ import java.util.Set;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.policyengine.TestPolicyDb.PolicyDbTestCase.TestData;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -77,13 +78,20 @@ public class TestPolicyDb {
 		assertTrue("invalid input: " + testName, testCase != null && testCase.servicePolicies != null && testCase.tests != null && testCase.servicePolicies.getPolicies() != null);
 
 
-		RangerPolicyDb policyDb = new RangerPolicyDb(testCase.servicePolicies);
+		RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
+
+		policyEngineOptions.evaluatorType           = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
+		policyEngineOptions.cacheAuditResults       = false;
+		policyEngineOptions.disableContextEnrichers = true;
+		policyEngineOptions.disableCustomConditions = true;
+
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testCase.servicePolicies, policyEngineOptions);
 
 		for(TestData test : testCase.tests) {
 			boolean expected = test.result;
 
 			if(test.allowedPolicies != null) {
-				List<RangerPolicy> allowedPolicies = policyDb.getAllowedPolicies(test.user, test.userGroups, test.accessType);
+				List<RangerPolicy> allowedPolicies = policyEngine.getAllowedPolicies(test.user, test.userGroups, test.accessType);
 
 				assertEquals("allowed-policy count mismatch!", test.allowedPolicies.size(), allowedPolicies.size());
 				
@@ -93,7 +101,7 @@ public class TestPolicyDb {
 				}
 				assertEquals("allowed-policy list mismatch!", test.allowedPolicies, allowedPolicyIds);
 			} else {
-				boolean result = policyDb.isAccessAllowed(test.resources, test.user, test.userGroups, test.accessType);
+				boolean result = policyEngine.isAccessAllowed(test.resources, test.user, test.userGroups, test.accessType);
 
 				assertEquals("isAccessAllowed mismatched! - " + test.name, expected, result);
 			}

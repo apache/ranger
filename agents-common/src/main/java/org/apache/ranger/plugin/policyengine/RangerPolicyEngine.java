@@ -21,11 +21,15 @@ package org.apache.ranger.plugin.policyengine;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
 public interface RangerPolicyEngine {
 	public static final String GROUP_PUBLIC   = "public";
@@ -37,17 +41,21 @@ public interface RangerPolicyEngine {
 
 	RangerServiceDef getServiceDef();
 
+	List<RangerPolicy> getPolicies();
+
+	long getPolicyVersion();
+
+	List<RangerPolicyEvaluator> getPolicyEvaluators();
+
 	List<RangerContextEnricher> getContextEnrichers();
 
-	void setPolicies(ServicePolicies policies);
-
-	ServicePolicies getPolicies();
 
 	void setDefaultAuditHandler(RangerAuditHandler auditHandler);
 
 	RangerAuditHandler getDefaultAuditHandler();
 
 	RangerAccessResult createAccessResult(RangerAccessRequest request);
+
 
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
 
@@ -56,4 +64,13 @@ public interface RangerPolicyEngine {
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler);
 
 	Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAuditHandler auditHandler);
+
+
+	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
+
+	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
+
+	RangerPolicy getExactMatchPolicy(RangerAccessResource resource);
+
+	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 }

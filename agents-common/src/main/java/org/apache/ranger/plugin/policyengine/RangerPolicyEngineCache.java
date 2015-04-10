@@ -25,25 +25,28 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
-public class RangerPolicyDbCache {
-	private static final Log LOG = LogFactory.getLog(RangerPolicyDbCache.class);
+public class RangerPolicyEngineCache {
+	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineCache.class);
 
-	private static final RangerPolicyDbCache sInstance = new RangerPolicyDbCache();
+	private static final RangerPolicyEngineCache sInstance = new RangerPolicyEngineCache();
 
-	private final Map<String, RangerPolicyDb> policyDbCache = Collections.synchronizedMap(new HashMap<String, RangerPolicyDb>());
+	private final Map<String, RangerPolicyEngine> policyEngineCache = Collections.synchronizedMap(new HashMap<String, RangerPolicyEngine>());
 
-	public static RangerPolicyDbCache getInstance() {
+	private RangerPolicyEngineOptions options = null;
+
+	public static RangerPolicyEngineCache getInstance() {
 		return sInstance;
 	}
 
-	public RangerPolicyDb getPolicyDb(String serviceName, ServiceStore svcStore) {
-		RangerPolicyDb ret = null;
+	public RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore) {
+		RangerPolicyEngine ret = null;
 
 		if(serviceName != null) {
-			ret = policyDbCache.get(serviceName);
+			ret = policyEngineCache.get(serviceName);
 
 			long policyVersion = ret != null ? ret.getPolicyVersion() : -1;
 
@@ -53,20 +56,32 @@ public class RangerPolicyDbCache {
 
 					if(policies != null) {
 						if(ret == null) {
-							ret = new RangerPolicyDb(policies);
-
-							policyDbCache.put(serviceName, ret);
+							ret = addPolicyEngine(policies);
 						} else if(policies.getPolicyVersion() != null && !policies.getPolicyVersion().equals(policyVersion)) {
-							ret = new RangerPolicyDb(policies);
-
-							policyDbCache.put(serviceName, ret);
+							ret = addPolicyEngine(policies);
 						}
 					}
 				} catch(Exception excp) {
-					LOG.error("getPolicyDbForService(" + serviceName + "): failed to get latest policies from service-store", excp);
+					LOG.error("getPolicyEngine(" + serviceName + "): failed to get latest policies from service-store", excp);
 				}
 			}
 		}
+
+		return ret;
+	}
+
+	public RangerPolicyEngineOptions getPolicyEngineOptions() {
+		return options;
+	}
+
+	public void setPolicyEngineOptions(RangerPolicyEngineOptions options) {
+		this.options = options;
+	}
+
+	private RangerPolicyEngine addPolicyEngine(ServicePolicies policies) {
+		RangerPolicyEngine ret = new RangerPolicyEngineImpl(policies, options);
+
+		policyEngineCache.put(policies.getServiceName(), ret);
 
 		return ret;
 	}

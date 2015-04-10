@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator {
     private static final Log LOG = LogFactory.getLog(RangerCachedPolicyEvaluator.class);
@@ -31,12 +32,12 @@ public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator 
     private RangerResourceAccessCache cache = null;
 
     @Override
-    public void init(RangerPolicy policy, RangerServiceDef serviceDef) {
+    public void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerCachedPolicyEvaluator.init()");
         }
 
-        super.init(policy, serviceDef);
+        super.init(policy, serviceDef, options);
 
         cache = RangerResourceAccessCacheImpl.getInstance(serviceDef, policy);
         
