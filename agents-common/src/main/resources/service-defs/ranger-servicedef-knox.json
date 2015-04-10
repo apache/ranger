@@ -1,13 +1,9 @@
 {
-	"id": 5,
 	"name": "knox",
 	"implClass": "org.apache.ranger.services.knox.RangerServiceKnox",
 	"label": "Knox Gateway",
 	"description": "Knox Gateway",
 	"guid": "84b481b5-f23b-4f71-b8b6-ab33977149ca",
-	"createTime": "20141208-22:48:42.238--0800",
-	"updateTime": "20141208-22:48:42.238--0800",
-	"version": 1,
 	"resources": 
 	[
 		{

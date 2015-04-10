@@ -1,13 +1,9 @@
 {
-	"id": 1,
 	"name": "hdfs",
 	"implClass": "org.apache.ranger.services.hdfs.RangerServiceHdfs",
 	"label": "HDFS Repository",
 	"description": "HDFS Repository",
 	"guid": "0d047247-bafe-4cf8-8e9b-d5d377284b2d",
-	"createTime": "20141208-22:04:25.233--0800",
-	"updateTime": "20141208-22:04:25.233--0800",
-	"version": 1,
 	"resources": 
 	[
 		{

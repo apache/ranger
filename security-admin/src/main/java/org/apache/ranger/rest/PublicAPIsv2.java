@@ -115,7 +115,7 @@ public class PublicAPIsv2 {
 		// serviceDef.name is immutable
 		// if serviceDef.name is specified, it should be same as the param 'name'
 		if(serviceDef.getName() == null) {
-			serviceDef.setType(name);
+			serviceDef.setName(name);
 		} else if(!serviceDef.getName().equals(name)) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "serviceDef name mismatch", true);
 		}
@@ -353,6 +353,9 @@ public class PublicAPIsv2 {
 		policy.setId(oldPolicy.getId());
 		if(StringUtils.isEmpty(policy.getGuid())) {
 			policy.setGuid(oldPolicy.getGuid());
+		}
+		if(StringUtils.isEmpty(policy.getName())) {
+			policy.setName(oldPolicy.getName());
 		}
 
 		return serviceREST.updatePolicy(policy);

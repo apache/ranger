@@ -73,10 +73,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param contextEnrichers
 	 * @param enums
 	 */
-	public RangerServiceDef(String type, String implClass, String label, String description, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
+	public RangerServiceDef(String name, String implClass, String label, String description, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
 		super();
 
-		setType(type);
+		setName(name);
 		setImplClass(implClass);
 		setLabel(label);
 		setDescription(description);
@@ -94,7 +94,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public void updateFrom(RangerServiceDef other) {
 		super.updateFrom(other);
 
-		setType(other.getName());
+		setName(other.getName());
 		setImplClass(other.getImplClass());
 		setLabel(other.getLabel());
 		setDescription(other.getDescription());
@@ -115,7 +115,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	/**
 	 * @param name the name to set
 	 */
-	public void setType(String name) {
+	public void setName(String name) {
 		this.name = name;
 	}
 

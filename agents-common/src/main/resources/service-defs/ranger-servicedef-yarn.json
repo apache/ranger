@@ -1,13 +1,9 @@
 {
-	"id": 7,
 	"name": "yarn",
 	"implClass": "org.apache.ranger.services.yarn.RangerServiceYarn",
 	"label": "YARN",
 	"description": "YARN",
 	"guid": "5b710438-edcf-4e20-834c-a9a267b5b963",
-	"createTime": "20141208-22:55:47.095--0800",
-	"updateTime": "20141208-22:55:47.095--0800",
-	"version": 1,
 	"resources": 
 	[
 		{

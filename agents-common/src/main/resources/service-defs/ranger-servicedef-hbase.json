@@ -1,13 +1,9 @@
 {
-	"id": 2,
 	"name": "hbase",
 	"implClass": "org.apache.ranger.services.hbase.RangerServiceHBase",
 	"label": "HBase",
 	"description": "HBase",
 	"guid": "d6cea1f0-2509-4791-8fc1-7b092399ba3b",
-	"createTime": "20141208-22:50:22.426--0800",
-	"updateTime": "20141208-22:50:22.426--0800",
-	"version": 1,
 	"resources": 
 	[
 		{
