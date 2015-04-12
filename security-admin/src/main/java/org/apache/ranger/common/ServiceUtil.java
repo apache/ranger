@@ -44,6 +44,7 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
@@ -322,6 +323,7 @@ public class ServiceUtil {
 				ret.setServices(resString);
 			}
 		}
+		updateResourceName(ret);
 
 		List<VXPermMap> permMapList = getVXPermMapList(policy);
 		
@@ -486,7 +488,89 @@ public class ServiceUtil {
 		}
 		return ret;
 	}	
-	
+
+	private void updateResourceName(VXResource resource) {
+		if(resource == null) {
+			return;
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		switch(resource.getAssetType()) {
+			case RangerCommonEnums.ASSET_HDFS:
+				sb.append(emptyIfNull(resource.getName()));
+			break;
+
+			case RangerCommonEnums.ASSET_HBASE:
+			{
+				String tables         = emptyIfNull(resource.getTables());
+				String columnFamilies = emptyIfNull(resource.getColumnFamilies());
+				String columns        = emptyIfNull(resource.getColumns());
+
+				for(String column : columns.split(",")) {
+					for(String columnFamily : columnFamilies.split(",")) {
+						for(String table : tables.split(",")) {
+							if(sb.length() > 0) {
+								sb.append(",");
+							}
+
+							sb.append("/").append(table).append("/").append(columnFamily).append("/").append(column);
+						}
+					}
+				}
+			}
+			break;
+
+			case RangerCommonEnums.ASSET_HIVE:
+			{
+				String databases = emptyIfNull(resource.getDatabases());
+				String tables    = emptyIfNull(resource.getTables());
+				String columns   = emptyIfNull(resource.getColumns());
+
+				for(String column : columns.split(",")) {
+					for(String table : tables.split(",")) {
+						for(String database : databases.split(",")) {
+							if(sb.length() > 0) {
+								sb.append(",");
+							}
+
+							sb.append("/").append(database).append(table).append("/").append("/").append(column);
+						}
+					}
+				}
+			}
+			break;
+
+			case RangerCommonEnums.ASSET_KNOX:
+			{
+				String topologies = emptyIfNull(resource.getTopologies());
+				String services   = emptyIfNull(resource.getServices());
+
+				for(String service : services.split(",")) {
+					for(String topology : topologies.split(",")) {
+						if(sb.length() > 0) {
+							sb.append(",");
+						}
+
+						sb.append("/").append(topology).append(service);
+					}
+				}
+			}
+			break;
+
+			case RangerCommonEnums.ASSET_STORM:
+				sb.append(emptyIfNull(resource.getTopologies()));
+			break;
+		}
+
+		if(sb.length() > 0) {
+			resource.setName(sb.toString());
+		}
+	}
+
+	private String emptyIfNull(String str) {
+		return str == null ? "" : str;
+	}
 	
 	private String getResourceString(List<String> values) {
 		String ret = null;

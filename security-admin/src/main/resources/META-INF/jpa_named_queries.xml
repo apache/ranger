@@ -190,16 +190,16 @@
 
 	<!-- XXPolicyItem -->
 	<named-query name="XXPolicyItem.findByPolicyId">
-		<query>select obj from XXPolicyItem obj where obj.policyId = :policyId</query>
+		<query>select obj from XXPolicyItem obj where obj.policyId = :policyId order by obj.order</query>
 	</named-query>
 
 	<!-- XXPolicy -->
 	<named-query name="XXPolicy.findByNameAndServiceId">
-		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId</query>
+		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId order by obj.id</query>
 	</named-query>
 
 	<named-query name="XXPolicy.findByServiceId">
-		<query>select obj from XXPolicy obj where obj.service = :serviceId</query>
+		<query>select obj from XXPolicy obj where obj.service = :serviceId order by obj.id</query>
 	</named-query>
 
 	<named-query name="XXPolicy.getMaxIdOfXXPolicy">
@@ -217,23 +217,23 @@
 
 	<!-- XXResourceDef -->
 	<named-query name="XXResourceDef.findByNameAndDefId">
-		<query>select obj from XXResourceDef obj where obj.name = :name and obj.defId = :defId</query>
+		<query>select obj from XXResourceDef obj where obj.name = :name and obj.defId = :defId order by obj.level</query>
 	</named-query>
 
 	<named-query name="XXResourceDef.findByServiceDefId">
-		<query>select obj from XXResourceDef obj where obj.defId = :serviceDefId</query>
+		<query>select obj from XXResourceDef obj where obj.defId = :serviceDefId order by obj.level</query>
 	</named-query>
 
 	<named-query name="XXResourceDef.findByPolicyId">
 		<query>select obj from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef, 
 				XXService xSvc where obj.defId = xSvcDef.id and xSvcDef.id = xSvc.type
-				and xSvc.id = xPol.service and xPol.id = :policyId</query>
+				and xSvc.id = xPol.service and xPol.id = :policyId order by obj.level</query>
 	</named-query>
 
 	<named-query name="XXResourceDef.findByNameAndPolicyId">
 		<query>select obj from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef, 
 				XXService xSvc where obj.defId = xSvcDef.id and xSvcDef.id = xSvc.type
-				and xSvc.id = xPol.service and xPol.id = :policyId and obj.name = :name</query>
+				and xSvc.id = xPol.service and xPol.id = :policyId and obj.name = :name order by obj.level</query>
 	</named-query>
 
 	<!-- XXAccessTypeDefGrants -->
@@ -243,17 +243,17 @@
 
 	<!-- XXEnumElementDef -->
 	<named-query name="XXEnumElementDef.findByEnumDefId">
-		<query>select obj from XXEnumElementDef obj where obj.enumDefId = :enumDefId</query>
+		<query>select obj from XXEnumElementDef obj where obj.enumDefId = :enumDefId order by obj.order</query>
 	</named-query>
 
 	<!-- XXServiceConfigDef -->
 	<named-query name="XXServiceConfigDef.findByServiceDefId">
-		<query>select obj from XXServiceConfigDef obj where obj.defId = :serviceDefId</query>
+		<query>select obj from XXServiceConfigDef obj where obj.defId = :serviceDefId order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXServiceConfigDef.findByServiceDefName">
 		<query>select obj from XXServiceConfigDef obj, XXServiceDef svcDef 
-				where obj.defId = svcDef.id and svcDef.name = :serviceDef</query>
+				where obj.defId = svcDef.id and svcDef.name = :serviceDef order by obj.order</query>
 	</named-query>
 
 
@@ -273,28 +273,28 @@
 	</named-query>
 
 	<named-query name="XXPolicyConditionDef.findByServiceDefIdAndName">
-		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name = :name</query>
+		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name = :name order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXPolicyConditionDef.findByPolicyItemId">
 		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
-		where xPolItemCond.policyItemId = :polItemId and obj.id = xPolItemCond.type</query>
+		where xPolItemCond.policyItemId = :polItemId and obj.id = xPolItemCond.type order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXPolicyConditionDef.findByPolicyItemIdAndName">
 		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
 				where xPolItemCond.policyItemId = :polItemId and obj.name = :name 
-				and obj.id = xPolItemCond.type 
+				and obj.id = xPolItemCond.type order by obj.order 
 		</query>
 	</named-query>
 
 	<!-- XXContextEnricherDef -->
 	<named-query name="XXContextEnricherDef.findByServiceDefId">
-		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId</query>
+		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXContextEnricherDef.findByServiceDefIdAndName">
-		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId and obj.name = :name</query>
+		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId and obj.name = :name order by obj.order</query>
 	</named-query>
 
 
@@ -334,32 +334,32 @@
 
 	<!-- XXPolicyResourceMap -->
 	<named-query name="XXPolicyResourceMap.findByPolicyResId">
-		<query>select obj from XXPolicyResourceMap obj where obj.resourceId = :polResId</query>
+		<query>select obj from XXPolicyResourceMap obj where obj.resourceId = :polResId order by obj.order</query>
 	</named-query>
 
 	<!-- XXPolicyItemAccess -->
 	<named-query name="XXPolicyItemAccess.findByPolicyItemId">
-		<query>select obj from XXPolicyItemAccess obj where obj.policyItemId = :polItemId</query>
+		<query>select obj from XXPolicyItemAccess obj where obj.policyItemId = :polItemId order by obj.order</query>
 	</named-query>
 
 	<!-- XXPolicyItemCondition -->
 	<named-query name="XXPolicyItemCondition.findByPolicyItemId">
-		<query>select obj from XXPolicyItemCondition obj where obj.policyItemId = :polItemId </query>
+		<query>select obj from XXPolicyItemCondition obj where obj.policyItemId = :polItemId order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXPolicyItemCondition.findByPolicyItemAndDefId">
 		<query>select obj from XXPolicyItemCondition obj where 
-				obj.policyItemId = :polItemId and obj.type = :polCondDefId</query>
+				obj.policyItemId = :polItemId and obj.type = :polCondDefId order by obj.order</query>
 	</named-query>
 
 	<!-- XXPolicyItemGroupPerm -->
 	<named-query name="XXPolicyItemGroupPerm.findByPolicyItemId">
-		<query>select obj from XXPolicyItemGroupPerm obj where obj.policyItemId = :polItemId</query>
+		<query>select obj from XXPolicyItemGroupPerm obj where obj.policyItemId = :polItemId order by obj.order</query>
 	</named-query>
 
 	<!-- XXPolicyItemUserPerm -->
 	<named-query name="XXPolicyItemUserPerm.findByPolicyItemId">
-		<query>select obj from XXPolicyItemUserPerm obj where obj.policyItemId = :polItemId</query>
+		<query>select obj from XXPolicyItemUserPerm obj where obj.policyItemId = :polItemId order by obj.order</query>
 	</named-query>
 
 	<!-- XXDataHist -->

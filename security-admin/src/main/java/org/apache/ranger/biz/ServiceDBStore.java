@@ -248,30 +248,39 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 		
 		XXServiceConfigDefDao xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
-		for(RangerServiceConfigDef config : configs) {
+		for(int i = 0; i < configs.size(); i++) {
+			RangerServiceConfigDef config = configs.get(i);
+
 			XXServiceConfigDef xConfig = new XXServiceConfigDef();
 			xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef,
 					RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+			xConfig.setOrder(i);
 			xConfig = xxServiceConfigDao.create(xConfig);
 		}
 		
 		XXResourceDefDao xxResDefDao = daoMgr.getXXResourceDef();
-		for(RangerResourceDef resource : resources) {
+		for(int i = 0; i < resources.size(); i++) {
+			RangerResourceDef resource = resources.get(i);
+
 			XXResourceDef parent = xxResDefDao.findByNameAndServiceDefId(resource.getParent(), serviceDefId);
 			Long parentId = (parent != null) ? parent.getId() : null;
 			
 			XXResourceDef xResource = new XXResourceDef();
 			xResource = serviceDefService.populateRangerResourceDefToXX(resource, xResource, createdSvcDef,
 					RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+			xResource.setOrder(i);
 			xResource.setParent(parentId);
 			xResource = xxResDefDao.create(xResource);
 		}
 		
 		XXAccessTypeDefDao xxATDDao = daoMgr.getXXAccessTypeDef();
-		for(RangerAccessTypeDef accessType : accessTypes) {
+		for(int i = 0; i < accessTypes.size(); i++) {
+			RangerAccessTypeDef accessType = accessTypes.get(i);
+
 			XXAccessTypeDef xAccessType = new XXAccessTypeDef();
 			xAccessType = serviceDefService.populateRangerAccessTypeDefToXX(accessType, xAccessType, createdSvcDef,
 					RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+			xAccessType.setOrder(i);
 			xAccessType = xxATDDao.create(xAccessType);
 			
 			Collection<String> impliedGrants = accessType.getImpliedGrants();
@@ -285,20 +294,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		
 		XXPolicyConditionDefDao xxPolCondDao = daoMgr.getXXPolicyConditionDef();
-		for (RangerPolicyConditionDef policyCondition : policyConditions) {
+		for (int i = 0; i < policyConditions.size(); i++) {
+			RangerPolicyConditionDef policyCondition = policyConditions.get(i);
+
 			XXPolicyConditionDef xPolicyCondition = new XXPolicyConditionDef();
 			xPolicyCondition = serviceDefService
 					.populateRangerPolicyConditionDefToXX(policyCondition,
 							xPolicyCondition, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+			xPolicyCondition.setOrder(i);
 			xPolicyCondition = xxPolCondDao.create(xPolicyCondition);
 		}
 		
 		XXContextEnricherDefDao xxContextEnricherDao = daoMgr.getXXContextEnricherDef();
-		for (RangerContextEnricherDef contextEnricher : contextEnrichers) {
+		for (int i = 0; i < contextEnrichers.size(); i++) {
+			RangerContextEnricherDef contextEnricher = contextEnrichers.get(i);
+
 			XXContextEnricherDef xContextEnricher = new XXContextEnricherDef();
 			xContextEnricher = serviceDefService
 					.populateRangerContextEnricherDefToXX(contextEnricher,
 							xContextEnricher, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+			xContextEnricher.setOrder(i);
 			xContextEnricher = xxContextEnricherDao.create(xContextEnricher);
 		}
 		
@@ -310,9 +325,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 			
 			List<RangerEnumElementDef> elements = vEnum.getElements();
 			XXEnumElementDefDao xxEnumEleDefDao = daoMgr.getXXEnumElementDef();
-			for(RangerEnumElementDef element : elements) {
+			for(int i = 0; i < elements.size(); i++) {
+				RangerEnumElementDef element = elements.get(i);
+
 				XXEnumElementDef xElement = new XXEnumElementDef();
 				xElement = serviceDefService.populateRangerEnumElementDefToXX(element, xElement, xEnum, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+				xElement.setOrder(i);
 				xElement = xxEnumEleDefDao.create(xElement);
 			}
 		}
@@ -1140,16 +1158,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 	
 	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems, XXServiceDef xServiceDef) {
 		
-		for (RangerPolicyItem policyItem : policyItems) {
+		for (int itemOrder = 0; itemOrder < policyItems.size(); itemOrder++) {
+			RangerPolicyItem policyItem = policyItems.get(itemOrder);
 			XXPolicyItem xPolicyItem = new XXPolicyItem();
 			xPolicyItem = (XXPolicyItem) rangerAuditFields.populateAuditFields(
 					xPolicyItem, xPolicy);
 			xPolicyItem.setDelegateAdmin(policyItem.getDelegateAdmin());
 			xPolicyItem.setPolicyId(policy.getId());
+			xPolicyItem.setOrder(itemOrder);
 			xPolicyItem = daoMgr.getXXPolicyItem().create(xPolicyItem);
 
 			List<RangerPolicyItemAccess> accesses = policyItem.getAccesses();
-			for (RangerPolicyItemAccess access : accesses) {
+			for (int i = 0; i < accesses.size(); i++) {
+				RangerPolicyItemAccess access = accesses.get(i);
 
 				XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef()
 						.findByNameAndServiceId(access.getType(),
@@ -1166,11 +1187,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				xPolItemAcc.setType(xAccTypeDef.getId());
 				xPolItemAcc.setPolicyitemid(xPolicyItem.getId());
+				xPolItemAcc.setOrder(i);
 				xPolItemAcc = daoMgr.getXXPolicyItemAccess()
 						.create(xPolItemAcc);
 			}
 			List<String> users = policyItem.getUsers();
-			for(String user : users) {
+			for(int i = 0; i < users.size(); i++) {
+				String user = users.get(i);
+
 				XXUser xUser = daoMgr.getXXUser().findByUserName(user);
 				if(xUser == null) {
 					LOG.info("User does not exists with username: " 
@@ -1181,11 +1205,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 				xUserPerm = (XXPolicyItemUserPerm) rangerAuditFields.populateAuditFields(xUserPerm, xPolicyItem);
 				xUserPerm.setUserId(xUser.getId());
 				xUserPerm.setPolicyItemId(xPolicyItem.getId());
+				xUserPerm.setOrder(i);
 				xUserPerm = daoMgr.getXXPolicyItemUserPerm().create(xUserPerm);
 			}
 			
 			List<String> groups = policyItem.getGroups();
-			for(String group : groups) {
+			for(int i = 0; i < groups.size(); i++) {
+				String group = groups.get(i);
+
 				XXGroup xGrp = daoMgr.getXXGroup().findByGroupName(group);
 				if(xGrp == null) {
 					LOG.info("Group does not exists with groupName: " 
@@ -1196,6 +1223,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				xGrpPerm = (XXPolicyItemGroupPerm) rangerAuditFields.populateAuditFields(xGrpPerm, xPolicyItem);
 				xGrpPerm.setGroupId(xGrp.getId());
 				xGrpPerm.setPolicyItemId(xPolicyItem.getId());
+				xGrpPerm.setOrder(i);
 				xGrpPerm = daoMgr.getXXPolicyItemGroupPerm().create(xGrpPerm);
 			}
 			
@@ -1212,12 +1240,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 					continue;
 				}
 				
-				for(String value : condition.getValues()) {
+				for(int i = 0; i < condition.getValues().size(); i++) {
+					String value = condition.getValues().get(i);
 					XXPolicyItemCondition xPolItemCond = new XXPolicyItemCondition();
 					xPolItemCond = (XXPolicyItemCondition) rangerAuditFields.populateAuditFields(xPolItemCond, xPolicyItem);
 					xPolItemCond.setPolicyItemId(xPolicyItem.getId());
 					xPolItemCond.setType(xPolCond.getId());
 					xPolItemCond.setValue(value);
+					xPolItemCond.setOrder(i);
 					xPolItemCond = daoMgr.getXXPolicyItemCondition().create(xPolItemCond);
 				}
 			}
@@ -1247,11 +1277,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xPolRes = daoMgr.getXXPolicyResource().create(xPolRes);
 
 			List<String> values = policyRes.getValues();
-			for (String value : values) {
+			for(int i = 0; i < values.size(); i++) {
 				XXPolicyResourceMap xPolResMap = new XXPolicyResourceMap();
 				xPolResMap = (XXPolicyResourceMap) rangerAuditFields.populateAuditFields(xPolResMap, xPolRes);
 				xPolResMap.setResourceId(xPolRes.getId());
-				xPolResMap.setValue(value);
+				xPolResMap.setValue(values.get(i));
+				xPolResMap.setOrder(i);
 
 				xPolResMap = daoMgr.getXXPolicyResourceMap().create(xPolResMap);
 			}
