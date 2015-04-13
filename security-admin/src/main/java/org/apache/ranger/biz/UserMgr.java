@@ -106,6 +106,9 @@ public class UserMgr {
 
 	@Autowired
 	XGroupPermissionService xGroupPermissionService;
+	
+	@Autowired
+	XUserMgr xUserMgr;
 
 	String publicRoles[] = new String[] { RangerConstants.ROLE_USER,
 			RangerConstants.ROLE_OTHER };
@@ -1096,6 +1099,8 @@ public class UserMgr {
 
 			}
 		}
+		
+		xUserMgr.assignPermissionToUser(userProfile,true);
 
 		XXPortalUser xXPortalUser = null;
 		String loginId = userProfile.getLoginId();
@@ -1161,7 +1166,7 @@ public class UserMgr {
 		for (XXPortalUserRole gjUserRole : gjUserRoleList) {
 			userProfile.getUserRoleList().add(gjUserRole.getUserRole());
 		}
-
+		
 		return userProfile;
 	}
 

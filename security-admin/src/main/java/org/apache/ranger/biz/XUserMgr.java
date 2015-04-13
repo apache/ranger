@@ -239,9 +239,9 @@ public class XUserMgr extends XUserMgrBase {
 				insertMappingUserPermisson(vXPortalUser.getId(),
 						moduleNameId.get(RangerConstants.MODULE_AUDIT),
 						isCreate);
-			/*	insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_KMS), isCreate);
 				insertMappingUserPermisson(vXPortalUser.getId(),
+						moduleNameId.get(RangerConstants.MODULE_KMS), isCreate);
+				/*insertMappingUserPermisson(vXPortalUser.getId(),
 						moduleNameId.get(RangerConstants.MODULE_PERMISSION),
 						isCreate);*/
 				insertMappingUserPermisson(vXPortalUser.getId(),
@@ -658,7 +658,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public void checkPermissionRoleByGivenUrls(String enteredURL, String method) {
 		Long currentUserId = ContextUtil.getCurrentUserId();
-		List<String> notPermittedUrls = daoManager.getXXModuleDef()
+		/*List<String> notPermittedUrls = daoManager.getXXModuleDef()
 				.findModuleURLOfPemittedModules(currentUserId);
 		if (notPermittedUrls != null) {
 			List<XXPortalUserRole> xPortalUserRoles = daoManager
@@ -679,7 +679,21 @@ public class XUserMgr extends XUserMgrBase {
 			if (flag) {
 				throw restErrorUtil.create403RESTException("Access Denied");
 			}
+		}*/
+		boolean flag = false;
+		List<XXPortalUserRole> xPortalUserRoles = daoManager
+				.getXXPortalUserRole().findByUserId(currentUserId);
+		for (XXPortalUserRole xPortalUserRole : xPortalUserRoles) {
+			if (xPortalUserRole.getUserRole().equalsIgnoreCase(
+					RangerConstants.ROLE_USER)
+					&& enteredURL.toLowerCase().contains("/permission")) {
+				flag = true;
+			}
 		}
+		if (flag) {
+			throw restErrorUtil.create403RESTException("Access Denied");
+		}
+		
 	}
 
 	// Module permissions

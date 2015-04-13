@@ -45,6 +45,8 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
  */
 public class RangerAuthenticationEntryPoint extends
 		LoginUrlAuthenticationEntryPoint {
+	public static final int SC_AUTHENTICATION_TIMEOUT = 419;
+
 	static Logger logger = Logger
 			.getLogger(RangerAuthenticationEntryPoint.class);
 	static int ajaxReturnCode = -1;
@@ -96,10 +98,10 @@ public class RangerAuthenticationEntryPoint extends
 			ajaxRequestHeader = null;
 			VXResponse vXResponse = new VXResponse();
 
-			vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+			vXResponse.setStatusCode(SC_AUTHENTICATION_TIMEOUT);
 			vXResponse.setMsgDesc("Session Timeout");
 
-			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			response.setStatus(SC_AUTHENTICATION_TIMEOUT);
 			response.getWriter()
 					.write(jsonUtil.writeObjectAsString(vXResponse));
 

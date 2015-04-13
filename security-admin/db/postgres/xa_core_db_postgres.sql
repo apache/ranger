@@ -923,12 +923,11 @@ url VARCHAR(1024) NOT NULL,
 PRIMARY KEY(id)
 );
 
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Policy Manager','/policymanager');
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Users/Groups','/users/usertab');
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Analytics','/reports/userAccess');
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Audit','/reports/audit/bigData');
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Permissions','/permission');
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'KMS','/kms');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Policy Manager','');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Users/Groups','');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Analytics','');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'Audit','');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,1,1,'KMS','');
 
 DROP TABLE IF EXISTS x_user_module_perm CASCADE;
 DROP SEQUENCE IF EXISTS x_user_module_perm_seq;

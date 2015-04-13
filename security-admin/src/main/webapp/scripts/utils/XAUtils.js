@@ -453,6 +453,8 @@ define(function(require) {
         	App.rContent.show(new vError({
         		status : error.status
         	}));
+        }else if (error.status == 419 ) {
+        	window.location = 'login.jsp'
         }
     };
     XAUtils.select2Focus  =  function(event) {

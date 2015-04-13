@@ -25,7 +25,7 @@ CREATE TABLE `x_modules_master` (
 PRIMARY KEY (`id`)
 );
 
-INSERT INTO `x_modules_master` VALUES (1,'2015-03-04 10:40:34','2015-03-09 15:26:45',1,1,'Policy Manager','/policymanager'),(2,'2015-03-04 10:41:51','2015-03-04 10:41:51',1,1,'Users/Groups','/users/usertab'),(3,'2015-03-04 10:42:19','2015-03-25 10:46:47',1,1,'Analytics','/reports/userAccess'),(4,'2015-03-04 10:42:45','2015-03-05 13:01:41',1,1,'Audit','/reports/audit/bigData'),(5,'2015-03-04 10:42:53','2015-03-04 10:42:53',1,1,'Permissions','/permission'),(6,'2015-03-04 10:44:00','2015-03-04 10:44:00',1,1,'KMS','/kms');
+INSERT INTO `x_modules_master` VALUES (1,now(),now(),1,1,'Policy Manager',''),(2,now(),now(),1,1,'Users/Groups',''),(3,now(),now(),1,1,'Analytics',''),(4,now(),now(),1,1,'Audit',''),(5,now(),now(),1,1,'KMS','');
 
 DROP TABLE IF EXISTS `x_user_module_perm`;
 CREATE TABLE `x_user_module_perm` (
