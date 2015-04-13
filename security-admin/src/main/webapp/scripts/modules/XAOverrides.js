@@ -418,7 +418,7 @@
 			  	//check dirtyField for input
 			  	this.$resource.on('change', function(e) {
 			  		if(_.isUndefined(that.resourceOpts.select2Opts)){
-			  			that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
+//			  			that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
 			  		}
 			  	});
 			  	//create select2 if select2Opts is specified

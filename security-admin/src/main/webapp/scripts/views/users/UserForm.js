@@ -68,7 +68,7 @@ define(function(require){
 				},
 				password : {
 					type		: 'Password',
-					title		: localization.tt("lbl.password") +' *',
+					title		: localization.tt("lbl.newPassword") +' *',
 					validators  : ['required', {type: 'match', field: 'passwordConfirm', message: 'Passwords must match!'},
 					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :localization.tt('validationMessages.passwordError')}],
 					editorAttrs  : {'onpaste':'return false;','oncopy':'return false;','autocomplete':'off'}               

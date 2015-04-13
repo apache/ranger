@@ -223,7 +223,7 @@ define(function(require) {
 					return result.text;
 				},
 				formatNoMatches: function(result){
-					return 'No group found.';
+					return typeGroup ? 'No group found.' : 'No user found.';
 				}
 			}).on('select2-focus', XAUtil.select2Focus);
 		},

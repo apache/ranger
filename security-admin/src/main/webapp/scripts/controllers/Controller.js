@@ -29,6 +29,7 @@ define(function(require) {
 	return Backbone.Marionette.Controller.extend({
 
 		initialize: function( options ) {
+
 			console.log("initialize a Controller Controller");
 			var vTopNav 	= require('views/common/TopNav');
 			var vProfileBar = require('views/common/ProfileBar');
@@ -280,26 +281,19 @@ define(function(require) {
 		   
 		   var rangerService = new RangerService({id : serviceId});
 		   var rangerPolicyList = new RangerPolicyList();
-		   /*var rangerPolicyList = new RangerPolicyList([],{
-			   queryParams : {
-				   'serviceId' : serviceId 
-			   }
-		   });*/
 		   rangerPolicyList.url = XAUtil.getServicePoliciesURL(serviceId);
 		   
 		   rangerService.fetch({
 			  cache : false,
 			  async : false
 		   });
-		   
 		   rangerPolicyList.fetch({
 			   cache : false,
-		   }).done(function(){
-			   App.rContent.show(new view({
-				   collection : rangerPolicyList,
-				   rangerService : rangerService
-			   }));
-		   });   
+		   });
+		   App.rContent.show(new view({
+			   collection : rangerPolicyList,
+			   rangerService : rangerService
+		   }));
 	   },
 	   RangerPolicyCreateAction :function(serviceId){
     	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });

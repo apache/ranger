@@ -85,7 +85,6 @@ define(function(require){
 			this.showUsers = this.tab == 'usertab' ? true : false;
 
 			this.chgFlags = [];
-			this.showUsers = true;
 
 			if(_.isUndefined(this.groupList)){
 				this.groupList = new VXGroupList();

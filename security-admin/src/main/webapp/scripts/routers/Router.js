@@ -78,7 +78,8 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 
 			var overrideCallback = function() {
 				callbackArgs = arguments;
-				if (window._preventNavigation) {
+				var formStatus = $('.form-horizontal').find('.dirtyField').length > 0 ? true : false
+				if (window._preventNavigation && formStatus) {
 					bootbox.dialog(window._preventNavigationMsg, [{
 						"label": "Stay on this page!",
 						"class": "btn-success btn-small",
