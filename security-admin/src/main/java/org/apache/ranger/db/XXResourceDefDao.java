@@ -86,4 +86,16 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
 		}
 	}
 
+	public List<XXResourceDef> findByParentResId(Long parentId) {
+		if(parentId == null) {
+			return new ArrayList<XXResourceDef>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXResourceDef.findByParentResId", tClass)
+					.setParameter("parentId", parentId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXResourceDef>();
+		}
+	}
+
 }

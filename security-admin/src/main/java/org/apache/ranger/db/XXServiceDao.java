@@ -17,6 +17,9 @@
 
 package org.apache.ranger.db;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
@@ -51,6 +54,18 @@ public class XXServiceDao extends BaseDao<XXService> {
 			return (Long) getEntityManager().createNamedQuery("XXService.getMaxIdOfXXService").getSingleResult();
 		} catch (NoResultException e) {
 			return null;
+		}
+	}
+
+	public List<XXService> findByServiceDefId(Long serviceDefId) {
+		if (serviceDefId == null) {
+			return new ArrayList<XXService>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXService.findByServiceDefId", tClass)
+					.setParameter("serviceDefId", serviceDefId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXService>();
 		}
 	}
 

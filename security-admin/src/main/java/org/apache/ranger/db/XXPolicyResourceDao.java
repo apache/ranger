@@ -58,4 +58,16 @@ public class XXPolicyResourceDao extends BaseDao<XXPolicyResource> {
 		}
 	}
 
+	public List<XXPolicyResource> findByResDefId(Long resDefId) {
+		if (resDefId == null) {
+			return new ArrayList<XXPolicyResource>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicyResource.findByResDefId", tClass)
+					.setParameter("resDefId", resDefId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicyResource>();
+		}
+	}
+
 }

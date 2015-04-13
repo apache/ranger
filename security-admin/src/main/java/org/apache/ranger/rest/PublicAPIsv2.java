@@ -153,16 +153,16 @@ public class PublicAPIsv2 {
 	@DELETE
 	@Path("/api/servicedef/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deleteServiceDef(@PathParam("id") Long id) {
-		serviceREST.deleteServiceDef(id);
+	public void deleteServiceDef(@PathParam("id") Long id, @Context HttpServletRequest request) {
+		serviceREST.deleteServiceDef(id, request);
 	}
 
 	@DELETE
 	@Path("/api/servicedef/name/{name}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deleteServiceDefByName(@PathParam("name") String name) {
+	public void deleteServiceDefByName(@PathParam("name") String name, @Context HttpServletRequest request) {
 		RangerServiceDef serviceDef = serviceREST.getServiceDefByName(name);
-		serviceREST.deleteServiceDef(serviceDef.getId());
+		serviceREST.deleteServiceDef(serviceDef.getId(), request);
 	}
 
 	/*

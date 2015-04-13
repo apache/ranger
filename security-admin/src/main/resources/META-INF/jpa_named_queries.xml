@@ -209,6 +209,11 @@
 	<named-query name="XXPolicy.findByResourceSignature">
 		<query>select obj from XXPolicy obj where obj.resourceSignature = :resSignature</query>
 	</named-query>
+	
+	<named-query name="XXPolicy.findByServiceDefId">
+		<query>select obj from XXPolicy obj, XXService svc where 
+		obj.service = svc.id and svc.type = :serviceDefId</query>
+	</named-query>
 
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
@@ -236,9 +241,23 @@
 				and xSvc.id = xPol.service and xPol.id = :policyId and obj.name = :name order by obj.level</query>
 	</named-query>
 
+	<named-query name="XXResourceDef.findByParentResId">
+		<query>
+			select obj from XXResourceDef obj where obj.parent = :parentId
+		</query>
+	</named-query>
+
 	<!-- XXAccessTypeDefGrants -->
 	<named-query name="XXAccessTypeDefGrants.findImpliedGrantsByATDId">
 		<query>select obj.impliedGrant from XXAccessTypeDefGrants obj where obj.atdId = :atdId</query>
+	</named-query>
+
+	<named-query name="XXAccessTypeDefGrants.findByNameAndATDId">
+		<query>select obj from XXAccessTypeDefGrants obj where obj.impliedGrant = :name and obj.atdId = :atdId</query>
+	</named-query>
+	
+	<named-query name="XXAccessTypeDefGrants.findByATDId">
+		<query>select obj from XXAccessTypeDefGrants obj where obj.atdId = :atdId</query>
 	</named-query>
 
 	<!-- XXEnumElementDef -->
@@ -321,6 +340,10 @@
 	<named-query name="XXService.getMaxIdOfXXService">
 		<query>select MAX(obj.id) from XXService obj</query>
 	</named-query>
+	
+	<named-query name="XXService.findByServiceDefId">
+		<query>select obj from XXService obj where obj.type = :serviceDefId</query>
+	</named-query>
 
 	<!-- XXPolicyResource -->
 	<named-query name="XXPolicyResource.findByResDefIdAndPolicyId">
@@ -332,6 +355,10 @@
 		<query>select obj from XXPolicyResource obj where obj.policyId = :policyId</query>
 	</named-query>
 
+	<named-query name="XXPolicyResource.findByResDefId">
+		<query>select obj from XXPolicyResource obj where obj.resDefId = :resDefId</query>
+	</named-query>
+	
 	<!-- XXPolicyResourceMap -->
 	<named-query name="XXPolicyResourceMap.findByPolicyResId">
 		<query>select obj from XXPolicyResourceMap obj where obj.resourceId = :polResId order by obj.order</query>
@@ -341,7 +368,11 @@
 	<named-query name="XXPolicyItemAccess.findByPolicyItemId">
 		<query>select obj from XXPolicyItemAccess obj where obj.policyItemId = :polItemId order by obj.order</query>
 	</named-query>
-
+	
+	<named-query name="XXPolicyItemAccess.findByType">
+		<query>select obj from XXPolicyItemAccess obj where obj.type = :type</query>
+	</named-query>
+	
 	<!-- XXPolicyItemCondition -->
 	<named-query name="XXPolicyItemCondition.findByPolicyItemId">
 		<query>select obj from XXPolicyItemCondition obj where obj.policyItemId = :polItemId order by obj.order</query>
@@ -352,6 +383,10 @@
 				obj.policyItemId = :polItemId and obj.type = :polCondDefId order by obj.order</query>
 	</named-query>
 
+	<named-query name="XXPolicyItemCondition.findByPolicyConditionDefId">
+		<query>select obj from XXPolicyItemCondition obj where obj.type = :polCondDefId</query>
+	</named-query>
+	
 	<!-- XXPolicyItemGroupPerm -->
 	<named-query name="XXPolicyItemGroupPerm.findByPolicyItemId">
 		<query>select obj from XXPolicyItemGroupPerm obj where obj.policyItemId = :polItemId order by obj.order</query>

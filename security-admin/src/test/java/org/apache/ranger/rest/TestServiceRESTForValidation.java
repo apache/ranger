@@ -29,6 +29,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.logging.Log;
@@ -46,6 +47,7 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.rest.ServiceREST;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class TestServiceRESTForValidation {
 
@@ -309,7 +311,8 @@ public class TestServiceRESTForValidation {
 			_serviceRest.updateServiceDef(_serviceDef);
 			verify(_serviceDefValidator).validate(_serviceDef, Action.UPDATE);
 
-			_serviceRest.deleteServiceDef(3L);
+			HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+			_serviceRest.deleteServiceDef(3L, request);
 			verify(_serviceDefValidator).validate(3L, Action.DELETE);
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -346,7 +349,8 @@ public class TestServiceRESTForValidation {
 
 		doThrow(_exception).when(_serviceDefValidator).validate(4L, Action.DELETE);
 		try {
-			_serviceRest.deleteServiceDef(4L);
+			HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+			_serviceRest.deleteServiceDef(4L, request);
 			fail("Should have thrown exception!");
 		} catch (WebApplicationException t) {
 			verify(_serviceDefValidator).validate(4L, Action.DELETE);
@@ -385,7 +389,8 @@ public class TestServiceRESTForValidation {
 		
 		doThrow(_exception).when(_store).deleteServiceDef(5L);
 		try {
-			_serviceRest.deleteServiceDef(5L);
+			HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+			_serviceRest.deleteServiceDef(5L, request);
 			fail("Should have thrown exception!");
 		} catch (WebApplicationException e) {
 			verify(_serviceDefValidator).validate(5L, Action.DELETE);

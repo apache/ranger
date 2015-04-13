@@ -44,4 +44,16 @@ public class XXPolicyItemAccessDao extends BaseDao<XXPolicyItemAccess> {
 		}
 	}
 
+	public List<XXPolicyItemAccess> findByType(Long type) {
+		if (type == null) {
+			return new ArrayList<XXPolicyItemAccess>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicyItemAccess.findByType", tClass)
+					.setParameter("type", type).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicyItemAccess>();
+		}
+	}
+
 }

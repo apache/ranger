@@ -85,7 +85,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 	 * @param atdId
 	 *            Value to set member attribute <b> atdId</b>
 	 */
-	public void setAtdid(Long atdId) {
+	public void setAtdId(Long atdId) {
 		this.atdId = atdId;
 	}
 
@@ -94,7 +94,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 	 * 
 	 * @return Date - value of member attribute <b>atdId</b> .
 	 */
-	public Long getAtdid() {
+	public Long getAtdId() {
 		return this.atdId;
 	}
 
@@ -105,7 +105,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 	 * @param impliedGrant
 	 *            Value to set member attribute <b> impliedGrant</b>
 	 */
-	public void setImpliedgrant(String impliedGrant) {
+	public void setImpliedGrant(String impliedGrant) {
 		this.impliedGrant = impliedGrant;
 	}
 
@@ -114,7 +114,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 	 * 
 	 * @return Date - value of member attribute <b>impliedGrant</b> .
 	 */
-	public String getImpliedgrant() {
+	public String getImpliedGrant() {
 		return this.impliedGrant;
 	}
 

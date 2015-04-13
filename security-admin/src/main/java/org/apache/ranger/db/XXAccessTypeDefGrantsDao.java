@@ -47,4 +47,28 @@ public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
 		}
 	}
 
+	public XXAccessTypeDefGrants findByNameAndATDId(Long atdId, String name) {
+		if (atdId == null || name == null) {
+			return null;
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXAccessTypeDefGrants.findByNameAndATDId", tClass)
+					.setParameter("atdId", atdId).setParameter("name", name).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
+	public List<XXAccessTypeDefGrants> findByATDId(Long atdId) {
+		if (atdId == null) {
+			return new ArrayList<XXAccessTypeDefGrants>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXAccessTypeDefGrants.findByATDId", tClass)
+					.setParameter("atdId", atdId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXAccessTypeDefGrants>();
+		}
+	}
+
 }

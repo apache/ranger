@@ -201,7 +201,7 @@ public class ServiceREST {
 	@Path("/definitions/{id}")
 	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deleteServiceDef(@PathParam("id") Long id) {
+	public void deleteServiceDef(@PathParam("id") Long id, @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deleteServiceDef(" + id + ")");
 		}
@@ -209,7 +209,14 @@ public class ServiceREST {
 		try {
 			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 			validator.validate(id, Action.DELETE);
-			svcStore.deleteServiceDef(id);
+			
+			String forceDeleteStr = request.getParameter("forceDelete");
+			boolean forceDelete = false;
+			if(!StringUtils.isEmpty(forceDeleteStr) && forceDeleteStr.equalsIgnoreCase("true")) {
+				forceDelete = true;
+			}
+			
+			svcStore.deleteServiceDef(id, forceDelete);
 		} catch(Exception excp) {
 			LOG.error("deleteServiceDef(" + id + ") failed", excp);
 

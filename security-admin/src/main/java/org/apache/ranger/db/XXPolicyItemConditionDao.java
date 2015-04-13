@@ -59,4 +59,16 @@ public class XXPolicyItemConditionDao extends BaseDao<XXPolicyItemCondition> {
 		}
 	}
 
+	public List<XXPolicyItemCondition> findByPolicyConditionDefId(Long polCondDefId) {
+		if (polCondDefId == null) {
+			return new ArrayList<XXPolicyItemCondition>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicyItemCondition.findByPolicyConditionDefId", tClass)
+					.setParameter("polCondDefId", polCondDefId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicyItemCondition>();
+		}
+	}
+
 }
