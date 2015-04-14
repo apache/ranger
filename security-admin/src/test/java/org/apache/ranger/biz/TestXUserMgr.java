@@ -1066,7 +1066,7 @@ public class TestXUserMgr {
 		Mockito.verify(xGroupPermissionService).deleteResource(1L);
 	}
 	
-	@Test
+	/*@Test
 	public void test43checkPermissionRoleByGivenUrls() {
 		XXModuleDefDao value = Mockito.mock(XXModuleDefDao.class);
 		XXPortalUserRoleDao xPortalUserRoleDao = Mockito
@@ -1097,7 +1097,7 @@ public class TestXUserMgr {
 		Mockito.verify(value).findModuleURLOfPemittedModules(null);
 		Mockito.verify(daoManager).getXXPortalUserRole();
 		Mockito.verify(xPortalUserRoleDao).findByUserId(null);
-	}
+	}*/
 	
 	@Test
 	public void test44getGroupsForUser() {

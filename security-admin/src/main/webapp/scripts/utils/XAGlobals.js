@@ -64,13 +64,14 @@ define(function(require){
 	XAGlobals.hardcoded.HBaseAssetId = 2;
 	XAGlobals.hardcoded.HiveAssetId = 3;
 	XAGlobals.DenyControllerActions = ['userManagerAction','userCreateAction','userEditAction','groupCreateAction',
-	                                   'groupEditAction','auditReportAction','loginSessionDetail','serviceCreateAction','serviceEditAction'];
+	                                   'groupEditAction','auditReportAction','loginSessionDetail','serviceCreateAction','serviceEditAction','modulePermissionsAction','modulePermissionEditAction'];
 	
 	XAGlobals.ListOfModuleActions = {
 									  'Policy Manager':['serviceManagerAction','serviceCreateAction','serviceEditAction', 'policyManageAction','RangerPolicyCreateAction','RangerPolicyEditAction'],
 					  'Users/Groups' : ['userManagerAction','userCreateAction','userEditAction','groupCreateAction','groupEditAction'],
 					  'Analytics' : ['userAccessReportAction'],
-					  'Audit' : ['auditReportAction','loginSessionDetail']
+					  'Audit' : ['auditReportAction','loginSessionDetail'],
+					  'Permissions' : ['modulePermissionsAction','modulePermissionEditAction']
 									};
 	return XAGlobals;
 });

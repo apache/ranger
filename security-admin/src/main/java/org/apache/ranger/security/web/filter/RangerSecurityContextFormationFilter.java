@@ -130,7 +130,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 				context.setUserSession(userSession);
 
-				xUserMgr.checkPermissionRoleByGivenUrls(httpRequest.getRequestURL().toString(),httpMethod);
+//				xUserMgr.checkPermissionRoleByGivenUrls(httpRequest.getRequestURL().toString(),httpMethod);
 			}
 			chain.doFilter(request, response);
 

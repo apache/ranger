@@ -391,7 +391,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		List<T> resultList = getDao().executeQueryInSecurityContext(tEntityClass, query);		
 
 		if (vList != null) {
-			vList.setResultSize(query.getResultList().size());
+			vList.setResultSize(resultList.size());
 			vList.setPageSize(query.getMaxResults());
 			vList.setSortBy(searchCriteria.getSortBy());
 			vList.setSortType(searchCriteria.getSortType());

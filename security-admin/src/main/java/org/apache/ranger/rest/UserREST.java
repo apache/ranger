@@ -32,6 +32,7 @@ import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.UserMgr;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConfigUtil;
@@ -86,6 +87,9 @@ public class UserREST {
 
 	@Autowired
 	RangerRestUtil msRestUtil;
+	
+	@Autowired
+	XUserMgr xUserMgr;
 
 	/**
 	 * Implements the traditional search functionalities for UserProfile
@@ -183,8 +187,14 @@ public class UserREST {
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
+		VXPortalUser vxPortalUser;
 		logger.info("create:" + userProfile.getEmailAddress());
-		return userManager.createDefaultAccountUser(userProfile);
+		vxPortalUser=userManager.createDefaultAccountUser(userProfile);
+		if(vxPortalUser!=null)
+		{
+			xUserMgr.assignPermissionToUser(vxPortalUser, true);
+		}
+		 return vxPortalUser;
 	}
 
 

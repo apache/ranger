@@ -1099,8 +1099,6 @@ public class UserMgr {
 
 			}
 		}
-		
-		xUserMgr.assignPermissionToUser(userProfile,true);
 
 		XXPortalUser xXPortalUser = null;
 		String loginId = userProfile.getLoginId();
