@@ -271,6 +271,7 @@ then
                              -dname "cn=unixauthservice,ou=authenticator,o=mycompany,c=US" 
 
 	chmod o-rwx conf/cert/unixauthservice.jks
+	chgrp ${unix_group} conf/cert/unixauthservice.jks
 
 fi
 
