@@ -426,6 +426,11 @@
 		<artifactId>xz</artifactId>
 		<version>${xz.version}</version>
 	</dependency>		  
+	<dependency>
+	  	<groupId>org.apache.ranger</groupId>
+    		<artifactId>credentialbuilder</artifactId>
+	    	<version>${project.version}</version>  	
+     </dependency>
   </dependencies>
   <build>
   <pluginManagement>

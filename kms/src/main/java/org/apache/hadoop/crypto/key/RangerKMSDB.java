@@ -19,6 +19,8 @@ package org.apache.hadoop.crypto.key;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.Iterator;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -37,17 +39,25 @@ public class RangerKMSDB {
 	
 	private static Map<String, String> DB_PROPERTIES = null;
 	
-	private static final String PROPERTY_PREFIX = "ranger.db.ks.";
-	private static final String DB_DIALECT = "javax.persistence.jdbc.dialect";
-	private static final String DB_DRIVER = "javax.persistence.jdbc.driver";
-	private static final String DB_URL = "javax.persistence.jdbc.url";
-	private static final String DB_USER = "javax.persistence.jdbc.user";
-	private static final String DB_PASSWORD = "javax.persistence.jdbc.password";
+	private static final String PROPERTY_PREFIX = "ranger.ks.";
+	private static final String DB_DIALECT = "jpa.jdbc.dialect";
+	private static final String DB_DRIVER = "jpa.jdbc.driver";
+	private static final String DB_URL = "jpa.jdbc.url";
+	private static final String DB_USER = "jpa.jdbc.user";
+	private static final String DB_PASSWORD = "jpa.jdbc.password";
+
+    private static final String JPA_DB_DIALECT = "javax.persistence.jdbc.dialect";
+    private static final String JPA_DB_DRIVER = "javax.persistence.jdbc.driver";
+    private static final String JPA_DB_URL = "javax.persistence.jdbc.url";
+    private static final String JPA_DB_USER = "javax.persistence.jdbc.user";
+    private static final String JPA_DB_PASSWORD = "javax.persistence.jdbc.password";
+
 	
 	private final Configuration conf;
 	
 	public RangerKMSDB(){
 		conf = new Configuration();
+		//TODO: need to load kms db config file here ...
 	}
 	
 	public RangerKMSDB(Configuration conf){		
@@ -61,20 +71,29 @@ public class RangerKMSDB {
 
 	private void initDBConnectivity(){
 		try {
+			
 			DB_PROPERTIES = new HashMap<String, String>();
-			DB_PROPERTIES.put(DB_DIALECT, conf.get(PROPERTY_PREFIX+DB_DIALECT));
-			DB_PROPERTIES.put(DB_DRIVER, conf.get(PROPERTY_PREFIX+DB_DRIVER));
-			DB_PROPERTIES.put(DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
-			DB_PROPERTIES.put(DB_USER, conf.get(PROPERTY_PREFIX+DB_USER));
-			DB_PROPERTIES.put(DB_PASSWORD, conf.get(PROPERTY_PREFIX+DB_PASSWORD));
+			DB_PROPERTIES.put(JPA_DB_DIALECT, conf.get(PROPERTY_PREFIX+DB_DIALECT));
+			DB_PROPERTIES.put(JPA_DB_DRIVER, conf.get(PROPERTY_PREFIX+DB_DRIVER));
+			DB_PROPERTIES.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
+			DB_PROPERTIES.put(JPA_DB_USER, conf.get(PROPERTY_PREFIX+DB_USER));
+			DB_PROPERTIES.put(JPA_DB_PASSWORD, conf.get(PROPERTY_PREFIX+DB_PASSWORD));
+
+			//DB_PROPERTIES.list(System.out) ;
+
+			Set keys = DB_PROPERTIES.keySet();
+
+   			for (Iterator i = keys.iterator(); i.hasNext();) {
+       				String key = (String) i.next();
+       				String value = (String) DB_PROPERTIES.get(key);
+       				System.out.println(key + " = " + value);
+   			}
 				
 			entityManagerFactory = Persistence.createEntityManagerFactory("persistence_ranger_server", DB_PROPERTIES);
-
-	   	    daoManager = new DaoManager();
-	   	    daoManager.setEntityManagerFactory(entityManagerFactory);
-
-	   	    daoManager.getEntityManager(); // this forces the connection to be made to DB
-	   	    logger.info("Connected to DB : "+isDbConnected());	   	    
+	   	    	daoManager = new DaoManager();
+	   	    	daoManager.setEntityManagerFactory(entityManagerFactory);
+	   	    	daoManager.getEntityManager(); // this forces the connection to be made to DB
+	   	    	logger.info("Connected to DB : "+isDbConnected());	   	    
 		} catch(Exception excp) {
 			excp.printStackTrace();
 		}

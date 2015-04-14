@@ -17,19 +17,33 @@ import re
 import sys
 import errno
 import shlex
+import platform
 import logging
 import subprocess
 import fileinput
 from os.path import basename
+from subprocess import Popen,PIPE
 from datetime import date
-from xml.etree import ElementTree as ET
+import datetime
+from time import gmtime, strftime
 globalDict = {}
 
+os_name = platform.system()
+os_name = os_name.upper()
+
+if os_name == "LINUX":
+	RANGER_KMS_HOME = os.getcwd()
+elif os_name == "WINDOWS":
+	RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+
 def check_output(query):
-	p = subprocess.Popen(query, stdout=subprocess.PIPE)
+	if os_name == "LINUX":
+		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
+	elif os_name == "WINDOWS":
+		p = subprocess.Popen(query, stdout=subprocess.PIPE, shell=True)
 	output = p.communicate ()[0]
 	return output
-	
+
 def log(msg,type):
 	if type == 'info':
 		logging.info(" %s",msg)
@@ -39,214 +53,422 @@ def log(msg,type):
 		logging.warning(" %s",msg)
 	if type == 'exception':
 		logging.exception(" %s",msg)
+	if type == 'error':
+		logging.error(" %s",msg)
 
 def populate_global_dict():
-    global globalDict
-    os.chdir("..")
-    read_config_file = open(os.path.join(os.getcwd(),'ews/webapp/config/dbks-site.xml'))
-    dbks_site_properties = import_properties_from_xml(read_config_file, globalDict)
+	global globalDict
+	if os_name == "LINUX":
+		read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
+	elif os_name == "WINDOWS":
+		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
+		library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
+
+	for each_line in read_config_file.read().split('\n') :
+		if len(each_line) == 0 : continue
+		if re.search('=', each_line):
+			key , value = each_line.strip().split("=",1)
+			key = key.strip()
+			if 'PASSWORD' in key:
+				jceks_file_path = os.path.join(os.getenv('RANGER_HOME'), 'jceks','ranger_db.jceks')
+				statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
+				if statuscode == 1:
+					value = ''
+			value = value.strip()
+			globalDict[key] = value
+
+def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
+    finalLibPath = libpath.replace('\\','/').replace('//','/')
+    finalFilePath = 'jceks://file/'+filepath.replace('\\','/').replace('//','/')
+    if getorcreate == 'create':
+        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
+        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, error = p.communicate()
+        statuscode = p.returncode
+        return statuscode
+    elif getorcreate == 'get':
+        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
+        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, error = p.communicate()
+        statuscode = p.returncode
+        return statuscode, output
+    else:
+        print 'proper command not received for input need get or create'
 
 class BaseDB(object):
 
-	def init_logfiles(self):
-		FORMAT = '%(asctime)-15s %(message)s'
-		logging.basicConfig(format=FORMAT, level=logging.DEBUG)	
+	def check_connection(self, db_name, db_user, db_password):
+		log("[I] ---------- Verifying DB connection ----------", "info")
 
-	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password):	
-		log("---------- Creating User ----------", "info")
+	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
+		log("[I] ---------- Verifying table ----------", "info")
 
-	def check_table(self, db_name, root_user, db_root_password, TABLE_NAME):
-		log("---------- Verifying table ----------", "info")
-	def import_file_to_db(self, root_user, db_name, db_user, db_password, db_root_password, file_name):	
-		log("---------- Importing db schema ----------", "info")
-	
+	def import_db_file(self, db_name, db_user, db_password, file_name):
+		log("[I] ---------- Importing db schema ----------", "info")
+
+
 class MysqlConf(BaseDB):
 	# Constructor
 	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
-		BaseDB.init_logfiles(self)
 
 	def get_jisql_cmd(self, user, password ,db_name):
-		#TODO: User array for forming command
-		jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,self.host,db_name,user,password)
+		#path = os.getcwd()
+		path = RANGER_KMS_HOME
+		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+		if os_name == "LINUX":
+			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,self.host,db_name,user,password)
+		elif os_name == "WINDOWS":
+			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
 		return jisql_cmd
 
-		
-	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password):
-		hosts_arr =["%", "localhost"]
-		for host in hosts_arr:
-			get_cmd = self.get_jisql_cmd(root_user, db_root_password ,'mysql')
-			query = get_cmd + " -query \"select user from mysql.user where user='%s' and host='%s';\"" %(db_user,host)
-			output = check_output(shlex.split(query))
-			if output.strip(db_user + " |"):
-				log( "\nMYSQL User: " + db_user + " already exists!", "debug")
-			else:
-				log("User does not exists", "info")
-				if db_password == "":
-					log ("Creating MySQL user: "+ db_user +" with DB password blank\n", "info")
-					query = get_cmd + " -query \"create user '%s'@'%s';\"" %(db_user, host)
-					ret = subprocess.check_call(shlex.split(query))
-					if ret == 0:
-						query = get_cmd + " -query \"select user from mysql.user where user='%s' and host='%s';\"" %(db_user,host)
-	       	               			output = check_output(shlex.split(query))
-						if output.strip(db_user + " |"):
-							log("Mysql user " + db_user +" created","info")	
-						else:
-							log("Creating Mysql user " + db_user +" Failed","info")	
-							sys.exit(1)
-				else:
-					log ("Creating MySQL user: "+ db_user +" with DB password\n", "info")
-					query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, db_password)
-					ret = subprocess.check_call(shlex.split(query))
-					if ret == 0:
-						log("Mysql user " + db_user +" created","info")	
-					else:
-						log("Creating Mysql user " + db_user +" Failed","info")	
-						sys.exit(1)
-
-        def verify_db(self, root_user, db_root_password, db_name):
-                log("\nVerifying Database: " + db_name + "\n", "debug")
-                get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
-                query = get_cmd + " -query \"show databases like '%s';\"" %(db_name)
-                output = check_output(shlex.split(query))
-                if output.strip(db_name + " |"):
-                        return True
-                else:
-                        return False
+	def check_connection(self, db_name, db_user, db_password):
+		log("[I] Checking connection..", "info")
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -query \"SELECT version();\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT version();\" -c ;"
+		output = check_output(query)
+		if output.strip('Production  |'):
+			log("[I] Checking connection passed.", "info")
+			return True
+		else:
+			log("[E] Can't establish connection!! Exiting.." ,"error")
+			log("[I] Please run DB setup first or contact Administrator.." ,"info")
+			sys.exit(1)
 
 
-        def import_file_to_db(self, root_user, db_name, db_user, db_password, db_root_password, file_name):
-                log ("\nImporting db schema to Database: " + db_name,"debug");
-                if self.verify_db(root_user, db_root_password, db_name):
-                        log("\nDatabase: "+db_name + " already exists. Ignoring import_db\n","info")
-                else:
-                        log("\nDatabase does not exist. Creating database : " + db_name,"info")
-	                get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
-                        query = get_cmd + " -query \"create database %s;\"" %(db_name)
-			ret = subprocess.check_call(shlex.split(query))
-			if ret != 0:
-				log("\nDatabase creation failed!!\n","info")
-				sys.exit(1)
-        		else:
-				if self.verify_db(root_user, db_root_password, db_name):
-           				log("Creating database: " + db_name + " succeeded", "info")
-					self.import_db_file(db_name, root_user , db_user, db_password, db_root_password, file_name)
-				else:
-					log("\nDatabase creation failed!!\n","info")
-					sys.exit(1)
-
-
-	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password , is_revoke):
-		hosts_arr =["%", "localhost"]
-		if is_revoke:
-			for host in hosts_arr:
-				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
-				query = get_cmd + " -query \"REVOKE ALL PRIVILEGES,GRANT OPTION FROM '%s'@'%s';\"" %(db_user, host)
-				ret = subprocess.check_call(shlex.split(query))
-				if ret == 0:
-					query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
-					ret = subprocess.check_call(shlex.split(query))
-					if ret != 0:
-						sys.exit(1)
-				else:
-					sys.exit(1)
-	
-		for host in hosts_arr:
-			log ("---------------GRANTING PRIVILEGES TO user '"+db_user+"'@'"+host+"' on db '"+db_name+"'-------------" , "info")
-			get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
-			query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\"" %(db_name,db_user, host)
-			ret = subprocess.check_call(shlex.split(query))
-			if ret == 0:
-				log ("---------------FLUSH PRIVILEGES -------------" , "info")
-				query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
-				ret = subprocess.check_call(shlex.split(query))
-				if ret == 0:
-					log("Privileges granted to '" + db_user + "' on '"+db_name+"'\n", "info")
-				else:
-					log("Granting privileges to '" +db_user+"' FAILED on '"+db_name+"'\n", "info")
-					sys.exit(1)
-			else:
-				log("\nGranting privileges to '" +db_user+"' FAILED on '"+db_name+"'\n", "info")
-				sys.exit(1)
-
-	def import_db_file(self, db_name, root_user, db_user, db_password, db_root_password, file_name):
+	def import_db_file(self, db_name, db_user, db_password, file_name):
 		name = basename(file_name)
 		if os.path.isfile(file_name):
-			log("Importing db schema to database : " + db_name + " from file: " + name,"info")
-			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
-			query = get_cmd + " -input %s" %file_name
-			ret = subprocess.check_call(shlex.split(query))
+			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
+			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+			if os_name == "LINUX":
+				query = get_cmd + " -input %s" %file_name
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -input %s -c ;" %file_name
+				ret = subprocess.call(query)
 			if ret == 0:
-				log(name + " DB schema imported successfully\n","info")
+				log("[I] "+name + " DB schema imported successfully","info")
 			else:
-				log(name + " DB Schema import failed!\n","info")
+				log("[E] "+name + " DB schema import failed!","error")
 				sys.exit(1)
 		else:
-		    log("\nDB Schema file " + name+ " not found\n","exception")
-		    sys.exit(1)
+			log("[E] DB schema file " + name+ " not found","error")
+			sys.exit(1)
 
-	def check_table(self, db_name, root_user, db_root_password, TABLE_NAME):
-                if self.verify_db(root_user, db_root_password, db_name):
-			log("Verifying table " + TABLE_NAME +" in database " + db_name, "debug")
 
-			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
+	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
 			query = get_cmd + " -query \"show tables like '%s';\"" %(TABLE_NAME)
-			output = check_output(shlex.split(query))	
-			if output.strip(TABLE_NAME + " |"):
-				log("Table " + TABLE_NAME +" already exists in  database " + db_name + "\n","info")
-				return True 
-			else:
-				log("Table " + TABLE_NAME +" does not exist in database " + db_name + "\n","info")
-				return False
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"show tables like '%s';\" -c ;" %(TABLE_NAME)
+		output = check_output(query)
+		if output.strip(TABLE_NAME + " |"):
+			log("[I] Table " + TABLE_NAME +" already exists in database '" + db_name + "'","info")
+			return True
 		else:
-			log("Database " + db_name +" does not exist\n","info")
+			log("[I] Table " + TABLE_NAME +" does not exist in database " + db_name + "","info")
 			return False
 
-def import_properties_from_xml(xml_path, properties_from_xml=None):
-	xml = ET.parse(xml_path)
-	root = xml.getroot()
-	if properties_from_xml is None:
-		properties_from_xml = dict()
-	for child in root.findall('property'):
-		name = child.find("name").text.strip()
-		value = child.find("value").text.strip() if child.find("value").text is not None else ""
-		properties_from_xml[name] = value
-	return properties_from_xml
+
+class OracleConf(BaseDB):
+	# Constructor
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
+		self.host = host 
+		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_BIN = JAVA_BIN
+
+	def get_jisql_cmd(self, user, password):
+		#path = os.getcwd()
+		path = RANGER_KMS_HOME
+		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+		if os_name == "LINUX":
+			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, user, password)
+		elif os_name == "WINDOWS":
+			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, user, password)
+		return jisql_cmd
 
 
-def main():
+	def check_connection(self, db_name, db_user, db_password):
+		log("[I] Checking connection", "info")
+		get_cmd = self.get_jisql_cmd(db_user, db_password)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"select * from v$version;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select * from v$version;\" -c ;"
+		output = check_output(query)
+		if output.strip('Production  |'):
+			log("[I] Connection success", "info")
+			return True
+		else:
+			log("[E] Can't establish connection!", "error")
+			sys.exit(1)
+
+
+	def import_db_file(self, db_name, db_user, db_password, file_name):
+		name = basename(file_name)
+		if os.path.isfile(file_name):
+			log("[I] Importing script " + db_name + " from file: " + name,"info")
+			get_cmd = self.get_jisql_cmd(db_user, db_password)
+			if os_name == "LINUX":
+				query = get_cmd + " -input %s -c \;" %file_name
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -input %s -c ;" %file_name
+				ret = subprocess.call(query)
+			if ret == 0:
+				log("[I] "+name + " imported successfully","info")
+			else:
+				log("[E] "+name + " import failed!","error")
+				sys.exit(1)
+		else:
+			log("[E] Import " +name + " sql file not found","error")
+			sys.exit(1)
+
+
+	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
+		get_cmd = self.get_jisql_cmd(db_user ,db_password)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query 'select default_tablespace from user_users;'"
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select default_tablespace from user_users;\" -c ;"
+		output = check_output(query).strip()
+		output = output.strip(' |')
+		db_name = db_name.upper()
+		if output == db_name:
+			log("[I] User name " + db_user + " and tablespace " + db_name + " already exists.","info")
+			log("[I] Verifying table " + TABLE_NAME +" in tablespace " + db_name, "info")
+			get_cmd = self.get_jisql_cmd(db_user, db_password)
+			if os_name == "LINUX":
+				query = get_cmd + " -c \; -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\"" %(db_name ,TABLE_NAME)
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\" -c ;" %(db_name ,TABLE_NAME)
+			output = check_output(query)
+			if output.strip(TABLE_NAME.upper() + ' |'):
+				log("[I] Table " + TABLE_NAME +" already exists in tablespace " + db_name + "","info")
+				return True
+			else:
+				log("[I] Table " + TABLE_NAME +" does not exist in tablespace " + db_name + "","info")
+				return False
+		else:
+			log("[E] "+db_user + " user already assigned to some other tablespace , provide different DB name.","error")
+			sys.exit(1)
+
+
+
+class PostgresConf(BaseDB):
+	# Constructor
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
+		self.host = host
+		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_BIN = JAVA_BIN
+
+	def get_jisql_cmd(self, user, password, db_name):
+		#TODO: User array for forming command
+		#path = os.getcwd()
+		path = RANGER_KMS_HOME
+		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+		if os_name == "LINUX":
+			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, db_name, user, password)
+		elif os_name == "WINDOWS":
+			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
+		return jisql_cmd
+
+	def check_connection(self, db_name, db_user, db_password):
+		log("[I] Checking connection", "info")
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -query \"SELECT 1;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT 1;\" -c ;"
+		output = check_output(query)
+		if output.strip('1 |'):
+			log("[I] connection success", "info")
+			return True
+		else:
+			log("[E] Can't establish connection", "error")
+			sys.exit(1)
+
+	def import_db_file(self, db_name, db_user, db_password, file_name):
+		name = basename(file_name)
+		if os.path.isfile(file_name):
+			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
+			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+			if os_name == "LINUX":
+				query = get_cmd + " -input %s" %file_name
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -input %s -c ;" %file_name
+				ret = subprocess.call(query)
+			if ret == 0:
+				log("[I] "+name + " DB schema imported successfully","info")
+			else:
+				log("[E] "+name + " DB schema import failed!","error")
+				sys.exit(1)
+		else:
+			log("[E] DB schema file " + name+ " not found","error")
+			sys.exit(1)
+
+
+	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
+		log("[I] Verifying table " + TABLE_NAME +" in database " + db_name, "info")
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -query \"select * from (select table_name from information_schema.tables where table_catalog='%s' and table_name = '%s') as temp;\"" %(db_name , TABLE_NAME)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select * from (select table_name from information_schema.tables where table_catalog='%s' and table_name = '%s') as temp;\" -c ;" %(db_name , TABLE_NAME)
+		output = check_output(query)
+		if output.strip(TABLE_NAME +" |"):
+			log("[I] Table " + TABLE_NAME +" already exists in database " + db_name, "info")
+			return True
+		else:
+			log("[I] Table " + TABLE_NAME +" does not exist in database " + db_name, "info")
+			return False
+
+
+class SqlServerConf(BaseDB):
+	# Constructor
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
+		self.host = host
+		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_BIN = JAVA_BIN
+
+	def get_jisql_cmd(self, user, password, db_name):
+		#TODO: User array for forming command
+		#path = os.getcwd()
+		path = RANGER_KMS_HOME
+		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+		if os_name == "LINUX":
+			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, user, password, self.host,db_name)
+		elif os_name == "WINDOWS":
+			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
+		return jisql_cmd
+
+	def check_connection(self, db_name, db_user, db_password):
+		log("[I] Checking connection", "info")
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"SELECT 1;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT 1;\" -c ;"
+		output = check_output(query)
+		if output.strip('1 |'):
+			log("[I] Connection success", "info")
+			return True
+		else:
+			log("[E] Can't establish connection", "error")
+			sys.exit(1)
+
+	def import_db_file(self, db_name, db_user, db_password, file_name):
+		name = basename(file_name)
+		if os.path.isfile(file_name):
+			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
+			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+			if os_name == "LINUX":
+				query = get_cmd + " -input %s" %file_name
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -input %s" %file_name
+				ret = subprocess.call(query)
+			if ret == 0:
+				log("[I] "+name + " DB schema imported successfully","info")
+			else:
+				log("[E] "+name + " DB Schema import failed!","error")
+				sys.exit(1)
+		else:
+			log("[I] DB Schema file " + name+ " not found","error")
+			sys.exit(1)
+
+	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"SELECT TABLE_NAME FROM information_schema.tables where table_name = '%s';\"" %(TABLE_NAME)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT TABLE_NAME FROM information_schema.tables where table_name = '%s';\" -c ;" %(TABLE_NAME)
+		output = check_output(query)
+		if output.strip(TABLE_NAME + " |"):
+			log("[I] Table '" + TABLE_NAME + "' already exists in  database '" + db_name + "'","info")
+			return True
+		else:
+			log("[I] Table '" + TABLE_NAME + "' does not exist in database '" + db_name + "'","info")
+			return False
+
+
+def main(argv):
 	populate_global_dict()
-	JAVA_BIN=globalDict['ranger.db.ks.java.bin']
-	XA_DB_FLAVOR=globalDict['ranger.db.ks.database.flavor']
-	XA_DB_FLAVOR.upper()
-	
-	xa_db_host = globalDict['ranger.db.host']
 
-	mysql_core_file = globalDict['ranger.db.ks.core.file']
+	FORMAT = '%(asctime)-15s %(message)s'
+	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
-	db_name = globalDict['ranger.db.ks.name']
-	db_user = globalDict['ranger.db.ks.javax.persistence.jdbc.user']
-	db_password = globalDict['ranger.db.ks.javax.persistence.jdbc.password']
-	xa_db_root_user = globalDict['ranger.db.root.user']
-	xa_db_root_password = globalDict['ranger.db.root.password']
+	JAVA_BIN = globalDict['JAVA_BIN']
+	XA_DB_FLAVOR = globalDict['DB_FLAVOR']
+	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
+
+	log("[I] DB FLAVOR :" + XA_DB_FLAVOR ,"info")
+	xa_db_host = globalDict['db_host']
+
+	mysql_core_file = globalDict['mysql_core_file']
+	mysql_patches = os.path.join('db','mysql','patches')
+
+	oracle_core_file = globalDict['oracle_core_file'] 
+	oracle_patches = os.path.join('db','oracle','patches')
+
+	postgres_core_file = globalDict['postgres_core_file']
+	postgres_patches = os.path.join('db','postgres','patches')
+
+	sqlserver_core_file = globalDict['sqlserver_core_file']
+	sqlserver_patches = os.path.join('db','sqlserver','patches')
+
+	db_name = globalDict['db_name']
+	db_user = globalDict['db_user']
+	db_password = globalDict['db_password']
+
+	x_db_version = 'x_db_version_h'
+	x_user = 'x_portal_user'
+
 
 	if XA_DB_FLAVOR == "MYSQL":
-		MYSQL_CONNECTOR_JAR=globalDict['ranger.db.ks.sql.connector.jar']		
-		xa_sqlObj = MysqlConf(xa_db_host,MYSQL_CONNECTOR_JAR,JAVA_BIN)
-		xa_db_core_file_script = os.path.join(os.getcwd(),'scripts')
-                xa_db_core_file = os.path.join(xa_db_core_file_script,mysql_core_file)
+		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME , mysql_core_file)
+		
+	elif XA_DB_FLAVOR == "ORACLE":
+		ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
+		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME ,oracle_core_file)
+
+	elif XA_DB_FLAVOR == "POSTGRES":
+		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME , postgres_core_file)
+
+	elif XA_DB_FLAVOR == "SQLSERVER":
+		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME , sqlserver_core_file)
 	else:
-		log ("--------- NO SUCH FLAVOUR ---------", "info")
+		log("[E] --------- NO SUCH SUPPORTED DB FLAVOUR!! ---------", "error")
 		sys.exit(1)
 
-	# Methods Begin
-	log("\n--------- Creating kms user --------- \n","info")
-	xa_sqlObj.create_rangerdb_user(xa_db_root_user, db_user, db_password, xa_db_root_password)
-	log("\n--------- Importing DB Core Database ---------\n","info")	
-	xa_sqlObj.import_file_to_db(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, xa_db_core_file)
-	xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, True)
+#	'''
 
-main()
+	log("[I] --------- Verifying Ranger DB connection ---------","info")
+	xa_sqlObj.check_connection(db_name, db_user, db_password)
 
+	if len(argv)==1:
+
+		log("[I] --------- Verifying Ranger DB tables ---------","info")
+		if xa_sqlObj.check_table(db_name, db_user, db_password, x_user):
+			pass
+		else:
+			log("[I] --------- Importing Ranger Core DB Schema ---------","info")
+			xa_sqlObj.import_db_file(db_name, db_user, db_password, xa_db_core_file)
+
+
+main(sys.argv)

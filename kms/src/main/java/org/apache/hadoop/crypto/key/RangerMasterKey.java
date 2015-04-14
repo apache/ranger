@@ -50,8 +50,6 @@ public class RangerMasterKey {
 	private static final String PBE_ALGO = "PBEWithMD5AndTripleDES";
 	private static final String MD_ALGO = "MD5";
 	
-	public static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
-	
 	private DaoManager daoManager;
 	
 	public RangerMasterKey() {		

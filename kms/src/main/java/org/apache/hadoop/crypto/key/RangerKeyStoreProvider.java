@@ -43,15 +43,24 @@ import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.KeyProviderFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.apache.hadoop.fs.Path;
+import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
+import org.apache.log4j.Logger;
 
 public class RangerKeyStoreProvider extends KeyProvider{
+	
+	static final Logger logger = Logger.getLogger(RangerKeyStoreProvider.class);
 	
 	public static final String SCHEME_NAME = "dbks";
 	public static final String KMS_CONFIG_DIR = "kms.config.dir";
 	public static final String DBKS_SITE_XML = "dbks-site.xml";
 	public static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
 	private static final String KEY_METADATA = "KeyMetadata";
+	private static final String CREDENTIAL_PATH = "ranger.ks.jpa.jdbc.credential.provider.path";
+	private static final String MK_CREDENTIAL_ALIAS = "ranger.ks.masterkey.credential.alias";
+	private static final String DB_CREDENTIAL_ALIAS = "ranger.ks.jpa.jdbc.credential.alias";
+	private static final String DB_PASSWORD = "ranger.ks.jpa.jdbc.password";
+	
 	private final RangerKeyStore dbStore;
 	private char[] masterKey;
 	private boolean changed = false;
@@ -61,11 +70,17 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	public RangerKeyStoreProvider(Configuration conf) throws Throwable {
 		super(conf);
 		conf = getDBKSConf();
+		getFromJceks(conf,CREDENTIAL_PATH, MK_CREDENTIAL_ALIAS, ENCRYPTION_KEY);
+		getFromJceks(conf,CREDENTIAL_PATH, DB_CREDENTIAL_ALIAS, DB_PASSWORD);
 		RangerKMSDB rangerKMSDB = new RangerKMSDB(conf);
 		daoManager = rangerKMSDB.getDaoManager();
 		RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);		
-		dbStore = new RangerKeyStore(daoManager);
+		dbStore = new RangerKeyStore(daoManager);		
 		String password = conf.get(ENCRYPTION_KEY);
+		System.out.println("RKSP Password = "+password);
+		if(password == null || password.trim().equals("") || password.trim().equals("_") || password.trim().equals("crypted")){
+			throw new IOException("Master Key Jceks does not exists");
+		}
 		rangerMasterKey.generateMasterKey(password);		
 		//code to retrieve rangerMasterKey password		
 		masterKey = rangerMasterKey.getMasterKey(password).toCharArray();
@@ -299,6 +314,28 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	    int nextVersion = meta.addVersion();
 	    String versionName = buildVersionName(name, nextVersion);
 	    return innerSetKeyVersion(name, versionName, material, meta.getCipher(), meta.getBitLength(), meta.getDescription(), meta.getVersions(), meta.getAttributes());
+	}
+	
+	private void getFromJceks(Configuration conf, String path, String alias, String key){
+		//update credential from keystore		
+		System.out.println("getFromJCEKS path = "+path+" alias = "+alias+" key = "+key);
+		if(conf!=null){	
+			String pathValue=conf.get(path);
+			System.out.println("path Value = "+pathValue);
+			String aliasValue=conf.get(alias);
+			System.out.println("alias Value = "+aliasValue);
+			if(pathValue!=null && aliasValue!=null){
+				String xaDBPassword=CredentialReader.getDecryptedString(pathValue.trim(),aliasValue.trim());		
+				System.out.println("xaDBPassword = "+xaDBPassword);
+				if(xaDBPassword!=null&& !xaDBPassword.trim().isEmpty() && 
+						!xaDBPassword.trim().equalsIgnoreCase("none")){
+					System.out.println("inside key = "+key+" xaDBaswword "+xaDBPassword);
+					conf.set(key, xaDBPassword);
+				}else{
+					logger.info("Credential keystore password not applied for KMS; clear text password shall be applicable");				
+				}
+			}
+		}
 	}
 	
 	/**

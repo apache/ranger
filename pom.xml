@@ -75,13 +75,13 @@
 
   <modules>
   <module>jisql</module>
-  <module>kms</module>
   <module>agents-audit</module>
   <module>agents-common</module>
   <module>agents-cred</module>
   <module>agents-installer</module>
   <module>credentialbuilder</module>
   <module>embeddedwebserver</module>
+  <module>kms</module>
   <module>hbase-agent</module>
   <module>hdfs-agent</module>
   <module>hive-agent</module>
@@ -96,7 +96,7 @@
   <module>unixauthclient</module>
   <module>unixauthservice</module>
   <module>ranger-util</module>
-  <module>plugin-kms</module>
+  <!--<module>plugin-kms</module>-->
   </modules>
   <properties>
         <javac.source.version>1.7</javac.source.version>
@@ -374,7 +374,7 @@
              <descriptor>src/main/assembly/migration-util.xml</descriptor>
              <descriptor>src/main/assembly/kms.xml</descriptor>
              <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-	     <descriptor>src/main/assembly/plugin-kms.xml</descriptor>
+	     <!--<descriptor>src/main/assembly/plugin-kms.xml</descriptor>-->
            </descriptors>
          </configuration>
       </plugin>
@@ -434,7 +434,7 @@
     </pluginManagement>
     <plugins>
 
-    <plugin>
+    <!--<plugin>
       <groupId>org.apache.rat</groupId>
       <artifactId>apache-rat-plugin</artifactId>
       <version>0.11</version>
@@ -482,7 +482,7 @@
         </excludes>
 
       </configuration>
-    </plugin>
+    </plugin>-->
 
       <plugin>
          <groupId>org.apache.maven.plugins</groupId>

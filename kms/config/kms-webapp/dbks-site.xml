@@ -41,23 +41,7 @@
    <!-- db Details -->
   
   <property>
-    <name>ranger.db.ks.database.flavor</name>
-    <value>MYSQL</value>
-    <description>
-      ULR for Database
-    </description>
-  </property>
-  
-  <property>
-    <name>ranger.db.ks.core.file</name>
-    <value>db/mysql/kms_core_db.sql</value>
-    <description>
-      ULR for Database
-    </description>
-  </property>
-
-  <property>
-    <name>ranger.db.ks.javax.persistence.jdbc.url</name>
+    <name>ranger.ks.jpa.jdbc.url</name>
     <value>jdbc:log4jdbc:mysql://localhost:3306/rangerkms</value>
     <description>
       ULR for Database
@@ -65,55 +49,47 @@
   </property>
     
   <property>
-    <name>ranger.db.root.user</name>
-    <value>root</value>
-    <description>
-      Database root user name used for operation
-    </description>
-  </property>
-  
-  <property>
-    <name>ranger.db.root.password</name>
-    <value></value>
-    <description>
-      Database root user name used for operation
-    </description>
-  </property>
-  
-  <property>
-    <name>ranger.db.host</name>
-    <value>localhost</value>
-    <description>
-      Database root user name used for operation
-    </description>
-  </property>
-  
-  <property>
-    <name>ranger.db.ks.name</name>
-    <value>rangerkms</value>
-    <description>
-      Driver used for database
-    </description>    
-  </property>
-  
-  <property>
-    <name>ranger.db.ks.javax.persistence.jdbc.user</name>
+    <name>ranger.ks.jpa.jdbc.user</name>
     <value>kmsadmin</value>
     <description>
-      Database user name used for operation
+      Database username used for operation
     </description>
   </property>
   
   <property>
-    <name>ranger.db.ks.javax.persistence.jdbc.password</name>
+    <name>ranger.ks.jpa.jdbc.password</name>
     <value>kmsadmin</value>
     <description>
       Database user's password 
     </description>
   </property>
-  
+
   <property>
-    <name>ranger.db.ks.javax.persistence.jdbc.dialect</name>
+    <name>ranger.ks.jpa.jdbc.credential.provider.path</name>
+    <value>/tmp/kms.jceks</value>
+    <description>
+      Credential provider path
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.ks.jpa.jdbc.credential.alias</name>
+    <value>ranger.ks.jdbc.password</value>
+    <description>
+      Credential alias used for password
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.ks.masterkey.credential.alias</name>
+    <value>ranger.ks.masterkey.password</value>
+    <description>
+      Credential alias used for masterkey
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.ks.jpa.jdbc.dialect</name>
     <value>org.eclipse.persistence.platform.database.MySQLPlatform</value>
     <description>
       Dialect used for database
@@ -121,7 +97,7 @@
   </property>
   
   <property>
-    <name>ranger.db.ks.javax.persistence.jdbc.driver</name>
+    <name>ranger.ks.jpa.jdbc.driver</name>
     <value>net.sf.log4jdbc.DriverSpy</value>
     <description>
       Driver used for database
@@ -129,19 +105,11 @@
   </property>
   
   <property>
-    <name>ranger.db.ks.sql.connector.jar</name>
+    <name>ranger.ks.jdbc.sqlconnectorjar</name>
     <value>/usr/share/java/mysql-connector-java.jar</value>
     <description>
       Driver used for database
     </description>    
   </property>  
   
-  <property>
-    <name>ranger.db.ks.java.bin</name>
-    <value>java</value>
-    <description>
-      ULR for Database
-    </description>
-  </property>
-    
 </configuration>

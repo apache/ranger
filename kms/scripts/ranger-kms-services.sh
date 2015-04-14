@@ -25,7 +25,7 @@ action=$1
 
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
-RANGER_KMS_DIR=`(cd $realScriptDir/..; pwd)`
+RANGER_KMS_DIR=`(cd $realScriptDir; pwd)`
 RANGER_KMS_EWS_DIR=${RANGER_KMS_DIR}/ews
 RANGER_KMS_EWS_CONF_DIR="${RANGER_KMS_EWS_DIR}/conf"
 RANGER_KMS_EWS_LIB_DIR="${RANGER_KMS_EWS_DIR}/lib"
