@@ -1514,29 +1514,27 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		ServicePolicies ret = null;
 
-		RangerService service = getServiceByName(serviceName);
+		XXService serviceDbObj = daoMgr.getXXService().findByName(serviceName);
 
-		if(service == null) {
-			throw new Exception("service does not exist - name=" + serviceName);
+		if(serviceDbObj == null) {
+			throw new Exception("service does not exist. name=" + serviceName);
 		}
 
-		RangerServiceDef serviceDef = getServiceDefByName(service.getType());
+		if(lastKnownVersion == null || serviceDbObj.getPolicyVersion() == null || !lastKnownVersion.equals(serviceDbObj.getPolicyVersion())) {
+			RangerServiceDef serviceDef = getServiceDef(serviceDbObj.getType());
 
-		if(serviceDef == null) {
-			throw new Exception(service.getType() + ": unknown service-def)");
-		}
+			if(serviceDef == null) {
+				throw new Exception("service-def does not exist. id=" + serviceDbObj.getType());
+			}
 
-		if(lastKnownVersion == null || service.getPolicyVersion() == null || lastKnownVersion.longValue() != service.getPolicyVersion().longValue()) {
-			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, serviceName);
-
-			List<RangerPolicy> policies = getServicePolicies(serviceName, filter);
+			List<RangerPolicy> policies = getServicePolicies(serviceName, null);
 
 			ret = new ServicePolicies();
 
-			ret.setServiceId(service.getId());
-			ret.setServiceName(service.getName());
-			ret.setPolicyVersion(service.getPolicyVersion());
-			ret.setPolicyUpdateTime(service.getPolicyUpdateTime());
+			ret.setServiceId(serviceDbObj.getId());
+			ret.setServiceName(serviceDbObj.getName());
+			ret.setPolicyVersion(serviceDbObj.getPolicyVersion());
+			ret.setPolicyUpdateTime(serviceDbObj.getPolicyUpdateTime());
 			ret.setPolicies(policies);
 			ret.setServiceDef(serviceDef);
 		}
@@ -1544,6 +1542,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
+
 		return ret;
 	}
 	
@@ -1635,10 +1634,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 	
 	private void handlePolicyUpdate(RangerService service) throws Exception {
-		if(service == null) {
+		updatePolicyVersion(service);
+	}
+
+	private void updatePolicyVersion(RangerService service) throws Exception {
+		if(service == null || service.getId() == null) {
 			return;
 		}
-		
+
+		XXServiceDao serviceDao = daoMgr.getXXService();
+
+		XXService serviceDbObj = serviceDao.getById(service.getId());
+
+		if(serviceDbObj == null) {
+			LOG.warn("updatePolicyVersion(serviceId=" + service.getId() + "): service not found");
+
+			return;
+		}
+
 		Long policyVersion = service.getPolicyVersion();
 
 		if(policyVersion == null) {
@@ -1646,12 +1659,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 		} else {
 			policyVersion = new Long(policyVersion.longValue() + 1);
 		}
-		
+
 		service.setPolicyVersion(policyVersion);
 		service.setPolicyUpdateTime(new Date());
-		service = updateService(service);
+
+		serviceDbObj.setPolicyVersion(service.getPolicyVersion());
+		serviceDbObj.setPolicyUpdateTime(service.getPolicyUpdateTime());
+
+		serviceDao.update(serviceDbObj);
 	}
-	
+
 	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems, XXServiceDef xServiceDef) {
 		
 		for (int itemOrder = 0; itemOrder < policyItems.size(); itemOrder++) {
