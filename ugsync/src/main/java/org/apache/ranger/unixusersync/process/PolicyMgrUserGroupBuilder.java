@@ -130,7 +130,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 
 	
-	public void init() throws Throwable {
+	synchronized public void init() throws Throwable {
 		recordsToPullPerCall = config.getMaxRecordsPerAPICall() ;
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL() ;
 		isMockRun = config.isMockRunEnabled() ;

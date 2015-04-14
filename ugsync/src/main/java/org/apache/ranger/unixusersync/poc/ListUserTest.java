@@ -37,7 +37,11 @@ public class ListUserTest
   
 	  while ((strLine = br.readLine()) != null)   {
 		 ListRangerUser userList = ListRangerUser.parseUser(strLine);
-		 System.out.println(userList.getName() + " " + userList.getUid() + " " + userList.getGid());
+     if (userList != null) {
+		   System.out.println(userList.getName() + " " + userList.getUid() + " " + userList.getGid());
+     } else {
+		   System.out.println("userList is null");
+     }
 	  }
 	
 	  file.close();

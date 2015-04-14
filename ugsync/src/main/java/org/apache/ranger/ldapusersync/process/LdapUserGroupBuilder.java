@@ -350,16 +350,18 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             Set<String> computedGroups = new HashSet<String>();
             while (groupSearchResultEnum.hasMore()) {
               final SearchResult groupEntry = groupSearchResultEnum.next();
-              String gName = (String) groupEntry.getAttributes()
-                .get(groupNameAttribute).get();
-              if (groupNameCaseConversionFlag) {
-                if (groupNameLowerCaseFlag) {
-                  gName = gName.toLowerCase();
-                } else {
-                  gName = gName.toUpperCase();
+              if (groupEntry != null) {
+                String gName = (String) groupEntry.getAttributes()
+                  .get(groupNameAttribute).get();
+                if (groupNameCaseConversionFlag) {
+                  if (groupNameLowerCaseFlag) {
+                    gName = gName.toLowerCase();
+                  } else {
+                    gName = gName.toUpperCase();
+                  }
                 }
+                computedGroups.add(gName);
               }
-              computedGroups.add(gName);
             }
             if (LOG.isInfoEnabled())  {
                  LOG.info("computed groups for user: " + userName +", groups: " + computedGroups);
