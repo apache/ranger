@@ -164,7 +164,7 @@ class MysqlConf(BaseDB):
 								query = get_cmd + " -query \"create user '%s'@'%s';\" -c ;" %(db_user, host)
 								ret = subprocess.call(query)
 							if ret == 0:
-								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd):
+								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd, dryMode):
 									log("[I] MySQL user " + db_user +" created for host " + host ,"info")
 								else:
 									log("[E] Creating MySQL user " + db_user +" failed..","error")

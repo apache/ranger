@@ -36,6 +36,7 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PasswordUtils;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.StringUtil;
@@ -171,6 +172,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
+	
+	public static final String HIDDEN_PASSWORD_STR = "*****";
+	public static final String CONFIG_KEY_PASSWORD = "password";
 	
 	@Override
 	public void init() throws Exception {
@@ -997,6 +1001,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 					}
 				}
 
+				if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
+					String encryptedPwd = PasswordUtils.encryptPassword(configValue);
+					String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+
+					if (StringUtils.equals(decryptedPwd, configValue)) {
+						configValue = encryptedPwd;
+					}
+				}
+
 				XXServiceConfigMap xConfMap = new XXServiceConfigMap();
 				xConfMap = (XXServiceConfigMap) rangerAuditFields.populateAuditFields(xConfMap, xCreatedService);
 				xConfMap.setServiceId(xCreatedService.getId());
@@ -1082,8 +1095,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		XXService xUpdService = daoMgr.getXXService().getById(service.getId());
 		
+		String oldPassword = null;
+		
 		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
 		for(XXServiceConfigMap dbConfigMap : dbConfigMaps) {
+			if(StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), CONFIG_KEY_PASSWORD)) {
+				oldPassword = dbConfigMap.getConfigvalue();
+			}
 			daoMgr.getXXServiceConfigMap().remove(dbConfigMap);
 		}
 		
@@ -1103,6 +1121,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 					vXUser.setName(userName);
 					vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 					vXUser = xUserMgr.createXUser(vXUser);
+				}
+			}
+
+			if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
+				if (StringUtils.equalsIgnoreCase(configValue, HIDDEN_PASSWORD_STR)) {
+					configValue = oldPassword;
+				} else {
+					String encryptedPwd = PasswordUtils.encryptPassword(configValue);
+					String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+
+					if (StringUtils.equals(decryptedPwd, configValue)) {
+						configValue = encryptedPwd;
+					}
 				}
 			}
 
