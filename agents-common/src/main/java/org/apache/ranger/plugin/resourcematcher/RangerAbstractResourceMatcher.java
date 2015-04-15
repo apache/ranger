@@ -53,14 +53,12 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	protected boolean      isMatchAny       = false;
 
 	@Override
-	public void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource) {
+	public void init(Map<String, String> options, RangerPolicyResource policyResource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ")");
 		}
 
-
-		this.options        = resourceDef.getMatcherOptions();
-		this.resourceDef    = resourceDef;
+		this.options        = options;
 		this.policyResource = policyResource;
 
 		optIgnoreCase = getBooleanOption(OPTION_IGNORE_CASE, true);
@@ -73,10 +71,6 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			for(String policyValue : policyResource.getValues()) {
 				if(StringUtils.isEmpty(policyValue)) {
 					continue;
-				}
-
-				if(optIgnoreCase) {
-					policyValue = policyValue.toLowerCase();
 				}
 
 				if(StringUtils.containsOnly(policyValue, WILDCARD_ASTERISK)) {
@@ -94,16 +88,6 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ")");
 		}
-	}
-
-	@Override
-	public RangerResourceDef getResourceDef() {
-		return resourceDef;
-	}
-
-	@Override
-	public RangerPolicyResource getPolicyResource() {
-		return policyResource;
 	}
 
 	@Override
