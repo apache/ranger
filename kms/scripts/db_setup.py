@@ -62,7 +62,7 @@ def populate_global_dict():
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
 	elif os_name == "WINDOWS":
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
-		library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
+	library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
 
 	for each_line in read_config_file.read().split('\n') :
 		if len(each_line) == 0 : continue

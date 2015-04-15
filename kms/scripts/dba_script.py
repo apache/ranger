@@ -30,6 +30,30 @@ globalDict = {}
 os_name = platform.system()
 os_name = os_name.upper()
 
+if os_name == "LINUX":
+        RANGER_KMS_HOME = os.getcwd()
+elif os_name == "WINDOWS":
+        RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+
+def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
+    finalLibPath = libpath.replace('\\','/').replace('//','/')
+    finalFilePath = 'jceks://file/'+filepath.replace('\\','/').replace('//','/')
+    if getorcreate == 'create':
+        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
+        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, error = p.communicate()
+        statuscode = p.returncode
+        return statuscode
+    elif getorcreate == 'get':
+        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
+        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, error = p.communicate()
+        statuscode = p.returncode
+        return statuscode, output
+    else:
+        print 'proper command not received for input need get or create'
+
+
 def check_output(query):
 	if os_name == "LINUX":
 		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
@@ -52,6 +76,11 @@ def log(msg,type):
 
 def populate_global_dict():
 	global globalDict
+	if os_name == "LINUX":
+		read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
+	elif os_name == "WINDOWS":
+		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
+	library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
 	read_config_file = open(os.path.join(os.getcwd(),'install.properties'))
 	for each_line in read_config_file.read().split('\n') :
 		if len(each_line) == 0 : continue
