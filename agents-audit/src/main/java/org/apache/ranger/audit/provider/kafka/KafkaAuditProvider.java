@@ -16,6 +16,7 @@
  */
 package org.apache.ranger.audit.provider.kafka;
 
+import java.util.Collection;
 import java.util.Properties;
 
 import kafka.javaapi.producer.Producer;
@@ -46,12 +47,12 @@ public class KafkaAuditProvider extends BaseAuditProvider {
 		LOG.info("init() called");
 		super.init(props);
 
-		setMaxQueueSize(BaseAuditProvider.getIntProperty(props,
-				AUDIT_MAX_QUEUE_SIZE_PROP, AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT));
-		setMaxFlushInterval(BaseAuditProvider.getIntProperty(props,
+		setMaxQueueSize(MiscUtil.getIntProperty(props,
+				AUDIT_MAX_QUEUE_SIZE_PROP, AUDIT_MAX_QUEUE_SIZE_DEFAULT));
+		setMaxBatchInterval(MiscUtil.getIntProperty(props,
 				AUDIT_MAX_QUEUE_SIZE_PROP,
-				AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT));
-		topic = BaseAuditProvider.getStringProperty(props,
+				AUDIT_BATCH_INTERVAL_DEFAULT_MS));
+		topic = MiscUtil.getStringProperty(props,
 				AUDIT_KAFKA_TOPIC_NAME);
 		if (topic == null || topic.isEmpty()) {
 			topic = "ranger_audits";
@@ -59,7 +60,7 @@ public class KafkaAuditProvider extends BaseAuditProvider {
 
 		try {
 			if (!initDone) {
-				String brokerList = BaseAuditProvider.getStringProperty(props,
+				String brokerList = MiscUtil.getStringProperty(props,
 						AUDIT_KAFKA_BROKER_LIST);
 				if (brokerList == null || brokerList.isEmpty()) {
 					brokerList = "localhost:9092";
@@ -87,7 +88,7 @@ public class KafkaAuditProvider extends BaseAuditProvider {
 	}
 
 	@Override
-	public void log(AuditEventBase event) {
+	public boolean log(AuditEventBase event) {
 		if (event instanceof AuthzAuditEvent) {
 			AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
 
@@ -118,7 +119,32 @@ public class KafkaAuditProvider extends BaseAuditProvider {
 		} catch (Throwable t) {
 			LOG.error("Error sending message to Kafka topic. topic=" + topic
 					+ ", message=" + message, t);
+			return false;
 		}
+		return true;
+	}
+
+	@Override
+	public boolean log(Collection<AuditEventBase> events) {
+		for (AuditEventBase event : events) {
+			log(event);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean logJSON(String event) {
+		AuditEventBase eventObj = MiscUtil.fromJson(event,
+				AuthzAuditEvent.class);
+		return log(eventObj);
+	}
+
+	@Override
+	public boolean logJSON(Collection<String> events) {
+		for (String event : events) {
+			logJSON(event);
+		}
+		return false;
 	}
 
 	@Override
@@ -143,8 +169,10 @@ public class KafkaAuditProvider extends BaseAuditProvider {
 	@Override
 	public void waitToComplete() {
 		LOG.info("waitToComplete() called");
-		// TODO Auto-generated method stub
-
+	}
+	
+	@Override
+	public void waitToComplete(long timeout) {
 	}
 
 	@Override

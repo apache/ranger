@@ -502,13 +502,18 @@ class DestinationDispatcherThread<T> extends Thread {
 				break;
 			}
 
-			// loop until log is sent successfully
-			while(!mStopThread && !mDestination.sendStringified(log)) {
-				try {
-					Thread.sleep(destinationPollIntervalInMs);
-				} catch(InterruptedException excp) {
-					throw new RuntimeException("LocalFileLogBuffer.sendCurrentFile(" + mCurrentLogfile + "): failed while waiting for destination to be available", excp);
+			try {
+				// loop until log is sent successfully
+				while(!mStopThread && !mDestination.sendStringified(log)) {
+					try {
+						Thread.sleep(destinationPollIntervalInMs);
+					} catch(InterruptedException excp) {
+						throw new RuntimeException("LocalFileLogBuffer.sendCurrentFile(" + mCurrentLogfile + "): failed while waiting for destination to be available", excp);
+					}
 				}
+			} catch ( AuditMessageException msgError) {
+				mLogger.error("Error in log message:" + log);
+				//If there is error in log message, then it will be skipped
 			}
 		}
 

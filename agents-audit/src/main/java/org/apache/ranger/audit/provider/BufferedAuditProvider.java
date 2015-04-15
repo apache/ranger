@@ -17,6 +17,7 @@
  */
 package org.apache.ranger.audit.provider;
 
+import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.ranger.audit.model.AuditEventBase;
@@ -32,7 +33,7 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 	}
 
 	@Override
-	public void log(AuditEventBase event) {
+	public boolean log(AuditEventBase event) {
 		if(event instanceof AuthzAuditEvent) {
 			AuthzAuditEvent authzEvent = (AuthzAuditEvent)event;
 
@@ -52,6 +53,30 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 		if(! mBuffer.add(event)) {
 			logFailedEvent(event);
 		}
+		return true;
+	}
+
+	@Override
+	public boolean log(Collection<AuditEventBase> events) {
+		for (AuditEventBase event : events) {
+			log(event);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean logJSON(String event) {
+		AuditEventBase eventObj = MiscUtil.fromJson(event,
+				AuthzAuditEvent.class);
+		return log(eventObj);
+	}
+
+	@Override
+	public boolean logJSON(Collection<String> events) {
+		for (String event : events) {
+			logJSON(event);
+		}
+		return false;
 	}
 
 	@Override
@@ -66,6 +91,11 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public void waitToComplete() {
+	}
+
+	
+	@Override
+	public void waitToComplete(long timeout) {
 	}
 
 	@Override

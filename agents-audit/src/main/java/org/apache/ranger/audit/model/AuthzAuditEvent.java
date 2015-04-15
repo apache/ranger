@@ -24,6 +24,7 @@ import java.util.Date;
 import org.apache.ranger.audit.dao.DaoManager;
 import org.apache.ranger.audit.entity.AuthzAuditEventDbObj;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 
@@ -32,7 +33,6 @@ public class AuthzAuditEvent extends AuditEventBase {
 
 	protected static final int MAX_ACTION_FIELD_SIZE       = 1800 ;
 	protected static final int MAX_REQUEST_DATA_FIELD_SIZE = 1800 ;
-
 
 	@SerializedName("repoType")
 	protected int    repositoryType = 0;
@@ -94,6 +94,17 @@ public class AuthzAuditEvent extends AuditEventBase {
 	@SerializedName("id")
 	protected String eventId        = null;
 
+	/**
+	 * This to ensure order within a session. Order not guaranteed across processes and hosts 
+	 */
+	@SerializedName("seq_num")
+	protected long seqNum = 0;
+
+	@SerializedName("freq_count")
+	protected long frequencyCount = 1;
+
+	@SerializedName("freq_dur_ms")
+	protected long frequencyDurationMS = 0;
 
 	public AuthzAuditEvent() {
 		super();
@@ -400,6 +411,31 @@ public class AuthzAuditEvent extends AuditEventBase {
 	}
 
 
+	
+	public long getSeqNum() {
+		return seqNum;
+	}
+
+	public void setSeqNum(long seqNum) {
+		this.seqNum = seqNum;
+	}
+
+	public long getFrequencyCount() {
+		return frequencyCount;
+	}
+
+	public void setFrequencyCount(long frequencyCount) {
+		this.frequencyCount = frequencyCount;
+	}
+
+	public long getFrequencyDurationMS() {
+		return frequencyDurationMS;
+	}
+
+	public void setFrequencyDurationMS(long frequencyDurationMS) {
+		this.frequencyDurationMS = frequencyDurationMS;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -432,6 +468,9 @@ public class AuthzAuditEvent extends AuditEventBase {
 		  .append("agentHostname=").append(agentHostname).append(FIELD_SEPARATOR)
 		  .append("logType=").append(logType).append(FIELD_SEPARATOR)
 		  .append("eventId=").append(eventId).append(FIELD_SEPARATOR)
+		  .append("seq_num=").append(seqNum).append(FIELD_SEPARATOR)
+		  .append("freq_count=").append(frequencyCount).append(FIELD_SEPARATOR)
+		  .append("freq_dur_ms=").append(frequencyDurationMS).append(FIELD_SEPARATOR)
 		;
 		return sb;
 	}

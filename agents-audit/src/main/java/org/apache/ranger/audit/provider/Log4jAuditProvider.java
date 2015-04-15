@@ -18,17 +18,18 @@
 
 package org.apache.ranger.audit.provider;
 
+import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.sun.tools.hat.internal.util.Misc;
 
 
-public class Log4jAuditProvider extends BaseAuditProvider {
+public class Log4jAuditProvider extends AuditDestination {
 
 	private static final Log LOG      = LogFactory.getLog(Log4jAuditProvider.class);
 	private static final Log AUDITLOG = LogFactory.getLog("xaaudit." + Log4jAuditProvider.class.getName());
@@ -37,7 +38,6 @@ public class Log4jAuditProvider extends BaseAuditProvider {
 	public static final String AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.log4j.async.max.queue.size" ;
 	public static final String AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.log4j.async.max.flush.interval.ms";
 
-	private Gson mGsonBuilder = null;
 
 	public Log4jAuditProvider() {
 		LOG.info("Log4jAuditProvider: creating..");
@@ -48,24 +48,41 @@ public class Log4jAuditProvider extends BaseAuditProvider {
 		LOG.info("Log4jAuditProvider.init()");
 
 		super.init(props);
-
-		try {
-			mGsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-		} catch(Throwable excp) {
-			LOG.warn("Log4jAuditProvider.init(): failed to create GsonBuilder object. events will be formated using toString(), instead of Json", excp);
-		}
 	}
 
 	@Override
-	public void log(AuditEventBase event) {
+	public boolean log(AuditEventBase event) {
 		if(! AUDITLOG.isInfoEnabled())
-			return;
+			return true;
 		
 		if(event != null) {
-			String eventStr = mGsonBuilder != null ? mGsonBuilder.toJson(event) : event.toString();
-
+			String eventStr = MiscUtil.stringify(event);
 			AUDITLOG.info(eventStr);
 		}
+		return true;
+	}
+
+	@Override
+	public boolean log(Collection<AuditEventBase> events) {
+		for (AuditEventBase event : events) {
+			log(event);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean logJSON(String event) {
+		AuditEventBase eventObj = MiscUtil.fromJson(event,
+				AuthzAuditEvent.class);
+		return log(eventObj);
+	}
+
+	@Override
+	public boolean logJSON(Collection<String> events) {
+		for (String event : events) {
+			logJSON(event);
+		}
+		return false;
 	}
 
 	@Override
@@ -78,23 +95,7 @@ public class Log4jAuditProvider extends BaseAuditProvider {
 		// intentionally left empty
 	}
 
-	@Override
-    public void waitToComplete() {
-		// intentionally left empty
-	}
-
-	@Override
-	public boolean isFlushPending() {
-		return false;
-	}
 	
-	@Override
-	public long getLastFlushTime() {
-		return 0;
-	}
 
-	@Override
-	public void flush() {
-		// intentionally left empty
-	}
+	
 }

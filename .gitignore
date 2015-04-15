@@ -1,5 +1,6 @@
 *.class
 *.iml
+.pydevproject
 .settings/
 .metadata
 .classpath

@@ -22,7 +22,6 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.provider.BaseAuditProvider;
 import org.apache.ranger.audit.provider.BufferedAuditProvider;
 import org.apache.ranger.audit.provider.DebugTracer;
 import org.apache.ranger.audit.provider.LocalFileLogBuffer;
@@ -44,7 +43,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 
 		super.init(props);
 
-		Map<String, String> hdfsProps = BaseAuditProvider.getPropertiesWithPrefix(props, "xasecure.audit.hdfs.config.");
+		Map<String, String> hdfsProps = MiscUtil.getPropertiesWithPrefix(props, "xasecure.audit.hdfs.config.");
 
 		String encoding                                = hdfsProps.get("encoding");
 

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.audit.provider.solr;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
 
@@ -55,12 +56,12 @@ public class SolrAuditProvider extends BaseAuditProvider {
 		LOG.info("init() called");
 		super.init(props);
 
-		setMaxQueueSize(BaseAuditProvider.getIntProperty(props,
-				AUDIT_MAX_QUEUE_SIZE_PROP, AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT));
-		setMaxFlushInterval(BaseAuditProvider.getIntProperty(props,
+		setMaxQueueSize(MiscUtil.getIntProperty(props,
+				AUDIT_MAX_QUEUE_SIZE_PROP, AUDIT_MAX_QUEUE_SIZE_DEFAULT));
+		setMaxBatchInterval(MiscUtil.getIntProperty(props,
 				AUDIT_MAX_QUEUE_SIZE_PROP,
-				AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT));
-		retryWaitTime = BaseAuditProvider.getIntProperty(props,
+				AUDIT_BATCH_INTERVAL_DEFAULT_MS));
+		retryWaitTime = MiscUtil.getIntProperty(props,
 				AUDIT_RETRY_WAIT_PROP, retryWaitTime);
 	}
 
@@ -68,7 +69,7 @@ public class SolrAuditProvider extends BaseAuditProvider {
 		if (solrClient == null) {
 			synchronized (lock) {
 				if (solrClient == null) {
-					String solrURL = BaseAuditProvider.getStringProperty(props,
+					String solrURL = MiscUtil.getStringProperty(props,
 							"xasecure.audit.solr.solr_url");
 
 					if (lastConnectTime != null) {
@@ -118,11 +119,11 @@ public class SolrAuditProvider extends BaseAuditProvider {
 	 * audit.model.AuditEventBase)
 	 */
 	@Override
-	public void log(AuditEventBase event) {
+	public boolean log(AuditEventBase event) {
 		if (!(event instanceof AuthzAuditEvent)) {
 			LOG.error(event.getClass().getName()
 					+ " audit event class type is not supported");
-			return;
+			return false;
 		}
 		AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
 		// TODO: This should be done at a higher level
@@ -144,7 +145,7 @@ public class SolrAuditProvider extends BaseAuditProvider {
 				connect();
 				if (solrClient == null) {
 					// Solr is still not initialized. So need to throw error
-					return;
+					return false;
 				}
 			}
 
@@ -155,7 +156,7 @@ public class SolrAuditProvider extends BaseAuditProvider {
 						LOG.debug("Ignore sending audit. lastConnect=" + diff
 								+ " ms");
 					}
-					return;
+					return false;
 				}
 			}
 			// Convert AuditEventBase to Solr document
@@ -176,8 +177,32 @@ public class SolrAuditProvider extends BaseAuditProvider {
 
 		} catch (Throwable t) {
 			LOG.error("Error sending message to Solr", t);
+			return false;
 		}
+		return true;
+	}
 
+	@Override
+	public boolean log(Collection<AuditEventBase> events) {
+		for (AuditEventBase event : events) {
+			log(event);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean logJSON(String event) {
+		AuditEventBase eventObj = MiscUtil.fromJson(event,
+				AuthzAuditEvent.class);
+		return log(eventObj);
+	}
+
+	@Override
+	public boolean logJSON(Collection<String> events) {
+		for (String event : events) {
+			logJSON(event);
+		}
+		return false;
 	}
 
 	/*
@@ -208,8 +233,13 @@ public class SolrAuditProvider extends BaseAuditProvider {
 	 */
 	@Override
 	public void waitToComplete() {
-		// TODO Auto-generated method stub
 
+	}
+
+	
+	@Override
+	public void waitToComplete(long timeout) {
+		
 	}
 
 	/*

@@ -90,10 +90,11 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 	}
 
 	@Override
-	public void log(AuditEventBase event) {
+	public boolean log(AuditEventBase event) {
 		LOG.debug("AsyncAuditProvider.logEvent(AuditEventBase)");
 
 		queueEvent(event);
+		return true;
 	}
 
 	@Override
@@ -230,7 +231,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		return mQueue.isEmpty();
 	}
 
-	private void waitToComplete(long maxWaitSeconds) {
+	public void waitToComplete(long maxWaitSeconds) {
 		LOG.debug("==> AsyncAuditProvider.waitToComplete()");
 
 		for (long waitTime = 0; !isEmpty()

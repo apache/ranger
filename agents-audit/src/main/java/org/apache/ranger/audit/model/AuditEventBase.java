@@ -17,24 +17,26 @@
  * under the License.
  */
 
- package org.apache.ranger.audit.model;
+package org.apache.ranger.audit.model;
 
 import org.apache.ranger.audit.dao.DaoManager;
 
-
 public abstract class AuditEventBase {
+
 	protected AuditEventBase() {
 	}
 
 	public abstract void persist(DaoManager daoManager);
-	
+
 	protected String trim(String str, int len) {
-		String ret = str ;
+		String ret = str;
 		if (str != null) {
 			if (str.length() > len) {
-				ret = str.substring(0,len) ;
+				ret = str.substring(0, len);
 			}
 		}
-		return ret ;
+		return ret;
 	}
+
+
 }

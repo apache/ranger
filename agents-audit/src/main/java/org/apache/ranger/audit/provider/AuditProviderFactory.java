@@ -28,7 +28,6 @@ import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
 import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
 import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
 
-
 /*
  * TODO:
  * 1) Flag to enable/disable audit logging
@@ -37,22 +36,25 @@ import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
  */
 
 public class AuditProviderFactory {
-	private static final Log LOG = LogFactory.getLog(AuditProviderFactory.class);
+	private static final Log LOG = LogFactory
+			.getLog(AuditProviderFactory.class);
 
-	private static final String AUDIT_IS_ENABLED_PROP       = "xasecure.audit.is.enabled" ;
-	private static final String AUDIT_DB_IS_ENABLED_PROP    = "xasecure.audit.db.is.enabled" ;
-	private static final String AUDIT_HDFS_IS_ENABLED_PROP  = "xasecure.audit.hdfs.is.enabled";
-	private static final String AUDIT_LOG4J_IS_ENABLED_PROP = "xasecure.audit.log4j.is.enabled" ;
-	private static final String AUDIT_KAFKA_IS_ENABLED_PROP = "xasecure.audit.kafka.is.enabled";
-	private static final String AUDIT_SOLR_IS_ENABLED_PROP = "xasecure.audit.solr.is.enabled";
-	
-	private static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT     = 10 * 1024;
-	private static final int AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT =  5 * 1000;
-	
+	public static final String AUDIT_IS_ENABLED_PROP = "xasecure.audit.is.enabled";
+	public static final String AUDIT_DB_IS_ENABLED_PROP = "xasecure.audit.db.is.enabled";
+	public static final String AUDIT_HDFS_IS_ENABLED_PROP = "xasecure.audit.hdfs.is.enabled";
+	public static final String AUDIT_LOG4J_IS_ENABLED_PROP = "xasecure.audit.log4j.is.enabled";
+	public static final String AUDIT_KAFKA_IS_ENABLED_PROP = "xasecure.audit.kafka.is.enabled";
+	public static final String AUDIT_SOLR_IS_ENABLED_PROP = "xasecure.audit.solr.is.enabled";
+
+	public static final String AUDIT_DEST_BASE = "xasecure.audit.destination";
+
+	public static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT = 10 * 1024;
+	public static final int AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT = 5 * 1000;
+
 	private static AuditProviderFactory sFactory;
 
 	private AuditProvider mProvider = null;
-	private boolean       mInitDone = false;
+	private boolean mInitDone = false;
 
 	private AuditProviderFactory() {
 		LOG.info("AuditProviderFactory: creating..");
@@ -61,9 +63,9 @@ public class AuditProviderFactory {
 	}
 
 	public static AuditProviderFactory getInstance() {
-		if(sFactory == null) {
-			synchronized(AuditProviderFactory.class) {
-				if(sFactory == null) {
+		if (sFactory == null) {
+			synchronized (AuditProviderFactory.class) {
+				if (sFactory == null) {
 					sFactory = new AuditProviderFactory();
 				}
 			}
@@ -75,7 +77,7 @@ public class AuditProviderFactory {
 	public static AuditProvider getAuditProvider() {
 		return AuditProviderFactory.getInstance().getProvider();
 	}
-	
+
 	public AuditProvider getProvider() {
 		return mProvider;
 	}
@@ -86,133 +88,301 @@ public class AuditProviderFactory {
 
 	public synchronized void init(Properties props, String appType) {
 		LOG.info("AuditProviderFactory: initializing..");
-		
-		if(mInitDone) {
-			LOG.warn("AuditProviderFactory.init(): already initialized!", new Exception());
+
+		if (mInitDone) {
+			LOG.warn("AuditProviderFactory.init(): already initialized!",
+					new Exception());
 
 			return;
 		}
 		mInitDone = true;
-		
+
 		MiscUtil.setApplicationType(appType);
 
-		boolean isEnabled             = BaseAuditProvider.getBooleanProperty(props, AUDIT_IS_ENABLED_PROP, false);
-		boolean isAuditToDbEnabled    = BaseAuditProvider.getBooleanProperty(props, AUDIT_DB_IS_ENABLED_PROP, false);
-		boolean isAuditToHdfsEnabled  = BaseAuditProvider.getBooleanProperty(props, AUDIT_HDFS_IS_ENABLED_PROP, false);
-		boolean isAuditToLog4jEnabled = BaseAuditProvider.getBooleanProperty(props, AUDIT_LOG4J_IS_ENABLED_PROP, false);
-		boolean isAuditToKafkaEnabled  = BaseAuditProvider.getBooleanProperty(props, AUDIT_KAFKA_IS_ENABLED_PROP, false);
-		boolean isAuditToSolrEnabled  = BaseAuditProvider.getBooleanProperty(props, AUDIT_SOLR_IS_ENABLED_PROP, false);
-
-		if(!isEnabled || !(isAuditToDbEnabled || isAuditToHdfsEnabled || isAuditToKafkaEnabled || isAuditToLog4jEnabled || isAuditToSolrEnabled)) {
-			LOG.info("AuditProviderFactory: Audit not enabled..");
-
-			mProvider = getDefaultProvider();
-
-			return;
-		}
+		boolean isEnabled = MiscUtil.getBooleanProperty(props,
+				AUDIT_IS_ENABLED_PROP, false);
+		boolean isAuditToDbEnabled = MiscUtil.getBooleanProperty(props,
+				AUDIT_DB_IS_ENABLED_PROP, false);
+		boolean isAuditToHdfsEnabled = MiscUtil.getBooleanProperty(props,
+				AUDIT_HDFS_IS_ENABLED_PROP, false);
+		boolean isAuditToLog4jEnabled = MiscUtil.getBooleanProperty(props,
+				AUDIT_LOG4J_IS_ENABLED_PROP, false);
+		boolean isAuditToKafkaEnabled = MiscUtil.getBooleanProperty(props,
+				AUDIT_KAFKA_IS_ENABLED_PROP, false);
+		boolean isAuditToSolrEnabled = MiscUtil.getBooleanProperty(props,
+				AUDIT_SOLR_IS_ENABLED_PROP, false);
 
 		List<AuditProvider> providers = new ArrayList<AuditProvider>();
 
-		if(isAuditToDbEnabled) {
-			LOG.info("DbAuditProvider is enabled");
-			DbAuditProvider dbProvider = new DbAuditProvider();
+		// TODO: Delete me
+		for (Object propNameObj : props.keySet()) {
+			LOG.info("DELETE ME: " + propNameObj.toString() + "="
+					+ props.getProperty(propNameObj.toString()));
+		}
 
-			boolean isAuditToDbAsync = BaseAuditProvider.getBooleanProperty(props, DbAuditProvider.AUDIT_DB_IS_ASYNC_PROP, false);
+		// Process new audit configurations
+		List<String> destNameList = new ArrayList<String>();
 
-			if(isAuditToDbAsync) {
-				int maxQueueSize     = BaseAuditProvider.getIntProperty(props, DbAuditProvider.AUDIT_DB_MAX_QUEUE_SIZE_PROP, AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
-				int maxFlushInterval = BaseAuditProvider.getIntProperty(props, DbAuditProvider.AUDIT_DB_MAX_FLUSH_INTERVAL_PROP, AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
-
-				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("DbAuditProvider", maxQueueSize, maxFlushInterval, dbProvider);
-
-				providers.add(asyncProvider);
-			} else {
-				providers.add(dbProvider);
+		for (Object propNameObj : props.keySet()) {
+			String propName = propNameObj.toString();
+			if (propName.length() <= AUDIT_DEST_BASE.length() + 1) {
+				continue;
+			}
+			String destName = propName.substring(AUDIT_DEST_BASE.length() + 1);
+			List<String> splits = MiscUtil.toArray(destName, ".");
+			if (splits.size() > 1) {
+				continue;
+			}
+			String value = props.getProperty(propName);
+			if (value.equalsIgnoreCase("enable")
+					|| value.equalsIgnoreCase("true")) {
+				destNameList.add(destName);
+				LOG.info("Audit destination " + propName + " is set to "
+						+ value);
 			}
 		}
 
-		if(isAuditToHdfsEnabled) {
-			LOG.info("HdfsAuditProvider is enabled");
+		for (String destName : destNameList) {
+			String destPropPrefix = AUDIT_DEST_BASE + "." + destName;
+			AuditProvider destProvider = getProviderFromConfig(props,
+					destPropPrefix, destName);
 
-			HdfsAuditProvider hdfsProvider = new HdfsAuditProvider();
+			if (destProvider != null) {
+				destProvider.init(props, destPropPrefix);
 
-			boolean isAuditToHdfsAsync = BaseAuditProvider.getBooleanProperty(props, HdfsAuditProvider.AUDIT_HDFS_IS_ASYNC_PROP, false);
-
-			if(isAuditToHdfsAsync) {
-				int maxQueueSize     = BaseAuditProvider.getIntProperty(props, HdfsAuditProvider.AUDIT_HDFS_MAX_QUEUE_SIZE_PROP, AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
-				int maxFlushInterval = BaseAuditProvider.getIntProperty(props, HdfsAuditProvider.AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP, AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
-
-				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("HdfsAuditProvider", maxQueueSize, maxFlushInterval, hdfsProvider);
-
-				providers.add(asyncProvider);
-			} else {
-				providers.add(hdfsProvider);
+				String queueName = MiscUtil.getStringProperty(props,
+						destPropPrefix + "." + BaseAuditProvider.PROP_QUEUE);
+				if( queueName == null || queueName.isEmpty()) {
+					queueName = "batch";
+				}
+				if (queueName != null && !queueName.isEmpty()
+						&& !queueName.equalsIgnoreCase("none")) {
+					String queuePropPrefix = destPropPrefix + "." + queueName;
+					AuditProvider queueProvider = getProviderFromConfig(props,
+							queuePropPrefix, queueName);
+					if (queueProvider != null) {
+						if (queueProvider instanceof BaseAuditProvider) {
+							BaseAuditProvider qProvider = (BaseAuditProvider) queueProvider;
+							qProvider.setConsumer(destProvider);
+							qProvider.init(props, queuePropPrefix);
+							providers.add(queueProvider);
+						} else {
+							LOG.fatal("Provider queue doesn't extend BaseAuditProvider destination "
+									+ destName
+									+ " can't be created. queueName="
+									+ queueName);
+						}
+					} else {
+						LOG.fatal("Queue provider for destination " + destName
+								+ " can't be created. queueName=" + queueName);
+					}
+				} else {
+					LOG.info("Audit destination " + destProvider.getName()
+							+ " added to provider list");
+					providers.add(destProvider);
+				}
 			}
 		}
+		if (providers.size() > 0) {
+			LOG.info("Using v2 audit configuration");
+			AuditAsyncQueue asyncQueue = new AuditAsyncQueue();
+			String propPrefix = BaseAuditProvider.PROP_DEFAULT_PREFIX + "." + "async";
+			asyncQueue.init(props, propPrefix);
 
-		if(isAuditToKafkaEnabled) {
-			LOG.info("KafkaAuditProvider is enabled");
-			KafkaAuditProvider kafkaProvider = new KafkaAuditProvider();
-			kafkaProvider.init(props);
-			
-			if( kafkaProvider.isAsync()) {
-				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("MyKafkaAuditProvider", kafkaProvider.getMaxQueueSize(), kafkaProvider.getMaxFlushInterval(), kafkaProvider);
-				providers.add(asyncProvider);
+			if (providers.size() == 1) {
+				asyncQueue.setConsumer(providers.get(0));
 			} else {
-				providers.add(kafkaProvider);
+				MultiDestAuditProvider multiDestProvider = new MultiDestAuditProvider();
+				multiDestProvider.init(props);
+				multiDestProvider.addAuditProviders(providers);
+				asyncQueue.setConsumer(multiDestProvider);
 			}
-		}
 
-		if(isAuditToSolrEnabled) {
-			LOG.info("SolrAuditProvider is enabled");
-			SolrAuditProvider solrProvider = new SolrAuditProvider();
-			solrProvider.init(props);
-			
-			if( solrProvider.isAsync()) {
-				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("MySolrAuditProvider", solrProvider.getMaxQueueSize(), solrProvider.getMaxFlushInterval(), solrProvider);
-				providers.add(asyncProvider);
-			} else {
-				providers.add(solrProvider);
-			}
-		}
-
-		if(isAuditToLog4jEnabled) {
-			Log4jAuditProvider log4jProvider = new Log4jAuditProvider();
-
-			boolean isAuditToLog4jAsync = BaseAuditProvider.getBooleanProperty(props, Log4jAuditProvider.AUDIT_LOG4J_IS_ASYNC_PROP, false);
-
-			if(isAuditToLog4jAsync) {
-				int maxQueueSize     = BaseAuditProvider.getIntProperty(props, Log4jAuditProvider.AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP, AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
-				int maxFlushInterval = BaseAuditProvider.getIntProperty(props, Log4jAuditProvider.AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP, AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
-
-				AsyncAuditProvider asyncProvider = new AsyncAuditProvider("Log4jAuditProvider", maxQueueSize, maxFlushInterval, log4jProvider);
-
-				providers.add(asyncProvider);
-			} else {
-				providers.add(log4jProvider);
-			}
-		}
-
-		if(providers.size() == 0) {
-			mProvider = getDefaultProvider();
-		} else if(providers.size() == 1) {
-			mProvider = providers.get(0);
+			mProvider = asyncQueue;
+			mProvider.start();
 		} else {
-			MultiDestAuditProvider multiDestProvider = new MultiDestAuditProvider();
-			
-			multiDestProvider.addAuditProviders(providers);
-			
-			mProvider = multiDestProvider;
+			LOG.info("No v2 audit configuration found. Trying v1 audit configurations");
+			if (!isEnabled
+					|| !(isAuditToDbEnabled || isAuditToHdfsEnabled
+							|| isAuditToKafkaEnabled || isAuditToLog4jEnabled
+							|| isAuditToSolrEnabled || providers.size() == 0)) {
+				LOG.info("AuditProviderFactory: Audit not enabled..");
+
+				mProvider = getDefaultProvider();
+
+				return;
+			}
+
+			if (isAuditToDbEnabled) {
+				LOG.info("DbAuditProvider is enabled");
+				DbAuditProvider dbProvider = new DbAuditProvider();
+
+				boolean isAuditToDbAsync = MiscUtil.getBooleanProperty(props,
+						DbAuditProvider.AUDIT_DB_IS_ASYNC_PROP, false);
+
+				if (isAuditToDbAsync) {
+					int maxQueueSize = MiscUtil.getIntProperty(props,
+							DbAuditProvider.AUDIT_DB_MAX_QUEUE_SIZE_PROP,
+							AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
+					int maxFlushInterval = MiscUtil.getIntProperty(props,
+							DbAuditProvider.AUDIT_DB_MAX_FLUSH_INTERVAL_PROP,
+							AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
+
+					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
+							"DbAuditProvider", maxQueueSize, maxFlushInterval,
+							dbProvider);
+
+					providers.add(asyncProvider);
+				} else {
+					providers.add(dbProvider);
+				}
+			}
+
+			if (isAuditToHdfsEnabled) {
+				LOG.info("HdfsAuditProvider is enabled");
+
+				HdfsAuditProvider hdfsProvider = new HdfsAuditProvider();
+
+				boolean isAuditToHdfsAsync = MiscUtil.getBooleanProperty(props,
+						HdfsAuditProvider.AUDIT_HDFS_IS_ASYNC_PROP, false);
+
+				if (isAuditToHdfsAsync) {
+					int maxQueueSize = MiscUtil.getIntProperty(props,
+							HdfsAuditProvider.AUDIT_HDFS_MAX_QUEUE_SIZE_PROP,
+							AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
+					int maxFlushInterval = MiscUtil
+							.getIntProperty(
+									props,
+									HdfsAuditProvider.AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP,
+									AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
+
+					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
+							"HdfsAuditProvider", maxQueueSize,
+							maxFlushInterval, hdfsProvider);
+
+					providers.add(asyncProvider);
+				} else {
+					providers.add(hdfsProvider);
+				}
+			}
+
+			if (isAuditToKafkaEnabled) {
+				LOG.info("KafkaAuditProvider is enabled");
+				KafkaAuditProvider kafkaProvider = new KafkaAuditProvider();
+				kafkaProvider.init(props);
+
+				if (kafkaProvider.isAsync()) {
+					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
+							"MyKafkaAuditProvider",
+							kafkaProvider.getMaxQueueSize(),
+							kafkaProvider.getMaxBatchInterval(), kafkaProvider);
+					providers.add(asyncProvider);
+				} else {
+					providers.add(kafkaProvider);
+				}
+			}
+
+			if (isAuditToSolrEnabled) {
+				LOG.info("SolrAuditProvider is enabled");
+				SolrAuditProvider solrProvider = new SolrAuditProvider();
+				solrProvider.init(props);
+
+				if (solrProvider.isAsync()) {
+					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
+							"MySolrAuditProvider",
+							solrProvider.getMaxQueueSize(),
+							solrProvider.getMaxBatchInterval(), solrProvider);
+					providers.add(asyncProvider);
+				} else {
+					providers.add(solrProvider);
+				}
+			}
+
+			if (isAuditToLog4jEnabled) {
+				Log4jAuditProvider log4jProvider = new Log4jAuditProvider();
+
+				boolean isAuditToLog4jAsync = MiscUtil.getBooleanProperty(
+						props, Log4jAuditProvider.AUDIT_LOG4J_IS_ASYNC_PROP,
+						false);
+
+				if (isAuditToLog4jAsync) {
+					int maxQueueSize = MiscUtil.getIntProperty(props,
+							Log4jAuditProvider.AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP,
+							AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
+					int maxFlushInterval = MiscUtil
+							.getIntProperty(
+									props,
+									Log4jAuditProvider.AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP,
+									AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
+
+					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
+							"Log4jAuditProvider", maxQueueSize,
+							maxFlushInterval, log4jProvider);
+
+					providers.add(asyncProvider);
+				} else {
+					providers.add(log4jProvider);
+				}
+			}
+			if (providers.size() == 0) {
+				mProvider = getDefaultProvider();
+			} else if (providers.size() == 1) {
+				mProvider = providers.get(0);
+			} else {
+				MultiDestAuditProvider multiDestProvider = new MultiDestAuditProvider();
+
+				multiDestProvider.addAuditProviders(providers);
+
+				mProvider = multiDestProvider;
+			}
+
+			mProvider.init(props);
+			mProvider.start();
 		}
-		
-		mProvider.init(props);
-		mProvider.start();
 
 		JVMShutdownHook jvmShutdownHook = new JVMShutdownHook(mProvider);
 
-	    Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
+		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
 	}
-	
+
+	private AuditProvider getProviderFromConfig(Properties props,
+			String propPrefix, String providerName) {
+		AuditProvider provider = null;
+		String className = MiscUtil.getStringProperty(props, propPrefix + "."
+				+ BaseAuditProvider.PROP_CLASS_NAME);
+		if (className != null && !className.isEmpty()) {
+			try {
+				provider = (AuditProvider) Class.forName(className)
+						.newInstance();
+			} catch (Exception e) {
+				LOG.fatal("Can't instantiate audit class for providerName="
+						+ providerName + ", className=" + className);
+			}
+		} else {
+			if (providerName.equals("file")) {
+				provider = new FileAuditDestination();
+			} else if (providerName.equalsIgnoreCase("hdfs")) {
+				provider = new HDFSAuditDestination();
+			} else if (providerName.equals("solr")) {
+				provider = new SolrAuditProvider();
+			} else if (providerName.equals("kafka")) {
+				provider = new KafkaAuditProvider();
+			} else if (providerName.equals("db")) {
+				provider = new DbAuditProvider();
+			} else if (providerName.equals("log4j")) {
+				provider = new Log4jAuditProvider();
+			} else if (providerName.equals("batch")) {
+				provider = new AuditBatchProcessor();
+			} else if (providerName.equals("async")) {
+				provider = new AuditAsyncQueue();
+			} else {
+				LOG.error("Provider name doesn't have any class associated with it. providerName="
+						+ providerName);
+			}
+		}
+		return provider;
+	}
+
 	private AuditProvider getDefaultProvider() {
 		return new DummyAuditProvider();
 	}
@@ -227,6 +397,6 @@ public class AuditProviderFactory {
 		public void run() {
 			mProvider.waitToComplete();
 			mProvider.stop();
-	    }
+		}
 	}
 }

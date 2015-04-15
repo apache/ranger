@@ -18,18 +18,38 @@
 
 package org.apache.ranger.audit.provider;
 
+import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.ranger.audit.model.AuditEventBase;
 
 public interface AuditProvider {
-	public void log(AuditEventBase event);
+	public boolean log(AuditEventBase event);
+	public boolean log(Collection<AuditEventBase> events);	
+
+	public boolean logJSON(String event);
+	public boolean logJSON(Collection<String> events);	
 
     public void init(Properties prop);
+    public void init(Properties prop, String basePropertyName);
     public void start();
     public void stop();
     public void waitToComplete();
+    public void waitToComplete(long timeout);
 
+    /**
+     * Name for this provider. Used only during logging. Uniqueness is not guaranteed
+     */
+    public String getName();
+
+    /**
+     * If this AuditProvider in the state of shutdown
+     * @return
+     */
+    public boolean isDrain();
+    
+    public int getMaxBatchSize();
+    public int getMaxBatchInterval();
 	public boolean isFlushPending();
 	public long    getLastFlushTime();
     public void    flush();

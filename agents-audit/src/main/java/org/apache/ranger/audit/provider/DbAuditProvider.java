@@ -19,6 +19,7 @@
 package org.apache.ranger.audit.provider;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 
@@ -31,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.dao.DaoManager;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 
 
@@ -38,7 +40,7 @@ import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
  * NOTE:
  * - Instances of this class are not thread-safe.
  */
-public class DbAuditProvider extends BaseAuditProvider {
+public class DbAuditProvider extends AuditDestination {
 
 	private static final Log LOG = LogFactory.getLog(DbAuditProvider.class);
 
@@ -73,17 +75,17 @@ public class DbAuditProvider extends BaseAuditProvider {
 
 		super.init(props);
 
-		mDbProperties         = BaseAuditProvider.getPropertiesWithPrefix(props, AUDIT_JPA_CONFIG_PROP_PREFIX);
-		mCommitBatchSize      = BaseAuditProvider.getIntProperty(props, AUDIT_DB_BATCH_SIZE_PROP, 1000);
-		mDbRetryMinIntervalMs = BaseAuditProvider.getIntProperty(props, AUDIT_DB_RETRY_MIN_INTERVAL_PROP, 15 * 1000);
+		mDbProperties         = MiscUtil.getPropertiesWithPrefix(props, AUDIT_JPA_CONFIG_PROP_PREFIX);
+		mCommitBatchSize      = MiscUtil.getIntProperty(props, AUDIT_DB_BATCH_SIZE_PROP, 1000);
+		mDbRetryMinIntervalMs = MiscUtil.getIntProperty(props, AUDIT_DB_RETRY_MIN_INTERVAL_PROP, 15 * 1000);
 
-		boolean isAsync = BaseAuditProvider.getBooleanProperty(props, AUDIT_DB_IS_ASYNC_PROP, false);
+		boolean isAsync = MiscUtil.getBooleanProperty(props, AUDIT_DB_IS_ASYNC_PROP, false);
 
 		if(! isAsync) {
 			mCommitBatchSize = 1; // Batching not supported in sync mode
 		}
 
-		String jdbcPassword = getCredentialString(BaseAuditProvider.getStringProperty(props, AUDIT_DB_CREDENTIAL_PROVIDER_FILE), AUDIT_DB_CREDENTIAL_PROVIDER_ALIAS);
+		String jdbcPassword = getCredentialString(MiscUtil.getStringProperty(props, AUDIT_DB_CREDENTIAL_PROVIDER_FILE), AUDIT_DB_CREDENTIAL_PROVIDER_ALIAS);
 
 		if(jdbcPassword != null && !jdbcPassword.isEmpty()) {
 			mDbProperties.put(AUDIT_JPA_JDBC_PASSWORD, jdbcPassword);
@@ -91,7 +93,7 @@ public class DbAuditProvider extends BaseAuditProvider {
 	}
 
 	@Override
-	public void log(AuditEventBase event) {
+	public boolean log(AuditEventBase event) {
 		LOG.debug("DbAuditProvider.log()");
 
 		boolean isSuccess = false;
@@ -113,6 +115,30 @@ public class DbAuditProvider extends BaseAuditProvider {
 				logFailedEvent(event);
 			}
 		}
+		return isSuccess;
+	}
+
+	@Override
+	public boolean log(Collection<AuditEventBase> events) {
+		for (AuditEventBase event : events) {
+			log(event);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean logJSON(String event) {
+		AuditEventBase eventObj = MiscUtil.fromJson(event,
+				AuthzAuditEvent.class);
+		return log(eventObj);
+	}
+
+	@Override
+	public boolean logJSON(Collection<String> events) {
+		for (String event : events) {
+			logJSON(event);
+		}
+		return false;
 	}
 
 	@Override
@@ -132,6 +158,13 @@ public class DbAuditProvider extends BaseAuditProvider {
 	@Override
     public void waitToComplete() {
 		LOG.info("DbAuditProvider.waitToComplete()");
+		waitToComplete(-1);
+	}
+
+	@Override
+	public void waitToComplete(long timeout) {
+		LOG.info("DbAuditProvider.waitToComplete():timeout=" + timeout);
+
 	}
 
 	@Override

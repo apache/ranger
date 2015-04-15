@@ -29,6 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.DebugTracer;
 import org.apache.ranger.audit.provider.LogDestination;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -36,6 +37,8 @@ import org.apache.ranger.audit.provider.MiscUtil;
 public class HdfsLogDestination<T> implements LogDestination<T> {
 	public final static String EXCP_MSG_FILESYSTEM_CLOSED = "Filesystem closed";
 
+	private String name = getClass().getName();
+	
 	private String  mDirectory                = null;
 	private String  mFile                     = null;
 	private int     mFlushIntervalSeconds     = 1 * 60;
@@ -57,6 +60,20 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		mLogger = tracer;
 	}
 
+	
+	public void setName(String name) {
+		this.name = name;
+	}
+
+
+	/* (non-Javadoc)
+	 * @see org.apache.ranger.audit.provider.LogDestination#getName()
+	 */
+	@Override
+	public String getName() {
+		return name;
+	}
+	
 	public String getDirectory() {
 		return mDirectory;
 	}
@@ -133,16 +150,28 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	}
 
 	@Override
-	public boolean send(T log) {
-		boolean ret = false;
+	public boolean send(AuditEventBase log) {
+		boolean ret = true;
 		
 		if(log != null) {
-			String msg = log.toString();
+			String msg = MiscUtil.stringify(log);
 
 			ret = sendStringified(msg);
 		}
 
 		return ret;
+	}
+
+	
+	@Override
+	public boolean send(AuditEventBase[] logs) {
+		for(int i = 0; i < logs.length; i++) {
+			boolean ret = send(logs[i]);
+			if(!ret) {
+				return ret;
+			}
+		}
+		return true;
 	}
 
 	@Override
@@ -168,6 +197,18 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		return ret;
 	}
 
+	@Override
+	public boolean sendStringified(String[] logs) {
+		for(int i = 0; i < logs.length; i++) {
+			boolean ret = sendStringified(logs[i]);
+			if(!ret) {
+				return ret;
+			}
+		}
+		return true;
+	}
+	
+	
 	@Override
 	public boolean flush() {
 		mLogger.debug("==> HdfsLogDestination.flush()");
@@ -448,4 +489,5 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		
 		return sb.toString();
 	}
+
 }
