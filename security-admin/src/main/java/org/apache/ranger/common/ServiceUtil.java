@@ -44,7 +44,6 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
@@ -489,23 +488,55 @@ public class ServiceUtil {
 		return ret;
 	}	
 
+	private void updateResourceName(VXPolicy policy) {
+		if(policy == null) {
+			return;
+		}
+
+		String resourceName = getResourceName(toAssetType(policy.getRepositoryType()),
+											  policy.getResourceName(),
+											  policy.getTables(),
+											  policy.getColumnFamilies(),
+											  policy.getColumns(),
+											  policy.getDatabases(),
+											  policy.getTopologies(),
+											  policy.getServices());
+
+		policy.setResourceName(resourceName);
+	}
+
 	private void updateResourceName(VXResource resource) {
 		if(resource == null) {
 			return;
 		}
 
+		String resourceName = getResourceName(resource.getAssetType(),
+											  resource.getName(),
+											  resource.getTables(),
+											  resource.getColumnFamilies(),
+											  resource.getColumns(),
+											  resource.getDatabases(),
+											  resource.getTopologies(),
+											  resource.getServices());
+
+		resource.setName(resourceName);
+	}
+
+	private String getResourceName(int assetType, String paths, String tables, String columnFamilies, String columns, String databases, String topologies, String services) {
 		StringBuilder sb = new StringBuilder();
 
-		switch(resource.getAssetType()) {
+		switch(assetType) {
 			case RangerCommonEnums.ASSET_HDFS:
-				sb.append(emptyIfNull(resource.getName()));
+				paths = emptyIfNull(paths);
+
+				sb.append(paths);
 			break;
 
 			case RangerCommonEnums.ASSET_HBASE:
 			{
-				String tables         = emptyIfNull(resource.getTables());
-				String columnFamilies = emptyIfNull(resource.getColumnFamilies());
-				String columns        = emptyIfNull(resource.getColumns());
+				tables         = emptyIfNull(tables);
+				columnFamilies = emptyIfNull(columnFamilies);
+				columns        = emptyIfNull(columns);
 
 				for(String column : columns.split(",")) {
 					for(String columnFamily : columnFamilies.split(",")) {
@@ -523,9 +554,9 @@ public class ServiceUtil {
 
 			case RangerCommonEnums.ASSET_HIVE:
 			{
-				String databases = emptyIfNull(resource.getDatabases());
-				String tables    = emptyIfNull(resource.getTables());
-				String columns   = emptyIfNull(resource.getColumns());
+				databases = emptyIfNull(databases);
+				tables    = emptyIfNull(tables);
+				columns   = emptyIfNull(columns);
 
 				for(String column : columns.split(",")) {
 					for(String table : tables.split(",")) {
@@ -534,7 +565,7 @@ public class ServiceUtil {
 								sb.append(",");
 							}
 
-							sb.append("/").append(database).append(table).append("/").append("/").append(column);
+							sb.append("/").append(database).append("/").append(table).append("/").append(column);
 						}
 					}
 				}
@@ -543,8 +574,8 @@ public class ServiceUtil {
 
 			case RangerCommonEnums.ASSET_KNOX:
 			{
-				String topologies = emptyIfNull(resource.getTopologies());
-				String services   = emptyIfNull(resource.getServices());
+				topologies = emptyIfNull(topologies);
+				services   = emptyIfNull(services);
 
 				for(String service : services.split(",")) {
 					for(String topology : topologies.split(",")) {
@@ -552,20 +583,20 @@ public class ServiceUtil {
 							sb.append(",");
 						}
 
-						sb.append("/").append(topology).append(service);
+						sb.append("/").append(topology).append("/").append(service);
 					}
 				}
 			}
 			break;
 
 			case RangerCommonEnums.ASSET_STORM:
-				sb.append(emptyIfNull(resource.getTopologies()));
+				topologies = emptyIfNull(topologies);
+
+				sb.append(topologies);
 			break;
 		}
 
-		if(sb.length() > 0) {
-			resource.setName(sb.toString());
-		}
+		return sb.toString();
 	}
 
 	private String emptyIfNull(String str) {
@@ -769,6 +800,7 @@ public class ServiceUtil {
 				ret.setServices(resString);
 			}
 		}
+		updateResourceName(ret);
 			
 		List<VXPermMap> vXPermMapList = getVXPermMapList(policy);
 			
@@ -916,12 +948,8 @@ public class ServiceUtil {
 				}
 				ipAddress = permMap.getIpAddress();
 			}
-			if (!userList.isEmpty()) {
-				vXPermObj.setUserList(userList);
-			}
-			if (!groupList.isEmpty()) {
-				vXPermObj.setGroupList(groupList);
-			}
+			vXPermObj.setUserList(userList);
+			vXPermObj.setGroupList(groupList);
 			vXPermObj.setPermList(permList);
 			vXPermObj.setIpAddress(ipAddress);
 
@@ -1100,8 +1128,6 @@ public class ServiceUtil {
 		RangerService service       = null;
 		List<VXPolicy> vXPolicyList = new ArrayList<VXPolicy>();
 
-		VXPolicyList  vXPolicyListObj  = new VXPolicyList();
-		
 		for ( RangerPolicy policy : rangerPolicyList) {
 			try {
 				service = svcStore.getServiceByName(policy.getService());
@@ -1117,8 +1143,8 @@ public class ServiceUtil {
 			
 			vXPolicyList.add(vXPolicy);
 		}
-		
-		vXPolicyListObj.setVXPolicies(vXPolicyList);
+
+		VXPolicyList vXPolicyListObj = new VXPolicyList(vXPolicyList);
 		
 		return vXPolicyListObj;
 		
