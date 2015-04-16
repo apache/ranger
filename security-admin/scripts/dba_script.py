@@ -1114,7 +1114,22 @@ def main(argv):
 
 	log("[I] Running DBA setup script. QuiteMode:" + str(quiteMode),"info")
 	if (quiteMode):
-		JAVA_BIN=globalDict['JAVA_BIN']
+		if os.environ['JAVA_HOME'] == "":
+			log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")
+			sys.exit(1)
+		else:
+			JAVA_BIN=os.path.join(os.environ['JAVA_HOME'],'bin','java')
+		if os_name == "WINDOWS" :
+			JAVA_BIN = JAVA_BIN+'.exe'
+		if os.path.isfile(JAVA_BIN):
+			pass
+		else:
+			JAVA_BIN=globalDict['JAVA_BIN']
+			if os.path.isfile(JAVA_BIN):
+				pass
+			else:
+				log("[E] ---------- JAVA Not Found, aborting installation. ----------", "error")
+				sys.exit(1)
 	else:
 		if os.environ['JAVA_HOME'] == "":
 			log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")
