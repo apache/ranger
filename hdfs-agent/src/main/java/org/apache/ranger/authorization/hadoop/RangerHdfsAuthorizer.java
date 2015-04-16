@@ -286,7 +286,21 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						accessGranted = true;
 					} finally {
 						if(auditHandler != null) {
-							auditHandler.logHadoopEvent(path, access, accessGranted);
+							FsAction action = access;
+
+							if(action == null) {
+								if(parentAccess != null) {
+									action = parentAccess;
+								} else if(ancestorAccess != null) {
+									action = ancestorAccess;
+								} else if(subAccess != null) {
+									action = subAccess;
+								} else {
+									action = FsAction.NONE;
+								}
+							}
+
+							auditHandler.logHadoopEvent(path, action, accessGranted);
 						}
 					}
 				}
@@ -436,6 +450,10 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 	@Override
 	public void logAudit(RangerAccessResult result) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerHdfsAuditHandler.logAudit(" + result + ")");
+		}
+
 		if(! isAuditEnabled && result.getIsAudited()) {
 			isAuditEnabled = true;
 		}
@@ -457,30 +475,46 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		auditEvent.setRepositoryType(result.getServiceType());
 		auditEvent.setRepositoryName(result.getServiceName());
 		auditEvent.setResultReason(resourcePath);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerHdfsAuditHandler.logAudit(" + result + "): " + auditEvent);
+		}
 	}
 
 	public void logHadoopEvent(String path, FsAction action, boolean accessGranted) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerHdfsAuditHandler.logHadoopEvent(" + path + ", " + action + ", " + accessGranted + ")");
+		}
+
 		auditEvent.setResultReason(path);
 		auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
 		auditEvent.setAccessType(action == null ? null : action.toString());
 		auditEvent.setAclEnforcer(HadoopModuleName);
 		auditEvent.setPolicyId(-1);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerHdfsAuditHandler.logHadoopEvent(" + path + ", " + action + ", " + accessGranted + "): " + auditEvent);
+		}
 	}
 
 	public void flushAudit() {
-		if(! isAuditEnabled || StringUtils.isEmpty(auditEvent.getAccessType())) {
-			return;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerHdfsAuditHandler.flushAudit(" + isAuditEnabled + ", " + auditEvent + ")");
 		}
 
-		String username = auditEvent.getUser();
+		if(isAuditEnabled && !StringUtils.isEmpty(auditEvent.getAccessType())) {
+			String username = auditEvent.getUser();
 
-		boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username)) ;
-		
-		if (skipLog) {
-			return ;
+			boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username)) ;
+
+			if (! skipLog) {
+				super.logAuthzAudit(auditEvent);
+			}
 		}
 
-		super.logAuthzAudit(auditEvent);
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerHdfsAuditHandler.flushAudit(" + isAuditEnabled + ", " + auditEvent + ")");
+		}
 	}
 }
 
