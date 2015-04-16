@@ -272,10 +272,8 @@ define(function(require){
 							XAUtil.blockUI('unblock');
 							that.collection.remove(model.get('id'));
 							XAUtil.notifySuccess('Success', localization.tt('msg.policyDeleteMsg'));
-							if(that.collection.length ==  0){
-								that.renderTable();
-								that.collection.fetch();
-							}
+							that.renderTable();
+							that.collection.fetch();
 						},
 						error: function (model, response, options) {
 							XAUtil.blockUI('unblock');

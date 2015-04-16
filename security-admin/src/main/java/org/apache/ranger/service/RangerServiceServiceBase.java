@@ -27,6 +27,7 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceDef;
@@ -48,7 +49,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		
 		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
 		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
-		sortFields.add(new SortField(SearchFilter.SERVICE_ID, "obj.id"));
+		sortFields.add(new SortField(SearchFilter.SERVICE_ID, "obj.id", true, SORT_ORDER.ASC));
 		sortFields.add(new SortField(SearchFilter.SERVICE_NAME, "obj.name"));
 		
 	}
