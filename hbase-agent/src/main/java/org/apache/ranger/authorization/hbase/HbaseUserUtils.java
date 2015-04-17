@@ -49,4 +49,11 @@ public interface HbaseUserUtils {
 	 * @return
 	 */
 	String getUserAsString();
+
+	/**
+	 * Returns true of specified user is configured to be a super user
+	 * @param user
+	 * @return
+	 */
+	boolean isSuperUser(User user);
 }

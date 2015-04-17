@@ -18,6 +18,8 @@
  */
 package org.apache.ranger.authorization.hbase;
 
+import org.apache.hadoop.conf.Configuration;
+
 
 
 // TODO remove this in favor of Guice DI
@@ -47,5 +49,9 @@ public class HbaseFactory {
 	
 	HbaseAuditHandler getAuditHandler() {
 		return new HbaseAuditHandlerImpl();
+	}
+
+	static void initialize(Configuration conf) {
+		HbaseUserUtilsImpl.initiailize(conf);
 	}
 }

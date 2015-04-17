@@ -31,6 +31,7 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 	final List<AuthzAuditEvent> _allEvents = new ArrayList<AuthzAuditEvent>();
 	// we replace its contents anytime new audit events are generated.
 	AuthzAuditEvent _mostRecentEvent = null;
+	boolean _superUserOverride = false;
 	
 	@Override
 	public AuthzAuditEvent getAuthzEvents(RangerAccessResult result) {
@@ -52,13 +53,14 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 		if (_mostRecentEvent != null) {
 			result.add(_mostRecentEvent);
 		}
-		
+		applySuperUserOverride(result);
 		return result;
 	}
 
 	@Override
 	public AuthzAuditEvent  discardMostRecentEvent() {
 		AuthzAuditEvent result = _mostRecentEvent;
+		applySuperUserOverride(result);
 		_mostRecentEvent = null;
 		return result;
 	}
@@ -66,5 +68,22 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 	@Override
 	public void setMostRecentEvent(AuthzAuditEvent event) {
 		_mostRecentEvent = event;
+	}
+
+	@Override
+	public void setSuperUserOverride(boolean override) {
+		_superUserOverride = override;
+	}
+	
+	void applySuperUserOverride(List<AuthzAuditEvent> events) {
+		for (AuthzAuditEvent event : events) {
+			applySuperUserOverride(event);
+		}
+	}
+	
+	void applySuperUserOverride(AuthzAuditEvent event) {
+		if (event != null && _superUserOverride) {
+			event.setAccessResult((short)1);
+		}
 	}
 }

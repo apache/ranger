@@ -57,6 +57,7 @@ public class AuthorizationSession {
 	Set<String> _groups; // this exits to avoid having to get group for a user repeatedly.  It is kept in sync with _user;
 	// Passing a null handler to policy engine would suppress audit logging.
 	HbaseAuditHandler _auditHandler = null;
+	boolean _superUser = false; // is this session for a super user?
 	
 	// internal state per-authorization
 	RangerAccessRequest _request;
@@ -89,10 +90,11 @@ public class AuthorizationSession {
 	AuthorizationSession user(User aUser) {
 		_user = aUser;
 		if (_user == null) {
-			LOG.debug("AuthorizationSession.user: user is null!");
+			LOG.warn("AuthorizationSession.user: user is null!");
 			_groups = null;
 		} else {
 			_groups = _userUtils.getUserGroups(_user);
+			_superUser = _userUtils.isSuperUser(_user);
 		}
 		return this;
 	}
@@ -185,6 +187,12 @@ public class AuthorizationSession {
 			throw new IllegalStateException(message);
 		} else {
 			// ok to pass potentially null handler to policy engine.  Null handler effectively suppresses the audit.
+			if (_auditHandler != null && _superUser) {
+				if (LOG.isDebugEnabled()) {
+	                LOG.debug("Setting super-user override on audit handler");
+				}
+				_auditHandler.setSuperUserOverride(_superUser);
+			}
 			_result = _authorizer.isAccessAllowed(_request, _auditHandler);
 		}
 		if (LOG.isDebugEnabled()) {
@@ -254,6 +262,12 @@ public class AuthorizationSession {
 			LOG.error(message);
 		} else {
 			allowed = _result.getIsAllowed();
+		}
+		if (!allowed && _superUser) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("User [" + _user + "] is a superUser!  Overriding policy engine's decision.  Request is deemed authorized!");
+			}
+			allowed = true;
 		}
 		return allowed;
 	}
