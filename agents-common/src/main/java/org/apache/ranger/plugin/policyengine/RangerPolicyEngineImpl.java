@@ -41,7 +41,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	private final RangerPolicyRepository policyRepository;
 
-	private RangerAuditHandler defaultAuditHandler = null;
 
 	public RangerPolicyEngineImpl(ServicePolicies servicePolicies) {
 		this(servicePolicies, null);
@@ -94,28 +93,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public void setDefaultAuditHandler(RangerAuditHandler auditHandler) {
-		this.defaultAuditHandler = auditHandler;
-	}
-
-	@Override
-	public RangerAuditHandler getDefaultAuditHandler() {
-		return defaultAuditHandler;
-	}
-
-	@Override
 	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
 		return new RangerAccessResult(this.getServiceName(), policyRepository.getServiceDef(), request);
-	}
-
-	@Override
-	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
-		return isAccessAllowed(request, defaultAuditHandler);
-	}
-
-	@Override
-	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests) {
-		return isAccessAllowed(requests, defaultAuditHandler);
 	}
 
 	@Override

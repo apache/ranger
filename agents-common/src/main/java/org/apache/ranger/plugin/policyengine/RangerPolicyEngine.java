@@ -50,16 +50,8 @@ public interface RangerPolicyEngine {
 	List<RangerContextEnricher> getContextEnrichers();
 
 
-	void setDefaultAuditHandler(RangerAuditHandler auditHandler);
-
-	RangerAuditHandler getDefaultAuditHandler();
-
 	RangerAccessResult createAccessResult(RangerAccessRequest request);
 
-
-	RangerAccessResult isAccessAllowed(RangerAccessRequest request);
-
-	Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests);
 
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler);
 
