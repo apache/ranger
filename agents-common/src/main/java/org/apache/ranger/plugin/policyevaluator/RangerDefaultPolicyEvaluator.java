@@ -649,7 +649,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			}
 
 			if (ret != null) {
-				ret.init(resourceDef, resource);
+				ret.init(resourceDef.getMatcherOptions(), resource);
 			}
 		} else {
 			LOG.error("RangerDefaultPolicyEvaluator: RangerResourceDef is null");

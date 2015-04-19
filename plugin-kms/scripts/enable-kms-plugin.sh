@@ -88,11 +88,6 @@ HCOMPONENT_NAME=`echo ${COMPONENT_NAME} | sed -e 's:-plugin::'`
 
 CFG_OWNER_INF="${HCOMPONENT_NAME}:${HCOMPONENT_NAME}"
 
-if [ "${HCOMPONENT_NAME}" = "hdfs" ]
-then
-	HCOMPONENT_NAME="hadoop"
-fi
-
 #
 # Based on script name, identify if the action is enabled or disabled
 #
@@ -111,14 +106,13 @@ fi
 # environment variables for enable|disable scripts 
 #
 
-PROJ_INSTALL_DIR1=`(cd ${basedir} ; pwd)`
-PROJ_INSTALL_DIR=${PROJ_INSTALL_DIR1}/..
+PROJ_INSTALL_DIR=`(cd ${basedir} ; pwd)`
 SET_ENV_SCRIPT_NAME=set-${COMPONENT_NAME}-env.sh
-SET_ENV_SCRIPT_TEMPLATE=${PROJ_INSTALL_DIR}/scripts/install/conf.templates/enable/${SET_ENV_SCRIPT_NAME}
-DEFAULT_XML_CONFIG=${PROJ_INSTALL_DIR}/scripts/install/conf.templates/default/configuration.xml
+SET_ENV_SCRIPT_TEMPLATE=${PROJ_INSTALL_DIR}/install/conf.templates/enable/${SET_ENV_SCRIPT_NAME}
+DEFAULT_XML_CONFIG=${PROJ_INSTALL_DIR}/install/conf.templates/default/configuration.xml
 PROJ_LIB_DIR=${PROJ_INSTALL_DIR}/ews/plugin/lib
-PROJ_INSTALL_LIB_DIR="${PROJ_INSTALL_DIR}/scripts/install/lib"
-INSTALL_ARGS="${PROJ_INSTALL_DIR}/ews/webapp/config/plugin-install.properties"
+PROJ_INSTALL_LIB_DIR="${PROJ_INSTALL_DIR}/install/lib"
+INSTALL_ARGS="${PROJ_INSTALL_DIR}/install.properties"
 COMPONENT_INSTALL_ARGS="${PROJ_INSTALL_DIR}/ews/webapp/config/${COMPONENT_NAME}-install.properties"
 JAVA=$JAVA_HOME/bin/java
 
@@ -290,7 +284,7 @@ fi
 # Run, the enable|disable ${COMPONENT} configurations 
 #
 
-if [ -d "${PROJ_INSTALL_DIR}/scripts/install/conf.templates/${action}" ]
+if [ -d "${PROJ_INSTALL_DIR}/install/conf.templates/${action}" ]
 then
 	INSTALL_CP="${PROJ_INSTALL_LIB_DIR}/*" 
 	if [ "${action}" = "enable" ]
@@ -298,17 +292,20 @@ then
 		echo "<ranger>\n<enabled>`date`</enabled>\n</ranger>" > ${HCOMPONENT_CONF_DIR}/ranger-security.xml
 		chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/ranger-security.xml
 		chmod a+r ${HCOMPONENT_CONF_DIR}/ranger-security.xml
-		for cf in ${PROJ_INSTALL_DIR}/scripts/install/conf.templates/${action}/*.xml
+		for cf in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.xml
 		do
-			cfb=`basename ${cf}`
-			if [ -f "${HCOMPONENT_CONF_DIR}/${cfb}" ]
+			if [ -f "${cf}" ]
 			then
-				log "Saving ${HCOMPONENT_CONF_DIR}/${cfb} to ${HCOMPONENT_CONF_DIR}/.${cfb}.${dt} ..."
-				cp ${HCOMPONENT_CONF_DIR}/${cfb} ${HCOMPONENT_CONF_DIR}/.${cfb}.${dt}
+				cfb=`basename ${cf}`
+				if [ -f "${HCOMPONENT_CONF_DIR}/${cfb}" ]
+				then
+					log "Saving ${HCOMPONENT_CONF_DIR}/${cfb} to ${HCOMPONENT_CONF_DIR}/.${cfb}.${dt} ..."
+					cp ${HCOMPONENT_CONF_DIR}/${cfb} ${HCOMPONENT_CONF_DIR}/.${cfb}.${dt}
+				fi
+				cp ${cf} ${HCOMPONENT_CONF_DIR}/
+				chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/${cfb}
+				chmod a+r ${HCOMPONENT_CONF_DIR}/${cfb}
 			fi
-			cp ${cf} ${HCOMPONENT_CONF_DIR}/
-			chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_DIR}/${cfb}
-			chmod a+r ${HCOMPONENT_CONF_DIR}/${cfb}
 		done
     else
 		if [ -f ${HCOMPONENT_CONF_DIR}/ranger-security.xml ]
@@ -364,7 +361,7 @@ then
 	fi
 
 
-	for f in ${PROJ_INSTALL_DIR}/scripts/install/conf.templates/${action}/*.cfg
+	for f in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.cfg
 	do
 		if [ -f "${f}" ]
 		then

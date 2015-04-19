@@ -19,15 +19,12 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
+import java.util.Map;
+
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
 public interface RangerResourceMatcher {
-	void init(RangerResourceDef resourceDef, RangerPolicyResource policyResource);
-
-	RangerResourceDef getResourceDef();
-
-	RangerPolicyResource getPolicyResource();
+	void init(Map<String, String> options, RangerPolicyResource policyResource);
 
 	boolean isMatch(String resource);
 

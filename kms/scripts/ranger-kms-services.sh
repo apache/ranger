@@ -32,7 +32,7 @@ RANGER_KMS_EWS_LIB_DIR="${RANGER_KMS_EWS_DIR}/lib"
 
 JAVA_OPTS=" ${JAVA_OPTS} -XX:MaxPermSize=256m -Xmx1024m -Xms1024m "
 
-for custom_env_script in `find ${RANGER_KMS_DIR}/ews/conf/ -name "ranger-admin-env*"`; do
+for custom_env_script in `find ${RANGER_KMS_DIR}/ews/conf/ -name "ranger-kms-env*"`; do
         if [ -f $custom_env_script ]; then
                 . $custom_env_script
         fi
@@ -86,7 +86,7 @@ elif [ "${action^^}" == "RESTART" ]; then
 	echo "Restarting Apache Ranger KMS"
 	java ${JAVA_OPTS} ${STOP_CLASS_NAME} ${KMS_CONFIG_FILENAME} > ${TOMCAT_STOP_LOG_FILE} 2>&1
 	echo "Apache Ranger KMS has been stopped."
-	echo "Starting Apache Ranger Admin.."
+	echo "Starting Apache Ranger KMS."
 	java -D${PROC_NAME} ${JAVA_OPTS} ${START_CLASS_NAME} ${KMS_CONFIG_FILENAME} > ${TOMCAT_LOG_FILE} 2>&1 &
 	echo "Apache Ranger KMS has started successfully."
 	exit

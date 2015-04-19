@@ -164,7 +164,7 @@ class MysqlConf(BaseDB):
 								query = get_cmd + " -query \"create user '%s'@'%s';\" -c ;" %(db_user, host)
 								ret = subprocess.call(query)
 							if ret == 0:
-								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd):
+								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd, dryMode):
 									log("[I] MySQL user " + db_user +" created for host " + host ,"info")
 								else:
 									log("[E] Creating MySQL user " + db_user +" failed..","error")
@@ -1114,7 +1114,22 @@ def main(argv):
 
 	log("[I] Running DBA setup script. QuiteMode:" + str(quiteMode),"info")
 	if (quiteMode):
-		JAVA_BIN=globalDict['JAVA_BIN']
+		if os.environ['JAVA_HOME'] == "":
+			log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")
+			sys.exit(1)
+		else:
+			JAVA_BIN=os.path.join(os.environ['JAVA_HOME'],'bin','java')
+		if os_name == "WINDOWS" :
+			JAVA_BIN = JAVA_BIN+'.exe'
+		if os.path.isfile(JAVA_BIN):
+			pass
+		else:
+			JAVA_BIN=globalDict['JAVA_BIN']
+			if os.path.isfile(JAVA_BIN):
+				pass
+			else:
+				log("[E] ---------- JAVA Not Found, aborting installation. ----------", "error")
+				sys.exit(1)
 	else:
 		if os.environ['JAVA_HOME'] == "":
 			log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")

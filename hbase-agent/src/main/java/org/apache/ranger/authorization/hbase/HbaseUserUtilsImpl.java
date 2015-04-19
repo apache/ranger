@@ -20,22 +20,49 @@ package org.apache.ranger.authorization.hbase;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.ipc.RpcServer;
 import org.apache.hadoop.hbase.security.User;
 
 public class HbaseUserUtilsImpl implements HbaseUserUtils {
 
 	private static final Log LOG = LogFactory.getLog(HbaseUserUtilsImpl.class.getName());
+	private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 
-	static Set<String> _SuperUsers = Collections.synchronizedSet(new HashSet<String>());
-	static AtomicBoolean initialized = new AtomicBoolean(false);
+	// only to detect problems with initialization order, not for thread-safety. 
+	static final AtomicBoolean _Initialized = new AtomicBoolean(false);
+	// should never be null
+	static final AtomicReference<Set<String>> _SuperUsers = new AtomicReference<Set<String>>(new HashSet<String>());
+	
+	public static void initiailize(Configuration conf) {
+		
+		if (_Initialized.get()) {
+			LOG.warn("HbaseUserUtilsImpl.initialize: Unexpected: initialization called more than once!");
+		} else {
+			if (conf == null) {
+				LOG.error("HbaseUserUtilsImpl.initialize: Internal error: called with null conf value!");
+			} else {
+				String[] users = conf.getStrings(SUPERUSER_CONFIG_PROP);
+				if (users != null && users.length > 0) {
+					Set<String> superUsers = new HashSet<String>(users.length);
+					for (String user : users) {
+						user = user.trim();
+						LOG.info("HbaseUserUtilsImpl.initialize: Adding Super User(" + user + ")");
+						superUsers.add(user);
+					}
+					_SuperUsers.set(superUsers);
+				}
+			}
+			_Initialized.set(true);
+		}
+	}
 	
 	@Override
 	public String getUserAsString(User user) {
@@ -83,5 +110,22 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
 		else {
 			return getUserAsString(user);
 		}
+	}
+
+	/**
+	 * No user can be a superuser till the class is properly initialized.  Once class is properly initialized, users specified in
+	 * configuration would be reported as super users.
+	 */
+	@Override
+	public boolean isSuperUser(User user) {
+		if (!_Initialized.get()) {
+			LOG.error("HbaseUserUtilsImpl.isSuperUser: Internal error: called before initialization was complete!");
+		}
+		Set<String> superUsers = _SuperUsers.get(); // can never be null
+		boolean isSuper = superUsers.contains(user.getShortName());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("IsSuperCheck on [" + user.getShortName() + "] returns [" + isSuper + "]");
+		}
+		return isSuper;
 	}
 }

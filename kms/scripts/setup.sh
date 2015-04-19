@@ -22,11 +22,13 @@
 PROPFILE=$PWD/install.properties
 propertyValue=''
 
-. $PROPFILE
-if [ ! $? = "0" ];then
-	log "$PROPFILE file not found....!!";
+if [ ! -f ${PROPFILE} ]
+then
+	echo "$PROPFILE file not found....!!";
 	exit 1;
 fi
+
+eval `grep -v '^XAAUDIT.' ${PROPFILE} | grep -v '^$' | grep -v '^#'`
 
 DB_HOST="${db_host}"
 
@@ -131,11 +133,14 @@ init_logfiles () {
 init_variables(){
 	curDt=`date '+%Y%m%d%H%M%S'`
 
-	VERSION=`cat ${PWD}/version`
+	if [ -f ${PWD}/version ] 
+	then
+		VERSION=`cat ${PWD}/version`
+	else
+		VERSION="0.5.0"
+	fi
 
 	KMS_DIR=$PWD
-
-	RANGER_KMS_INITD=kms-initd
 
 	RANGER_KMS=ranger-kms
 
@@ -267,9 +272,15 @@ copy_db_connector(){
 
 setup_kms(){
         #copying ranger kms provider 
+	oldP=${PWD}
         cd $PWD/ews/webapp
         log "[I] Adding ranger kms provider as services in hadoop-common jar"
-        jar -uf lib/hadoop-common*.jar META-INF/services/org.apache.hadoop.crypto.key.KeyProviderFactory
+	for f in lib/hadoop-common*.jar
+	do
+        	jar -uf ${f}  META-INF/services/org.apache.hadoop.crypto.key.KeyProviderFactory
+		chown ${unix_user}:${unix_group} ${f}
+	done
+        cd ${oldP}
 }
 
 update_properties() {
@@ -355,16 +366,21 @@ update_properties() {
 
 	echo "Starting configuration for XA DB credentials:"
 
-	db_password_alias=ranger.ks.jdbc.password
+	MK_CREDENTIAL_ATTR="ranger.db.encrypt.key.password"
+	DB_CREDENTIAL_ATTR="ranger.ks.jpa.jdbc.password" 
+
+	MK_CREDENTIAL_ALIAS="ranger.ks.masterkey.password"
+	DB_CREDENTIAL_ALIAS="ranger.ks.jpa.jdbc.credential.alias"
 
 	if [ "${keystore}" != "" ]
 	then
 		mkdir -p `dirname "${keystore}"`
 
-		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
+		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "${DB_CREDENTIAL_ALIAS}" -value "$db_password" -provider jceks://file$keystore
+		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "${MK_CREDENTIAL_ALIAS}" -value "${KMS_MASTER_KEY_PASSWD}" -provider jceks://file$keystore
 
 		propertyName=ranger.ks.jpa.jdbc.credential.alias
-		newPropertyValue="${db_password_alias}"
+		newPropertyValue="${DB_CREDENTIAL_ALIAS}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 		propertyName=ranger.ks.jpa.jdbc.credential.provider.path
@@ -375,8 +391,12 @@ update_properties() {
 		newPropertyValue="_"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	else
-		propertyName=ranger.ks.jpa.jdbc.password
+		propertyName="${DB_CREDENTIAL_ATTR}"
 		newPropertyValue="${db_password}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName="${MK_CREDENTIAL_ATTR}"
+		newPropertyValue="${KMS_MASTER_KEY_PASSWD}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
 
@@ -386,8 +406,13 @@ update_properties() {
 		chmod 640 ${keystore}
 	else
 		#echo "$keystore not found. so clear text password"
-		propertyName=ranger.ks.jpa.jdbc.password
+
+		propertyName="${DB_CREDENTIAL_ATTR}"
 		newPropertyValue="${db_password}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName="${MK_CREDENTIAL_ATTR}"
+		newPropertyValue="${KMS_MASTER_KEY_PASSWD}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
 
@@ -437,7 +462,7 @@ setup_install_files(){
 
 	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
-	    cp ${INSTALL_DIR}/ews/${RANGER_KMS_INITD} /etc/init.d/${RANGER_KMS}
+	    cp ${INSTALL_DIR}/${RANGER_KMS} /etc/init.d/${RANGER_KMS}
 
 	    chmod ug+rx /etc/init.d/${RANGER_KMS}
 
@@ -500,6 +525,13 @@ setup_install_files(){
 	  ln -sf ${INSTALL_DIR}/ranger-kms-services.sh /usr/bin/ranger-kms
 	  chmod ug+rx /usr/bin/ranger-kms	
 	fi
+
+	if [ ! -d /var/log/ranger/kms ]
+	then
+		mkdir -p /var/log/ranger/kms
+	fi
+	chgrp ${unix_group} /var/log/ranger/kms
+	chmod g+rwx /var/log/ranger/kms
 }
 
 init_logfiles
@@ -526,4 +558,7 @@ else
 	log "[E] DB schema setup failed! Please contact Administrator."
 	exit 1
 fi
+
+./enable-kms-plugin.sh
+
 echo "Installation of Ranger KMS is completed."

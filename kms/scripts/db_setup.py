@@ -62,7 +62,7 @@ def populate_global_dict():
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
 	elif os_name == "WINDOWS":
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
-		library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
+	library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
 
 	for each_line in read_config_file.read().split('\n') :
 		if len(each_line) == 0 : continue
@@ -406,7 +406,22 @@ def main(argv):
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
-	JAVA_BIN = globalDict['JAVA_BIN']
+	if os.environ['JAVA_HOME'] == "":
+		log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")
+		sys.exit(1)
+	else:
+		JAVA_BIN=os.path.join(os.environ['JAVA_HOME'],'bin','java')
+	if os_name == "WINDOWS" :
+		JAVA_BIN = JAVA_BIN+'.exe'
+	if os.path.isfile(JAVA_BIN):
+		pass
+	else:
+		JAVA_BIN=globalDict['JAVA_BIN']
+		if os.path.isfile(JAVA_BIN):
+			pass
+		else:
+			log("[E] ---------- JAVA Not Found, aborting installation. ----------", "error")
+			sys.exit(1)
 	XA_DB_FLAVOR = globalDict['DB_FLAVOR']
 	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
 
@@ -430,7 +445,7 @@ def main(argv):
 	db_password = globalDict['db_password']
 
 	x_db_version = 'x_db_version_h'
-	x_user = 'x_portal_user'
+	x_user = 'ranger_masterkey'
 
 
 	if XA_DB_FLAVOR == "MYSQL":

@@ -30,6 +30,30 @@ globalDict = {}
 os_name = platform.system()
 os_name = os_name.upper()
 
+if os_name == "LINUX":
+        RANGER_KMS_HOME = os.getcwd()
+elif os_name == "WINDOWS":
+        RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+
+def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
+    finalLibPath = libpath.replace('\\','/').replace('//','/')
+    finalFilePath = 'jceks://file/'+filepath.replace('\\','/').replace('//','/')
+    if getorcreate == 'create':
+        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
+        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, error = p.communicate()
+        statuscode = p.returncode
+        return statuscode
+    elif getorcreate == 'get':
+        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
+        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, error = p.communicate()
+        statuscode = p.returncode
+        return statuscode, output
+    else:
+        print 'proper command not received for input need get or create'
+
+
 def check_output(query):
 	if os_name == "LINUX":
 		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
@@ -52,6 +76,11 @@ def log(msg,type):
 
 def populate_global_dict():
 	global globalDict
+	if os_name == "LINUX":
+		read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
+	elif os_name == "WINDOWS":
+		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
+	library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
 	read_config_file = open(os.path.join(os.getcwd(),'install.properties'))
 	for each_line in read_config_file.read().split('\n') :
 		if len(each_line) == 0 : continue
@@ -162,7 +191,7 @@ class MysqlConf(BaseDB):
 								query = get_cmd + " -query \"create user '%s'@'%s';\" -c ;" %(db_user, host)
 								ret = subprocess.call(query)
 							if ret == 0:
-								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd):
+								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd,dryMode):
 									log("[I] MySQL user " + db_user +" created for host " + host ,"info")
 								else:
 									log("[E] Creating MySQL user " + db_user +" failed..","error")
@@ -897,7 +926,22 @@ def main(argv):
 
 	log("[I] Running DBA setup script. QuiteMode:" + str(quiteMode),"info")
 	if (quiteMode):
-		JAVA_BIN=globalDict['JAVA_BIN']
+		if os.environ['JAVA_HOME'] == "":
+			log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")
+			sys.exit(1)
+		else:
+			JAVA_BIN=os.path.join(os.environ['JAVA_HOME'],'bin','java')
+		if os_name == "WINDOWS" :
+			JAVA_BIN = JAVA_BIN+'.exe'
+		if os.path.isfile(JAVA_BIN):
+			pass
+		else:
+			JAVA_BIN=globalDict['JAVA_BIN']
+			if os.path.isfile(JAVA_BIN):
+				pass
+			else:
+				log("[E] ---------- JAVA Not Found, aborting installation. ----------", "error")
+				sys.exit(1)
 	else:
 		if os.environ['JAVA_HOME'] == "":
 			log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")
@@ -1035,12 +1079,12 @@ def main(argv):
 			xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, is_revoke,dryMode)
 			logFile("===============================================\n")
 		if (dryMode==False):
-			log("[I] ---------- Creating Ranger Admin db user ---------- ","info")
+			log("[I] ---------- Creating Ranger KMS db user ---------- ","info")
 			xa_sqlObj.create_rangerdb_user(xa_db_root_user, db_user, db_password, xa_db_root_password,dryMode)
-			log("[I] ---------- Creating Ranger Admin database ----------","info")
+			log("[I] ---------- Creating Ranger KMS database ----------","info")
 			xa_sqlObj.create_db(xa_db_root_user, xa_db_root_password, db_name, db_user, db_password,dryMode)
-			log("[I] ---------- Granting permission to Ranger Admin db user ----------","info")
+			log("[I] ---------- Granting permission to Ranger KMS db user ----------","info")
 			xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, is_revoke,dryMode)
-			# Ranger Admin DB Host AND Ranger Audit DB Host are Different OR Same
-			log("[I] ---------- Ranger Policy Manager DB and User Creation Process Completed..  ---------- ","info")
+			# Ranger KMS DB Host AND Ranger Audit DB Host are Different OR Same
+			log("[I] ---------- Ranger KMS DB and User Creation Process Completed..  ---------- ","info")
 main(sys.argv)

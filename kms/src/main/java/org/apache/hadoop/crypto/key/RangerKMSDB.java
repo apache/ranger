@@ -81,6 +81,7 @@ public class RangerKMSDB {
 
 			//DB_PROPERTIES.list(System.out) ;
 
+			/*
 			Set keys = DB_PROPERTIES.keySet();
 
    			for (Iterator i = keys.iterator(); i.hasNext();) {
@@ -88,6 +89,7 @@ public class RangerKMSDB {
        				String value = (String) DB_PROPERTIES.get(key);
        				System.out.println(key + " = " + value);
    			}
+			*/
 				
 			entityManagerFactory = Persistence.createEntityManagerFactory("persistence_ranger_server", DB_PROPERTIES);
 	   	    	daoManager = new DaoManager();

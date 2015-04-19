@@ -17,6 +17,7 @@
 
 package org.apache.ranger.service;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,8 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
+import org.apache.ranger.common.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXService;
@@ -95,7 +99,12 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		List<XXServiceConfigMap> svcConfigMapList = daoMgr.getXXServiceConfigMap()
 				.findByServiceId(xService.getId());
 		for(XXServiceConfigMap svcConfMap : svcConfigMapList) {
-			configs.put(svcConfMap.getConfigkey(), svcConfMap.getConfigvalue());
+			String configValue = svcConfMap.getConfigvalue();
+			
+			if(StringUtils.equalsIgnoreCase(svcConfMap.getConfigkey(), ServiceDBStore.CONFIG_KEY_PASSWORD)) {
+				configValue = ServiceDBStore.HIDDEN_PASSWORD_STR;
+			}
+			configs.put(svcConfMap.getConfigkey(), configValue);
 		}
 		vService.setConfigs(configs);
 		
@@ -262,6 +271,24 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		xTrxLog.setParentObjectName(parentObj.getName());
 
 		return xTrxLog;
+	}
+
+	public Map<String, String> getConfigsWithDecryptedPassword(RangerService service) throws IOException {
+		Map<String, String> configs = service.getConfigs();
+		
+		String pwd = configs.get(ServiceDBStore.CONFIG_KEY_PASSWORD);
+		if(!stringUtil.isEmpty(pwd) && pwd.equalsIgnoreCase(ServiceDBStore.HIDDEN_PASSWORD_STR)) {
+			XXServiceConfigMap pwdConfig = daoMgr.getXXServiceConfigMap().findByServiceAndConfigKey(service.getId(),
+					ServiceDBStore.CONFIG_KEY_PASSWORD);
+			if(pwdConfig != null) {
+				String encryptedPwd = pwdConfig.getConfigvalue();
+				String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+				if(StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
+					configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, decryptedPwd);
+				}
+			}
+		}
+		return configs;
 	}
 
 }

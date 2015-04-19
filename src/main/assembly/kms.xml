@@ -192,7 +192,7 @@
                 </includes>
             </dependencySet>
             <dependencySet>
-                   <outputDirectory>/scripts/install/lib</outputDirectory>
+                   <outputDirectory>/install/lib</outputDirectory>
                     <unpack>false</unpack>
             		<directoryMode>755</directoryMode>
             		<fileMode>644</fileMode>
@@ -224,13 +224,12 @@
 		<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
 		<include>security_plugins.ranger-kms-plugin:ranger-kms-plugin</include>
 		<include>org.apache.ranger:credentialbuilder</include>
-		<include>org.apache.ranger:ranger-kms-plugin</include>
      </includes>
     </moduleSet>
     <moduleSet>
      <binaries>
         <includeDependencies>false</includeDependencies>
-        <outputDirectory>/scripts/install/lib</outputDirectory>
+        <outputDirectory>/install/lib</outputDirectory>
         <unpack>false</unpack>
      </binaries>
      <includes>
@@ -316,7 +315,7 @@
   	<!-- Plugin -->
    	<!-- conf.templates for enable -->
     <fileSet>
-        <outputDirectory>/scripts/install/conf.templates/enable</outputDirectory>
+        <outputDirectory>/install/conf.templates/enable</outputDirectory>
         <directory>plugin-kms/conf</directory>
         <excludes>
             <exclude>*.sh</exclude>
@@ -324,12 +323,12 @@
         <fileMode>700</fileMode>
     </fileSet>
     <fileSet>
-        <outputDirectory>/scripts/install/conf.templates/disable</outputDirectory>
+        <outputDirectory>/install/conf.templates/disable</outputDirectory>
         <directory>plugin-kms/disable-conf</directory>
         <fileMode>700</fileMode>
     </fileSet>
     <fileSet>
-        <outputDirectory>/scripts/install/conf.templates/default</outputDirectory>
+        <outputDirectory>/install/conf.templates/default</outputDirectory>
         <directory>plugin-kms/template</directory>
         <fileMode>700</fileMode>
     </fileSet>
@@ -346,21 +345,9 @@
   <files>
     <file>
 	<source>plugin-kms/scripts/enable-kms-plugin.sh</source>
-        <outputDirectory>/scripts</outputDirectory>
+        <outputDirectory>/</outputDirectory>
         <destName>enable-kms-plugin.sh</destName>
         <fileMode>755</fileMode>
     </file>    
-    <file>
-        <source>plugin-kms/scripts/install.properties</source>
-        <outputDirectory>/ews/webapp/config</outputDirectory>
-        <destName>plugin-install.properties</destName>
-        <fileMode>755</fileMode>
-    </file>
-    <file>
-        <source>plugin-kms/scripts/kms-plugin-install.properties</source>
-        <outputDirectory>/ews/webapp/config</outputDirectory>
-        <destName>kms-plugin-install.properties</destName>
-        <fileMode>755</fileMode>
-    </file>
   </files>
 </assembly>

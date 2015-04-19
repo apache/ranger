@@ -59,16 +59,17 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
-import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
-import org.apache.ranger.plugin.model.validation.RangerValidatorFactory;
-import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
+import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
+import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
+import org.apache.ranger.plugin.model.validation.RangerValidatorFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
@@ -863,8 +864,8 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 		
 		try {
-			// RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-			// validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
+			 // RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+			 // validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
 
 			ensureAdminAccess(policy.getService(), policy.getResources());
 
@@ -897,8 +898,8 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		try {
-			// RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-			// validator.validate(policy, Action.UPDATE, bizUtil.isAdmin());
+			 // RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+			 // validator.validate(policy, Action.UPDATE, bizUtil.isAdmin());
 
 			ensureAdminAccess(policy.getService(), policy.getResources());
 
@@ -925,8 +926,8 @@ public class ServiceREST {
 		}
 
 		try {
-			// RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-			// validator.validate(id, Action.DELETE);
+			 // RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+			 // validator.validate(id, Action.DELETE);
 
 			RangerPolicy policy = svcStore.getPolicy(id);
 

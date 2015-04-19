@@ -96,7 +96,7 @@
   <module>unixauthclient</module>
   <module>unixauthservice</module>
   <module>ranger-util</module>
-  <!--<module>plugin-kms</module>-->
+  <module>plugin-kms</module>
   </modules>
   <properties>
         <javac.source.version>1.7</javac.source.version>

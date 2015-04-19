@@ -54,6 +54,7 @@ public class RangerBasePlugin {
 	private PolicyRefresher           refresher    = null;
 	private RangerPolicyEngine        policyEngine = null;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
+	private RangerAuditHandler        defaultAuditHandler = null;
 
 
 	public RangerBasePlugin(String serviceType, String appId) {
@@ -128,48 +129,20 @@ public class RangerBasePlugin {
 	}
 
 	public void setDefaultAuditHandler(RangerAuditHandler auditHandler) {
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
-		if(policyEngine != null) {
-			policyEngine.setDefaultAuditHandler(auditHandler);
-		}
+		this.defaultAuditHandler = auditHandler;
 	}
 
 	public RangerAuditHandler getDefaultAuditHandler() {
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
-		if(policyEngine != null) {
-			return policyEngine.getDefaultAuditHandler();
-		}
-
-		return null;
+		return this.defaultAuditHandler;
 	}
 
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
-		if(policyEngine != null) {
-			enrichRequest(request, policyEngine);
-
-			return policyEngine.isAccessAllowed(request);
-		}
-
-		return null;
+		return isAccessAllowed(request, defaultAuditHandler);
 	}
-
 
 	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests) {
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
-		if(policyEngine != null) {
-			enrichRequests(requests, policyEngine);
-
-			return policyEngine.isAccessAllowed(requests);
-		}
-
-		return null;
+		return isAccessAllowed(requests, defaultAuditHandler);
 	}
-
 
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
@@ -182,7 +155,6 @@ public class RangerBasePlugin {
 
 		return null;
 	}
-
 
 	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAuditHandler auditHandler) {
 		RangerPolicyEngine policyEngine = this.policyEngine;

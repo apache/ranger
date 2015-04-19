@@ -137,16 +137,19 @@ public class SolrAccessAuditsService {
 					"Error running search query", MessageEnums.ERROR_SYSTEM);
 		}
 		SolrDocumentList docs = response.getResults();
-		for (int i = 0; i < docs.size(); i++) {
+		int i;
+		for (i = 0; i < docs.size(); i++) {
 			SolrDocument doc = docs.get(i);
+			
 			VXAccessAudit vXAccessAudit = populateViewBean(doc);
 			xAccessAuditList.add(vXAccessAudit);
 		}
-
-		returnList.setResultSize((int) docs.getNumFound());
+		
+		returnList.setPageSize(searchCriteria.getMaxRows());
+		returnList.setResultSize(i);
+		returnList.setTotalCount((int) docs.getNumFound());
 		returnList.setStartIndex((int) docs.getStart());
 		returnList.setVXAccessAudits(xAccessAuditList);
-
 		return returnList;
 	}
 

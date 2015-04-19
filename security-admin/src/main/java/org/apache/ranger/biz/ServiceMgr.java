@@ -36,8 +36,10 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
@@ -46,10 +48,21 @@ public class ServiceMgr {
 
 	private static final Log LOG = LogFactory.getLog(ServiceMgr.class);
 	
+	@Autowired
+	RangerServiceService rangerSvcService;
+	
+	@Autowired
+	ServiceDBStore svcDBStore;
 	
 	public List<String> lookupResource(String serviceName, ResourceLookupContext context, ServiceStore svcStore) throws Exception {
 		List<String> 	  ret = null;
-		RangerBaseService svc = getRangerServiceByName(serviceName, svcStore);
+		
+		RangerService service = svcDBStore.getServiceByName(serviceName);
+		
+		Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
+		service.setConfigs(newConfigs);
+		
+		RangerBaseService svc = getRangerServiceByService(service, svcStore);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceMgr.lookupResource for Service: (" + svc + "Context: " + context + ")");
@@ -79,6 +92,10 @@ public class ServiceMgr {
 	
 	public VXResponse validateConfig(RangerService service, ServiceStore svcStore) throws Exception {
 		VXResponse        ret = new VXResponse();
+		
+		Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
+		service.setConfigs(newConfigs);
+		
 		RangerBaseService svc = getRangerServiceByService(service, svcStore);
 
 		if(LOG.isDebugEnabled()) {

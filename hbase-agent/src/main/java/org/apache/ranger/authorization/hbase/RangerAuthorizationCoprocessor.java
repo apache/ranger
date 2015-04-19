@@ -72,11 +72,11 @@ import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.AccessControlService;
 import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos.SnapshotDescription;
+import org.apache.hadoop.hbase.protobuf.generated.QuotaProtos.Quotas;
 import org.apache.hadoop.hbase.protobuf.generated.SecureBulkLoadProtos.CleanupBulkLoadRequest;
 import org.apache.hadoop.hbase.protobuf.generated.SecureBulkLoadProtos.PrepareBulkLoadRequest;
-import org.apache.hadoop.hbase.protobuf.generated.QuotaProtos.Quotas;
-import org.apache.hadoop.hbase.regionserver.Region;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
+import org.apache.hadoop.hbase.regionserver.Region;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.regionserver.ScanType;
 import org.apache.hadoop.hbase.regionserver.Store;
@@ -115,7 +115,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	private static boolean UpdateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	private static final String GROUP_PREFIX = "@";
 		
-	private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 	private static final String WILDCARD = "*";
 	
     private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
@@ -123,8 +122,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
     private RegionCoprocessorEnvironment regionEnv;
 	private Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
 	
-	private List<String> superUserList = null;
-
 	/*
 	 * These are package level only for testability and aren't meant to be exposed outside via getters/setters or made available to derived classes.
 	 */
@@ -150,20 +147,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		if (user == null) {
 			throw new IOException("Unable to obtain the current user, authorization checks for internal operations will not work correctly!");
 		}
-		String currentUser = user.getShortName();
-		List<String> superusers = Lists.asList(currentUser, conf.getStrings(SUPERUSER_CONFIG_PROP, new String[0]));
+		String systemUser = user.getShortName();
 		User activeUser = getActiveUser();
-		if (!(superusers.contains(activeUser.getShortName()))) {
+		if (!Objects.equal(systemUser, activeUser.getShortName()) && !_userUtils.isSuperUser(activeUser)) {
 			throw new AccessDeniedException("User '" + user.getShortName() + "is not system or super user.");
 		}
-	}
-	private boolean isSuperUser(User user) {
-		boolean isSuper = false;
-		isSuper = (superUserList != null && superUserList.contains(user.getShortName()));
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("IsSuperCheck on [" + user.getShortName() + "] returns [" + isSuper + "]");
-		}
-		return isSuper;
 	}
 	protected boolean isSpecialTable(HRegionInfo regionInfo) {
 		return isSpecialTable(regionInfo.getTable().getName());
@@ -213,7 +201,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
        throw new AccessDeniedException("User '"+ requestUserName +"' is not the scanner owner!");
      }	
 	}
-
 	/**
 	 * @param families
 	 * @return empty map if families is null, would never have empty or null keys, would never have null values, values could be empty (non-null) set
@@ -344,7 +331,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			// if authorized then pass captured events as access allowed set else as access denied set.
 			result = new ColumnFamilyAccessResult(authorized, authorized, 
 						authorized ? Collections.singletonList(event) : null,
-						authorized ? null : event, null, reason); 
+						authorized ? null : event, null, reason);
 			if (LOG.isDebugEnabled()) {
 				String message = String.format(messageTemplate, operation, access, families.toString(), result.toString());
 				LOG.debug(message);
@@ -534,9 +521,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			String message = "Unexpeceted: User is null: access denied, not audited!"; 
 			LOG.warn("canSkipAccessCheck: exiting" + message);
 			throw new AccessDeniedException("No user associated with request (" + operation + ") for action: " + access + "on table:" + table);
-		} else if (isSuperUser(user)) {
-			LOG.debug("canSkipAccessCheck: true: superuser access allowed, not audited");
-			result = true;
 		} else if (isAccessForMetadataRead(access, table)) {
 			LOG.debug("canSkipAccessCheck: true: metadata read access always allowed, not audited");
 			result = true;
@@ -913,19 +897,9 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			coprocessorType = REGIONAL_COPROCESSOR_TYPE;
 			appType = "hbaseRegional";
 		}
-
-		if (superUserList == null) {
-			superUserList = new ArrayList<String>();
-			Configuration conf = env.getConfiguration();
-			String[] users = conf.getStrings(SUPERUSER_CONFIG_PROP);
-			if (users != null) {
-				for (String user : users) {
-					user = user.trim();
-					LOG.info("Start() - Adding Super User(" + user + ")");
-					superUserList.add(user);
-				}
-			}
-		}
+		
+		Configuration conf = env.getConfiguration();
+		HbaseFactory.initialize(conf);
 
 		// create and initialize the plugin class
 		RangerHBasePlugin plugin = hbasePlugin;
@@ -947,7 +921,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 		
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Start of Coprocessor: [" + coprocessorType + "] with superUserList [" + superUserList + "]");
+			LOG.debug("Start of Coprocessor: [" + coprocessorType + "]");
 		}
 	}
 	@Override

@@ -1694,7 +1694,7 @@ public class AssetMgr extends AssetMgrBase {
 									.getBooleanProperty(
 											"xa.log.SC_NOT_MODIFIED", false);
 							if (!logNotModified) {
-								logger.info("Not logging HttpServletResponse."
+								logger.debug("Not logging HttpServletResponse."
 										+ "SC_NOT_MODIFIED, to enable, update "
 										+ ": xa.log.SC_NOT_MODIFIED");
 								return null;

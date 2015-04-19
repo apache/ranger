@@ -45,4 +45,9 @@ public interface HbaseAuditHandler extends RangerAuditHandler {
 	 */
 	void setMostRecentEvent(AuthzAuditEvent capturedEvents);
 	
+	/**
+	 * Is audit handler being used in context of a access authorization of a superuser?
+	 * @param override
+	 */
+	void setSuperUserOverride(boolean override);
 }
