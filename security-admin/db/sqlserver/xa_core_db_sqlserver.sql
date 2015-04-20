@@ -2654,7 +2654,7 @@ CREATE TABLE [dbo].[x_modules_master] (
 	[added_by_id] [bigint] DEFAULT NULL NULL,
 	[upd_by_id] [bigint] DEFAULT NULL NULL,
 	[module] [varchar](1024)NOT NULL,
-	[url] [varchar](1024)NOT NULL,
+	[url] [varchar](1024) DEFAULT NULL NULL,
 	PRIMARY KEY CLUSTERED 
 (
 	[id] ASC

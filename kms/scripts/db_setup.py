@@ -70,7 +70,7 @@ def populate_global_dict():
 			key , value = each_line.strip().split("=",1)
 			key = key.strip()
 			if 'PASSWORD' in key:
-				jceks_file_path = os.path.join(os.getenv('RANGER_HOME'), 'jceks','ranger_db.jceks')
+				jceks_file_path = os.path.join(RANGER_KMS_HOME, 'jceks','ranger_db.jceks')
 				statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
 				if statuscode == 1:
 					value = ''
