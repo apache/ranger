@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -75,6 +76,7 @@ import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -85,6 +87,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+@Ignore("tests to be reviewed")
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestServiceREST {
