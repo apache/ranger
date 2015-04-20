@@ -74,6 +74,7 @@
               <include>org.apache.hive:hive-service:jar:${hive.version}</include>
               <include>org.apache.hive:hive-exec:jar:${hive.version}</include>
               <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
+              <include>org.apache.hive:hive-jdbc:jar:standalone:${hive.version}</include>
               <include>org.apache.hive:hive-metastore:jar:${hive.version}</include>
             </includes>
           </dependencySet>

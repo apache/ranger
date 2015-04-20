@@ -42,7 +42,7 @@ public class HiveResourceMgr {
 		HashMap<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HiveResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
+			LOG.debug("==> HiveResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
 		}	
 		
 		try {
@@ -108,7 +108,7 @@ public class HiveResourceMgr {
 			try {
 				
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HiveResourceMgr.getHiveResources() UserInput: "+ userInput  + " configs: " + configs + " databaseList: "  + databaseList + " tableList: " 
+					LOG.debug("==> HiveResourceMgr.getHiveResources() UserInput: "+ userInput  + " configs: " + configs + " databaseList: "  + databaseList + " tableList: " 
 																				  + tableList + " columnList: " + columnList ) ;
 				}
 				
