@@ -21,7 +21,7 @@ CREATE TABLE `x_modules_master` (
 `added_by_id` bigint(20) NULL DEFAULT NULL,
 `upd_by_id` bigint(20) NULL DEFAULT NULL,
 `module` varchar(1024) NOT NULL,
-`url` varchar(1024) NOT NULL,
+`url` varchar(1024) NULL DEFAULT NULL,
 PRIMARY KEY (`id`)
 );
 
