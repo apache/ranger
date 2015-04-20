@@ -478,6 +478,12 @@ public class HiveClient extends BaseClient implements Closeable {
 			hdpException.generateResponseDataMap(false, getMessage(se), msgDesc
 					+ errMsg, null, null);
 			throw hdpException;
+		} catch ( Throwable t) {
+			String msgDesc = "Unable to connect to Hive Thrift Server instance";
+			HadoopException hdpException = new HadoopException(msgDesc, t);
+			hdpException.generateResponseDataMap(false, getMessage(t),
+					msgDesc + errMsg, null, url);
+		     throw hdpException;
 		}
 	}
 

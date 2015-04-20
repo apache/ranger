@@ -102,6 +102,12 @@
 	  <version>${hive.version}</version>
     </dependency>
     <dependency>
+	  <groupId>org.apache.hive</groupId>
+	  <artifactId>hive-jdbc</artifactId>
+	  <version>${hive.version}</version>
+	  <classifier>standalone</classifier>
+    </dependency>
+    <dependency>
 	  <groupId>org.apache.hadoop</groupId>
 	  <artifactId>hadoop-hdfs</artifactId>
 	  <version>${hadoop.version}</version>
