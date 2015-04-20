@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.destination;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.MiscUtil;
 
 /**
  * This class write the logs to local file

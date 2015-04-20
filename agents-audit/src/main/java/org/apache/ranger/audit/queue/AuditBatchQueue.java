@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.queue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,10 +29,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.AuditProvider;
+import org.apache.ranger.audit.provider.BaseAuditProvider;
 
-public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
-	private static final Log logger = LogFactory
-			.getLog(AuditBatchProcessor.class);
+public class AuditBatchQueue extends BaseAuditProvider implements Runnable {
+	private static final Log logger = LogFactory.getLog(AuditBatchQueue.class);
 
 	private BlockingQueue<AuditEventBase> queue = null;
 	private Collection<AuditEventBase> localBatchBuffer = new ArrayList<AuditEventBase>();
@@ -40,10 +41,10 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 	Thread consumerThread = null;
 	static int threadCount = 0;
 
-	public AuditBatchProcessor() {
+	public AuditBatchQueue() {
 	}
 
-	public AuditBatchProcessor(AuditProvider consumer) {
+	public AuditBatchQueue(AuditProvider consumer) {
 		super(consumer);
 	}
 
@@ -64,10 +65,14 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
+		boolean ret = true;
 		for (AuditEventBase event : events) {
-			log(event);
+			ret = log(event);
+			if (!ret) {
+				break;
+			}
 		}
-		return true;
+		return ret;
 	}
 
 	@Override
@@ -122,7 +127,10 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 		setDrain(true);
 		flush();
 		try {
-			consumerThread.interrupt();
+			if (consumerThread != null) {
+				consumerThread.interrupt();
+			}
+			consumerThread = null;
 		} catch (Throwable t) {
 			// ignore any exception
 		}
@@ -160,7 +168,9 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 			} else {
 				staticLoopCount = 0;
 			}
-			consumerThread.interrupt();
+			if (consumerThread != null) {
+				consumerThread.interrupt();
+			}
 			try {
 				Thread.sleep(sleepTime);
 				if (timeout > 0
@@ -231,6 +241,7 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 						// not in drain mode, lets wait and retry
 						if (nextDispatchDuration > 0) {
 							Thread.sleep(nextDispatchDuration);
+							lastDispatchTime = System.currentTimeMillis();
 						}
 						continue;
 					}
@@ -243,22 +254,30 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 						&& nextDispatchDuration > 0) {
 					event = queue.poll(nextDispatchDuration,
 							TimeUnit.MILLISECONDS);
-
 				} else {
 					// For poll() is non blocking
 					event = queue.poll();
 				}
+
 				if (event != null) {
 					localBatchBuffer.add(event);
 					if (getMaxBatchSize() >= localBatchBuffer.size()) {
 						queue.drainTo(localBatchBuffer, getMaxBatchSize()
 								- localBatchBuffer.size());
 					}
+				} else {
+					// poll returned due to timeout, so reseting clock
+					nextDispatchDuration = lastDispatchTime
+							- System.currentTimeMillis()
+							+ getMaxBatchInterval();
+
+					lastDispatchTime = System.currentTimeMillis();
 				}
 			} catch (InterruptedException e) {
 				logger.info(
 						"Caught exception in consumer thread. Mostly to abort loop",
 						e);
+				setDrain(true);
 			} catch (Throwable t) {
 				logger.error("Caught error during processing request.", t);
 			}
@@ -270,10 +289,10 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 							+ ", dest=" + consumer.getName());
 				}
 				isDestActive = false;
+				// Just before stashing
+				lastDispatchTime = System.currentTimeMillis();
 				fileSpooler.stashLogs(localBatchBuffer);
 				localBatchBuffer.clear();
-				// Reset all variables
-				lastDispatchTime = System.currentTimeMillis();
 			} else if (localBatchBuffer.size() > 0
 					&& (isDrain()
 							|| localBatchBuffer.size() >= getMaxBatchSize() || nextDispatchDuration <= 0)) {
@@ -281,6 +300,8 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 					logger.info("Switching to writing to destination. Queue="
 							+ getName() + ", dest=" + consumer.getName());
 				}
+				// Reset time just before sending the logs
+				lastDispatchTime = System.currentTimeMillis();
 				boolean ret = consumer.log(localBatchBuffer);
 				if (!ret) {
 					if (fileSpoolerEnabled) {
@@ -297,8 +318,6 @@ public class AuditBatchProcessor extends BaseAuditProvider implements Runnable {
 					isDestActive = true;
 				}
 				localBatchBuffer.clear();
-				// Reset all variables
-				lastDispatchTime = System.currentTimeMillis();
 			}
 
 			if (isDrain()) {

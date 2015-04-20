@@ -17,12 +17,13 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.destination;
 
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.provider.BaseAuditProvider;
 
 /**
  * This class needs to be extended by anyone who wants to build custom

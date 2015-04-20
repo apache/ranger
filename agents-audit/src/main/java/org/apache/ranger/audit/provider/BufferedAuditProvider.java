@@ -24,7 +24,7 @@ import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 
 public abstract class BufferedAuditProvider extends BaseAuditProvider {
-	private LogBuffer<AuditEventBase>      mBuffer      = null;
+	private LogBuffer<AuditEventBase> mBuffer = null;
 	private LogDestination<AuditEventBase> mDestination = null;
 
 	@Override
@@ -34,34 +34,39 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public boolean log(AuditEventBase event) {
-		if(event instanceof AuthzAuditEvent) {
-			AuthzAuditEvent authzEvent = (AuthzAuditEvent)event;
+		if (event instanceof AuthzAuditEvent) {
+			AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
 
-			if(authzEvent.getAgentHostname() == null) {
+			if (authzEvent.getAgentHostname() == null) {
 				authzEvent.setAgentHostname(MiscUtil.getHostname());
 			}
 
-			if(authzEvent.getLogType() == null) {
+			if (authzEvent.getLogType() == null) {
 				authzEvent.setLogType("RangerAudit");
 			}
 
-			if(authzEvent.getEventId() == null) {
+			if (authzEvent.getEventId() == null) {
 				authzEvent.setEventId(MiscUtil.generateUniqueId());
 			}
 		}
 
-		if(! mBuffer.add(event)) {
+		if (!mBuffer.add(event)) {
 			logFailedEvent(event);
+			return false;
 		}
 		return true;
 	}
 
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
+		boolean ret = true;
 		for (AuditEventBase event : events) {
-			log(event);
+			ret = log(event);
+			if (!ret) {
+				break;
+			}
 		}
-		return true;
+		return ret;
 	}
 
 	@Override
@@ -73,8 +78,12 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public boolean logJSON(Collection<String> events) {
+		boolean ret = true;
 		for (String event : events) {
-			logJSON(event);
+			ret = logJSON(event);
+			if (!ret) {
+				break;
+			}
 		}
 		return false;
 	}
@@ -93,7 +102,6 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 	public void waitToComplete() {
 	}
 
-	
 	@Override
 	public void waitToComplete(long timeout) {
 	}
@@ -120,9 +128,9 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 		return mDestination;
 	}
 
-	protected void setBufferAndDestination(LogBuffer<AuditEventBase>      buffer,
-										   LogDestination<AuditEventBase> destination) {
-		mBuffer      = buffer;
+	protected void setBufferAndDestination(LogBuffer<AuditEventBase> buffer,
+			LogDestination<AuditEventBase> destination) {
+		mBuffer = buffer;
 		mDestination = destination;
 	}
 }

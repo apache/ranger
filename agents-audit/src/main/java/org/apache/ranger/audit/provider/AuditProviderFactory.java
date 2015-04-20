@@ -24,9 +24,14 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.destination.FileAuditDestination;
+import org.apache.ranger.audit.destination.HDFSAuditDestination;
 import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
 import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
 import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
+import org.apache.ranger.audit.queue.AuditAsyncQueue;
+import org.apache.ranger.audit.queue.AuditBatchQueue;
+import org.apache.ranger.audit.queue.AuditSummaryQueue;
 
 /*
  * TODO:
@@ -90,10 +95,11 @@ public class AuditProviderFactory {
 		LOG.info("AuditProviderFactory: initializing..");
 
 		if (mInitDone) {
-			LOG.warn("AuditProviderFactory.init(): already initialized!",
+			LOG.warn(
+					"AuditProviderFactory.init(): already initialized! Will try to re-initialize",
 					new Exception());
 
-			return;
+			// return;
 		}
 		mInitDone = true;
 
@@ -125,7 +131,7 @@ public class AuditProviderFactory {
 
 		for (Object propNameObj : props.keySet()) {
 			String propName = propNameObj.toString();
-			if (propName.length() <= AUDIT_DEST_BASE.length() + 1) {
+			if (!propName.startsWith(AUDIT_DEST_BASE)) {
 				continue;
 			}
 			String destName = propName.substring(AUDIT_DEST_BASE.length() + 1);
@@ -152,9 +158,14 @@ public class AuditProviderFactory {
 
 				String queueName = MiscUtil.getStringProperty(props,
 						destPropPrefix + "." + BaseAuditProvider.PROP_QUEUE);
-				if( queueName == null || queueName.isEmpty()) {
+				if (queueName == null || queueName.isEmpty()) {
+					LOG.info(destPropPrefix + "."
+							+ BaseAuditProvider.PROP_QUEUE
+							+ " is not set. Setting queue to batch for "
+							+ destName);
 					queueName = "batch";
 				}
+				LOG.info("queue for " + destName + " is " + queueName);
 				if (queueName != null && !queueName.isEmpty()
 						&& !queueName.equalsIgnoreCase("none")) {
 					String queuePropPrefix = destPropPrefix + "." + queueName;
@@ -184,24 +195,55 @@ public class AuditProviderFactory {
 			}
 		}
 		if (providers.size() > 0) {
-			LOG.info("Using v2 audit configuration");
+			LOG.info("Using v3 audit configuration");
 			AuditAsyncQueue asyncQueue = new AuditAsyncQueue();
-			String propPrefix = BaseAuditProvider.PROP_DEFAULT_PREFIX + "." + "async";
+			String propPrefix = BaseAuditProvider.PROP_DEFAULT_PREFIX + "."
+					+ "async";
 			asyncQueue.init(props, propPrefix);
 
+			propPrefix = BaseAuditProvider.PROP_DEFAULT_PREFIX;
+			boolean summaryEnabled = MiscUtil.getBooleanProperty(props,
+					propPrefix + "." + "summary" + "." + "enabled", false);
+			AuditSummaryQueue summaryQueue = null;
+			if (summaryEnabled) {
+				LOG.info("AuditSummaryQueue is enabled");
+				summaryQueue = new AuditSummaryQueue();
+				summaryQueue.init(props, propPrefix);
+				asyncQueue.setConsumer(summaryQueue);
+			} else {
+				LOG.info("AuditSummaryQueue is disabled");
+			}
+
 			if (providers.size() == 1) {
-				asyncQueue.setConsumer(providers.get(0));
+				if (summaryEnabled) {
+					LOG.info("Setting " + providers.get(0).getName()
+							+ " as consumer to AuditSummaryQueue");
+					summaryQueue.setConsumer(providers.get(0));
+				} else {
+					LOG.info("Setting " + providers.get(0).getName()
+							+ " as consumer to " + asyncQueue.getName());
+					asyncQueue.setConsumer(providers.get(0));
+				}
 			} else {
 				MultiDestAuditProvider multiDestProvider = new MultiDestAuditProvider();
 				multiDestProvider.init(props);
 				multiDestProvider.addAuditProviders(providers);
-				asyncQueue.setConsumer(multiDestProvider);
+				if (summaryEnabled) {
+					LOG.info("Setting " + multiDestProvider.getName()
+							+ " as consumer to AuditSummaryQueue");
+					summaryQueue.setConsumer(multiDestProvider);
+				} else {
+					LOG.info("Setting " + multiDestProvider.getName()
+							+ " as consumer to " + asyncQueue.getName());
+					asyncQueue.setConsumer(multiDestProvider);
+				}
 			}
 
 			mProvider = asyncQueue;
+			LOG.info("Starting " + mProvider.getName());
 			mProvider.start();
 		} else {
-			LOG.info("No v2 audit configuration found. Trying v1 audit configurations");
+			LOG.info("No v3 audit configuration found. Trying v2 audit configurations");
 			if (!isEnabled
 					|| !(isAuditToDbEnabled || isAuditToHdfsEnabled
 							|| isAuditToKafkaEnabled || isAuditToLog4jEnabled
@@ -356,7 +398,7 @@ public class AuditProviderFactory {
 						.newInstance();
 			} catch (Exception e) {
 				LOG.fatal("Can't instantiate audit class for providerName="
-						+ providerName + ", className=" + className);
+						+ providerName + ", className=" + className, e);
 			}
 		} else {
 			if (providerName.equals("file")) {
@@ -372,7 +414,7 @@ public class AuditProviderFactory {
 			} else if (providerName.equals("log4j")) {
 				provider = new Log4jAuditProvider();
 			} else if (providerName.equals("batch")) {
-				provider = new AuditBatchProcessor();
+				provider = new AuditBatchQueue();
 			} else if (providerName.equals("async")) {
 				provider = new AuditAsyncQueue();
 			} else {

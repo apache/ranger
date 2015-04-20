@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.queue;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -41,6 +41,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.AuditProvider;
+import org.apache.ranger.audit.provider.MiscUtil;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -207,6 +209,10 @@ public class AuditFileSpool implements Runnable {
 					+ queueProvider.getName());
 
 			if (indexFileName == null || indexFileName.isEmpty()) {
+				if (fileNamePrefix == null || fileNamePrefix.isEmpty()) {
+					fileNamePrefix = queueProvider.getName() + "_"
+							+ consumerProvider.getName();
+				}
 				indexFileName = "index_" + fileNamePrefix + ".json";
 			}
 
@@ -328,7 +334,10 @@ public class AuditFileSpool implements Runnable {
 			}
 		}
 		try {
-			destinationThread.interrupt();
+			if (destinationThread != null) {
+				destinationThread.interrupt();
+			}
+			destinationThread = null;
 		} catch (Throwable e) {
 			// ignore
 		}

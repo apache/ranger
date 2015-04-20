@@ -69,6 +69,8 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 	public void addAuditProviders(List<AuditProvider> providers) {
 		if (providers != null) {
 			for (AuditProvider provider : providers) {
+				LOG.info("Adding " + provider.getName()
+						+ " as consumer to MultiDestination " + getName());
 				addAuditProvider(provider);
 			}
 		}

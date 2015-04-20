@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.destination;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,6 +34,7 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.MiscUtil;
 
 /**
  * This class write the logs to local file

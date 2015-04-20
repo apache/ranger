@@ -19,6 +19,8 @@
 
 package org.apache.ranger.audit.model;
 
+import java.util.Date;
+
 import org.apache.ranger.audit.dao.DaoManager;
 
 public abstract class AuditEventBase {
@@ -27,7 +29,12 @@ public abstract class AuditEventBase {
 	}
 
 	public abstract void persist(DaoManager daoManager);
-
+	
+	public abstract String getEventKey();
+	public abstract Date getEventTime ();
+	public abstract void setEventCount(long frequencyCount);
+	public abstract void setEventDurationMS(long frequencyDurationMS);
+	
 	protected String trim(String str, int len) {
 		String ret = str;
 		if (str != null) {

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.queue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +26,8 @@ import java.util.concurrent.LinkedTransferQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.AuditProvider;
+import org.apache.ranger.audit.provider.BaseAuditProvider;
 
 /**
  * This is a non-blocking queue with no limit on capacity.
@@ -36,6 +38,7 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 	LinkedTransferQueue<AuditEventBase> queue = new LinkedTransferQueue<AuditEventBase>();
 	Thread consumerThread = null;
 
+	static final int MAX_DRAIN = 1000;
 	static int threadCount = 0;
 	static final String DEFAULT_NAME = "async";
 
@@ -68,10 +71,14 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
+		boolean ret = true;
 		for (AuditEventBase event : events) {
-			log(event);
+			ret = log(event);
+			if (!ret) {
+				break;
+			}
 		}
-		return true;
+		return ret;
 	}
 
 	/*
@@ -81,10 +88,10 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 	 */
 	@Override
 	public void start() {
-		if(consumer != null) {
+		if (consumer != null) {
 			consumer.start();
 		}
-		
+
 		consumerThread = new Thread(this, this.getClass().getName()
 				+ (threadCount++));
 		consumerThread.setDaemon(true);
@@ -100,7 +107,10 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 	public void stop() {
 		setDrain(true);
 		try {
-			consumerThread.interrupt();
+			if (consumerThread != null) {
+				consumerThread.interrupt();
+			}
+			consumerThread = null;
 		} catch (Throwable t) {
 			// ignore any exception
 		}
@@ -139,11 +149,8 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 				if (event != null) {
 					Collection<AuditEventBase> eventList = new ArrayList<AuditEventBase>();
 					eventList.add(event);
-					// TODO: Put a limit. Hard coding to 1000 (use batch size
-					// property)
-					queue.drainTo(eventList, 1000 - 1);
+					queue.drainTo(eventList, MAX_DRAIN - 1);
 					consumer.log(eventList);
-					eventList.clear();
 				}
 			} catch (InterruptedException e) {
 				logger.info(

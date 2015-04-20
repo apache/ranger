@@ -31,6 +31,7 @@ import javax.persistence.Persistence;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.dao.DaoManager;
+import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
@@ -120,10 +121,14 @@ public class DbAuditProvider extends AuditDestination {
 
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
+		boolean ret = true;
 		for (AuditEventBase event : events) {
-			log(event);
+			ret = log(event);
+			if(!ret) {
+				break;
+			}
 		}
-		return true;
+		return ret;
 	}
 
 	@Override
@@ -135,10 +140,14 @@ public class DbAuditProvider extends AuditDestination {
 
 	@Override
 	public boolean logJSON(Collection<String> events) {
+		boolean ret = true;
 		for (String event : events) {
-			logJSON(event);
+			ret = logJSON(event);
+			if( !ret ) {
+				break;
+			}
 		}
-		return false;
+		return ret;
 	}
 
 	@Override
