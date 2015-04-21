@@ -314,8 +314,18 @@
 			<include>db_setup.py</include>
 			<include>dba_script.py</include>
 			<include>restrict_permissions.py</include>
+			<include>upgrade_admin.py</include>
+			<include>upgrade.sh</include>
 		</includes>
 		<fileMode>544</fileMode>
+	</fileSet>
+	<fileSet>
+		<outputDirectory>/templates-upgrade</outputDirectory>
+		<directory>security-admin/scripts</directory>
+		<includes>
+			<include>install.properties</include>
+			<include>ranger-admin-site-template.xml</include>
+		</includes>
 	</fileSet>
 	<fileSet>
 		<outputDirectory>/</outputDirectory>

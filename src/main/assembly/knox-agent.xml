@@ -131,6 +131,17 @@
         <fileMode>755</fileMode>
     </file>
     <file>
+        <source>agents-common/scripts/upgrade-plugin.sh</source>
+        <outputDirectory>/</outputDirectory>
+        <destName>upgrade-knox-plugin.sh</destName>
+        <fileMode>755</fileMode>
+    </file>
+    <file>
+        <source>agents-common/scripts/upgrade-plugin.py</source>
+        <outputDirectory>/</outputDirectory>
+        <fileMode>755</fileMode>
+    </file>
+    <file>
 		<source>agents-common/scripts/enable-agent.sh</source>
         <outputDirectory>/</outputDirectory>
         <destName>disable-knox-plugin.sh</destName>

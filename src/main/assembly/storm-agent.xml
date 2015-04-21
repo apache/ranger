@@ -139,6 +139,17 @@
         <fileMode>755</fileMode>
     </file>
     <file>
+        <source>agents-common/scripts/upgrade-plugin.sh</source>
+        <outputDirectory>/</outputDirectory>
+        <destName>upgrade-storm-plugin.sh</destName>
+        <fileMode>755</fileMode>
+    </file>
+    <file>
+        <source>agents-common/scripts/upgrade-plugin.py</source>
+        <outputDirectory>/</outputDirectory>
+        <fileMode>755</fileMode>
+    </file>
+    <file>
 		<source>agents-common/scripts/enable-agent.sh</source>
         <outputDirectory>/</outputDirectory>
         <destName>disable-storm-plugin.sh</destName>
