@@ -37,7 +37,11 @@ under the License.
 </bannerLeft>
 
 <bannerRight>
-    <src></src>
+	<name>Apache Incubator</name>
+    <src>http://incubator.apache.org/images/egg-logo.png</src>
+	<height>200px</height>
+	<width>400px</width>
+	<href>http://incubator.apache.org/</href>
 </bannerRight>
 
 <body>
@@ -68,11 +72,13 @@ under the License.
     <fluidoSkin>
         <sideBarEnabled>true</sideBarEnabled>
         <sourceLineNumbersEnabled>true</sourceLineNumbersEnabled>
+		<!--
         <twitter>
             <user>Ranger4Hadoop</user>
             <showUser>true</showUser>
             <showFollowers>true</showFollowers>
         </twitter>
+		-->
         <facebookLike />
         <skipGenerationDate>true</skipGenerationDate>
     </fluidoSkin>
