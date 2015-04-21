@@ -462,7 +462,7 @@ setup_install_files(){
 
 	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
-	    cp ${INSTALL_DIR}/${RANGER_KMS} /etc/init.d/${RANGER_KMS}
+	    cp ${INSTALL_DIR}/${RANGER_KMS}.initd /etc/init.d/${RANGER_KMS}
 
 	    chmod ug+rx /etc/init.d/${RANGER_KMS}
 
@@ -522,7 +522,7 @@ setup_install_files(){
 	# Copy ranger-admin-services to /usr/bin
 	if [ ! \( -e /usr/bin/ranger-kms \) ]
 	then
-	  ln -sf ${INSTALL_DIR}/ranger-kms-services.sh /usr/bin/ranger-kms
+	  ln -sf ${INSTALL_DIR}/ranger-kms /usr/bin/ranger-kms
 	  chmod ug+rx /usr/bin/ranger-kms	
 	fi
 
