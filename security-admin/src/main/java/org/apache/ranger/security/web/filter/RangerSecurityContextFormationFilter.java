@@ -64,8 +64,11 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 	HTTPUtil httpUtil;
 
 	 @Autowired
-   XUserMgr xUserMgr;
+    XUserMgr xUserMgr;
 
+	@Autowired
+	GUIDUtil guidUtil;
+		
 	String testIP = null;
 
 	public RangerSecurityContextFormationFilter() {
@@ -113,7 +116,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				requestContext.setUserAgent(userAgent);
 				requestContext.setDeviceType(httpUtil
 						.getDeviceType(httpRequest));
-				requestContext.setServerRequestId(GUIDUtil.genGUI());
+				requestContext.setServerRequestId(guidUtil.genGUID());
 				requestContext.setRequestURL(httpRequest.getRequestURI());
 
 				requestContext.setClientTimeOffsetInMinute(clientTimeOffset);

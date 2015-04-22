@@ -60,11 +60,14 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	@Autowired
 	JSONUtil jsonUtil;
 	
+	@Autowired
+	GUIDUtil guidUtil;
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	protected XXServiceDef mapViewToEntityBean(RangerServiceDef vObj, XXServiceDef xObj, int operationContext) {
 		
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? GUIDUtil.genGUI() : vObj.getGuid();
+		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 		
 		xObj.setGuid(guid);
 		xObj.setVersion(vObj.getVersion());

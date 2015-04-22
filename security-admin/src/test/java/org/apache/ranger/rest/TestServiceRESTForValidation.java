@@ -23,11 +23,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
@@ -36,7 +32,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -44,13 +42,11 @@ import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
-import org.apache.ranger.plugin.model.validation.RangerValidatorFactory;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-@Ignore("tests to be reviewed")
 public class TestServiceRESTForValidation {
 
 	private static final Log LOG = LogFactory.getLog(TestServiceRESTForValidation.class);
@@ -79,6 +75,11 @@ public class TestServiceRESTForValidation {
 		WebApplicationException webApplicationException = new WebApplicationException();
 		when(_restErrorUtil.createRESTException(anyInt(), anyString(), anyBoolean())).thenReturn(webApplicationException);
 		_serviceRest.restErrorUtil = _restErrorUtil;
+		
+		_guidUtil = mock(GUIDUtil.class);
+		when(_guidUtil.genGUID()).thenReturn("a-guid");
+		_serviceRest.guidUtil = _guidUtil;
+		
 		// other object of use in multiple tests
 		_service = mock(RangerService.class);
 		_policy = mock(RangerPolicy.class);
@@ -204,6 +205,7 @@ public class TestServiceRESTForValidation {
 		}
 	}
 
+	@Ignore("Disabled pending with hive policy creation-failure")
 	@Test
 	public void testPolicy_happyPath() {
 		setupBizUtils();
@@ -211,9 +213,6 @@ public class TestServiceRESTForValidation {
 		try {
 			_serviceRest.updatePolicy(_policy);
 			verify(_policyValidator).validate(_policy, Action.UPDATE, true);
-
-			_serviceRest.deletePolicy(3L);
-			verify(_policyValidator).validate(3L, Action.DELETE);
 
 			_serviceRest.createPolicy(_policy);
 			verify(_policyValidator).validate(_policy, Action.CREATE, true);
@@ -223,6 +222,23 @@ public class TestServiceRESTForValidation {
 		}
 	}
 	
+	@Ignore("Disabled pending with hive policy creation-failure")
+	@Test
+	public void testPolicy_happyPath_deletion() {
+		setupBizUtils();
+		
+		try {
+			long id = 3;
+			ServiceREST spy = setupForDelete(id);
+			spy.deletePolicy(id);
+			verify(_policyValidator).validate(id, Action.DELETE);
+		} catch (Exception e) {
+			LOG.debug(e);
+			fail("unexpected exception");
+		}
+	}
+	
+	@Ignore("Disabled pending with hive policy creation-failure")
 	@Test
 	public void testPolicy_validatorFailure() throws Exception {
 
@@ -266,6 +282,7 @@ public class TestServiceRESTForValidation {
 		}
 	}
 	
+	@Ignore("Disabled pending with hive policy creation-failure")
 	@Test
 	public void testPolicy_storeFailure() throws Exception {
 
@@ -295,14 +312,24 @@ public class TestServiceRESTForValidation {
 			LOG.debug(t);
 			fail("Unexpected exception!");
 		}
+	}
+
+	@Ignore("Disabled pending with hive policy creation-failure")
+	@Test
+	public void testPolicy_storeFailure_forDelete() throws Exception {
+
+		// let's have bizutils return true for now
+		setupBizUtils();
 		
-		doThrow(_exception).when(_store).deletePolicy(5L);
+		Long id = 5L;
+		ServiceREST spy = setupForDelete(id);
+		doThrow(_exception).when(_store).deletePolicy(id);
 		try {
-			_serviceRest.deletePolicy(5L);
+			spy.deletePolicy(id);
 			fail("Should have thrown exception!");
 		} catch (WebApplicationException e) {
-			verify(_policyValidator).validate(5L, Action.DELETE);
-			verify(_store).deletePolicy(5L);
+			verify(_policyValidator).validate(id, Action.DELETE);
+			verify(_store).deletePolicy(id);
 		} catch (Throwable t) {
 			LOG.debug(t);
 			fail("Unexpected exception!");
@@ -400,14 +427,14 @@ public class TestServiceRESTForValidation {
 			fail("Unexpected exception!");
 		}
 		
-		doThrow(_exception).when(_store).deleteServiceDef(5L);
+		doThrow(_exception).when(_store).deleteServiceDef(5L, false);
 		try {
 			HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 			_serviceRest.deleteServiceDef(5L, request);
 			fail("Should have thrown exception!");
 		} catch (WebApplicationException e) {
 			verify(_serviceDefValidator).validate(5L, Action.DELETE);
-			verify(_store).deleteServiceDef(5L);
+			verify(_store).deleteServiceDef(5L, false);
 		} catch (Throwable t) {
 			LOG.debug(t);
 			fail("Unexpected exception!");
@@ -416,6 +443,16 @@ public class TestServiceRESTForValidation {
 
 	void setupBizUtils() {
 		when(_bizUtils.isAdmin()).thenReturn(true);
+	}
+	
+	@SuppressWarnings("unchecked")
+	ServiceREST setupForDelete(long id) throws Exception {
+		// deletion now asserts admin privileges.  Ensure that it will find the policy from the store
+		when(_store.getPolicy(id)).thenReturn(_policy);
+		// now we have to ensure that real admin check never gets called -- we are not interested in its working
+		ServiceREST spy = spy(_serviceRest);
+		doNothing().when(spy).ensureAdminAccess(anyString(), anyMap());
+		return spy;
 	}
 	
 	private RangerValidatorFactory _factory;
@@ -432,4 +469,5 @@ public class TestServiceRESTForValidation {
 	private RangerService _service;
 	private RangerPolicy _policy;
 	private RangerServiceDef _serviceDef;
+	private GUIDUtil _guidUtil;
 }
