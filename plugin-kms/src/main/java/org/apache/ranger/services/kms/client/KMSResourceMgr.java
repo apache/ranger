@@ -28,7 +28,7 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 
 public class KMSResourceMgr {
 	public static final 	Logger 	LOG 		= Logger.getLogger(KMSResourceMgr.class);
-	private static final 	String  KMSQUEUE	= "queue";
+	private static final 	String  KMSKEY	= "keyname";
 	
 	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
 		HashMap<String, Object> ret = null;
@@ -54,35 +54,32 @@ public class KMSResourceMgr {
         String 		 userInput 				  = context.getUserInput();
 		Map<String, List<String>> resourceMap = context.getResources();
 	    List<String> 		resultList        = null;
-		List<String> 		kmsQueueList 	  = null;
-		String  			kmsQueueName     = null;
+		List<String> 		kmsKeyList 	  = null;
+		String  			kmsKeyName     = null;
 		
-		if ( resourceMap != null && !resourceMap.isEmpty() &&
-			resourceMap.get(KMSQUEUE) != null ) {
-			kmsQueueName = userInput;
-			kmsQueueList = resourceMap.get(KMSQUEUE); 
+		if ( resourceMap != null && !resourceMap.isEmpty() && resourceMap.get(KMSKEY) != null ) {
+			kmsKeyName = userInput;
+			kmsKeyList = resourceMap.get(KMSKEY); 
 		} else {
-			kmsQueueName = userInput;
+			kmsKeyName = userInput;
 		}
 		
 		
         if (configs == null || configs.isEmpty()) {
                 LOG.error("Connection Config is empty");
-
         } else {
                 
-                String url 		= configs.get("kms.url");
+                String url 		= configs.get("provider");
                 String username = configs.get("username");
                 String password = configs.get("password");
-                resultList = getKMSResource(url, username, password,kmsQueueName,kmsQueueList) ;
+                resultList = getKMSResource(url, username, password,kmsKeyName,kmsKeyList) ;
         }
         return resultList ;
     }
 
-    public static List<String> getKMSResource(String url, String username, String password,String kmsQueueName, List<String> kmsQueueList) {
+    public static List<String> getKMSResource(String url, String username, String password,String kmsKeyName, List<String> kmsKeyList) {
         final KMSClient KMSClient = KMSConnectionMgr.getKMSClient(url, username, password);
-        List<String> topologyList = KMSClient.getQueueList(kmsQueueName, kmsQueueList);
+        List<String> topologyList = KMSClient.getKeyList(kmsKeyName, kmsKeyList);
         return topologyList;
-    }
-    
+    }    
 }

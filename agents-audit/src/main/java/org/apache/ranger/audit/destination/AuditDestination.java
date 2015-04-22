@@ -17,18 +17,19 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.destination;
 
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.provider.BaseAuditHandler;
 
 /**
  * This class needs to be extended by anyone who wants to build custom
  * destination
  */
-public abstract class AuditDestination extends BaseAuditProvider {
+public abstract class AuditDestination extends BaseAuditHandler {
 	private static final Log logger = LogFactory.getLog(AuditDestination.class);
 
 	public AuditDestination() {
@@ -50,16 +51,6 @@ public abstract class AuditDestination extends BaseAuditProvider {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isFlushPending()
-	 */
-	@Override
-	public boolean isFlushPending() {
-		return false;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see org.apache.ranger.audit.provider.AuditProvider#flush()
 	 */
 	@Override
@@ -67,4 +58,24 @@ public abstract class AuditDestination extends BaseAuditProvider {
 
 	}
 
+	@Override
+	public void start() {
+		
+	}
+
+	@Override
+	public void stop() {
+		
+	}
+
+	@Override
+	public void waitToComplete() {
+		
+	}
+
+	@Override
+	public void waitToComplete(long timeout) {
+		
+	}
+	
 }

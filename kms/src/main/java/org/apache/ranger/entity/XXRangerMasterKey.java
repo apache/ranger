@@ -34,8 +34,8 @@ public class XXRangerMasterKey extends XXDBBase implements java.io.Serializable 
 	private static final long serialVersionUID = 1L;
 	
 	@Id
-	@SequenceGenerator(name="rangermasterkey",sequenceName="rangermasterkey",allocationSize=1)
-	@GeneratedValue(strategy=GenerationType.AUTO,generator="rangermasterkey")
+	@SequenceGenerator(name="RANGER_MASTERKEY_SEQ",sequenceName="RANGER_MASTERKEY_SEQ",allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="RANGER_MASTERKEY_SEQ")
 	@Column(name="ID")
 	protected Long id;
 	@Override

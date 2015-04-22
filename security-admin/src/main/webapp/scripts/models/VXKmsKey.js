@@ -17,33 +17,38 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.model;
+ 
+define(function(require){
+	'use strict';	
 
-import java.util.Date;
-
-import org.apache.ranger.audit.dao.DaoManager;
-
-public abstract class AuditEventBase {
-
-	protected AuditEventBase() {
-	}
-
-	public abstract void persist(DaoManager daoManager);
+	var VXKmsKeyBase	= require('model_bases/VXKmsKeyBase');
+	var localization	= require('utils/XALangSupport');
+	var XAEnums     	= require('utils/XAEnums');
 	
-	public abstract String getEventKey();
-	public abstract Date getEventTime ();
-	public abstract void setEventCount(long eventCount);
-	public abstract void setEventDurationMS(long eventDurationMS);
-	
-	protected String trim(String str, int len) {
-		String ret = str;
-		if (str != null) {
-			if (str.length() > len) {
-				ret = str.substring(0, len);
-			}
+	var VXKmsKey = VXKmsKeyBase.extend(
+	/** @lends VXKmsKey.prototype */
+	{
+		/**
+		 * VXKmsKey initialize method
+		 * @augments XABaseModel
+		 * @constructs
+		 */
+		initialize: function() {
+			this.modelName = 'VXKmsKey';
+			this.bindErrorEvents();
+		},
+
+		/** This models toString() */
+		toString : function(){
+			return /*this.get('name')*/;
 		}
-		return ret;
-	}
+
+	}, {
+		// static class members
+	});
+
+    return VXKmsKey;
+	
+});
 
 
-}

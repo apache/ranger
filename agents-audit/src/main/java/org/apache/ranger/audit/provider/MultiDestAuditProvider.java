@@ -26,18 +26,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 
-public class MultiDestAuditProvider extends BaseAuditProvider {
+public class MultiDestAuditProvider extends BaseAuditHandler {
 
 	private static final Log LOG = LogFactory
 			.getLog(MultiDestAuditProvider.class);
 
-	protected List<AuditProvider> mProviders = new ArrayList<AuditProvider>();
+	protected List<AuditHandler> mProviders = new ArrayList<AuditHandler>();
 
 	public MultiDestAuditProvider() {
 		LOG.info("MultiDestAuditProvider: creating..");
 	}
 
-	public MultiDestAuditProvider(AuditProvider provider) {
+	public MultiDestAuditProvider(AuditHandler provider) {
 		addAuditProvider(provider);
 	}
 
@@ -47,7 +47,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 		super.init(props);
 
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.init(props);
 			} catch (Throwable excp) {
@@ -57,7 +57,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 		}
 	}
 
-	public void addAuditProvider(AuditProvider provider) {
+	public void addAuditProvider(AuditHandler provider) {
 		if (provider != null) {
 			LOG.info("MultiDestAuditProvider.addAuditProvider(providerType="
 					+ provider.getClass().getCanonicalName() + ")");
@@ -66,9 +66,11 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 		}
 	}
 
-	public void addAuditProviders(List<AuditProvider> providers) {
+	public void addAuditProviders(List<AuditHandler> providers) {
 		if (providers != null) {
-			for (AuditProvider provider : providers) {
+			for (AuditHandler provider : providers) {
+				LOG.info("Adding " + provider.getName()
+						+ " as consumer to MultiDestination " + getName());
 				addAuditProvider(provider);
 			}
 		}
@@ -76,7 +78,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public boolean log(AuditEventBase event) {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.log(event);
 			} catch (Throwable excp) {
@@ -88,7 +90,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.log(events);
 			} catch (Throwable excp) {
@@ -100,7 +102,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public boolean logJSON(String event) {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.logJSON(event);
 			} catch (Throwable excp) {
@@ -112,7 +114,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public boolean logJSON(Collection<String> events) {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.logJSON(events);
 			} catch (Throwable excp) {
@@ -124,7 +126,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public void start() {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.start();
 			} catch (Throwable excp) {
@@ -136,7 +138,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public void stop() {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.stop();
 			} catch (Throwable excp) {
@@ -148,7 +150,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public void waitToComplete() {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.waitToComplete();
 			} catch (Throwable excp) {
@@ -161,7 +163,7 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public void waitToComplete(long timeout) {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.waitToComplete(timeout);
 			} catch (Throwable excp) {
@@ -173,35 +175,8 @@ public class MultiDestAuditProvider extends BaseAuditProvider {
 	}
 
 	@Override
-	public boolean isFlushPending() {
-		for (AuditProvider provider : mProviders) {
-			if (provider.isFlushPending()) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	@Override
-	public long getLastFlushTime() {
-		long lastFlushTime = 0;
-		for (AuditProvider provider : mProviders) {
-			long flushTime = provider.getLastFlushTime();
-
-			if (flushTime != 0) {
-				if (lastFlushTime == 0 || lastFlushTime > flushTime) {
-					lastFlushTime = flushTime;
-				}
-			}
-		}
-
-		return lastFlushTime;
-	}
-
-	@Override
 	public void flush() {
-		for (AuditProvider provider : mProviders) {
+		for (AuditHandler provider : mProviders) {
 			try {
 				provider.flush();
 			} catch (Throwable excp) {

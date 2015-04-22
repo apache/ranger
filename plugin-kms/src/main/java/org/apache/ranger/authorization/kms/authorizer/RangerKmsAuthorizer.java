@@ -113,6 +113,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		  return conf;
 	  }
 
+	  @Override
 	  public synchronized void startReloader() {
 	    if (executorService == null) {
 	      executorService = Executors.newScheduledThreadPool(1);
@@ -120,7 +121,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	          RELOADER_SLEEP_MILLIS, TimeUnit.MILLISECONDS);
 	    }
 	  }
-
+	  @Override
 	  public synchronized void stopReloader() {
 	    if (executorService != null) {
 	      executorService.shutdownNow();
@@ -194,17 +195,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	 	  return true;
 	  }
 
-	  @Override
-	  public void startACLReloader() {
-		this.startReloader();	
-	  }
-
-	  @Override
-	  public void stopACLReloader() {
-		this.stopReloader();
-	  }	
-	  
-		public void init(Configuration conf) {
+   	  public void init(Configuration conf) {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerKmsAuthorizer.init()");
 			}

@@ -24,7 +24,7 @@ import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 
 
-public class DummyAuditProvider implements AuditProvider {
+public class DummyAuditProvider implements AuditHandler {
 	@Override
 	public void init(Properties prop) {
 		// intentionally left empty
@@ -74,23 +74,6 @@ public class DummyAuditProvider implements AuditProvider {
 		// intentionally left empty
 	}
 
-	
-	@Override
-	public int getMaxBatchSize() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public boolean isFlushPending() {
-		return false;
-	}
-	
-	@Override
-	public long getLastFlushTime() {
-		return 0;
-	}
-
 	@Override
 	public void flush() {
 		// intentionally left empty
@@ -120,20 +103,4 @@ public class DummyAuditProvider implements AuditProvider {
 		return this.getClass().getName();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isDrain()
-	 */
-	@Override
-	public boolean isDrain() {
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.apache.ranger.audit.provider.AuditProvider#getMaxBatchInterval()
-	 */
-	@Override
-	public int getMaxBatchInterval() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 }

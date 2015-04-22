@@ -214,7 +214,15 @@ define(function(require) {
 				isVisible                       : 'Visible',
 				delegatedAdmin					: 'Delegate Admin',
 				policyId						: 'Policy ID',
-				moduleName						: 'Module Name'
+				moduleName						: 'Module Name',
+				keyManagement					: 'Key Management',
+				addNewKey						: 'Add New Key',
+				keyName							: 'Key Name',
+				cipher							: 'Cipher',
+				length							: 'Length',
+				version							: 'Version',
+				attributes						: 'Attributes',
+				material						: 'Material'
 			},
 			btn : {
 				add							: 'Add',
@@ -274,7 +282,11 @@ define(function(require) {
 				searchForYourGroup 			:"Search for your groups...",
 				access						: 'Access',
 				policyCondition				: 'Policy Condtions',
-				permissions					: 'Permissions'
+				permissions					: 'Permissions',
+				kms							: 'KMS',
+				keyCreate					: 'Key Create',
+				keyEdit					: 'Key Edit',
+				searchForKeys				:"Search for your keys...",
 				
 				
 			},
@@ -303,6 +315,7 @@ define(function(require) {
 				repoDoesNotExistAnymore   : 'Repository does not exist anymore..',
 				policyDisabledMsg		  : 'This policy is currently in disabled state.',
 				noRecordsFound			  : 'No Records Found',
+				keyDeleteMsg			  : 'Key deleted successfully'
 				
 				
 				

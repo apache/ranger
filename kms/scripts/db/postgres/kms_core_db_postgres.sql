@@ -1,8 +1,8 @@
 DROP TABLE IF EXISTS ranger_masterkey CASCADE;
-DROP SEQUENCE IF EXISTS ranger_masterkey_seq;
-CREATE SEQUENCE ranger_masterkey_seq;
+DROP SEQUENCE IF EXISTS RANGER_MASTERKEY_SEQ;
+CREATE SEQUENCE RANGER_MASTERKEY_SEQ;
 CREATE TABLE ranger_masterkey(
-id BIGINT DEFAULT nextval('ranger_masterkey_seq'::regclass),
+id BIGINT DEFAULT nextval('RANGER_MASTERKEY_SEQ'::regclass),
 create_time TIMESTAMP DEFAULT NULL NULL,
 update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,
@@ -14,10 +14,10 @@ PRIMARY KEY (id)
 );
 
 DROP TABLE IF EXISTS ranger_keystore CASCADE;
-DROP SEQUENCE IF EXISTS ranger_keystore_seq;
-CREATE SEQUENCE ranger_keystore_seq;
+DROP SEQUENCE IF EXISTS RANGER_KEYSTORE_SEQ;
+CREATE SEQUENCE RANGER_KEYSTORE_SEQ;
 CREATE TABLE ranger_keystore(
-id BIGINT DEFAULT nextval('ranger_keystore_seq'::regclass),
+id BIGINT DEFAULT nextval('RANGER_KEYSTORE_SEQ'::regclass),
 create_time TIMESTAMP DEFAULT NULL NULL,
 update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,

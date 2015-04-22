@@ -17,14 +17,12 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.destination;
 
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,18 +31,24 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.MiscUtil;
 
 /**
  * This class write the logs to local file
  */
-public class FileAuditDestination extends AuditDestination {
+public class HDFSAuditDestination extends AuditDestination {
 	private static final Log logger = LogFactory
-			.getLog(FileAuditDestination.class);
+			.getLog(HDFSAuditDestination.class);
 
-	public static final String PROP_FILE_LOCAL_DIR = "dir";
-	public static final String PROP_FILE_LOCAL_FILE_NAME_FORMAT = "filename.format";
-	public static final String PROP_FILE_FILE_ROLLOVER = "file.rollover.sec";
+	public static final String PROP_HDFS_DIR = "dir";
+	public static final String PROP_HDFS_SUBDIR = "subdir";
+	public static final String PROP_HDFS_FILE_NAME_FORMAT = "filename.format";
+	public static final String PROP_HDFS_ROLLOVER = "file.rollover.sec";
 
 	String baseFolder = null;
 	String fileFormat = null;
@@ -53,7 +57,7 @@ public class FileAuditDestination extends AuditDestination {
 
 	boolean initDone = false;
 
-	private File logFolder;
+	private String logFolder;
 	PrintWriter logWriter = null;
 
 	private Date fileCreateTime = null;
@@ -69,36 +73,30 @@ public class FileAuditDestination extends AuditDestination {
 		// Initialize properties for this class
 		// Initial folder and file properties
 		String logFolderProp = MiscUtil.getStringProperty(props, propPrefix
-				+ "." + PROP_FILE_LOCAL_DIR);
-		logFileNameFormat = MiscUtil.getStringProperty(props, propPrefix + "."
-				+ PROP_FILE_LOCAL_FILE_NAME_FORMAT);
-		fileRolloverSec = MiscUtil.getIntProperty(props, propPrefix + "."
-				+ PROP_FILE_FILE_ROLLOVER, fileRolloverSec);
-
+				+ "." + PROP_HDFS_DIR);
 		if (logFolderProp == null || logFolderProp.isEmpty()) {
-			logger.error("File destination folder is not configured. Please set "
-					+ propPrefix
-					+ "."
-					+ PROP_FILE_LOCAL_DIR
-					+ ". name="
-					+ getName());
+			logger.fatal("File destination folder is not configured. Please set "
+					+ propPrefix + "." + PROP_HDFS_DIR + ". name=" + getName());
 			return;
 		}
-		logFolder = new File(logFolderProp);
-		if (!logFolder.isDirectory()) {
-			logFolder.mkdirs();
-			if (!logFolder.isDirectory()) {
-				logger.error("FileDestination folder not found and can't be created. folder="
-						+ logFolder.getAbsolutePath() + ", name=" + getName());
-				return;
-			}
+
+		String logSubFolder = MiscUtil.getStringProperty(props, propPrefix
+				+ "." + PROP_HDFS_SUBDIR);
+		if (logSubFolder == null || logSubFolder.isEmpty()) {
+			logSubFolder = "%app-type%/%time:yyyyMMdd%";
 		}
-		logger.info("logFolder=" + logFolder + ", name=" + getName());
+
+		logFileNameFormat = MiscUtil.getStringProperty(props, propPrefix + "."
+				+ PROP_HDFS_FILE_NAME_FORMAT);
+		fileRolloverSec = MiscUtil.getIntProperty(props, propPrefix + "."
+				+ PROP_HDFS_ROLLOVER, fileRolloverSec);
 
 		if (logFileNameFormat == null || logFileNameFormat.isEmpty()) {
-			logFileNameFormat = "%app-type%_ranger_audit.log";
+			logFileNameFormat = "%app-type%_ranger_audit_%hostname%" + ".log";
 		}
 
+		logFolder = logFolderProp + "/" + logSubFolder;
+		logger.info("logFolder=" + logFolder + ", destName=" + getName());
 		logger.info("logFileNameFormat=" + logFileNameFormat + ", destName="
 				+ getName());
 
@@ -106,7 +104,12 @@ public class FileAuditDestination extends AuditDestination {
 	}
 
 	@Override
-	public boolean logJSON(Collection<String> events) {
+	synchronized public boolean logJSON(Collection<String> events) {
+		if (isStopped) {
+			logError("log() called after stop was requested. name=" + getName());
+			return false;
+		}
+
 		try {
 			PrintWriter out = getLogFileStream();
 			for (String event : events) {
@@ -127,7 +130,7 @@ public class FileAuditDestination extends AuditDestination {
 	 * org.apache.ranger.audit.provider.AuditProvider#log(java.util.Collection)
 	 */
 	@Override
-	synchronized public boolean log(Collection<AuditEventBase> events) {
+	public boolean log(Collection<AuditEventBase> events) {
 		if (isStopped) {
 			logError("log() called after stop was requested. name=" + getName());
 			return false;
@@ -157,16 +160,21 @@ public class FileAuditDestination extends AuditDestination {
 
 	@Override
 	synchronized public void stop() {
+		isStopped = true;
 		if (logWriter != null) {
-			logWriter.flush();
-			logWriter.close();
+			try {
+				logWriter.flush();
+				logWriter.close();
+			} catch (Throwable t) {
+				logger.error("Error on closing log writter. Exception will be ignored. name="
+						+ getName() + ", fileName=" + currentFileName);
+			}
 			logWriter = null;
-			isStopped = true;
 		}
 	}
 
 	// Helper methods in this class
-	synchronized private PrintWriter getLogFileStream() throws Exception {
+	synchronized private PrintWriter getLogFileStream() throws Throwable {
 		closeFileIfNeeded();
 
 		// Either there are no open log file or the previous one has been rolled
@@ -176,52 +184,72 @@ public class FileAuditDestination extends AuditDestination {
 			// Create a new file
 			String fileName = MiscUtil.replaceTokens(logFileNameFormat,
 					currentTime.getTime());
-			File outLogFile = new File(logFolder, fileName);
-			if (outLogFile.exists()) {
-				// Let's try to get the next available file
-				int i = 0;
-				while (true) {
-					i++;
-					int lastDot = fileName.lastIndexOf('.');
-					String baseName = fileName.substring(0, lastDot);
-					String extension = fileName.substring(lastDot);
-					String newFileName = baseName + "." + i + extension;
-					File newLogFile = new File(logFolder, newFileName);
-					if (!newLogFile.exists()) {
-						// Move the file
-						if (!outLogFile.renameTo(newLogFile)) {
-							logger.error("Error renameing file. " + outLogFile
-									+ " to " + newLogFile);
-						}
-						break;
-					}
-				}
+			String parentFolder = MiscUtil.replaceTokens(logFolder,
+					currentTime.getTime());
+			Configuration conf = new Configuration();
+
+			String fullPath = parentFolder
+					+ org.apache.hadoop.fs.Path.SEPARATOR + fileName;
+			String defaultPath = fullPath;
+			URI uri = URI.create(fullPath);
+			FileSystem fileSystem = FileSystem.get(uri, conf);
+
+			Path hdfPath = new Path(fullPath);
+			logger.info("Checking whether log file exists. hdfPath=" + fullPath);
+			int i = 0;
+			while (fileSystem.exists(hdfPath)) {
+				i++;
+				int lastDot = defaultPath.lastIndexOf('.');
+				String baseName = defaultPath.substring(0, lastDot);
+				String extension = defaultPath.substring(lastDot);
+				fullPath = baseName + "." + i + extension;
+				hdfPath = new Path(fullPath);
+				logger.info("Checking whether log file exists. hdfPath="
+						+ fullPath);
 			}
-			if (!outLogFile.exists()) {
-				logger.info("Creating new file. destName=" + getName()
-						+ ", fileName=" + fileName);
-				// Open the file
-				logWriter = new PrintWriter(new BufferedWriter(new FileWriter(
-						outLogFile)));
-			} else {
-				logWriter = new PrintWriter(new BufferedWriter(new FileWriter(
-						outLogFile, true)));
-			}
+			logger.info("Log file doesn't exists. Will create and use it. hdfPath="
+					+ fullPath);
+			// Create parent folders
+			createParents(hdfPath, fileSystem);
+
+			// Create the file to write
+			logger.info("Creating new log file. hdfPath=" + fullPath);
+			FSDataOutputStream ostream = fileSystem.create(hdfPath);
+			logWriter = new PrintWriter(ostream);
 			fileCreateTime = new Date();
-			currentFileName = outLogFile.getPath();
+			currentFileName = fullPath;
 		}
 		return logWriter;
+	}
+
+	private void createParents(Path pathLogfile, FileSystem fileSystem)
+			throws Throwable {
+		logger.info("Creating parent folder for " + pathLogfile);
+		Path parentPath = pathLogfile != null ? pathLogfile.getParent() : null;
+
+		if (parentPath != null && fileSystem != null
+				&& !fileSystem.exists(parentPath)) {
+			fileSystem.mkdirs(parentPath);
+		}
 	}
 
 	private void closeFileIfNeeded() throws FileNotFoundException, IOException {
 		if (logWriter == null) {
 			return;
 		}
+		// TODO: Close the file on absolute time. Currently it is implemented as
+		// relative time
 		if (System.currentTimeMillis() - fileCreateTime.getTime() > fileRolloverSec * 1000) {
 			logger.info("Closing file. Rolling over. name=" + getName()
 					+ ", fileName=" + currentFileName);
-			logWriter.flush();
-			logWriter.close();
+			try {
+				logWriter.flush();
+				logWriter.close();
+			} catch (Throwable t) {
+				logger.error("Error on closing log writter. Exception will be ignored. name="
+						+ getName() + ", fileName=" + currentFileName);
+			}
+
 			logWriter = null;
 			currentFileName = null;
 		}

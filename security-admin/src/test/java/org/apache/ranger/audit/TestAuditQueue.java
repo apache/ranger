@@ -25,32 +25,30 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.destination.FileAuditDestination;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.AuditAsyncQueue;
-import org.apache.ranger.audit.provider.AuditBatchProcessor;
-import org.apache.ranger.audit.provider.AuditDestination;
-import org.apache.ranger.audit.provider.AuditFileSpool;
-import org.apache.ranger.audit.provider.AuditProvider;
+import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.audit.provider.BaseAuditProvider;
-import org.apache.ranger.audit.provider.FileAuditDestination;
+import org.apache.ranger.audit.provider.BaseAuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.provider.MultiDestAuditProvider;
+import org.apache.ranger.audit.queue.AuditAsyncQueue;
+import org.apache.ranger.audit.queue.AuditBatchQueue;
+import org.apache.ranger.audit.queue.AuditFileSpool;
+import org.apache.ranger.audit.queue.AuditQueue;
+import org.apache.ranger.audit.queue.AuditSummaryQueue;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestAuditProcessor {
+public class TestAuditQueue {
 
-	private static final Log logger = LogFactory
-			.getLog(TestAuditProcessor.class);
+	private static final Log logger = LogFactory.getLog(TestAuditQueue.class);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -87,6 +85,126 @@ public class TestAuditProcessor {
 		assertEquals(messageToSend, testConsumer.getCountTotal());
 		assertEquals(messageToSend, testConsumer.getSumTotal());
 		assertNull("Event not in sequnce", testConsumer.isInSequence());
+	}
+
+	@Test
+	public void testAuditSummaryQueue() {
+		logger.debug("testAuditSummaryQueue()...");
+		TestConsumer testConsumer = new TestConsumer();
+		AuditSummaryQueue queue = new AuditSummaryQueue(testConsumer);
+
+		Properties props = new Properties();
+		props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "."
+				+ AuditSummaryQueue.PROP_SUMMARY_INTERVAL, "" + 300);
+		queue.init(props, BaseAuditHandler.PROP_DEFAULT_PREFIX);
+
+		queue.start();
+
+		commonTestSummary(testConsumer, queue);
+	}
+
+	private void commonTestSummary(TestConsumer testConsumer,
+			BaseAuditHandler queue) {
+		int messageToSend = 0;
+		int pauseMS = 330;
+
+		int countToCheck = 0;
+		try {
+
+			queue.log(createEvent("john", "select",
+					"xademo/customer_details/imei", true));
+			messageToSend++;
+			queue.log(createEvent("john", "select",
+					"xademo/customer_details/imei", true));
+			messageToSend++;
+			countToCheck++;
+			queue.log(createEvent("jane", "select",
+					"xademo/customer_details/imei", true));
+			messageToSend++;
+			countToCheck++;
+			Thread.sleep(pauseMS);
+
+			queue.log(createEvent("john", "select",
+					"xademo/customer_details/imei", true));
+			messageToSend++;
+			queue.log(createEvent("john", "select",
+					"xademo/customer_details/imei", true));
+			messageToSend++;
+			countToCheck++;
+			queue.log(createEvent("jane", "select",
+					"xademo/customer_details/imei", true));
+			messageToSend++;
+			countToCheck++;
+			Thread.sleep(pauseMS);
+
+			queue.log(createEvent("john", "select",
+					"xademo/customer_details/imei", true));
+			messageToSend++;
+			countToCheck++;
+			queue.log(createEvent("john", "select",
+					"xademo/customer_details/imei", false));
+			messageToSend++;
+			countToCheck++;
+			queue.log(createEvent("jane", "select",
+					"xademo/customer_details/imei", true));
+			messageToSend++;
+			countToCheck++;
+			Thread.sleep(pauseMS);
+
+		} catch (InterruptedException e1) {
+			logger.error("Sleep interupted", e1);
+		}
+		// Let's wait for second
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// ignore
+		}
+
+		queue.waitToComplete();
+		queue.stop();
+		queue.waitToComplete();
+		// Let's wait for second
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// ignore
+		}
+		assertEquals(messageToSend, testConsumer.getSumTotal());
+		assertEquals(countToCheck, testConsumer.getCountTotal());
+	}
+
+	@Test
+	public void testAuditSummaryByInfra() {
+		logger.debug("testAuditSummaryByInfra()...");
+
+		Properties props = new Properties();
+		// Destination
+		String propPrefix = AuditProviderFactory.AUDIT_DEST_BASE + ".test";
+		props.put(propPrefix, "enable");
+		props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "summary" + "."
+				+ "enabled", "true");
+		props.put(propPrefix + "." + BaseAuditHandler.PROP_NAME, "test");
+		props.put(propPrefix + "." + AuditQueue.PROP_QUEUE, "none");
+
+		props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "."
+				+ AuditSummaryQueue.PROP_SUMMARY_INTERVAL, "" + 300);
+		props.put(propPrefix + "." + BaseAuditHandler.PROP_CLASS_NAME,
+				TestConsumer.class.getName());
+
+		AuditProviderFactory factory = AuditProviderFactory.getInstance();
+		factory.init(props, "test");
+		AuditQueue queue = (AuditQueue) factory.getProvider();
+		BaseAuditHandler consumer = (BaseAuditHandler) queue.getConsumer();
+		while (consumer != null && consumer instanceof AuditQueue) {
+			AuditQueue cQueue = (AuditQueue) consumer;
+			consumer = (BaseAuditHandler) cQueue.getConsumer();
+		}
+		assertTrue("Consumer should be TestConsumer. class="
+				+ consumer.getClass().getName(),
+				consumer instanceof TestConsumer);
+		TestConsumer testConsumer = (TestConsumer) consumer;
+		commonTestSummary(testConsumer, queue);
 	}
 
 	@Test
@@ -128,26 +246,27 @@ public class TestAuditProcessor {
 	}
 
 	@Test
-	public void testAuditBatchProcessorBySize() {
-		logger.debug("testAuditBatchProcessor()...");
+	public void testAuditBatchQueueBySize() {
+		logger.debug("testAuditBatchQueue()...");
 		int messageToSend = 10;
 
-		String basePropName = "ranger.test.batch";
+		String basePropName = "testAuditBatchQueueBySize_"
+				+ MiscUtil.generateUniqueId();
 		int batchSize = messageToSend / 3;
 		int expectedBatchSize = batchSize
 				+ (batchSize * 3 < messageToSend ? 1 : 0);
 		int queueSize = messageToSend * 2;
 		int intervalMS = messageToSend * 100; // Deliberately big interval
 		Properties props = new Properties();
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		TestConsumer testConsumer = new TestConsumer();
-		AuditBatchProcessor queue = new AuditBatchProcessor(testConsumer);
+		AuditBatchQueue queue = new AuditBatchQueue(testConsumer);
 		queue.init(props, basePropName);
 		queue.start();
 
@@ -175,29 +294,30 @@ public class TestAuditProcessor {
 	}
 
 	@Test
-	public void testAuditBatchProcessorByTime() {
-		logger.debug("testAuditBatchProcessor()...");
+	public void testAuditBatchQueueByTime() {
+		logger.debug("testAuditBatchQueue()...");
 
 		int messageToSend = 10;
 
-		String basePropName = "ranger.test.batch";
+		String basePropName = "testAuditBatchQueueByTime_"
+				+ MiscUtil.generateUniqueId();
 		int batchSize = messageToSend * 2; // Deliberately big size
 		int queueSize = messageToSend * 2;
 		int intervalMS = (1000 / messageToSend) * 3; // e.g (1000/10 * 3) = 300
 														// ms
-		int pauseMS = 1000 / messageToSend + 3; // e.g. 1000/10 -5 = 95ms
+		int pauseMS = 1000 / messageToSend + 3; // e.g. 1000/10 + 3 = 103ms
 		int expectedBatchSize = (messageToSend * pauseMS) / intervalMS + 1;
 
 		Properties props = new Properties();
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		TestConsumer testConsumer = new TestConsumer();
-		AuditBatchProcessor queue = new AuditBatchProcessor(testConsumer);
+		AuditBatchQueue queue = new AuditBatchQueue(testConsumer);
 		queue.init(props, basePropName);
 		queue.start();
 
@@ -227,24 +347,25 @@ public class TestAuditProcessor {
 	}
 
 	@Test
-	public void testAuditBatchProcessorDestDown() {
-		logger.debug("testAuditBatchProcessorDestDown()...");
+	public void testAuditBatchQueueDestDown() {
+		logger.debug("testAuditBatchQueueDestDown()...");
 		int messageToSend = 10;
 
-		String basePropName = "ranger.test.batch";
+		String basePropName = "testAuditBatchQueueDestDown_"
+				+ MiscUtil.generateUniqueId();
 		int batchSize = messageToSend / 3;
 		int queueSize = messageToSend * 2;
 		int intervalMS = Integer.MAX_VALUE; // Deliberately big interval
 		Properties props = new Properties();
-		props.put(basePropName + "." + BaseAuditProvider.PROP_NAME,
-				"testAuditBatchProcessorDestDown");
+		props.put(basePropName + "." + BaseAuditHandler.PROP_NAME,
+				"testAuditBatchQueueDestDown");
 
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		// Enable File Spooling
 		props.put(basePropName + "." + "filespool.enable", "" + true);
@@ -253,7 +374,7 @@ public class TestAuditProcessor {
 		TestConsumer testConsumer = new TestConsumer();
 		testConsumer.isDown = true;
 
-		AuditBatchProcessor queue = new AuditBatchProcessor(testConsumer);
+		AuditBatchQueue queue = new AuditBatchQueue(testConsumer);
 		queue.init(props, basePropName);
 		queue.start();
 
@@ -278,34 +399,32 @@ public class TestAuditProcessor {
 		assertNull("Event not in sequnce", testConsumer.isInSequence());
 	}
 
-	//@Test
-	public void testAuditBatchProcessorDestDownFlipFlop() {
-		logger.debug("testAuditBatchProcessorDestDown()...");
+	@Test
+	public void testAuditBatchQueueDestDownFlipFlop() {
+		logger.debug("testAuditBatchQueueDestDownFlipFlop()...");
 		int messageToSend = 10;
 
-		String basePropName = "ranger.test.batch";
+		String basePropName = "testAuditBatchQueueDestDownFlipFlop_"
+				+ MiscUtil.generateUniqueId();
 		int batchSize = messageToSend / 3;
-		int expectedBatchSize = batchSize
-				+ (batchSize * 3 < messageToSend ? 1 : 0);
 		int queueSize = messageToSend * 2;
 		int intervalMS = 3000; // Deliberately big interval
 		Properties props = new Properties();
 		props.put(
-				basePropName + "." + BaseAuditProvider.PROP_NAME,
-				"testAuditBatchProcessorDestDownFlipFlop_"
+				basePropName + "." + BaseAuditHandler.PROP_NAME,
+				"testAuditBatchQueueDestDownFlipFlop_"
 						+ MiscUtil.generateUniqueId());
 
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		// Enable File Spooling
 		int destRetryMS = 10;
-		props.put(
-				basePropName + "." + BaseAuditProvider.PROP_FILE_SPOOL_ENABLE,
+		props.put(basePropName + "." + AuditQueue.PROP_FILE_SPOOL_ENABLE,
 				"" + true);
 		props.put(
 				basePropName + "." + AuditFileSpool.PROP_FILE_SPOOL_LOCAL_DIR,
@@ -317,7 +436,7 @@ public class TestAuditProcessor {
 		TestConsumer testConsumer = new TestConsumer();
 		testConsumer.isDown = false;
 
-		AuditBatchProcessor queue = new AuditBatchProcessor(testConsumer);
+		AuditBatchQueue queue = new AuditBatchQueue(testConsumer);
 		queue.init(props, basePropName);
 		queue.start();
 
@@ -367,32 +486,33 @@ public class TestAuditProcessor {
 	/**
 	 * See if we recover after restart
 	 */
-	public void testAuditBatchProcessorDestDownRestart() {
-		logger.debug("testAuditBatchProcessorDestDownRestart()...");
+	@Test
+	public void testAuditBatchQueueDestDownRestart() {
+		logger.debug("testAuditBatchQueueDestDownRestart()...");
 		int messageToSend = 10;
 
-		String basePropName = "ranger.test.batch";
+		String basePropName = "testAuditBatchQueueDestDownRestart_"
+				+ MiscUtil.generateUniqueId();
 		int batchSize = messageToSend / 3;
 		int queueSize = messageToSend * 2;
 		int intervalMS = 3000; // Deliberately big interval
 		int maxArchivedFiles = 1;
 		Properties props = new Properties();
 		props.put(
-				basePropName + "." + BaseAuditProvider.PROP_NAME,
-				"testAuditBatchProcessorDestDownRestart_"
+				basePropName + "." + BaseAuditHandler.PROP_NAME,
+				"testAuditBatchQueueDestDownRestart_"
 						+ MiscUtil.generateUniqueId());
 
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		// Enable File Spooling
 		int destRetryMS = 10;
-		props.put(
-				basePropName + "." + BaseAuditProvider.PROP_FILE_SPOOL_ENABLE,
+		props.put(basePropName + "." + AuditQueue.PROP_FILE_SPOOL_ENABLE,
 				"" + true);
 		props.put(
 				basePropName + "." + AuditFileSpool.PROP_FILE_SPOOL_LOCAL_DIR,
@@ -407,7 +527,7 @@ public class TestAuditProcessor {
 		TestConsumer testConsumer = new TestConsumer();
 		testConsumer.isDown = true;
 
-		AuditBatchProcessor queue = new AuditBatchProcessor(testConsumer);
+		AuditBatchQueue queue = new AuditBatchQueue(testConsumer);
 		queue.init(props, basePropName);
 		queue.start();
 
@@ -434,12 +554,11 @@ public class TestAuditProcessor {
 		} catch (InterruptedException e) {
 			// ignore
 		}
-		
-		
+
 		// Let's now recreate the objects
 		testConsumer = new TestConsumer();
 
-		queue = new AuditBatchProcessor(testConsumer);
+		queue = new AuditBatchQueue(testConsumer);
 		queue.init(props, basePropName);
 		queue.start();
 
@@ -478,7 +597,7 @@ public class TestAuditProcessor {
 		// Destination
 		String filePropPrefix = AuditProviderFactory.AUDIT_DEST_BASE + ".file";
 		props.put(filePropPrefix, "enable");
-		props.put(filePropPrefix + "." + BaseAuditProvider.PROP_NAME, "file");
+		props.put(filePropPrefix + "." + AuditQueue.PROP_NAME, "file");
 		props.put(filePropPrefix + "."
 				+ FileAuditDestination.PROP_FILE_LOCAL_DIR, logFolderName);
 		props.put(filePropPrefix + "."
@@ -487,21 +606,20 @@ public class TestAuditProcessor {
 		props.put(filePropPrefix + "."
 				+ FileAuditDestination.PROP_FILE_FILE_ROLLOVER, "" + 10);
 
-		props.put(filePropPrefix + "." + BaseAuditProvider.PROP_QUEUE, "batch");
+		props.put(filePropPrefix + "." + AuditQueue.PROP_QUEUE, "batch");
 		String batchPropPrefix = filePropPrefix + "." + "batch";
 
-		props.put(batchPropPrefix + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(batchPropPrefix + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(batchPropPrefix + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(batchPropPrefix + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(
-				batchPropPrefix + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
+		props.put(batchPropPrefix + "." + AuditQueue.PROP_BATCH_INTERVAL,
 				"" + intervalMS);
 
 		// Enable File Spooling
 		int destRetryMS = 10;
 		props.put(batchPropPrefix + "."
-				+ BaseAuditProvider.PROP_FILE_SPOOL_ENABLE, "" + true);
+				+ AuditQueue.PROP_FILE_SPOOL_ENABLE, "" + true);
 		props.put(batchPropPrefix + "."
 				+ AuditFileSpool.PROP_FILE_SPOOL_LOCAL_DIR, "target");
 		props.put(batchPropPrefix + "."
@@ -514,11 +632,11 @@ public class TestAuditProcessor {
 		// FileAuditDestination fileDest = new FileAuditDestination();
 		// fileDest.init(props, filePropPrefix);
 		//
-		// AuditBatchProcessor queue = new AuditBatchProcessor(fileDest);
+		// AuditBatchQueue queue = new AuditBatchQueue(fileDest);
 		// queue.init(props, batchPropPrefix);
 		// queue.start();
 
-		AuditProvider queue = factory.getProvider();
+		AuditHandler queue = factory.getProvider();
 
 		for (int i = 0; i < messageToSend; i++) {
 			queue.log(createEvent());
@@ -546,7 +664,7 @@ public class TestAuditProcessor {
 				AuthzAuditEvent event = MiscUtil.fromJson(line,
 						AuthzAuditEvent.class);
 				eventList.add(event);
-				totalSum += event.getFrequencyCount();
+				totalSum += event.getEventCount();
 				if (event.getSeqNum() <= lastSeq) {
 					outOfSeq = true;
 				}
@@ -570,217 +688,15 @@ public class TestAuditProcessor {
 		return event;
 	}
 
-	class TestConsumer extends AuditDestination {
+	private AuthzAuditEvent createEvent(String user, String accessType,
+			String resource, boolean isAllowed) {
+		AuthzAuditEvent event = new AuthzAuditEvent();
+		event.setUser(user);
+		event.setAccessType(accessType);
+		event.setResourcePath(resource);
+		event.setAccessResult(isAllowed ? (short) 1 : (short) 0);
 
-		int countTotal = 0;
-		int sumTotal = 0;
-		int batchCount = 0;
-		String providerName = getClass().getName();
-		boolean isDown = false;
-		int batchSize = 3;
-
-		List<AuthzAuditEvent> eventList = new ArrayList<AuthzAuditEvent>();
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.apache.ranger.audit.provider.AuditProvider#log(org.apache.ranger
-		 * .audit.model.AuditEventBase)
-		 */
-		@Override
-		public boolean log(AuditEventBase event) {
-			if (isDown) {
-				return false;
-			}
-			countTotal++;
-			if (event instanceof AuthzAuditEvent) {
-				AuthzAuditEvent azEvent = (AuthzAuditEvent) event;
-				sumTotal += azEvent.getFrequencyCount();
-				logger.info("EVENT:" + event);
-				eventList.add(azEvent);
-			}
-			return true;
-		}
-
-		@Override
-		public boolean log(Collection<AuditEventBase> events) {
-			if (isDown) {
-				return false;
-			}
-			batchCount++;
-			for (AuditEventBase event : events) {
-				log(event);
-			}
-			return true;
-		}
-
-		@Override
-		public boolean logJSON(String jsonStr) {
-			if (isDown) {
-				return false;
-			}
-			countTotal++;
-			AuthzAuditEvent event = MiscUtil.fromJson(jsonStr,
-					AuthzAuditEvent.class);
-			sumTotal += event.getFrequencyCount();
-			logger.info("JSON:" + jsonStr);
-			eventList.add(event);
-			return true;
-		}
-
-		@Override
-		public boolean logJSON(Collection<String> events) {
-			if (isDown) {
-				return false;
-			}
-			for (String event : events) {
-				logJSON(event);
-			}
-			return true;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.apache.ranger.audit.provider.AuditProvider#init(java.util.Properties
-		 * )
-		 */
-		@Override
-		public void init(Properties prop) {
-			// Nothing to do here
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.apache.ranger.audit.provider.AuditProvider#start()
-		 */
-		@Override
-		public void start() {
-			// Nothing to do here
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.apache.ranger.audit.provider.AuditProvider#stop()
-		 */
-		@Override
-		public void stop() {
-			// Nothing to do here
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.apache.ranger.audit.provider.AuditProvider#waitToComplete()
-		 */
-		@Override
-		public void waitToComplete() {
-		}
-
-		@Override
-		public int getMaxBatchSize() {
-			return batchSize;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.apache.ranger.audit.provider.AuditProvider#isFlushPending()
-		 */
-		@Override
-		public boolean isFlushPending() {
-			return false;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.apache.ranger.audit.provider.AuditProvider#getLastFlushTime()
-		 */
-		@Override
-		public long getLastFlushTime() {
-			return 0;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.apache.ranger.audit.provider.AuditProvider#flush()
-		 */
-		@Override
-		public void flush() {
-			// Nothing to do here
-		}
-
-		public int getCountTotal() {
-			return countTotal;
-		}
-
-		public int getSumTotal() {
-			return sumTotal;
-		}
-
-		public int getBatchCount() {
-			return batchCount;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.apache.ranger.audit.provider.AuditProvider#init(java.util.Properties
-		 * , java.lang.String)
-		 */
-		@Override
-		public void init(Properties prop, String basePropertyName) {
-
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.apache.ranger.audit.provider.AuditProvider#waitToComplete(long)
-		 */
-		@Override
-		public void waitToComplete(long timeout) {
-
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.apache.ranger.audit.provider.AuditProvider#getName()
-		 */
-		@Override
-		public String getName() {
-			return providerName;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.apache.ranger.audit.provider.AuditProvider#isDrain()
-		 */
-		@Override
-		public boolean isDrain() {
-			return false;
-		}
-
-		// Local methods
-		public AuthzAuditEvent isInSequence() {
-			int lastSeq = -1;
-			for (AuthzAuditEvent event : eventList) {
-				if (event.getSeqNum() <= lastSeq) {
-					return event;
-				}
-			}
-			return null;
-		}
+		event.setSeqNum(++seqNum);
+		return event;
 	}
 }

@@ -31,22 +31,22 @@
 		{{/hasAccessToTab}}
 		{{#hasAccessToTab  'Analytics'}}
 		<li>
-			<a href="#!/reports/userAccess" id="nav7"><i class="icon-beaker"></i> {{tt 'h.analytics'}} </a>
+			<a href="#!/reports/userAccess" id="nav4"><i class="icon-beaker"></i> {{tt 'h.analytics'}} </a>
 		</li>
 		{{/hasAccessToTab}}
 		{{#hasAccessToTab  'Audit'}}
 		<li>
-			<a href="#!/reports/audit/bigData" id="nav8"><i class=" icon-file-alt"></i> {{tt 'h.audit'}} </a>
+			<a href="#!/reports/audit/bigData" id="nav5"><i class=" icon-file-alt"></i> {{tt 'h.audit'}} </a>
 		</li>
 		{{/hasAccessToTab}}
 		{{#isSystemAdmin .}}
 		<li>
-			<a href="#!/permissions" id="nav8"><i class=" icon-file-alt"></i> {{tt 'h.permissions'}} </a>
+			<a href="#!/permissions" id="nav6"><i class=" icon-file-alt"></i> {{tt 'h.permissions'}} </a>
 		</li>
 		{{/isSystemAdmin}}
 	 
-	<!--	<li>
-			<a href="#" id="nav4"><i class="icon-cog"></i> {{tt 'h.config'}} </a>
-		</li> -->
+		<li>
+			<a href="#!/kms/keys/new/manage/service" id="nav7"><i class="icon-key"></i> {{tt 'h.kms'}} </a>
+		</li>
 	</ul>
 </div>

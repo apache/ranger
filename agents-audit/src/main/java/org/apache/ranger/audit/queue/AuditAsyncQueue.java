@@ -17,33 +17,31 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.queue;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.AuditHandler;
 
 /**
  * This is a non-blocking queue with no limit on capacity.
  */
-public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
+public class AuditAsyncQueue extends AuditQueue implements Runnable {
 	private static final Log logger = LogFactory.getLog(AuditAsyncQueue.class);
 
-	LinkedTransferQueue<AuditEventBase> queue = new LinkedTransferQueue<AuditEventBase>();
+	LinkedBlockingQueue<AuditEventBase> queue = new LinkedBlockingQueue<AuditEventBase>();
 	Thread consumerThread = null;
 
+	static final int MAX_DRAIN = 1000;
 	static int threadCount = 0;
 	static final String DEFAULT_NAME = "async";
 
-	public AuditAsyncQueue() {
-		setName(DEFAULT_NAME);
-	}
-
-	public AuditAsyncQueue(AuditProvider consumer) {
+	public AuditAsyncQueue(AuditHandler consumer) {
 		super(consumer);
 		setName(DEFAULT_NAME);
 	}
@@ -62,16 +60,19 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 			return false;
 		}
 		queue.add(event);
-		addLifeTimeInLogCount(1);
 		return true;
 	}
 
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
+		boolean ret = true;
 		for (AuditEventBase event : events) {
-			log(event);
+			ret = log(event);
+			if (!ret) {
+				break;
+			}
 		}
-		return true;
+		return ret;
 	}
 
 	/*
@@ -81,10 +82,13 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 	 */
 	@Override
 	public void start() {
-		if(consumer != null) {
+		if (consumer != null) {
 			consumer.start();
+		} else {
+			logger.error("consumer is not set. Nothing will be sent to any consumer. name="
+					+ getName());
 		}
-		
+
 		consumerThread = new Thread(this, this.getClass().getName()
 				+ (threadCount++));
 		consumerThread.setDaemon(true);
@@ -100,23 +104,13 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 	public void stop() {
 		setDrain(true);
 		try {
-			consumerThread.interrupt();
+			if (consumerThread != null) {
+				consumerThread.interrupt();
+			}
 		} catch (Throwable t) {
 			// ignore any exception
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isFlushPending()
-	 */
-	@Override
-	public boolean isFlushPending() {
-		if (queue.isEmpty()) {
-			return consumer.isFlushPending();
-		}
-		return true;
+		consumerThread = null;
 	}
 
 	/*
@@ -139,11 +133,8 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 				if (event != null) {
 					Collection<AuditEventBase> eventList = new ArrayList<AuditEventBase>();
 					eventList.add(event);
-					// TODO: Put a limit. Hard coding to 1000 (use batch size
-					// property)
-					queue.drainTo(eventList, 1000 - 1);
+					queue.drainTo(eventList, MAX_DRAIN - 1);
 					consumer.log(eventList);
-					eventList.clear();
 				}
 			} catch (InterruptedException e) {
 				logger.info(

@@ -25,12 +25,12 @@ import kafka.producer.ProducerConfig;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.BaseAuditProvider;
 import org.apache.ranger.audit.provider.MiscUtil;
 
-public class KafkaAuditProvider extends BaseAuditProvider {
+public class KafkaAuditProvider extends AuditDestination {
 	private static final Log LOG = LogFactory.getLog(KafkaAuditProvider.class);
 
 	public static final String AUDIT_MAX_QUEUE_SIZE_PROP = "xasecure.audit.kafka.async.max.queue.size";
@@ -47,11 +47,6 @@ public class KafkaAuditProvider extends BaseAuditProvider {
 		LOG.info("init() called");
 		super.init(props);
 
-		setMaxQueueSize(MiscUtil.getIntProperty(props,
-				AUDIT_MAX_QUEUE_SIZE_PROP, AUDIT_MAX_QUEUE_SIZE_DEFAULT));
-		setMaxBatchInterval(MiscUtil.getIntProperty(props,
-				AUDIT_MAX_QUEUE_SIZE_PROP,
-				AUDIT_BATCH_INTERVAL_DEFAULT_MS));
 		topic = MiscUtil.getStringProperty(props,
 				AUDIT_KAFKA_TOPIC_NAME);
 		if (topic == null || topic.isEmpty()) {
@@ -173,19 +168,6 @@ public class KafkaAuditProvider extends BaseAuditProvider {
 	
 	@Override
 	public void waitToComplete(long timeout) {
-	}
-
-	@Override
-	public boolean isFlushPending() {
-		LOG.info("isFlushPending() called");
-		return false;
-	}
-
-	@Override
-	public long getLastFlushTime() {
-		LOG.info("getLastFlushTime() called");
-
-		return 0;
 	}
 
 	@Override

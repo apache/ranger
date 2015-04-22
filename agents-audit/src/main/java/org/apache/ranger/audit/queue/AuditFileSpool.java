@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.audit.provider;
+package org.apache.ranger.audit.queue;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -35,12 +35,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.AuditHandler;
+import org.apache.ranger.audit.provider.MiscUtil;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,10 +69,10 @@ public class AuditFileSpool implements Runnable {
 	// "filespool.index.done_filename";
 	public static final String PROP_FILE_SPOOL_DEST_RETRY_MS = "filespool.destination.retry.ms";
 
-	AuditProvider queueProvider = null;
-	AuditProvider consumerProvider = null;
+	AuditQueue queueProvider = null;
+	AuditHandler consumerProvider = null;
 
-	BlockingQueue<AuditIndexRecord> indexQueue = new LinkedTransferQueue<AuditIndexRecord>();
+	BlockingQueue<AuditIndexRecord> indexQueue = new LinkedBlockingQueue<AuditIndexRecord>();
 
 	// Folder and File attributes
 	File logFolder = null;
@@ -106,10 +108,10 @@ public class AuditFileSpool implements Runnable {
 	boolean isDrain = false;
 	boolean isDestDown = true;
 
-	private static Gson gson = null;
+	private Gson gson = null;
 
-	public AuditFileSpool(AuditProvider queueProvider,
-			AuditProvider consumerProvider) {
+	public AuditFileSpool(AuditQueue queueProvider,
+			AuditHandler consumerProvider) {
 		this.queueProvider = queueProvider;
 		this.consumerProvider = consumerProvider;
 	}
@@ -118,12 +120,12 @@ public class AuditFileSpool implements Runnable {
 		init(prop, null);
 	}
 
-	public void init(Properties props, String basePropertyName) {
+	public boolean init(Properties props, String basePropertyName) {
 		if (initDone) {
 			logger.error("init() called more than once. queueProvider="
 					+ queueProvider.getName() + ", consumerProvider="
 					+ consumerProvider.getName());
-			return;
+			return true;
 		}
 		String propPrefix = "xasecure.audit.filespool";
 		if (basePropertyName != null) {
@@ -160,22 +162,22 @@ public class AuditFileSpool implements Runnable {
 					+ queueProvider.getName());
 
 			if (logFolderProp == null || logFolderProp.isEmpty()) {
-				logger.error("Audit spool folder is not configured. Please set "
+				logger.fatal("Audit spool folder is not configured. Please set "
 						+ propPrefix
 						+ "."
 						+ PROP_FILE_SPOOL_LOCAL_DIR
 						+ ". queueName=" + queueProvider.getName());
-				return;
+				return false;
 			}
 			logFolder = new File(logFolderProp);
 			if (!logFolder.isDirectory()) {
 				logFolder.mkdirs();
 				if (!logFolder.isDirectory()) {
-					logger.error("File Spool folder not found and can't be created. folder="
+					logger.fatal("File Spool folder not found and can't be created. folder="
 							+ logFolder.getAbsolutePath()
 							+ ", queueName="
 							+ queueProvider.getName());
-					return;
+					return false;
 				}
 			}
 			logger.info("logFolder=" + logFolder + ", queueName="
@@ -200,29 +202,46 @@ public class AuditFileSpool implements Runnable {
 							+ archiveFolder.getAbsolutePath()
 							+ ", queueName="
 							+ queueProvider.getName());
-					return;
+					return false;
 				}
 			}
 			logger.info("archiveFolder=" + archiveFolder + ", queueName="
 					+ queueProvider.getName());
 
 			if (indexFileName == null || indexFileName.isEmpty()) {
+				if (fileNamePrefix == null || fileNamePrefix.isEmpty()) {
+					fileNamePrefix = queueProvider.getName() + "_"
+							+ consumerProvider.getName();
+				}
 				indexFileName = "index_" + fileNamePrefix + ".json";
 			}
 
 			indexFile = new File(logFolder, indexFileName);
 			if (!indexFile.exists()) {
-				indexFile.createNewFile();
+				boolean ret = indexFile.createNewFile();
+				if (!ret) {
+					logger.fatal("Error creating index file. fileName="
+							+ indexDoneFile.getPath());
+					return false;
+				}
 			}
 			logger.info("indexFile=" + indexFile + ", queueName="
 					+ queueProvider.getName());
 
 			int lastDot = indexFileName.lastIndexOf('.');
+			if (lastDot < 0) {
+				lastDot = indexFileName.length() - 1;
+			}
 			indexDoneFileName = indexFileName.substring(0, lastDot)
 					+ "_closed.json";
 			indexDoneFile = new File(logFolder, indexDoneFileName);
 			if (!indexDoneFile.exists()) {
-				indexDoneFile.createNewFile();
+				boolean ret = indexDoneFile.createNewFile();
+				if (!ret) {
+					logger.fatal("Error creating index done file. fileName="
+							+ indexDoneFile.getPath());
+					return false;
+				}
 			}
 			logger.info("indexDoneFile=" + indexDoneFile + ", queueName="
 					+ queueProvider.getName());
@@ -246,8 +265,6 @@ public class AuditFileSpool implements Runnable {
 				}
 			}
 			printIndex();
-			// One more loop to add the rest of the pending records in reverse
-			// order
 			for (int i = 0; i < indexRecords.size(); i++) {
 				AuditIndexRecord auditIndexRecord = indexRecords.get(i);
 				if (auditIndexRecord.status.equals(SPOOL_FILE_STATUS.pending)) {
@@ -255,18 +272,19 @@ public class AuditFileSpool implements Runnable {
 					if (!consumerFile.exists()) {
 						logger.error("INIT: Consumer file="
 								+ consumerFile.getPath() + " not found.");
-						System.exit(1);
+					} else {
+						indexQueue.add(auditIndexRecord);
 					}
-					indexQueue.add(auditIndexRecord);
 				}
 			}
 
 		} catch (Throwable t) {
 			logger.fatal("Error initializing File Spooler. queue="
 					+ queueProvider.getName(), t);
-			return;
+			return false;
 		}
 		initDone = true;
+		return true;
 	}
 
 	/**
@@ -322,13 +340,17 @@ public class AuditFileSpool implements Runnable {
 
 					out.flush();
 					out.close();
+					break;
 				} catch (Throwable t) {
 					logger.debug("Error closing spool out file.", t);
 				}
 			}
 		}
 		try {
-			destinationThread.interrupt();
+			if (destinationThread != null) {
+				destinationThread.interrupt();
+			}
+			destinationThread = null;
 		} catch (Throwable e) {
 			// ignore
 		}

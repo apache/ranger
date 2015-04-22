@@ -46,13 +46,11 @@ define(function(require){
 			Dashboard 			: { value:1, valStr: 'Dashboard'},
 			PolicyManager		: { value:2, valStr: 'Policy'},
 			Users 				: { value:3, valStr: 'Users'},
-//			Reports 			: { value:4, valStr: 'Reports'},
-			Config 				: { value:5, valStr: 'Config'},
-			Assets				: { value:6, valStr: 'Assets'},
-			Analytics			: { value:7, valStr: 'Analytics'},
-			Audit				: { value:8, valStr: 'Analytics'},
-			Permissions			: { value:9, valStr:'Permissions'},
-			None				: { value:10, valStr: 'None'}
+			Analytics			: { value:4, valStr: 'Analytics'},
+			Audit				: { value:5, valStr: 'Audit'},
+			Permissions			: { value:6, valStr:'Permissions'},
+			KMS					: { value:7, valStr: 'KMS'},
+			None				: { value:8, valStr: 'None'}
 		};
 
 	XAGlobals.BooleanValue = {
