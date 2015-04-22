@@ -160,6 +160,7 @@ public class KMSACLs implements Runnable, KeyACLs {
     }
   }
 
+  @Override
   public synchronized void startReloader() {
     if (executorService == null) {
       executorService = Executors.newScheduledThreadPool(1);
@@ -168,6 +169,7 @@ public class KMSACLs implements Runnable, KeyACLs {
     }
   }
 
+  @Override
   public synchronized void stopReloader() {
     if (executorService != null) {
       executorService.shutdownNow();
@@ -239,15 +241,5 @@ public class KMSACLs implements Runnable, KeyACLs {
   @Override
   public boolean isACLPresent(String keyName, KeyOpType opType) {
     return (keyAcls.containsKey(keyName) || defaultKeyAcls.containsKey(opType));
-  }
-
-  @Override
-  public void startACLReloader() {
-	this.startReloader();	
-  }
-
-  @Override
-  public void stopACLReloader() {
-	this.stopReloader();
   }
 }

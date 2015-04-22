@@ -82,9 +82,9 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
      */
     public boolean isACLPresent(String aclName, KeyOpType opType);
 
-	public void startACLReloader();
+	public void startReloader();
 	
-	public void stopACLReloader();
+	public void stopReloader();
 
 	public boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi);
 

@@ -391,6 +391,43 @@ define(function(require) {
 			location.hash = XALinks.get('UserProfile').href;
 		}
            },
+	   /************** KMS *********************/
+	   kmsManagerAction :function(kmsManagePage, kmsServiceName){
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.KMS.value });
+		   var view 		= require('views/kms/KMSTableLayout');
+		   var KmsKeyList	= require('collections/VXKmsKeyList');
+		   App.rContent.show(new view({
+			   collection     : new KmsKeyList(),
+			   kmsServiceName : kmsServiceName,
+			   kmsManagePage  : kmsManagePage
+		   }));
+	   },
+	   kmsKeyCreateAction : function(kmsServiceName){
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.KMS.value });
+		   var view 		= require('views/kms/KmsKeyCreate');
+		   var KmsKey		= require('models/VXKmsKey');
+		   
+		   App.rContent.show(new view({
+			   model : new KmsKey(),
+			   kmsServiceName : kmsServiceName
+		   }));
+	   },
+	   kmsKeyEditAction : function(kmsServiceName, keyName){
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.KMS.value });
+		   var view 		= require('views/kms/KmsKeyCreate');
+		   var VXKmsKey		= require('models/VXKmsKey');
+		   var kmsKeyModel 	= new VXKmsKey({'name' : keyName});
+		   var data = {'provider': kmsServiceName}
+		   kmsKeyModel.fetch({
+				   cache : true,
+				   data : data
+			   }).done(function(){
+			   App.rContent.show(new view({
+				   model : kmsKeyModel,
+				   kmsServiceName : kmsServiceName
+			   }));
+		   });	   
+	   },
 	   /**************** ERROR PAGE ******************************/
 	   pageNotFoundAction	: function() {
 		   var XAUtils			= require('utils/XAUtils');

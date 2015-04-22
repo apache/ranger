@@ -390,6 +390,14 @@ update_properties() {
 		propertyName=ranger.ks.jpa.jdbc.password
 		newPropertyValue="_"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.ks.masterkey.credential.alias
+	        newPropertyValue="${MK_CREDENTIAL_ALIAS}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.db.encrypt.key.password
+                newPropertyValue="_"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	else
 		propertyName="${DB_CREDENTIAL_ATTR}"
 		newPropertyValue="${db_password}"
@@ -415,6 +423,10 @@ update_properties() {
 		newPropertyValue="${KMS_MASTER_KEY_PASSWD}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
+
+	propertyName=hadoop.kms.blacklist.CREATE
+        newPropertyValue="BlacklistUser"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 	###########
 }

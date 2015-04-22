@@ -64,10 +64,25 @@ define(function(require) {
 				text : 'h.usersOrGroups',
 				title: 'h.usersOrGroups'
 			},
-			Configs: { 
-				href : '#!/configs',
-				text : 'h.configs',
-				title: 'h.configs'
+			Kms : { 
+				href : '#!/kms/keys',
+				text : 'h.kms',
+				title: 'h.kms'
+			},
+			KmsKeyCreate : { 
+				href : '#!/kms/keys/create',
+				text : 'h.keyCreate',
+				title: 'h.keyCreate'
+			},
+			KmsKeyEdit : { 
+				href : 'javascript:void(0);',
+				text : 'h.keyEdit',
+				title: 'h.keyEdit'
+			},
+			KmsKeyForService : { 
+				href : 'javascrit:;',
+				text : 'KMS_TEST1',
+				title: 'KMS_TEST1'
 			},
 			ManageTables: { 
 				href : '#!/managetables',
@@ -284,6 +299,17 @@ define(function(require) {
                     title: options.model.get('module')
                 };
 			},
+			KmsServiceForKey : function(options) {
+				var href = "javascript:void(0);";
+				if(_.has(options,'kmsServiceDefModel') && _.has(options,'kmsService')){
+                    href =  '#!/service/'+options.kmsServiceDefModel.id+"/edit/"+options.kmsService.id;
+                }
+				return {
+                    href : href,
+                    text : options.kmsService.get('name'),
+                    title: options.kmsService.get('name')
+                };
+			}
 	};      
        
 	
