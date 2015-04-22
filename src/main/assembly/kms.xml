@@ -292,8 +292,8 @@
       <include>dba_script.py</include>
 			<include>db_setup.py</include>
 			<include>update_property.py</include>
+			<include>ranger-kms-initd</include>
 			<include>ranger-kms</include>
-			<include>ranger-kms-services.sh</include>
 			<include>setup.sh</include>
       <include>install.properties</include>
 			<include>migrate-keystore-dbks.sh</include>
