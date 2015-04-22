@@ -77,7 +77,6 @@ public class RangerKeyStoreProvider extends KeyProvider{
 		RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);		
 		dbStore = new RangerKeyStore(daoManager);		
 		String password = conf.get(ENCRYPTION_KEY);
-		// System.out.println("RKSP Password = "+password);
 		if(password == null || password.trim().equals("") || password.trim().equals("_") || password.trim().equals("crypted")){
 			throw new IOException("Master Key Jceks does not exists");
 		}
@@ -318,18 +317,13 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	
 	private void getFromJceks(Configuration conf, String path, String alias, String key){
 		//update credential from keystore		
-		// System.out.println("getFromJCEKS path = "+path+" alias = "+alias+" key = "+key);
 		if(conf!=null){	
 			String pathValue=conf.get(path);
-			// System.out.println("path Value = "+pathValue);
 			String aliasValue=conf.get(alias);
-			// System.out.println("alias Value = "+aliasValue);
 			if(pathValue!=null && aliasValue!=null){
 				String xaDBPassword=CredentialReader.getDecryptedString(pathValue.trim(),aliasValue.trim());		
-				// System.out.println("xaDBPassword = "+xaDBPassword);
 				if(xaDBPassword!=null&& !xaDBPassword.trim().isEmpty() && 
 						!xaDBPassword.trim().equalsIgnoreCase("none")){
-					// System.out.println("inside key = "+key+" xaDBaswword "+xaDBPassword);
 					conf.set(key, xaDBPassword);
 				}else{
 					logger.info("Credential keystore password not applied for KMS; clear text password shall be applicable");				

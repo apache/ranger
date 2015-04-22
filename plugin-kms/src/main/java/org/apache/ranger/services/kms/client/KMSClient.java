@@ -25,12 +25,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.kms.client.KMSClient;
-import org.apache.ranger.services.kms.client.json.model.KMSSchedulerResponse;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -44,45 +44,42 @@ public class KMSClient {
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 	
-	private static final String KMS_LIST_API_ENDPOINT = "/ws/v1/cluster/scheduler" ;
+	private static final String KMS_LIST_API_ENDPOINT = "v1/keys/names?user.name=${userName}";			//GET
 	
 	private static final String errMessage =  " You can still save the repository and start creating "
 											  + "policies, but you would not be able to use autocomplete for "
 											  + "resource names. Check xa_portal.log for more info.";
-
 	
-	String kmsQUrl;
-	String userName;
+	String provider;
+	String username;
 	String password;
 
-	public  KMSClient(String kmsQueueUrl, String kmsUserName, String kmsPassWord) {
-		
-		this.kmsQUrl = kmsQueueUrl;
-		this.userName = kmsUserName ;
-		this.password = kmsPassWord;
+	public  KMSClient(String provider, String username, String password) {
+		provider = provider.replaceAll("kms://","");
+		provider = provider.replaceAll("http@","http://");		
+		this.provider = provider;
+		this.username = username ;
+		this.password = password;
 		
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Kms Client is build with url [" + kmsQueueUrl + "] user: [" + kmsPassWord + "], password: [" + "" + "]");
-		}
-		
+			LOG.debug("Kms Client is build with url [" + provider + "] user: [" + username + "]");
+		}		
 	}
 	
-	public List<String> getQueueList(final String queueNameMatching, final List<String> existingQueueList) {
+	public List<String> getKeyList(final String keyNameMatching, final List<String> existingKeyList) {
 		
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Getting Kms queue list for queueNameMatching : " + queueNameMatching);
+			LOG.debug("Getting Kms Key list for keyNameMatching : " + keyNameMatching);
 		}
-		final String errMsg 			= errMessage;
+		final String errMsg = errMessage;
 		
-		List<String> ret = new ArrayList<String>();
-		
-		Callable<List<String>> kmsQueueListGetter = new Callable<List<String>>() {
+		Callable<List<String>> kmsKeyListGetter = new Callable<List<String>>() {
 			@Override
 			public List<String> call() {
 				
-				List<String> lret = new ArrayList<String>();
-				
-				String url = kmsQUrl + KMS_LIST_API_ENDPOINT ;
+				List<String> lret = new ArrayList<String>();				
+				String keyLists = KMS_LIST_API_ENDPOINT.replaceAll(Pattern.quote("${userName}"), username);
+				String uri = provider + (provider.endsWith("/") ? keyLists : ("/" + keyLists));		
 				
 				Client client = null ;
 				ClientResponse response = null ;
@@ -90,70 +87,65 @@ public class KMSClient {
 				try {
 					client = Client.create() ;
 					
-					WebResource webResource = client.resource(url);
+					WebResource webResource = client.resource(uri);
 					
-					response = webResource.accept(EXPECTED_MIME_TYPE)
-						    .get(ClientResponse.class);
+					response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
 					
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("getQueueList():calling " + url);
+						LOG.debug("getKeyList():calling " + uri);
 					}
 					
 					if (response != null) {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("getQueueList():response.getStatus()= " + response.getStatus());	
+							LOG.debug("getKeyList():response.getStatus()= " + response.getStatus());	
 						}
 						if (response.getStatus() == 200) {
 							String jsonString = response.getEntity(String.class);
 							Gson gson = new GsonBuilder().setPrettyPrinting().create();
-							KMSSchedulerResponse kmsQResponse = gson.fromJson(jsonString, KMSSchedulerResponse.class);
-							if (kmsQResponse != null) {
-								List<String>  kmsQueueList = kmsQResponse.getQueueNames();
-								if (kmsQueueList != null) {
-									for ( String kmsQueueName : kmsQueueList) {
-										if ( existingQueueList != null && existingQueueList.contains(kmsQueueName)) {
+							@SuppressWarnings("unchecked")
+							List<String> keys = gson.fromJson(jsonString, List.class) ;
+							if (keys != null) {
+								for ( String key : keys) {
+									if ( existingKeyList != null && existingKeyList.contains(key)) {
 								        	continue;
 								        }
-										if (queueNameMatching == null || queueNameMatching.isEmpty()
-												|| kmsQueueName.startsWith(queueNameMatching)) {
+										if (keyNameMatching == null || keyNameMatching.isEmpty() || key.startsWith(keyNameMatching)) {
 												if (LOG.isDebugEnabled()) {
-													LOG.debug("getQueueList():Adding kmsQueue " + kmsQueueName);
+													LOG.debug("getKeyList():Adding kmsKey " + key);
 												}
-												lret.add(kmsQueueName) ;
+												lret.add(key) ;
 											}
-										}
 									}
-								}
-						 } else{
-							LOG.info("getQueueList():response.getStatus()= " + response.getStatus() + " for URL " + url + ", so returning null list");	
-							String jsonString = response.getEntity(String.class);
-							LOG.info(jsonString);
-							lret = null;
+								}							
+						 }else if (response.getStatus() == 401) {
+							 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");
+							 return lret;
+						 }else if (response.getStatus() == 403) {
+							 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");
+							 return lret;
+						 }else {
+							 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");	
+							 String jsonString = response.getEntity(String.class);
+							 LOG.info(jsonString);
+							 lret = null;
 						}
-					} else {
+					}else {
 						String msgDesc = "Unable to get a valid response for "
 								+ "expected mime type : [" + EXPECTED_MIME_TYPE
-								+ "] URL : " + url + " - got null response.";
+								+ "] URL : " + uri + " - got null response.";
 						LOG.error(msgDesc);
 						HadoopException hdpException = new HadoopException(msgDesc);
-						hdpException.generateResponseDataMap(false, msgDesc,
-								msgDesc + errMsg, null, null);
+						hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
 						throw hdpException;
 					}
 				} catch (HadoopException he) {
 					throw he;
-				} catch (Throwable t) {
-					String msgDesc = "Exception while getting Kms Queue List."
-							+ " URL : " + url;
-					HadoopException hdpException = new HadoopException(msgDesc,
-							t);
+				}catch (Throwable t) {
+					String msgDesc = "Exception while getting Kms Key List. URL : " + uri;
+					HadoopException hdpException = new HadoopException(msgDesc, t);
 					LOG.error(msgDesc, t);
-
-					hdpException.generateResponseDataMap(false,
-							BaseClient.getMessage(t), msgDesc + errMsg, null,
-							null);
-					throw hdpException;
-					
+					hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + errMsg, null, null);
+					throw hdpException;					
 				} finally {
 					if (response != null) {
 						response.close();
@@ -161,34 +153,24 @@ public class KMSClient {
 					
 					if (client != null) {
 						client.destroy(); 
-					}
-				
+					}				
 				}
 				return lret ;
 			}
 		} ;
-		
-		try {
-			ret = timedTask(kmsQueueListGetter, 5, TimeUnit.SECONDS);
-		} catch ( Exception e) {
-			LOG.error("Unable to get Kms Queue list from [" + kmsQUrl + "]", e) ;
-		}
-		
-		return ret;
+		return null;
 	}
 		
-	public static HashMap<String, Object> testConnection(String serviceName,
-			Map<String, String> configs) {
+	public static HashMap<String, Object> testConnection(String serviceName, Map<String, String> configs) {
 
 		List<String> strList = new ArrayList<String>();
 		String errMsg = errMessage;
 		boolean connectivityStatus = false;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 
-		KMSClient kmsClient = getKmsClient(serviceName,
-				configs);
-		strList = getKmsResource(kmsClient, "",null);
-
+		KMSClient kmsClient = getKmsClient(serviceName, configs);
+		strList = getKmsKey(kmsClient, "", null);
+		
 		if (strList != null) {
 			connectivityStatus = true;
 		}
@@ -198,7 +180,7 @@ public class KMSClient {
 			BaseClient.generateResponseDataMap(connectivityStatus, successMsg,
 					successMsg, null, null, responseData);
 		} else {
-			String failureMsg = "Unable to retrieve any Kms Queues using given parameters.";
+			String failureMsg = "Unable to retrieve any Kms Key using given parameters.";
 			BaseClient.generateResponseDataMap(connectivityStatus, failureMsg,
 					failureMsg + errMsg, null, null, responseData);
 		}
@@ -232,15 +214,14 @@ public class KMSClient {
 		return kmsClient;
 	}
 
-	public static List<String> getKmsResource (final KMSClient kmsClient,
-			String yanrQname, List<String> existingQueueName) {
+	public static List<String> getKmsKey (final KMSClient kmsClient, String keyName, List<String> existingKeyName) {
 
 		List<String> resultList = new ArrayList<String>();
 		String errMsg = errMessage;
 
 		try {
 			if (kmsClient == null) {
-				String msgDesc = "Unable to get Kms Queue : KmsClient is null.";
+				String msgDesc = "Unable to get Kms Key : KmsClient is null.";
 				LOG.error(msgDesc);
 				HadoopException hdpException = new HadoopException(msgDesc);
 				hdpException.generateResponseDataMap(false, msgDesc, msgDesc
@@ -248,26 +229,22 @@ public class KMSClient {
 				throw hdpException;
 			}
 
-			if (yanrQname != null) {
-				String finalkmsQueueName = (yanrQname == null) ? ""
-						: yanrQname.trim();
-				resultList = kmsClient
-						.getQueueList(finalkmsQueueName,existingQueueName);
+			if (keyName != null) {
+				String finalkmsKeyName = (keyName == null) ? "": keyName.trim();
+				resultList = kmsClient.getKeyList(finalkmsKeyName,existingKeyName);
 				if (resultList != null) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Returning list of " + resultList.size() + " Kms Queues");
+						LOG.debug("Returning list of " + resultList.size() + " Kms Keys");
 					}
 				}
 			}
 		} catch (HadoopException he) {
 			throw he;
 		} catch (Exception e) {
-			String msgDesc = "getKmsResource: Unable to get Kms resources.";
+			String msgDesc = "Unable to get a valid response from the provider";
 			LOG.error(msgDesc, e);
 			HadoopException hdpException = new HadoopException(msgDesc);
-
-			hdpException.generateResponseDataMap(false,
-					BaseClient.getMessage(e), msgDesc + errMsg, null, null);
+			hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
 			throw hdpException;
 		}
 		return resultList;
@@ -277,5 +254,4 @@ public class KMSClient {
 			TimeUnit timeUnit) throws Exception {
 		return callableObj.call();
 	}
-
 }

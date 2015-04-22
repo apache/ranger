@@ -44,7 +44,7 @@
     <name>ranger.ks.jpa.jdbc.url</name>
     <value>jdbc:log4jdbc:mysql://localhost:3306/rangerkms</value>
     <description>
-      ULR for Database
+      URL for Database
     </description>
   </property>
     

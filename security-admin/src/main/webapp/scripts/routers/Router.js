@@ -59,9 +59,15 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/service/:serviceId/policies/:id/edit": "RangerPolicyEditAction",
 
 			/************PERMISSIONS VIEWS *****************************************/
-                        "!/permissions": "modulePermissionsAction",
-                        "!/permissions/:id/edit"        : "modulePermissionEditAction",
-			/*************** ERROR PAGE ****************************************/
+            "!/permissions"					: "modulePermissionsAction",
+            "!/permissions/:id/edit"        : "modulePermissionEditAction",
+			
+			/************ KMS ***************************/
+			"!/kms/keys/:isService/manage/:serviceName"	: "kmsManagerAction",
+			"!/kms/keys/:serviceName/create"		: "kmsKeyCreateAction",
+			"!/kms/keys/:serviceName/edit/:id"		: "kmsKeyEditAction",
+			
+			/*************** ERROR PAGE ***********************/
 			"*actions"					: "pageNotFoundAction"
 			
 		},

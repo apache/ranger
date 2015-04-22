@@ -132,9 +132,7 @@ public class KMSWebApp implements ServletContextListener {
 
       
       kmsAcls = getAcls(kmsConf.get(KMSConfiguration.KMS_SECURITY_AUTHORIZER));
-    		  
-      //kmsAcls = new KMSACLs();
-      kmsAcls.startACLReloader();
+      kmsAcls.startReloader();
 
       metricRegistry = new MetricRegistry();
       jmxReporter = JmxReporter.forRegistry(metricRegistry).build();
@@ -225,6 +223,7 @@ public class KMSWebApp implements ServletContextListener {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private KeyACLs getAcls(String clsStr) throws IOException {
 	  KeyACLs keyAcl = null;
 	  try {
@@ -232,13 +231,9 @@ public class KMSWebApp implements ServletContextListener {
         if (clsStr == null || clsStr.trim().equals("")) {
         	cls = KMSACLs.class;
         } else {
-            //Class<?> configClass = Class.forName(clsStr, true, JavaUtils.getClassLoader());
         	Class<?> configClass = Class.forName(clsStr);
-            //Class<?> configClass = Class.forName(clsStr, true, JavaUtils.getClassLoader());
             if(!KeyACLs.class.isAssignableFrom(configClass) ){
-            	//if it's not of type KeyACLs
-            	//we can have default also "cls = KMSACLs.class;"
-	            return null;
+            	throw new RuntimeException(clsStr+" should implement KeyACLs");
             }
             cls = (Class<? extends KeyACLs>)configClass;
         }
@@ -254,7 +249,7 @@ public class KMSWebApp implements ServletContextListener {
 @Override
   public void contextDestroyed(ServletContextEvent sce) {
     kmsAudit.shutdown();
-    kmsAcls.stopACLReloader();
+    kmsAcls.stopReloader();
     jmxReporter.stop();
     jmxReporter.close();
     metricRegistry = null;
