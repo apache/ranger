@@ -74,6 +74,12 @@ public class HDFSAuditDestination extends AuditDestination {
 		// Initial folder and file properties
 		String logFolderProp = MiscUtil.getStringProperty(props, propPrefix
 				+ "." + PROP_HDFS_DIR);
+		if (logFolderProp == null || logFolderProp.isEmpty()) {
+			logger.fatal("File destination folder is not configured. Please set "
+					+ propPrefix + "." + PROP_HDFS_DIR + ". name=" + getName());
+			return;
+		}
+
 		String logSubFolder = MiscUtil.getStringProperty(props, propPrefix
 				+ "." + PROP_HDFS_SUBDIR);
 		if (logSubFolder == null || logSubFolder.isEmpty()) {
@@ -89,12 +95,6 @@ public class HDFSAuditDestination extends AuditDestination {
 			logFileNameFormat = "%app-type%_ranger_audit_%hostname%" + ".log";
 		}
 
-		if (logFolderProp == null || logFolderProp.isEmpty()) {
-			logger.fatal("File destination folder is not configured. Please set "
-					+ propPrefix + "." + PROP_HDFS_DIR + ". name=" + getName());
-			return;
-		}
-
 		logFolder = logFolderProp + "/" + logSubFolder;
 		logger.info("logFolder=" + logFolder + ", destName=" + getName());
 		logger.info("logFileNameFormat=" + logFileNameFormat + ", destName="
@@ -104,7 +104,12 @@ public class HDFSAuditDestination extends AuditDestination {
 	}
 
 	@Override
-	public boolean logJSON(Collection<String> events) {
+	synchronized public boolean logJSON(Collection<String> events) {
+		if (isStopped) {
+			logError("log() called after stop was requested. name=" + getName());
+			return false;
+		}
+
 		try {
 			PrintWriter out = getLogFileStream();
 			for (String event : events) {
@@ -125,7 +130,7 @@ public class HDFSAuditDestination extends AuditDestination {
 	 * org.apache.ranger.audit.provider.AuditProvider#log(java.util.Collection)
 	 */
 	@Override
-	synchronized public boolean log(Collection<AuditEventBase> events) {
+	public boolean log(Collection<AuditEventBase> events) {
 		if (isStopped) {
 			logError("log() called after stop was requested. name=" + getName());
 			return false;
@@ -155,15 +160,16 @@ public class HDFSAuditDestination extends AuditDestination {
 
 	@Override
 	synchronized public void stop() {
-		try {
-			if (logWriter != null) {
+		isStopped = true;
+		if (logWriter != null) {
+			try {
 				logWriter.flush();
 				logWriter.close();
-				logWriter = null;
-				isStopped = true;
+			} catch (Throwable t) {
+				logger.error("Error on closing log writter. Exception will be ignored. name="
+						+ getName() + ", fileName=" + currentFileName);
 			}
-		} catch (Throwable t) {
-			logger.error("Error closing HDFS file.", t);
+			logWriter = null;
 		}
 	}
 
@@ -198,9 +204,11 @@ public class HDFSAuditDestination extends AuditDestination {
 				String extension = defaultPath.substring(lastDot);
 				fullPath = baseName + "." + i + extension;
 				hdfPath = new Path(fullPath);
-				logger.info("Checking whether log file exists. hdfPath=" + fullPath);
+				logger.info("Checking whether log file exists. hdfPath="
+						+ fullPath);
 			}
-			logger.info("Log file doesn't exists. Will create and use it. hdfPath=" + fullPath);
+			logger.info("Log file doesn't exists. Will create and use it. hdfPath="
+					+ fullPath);
 			// Create parent folders
 			createParents(hdfPath, fileSystem);
 
@@ -234,8 +242,14 @@ public class HDFSAuditDestination extends AuditDestination {
 		if (System.currentTimeMillis() - fileCreateTime.getTime() > fileRolloverSec * 1000) {
 			logger.info("Closing file. Rolling over. name=" + getName()
 					+ ", fileName=" + currentFileName);
-			logWriter.flush();
-			logWriter.close();
+			try {
+				logWriter.flush();
+				logWriter.close();
+			} catch (Throwable t) {
+				logger.error("Error on closing log writter. Exception will be ignored. name="
+						+ getName() + ", fileName=" + currentFileName);
+			}
+
 			logWriter = null;
 			currentFileName = null;
 		}

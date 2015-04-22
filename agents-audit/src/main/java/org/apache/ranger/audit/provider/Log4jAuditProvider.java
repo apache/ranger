@@ -27,8 +27,6 @@ import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 
-import com.sun.tools.hat.internal.util.Misc;
-
 
 public class Log4jAuditProvider extends AuditDestination {
 

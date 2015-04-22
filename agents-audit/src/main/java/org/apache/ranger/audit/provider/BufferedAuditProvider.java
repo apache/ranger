@@ -23,7 +23,7 @@ import java.util.Properties;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 
-public abstract class BufferedAuditProvider extends BaseAuditProvider {
+public abstract class BufferedAuditProvider extends BaseAuditHandler {
 	private LogBuffer<AuditEventBase> mBuffer = null;
 	private LogDestination<AuditEventBase> mDestination = null;
 
@@ -104,16 +104,6 @@ public abstract class BufferedAuditProvider extends BaseAuditProvider {
 
 	@Override
 	public void waitToComplete(long timeout) {
-	}
-
-	@Override
-	public boolean isFlushPending() {
-		return false;
-	}
-
-	@Override
-	public long getLastFlushTime() {
-		return 0;
 	}
 
 	@Override

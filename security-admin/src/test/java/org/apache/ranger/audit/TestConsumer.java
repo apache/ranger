@@ -39,15 +39,13 @@ public class TestConsumer extends AuditDestination {
 	int batchCount = 0;
 	String providerName = getClass().getName();
 	boolean isDown = false;
-	int batchSize = 3;
 
 	List<AuthzAuditEvent> eventList = new ArrayList<AuthzAuditEvent>();
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.apache.ranger.audit.provider.AuditProvider#log(org.apache.ranger
+	 * @see org.apache.ranger.audit.provider.AuditProvider#log(org.apache.ranger
 	 * .audit.model.AuditEventBase)
 	 */
 	@Override
@@ -144,32 +142,6 @@ public class TestConsumer extends AuditDestination {
 	public void waitToComplete() {
 	}
 
-	@Override
-	public int getMaxBatchSize() {
-		return batchSize;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isFlushPending()
-	 */
-	@Override
-	public boolean isFlushPending() {
-		return false;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.apache.ranger.audit.provider.AuditProvider#getLastFlushTime()
-	 */
-	@Override
-	public long getLastFlushTime() {
-		return 0;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -207,8 +179,7 @@ public class TestConsumer extends AuditDestination {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.apache.ranger.audit.provider.AuditProvider#waitToComplete(long)
+	 * @see org.apache.ranger.audit.provider.AuditProvider#waitToComplete(long)
 	 */
 	@Override
 	public void waitToComplete(long timeout) {
@@ -225,23 +196,14 @@ public class TestConsumer extends AuditDestination {
 		return providerName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isDrain()
-	 */
-	@Override
-	public boolean isDrain() {
-		return false;
-	}
-
 	// Local methods
 	public AuthzAuditEvent isInSequence() {
-		int lastSeq = -1;
+		long lastSeq = -1;
 		for (AuthzAuditEvent event : eventList) {
 			if (event.getSeqNum() <= lastSeq) {
 				return event;
 			}
+			lastSeq = event.getSeqNum();
 		}
 		return null;
 	}

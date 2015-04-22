@@ -21,32 +21,27 @@ package org.apache.ranger.audit.queue;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.provider.AuditProvider;
-import org.apache.ranger.audit.provider.BaseAuditProvider;
+import org.apache.ranger.audit.provider.AuditHandler;
 
 /**
  * This is a non-blocking queue with no limit on capacity.
  */
-public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
+public class AuditAsyncQueue extends AuditQueue implements Runnable {
 	private static final Log logger = LogFactory.getLog(AuditAsyncQueue.class);
 
-	LinkedTransferQueue<AuditEventBase> queue = new LinkedTransferQueue<AuditEventBase>();
+	LinkedBlockingQueue<AuditEventBase> queue = new LinkedBlockingQueue<AuditEventBase>();
 	Thread consumerThread = null;
 
 	static final int MAX_DRAIN = 1000;
 	static int threadCount = 0;
 	static final String DEFAULT_NAME = "async";
 
-	public AuditAsyncQueue() {
-		setName(DEFAULT_NAME);
-	}
-
-	public AuditAsyncQueue(AuditProvider consumer) {
+	public AuditAsyncQueue(AuditHandler consumer) {
 		super(consumer);
 		setName(DEFAULT_NAME);
 	}
@@ -65,7 +60,6 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 			return false;
 		}
 		queue.add(event);
-		addLifeTimeInLogCount(1);
 		return true;
 	}
 
@@ -90,6 +84,9 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 	public void start() {
 		if (consumer != null) {
 			consumer.start();
+		} else {
+			logger.error("consumer is not set. Nothing will be sent to any consumer. name="
+					+ getName());
 		}
 
 		consumerThread = new Thread(this, this.getClass().getName()
@@ -110,23 +107,10 @@ public class AuditAsyncQueue extends BaseAuditProvider implements Runnable {
 			if (consumerThread != null) {
 				consumerThread.interrupt();
 			}
-			consumerThread = null;
 		} catch (Throwable t) {
 			// ignore any exception
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isFlushPending()
-	 */
-	@Override
-	public boolean isFlushPending() {
-		if (queue.isEmpty()) {
-			return consumer.isFlushPending();
-		}
-		return true;
+		consumerThread = null;
 	}
 
 	/*

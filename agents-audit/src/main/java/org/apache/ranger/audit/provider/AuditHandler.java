@@ -23,7 +23,7 @@ import java.util.Properties;
 
 import org.apache.ranger.audit.model.AuditEventBase;
 
-public interface AuditProvider {
+public interface AuditHandler {
 	public boolean log(AuditEventBase event);
 	public boolean log(Collection<AuditEventBase> events);	
 
@@ -42,15 +42,5 @@ public interface AuditProvider {
      */
     public String getName();
 
-    /**
-     * If this AuditProvider in the state of shutdown
-     * @return
-     */
-    public boolean isDrain();
-    
-    public int getMaxBatchSize();
-    public int getMaxBatchInterval();
-	public boolean isFlushPending();
-	public long    getLastFlushTime();
     public void    flush();
 }

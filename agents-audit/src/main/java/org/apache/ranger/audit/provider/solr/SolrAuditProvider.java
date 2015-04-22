@@ -25,16 +25,16 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.BaseAuditProvider;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
-public class SolrAuditProvider extends BaseAuditProvider {
+public class SolrAuditProvider extends AuditDestination {
 	private static final Log LOG = LogFactory.getLog(SolrAuditProvider.class);
 
 	public static final String AUDIT_MAX_QUEUE_SIZE_PROP = "xasecure.audit.solr.async.max.queue.size";
@@ -56,11 +56,6 @@ public class SolrAuditProvider extends BaseAuditProvider {
 		LOG.info("init() called");
 		super.init(props);
 
-		setMaxQueueSize(MiscUtil.getIntProperty(props,
-				AUDIT_MAX_QUEUE_SIZE_PROP, AUDIT_MAX_QUEUE_SIZE_DEFAULT));
-		setMaxBatchInterval(MiscUtil.getIntProperty(props,
-				AUDIT_MAX_QUEUE_SIZE_PROP,
-				AUDIT_BATCH_INTERVAL_DEFAULT_MS));
 		retryWaitTime = MiscUtil.getIntProperty(props,
 				AUDIT_RETRY_WAIT_PROP, retryWaitTime);
 	}
@@ -241,29 +236,7 @@ public class SolrAuditProvider extends BaseAuditProvider {
 	public void waitToComplete(long timeout) {
 		
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isFlushPending()
-	 */
-	@Override
-	public boolean isFlushPending() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#getLastFlushTime()
-	 */
-	@Override
-	public long getLastFlushTime() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 

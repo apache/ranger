@@ -29,10 +29,9 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.provider.AuditProvider;
-import org.apache.ranger.audit.provider.BaseAuditProvider;
+import org.apache.ranger.audit.provider.AuditHandler;
 
-public class AuditBatchQueue extends BaseAuditProvider implements Runnable {
+public class AuditBatchQueue extends AuditQueue implements Runnable {
 	private static final Log logger = LogFactory.getLog(AuditBatchQueue.class);
 
 	private BlockingQueue<AuditEventBase> queue = null;
@@ -41,10 +40,7 @@ public class AuditBatchQueue extends BaseAuditProvider implements Runnable {
 	Thread consumerThread = null;
 	static int threadCount = 0;
 
-	public AuditBatchQueue() {
-	}
-
-	public AuditBatchQueue(AuditProvider consumer) {
+	public AuditBatchQueue(AuditHandler consumer) {
 		super(consumer);
 	}
 
@@ -59,7 +55,6 @@ public class AuditBatchQueue extends BaseAuditProvider implements Runnable {
 	public boolean log(AuditEventBase event) {
 		// Add to batchQueue. Block if full
 		queue.add(event);
-		addLifeTimeInLogCount(1);
 		return true;
 	}
 
@@ -130,10 +125,10 @@ public class AuditBatchQueue extends BaseAuditProvider implements Runnable {
 			if (consumerThread != null) {
 				consumerThread.interrupt();
 			}
-			consumerThread = null;
 		} catch (Throwable t) {
 			// ignore any exception
 		}
+		consumerThread = null;
 	}
 
 	/*
@@ -182,19 +177,6 @@ public class AuditBatchQueue extends BaseAuditProvider implements Runnable {
 			}
 		}
 		consumer.waitToComplete(timeout);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isFlushPending()
-	 */
-	@Override
-	public boolean isFlushPending() {
-		if (queue.isEmpty()) {
-			return consumer.isFlushPending();
-		}
-		return true;
 	}
 
 	/*

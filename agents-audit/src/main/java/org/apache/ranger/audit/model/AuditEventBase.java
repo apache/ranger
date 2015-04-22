@@ -32,8 +32,8 @@ public abstract class AuditEventBase {
 	
 	public abstract String getEventKey();
 	public abstract Date getEventTime ();
-	public abstract void setEventCount(long frequencyCount);
-	public abstract void setEventDurationMS(long frequencyDurationMS);
+	public abstract void setEventCount(long eventCount);
+	public abstract void setEventDurationMS(long eventDurationMS);
 	
 	protected String trim(String str, int len) {
 		String ret = str;

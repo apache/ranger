@@ -21,9 +21,7 @@ package org.apache.ranger.audit.destination;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -107,7 +105,12 @@ public class FileAuditDestination extends AuditDestination {
 	}
 
 	@Override
-	public boolean logJSON(Collection<String> events) {
+	synchronized public boolean logJSON(Collection<String> events) {
+		if (isStopped) {
+			logError("log() called after stop was requested. name=" + getName());
+			return false;
+		}
+
 		try {
 			PrintWriter out = getLogFileStream();
 			for (String event : events) {
@@ -128,7 +131,7 @@ public class FileAuditDestination extends AuditDestination {
 	 * org.apache.ranger.audit.provider.AuditProvider#log(java.util.Collection)
 	 */
 	@Override
-	synchronized public boolean log(Collection<AuditEventBase> events) {
+	public boolean log(Collection<AuditEventBase> events) {
 		if (isStopped) {
 			logError("log() called after stop was requested. name=" + getName());
 			return false;
@@ -158,11 +161,16 @@ public class FileAuditDestination extends AuditDestination {
 
 	@Override
 	synchronized public void stop() {
+		isStopped = true;
 		if (logWriter != null) {
-			logWriter.flush();
-			logWriter.close();
+			try {
+				logWriter.flush();
+				logWriter.close();
+			} catch (Throwable t) {
+				logger.error("Error on closing log writter. Exception will be ignored. name="
+						+ getName() + ", fileName=" + currentFileName);
+			}
 			logWriter = null;
-			isStopped = true;
 		}
 	}
 
@@ -214,15 +222,20 @@ public class FileAuditDestination extends AuditDestination {
 		return logWriter;
 	}
 
-	private void closeFileIfNeeded() throws FileNotFoundException, IOException {
+	private void closeFileIfNeeded() {
 		if (logWriter == null) {
 			return;
 		}
 		if (System.currentTimeMillis() - fileCreateTime.getTime() > fileRolloverSec * 1000) {
 			logger.info("Closing file. Rolling over. name=" + getName()
 					+ ", fileName=" + currentFileName);
-			logWriter.flush();
-			logWriter.close();
+			try {
+				logWriter.flush();
+				logWriter.close();
+			} catch (Throwable t) {
+				logger.error("Error on closing log writter. Exception will be ignored. name="
+						+ getName() + ", fileName=" + currentFileName);
+			}
 			logWriter = null;
 			currentFileName = null;
 		}

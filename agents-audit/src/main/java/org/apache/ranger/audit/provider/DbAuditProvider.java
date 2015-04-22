@@ -177,16 +177,6 @@ public class DbAuditProvider extends AuditDestination {
 	}
 
 	@Override
-	public boolean isFlushPending() {
-		return mUncommitted.size() > 0;
-	}
-	
-	@Override
-	public long getLastFlushTime() {
-		return mLastCommitTime;
-	}
-
-	@Override
 	public void flush() {
 		if(mUncommitted.size() > 0) {
 			boolean isSuccess = commitTransaction();

@@ -25,26 +25,25 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.provider.AuditProvider;
-import org.apache.ranger.audit.provider.BaseAuditProvider;
+import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
 
 /**
  * This is a non-blocking queue with no limit on capacity.
  */
-public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
+public class AuditSummaryQueue extends AuditQueue implements Runnable {
 	private static final Log logger = LogFactory
 			.getLog(AuditSummaryQueue.class);
 
 	public static final String PROP_SUMMARY_INTERVAL = "summary.interval.ms";
 
-	LinkedTransferQueue<AuditEventBase> queue = new LinkedTransferQueue<AuditEventBase>();
+	LinkedBlockingQueue<AuditEventBase> queue = new LinkedBlockingQueue<AuditEventBase>();
 	Thread consumerThread = null;
 
 	static int threadCount = 0;
@@ -52,15 +51,11 @@ public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
 
 	private static final int MAX_DRAIN = 100000;
 
-	private int maxSummaryInterval = 5000;
+	private int maxSummaryIntervalMs = 5000;
 
 	HashMap<String, AuditSummary> summaryMap = new HashMap<String, AuditSummary>();
 
-	public AuditSummaryQueue() {
-		setName(DEFAULT_NAME);
-	}
-
-	public AuditSummaryQueue(AuditProvider consumer) {
+	public AuditSummaryQueue(AuditHandler consumer) {
 		super(consumer);
 		setName(DEFAULT_NAME);
 	}
@@ -68,9 +63,9 @@ public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
 	@Override
 	public void init(Properties props, String propPrefix) {
 		super.init(props, propPrefix);
-		maxSummaryInterval = MiscUtil.getIntProperty(props, propPrefix + "."
-				+ PROP_SUMMARY_INTERVAL, maxSummaryInterval);
-		logger.info("maxSummaryInterval=" + maxSummaryInterval + ", name="
+		maxSummaryIntervalMs = MiscUtil.getIntProperty(props, propPrefix + "."
+				+ PROP_SUMMARY_INTERVAL, maxSummaryIntervalMs);
+		logger.info("maxSummaryInterval=" + maxSummaryIntervalMs + ", name="
 				+ getName());
 	}
 
@@ -88,7 +83,6 @@ public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
 			return false;
 		}
 		queue.add(event);
-		addLifeTimeInLogCount(1);
 		return true;
 	}
 
@@ -133,23 +127,10 @@ public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
 			if (consumerThread != null) {
 				consumerThread.interrupt();
 			}
-			consumerThread = null;
 		} catch (Throwable t) {
 			// ignore any exception
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.ranger.audit.provider.AuditProvider#isFlushPending()
-	 */
-	@Override
-	public boolean isFlushPending() {
-		if (queue.isEmpty()) {
-			return consumer.isFlushPending();
-		}
-		return true;
+		consumerThread = null;
 	}
 
 	/*
@@ -164,7 +145,7 @@ public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
 		while (true) {
 			// Time to next dispatch
 			long nextDispatchDuration = lastDispatchTime
-					- System.currentTimeMillis() + maxSummaryInterval;
+					- System.currentTimeMillis() + maxSummaryIntervalMs;
 
 			Collection<AuditEventBase> eventList = new ArrayList<AuditEventBase>();
 
@@ -184,7 +165,7 @@ public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
 				} else {
 					// poll returned due to timeout, so reseting clock
 					nextDispatchDuration = lastDispatchTime
-							- System.currentTimeMillis() + maxSummaryInterval;
+							- System.currentTimeMillis() + maxSummaryIntervalMs;
 					lastDispatchTime = System.currentTimeMillis();
 				}
 			} catch (InterruptedException e) {
@@ -213,6 +194,9 @@ public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
 			}
 
 			if (isDrain() || nextDispatchDuration <= 0) {
+				// Reset time just before sending the logs
+				lastDispatchTime = System.currentTimeMillis();
+
 				for (Map.Entry<String, AuditSummary> entry : summaryMap
 						.entrySet()) {
 					AuditSummary auditSummary = entry.getValue();
@@ -221,9 +205,6 @@ public class AuditSummaryQueue extends BaseAuditProvider implements Runnable {
 							- auditSummary.startTime.getTime();
 					timeDiff = timeDiff > 0 ? timeDiff : 1;
 					auditSummary.event.setEventDurationMS(timeDiff);
-
-					// Reset time just before sending the logs
-					lastDispatchTime = System.currentTimeMillis();
 					boolean ret = consumer.log(auditSummary.event);
 					if (!ret) {
 						// We need to drop this event

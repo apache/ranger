@@ -31,6 +31,7 @@ import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
 import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
 import org.apache.ranger.audit.queue.AuditBatchQueue;
+import org.apache.ranger.audit.queue.AuditQueue;
 import org.apache.ranger.audit.queue.AuditSummaryQueue;
 
 /*
@@ -58,7 +59,7 @@ public class AuditProviderFactory {
 
 	private static AuditProviderFactory sFactory;
 
-	private AuditProvider mProvider = null;
+	private AuditHandler mProvider = null;
 	private boolean mInitDone = false;
 
 	private AuditProviderFactory() {
@@ -79,11 +80,11 @@ public class AuditProviderFactory {
 		return sFactory;
 	}
 
-	public static AuditProvider getAuditProvider() {
+	public static AuditHandler getAuditProvider() {
 		return AuditProviderFactory.getInstance().getProvider();
 	}
 
-	public AuditProvider getProvider() {
+	public AuditHandler getProvider() {
 		return mProvider;
 	}
 
@@ -118,7 +119,7 @@ public class AuditProviderFactory {
 		boolean isAuditToSolrEnabled = MiscUtil.getBooleanProperty(props,
 				AUDIT_SOLR_IS_ENABLED_PROP, false);
 
-		List<AuditProvider> providers = new ArrayList<AuditProvider>();
+		List<AuditHandler> providers = new ArrayList<AuditHandler>();
 
 		// TODO: Delete me
 		for (Object propNameObj : props.keySet()) {
@@ -150,17 +151,16 @@ public class AuditProviderFactory {
 
 		for (String destName : destNameList) {
 			String destPropPrefix = AUDIT_DEST_BASE + "." + destName;
-			AuditProvider destProvider = getProviderFromConfig(props,
-					destPropPrefix, destName);
+			AuditHandler destProvider = getProviderFromConfig(props,
+					destPropPrefix, destName, null);
 
 			if (destProvider != null) {
 				destProvider.init(props, destPropPrefix);
 
 				String queueName = MiscUtil.getStringProperty(props,
-						destPropPrefix + "." + BaseAuditProvider.PROP_QUEUE);
+						destPropPrefix + "." + AuditQueue.PROP_QUEUE);
 				if (queueName == null || queueName.isEmpty()) {
-					LOG.info(destPropPrefix + "."
-							+ BaseAuditProvider.PROP_QUEUE
+					LOG.info(destPropPrefix + "." + AuditQueue.PROP_QUEUE
 							+ " is not set. Setting queue to batch for "
 							+ destName);
 					queueName = "batch";
@@ -169,16 +169,15 @@ public class AuditProviderFactory {
 				if (queueName != null && !queueName.isEmpty()
 						&& !queueName.equalsIgnoreCase("none")) {
 					String queuePropPrefix = destPropPrefix + "." + queueName;
-					AuditProvider queueProvider = getProviderFromConfig(props,
-							queuePropPrefix, queueName);
+					AuditHandler queueProvider = getProviderFromConfig(props,
+							queuePropPrefix, queueName, destProvider);
 					if (queueProvider != null) {
-						if (queueProvider instanceof BaseAuditProvider) {
-							BaseAuditProvider qProvider = (BaseAuditProvider) queueProvider;
-							qProvider.setConsumer(destProvider);
+						if (queueProvider instanceof AuditQueue) {
+							AuditQueue qProvider = (AuditQueue) queueProvider;
 							qProvider.init(props, queuePropPrefix);
 							providers.add(queueProvider);
 						} else {
-							LOG.fatal("Provider queue doesn't extend BaseAuditProvider destination "
+							LOG.fatal("Provider queue doesn't extend AuditQueue. Destination="
 									+ destName
 									+ " can't be created. queueName="
 									+ queueName);
@@ -196,51 +195,51 @@ public class AuditProviderFactory {
 		}
 		if (providers.size() > 0) {
 			LOG.info("Using v3 audit configuration");
-			AuditAsyncQueue asyncQueue = new AuditAsyncQueue();
-			String propPrefix = BaseAuditProvider.PROP_DEFAULT_PREFIX + "."
-					+ "async";
-			asyncQueue.init(props, propPrefix);
+			AuditHandler consumer = providers.get(0);
 
-			propPrefix = BaseAuditProvider.PROP_DEFAULT_PREFIX;
+			// Possible pipeline is:
+			// async_queue -> summary_queue -> multidestination -> batch_queue
+			// -> hdfs_destination
+			// -> batch_queue -> solr_destination
+			// -> batch_queue -> kafka_destination
+			// Above, up to multidestination, the providers are same, then it
+			// branches out in parallel.
+
+			// Set the providers in the reverse order e.g.
+
+			if (providers.size() > 1) {
+				// If there are more than one destination, then we need multi
+				// destination to process it in parallel
+				LOG.info("MultiDestAuditProvider is used. Destination count="
+						+ providers.size());
+				MultiDestAuditProvider multiDestProvider = new MultiDestAuditProvider();
+				multiDestProvider.init(props);
+				multiDestProvider.addAuditProviders(providers);
+				consumer = multiDestProvider;
+			}
+
+			// Let's see if Summary is enabled, then summarize before sending it
+			// downstream
+			String propPrefix = BaseAuditHandler.PROP_DEFAULT_PREFIX;
 			boolean summaryEnabled = MiscUtil.getBooleanProperty(props,
 					propPrefix + "." + "summary" + "." + "enabled", false);
 			AuditSummaryQueue summaryQueue = null;
 			if (summaryEnabled) {
 				LOG.info("AuditSummaryQueue is enabled");
-				summaryQueue = new AuditSummaryQueue();
+				summaryQueue = new AuditSummaryQueue(consumer);
 				summaryQueue.init(props, propPrefix);
-				asyncQueue.setConsumer(summaryQueue);
+				consumer = summaryQueue;
 			} else {
 				LOG.info("AuditSummaryQueue is disabled");
 			}
 
-			if (providers.size() == 1) {
-				if (summaryEnabled) {
-					LOG.info("Setting " + providers.get(0).getName()
-							+ " as consumer to AuditSummaryQueue");
-					summaryQueue.setConsumer(providers.get(0));
-				} else {
-					LOG.info("Setting " + providers.get(0).getName()
-							+ " as consumer to " + asyncQueue.getName());
-					asyncQueue.setConsumer(providers.get(0));
-				}
-			} else {
-				MultiDestAuditProvider multiDestProvider = new MultiDestAuditProvider();
-				multiDestProvider.init(props);
-				multiDestProvider.addAuditProviders(providers);
-				if (summaryEnabled) {
-					LOG.info("Setting " + multiDestProvider.getName()
-							+ " as consumer to AuditSummaryQueue");
-					summaryQueue.setConsumer(multiDestProvider);
-				} else {
-					LOG.info("Setting " + multiDestProvider.getName()
-							+ " as consumer to " + asyncQueue.getName());
-					asyncQueue.setConsumer(multiDestProvider);
-				}
-			}
+			// Create the AsysnQueue
+			AuditAsyncQueue asyncQueue = new AuditAsyncQueue(consumer);
+			propPrefix = BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "async";
+			asyncQueue.init(props, propPrefix);
 
 			mProvider = asyncQueue;
-			LOG.info("Starting " + mProvider.getName());
+			LOG.info("Starting audit queue " + mProvider.getName());
 			mProvider.start();
 		} else {
 			LOG.info("No v3 audit configuration found. Trying v2 audit configurations");
@@ -315,9 +314,7 @@ public class AuditProviderFactory {
 
 				if (kafkaProvider.isAsync()) {
 					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
-							"MyKafkaAuditProvider",
-							kafkaProvider.getMaxQueueSize(),
-							kafkaProvider.getMaxBatchInterval(), kafkaProvider);
+							"MyKafkaAuditProvider", 1000, 1000, kafkaProvider);
 					providers.add(asyncProvider);
 				} else {
 					providers.add(kafkaProvider);
@@ -331,9 +328,7 @@ public class AuditProviderFactory {
 
 				if (solrProvider.isAsync()) {
 					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
-							"MySolrAuditProvider",
-							solrProvider.getMaxQueueSize(),
-							solrProvider.getMaxBatchInterval(), solrProvider);
+							"MySolrAuditProvider", 1000, 1000, solrProvider);
 					providers.add(asyncProvider);
 				} else {
 					providers.add(solrProvider);
@@ -387,18 +382,26 @@ public class AuditProviderFactory {
 		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
 	}
 
-	private AuditProvider getProviderFromConfig(Properties props,
-			String propPrefix, String providerName) {
-		AuditProvider provider = null;
+	private AuditHandler getProviderFromConfig(Properties props,
+			String propPrefix, String providerName, AuditHandler consumer) {
+		AuditHandler provider = null;
 		String className = MiscUtil.getStringProperty(props, propPrefix + "."
-				+ BaseAuditProvider.PROP_CLASS_NAME);
+				+ BaseAuditHandler.PROP_CLASS_NAME);
 		if (className != null && !className.isEmpty()) {
 			try {
-				provider = (AuditProvider) Class.forName(className)
-						.newInstance();
+				Class<?> handlerClass = Class.forName(className);
+				if (handlerClass.isAssignableFrom(AuditQueue.class)) {
+					// Queue class needs consumer
+					handlerClass.getDeclaredConstructor(AuditHandler.class)
+							.newInstance(consumer);
+				} else {
+					provider = (AuditHandler) Class.forName(className)
+							.newInstance();
+				}
 			} catch (Exception e) {
 				LOG.fatal("Can't instantiate audit class for providerName="
-						+ providerName + ", className=" + className, e);
+						+ providerName + ", className=" + className
+						+ ", propertyPrefix=" + propPrefix, e);
 			}
 		} else {
 			if (providerName.equals("file")) {
@@ -414,25 +417,32 @@ public class AuditProviderFactory {
 			} else if (providerName.equals("log4j")) {
 				provider = new Log4jAuditProvider();
 			} else if (providerName.equals("batch")) {
-				provider = new AuditBatchQueue();
+				provider = new AuditBatchQueue(consumer);
 			} else if (providerName.equals("async")) {
-				provider = new AuditAsyncQueue();
+				provider = new AuditAsyncQueue(consumer);
 			} else {
 				LOG.error("Provider name doesn't have any class associated with it. providerName="
-						+ providerName);
+						+ providerName + ", propertyPrefix=" + propPrefix);
+			}
+		}
+		if (provider != null && provider instanceof AuditQueue) {
+			if (consumer == null) {
+				LOG.fatal("consumer can't be null for AuditQueue. queue="
+						+ provider.getName() + ", propertyPrefix=" + propPrefix);
+				provider = null;
 			}
 		}
 		return provider;
 	}
 
-	private AuditProvider getDefaultProvider() {
+	private AuditHandler getDefaultProvider() {
 		return new DummyAuditProvider();
 	}
 
 	private static class JVMShutdownHook extends Thread {
-		AuditProvider mProvider;
+		AuditHandler mProvider;
 
-		public JVMShutdownHook(AuditProvider provider) {
+		public JVMShutdownHook(AuditHandler provider) {
 			mProvider = provider;
 		}
 

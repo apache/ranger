@@ -32,14 +32,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.FileAuditDestination;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.AuditProvider;
+import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.audit.provider.BaseAuditProvider;
+import org.apache.ranger.audit.provider.BaseAuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.provider.MultiDestAuditProvider;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
 import org.apache.ranger.audit.queue.AuditBatchQueue;
 import org.apache.ranger.audit.queue.AuditFileSpool;
+import org.apache.ranger.audit.queue.AuditQueue;
 import org.apache.ranger.audit.queue.AuditSummaryQueue;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -93,9 +94,9 @@ public class TestAuditQueue {
 		AuditSummaryQueue queue = new AuditSummaryQueue(testConsumer);
 
 		Properties props = new Properties();
-		props.put(BaseAuditProvider.PROP_DEFAULT_PREFIX + "."
+		props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "."
 				+ AuditSummaryQueue.PROP_SUMMARY_INTERVAL, "" + 300);
-		queue.init(props, BaseAuditProvider.PROP_DEFAULT_PREFIX);
+		queue.init(props, BaseAuditHandler.PROP_DEFAULT_PREFIX);
 
 		queue.start();
 
@@ -103,7 +104,7 @@ public class TestAuditQueue {
 	}
 
 	private void commonTestSummary(TestConsumer testConsumer,
-			BaseAuditProvider queue) {
+			BaseAuditHandler queue) {
 		int messageToSend = 0;
 		int pauseMS = 330;
 
@@ -171,7 +172,6 @@ public class TestAuditQueue {
 		}
 		assertEquals(messageToSend, testConsumer.getSumTotal());
 		assertEquals(countToCheck, testConsumer.getCountTotal());
-		assertNull("Event not in sequnce", testConsumer.isInSequence());
 	}
 
 	@Test
@@ -182,22 +182,23 @@ public class TestAuditQueue {
 		// Destination
 		String propPrefix = AuditProviderFactory.AUDIT_DEST_BASE + ".test";
 		props.put(propPrefix, "enable");
-		props.put(BaseAuditProvider.PROP_DEFAULT_PREFIX + "." + "summary" + "."
+		props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "summary" + "."
 				+ "enabled", "true");
-		props.put(propPrefix + "." + BaseAuditProvider.PROP_NAME, "test");
-		props.put(propPrefix + "." + BaseAuditProvider.PROP_QUEUE, "none");
+		props.put(propPrefix + "." + BaseAuditHandler.PROP_NAME, "test");
+		props.put(propPrefix + "." + AuditQueue.PROP_QUEUE, "none");
 
-		props.put(BaseAuditProvider.PROP_DEFAULT_PREFIX + "."
+		props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "."
 				+ AuditSummaryQueue.PROP_SUMMARY_INTERVAL, "" + 300);
-		props.put(propPrefix + "." + BaseAuditProvider.PROP_CLASS_NAME,
+		props.put(propPrefix + "." + BaseAuditHandler.PROP_CLASS_NAME,
 				TestConsumer.class.getName());
 
 		AuditProviderFactory factory = AuditProviderFactory.getInstance();
 		factory.init(props, "test");
-		BaseAuditProvider queue = (BaseAuditProvider) factory.getProvider();
-		BaseAuditProvider consumer = (BaseAuditProvider) queue.getConsumer();
-		while (consumer.getConsumer() != null) {
-			consumer = (BaseAuditProvider) consumer.getConsumer();
+		AuditQueue queue = (AuditQueue) factory.getProvider();
+		BaseAuditHandler consumer = (BaseAuditHandler) queue.getConsumer();
+		while (consumer != null && consumer instanceof AuditQueue) {
+			AuditQueue cQueue = (AuditQueue) consumer;
+			consumer = (BaseAuditHandler) cQueue.getConsumer();
 		}
 		assertTrue("Consumer should be TestConsumer. class="
 				+ consumer.getClass().getName(),
@@ -257,12 +258,12 @@ public class TestAuditQueue {
 		int queueSize = messageToSend * 2;
 		int intervalMS = messageToSend * 100; // Deliberately big interval
 		Properties props = new Properties();
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		TestConsumer testConsumer = new TestConsumer();
 		AuditBatchQueue queue = new AuditBatchQueue(testConsumer);
@@ -308,12 +309,12 @@ public class TestAuditQueue {
 		int expectedBatchSize = (messageToSend * pauseMS) / intervalMS + 1;
 
 		Properties props = new Properties();
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		TestConsumer testConsumer = new TestConsumer();
 		AuditBatchQueue queue = new AuditBatchQueue(testConsumer);
@@ -356,15 +357,15 @@ public class TestAuditQueue {
 		int queueSize = messageToSend * 2;
 		int intervalMS = Integer.MAX_VALUE; // Deliberately big interval
 		Properties props = new Properties();
-		props.put(basePropName + "." + BaseAuditProvider.PROP_NAME,
+		props.put(basePropName + "." + BaseAuditHandler.PROP_NAME,
 				"testAuditBatchQueueDestDown");
 
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		// Enable File Spooling
 		props.put(basePropName + "." + "filespool.enable", "" + true);
@@ -410,21 +411,20 @@ public class TestAuditQueue {
 		int intervalMS = 3000; // Deliberately big interval
 		Properties props = new Properties();
 		props.put(
-				basePropName + "." + BaseAuditProvider.PROP_NAME,
+				basePropName + "." + BaseAuditHandler.PROP_NAME,
 				"testAuditBatchQueueDestDownFlipFlop_"
 						+ MiscUtil.generateUniqueId());
 
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		// Enable File Spooling
 		int destRetryMS = 10;
-		props.put(
-				basePropName + "." + BaseAuditProvider.PROP_FILE_SPOOL_ENABLE,
+		props.put(basePropName + "." + AuditQueue.PROP_FILE_SPOOL_ENABLE,
 				"" + true);
 		props.put(
 				basePropName + "." + AuditFileSpool.PROP_FILE_SPOOL_LOCAL_DIR,
@@ -499,21 +499,20 @@ public class TestAuditQueue {
 		int maxArchivedFiles = 1;
 		Properties props = new Properties();
 		props.put(
-				basePropName + "." + BaseAuditProvider.PROP_NAME,
+				basePropName + "." + BaseAuditHandler.PROP_NAME,
 				"testAuditBatchQueueDestDownRestart_"
 						+ MiscUtil.generateUniqueId());
 
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(basePropName + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
-				"" + intervalMS);
+		props.put(basePropName + "." + AuditQueue.PROP_BATCH_INTERVAL, ""
+				+ intervalMS);
 
 		// Enable File Spooling
 		int destRetryMS = 10;
-		props.put(
-				basePropName + "." + BaseAuditProvider.PROP_FILE_SPOOL_ENABLE,
+		props.put(basePropName + "." + AuditQueue.PROP_FILE_SPOOL_ENABLE,
 				"" + true);
 		props.put(
 				basePropName + "." + AuditFileSpool.PROP_FILE_SPOOL_LOCAL_DIR,
@@ -598,7 +597,7 @@ public class TestAuditQueue {
 		// Destination
 		String filePropPrefix = AuditProviderFactory.AUDIT_DEST_BASE + ".file";
 		props.put(filePropPrefix, "enable");
-		props.put(filePropPrefix + "." + BaseAuditProvider.PROP_NAME, "file");
+		props.put(filePropPrefix + "." + AuditQueue.PROP_NAME, "file");
 		props.put(filePropPrefix + "."
 				+ FileAuditDestination.PROP_FILE_LOCAL_DIR, logFolderName);
 		props.put(filePropPrefix + "."
@@ -607,21 +606,20 @@ public class TestAuditQueue {
 		props.put(filePropPrefix + "."
 				+ FileAuditDestination.PROP_FILE_FILE_ROLLOVER, "" + 10);
 
-		props.put(filePropPrefix + "." + BaseAuditProvider.PROP_QUEUE, "batch");
+		props.put(filePropPrefix + "." + AuditQueue.PROP_QUEUE, "batch");
 		String batchPropPrefix = filePropPrefix + "." + "batch";
 
-		props.put(batchPropPrefix + "." + BaseAuditProvider.PROP_BATCH_SIZE, ""
+		props.put(batchPropPrefix + "." + AuditQueue.PROP_BATCH_SIZE, ""
 				+ batchSize);
-		props.put(batchPropPrefix + "." + BaseAuditProvider.PROP_QUEUE_SIZE, ""
+		props.put(batchPropPrefix + "." + AuditQueue.PROP_QUEUE_SIZE, ""
 				+ queueSize);
-		props.put(
-				batchPropPrefix + "." + BaseAuditProvider.PROP_BATCH_INTERVAL,
+		props.put(batchPropPrefix + "." + AuditQueue.PROP_BATCH_INTERVAL,
 				"" + intervalMS);
 
 		// Enable File Spooling
 		int destRetryMS = 10;
 		props.put(batchPropPrefix + "."
-				+ BaseAuditProvider.PROP_FILE_SPOOL_ENABLE, "" + true);
+				+ AuditQueue.PROP_FILE_SPOOL_ENABLE, "" + true);
 		props.put(batchPropPrefix + "."
 				+ AuditFileSpool.PROP_FILE_SPOOL_LOCAL_DIR, "target");
 		props.put(batchPropPrefix + "."
@@ -638,7 +636,7 @@ public class TestAuditQueue {
 		// queue.init(props, batchPropPrefix);
 		// queue.start();
 
-		AuditProvider queue = factory.getProvider();
+		AuditHandler queue = factory.getProvider();
 
 		for (int i = 0; i < messageToSend; i++) {
 			queue.log(createEvent());
