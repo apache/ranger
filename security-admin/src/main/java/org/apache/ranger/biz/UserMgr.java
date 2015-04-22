@@ -110,6 +110,9 @@ public class UserMgr {
 	@Autowired
 	XUserMgr xUserMgr;
 
+	@Autowired
+	GUIDUtil guidUtil;
+	
 	String publicRoles[] = new String[] { RangerConstants.ROLE_USER,
 			RangerConstants.ROLE_OTHER };
 
@@ -203,7 +206,7 @@ public class UserMgr {
 		// emailAddress
 		String emailAddress = userProfile.getEmailAddress();
 		if (stringUtil.isEmpty(emailAddress)) {
-			String randomString = GUIDUtil.genGUI();
+			String randomString = guidUtil.genGUID();
 			userProfile.setEmailAddress(randomString);
 			updateUser = true;
 		} else {
@@ -1122,7 +1125,7 @@ public class UserMgr {
 										MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
 					}
 				} else {
-					String randomEmail = GUIDUtil.genGUI();
+					String randomEmail = guidUtil.genGUID();
 					userProfile.setEmailAddress(randomEmail);
 					xXPortalUser = this.createUser(userProfile,
 							RangerCommonEnums.STATUS_ENABLED);

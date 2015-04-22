@@ -22,8 +22,10 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.WebApplicationException;
+
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -93,6 +95,9 @@ public class TestRangerServiceDefServiceBase {
 
 	@Mock
 	RangerSearchUtil searchUtil;
+	
+	@Mock
+	GUIDUtil guidUtil;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

@@ -54,9 +54,9 @@ import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermObj;
 import org.apache.ranger.view.VXPolicy;
 import org.apache.ranger.view.VXPolicyList;
+import org.apache.ranger.view.VXRepository;
 import org.apache.ranger.view.VXRepositoryList;
 import org.apache.ranger.view.VXResource;
-import org.apache.ranger.view.VXRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -288,6 +288,7 @@ public class ServiceUtil {
 		ret.setAssetType(toAssetType(service.getType()));
 		ret.setPolicyName(policy.getName());
 		ret.setDescription(policy.getDescription());
+		ret.setGuid(policy.getGuid());
 		ret.setResourceStatus(policy.getIsEnabled() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
 
 		List<VXAuditMap> auditList = null;

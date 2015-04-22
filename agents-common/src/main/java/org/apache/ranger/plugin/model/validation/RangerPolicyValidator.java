@@ -278,7 +278,7 @@ public class RangerPolicyValidator extends RangerValidator {
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("resources")
 							.isSemanticallyIncorrect()
-							.becauseOf("found another policy[" + policy.getName() + "] with matching resources[" + policy.getResources() + "]!")
+							.becauseOf("found another policy[" + otherPolicy.getName() + "] with matching resources[" + otherPolicy.getResources() + "]!")
 							.build());
 					}
 				}

@@ -146,6 +146,11 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	protected String services;
 
 	/**
+	 * guid
+	 */
+	protected String guid;
+	
+	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXResource ( ) {
@@ -583,6 +588,25 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	}
 
 	/**
+	 * Returns the value for the member attribute <b>guid</b>
+	 * 
+	 * @return String - value of member attribute <b>guid</b>.
+	 */
+	public String getGuid() {
+		return guid;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b>guid</b>. You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param guid - Value to set member attribute <b>guid</b>
+	 */
+	public void setGuid(String guid) {
+		this.guid = guid;
+	}
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -590,6 +614,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 		String str = "VXResource={";
 		str += super.toString();
 		str += "name={" + name + "} ";
+		str += "guid={" + guid + "} ";
 		str += "policyName={" + policyName + "} ";
 		str += "description={" + description + "} ";
 		str += "resourceType={" + resourceType + "} ";

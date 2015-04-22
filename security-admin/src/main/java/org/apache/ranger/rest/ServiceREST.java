@@ -49,10 +49,12 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.XUserMgr;
+import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.RangerSearchUtil;
+import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -61,11 +63,9 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
-import org.apache.ranger.plugin.model.validation.RangerValidatorFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
@@ -134,9 +134,11 @@ public class ServiceREST {
     @Autowired
     RangerBizUtil bizUtil;
 
-	// this indirection for validation via a factory exists only for testability
-	// TODO move the instantiation to DI framework?
-	RangerValidatorFactory validatorFactory = new RangerValidatorFactory(); 
+	@Autowired
+	GUIDUtil guidUtil;
+	
+	@Autowired
+	RangerValidatorFactory validatorFactory; 
 
 	public ServiceREST() {
 	}
@@ -864,6 +866,23 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 		
 		try {
+			// this needs to happen before validator is called
+			// set name of policy if unspecified
+			if (StringUtils.isBlank(policy.getName())) { // use of isBlank over isEmpty is deliberate as a blank string does not strike us as a particularly useful policy name!
+				String guid = policy.getGuid();
+				if (StringUtils.isBlank(guid)) { // use of isBlank is deliberate. External parties could send the guid in, perhaps to sync between dev/test/prod instances?
+					guid = guidUtil.genGUID();
+					policy.setGuid(guid);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("No GUID supplied on the policy!  Ok, setting GUID to [" + guid + "].");
+					}
+				}
+				String name = policy.getService() + "-" + guid;
+				policy.setName(name);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Policy did not have its name set!  Ok, setting name to [" + name + "]");
+				}
+			}
 			 // RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			 // validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
 
@@ -1400,7 +1419,7 @@ public class ServiceREST {
 		}
 	}
 
-	private void ensureAdminAccess(String serviceName, Map<String, RangerPolicyResource> resources) {
+	void ensureAdminAccess(String serviceName, Map<String, RangerPolicyResource> resources) {
 		boolean isAdmin = bizUtil.isAdmin();
 
 		if(!isAdmin) {

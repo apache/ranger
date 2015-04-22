@@ -50,10 +50,14 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerPolicyList;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends RangerPolicy> extends
 		RangerBaseModelService<T, V> {
 
+	@Autowired
+	GUIDUtil guidUtil;
+	
 	public RangerPolicyServiceBase() {
 		super();
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "xSvcDef.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
@@ -89,7 +93,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 	@Override
 	@SuppressWarnings("unchecked")
 	protected XXPolicyBase mapViewToEntityBean(RangerPolicy vObj, XXPolicyBase xObj, int OPERATION_CONTEXT) {
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? GUIDUtil.genGUI() : vObj.getGuid();
+		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
 		xObj.setGuid(guid);
 		xObj.setVersion(vObj.getVersion());

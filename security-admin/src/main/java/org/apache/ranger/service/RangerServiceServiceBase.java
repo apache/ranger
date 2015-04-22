@@ -24,9 +24,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceBase;
@@ -34,8 +34,12 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerServiceList;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extends RangerService> extends RangerBaseModelService<T, V> {
+	
+	@Autowired
+	GUIDUtil guidUtil;
 	
 	public RangerServiceServiceBase() {
 		super();
@@ -57,7 +61,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 	@Override
 	@SuppressWarnings("unchecked")
 	protected XXServiceBase mapViewToEntityBean(RangerService vObj, XXServiceBase xObj, int OPERATION_CONTEXT) {
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? GUIDUtil.genGUI() : vObj.getGuid();
+		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 		
 		xObj.setGuid(guid);
 		xObj.setVersion(vObj.getVersion());
