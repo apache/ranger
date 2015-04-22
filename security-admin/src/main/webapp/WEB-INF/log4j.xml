@@ -20,7 +20,7 @@
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
 
 	<appender name="xa_log_appender" class="org.apache.log4j.DailyRollingFileAppender">
-		<param name="file" value="${catalina.base}/logs/xa_portal.log" />
+		<param name="file" value="${logdir}/xa_portal.log" />
 		<param name="datePattern" value="'.'yyyy-MM-dd" />
 		<param name="append" value="true" />
 		<layout class="org.apache.log4j.PatternLayout">
@@ -29,7 +29,7 @@
 	</appender>
 
 	<appender name="sql_appender" class="org.apache.log4j.DailyRollingFileAppender">
-		<param name="file" value="${catalina.base}/logs/xa_portal_sql.log" />
+		<param name="file" value="${logdir}/xa_portal_sql.log" />
 		<param name="datePattern" value="'.'yyyy-MM-dd" />
 		<param name="append" value="true" />
 		<layout class="org.apache.log4j.PatternLayout">

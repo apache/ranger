@@ -171,8 +171,8 @@ def get_class_path(paths):
 
 def get_jdk_options():
     global conf_dict
-    return [os.getenv('RANGER_PROPERTIES', ''),
-                  '-Dcatalina.base=' + conf_dict['EWS_ROOT'] ]
+    return [os.getenv('RANGER_PROPERTIES', ''),"-Dlogdir="+os.getenv("RANGER_LOG_DIR"),
+											' -Dcatalina.base=' + conf_dict['EWS_ROOT'] ]
 
 
 """
@@ -194,9 +194,9 @@ def populate_config_dict_from_env():
     global config_dict
     conf_dict['RANGER_ADMIN_DB_HOST'] = os.getenv("RANGER_ADMIN_DB_HOST")
     conf_dict['RANGER_AUDIT_DB_HOST'] = os.getenv("RANGER_AUDIT_DB_HOST")
-    conf_dict['MYSQL_BIN'] = 'mysql.exe'       #os.getenv("MYSQL_BIN")
-    conf_dict['XA_DB_FLAVOR'] = os.getenv("XA_DB_FLAVOR")
-    conf_dict['AUDIT_DB_FLAVOR'] = os.getenv("AUDIT_DB_FLAVOR")
+    #conf_dict['MYSQL_BIN'] = 'mysql.exe'       #os.getenv("MYSQL_BIN")
+    conf_dict['RANGER_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
+    conf_dict['RANGER_AUDIT_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
     conf_dict['RANGER_ADMIN_DB_USERNAME'] = os.getenv("RANGER_ADMIN_DB_USERNAME")
     conf_dict['RANGER_ADMIN_DB_PASSWORD'] = os.getenv("RANGER_ADMIN_DB_PASSWORD")
     conf_dict['RANGER_ADMIN_DB_NAME'] = os.getenv("RANGER_ADMIN_DB_DBNAME")
@@ -262,8 +262,31 @@ def init_variables(switch):
     conf_dict['WEBAPP_ROOT']= WEBAPP_ROOT
     conf_dict['INSTALL_DIR']= INSTALL_DIR
     conf_dict['JAVA_BIN']='java'
-    conf_dict['DB_FLAVOR']=os.getenv("XA_DB_FLAVOR")
-    conf_dict['SQL_CONNECTOR_JAR']=os.getenv("SQL_CONNECTOR_JAR")
+    conf_dict['DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
+    conf_dict['RANGER_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
+    conf_dict['RANGER_AUDIT_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")	
+    dir = os.path.join(os.getenv("RANGER_HOME"),"connector-jar")
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    layout_dir = os.path.dirname(os.getenv("HDP_LAYOUT"))
+    files = os.listdir(layout_dir)
+    if files:
+        for filename in files:
+            #log (filename,"info")
+            if os.getenv("RANGER_DB_FLAVOR") == "MYSQL" or os.getenv("RANGER_AUDIT_DB_FLAVOR") == "MYSQL":
+                f = re.match("^mysql-connector-java.*?.jar",filename)
+            elif os.getenv("RANGER_DB_FLAVOR") == "ORACLE" or os.getenv("RANGER_AUDIT_DB_FLAVOR") == "ORACLE":    
+                f = re.match("^ojdbc.*?.jar",filename)
+            elif os.getenv("RANGER_DB_FLAVOR") == "POSTGRES" or os.getenv("RANGER_AUDIT_DB_FLAVOR") == "POSTGRES":    
+                f = re.match("^postgresql-connector-jdbc.*?.jar",filename)    
+            elif os.getenv("RANGER_DB_FLAVOR") == "SQLSERVER" or os.getenv("RANGER_AUDIT_DB_FLAVOR") == "SQLSERVER":
+                f = re.match("^sqljdbc.*?.jar",filename)    
+            if f:
+                src = os.path.join(layout_dir,filename)
+                shutil.copy2(src, dir)
+                conf_dict['SQL_CONNECTOR_JAR'] = os.path.join(dir,filename)
+				
+                    				
     conf_dict['db_host']=os.getenv("RANGER_ADMIN_DB_HOST")
     conf_dict['db_name']=os.getenv("RANGER_ADMIN_DB_DBNAME")
     conf_dict['db_user']=os.getenv("RANGER_ADMIN_DB_USERNAME")
@@ -672,8 +695,8 @@ def update_properties():
     global conf_dict
     sys_conf_dict={}
 
-    XA_DB_FLAVOR = conf_dict["XA_DB_FLAVOR"]
-    AUDIT_DB_FLAVOR = conf_dict["AUDIT_DB_FLAVOR"]
+    RANGER_DB_FLAVOR = conf_dict["RANGER_DB_FLAVOR"]
+    RANGER_AUDIT_DB_FLAVOR = conf_dict["RANGER_DB_FLAVOR"]
     MYSQL_HOST = conf_dict["RANGER_ADMIN_DB_HOST"]
     WEBAPP_ROOT = conf_dict["WEBAPP_ROOT"]
     db_user = conf_dict["RANGER_ADMIN_DB_USERNAME"]
@@ -707,35 +730,35 @@ def update_properties():
 
     log("SQL_HOST is : " + MYSQL_HOST,"debug")
     propertyName="jdbc.url"
-    if XA_DB_FLAVOR == "MYSQL":
+    if RANGER_DB_FLAVOR == "MYSQL":
         newPropertyValue="jdbc:log4jdbc:mysql://" + MYSQL_HOST + ":3306/" + db_name
-    elif XA_DB_FLAVOR == "ORACLE":
+    elif RANGER_DB_FLAVOR == "ORACLE":
         newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(db_user, db_password, MYSQL_HOST)
-    elif XA_DB_FLAVOR == "POSTGRES":
+    elif RANGER_DB_FLAVOR == "POSTGRES":
         newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, db_name)
-    elif XA_DB_FLAVOR == "SQLSERVER":
+    elif RANGER_DB_FLAVOR == "SQLSERVER":
         newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" %(MYSQL_HOST, db_name)
     cObj.set('dummysection',propertyName,newPropertyValue)
 
     propertyName="jdbc.dialect"
-    if XA_DB_FLAVOR == "MYSQL":
+    if RANGER_DB_FLAVOR == "MYSQL":
         newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
-    elif XA_DB_FLAVOR == "ORACLE":
+    elif RANGER_DB_FLAVOR == "ORACLE":
         newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
-    elif XA_DB_FLAVOR == "POSTGRES":
+    elif RANGER_DB_FLAVOR == "POSTGRES":
         newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
-    elif XA_DB_FLAVOR == "SQLSERVER":
+    elif RANGER_DB_FLAVOR == "SQLSERVER":
         newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
     cObj.set('dummysection',propertyName,newPropertyValue)
 
     propertyName="jdbc.driver"
-    if XA_DB_FLAVOR == "MYSQL":
+    if RANGER_DB_FLAVOR == "MYSQL":
         newPropertyValue="net.sf.log4jdbc.DriverSpy"
-    elif XA_DB_FLAVOR == "ORACLE":
+    elif RANGER_DB_FLAVOR == "ORACLE":
         newPropertyValue="oracle.jdbc.OracleDriver"
-    elif XA_DB_FLAVOR == "POSTGRES":
+    elif RANGER_DB_FLAVOR == "POSTGRES":
         newPropertyValue="org.postgresql.Driver"
-    elif XA_DB_FLAVOR == "SQLSERVER":
+    elif RANGER_DB_FLAVOR == "SQLSERVER":
         newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
     cObj.set('dummysection',propertyName,newPropertyValue)
 
@@ -749,35 +772,35 @@ def update_properties():
     cObj.set('dummysection',propertyName,newPropertyValue)
 
     propertyName="auditDB.jdbc.url"
-    if AUDIT_DB_FLAVOR == "MYSQL":
+    if RANGER_AUDIT_DB_FLAVOR == "MYSQL":
         newPropertyValue="jdbc:log4jdbc:mysql://"+MYSQL_HOST+":3306/"+audit_db_name
-    elif AUDIT_DB_FLAVOR == "ORACLE":
-        newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(db_user, db_password, MYSQL_HOST)
-    elif AUDIT_DB_FLAVOR == "POSTGRES":
-        newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, db_name)
-    elif AUDIT_DB_FLAVOR == "SQLSERVER":
+    elif RANGER_AUDIT_DB_FLAVOR == "ORACLE":
+        newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(audit_db_user, audit_db_password, MYSQL_HOST)
+    elif RANGER_AUDIT_DB_FLAVOR == "POSTGRES":
+        newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, audit_db_name)
+    elif RANGER_AUDIT_DB_FLAVOR == "SQLSERVER":
         newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" % (MYSQL_HOST, audit_db_name)
     cObj.set('dummysection',propertyName,newPropertyValue)
 
     propertyName="auditDB.jdbc.dialect"
-    if AUDIT_DB_FLAVOR == "MYSQL":
+    if RANGER_AUDIT_DB_FLAVOR == "MYSQL":
         newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
-    elif AUDIT_DB_FLAVOR == "ORACLE":
+    elif RANGER_AUDIT_DB_FLAVOR == "ORACLE":
         newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
-    elif AUDIT_DB_FLAVOR == "POSTGRES":
+    elif RANGER_AUDIT_DB_FLAVOR == "POSTGRES":
         newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
-    elif AUDIT_DB_FLAVOR == "SQLSERVER":
+    elif RANGER_AUDIT_DB_FLAVOR == "SQLSERVER":
         newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
     cObj.set('dummysection',propertyName,newPropertyValue)
 
     propertyName="auditDB.jdbc.driver"
-    if AUDIT_DB_FLAVOR == "MYSQL":
+    if RANGER_AUDIT_DB_FLAVOR == "MYSQL":
         newPropertyValue="net.sf.log4jdbc.DriverSpy"
-    elif AUDIT_DB_FLAVOR == "ORACLE":
+    elif RANGER_AUDIT_DB_FLAVOR == "ORACLE":
         newPropertyValue="oracle.jdbc.OracleDriver"
-    elif AUDIT_DB_FLAVOR == "POSTGRES":
+    elif RANGER_AUDIT_DB_FLAVOR == "POSTGRES":
         newPropertyValue="org.postgresql.Driver"
-    elif AUDIT_DB_FLAVOR == "SQLSERVER":
+    elif RANGER_AUDIT_DB_FLAVOR == "SQLSERVER":
         newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
     cObj.set('dummysection',propertyName,newPropertyValue)
 
