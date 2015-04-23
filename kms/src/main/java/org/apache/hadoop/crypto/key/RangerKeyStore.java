@@ -17,15 +17,41 @@
 
 package org.apache.hadoop.crypto.key;
 
-import java.io.*;
-import java.security.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.security.DigestInputStream;
+import java.security.DigestOutputStream;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.KeyStoreSpi;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.util.*;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.crypto.SealedObject;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.hadoop.crypto.key.KeyProvider.Metadata;
 import org.apache.log4j.Logger;
 import org.apache.ranger.entity.XXRangerKeyStore;
 import org.apache.ranger.kms.dao.DaoManager;
@@ -550,4 +576,60 @@ public class RangerKeyStore extends KeyStoreSpi {
 
 		return prefixedProperties;
 	}	
+	
+	//
+	// The method is created to support JKS migration (from hadoop-common KMS keystore to RangerKMS keystore)
+	//
+	
+	private static final String METADATA_FIELDNAME = "metadata" ;
+	private static final int NUMBER_OF_BITS_PER_BYTE = 8 ;
+	
+	public void engineLoadKeyStoreFile(InputStream stream, char[] storePass, char[] keyPass, char[] masterKey, String fileFormat)
+	        throws IOException, NoSuchAlgorithmException, CertificateException
+	{
+			synchronized(entries) {
+				KeyStore ks;
+				
+				try {
+					ks = KeyStore.getInstance(fileFormat);
+					ks.load(stream, storePass);
+					entries.clear();     
+					for (Enumeration<String> name = ks.aliases(); name.hasMoreElements();){
+						  	  SecretKeyEntry entry = new SecretKeyEntry();
+							  String alias = (String) name.nextElement();
+							  Key k = ks.getKey(alias, keyPass);		
+							  
+							  if (k instanceof JavaKeyStoreProvider.KeyMetadata) {
+								  JavaKeyStoreProvider.KeyMetadata keyMetadata = (JavaKeyStoreProvider.KeyMetadata)k ; 
+								  Field f = JavaKeyStoreProvider.KeyMetadata.class.getDeclaredField(METADATA_FIELDNAME) ;
+								  f.setAccessible(true);
+								  Metadata metadata = (Metadata)f.get(keyMetadata) ;
+								  entry.bit_length = metadata.getBitLength() ;
+								  entry.cipher_field = metadata.getAlgorithm() ;
+								  Constructor<RangerKeyStoreProvider.KeyMetadata> constructor = RangerKeyStoreProvider.KeyMetadata.class.getDeclaredConstructor(Metadata.class);
+							      constructor.setAccessible(true);
+							      RangerKeyStoreProvider.KeyMetadata  nk = constructor.newInstance(metadata);
+							      k = nk ;
+							  }
+							  else {
+			                      entry.bit_length = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE) ;
+			                      entry.cipher_field = k.getAlgorithm();
+							  }
+		                      String keyName = alias.split("@")[0] ;
+		                      entry.attributes = "{\"key.acl.name\":\"" +  keyName + "\"}" ;
+							  KeyProtector keyProtector = new KeyProtector(masterKey);
+							  entry.sealedKey = keyProtector.seal(k);
+ 	                          entry.date = ks.getCreationDate(alias);
+		                      entry.version = (alias.split("@").length == 2)?(Integer.parseInt(alias.split("@")[1])):0;
+		    				  entry.description = k.getFormat()+" - "+ks.getType();
+		                      entries.put(alias, entry);		
+		                      System.out.println("+ adding key alias [" + alias + "]") ;
+		    	            }
+				} catch (Throwable t) {
+					logger.error("Unable to load keystore file ", t);
+					throw new IOException(t) ;
+				}
+			}
+	}
+	
 }
