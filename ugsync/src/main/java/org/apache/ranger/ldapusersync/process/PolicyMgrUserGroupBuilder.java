@@ -59,6 +59,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 
 public class PolicyMgrUserGroupBuilder implements UserGroupSink {
@@ -669,7 +670,13 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		    cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
 		    ret = Client.create(cc);	
 		}
-		
+		if(ret!=null){
+			 String username = config.getPolicyMgrUserName();
+			 String password = config.getPolicyMgrPassword();
+			 if(username!=null && password!=null){
+				 ret.addFilter(new HTTPBasicAuthFilter(username, password));
+			 }
+		}
 		return ret ;
 	}
 	

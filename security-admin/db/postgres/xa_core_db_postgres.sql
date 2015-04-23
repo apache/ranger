@@ -968,3 +968,7 @@ CREATE INDEX x_usr_module_perm_idx_userid ON x_user_module_perm(user_id);
 CREATE INDEX x_grp_module_perm_idx_groupid ON x_group_module_perm(group_id);
 CREATE INDEX x_grp_module_perm_idx_moduleid ON x_group_module_perm(module_id);
 COMMIT;
+INSERT INTO x_portal_user(CREATE_TIME,UPDATE_TIME,FIRST_NAME,LAST_NAME,PUB_SCR_NAME,LOGIN_ID,PASSWORD,EMAIL,STATUS)VALUES(current_timestamp,current_timestamp,'rangerusersync','','rangerusersync','rangerusersync','70b8374d3dfe0325aaa5002a688c7e3b','rangerusersync',1);
+INSERT INTO x_portal_user_role(CREATE_TIME,UPDATE_TIME,USER_ID,USER_ROLE,STATUS)VALUES(current_timestamp,current_timestamp,2,'ROLE_SYS_ADMIN',1);
+INSERT INTO x_user(CREATE_TIME,UPDATE_TIME,user_name,status,descr)VALUES(current_timestamp,current_timestamp,'rangerusersync',0,'rangerusersync');
+COMMIT;

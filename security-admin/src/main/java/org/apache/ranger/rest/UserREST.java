@@ -188,7 +188,6 @@ public class UserREST {
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
 		VXPortalUser vxPortalUser;
-		logger.info("create:" + userProfile.getEmailAddress());
 		vxPortalUser=userManager.createDefaultAccountUser(userProfile);
 		if(vxPortalUser!=null)
 		{

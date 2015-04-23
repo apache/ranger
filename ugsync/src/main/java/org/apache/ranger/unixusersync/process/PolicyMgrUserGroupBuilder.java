@@ -50,6 +50,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.GetXGroupListResponse;
@@ -446,7 +447,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			addXUserGroupInfo(user, groups) ;
 		}
 		
-		Client c = new Client();
+		Client c = getClient();
 		
 		WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
 		
@@ -687,7 +688,17 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		    cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
 		    ret = Client.create(cc);	
 		}
-		
+		if(ret!=null){
+			 String username = config.getPolicyMgrUserName();
+			 String password = config.getPolicyMgrPassword();
+			 if(username==null||password==null||username.trim().isEmpty()||password.trim().isEmpty()){
+				 username=config.getDefaultPolicyMgrUserName();
+				 password=config.getDefaultPolicyMgrPassword();
+			 }
+			 if(username!=null && password!=null){
+				 ret.addFilter(new HTTPBasicAuthFilter(username, password));
+			 }
+		}
 		return ret ;
 	}
 	
