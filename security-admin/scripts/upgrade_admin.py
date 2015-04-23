@@ -198,6 +198,9 @@ def main():
 	auditJcksFileName = xaSysProps['auditDB.jdbc.credential.provider.path']
 	jcksFileName = xaSysProps['xaDB.jdbc.credential.provider.path']
 
+	auditJdbcUrl = xaSysProps['auditDB.jdbc.url']
+	auditHostTokens = auditJdbcUrl.split("//")
+	auditdbTokens = auditHostTokens[1].split("/")
 
 	tokens = jdbcUrl.split(":")
 	hostTokens = jdbcUrl.split("//")
@@ -211,7 +214,7 @@ def main():
 		installProps['SQL_COMMAND_INVOKER'] = 'mysql'
 		installProps['db_host'] = dbTokens[0]
 		installProps['db_name'] = dbTokens[1]
-		installProps['audit_db_name'] = dbTokens[1]
+		installProps['audit_db_name'] = auditdbTokens[1]
 		mysqlConnectorJarFileName = [ f for f in listdir(libFolder) if (isfile(join(libFolder,f)) and f.startswith("mysql") and f.endswith(".jar")) ]
 		if (len(mysqlConnectorJarFileName) >  0):
 			if not os.path.exists(tempLibFolder):
