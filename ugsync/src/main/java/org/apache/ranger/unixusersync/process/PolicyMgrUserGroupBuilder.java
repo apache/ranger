@@ -306,7 +306,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" ) ;
  			}
  			if (! isMockRun) {
- 				addXUserGroupInfo(user, addGroups) ;
+ 			    addXUserGroupInfo(user, addGroups) ;
  			}
  			
  			for(String g : delGroups) {
@@ -527,6 +527,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
    private XUserGroupInfo addXUserGroupInfo(XUserInfo aUserInfo, XGroupInfo aGroupInfo) {
 		
+	    XUserGroupInfo ret = null ;
+	   
 	    XUserGroupInfo ugInfo = new XUserGroupInfo() ;
 		
 		ugInfo.setUserId(aUserInfo.getId());
@@ -535,7 +537,25 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		
 		// ugInfo.setParentGroupId("1");
 		
-	    return ugInfo ;
+        Client c = getClient() ;
+	    
+	    WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_LINK_URI)) ;
+	    
+	    Gson gson = new GsonBuilder().create() ;
+
+	    String jsonString = gson.toJson(ugInfo) ;
+	    
+	    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+	    
+	    LOG.debug("RESPONSE: [" + response + "]") ;
+
+	    ret = gson.fromJson(response, XUserGroupInfo.class) ;
+	    
+	    if (ret != null) {
+	    	addUserGroupToList(ret);
+	    }
+		
+		return ret ;
 	}
 
 	
