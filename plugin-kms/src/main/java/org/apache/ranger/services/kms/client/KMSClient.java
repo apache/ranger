@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -72,93 +70,87 @@ public class KMSClient {
 			LOG.debug("Getting Kms Key list for keyNameMatching : " + keyNameMatching);
 		}
 		final String errMsg = errMessage;
-		
-		Callable<List<String>> kmsKeyListGetter = new Callable<List<String>>() {
-			@Override
-			public List<String> call() {
+		List<String> lret = new ArrayList<String>();				
+		String keyLists = KMS_LIST_API_ENDPOINT.replaceAll(Pattern.quote("${userName}"), username);
+		String uri = provider + (provider.endsWith("/") ? keyLists : ("/" + keyLists));		
+		Client client = null ;
+		ClientResponse response = null ;
 				
-				List<String> lret = new ArrayList<String>();				
-				String keyLists = KMS_LIST_API_ENDPOINT.replaceAll(Pattern.quote("${userName}"), username);
-				String uri = provider + (provider.endsWith("/") ? keyLists : ("/" + keyLists));		
-				
-				Client client = null ;
-				ClientResponse response = null ;
-				
-				try {
-					client = Client.create() ;
-					
-					WebResource webResource = client.resource(uri);
-					
-					response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
-					
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("getKeyList():calling " + uri);
-					}
-					
-					if (response != null) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("getKeyList():response.getStatus()= " + response.getStatus());	
-						}
-						if (response.getStatus() == 200) {
-							String jsonString = response.getEntity(String.class);
-							Gson gson = new GsonBuilder().setPrettyPrinting().create();
-							@SuppressWarnings("unchecked")
-							List<String> keys = gson.fromJson(jsonString, List.class) ;
-							if (keys != null) {
-								for ( String key : keys) {
-									if ( existingKeyList != null && existingKeyList.contains(key)) {
-								        	continue;
-								        }
-										if (keyNameMatching == null || keyNameMatching.isEmpty() || key.startsWith(keyNameMatching)) {
-												if (LOG.isDebugEnabled()) {
-													LOG.debug("getKeyList():Adding kmsKey " + key);
-												}
-												lret.add(key) ;
-											}
-									}
-								}							
-						 }else if (response.getStatus() == 401) {
-							 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");
-							 return lret;
-						 }else if (response.getStatus() == 403) {
-							 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");
-							 return lret;
-						 }else {
-							 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");	
-							 String jsonString = response.getEntity(String.class);
-							 LOG.info(jsonString);
-							 lret = null;
-						}
-					}else {
-						String msgDesc = "Unable to get a valid response for "
-								+ "expected mime type : [" + EXPECTED_MIME_TYPE
-								+ "] URL : " + uri + " - got null response.";
-						LOG.error(msgDesc);
-						HadoopException hdpException = new HadoopException(msgDesc);
-						hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
-						throw hdpException;
-					}
-				} catch (HadoopException he) {
-					throw he;
-				}catch (Throwable t) {
-					String msgDesc = "Exception while getting Kms Key List. URL : " + uri;
-					HadoopException hdpException = new HadoopException(msgDesc, t);
-					LOG.error(msgDesc, t);
-					hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + errMsg, null, null);
-					throw hdpException;					
-				} finally {
-					if (response != null) {
-						response.close();
-					}
-					
-					if (client != null) {
-						client.destroy(); 
-					}				
-				}
-				return lret ;
+		try {
+			client = Client.create() ;
+			
+			WebResource webResource = client.resource(uri);
+			
+			response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+			
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("getKeyList():calling " + uri);
 			}
-		} ;
-		return null;
+			
+			if (response != null) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("getKeyList():response.getStatus()= " + response.getStatus());	
+				}
+				if (response.getStatus() == 200) {
+					String jsonString = response.getEntity(String.class);
+					Gson gson = new GsonBuilder().setPrettyPrinting().create();
+					@SuppressWarnings("unchecked")
+					List<String> keys = gson.fromJson(jsonString, List.class) ;					
+					if (keys != null) {
+						for ( String key : keys) {
+							if ( existingKeyList != null && existingKeyList.contains(key)) {
+						        	continue;
+						        }
+								if (keyNameMatching == null || keyNameMatching.isEmpty() || key.startsWith(keyNameMatching)) {
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("getKeyList():Adding kmsKey " + key);
+										}
+										lret.add(key) ;
+									}
+							}
+						}							
+				 }else if (response.getStatus() == 401) {
+					 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");
+					 return lret;
+				 }else if (response.getStatus() == 403) {
+					 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");
+					 return lret;
+				 }else {
+					 LOG.info("getKeyList():response.getStatus()= " + response.getStatus() + " for URL " + uri + ", so returning null list");	
+					 String jsonString = response.getEntity(String.class);
+					 LOG.info(jsonString);
+					 lret = null;
+				}
+			}else {
+				String msgDesc = "Unable to get a valid response for "
+						+ "expected mime type : [" + EXPECTED_MIME_TYPE
+						+ "] URL : " + uri + " - got null response.";
+				LOG.error(msgDesc);
+				HadoopException hdpException = new HadoopException(msgDesc);
+				hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
+				lret = null;
+				throw hdpException;
+			}
+		} catch (HadoopException he) {
+			lret = null;
+			throw he;
+		}catch (Throwable t) {
+			String msgDesc = "Exception while getting Kms Key List. URL : " + uri;
+			HadoopException hdpException = new HadoopException(msgDesc, t);
+			LOG.error(msgDesc, t);
+			hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + errMsg, null, null);
+			lret = null;
+			throw hdpException;					
+		} finally {
+			if (response != null) {
+				response.close();
+			}
+			
+			if (client != null) {
+				client.destroy(); 
+			}				
+		}
+		return lret ;			
 	}
 		
 	public static HashMap<String, Object> testConnection(String serviceName, Map<String, String> configs) {
@@ -170,11 +162,9 @@ public class KMSClient {
 
 		KMSClient kmsClient = getKmsClient(serviceName, configs);
 		strList = getKmsKey(kmsClient, "", null);
-		
 		if (strList != null) {
 			connectivityStatus = true;
 		}
-
 		if (connectivityStatus) {
 			String successMsg = "TestConnection Successful";
 			BaseClient.generateResponseDataMap(connectivityStatus, successMsg,
@@ -230,7 +220,7 @@ public class KMSClient {
 			}
 
 			if (keyName != null) {
-				String finalkmsKeyName = (keyName == null) ? "": keyName.trim();
+				String finalkmsKeyName = keyName.trim();
 				resultList = kmsClient.getKeyList(finalkmsKeyName,existingKeyName);
 				if (resultList != null) {
 					if (LOG.isDebugEnabled()) {
@@ -239,19 +229,16 @@ public class KMSClient {
 				}
 			}
 		} catch (HadoopException he) {
+			resultList = null;
 			throw he;
 		} catch (Exception e) {
 			String msgDesc = "Unable to get a valid response from the provider";
 			LOG.error(msgDesc, e);
 			HadoopException hdpException = new HadoopException(msgDesc);
 			hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
+			resultList = null;
 			throw hdpException;
 		}
 		return resultList;
-	}
-	
-	public static <T> T timedTask(Callable<T> callableObj, long timeout,
-			TimeUnit timeUnit) throws Exception {
-		return callableObj.call();
-	}
+	}	
 }

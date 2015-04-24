@@ -203,6 +203,8 @@ def populate_config_dict_from_env():
     conf_dict['RANGER_AUDIT_DB_USERNAME'] = os.getenv("RANGER_AUDIT_DB_USERNAME")
     conf_dict['RANGER_AUDIT_DB_PASSWORD'] = os.getenv("RANGER_AUDIT_DB_PASSWORD")
     conf_dict['RANGER_AUDIT_DB_NAME'] = os.getenv("RANGER_AUDIT_DB_DBNAME")
+    conf_dict['db_root_user'] = os.getenv("RANGER_DB_ROOT_USER")
+    conf_dict['db_root_password'] = os.getenv("RANGER_ADMIN_DB_ROOT_PASSWORD")
     conf_dict['RANGER_ADMIN_DB_ROOT_PASSWORD'] = os.getenv("RANGER_ADMIN_DB_ROOT_PASSWORD")
     conf_dict['RANGER_AUDIT_DB_ROOT_PASSWORD'] = os.getenv("RANGER_AUDIT_DB_ROOT_PASSWORD")
     conf_dict['RANGER_ADMIN_HOME'] = os.getenv("RANGER_ADMIN_HOME")
@@ -261,11 +263,13 @@ def init_variables(switch):
     conf_dict['EWS_ROOT']   = EWS_ROOT
     conf_dict['WEBAPP_ROOT']= WEBAPP_ROOT
     conf_dict['INSTALL_DIR']= INSTALL_DIR
-    conf_dict['JAVA_BIN']='java'
+    conf_dict['JAVA_BIN']= os.path.join(os.getenv("JAVA_HOME"),'bin','java.exe')
     conf_dict['DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
     conf_dict['RANGER_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
     conf_dict['RANGER_AUDIT_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")	
     dir = os.path.join(os.getenv("RANGER_HOME"),"connector-jar")
+    ews_dir = os.path.join(os.getenv("RANGER_ADMIN_HOME"),"ews","webapp","WEB-INF","lib")
+    log(ews_dir,"info")
     if not os.path.exists(dir):
         os.makedirs(dir)
     layout_dir = os.path.dirname(os.getenv("HDP_LAYOUT"))
@@ -284,6 +288,7 @@ def init_variables(switch):
             if f:
                 src = os.path.join(layout_dir,filename)
                 shutil.copy2(src, dir)
+                shutil.copy2(src, ews_dir)
                 conf_dict['SQL_CONNECTOR_JAR'] = os.path.join(dir,filename)
 				
                     				
@@ -377,7 +382,7 @@ def write_config_to_file():
     open(write_conf_to_file,'wb')
     for key,value in conf_dict.items():
         if 'PASSWORD' in key :
-            call_keystore(library_path,key,value,jceks_file_path,'create')
+            #call_keystore(library_path,key,value,jceks_file_path,'create')
             value=''
         ModConfig(write_conf_to_file , key,value)
 

@@ -32,7 +32,9 @@ os_name = platform.system()
 os_name = os_name.upper()
 
 if os_name == "LINUX":
-	RANGER_ADMIN_HOME = os.getcwd()
+	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+	if RANGER_ADMIN_HOME is None:
+		RANGER_ADMIN_HOME = os.getcwd()
 elif os_name == "WINDOWS":
 	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
 
@@ -69,10 +71,10 @@ def populate_global_dict():
 			key , value = each_line.strip().split("=",1)
 			key = key.strip()
 			if 'PASSWORD' in key:
-				jceks_file_path = os.path.join(os.getenv('RANGER_HOME'), 'jceks','ranger_db.jceks')
-				statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
-				if statuscode == 1:
-					value = ''
+				jceks_file_path = os.path.join(RANGER_ADMIN_HOME, 'jceks','ranger_db.jceks')
+				#statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
+				#if statuscode == 1:
+				value = ''
 			value = value.strip()
 			globalDict[key] = value
 
@@ -138,11 +140,10 @@ class MysqlConf(BaseDB):
 		self.JAVA_BIN = JAVA_BIN
 
 	def get_jisql_cmd(self, user, password ,db_name):
-		#path = os.getcwd()
 		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,self.host,db_name,user,password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,path,self.host,db_name,user,password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
 		return jisql_cmd
@@ -304,7 +305,10 @@ class MysqlConf(BaseDB):
 						log("[I] Java patch "+ className  +" is already applied" ,"info")
 					else:
 						log ("[I] java patch "+ className +" is being applied..","info")
-						path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						if os_name == "LINUX":
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
@@ -334,11 +338,10 @@ class OracleConf(BaseDB):
 		self.JAVA_BIN = JAVA_BIN
 
 	def get_jisql_cmd(self, user, password):
-		#path = os.getcwd()
 		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, user, password)
 		return jisql_cmd
@@ -528,7 +531,10 @@ class OracleConf(BaseDB):
 						log("[I] java patch "+ className  +" is already applied" ,"info")
 					else:
 						log ("[I] java patch "+ className +" is being applied..","info")
-						path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						if os_name == "LINUX":
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":	
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
@@ -560,11 +566,10 @@ class PostgresConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
-		#path = os.getcwd()
 		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, db_name, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
 		return jisql_cmd
@@ -735,7 +740,10 @@ class PostgresConf(BaseDB):
 						log("[I] java patch "+ className  +" is already applied" ,"info")
 					else:
 						log ("[I] java patch "+ className +" is being applied..","info")
-						path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						if os_name == "LINUX":
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":	
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
@@ -768,11 +776,10 @@ class SqlServerConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
-		#path = os.getcwd()
 		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, user, password, self.host,db_name)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
 		return jisql_cmd
@@ -931,7 +938,10 @@ class SqlServerConf(BaseDB):
 						log("[I] java patch "+ className  +" is already applied" ,"info")
 					else:
 						log ("[I] java patch "+ className +" is being applied..","info")
-						path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						if os_name == "LINUX":
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":	
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
@@ -943,7 +953,7 @@ class SqlServerConf(BaseDB):
 								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', now(), '%s@%s', now(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
 								ret = subprocess.call(query)
 							if ret == 0:
 								log("[I] java patch "+ className  +" applied", "info")

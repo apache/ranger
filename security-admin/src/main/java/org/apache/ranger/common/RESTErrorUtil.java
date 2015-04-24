@@ -68,6 +68,28 @@ public class RESTErrorUtil {
 		return restException;
 	}
 
+	public WebApplicationException generateRESTException(VXResponse gjResponse) {
+		Response errorResponse = Response
+				.status(gjResponse.getStatusCode())
+				.entity(gjResponse).build();
+
+		WebApplicationException restException = new WebApplicationException(
+				errorResponse);
+		restException.fillInStackTrace();
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		Long sessionId = null;
+		String loginId = null;
+		if (userSession != null) {
+			loginId = userSession.getLoginId();
+			sessionId = userSession.getSessionId();
+		}
+
+		logger.info("Request failed. SessionId=" + sessionId + ", loginId="
+				+ loginId + ", logMessage=" + gjResponse.getMsgDesc(),
+				restException);
+
+		return restException;
+	}
 	/**
 	 * 
 	 * @param logMessage

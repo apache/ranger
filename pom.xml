@@ -350,6 +350,10 @@
            <encoding>UTF-8</encoding>
            <systemProperties>
               <property>
+                <name>logdir</name>
+                <value>${project.build.directory}</value>
+              </property>
+              <property>
                 <name>catalina.base</name>
                 <value>${project.build.directory}</value>
               </property>

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.persistence.Query;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
@@ -135,6 +136,21 @@ public class UserMgr {
 
 	public XXPortalUser createUser(VXPortalUser userProfile, int userStatus,
 			Collection<String> userRoleList) {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session != null) {
+			if (!session.isUserAdmin()) {
+				throw restErrorUtil.create403RESTException("User "
+						+ "creation denied. LoggedInUser="
+						+ (session != null ? session.getXXPortalUser().getId()
+								: "Not Logged In")
+						+ " ,isn't permitted to perform the action.");
+			}
+		}else{
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setMsgDesc("Bad Credentials");
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
 		XXPortalUser user = mapVXPortalUserToXXPortalUser(userProfile);
 		user = createUser(user, userStatus, userRoleList);
 
@@ -511,6 +527,21 @@ public class UserMgr {
 	 * @param userId
 	 */
 	public VXPortalUser deactivateUser(XXPortalUser gjUser) {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session != null) {
+			if (!session.isUserAdmin()) {
+				throw restErrorUtil.create403RESTException("deactivation of user"
+						+ " denied. LoggedInUser="
+						+ (session != null ? session.getXXPortalUser().getId()
+								: "Not Logged In")
+						+ " ,isn't permitted to perform the action.");
+			}
+		}else{
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setMsgDesc("Bad Credentials");
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
 		if (gjUser != null
 				&& gjUser.getStatus() != RangerConstants.ACT_STATUS_DEACTIVATED) {
 			logger.info("Marking user " + gjUser.getLoginId() + " as deleted");
@@ -1101,8 +1132,13 @@ public class UserMgr {
 						+ " ,isn't permitted to perform the action.");
 
 			}
+		}else{
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setMsgDesc("Bad Credentials");
+			throw restErrorUtil.generateRESTException(vXResponse);
 		}
-
+		logger.info("create:" + userProfile.getEmailAddress());
 		XXPortalUser xXPortalUser = null;
 		String loginId = userProfile.getLoginId();
 		String emailAddress = userProfile.getEmailAddress();

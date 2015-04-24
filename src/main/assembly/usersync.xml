@@ -50,6 +50,7 @@
 					<include>org.apache.ranger:credentialbuilder</include>
 					<include>org.apache.ranger:ranger-util</include>
 					<include>commons-io:commons-io:jar:${commons.io.version}</include>
+					<include>org.apache.htrace:htrace-core</include>
 				</includes>
 				<unpack>false</unpack>
   			</dependencySet>

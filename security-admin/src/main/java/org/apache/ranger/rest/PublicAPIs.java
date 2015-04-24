@@ -19,11 +19,13 @@
 
 package org.apache.ranger.rest;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.*;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXPolicy;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -41,7 +43,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
-import java.util.HashMap;
 import java.util.List;
 
 @Path("public")
@@ -70,6 +71,11 @@ public class PublicAPIs {
 	@Autowired
 	ServiceREST serviceREST;
 
+	@Autowired
+	RangerDaoManager daoMgr;
+
+	@Autowired
+	RESTErrorUtil restErrorUtil;
 	
 	@GET
 	@Path("/api/repository/{id}")
@@ -126,11 +132,17 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.updateRepository(" + id + ")");
 		}
 		
+		XXService existing = daoMgr.getXXService().getById(id);
+		if(existing == null) {
+			throw restErrorUtil.createRESTException("Repository not found for Id: " + id, MessageEnums.DATA_NOT_FOUND);
+		}
+
 		vXRepository.setId(id);
 		
 		VXAsset vXAsset  = serviceUtil.publicObjecttoVXAsset(vXRepository);
 
 		RangerService service = serviceUtil.toRangerService(vXAsset);
+		service.setVersion(existing.getVersion());
 
 		RangerService updatedService = serviceREST.updateService(service);
 		
@@ -157,12 +169,6 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.deleteRepository(" + id + ")");
 		}
 		
-		String forceStr = request.getParameter("force");
-		boolean force = true;
-		if (!stringUtil.isEmpty(forceStr)) {
-			force = Boolean.parseBoolean(forceStr.trim());
-		}
-				
 		serviceREST.deleteService(id);
 		
 		if(logger.isDebugEnabled()) {
@@ -285,11 +291,17 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.updatePolicy(): "  + vXPolicy );
 		}
 		
+		XXPolicy existing = daoMgr.getXXPolicy().getById(id);
+		if(existing == null) {
+			throw restErrorUtil.createRESTException("Policy not found for Id: " + id, MessageEnums.DATA_NOT_FOUND);
+		}
+
 		vXPolicy.setId(id);
 		
 		RangerService service       = serviceREST.getServiceByName(vXPolicy.getRepositoryName());
 		
 		RangerPolicy  policy        = serviceUtil.toRangerPolicy(vXPolicy,service);
+		policy.setVersion(existing.getVersion());
 
 		RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy);
 

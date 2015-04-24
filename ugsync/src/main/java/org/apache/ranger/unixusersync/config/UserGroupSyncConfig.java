@@ -144,6 +144,17 @@ public class UserGroupSyncConfig  {
   private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ldapGroupSync.groupMemberAttributeName";
   private static final String DEFAULT_LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "member";
 
+	private static final String SYNC_POLICY_MGR_KEYSTORE = "userSync.policyMgrKeystore";
+
+	private static final String SYNC_POLICY_MGR_ALIAS = "userSync.policyMgrAlias";
+
+	private static final String SYNC_POLICY_MGR_PASSWORD = "userSync.policyMgrPassword";
+
+	private static final String SYNC_POLICY_MGR_USERNAME = "userSync.policyMgrUserName";
+
+	private static final String DEFAULT_POLICYMGR_USERNAME = "rangerusersync";
+
+	private static final String DEFAULT_POLICYMGR_PASSWORD = "rangerusersync";
 	private Properties prop = new Properties() ;
 	
 	private static volatile UserGroupSyncConfig me = null ;
@@ -564,5 +575,52 @@ public class UserGroupSyncConfig  {
  	public String getProperty(String aPropertyName, String aDefaultValue) {
  		return prop.getProperty(aPropertyName, aDefaultValue) ;
  	}
-	
+
+	public String getPolicyMgrPassword(){
+		//update credential from keystore
+		String password=null;
+		if(prop!=null && prop.containsKey(SYNC_POLICY_MGR_KEYSTORE)){
+			password=prop.getProperty(SYNC_POLICY_MGR_PASSWORD);
+			if(password!=null && !password.isEmpty()){
+				return password;
+			}
+		}
+		if(prop!=null && prop.containsKey(SYNC_POLICY_MGR_KEYSTORE) &&  prop.containsKey(SYNC_POLICY_MGR_ALIAS)){
+			String path=prop.getProperty(SYNC_POLICY_MGR_KEYSTORE);
+			String alias=prop.getProperty(SYNC_POLICY_MGR_ALIAS,"policymgr.user.password");
+			if(path!=null && alias!=null){
+				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
+					try{
+						password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					}catch(Exception ex){
+						password=null;
+					}
+					if(password!=null&& !password.trim().isEmpty() && !password.trim().equalsIgnoreCase("none")){
+						prop.setProperty(SYNC_POLICY_MGR_PASSWORD,password);
+						return password;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	public String getPolicyMgrUserName() {
+		String userName=null;
+		if(prop!=null && prop.containsKey(SYNC_POLICY_MGR_USERNAME)){
+			userName=prop.getProperty(SYNC_POLICY_MGR_USERNAME);
+			if(userName!=null && !userName.isEmpty()){
+				return userName;
+			}
+		}
+		return null;
+	}
+
+	public String getDefaultPolicyMgrUserName(){
+		return DEFAULT_POLICYMGR_USERNAME;
+	}
+
+	public String getDefaultPolicyMgrPassword(){
+		return DEFAULT_POLICYMGR_PASSWORD;
+	}
 }

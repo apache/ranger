@@ -99,7 +99,11 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	}
 
 	public static Configuration getDBKSConf() {
-	    return getConfiguration(true, DBKS_SITE_XML);
+	    Configuration newConfig =  getConfiguration(true, DBKS_SITE_XML);
+		getFromJceks(newConfig,CREDENTIAL_PATH, MK_CREDENTIAL_ALIAS, ENCRYPTION_KEY);
+		getFromJceks(newConfig,CREDENTIAL_PATH, DB_CREDENTIAL_ALIAS, DB_PASSWORD);
+		return newConfig ;
+		
 	}
 	
 	static Configuration getConfiguration(boolean loadHadoopDefaults,
@@ -315,7 +319,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	    return innerSetKeyVersion(name, versionName, material, meta.getCipher(), meta.getBitLength(), meta.getDescription(), meta.getVersions(), meta.getAttributes());
 	}
 	
-	private void getFromJceks(Configuration conf, String path, String alias, String key){
+	private static void getFromJceks(Configuration conf, String path, String alias, String key){
 		//update credential from keystore		
 		if(conf!=null){	
 			String pathValue=conf.get(path);

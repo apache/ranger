@@ -30,6 +30,13 @@ globalDict = {}
 os_name = platform.system()
 os_name = os_name.upper()
 
+if os_name == "LINUX":
+	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+	if RANGER_ADMIN_HOME is None:
+		RANGER_ADMIN_HOME = os.getcwd()
+elif os_name == "WINDOWS":
+	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+
 def check_output(query):
 	if os_name == "LINUX":
 		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
@@ -52,17 +59,21 @@ def log(msg,type):
 
 def populate_global_dict():
 	global globalDict
-	read_config_file = open(os.path.join(os.getcwd(),'install.properties'))
+	if os_name == "LINUX":
+		read_config_file = open(os.path.join(RANGER_ADMIN_HOME,'install.properties'))
+	elif os_name == "WINDOWS":
+		read_config_file = open(os.path.join(RANGER_ADMIN_HOME,'bin','install_config.properties'))
+		library_path = os.path.join(RANGER_ADMIN_HOME,"cred","lib","*")
 	for each_line in read_config_file.read().split('\n') :
 		if len(each_line) == 0 : continue
 		if re.search('=', each_line):
 			key , value = each_line.strip().split("=",1)
 			key = key.strip()
 			if 'PASSWORD' in key:
-				jceks_file_path = os.path.join(os.getenv('RANGER_HOME'), 'jceks','ranger_db.jceks')
-				statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
-				if statuscode == 1:
-					value = ''
+				jceks_file_path = os.path.join(RANGER_ADMIN_HOME, 'jceks','ranger_db.jceks')
+				#statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
+				#if statuscode == 1:
+				value = ''
 			value = value.strip()
 			globalDict[key] = value
 
@@ -109,9 +120,9 @@ class MysqlConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		#TODO: User array for forming command
-		path = os.getcwd()
+		path = RANGER_ADMIN_HOME
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,self.host,db_name,user,password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,path,self.host,db_name,user,password)
 		elif os_name == "WINDOWS":
 			self.JAVA_BIN = self.JAVA_BIN.strip("'")
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
@@ -319,9 +330,9 @@ class OracleConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password):
 		#TODO: User array for forming command
-		path = os.getcwd()
+		path = RANGER_ADMIN_HOME
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, self.host, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, user, password)
 		return jisql_cmd
@@ -683,10 +694,10 @@ class PostgresConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
-		path = os.getcwd()
+		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, db_name, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, self.host, db_name, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
 		return jisql_cmd
@@ -890,10 +901,10 @@ class SqlServerConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
-		path = os.getcwd()
+		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, user, password, self.host,db_name)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password, self.host,db_name)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
 		return jisql_cmd
@@ -1289,9 +1300,9 @@ def main(argv):
 		#MYSQL_CONNECTOR_JAR='/usr/share/java/mysql-connector-java.jar'
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN)
-		xa_db_version_file = os.path.join(os.getcwd(),mysql_dbversion_catalog)
-		xa_db_core_file = os.path.join(os.getcwd(),mysql_core_file)
-		xa_patch_file = os.path.join(os.getcwd(),mysql_patches)
+		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME,mysql_dbversion_catalog)
+		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME,mysql_core_file)
+		xa_patch_file = os.path.join(RANGER_ADMIN_HOME,mysql_patches)
 
 	elif XA_DB_FLAVOR == "ORACLE":
 		#ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
@@ -1302,27 +1313,27 @@ def main(argv):
 		elif os_name == "WINDOWS":
 			xa_db_root_user = xa_db_root_user
 		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN)
-		xa_db_version_file = os.path.join(os.getcwd(),oracle_dbversion_catalog)
-		xa_db_core_file = os.path.join(os.getcwd(),oracle_core_file)
-		xa_patch_file = os.path.join(os.getcwd(),oracle_patches)
+		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME,oracle_dbversion_catalog)
+		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME,oracle_core_file)
+		xa_patch_file = os.path.join(RANGER_ADMIN_HOME,oracle_patches)
 
 	elif XA_DB_FLAVOR == "POSTGRES":
 		#POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		#POSTGRES_CONNECTOR_JAR='/usr/share/java/postgresql.jar'
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
-		xa_db_version_file = os.path.join(os.getcwd(),postgres_dbversion_catalog)
-		xa_db_core_file = os.path.join(os.getcwd(),postgres_core_file)
-		xa_patch_file = os.path.join(os.getcwd(),postgres_patches)
+		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME,postgres_dbversion_catalog)
+		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME,postgres_core_file)
+		xa_patch_file = os.path.join(RANGER_ADMIN_HOME,postgres_patches)
 
 	elif XA_DB_FLAVOR == "SQLSERVER":
 		#SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		#SQLSERVER_CONNECTOR_JAR='/usr/share/java/sqljdbc4-2.0.jar'
 		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
-		xa_db_version_file = os.path.join(os.getcwd(),sqlserver_dbversion_catalog)
-		xa_db_core_file = os.path.join(os.getcwd(),sqlserver_core_file)
-		xa_patch_file = os.path.join(os.getcwd(),sqlserver_patches)
+		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME,sqlserver_dbversion_catalog)
+		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME,sqlserver_core_file)
+		xa_patch_file = os.path.join(RANGER_ADMIN_HOME,sqlserver_patches)
 	else:
 		log("[E] ---------- NO SUCH SUPPORTED DB FLAVOUR.. ----------", "error")
 		sys.exit(1)
@@ -1332,7 +1343,7 @@ def main(argv):
 		#MYSQL_CONNECTOR_JAR='/usr/share/java/mysql-connector-java.jar'
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = MysqlConf(audit_db_host,MYSQL_CONNECTOR_JAR,JAVA_BIN)
-		audit_db_file = os.path.join(os.getcwd(),mysql_audit_file)
+		audit_db_file = os.path.join(RANGER_ADMIN_HOME,mysql_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "ORACLE":
 		#ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
@@ -1343,21 +1354,21 @@ def main(argv):
 		if os_name == "WINDOWS":
 			audit_db_root_user = audit_db_root_user
 		audit_sqlObj = OracleConf(audit_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN)
-		audit_db_file = os.path.join(os.getcwd(),oracle_audit_file)
+		audit_db_file = os.path.join(RANGER_ADMIN_HOME,oracle_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "POSTGRES":
 		#POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		#POSTGRES_CONNECTOR_JAR='/usr/share/java/postgresql.jar'
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = PostgresConf(audit_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
-		audit_db_file = os.path.join(os.getcwd(),postgres_audit_file)
+		audit_db_file = os.path.join(RANGER_ADMIN_HOME,postgres_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "SQLSERVER":
 		#SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		#SQLSERVER_CONNECTOR_JAR='/usr/share/java/sqljdbc4-2.0.jar'
 		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = SqlServerConf(audit_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
-		audit_db_file = os.path.join(os.getcwd(),sqlserver_audit_file)
+		audit_db_file = os.path.join(RANGER_ADMIN_HOME,sqlserver_audit_file)
 	else:
 		log("[E] ---------- NO SUCH SUPPORTED DB FLAVOUR.. ----------", "error")
 		sys.exit(1)

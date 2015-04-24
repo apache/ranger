@@ -295,8 +295,8 @@
 			<include>ranger-kms-initd</include>
 			<include>ranger-kms</include>
 			<include>setup.sh</include>
-      <include>install.properties</include>
-			<include>migrate-keystore-dbks.sh</include>
+            <include>install.properties</include>
+			<include>importJCEKSKeys.sh</include>
 		</includes>
 		<fileMode>544</fileMode>
 	</fileSet>

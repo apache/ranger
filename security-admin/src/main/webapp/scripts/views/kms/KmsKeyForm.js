@@ -84,7 +84,6 @@ define(function(require){
 			if(this.model.has('versions')){
 				this.fields.cipher.$el.show();
 				this.fields.length.$el.show();
-				this.fields.material.$el.show();
 				this.fields.description.editor.$el.attr('disabled',true);
 			}
 		},

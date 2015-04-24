@@ -35,18 +35,10 @@
                 <outputDirectory>/lib</outputDirectory>
                 <unpack>false</unpack>
                 <includes>
-                    <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
                     <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop-common.version}</include>
-                    <include>com.google.code.gson:gson</include>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
-                    <include>commons-collections:commons-collections</include>
-					<include>com.sun.jersey:jersey-bundle</include>
-                    <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                    <include>com.google.guava:guava:jar:${guava.version}</include>
-		    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponent.httpclient.version}</include>
-		    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponent.httpcore.version}</include>
 		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
 		    <include>org.noggit:noggit:jar:${noggit.version}</include>
                 </includes>
