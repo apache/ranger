@@ -51,6 +51,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 	private AtomicLong intervalDropCount   = new AtomicLong(0);
 	private long lastIntervalLogTime   = System.currentTimeMillis();
 	private int  intervalLogDurationMS = 60000;
+	private long lastFlushTime = System.currentTimeMillis();
 
 	public AsyncAuditProvider(String name, int maxQueueSize, int maxFlushInterval) {
 		LOG.info("AsyncAuditProvider(" + name + "): creating..");
@@ -139,6 +140,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 				if (event != null) {
 					super.log(event);
 				} else {
+					lastFlushTime = System.currentTimeMillis();
 					flush();
 				}
 			} catch (InterruptedException excp) {
@@ -149,6 +151,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		}
 
 		try {
+			lastFlushTime = System.currentTimeMillis();
 			flush();
 		} catch (Exception excp) {
 			LOG.error("AsyncAuditProvider.run()", excp);
@@ -174,21 +177,21 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		while(ret == null) {
 			logSummaryIfRequired();
 
-//			if (mMaxFlushInterval > 0 && isFlushPending()) {
-//				long timeTillNextFlush = getTimeTillNextFlush();
-//
-//				if (timeTillNextFlush <= 0) {
-//					break; // force flush
-//				}
-//
-//				ret = mQueue.poll(timeTillNextFlush, TimeUnit.MILLISECONDS);
-//			} else {
+			if (mMaxFlushInterval > 0 ) {
+				long timeTillNextFlush = getTimeTillNextFlush();
+
+				if (timeTillNextFlush <= 0) {
+					break; // force flush
+				}
+
+				ret = mQueue.poll(timeTillNextFlush, TimeUnit.MILLISECONDS);
+			} else {
 				// Let's wake up for summary logging
 				long waitTime = intervalLogDurationMS - (System.currentTimeMillis() - lastIntervalLogTime);
 				waitTime = waitTime <= 0 ? intervalLogDurationMS : waitTime;
 
 				ret = mQueue.poll(waitTime, TimeUnit.MILLISECONDS);
-//			}
+			}
 		}
 
 		if(ret != null) {
@@ -246,23 +249,23 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		LOG.debug("<== AsyncAuditProvider.waitToComplete()");
 	}
 
-//	private long getTimeTillNextFlush() {
-//		long timeTillNextFlush = mMaxFlushInterval;
-//
-//		if (mMaxFlushInterval > 0) {
-//			long lastFlushTime = getLastFlushTime();
-//
-//			if (lastFlushTime != 0) {
-//				long timeSinceLastFlush = System.currentTimeMillis()
-//						- lastFlushTime;
-//
-//				if (timeSinceLastFlush >= mMaxFlushInterval)
-//					timeTillNextFlush = 0;
-//				else
-//					timeTillNextFlush = mMaxFlushInterval - timeSinceLastFlush;
-//			}
-//		}
-//
-//		return timeTillNextFlush;
-//	}
+	private long getTimeTillNextFlush() {
+		long timeTillNextFlush = mMaxFlushInterval;
+
+		if (mMaxFlushInterval > 0) {
+
+			if (lastFlushTime != 0) {
+				long timeSinceLastFlush = System.currentTimeMillis()
+						- lastFlushTime;
+
+				if (timeSinceLastFlush >= mMaxFlushInterval) {
+					timeTillNextFlush = 0;
+				} else {
+					timeTillNextFlush = mMaxFlushInterval - timeSinceLastFlush;
+				}
+			}
+		}
+
+		return timeTillNextFlush;
+	}
 }
