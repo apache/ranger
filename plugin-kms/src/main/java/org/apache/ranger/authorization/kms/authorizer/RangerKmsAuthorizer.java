@@ -1,4 +1,3 @@
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -46,6 +45,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,7 +153,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		    }
 		    
 			if(plugin != null && ret) {				
-				RangerKMSAccessRequest request = new RangerKMSAccessRequest(rangerAccessType, ugi);
+				RangerKMSAccessRequest request = new RangerKMSAccessRequest("", rangerAccessType, ugi);
 				RangerAccessResult result = plugin.isAccessAllowed(request);
 				ret = result == null ? false : result.getIsAllowed();
 			}
@@ -164,18 +164,49 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
 			return ret;
 	  }
+	  
+	  public boolean hasAccess(Type type, UserGroupInformation ugi, String keyName) {
+		  if(LOG.isDebugEnabled()) {
+				LOG.debug("==> RangerKmsAuthorizer.hasAccess(" + type + ", " + ugi + " , "+keyName+")");
+			}
+
+			boolean ret = false;
+			RangerKMSPlugin plugin = kmsPlugin;
+			String rangerAccessType = getRangerAccessType(type);
+			AccessControlList blacklist = blacklistedAcls.get(type);
+		    ret = (blacklist == null) || !blacklist.isUserInList(ugi);
+		    if(!ret){
+		    	LOG.debug("Operation "+rangerAccessType+" blocked in the blacklist for user "+ugi.getUserName());
+		    }
+		    
+			if(plugin != null && ret) {				
+				RangerKMSAccessRequest request = new RangerKMSAccessRequest(keyName, rangerAccessType, ugi);
+				RangerAccessResult result = plugin.isAccessAllowed(request);
+				ret = result == null ? false : result.getIsAllowed();
+			}
+			
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerkmsAuthorizer.hasAccess(" + type + ", " + ugi +  " , "+keyName+ "): " + ret);
+			}
+
+			return ret;
+	  }
 
 	  @Override
 	  public void assertAccess(Type aclType, UserGroupInformation ugi, KMSOp operation, String key)
 	      throws AccessControlException {
-	    if (!KMSWebApp.getACLs().hasAccess(aclType, ugi)) {
-	      KMSWebApp.getUnauthorizedCallsMeter().mark();
-	      KMSWebApp.getKMSAudit().unauthorized(ugi, operation, key);
-	      throw new AuthorizationException(String.format(
-	          (key != null) ? UNAUTHORIZED_MSG_WITH_KEY
+		    if(LOG.isDebugEnabled()) {
+				LOG.debug("==> RangerKmsAuthorizer.assertAccess(" + key + ", " + ugi +", " + aclType + ")");
+			}
+		  	key = (key == null)?"":key;
+		  	if (!hasAccess(aclType, ugi, key)) {
+		  		KMSWebApp.getUnauthorizedCallsMeter().mark();
+		  		KMSWebApp.getKMSAudit().unauthorized(ugi, operation, key);
+		  		throw new AuthorizationException(String.format(
+		  				(key != null) ? UNAUTHORIZED_MSG_WITH_KEY
 	                        : UNAUTHORIZED_MSG_WITHOUT_KEY,
-	          ugi.getShortUserName(), operation, key));
-	    }
+	                        ugi.getShortUserName(), operation, key));
+		  	}
 	  }
 
 	  @Override
@@ -300,13 +331,13 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	}
 
 	class RangerKMSAccessRequest extends RangerAccessRequestImpl {
-		public RangerKMSAccessRequest(String accessType, UserGroupInformation ugi) {
-			super.setResource(new RangerKMSResource("kms"));
+		public RangerKMSAccessRequest(String keyName, String accessType, UserGroupInformation ugi) {
+			super.setResource(new RangerKMSResource(keyName));
 			super.setAccessType(accessType);
 			super.setUser(ugi.getShortUserName());
 			super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
 			super.setAccessTime(StringUtil.getUTCDate());
-			super.setClientIPAddress(getRemoteIp());
+			super.setClientIPAddress(getRemoteIp());			
 			super.setAction(accessType);
 		}
 		

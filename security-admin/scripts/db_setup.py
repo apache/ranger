@@ -953,7 +953,7 @@ class SqlServerConf(BaseDB):
 								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', now(), '%s@%s', now(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
 								ret = subprocess.call(query)
 							if ret == 0:
 								log("[I] java patch "+ className  +" applied", "info")

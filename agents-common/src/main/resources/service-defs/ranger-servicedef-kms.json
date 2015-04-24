@@ -9,9 +9,9 @@
 			"name": "keyname",
 			"type": "string",
 			"level": 1,
-			"mandatory": false,
+			"mandatory": true,
 			"lookupSupported": true,
-			"recursiveSupported": true,
+			"recursiveSupported": false,
 			"label": "Key Name",
 			"description": "Key Name"
 		}
