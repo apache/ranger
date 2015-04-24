@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 
@@ -98,16 +99,13 @@ public class JKS2RangerUtil {
 					try {
 						in.close();
 					} catch (Exception e) {
-						System.err.println("ERROR:  Unable to close file stream for [" + keyStoreFileName + "]") ;
-						System.exit(1);
+						throw new RuntimeException("ERROR:  Unable to close file stream for [" + keyStoreFileName + "]", e) ;
 					} 
 				}
 			}
 		}
 		catch(Throwable t) {
-			System.err.println("Unable to import keys from [" + keyStoreFileName + "] due to exception :" + t ) ;
-			t.printStackTrace(); 
-			System.exit(1);
+			throw new RuntimeException("Unable to import keys from [" + keyStoreFileName + "] due to exception.", t) ;
 		}
 	}
 	
@@ -125,10 +123,16 @@ public class JKS2RangerUtil {
 	        if (l>0) {
 	            byte[] e=new byte[l];
 	            System.arraycopy(b,0, e, 0, l);
-	            ret = new String(e);
+	            ret = new String(e, Charset.defaultCharset());
 	        } 
 	    } else { 
-	        ret = new String(c.readPassword(prompt + " "));
+	    	char[] pwd = c.readPassword(prompt + " ") ;
+	    	if (pwd == null) {
+	    		ret = null ;
+	    	}
+	    	else {
+	    		ret = new String(pwd);
+	    	}
 	    }
 	    if (ret == null) {
 	    	ret = "" ;
