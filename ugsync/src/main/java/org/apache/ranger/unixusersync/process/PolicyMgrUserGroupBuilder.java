@@ -52,6 +52,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.GetXGroupListResponse;
 import org.apache.ranger.unixusersync.model.GetXUserGroupListResponse;
@@ -62,6 +63,7 @@ import org.apache.ranger.unixusersync.model.XUserGroupInfo;
 import org.apache.ranger.unixusersync.model.XUserInfo;
 import org.apache.ranger.unixusersync.model.UserGroupInfo;
 import org.apache.ranger.usergroupsync.UserGroupSink;
+import org.mortbay.log.Log;
 
 public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
@@ -266,6 +268,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	@Override
 	public void addOrUpdateUser(String userName, List<String> groups) {
+		
+		UserGroupInfo ugInfo		  = new UserGroupInfo();
 		XUserInfo user = userName2XUserInfoMap.get(userName) ;
 		
 		if (groups == null) {
@@ -301,12 +305,17 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					delGroups.add(group) ;
 				}
 			}
-			
+
  			for(String g : addGroups) {
  				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" ) ;
  			}
  			if (! isMockRun) {
- 			    addXUserGroupInfo(user, addGroups) ;
+ 				if (!addGroups.isEmpty()){
+ 					ugInfo.setXuserInfo(addXUserInfo(userName));
+ 				    ugInfo.setXgroupInfo(getXGroupInfoList(addGroups));
+ 				    addUserGroupInfo(ugInfo);
+ 				}
+ 				addXUserGroupInfo(user, addGroups) ;
  			}
  			
  			for(String g : delGroups) {
@@ -477,6 +486,38 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		return ret;	
 	}
 
+	private void addUserGroupInfo(UserGroupInfo usergroupInfo){
+
+		UserGroupInfo ret = null;
+
+		Client c = getClient();
+
+		WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
+
+		Gson gson = new GsonBuilder().create();
+
+		String jsonString = gson.toJson(usergroupInfo);
+		if ( LOG.isDebugEnabled() ) {
+		   LOG.debug("USER GROUP MAPPING" + jsonString);
+		}
+
+		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug("RESPONSE: [" + response + "]") ;
+		}
+		ret = gson.fromJson(response, UserGroupInfo.class);
+
+		if ( ret != null) {
+
+			XUserInfo xUserInfo = ret.getXuserInfo();
+			addUserToList(xUserInfo);
+
+			for(XGroupInfo xGroupInfo : ret.getXgroupInfo()) {
+				addGroupToList(xGroupInfo);
+				addUserGroupInfoToList(xUserInfo,xGroupInfo);
+			}
+		}
+	}
 
 	private XUserInfo addXUserInfo(String aUserName) {
 		
@@ -522,12 +563,23 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		usergroupInfo.setXgroupInfo(xGroupInfoList);
 	}
 	
+	private List<XGroupInfo> getXGroupInfoList(List<String> aGroupList) {
+
+		List<XGroupInfo> xGroupInfoList = new ArrayList<XGroupInfo>();
+		for(String groupName : aGroupList) {
+			XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
+			if (group == null) {
+				group = addXGroupInfo(groupName) ;
+			}
+			xGroupInfoList.add(group);
+		}
+		return xGroupInfoList;
+	}
 	
 
 	
    private XUserGroupInfo addXUserGroupInfo(XUserInfo aUserInfo, XGroupInfo aGroupInfo) {
 		
-	    XUserGroupInfo ret = null ;
 	   
 	    XUserGroupInfo ugInfo = new XUserGroupInfo() ;
 		
@@ -537,25 +589,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		
 		// ugInfo.setParentGroupId("1");
 		
-        Client c = getClient() ;
-	    
-	    WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_LINK_URI)) ;
-	    
-	    Gson gson = new GsonBuilder().create() ;
-
-	    String jsonString = gson.toJson(ugInfo) ;
-	    
-	    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
-	    
-	    LOG.debug("RESPONSE: [" + response + "]") ;
-
-	    ret = gson.fromJson(response, XUserGroupInfo.class) ;
-	    
-	    if (ret != null) {
-	    	addUserGroupToList(ret);
-	    }
-		
-		return ret ;
+        return ugInfo;
 	}
 
 	
