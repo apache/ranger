@@ -239,7 +239,8 @@ public class RangerPolicyValidator extends RangerValidator {
 		
 		boolean valid = true;
 		if (serviceDef != null) { // following checks can't be done meaningfully otherwise
-			valid = isValidResourceNames(policy, failures, serviceDef);
+//			TODO - disabled till a more robust fix for Hive resources definition can be found
+//			valid = isValidResourceNames(policy, failures, serviceDef);
 			Map<String, RangerPolicyResource> resourceMap = policy.getResources();
 			if (resourceMap != null) { // following checks can't be done meaningfully otherwise
 				valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
