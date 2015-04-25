@@ -538,6 +538,12 @@ setup_install_files(){
 	  chmod ug+rx /usr/bin/ranger-kms	
 	fi
 
+	if [ ! \( -e /usr/bin/ranger-kms-services.sh \) ]
+	then
+	  ln -sf ${INSTALL_DIR}/ranger-kms /usr/bin/ranger-kms-services.sh
+	  chmod ug+rx /usr/bin/ranger-kms-services.sh	
+	fi
+
 	if [ ! -d /var/log/ranger/kms ]
 	then
 		mkdir -p /var/log/ranger/kms
