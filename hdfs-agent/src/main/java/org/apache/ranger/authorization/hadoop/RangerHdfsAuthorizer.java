@@ -449,7 +449,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 	}
 
 	@Override
-	public void logAudit(RangerAccessResult result) {
+	public void processResult(RangerAccessResult result) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerHdfsAuditHandler.logAudit(" + result + ")");
 		}

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -53,9 +52,9 @@ public interface RangerPolicyEngine {
 	RangerAccessResult createAccessResult(RangerAccessRequest request);
 
 
-	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler);
+	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor);
 
-	Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAuditHandler auditHandler);
+	Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor);
 
 
 	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);

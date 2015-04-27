@@ -22,9 +22,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.plugin.audit.RangerAuditHandler;
+import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 
-public interface HbaseAuditHandler extends RangerAuditHandler {
+public interface HbaseAuditHandler extends RangerAccessResultProcessor {
 
 	List<AuthzAuditEvent> getCapturedEvents();
 	

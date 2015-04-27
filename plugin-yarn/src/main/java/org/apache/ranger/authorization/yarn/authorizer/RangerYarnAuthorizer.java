@@ -185,7 +185,7 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 				}
 
 				try {
-					plugin.grantAccess(request, plugin.getDefaultAuditHandler());
+					plugin.grantAccess(request, plugin.getResultProcessor());
 				} catch(Exception excp) {
 					LOG.error("grantAccess(" + request + ") failed", excp);
 				}
@@ -242,7 +242,7 @@ class RangerYarnPlugin extends RangerBasePlugin {
 
 		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 
-		super.setDefaultAuditHandler(auditHandler);
+		super.setResultProcessor(auditHandler);
 	}
 }
 

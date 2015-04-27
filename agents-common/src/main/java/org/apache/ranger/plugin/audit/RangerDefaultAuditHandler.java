@@ -32,9 +32,10 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 
 
-public class RangerDefaultAuditHandler implements RangerAuditHandler {
+public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
 
 
@@ -42,9 +43,9 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 	}
 
 	@Override
-	public void logAudit(RangerAccessResult result) {
+	public void processResult(RangerAccessResult result) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.logAudit(" + result + ")");
+			LOG.debug("==> RangerDefaultAuditHandler.processResult(" + result + ")");
 		}
 
 		AuthzAuditEvent event = getAuthzEvents(result);
@@ -52,14 +53,14 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 		logAuthzAudit(event);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.logAudit(" + result + ")");
+			LOG.debug("<== RangerDefaultAuditHandler.processResult(" + result + ")");
 		}
 	}
 
 	@Override
-	public void logAudit(Collection<RangerAccessResult> results) {
+	public void processResults(Collection<RangerAccessResult> results) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.logAudit(" + results + ")");
+			LOG.debug("==> RangerDefaultAuditHandler.processResults(" + results + ")");
 		}
 
 		Collection<AuthzAuditEvent> events = getAuthzEvents(results);
@@ -67,7 +68,7 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 		logAuthzAudits(events);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.logAudit(" + results + ")");
+			LOG.debug("<== RangerDefaultAuditHandler.processResults(" + results + ")");
 		}
 	}
 

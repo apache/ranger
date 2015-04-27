@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -98,15 +97,15 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler) {
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + request + ")");
 		}
 
 		RangerAccessResult ret = isAccessAllowedNoAudit(request);
 
-		if(auditHandler != null) {
-			auditHandler.logAudit(ret);
+		if(resultProcessor != null) {
+			resultProcessor.processResult(ret);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -117,7 +116,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAuditHandler auditHandler) {
+	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + requests + ")");
 		}
@@ -132,8 +131,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		if(auditHandler != null) {
-			auditHandler.logAudit(ret);
+		if(resultProcessor != null) {
+			resultProcessor.processResults(ret);
 		}
 
 		if(LOG.isDebugEnabled()) {

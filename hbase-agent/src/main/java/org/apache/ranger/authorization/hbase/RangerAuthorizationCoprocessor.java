@@ -96,8 +96,8 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 
@@ -1012,7 +1012,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				RangerHBasePlugin plugin = hbasePlugin;
 
 				if(plugin != null) {
-					RangerAuditHandler auditHandler = new RangerDefaultAuditHandler();
+					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 					plugin.grantAccess(grData, auditHandler);
 
@@ -1051,7 +1051,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				RangerHBasePlugin plugin = hbasePlugin;
 
 				if(plugin != null) {
-					RangerAuditHandler auditHandler = new RangerDefaultAuditHandler();
+					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 					plugin.revokeAccess(grData, auditHandler);
 

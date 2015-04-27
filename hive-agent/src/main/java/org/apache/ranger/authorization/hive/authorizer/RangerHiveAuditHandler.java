@@ -130,7 +130,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	}
 	
 	@Override
-	public void logAudit(RangerAccessResult result) {
+	public void processResult(RangerAccessResult result) {
 		if(! result.getIsAudited()) {
 			return;
 		}
@@ -143,7 +143,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	 * To ensure this, RangerHiveAuthorizer should call isAccessAllowed(Collection<requests>) only for this condition
 	 */
 	@Override
-	public void logAudit(Collection<RangerAccessResult> results) {
+	public void processResults(Collection<RangerAccessResult> results) {
 		List<AuthzAuditEvent> auditEvents = createAuditEvents(results);
 		for(AuthzAuditEvent auditEvent : auditEvents) {
 			addAuthzAuditEvent(auditEvent);

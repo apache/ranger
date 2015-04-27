@@ -48,7 +48,7 @@ public class StormRangerPlugin extends RangerBasePlugin {
 			// mandatory call to base plugin
 			super.init();
 			// One time call to register the audit hander with the policy engine.
-			super.setDefaultAuditHandler(new RangerDefaultAuditHandler());
+			super.setResultProcessor(new RangerDefaultAuditHandler());
 			// this needed to set things right in the nimbus process
 			if (KerberosName.getRules() == null) {
 				KerberosName.setRules("DEFAULT") ;

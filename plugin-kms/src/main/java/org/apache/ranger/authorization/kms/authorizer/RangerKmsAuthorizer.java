@@ -318,7 +318,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
 			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 
-			super.setDefaultAuditHandler(auditHandler);
+			super.setResultProcessor(auditHandler);
 		}
 	}
 

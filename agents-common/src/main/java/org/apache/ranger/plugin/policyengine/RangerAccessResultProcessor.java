@@ -17,15 +17,13 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.audit;
+package org.apache.ranger.plugin.policyengine;
 
 import java.util.Collection;
 
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
+public interface RangerAccessResultProcessor {
+	void processResult(RangerAccessResult result);
 
-public interface RangerAuditHandler {
-	void logAudit(RangerAccessResult result);
-
-	void logAudit(Collection<RangerAccessResult> results);
+	void processResults(Collection<RangerAccessResult> results);
 }

@@ -29,12 +29,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.audit.RangerAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
@@ -54,7 +54,7 @@ public class RangerBasePlugin {
 	private PolicyRefresher           refresher    = null;
 	private RangerPolicyEngine        policyEngine = null;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-	private RangerAuditHandler        defaultAuditHandler = null;
+	private RangerAccessResultProcessor resultProcessor = null;
 
 
 	public RangerBasePlugin(String serviceType, String appId) {
@@ -128,41 +128,41 @@ public class RangerBasePlugin {
 		}
 	}
 
-	public void setDefaultAuditHandler(RangerAuditHandler auditHandler) {
-		this.defaultAuditHandler = auditHandler;
+	public void setResultProcessor(RangerAccessResultProcessor resultProcessor) {
+		this.resultProcessor = resultProcessor;
 	}
 
-	public RangerAuditHandler getDefaultAuditHandler() {
-		return this.defaultAuditHandler;
+	public RangerAccessResultProcessor getResultProcessor() {
+		return this.resultProcessor;
 	}
 
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
-		return isAccessAllowed(request, defaultAuditHandler);
+		return isAccessAllowed(request, resultProcessor);
 	}
 
 	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests) {
-		return isAccessAllowed(requests, defaultAuditHandler);
+		return isAccessAllowed(requests, resultProcessor);
 	}
 
-	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAuditHandler auditHandler) {
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
 			enrichRequest(request, policyEngine);
 
-			return policyEngine.isAccessAllowed(request, auditHandler);
+			return policyEngine.isAccessAllowed(request, resultProcessor);
 		}
 
 		return null;
 	}
 
-	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAuditHandler auditHandler) {
+	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
 			enrichRequests(requests, policyEngine);
 
-			return policyEngine.isAccessAllowed(requests, auditHandler);
+			return policyEngine.isAccessAllowed(requests, resultProcessor);
 		}
 
 		return null;
@@ -178,7 +178,7 @@ public class RangerBasePlugin {
 		return null;
 	}
 
-	public void grantAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) throws Exception {
+	public void grantAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
@@ -196,7 +196,7 @@ public class RangerBasePlugin {
 
 			isSuccess = true;
 		} finally {
-			auditGrantRevoke(request, "grant", isSuccess, auditHandler);
+			auditGrantRevoke(request, "grant", isSuccess, resultProcessor);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -204,7 +204,7 @@ public class RangerBasePlugin {
 		}
 	}
 
-	public void revokeAccess(GrantRevokeRequest request, RangerAuditHandler auditHandler) throws Exception {
+	public void revokeAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.revokeAccess(" + request + ")");
 		}
@@ -222,7 +222,7 @@ public class RangerBasePlugin {
 
 			isSuccess = true;
 		} finally {
-			auditGrantRevoke(request, "revoke", isSuccess, auditHandler);
+			auditGrantRevoke(request, "revoke", isSuccess, resultProcessor);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -301,10 +301,10 @@ public class RangerBasePlugin {
 		}
 	}
 
-	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAuditHandler auditHandler) {
+	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
-		if(request != null && auditHandler != null && policyEngine != null) {
+		if(request != null && resultProcessor != null && policyEngine != null) {
 			RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
 	
 			accessRequest.setResource(new RangerAccessResourceImpl(request.getResource()));
@@ -323,7 +323,7 @@ public class RangerBasePlugin {
 					accessResult.setPolicyId(-1);
 				}
 
-				auditHandler.logAudit(accessResult);
+				resultProcessor.processResult(accessResult);
 			}
 		}
 	}
