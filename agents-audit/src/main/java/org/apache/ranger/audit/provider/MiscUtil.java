@@ -369,9 +369,11 @@ public class MiscUtil {
 	 */
 	public static List<String> toArray(String destListStr, String delim) {
 		List<String> list = new ArrayList<String>();
-		StringTokenizer tokenizer = new StringTokenizer(destListStr, delim);
-		while (tokenizer.hasMoreTokens()) {
-			list.add(tokenizer.nextToken());
+		if (destListStr != null && !destListStr.isEmpty()) {
+			StringTokenizer tokenizer = new StringTokenizer(destListStr, delim);
+			while (tokenizer.hasMoreTokens()) {
+				list.add(tokenizer.nextToken());
+			}
 		}
 		return list;
 	}

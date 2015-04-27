@@ -208,7 +208,7 @@ public class AuditSummaryQueue extends AuditQueue implements Runnable {
 					boolean ret = consumer.log(auditSummary.event);
 					if (!ret) {
 						// We need to drop this event
-						logFailedEvent(auditSummary.event, null);
+						logFailedEvent(auditSummary.event);
 					}
 				}
 				summaryMap.clear();

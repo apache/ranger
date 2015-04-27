@@ -294,7 +294,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 						isDestActive = false;
 					} else {
 						// We need to drop this event
-						logFailedEvent(localBatchBuffer, null);
+						logFailedEvent(localBatchBuffer);
 					}
 				} else {
 					isDestActive = true;

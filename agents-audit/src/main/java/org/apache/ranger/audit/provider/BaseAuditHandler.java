@@ -136,14 +136,11 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	 */
 	@Override
 	public boolean logJSON(Collection<String> events) {
-		boolean ret = true;
+		List<AuditEventBase> eventList = new ArrayList<AuditEventBase>();
 		for (String event : events) {
-			ret = logJSON(event);
-			if (!ret) {
-				break;
-			}
+			eventList.add(MiscUtil.fromJson(event, AuthzAuditEvent.class));
 		}
-		return ret;
+		return log(eventList);
 	}
 
 	public void setName(String name) {
@@ -153,10 +150,6 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	@Override
 	public String getName() {
 		return providerName;
-	}
-
-	public void logFailedEvent(AuditEventBase event) {
-		logFailedEvent(event, null);
 	}
 
 	public void logError(String msg) {
@@ -198,6 +191,10 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			return String.format("%03d milli-seconds", mSeconds);
 	}
 
+	public void logFailedEvent(AuditEventBase event) {
+		logFailedEvent(event, "");
+	}
+
 	public void logFailedEvent(AuditEventBase event, Throwable excp) {
 		long now = System.currentTimeMillis();
 
@@ -228,9 +225,44 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		}
 	}
 
+	public void logFailedEvent(Collection<AuditEventBase> events) {
+		logFailedEvent(events, "");
+	}
+
 	public void logFailedEvent(Collection<AuditEventBase> events, Throwable excp) {
 		for (AuditEventBase event : events) {
 			logFailedEvent(event, excp);
+		}
+	}
+
+	public void logFailedEvent(AuditEventBase event, String message) {
+		long now = System.currentTimeMillis();
+
+		long timeSinceLastReport = now - mFailedLogLastReportTime.get();
+		long countSinceLastReport = mFailedLogCountSinceLastReport
+				.incrementAndGet();
+		long countLifeTime = mFailedLogCountLifeTime.incrementAndGet();
+
+		if (timeSinceLastReport >= mLogFailureReportMinIntervalInMs) {
+			mFailedLogLastReportTime.set(now);
+			mFailedLogCountSinceLastReport.set(0);
+
+			LOG.warn("failed to log audit event: " + MiscUtil.stringify(event)
+					+ ", errorMessage=" + message);
+
+			if (countLifeTime > 1) { // no stats to print for the 1st failure
+				LOG.warn("Log failure count: " + countSinceLastReport
+						+ " in past "
+						+ formatIntervalForLog(timeSinceLastReport) + "; "
+						+ countLifeTime + " during process lifetime");
+			}
+		}
+	}
+
+	public void logFailedEvent(Collection<AuditEventBase> events,
+			String errorMessage) {
+		for (AuditEventBase event : events) {
+			logFailedEvent(event, errorMessage);
 		}
 	}
 
@@ -267,5 +299,4 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		}
 	}
 
-	
 }

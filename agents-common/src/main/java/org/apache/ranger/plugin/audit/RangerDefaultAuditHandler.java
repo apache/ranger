@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -151,6 +152,17 @@ public class RangerDefaultAuditHandler implements RangerAuditHandler {
 		}
 
 		if(auditEvent != null) {
+			if (auditEvent.getAgentHostname() == null || auditEvent.getAgentHostname().isEmpty()) {
+				auditEvent.setAgentHostname(MiscUtil.getHostname());
+			}
+
+			if (auditEvent.getLogType() == null || auditEvent.getLogType().isEmpty()) {
+				auditEvent.setLogType("RangerAudit");
+			}
+
+			if (auditEvent.getEventId() == null || auditEvent.getEventId().isEmpty()) {
+				auditEvent.setEventId(MiscUtil.generateUniqueId());
+			}
 			AuditProviderFactory.getAuditProvider().log(auditEvent);
 		}
 

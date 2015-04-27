@@ -213,7 +213,10 @@ public class AuditFileSpool implements Runnable {
 					fileNamePrefix = queueProvider.getName() + "_"
 							+ consumerProvider.getName();
 				}
-				indexFileName = "index_" + fileNamePrefix + ".json";
+				indexFileName = "index_" + fileNamePrefix + "_" + "%app-type%"
+						+ ".json";
+				indexFileName = MiscUtil.replaceTokens(indexFileName,
+						System.currentTimeMillis());
 			}
 
 			indexFile = new File(logFolder, indexFileName);
@@ -607,6 +610,11 @@ public class AuditFileSpool implements Runnable {
 			}
 		}
 		saveIndexFile();
+		// If there are no more files in the index, then let's assume the
+		// destination is now available
+		if (indexRecords.size() == 0) {
+			isPending = false;
+		}
 	}
 
 	synchronized void saveIndexFile() throws FileNotFoundException, IOException {
@@ -743,6 +751,7 @@ public class AuditFileSpool implements Runnable {
 	 */
 	@Override
 	public void run() {
+		// boolean isResumed = false;
 		while (true) {
 			try {
 				// Let's pause between each iteration
@@ -778,7 +787,6 @@ public class AuditFileSpool implements Runnable {
 						int startLine = currentConsumerIndexRecord.linePosition;
 						String line;
 						int currLine = 0;
-						boolean isResumed = false;
 						List<String> lines = new ArrayList<String>();
 						while ((line = br.readLine()) != null) {
 							currLine++;
@@ -791,15 +799,6 @@ public class AuditFileSpool implements Runnable {
 										currentConsumerIndexRecord, currLine);
 								if (!ret) {
 									throw new Exception("Destination down");
-								} else {
-									if (!isResumed) {
-										logger.info("Started writing to destination. file="
-												+ currentConsumerIndexRecord.filePath
-												+ ", queueName="
-												+ queueProvider.getName()
-												+ ", consumer="
-												+ consumerProvider.getName());
-									}
 								}
 								lines.clear();
 							}
@@ -809,15 +808,6 @@ public class AuditFileSpool implements Runnable {
 									currentConsumerIndexRecord, currLine);
 							if (!ret) {
 								throw new Exception("Destination down");
-							} else {
-								if (!isResumed) {
-									logger.info("Started writing to destination. file="
-											+ currentConsumerIndexRecord.filePath
-											+ ", queueName="
-											+ queueProvider.getName()
-											+ ", consumer="
-											+ consumerProvider.getName());
-								}
 							}
 							lines.clear();
 						}

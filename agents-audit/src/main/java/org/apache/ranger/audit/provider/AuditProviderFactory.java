@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.FileAuditDestination;
 import org.apache.ranger.audit.destination.HDFSAuditDestination;
+import org.apache.ranger.audit.destination.SolrAuditDestination;
 import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
 import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
 import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
@@ -142,6 +143,7 @@ public class AuditProviderFactory {
 			}
 			String value = props.getProperty(propName);
 			if (value.equalsIgnoreCase("enable")
+					|| value.equalsIgnoreCase("enabled")
 					|| value.equalsIgnoreCase("true")) {
 				destNameList.add(destName);
 				LOG.info("Audit destination " + propName + " is set to "
@@ -409,7 +411,7 @@ public class AuditProviderFactory {
 			} else if (providerName.equalsIgnoreCase("hdfs")) {
 				provider = new HDFSAuditDestination();
 			} else if (providerName.equals("solr")) {
-				provider = new SolrAuditProvider();
+				provider = new SolrAuditDestination();
 			} else if (providerName.equals("kafka")) {
 				provider = new KafkaAuditProvider();
 			} else if (providerName.equals("db")) {
