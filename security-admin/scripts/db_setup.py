@@ -129,6 +129,21 @@ class BaseDB(object):
 	def auditdb_operation(self, xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, file_name, TABLE_NAME):
 		log("[I] ----------------- Audit DB operations ------------", "info")
 
+	def apply_auditdb_patches(self, xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, PATCHES_PATH, TABLE_NAME):
+		#first get all patches and then apply each patch
+		if not os.path.exists(PATCHES_PATH):
+			log("[I] No patches to apply!","info")
+		else:
+			# files: coming from os.listdir() sorted alphabetically, thus not numerically
+			files = os.listdir(PATCHES_PATH)
+			if files:
+				sorted_files = sorted(files, key=lambda x: str(x.split('.')[0]))
+				for filename in sorted_files:
+					currentPatch = os.path.join(PATCHES_PATH, filename)
+					self.import_auditdb_patches(xa_sqlObj, xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, currentPatch, TABLE_NAME)
+			else:
+				log("[I] No patches to apply!","info")
+
 	def execute_java_patches(xa_db_host, db_user, db_password, db_name):
 		log("[I] ----------------- Executing java patches ------------", "info")
 
@@ -238,8 +253,49 @@ class MysqlConf(BaseDB):
 				else:
 					log("[E] "+name + " import failed!","error")
 					sys.exit(1)
+
+	def import_auditdb_patches(self, xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, file_name, TABLE_NAME):
+		log("[I] --------- Checking XA_ACCESS_AUDIT table to apply audit db patches --------- ","info")
+		output = self.check_table(audit_db_name, db_user, db_password, TABLE_NAME)
+		if output == True:
+			name = basename(file_name)
+			if os.path.isfile(file_name):
+				version = name.split('-')[0]
+				log("[I] Executing patch on  " + audit_db_name + " from file: " + name,"info")
+				get_cmd1 = xa_sqlObj.get_jisql_cmd(db_user, db_password, db_name)
+				if os_name == "LINUX":
+					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				output = check_output(query)
+				if output.strip(version + " |"):
+					log("[I] Patch "+ name  +" is already applied" ,"info")
+				else:
+					get_cmd2 = self.get_jisql_cmd(db_user, db_password, audit_db_name)
+					if os_name == "LINUX":
+						query = get_cmd2 + " -input %s" %file_name
+						ret = subprocess.call(shlex.split(query))
+					elif os_name == "WINDOWS":
+						query = get_cmd2 + " -input %s -c ;" %file_name
+						ret = subprocess.call(query)
+					if ret == 0:
+						log("[I] "+name + " patch applied","info")
+						if os_name == "LINUX":
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), user(), now(), user()) ;\"" %(version)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), user(), now(), user()) ;\" -c ;" %(version)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log("[I] Patch version updated", "info")
+						else:
+							log("[E] Updating patch version failed", "error")
+							sys.exit(1)
+					else:
+						log("[E] "+name + " import failed!","error")
+						sys.exit(1)
 		else:
-			log("[I] Import " +name + " file not found","error")
+			log("[I] Table XA_ACCESS_AUDIT does not exists in " +audit_db_name,"error")
 			sys.exit(1)
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
@@ -405,9 +461,6 @@ class OracleConf(BaseDB):
 			else:
 				log("[E] "+name + " import failed!","error")
 				sys.exit(1)
-		else:
-			log("[E] Import " +name + " sql file not found","error")
-			sys.exit(1)
 
 	def import_db_patches(self, db_name, db_user, db_password, file_name):
 		if os.path.isfile(file_name):
@@ -446,9 +499,50 @@ class OracleConf(BaseDB):
 				else:
 					log("[E] "+name + " Import failed!","error")
 					sys.exit(1)
-		else:
-			log("[I] Patch file not found","error")
-			sys.exit(1)
+
+	def import_auditdb_patches(self, xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, file_name, TABLE_NAME):
+		log("[I] --------- Checking XA_ACCESS_AUDIT table to apply audit db patches --------- ","info")
+		output = self.check_table(db_name, db_user, db_password, TABLE_NAME)
+		if output == True:
+			if os.path.isfile(file_name):
+				name = basename(file_name)
+				version = name.split('-')[0]
+				log("[I] Executing patch on " + audit_db_name + " from file: " + name,"info")
+				get_cmd1 = xa_sqlObj.get_jisql_cmd(db_user, db_password)
+				if os_name == "LINUX":
+					query = get_cmd1 + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				output = check_output(query)
+				if output.strip(version +" |"):
+					log("[I] Patch "+ name  +" is already applied" ,"info")
+				else:
+					get_cmd2 = self.get_jisql_cmd(db_user, db_password)
+					if os_name == "LINUX":
+						query = get_cmd2 + " -input %s -c /" %file_name
+						ret = subprocess.call(shlex.split(query))
+					elif os_name == "WINDOWS":
+						query = get_cmd2 + " -input %s -c /" %file_name
+						ret = subprocess.call(query)
+					if ret == 0:
+						log("[I] "+name + " patch applied","info")
+						if os_name == "LINUX":
+							query = get_cmd1 + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s');\"" %(version, db_user, db_user)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd1 + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s');\" -c ;" %(version, db_user, db_user)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log("[I] Patch version updated", "info")
+						else:
+							log("[E] Updating patch version failed", "error")
+							sys.exit(1)
+					else:
+						log("[E] "+name + " Import failed!","error")
+						sys.exit(1)
+			else:
+				log("[I] Patch file not found","error")
+				sys.exit(1)
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
 		get_cmd = self.get_jisql_cmd(db_user ,db_password)
@@ -605,9 +699,6 @@ class PostgresConf(BaseDB):
 			else:
 				log("[E] "+name + " DB schema import failed!","error")
 				sys.exit(1)
-		else:
-			log("[E] DB schema file " + name+ " not found","error")
-			sys.exit(1)
 
 	def grant_audit_db_user(self, audit_db_name , db_user, audit_db_user, db_password, audit_db_password):
 		log("[I] Granting permission to " + audit_db_user, "info")
@@ -670,8 +761,49 @@ class PostgresConf(BaseDB):
 				else:
 					log("[E] "+name + " import failed!","error")
 					sys.exit(1)
+
+	def import_auditdb_patches(self, xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, file_name, TABLE_NAME):
+		log("[I] --------- Checking XA_ACCESS_AUDIT table to apply audit db patches --------- ","info")
+		output = self.check_table(audit_db_name, db_user, db_password, TABLE_NAME)
+		if output == True:
+			name = basename(file_name)
+			if os.path.isfile(file_name):
+				version = name.split('-')[0]
+				log("[I] Executing patch on " + audit_db_name + " from file: " + name,"info")
+				get_cmd1 = xa_sqlObj.get_jisql_cmd(db_user, db_password, db_name)
+				if os_name == "LINUX":
+					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				output = check_output(query)
+				if output.strip(version + " |"):
+					log("[I] Patch "+ name  +" is already applied" ,"info")
+				else:
+					get_cmd2 = self.get_jisql_cmd(db_user, db_password, audit_db_name)
+					if os_name == "LINUX":
+						query = get_cmd2 + " -input %s" %file_name
+						ret = subprocess.call(shlex.split(query))
+					elif os_name == "WINDOWS":
+						query = get_cmd2 + " -input %s -c ;" %file_name
+						ret = subprocess.call(query)
+					if ret == 0:
+						log("[I] "+name + " patch applied","info")
+						if os_name == "LINUX":
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), '%s@%s', now(), '%s@%s') ;\"" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), '%s@%s', now(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log("[I] Patch version updated", "info")
+						else:
+							log("[E] Updating patch version failed", "error")
+							sys.exit(1)
+					else:
+						log("[E] "+name + " import failed!","error")
+						sys.exit(1)
 		else:
-			log("[E] Import " +name + " file not found","error")
+			log("[I] Table XA_ACCESS_AUDIT does not exists in " +audit_db_name,"error")
 			sys.exit(1)
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
@@ -815,9 +947,6 @@ class SqlServerConf(BaseDB):
 			else:
 				log("[E] "+name + " DB Schema import failed!","error")
 				sys.exit(1)
-		else:
-			log("[I] DB Schema file " + name+ " not found","error")
-			sys.exit(1)
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
@@ -883,10 +1012,50 @@ class SqlServerConf(BaseDB):
 				else:
 					log("[E] "+name + " import failed!","error")
 					sys.exit(1)
-		else:
-			log("[E] Import " +name + " file not found","error")
-			sys.exit(1)
 
+	def import_auditdb_patches(self, xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, file_name, TABLE_NAME):
+		log("[I] --------- Checking XA_ACCESS_AUDIT table to apply audit db patches --------- ","info")
+		output = self.check_table(audit_db_name, db_user, db_password, TABLE_NAME)
+		if output == True:
+			name = basename(file_name)
+			if os.path.isfile(file_name):
+				version = name.split('-')[0]
+				log("[I] Executing patch on " + audit_db_name + " from file: " + name,"info")
+				get_cmd1 = xa_sqlObj.get_jisql_cmd(db_user, db_password, db_name)
+				if os_name == "LINUX":
+					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				output = check_output(query)
+				if output.strip(version + " |"):
+					log("[I] Patch "+ name  +" is already applied" ,"info")
+				else:
+					get_cmd2 = self.get_jisql_cmd(db_user, db_password, audit_db_name)
+					if os_name == "LINUX":
+						query = get_cmd2 + " -input %s" %file_name
+						ret = subprocess.call(shlex.split(query))
+					elif os_name == "WINDOWS":
+						query = get_cmd2 + " -input %s" %file_name
+						ret = subprocess.call(query)
+					if ret == 0:
+						log("[I] "+name + " patch applied","info")
+						if os_name == "LINUX":
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log("[I] Patch version updated", "info")
+						else:
+							log("[E] Updating patch version failed", "error")
+							sys.exit(1)
+					else:
+						log("[E] "+name + " import failed!","error")
+						sys.exit(1)
+		else:
+			log("[I] Table XA_ACCESS_AUDIT does not exists in " +audit_db_name,"error")
+			sys.exit(1)
 	def auditdb_operation(self, xa_db_host, audit_db_host, db_name, audit_db_name,db_user, audit_db_user, db_password, audit_db_password, file_name, TABLE_NAME):
 		log("[I] --------- Check admin user connection --------- ","info")
 		self.check_connection(audit_db_name, db_user, db_password)
@@ -1000,21 +1169,25 @@ def main(argv):
 	mysql_core_file = globalDict['mysql_core_file']
 	mysql_audit_file = globalDict['mysql_audit_file']
 	mysql_patches = os.path.join('db','mysql','patches')
+	mysql_auditdb_patches = os.path.join('db','mysql','patches','audit')
 
 	oracle_dbversion_catalog = os.path.join('db','oracle','create_dbversion_catalog.sql')
 	oracle_core_file = globalDict['oracle_core_file'] 
 	oracle_audit_file = globalDict['oracle_audit_file'] 
 	oracle_patches = os.path.join('db','oracle','patches')
+	oracle_auditdb_patches = os.path.join('db','oracle','patches','audit')
 
 	postgres_dbversion_catalog = os.path.join('db','postgres','create_dbversion_catalog.sql')
 	postgres_core_file = globalDict['postgres_core_file']
 	postgres_audit_file = globalDict['postgres_audit_file']
 	postgres_patches = os.path.join('db','postgres','patches')
+	postgres_auditdb_patches = os.path.join('db','postgres','patches','audit')
 
 	sqlserver_dbversion_catalog = os.path.join('db','sqlserver','create_dbversion_catalog.sql')
 	sqlserver_core_file = globalDict['sqlserver_core_file']
 	sqlserver_audit_file = globalDict['sqlserver_audit_file']
 	sqlserver_patches = os.path.join('db','sqlserver','patches')
+	sqlserver_auditdb_patches = os.path.join('db','sqlserver','patches','audit')
 
 	db_name = globalDict['db_name']
 	db_user = globalDict['db_user']
@@ -1034,6 +1207,7 @@ def main(argv):
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME , mysql_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME , mysql_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME ,mysql_patches)
+		audit_patch_file = os.path.join(RANGER_ADMIN_HOME ,mysql_auditdb_patches)
 		
 	elif XA_DB_FLAVOR == "ORACLE":
 		ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
@@ -1041,6 +1215,7 @@ def main(argv):
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME ,oracle_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME ,oracle_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME ,oracle_patches)
+		audit_patch_file = os.path.join(RANGER_ADMIN_HOME ,oracle_auditdb_patches)
 
 	elif XA_DB_FLAVOR == "POSTGRES":
 		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
@@ -1048,6 +1223,7 @@ def main(argv):
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME , postgres_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME , postgres_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME , postgres_patches)
+		audit_patch_file = os.path.join(RANGER_ADMIN_HOME ,postgres_auditdb_patches)
 
 	elif XA_DB_FLAVOR == "SQLSERVER":
 		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
@@ -1055,6 +1231,7 @@ def main(argv):
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME ,sqlserver_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME , sqlserver_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME , sqlserver_patches)
+		audit_patch_file = os.path.join(RANGER_ADMIN_HOME ,sqlserver_auditdb_patches)
 	else:
 		log("[E] --------- NO SUCH SUPPORTED DB FLAVOUR!! ---------", "error")
 		sys.exit(1)
@@ -1099,9 +1276,12 @@ def main(argv):
 		if output == False:
 			log("[I] --------- Creating version history table ---------","info")
 			xa_sqlObj.upgrade_db(db_name, db_user, db_password, xa_db_version_file)
-		log("[I] --------- Applying patches ---------","info")
+		log("[I] --------- Applying Ranger DB patches ---------","info")
 		xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
+		log("[I] --------- Starting Audit Operation ---------","info")
 		audit_sqlObj.auditdb_operation(xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_file, xa_access_audit)
+		log("[I] --------- Applying Audit DB patches ---------","info")
+		audit_sqlObj.apply_auditdb_patches(xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_patch_file, xa_access_audit)
 #	'''
 	if len(argv)>1:
 		for i in range(len(argv)):

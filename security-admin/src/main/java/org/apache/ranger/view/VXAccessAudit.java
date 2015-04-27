@@ -26,6 +26,7 @@
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
@@ -120,6 +121,12 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	 */
 	protected String resourceType;
 
+	protected long sequenceNumber;
+
+	protected long eventCount;
+
+	//event duration in ms
+	protected long eventDuration;
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -433,6 +440,30 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		return this.resourceType;
 	}
 
+	public long getSequenceNumber() {
+		return sequenceNumber;
+	}
+
+	public void setSequenceNumber(long sequenceNumber) {
+		this.sequenceNumber = sequenceNumber;
+	}
+
+	public long getEventCount() {
+		return eventCount;
+	}
+
+	public void setEventCount(long eventCount) {
+		this.eventCount = eventCount;
+	}
+
+	public long getEventDuration() {
+		return eventDuration;
+	}
+
+	public void setEventDuration(long eventDuration) {
+		this.eventDuration = eventDuration;
+	}
+
 	@Override
 	public int getMyClassType( ) {
 	    return AppConstants.CLASS_TYPE_XA_ACCESS_AUDIT;
@@ -463,6 +494,9 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "requestData={" + requestData + "} ";
 		str += "resourcePath={" + resourcePath + "} ";
 		str += "resourceType={" + resourceType + "} ";
+		str += "sequenceNumber={" + sequenceNumber + "}";
+		str += "eventCount={" + eventCount + "}";
+		str += "eventDuration={" + eventDuration + "}";
 		str += "}";
 		return str;
 	}

@@ -178,6 +178,8 @@ define(function(require) {
 					<th class="renderable cip"></th>\
 					<th class="renderable cip"> </th>\
 					<th class="renderable aip" > </th>\
+					<th class="renderable aip" > </th>\
+					<th class="renderable aip" > </th>\
 				</tr>');
 		},
 		renderDateFields : function(){
@@ -899,6 +901,22 @@ define(function(require) {
 					},
 					clientIP : {
 						label : 'Client IP',
+						cell: "string",
+						click : false,
+						drag : false,
+						sortable:false,
+						editable:false
+					},
+					eventCount : {
+						label : 'Event Count',
+						cell: "string",
+						click : false,
+						drag : false,
+						sortable:false,
+						editable:false
+					},
+					eventDuration : {
+						label : 'Event Duration(ms)',
 						cell: "string",
 						click : false,
 						drag : false,

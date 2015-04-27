@@ -60,6 +60,9 @@ public abstract class XAccessAuditServiceBase<T extends XXAccessAudit, V extends
 		mObj.setRequestData( vObj.getRequestData());
 		mObj.setResourcePath( vObj.getResourcePath());
 		mObj.setResourceType( vObj.getResourceType());
+		mObj.setSequenceNumber( vObj.getSequenceNumber());
+		mObj.setEventCount( vObj.getEventCount());
+		mObj.setEventDuration( vObj.getEventDuration());
 		return mObj;
 	}
 
@@ -84,6 +87,9 @@ public abstract class XAccessAuditServiceBase<T extends XXAccessAudit, V extends
 		vObj.setRequestData( mObj.getRequestData());
 		vObj.setResourcePath( mObj.getResourcePath());
 		vObj.setResourceType( mObj.getResourceType());
+		vObj.setSequenceNumber( mObj.getSequenceNumber());
+		vObj.setEventCount( mObj.getEventCount());
+		vObj.setEventDuration( mObj.getEventDuration());
 		return vObj;
 	}
 

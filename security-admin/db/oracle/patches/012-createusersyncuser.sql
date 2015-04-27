@@ -17,9 +17,9 @@ DECLARE
 	v_count number:=0;
 	loginID number:=0;
 	sql_stmt VARCHAR2(1000);
-	first_name VARCHAR2(10):='rangerusersync';
-	scr_name VARCHAR2(10):='rangerusersync';
-	login_name VARCHAR2(10):='rangerusersync';
+	first_name VARCHAR2(20):='rangerusersync';
+	scr_name VARCHAR2(20):='rangerusersync';
+	login_name VARCHAR2(20):='rangerusersync';
 	password VARCHAR2(50):='70b8374d3dfe0325aaa5002a688c7e3b';
 	user_role VARCHAR2(50):='ROLE_SYS_ADMIN';
 	email VARCHAR2(20):='rangerusersync';

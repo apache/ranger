@@ -118,6 +118,9 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 		mObj.setResourceType(vObj.getResourceType());
 		mObj.setClientIP(vObj.getClientIP());
 		mObj.setClientType(vObj.getClientType());
+		mObj.setSequenceNumber( vObj.getSequenceNumber());
+		mObj.setEventCount( vObj.getEventCount());
+		mObj.setEventDuration( vObj.getEventDuration());
 		return mObj;
 	}
 
@@ -139,6 +142,9 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 		vObj.setResourceType( mObj.getResourceType());
 		vObj.setClientIP( mObj.getClientIP());
 		vObj.setClientType( mObj.getClientType());
+		vObj.setSequenceNumber( mObj.getSequenceNumber());
+		vObj.setEventCount( mObj.getEventCount());
+		vObj.setEventDuration( mObj.getEventDuration());
 		return vObj;
 	}
 

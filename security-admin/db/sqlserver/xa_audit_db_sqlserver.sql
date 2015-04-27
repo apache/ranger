@@ -43,6 +43,9 @@ CREATE TABLE [dbo].[xa_access_audit](
 	[request_data] [varchar](4000) DEFAULT NULL NULL,
 	[resource_path] [varchar](4000) DEFAULT NULL NULL,
 	[resource_type] [varchar](255) DEFAULT NULL NULL,
+	[seq_num] [bigint] DEFAULT 0 NULL,
+	[event_count] [bigint] DEFAULT 1 NULL,
+	[event_dur_ms] [bigint] DEFAULT 1 NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[id] ASC

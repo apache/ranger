@@ -238,6 +238,18 @@ public class SolrAccessAuditsService {
 		if (value != null) {
 			accessAudit.setEventTime(solrUtil.toDate(value));
 		}
+		value = doc.getFieldValue("seq_num");
+		if (value != null) {
+			accessAudit.setSequenceNumber(solrUtil.toLong(value));
+		}
+		value = doc.getFieldValue("event_count");
+		if (value != null) {
+			accessAudit.setEventCount(solrUtil.toLong(value));
+		}
+		value = doc.getFieldValue("event_dur_ms");
+		if (value != null) {
+			accessAudit.setEventDuration(solrUtil.toLong(value));
+		}
 		return accessAudit;
 	}
 

@@ -240,6 +240,16 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 	@Column(name="RESOURCE_TYPE"   , length=255)
 	protected String resourceType;
 
+	@Column(name="SEQ_NUM")
+	protected long sequenceNumber;
+
+	@Column(name="EVENT_COUNT")
+	protected long eventCount;
+
+	//event duration in ms
+	@Column(name="EVENT_DUR_MS")
+	protected long eventDuration;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -559,6 +569,25 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 		return this.resourceType;
 	}
 
+
+	public long getSequenceNumber() {
+		return sequenceNumber;
+	}
+	public void setSequenceNumber(long sequenceNumber) {
+		this.sequenceNumber = sequenceNumber;
+	}
+	public long getEventCount() {
+		return eventCount;
+	}
+	public void setEventCount(long eventCount) {
+		this.eventCount = eventCount;
+	}
+	public long getEventDuration() {
+		return eventDuration;
+	}
+	public void setEventDuration(long eventDuration) {
+		this.eventDuration = eventDuration;
+	}
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -585,6 +614,9 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 		str += "requestData={" + requestData + "} ";
 		str += "resourcePath={" + resourcePath + "} ";
 		str += "resourceType={" + resourceType + "} ";
+		str += "sequenceNumber={" + sequenceNumber + "}";
+		str += "eventCount={" + eventCount + "}";
+		str += "eventDuration={" + eventDuration + "}";
 		str += "}";
 		return str;
 	}

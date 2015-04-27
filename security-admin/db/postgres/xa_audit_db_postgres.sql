@@ -40,6 +40,9 @@ action VARCHAR(2000) DEFAULT NULL NULL,
 request_data VARCHAR(4000) DEFAULT NULL NULL,
 resource_path VARCHAR(4000) DEFAULT NULL NULL,
 resource_type VARCHAR(255) DEFAULT NULL NULL,
+seq_num BIGINT DEFAULT '0' NULL,
+event_count BIGINT DEFAULT '1' NULL,
+event_dur_ms BIGINT DEFAULT '1' NULL,
 PRIMARY KEY (id)
 );
 CREATE INDEX xa_access_audit_added_by_id ON  xa_access_audit(added_by_id);
