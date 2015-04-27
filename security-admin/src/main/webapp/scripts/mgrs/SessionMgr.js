@@ -128,7 +128,9 @@ define(function(require){
 	SessionMgr.isSystemAdmin = function(){
 		return this.userInRole('ROLE_SYS_ADMIN') ? true : false;
 	};
-	
+	SessionMgr.isKeyAdmin = function(){
+		return this.userInRole('ROLE_KEY_ADMIN') ? true : false;
+	};
 	SessionMgr.isUser = function(){
 		var roles = this.getRoleInUserSchool();
 		return  $.inArray('ROLE_USER',roles) != -1  ? true  : false ;

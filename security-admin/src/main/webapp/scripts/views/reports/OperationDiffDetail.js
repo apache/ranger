@@ -353,10 +353,14 @@ define(function(require){
 						m.set('newValue',XAEnums.UserRoles.ROLE_USER.label)
 					else if(newRole == "ROLE_SYS_ADMIN")
 						m.set('newValue',XAEnums.UserRoles.ROLE_SYS_ADMIN.label)
+					else if(newRole == "ROLE_KEY_ADMIN")
+						m.set('newValue',XAEnums.UserRoles.ROLE_KEY_ADMIN.label)
 					if(prevRole == "ROLE_USER")
 						m.set('previousValue',XAEnums.UserRoles.ROLE_USER.label)
 					else if(prevRole == "ROLE_SYS_ADMIN")
 						m.set('previousValue',XAEnums.UserRoles.ROLE_SYS_ADMIN.label)
+					else if(prevRole == "ROLE_KEY_ADMIN")
+						m.set('previousValue',XAEnums.UserRoles.ROLE_KEY_ADMIN.label)
 				}else{
 					if(!m.has('attributeName'))
 						modelArr.push(m);

@@ -69,7 +69,6 @@ import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
-import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserGroupInfo;
 import org.apache.ranger.view.VXUserList;
@@ -317,6 +316,7 @@ public class XUserREST {
 				null);		
 		searchUtil.extractInt(request, searchCriteria, "userSource", "User Source");
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
+		searchUtil.extractInt(request, searchCriteria, "status", "User Status");
 		searchUtil.extractString(request, searchCriteria, "userRoleList", "User Role",
 				null);
 		return xUserMgr.searchXUsers(searchCriteria);
@@ -833,5 +833,12 @@ public class XUserREST {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xGroupPermissionService.sortFields);
 		return xUserMgr.getXGroupPermissionSearchCount(searchCriteria);
+	}
+
+	@PUT
+	@Path("/secure/users/activestatus")
+	@Produces({ "application/xml", "application/json" })
+	public void modifyUserActiveStatus(HashMap<Long, Integer> statusMap){
+		 xUserMgr.modifyUserActiveStatus(statusMap);
 	}
 }

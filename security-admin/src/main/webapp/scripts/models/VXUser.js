@@ -38,6 +38,7 @@ define(function(require){
 			_.extend(this, selectable);
 			this.bindErrorEvents();
 			this.toView();
+			this.toViewStatus();
 		},
 
 		toView : function(){
@@ -52,6 +53,18 @@ define(function(require){
 			this.set('isVisible', visible);
 		},
 		
+		toViewStatus : function(){
+			if(!_.isUndefined(this.get('status'))){
+				var status = (this.get('status') == XAEnums.ActiveStatus.STATUS_ENABLED.value);
+				this.set('status', status);
+			}
+		},
+
+		toServerStatus : function(){
+			var status = this.get('status') ? XAEnums.ActiveStatus.STATUS_ENABLED.value : XAEnums.ActiveStatus.STATUS_DISABLED.value;
+			this.set('status', status);
+		},
+
 		/** This models toString() */
 		toString : function(){
 			return this.get('name');

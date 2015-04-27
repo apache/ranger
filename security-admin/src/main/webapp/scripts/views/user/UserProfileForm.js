@@ -78,6 +78,8 @@ define(function(require){
 					if(!_.isUndefined(roleList) && roleList.length > 0){
 						if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_USER.value)
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_USER.value);
+						else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN.value)
+							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_KEY_ADMIN.value);
 						else
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_SYS_ADMIN.value);
 					}
@@ -120,6 +122,8 @@ define(function(require){
 				this.model.set('userRoleList',["ROLE_SYS_ADMIN"]);
 			}else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_USER.value){
 				this.model.set('userRoleList',["ROLE_USER"]);
+			}else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
+				this.model.set('userRoleList',["ROLE_KEY_ADMIN"]);
 			}
 		},
 		/** all post render plugin initialization */

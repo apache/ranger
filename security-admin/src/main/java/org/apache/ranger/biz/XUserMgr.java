@@ -285,14 +285,18 @@ public class XUserMgr extends XUserMgrBase {
 				insertMappingUserPermisson(vXPortalUser.getId(),
 						moduleNameId.get(RangerConstants.MODULE_AUDIT),
 						isCreate);
-				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_KMS), isCreate);
+				/*insertMappingUserPermisson(vXPortalUser.getId(),
+						moduleNameId.get(RangerConstants.MODULE_KMS),
+						isCreate);*/
 				/*insertMappingUserPermisson(vXPortalUser.getId(),
 						moduleNameId.get(RangerConstants.MODULE_PERMISSION),
 						isCreate);*/
 				insertMappingUserPermisson(vXPortalUser.getId(),
 						moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),
 						isCreate);
+			} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
+				insertMappingUserPermisson(vXPortalUser.getId(),
+						moduleNameId.get(RangerConstants.MODULE_KMS), isCreate);
 			}
 
 		}
@@ -968,4 +972,32 @@ public class XUserMgr extends XUserMgrBase {
 		xGroupPermissionService.deleteResource(id);
 	}
 
+	public void modifyUserActiveStatus(HashMap<Long, Integer> statusMap) {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		String currentUser=null;
+		if(session!=null){
+			currentUser=session.getLoginId();
+			if(currentUser==null || currentUser.trim().isEmpty()){
+				currentUser=null;
+			}
+		}
+		if(currentUser==null){
+			return;
+		}
+		Set<Map.Entry<Long, Integer>> entries = statusMap.entrySet();
+		for (Map.Entry<Long, Integer> entry : entries) {
+			if(entry!=null && entry.getKey()!=null && entry.getValue()!=null){
+				XXUser xUser = daoManager.getXXUser().getById(entry.getKey());
+				if(xUser!=null){
+					VXPortalUser vXPortalUser = userMgr.getUserProfileByLoginId(xUser.getName());
+					if(vXPortalUser!=null){
+						if(vXPortalUser.getLoginId()!=null && !vXPortalUser.getLoginId().equalsIgnoreCase(currentUser)){
+							vXPortalUser.setStatus(entry.getValue());
+							userMgr.updateUser(vXPortalUser);
+						}
+					}
+				}
+			}
+		}
+	}
 }

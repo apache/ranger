@@ -126,6 +126,7 @@ public class UserMgr {
 		DEFAULT_ROLE_LIST.add(RangerConstants.ROLE_USER);
 		VALID_ROLE_LIST.add(RangerConstants.ROLE_SYS_ADMIN);
 		VALID_ROLE_LIST.add(RangerConstants.ROLE_USER);
+		VALID_ROLE_LIST.add(RangerConstants.ROLE_KEY_ADMIN);
 	}
 
 	public UserMgr() {

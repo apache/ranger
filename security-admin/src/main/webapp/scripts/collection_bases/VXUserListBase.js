@@ -82,6 +82,18 @@ define(function(require){
 
 			return this.constructor.nonCrudOperation.call(this, url, 'PUT', options);
 		},
+
+		setStatus : function(postData , options){
+			var url = XAGlobals.baseURL  + 'xusers/secure/users/activestatus';
+
+			options = _.extend({
+				data : JSON.stringify(postData),
+				contentType : 'application/json',
+				dataType : 'json'
+			}, options);
+
+			return this.constructor.nonCrudOperation.call(this, url, 'PUT', options);
+		},
 	},{
 	/**
 	* Table Cols to be passed to Backgrid

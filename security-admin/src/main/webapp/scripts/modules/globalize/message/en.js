@@ -231,7 +231,8 @@ define(function(require) {
 				addMore						: 'Add More..',
 				stayOnPage					: 'Stay on this page',
 				leavePage					: 'Leave this page',
-				setVisibility               : 'Set Visibility' 
+				setVisibility               : 'Set Visibility',
+				setStatus               	: 'Set Status'
 				
 			},
 			// h1, h2, h3, fieldset, title

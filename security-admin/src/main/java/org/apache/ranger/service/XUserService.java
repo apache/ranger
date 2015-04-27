@@ -110,6 +110,10 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 		searchFields.add(new SearchField("isVisible", "obj.isVisible",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL ));
 
+		searchFields.add(new SearchField("status", "xXPortalUser.status",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,
+				"XXPortalUser xXPortalUser", "xXPortalUser.loginId = obj.name "));
+
 		
 		createdByUserId = new Long(PropertiesUtil.getIntProperty(
 				"xa.xuser.createdByUserId", 1));
