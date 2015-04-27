@@ -44,10 +44,7 @@ public class SolrAuditDestination extends AuditDestination {
 	public static final String PROP_SOLR_URLS = "urls";
 	public static final String PROP_SOLR_ZK = "zookeepers";
 
-	static final Object lock = new Object();
 	SolrClient solrClient = null;
-	List<String> solrURLs = new ArrayList<String>();
-	String zkHosts = null;
 
 	public SolrAuditDestination() {
 	}
@@ -56,44 +53,44 @@ public class SolrAuditDestination extends AuditDestination {
 	public void init(Properties props, String propPrefix) {
 		LOG.info("init() called");
 		super.init(props, propPrefix);
-
-		String urls = MiscUtil.getStringProperty(props, propPrefix + "."
-				+ PROP_SOLR_URLS);
-		if (urls != null && urls.equalsIgnoreCase("NONE")) {
-			urls = null;
-		}
-		solrURLs = MiscUtil.toArray(urls, ",");
-		zkHosts = MiscUtil.getStringProperty(props, propPrefix + "."
-				+ PROP_SOLR_ZK);
-		if (zkHosts != null && zkHosts.equalsIgnoreCase("NONE")) {
-			zkHosts = null;
-		}
 		connect();
 	}
 
-	void connect() {
+	synchronized void connect() {
 		if (solrClient == null) {
-			synchronized (lock) {
+			if (solrClient == null) {
+				String urls = MiscUtil.getStringProperty(props, propPrefix
+						+ "." + PROP_SOLR_URLS);
+				if (urls != null && urls.equalsIgnoreCase("NONE")) {
+					urls = null;
+				}
 
-				if (solrClient == null) {
-					try {
-						if (zkHosts != null && !zkHosts.isEmpty()) {
-							// Instantiate
-							solrClient = new CloudSolrClient(zkHosts);
-						} else if (solrURLs == null || !solrURLs.isEmpty()) {
-							LBHttpSolrClient lbSolrClient = new LBHttpSolrClient(
-									solrURLs.get(0));
-							lbSolrClient.setConnectionTimeout(1000);
+				List<String> solrURLs = new ArrayList<String>();
+				String zkHosts = null;
+				solrURLs = MiscUtil.toArray(urls, ",");
+				zkHosts = MiscUtil.getStringProperty(props, propPrefix + "."
+						+ PROP_SOLR_ZK);
+				if (zkHosts != null && zkHosts.equalsIgnoreCase("NONE")) {
+					zkHosts = null;
+				}
 
-							for (int i = 1; i < solrURLs.size(); i++) {
-								lbSolrClient.addSolrServer(solrURLs.get(i));
-							}
-							solrClient = lbSolrClient;
+				try {
+					if (zkHosts != null && !zkHosts.isEmpty()) {
+						// Instantiate
+						solrClient = new CloudSolrClient(zkHosts);
+					} else if (solrURLs != null && !solrURLs.isEmpty()) {
+						LBHttpSolrClient lbSolrClient = new LBHttpSolrClient(
+								solrURLs.get(0));
+						lbSolrClient.setConnectionTimeout(1000);
+
+						for (int i = 1; i < solrURLs.size(); i++) {
+							lbSolrClient.addSolrServer(solrURLs.get(i));
 						}
-					} catch (Throwable t) {
-						LOG.fatal("Can't connect to Solr server. URL="
-								+ solrURLs, t);
+						solrClient = lbSolrClient;
 					}
+				} catch (Throwable t) {
+					LOG.fatal("Can't connect to Solr server. URL=" + solrURLs,
+							t);
 				}
 			}
 		}
