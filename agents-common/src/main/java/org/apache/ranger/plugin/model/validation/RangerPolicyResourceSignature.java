@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.model.validation;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -137,7 +138,7 @@ public class RangerPolicyResourceSignature {
 			if (_policyResource != null) {
 				builder.append("values=");
 				if (_policyResource.getValues() != null) {
-					List<String> values = _policyResource.getValues();
+					List<String> values = new ArrayList<String>(_policyResource.getValues());
 					Collections.sort(values);
 					builder.append(values);
 				}
