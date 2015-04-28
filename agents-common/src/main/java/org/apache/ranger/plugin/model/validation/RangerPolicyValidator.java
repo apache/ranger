@@ -479,14 +479,18 @@ public class RangerPolicyValidator extends RangerValidator {
 		if (policyItem == null) {
 			LOG.debug("policy item was null!");
 		} else {
-			// access items collection can't be empty and should be otherwise valid
+			// access items collection can't be empty (unless delegated admin is true) and should be otherwise valid
 			if (CollectionUtils.isEmpty(policyItem.getAccesses())) {
-				failures.add(new ValidationFailureDetailsBuilder()
-					.field("policy item accesses")
-					.isMissing()
-					.becauseOf("policy items accesses collection was null")
-					.build());
-				valid = false;
+				if (!Boolean.TRUE.equals(policyItem.getDelegateAdmin())) {
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("policy item accesses")
+						.isMissing()
+						.becauseOf("policy items accesses collection was null")
+						.build());
+					valid = false;
+				} else {
+					LOG.debug("policy item collection was null but delegated admin is true. Ok");
+				}
 			} else {
 				valid = isValidItemAccesses(policyItem.getAccesses(), failures, serviceDef) && valid;
 			}

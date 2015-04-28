@@ -490,6 +490,18 @@ public class TestRangerPolicyValidator {
 	}
 	
 	@Test
+	public void test_isValidPolicyItem_happPath() {
+		// A policy item with no access is valid if it has delegated admin turned on and one user/group specified.
+		RangerPolicyItem policyItem = mock(RangerPolicyItem.class);
+		when(policyItem.getAccesses()).thenReturn(null);
+		when(policyItem.getDelegateAdmin()).thenReturn(true);
+		// create a non-empty user-list
+		List<String> users = Arrays.asList("user1");
+		when(policyItem.getUsers()).thenReturn(users);
+		_failures.clear(); assertTrue(_validator.isValidPolicyItem(policyItem, _failures, _serviceDef));
+		assertTrue(_failures.isEmpty());
+	}
+	@Test
 	public void test_isValidItemAccesses_happyPath() {
 		
 		// happy path
