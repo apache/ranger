@@ -38,9 +38,8 @@ public class StopEmbeddedServer extends EmbeddedServer {
 		
 		try {
 			
-			int shutdownPort = getIntConfig("service.shutdownPort", DEFAULT_SHUTDOWN_PORT ) ;
-			
-			String shutdownCommand = getConfig("service.shutdownCommand", DEFAULT_SHUTDOWN_COMMAND ) ;
+			int shutdownPort = getIntConfig("ranger.service.shutdown.port", DEFAULT_SHUTDOWN_PORT ) ;
+			String shutdownCommand = getConfig("ranger.service.shutdown.command", DEFAULT_SHUTDOWN_COMMAND ) ;
 			
 			Socket sock = new Socket(SHUTDOWN_HOSTNAME,shutdownPort) ;
 			
@@ -58,5 +57,4 @@ public class StopEmbeddedServer extends EmbeddedServer {
 		}
 	}
 	
-
 }

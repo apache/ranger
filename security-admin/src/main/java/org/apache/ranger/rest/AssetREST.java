@@ -512,7 +512,7 @@ public class AssetREST {
 			ipAddress = request.getRemoteAddr();
 		}
 
-		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
+		boolean httpEnabled = PropertiesUtil.getBooleanProperty("ranger.service.http.enabled",true);
 
 		RangerService      service  = serviceREST.getServiceByName(repository);
 		List<RangerPolicy> policies = serviceREST.getServicePolicies(repository, request).getPolicies();

@@ -22,7 +22,9 @@
  */
 package org.apache.ranger.common;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -38,6 +40,8 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 public class PropertiesUtil extends PropertyPlaceholderConfigurer {
     private static Map<String, String> propertiesMap = new HashMap<String, String>();
     private static Logger logger = Logger.getLogger(PropertiesUtil.class);
+    protected List<String> xmlPropertyConfigurer  = new ArrayList<String>();
+
     private PropertiesUtil() {
 
     }
@@ -46,7 +50,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
     protected void processProperties(
 	    ConfigurableListableBeanFactory beanFactory, Properties props)
 	    throws BeansException {
-    	
+
     // First let's add the system properties
 	Set<Object> keySet = System.getProperties().keySet();
 	for (Object key : keySet) {
@@ -54,43 +58,43 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	    propertiesMap.put(keyStr, System.getProperties()
 		    .getProperty(keyStr).trim());
 	}
-	
+
 	// Let's add our properties now
 	keySet = props.keySet();
 	for (Object key : keySet) {
 	    String keyStr = key.toString();
 	    propertiesMap.put(keyStr, props.getProperty(keyStr).trim());
 	}
-	
+
 	//update credential from keystore
-	if(propertiesMap!=null && propertiesMap.containsKey("xaDB.jdbc.credential.provider.path") && propertiesMap.containsKey("xaDB.jdbc.credential.alias")){	
-		String path=propertiesMap.get("xaDB.jdbc.credential.provider.path");
-		String alias=propertiesMap.get("xaDB.jdbc.credential.alias");
+	if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.jpa.jdbc.credential.alias")){
+		String path=propertiesMap.get("ranger.credential.provider.path");
+		String alias=propertiesMap.get("ranger.jpa.jdbc.credential.alias");
 		if(path!=null && alias!=null){
-			String xaDBPassword=CredentialReader.getDecryptedString(path.trim(),alias.trim());		
-			if(xaDBPassword!=null&& !xaDBPassword.trim().isEmpty() && 
+			String xaDBPassword=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+			if(xaDBPassword!=null&& !xaDBPassword.trim().isEmpty() &&
 					!xaDBPassword.trim().equalsIgnoreCase("none")){
-				propertiesMap.put("jdbc.password", xaDBPassword);
-				props.put("jdbc.password", xaDBPassword);
+				propertiesMap.put("ranger.jpa.jdbc.password", xaDBPassword);
+				props.put("ranger.jpa.jdbc.password", xaDBPassword);
 			}else{
-				logger.info("Credential keystore password not applied for XA DB; clear text password shall be applicable");				
+				logger.info("Credential keystore password not applied for XA DB; clear text password shall be applicable");
 			}
 		}
 	}
-	if(propertiesMap!=null && propertiesMap.containsKey("auditDB.jdbc.credential.provider.path") && propertiesMap.containsKey("auditDB.jdbc.credential.alias")){
-		String path=propertiesMap.get("auditDB.jdbc.credential.provider.path");
-		String alias=propertiesMap.get("auditDB.jdbc.credential.alias");
+	if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.jpa.audit.jdbc.credential.alias")){
+		String path=propertiesMap.get("ranger.credential.provider.path");
+		String alias=propertiesMap.get("ranger.jpa.audit.jdbc.credential.alias");
 		if(path!=null && alias!=null){
 			String auditDBPassword=CredentialReader.getDecryptedString(path.trim(), alias.trim());
-			if(auditDBPassword!=null&& !auditDBPassword.trim().isEmpty() && 
+			if(auditDBPassword!=null&& !auditDBPassword.trim().isEmpty() &&
 					!auditDBPassword.trim().equalsIgnoreCase("none")){
-				propertiesMap.put("auditDB.jdbc.password", auditDBPassword);
-				props.put("auditDB.jdbc.password", auditDBPassword);
+				propertiesMap.put("ranger.jpa.audit.jdbc.password", auditDBPassword);
+				props.put("ranger.jpa.audit.jdbc.password", auditDBPassword);
 			}else{
 				logger.info("Credential keystore password not applied for Audit DB; clear text password shall be applicable");
 			}
-		}		
-	}	
+		}
+	}
 	super.processProperties(beanFactory, props);
     }
 

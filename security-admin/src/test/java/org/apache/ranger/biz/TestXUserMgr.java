@@ -210,6 +210,7 @@ public class TestXUserMgr {
 	@Ignore("temp disable")
 	@Test
 	public void test11CreateXUser() {
+		setup();
 		VXUser vxUser = vxUser();
 		Collection<String> userRoleList = new ArrayList<String>();
 		userRoleList.add("test");
@@ -263,6 +264,7 @@ public class TestXUserMgr {
 
 	@Test
 	public void test12UpdateXUser() {
+		setup();
 		VXUser vxUser = vxUser();
 		Mockito.when(xUserService.updateResource(vxUser)).thenReturn(vxUser);
 

@@ -1,0 +1,165 @@
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+
+<configuration>
+<!-- # DB Info -->
+	<property>
+		<name>ranger.jpa.jdbc.driver</name>
+		<value>net.sf.log4jdbc.DriverSpy</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.jdbc.url</name>
+		<value>jdbc:log4jdbc:mysql://localhost/ranger</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.jdbc.user</name>
+		<value>rangeradmin</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.jdbc.password</name>
+		<value>rangeradmin</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.externalurl</name>
+		<value>http://localhost:6080</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.scheduler.enabled</name>
+		<value>true</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.solr.url</name>
+		<value>http://##solr_host##:6083/solr/ranger_audits</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.audit.source.type</name>
+		<value>db</value>
+		<description></description>
+	</property>
+<!-- # DB Info for audit_DB -->
+
+	<property>
+		<name>ranger.jpa.audit.jdbc.driver</name>
+		<value>net.sf.log4jdbc.DriverSpy</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.audit.jdbc.url</name>
+		<value>jdbc:log4jdbc:mysql://localhost/rangeraudit</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.audit.jdbc.user</name>
+		<value>rangerlogger</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.audit.jdbc.password</name>
+		<value>rangerlogger</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.service.http.enabled</name>
+		<value>true</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.authentication.method</name>
+		<value>NONE</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.ldap.url</name>
+		<value>ldap://</value>
+		<description></description>
+	</property>
+		<property>
+		<name>ranger.ldap.user.dnpattern</name>
+		<value>uid={0},ou=users,dc=xasecure,dc=net</value>
+		<description></description>
+	</property>
+		<property>
+		<name>ranger.ldap.group.searchbase</name>
+		<value>ou=groups,dc=xasecure,dc=net</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.ldap.group.searchfilter</name>
+		<value>(member=uid={0},ou=users,dc=xasecure,dc=net)</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.ldap.group.roleattribute</name>
+		<value>cn</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.ldap.default.role</name>
+		<value>ROLE_USER</value>
+	</property>
+	<property>
+		<name>ranger.ldap.ad.domain</name>
+		<value>freestone.local</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.ldap.ad.url</name>
+		<value></value>
+		<description>ldap://</description>
+	</property>
+
+	<property>
+		<name>ranger.service.https.attrib.ssl.enabled</name>
+		<value>false</value>
+	</property>
+
+	<property>
+		<name>ranger.service.https.attrib.keystore.keyalias</name>
+		<value>myKey</value>
+	</property>
+
+	<property>
+		<name>ranger.service.https.attrib.keystore.pass</name>
+		<value>ranger</value>
+	</property>
+
+	<property>
+		<name>ranger.service.host</name>
+		<value>localhost</value>
+	</property>
+
+	<property>
+		<name>ranger.service.http.port</name>
+		<value>6080</value>
+	</property>
+
+	<property>
+		<name>ranger.service.https.port</name>
+		<value>6182</value>
+	</property>
+
+	<property>
+		<name>ranger.service.https.attrib.keystore.file</name>
+		<value>/etc/ranger/admin/keys/server.jks</value>
+	</property>
+
+</configuration>

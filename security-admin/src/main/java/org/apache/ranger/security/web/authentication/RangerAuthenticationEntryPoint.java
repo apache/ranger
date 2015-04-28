@@ -47,8 +47,7 @@ public class RangerAuthenticationEntryPoint extends
 		LoginUrlAuthenticationEntryPoint {
 	public static final int SC_AUTHENTICATION_TIMEOUT = 419;
 
-	static Logger logger = Logger
-			.getLogger(RangerAuthenticationEntryPoint.class);
+	static Logger logger = Logger.getLogger(RangerAuthenticationEntryPoint.class);
 	static int ajaxReturnCode = -1;
 
 	@Autowired
@@ -64,8 +63,7 @@ public class RangerAuthenticationEntryPoint extends
 		}
 
 		if (ajaxReturnCode < 0) {
-			ajaxReturnCode = PropertiesUtil.getIntProperty(
-					"xa.ajax.auth.required.code", 401);
+		ajaxReturnCode = PropertiesUtil.getIntProperty("ranger.ajax.auth.required.code", 401);
 		}
 	}
 
@@ -79,12 +77,9 @@ public class RangerAuthenticationEntryPoint extends
 			logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 		}
 
-		String requestURL = (request.getRequestURL() != null) ? request
-				.getRequestURL().toString() : "";
-		String servletPath = PropertiesUtil.getProperty(
-				"xa.servlet.mapping.url.pattern", "service");
-		String reqServletPath = configUtil.getWebAppRootURL() + "/"
-				+ servletPath;
+		String requestURL = (request.getRequestURL() != null) ? request.getRequestURL().toString() : "";
+		String servletPath = PropertiesUtil.getProperty("ranger.servlet.mapping.url.pattern", "service");
+		String reqServletPath = configUtil.getWebAppRootURL() + "/" + servletPath;
 
 		response.setContentType("application/json;charset=UTF-8");
 		response.setHeader("Cache-Control", "no-cache");

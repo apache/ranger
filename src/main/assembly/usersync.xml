@@ -90,6 +90,7 @@
 		<directory>unixauthservice/scripts</directory>
 		<excludes>
 			<exclude>*.properties</exclude>
+			<exclude>initd</exclude>
 		</excludes>
 	</fileSet>
 	<fileSet>
@@ -126,4 +127,12 @@
 		<fileMode>444</fileMode>
         </fileSet>
   </fileSets>
+  <files>
+      <file>
+		<source>unixauthservice/scripts/initd</source>
+		<outputDirectory>/</outputDirectory>
+		<destName>ranger-usersync</destName>
+		<fileMode>755</fileMode>
+      </file>
+   </files>
 </assembly>

@@ -57,11 +57,8 @@ public class SearchUtil {
 	String defaultDateFormat="MM/dd/yyyy";
 
 	public SearchUtil() {
-		minInListLength = PropertiesUtil.getIntProperty(
-				"xa.db.min_inlist", minInListLength);
-		defaultDateFormat = PropertiesUtil.getProperty(
-				"xa.ui.defaultDateformat", defaultDateFormat);
-		
+		minInListLength = PropertiesUtil.getIntProperty("ranger.db.min_inlist", minInListLength);
+		defaultDateFormat = PropertiesUtil.getProperty("ranger.ui.defaultDateformat", defaultDateFormat);
 	}
 
 	@Deprecated

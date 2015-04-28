@@ -52,8 +52,7 @@ ExceptionMappingAuthenticationFailureHandler {
     public RangerAuthFailureHandler() {
 	super();
 	if (ajaxLoginfailurePage == null) {
-	    ajaxLoginfailurePage = PropertiesUtil.getProperty(
-		    "xa.ajax.auth.failure.page", "/ajax_failure.jsp");
+		ajaxLoginfailurePage = PropertiesUtil.getProperty("ranger.ajax.auth.failure.page", "/ajax_failure.jsp");
 	}
     }
 

@@ -13,14 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#LDAP|ACTIVE_DIRECTORY|UNIX|NONE
-authentication_method=NONE
-####
-xa_ldap_url=ldap://
-xa_ldap_userDNpattern=uid={0},ou=users,dc=xasecure,dc=net
-xa_ldap_groupSearchBase=ou=groups,dc=xasecure,dc=net
-xa_ldap_groupSearchFilter=(member=uid={0},ou=users,dc=xasecure,dc=net)
-xa_ldap_groupRoleAttribute=cn
-###
-xa_ldap_ad_domain=
-xa_ldap_ad_url=ldap://
+import sys
+import os
+from xml.etree import ElementTree as ET
+
+def write_properties_to_xml(xml_path, property_name='', property_value=''):
+	if(os.path.isfile(xml_path)):
+		xml = ET.parse(xml_path)
+		root = xml.getroot()
+		for child in root.findall('property'):
+			name = child.find("name").text.strip()
+			if name == property_name:
+				child.find("value").text = property_value
+		xml.write(xml_path)
+		return 0
+	else:
+		return -1
+
+
+
+if __name__ == '__main__':
+	if(len(sys.argv) > 1):
+		parameter_name = sys.argv[1] if len(sys.argv) > 1  else None
+		parameter_value = sys.argv[2] if len(sys.argv) > 2  else None
+		ranger_admin_site_xml_path = sys.argv[3] if len(sys.argv) > 3  else None
+		write_properties_to_xml(ranger_admin_site_xml_path,parameter_name,parameter_value)

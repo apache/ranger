@@ -15,7 +15,8 @@
   limitations under the License.
 -->
     <beans:bean id="ldapContextSource" class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
-        <beans:constructor-arg value="${xa_ldap_url}"/>
+        <!-- <beans:constructor-arg value="${xa_ldap_url}"/> -->
+        <beans:constructor-arg value="${ranger.ldap.url}"/>
         <!-- Set bind user values and uncomment below two lines, if your LDAP settings require this -->
         <!-- <beans:property name="userDn" value="***"/>
         <beans:property name="password" value="***"/> -->
@@ -28,7 +29,8 @@
                 <beans:constructor-arg ref="ldapContextSource"/>
                 <beans:property name="userDnPatterns">
                     <beans:list>
-                        <beans:value>${xa_ldap_userDNpattern}</beans:value>
+                        <!-- <beans:value>${xa_ldap_userDNpattern}</beans:value> -->
+                        <beans:value>${ranger.ldap.user.dnpattern}</beans:value>
                     </beans:list>
                 </beans:property>
             </beans:bean>
@@ -36,9 +38,12 @@
         <beans:constructor-arg>
             <beans:bean class="org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator">
                 <beans:constructor-arg ref="ldapContextSource"/>
-                <beans:constructor-arg value="${xa_ldap_groupSearchBase}"/>
+                <!-- <beans:constructor-arg value="${xa_ldap_groupSearchBase}"/>
                 <beans:property name="groupSearchFilter" value="${xa_ldap_groupSearchFilter}"/>
-                <beans:property name="groupRoleAttribute" value="${xa_ldap_groupRoleAttribute}"/>
+                <beans:property name="groupRoleAttribute" value="${xa_ldap_groupRoleAttribute}"/> -->
+                <beans:constructor-arg value="${ranger.ldap.group.searchbase}"/>
+                <beans:property name="groupSearchFilter" value="${ranger.ldap.group.searchfilter}"/>
+                <beans:property name="groupRoleAttribute" value="${ranger.ldap.group.roleattribute}"/>
             </beans:bean>
         </beans:constructor-arg>
     </beans:bean>

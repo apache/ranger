@@ -29,45 +29,54 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class UserGroupSyncConfig  {
 
-	public static final String CONFIG_FILE = "unixauthservice.properties" ;
-	
-	public static final String  UGSYNC_ENABLED_PROP = "usergroupSync.enabled" ;
-	
-	public static final String  UGSYNC_PM_URL_PROP = 	"usergroupSync.policymanager.baseURL" ;
-	
-	public static final String  UGSYNC_MIN_USERID_PROP  = 	"usergroupSync.unix.minUserId" ;
-	
-	public static final String  UGSYNC_MAX_RECORDS_PER_API_CALL_PROP  = 	"usergroupSync.policymanager.MaxRecordsPerAPICall" ;
+	public static final String CONFIG_FILE = "ranger-ugsync-site.xml" ;
 
-	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"usergroupSync.policymanager.mockRun" ;
+	public static final String DEFAULT_CONFIG_FILE = "ranger-ugsync-default-site.xml" ;
 	
-	public static final String UGSYNC_SOURCE_FILE_PROC =	"usergroupSync.filesource.file";
+	public static final String  UGSYNC_ENABLED_PROP = "ranger.usersync.enabled" ;
 	
-	public static final String UGSYNC_SOURCE_FILE_DELIMITER = "usergroupSync.filesource.text.delimiter";
+	public static final String  UGSYNC_PM_URL_PROP = 	"ranger.usersync.policymanager.baseURL" ;
 	
-	private static final String SSL_KEYSTORE_PATH_PARAM = "keyStore" ;
+	public static final String  UGSYNC_MIN_USERID_PROP  = 	"ranger.usersync.unix.minUserId" ;
+	
+	public static final String  UGSYNC_MAX_RECORDS_PER_API_CALL_PROP  = 	"ranger.usersync.policymanager.maxrecordsperapicall" ;
 
-	private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM = "keyStorePassword" ;
+	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"ranger.usersync.policymanager.mockrun" ;
 	
-	private static final String SSL_TRUSTSTORE_PATH_PARAM = "trustStore" ;
+	public static final String UGSYNC_SOURCE_FILE_PROC =	"ranger.usersync.filesource.file";
 	
-	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM = "trustStorePassword" ;
+	public static final String UGSYNC_SOURCE_FILE_DELIMITER = "ranger.usersync.filesource.text.delimiterer";
 	
-	private static final String UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM = "usergroupSync.sleepTimeInMillisBetweenSyncCycle" ;
+	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file" ;
+
+	private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.keystore.password" ;
+	
+	private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file" ;
+	
+	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.truststore.password" ;
+	
+	private static final String UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM = "ranger.usersync.sleeptimeinmillisbetweensynccycle" ;
 	
 	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE = 300000L ;
 	
 	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE = 21600000L ;
 
-	private static final String UGSYNC_SOURCE_CLASS_PARAM = "usergroupSync.source.impl.class";
+	private static final String UGSYNC_SOURCE_CLASS_PARAM = "ranger.usersync.source.impl.class";
 
-	private static final String UGSYNC_SINK_CLASS_PARAM = "usergroupSync.sink.impl.class";
+	private static final String UGSYNC_SINK_CLASS_PARAM = "ranger.usersync.sink.impl.class";
 
 	private static final String UGSYNC_SOURCE_CLASS = "org.apache.ranger.unixusersync.process.UnixUserGroupBuilder";
 
@@ -75,82 +84,82 @@ public class UserGroupSyncConfig  {
 
 	private static final String LGSYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
 	
-	private static final String LGSYNC_LDAP_URL = "ldapGroupSync.ldapUrl";
+	private static final String LGSYNC_LDAP_URL = "ranger.usersync.ldap.url";
 	
-	private static final String LGSYNC_LDAP_BIND_DN = "ldapGroupSync.ldapBindDn";
+	private static final String LGSYNC_LDAP_BIND_DN = "ranger.usersync.ldap.binddn";
 	
-	private static final String LGSYNC_LDAP_BIND_KEYSTORE = "ldapGroupSync.ldapBindKeystore";
+	private static final String LGSYNC_LDAP_BIND_KEYSTORE = "ranger.usersync.ldap.bindkeystore";
 	
-	private static final String LGSYNC_LDAP_BIND_ALIAS = "ldapGroupSync.ldapBindAlias";
+	private static final String LGSYNC_LDAP_BIND_ALIAS = "ranger.usersync.ldap.bindalias";
 	
-	private static final String LGSYNC_LDAP_BIND_PASSWORD = "ldapGroupSync.ldapBindPassword";	
+	private static final String LGSYNC_LDAP_BIND_PASSWORD = "ranger.usersync.ldap.ldapbindpassword";
 	
-	private static final String LGSYNC_LDAP_AUTHENTICATION_MECHANISM = "ldapGroupSync.ldapAuthenticationMechanism";
+	private static final String LGSYNC_LDAP_AUTHENTICATION_MECHANISM = "ranger.usersync.ldap.authentication.mechanism";
   private static final String DEFAULT_AUTHENTICATION_MECHANISM = "simple";
 
-  private static final String LGSYNC_SEARCH_BASE = "ldapGroupSync.searchBase";
+  private static final String LGSYNC_SEARCH_BASE = "ranger.usersync.ldap.searchBase";
 
-  private static final String LGSYNC_USER_SEARCH_BASE = "ldapGroupSync.userSearchBase";
+  private static final String LGSYNC_USER_SEARCH_BASE = "ranger.usersync.ldap.user.searchbase";
 
-  private static final String LGSYNC_USER_SEARCH_SCOPE = "ldapGroupSync.userSearchScope";
+  private static final String LGSYNC_USER_SEARCH_SCOPE = "ranger.usersync.ldap.user.searchscope";
 
-	private static final String LGSYNC_USER_OBJECT_CLASS = "ldapGroupSync.userObjectClass";
+	private static final String LGSYNC_USER_OBJECT_CLASS = "ranger.usersync.ldap.user.objectclass";
   private static final String DEFAULT_USER_OBJECT_CLASS = "person";
 	
-	private static final String LGSYNC_USER_SEARCH_FILTER = "ldapGroupSync.userSearchFilter";
+	private static final String LGSYNC_USER_SEARCH_FILTER = "ranger.usersync.ldap.user.searchfilter";
 	
-	private static final String LGSYNC_USER_NAME_ATTRIBUTE = "ldapGroupSync.userNameAttribute";
+	private static final String LGSYNC_USER_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.nameattribute";
   private static final String DEFAULT_USER_NAME_ATTRIBUTE = "cn";
 	
-	private static final String LGSYNC_USER_GROUP_NAME_ATTRIBUTE = "ldapGroupSync.userGroupNameAttribute";
+	private static final String LGSYNC_USER_GROUP_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.groupnameattribute";
   private static final String DEFAULT_USER_GROUP_NAME_ATTRIBUTE = "memberof,ismemberof";
 	
 	public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none" ;
 	public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower" ;
 	public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE = "upper" ;
 	 
-	private static final String UGSYNC_USERNAME_CASE_CONVERSION_PARAM = "ldapGroupSync.username.caseConversion" ;
+	private static final String UGSYNC_USERNAME_CASE_CONVERSION_PARAM = "ranger.usersync.ldap.username.caseconversion" ;
   private static final String DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE = UGSYNC_LOWER_CASE_CONVERSION_VALUE  ;
 
-	private static final String UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM = "ldapGroupSync.groupname.caseConversion" ;
+	private static final String UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM = "ranger.usersync.ldap.groupname.caseconversion" ;
 	private static final String DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE = UGSYNC_LOWER_CASE_CONVERSION_VALUE ;
 	
 	private static final String DEFAULT_USER_GROUP_TEXTFILE_DELIMITER = ",";
 
-  private static final String LGSYNC_PAGED_RESULTS_ENABLED = "ldapGroupSync.pagedResultsEnabled";
+  private static final String LGSYNC_PAGED_RESULTS_ENABLED = "ranger.usersync.pagedresultsenabled";
   private static final boolean DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED = true;
 
-  private static final String LGSYNC_PAGED_RESULTS_SIZE = "ldapGroupSync.pagedResultsSize";
+  private static final String LGSYNC_PAGED_RESULTS_SIZE = "ranger.usersync.pagedresultssize";
   private static final int DEFAULT_LGSYNC_PAGED_RESULTS_SIZE = 500;
 
-  private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ldapGroupSync.groupSearchEnabled";
+  private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ranger.usersync.group.searchenabled";
   private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = false;
 
-  private static final String LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = "ldapGroupSync.groupUserMapSyncEnabled";
+  private static final String LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = "ranger.usersync.group.usermapsyncenabled";
   private static final boolean DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = false;
 
-  private static final String LGSYNC_GROUP_SEARCH_BASE = "ldapGroupSync.groupSearchBase";
+  private static final String LGSYNC_GROUP_SEARCH_BASE = "ranger.usersync.group.searchbase";
 
-  private static final String LGSYNC_GROUP_SEARCH_SCOPE = "ldapGroupSync.groupSearchScope";
+  private static final String LGSYNC_GROUP_SEARCH_SCOPE = "ranger.usersync.group.searchscope";
 
-  private static final String LGSYNC_GROUP_OBJECT_CLASS = "ldapGroupSync.groupObjectClass";
+  private static final String LGSYNC_GROUP_OBJECT_CLASS = "ranger.usersync.group.objectclass";
   private static final String DEFAULT_LGSYNC_GROUP_OBJECT_CLASS = "groupofnames";
 
-  private static final String LGSYNC_GROUP_SEARCH_FILTER = "ldapGroupSync.groupSearchFilter";
+  private static final String LGSYNC_GROUP_SEARCH_FILTER = "ranger.usersync.group.searchfilter";
 
-  private static final String LGSYNC_GROUP_NAME_ATTRIBUTE = "ldapGroupSync.groupNameAttribute";
+  private static final String LGSYNC_GROUP_NAME_ATTRIBUTE = "ranger.usersync.group.nameattribute";
   private static final String DEFAULT_LGSYNC_GROUP_NAME_ATTRIBUTE = "cn";
 
-  private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ldapGroupSync.groupMemberAttributeName";
+  private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ranger.usersync.group.memberattributename";
   private static final String DEFAULT_LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "member";
 
-	private static final String SYNC_POLICY_MGR_KEYSTORE = "userSync.policyMgrKeystore";
+	private static final String SYNC_POLICY_MGR_KEYSTORE = "ranger.usersync.policymgr.keystore";
 
-	private static final String SYNC_POLICY_MGR_ALIAS = "userSync.policyMgrAlias";
+	private static final String SYNC_POLICY_MGR_ALIAS = "ranger.usersync.policymgr.alias";
 
-	private static final String SYNC_POLICY_MGR_PASSWORD = "userSync.policyMgrPassword";
+	private static final String SYNC_POLICY_MGR_PASSWORD = "ranger.usersync.policymgr.password";
 
-	private static final String SYNC_POLICY_MGR_USERNAME = "userSync.policyMgrUserName";
+	private static final String SYNC_POLICY_MGR_USERNAME = "ranger.usersync.policymgr.username";
 
 	private static final String DEFAULT_POLICYMGR_USERNAME = "rangerusersync";
 
@@ -177,13 +186,56 @@ public class UserGroupSyncConfig  {
 		init() ;
 	}
 	
-	
 	private void init() {
+		readConfigFile(CONFIG_FILE);
+		readConfigFile(DEFAULT_CONFIG_FILE);
+	}
+
+	private void readConfigFile(String fileName) {
 		try {
-			InputStream in = getFileInputStream(CONFIG_FILE) ;
+			InputStream in = getFileInputStream(fileName);
 			if (in != null) {
 				try {
-					prop.load(in) ;
+//					prop.load(in) ;
+					DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
+							.newInstance();
+					xmlDocumentBuilderFactory.setIgnoringComments(true);
+					xmlDocumentBuilderFactory.setNamespaceAware(true);
+					DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory
+							.newDocumentBuilder();
+					Document xmlDocument = xmlDocumentBuilder.parse(in);
+					xmlDocument.getDocumentElement().normalize();
+
+					NodeList nList = xmlDocument
+							.getElementsByTagName("property");
+
+					for (int temp = 0; temp < nList.getLength(); temp++) {
+
+						Node nNode = nList.item(temp);
+
+						if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+
+							Element eElement = (Element) nNode;
+
+							String propertyName = "";
+							String propertyValue = "";
+							if (eElement.getElementsByTagName("name").item(
+									0) != null) {
+								propertyName = eElement
+										.getElementsByTagName("name")
+										.item(0).getTextContent().trim();
+							}
+							if (eElement.getElementsByTagName("value")
+									.item(0) != null) {
+								propertyValue = eElement
+										.getElementsByTagName("value")
+										.item(0).getTextContent().trim();
+							}
+
+							prop.put(propertyName, propertyValue);
+
+						}
+					}
 				}
 				finally {
 					try {

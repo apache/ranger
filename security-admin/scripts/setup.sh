@@ -115,6 +115,13 @@ updatePropertyToFile(){
 }
 
 
+#Update Properties to File
+#$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
+updatePropertyToFilePy(){
+    python update_property.py $1 $2 $3
+    check_ret_status $? "Update property failed for: " $1
+}
+
 init_logfiles () {
     for f in $LOGFILES; do
         touch $f
@@ -744,152 +751,159 @@ update_properties() {
 	echo "export JAVA_HOME=${JAVA_HOME}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
 	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
 
-
-	to_file=$app_home/WEB-INF/classes/conf/xa_system.properties
-	if test -f $to_file; then
-		log "[I] $to_file file found"
+	to_file_ranger=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
+	if test -f $to_file_ranger; then
+		log "[I] $to_file_ranger file found"
 	else
-		log "[E] $to_file does not exists" ; exit 1;
+		log "[E] $to_file_ranger does not exists" ; exit 1;
     fi
+
+	to_file_default=$app_home/WEB-INF/classes/conf/ranger-admin-default-site.xml
+	if test -f $to_file_default; then
+		log "[I] $to_file_default file found"
+	else
+		log "[E] $to_file_default does not exists" ; exit 1;
+    fi
+
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
-		propertyName=jdbc.url
+		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${db_name}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=auditDB.jdbc.url
+		propertyName=ranger.jpa.audit.jdbc.url
 		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${audit_db_name}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=jdbc.dialect
+		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=auditDB.jdbc.dialect
+		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=jdbc.driver
+		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="net.sf.log4jdbc.DriverSpy"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=auditDB.jdbc.driver
+		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="net.sf.log4jdbc.DriverSpy"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
 	then
-		propertyName=jdbc.url
+		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:oracle:thin:\@//${DB_HOST}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=auditDB.jdbc.url
+		propertyName=ranger.jpa.audit.jdbc.url
 		newPropertyValue="jdbc:oracle:thin:\@//${DB_HOST}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=jdbc.dialect
+		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=auditDB.jdbc.dialect
+		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=jdbc.driver
+		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="oracle.jdbc.OracleDriver"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=auditDB.jdbc.driver
+		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="oracle.jdbc.OracleDriver"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
-		propertyName=jdbc.url
+		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=auditDB.jdbc.url
+		propertyName=ranger.jpa.audit.jdbc.url
 		newPropertyValue="jdbc:postgresql://${DB_HOST}/${audit_db_name}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=jdbc.dialect
+		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=auditDB.jdbc.dialect
+		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=jdbc.driver
+		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="org.postgresql.Driver"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=auditDB.jdbc.driver
+		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="org.postgresql.Driver"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 	if [ "${DB_FLAVOR}" == "SQLSERVER" ]
 	then
-		propertyName=jdbc.url
+		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=auditDB.jdbc.url
+		propertyName=ranger.jpa.audit.jdbc.url
 		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${audit_db_name}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=jdbc.dialect
+		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=auditDB.jdbc.dialect
+		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=jdbc.driver
+		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=auditDB.jdbc.driver
+		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 
 	if [ "${audit_store}" == "solr" ]
         then
-                propertyName=xa.audit.solr.url
+			propertyName=ranger.solr.url
                 newPropertyValue=${audit_solr_url}
-                updatePropertyToFile $propertyName $newPropertyValue $to_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
         fi
 
-        propertyName=xa.audit.store
+	propertyName=ranger.audit.source.type
         newPropertyValue=${audit_store}
-        updatePropertyToFile $propertyName $newPropertyValue $to_file
+	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 
-	propertyName=xa.webapp.url.root
+	propertyName=ranger.externalurl
 	newPropertyValue="${policymgr_external_url}"
-	updatePropertyToFile $propertyName $newPropertyValue $to_file
+	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-	propertyName=http.enabled
+	propertyName=ranger.service.http.enabled
 	newPropertyValue="${policymgr_http_enabled}"
-	updatePropertyToFile $propertyName $newPropertyValue $to_file
+	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-	propertyName=jdbc.user
+	propertyName=ranger.jpa.jdbc.user
 	newPropertyValue="${db_user}"
-	updatePropertyToFile $propertyName $newPropertyValue $to_file
+	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-	propertyName=auditDB.jdbc.user
+	propertyName=ranger.jpa.audit.jdbc.user
 	newPropertyValue="${audit_db_user}"
-	updatePropertyToFile $propertyName $newPropertyValue $to_file
+	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	##########
 
 	keystore="${cred_keystore_filename}"
 
-	echo "Starting configuration for XA DB credentials:"
+	echo "Starting configuration for Ranger DB credentials:"
 
-	db_password_alias=policyDB.jdbc.password
+	db_password_alias=ranger.db.password
 
 	if [ "${keystore}" != "" ]
 	then
@@ -897,21 +911,25 @@ update_properties() {
 
 		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
 
-		propertyName=xaDB.jdbc.credential.alias
-		newPropertyValue="${db_password_alias}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
-
-		propertyName=xaDB.jdbc.credential.provider.path
+		propertyName=ranger.credential.provider.path
 		newPropertyValue="${keystore}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=jdbc.password
+		propertyName=ranger.jpa.jdbc.credential.alias
+		newPropertyValue="${db_password_alias}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.credential.provider.path
+		newPropertyValue="${keystore}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+		propertyName=ranger.jpa.jdbc.password
 		newPropertyValue="_"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	else
-		propertyName=jdbc.password
+		propertyName=ranger.jpa.jdbc.password
 		newPropertyValue="${db_password}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 
 	if test -f $keystore; then
@@ -919,16 +937,15 @@ update_properties() {
 		chown -R ${unix_user}:${unix_group} ${keystore}
 		chmod 640 ${keystore}
 	else
-		#echo "$keystore not found. so clear text password"
-		propertyName=jdbc.password
+		propertyName=ranger.jpa.jdbc.password
 		newPropertyValue="${db_password}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 
 	###########
 	if [ "${audit_store}" != "solr" ]
 	then
-	    audit_db_password_alias=auditDB.jdbc.password
+	    audit_db_password_alias=ranger.auditdb.password
 
 	    echo "Starting configuration for Audit DB credentials:"
 
@@ -936,21 +953,23 @@ update_properties() {
 	    then
 		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
 
-		propertyName=auditDB.jdbc.credential.alias
+			propertyName=ranger.jpa.audit.jdbc.credential.alias
 		newPropertyValue="${audit_db_password_alias}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 		
-		propertyName=auditDB.jdbc.credential.provider.path
-		newPropertyValue="${keystore}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+			#Use the same provider file for both audit/admin db
+	#		propertyName=audit.jdbc.credential.provider.path
+			#propertyName=ranger.credential.provider.path
+			#newPropertyValue="${keystore}"
+			#updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 		
-		propertyName=auditDB.jdbc.password
+			propertyName=ranger.jpa.audit.jdbc.password
 		newPropertyValue="_"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	    else
-		propertyName=auditDB.jdbc.password
+			propertyName=ranger.jpa.audit.jdbc.password
 		newPropertyValue="${audit_db_password}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	    fi
 
 	    if test -f $keystore; then
@@ -958,9 +977,9 @@ update_properties() {
 		#echo "$keystore found."
 	    else
 		#echo "$keystore not found. so use clear text password"
-		propertyName=auditDB.jdbc.password
+			propertyName=ranger.jpa.audit.jdbc.password
 		newPropertyValue="${audit_db_password}"
-		updatePropertyToFile $propertyName $newPropertyValue $to_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	    fi
 	fi
 }
@@ -1148,14 +1167,23 @@ do_unixauth_setup() {
 
 	cp ./unixauth-config/*  ${RANGER_JAAS_CONF_DIR}
 
-	cat unixauth-config/unixauth.properties | \
-			grep -v '^remoteLoginEnabled=' | \
-			grep -v '^authServiceHostName=' | \
-			grep -v '^authServicePort=' > ${RANGER_JAAS_CONF_DIR}/unixauth.properties
+    ldap_file=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
+    if test -f $ldap_file; then
+	log "[I] $ldap_file file found"
+        propertyName=ranger.unixauth.remote.login.enabled
+        newPropertyValue="${remoteLoginEnabled}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
-	echo "remoteLoginEnabled=${remoteLoginEnabled}"   >> ${RANGER_JAAS_CONF_DIR}/unixauth.properties
-	echo "authServiceHostName=${authServiceHostName}" >> ${RANGER_JAAS_CONF_DIR}/unixauth.properties
-	echo "authServicePort=${authServicePort}"         >> ${RANGER_JAAS_CONF_DIR}/unixauth.properties
+        propertyName=ranger.unixauth.service.hostname
+        newPropertyValue="${authServiceHostName}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+        propertyName=ranger.unixauth.service.port
+        newPropertyValue="${authServicePort}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+	else
+		log "[E] $ldap_file does not exists" ; exit 1;
+	fi
 
 	owner=ranger
 	group=ranger
@@ -1170,33 +1198,39 @@ do_authentication_setup(){
     if [ $authentication_method = "LDAP" ] ; then
 	log "[I] Loading LDAP attributes and properties";
 		newPropertyValue=''
-		ldap_file=$app_home/WEB-INF/classes/conf/xa_ldap.properties
+		ldap_file=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
 		if test -f $ldap_file; then
 			log "[I] $ldap_file file found"
-			propertyName=xa_ldap_url
+#			propertyName=xa_ldap_url
+			propertyName=ranger.ldap.url
 			newPropertyValue="${xa_ldap_url}"
 
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
-			propertyName=xa_ldap_userDNpattern
+#			propertyName=xa_ldap_userDNpattern
+			propertyName=ranger.ldap.user.dnpattern
 			newPropertyValue="${xa_ldap_userDNpattern}"
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
-			propertyName=xa_ldap_groupSearchBase
+#			propertyName=xa_ldap_groupSearchBase
+			propertyName=ranger.ldap.group.searchbase
 			newPropertyValue="${xa_ldap_groupSearchBase}"
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
-			propertyName=xa_ldap_groupSearchFilter
+#			propertyName=xa_ldap_groupSearchFilter
+			propertyName=ranger.ldap.group.searchfilter
 			newPropertyValue="${xa_ldap_groupSearchFilter}"
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
-			propertyName=xa_ldap_groupRoleAttribute
+#			propertyName=xa_ldap_groupRoleAttribute
+			propertyName=ranger.ldap.group.roleattribute
 			newPropertyValue="${xa_ldap_groupRoleAttribute}"
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
-			propertyName=authentication_method
+#			propertyName=authentication_method
+			propertyName=ranger.authentication.method
 			newPropertyValue="${authentication_method}"
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 		else
 			log "[E] $ldap_file does not exists" ; exit 1;
 
@@ -1205,20 +1239,23 @@ do_authentication_setup(){
     if [ $authentication_method = "ACTIVE_DIRECTORY" ] ; then
 	log "[I] Loading ACTIVE DIRECTORY attributes and properties";
 		newPropertyValue=''
-		ldap_file=$app_home/WEB-INF/classes/conf/xa_ldap.properties
+		ldap_file=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
 		if test -f $ldap_file; then
 			log "[I] $ldap_file file found"
-			propertyName=xa_ldap_ad_url
+#			propertyName=xa_ldap_ad_url
+			propertyName=ranger.ldap.ad.url
 			newPropertyValue="${xa_ldap_ad_url}"
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
-			propertyName=xa_ldap_ad_domain
+#			propertyName=xa_ldap_ad_domain
+			propertyName=ranger.ldap.ad.domain
 			newPropertyValue="${xa_ldap_ad_domain}"
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
-			propertyName=authentication_method
+#			propertyName=authentication_method
+			propertyName=ranger.authentication.method
 			newPropertyValue="${authentication_method}"
-			updatePropertyToFile $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 		else
 			log "[E] $ldap_file does not exists" ; exit 1;
 		fi

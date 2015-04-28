@@ -58,8 +58,7 @@ SavedRequestAwareAuthenticationSuccessHandler {
     public RangerAuthSuccessHandler() {
 	super();
 	if (ajaxLoginSuccessPage == null) {
-	    ajaxLoginSuccessPage = PropertiesUtil.getProperty(
-		    "xa.ajax.auth.success.page", "/ajax_success.html");
+		ajaxLoginSuccessPage = PropertiesUtil.getProperty("ranger.ajax.auth.success.page", "/ajax_success.html");
 	}
     }
 

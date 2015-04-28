@@ -17,7 +17,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%
 	int ajaxReturnCode = 401;
-	//PropertiesUtil.getIntProperty("xa.ajax.auth.required.code", 401);
+	//PropertiesUtil.getIntProperty("ranger.ajax.auth.required.code", 401);
 	response.sendError(ajaxReturnCode);
 %>
 <html>

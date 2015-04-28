@@ -134,8 +134,13 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 			WHERE usr.LOGIN_ID=?
 			AND usr_role.USER_ID = usr.ID"
 			/>
+ <beans:bean id="customAuthenticationProvider" class="org.apache.ranger.security.handler.RangerAuthenticationProvider" >
+	<beans:property name="rangerAuthenticationMethod" value="${ranger.authentication.method}" />
+ </beans:bean>
 
 	<security:authentication-manager alias="authenticationManager">
+         <security:authentication-provider ref="customAuthenticationProvider"/>
+	<!-- <security:authentication-manager alias="authenticationManager"> -->
 		<!-- AD_SEC_SETTINGS_START -->
 		<!-- AD_SEC_SETTINGS_END-->
 		<!-- LDAP_SEC_SETTINGS_START -->

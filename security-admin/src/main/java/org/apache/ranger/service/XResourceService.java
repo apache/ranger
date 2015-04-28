@@ -90,8 +90,7 @@ public class XResourceService extends
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	
-	static String fileSeparator = PropertiesUtil.getProperty(
-			"xa.file.separator", "/");
+	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
 	
 	static {
 		trxLogAttrs.put("name", new VTrxLogAttr("name", "Resource Path", false));

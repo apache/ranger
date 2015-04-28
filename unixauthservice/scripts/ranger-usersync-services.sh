@@ -45,13 +45,8 @@ if [ ${action^^} == "START" ]; then
         	export PATH=$JAVA_HOME/bin:$PATH
 	fi
 
-	logdir=`grep -P '^[ \t]*logdir[ \t]*=' ${cdir}/install.properties | awk -F= '{ print $2 }' | tr '\t' ' ' | sed -e 's:[ ]::g'`
-	if [ ! -d ${logdir} ]
-	then
         logdir=/var/log/ranger/usersync
-        [ ! -d ${logdir} ] && mkdir -p ${logdir}
-        chown ranger:ranger ${logdir}
-	fi
+
 	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf"
 
     if [ -f $pidf ]; then
@@ -82,7 +77,6 @@ if [ ${action^^} == "START" ]; then
 	exit;
 
 elif [ ${action^^} == "STOP" ]; then
-	port=`grep  '^[ ]*authServicePort' ${cdir}/conf/unixauthservice.properties | awk -F= '{ print $2 }' | awk '{ print $1 }'`
 
     if [ -f $pidf ]; then
             pidf=/var/run/ranger/usersync.pid

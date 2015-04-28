@@ -76,7 +76,7 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 	
 	public XAssetService(){
 		super();
-		hiddenPasswordString = PropertiesUtil.getProperty("xa.password.hidden", "*****");
+		hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		searchFields.add(new SearchField("status", "obj.activeStatus",
 				SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("name", "obj.name", DATA_TYPE.STRING,

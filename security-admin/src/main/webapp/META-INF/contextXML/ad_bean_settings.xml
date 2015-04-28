@@ -16,7 +16,9 @@
 -->
     <beans:bean id="activeDirectoryAuthenticationProvider"
         class="org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider">
-    <beans:constructor-arg value="${xa_ldap_ad_domain}" />
-    <beans:constructor-arg value="${xa_ldap_ad_url}" />
+    <!-- <beans:constructor-arg value="${xa_ldap_ad_domain}" />
+    <beans:constructor-arg value="${xa_ldap_ad_url}" /> -->
+    <beans:constructor-arg value="${ranger.ldap.ad.domain}" />
+    <beans:constructor-arg value="${ranger.ldap.ad.url}" />
     <beans:property name="convertSubErrorCodesToExceptions" value="true"/>
 	</beans:bean>

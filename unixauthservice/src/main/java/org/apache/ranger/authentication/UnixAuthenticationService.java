@@ -41,9 +41,15 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.usergroupsync.UserGroupSync;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class UnixAuthenticationService {
 
@@ -52,15 +58,15 @@ public class UnixAuthenticationService {
 	private static final String serviceName = "UnixAuthenticationService" ;
 	
 	private static final String SSL_ALGORITHM = "TLS" ;
-	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "authServicePort" ;
-	private static final String SSL_KEYSTORE_PATH_PARAM = "keyStore" ;
-	private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM = "keyStorePassword" ;
-	private static final String SSL_TRUSTSTORE_PATH_PARAM = "trustStore" ;
-	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM = "trustStorePassword" ;
-	private static final String CRED_VALIDATOR_PROG = "passwordValidatorPath" ;
+	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.usersync.port" ;
+	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file" ;
+	private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.keystore.password" ;
+	private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file" ;
+	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.truststore.password" ;
+	private static final String CRED_VALIDATOR_PROG = "ranger.usersync.passwordvalidator.path" ;
 	private static final String ADMIN_USER_LIST_PARAM = "admin.users" ;
 	private static final String ADMIN_ROLE_LIST_PARAM = "admin.roleNames" ;
-	private static final String SSL_ENABLED_PARAM = "useSSL" ;
+	private static final String SSL_ENABLED_PARAM = "ranger.usersync.ssl" ;
 	
 	private String keyStorePath ;
 	private String keyStorePathPassword ;
@@ -127,11 +133,51 @@ public class UnixAuthenticationService {
 	//TODO: add more validation code
 	private void init() throws Throwable {
 		Properties prop = new Properties() ;
-		InputStream in = getFileInputStream("unixauthservice.properties") ;
+		InputStream in = getFileInputStream("ranger-ugsync-site.xml") ;
 
 		if (in != null) {
 			try {
-				prop.load(in);
+//				prop.load(in);
+				DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
+						.newInstance();
+				xmlDocumentBuilderFactory.setIgnoringComments(true);
+				xmlDocumentBuilderFactory.setNamespaceAware(true);
+				DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory
+						.newDocumentBuilder();
+				Document xmlDocument = xmlDocumentBuilder.parse(in);
+				xmlDocument.getDocumentElement().normalize();
+
+				NodeList nList = xmlDocument
+						.getElementsByTagName("property");
+
+				for (int temp = 0; temp < nList.getLength(); temp++) {
+
+					Node nNode = nList.item(temp);
+
+					if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+
+						Element eElement = (Element) nNode;
+
+						String propertyName = "";
+						String propertyValue = "";
+						if (eElement.getElementsByTagName("name").item(
+								0) != null) {
+							propertyName = eElement
+									.getElementsByTagName("name")
+									.item(0).getTextContent().trim();
+						}
+						if (eElement.getElementsByTagName("value")
+								.item(0) != null) {
+							propertyValue = eElement
+									.getElementsByTagName("value")
+									.item(0).getTextContent().trim();
+						}
+
+						LOG.info("Adding Property:[" + propertyName + "] Value:"+ propertyValue);
+						prop.put(propertyName, propertyValue);
+
+					}
+				}
 			}
 			finally {
 				try {

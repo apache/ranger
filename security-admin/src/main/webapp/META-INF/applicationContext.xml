@@ -46,8 +46,8 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		<property name="dataSource" ref="defaultDataSource" />
 		<property name="jpaVendorAdapter">
 			<bean class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter">
-				<property name="databasePlatform" value="${jdbc.dialect}" />
-				<property name="showSql" value="${xa.jpa.showsql}" />
+				<property name="databasePlatform" value="${ranger.jpa.jdbc.dialect}" />
+				<property name="showSql" value="${ranger.jpa.showsql}" />
 				<property name="generateDdl" value="false" />
 			</bean>
 		</property>
@@ -66,8 +66,8 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		<property name="dataSource" ref="loggingDataSource" />
 		<property name="jpaVendorAdapter">
 			<bean class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter">
-				<property name="databasePlatform" value="${auditDB.jdbc.dialect}" />
-				<property name="showSql" value="${xa.jpa.showsql}" />
+				<property name="databasePlatform" value="${ranger.jpa.audit.jdbc.dialect}" />
+				<property name="showSql" value="${ranger.jpa.showsql}" />
 				<property name="generateDdl" value="false" />
 			</bean>
 		</property>
@@ -81,17 +81,27 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		</property>
 	</bean>
 	
+
+	<bean id="xmlPropertyConfigurer" class="org.apache.ranger.common.XMLPropertiesUtil" />
+
 	<bean id="propertyConfigurer" class="org.apache.ranger.common.PropertiesUtil">
 		<property name="locations">
 			<list>
-				<value>classpath:xa_default.properties</value>
-				<value>classpath:xa_system.properties</value>
-				<value>classpath:xa_custom.properties</value>
-				<value>classpath:xa_ldap.properties</value>
+				<!-- <value>classpath:xa_default.properties</value> -->
+				<!-- <value>classpath:xa_system.properties</value> -->
+				<!-- <value>classpath:xa_custom.properties</value> -->
+				<!-- <value>classpath:xa_ldap.properties</value> -->
+				<value>classpath:ranger-admin-default-site.xml</value>
+				<value>classpath:ranger-admin-site.xml</value>
 			</list>
 		</property>
+		<property name="propertiesPersister" ref="xmlPropertyConfigurer" />
 	</bean>
 	
+
+
+
+
 	<bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
 		<property name="scopes">
 			<map>
@@ -124,77 +134,79 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 	<!-- Datasource and Connection Pool Configuration http://www.mchange.com/projects/c3p0/index.jsp#configuration_properties -->
 	<bean id="defaultDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
 		<property name="driverClass">
-			<value>${jdbc.driver}</value>
+			<value>${ranger.jpa.jdbc.driver}</value>
 		</property>
 		<property name="jdbcUrl">
-			<value>${jdbc.url}</value>
+			<value>${ranger.jpa.jdbc.url}</value>
 		</property>
 		<property name="user">
-			<value>${jdbc.user}</value>
+			<value>${ranger.jpa.jdbc.user}</value>
 		</property>
 		<property name="password">
-			<value>${jdbc.password}</value>
+			<value>${ranger.jpa.jdbc.password}</value>
 		</property>
 		<property name="maxPoolSize">
-			<value>20</value>
+			<!-- <value>20</value> -->
+			<value>${ranger.jpa.jdbc.maxpoolsize}</value>
 		</property>
 		<property name="minPoolSize">
-			<value>${jdbc.minPoolSize}</value>
+			<value>${ranger.jpa.jdbc.minpoolsize}</value>
 		</property>
 		<property name="initialPoolSize">
-			<value>${jdbc.initialPoolSize}</value>
+			<value>${ranger.jpa.jdbc.initialpoolsize}</value>
 		</property>
 		<!-- Seconds a Connection can remain pooled but unused before being discarded.
 		Zero means idle connections never expire. -->
 		<property name="maxIdleTime">
-			<value>${jdbc.maxIdleTime}</value>
+			<value>${ranger.jpa.jdbc.maxidletime}</value>
 		</property>
 		<property name="maxStatements">
-			<value>${jdbc.maxStatements}</value>
+			<value>${ranger.jpa.jdbc.maxstatements}</value>
 		</property>
 		<property name="preferredTestQuery">
-			<value>${jdbc.preferredTestQuery}</value>
+			<value>${ranger.jpa.jdbc.preferredtestquery}</value>
 		</property>
 		<property name="idleConnectionTestPeriod">
-			<value>${jdbc.idleConnectionTestPeriod}</value>
+			<value>${ranger.jpa.jdbc.idleconnectiontestperiod}</value>
 		</property>
 	</bean>	
 	
 	<bean id="loggingDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
 		<property name="driverClass">
-			<value>${auditDB.jdbc.driver}</value>
+			<value>${ranger.jpa.audit.jdbc.driver}</value>
 		</property>
 		<property name="jdbcUrl">
-			<value>${auditDB.jdbc.url}</value>
+			<value>${ranger.jpa.audit.jdbc.url}</value>
 		</property>
 		<property name="user">
-			<value>${jdbc.user}</value>
+			<value>${ranger.jpa.audit.jdbc.user}</value>
 		</property>
 		<property name="password">
-			<value>${jdbc.password}</value>
+			<value>${ranger.jpa.jdbc.password}</value>
 		</property>
 		<property name="maxPoolSize">
-			<value>20</value>
+			<!-- <value>20</value> -->
+			<value>${ranger.jpa.jdbc.maxpoolsize}</value>
 		</property>
 		<property name="minPoolSize">
-			<value>${jdbc.minPoolSize}</value>
+			<value>${ranger.jpa.jdbc.minpoolsize}</value>
 		</property>
 		<property name="initialPoolSize">
-			<value>${jdbc.initialPoolSize}</value>
+			<value>${ranger.jpa.jdbc.initialpoolsize}</value>
 		</property>
 		<!-- Seconds a Connection can remain pooled but unused before being discarded.
 		Zero means idle connections never expire. -->
 		<property name="maxIdleTime">
-			<value>${jdbc.maxIdleTime}</value>
+			<value>${ranger.jpa.jdbc.maxidletime}</value>
 		</property>
 		<property name="maxStatements">
-			<value>${jdbc.maxStatements}</value>
+			<value>${ranger.jpa.jdbc.maxstatements}</value>
 		</property>
 		<property name="preferredTestQuery">
-			<value>${jdbc.preferredTestQuery}</value>
+			<value>${ranger.jpa.jdbc.preferredtestquery}</value>
 		</property>
 		<property name="idleConnectionTestPeriod">
-			<value>${jdbc.idleConnectionTestPeriod}</value>
+			<value>${ranger.jpa.jdbc.idleconnectiontestperiod}</value>
 		</property>
 	</bean>
 		

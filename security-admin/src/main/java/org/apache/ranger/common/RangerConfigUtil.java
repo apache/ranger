@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.common;
+package org.apache.ranger.common;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -38,25 +38,19 @@ public class RangerConfigUtil {
 	boolean isUserPrefEnabled = false;
 
 	public RangerConfigUtil() {
-		webappRootURL = PropertiesUtil
-				.getProperty("xa.webapp.url.root");
+
+		webappRootURL = PropertiesUtil.getProperty("ranger.externalurl");
 		if (webappRootURL == null || webappRootURL.trim().length() == 0) {
-			logger.error("webapp URL is not set. Please xa.webapp.url.root property");
+			logger.error("webapp URL is not set. Please ranger.externalurl property");
 		}
 
 		defaultMaxRows = PropertiesUtil.getIntProperty(
-				"xa.db.maxrows.default", defaultMaxRows);
+				"ranger.db.maxrows.default", defaultMaxRows);
+		roles = PropertiesUtil.getPropertyStringList("ranger.users.roles.list");
 
-		roles = PropertiesUtil
-				.getPropertyStringList("xa.users.roles.list");
-
-		accessFilterEnabled = PropertiesUtil.getBooleanProperty(
-				"xa.db.access.filter.enable", true);
-
-		isModerationEnabled = PropertiesUtil.getBooleanProperty(
-				"xa.moderation.enabled", isModerationEnabled);
-		isUserPrefEnabled = PropertiesUtil.getBooleanProperty(
-				"xa.userpref.enabled", isUserPrefEnabled);
+		accessFilterEnabled = PropertiesUtil.getBooleanProperty("ranger.db.access.filter.enable", true);
+		isModerationEnabled = PropertiesUtil.getBooleanProperty("ranger.moderation.enabled", isModerationEnabled);
+		isUserPrefEnabled = PropertiesUtil.getBooleanProperty("ranger.userpref.enabled", isUserPrefEnabled);
 	}	
 
 	/**

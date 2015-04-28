@@ -316,6 +316,7 @@
 			<include>restrict_permissions.py</include>
 			<include>upgrade_admin.py</include>
 			<include>upgrade.sh</include>
+			<include>update_property.py</include>
 		</includes>
 		<fileMode>544</fileMode>
 	</fileSet>
