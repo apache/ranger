@@ -206,6 +206,7 @@ public class TestXUserMgr {
 		return groupPermission;
 	}
 
+	@Ignore("temp disable")
 	@Test
 	public void test11CreateXUser() {
 		VXUser vxUser = vxUser();
