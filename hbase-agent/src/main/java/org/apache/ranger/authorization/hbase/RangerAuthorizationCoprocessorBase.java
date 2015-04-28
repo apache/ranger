@@ -400,7 +400,17 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
 		// Not applicable.  Expected to be empty
 	}
 
-  public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
+	//TODO - add @Override directive when hbase changes to MasterObserver go mainstream
+	public void postListSnapshot( ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
+		// Not applicable.  Expected to be empty
+	}
+
+	//TODO - add @Override directive when hbase changes to MasterObserver go mainstream
+	public void preListSnapshot( ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
+		// Not applicable.  Expected to be empty
+	}
+
+	public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
       final String userName, final Quotas quotas) throws IOException {
   }
 
