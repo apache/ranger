@@ -1243,7 +1243,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		GrantRevokeRequest ret = new GrantRevokeRequest();
 
 		ret.setGrantor(grantor);
-		ret.setDelegateAdmin(Boolean.FALSE);
+		ret.setDelegateAdmin(Boolean.TRUE); // remove delegateAdmin privilege as well
 		ret.setEnableAudit(Boolean.TRUE);
 		ret.setReplaceExistingPermissions(Boolean.TRUE);
 		ret.setResource(mapResource);

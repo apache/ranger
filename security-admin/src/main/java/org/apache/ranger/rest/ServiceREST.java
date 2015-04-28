@@ -612,37 +612,7 @@ public class ServiceREST {
 	
 					// replace all existing privileges for users and groups
 					if(grantRequest.getReplaceExistingPermissions()) {
-						List<RangerPolicyItem> policyItems = policy.getPolicyItems();
-	
-						int numOfItems = policyItems.size();
-		
-						for(int i = 0; i < numOfItems; i++) {
-							RangerPolicyItem policyItem = policyItems.get(i);
-		
-							if(CollectionUtils.containsAny(policyItem.getUsers(), grantRequest.getUsers())) {
-								policyItem.getUsers().removeAll(grantRequest.getUsers());
-	
-								policyUpdated = true;
-							}
-	
-							if(CollectionUtils.containsAny(policyItem.getGroups(), grantRequest.getGroups())) {
-								policyItem.getGroups().removeAll(grantRequest.getGroups());
-	
-								policyUpdated = true;
-							}
-	
-							if(CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
-								policyItems.remove(i);
-								numOfItems--;
-								i--;
-	
-								policyUpdated = true;
-							}
-						}
-	
-						if(compactPolicy(policy)) {
-							policyUpdated = true;
-						}
+						policyUpdated = removeUsersAndGroupsFromPolicy(policy, grantRequest.getUsers(), grantRequest.getGroups());
 					}
 	
 					for(String user : grantRequest.getUsers()) {
@@ -791,45 +761,49 @@ public class ServiceREST {
 				
 				if(policy != null) {
 					boolean policyUpdated = false;
-	
-					for(String user : revokeRequest.getUsers()) {
-						RangerPolicyItem policyItem = getPolicyItemForUser(policy, user);
 
-						if (policyItem != null) {
-							if (removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
-								policyUpdated = true;
-							}
+					// remove all existing privileges for users and groups
+					if(revokeRequest.getReplaceExistingPermissions()) {
+						policyUpdated = removeUsersAndGroupsFromPolicy(policy, revokeRequest.getUsers(), revokeRequest.getGroups());
+					} else {
+						for(String user : revokeRequest.getUsers()) {
+							RangerPolicyItem policyItem = getPolicyItemForUser(policy, user);
 
-
-							if (revokeRequest.getDelegateAdmin()) { // remove delegate?
-								if (policyItem.getDelegateAdmin()) {
-									policyItem.setDelegateAdmin(Boolean.FALSE);
+							if (policyItem != null) {
+								if (removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
 									policyUpdated = true;
 								}
 
+								if (revokeRequest.getDelegateAdmin()) { // remove delegate?
+									if (policyItem.getDelegateAdmin()) {
+										policyItem.setDelegateAdmin(Boolean.FALSE);
+										policyUpdated = true;
+									}
+
+								}
 							}
 						}
-					}
 	
-					for(String group : revokeRequest.getGroups()) {
-						RangerPolicyItem policyItem = getPolicyItemForGroup(policy, group);
+						for(String group : revokeRequest.getGroups()) {
+							RangerPolicyItem policyItem = getPolicyItemForGroup(policy, group);
 						
-						if(policyItem != null) {
-							if(removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
-								policyUpdated = true;
-							}
-	
-							if(revokeRequest.getDelegateAdmin()) { // remove delegate?
-								if(policyItem.getDelegateAdmin()) {
-									policyItem.setDelegateAdmin(Boolean.FALSE);
+							if(policyItem != null) {
+								if(removeAccesses(policyItem, revokeRequest.getAccessTypes())) {
 									policyUpdated = true;
+								}
+
+								if(revokeRequest.getDelegateAdmin()) { // remove delegate?
+									if(policyItem.getDelegateAdmin()) {
+										policyItem.setDelegateAdmin(Boolean.FALSE);
+										policyUpdated = true;
+									}
 								}
 							}
 						}
-					}
 	
-					if(compactPolicy(policy)) {
-						policyUpdated = true;
+						if(compactPolicy(policy)) {
+							policyUpdated = true;
+						}
 					}
 	
 					if(policyUpdated) {
@@ -1340,6 +1314,40 @@ public class ServiceREST {
 		}
 
 		return ret;
+	}
+
+	private boolean removeUsersAndGroupsFromPolicy(RangerPolicy policy, Set<String> users, Set<String> groups) {
+		boolean policyUpdated = false;
+
+		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+
+		int numOfItems = policyItems.size();
+
+		for(int i = 0; i < numOfItems; i++) {
+			RangerPolicyItem policyItem = policyItems.get(i);
+
+			if(CollectionUtils.containsAny(policyItem.getUsers(), users)) {
+				policyItem.getUsers().removeAll(users);
+
+				policyUpdated = true;
+			}
+
+			if(CollectionUtils.containsAny(policyItem.getGroups(), groups)) {
+				policyItem.getGroups().removeAll(groups);
+
+				policyUpdated = true;
+			}
+
+			if(CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
+				policyItems.remove(i);
+				numOfItems--;
+				i--;
+
+				policyUpdated = true;
+			}
+		}
+
+		return policyUpdated;
 	}
 
 	@GET
