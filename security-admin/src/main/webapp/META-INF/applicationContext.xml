@@ -179,7 +179,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 			<value>${ranger.jpa.audit.jdbc.url}</value>
 		</property>
 		<property name="user">
-			<value>${ranger.jpa.audit.jdbc.user}</value>
+			<value>${ranger.jpa.jdbc.user}</value>
 		</property>
 		<property name="password">
 			<value>${ranger.jpa.jdbc.password}</value>

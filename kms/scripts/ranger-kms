@@ -57,7 +57,8 @@ START_CLASS_NAME="org.apache.ranger.server.tomcat.EmbeddedServer"
 
 STOP_CLASS_NAME="org.apache.ranger.server.tomcat.StopEmbeddedServer"
 
-KMS_CONFIG_FILENAME=kms_webserver.properties
+#KMS_CONFIG_FILENAME=kms_webserver.properties
+KMS_CONFIG_FILENAME=ranger-kms-site.xml
 
 TOMCAT_LOG_DIR=/var/log/ranger/kms
 

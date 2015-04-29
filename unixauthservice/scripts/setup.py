@@ -58,7 +58,7 @@ PROP2ALIASMAP = { 'ranger.usersync.ldap.ldapbindpassword':'ranger.usersync.ldap.
 
 installTemplateDirName = join(installPropDirName,'templates')
 confDistDirName = join(installPropDirName, confDistBaseDirName)
-ugsyncLogFolderName = join(logFolderName, 'ugsync')
+ugsyncLogFolderName = join(logFolderName, 'usersync')
 nativeAuthFolderName = join(installPropDirName, 'native')
 nativeAuthProgramName = join(nativeAuthFolderName, 'credValidator.uexe')
 usersyncBaseDirFullName = join(rangerBaseDirName, usersyncBaseDirName)
