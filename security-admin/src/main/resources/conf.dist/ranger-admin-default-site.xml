@@ -225,7 +225,7 @@
 	</property>
 	<property>
 		<name>ranger.unixauth.service.hostname</name>
-		<value>bigdata.xasecure.net</value>
+		<value>localhost</value>
 	</property>
 	<property>
 		<name>ranger.unixauth.service.port</name>

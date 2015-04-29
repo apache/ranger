@@ -232,6 +232,10 @@ public class UserGroupSyncConfig  {
 										.item(0).getTextContent().trim();
 							}
 
+							if (prop.get(propertyName) != null) {
+								prop.remove(propertyName) ;
+							}
+							
 							prop.put(propertyName, propertyValue);
 
 						}

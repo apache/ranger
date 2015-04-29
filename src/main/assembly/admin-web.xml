@@ -284,12 +284,12 @@
 		<outputDirectory>/ews/lib</outputDirectory>
 		<directory>embeddedwebserver/lib</directory>
 	</fileSet>
--->
 	<fileSet>
 		<outputDirectory>/unixauth-config</outputDirectory>
 		<directory>security-admin/unixauth-config</directory>
 		<fileMode>544</fileMode>
 	</fileSet>
+-->
 
 	<fileSet>
 		<outputDirectory>/db</outputDirectory>

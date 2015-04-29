@@ -1163,10 +1163,6 @@ create_audit_db_user(){
 
 do_unixauth_setup() {
 
-	RANGER_JAAS_CONF_DIR="${INSTALL_DIR}/ews/webapp/WEB-INF/classes/conf/ranger_jaas"
-
-	cp ./unixauth-config/*  ${RANGER_JAAS_CONF_DIR}
-
     ldap_file=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
     if test -f $ldap_file; then
 	log "[I] $ldap_file file found"
@@ -1184,11 +1180,6 @@ do_unixauth_setup() {
 	else
 		log "[E] $ldap_file does not exists" ; exit 1;
 	fi
-
-	owner=ranger
-	group=ranger
-	chown -R ${owner}:${group} ${RANGER_JAAS_CONF_DIR}
-	chmod -R go-rwx ${RANGER_JAAS_CONF_DIR}
 }
 
 do_authentication_setup(){
@@ -1299,13 +1290,6 @@ setup_install_files(){
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	    cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
-	fi
-
-	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas ]; then
-	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas"
-	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas
-		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas
-		chmod 700 ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger_jaas
 	fi
 
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then

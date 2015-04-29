@@ -14,6 +14,10 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+<beans:bean id="rangerConfiguration"  class="org.apache.ranger.common.RangerProperties">
+    <beans:constructor-arg value="ranger-admin-default-site.xml,ranger-admin-site.xml" />
+</beans:bean>
+
 <beans:bean id="jaasAuthProvider" class="org.springframework.security.authentication.jaas.DefaultJaasAuthenticationProvider">
 		<beans:property name="configuration">
 			<beans:bean
@@ -28,11 +32,7 @@
 									<beans:constructor-arg>
 										<util:constant static-field="javax.security.auth.login.AppConfigurationEntry$LoginModuleControlFlag.REQUIRED" />
 									</beans:constructor-arg>
-									<beans:constructor-arg>
-										<beans:map>
-											<beans:entry key="configFile" value="unixauth.properties" />
-										</beans:map>
-									</beans:constructor-arg>
+									<beans:constructor-arg ref="rangerConfiguration" />
 								</beans:bean>
 							</beans:array>
 						</beans:entry>

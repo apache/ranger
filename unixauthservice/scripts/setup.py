@@ -38,7 +38,7 @@ pidFolderName = '/var/run/ranger'
 logFolderName = '/var/log/ranger'
 initdDirName = '/etc/init.d'
 
-rangerBaseDirName = os.getcwd() #'/etc/ranger'
+rangerBaseDirName = '/etc/ranger'
 usersyncBaseDirName = 'usersync'
 confBaseDirName = 'conf'
 confDistBaseDirName = 'conf.dist'
@@ -52,7 +52,7 @@ log4jFileName          = 'log4j.xml'
 install2xmlMapFileName = 'installprop2xml.properties'
 templateFileName = 'ranger-ugsync-template.xml'
 initdProgramName = 'ranger-usersync'
-PROP2ALIASMAP = { 'ranger.usersync.ldap.ldapbindpassword':'ldap.bind.password' ,
+PROP2ALIASMAP = { 'ranger.usersync.ldap.ldapbindpassword':'ranger.usersync.ldap.bindalias', 
 				   'ranger.usersync.keystore.password':'usersync.ssl.key.password',
 				   'ranger.usersync.truststore.password':'usersync.ssl.truststore.password'}
 
@@ -145,8 +145,8 @@ def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
         name = config.find('name').text
         if (name in prop.keys()):
             config.find('value').text = prop[name]
-        else:
-            print "ERROR: key not found: %s" % (name)
+        #else:
+        #    print "ERROR: key not found: %s" % (name)
     if isfile(xmlOutputFileName):
         archiveFile(xmlOutputFileName)
     tree.write(xmlOutputFileName)
@@ -179,14 +179,18 @@ def convertInstallPropsToXML(props):
 		if (syncSource == SYNC_SOURCE_UNIX):
 			ret['ranger.usersync.source.impl.class'] = 'org.apache.ranger.unixusersync.process.UnixUserGroupBuilder'
 			if (SYNC_INTERVAL_NEW_KEY not in ret or len(str(ret[SYNC_INTERVAL_NEW_KEY])) == 0):
-				ret[SYNC_INTERVAL_NEW_KEY] = '5'
+				ret[SYNC_INTERVAL_NEW_KEY] = "300000"
+			else:
+				ret[SYNC_INTERVAL_NEW_KEY] = int(ret[SYNC_INTERVAL_NEW_KEY]) * 60000
 			#for key in ret.keys():
 			#	if (key.startswith("ranger.usersync.ldap") or key.startswith("ranger.usersync.group") or key.startswith("ranger.usersync.paged")):
 			#		del ret[key]
 		elif (syncSource == SYNC_SOURCE_LDAP):
 			ret['ranger.usersync.source.impl.class'] = 'org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder'
 			if (SYNC_INTERVAL_NEW_KEY not in ret or len(str(ret[SYNC_INTERVAL_NEW_KEY])) == 0):
-				ret[SYNC_INTERVAL_NEW_KEY] = '60'
+				ret[SYNC_INTERVAL_NEW_KEY] = "3600000"
+			else:
+				ret[SYNC_INTERVAL_NEW_KEY] = int(ret[SYNC_INTERVAL_NEW_KEY]) * 60000
 		else:
 			print "ERROR: Invalid value (%s) defined for %s in install.properties. Only valid values are %s" % (syncSource, SYNC_SOURCE_KEY,SYNC_SOURCE_LIST)
 			sys.exit(1)

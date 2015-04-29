@@ -80,7 +80,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 	private char[] password;
 	private Subject subject;
 	private CallbackHandler callbackHandler;
-	private boolean debug = false;
+	private boolean debug = true ;
 
 	private String remoteHostName;
 	private int remoteHostAuthServicePort;
@@ -142,6 +142,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 			this.callbackHandler = new ConsolePromptCallbackHandler();
 		}
 
+		/*
 		Properties config = null ;
 
 		String val = (String) options.get(REMOTE_UNIX_AUTHENICATION_CONFIG_FILE_PARAM);
@@ -219,7 +220,11 @@ public class RemoteUnixLoginModule implements LoginModule {
 			config = new Properties() ;
 			config.putAll(options);
 		}
-
+		
+		*/
+		
+		Properties config = new Properties() ;
+		config.putAll(options) ;
 		initParams(config) ;
 		
 	}
@@ -244,6 +249,9 @@ public class RemoteUnixLoginModule implements LoginModule {
 		val = (String) options.get(DEBUG_PARAM);
 		if (val != null && (!val.equalsIgnoreCase("false"))) {
 			debug = true;
+		}
+		else {
+			debug = false ;
 		}
 
 		remoteHostName = (String) options.get(REMOTE_LOGIN_HOST_PARAM);
@@ -483,8 +491,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 				}
 			}
 		} catch (Throwable t) {
-			t.printStackTrace();
-			throw new LoginException("FAILED: unable to authenticate to AuthenticationService: " + remoteHostName + ":" + remoteHostAuthServicePort + ", Exception: " + t);
+			throw new LoginException("FAILED: unable to authenticate to AuthenticationService: " + remoteHostName + ":" + remoteHostAuthServicePort + ", Exception: [" + t + "]");
 		} finally {
 			log("Login of user String: {" + aUserName + "}, return from AuthServer: {" + ret + "}");
 		}
