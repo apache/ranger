@@ -67,8 +67,6 @@ public class ServiceUtil {
 	static Map<String, Integer> mapServiceTypeToAssetType = new HashMap<String, Integer>();
 	static Map<String, Integer> mapAccessTypeToPermType   = new HashMap<String, Integer>();
 	static String version;
-	static String uniqueKeySeparator;
-	static int	  assetType;
 	
 	@Autowired
 	JSONUtil jsonUtil;
@@ -121,10 +119,8 @@ public class ServiceUtil {
 		mapAccessTypeToPermType.put("getUserTopology", 29);
 		mapAccessTypeToPermType.put("getTopologyInfo", 30);
 		mapAccessTypeToPermType.put("uploadNewCredentials", 31);
-		
-		version 		   = "0";
-		uniqueKeySeparator = "_";
 
+		version = "0";
 	}
 
 	public RangerService toRangerService(VXAsset asset) {
@@ -146,26 +142,39 @@ public class ServiceUtil {
 	}
 
 	public VXAsset toVXAsset(RangerService service) {
-		if(service == null) {
+		if(service == null || toAssetType(service.getType()) == null) {
 			return null;
 		}
 
-		VXAsset ret = null;
+		VXAsset ret = new VXAsset();
+	
+		rangerObjectToDataObject(service, ret);
 
-		Integer assetType = toAssetType(service.getType());
-		
-		if(assetType != null) {
-			ret = new VXAsset();
-	
-			rangerObjectToDataObject(service, ret);
-	
-			ret.setAssetType(toAssetType(service.getType()));
-			ret.setName(service.getName());
-			ret.setDescription(service.getDescription());
-			ret.setActiveStatus(service.getIsEnabled() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
-			ret.setConfig(jsonUtil.readMapToString(service.getConfigs()));
+		ret.setAssetType(toAssetType(service.getType()));
+		ret.setName(service.getName());
+		ret.setDescription(service.getDescription());
+		ret.setActiveStatus(service.getIsEnabled() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
+		ret.setConfig(jsonUtil.readMapToString(service.getConfigs()));
+
+		return ret;
+	}
+
+	public VXRepository toVXRepository(RangerService service){
+		if(service == null || toAssetType(service.getType()) == null) {
+			return null;
 		}
 
+		VXRepository  ret = new VXRepository();
+
+		rangerObjectToDataObject(service,ret);
+
+		ret.setRepositoryType(service.getType());
+		ret.setName(service.getName());
+		ret.setDescription(service.getDescription());
+		ret.setIsActive(service.getIsEnabled());
+		ret.setConfig(jsonUtil.readMapToString(service.getConfigs()));
+		ret.setVersion(Long.toString(service.getVersion()));
+		
 		return ret;
 	}
 	
@@ -189,18 +198,18 @@ public class ServiceUtil {
 		ret.setIsEnabled(resource.getResourceStatus() == RangerCommonEnums.STATUS_ENABLED);
 		ret.setIsAuditEnabled(resource.getAuditList() != null && resource.getAuditList().size() > 0);
 
-		Boolean isRecursive      = resource.getIsRecursive() == RangerCommonEnums.BOOL_TRUE;
+		Boolean isPathRecursive  = resource.getIsRecursive() == RangerCommonEnums.BOOL_TRUE;
 		Boolean isTableExcludes  = resource.getTableType() == RangerCommonEnums.POLICY_EXCLUSION;
 		Boolean isColumnExcludes = resource.getColumnType() == RangerCommonEnums.POLICY_EXCLUSION;
 
-		toRangerResourceList(resource.getName(), "path", Boolean.FALSE, isRecursive, ret.getResources());
-		toRangerResourceList(resource.getTables(), "table", isTableExcludes, isRecursive, ret.getResources());
-		toRangerResourceList(resource.getColumnFamilies(), "column-family", Boolean.FALSE, isRecursive, ret.getResources());
-		toRangerResourceList(resource.getColumns(), "column", isColumnExcludes, isRecursive, ret.getResources());
-		toRangerResourceList(resource.getDatabases(), "database", Boolean.FALSE, isRecursive, ret.getResources());
-		toRangerResourceList(resource.getUdfs(), "udf", Boolean.FALSE, isRecursive, ret.getResources());
-		toRangerResourceList(resource.getTopologies(), "topology", Boolean.FALSE, isRecursive, ret.getResources());
-		toRangerResourceList(resource.getServices(), "service", Boolean.FALSE, isRecursive, ret.getResources());
+		toRangerResourceList(resource.getName(), "path", Boolean.FALSE, isPathRecursive, ret.getResources());
+		toRangerResourceList(resource.getTables(), "table", isTableExcludes, Boolean.FALSE, ret.getResources());
+		toRangerResourceList(resource.getColumnFamilies(), "column-family", Boolean.FALSE, Boolean.FALSE, ret.getResources());
+		toRangerResourceList(resource.getColumns(), "column", isColumnExcludes, Boolean.FALSE, ret.getResources());
+		toRangerResourceList(resource.getDatabases(), "database", Boolean.FALSE, Boolean.FALSE, ret.getResources());
+		toRangerResourceList(resource.getUdfs(), "udf", Boolean.FALSE, Boolean.FALSE, ret.getResources());
+		toRangerResourceList(resource.getTopologies(), "topology", Boolean.FALSE, Boolean.FALSE, ret.getResources());
+		toRangerResourceList(resource.getServices(), "service", Boolean.FALSE, Boolean.FALSE, ret.getResources());
 
 		HashMap<String, List<VXPermMap>> sortedPermMap = new HashMap<String, List<VXPermMap>>();
 		
@@ -219,7 +228,7 @@ public class ServiceUtil {
 			}
 		}
 
-		assetType = getAssetType(service,ret.getService());
+		Integer assetType = getAssetType(service,ret.getService());
 
 		for (Entry<String, List<VXPermMap>> entry : sortedPermMap.entrySet()) {
 			List<String>                 userList   = new ArrayList<String>();
@@ -248,7 +257,7 @@ public class ServiceUtil {
 				
 				if(StringUtils.equalsIgnoreCase(accessType, "Admin")) {
 					policyItem.setDelegateAdmin(Boolean.TRUE);
-					if ( assetType == RangerCommonEnums.ASSET_HBASE) {
+					if ( assetType != null && assetType == RangerCommonEnums.ASSET_HBASE) {
 						accessList.add(new RangerPolicyItemAccess(accessType));
 					}
 				} else {
@@ -275,7 +284,7 @@ public class ServiceUtil {
 	}
 
 	public VXResource toVXResource(RangerPolicy policy, RangerService service) {
-		if(policy == null || service == null) {
+		if(policy == null || service == null || toAssetType(service.getType()) == null) {
 			return null;
 		}
 
@@ -338,6 +347,34 @@ public class ServiceUtil {
 		return ret;
 	}
 
+	public VXAsset publicObjecttoVXAsset(VXRepository vXRepository) {
+		VXAsset ret = new VXAsset();
+		publicDataObjectTovXDataObject(vXRepository,ret);
+
+		Integer assetType = toAssetType(vXRepository.getRepositoryType()); 
+
+		ret.setAssetType(assetType == null ? -1 : assetType.intValue());
+		ret.setName(vXRepository.getName());
+		ret.setDescription(vXRepository.getDescription());
+		ret.setActiveStatus(vXRepository.getIsActive() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
+		ret.setConfig(vXRepository.getConfig());
+		return ret;
+	}
+	
+	public VXRepository  vXAssetToPublicObject(VXAsset asset) {
+		VXRepository ret = new VXRepository();
+		vXDataObjectToPublicDataObject(ret,asset);
+
+		ret.setRepositoryType(toServiceType(asset.getAssetType()));
+		ret.setName(asset.getName());
+		ret.setDescription(asset.getDescription());
+		ret.setIsActive(asset.getActiveStatus() == RangerCommonEnums.STATUS_ENABLED ? true : false);
+		ret.setConfig(asset.getConfig());
+		ret.setVersion(version);
+		
+		return ret;
+	}
+
 	private Map<String, RangerPolicy.RangerPolicyResource> toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, Map<String, RangerPolicy.RangerPolicyResource> resources) {
 		Map<String, RangerPolicy.RangerPolicyResource> ret = resources == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resources;
 
@@ -360,7 +397,7 @@ public class ServiceUtil {
 		return ret;
 	}
 
-	public static String toServiceType(int assetType) {
+	private static String toServiceType(int assetType) {
 		String ret = null;
 
 		for(Map.Entry<String, Integer> e : mapServiceTypeToAssetType.entrySet()) {
@@ -374,21 +411,17 @@ public class ServiceUtil {
 		return ret;
 	}
 
-	public static Integer toAssetType(String serviceType) {
+	private static Integer toAssetType(String serviceType) {
 		Integer ret = null;
 
 		if(serviceType != null) {
 			ret = mapServiceTypeToAssetType.get(serviceType.toLowerCase());
 		}
 
-		if(ret == null) {
-			ret = new Integer(-1);
-		}
-
 		return ret;
 	}
 
-	public static String toAccessType(int permType) {
+	private static String toAccessType(int permType) {
 		String ret = null;
 
 		for(Map.Entry<String, Integer> e : mapAccessTypeToPermType.entrySet()) {
@@ -402,7 +435,7 @@ public class ServiceUtil {
 		return ret;
 	}
 
-	public static Integer toPermType(String accessType) {
+	private static Integer toPermType(String accessType) {
 		Integer ret = null;
 
 		for(Map.Entry<String, Integer> e : mapAccessTypeToPermType.entrySet()) {
@@ -415,50 +448,6 @@ public class ServiceUtil {
 
 		return ret;
 	}
-	
-	public VXRepository toVXRepository(RangerService service){
-		
-		VXRepository  ret = new VXRepository();
-		rangerObjectToDataObject(service,ret);
-
-		ret.setRepositoryType(service.getType());
-		ret.setName(service.getName());
-		ret.setDescription(service.getDescription());
-		ret.setIsActive(service.getIsEnabled());
-		ret.setConfig(jsonUtil.readMapToString(service.getConfigs()));
-		ret.setVersion(Long.toString(service.getVersion()));
-		
-		return ret;
-	}
-	
-	
-	public VXAsset publicObjecttoVXAsset(VXRepository vXRepository) {
-		VXAsset ret = new VXAsset();
-		publicDataObjectTovXDataObject(vXRepository,ret);
-		
-		ret.setAssetType(toAssetType(vXRepository.getRepositoryType()));
-		ret.setName(vXRepository.getName());
-		ret.setDescription(vXRepository.getDescription());
-		ret.setActiveStatus(vXRepository.getIsActive() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
-		ret.setConfig(vXRepository.getConfig());
-		return ret;
-		
-	}
-	
-	public VXRepository  vXAssetToPublicObject(VXAsset asset) {
-		VXRepository ret = new VXRepository();
-		vXDataObjectToPublicDataObject(ret,asset);
-		
-		ret.setRepositoryType(toServiceType(asset.getAssetType()));
-		ret.setName(asset.getName());
-		ret.setDescription(asset.getDescription());
-		ret.setIsActive(asset.getActiveStatus() == RangerCommonEnums.STATUS_ENABLED ? true : false);
-		ret.setConfig(asset.getConfig());
-		ret.setVersion(version);
-		
-		return ret;
-	}
-
 	
 	private RangerBaseModelObject dataObjectToRangerObject(VXDataObject dataObject,RangerBaseModelObject rangerObject) {
 		RangerBaseModelObject ret = rangerObject;
@@ -499,7 +488,7 @@ public class ServiceUtil {
 	}	
 
 	private void updateResourceName(VXPolicy policy) {
-		if(policy == null) {
+		if(policy == null || toAssetType(policy.getRepositoryType()) == null) {
 			return;
 		}
 
@@ -729,7 +718,10 @@ public class ServiceUtil {
 		List<VXRepository> repoList = new ArrayList<VXRepository>();
 		for (RangerService service  : serviceList) {
 			VXRepository vXRepo = toVXRepository(service);
-			repoList.add(vXRepo);
+
+			if(vXRepo != null) {
+				repoList.add(vXRepo);
+			}
 		}
 		VXRepositoryList vXRepositoryList = new VXRepositoryList(repoList);
 		return vXRepositoryList;
@@ -764,7 +756,7 @@ public class ServiceUtil {
 	
 	
 	public VXPolicy toVXPolicy(RangerPolicy policy, RangerService service) {
-		if(policy == null || service == null) {
+		if(policy == null || service == null || toAssetType(service.getType()) == null) {
 			return null;
 		}
 
@@ -970,8 +962,7 @@ public class ServiceUtil {
 	
 	
 	public RangerPolicy toRangerPolicy(VXPolicy vXPolicy, RangerService service ) {
-		
-		if(vXPolicy == null) {
+		if(vXPolicy == null || service == null || toAssetType(service.getType()) == null) {
 			return null;
 		}
 
@@ -979,12 +970,7 @@ public class ServiceUtil {
 
 		ret = (RangerPolicy) dataObjectToRangerObject(vXPolicy, ret);
 
-		if(service != null) {
-			ret.setService(service.getName());
-		} else {
-			ret.setService(vXPolicy.getRepositoryName());
-		}
-
+		ret.setService(service.getName());
 		ret.setName(vXPolicy.getPolicyName());
 		ret.setDescription(vXPolicy.getDescription());
 		ret.setIsEnabled(vXPolicy.getIsEnabled() == true);
@@ -1036,12 +1022,12 @@ public class ServiceUtil {
 		if (vXPolicy.getServices() != null) {
 			toRangerResourceList(vXPolicy.getServices(), "service", Boolean.FALSE, isRecursive, ret.getResources());
 		}  
-
-		assetType = getAssetType(service,ret.getService());
 		
 		if ( vXPolicy.getPermMapList() != null) {
 			List<VXPermObj> vXPermObjList = vXPolicy.getPermMapList();
-			
+
+			Integer assetType = toAssetType(service.getType());
+
 			for(VXPermObj vXPermObj : vXPermObjList ) {
 				List<String>                 userList   = new ArrayList<String>();
 				List<String>                 groupList  = new ArrayList<String>();
@@ -1070,7 +1056,7 @@ public class ServiceUtil {
 						if ( AppConstants.getEnumFor_XAPermType(perm) != 0 ) {
 							if (perm.equalsIgnoreCase("Admin")) {
 								delegatedAdmin=true;
-								if ( assetType != RangerCommonEnums.ASSET_HBASE) {
+								if (assetType != RangerCommonEnums.ASSET_HBASE) {
 									continue;
 								}
 							}
@@ -1153,8 +1139,10 @@ public class ServiceUtil {
 			}
 			
 			VXPolicy vXPolicy = toVXPolicy(policy,service);
-			
-			vXPolicyList.add(vXPolicy);
+
+			if(vXPolicy != null) {
+				vXPolicyList.add(vXPolicy);
+			}
 		}
 
 		VXPolicyList vXPolicyListObj = new VXPolicyList(vXPolicyList);
@@ -1194,9 +1182,12 @@ public class ServiceUtil {
 			
 			ret.setReplaceExistingPermissions(toBooleanReplacePerm(vXPolicy.isReplacePerm()));
 		
-			int assetType =  toAssetType(serviceType);
+			Integer assetType = toAssetType(serviceType);
 			
-			if (assetType == RangerCommonEnums.ASSET_HIVE) {
+			if(assetType == null) {
+				// nothing to do
+			}
+			else if (assetType == RangerCommonEnums.ASSET_HIVE) {
 				
 				String database = StringUtils.isEmpty(vXPolicy.getDatabases()) ? "*" : vXPolicy.getDatabases();
 				String table    = getTableOrUdf(vXPolicy);
