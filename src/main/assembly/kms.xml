@@ -276,7 +276,7 @@
   <fileSets>
 	<fileSet>
 		<outputDirectory>/ews/webapp/WEB-INF/classes/conf.dist</outputDirectory>
-		<directory>embeddedwebserver/conf</directory>
+		<directory>kms/config/webserver</directory>
 		<fileMode>700</fileMode>
 	</fileSet>
 	<fileSet>
