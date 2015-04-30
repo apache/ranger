@@ -15,7 +15,7 @@
 # limitations under the License.
 # -------------------------------------------------------------------------------------
 #
-# Ranger Admin Setup Script
+# Ranger KMS Setup Script
 #
 # This script will install policymanager webapplication under tomcat and also, initialize the database with ranger users/tables.
 
@@ -263,11 +263,17 @@ create_rollback_point() {
 }
 
 
-copy_db_connector(){
-	log "[I] Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib ";
-    cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/lib
-	check_ret_status $? "Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib failed"
-	log "[I] Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib DONE";
+copy_db_connector(){	
+        libfolder=$PWD/ews/lib
+	if [ ! -d  ${libfolder} ]
+        then
+                log "Creating ${libfolder}"
+                mkdir -p ${libfolder}
+        fi
+	log "[I] Copying ${DB_FLAVOR} Connector to ${libfolder} ";
+    	cp -f $SQL_CONNECTOR_JAR ${libfolder}
+	check_ret_status $? "Copying ${DB_FLAVOR} Connector to ${libfolder} failed"
+	log "[I] Copying ${DB_FLAVOR} Connector to ${libfolder} DONE";
 }
 
 setup_kms(){
@@ -531,7 +537,7 @@ setup_install_files(){
 	    fi
 	fi
 
-	# Copy ranger-admin-services to /usr/bin
+	# Copy ranger-kms-services to /usr/bin
 	if [ ! \( -e /usr/bin/ranger-kms \) ]
 	then
 	  ln -sf ${INSTALL_DIR}/ranger-kms /usr/bin/ranger-kms
