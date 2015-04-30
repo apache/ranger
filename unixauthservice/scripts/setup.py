@@ -144,7 +144,7 @@ def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
     for config in root.findall('property'):
         name = config.find('name').text
         if (name in prop.keys()):
-            config.find('value').text = prop[name]
+            config.find('value').text = str(prop[name])
         #else:
         #    print "ERROR: key not found: %s" % (name)
     if isfile(xmlOutputFileName):
