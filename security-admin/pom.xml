@@ -330,13 +330,13 @@
     		<artifactId>jackson-mapper-asl</artifactId>
     		<version>${codehaus.jackson.version}</version>
 		</dependency>
-		<!--  
+
 		<dependency>
 		<groupId>org.apache.ranger</groupId>
 			<artifactId>ranger-util</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		 -->
+
 		<dependency>
         	<groupId>org.apache.hadoop</groupId>
         	<artifactId>hadoop-common</artifactId>
