@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -53,11 +54,31 @@ import com.google.common.collect.Sets;
 
 public class TestRangerPolicyValidator {
 
+	/**
+	 * Wrapper class only so we clear out the RangerServiceDefHelper before every test.
+	 * @author alal
+	 *
+	 */
+	static class RangerPolicyValidatorWrapper extends RangerPolicyValidator {
+		public RangerPolicyValidatorWrapper(ServiceStore store) {
+			super(store);
+		}
+		
+		boolean isValid(Long id, Action action, List<ValidationFailureDetails> failures) {
+			RangerServiceDefHelper._Cache.clear();
+			return super.isValid(id, action, failures);
+		}
+		
+		boolean isValid(RangerPolicy policy, Action action, boolean isAdmin, List<ValidationFailureDetails> failures) {
+			RangerServiceDefHelper._Cache.clear();
+			return super.isValid(policy, action, isAdmin, failures);
+		}
+	}
 	@Before
 	public void setUp() throws Exception {
 		_store = mock(ServiceStore.class);
 		_policy = mock(RangerPolicy.class);
-		_validator = new RangerPolicyValidator(_store);
+		_validator = new RangerPolicyValidatorWrapper(_store);
 		_serviceDef = mock(RangerServiceDef.class);
 		_factory = mock(RangerObjectFactory.class);
 		_validator._factory = _factory;
@@ -87,16 +108,30 @@ public class TestRangerPolicyValidator {
 	String[] accessTypes_bad = new String[] { "r", "w", "xx", }; // two missing (x, a), one new that isn't on bad (xx)
 	
 	private final Object[][] resourceDefData = new Object[][] {
-			// { name, mandatory, reg-exp, excludesSupported, recursiveSupported }
-			{ "db", true, "db\\d+", null, null }, // valid values: db1, db22, db983, etc.; invalid: db, db12x, ttx11, etc.; null => false for excludes and recursive
-			{ "tbl", true, null, true, true }, // regex == null => anything goes; excludes == true, recursive == true
-			{ "col", false, "col\\d{1,2}", false, true }  // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true 
+		//  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp,       parent-level }
+			{ "db",  null,              null,               true,      "db\\d+",      null },       // valid values: db1, db22, db983, etc.; invalid: db, db12x, ttx11, etc.; null => false for excludes and recursive
+			{ "tbl", true,              true,               true,      null,          "db" },       // regex == null => anything goes; excludes == true, recursive == true
+			{ "col", false,             true,               false,     "col\\d{1,2}", "tbl" },      // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true 
 	};
 	
+	private final Object[][] resourceDefData_multipleHierarchies = new Object[][] {
+		//  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp,       parent-level }
+			{ "db",  null,              null,               true,      "db\\d+",      null },       // valid values: db1, db22, db983, etc.; invalid: db, db12x, ttx11, etc.; null => false for excludes and recursive
+			{ "tbl", true,              true,               true,      null,          "db" },       // regex == null => anything goes; excludes == true, recursive == true
+			{ "col", false,             true,               false,     "col\\d{1,2}", "tbl" },      // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true 
+			{ "udf", true,              true,               true,      null,          "db" }        // same parent as tbl (simulating hive's multiple resource hierarchies)
+	};
+		
 	private final Object[][] policyResourceMap_good = new Object[][] {
 			// resource-name, values, excludes, recursive
 			{ "db", new String[] { "db1", "db2" }, null, null },
 			{ "TBL", new String[] { "tbl1", "tbl2" }, true, false } // case should not matter
+	};
+	
+	private final Object[][] policyResourceMap_goodMultipleHierarchies = new Object[][] {
+			// resource-name, values, excludes, recursive
+			{ "db", new String[] { "db1", "db2" }, null, null },
+			{ "UDF", new String[] { "udf1", "udf2" }, true, false } // case should not matter
 	};
 	
 	private final Object[][] policyResourceMap_bad = new Object[][] {
@@ -140,6 +175,7 @@ public class TestRangerPolicyValidator {
 		when(_store.getServiceByName("service-name")).thenReturn(service);
 		// service points to a valid service-def
 		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes);
+		when(_serviceDef.getName()).thenReturn("service-type");
 		when(_store.getServiceDefByName("service-type")).thenReturn(_serviceDef);
 		// a matching policy should exist for create when checked by id and not exist when checked by name.
 		when(_store.getPolicy(7L)).thenReturn(null);
@@ -382,7 +418,7 @@ public class TestRangerPolicyValidator {
 		}
 		
 		// service-def should contain the right access types on it.
-		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes_bad);
+		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes_bad, "service-type");
 		when(_store.getServiceDefByName("service-type")).thenReturn(_serviceDef);
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
@@ -392,7 +428,7 @@ public class TestRangerPolicyValidator {
 		}
 		
 		// create the right service def with right resource defs - this is the same as in the happypath test above.
-		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes);
+		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes, "service-type");
 		when(_store.getPolicies(filter)).thenReturn(null);
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDefData);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
@@ -401,17 +437,16 @@ public class TestRangerPolicyValidator {
 		// one mandatory is missing (tbl) and one unknown resource is specified (extra), and values of option resource don't conform to validation pattern (col)
 		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);
 		when(_policy.getResources()).thenReturn(policyResources);
-//		TODO disabled till a more robust fix for Hive resources definition can be found
-//		for (Action action : cu) {
-//			for (boolean isAdmin : new boolean[] { true, false }) {
-//				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
-//				_utils.checkFailureForMissingValue(_failures, "resources", "tbl"); // for missing resource: tbl
-//				_utils.checkFailureForSemanticError(_failures, "resources", "extra"); // for spurious resource: "extra"
-//				_utils.checkFailureForSemanticError(_failures, "resource-values", "col"); // for spurious resource: "extra"
-//				_utils.checkFailureForSemanticError(_failures, "isRecursive", "db"); // for specifying it as true when def did not allow it
-//				_utils.checkFailureForSemanticError(_failures, "isExcludes", "col"); // for specifying it as true when def did not allow it
-//			}
-//		}
+		for (Action action : cu) {
+			for (boolean isAdmin : new boolean[] { true, false }) {
+				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
+				_utils.checkFailureForSemanticError(_failures, "resource-values", "col"); // for spurious resource: "extra"
+				_utils.checkFailureForSemanticError(_failures, "isRecursive", "db"); // for specifying it as true when def did not allow it
+				_utils.checkFailureForSemanticError(_failures, "isExcludes", "col"); // for specifying it as true when def did not allow it
+				_utils.checkFailureForMissingValue(_failures, "resources", "tbl"); // for missing resource: tbl
+				_utils.checkFailureForSemanticError(_failures, "resources", "extra"); // for spurious resource: "extra"
+			}
+		}
 		
 		// create the right resource def but let it clash with another policy with matching resource-def
 		policyResources = _utils.createPolicyResourceMap(policyResourceMap_good);
@@ -597,7 +632,7 @@ public class TestRangerPolicyValidator {
 	public final void test_isValidResourceFlags_happyPath() {
 
 		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_happyPath);
-		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs2(resourceDef_happyPath);
+		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDef_happyPath);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		assertTrue(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy", true));
 
@@ -617,7 +652,7 @@ public class TestRangerPolicyValidator {
 	@Test
 	public final void test_isValidResourceFlags_failures() {
 		// passing true when def says false/null
-		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs2(resourceDef_happyPath);
+		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDef_happyPath);
 		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_failures);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		// should not error out on 
@@ -663,6 +698,39 @@ public class TestRangerPolicyValidator {
 		when(policies[2].getId()).thenReturn((long)0);
 		assertTrue("No duplication if updating policy", _validator.isPolicyResourceUnique(policies[0], _failures, Action.UPDATE, serviceName));
 	}
+	
+	@Test
+	public final void test_isValidResourceNames_happyPath() {
+		String serviceName = "a-service-def";
+		// setup service-def
+		Date now = new Date();
+		when(_serviceDef.getName()).thenReturn(serviceName );
+		when(_serviceDef.getUpdateTime()).thenReturn(now);
+		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDefData_multipleHierarchies);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		// setup policy
+		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_goodMultipleHierarchies);				
+		when(_policy.getResources()).thenReturn(policyResources);
+		assertTrue(_validator.isValidResourceNames(_policy, _failures, _serviceDef));
+	}
+	
+	@Test
+	public final void test_isValidResourceNames_failures() {
+		String serviceName = "a-service-def";
+		// setup service-def
+		Date now = new Date();
+		when(_serviceDef.getName()).thenReturn(serviceName );
+		when(_serviceDef.getUpdateTime()).thenReturn(now);
+		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDefData_multipleHierarchies);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		// setup policy
+		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);				
+		when(_policy.getResources()).thenReturn(policyResources);
+		assertFalse("Missing required resource and unknown resource", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+		_utils.checkFailureForMissingValue(_failures, "resources", new String[] {"tbl", "udf"} );
+		_utils.checkFailureForSemanticError(_failures, "resources", "extra");
+	}
+	
 	
 	private ValidationTestUtils _utils = new ValidationTestUtils();
 	private List<ValidationFailureDetails> _failures = new ArrayList<ValidationFailureDetails>();

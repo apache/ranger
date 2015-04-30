@@ -38,6 +38,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class RangerPolicyValidator extends RangerValidator {
@@ -238,14 +239,11 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 		
 		boolean valid = true;
-		if (serviceDef != null) { // following checks can't be done meaningfully otherwise
-//			TODO - disabled till a more robust fix for Hive resources definition can be found
-//			valid = isValidResourceNames(policy, failures, serviceDef);
-			Map<String, RangerPolicyResource> resourceMap = policy.getResources();
-			if (resourceMap != null) { // following checks can't be done meaningfully otherwise
-				valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
-				valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName(), isAdmin) && valid;
-			}
+		Map<String, RangerPolicyResource> resourceMap = policy.getResources();
+		if (serviceDef != null && resourceMap != null) { // following checks can't be done meaningfully otherwise
+			valid = isValidResourceNames(policy, failures, serviceDef) && valid;
+			valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
+			valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName(), isAdmin) && valid;
 		}
 		if (StringUtils.isNotBlank(serviceName)) { // resource uniqueness check cannot be done meaningfully otherwise
 			valid = isPolicyResourceUnique(policy, failures, action, serviceName) && valid;
@@ -300,28 +298,59 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 
 		boolean valid = true;
-		Set<String> mandatoryResources = getMandatoryResourceNames(serviceDef);
 		Set<String> policyResources = getPolicyResources(policy);
-		Set<String> missingResources = Sets.difference(mandatoryResources, policyResources);
-		if (!missingResources.isEmpty()) {
-			failures.add(new ValidationFailureDetailsBuilder()
-				.field("resources")
-				.subField(missingResources.iterator().next()) // we return any one parameter!
-				.isMissing()
-				.becauseOf("required resources[" + missingResources + "] are missing")
-				.build());
-			valid = false;
-		}
-		Set<String> allResource = getAllResourceNames(serviceDef);
-		Set<String> unknownResources = Sets.difference(policyResources, allResource);
-		if (!unknownResources.isEmpty()) {
-			failures.add(new ValidationFailureDetailsBuilder()
-				.field("resources")
-				.subField(unknownResources.iterator().next()) // we return any one parameter!
-				.isSemanticallyIncorrect()
-				.becauseOf("resource[" + unknownResources + "] is not valid for service-def[" + serviceDef.getName() + "]")
-				.build());
-			valid = false;
+
+		RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef);
+		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(); // this can be empty but not null!
+		if (hierarchies.isEmpty()) {
+			LOG.debug("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies!  Skipping this check!");
+		} else {
+			Iterator<List<RangerResourceDef>> iterator = hierarchies.iterator();
+			boolean foundHierarchyMatch = false;
+			Set<String> missingResourcesCopyForErrorMessage = null; // used to give more helpful error message to the user
+			while (iterator.hasNext() && !foundHierarchyMatch) {
+				List<RangerResourceDef> aHierarchy = iterator.next();
+				Set<String> mandatoryResources = defHelper.getMandatoryResourceNames(aHierarchy);
+				Set<String> missingResources = Sets.difference(mandatoryResources, policyResources);
+				if (missingResources.isEmpty()) {
+					foundHierarchyMatch = true;
+				} else {
+					/*
+					 * Since user does not specify which hierarchy the policy is for, it is tricky to guess her intention and give error message about 
+					 * what resource is really missing.  For example if only db is speicifed then it is tricky to say if just UDF was missed or TBL and COL were missed. 
+					 * So we punt and capture the first hierarchy that does not match.  And if policy does not match any hierarchies then we use this cached value
+					 * to report error back to the user.  Ideal solution is to require user to specify hierarhcy in policy in case of multi-hierarchy policies.
+					 */
+					missingResourcesCopyForErrorMessage = ImmutableSet.copyOf(missingResources);
+				}
+			}
+			/*
+			 * We have evaluated all valid resource hierarchies for the service.  But policy did not have mandatory resources required by any of those hierarchies!
+			 */
+			if (!foundHierarchyMatch) {
+				failures.add(new ValidationFailureDetailsBuilder()
+					.field("resources")
+					.subField(missingResourcesCopyForErrorMessage.iterator().next()) // We return any one missing resource here!
+					.isMissing()
+					.becauseOf("required resources [" + missingResourcesCopyForErrorMessage + "] are missing")
+					.build());
+				valid = false;
+			}
+			/*
+			 * Since policy does not specify which hierarchy it belongs to, we can't reliably check if a policy is specifying levels not relevant for it.  However, we can 
+			 * do a secular check if we got a level that is not applicable to any hierarchy for the service.
+			 */
+			Set<String> allResource = defHelper.getResorceMap().keySet();
+			Set<String> unknownResources = Sets.difference(policyResources, allResource);
+			if (!unknownResources.isEmpty()) {
+				failures.add(new ValidationFailureDetailsBuilder()
+					.field("resources")
+					.subField(unknownResources.iterator().next()) // we return any one parameter!
+					.isSemanticallyIncorrect()
+					.becauseOf("resource[" + unknownResources + "] is not valid for service-def[" + serviceDef.getName() + "]")
+					.build());
+				valid = false;
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

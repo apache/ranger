@@ -83,6 +83,24 @@ public class ValidationTestUtils {
 		checkFailure(failures, null, true, null, field, subField);
 	}
 
+	// check if any one of the sub-fields is present
+	void checkFailureForMissingValue(List<ValidationFailureDetails> failures, String field, String[] subFields) {
+		if (CollectionUtils.isEmpty(failures)) {
+			fail("List of failures is null/empty!");
+		} else {
+			boolean found = false;
+			int i = 0;
+			while (!found && i < subFields.length) {
+				String subField = subFields[i];
+				if (hasFailure(failures, null, true, null, field, subField)) {
+					found = true;
+				}
+				i++;
+			}
+			assertTrue(failures.toString(), found);
+		}
+	}
+
 	void checkFailureForInternalError(List<ValidationFailureDetails> failures, String fieldName) {
 		checkFailure(failures, true, null, null, fieldName, null);
 	}
@@ -95,18 +113,23 @@ public class ValidationTestUtils {
 		if (CollectionUtils.isEmpty(failures)) {
 			fail("List of failures is null/empty!");
 		} else {
-			boolean found = false;
-			for (ValidationFailureDetails f : failures) {
-				if ((internalError == null || internalError == f._internalError) &&
-						(missing == null || missing == f._missing) &&
-						(semanticError == null || semanticError == f._semanticError) &&
-						(field == null || field.equals(f._fieldName)) &&
-						(subField == null || subField.equals(f._subFieldName))) {
-					found = true;
-				}
-			}
-			assertTrue(found);
+			boolean found = hasFailure(failures, internalError, missing, semanticError, field, subField);
+			assertTrue(failures.toString(), found);
 		}
+	}
+	
+	boolean hasFailure(List<ValidationFailureDetails> failures, Boolean internalError, Boolean missing, Boolean semanticError, String field, String subField) {
+		boolean found = false;
+		for (ValidationFailureDetails f : failures) {
+			if ((internalError == null || internalError == f._internalError) &&
+					(missing == null || missing == f._missing) &&
+					(semanticError == null || semanticError == f._semanticError) &&
+					(field == null || field.equals(f._fieldName)) &&
+					(subField == null || subField.equals(f._subFieldName))) {
+				found = true;
+			}
+		}
+		return found;
 	}
 
 	List<RangerAccessTypeDef> createAccessTypeDefs(String[] names) {
@@ -142,6 +165,12 @@ public class ValidationTestUtils {
 			result.add(aTypeDef);
 		}
 		return result;
+	}
+
+	RangerServiceDef createServiceDefWithAccessTypes(String[] accesses, String serviceName) {
+		RangerServiceDef serviceDef = createServiceDefWithAccessTypes(accesses);
+		when(serviceDef.getName()).thenReturn(serviceName);
+		return serviceDef;
 	}
 
 	RangerServiceDef createServiceDefWithAccessTypes(String[] accesses) {
@@ -221,15 +250,18 @@ public class ValidationTestUtils {
 				String regExPattern = null;
 				Boolean isExcludesSupported = null;
 				Boolean isRecursiveSupported = null;
+				String parent = null;
 				switch(row.length) {
+				case 6:
+					parent = (String) row[5];
 				case 5:
-					isRecursiveSupported = (Boolean)row[4];
+					regExPattern = (String)row[4];
 				case 4:
-					isExcludesSupported = (Boolean)row[3];
+					mandatory = (Boolean)row[3];
 				case 3:
-					regExPattern = (String)row[2];
+					isRecursiveSupported = (Boolean)row[2];
 				case 2:
-					mandatory = (Boolean)row[1];
+					isExcludesSupported = (Boolean)row[1];
 				case 1:
 					name = (String)row[0];
 				}
@@ -239,36 +271,7 @@ public class ValidationTestUtils {
 				when(aDef.getValidationRegEx()).thenReturn(regExPattern);
 				when(aDef.getExcludesSupported()).thenReturn(isExcludesSupported);
 				when(aDef.getRecursiveSupported()).thenReturn(isRecursiveSupported);
-			}
-			defs.add(aDef);
-		}
-		return defs;
-	}
-
-	List<RangerResourceDef> createResourceDefs2(Object[][] data) {
-		// if data itself is null then return null back
-		if (data == null) {
-			return null;
-		}
-		List<RangerResourceDef> defs = new ArrayList<RangerResourceDef>();
-		for (Object[] row : data) {
-			RangerResourceDef aDef = null;
-			if (row != null) {
-				String name = null;
-				Boolean isExcludesSupported = null;
-				Boolean isRecursiveSupported = null;
-				switch(row.length) {
-				case 3:
-					isRecursiveSupported = (Boolean)row[2]; // note: falls through to next case
-				case 2:
-					isExcludesSupported = (Boolean)row[1]; // note: falls through to next case
-				case 1:
-					name = (String)row[0];
-				}
-				aDef = mock(RangerResourceDef.class);
-				when(aDef.getName()).thenReturn(name);
-				when(aDef.getExcludesSupported()).thenReturn(isExcludesSupported);
-				when(aDef.getRecursiveSupported()).thenReturn(isRecursiveSupported);
+				when(aDef.getParent()).thenReturn(parent);
 			}
 			defs.add(aDef);
 		}

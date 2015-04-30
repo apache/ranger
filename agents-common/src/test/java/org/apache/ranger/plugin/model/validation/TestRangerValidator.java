@@ -280,12 +280,14 @@ public class TestRangerValidator {
 		
 		// access type defs with null empty blank names are skipped, spaces within names are preserved
 		Object[][] data = {
-				{ "a", true },  // all good
-				null,           // this should put a null element in the resource def!
-				{ "b", null },  // mandatory field is null, i.e. false
-				{ "c", false }, // non-mandatory field false - upper case
-				{ "D", true },  // resource specified in upper case
-				{ "E", false }, // all good
+		//  { name,  excludes     recursive    mandatory, reg-exp,       parent-level }
+        //	         Supported?,  Supported?,
+			{ "a",   null,        null,        true  }, // all good
+			null,                                       // this should put a null element in the resource def!
+			{ "b",   null,        null,        null  }, // mandatory field is null, i.e. false
+			{ "c",   null,        null,        false }, // non-mandatory field false - upper case
+			{ "D",   null,        null,        true  }, // resource specified in upper case
+			{ "E",   null,        null,        false }, // all good
 		};
 		resourceDefs.addAll(_utils.createResourceDefs(data));
 		accessTypes = _validator.getMandatoryResourceNames(serviceDef);
