@@ -241,6 +241,7 @@ public class KMSWebApp implements ServletContextListener {
             keyAcl = ReflectionUtils.newInstance(cls, kmsConf);
         }
       } catch (Exception e) {
+			LOG.error("Unable to getAcls with an exception", e) ;
 	        throw new IOException(e.getMessage());
       }
 	  return keyAcl;

@@ -374,7 +374,8 @@ def main():
 			updateProppertyInJCKSFile(cryptPath,aliasName,keyPassword)
 		else:
 			updateProppertyInJCKSFile(cryptPath,aliasName," ")
-
+	
+	os.chown(cryptPath,ownerId,groupId)
 
 	fixPermList = [ ".", usersyncBaseDirName, confFolderName, certFolderName ]
 

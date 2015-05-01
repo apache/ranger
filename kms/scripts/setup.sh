@@ -270,10 +270,16 @@ copy_db_connector(){
                 log "Creating ${libfolder}"
                 mkdir -p ${libfolder}
         fi
-	log "[I] Copying ${DB_FLAVOR} Connector to ${libfolder} ";
-    	cp -f $SQL_CONNECTOR_JAR ${libfolder}
-	check_ret_status $? "Copying ${DB_FLAVOR} Connector to ${libfolder} failed"
-	log "[I] Copying ${DB_FLAVOR} Connector to ${libfolder} DONE";
+	fn=`basename ${SQL_CONNECTOR_JAR}`
+	if [ ! -f ${libfolder}/${fn} ]
+	then
+		log "[I] Copying ${DB_FLAVOR} Connector to ${libfolder} ";
+    		cp -f $SQL_CONNECTOR_JAR ${libfolder}
+		check_ret_status $? "Copying ${DB_FLAVOR} Connector to ${libfolder} failed"
+		log "[I] Copying ${DB_FLAVOR} Connector to ${libfolder} DONE";
+	else
+		log "[I] Using already existing DB connector: ${libfolder}/${fn} ";
+	fi
 }
 
 setup_kms(){
@@ -548,6 +554,12 @@ setup_install_files(){
 	then
 	  ln -sf ${INSTALL_DIR}/ranger-kms /usr/bin/ranger-kms-services.sh
 	  chmod ug+rx /usr/bin/ranger-kms-services.sh	
+	fi
+
+	if [ ! \( -e ${INSTALL_DIR}/ranger-kms-services.sh \) ]
+	then
+	  ln -sf ${INSTALL_DIR}/ranger-kms-initd ${INSTALL_DIR}/ranger-kms-services.sh
+	  chmod ug+rx ${INSTALL_DIR}/ranger-kms-services.sh	
 	fi
 
 	if [ ! -d /var/log/ranger/kms ]

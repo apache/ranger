@@ -152,13 +152,13 @@
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-core</artifactId>
-      <version>${jersey-server.version}</version>
+	  <version>${sun-jersey-bundle.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-server</artifactId>
-      <version>${jersey-server.version}</version>
+	  <version>${sun-jersey-bundle.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -374,7 +374,7 @@
 	<dependency>
 		<groupId>com.sun.jersey</groupId>
 		<artifactId>jersey-json</artifactId>
-		<version>${jersey-server.version}</version>
+	    <version>${sun-jersey-bundle.version}</version>
 	</dependency>	  
 	<dependency>
 		<groupId>org.codehaus.jettison</groupId>
