@@ -336,14 +336,14 @@ def main():
 	if (unixUserProp in mergeProps):
 		ownerName = mergeProps[unixUserProp]
 	else:
-		print "ERROR: Property [%s] not defined." % (unixUserProp)
-		sys.exit(1)
+		mergeProps[unixUserProp] = "ranger"
+		ownerName = mergeProps[unixUserProp]
 
 	if (unixGroupProp in mergeProps):
 		groupName = mergeProps[unixGroupProp]
 	else:
-		print "ERROR: Property [%s] not defined." % (unixGroupProp)
-		sys.exit(1)
+		mergeProps[unixGroupProp] = "ranger"
+		groupName = mergeProps[unixGroupProp]
 
 	try:
 		ownerId = pwd.getpwnam(ownerName).pw_uid
@@ -358,6 +358,7 @@ def main():
 	os.chown(logFolderName,ownerId,groupId)
 	os.chown(ugsyncLogFolderName,ownerId,groupId)
 	os.chown(pidFolderName,ownerId,groupId)
+	os.chown(rangerBaseDirName,ownerId,groupId)
 
 	initializeInitD()
 
@@ -375,9 +376,7 @@ def main():
 			updateProppertyInJCKSFile(cryptPath,aliasName," ")
 
 
-	fixPermList = [ "." ]
-	for d in dirList:
-		fixPermList.append(d)
+	fixPermList = [ ".", usersyncBaseDirName, confFolderName, certFolderName ]
 
 	for dir in fixPermList:
 		for root, dirs, files in os.walk(dir):
