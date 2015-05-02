@@ -975,9 +975,11 @@ public class ServiceUtil {
 		ret.setDescription(vXPolicy.getDescription());
 		ret.setIsEnabled(vXPolicy.getIsEnabled() == true);
 		ret.setIsAuditEnabled(vXPolicy.getIsAuditEnabled());
+
+		Integer assetType = toAssetType(service.getType());
 		
 		Boolean isRecursive  =  Boolean.FALSE;
-		if ( vXPolicy.getIsRecursive() != null) {
+		if (assetType == RangerCommonEnums.ASSET_HDFS && vXPolicy.getIsRecursive() != null) {
 			isRecursive      = vXPolicy.getIsRecursive();
 		}
 		
@@ -991,7 +993,7 @@ public class ServiceUtil {
 			isColumnExcludes = vXPolicy.getColumnType().equals(RangerCommonEnums.getLabelFor_PolicyType(RangerCommonEnums.POLICY_EXCLUSION));
 		}
 		
-		if (vXPolicy.getResourceName() != null ) {
+		if (assetType == RangerCommonEnums.ASSET_HDFS && vXPolicy.getResourceName() != null ) {
 			toRangerResourceList(vXPolicy.getResourceName(), "path", Boolean.FALSE, isRecursive, ret.getResources());
 		}
 		
@@ -1025,8 +1027,6 @@ public class ServiceUtil {
 		
 		if ( vXPolicy.getPermMapList() != null) {
 			List<VXPermObj> vXPermObjList = vXPolicy.getPermMapList();
-
-			Integer assetType = toAssetType(service.getType());
 
 			for(VXPermObj vXPermObj : vXPermObjList ) {
 				List<String>                 userList   = new ArrayList<String>();
@@ -1062,8 +1062,6 @@ public class ServiceUtil {
 							}
 							accessList.add(new RangerPolicyItemAccess(perm));
 						}
-					
-						
 					}
 				}
 				
