@@ -53,6 +53,7 @@ import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAgentService;
 import org.apache.ranger.service.XAssetService;
@@ -238,7 +239,9 @@ public class AssetREST {
 
 		VXAssetList ret = new VXAssetList();
 
-		List<RangerService> services = serviceREST.getServices(request).getServices();
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields);
+
+		List<RangerService> services = serviceREST.getServices(filter);
 
 		if(services != null) {
 			List<VXAsset> assets = new ArrayList<VXAsset>();
@@ -271,9 +274,7 @@ public class AssetREST {
 
 		VXLong ret = new VXLong();
 
-		Long svcCount = serviceREST.countServices(request);
-
-		ret.setValue(svcCount == null ? 0 : svcCount.longValue());
+		ret.setValue(searchXAssets(request).getListSize());
 
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== AssetREST.countXAssets(): " + ret);
@@ -379,19 +380,21 @@ public class AssetREST {
 
 		VXResourceList ret = new VXResourceList();
 
-		String arg     = request.getParameter("assetId");
-		Long   assetId = (arg == null || arg.isEmpty()) ? null : Long.parseLong(arg);
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, xResourceService.sortFields);
 
-		List<RangerPolicy> policies = assetId != null ? serviceREST.getServicePolicies(assetId, request)
-				.getPolicies() : serviceREST.getPolicies(request).getPolicies();
+		List<RangerPolicy> policies = serviceREST.getPolicies(filter);
 
 		if(policies != null) {
-			List<VXResource> resources = new ArrayList<VXResource>(policies.size());
+			List<VXResource> resources = new ArrayList<VXResource>();
 
 			for(RangerPolicy policy : policies) {
 				RangerService service = serviceREST.getServiceByName(policy.getService());
 
-				resources.add(serviceUtil.toVXResource(policy, service));
+				VXResource resource = serviceUtil.toVXResource(policy, service);
+
+				if(resource != null) {
+					resources.add(resource);
+				}
 			}
 
 			ret.setVXResources(resources);
@@ -414,9 +417,7 @@ public class AssetREST {
 
 		VXLong ret = new VXLong();
 
-		Long count = serviceREST.countPolicies(request);
-
-		ret.setValue(count == null ? 0 : count.longValue());
+		ret.setValue(searchXResources(request).getListSize());
 
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== AssetREST.countXAssets(): " + ret);

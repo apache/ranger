@@ -119,9 +119,15 @@ public class RangerSearchUtil extends SearchUtil {
 		if (repositoryType != null) {
 			repositoryType = repositoryType.toLowerCase() ;
 		}
+
+		String repositoryId = request.getParameter("repositoryId");
+		if(repositoryId == null) {
+			repositoryId = request.getParameter("assetId");
+		}
+
 		ret.setParam(SearchFilter.SERVICE_TYPE, repositoryType) ;
 		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter("repositoryName"));
-		ret.setParam(SearchFilter.SERVICE_ID, request.getParameter("repositoryId"));
+		ret.setParam(SearchFilter.SERVICE_ID, repositoryId);
 		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter("policyName"));
 		ret.setParam(SearchFilter.USER, request.getParameter("userName"));
 		ret.setParam(SearchFilter.GROUP, request.getParameter("groupName"));
