@@ -186,7 +186,7 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.searchRepositories()");
 		}
 
-		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, policyService.sortFields);
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields);
 
 		List<RangerService> serviceList = serviceREST.getServices(filter);
 
@@ -213,9 +213,10 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.countRepositories()");
 		}
 
-        VXLong ret = new VXLong();
-        
-        ret.setValue(serviceREST.countServices(request));
+		VXRepositoryList repositories = searchRepositories(request);
+
+		VXLong ret = new VXLong();
+		ret.setValue(repositories == null ? 0 : repositories.getResultSize());
 
         if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.countRepositories(): count=" + ret);
@@ -263,17 +264,19 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.createPolicy()");
 		}
 		
-		RangerService service       = serviceREST.getServiceByName(vXPolicy.getRepositoryName());
-		
-		RangerPolicy  policy        = serviceUtil.toRangerPolicy(vXPolicy,service);
+		RangerService service = serviceREST.getServiceByName(vXPolicy.getRepositoryName());
+		RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXPolicy,service);
 
-		if(logger.isDebugEnabled()) {
-			logger.debug("RANGERPOLICY: " + policy.toString());
+		VXPolicy ret = null;
+		if(policy != null) {
+			if(logger.isDebugEnabled()) {
+				logger.debug("RANGERPOLICY: " + policy.toString());
+			}
+		
+			RangerPolicy  createdPolicy = serviceREST.createPolicy(policy);
+
+			ret = serviceUtil.toVXPolicy(createdPolicy, service);
 		}
-		
-		RangerPolicy  createdPolicy = serviceREST.createPolicy(policy);
-
-		VXPolicy ret = serviceUtil.toVXPolicy(createdPolicy, service);
 		
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.createPolicy(" + policy + "): " + ret);
@@ -298,14 +301,17 @@ public class PublicAPIs {
 
 		vXPolicy.setId(id);
 		
-		RangerService service       = serviceREST.getServiceByName(vXPolicy.getRepositoryName());
-		
-		RangerPolicy  policy        = serviceUtil.toRangerPolicy(vXPolicy,service);
-		policy.setVersion(existing.getVersion());
+		RangerService service = serviceREST.getServiceByName(vXPolicy.getRepositoryName());
+		RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXPolicy,service);
 
-		RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy);
+		VXPolicy ret = null;
+		if(policy != null) {
+			policy.setVersion(existing.getVersion());
 
-		VXPolicy ret = serviceUtil.toVXPolicy(updatedPolicy, service);
+			RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy);
+
+			ret = serviceUtil.toVXPolicy(updatedPolicy, service);
+		}
 
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.updatePolicy(" + policy + "): " + ret);
@@ -367,10 +373,10 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.countPolicies(): ");
 		}
 
-		Long policyCount = serviceREST.countPolicies(request);
-		
+		VXPolicyList policies = searchPolicies(request);
+
 		VXLong vXlong = new VXLong();
-		vXlong.setValue(policyCount);
+		vXlong.setValue(policies == null ? 0 : policies.getResultSize());
 
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.countPolicies(): "  + request );
