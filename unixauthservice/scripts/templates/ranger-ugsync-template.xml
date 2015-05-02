@@ -165,4 +165,16 @@
 		<name>ranger.usersync.truststore.file</name>
 		<value></value>
 	</property>
+	<property>
+		<name>ranger.usersync.policymgr.username</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.policymgr.alias</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.policymgr.keystore</name>
+		<value></value>
+	</property>
 </configuration>

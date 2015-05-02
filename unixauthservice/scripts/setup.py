@@ -311,12 +311,12 @@ def main():
 		mergeProps['ranger.usersync.keystore.password'] = defaultKSPassword
 		createJavaKeystoreForSSL(ksFileName, defaultKSPassword)
 
-
+	if ('ranger.usersync.keystore.password' not in mergeProps):
+		mergeProps['ranger.usersync.keystore.password'] = defaultKSPassword
 
 
 	fn = join(installTemplateDirName,templateFileName)
 	outfn = join(confFolderName, outputFileName)
-	writeXMLUsingProperties(fn, mergeProps, outfn)
 
 	if ( os.path.isdir(logFolderName) ):
 		logStat = os.stat(logFolderName)
@@ -377,6 +377,29 @@ def main():
 	
 	os.chown(cryptPath,ownerId,groupId)
 
+	if ('ranger.usersync.policymgr.keystore' not in mergeProps):
+		mergeProps['ranger.usersync.policymgr.keystore'] = cryptPath
+
+	ugsyncCryptPath = mergeProps['ranger.usersync.policymgr.keystore']
+
+	if ('ranger.usersync.policymgr.username' not in mergeProps):
+		mergeProps['ranger.usersync.policymgr.username'] = 'rangerusersync'
+	
+	if ('ranger.usersync.policymgr.alias' not in mergeProps):
+		mergeProps['ranger.usersync.policymgr.alias'] = 'ranger.usersync.policymgr.password'
+	
+	if ('ranger.usersync.policymgr.password' not in mergeProps):
+		mergeProps['ranger.usersync.policymgr.password'] = 'rangerusersync'
+
+	usersyncKSPath = mergeProps['ranger.usersync.policymgr.keystore']
+	pmgrAlias = mergeProps['ranger.usersync.policymgr.alias']
+	pmgrPasswd = mergeProps['ranger.usersync.policymgr.password']
+
+	updateProppertyInJCKSFile(usersyncKSPath,pmgrAlias,pmgrPasswd)
+	os.chown(ugsyncCryptPath,ownerId,groupId)
+
+	writeXMLUsingProperties(fn, mergeProps, outfn)
+
 	fixPermList = [ ".", usersyncBaseDirName, confFolderName, certFolderName ]
 
 	for dir in fixPermList:
@@ -394,7 +417,7 @@ def main():
 
 	if isfile(nativeAuthProgramName):
 		os.chown(nativeAuthProgramName, rootOwnerId, groupId)
-		os.chmod(nativeAuthProgramName, 04550)
+		os.chmod(nativeAuthProgramName, 04555)
 	else:
 		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (nativeAuthProgramName, "root", groupName)
 
