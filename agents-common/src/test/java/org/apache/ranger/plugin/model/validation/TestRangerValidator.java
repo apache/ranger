@@ -46,7 +46,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.apache.ranger.plugin.model.validation.RangerValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -192,6 +191,27 @@ public class TestRangerValidator {
 		assertNull(_validator.getPolicy(1L));
 		assertNull(_validator.getPolicy(2L));
 		assertTrue(_validator.getPolicy(3L) != null);
+	}
+	
+	@Test
+	public final void test_getPoliciesForResourceSignature() throws Exception {
+		// return null if store returns null or throws an exception
+		String hexSignature = "aSignature";
+		when(_store.getPoliciesByResourceSignature(hexSignature)).thenReturn(null);
+		assertNull(_validator.getPoliciesForResourceSignature(hexSignature));
+		when(_store.getPoliciesByResourceSignature(hexSignature)).thenThrow(new Exception());
+		assertNull(_validator.getPoliciesForResourceSignature(hexSignature));
+
+		// what ever store returns should come back
+		hexSignature = "anotherSignature";
+		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		RangerPolicy policy1 = mock(RangerPolicy.class);
+		policies.add(policy1);
+		RangerPolicy policy2 = mock(RangerPolicy.class);
+		policies.add(policy2);
+		when(_store.getPoliciesByResourceSignature(hexSignature)).thenReturn(policies);
+		List<RangerPolicy> result = _validator.getPoliciesForResourceSignature(hexSignature);
+		assertTrue(result.contains(policy1) && result.contains(policy2));
 	}
 
 	@Test

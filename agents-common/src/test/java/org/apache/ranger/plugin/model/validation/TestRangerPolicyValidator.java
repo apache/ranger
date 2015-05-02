@@ -38,6 +38,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -195,6 +196,8 @@ public class TestRangerPolicyValidator {
 		when(_store.getPolicies(updateFilter)).thenReturn(existingPolicies);
 		// valid policy can have empty set of policy items if audit is turned on
 		// null value for audit is treated as audit on.
+		// for now we want to turn any resource related checking off
+		when(_policy.getResources()).thenReturn(null);
 		for (Action action : cu) {
 			for (Boolean auditEnabled : new Boolean[] { null, true } ) {
 				for (boolean isAdmin : new boolean[] { true, false }) {
@@ -243,12 +246,13 @@ public class TestRangerPolicyValidator {
 		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_good);
 		when(_policy.getResources()).thenReturn(resourceMap);
 		// let's add some other policies in the store for this service that have a different signature
-		SearchFilter resourceDuplicationFilter = new SearchFilter();
-		resourceDuplicationFilter.setParam(SearchFilter.SERVICE_NAME, "service-name");
-		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(new RangerPolicyResourceSignature("policy"));
-		when(_factory.createPolicyResourceSignature(existingPolicy)).thenReturn(new RangerPolicyResourceSignature("policy-name-2"));
+		// setup the signatures on the policies
+		RangerPolicyResourceSignature policySignature = mock(RangerPolicyResourceSignature.class);
+		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(policySignature);
+		// setup the store to indicate that no other policy exists with matching signature
+		when(policySignature.getSignature()).thenReturn("hash-1");
+		when(_store.getPoliciesByResourceSignature("hash-1")).thenReturn(null);
 		// we are reusing the same policies collection here -- which is fine
-		when(_store.getPolicies(resourceDuplicationFilter)).thenReturn(existingPolicies);
 		for (Action action : cu) {
 			if (action == Action.CREATE) {
 				when(_policy.getId()).thenReturn(7L);
@@ -299,6 +303,7 @@ public class TestRangerPolicyValidator {
 			_policy = mock(RangerPolicy.class);
 			for (String name : new String[] { null, "  " }) {
 				when(_policy.getName()).thenReturn(name);
+				when(_policy.getResources()).thenReturn(null);
 				checkFailure_isValid(action, "missing", "name");
 			}
 			
@@ -437,6 +442,11 @@ public class TestRangerPolicyValidator {
 		// one mandatory is missing (tbl) and one unknown resource is specified (extra), and values of option resource don't conform to validation pattern (col)
 		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);
 		when(_policy.getResources()).thenReturn(policyResources);
+		// ensure thta policy is kosher when it comes to resource signature
+		RangerPolicyResourceSignature signature = mock(RangerPolicyResourceSignature.class);
+		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(signature);
+		when(signature.getSignature()).thenReturn("hash-1");
+		when(_store.getPoliciesByResourceSignature("hash-1")).thenReturn(null); // store does not have any policies for that signature hash 
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
@@ -448,13 +458,8 @@ public class TestRangerPolicyValidator {
 			}
 		}
 		
-		// create the right resource def but let it clash with another policy with matching resource-def
-		policyResources = _utils.createPolicyResourceMap(policyResourceMap_good);
-		when(_policy.getResources()).thenReturn(policyResources);
-		filter = new SearchFilter(); filter.setParam(SearchFilter.SERVICE_NAME, "service-name");
-		when(_store.getPolicies(filter)).thenReturn(existingPolicies);
-		// we are doctoring the factory to always return the same signature
-		when(_factory.createPolicyResourceSignature(anyPolicy())).thenReturn(new RangerPolicyResourceSignature("blah"));
+		// Check if error around resource signature clash are reported.  have Store return policies for same signature
+		when(_store.getPoliciesByResourceSignature("hash-1")).thenReturn(existingPolicies);
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
@@ -665,38 +670,23 @@ public class TestRangerPolicyValidator {
 	@Test
 	public final void test_isPolicyResourceUnique() throws Exception {
 
-		RangerPolicy[] policies = new RangerPolicy[3];
-		RangerPolicyResourceSignature[] signatures = new RangerPolicyResourceSignature[3];
-		for (int i = 0; i < 3; i++) {
-			RangerPolicy policy = mock(RangerPolicy.class);
-			when(policy.getId()).thenReturn((long)i);
-			policies[i] = policy;
-			signatures[i] = new RangerPolicyResourceSignature("policy" + i);
-			when(_factory.createPolicyResourceSignature(policies[i])).thenReturn(signatures[i]);
-		}
-		
-		SearchFilter searchFilter = new SearchFilter();
-		String serviceName = "aService";
-		searchFilter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		
-		List<RangerPolicy> existingPolicies = Arrays.asList(new RangerPolicy[] { policies[1], policies[2]} );
-		// all existing policies have distinct signatures
-		for (Action action : cu) {
-			when(_store.getPolicies(searchFilter)).thenReturn(existingPolicies);
-			assertTrue("No duplication: " + action, _validator.isPolicyResourceUnique(policies[0], _failures, action, serviceName));
-		}
-	
-		// Failure if signature matches an existing policy
-		// We change the signature of 3rd policy to be same as that of 1st so duplication check will fail
-		for (Action action : cu) {
-			when(_factory.createPolicyResourceSignature(policies[2])).thenReturn(new RangerPolicyResourceSignature("policy0"));
-			when(_store.getPolicies(searchFilter)).thenReturn(existingPolicies);
-			assertFalse("Duplication:" + action, _validator.isPolicyResourceUnique(policies[0], _failures, action, serviceName));
-		}
+		// if store does not contain any matching policies then check should succeed
+		RangerPolicyResourceSignature signature = mock(RangerPolicyResourceSignature.class);
+		String hash = "hash-1";
+		when(signature.getSignature()).thenReturn(hash);
+		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(signature);
+		List<RangerPolicy> policies = null;
+		when(_store.getPoliciesByResourceSignature(hash)).thenReturn(policies);
+		assertTrue(_validator.isPolicyResourceUnique(_policy, _failures));
+		policies = new ArrayList<RangerPolicy>();
+		assertTrue(_validator.isPolicyResourceUnique(_policy, _failures));
 
-		// update should exclude itself! - let's change id of 3rd policy to be the same as the 1st one.
-		when(policies[2].getId()).thenReturn((long)0);
-		assertTrue("No duplication if updating policy", _validator.isPolicyResourceUnique(policies[0], _failures, Action.UPDATE, serviceName));
+		// if store does have any policy then test should fail with appropriate error message.
+		RangerPolicy policy1 = mock(RangerPolicy.class); policies.add(policy1); 
+		RangerPolicy policy2 = mock(RangerPolicy.class); policies.add(policy2); 
+		when(_store.getPoliciesByResourceSignature(hash)).thenReturn(policies);
+		assertFalse(_validator.isPolicyResourceUnique(_policy, _failures));
+		_utils.checkFailureForSemanticError(_failures, "resources");
 	}
 	
 	@Test

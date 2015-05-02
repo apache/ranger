@@ -87,9 +87,10 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
@@ -97,13 +98,15 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerDataHistService;
+import org.apache.ranger.service.RangerFactory;
 import org.apache.ranger.service.RangerPolicyService;
+import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.RangerServiceWithAssignedIdService;
@@ -120,7 +123,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.apache.ranger.plugin.util.SearchFilter;
 
 
 @Component
@@ -170,6 +172,9 @@ public class ServiceDBStore extends AbstractServiceStore {
     @Autowired
     RangerServiceWithAssignedIdService svcServiceWithAssignedId;
 
+    @Autowired
+    RangerFactory factory;
+    
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
 	
@@ -1194,6 +1199,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	@Override
+	public List<RangerPolicy> getPoliciesByResourceSignature(String hexSignature) throws Exception {
+		List<XXPolicy> xxPolicies = daoMgr.getXXPolicy().findByResourceSignature(hexSignature);
+		List<RangerPolicy> policies = new ArrayList<RangerPolicy>(xxPolicies.size());
+		for (XXPolicy xxPolicy : xxPolicies) {
+			RangerPolicy policy = policyService.getPopulatedViewObject(xxPolicy);
+			policies.add(policy);
+		}
+		
+		return policies;
+	}
+
+	@Override
 	public RangerService getService(Long id) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getService()");
@@ -1270,6 +1287,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
 
 		policy.setVersion(new Long(1));
+		RangerPolicyResourceSignature signature = factory.createPolicyResourceSignature(policy);
+		String hexSignature = signature.getSignature();
+		policy.setResourceSignature(hexSignature);
 
 		if(populateExistingBaseFields) {
 			assignedIdPolicyService.setPopulateExistingBaseFields(true);
@@ -1433,15 +1453,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	public RangerPolicyList getPaginatedPolicies(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.getPaginatedPolicies()");
+			LOG.debug("==> ServiceDBStore.getPaginatedPolicies(+ " + filter + ")");
 		}
 
 		RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
-
+		
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("before filter: count=" + policyList.getListSize());
+		}
 		applyFilter(policyList.getPolicies(), filter);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("after filter: count=" + policyList.getListSize());
+		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDBStore.getPaginatedPolicies()");
+			LOG.debug("<== ServiceDBStore.getPaginatedPolicies(" + filter + "): count=" + policyList.getListSize());
 		}
 
 		return policyList;

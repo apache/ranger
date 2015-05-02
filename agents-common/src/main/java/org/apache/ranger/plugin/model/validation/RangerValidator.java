@@ -268,6 +268,25 @@ public abstract class RangerValidator {
 		}
 		return policies;
 	}
+	
+	List<RangerPolicy> getPoliciesForResourceSignature(String hexSignature) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getPolicies(" + hexSignature + ")");
+		}
+
+		List<RangerPolicy> policies = null;
+		try {
+			policies = _store.getPoliciesByResourceSignature(hexSignature);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving policies from service store!", e);
+		}
+		
+		if(LOG.isDebugEnabled()) {
+			int count = policies == null ? 0 : policies.size();
+			LOG.debug("<== RangerValidator.getPolicies(" + hexSignature + "): count[" + count + "], " + policies);
+		}
+		return policies;
+	}
 
 	Set<String> getAccessTypes(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {

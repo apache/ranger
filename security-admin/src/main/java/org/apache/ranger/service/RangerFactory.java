@@ -17,12 +17,16 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.util;
+package org.apache.ranger.service;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
-public class RangerObjectFactory {
+@Service
+@Scope("singleton")
+public class RangerFactory {
 	public RangerPolicyResourceSignature createPolicyResourceSignature(RangerPolicy policy) {
 		return new RangerPolicyResourceSignature(policy);
 	}

@@ -36,10 +36,10 @@ import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 
@@ -81,6 +81,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		addPredicateForIsRecursive(filter.getParam(SearchFilter.IS_RECURSIVE), predicates);
 		addPredicateForUserName(filter.getParam(SearchFilter.USER), predicates);
 		addPredicateForGroupName(filter.getParam(SearchFilter.GROUP), predicates);
+		addPredicateForResourceSignature(filter.getParam(SearchFilter.RESOURCE_SIGNATURE), predicates);
 		addPredicateForResources(filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true), predicates);
 
 		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
@@ -682,5 +683,49 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 
 		return ret;
+	}
+
+	private Predicate addPredicateForResourceSignature(final String hexSignature, List<Predicate> predicates) {
+
+		Predicate ret = createPredicateForResourceSignature(hexSignature);
+
+		if(predicates != null && ret != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	/**
+	 * NOTE: Null or empty hexSignature, though invalid, is supported in search.
+	 * @param hexSignature
+	 * @return
+	 */
+	public Predicate createPredicateForResourceSignature(final String hexSignature) {
+
+		if(StringUtils.isEmpty(hexSignature)) {
+			return null;
+		}
+
+		return new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if (object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					ret = StringUtils.equals(hexSignature, policy.getResourceSignature());
+				} else {
+					ret = true;
+				}
+
+				return ret;
+			}
+		};
 	}
 }

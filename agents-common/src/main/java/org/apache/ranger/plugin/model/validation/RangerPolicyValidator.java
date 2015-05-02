@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -240,13 +241,13 @@ public class RangerPolicyValidator extends RangerValidator {
 		
 		boolean valid = true;
 		Map<String, RangerPolicyResource> resourceMap = policy.getResources();
-		if (serviceDef != null && resourceMap != null) { // following checks can't be done meaningfully otherwise
-			valid = isValidResourceNames(policy, failures, serviceDef) && valid;
-			valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
-			valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName(), isAdmin) && valid;
-		}
-		if (StringUtils.isNotBlank(serviceName)) { // resource uniqueness check cannot be done meaningfully otherwise
-			valid = isPolicyResourceUnique(policy, failures, action, serviceName) && valid;
+		if (resourceMap != null) { // following checks can't be done meaningfully otherwise
+			valid = isPolicyResourceUnique(policy, failures) && valid;
+			if (serviceDef != null) { // following checks can't be done meaningfully otherwise
+				valid = isValidResourceNames(policy, failures, serviceDef) && valid;
+				valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
+				valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName(), isAdmin) && valid;
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -255,38 +256,28 @@ public class RangerPolicyValidator extends RangerValidator {
 		return valid;
 	}
 	
-	boolean isPolicyResourceUnique(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action, final String serviceName) {
+	boolean isPolicyResourceUnique(RangerPolicy policy, final List<ValidationFailureDetails> failures) {
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerPolicyValidator.isPolicyResourceUnique(%s, %s, %s, %s)", policy, failures, action, serviceName));
+			LOG.debug(String.format("==> RangerPolicyValidator.isPolicyResourceUnique(%s, %s)", policy, failures));
 		}
 
-		boolean foundDuplicate = false;
-		RangerPolicyResourceSignature signature = _factory.createPolicyResourceSignature(policy);
-		List<RangerPolicy> policies = getPolicies(serviceName, null);
+		boolean valid = true;
+		RangerPolicyResourceSignature policySignature = _factory.createPolicyResourceSignature(policy);
+		String signature = policySignature.getSignature();
+		List<RangerPolicy> policies = getPoliciesForResourceSignature(signature);
 		if (CollectionUtils.isNotEmpty(policies)) {
-			Iterator<RangerPolicy> iterator = policies.iterator();
-			while (iterator.hasNext() && !foundDuplicate) {
-				RangerPolicy otherPolicy = iterator.next();
-				if (otherPolicy.getId().equals(policy.getId()) && action == Action.UPDATE) {
-					LOG.debug("isPolicyResourceUnique: Skipping self during update!");
-				} else {
-					RangerPolicyResourceSignature otherSignature = _factory.createPolicyResourceSignature(otherPolicy);
-					if (signature.equals(otherSignature)) {
-						foundDuplicate = true;
-						failures.add(new ValidationFailureDetailsBuilder()
-							.field("resources")
-							.isSemanticallyIncorrect()
-							.becauseOf("found another policy[" + otherPolicy.getName() + "] with matching resources[" + otherPolicy.getResources() + "]!")
-							.build());
-					}
-				}
-			}
+			RangerPolicy otherPolicy = policies.iterator().next();
+			valid = false;
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field("resources")
+				.isSemanticallyIncorrect()
+				.becauseOf("found another policy[" + otherPolicy.getName() + "] with matching resources[" + otherPolicy.getResources() + "]!")
+				.build());
 		}
 
-		boolean valid = !foundDuplicate;
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerPolicyValidator.isPolicyResourceUnique(%s, %s, %s, %s): %s", policy, failures, action, serviceName, valid));
+			LOG.debug(String.format("<== RangerPolicyValidator.isPolicyResourceUnique(%s, %s): %s", policy, failures, valid));
 		}
 		return valid;
 	}

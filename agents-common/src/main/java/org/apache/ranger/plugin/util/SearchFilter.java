@@ -46,6 +46,7 @@ public class SearchFilter {
 	public static final String START_INDEX     = "startIndex";
 	public static final String PAGE_SIZE       = "pageSize";
 	public static final String SORT_BY         = "sortBy";
+	public static final String RESOURCE_SIGNATURE = "resourceSignature:";     // search
 
 	private Map<String, String> params     = null;
 	private int                 startIndex = 0;
@@ -174,5 +175,28 @@ public class SearchFilter {
 	@Override
 	public int hashCode() {
 		return Objects.hash(params);
+	}
+	
+	@Override
+	public String toString( ) {
+		StringBuilder sb = new StringBuilder();
+
+		toString(sb);
+
+		return sb.toString();
+	}
+
+	public StringBuilder toString(StringBuilder sb) {
+		sb.append("SearchFilter={");
+
+		sb.append("getCount={").append(getCount).append("} ");
+		sb.append("maxRows={").append(maxRows).append("} ");
+		sb.append("params={").append(params).append("} ");
+		sb.append("sortBy={").append(sortBy).append("} ");
+		sb.append("sortType={").append(sortType).append("} ");
+		sb.append("startIndex={").append(startIndex).append("} ");
+		sb.append("}");
+
+		return sb;
 	}
 }

@@ -615,6 +615,23 @@ public class ServiceFileStore extends BaseFileStore {
 	}
 
 	@Override
+	public List<RangerPolicy> getPoliciesByResourceSignature(String hexSignature) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceFileStore.getPolicies()");
+		}
+
+		List<RangerPolicy> ret = getAllPolicies();
+
+		CollectionUtils.filter(ret, createPredicateForResourceSignature(hexSignature));
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceFileStore.getPolicies(): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@Override
 	public List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceFileStore.getPolicies()");

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.model.validation;
+package org.apache.ranger.plugin.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +29,6 @@ import java.util.TreeMap;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
 public class RangerPolicyResourceSignature {
@@ -66,11 +65,11 @@ public class RangerPolicyResourceSignature {
 		_hash = DigestUtils.md5Hex(_string);
 	}
 	
-	public String asString() {
+	String asString() {
 		return _string;
 	}
 
-	public String asHashHex() {
+	public String getSignature() {
 		return _hash;
 	}
 	

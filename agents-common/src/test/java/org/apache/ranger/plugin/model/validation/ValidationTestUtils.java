@@ -332,7 +332,7 @@ public class ValidationTestUtils {
 		return defs;
 	}
 
-	Map<String, RangerPolicyResource> createPolicyResourceMap(Object[][] input) {
+	public Map<String, RangerPolicyResource> createPolicyResourceMap(Object[][] input) {
 		if (input == null) {
 			return null;
 		}

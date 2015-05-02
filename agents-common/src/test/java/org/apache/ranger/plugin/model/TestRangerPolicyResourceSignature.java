@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.model.validation;
+package org.apache.ranger.plugin.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,8 +31,10 @@ import java.util.Map;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.validation.RangerPolicyResourceSignature.RangerPolicyResourceView;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature.RangerPolicyResourceView;
+import org.apache.ranger.plugin.model.validation.ValidationTestUtils;
 import org.junit.Test;
 
 public class TestRangerPolicyResourceSignature {
@@ -102,7 +104,7 @@ public class TestRangerPolicyResourceSignature {
 		// String rep of a null policy is an empty string! and its hash is sha of empty string!
 		RangerPolicyResourceSignature signature = new RangerPolicyResourceSignature((String)null);
 		assertEquals("", signature.asString());
-		assertEquals(DigestUtils.md5Hex(""), signature.asHashHex());
+		assertEquals(DigestUtils.md5Hex(""), signature.getSignature());
 	}
 
 	/*
