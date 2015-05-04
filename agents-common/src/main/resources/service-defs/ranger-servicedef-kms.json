@@ -6,12 +6,20 @@
 	"resources": 
 	[
 		{
+			"id": 1,
 			"name": "keyname",
 			"type": "string",
-			"level": 1,
+			"level": 10,
+			"parent": "",
 			"mandatory": true,
 			"lookupSupported": true,
 			"recursiveSupported": false,
+			"excludesSupported": false,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":false },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
 			"label": "Key Name",
 			"description": "Key Name"
 		}

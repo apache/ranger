@@ -17,7 +17,7 @@
 			"recursiveSupported": true,
 			"excludesSupported": false,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
-			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"matcherOptions": { "wildCard":true, "ignoreCase":false },
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
