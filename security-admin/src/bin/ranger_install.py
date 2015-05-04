@@ -695,7 +695,14 @@ def update_xapolicymgr_properties():
     log("xapolicymgr_properties: " + xapolicymgr_properties, "debug")
     ModConfig(xapolicymgr_properties,"xa.webapp.dir", WEBAPP_ROOT.replace('\\','/' ))
 
-
+def updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file):
+    ret = subprocess.call(['python', '%s\update_property.py' %os.getenv("RANGER_ADMIN_HOME"), propertyName ,newPropertyValue ,to_file])
+    if ret == 0:
+        log("Updated property for :"+to_file,"info")
+    else:
+        log("Update property failed for :"+to_file,"info")
+        sys.exit(1)
+	
 def update_properties():
     global conf_dict
     sys_conf_dict={}
@@ -711,149 +718,186 @@ def update_properties():
     audit_db_user = conf_dict["RANGER_AUDIT_DB_USERNAME"]
     audit_db_password = conf_dict["RANGER_AUDIT_DB_PASSWORD"]
     audit_db_name = conf_dict["RANGER_AUDIT_DB_NAME"]
-    update_xapolicymgr_properties()
-    newPropertyValue=''
-    to_file = os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "conf", "xa_system.properties")
-    if os.path.isfile(to_file):
-        log("to_file: " + to_file + " file found", "info")
-    else:
-        log("to_file: " + to_file + " does not exists", "warning")
-    config = StringIO.StringIO()
-    config.write('[dummysection]\n')
-    config.write(open(to_file).read())
-    config.seek(0, os.SEEK_SET)
-    ##Now parse using configparser
-    cObj = ConfigParser.ConfigParser()
-    cObj.optionxform = str
-    cObj.readfp(config)
-    options = cObj.options('dummysection')
-    for option in options:
-        value = cObj.get('dummysection', option)
-        sys_conf_dict[option] = value
-        cObj.set("dummysection",option, value)
 
+    to_file_ranger = os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "conf", "ranger-admin-site.xml")
+    newPropertyValue=''
+    to_file_default = os.path.join(WEBAPP_ROOT, "WEB-INF", "classes", "conf", "ranger-admin-default-site.xml")
+    if os.path.isfile(to_file_ranger):
+        log("to_file_ranger: " + to_file_ranger + " file found", "info")
+    else:
+        log("to_file_ranger: " + to_file_ranger + " does not exists", "warning")
+    if os.path.isfile(to_file_default):
+        log("to_file_default: " + to_file_default + " file found", "info")
+    else:
+        log("to_file_default: " + to_file_default + " does not exists", "warning")	
 
     log("SQL_HOST is : " + MYSQL_HOST,"debug")
-    propertyName="jdbc.url"
     if RANGER_DB_FLAVOR == "MYSQL":
-        newPropertyValue="jdbc:log4jdbc:mysql://" + MYSQL_HOST + ":3306/" + db_name
+            propertyName="ranger.jpa.jdbc.url"
+            newPropertyValue="jdbc:log4jdbc:mysql://" + MYSQL_HOST + ":3306/" + db_name
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+            propertyName="ranger.jpa.jdbc.user"
+            newPropertyValue=db_user
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+            propertyName="ranger.jpa.audit.jdbc.user"
+            newPropertyValue=audit_db_user
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+		
+            propertyName="ranger.jpa.audit.jdbc.url"
+            newPropertyValue="jdbc:log4jdbc:mysql://"+MYSQL_HOST+":3306/"+audit_db_name
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+            propertyName="ranger.jpa.jdbc.dialect"
+            newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
+
+            propertyName="ranger.jpa.audit.jdbc.dialect"
+            newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
+
+            propertyName="ranger.jpa.jdbc.driver"
+            newPropertyValue="net.sf.log4jdbc.DriverSpy"
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+            propertyName="ranger.jpa.audit.jdbc.driver"
+            newPropertyValue="net.sf.log4jdbc.DriverSpy"
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+    
     elif RANGER_DB_FLAVOR == "ORACLE":
-        newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(db_user, db_password, MYSQL_HOST)
+            propertyName="ranger.jpa.jdbc.url"
+            newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(db_user, db_password, MYSQL_HOST)
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+			
+            propertyName="ranger.jpa.jdbc.user"
+            newPropertyValue=db_user
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+            propertyName="ranger.jpa.audit.jdbc.user"
+            newPropertyValue=audit_db_user
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+			
+            propertyName="ranger.jpa.audit.jdbc.url"
+            newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(audit_db_user, audit_db_password, MYSQL_HOST)
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+            propertyName="ranger.jpa.jdbc.dialect"
+            newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
+
+            propertyName="ranger.jpa.audit.jdbc.dialect"
+            newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
+
+            propertyName="ranger.jpa.jdbc.driver"
+            newPropertyValue="oracle.jdbc.OracleDriver"
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+            propertyName="ranger.jpa.audit.jdbc.driver"
+            newPropertyValue="oracle.jdbc.OracleDriver"
+            updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
     elif RANGER_DB_FLAVOR == "POSTGRES":
+        propertyName="ranger.jpa.jdbc.url"
         newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, db_name)
-    elif RANGER_DB_FLAVOR == "SQLSERVER":
-        newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" %(MYSQL_HOST, db_name)
-    cObj.set('dummysection',propertyName,newPropertyValue)
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+		
+        propertyName="ranger.jpa.jdbc.user"
+        newPropertyValue=db_user
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-    propertyName="jdbc.dialect"
-    if RANGER_DB_FLAVOR == "MYSQL":
-        newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
-    elif RANGER_DB_FLAVOR == "ORACLE":
-        newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
-    elif RANGER_DB_FLAVOR == "POSTGRES":
-        newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
-    elif RANGER_DB_FLAVOR == "SQLSERVER":
-        newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
-    cObj.set('dummysection',propertyName,newPropertyValue)
-
-    propertyName="jdbc.driver"
-    if RANGER_DB_FLAVOR == "MYSQL":
-        newPropertyValue="net.sf.log4jdbc.DriverSpy"
-    elif RANGER_DB_FLAVOR == "ORACLE":
-        newPropertyValue="oracle.jdbc.OracleDriver"
-    elif RANGER_DB_FLAVOR == "POSTGRES":
-        newPropertyValue="org.postgresql.Driver"
-    elif RANGER_DB_FLAVOR == "SQLSERVER":
-        newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-    cObj.set('dummysection',propertyName,newPropertyValue)
-
-    propertyName="xa.webapp.url.root"
-    newPropertyValue=os.getenv("RANGER_EXTERNAL_URL")
-    cObj.set('dummysection',propertyName,newPropertyValue)
-
-    #TODO hardcoding for now
-    propertyName="http.enabled"
-    newPropertyValue="true"
-    cObj.set('dummysection',propertyName,newPropertyValue)
-
-    propertyName="auditDB.jdbc.url"
-    if RANGER_AUDIT_DB_FLAVOR == "MYSQL":
-        newPropertyValue="jdbc:log4jdbc:mysql://"+MYSQL_HOST+":3306/"+audit_db_name
-    elif RANGER_AUDIT_DB_FLAVOR == "ORACLE":
-        newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(audit_db_user, audit_db_password, MYSQL_HOST)
-    elif RANGER_AUDIT_DB_FLAVOR == "POSTGRES":
+        propertyName="ranger.jpa.audit.jdbc.user"
+        newPropertyValue=audit_db_user
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+		
+        propertyName="ranger.jpa.audit.jdbc.url"
         newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, audit_db_name)
-    elif RANGER_AUDIT_DB_FLAVOR == "SQLSERVER":
-        newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" % (MYSQL_HOST, audit_db_name)
-    cObj.set('dummysection',propertyName,newPropertyValue)
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-    propertyName="auditDB.jdbc.dialect"
-    if RANGER_AUDIT_DB_FLAVOR == "MYSQL":
-        newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
-    elif RANGER_AUDIT_DB_FLAVOR == "ORACLE":
-        newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
-    elif RANGER_AUDIT_DB_FLAVOR == "POSTGRES":
+        propertyName="ranger.jpa.jdbc.dialect"
         newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
-    elif RANGER_AUDIT_DB_FLAVOR == "SQLSERVER":
-        newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
-    cObj.set('dummysection',propertyName,newPropertyValue)
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
 
-    propertyName="auditDB.jdbc.driver"
-    if RANGER_AUDIT_DB_FLAVOR == "MYSQL":
-        newPropertyValue="net.sf.log4jdbc.DriverSpy"
-    elif RANGER_AUDIT_DB_FLAVOR == "ORACLE":
-        newPropertyValue="oracle.jdbc.OracleDriver"
-    elif RANGER_AUDIT_DB_FLAVOR == "POSTGRES":
+        propertyName="ranger.jpa.audit.jdbc.dialect"
+        newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
+
+        propertyName="ranger.jpa.jdbc.driver"
         newPropertyValue="org.postgresql.Driver"
-    elif RANGER_AUDIT_DB_FLAVOR == "SQLSERVER":
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.jpa.audit.jdbc.driver"
+        newPropertyValue="org.postgresql.Driver"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+       
+
+    elif RANGER_DB_FLAVOR == "SQLSERVER":
+        propertyName="ranger.jpa.jdbc.url"
+        newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" %(MYSQL_HOST, db_name)
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.jpa.jdbc.user"
+        newPropertyValue=db_user
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.jpa.audit.jdbc.user"
+        newPropertyValue=audit_db_user
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+		
+        propertyName="ranger.jpa.audit.jdbc.url"
+        newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" % (MYSQL_HOST, audit_db_name)
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.jpa.jdbc.dialect"
+        newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
+
+        propertyName="ranger.jpa.jdbc.dialect"
+        newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
+
+        propertyName="ranger.jpa.jdbc.driver"
         newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-    cObj.set('dummysection',propertyName,newPropertyValue)
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-    propertyName="jdbc.user"
-    newPropertyValue=db_user
-    cObj.set('dummysection',propertyName,newPropertyValue)
-
-    propertyName="auditDB.jdbc.user"
-    newPropertyValue=audit_db_user
-    cObj.set('dummysection',propertyName,newPropertyValue)
+        propertyName="ranger.jpa.audit.jdbc.driver"
+        newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
     if (os.path.isfile(os.getenv("RANGER_ADMIN_CRED_KEYSTORE_FILE"))):
-        propertyName="xaDB.jdbc.credential.alias"
-        newPropertyValue="policyDB.jdbc.password"
-        cObj.set('dummysection',propertyName,newPropertyValue)
+        propertyName="ranger.credential.provider.path"
+        newPropertyValue=os.getenv("RANGER_ADMIN_CRED_KEYSTORE_FILE")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
 
-        propertyName="xaDB.jdbc.credential.provider.path"
-        newPropertyValue= os.getenv("RANGER_ADMIN_CRED_KEYSTORE_FILE")
-        cObj.set('dummysection',propertyName,newPropertyValue)
+        propertyName="ranger.jpa.jdbc.credential.alias"
+        newPropertyValue="ranger.jpa.jdbc.password"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
 
-        propertyName="jdbc.password"
-        newPropertyValue="_"
-        cObj.set('dummysection',propertyName,newPropertyValue)
+	propertyName="ranger.credential.provider.path"
+	newPropertyValue=os.getenv("RANGER_ADMIN_CRED_KEYSTORE_FILE")
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-        propertyName="auditDB.jdbc.credential.alias"
-        newPropertyValue="auditDB.jdbc.password"
-        cObj.set('dummysection',propertyName,newPropertyValue)
-
-        propertyName="auditDB.jdbc.credential.provider.path"
-        newPropertyValue= os.getenv("RANGER_ADMIN_CRED_KEYSTORE_FILE")
-        cObj.set('dummysection',propertyName,newPropertyValue)
-
-        propertyName="auditDB.jdbc.password"
-        newPropertyValue="_"
-        cObj.set('dummysection',propertyName,newPropertyValue)
-
+	propertyName="ranger.jpa.jdbc.password"
+	newPropertyValue="_"
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+		
+	propertyName="ranger.jpa.audit.jdbc.credential.alias"
+        newPropertyValue="ranger.jpa.audit.jdbc.password"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
+		
+	propertyName="ranger.jpa.audit.jdbc.password"
+	newPropertyValue="_"
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+		
     else:
-
-        propertyName="jdbc.password"
+        propertyName="ranger.jpa.jdbc.password"
         newPropertyValue=os.getenv("RANGER_ADMIN_DB_PASSWORD")
         cObj.set('dummysection',propertyName,newPropertyValue)
 
-        propertyName="auditDB.jdbc.password"
+        propertyName="ranger.jpa.audit.jdbc.password"
         newPropertyValue=os.getenv("RANGER_AUDIT_DB_PASSWORD")
         cObj.set('dummysection',propertyName,newPropertyValue)
-
-    with open(to_file, 'wb') as configfile:
-        cObj.write(configfile)
 
 def setup_authentication(authentication_method, xmlPath):
    if authentication_method == "UNIX":
@@ -1150,7 +1194,7 @@ def run_setup(cmd):
     write_config_to_file()
     #extract_war()
     update_properties()
-    do_authentication_setup()
+    #do_authentication_setup()
     return
 
 # Entry point to script using --configure
