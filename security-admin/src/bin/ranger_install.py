@@ -283,7 +283,7 @@ def init_variables(switch):
                 f = re.match("^ojdbc.*?.jar",filename)
             elif os.getenv("RANGER_DB_FLAVOR") == "POSTGRES" or os.getenv("RANGER_AUDIT_DB_FLAVOR") == "POSTGRES":    
                 f = re.match("^postgresql-connector-jdbc.*?.jar",filename)    
-            elif os.getenv("RANGER_DB_FLAVOR") == "SQLSERVER" or os.getenv("RANGER_AUDIT_DB_FLAVOR") == "SQLSERVER":
+            elif os.getenv("RANGER_DB_FLAVOR") == "MSSQL" or os.getenv("RANGER_AUDIT_DB_FLAVOR") == "MSSQL":
                 f = re.match("^sqljdbc.*?.jar",filename)    
             if f:
                 src = os.path.join(layout_dir,filename)
@@ -832,7 +832,7 @@ def update_properties():
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
        
 
-    elif RANGER_DB_FLAVOR == "SQLSERVER":
+    elif RANGER_DB_FLAVOR == "MSSQL":
         propertyName="ranger.jpa.jdbc.url"
         newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" %(MYSQL_HOST, db_name)
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)

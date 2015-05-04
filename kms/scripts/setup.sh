@@ -245,7 +245,7 @@ sanity_check_files() {
             log "[E] ${postgres_core_file} does not exists" ; exit 1;
         fi
     fi
-    if [ "${DB_FLAVOR}" == "SQLSERVER" ]
+    if [ "${DB_FLAVOR}" == "MSSQL" ]
     then
         if test -f ${sqlserver_core_file}; then
 			log "[I] ${sqlserver_core_file} file found"
@@ -358,7 +358,7 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 	fi
-	if [ "${DB_FLAVOR}" == "SQLSERVER" ]
+	if [ "${DB_FLAVOR}" == "MSSQL" ]
 	then
 		propertyName=ranger.ks.jpa.jdbc.url
 		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"

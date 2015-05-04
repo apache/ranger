@@ -1162,7 +1162,7 @@ def main(argv):
 	else:
 		XA_DB_FLAVOR=''
 		while XA_DB_FLAVOR == "":
-			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|SQLSERVER} :","info")
+			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL} :","info")
 			XA_DB_FLAVOR=raw_input()
 			AUDIT_DB_FLAVOR = XA_DB_FLAVOR
 
@@ -1173,7 +1173,7 @@ def main(argv):
 	if (quiteMode):
 		CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
 	else:
-		if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "ORACLE" or XA_DB_FLAVOR == "POSTGRES" or XA_DB_FLAVOR == "SQLSERVER":
+		if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "ORACLE" or XA_DB_FLAVOR == "POSTGRES" or XA_DB_FLAVOR == "MSSQL":
 			log("Enter JDBC connector file for :"+XA_DB_FLAVOR,"info")
 			CONNECTOR_JAR=raw_input()
 			while os.path.isfile(CONNECTOR_JAR) == False:
@@ -1326,7 +1326,7 @@ def main(argv):
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME,postgres_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME,postgres_patches)
 
-	elif XA_DB_FLAVOR == "SQLSERVER":
+	elif XA_DB_FLAVOR == "MSSQL":
 		#SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		#SQLSERVER_CONNECTOR_JAR='/usr/share/java/sqljdbc4-2.0.jar'
 		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR
@@ -1363,7 +1363,7 @@ def main(argv):
 		audit_sqlObj = PostgresConf(audit_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,postgres_audit_file)
 
-	elif AUDIT_DB_FLAVOR == "SQLSERVER":
+	elif AUDIT_DB_FLAVOR == "MSSQL":
 		#SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		#SQLSERVER_CONNECTOR_JAR='/usr/share/java/sqljdbc4-2.0.jar'
 		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR

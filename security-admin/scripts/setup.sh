@@ -292,7 +292,7 @@ sanity_check_files() {
             log "[E] ${postgres_core_file} does not exists" ; exit 1;
         fi
     fi
-    if [ "${DB_FLAVOR}" == "SQLSERVER" ]
+    if [ "${DB_FLAVOR}" == "MSSQL" ]
     then
         if test -f ${sqlserver_core_file}; then
 			log "[I] ${sqlserver_core_file} file found"
@@ -843,7 +843,8 @@ update_properties() {
 		newPropertyValue="org.postgresql.Driver"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
-	if [ "${DB_FLAVOR}" == "SQLSERVER" ]
+
+	if [ "${DB_FLAVOR}" == "MSSQL" ]
 	then
 		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"

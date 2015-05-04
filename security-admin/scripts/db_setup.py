@@ -1225,7 +1225,7 @@ def main(argv):
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME , postgres_patches)
 		audit_patch_file = os.path.join(RANGER_ADMIN_HOME ,postgres_auditdb_patches)
 
-	elif XA_DB_FLAVOR == "SQLSERVER":
+	elif XA_DB_FLAVOR == "MSSQL":
 		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME ,sqlserver_dbversion_catalog)
@@ -1251,7 +1251,7 @@ def main(argv):
 		audit_sqlObj = PostgresConf(audit_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME , postgres_audit_file)
 
-	elif AUDIT_DB_FLAVOR == "SQLSERVER":
+	elif AUDIT_DB_FLAVOR == "MSSQL":
 		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		audit_sqlObj = SqlServerConf(audit_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME , sqlserver_audit_file)

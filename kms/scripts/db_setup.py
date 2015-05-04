@@ -463,7 +463,7 @@ def main(argv):
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME , postgres_core_file)
 
-	elif XA_DB_FLAVOR == "SQLSERVER":
+	elif XA_DB_FLAVOR == "MSSQL":
 		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME , sqlserver_core_file)

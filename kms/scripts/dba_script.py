@@ -962,7 +962,7 @@ def main(argv):
 	else:
 		XA_DB_FLAVOR=''
 		while XA_DB_FLAVOR == "":
-			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|SQLSERVER} :","info")
+			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL} :","info")
 			XA_DB_FLAVOR=raw_input()
 
 	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
@@ -971,7 +971,7 @@ def main(argv):
 	if (quiteMode):
 		CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
 	else:
-		if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "ORACLE" or XA_DB_FLAVOR == "POSTGRES" or XA_DB_FLAVOR == "SQLSERVER":
+		if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "ORACLE" or XA_DB_FLAVOR == "POSTGRES" or XA_DB_FLAVOR == "MSSQL":
 			log("Enter JDBC connector file for :"+XA_DB_FLAVOR,"info")
 			CONNECTOR_JAR=raw_input()
 			while os.path.isfile(CONNECTOR_JAR) == False:
@@ -1059,7 +1059,7 @@ def main(argv):
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_core_file = os.path.join(os.getcwd(),postgres_core_file)
 
-	elif XA_DB_FLAVOR == "SQLSERVER":
+	elif XA_DB_FLAVOR == "MSSQL":
 		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_core_file = os.path.join(os.getcwd(),sqlserver_core_file)
