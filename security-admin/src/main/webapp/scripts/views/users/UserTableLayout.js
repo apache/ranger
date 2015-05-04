@@ -531,12 +531,14 @@ define(function(require){
 			this.rTableList.$el.find('[policy-group-id="'+id+'"]').show();
 			$('[data-id="showLess"][policy-group-id="'+id+'"]').show();
 			$('[data-id="showMore"][policy-group-id="'+id+'"]').hide();
+			$('[data-id="showMore"][policy-group-id="'+id+'"]').parents('div[data-id="groupsDiv"]').addClass('set-height-groups');
 		},
 		onShowLess : function(e){
 			var id = $(e.currentTarget).attr('policy-group-id');
 			this.rTableList.$el.find('[policy-group-id="'+id+'"]').slice(4).hide();
 			$('[data-id="showLess"][policy-group-id="'+id+'"]').hide();
 			$('[data-id="showMore"][policy-group-id="'+id+'"]').show();
+			$('[data-id="showMore"][policy-group-id="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups')
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){

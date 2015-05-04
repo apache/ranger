@@ -1826,3 +1826,12 @@ td.select-row-cell {
   border: 1px solid #dddddd;
   padding-left: 0;
 }
+.set-height-groups{
+	width: 100%;
+	height: 100px;
+	overflow-x: hidden;	
+}
+.float-left-margin-2{
+	float: left;
+	margin: 2px;
+}

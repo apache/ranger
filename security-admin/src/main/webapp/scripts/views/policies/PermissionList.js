@@ -361,8 +361,8 @@ define(function(require) {
 					vals.push.apply(vals, m.get(name+'Name').split(','));
 				}
 			});
-			if(!_.isEmpty($select.select2('val')))
-				selectedVals = $select.select2('val');
+			if(!_.isEmpty($select.select2('data')))
+				selectedVals = _.map($select.select2('data'),function(obj){ return obj.text});
 			vals.push.apply(vals , selectedVals);
 			vals = $.unique(vals);
 			return vals;

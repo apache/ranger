@@ -437,25 +437,27 @@ define(function(require) {
 			}
 			var newGroupArr = _.map(groupArr, function(name, i) {
 				if (i >= 4)
-					return '<span class="label label-info" policy-group-id="'
+					return '<span class="label label-info float-left-margin-2" policy-group-id="'
 							+ id + '" style="display:none;">' + name
 							+ '</span>';
 				else if (i == 3 && groupArr.length > 4) {
 					showMoreLess = true;
-					return '<span class="label label-info" policy-group-id="'
+					return '<span class="label label-info float-left-margin-2" policy-group-id="'
 							+ id + '">' + name + '</span>';
 				} else
-					return '<span class="label label-info" policy-group-id="'
+					return '<span class="label label-info float-left-margin-2" policy-group-id="'
 							+ id + '">' + name + '</span>';
 			});
 			if (showMoreLess) {
 				newGroupArr
-						.push('<span class="pull-left"><a href="javascript:void(0);" data-id="showMore" class="" policy-group-id="'
+						.push('<span class="float-left-margin-2"><a href="javascript:void(0);" data-id="showMore" class="" policy-group-id="'
 								+ id
-								+ '"><code style=""> + More..</code></a></span><span class="pull-left" ><a href="javascript:void(0);" data-id="showLess" class="" policy-group-id="'
+								+ '"><code style=""> + More..</code></a></span><span class="float-left-margin-2"><a href="javascript:void(0);" data-id="showLess" class="" policy-group-id="'
 								+ id
 								+ '" style="display:none;"><code> - Less..</code></a></span>');
 			}
+			newGroupArr.unshift('<div data-id="groupsDiv">');
+			newGroupArr.push('</div>');
 			return newGroupArr.length ? newGroupArr.join(' ') : '--';
 		} else
 			return '--';
@@ -546,6 +548,9 @@ define(function(require) {
 	XAUtils.defaultErrorHandler = function(model, error) {
 		var App = require('App');
 		var vError = require('views/common/ErrorView');
+		if(!_.isUndefined(model) && !_.isUndefined(model.modelName) &&  model.modelName == XAEnums.ClassTypes.CLASS_TYPE_XA_ACCESS_AUDIT.modelName){
+			return;
+		}
 		if (error.status == 404) {
 			App.rContent.show(new vError({
 				status : error.status
