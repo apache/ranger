@@ -22,6 +22,9 @@
 PROPFILE=$PWD/install.properties
 propertyValue=''
 
+CONF_FILE=$PWD/ews/webapp/WEB-INF/classes/conf
+ETC_CONF_FILE=/etc/ranger/kms/conf
+
 if [ ! -f ${PROPFILE} ]
 then
 	echo "$PROPFILE file not found....!!";
@@ -159,6 +162,27 @@ init_variables(){
 	getPropertyFromFile 'db_root_password' $PROPFILE db_user
 	getPropertyFromFile 'db_user' $PROPFILE db_user
 	getPropertyFromFile 'db_password' $PROPFILE db_password
+	
+	#if [ -L ${CONF_FILE} ]
+   #     then
+   #             log "Deleting conf symlink"
+   #             rm -f ${CONF_FILE}
+   #     fi
+
+   #     if [ -f ${ETC_CONF_FILE} ]
+   #     then
+   #             log "Deleting /etc/ranger/kms/conf file"
+   #             rm -f ${ETC_CONF_FILE}
+   #     fi
+
+   #     if [ ! -d  ${ETC_CONF_FILE} ]
+   #     then
+   #             log "Creating /etc/ranger/kms/conf dir"
+   #             mkdir -p ${ETC_CONF_FILE}
+   #     fi
+
+   #     log "Create link of conf -> /etc/ranger/kms/conf"
+   #     ln -sf ${ETC_CONF_FILE} ${CONF_FILE}	
 }
 
 
@@ -301,7 +325,7 @@ update_properties() {
 	#chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
 
 
-	to_file=$app_home/config/dbks-site.xml
+	to_file=$PWD/ews/webapp/WEB-INF/classes/conf/dbks-site.xml
 	if test -f $to_file; then
 		log "[I] $to_file file found"
 	else
@@ -471,12 +495,12 @@ setup_install_files(){
 
 	log "[I] Setting up installation files and directory";
 
-	#if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
-	#    log "[I] Copying ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist ${WEBAPP_ROOT}/WEB-INF/classes/conf"
-	#    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf
-	#    cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
-	#	chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
-	#fi
+	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
+	    log "[I] Copying ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist ${WEBAPP_ROOT}/WEB-INF/classes/conf"
+	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf
+	fi
+	cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
+        chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
 
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/lib"

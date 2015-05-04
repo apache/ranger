@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 
 /**
  * Provides access to the <code>AccessControlList</code>s used by KMS,
- * hot-reloading them if the <code>kms-acls.xml</code> file where the ACLs
+ * hot-reloading them if the <code>dbks-site.xml</code> file where the ACLs
  * are defined has been updated.
  */
 @InterfaceAudience.Private

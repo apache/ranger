@@ -123,13 +123,13 @@
     <moduleSet>
      <binaries>
         <includeDependencies>false</includeDependencies>
-        <outputDirectory>/ews/lib</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/lib</outputDirectory>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <dependencySets>
             <dependencySet>
-                <outputDirectory>/ews/lib</outputDirectory>
+                <outputDirectory>/ews/webapp/WEB-INF/classes/lib</outputDirectory>
                 <includes>
                     <include>org.apache.tomcat.embed:tomcat-embed*</include>
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
@@ -214,7 +214,7 @@
                     </includes>
             </dependencySet>
         </dependencySets>
-        <outputDirectory>/ews/lib</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/lib</outputDirectory>
      </binaries>
      <includes>
 		<include>org.apache.ranger:ranger_solrj</include>
@@ -274,11 +274,11 @@
    </moduleSets>
 
   <fileSets>
-	<fileSet>
+	<!-- <fileSet>
 		<outputDirectory>/ews/webapp/WEB-INF/classes/conf.dist</outputDirectory>
 		<directory>kms/config/webserver</directory>
 		<fileMode>700</fileMode>
-	</fileSet>
+	</fileSet> -->
 	<fileSet>
 		<outputDirectory>/db</outputDirectory>
 		<directoryMode>755</directoryMode>
@@ -301,13 +301,13 @@
 		<fileMode>544</fileMode>
 	</fileSet>
 	<fileSet>
-		<outputDirectory>/ews/webapp/config</outputDirectory>
+		<outputDirectory>/ews/webapp/WEB-INF/classes/conf.dist</outputDirectory>
 		<directoryMode>0700</directoryMode>
 		<directory>kms/config/kms-webapp</directory>
 		<fileMode>0700</fileMode>
   	</fileSet>	
   	<fileSet>
-		<outputDirectory>/ews/conf</outputDirectory>
+		<outputDirectory>/ews/webapp/WEB-INF/classes/conf.dist</outputDirectory>
 		<directoryMode>0700</directoryMode>
 		<directory>kms/config/webserver</directory>
 		<fileMode>0700</fileMode>

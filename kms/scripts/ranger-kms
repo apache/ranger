@@ -27,12 +27,12 @@ realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 RANGER_KMS_DIR=`(cd $realScriptDir; pwd)`
 RANGER_KMS_EWS_DIR=${RANGER_KMS_DIR}/ews
-RANGER_KMS_EWS_CONF_DIR="${RANGER_KMS_EWS_DIR}/conf"
-RANGER_KMS_EWS_LIB_DIR="${RANGER_KMS_EWS_DIR}/lib"
+RANGER_KMS_EWS_CONF_DIR="${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/conf"
+RANGER_KMS_EWS_LIB_DIR="${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/lib"
 
 JAVA_OPTS=" ${JAVA_OPTS} -XX:MaxPermSize=256m -Xmx1024m -Xms1024m "
 
-for custom_env_script in `find ${RANGER_KMS_DIR}/ews/conf/ -name "ranger-kms-env*"`; do
+for custom_env_script in `find ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf/ -name "ranger-kms-env*"`; do
         if [ -f $custom_env_script ]; then
                 . $custom_env_script
         fi
@@ -70,7 +70,7 @@ then
 	mkdir -p ${TOMCAT_LOG_DIR}
 fi
 
-KMS_CONF_DIR=${RANGER_KMS_EWS_DIR}/webapp/config/
+KMS_CONF_DIR=${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/conf
 
 JAVA_OPTS="${JAVA_OPTS} -Dcatalina.base=${RANGER_KMS_EWS_DIR} -Dkms.config.dir=${KMS_CONF_DIR} -Dkms.log.dir=${TOMCAT_LOG_DIR} -cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_LIB_DIR}/*:${RANGER_KMS_EWS_DIR}/webapp/lib/*:${JAVA_HOME}/lib/* "
 

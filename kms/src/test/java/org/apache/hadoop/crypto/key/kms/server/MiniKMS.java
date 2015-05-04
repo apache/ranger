@@ -158,20 +158,13 @@ public class MiniKMS {
   public void start() throws Exception {
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
     System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, kmsConfDir);
-    File aclsFile = new File(kmsConfDir, "kms-acls.xml");
+    File aclsFile = new File(kmsConfDir, "dbks-site.xml");
     if (!aclsFile.exists()) {
       InputStream is = cl.getResourceAsStream("mini-kms-acls-default.xml");
       OutputStream os = new FileOutputStream(aclsFile);
       IOUtils.copy(is, os);
       is.close();
       os.close();
-    }
-    File coreFile = new File(kmsConfDir, "core-site.xml");
-    if (!coreFile.exists()) {
-      Configuration core = new Configuration();
-      Writer writer = new FileWriter(coreFile);
-      core.writeXml(writer);
-      writer.close();
     }
     File kmsFile = new File(kmsConfDir, "kms-site.xml");
     if (!kmsFile.exists()) {

@@ -100,7 +100,7 @@ public class KMSConfiguration {
   }
 
   public static Configuration getKMSConf() {
-    return getConfiguration(true, "core-site.xml", KMS_SITE_XML);
+    return getConfiguration(true, KMS_SITE_XML);
   }
 
   public static Configuration getACLsConf() {
