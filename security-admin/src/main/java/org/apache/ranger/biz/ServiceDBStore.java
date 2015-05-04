@@ -39,6 +39,7 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PasswordUtils;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
@@ -1643,6 +1644,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 			List<String> users = new ArrayList<String>();
 			users.add(vXUser.getName());
 			policyItem.setUsers(users);
+
+			// Default policy for KMS should grant all access to 'public'
+			long serviceType = createdService.getType() == null ? -1 : createdService.getType();
+			if(serviceType == EmbeddedServiceDefsUtil.instance().getKmsServiceDefId()) {
+				List<String> groups = new ArrayList<String>();
+				groups.add(RangerConstants.GROUP_PUBLIC);
+				policyItem.setGroups(groups);
+			}
 			
 			List<XXAccessTypeDef> accessTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(createdService.getType());
 			List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
