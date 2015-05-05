@@ -1,7 +1,6 @@
 package org.apache.ranger.rest;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -20,11 +19,15 @@ import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 
 @Path("keys")
@@ -61,8 +64,7 @@ public class XKeyREST {
 			vxKmsKeyList = keyMgr.searchKeys(provider);
 			vxKmsKeyList = keyMgr.getFilteredKeyList(request, vxKmsKeyList);
 		}catch(Exception e){
-			e.printStackTrace();
-			handleError(e.getMessage());						
+			handleError(e);						
 		}
 		return vxKmsKeyList;
 	}
@@ -83,9 +85,12 @@ public class XKeyREST {
 				throw restErrorUtil.createRESTException("Please provide a valid "
 						+ "alias.", MessageEnums.INVALID_INPUT_DATA);
 			}
+			if(vXKey.getCipher() == null || vXKey.getCipher().trim().isEmpty()){
+				vXKey.setCipher(null);
+			}
 			vxKmsKey = keyMgr.rolloverKey(provider, vXKey);
 		}catch(Exception e){
-			handleError(e.getMessage());
+			handleError(e);
 		}
 		return vxKmsKey;
 	}	
@@ -106,7 +111,7 @@ public class XKeyREST {
 			}
 			keyMgr.deleteKey(provider, name);
 		}catch(Exception e){
-			handleError(e.getMessage());
+			handleError(e);
 		}
 	}
 	
@@ -126,9 +131,12 @@ public class XKeyREST {
 				throw restErrorUtil.createRESTException("Please provide a valid "
 						+ "alias.", MessageEnums.INVALID_INPUT_DATA);
 			}
+			if(vXKey.getCipher() == null || vXKey.getCipher().trim().isEmpty()){
+				vXKey.setCipher(null);
+			}
 			vxKmsKey = keyMgr.createKey(provider, vXKey);
 		}catch(Exception e){
-			handleError(e.getMessage());
+			handleError(e);
 		}
 		return vxKmsKey;
 	}
@@ -151,12 +159,26 @@ public class XKeyREST {
 			}
 			vxKmsKey = keyMgr.getKey(provider, name);
 		}catch(Exception e){
-			handleError(e.getMessage());
+			handleError(e);
 		}
 		return vxKmsKey;
 	}
 	
-	private void handleError(String message) {		
+	private void handleError(Exception e) {
+		String message = e.getMessage();
+		if (e instanceof UniformInterfaceException){
+			 UniformInterfaceException uie=(UniformInterfaceException)e;
+			 message = uie.getResponse().getEntity(String.class);
+			 logger.error(message);
+			 try {
+				JSONObject objRE = new JSONObject(message);
+				message = objRE.getString("RemoteException");
+				JSONObject obj = new JSONObject(message);
+				message = obj.getString("message");
+			} catch (JSONException e1) {
+				message = e1.getMessage();
+			}			 
+		}			
 		if(!(message==null) && !(message.isEmpty()) && message.contains("Connection refused")){
 			message = "Connection refused : Please check the KMS provider URL and whether the Ranger KMS is running";			
 		}else if(!(message==null) && !(message.isEmpty()) && message.contains("response status of 403")){
