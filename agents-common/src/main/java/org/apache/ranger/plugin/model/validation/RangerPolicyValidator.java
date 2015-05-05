@@ -242,7 +242,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		boolean valid = true;
 		Map<String, RangerPolicyResource> resourceMap = policy.getResources();
 		if (resourceMap != null) { // following checks can't be done meaningfully otherwise
-			valid = isPolicyResourceUnique(policy, failures) && valid;
+			valid = isPolicyResourceUnique(policy, failures, action) && valid;
 			if (serviceDef != null) { // following checks can't be done meaningfully otherwise
 				valid = isValidResourceNames(policy, failures, serviceDef) && valid;
 				valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
@@ -256,10 +256,10 @@ public class RangerPolicyValidator extends RangerValidator {
 		return valid;
 	}
 	
-	boolean isPolicyResourceUnique(RangerPolicy policy, final List<ValidationFailureDetails> failures) {
+	boolean isPolicyResourceUnique(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action) {
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerPolicyValidator.isPolicyResourceUnique(%s, %s)", policy, failures));
+			LOG.debug(String.format("==> RangerPolicyValidator.isPolicyResourceUnique(%s, %s, %s)", policy, failures, action));
 		}
 
 		boolean valid = true;
@@ -267,21 +267,24 @@ public class RangerPolicyValidator extends RangerValidator {
 		String signature = policySignature.getSignature();
 		List<RangerPolicy> policies = getPoliciesForResourceSignature(signature);
 		if (CollectionUtils.isNotEmpty(policies)) {
-			RangerPolicy otherPolicy = policies.iterator().next();
-			valid = false;
-			failures.add(new ValidationFailureDetailsBuilder()
-				.field("resources")
-				.isSemanticallyIncorrect()
-				.becauseOf("found another policy[" + otherPolicy.getName() + "] with matching resources[" + otherPolicy.getResources() + "]!")
-				.build());
+			RangerPolicy matchedPolicy = policies.iterator().next();
+			// there shouldn't be a matching policy for create.  During update only match should be to itself
+			if (action == Action.CREATE || (action == Action.UPDATE && (policies.size() > 1 || !matchedPolicy.getId().equals(policy.getId())))) {
+				failures.add(new ValidationFailureDetailsBuilder()
+					.field("resources")
+					.isSemanticallyIncorrect()
+					.becauseOf("found another policy[" + matchedPolicy.getName() + "] with matching resources[" + matchedPolicy.getResources() + "]!")
+					.build());
+				valid = false;
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerPolicyValidator.isPolicyResourceUnique(%s, %s): %s", policy, failures, valid));
+			LOG.debug(String.format("<== RangerPolicyValidator.isPolicyResourceUnique(%s, %s, %s): %s", policy, failures, action, valid));
 		}
 		return valid;
 	}
-
+	
 	boolean isValidResourceNames(final RangerPolicy policy, final List<ValidationFailureDetails> failures, final RangerServiceDef serviceDef) {
 		
 		if(LOG.isDebugEnabled()) {

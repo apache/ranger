@@ -677,15 +677,32 @@ public class TestRangerPolicyValidator {
 		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(signature);
 		List<RangerPolicy> policies = null;
 		when(_store.getPoliciesByResourceSignature(hash)).thenReturn(policies);
-		assertTrue(_validator.isPolicyResourceUnique(_policy, _failures));
 		policies = new ArrayList<RangerPolicy>();
-		assertTrue(_validator.isPolicyResourceUnique(_policy, _failures));
-
-		// if store does have any policy then test should fail with appropriate error message.
-		RangerPolicy policy1 = mock(RangerPolicy.class); policies.add(policy1); 
-		RangerPolicy policy2 = mock(RangerPolicy.class); policies.add(policy2); 
+		for (Action action : cu) {
+			assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, action));
+			assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, action));
+		}
+		/* 
+		 * If store does have any policy then test should fail with appropriate error message.
+		 * For create any match is a problem
+		 */
+		RangerPolicy policy1 = mock(RangerPolicy.class); policies.add(policy1);
 		when(_store.getPoliciesByResourceSignature(hash)).thenReturn(policies);
-		assertFalse(_validator.isPolicyResourceUnique(_policy, _failures));
+		assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.CREATE));
+		_utils.checkFailureForSemanticError(_failures, "resources");
+		// For Update match with itself is not a problem as long as it isn't itself, i.e. same id.
+		when(policy1.getId()).thenReturn(103L);
+		when(_policy.getId()).thenReturn(103L);
+		assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
+		// matching policy can't be some other policy (i.e. different id) because that implies a conflict.
+		when(policy1.getId()).thenReturn(104L);
+		assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
+		_utils.checkFailureForSemanticError(_failures, "resources");
+		// And validation should never pass if there are more than one policies with matching signature, regardless of their ID!!
+		RangerPolicy policy2 = mock(RangerPolicy.class);
+		when(policy2.getId()).thenReturn(103L);  // has same id as the policy being tested (_policy)
+		policies.add(policy2);
+		assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
 		_utils.checkFailureForSemanticError(_failures, "resources");
 	}
 	
