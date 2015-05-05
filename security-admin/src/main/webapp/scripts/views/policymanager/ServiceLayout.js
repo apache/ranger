@@ -41,7 +41,7 @@ define(function(require){
 		templateHelpers: function(){
 			var groupedServices = this.services.groupBy("type");
 			return {
-				isSysAdmin : SessionMgr.isSystemAdmin(),
+				operation : SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin(),
 				serviceDefs : this.collection.models,
 				services : groupedServices
 			};

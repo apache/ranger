@@ -24,6 +24,7 @@ define(function(require){
 	var Backbone		= require('backbone');
 	var XAEnums			= require('utils/XAEnums');
 	var localization	= require('utils/XALangSupport');
+	var KeyValuePairList= require('views/service/ConfigurationList')
 	
 	require('backbone-forms');
 	require('backbone-forms.templates');
@@ -39,8 +40,9 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a KmsKeyForm Form View");
 			_.extend(this, _.pick(options,''));
-    		Backbone.Form.prototype.initialize.call(this, options);
-
+			this.attributesColl = new Backbone.Collection();
+			this.setupFormForEditMode();
+			Backbone.Form.prototype.initialize.call(this, options);
 			this.bindEvents();
 		},
 		/** all events binding here */
@@ -56,21 +58,16 @@ define(function(require){
 				cipher : {
 					type		: 'Text',
 					title		: localization.tt("lbl.cipher"),
-					fieldAttrs 	: {style : 'display:none;'},
-					editorAttrs : {'disabled' : true}
 				},
 				length : {
 					type		: 'Number',
 					title		: localization.tt("lbl.length"),
-					fieldAttrs 	: {style : 'display:none;'},
-					editorAttrs : {'disabled' : true}
+					validators	: [{type : 'regexp', regexp : /^\d+$/, message : 'Please enter valid integer value.'}],
 				},
-				material : {
+				/*material : {
 					type		: 'Text',
 					title		: localization.tt("lbl.material"),
-					fieldAttrs 	: {style : 'display:none;'},
-					editorAttrs : {'disabled' : true}
-				},
+				},*/
 				description : {
 					type		: 'TextArea',
 					title		: localization.tt("lbl.description"),
@@ -81,23 +78,28 @@ define(function(require){
 		render: function(options) {
 			Backbone.Form.prototype.render.call(this, options);
 			this.initializePlugins();
-			if(this.model.has('versions')){
-				this.fields.cipher.$el.show();
-				this.fields.length.$el.show();
-				this.fields.description.editor.$el.attr('disabled',true);
+			this.renderCustomFields();
+		},
+		/** all custom field rendering */
+		renderCustomFields: function(){
+			this.$('.attributes').html(new KeyValuePairList({
+				collection : this.attributesColl,
+				model 	   : this.model,
+				fieldLabel : localization.tt("lbl.attributes"),
+			}).render().el);
+		},
+		setupFormForEditMode : function() {
+			if(!this.model.isNew() && !_.isUndefined(this.model.get('attributes'))){
+				_.map(this.model.get('attributes'), function(value, key) { this.attributesColl.add({'name' : key, 'value' : value}) }, this)
 			}
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},
 		beforeSave : function(){
-			//to check model is new or not
-			if(this.model.has('versions')){
-				this.model.attributes = { 'name' : this.model.get('name') };
-			}else{
-				this.model.attributes = { 'name' : this.model.get('name'), 'description' : this.model.get('description')};	
-			}
-			
+			var attributes = {};
+			this.attributesColl.each(function(obj){ attributes[obj.get('name')] = obj.get('value'); })
+			this.model.set('attributes',attributes);
 		}
 		
 	});

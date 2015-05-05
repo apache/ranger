@@ -96,6 +96,9 @@ public class UserSessionBase implements Serializable {
 	public void setUserRoleList(List<String> strRoleList) {
 		this.userRoleList = strRoleList;
 	}
+	public List<String> getUserRoleList() {
+		return this.userRoleList;
+	}
 
 	public int getAuthProvider() {
 		return this.authProvider;

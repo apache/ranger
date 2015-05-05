@@ -517,7 +517,7 @@
 		if(!_.isUndefined(services[serviceType])){
 			_.each(services[serviceType],function(serv){
 				serviceName = serv.get('name');
-				if(SessionMgr.isSystemAdmin()){
+				if(SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin()){
 					serviceOperationDiv = '<div class="pull-right">\
 					<a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
 					<a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\

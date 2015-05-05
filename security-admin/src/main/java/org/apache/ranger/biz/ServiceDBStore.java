@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -115,6 +116,7 @@ import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
+import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -890,7 +892,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 		RangerServiceDef ret = null;
 
 		ret = serviceDefService.read(id);
-
+		List<String> userRoleList = ContextUtil.getCurrentUserSession().getUserRoleList();
+		if(userRoleList != null && !userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
+			if(ret!=null && "KMS".equalsIgnoreCase(ret.getName())){
+				ret=null;
+			}
+		}else{
+			if(ret!=null && !"KMS".equalsIgnoreCase(ret.getName())){
+				ret=null;
+			}
+		}
+			
+		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.getServiceDef(" + id + "): " + ret);
 		}
@@ -962,7 +975,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		boolean createDefaultPolicy = true;
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
+		List<String> userRoleList=usb.getUserRoleList();
+		boolean isAllowed=false;
+		if (userRoleList != null && userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
+			if(service!=null && "KMS".equalsIgnoreCase(service.getType())){
+				isAllowed=true;
+			}
+		}
 		if (usb != null && usb.isUserAdmin() || populateExistingBaseFields) {
+			isAllowed=true;
+		}
+		if (isAllowed) {
 			Map<String, String> configs = service.getConfigs();
 			Map<String, String> validConfigs = validateRequiredConfigParams(
 					service, configs);

@@ -42,7 +42,7 @@ define(function(require){
     	templateHelpers : function(){
 //    		return { kmsServiceName : this.kmsServiceName };
     	},
-    	breadCrumbs :[XALinks.get('Kms')],
+    	breadCrumbs :[XALinks.get('KmsManage')],
 		/** Layout sub regions */
     	regions: {
     		'rTableList' :'div[data-id="r_tableList"]',
@@ -54,7 +54,8 @@ define(function(require){
     		addNewKey	: '[data-id="addNewKey"]',
     		deleteKeyBtn	: '[data-name="deleteKey"]',
     		visualSearch: '.visual_search',
-    		selectServiceName	: '[data-js="serviceName"]'
+    		selectServiceName	: '[data-js="serviceName"]',
+    		rolloverBtn	: '[data-name="rolloverKey"]',
     	},
 
 		/** ui events hash */
@@ -62,6 +63,7 @@ define(function(require){
 			var events = {};
 			events['click '+this.ui.tab+' li a']  = 'onTabChange';
 			events['click '+this.ui.deleteKeyBtn]  = 'onDelete';
+			events['click '+this.ui.rolloverBtn]  = 'onRollover';
 			
 			return events;
 		},
@@ -117,7 +119,7 @@ define(function(require){
 				this.renderKeyTab();
 			}
 			if(this.isKnownKmsServicePage){
-				this.ui.selectServiceName.val(this.ksmServiceName);
+				this.ui.selectServiceName.val(this.kmsServiceName);
 				this.ui.addNewKey.attr('disabled',false);
 				this.ui.addNewKey.attr('href','#!/kms/keys/'+ this.kmsServiceName +'/create')
 				
@@ -159,12 +161,10 @@ define(function(require){
 				
 				name : {
 					label	: localization.tt("lbl.keyName"),
-					href: function(model){
-						return '#!/kms/keys/'+that.kmsServiceName+'/edit/'+model.get('name');
-					},
+					cell :'string',
 					editable:false,
 					sortable:false,
-					cell :'uri'						
+											
 				},
 				cipher : {
 					label	: localization.tt("lbl.cipher"),
@@ -220,7 +220,7 @@ define(function(require){
 						label : localization.tt("lbl.action"),
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue,model) {
-								return '<a href="#!/kms/keys/'+that.kmsServiceName+'/edit/'+model.get('name')+'" class="btn btn-mini" title="Rollover"><i class="icon-edit" /></a>\
+								return '<a href="javascript:void(0);" data-name ="rolloverKey" data-id="'+model.get('name')+'" class="btn btn-mini" title="Rollover"><i class="icon-edit" /></a>\
 										<a href="javascript:void(0);" data-name ="deleteKey" data-id="'+model.get('name')+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash" /></a>';
 								//You can use rawValue to custom your html, you can change this value using the name parameter.
 							}
@@ -329,6 +329,35 @@ define(function(require){
 						'error': function (model, response, options) {
 							XAUtil.blockUI('unblock');
 							XAUtil.notifyError('Error', 'Error deleting key!');
+						}
+					});
+				}
+			});
+		},
+		onRollover :function(e){
+			var that = this;
+			var obj = this.collection.get($(e.currentTarget).data('id'));
+			var model = new KmsKey({ 'name' : obj.attributes.name });
+			model.collection = this.collection;
+			 var url = model.urlRoot+"?provider="+ this.kmsServiceName;
+			XAUtil.confirmPopup({
+				msg :'Are you sure want to rollover ?',
+				callback : function(){
+					XAUtil.blockUI();
+					
+					model.save({},{
+						 'type' : 'PUT',
+                         'url' : url,
+						'success': function(model, response) {
+							XAUtil.blockUI('unblock');
+							that.collection.remove(model.get('id'));
+							XAUtil.notifySuccess('Success', localization.tt('msg.rolloverSuccessfully'));
+							that.renderKeyTab();
+							that.collection.fetch();
+						},
+						'error': function (model, response, options) {
+							XAUtil.blockUI('unblock');
+							XAUtil.notifyError('Error', 'Error rollovering key!');
 						}
 					});
 				}

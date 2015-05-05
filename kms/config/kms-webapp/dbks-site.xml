@@ -20,13 +20,14 @@
 
   <!-- Blacklist for authorization -->
 
-  <!--<property>
-    <name>hadoop.kms.blacklist.CREATE</name>
+  <property>
+    <name>hadoop.kms.blacklist.DECRYPT_EEK</name>
     <value>hdfs</value>
     <description>
-          Blacklist for create-key operations.
+          Blacklist for decrypt EncryptedKey
+          CryptoExtension operations
     </description>
-  </property>-->
+  </property>
 
   <!-- Encryption key Password -->
   

@@ -408,26 +408,26 @@ define(function(require) {
 		   var KmsKey		= require('models/VXKmsKey');
 		   
 		   App.rContent.show(new view({
-			   model : new KmsKey(),
+			   model : new KmsKey({'length' : 128, 'cipher' : 'AES' }),
 			   kmsServiceName : kmsServiceName
 		   }));
 	   },
-	   kmsKeyEditAction : function(kmsServiceName, keyName){
-		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.KMS.value });
-		   var view 		= require('views/kms/KmsKeyCreate');
-		   var VXKmsKey		= require('models/VXKmsKey');
-		   var kmsKeyModel 	= new VXKmsKey({'name' : keyName});
-		   var data = {'provider': kmsServiceName}
-		   kmsKeyModel.fetch({
-				   cache : true,
-				   data : data
-			   }).done(function(){
-			   App.rContent.show(new view({
-				   model : kmsKeyModel,
-				   kmsServiceName : kmsServiceName
-			   }));
-		   });	   
-	   },
+//	   kmsKeyEditAction : function(kmsServiceName, keyName){
+//		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.KMS.value });
+//		   var view 		= require('views/kms/KmsKeyCreate');
+//		   var VXKmsKey		= require('models/VXKmsKey');
+//		   var kmsKeyModel 	= new VXKmsKey({'name' : keyName});
+//		   var data = {'provider': kmsServiceName}
+//		   kmsKeyModel.fetch({
+//				   cache : true,
+//				   data : data
+//		   }).done(function(){
+//			   App.rContent.show(new view({
+//				   model : kmsKeyModel,
+//				   kmsServiceName : kmsServiceName
+//			   }));
+//		   });	   
+//	   },
 	   /**************** ERROR PAGE ******************************/
 	   pageNotFoundAction	: function() {
 		   var XAUtils			= require('utils/XAUtils');

@@ -133,6 +133,7 @@ define(function(require){
 			this.$('.extraServiceConfigs').html(new ConfigurationList({
 				collection : this.extraConfigColl,
 				model 	   : this.model,
+				fieldLabel : localization.tt('lbl.addNewConfig')
 			}).render().el);
 		},
 

@@ -460,8 +460,8 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
 
-	propertyName=hadoop.kms.blacklist.CREATE
-        newPropertyValue="BlacklistUser"
+	propertyName=hadoop.kms.blacklist.DECRYPT_EEK
+        newPropertyValue="${KMS_BLACKLIST_DECRYPT_EEK}"
         updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 	###########

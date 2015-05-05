@@ -296,6 +296,16 @@ public class XUserMgr extends XUserMgrBase {
 			} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
 				insertMappingUserPermisson(vXPortalUser.getId(),
 						moduleNameId.get(RangerConstants.MODULE_KMS), isCreate);
+				insertMappingUserPermisson(vXPortalUser.getId(),
+						moduleNameId.get(RangerConstants.MODULE_ANALYTICS),
+						isCreate);
+				insertMappingUserPermisson(
+						vXPortalUser.getId(),
+						moduleNameId.get(RangerConstants.MODULE_POLICY_MANAGER),
+						isCreate);
+				insertMappingUserPermisson(vXPortalUser.getId(),
+						moduleNameId.get(RangerConstants.MODULE_AUDIT),
+						isCreate);
 			}
 
 		}

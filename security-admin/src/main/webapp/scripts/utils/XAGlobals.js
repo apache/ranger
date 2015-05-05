@@ -67,9 +67,10 @@ define(function(require){
 	XAGlobals.ListOfModuleActions = {
 									  'Policy Manager':['serviceManagerAction','serviceCreateAction','serviceEditAction', 'policyManageAction','RangerPolicyCreateAction','RangerPolicyEditAction'],
 					  'Users/Groups' : ['userManagerAction','userCreateAction','userEditAction','groupCreateAction','groupEditAction'],
-					  'Analytics' : ['userAccessReportAction'],
-					  'Audit' : ['auditReportAction','loginSessionDetail'],
-					  'Permissions' : ['modulePermissionsAction','modulePermissionEditAction']
-									};
+					  'Analytics' 	 : ['userAccessReportAction'],
+					  'Audit' 		 : ['auditReportAction','loginSessionDetail'],
+					  'Permissions'  : ['modulePermissionsAction','modulePermissionEditAction'],
+					  'KMS' 		 : ['kmsManagerAction','kmsKeyCreateAction']
+					};
 	return XAGlobals;
 });

@@ -65,7 +65,7 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			/************ KMS ***************************/
 			"!/kms/keys/:isService/manage/:serviceName"	: "kmsManagerAction",
 			"!/kms/keys/:serviceName/create"		: "kmsKeyCreateAction",
-			"!/kms/keys/:serviceName/edit/:id"		: "kmsKeyEditAction",
+//			"!/kms/keys/:serviceName/edit/:id"		: "kmsKeyEditAction",
 			
 			/*************** ERROR PAGE ***********************/
 			"*actions"					: "pageNotFoundAction"
