@@ -892,18 +892,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		RangerServiceDef ret = null;
 
 		ret = serviceDefService.read(id);
-		List<String> userRoleList = ContextUtil.getCurrentUserSession().getUserRoleList();
-		if(userRoleList != null && !userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-			if(ret!=null && "KMS".equalsIgnoreCase(ret.getName())){
-				ret=null;
-			}
-		}else{
-			if(ret!=null && !"KMS".equalsIgnoreCase(ret.getName())){
-				ret=null;
-			}
-		}
-			
-		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.getServiceDef(" + id + "): " + ret);
 		}
