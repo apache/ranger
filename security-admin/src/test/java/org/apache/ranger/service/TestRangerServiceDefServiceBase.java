@@ -786,6 +786,7 @@ public class TestRangerServiceDefServiceBase {
 
 	@Test
 	public void test21searchRangerServiceDefs() {
+		setup();
 		EntityManager entityManager = Mockito.mock(EntityManager.class);
 		SearchFilter searchFilter = new SearchFilter();
 		searchFilter.setParam(SearchFilter.POLICY_NAME, "policyName");
