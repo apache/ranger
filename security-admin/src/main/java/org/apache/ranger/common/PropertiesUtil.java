@@ -95,6 +95,44 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 			}
 		}
 	}
+	if(propertiesMap!=null && propertiesMap.containsKey("ranger.authentication.method")){
+		String authenticationMethod=propertiesMap.get("ranger.authentication.method");
+		if(authenticationMethod!=null && (authenticationMethod.equalsIgnoreCase("ACTIVE_DIRECTORY")||authenticationMethod.equalsIgnoreCase("AD"))){
+			if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.ldap.ad.binddn.credential.alias")){
+				String path=propertiesMap.get("ranger.credential.provider.path");
+				String alias=propertiesMap.get("ranger.ldap.ad.binddn.credential.alias");
+				if(path!=null && alias!=null){
+					String bindDNPassword=CredentialReader.getDecryptedString(path.trim(), alias.trim());
+					if(bindDNPassword!=null&& !bindDNPassword.trim().isEmpty() &&
+							!bindDNPassword.trim().equalsIgnoreCase("none")){
+						propertiesMap.put("ranger.ldap.ad.bind.password", bindDNPassword);
+						props.put("ranger.ldap.ad.bind.password", bindDNPassword);
+					}else{
+						logger.info("Credential keystore password not applied for AD Bind DN; clear text password shall be applicable");
+					}
+				}
+			}
+		}
+	}
+	if(propertiesMap!=null && propertiesMap.containsKey("ranger.authentication.method")){
+		String authenticationMethod=propertiesMap.get("ranger.authentication.method");
+		if(authenticationMethod!=null && (authenticationMethod.equalsIgnoreCase("LDAP"))){
+			if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.ldap.binddn.credential.alias")){
+				String path=propertiesMap.get("ranger.credential.provider.path");
+				String alias=propertiesMap.get("ranger.ldap.binddn.credential.alias");
+				if(path!=null && alias!=null){
+					String bindDNPassword=CredentialReader.getDecryptedString(path.trim(), alias.trim());
+					if(bindDNPassword!=null&& !bindDNPassword.trim().isEmpty() &&
+							!bindDNPassword.trim().equalsIgnoreCase("none")){
+						propertiesMap.put("ranger.ldap.bind.password", bindDNPassword);
+						props.put("ranger.ldap.bind.password", bindDNPassword);
+					}else{
+						logger.info("Credential keystore password not applied for LDAP Bind DN; clear text password shall be applicable");
+					}
+				}
+			}
+		}
+	}
 	super.processProperties(beanFactory, props);
     }
 

@@ -1223,6 +1223,58 @@ do_authentication_setup(){
 			propertyName=ranger.authentication.method
 			newPropertyValue="${authentication_method}"
 			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+			if [ "${xa_ldap_base_dn}" != "" ] && [ "${xa_ldap_bind_dn}" != "" ]  && [ "${xa_ldap_bind_password}" != "" ]
+			then
+				propertyName=ranger.ldap.base.dn
+				newPropertyValue="${xa_ldap_base_dn}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+				propertyName=ranger.ldap.bind.dn
+				newPropertyValue="${xa_ldap_bind_dn}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+				keystore="${cred_keystore_filename}"
+
+				if [ "${keystore}" != "" ]
+				then
+					mkdir -p `dirname "${keystore}"`
+
+					ldap_password_alias=ranger.ldap.binddn.password
+					$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$ldap_password_alias" -value "$xa_ldap_bind_password" -provider jceks://file$keystore
+
+					to_file_default=$app_home/WEB-INF/classes/conf/ranger-admin-default-site.xml
+
+					if test -f $to_file_default; then
+						propertyName=ranger.credential.provider.path
+						newPropertyValue="${keystore}"
+						updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+						propertyName=ranger.ldap.binddn.credential.alias
+						newPropertyValue="${ldap_password_alias}"
+						updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+						propertyName=ranger.ldap.bind.password
+						newPropertyValue="_"
+						updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+					else
+						log "[E] $to_file_default does not exists" ; exit 1;
+					fi
+				else
+					propertyName=ranger.ldap.bind.password
+					newPropertyValue="${xa_ldap_bind_password}"
+					updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				fi
+				if test -f $keystore; then
+					#echo "$keystore found."
+					chown -R ${unix_user}:${unix_group} ${keystore}
+					chmod 640 ${keystore}
+				else
+					propertyName=ranger.ldap.bind.password
+					newPropertyValue="${xa_ldap_bind_password}"
+					updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				fi
+			fi
 		else
 			log "[E] $ldap_file does not exists" ; exit 1;
 
@@ -1248,6 +1300,58 @@ do_authentication_setup(){
 			propertyName=ranger.authentication.method
 			newPropertyValue="${authentication_method}"
 			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+			if [ "${xa_ldap_ad_base_dn}" != "" ] && [ "${xa_ldap_ad_bind_dn}" != "" ]  && [ "${xa_ldap_ad_bind_password}" != "" ]
+			then
+				propertyName=ranger.ldap.ad.base.dn
+				newPropertyValue="${xa_ldap_ad_base_dn}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+				propertyName=ranger.ldap.ad.bind.dn
+				newPropertyValue="${xa_ldap_ad_bind_dn}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+				keystore="${cred_keystore_filename}"
+
+				if [ "${keystore}" != "" ]
+				then
+					mkdir -p `dirname "${keystore}"`
+
+					ad_password_alias=ranger.ad.binddn.password
+					$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$ad_password_alias" -value "$xa_ldap_ad_bind_password" -provider jceks://file$keystore
+
+					to_file_default=$app_home/WEB-INF/classes/conf/ranger-admin-default-site.xml
+
+					if test -f $to_file_default; then
+						propertyName=ranger.credential.provider.path
+						newPropertyValue="${keystore}"
+						updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+						propertyName=ranger.ldap.ad.binddn.credential.alias
+						newPropertyValue="${ad_password_alias}"
+						updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+						propertyName=ranger.ldap.ad.bind.password
+						newPropertyValue="_"
+						updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+					else
+						log "[E] $to_file_default does not exists" ; exit 1;
+					fi
+				else
+					propertyName=ranger.ldap.ad.bind.password
+					newPropertyValue="${xa_ldap_ad_bind_password}"
+					updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				fi
+				if test -f $keystore; then
+					#echo "$keystore found."
+					chown -R ${unix_user}:${unix_group} ${keystore}
+					chmod 640 ${keystore}
+				else
+					propertyName=ranger.ldap.ad.bind.password
+					newPropertyValue="${xa_ldap_ad_bind_password}"
+					updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				fi
+			fi
 		else
 			log "[E] $ldap_file does not exists" ; exit 1;
 		fi

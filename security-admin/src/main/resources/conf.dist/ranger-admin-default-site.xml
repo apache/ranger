@@ -395,6 +395,14 @@
 		<value>ranger.auditdb.password</value>
 		<description></description>
 	</property>
-
-
+	<property>
+		<name>ranger.ldap.binddn.credential.alias</name>
+		<value>ranger.ldap.binddn.password</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.ldap.ad.binddn.credential.alias</name>
+		<value>ranger.ad.binddn.password</value>
+		<description></description>
+	</property>
 </configuration>

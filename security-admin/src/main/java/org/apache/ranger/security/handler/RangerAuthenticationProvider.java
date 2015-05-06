@@ -9,7 +9,7 @@ import java.util.HashMap;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
-
+import org.apache.log4j.Logger;
 import org.apache.ranger.authentication.unix.jaas.RoleUserAuthorityGranter;
 import org.apache.ranger.common.PropertiesUtil;
 import org.springframework.ldap.core.support.LdapContextSource;
@@ -29,11 +29,12 @@ import org.springframework.security.ldap.authentication.LdapAuthenticationProvid
 import org.springframework.security.ldap.authentication.LdapAuthenticator;
 import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 
 
 
 public class RangerAuthenticationProvider implements AuthenticationProvider {
-
+	private static Logger logger = Logger.getLogger(RangerAuthenticationProvider.class);
 	private String rangerAuthenticationMethod;
 
 	private LdapAuthenticator authenticator;
@@ -42,21 +43,38 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
 	}
 
-	public Authentication initializeAuthenticationHandler(
-			Authentication authentication) {
-		if (rangerAuthenticationMethod.equalsIgnoreCase("LDAP")) {
-			return getLdapAuthentication(authentication);
+	@Override
+	public Authentication authenticate(Authentication authentication)
+			throws AuthenticationException {
+		if (authentication != null && rangerAuthenticationMethod!=null) {
+			if (rangerAuthenticationMethod.equalsIgnoreCase("LDAP")) {
+				authentication=getLdapAuthentication(authentication);
+				if(authentication!=null && authentication.isAuthenticated()){
+					return authentication;
+				}else{
+					authentication=getLdapBindAuthentication(authentication);
+					if(authentication!=null && authentication.isAuthenticated()){
+						return authentication;
+					}
+				}
+			}
+			if (rangerAuthenticationMethod.equalsIgnoreCase("ACTIVE_DIRECTORY")) {
+				authentication=getADBindAuthentication(authentication);
+				if(authentication!=null && authentication.isAuthenticated()){
+					return authentication;
+				}else{
+					authentication=getADAuthentication(authentication);
+					if(authentication!=null && authentication.isAuthenticated()){
+						return authentication;
+					}
+				}
+			}
+			if (rangerAuthenticationMethod.equalsIgnoreCase("UNIX")) {
+				return getUnixAuthentication(authentication);
+			}
+			return null;
 		}
-		if (rangerAuthenticationMethod.equalsIgnoreCase("ACTIVE_DIRECTORY")
-				|| rangerAuthenticationMethod.equalsIgnoreCase("AD")) {
-			return getADAuthentication(authentication);
-		}
-		if (rangerAuthenticationMethod.equalsIgnoreCase("UNIX")) {
-			return getUnixAuthentication(authentication);
-		}
-
 		return null;
-
 	}
 
 	private Authentication getLdapAuthentication(Authentication authentication) {
@@ -74,7 +92,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String rangerLdapGroupRoleAttribute = PropertiesUtil.getProperty(
 					"ranger.ldap.group.roleattribute", "");
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty(
-					"ranger.ldap.default.role", "");
+					"ranger.ldap.default.role", "ROLE_USER");
 
 			// taking the user-name and password from the authentication
 			// object.
@@ -136,55 +154,58 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return null;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("LDAP Authentication Failed:"+e.getMessage());
 		}
 		return null;
 	}
 
 	public Authentication getADAuthentication(Authentication authentication) {
+		try{
+			String rangerADURL = PropertiesUtil.getProperty("ranger.ldap.ad.url",
+					"");
+			String rangerADDomain = PropertiesUtil.getProperty(
+					"ranger.ldap.ad.domain", "");
+			String rangerLdapDefaultRole = PropertiesUtil.getProperty(
+					"ranger.ldap.default.role", "ROLE_USER");
 
-		String rangerADURL = PropertiesUtil.getProperty("ranger.ldap.ad.url",
-				"");
-		String rangerADDomain = PropertiesUtil.getProperty(
-				"ranger.ldap.ad.domain", "");
-		String rangerLdapDefaultRole = PropertiesUtil.getProperty(
-				"ranger.ldap.default.role", "");
+			ActiveDirectoryLdapAuthenticationProvider adAuthenticationProvider = new ActiveDirectoryLdapAuthenticationProvider(
+					rangerADDomain, rangerADURL);
+			adAuthenticationProvider.setConvertSubErrorCodesToExceptions(true);
+			adAuthenticationProvider.setUseAuthenticationRequestCredentials(true);
 
-		ActiveDirectoryLdapAuthenticationProvider adAuthenticationProvider = new ActiveDirectoryLdapAuthenticationProvider(
-				rangerADDomain, rangerADURL);
-		adAuthenticationProvider.setConvertSubErrorCodesToExceptions(true);
-		adAuthenticationProvider.setUseAuthenticationRequestCredentials(true);
+			// Grab the user-name and password out of the authentication object.
+			String userName = authentication.getName();
+			String userPassword = "";
+			if (authentication.getCredentials() != null) {
+				userPassword = authentication.getCredentials().toString();
+			}
 
-		// Grab the user-name and password out of the authentication object.
-		String userName = authentication.getName();
-		String userPassword = "";
-		if (authentication.getCredentials() != null) {
-			userPassword = authentication.getCredentials().toString();
+			// getting user authenticated
+			if (userName != null && userPassword != null
+					&& !userName.trim().isEmpty() && !userPassword.trim().isEmpty()) {
+				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+				grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+				final UserDetails principal = new User(userName, userPassword,
+						grantedAuths);
+				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(
+						principal, userPassword, grantedAuths);
+				authentication = adAuthenticationProvider
+						.authenticate(finalAuthentication);
+				return authentication;
+			} else {
+				return null;
+			}
+		}catch (Exception e) {
+			logger.error("AD Authentication Failed:"+e.getMessage());
 		}
-
-		// getting user authenticated
-		if (userName != null && userPassword != null
-				&& !userName.trim().isEmpty() && !userPassword.trim().isEmpty()) {
-			final List<GrantedAuthority> grantedAuths = new ArrayList<>();
-			grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
-			final UserDetails principal = new User(userName, userPassword,
-					grantedAuths);
-			final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(
-					principal, userPassword, grantedAuths);
-			authentication = adAuthenticationProvider
-					.authenticate(finalAuthentication);
-			return authentication;
-		} else {
-			return null;
-		}
-
+		return authentication;
 	}
 
 	public Authentication getUnixAuthentication(Authentication authentication) {
 
 		try {
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty(
-					"ranger.ldap.default.role", "");
+					"ranger.ldap.default.role", "ROLE_USER");
 			DefaultJaasAuthenticationProvider jaasAuthenticationProvider = new DefaultJaasAuthenticationProvider();
 			String loginModuleName = "org.apache.ranger.authentication.unix.jaas.RemoteUnixLoginModule";
 			LoginModuleControlFlag controlFlag = LoginModuleControlFlag.REQUIRED;
@@ -233,20 +254,10 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return null;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Unix Authentication Failed:"+e.getMessage());
 		}
 
 		return authentication;
-	}
-
-	@Override
-	public Authentication authenticate(Authentication authentication)
-			throws AuthenticationException {
-		if (authentication != null) {
-			return initializeAuthenticationHandler(authentication);
-		}
-
-		return null;
 	}
 
 	@Override
@@ -268,5 +279,116 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
 	public void setAuthenticator(LdapAuthenticator authenticator) {
 		this.authenticator = authenticator;
+	}
+
+	private Authentication getADBindAuthentication(Authentication authentication) {
+		try {
+			String rangerADURL = PropertiesUtil.getProperty("ranger.ldap.ad.url", "");
+			String rangerLdapADBase = PropertiesUtil.getProperty("ranger.ldap.ad.base.dn", "");
+			String rangerADBindDN = PropertiesUtil.getProperty("ranger.ldap.ad.bind.dn", "");
+			String rangerADBindPassword = PropertiesUtil.getProperty("ranger.ldap.ad.bind.password", "");
+			String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
+
+			String userName = authentication.getName();
+			String userPassword = "";
+			if (authentication.getCredentials() != null) {
+				userPassword = authentication.getCredentials().toString();
+			}
+
+			LdapContextSource ldapContextSource = new DefaultSpringSecurityContextSource(rangerADURL);
+			ldapContextSource.setUserDn(rangerADBindDN);
+			ldapContextSource.setPassword(rangerADBindPassword);
+			ldapContextSource.setReferral("follow");
+			ldapContextSource.setCacheEnvironmentProperties(true);
+			ldapContextSource.setAnonymousReadOnly(false);
+			ldapContextSource.setPooled(true);
+			ldapContextSource.afterPropertiesSet();
+
+			String searchFilter="(sAMAccountName={0})";
+			FilterBasedLdapUserSearch userSearch=new FilterBasedLdapUserSearch(rangerLdapADBase, searchFilter,ldapContextSource);
+			userSearch.setSearchSubtree(true);
+
+			BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
+			bindAuthenticator.setUserSearch(userSearch);
+			bindAuthenticator.afterPropertiesSet();
+
+			LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
+
+			if (userName != null && userPassword != null && !userName.trim().isEmpty() && !userPassword.trim().isEmpty()) {
+				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+				grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+				final UserDetails principal = new User(userName, userPassword,grantedAuths);
+				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
+
+				authentication = ldapAuthenticationProvider.authenticate(finalAuthentication);
+				return authentication;
+			} else {
+				return null;
+			}
+		} catch (Exception e) {
+			logger.error("AD Authentication Failed:"+e.getMessage());
+		}
+		return authentication;
+	}
+
+	private Authentication getLdapBindAuthentication(Authentication authentication) {
+		try {
+			String rangerLdapURL = PropertiesUtil.getProperty("ranger.ldap.url", "");
+			String rangerLdapUserDNPattern = PropertiesUtil.getProperty("ranger.ldap.user.dnpattern", "");
+			String rangerLdapGroupSearchBase = PropertiesUtil.getProperty("ranger.ldap.group.searchbase", "");
+			String rangerLdapGroupSearchFilter = PropertiesUtil.getProperty("ranger.ldap.group.searchfilter", "");
+			String rangerLdapGroupRoleAttribute = PropertiesUtil.getProperty("ranger.ldap.group.roleattribute", "");
+			String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
+			String rangerLdapBase = PropertiesUtil.getProperty("ranger.ldap.base.dn", "");
+			String rangerLdapBindDN = PropertiesUtil.getProperty("ranger.ldap.bind.dn", "");
+			String rangerLdapBindPassword = PropertiesUtil.getProperty("ranger.ldap.bind.password", "");
+
+			String userName = authentication.getName();
+			String userPassword = "";
+			if (authentication.getCredentials() != null) {
+				userPassword = authentication.getCredentials().toString();
+			}
+
+			LdapContextSource ldapContextSource = new DefaultSpringSecurityContextSource(rangerLdapURL);
+			ldapContextSource.setUserDn(rangerLdapBindDN);
+			ldapContextSource.setPassword(rangerLdapBindPassword);
+			ldapContextSource.setReferral("follow");
+			ldapContextSource.setCacheEnvironmentProperties(false);
+			ldapContextSource.setAnonymousReadOnly(true);
+			ldapContextSource.setPooled(true);
+			ldapContextSource.afterPropertiesSet();
+
+			DefaultLdapAuthoritiesPopulator defaultLdapAuthoritiesPopulator = new DefaultLdapAuthoritiesPopulator(ldapContextSource, rangerLdapGroupSearchBase);
+			defaultLdapAuthoritiesPopulator.setGroupRoleAttribute(rangerLdapGroupRoleAttribute);
+			defaultLdapAuthoritiesPopulator.setGroupSearchFilter(rangerLdapGroupSearchFilter);
+			defaultLdapAuthoritiesPopulator.setIgnorePartialResultException(true);
+
+			String searchFilter="(uid={0})";
+			FilterBasedLdapUserSearch userSearch=new FilterBasedLdapUserSearch(rangerLdapBase, searchFilter,ldapContextSource);
+			userSearch.setSearchSubtree(true);
+
+			BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
+			bindAuthenticator.setUserSearch(userSearch);
+			String[] userDnPatterns = new String[] { rangerLdapUserDNPattern };
+			bindAuthenticator.setUserDnPatterns(userDnPatterns);
+			bindAuthenticator.afterPropertiesSet();
+
+			LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator,defaultLdapAuthoritiesPopulator);
+
+			if (userName != null && userPassword != null && !userName.trim().isEmpty()&& !userPassword.trim().isEmpty()) {
+				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+				grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+				final UserDetails principal = new User(userName, userPassword,grantedAuths);
+				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
+
+				authentication = ldapAuthenticationProvider.authenticate(finalAuthentication);
+				return authentication;
+			} else {
+				return null;
+			}
+		} catch (Exception e) {
+			logger.error("LDAP Authentication Failed:"+e.getMessage());
+		}
+		return authentication;
 	}
 }

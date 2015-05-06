@@ -113,18 +113,49 @@
 		<description></description>
 	</property>
 	<property>
+		<name>ranger.ldap.base.dn</name>
+		<value></value>
+		<description>LDAP base dn or search base</description>
+	</property>
+	<property>
+		<name>ranger.ldap.bind.dn</name>
+		<value></value>
+		<description>LDAP bind dn or manager dn</description>
+	</property>
+	<property>
+		<name>ranger.ldap.bind.password</name>
+		<value></value>
+		<description>LDAP bind password</description>
+	</property>
+	<property>
 		<name>ranger.ldap.default.role</name>
 		<value>ROLE_USER</value>
 	</property>
 	<property>
 		<name>ranger.ldap.ad.domain</name>
-		<value>freestone.local</value>
+		<value>example.com</value>
 		<description></description>
 	</property>
 	<property>
 		<name>ranger.ldap.ad.url</name>
 		<value></value>
 		<description>ldap://</description>
+	</property>
+
+	<property>
+		<name>ranger.ldap.ad.base.dn</name>
+		<value>dc=example,dc=com</value>
+		<description>AD base dn or search base</description>
+	</property>
+	<property>
+		<name>ranger.ldap.ad.bind.dn</name>
+		<value>cn=administrator,ou=users,dc=example,dc=com</value>
+		<description>AD bind dn or manager dn</description>
+	</property>
+	<property>
+		<name>ranger.ldap.ad.bind.password</name>
+		<value></value>
+		<description>AD bind password</description>
 	</property>
 
 	<property>
