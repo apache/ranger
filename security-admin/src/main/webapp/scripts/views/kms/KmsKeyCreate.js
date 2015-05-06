@@ -50,7 +50,8 @@ define(function(require){
     	breadCrumbs :function(){
     		var opts = { 'kmsService' : this.kmsService, 'kmsServiceDefModel' : this.kmsServiceDefModel }
     		if(this.model.isNew())
-    			return [XALinks.get('KmsManage',opts), XALinks.get('KmsServiceForKey', opts), XALinks.get('KmsKeyCreate')];
+    			return [XALinks.get('Kms'), XALinks.get('KmsServiceForKey', opts), XALinks.get('KmsKeyCreate')];
+    		return [XALinks.get('Kms'), XALinks.get('KmsServiceForKey', opts), XALinks.get('KmsKeyEdit')];
     	} ,        
 
 		/** Layout sub regions */

@@ -65,7 +65,7 @@ define(function(require) {
 				title: 'h.usersOrGroups'
 			},
 			Kms : { 
-				href : '#!/kms/keys/new/manage/service',
+				href : '#!/kms/keys',
 				text : 'h.kms',
 				title: 'h.kms'
 			},
@@ -308,17 +308,6 @@ define(function(require) {
                     href : href,
                     text : options.kmsService.get('name'),
                     title: options.kmsService.get('name')
-                };
-			},
-			KmsManage : function(options) {
-				var href = "javascript:void(0);";
-				if(_.has(options,'kmsService')){
-                    href =  '#!/kms/keys/edit/manage/'+options.kmsService;
-                }
-				return {
-                    href : href,
-                    text : 'h.kms',
-                    title: 'h.kms'
                 };
 			}
 	};      

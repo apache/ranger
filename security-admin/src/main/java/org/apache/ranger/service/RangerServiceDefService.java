@@ -20,8 +20,6 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
@@ -41,7 +39,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.view.RangerServiceDefList;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -157,31 +154,5 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 	public RangerServiceDef getPopulatedViewObject(XXServiceDef xServiceDef) {
 		return this.populateViewBean(xServiceDef);
 	}
-	@Override
-	@SuppressWarnings("unchecked")
-	public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
-		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
-		RangerServiceDefList retList = new RangerServiceDefList();
-
-		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields, retList);
-		List<String> userRoleList = ContextUtil.getCurrentUserSession().getUserRoleList();
-		for (XXServiceDef xSvcDef : xSvcDefList) {
-			if(userRoleList != null && !userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-				if(xSvcDef!=null && !"KMS".equalsIgnoreCase(xSvcDef.getName())){
-					serviceDefList.add(populateViewBean(xSvcDef));
-				}
-			}
-			else if(userRoleList != null && userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-				if(xSvcDef!=null && "KMS".equalsIgnoreCase(xSvcDef.getName())){
-					serviceDefList.add(populateViewBean(xSvcDef));
-					break;
-				}
-			}
-		}
-		retList.setServiceDefs(serviceDefList);
-
-		return retList;
-	}
-
 
 }

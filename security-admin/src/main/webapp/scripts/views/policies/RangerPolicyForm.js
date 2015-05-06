@@ -422,8 +422,6 @@ define(function(require){
 						}).length === 0) {
 							if(!_.isUndefined(options.regExpValidation) && !options.regExpValidation.regexp.test(term)){
 									validRegExpString = false; 
-							}else if($.inArray(term, this.val()) >= 0){
-								return null;
 							}else{
 								return {
 									id : term,

@@ -92,7 +92,6 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		vObj.setDescription(xObj.getDescription());
 		vObj.setPolicyVersion(xObj.getPolicyVersion());
 		vObj.setPolicyUpdateTime(xObj.getPolicyUpdateTime());
-		vObj.setIsEnabled(xObj.getIsenabled());
 		return vObj;
 	}
 

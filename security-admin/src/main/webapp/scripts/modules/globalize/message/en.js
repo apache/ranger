@@ -222,8 +222,7 @@ define(function(require) {
 				length							: 'Length',
 				version							: 'Version',
 				attributes						: 'Attributes',
-				material						: 'Material',
-				addNewConfig					: 'Add New Configurations'
+				material						: 'Material'
 			},
 			btn : {
 				add							: 'Add',
@@ -317,8 +316,7 @@ define(function(require) {
 				repoDoesNotExistAnymore   : 'Repository does not exist anymore..',
 				policyDisabledMsg		  : 'This policy is currently in disabled state.',
 				noRecordsFound			  : 'No Records Found',
-				keyDeleteMsg			  : 'Key deleted successfully',
-				rolloverSuccessfully	  : 'Key rollover successfully'
+				keyDeleteMsg			  : 'Key deleted successfully'
 				
 				
 				

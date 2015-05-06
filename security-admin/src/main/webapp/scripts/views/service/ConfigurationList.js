@@ -72,7 +72,6 @@ define(function(require) {
 		_msvName : 'ConfigurationList',
 		template : require('hbs!tmpl/service/ConfigurationList_tmpl'),
 		templateHelpers :function(){
-			return { 'fieldLabel' : this.fieldLabel }; 
 		},
 		getItemView : function(item){
 			if(!item){
@@ -90,7 +89,7 @@ define(function(require) {
 			'click [data-action="addGroup"]' : 'addNew'
 		},
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'fieldLabel'));
+			_.extend(this, _.pick(options, ''));
 //					this.listenTo(this.groupList, 'sync', this.render, this);
 					if(this.collection.length == 0)
 						this.collection.add(new Backbone.Model());
