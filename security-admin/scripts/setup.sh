@@ -1583,4 +1583,6 @@ else
 	log "[E] DB schema setup failed! Please contact Administrator."
 	exit 1
 fi
+echo "ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf"
+ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf
 echo "Installation of Ranger PolicyManager Web Application is completed."
