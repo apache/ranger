@@ -44,6 +44,15 @@ public class RangerServiceDefHelper {
 	final Delegate _delegate;
 
 	public RangerServiceDefHelper(RangerServiceDef serviceDef) {
+		this(serviceDef, true);
+	}
+	
+	/**
+	 * Intended for use when serviceDef object is not-trusted, e.g. when service-def is being created or updated. 
+	 * @param serviceDef
+	 * @param useCache
+	 */
+	public RangerServiceDefHelper(RangerServiceDef serviceDef, boolean useCache) {
 		// NOTE: we assume serviceDef, its name and update time are can never by null.
 		
 		if(LOG.isDebugEnabled()) {
@@ -54,7 +63,7 @@ public class RangerServiceDefHelper {
 		Date serviceDefFreshnessDate = serviceDef.getUpdateTime();
 
 		Delegate delegate = null;
-		if (_Cache.containsKey(serviceName)) {
+		if (useCache && _Cache.containsKey(serviceName)) {
 			LOG.debug("RangerServiceDefHelper(): found delegate in cache with matching serviceName.  Need to check date");
 			Delegate that = _Cache.get(serviceName);
 			if (Objects.equals(that.getServiceFreshnessDate(), serviceDefFreshnessDate)) {
@@ -66,8 +75,10 @@ public class RangerServiceDefHelper {
 		}
 		if (delegate == null) { // either not found in cache or date didn't match
 			delegate = new Delegate(serviceDef);
-			_Cache.put(serviceName, delegate);
-			LOG.debug("RangerServiceDefHelper(): Created new delegate and put in delegate cache!");
+			if (useCache) {
+				LOG.debug("RangerServiceDefHelper(): Created new delegate and put in delegate cache!");
+				_Cache.put(serviceName, delegate);
+			}
 		}
 		_delegate = delegate;
 	}
@@ -106,12 +117,16 @@ public class RangerServiceDefHelper {
 		return result;
 	}
 	
-	public Set<String> getAllResourceNames(List<RangerResourceDef> hierarchy) {
-		Set<String> result = new HashSet<String>(hierarchy.size());
+	public List<String> getAllResourceNames(List<RangerResourceDef> hierarchy) {
+		List<String> result = new ArrayList<String>(hierarchy.size());
 		for (RangerResourceDef resourceDef : hierarchy) {
 			result.add(resourceDef.getName());
 		}
 		return result;
+	}
+	
+	public boolean isResourceGraphValid() {
+		return _delegate.isResourceGraphValid();
 	}
 
 	/**
@@ -123,6 +138,7 @@ public class RangerServiceDefHelper {
 		final Date _serviceDefFreshnessDate;
 		final String _serviceName;
 		final Map<String, RangerResourceDef> _resourceMap;
+		final boolean _valid;
 		
 		public Delegate(RangerServiceDef serviceDef) {
 
@@ -135,7 +151,8 @@ public class RangerServiceDefHelper {
 			_resourceMap = Collections.unmodifiableMap(getResourcesAsMap(resourceDefs));
 			
 			DirectedGraph graph = createGraph(resourceDefs);
-			if (isValid(graph)) {
+			_valid = isValid(graph); 
+			if (_valid) {
 				Set<List<String>> hierarchies = getHierarchies(graph);
 				_hierarchies = Collections.unmodifiableSet(convertHierarchies(hierarchies, _resourceMap));
 			} else {
@@ -163,6 +180,10 @@ public class RangerServiceDefHelper {
 		public Date getServiceFreshnessDate() {
 			return _serviceDefFreshnessDate;
 		}
+		
+		public boolean isResourceGraphValid() {
+			return _valid;
+		}
 		/**
 		 * Builds a directed graph where each resource is node and arc goes from parent level to child level
 		 * 
@@ -186,12 +207,12 @@ public class RangerServiceDefHelper {
 		}
 
 		/**
-		 * A minimally valid resource graph has - at least one sink AND - and least one source.
+		 * A valid resource graph is a forest, i.e. a disjoint union of trees.  In our case, given that node can have only one "parent" node, we can detect this validity simply by ensuring that 
+		 * the resource graph has:
+		 * - at least one sink AND
+		 * - and least one source.
 		 * 
-		 * A more rigorous definition would require all of the following: - exactly one source (assuming this is required) - At least one sink - no cycles - all non-source nodes have an in-degree of
-		 * exactly 1 - all non-sink nodes have an out-degree of 1 or more (if more than one source is allowed then this will changed)
-		 * 
-		 * Anyhow, we don't need such a rigorous definition at this time, hence a more complete validity function is deferred till we need one!
+		 * A more direct method would have been ensure that the resulting graph does not have any cycles. 
 		 * 
 		 * @param graph
 		 * 

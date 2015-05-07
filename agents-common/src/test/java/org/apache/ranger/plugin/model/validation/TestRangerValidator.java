@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,6 +78,7 @@ public class TestRangerValidator {
 	public void before() {
 		_store = mock(ServiceStore.class);
 		_validator = new RangerValidatorForTest(_store);
+		_failures = new ArrayList<ValidationFailureDetails>();
 	}
 
 	@Test
@@ -506,7 +508,76 @@ public class TestRangerValidator {
 		assertTrue(result.contains(" d "));
 	}
 	
+	@Test
+	public void test_isValid_string() {
+		String fieldName = "value-field-Name";
+		String collectionName = "value-collection-Name";
+		Set<String> alreadySeen = new HashSet<String>();
+		// null/empty string value is invalid 
+		for (String value : new String[] { null, "", "  " }) {
+			assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+			_utils.checkFailureForMissingValue(_failures, fieldName);
+		}
+		// value should not have been seen so far.
+		String value = "blah";
+		_failures.clear(); assertTrue(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		assertTrue(_failures.isEmpty());
+		assertTrue(alreadySeen.contains(value));
+
+		// since "blah" has already been seen doing this test again should fail
+		_failures.clear(); assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		_utils.checkFailureForSemanticError(_failures, fieldName, value);
+		
+		// not see check is done in a case-insenstive manner
+		value = "bLaH";
+		_failures.clear(); assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		_utils.checkFailureForSemanticError(_failures, fieldName, value);
+	}
+	
+	@Test
+	public void test_isValid_long() {
+		String fieldName = "field-Name";
+		String collectionName = "field-collection-Name";
+		Set<Long> alreadySeen = new HashSet<Long>();
+		Long value = null;
+		// null value is invalid 
+		assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		_utils.checkFailureForMissingValue(_failures, fieldName);
+
+		// value should not have been seen so far.
+		value = 7L;
+		_failures.clear(); assertTrue(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		assertTrue(_failures.isEmpty());
+		assertTrue(alreadySeen.contains(value));
+
+		// since 7L has already been seen doing this test again should fail
+		_failures.clear(); assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		_utils.checkFailureForSemanticError(_failures, fieldName, value.toString());
+	}
+	
+	@Test
+	public void test_isValid_integer() {
+		String fieldName = "field-Name";
+		String collectionName = "field-collection-Name";
+		Set<Integer> alreadySeen = new HashSet<Integer>();
+		Integer value = null;
+		// null value is invalid 
+		assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		_utils.checkFailureForMissingValue(_failures, fieldName);
+
+		// value should not have been seen so far.
+		value = 49;
+		_failures.clear(); assertTrue(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		assertTrue(_failures.isEmpty());
+		assertTrue(alreadySeen.contains(value));
+
+		// since 7L has already been seen doing this test again should fail
+		_failures.clear(); assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
+		_utils.checkFailureForSemanticError(_failures, fieldName, value.toString());
+	}
+	
 	private RangerValidatorForTest _validator;
 	private ServiceStore _store;
 	private ValidationTestUtils _utils = new ValidationTestUtils();
+	private List<ValidationFailureDetails> _failures;
 }

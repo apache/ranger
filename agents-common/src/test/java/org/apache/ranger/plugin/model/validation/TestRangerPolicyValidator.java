@@ -152,18 +152,19 @@ public class TestRangerPolicyValidator {
 		_failures.clear(); _failures.clear(); assertFalse(_validator.isValid((Long)null, Action.DELETE, _failures));
 		_utils.checkFailureForMissingValue(_failures, "id");
 		
-		// should fail with appropriate error message if policy can't be found for the specified id
+		// should not fail if policy can't be found for the specified id
 		when(_store.getPolicy(1L)).thenReturn(null);
 		when(_store.getPolicy(2L)).thenThrow(new Exception());
 		RangerPolicy existingPolicy = mock(RangerPolicy.class);
 		when(_store.getPolicy(3L)).thenReturn(existingPolicy);
-		_failures.clear(); assertFalse(_validator.isValid(1L, Action.DELETE, _failures));
-		_utils.checkFailureForSemanticError(_failures, "id");
-		_failures.clear(); assertFalse(_validator.isValid(2L, Action.DELETE, _failures));
-		_utils.checkFailureForSemanticError(_failures, "id");
+		_failures.clear(); assertTrue(_validator.isValid(1L, Action.DELETE, _failures));
+		assertTrue(_failures.isEmpty());
+		_failures.clear(); assertTrue(_validator.isValid(2L, Action.DELETE, _failures));
+		assertTrue(_failures.isEmpty());
 
-		// if policy exists then delete validation should pass 
-		assertTrue(_validator.isValid(3L, Action.DELETE, _failures));
+		// if policy exists then delete validation should pass, too! 
+		_failures.clear(); assertTrue(_validator.isValid(3L, Action.DELETE, _failures));
+		assertTrue(_failures.isEmpty());
 	}
 	
 	@Test

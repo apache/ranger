@@ -214,14 +214,14 @@ public class TestRangerServiceValidator {
 		_validator = new RangerServiceValidator(_store);
 		_failures.clear(); assertFalse(_validator.isValid((Long)null, Action.DELETE, _failures));
 		_utils.checkFailureForMissingValue(_failures, "id");
-		// if service with that id does not exist then that, too, is a failure
+		// if service with that id does not exist then that, is ok because delete is idempotent
 		when(_store.getService(1L)).thenReturn(null);
 		when(_store.getService(2L)).thenThrow(new Exception());
-		_failures.clear(); assertFalse(_validator.isValid(1L, Action.DELETE, _failures));
-		_utils.checkFailureForSemanticError(_failures, "id");
+		_failures.clear(); assertTrue(_validator.isValid(1L, Action.DELETE, _failures));
+		assertTrue(_failures.isEmpty());
 
-		_failures.clear(); assertFalse(_validator.isValid(2L, Action.DELETE, _failures));
-		_utils.checkFailureForSemanticError(_failures, "id");
+		_failures.clear(); assertTrue(_validator.isValid(2L, Action.DELETE, _failures));
+		assertTrue(_failures.isEmpty());
 	}
 	
 	@Test

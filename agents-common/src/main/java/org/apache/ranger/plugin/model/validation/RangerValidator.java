@@ -39,6 +39,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -499,6 +500,155 @@ public abstract class RangerValidator {
 			output.put(entry.getKey().toLowerCase(), entry.getValue());
 		}
 		return output;
+	}
+
+	boolean isUnique(Long value, Set<Long> alreadySeen, String valueName, String collectionName, List<ValidationFailureDetails> failures) {
+		return isUnique(value, null,  alreadySeen, valueName, collectionName, failures);
+	}
+
+	/**
+	 * NOTE: <code>alreadySeen</code> collection passed in gets updated.
+	 * @param value
+	 * @param alreadySeen
+	 * @param valueName - use-friendly name of the <code>value</code> that would be used when generating failure message
+	 * @param collectionName - use-friendly name of the <code>value</code> collection that would be used when generating failure message
+	 * @param failures
+	 * @return
+	 */
+	boolean isUnique(Long value, String valueContext, Set<Long> alreadySeen, String valueName, String collectionName, List<ValidationFailureDetails> failures) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerServiceDefValidator.isValueUnique(%s, %s, %s, %s, %s)", value, alreadySeen, valueName, collectionName, failures));
+		}
+		boolean valid = true;
+
+		if (value == null) {  // null/empty/blank value is an error
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field(valueName)
+				.subField(valueContext)
+				.isMissing()
+				.becauseOf(String.format("%s[%s] is null/empty", valueName, value))
+				.build());
+			valid = false;
+		} else if (alreadySeen.contains(value)) { // it shouldn't have been seen already
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field(valueName)
+				.subField(value.toString())
+				.isSemanticallyIncorrect()
+				.becauseOf(String.format("duplicate %s[%s] in %s", valueName, value, collectionName))
+				.build());
+			valid = false;
+		} else {
+			alreadySeen.add(value); // we have a new unique access type
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerServiceDefValidator.isValueUnique(%s, %s, %s, %s, %s): %s", value, alreadySeen, valueName, collectionName, failures, valid));
+		}
+		return valid;
+	}
+
+	/**
+	 * NOTE: <code>alreadySeen</code> collection passed in gets updated.
+	 * @param value
+	 * @param alreadySeen
+	 * @param valueName - use-friendly name of the <code>value</code> that would be used when generating failure message
+	 * @param collectionName - use-friendly name of the <code>value</code> collection that would be used when generating failure message
+	 * @param failures
+	 * @return
+	 */
+	boolean isUnique(Integer value, Set<Integer> alreadySeen, String valueName, String collectionName, List<ValidationFailureDetails> failures) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerServiceDefValidator.isValueUnique(%s, %s, %s, %s, %s)", value, alreadySeen, valueName, collectionName, failures));
+		}
+		boolean valid = true;
+
+		if (value == null) {  // null/empty/blank value is an error
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field(valueName)
+				.isMissing()
+				.becauseOf(String.format("%s[%s] is null/empty", valueName, value))
+				.build());
+			valid = false;
+		} else if (alreadySeen.contains(value)) { // it shouldn't have been seen already
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field(valueName)
+				.subField(value.toString())
+				.isSemanticallyIncorrect()
+				.becauseOf(String.format("duplicate %s[%s] in %s", valueName, value, collectionName))
+				.build());
+			valid = false;
+		} else {
+			alreadySeen.add(value); // we have a new unique access type
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerServiceDefValidator.isValueUnique(%s, %s, %s, %s, %s): %s", value, alreadySeen, valueName, collectionName, failures, valid));
+		}
+		return valid;
+	}
+
+	boolean isUnique(final String value, final Set<String> alreadySeen, final String valueName, final String collectionName, final List<ValidationFailureDetails> failures) {
+		return isUnique(value, null, alreadySeen, valueName, collectionName, failures);
+	}
+	/**
+	 * NOTE: <code>alreadySeen</code> collection passed in gets updated.
+	 * @param value
+	 * @param alreadySeen
+	 * @param valueName - use-friendly name of the <code>value</code> that would be used when generating failure message
+	 * @param collectionName - use-friendly name of the <code>value</code> collection that would be used when generating failure message
+	 * @param failures
+	 * @return
+	 */
+	boolean isUnique(final String value, final String valueContext, final Set<String> alreadySeen, final String valueName, final String collectionName, final List<ValidationFailureDetails> failures) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerServiceDefValidator.isValueUnique(%s, %s, %s, %s, %s)", value, alreadySeen, valueName, collectionName, failures));
+		}
+		boolean valid = true;
+
+		if (StringUtils.isBlank(value)) {  // null/empty/blank value is an error
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field(valueName)
+				.subField(valueContext)
+				.isMissing()
+				.becauseOf(String.format("%s[%s] is null/empty", valueName, value))
+				.build());
+			valid = false;
+		} else if (alreadySeen.contains(value.toLowerCase())) { // it shouldn't have been seen already
+			failures.add(new ValidationFailureDetailsBuilder()
+				.field(valueName)
+				.subField(value)
+				.isSemanticallyIncorrect()
+				.becauseOf(String.format("duplicate %s[%s] in %s", valueName, value, collectionName))
+				.build());
+			valid = false;
+		} else {
+			alreadySeen.add(value.toLowerCase()); // we have a new unique access type
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerServiceDefValidator.isValueUnique(%s, %s, %s, %s, %s): %s", value, alreadySeen, valueName, collectionName, failures, valid));
+		}
+		return valid;
+	}
+	
+	Map<String, RangerEnumDef> getEnumDefMap(List<RangerEnumDef> enumDefs) {
+		Map<String, RangerEnumDef> result = new HashMap<String, RangerServiceDef.RangerEnumDef>();
+		if (enumDefs != null) {
+			for (RangerEnumDef enumDef : enumDefs) {
+				result.put(enumDef.getName(), enumDef);
+			}
+		}
+		return result;
+	}
+
+	Set<String> getEnumValues(RangerEnumDef enumDef) {
+		Set<String> result = new HashSet<String>();
+		if (enumDef != null) {
+			for (RangerEnumElementDef element : enumDef.getElements()) {
+				result.add(element.getName());
+			}
+		}
+		return result;
 	}
 
 }

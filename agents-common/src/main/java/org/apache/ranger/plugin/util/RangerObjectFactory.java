@@ -21,9 +21,19 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 
 public class RangerObjectFactory {
 	public RangerPolicyResourceSignature createPolicyResourceSignature(RangerPolicy policy) {
 		return new RangerPolicyResourceSignature(policy);
+	}
+	
+	public RangerServiceDefHelper createServiceDefHelper(RangerServiceDef serviceDef) {
+		return new RangerServiceDefHelper(serviceDef);
+	}
+
+	public RangerServiceDefHelper createServiceDefHelper(RangerServiceDef serviceDef, boolean useCache) {
+		return new RangerServiceDefHelper(serviceDef, useCache);
 	}
 }

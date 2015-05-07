@@ -28,34 +28,42 @@
 	],
 	"accessTypes":[
 		{
+			"id": 1,
 			"name":"publish",
 			"label":"Publish"
 		},
 		{
+			"id": 2,
 			"name":"consume",
 			"label":"Consume"
 		},
 		{
+			"id": 3,
 			"name":"create",
 			"label":"Create"
 		},
 		{
+			"id": 4,
 			"name":"delete",
 			"label":"Delete"
 		},
 		{
+			"id": 5,
 			"name":"configure",
 			"label":"Configure"
 		},
 		{
+			"id": 6,
 			"name":"describe",
 			"label":"Describe"
 		},
 		{
+			"id": 7,
 			"name":"replicate",
 			"label":"Replicate"
 		},
 		{
+			"id": 8,
 			"name":"connect",
 			"label":"Connect"
 		}
@@ -63,18 +71,21 @@
 	],
 	"configs":[
 		{
+			"id": 1,
 			"name":"username",
 			"type":"string",
 			"mandatory":true,
 			"label":"Username"
 		},
 		{
+			"id": 2,
 			"name":"password",
 			"type":"password",
 			"mandatory":true,
 			"label":"Password"
 		},
 		{
+			"id": 3,
 			"name":"zookeeper.connect",
 			"type":"string",
 			"mandatory":true,
@@ -82,6 +93,7 @@
 			"label":"Zookeeper Connect String"
 		},
 		{
+			"id": 4,
 			"name":"commonNameForCertificate",
 			"type":"string",
 			"mandatory":false,

@@ -39,9 +39,9 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 
 public class ValidationTestUtils {
 	
@@ -153,8 +153,9 @@ public class ValidationTestUtils {
 			return result;
 		}
 		for (Object[] entry : data) {
-			String accessType = (String)entry[0];
-			String[] impliedAccessArray = (String[])entry[1];
+			Long id = (Long)entry[0];
+			String accessType = (String)entry[1];
+			String[] impliedAccessArray = (String[])entry[2];
 			List<String> impliedAccesses = null;
 			if (impliedAccessArray != null) {
 				impliedAccesses = Arrays.asList(impliedAccessArray);
@@ -162,6 +163,7 @@ public class ValidationTestUtils {
 			RangerAccessTypeDef aTypeDef = mock(RangerAccessTypeDef.class);
 			when(aTypeDef.getName()).thenReturn(accessType);
 			when(aTypeDef.getImpliedGrants()).thenReturn(impliedAccesses);
+			when(aTypeDef.getId()).thenReturn(id);
 			result.add(aTypeDef);
 		}
 		return result;
@@ -251,7 +253,10 @@ public class ValidationTestUtils {
 				Boolean isExcludesSupported = null;
 				Boolean isRecursiveSupported = null;
 				String parent = null;
+				Integer level = null;
 				switch(row.length) {
+				case 7:
+					level = (Integer)row[6];
 				case 6:
 					parent = (String) row[5];
 				case 5:
@@ -272,6 +277,7 @@ public class ValidationTestUtils {
 				when(aDef.getExcludesSupported()).thenReturn(isExcludesSupported);
 				when(aDef.getRecursiveSupported()).thenReturn(isRecursiveSupported);
 				when(aDef.getParent()).thenReturn(parent);
+				when(aDef.getLevel()).thenReturn(level);
 			}
 			defs.add(aDef);
 		}
@@ -298,35 +304,76 @@ public class ValidationTestUtils {
 		return defs;
 	}
 
+	List<RangerResourceDef> createResourceDefsWithIds(Object[][] data) {
+		// if data itself is null then return null back
+		if (data == null) {
+			return null;
+		}
+		List<RangerResourceDef> defs = new ArrayList<RangerResourceDef>();
+		for (Object[] row : data) {
+			RangerResourceDef aDef = null;
+			if (row != null) {
+				Long id = (Long)row[0];
+				Integer level = (Integer)row[1];
+				String name = (String)row[2];
+				aDef = mock(RangerResourceDef.class);
+				when(aDef.getName()).thenReturn(name);
+				when(aDef.getId()).thenReturn(id);
+				when(aDef.getLevel()).thenReturn(level);
+			}
+			defs.add(aDef);
+		}
+		return defs;
+	}
+
 	List<RangerEnumElementDef> createEnumElementDefs(String[] input) {
 		if (input == null) {
 			return null;
 		}
+		Object[][] data = new Object[input.length][];
+		for (int i = 0; i < input.length; i++) {
+			data[i] = new Object[] { (long)i, input[i] };
+		}
+		return createEnumElementDefs(data);
+	}
+
+	List<RangerEnumElementDef> createEnumElementDefs(Object[][] input) {
+		if (input == null) {
+			return null;
+		}
 		List<RangerEnumElementDef> output = new ArrayList<RangerEnumElementDef>();
-		for (String elementName : input) {
+		for (Object[] row : input) {
 			RangerEnumElementDef aDef = mock(RangerEnumElementDef.class);
-			when(aDef.getName()).thenReturn(elementName);
+			switch(row.length) {
+			case 2:
+				when(aDef.getName()).thenReturn((String)row[1]);
+			case 1:
+				when(aDef.getId()).thenReturn((Long) row[0]);
+			}
 			output.add(aDef);
 		}
 		return output;
 	}
 
-	List<RangerEnumDef> createEnumDefs(Map<String, String[]> input) {
+	List<RangerEnumDef> createEnumDefs(Object[][] input) {
 		if (input == null) {
 			return null;
 		}
 		List<RangerEnumDef> defs = new ArrayList<RangerEnumDef>();
-		for (Map.Entry<String, String[]> entry : input.entrySet()) {
+		for (Object[] row : input) {
 			RangerEnumDef enumDef = mock(RangerEnumDef.class);
-			String enumName = entry.getKey();
-			if ("null".equals(enumName)) { // special handling to process null hint in enum-name
-				enumName = null;
+			switch (row.length) {
+			case 3:
+				List<RangerEnumElementDef> elements = createEnumElementDefs((String[])row[2]);
+				when(enumDef.getElements()).thenReturn(elements);
+				// by default set default index to last element
+				when(enumDef.getDefaultIndex()).thenReturn(elements.size() - 1);
+			case 2:
+				String enumName = (String) row[1];
+				when(enumDef.getName()).thenReturn(enumName);
+			case 1:
+				when(enumDef.getId()).thenReturn((Long)row[0]);
 			}
-			when(enumDef.getName()).thenReturn(enumName);
-			List<RangerEnumElementDef> elements = createEnumElementDefs(entry.getValue());
-			when(enumDef.getElements()).thenReturn(elements);
-			// by default set default index to last element
-			when(enumDef.getDefaultIndex()).thenReturn(elements.size() - 1);
 			defs.add(enumDef);
 		}
 		return defs;
@@ -351,6 +398,47 @@ public class ValidationTestUtils {
 			when(aResource.getIsExcludes()).thenReturn(isExcludes);
 			when(aResource.getIsRecursive()).thenReturn(isRecursive);
 			result.put(resourceName, aResource);
+		}
+		return result;
+	}
+
+	List<RangerServiceConfigDef> createServiceDefConfigs(Object[][] input) {
+		if (input == null) {
+			return null;
+		}
+		List<RangerServiceConfigDef> result = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+		for (Object[] row : input) {
+			RangerServiceConfigDef configDef = mock(RangerServiceConfigDef.class);
+			switch(row.length) {
+			case 5: // default value
+				when(configDef.getDefaultValue()).thenReturn((String)row[4]);
+			case 4: // subtype
+				when(configDef.getSubType()).thenReturn((String) row[3]);
+			case 3: // type
+				String type = (String)row[2];
+				when(configDef.getType()).thenReturn(type);
+			case 2: // name
+				String name = (String)row[1];
+				when(configDef.getName()).thenReturn(name);
+			case 1: // id
+				Long id = (Long)row[0];
+				when(configDef.getId()).thenReturn(id);
+			}
+			result.add(configDef);
+		}
+		return result;
+	}
+
+	List<RangerPolicyConditionDef> createPolicyConditionDefs(Object[][] input) {
+		List<RangerPolicyConditionDef> result = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
+		if (input != null) {
+			for (Object[] row : input) {
+				RangerPolicyConditionDef conditionDef = mock(RangerPolicyConditionDef.class);
+				when(conditionDef.getId()).thenReturn((Long)row[0]);
+				when(conditionDef.getName()).thenReturn((String)row[1]);
+				when(conditionDef.getEvaluator()).thenReturn((String)row[2]);
+				result.add(conditionDef);
+			}
 		}
 		return result;
 	}

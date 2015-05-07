@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.model.validation;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,19 +27,28 @@ import static org.mockito.Mockito.when;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper.Delegate;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
 public class TestRangerServiceDefHelper {
 
+	@Before
+	public void before() {
+		_serviceDef = mock(RangerServiceDef.class); 
+		when(_serviceDef.getName()).thenReturn("a-service-def");
+		// wipe the cache clean
+		RangerServiceDefHelper._Cache.clear();
+	}
+	
 	@Test
 	public void test_getResourceHierarchies() {
 		/*
@@ -65,12 +75,11 @@ public class TestRangerServiceDefHelper {
 		// order of resources in list sould not matter
 		List<RangerResourceDef> resourceDefs = Lists.newArrayList(Column, Database, Table, Table_Atrribute, UDF);
 		// stuff this into a service-def
-		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
-		when(serviceDef.getResources()).thenReturn(resourceDefs);
-		when(serviceDef.getName()).thenReturn("a-service-def");
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		// now assert the behavior
-		RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-		Set<List<RangerResourceDef>> hierarchies = serviceDefHelper.getResourceHierarchies();
+		_helper = new RangerServiceDefHelper(_serviceDef);
+		assertTrue(_helper.isResourceGraphValid());
+		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies();
 		// there should be 
 		List<RangerResourceDef> hierarchy = Lists.newArrayList(Database, UDF);
 		assertTrue(hierarchies.contains(hierarchy));
@@ -80,6 +89,69 @@ public class TestRangerServiceDefHelper {
 		assertTrue(hierarchies.contains(hierarchy));
 	}
 	
+	@Test
+	public final void test_isResourceGraphValid_detectCycle() {
+		/*
+		 * Create a service-def with cycles in resource graph
+		 *  A --> B --> C
+		 *  ^           |
+		 *  |           |
+		 *  |---- D <---  
+		 */
+		RangerResourceDef A = createResourceDef("A", "D"); // A's parent is D, etc.
+		RangerResourceDef B = createResourceDef("B", "C");
+		RangerResourceDef C = createResourceDef("C", "D");
+		RangerResourceDef D = createResourceDef("D", "A");
+		// order of resources in list sould not matter
+		List<RangerResourceDef> resourceDefs = Lists.newArrayList(A, B, C, D);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		_helper = new RangerServiceDefHelper(_serviceDef);
+		assertFalse("Graph was valid!", _helper.isResourceGraphValid());
+	}
+	
+	@Test
+	public final void test_isResourceGraphValid_forest() {
+		/*
+		 * Create a service-def which is a forest
+		 *   Database -> Table-space
+		 *       |
+		 *       v
+		 *      Table -> Column
+		 *      
+		 *   Namespace -> package
+		 *       |
+		 *       v
+		 *     function
+		 *     
+		 * Check that helper corrects reports back all of the hierarchies: levels in it and their order.   
+		 */
+		RangerResourceDef database = createResourceDef("database", "");
+		RangerResourceDef tableSpace = createResourceDef("table-space", "database");
+		RangerResourceDef table = createResourceDef("table", "database");
+		RangerResourceDef column = createResourceDef("column", "table");
+		RangerResourceDef namespace = createResourceDef("namespace", "");
+		RangerResourceDef function = createResourceDef("function", "namespace");
+		RangerResourceDef Package = createResourceDef("package", "namespace"); 
+		List<RangerResourceDef> resourceDefs = Lists.newArrayList(database, tableSpace, table, column, namespace, function, Package);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		_helper = new RangerServiceDefHelper(_serviceDef);
+		assertTrue(_helper.isResourceGraphValid());
+		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies();
+
+		Set<List<String>> expectedHierarchies = new HashSet<List<String>>(); 
+		expectedHierarchies.add(Lists.newArrayList("database", "table-space"));
+		expectedHierarchies.add(Lists.newArrayList("database", "table", "column"));
+		expectedHierarchies.add(Lists.newArrayList("namespace", "package"));
+		expectedHierarchies.add(Lists.newArrayList("namespace", "function"));
+		
+		for (List<RangerResourceDef> aHierarchy : hierarchies) {
+			List<String> resourceNames = _helper.getAllResourceNames(aHierarchy);
+			assertTrue(expectedHierarchies.contains(resourceNames));
+			expectedHierarchies.remove(resourceNames);
+		}
+		assertTrue(expectedHierarchies.isEmpty()); // make sure we saw got back hierarchies
+	}
+
 	@Test
 	public final void test_cacheBehavior() {
 		// wipe the cache clean
@@ -93,26 +165,26 @@ public class TestRangerServiceDefHelper {
 		RangerServiceDefHelper._Cache.put(serviceName, delegate);
 		
 		// create a service def with matching date value
-		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
-		when(serviceDef.getName()).thenReturn(serviceName);
-		when(serviceDef.getUpdateTime()).thenReturn(aDate);
+		_serviceDef = mock(RangerServiceDef.class);
+		when(_serviceDef.getName()).thenReturn(serviceName);
+		when(_serviceDef.getUpdateTime()).thenReturn(aDate);
 		
 		// since cache has it, we should get back the one that we have added
-		RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-		assertTrue("Didn't get back the same object that was put in cache", delegate == serviceDefHelper._delegate);
+		_helper = new RangerServiceDefHelper(_serviceDef);
+		assertTrue("Didn't get back the same object that was put in cache", delegate == _helper._delegate);
 		
 		// if we change the date then that should force helper to create a new delegate instance
 		/*
 		 * NOTE:: current logic would replace the cache instance even if the one in the cache is newer.  This is not likely to happen but it is important to call this out
 		 * as in rare cases one may end up creating re creating delegate if threads have stale copies of service def.
 		 */
-		when(serviceDef.getUpdateTime()).thenReturn(getLastMonth());
-		serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-		assertTrue("Didn't get a delegate different than what was put in the cache", delegate != serviceDefHelper._delegate);
+		when(_serviceDef.getUpdateTime()).thenReturn(getLastMonth());
+		_helper = new RangerServiceDefHelper(_serviceDef);
+		assertTrue("Didn't get a delegate different than what was put in the cache", delegate != _helper._delegate);
 		// now that a new instance was added to the cache let's ensure that it got added to the cache 
-		Delegate newDelegate = serviceDefHelper._delegate;
-		serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-		assertTrue("Didn't get a delegate different than what was put in the cache", newDelegate == serviceDefHelper._delegate);
+		Delegate newDelegate = _helper._delegate;
+		_helper = new RangerServiceDefHelper(_serviceDef);
+		assertTrue("Didn't get a delegate different than what was put in the cache", newDelegate == _helper._delegate);
 	}
 	
 	RangerResourceDef createResourceDef(String name, String parent) {
@@ -134,4 +206,7 @@ public class TestRangerServiceDefHelper {
 		Date now = cal.getTime();
 		return now;
 	}
+	
+	private RangerServiceDef _serviceDef;
+	private RangerServiceDefHelper _helper;
 }

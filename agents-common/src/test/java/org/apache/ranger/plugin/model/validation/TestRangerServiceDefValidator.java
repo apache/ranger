@@ -26,21 +26,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
-import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
-import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableMap;
 
 public class TestRangerServiceDefValidator {
 
@@ -55,15 +54,15 @@ public class TestRangerServiceDefValidator {
 	final Action[] cu = new Action[] { Action.CREATE, Action.UPDATE };
 	
 	final Object[][] accessTypes_good = new Object[][] {
-			{ "read",  null },                                // ok, null implied grants
-			{ "write", new String[] {   } },                  // ok, empty implied grants
-			{ "admin", new String[] { "READ",  "write" } }    // ok, admin access implies read/write, access types are case-insensitive
+			{ 1L, "read",  null },                                // ok, null implied grants
+			{ 2L, "write", new String[] {   } },                  // ok, empty implied grants
+			{ 3L, "admin", new String[] { "READ",  "write" } }    // ok, admin access implies read/write, access types are case-insensitive
 	};
 
-	final Map<String, String[]> enums_good = ImmutableMap.of(
-			"authentication-type", new String[] { "simple", "kerberos" },
-			"time-unit", new String[] { "day", "hour", "minute" }
-	);
+	final Object[][] enums_good = new Object[][] {
+			{ 1L, "authentication-type", new String[] { "simple", "kerberos" } },
+			{ 2L, "time-unit", new String[] { "day", "hour", "minute" } }, 
+	};
 	
 	@Test
 	public final void test_isValid_happyPath_create() throws Exception {
@@ -74,26 +73,6 @@ public class TestRangerServiceDefValidator {
 		List<RangerEnumDef> enumDefs = _utils.createEnumDefs(enums_good);
 		when(_serviceDef.getEnums()).thenReturn(enumDefs);
 
-		// create: id is not relevant, name should not conflict 
-		when(_serviceDef.getId()).thenReturn(null); // id is not relevant for create
-		when(_serviceDef.getName()).thenReturn("aServiceDef"); // service has a name
-		when(_store.getServiceDefByName("aServiceDef")).thenReturn(null); // no name collision
-		assertTrue(_validator.isValid(_serviceDef, Action.CREATE, _failures));
-		assertTrue(_failures.isEmpty());
-		
-		// update: id should match existing service, name should not point to different service def
-		when(_serviceDef.getId()).thenReturn(5L);
-		RangerServiceDef existingServiceDef = mock(RangerServiceDef.class);
-		when(_store.getServiceDef(5L)).thenReturn(existingServiceDef);
-		assertTrue(_validator.isValid(_serviceDef, Action.UPDATE, _failures));
-		assertTrue(_failures.isEmpty());
-		
-		// update: if name points to a service that it's id should be the same
-		RangerServiceDef anotherExistingServiceDef = mock(RangerServiceDef.class);
-		when(anotherExistingServiceDef.getId()).thenReturn(5L);
-		when(_store.getServiceDefByName("aServiceDef")).thenReturn(anotherExistingServiceDef);
-		assertTrue(_validator.isValid(_serviceDef, Action.UPDATE, _failures));
-		assertTrue(_failures.isEmpty());
 	}
 	
 	@Test
@@ -106,11 +85,11 @@ public class TestRangerServiceDefValidator {
 		// passing in null id is an error
 		_failures.clear(); assertFalse(_validator.isValid((Long)null, Action.DELETE, _failures));
 		_utils.checkFailureForMissingValue(_failures, "id");
-		// a service def with that id should exist, else it is an error
+		// It is ok for a service def with that id to not exist!
 		id = 3L;
 		when(_store.getServiceDef(id)).thenReturn(null);
-		_failures.clear(); assertFalse(_validator.isValid(id, Action.DELETE, _failures));
-		_utils.checkFailureForSemanticError(_failures, "id");
+		_failures.clear(); assertTrue(_validator.isValid(id, Action.DELETE, _failures));
+		assertTrue(_failures.isEmpty());		
 		// happypath
 		when(_store.getServiceDef(id)).thenReturn(_serviceDef);
 		_failures.clear(); assertTrue(_validator.isValid(id, Action.DELETE, _failures));
@@ -118,81 +97,116 @@ public class TestRangerServiceDefValidator {
 	}
 
 	@Test
-	public final void testIsValid_failures_name() throws Exception {
+	public final void testIsValid_failures() throws Exception {
 		// null service def and bad service def name
 		for (Action action : cu) {
 			// passing in null service def is an error
 			assertFalse(_validator.isValid((RangerServiceDef)null, action, _failures));
 			_utils.checkFailureForMissingValue(_failures, "service def");
-			// name should be valid
+		}
+	}
+	
+	@Test
+	public final void test_isValidServiceDefId_failures() throws Exception {
+		
+		// id is required for update
+		assertFalse(_validator.isValidServiceDefId(null, Action.UPDATE, _failures));
+		_utils.checkFailureForMissingValue(_failures, "id");
+		
+		// update: service should exist for the passed in id
+		long id = 7;
+		when(_serviceDef.getId()).thenReturn(id);
+		when(_store.getServiceDef(id)).thenReturn(null);
+		assertFalse(_validator.isValidServiceDefId(id, Action.UPDATE, _failures));
+		_utils.checkFailureForSemanticError(_failures, "id");
+
+		when(_store.getServiceDef(id)).thenThrow(new Exception());
+		assertFalse(_validator.isValidServiceDefId(id, Action.UPDATE, _failures));
+		_utils.checkFailureForSemanticError(_failures, "id");
+	}
+	
+	@Test
+	public final void test_isValidServiceDefId_happyPath() throws Exception {
+		
+		// create: null id is ok
+		assertTrue(_validator.isValidServiceDefId(null, Action.CREATE, _failures));
+		assertTrue(_failures.isEmpty());
+		
+		// update: a service with same id exist
+		long id = 7;
+		when(_serviceDef.getId()).thenReturn(id);
+		RangerServiceDef serviceDefFromDb = mock(RangerServiceDef.class);
+		when(serviceDefFromDb.getId()).thenReturn(id);
+		when(_store.getServiceDef(id)).thenReturn(serviceDefFromDb);
+		assertTrue(_validator.isValidServiceDefId(id, Action.UPDATE, _failures));
+		assertTrue(_failures.isEmpty());
+	}
+	
+	@Test
+	public final void test_isValidName() throws Exception {
+		Long id = 7L; // some arbitrary value
+		// name can't be null/empty
+		for (Action action: cu) {
 			for (String name : new String[] { null, "", "  " }) {
 				when(_serviceDef.getName()).thenReturn(name);
-				_failures.clear(); assertFalse(_validator.isValid(_serviceDef, action, _failures));
+				_failures.clear(); assertFalse(_validator.isValidServiceDefName(name, id, action, _failures));
 				_utils.checkFailureForMissingValue(_failures, "name");
 			}
 		}
 	}
 	
 	@Test
-	public final void testIsValid_failures_id() throws Exception {
-		// id is required for update
-		when(_serviceDef.getId()).thenReturn(null);
-		assertFalse(_validator.isValid(_serviceDef, Action.UPDATE, _failures));
-		_utils.checkFailureForMissingValue(_failures, "id");
-		
-		// update: service should exist for the passed in id
-		Long id = 7L;
-		when(_serviceDef.getId()).thenReturn(id);
-		when(_store.getServiceDef(id)).thenReturn(null);
-		assertFalse(_validator.isValid(_serviceDef, Action.UPDATE, _failures));
-		_utils.checkFailureForSemanticError(_failures, "id");
+	public final void test_isValidName_create() throws Exception {
+		Long id = null; // id should be irrelevant for name check for create.
 
-		when(_store.getServiceDef(id)).thenThrow(new Exception());
-		assertFalse(_validator.isValid(_serviceDef, Action.UPDATE, _failures));
-		_utils.checkFailureForSemanticError(_failures, "id");
-	}
-	
-	@Test
-	public final void testIsValid_failures_nameId_create() throws Exception {
-		// service shouldn't exist with the name
+		// for create a service shouldn't exist with the name
+		String name = "existing-service";
+		when(_serviceDef.getName()).thenReturn(name);
+		when(_store.getServiceDefByName(name)).thenReturn(null);
+		assertTrue(_validator.isValidServiceDefName(name, id, Action.CREATE, _failures));
+		assertTrue(_failures.isEmpty());
+		
 		RangerServiceDef existingServiceDef = mock(RangerServiceDef.class);
-		when(_store.getServiceDefByName("existing-service")).thenReturn(existingServiceDef);
-		when(_serviceDef.getName()).thenReturn("existing-service");
-		_failures.clear(); assertFalse(_validator.isValid(_serviceDef, Action.CREATE, _failures));
+		when(_store.getServiceDefByName(name)).thenReturn(existingServiceDef);
+		_failures.clear(); assertFalse(_validator.isValidServiceDefName(name, id, Action.CREATE, _failures));
 		_utils.checkFailureForSemanticError(_failures, "name");
 	}
 	
 	@Test
-	public final void testIsValid_failures_nameId_update() throws Exception {
+	public final void test_isValidName_update() throws Exception {
 		
 		// update: if service exists with the same name then it can't point to a different service
-		Long id = 7L;
+		long id = 7;
 		when(_serviceDef.getId()).thenReturn(id);
-		RangerServiceDef existingServiceDef = mock(RangerServiceDef.class);
-		when(existingServiceDef.getId()).thenReturn(id);
-		when(_store.getServiceDef(id)).thenReturn(existingServiceDef);
-		
 		String name = "aServiceDef";
 		when(_serviceDef.getName()).thenReturn(name);
-		RangerServiceDef anotherExistingServiceDef = mock(RangerServiceDef.class);
-		Long anotherId = 49L;
-		when(anotherExistingServiceDef.getId()).thenReturn(anotherId);
-		when(_store.getServiceDefByName(name)).thenReturn(anotherExistingServiceDef);
+		when(_store.getServiceDefByName(name)).thenReturn(null); // no service with the new name (we are updating the name to a unique value)
+		assertTrue(_validator.isValidServiceDefName(name, id, Action.UPDATE, _failures));
+		assertTrue(_failures.isEmpty());
+
+		RangerServiceDef existingServiceDef = mock(RangerServiceDef.class);
+		when(existingServiceDef.getId()).thenReturn(id);
+		when(existingServiceDef.getName()).thenReturn(name);
+		when(_store.getServiceDefByName(name)).thenReturn(existingServiceDef);
+		assertTrue(_validator.isValidServiceDefName(name, id, Action.UPDATE, _failures));
+		assertTrue(_failures.isEmpty());
 		
-		assertFalse(_validator.isValid(_serviceDef, Action.UPDATE, _failures));
+		long anotherId = 49;
+		when(existingServiceDef.getId()).thenReturn(anotherId);
+		assertFalse(_validator.isValidServiceDefName(name, id, Action.UPDATE, _failures));
 		_utils.checkFailureForSemanticError(_failures, "id/name");
 	}
 
 	final Object[][] accessTypes_bad_unknownType = new Object[][] {
-			{ "read",  null },                                // ok, null implied grants
-			{ "write", new String[] {   } },                  // ok, empty implied grants
-			{ "admin", new String[] { "ReaD",  "execute" } }  // non-existent access type (execute), read is good (case should not matter)
+			{ 1L, "read",  null },                                // ok, null implied grants
+			{ 1L, "write", new String[] {   }  },                 // empty implied grants-ok, duplicate id
+			{ 3L, "admin", new String[] { "ReaD",  "execute" } }  // non-existent access type (execute), read is good (case should not matter)
 	};
 
 	final Object[][] accessTypes_bad_selfReference = new Object[][] {
-			{ "read",  null },                                // ok, null implied grants
-			{ "write", new String[] {   } },                  // ok, empty implied grants
-			{ "admin", new String[] { "write", "admin" } }  // non-existent access type (execute)
+			{ 1L, "read",  null },                              // ok, null implied grants
+			{ 2L, "write", new String[] {   } },                // ok, empty implied grants
+			{ 3L, "admin", new String[] { "write", "admin" } }  // non-existent access type (execute)
 	};
 
 	@Test
@@ -204,16 +218,17 @@ public class TestRangerServiceDefValidator {
 	
 	@Test
 	public final void test_isValidAccessTypes_failures() {
-		// sending in empty null access type defs is ok
-		assertTrue(_validator.isValidAccessTypes(null, _failures));
-		assertTrue(_failures.isEmpty());
+		// null or empty access type defs
+		List<RangerAccessTypeDef> accessTypeDefs = null;
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_utils.checkFailureForMissingValue(_failures, "access types");
 		
-		List<RangerAccessTypeDef> input = new ArrayList<RangerAccessTypeDef>();
-		_failures.clear(); assertTrue(_validator.isValidAccessTypes(input, _failures));
-		assertTrue(_failures.isEmpty());
+		accessTypeDefs = new ArrayList<RangerAccessTypeDef>();
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_utils.checkFailureForMissingValue(_failures, "access types");
 
 		// null/empty access types
-		List<RangerAccessTypeDef> accessTypeDefs = _utils.createAccessTypeDefs(new String[] { null, "", "		" });
+		accessTypeDefs = _utils.createAccessTypeDefs(new String[] { null, "", "		" });
 		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
 		_utils.checkFailureForMissingValue(_failures, "access type name");
 		
@@ -231,6 +246,7 @@ public class TestRangerServiceDefValidator {
 		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_bad_unknownType);
 		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
 		_utils.checkFailureForSemanticError(_failures, "implied grants", "execute");
+		_utils.checkFailureForSemanticError(_failures, "access type id", "1"); // id 1 is duplicated
 		
 		// access type with implied grant referring to itself
 		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_bad_selfReference);
@@ -238,34 +254,33 @@ public class TestRangerServiceDefValidator {
 		_utils.checkFailureForSemanticError(_failures, "implied grants", "admin");
 	}
 	
-	final Map<String, String[]> enums_bad_enumName_null = ImmutableMap.of(
-			"authentication-type", new String[] { "simple", "kerberos" },
-			"time-unit", new String[] { "day", "hour", "minute" },
-			"null", new String[] { "foo", "bar", "tar" } // null enum-name -- "null" is a special value that leads to a null enum name
-	);
+	final Object[][] enums_bad_enumName_null = new Object[][] {
+		//  { id, enum-name,             enum-values }
+			{ 1L, "authentication-type", new String[] { "simple", "kerberos" } },
+			{ 2L, "time-unit", new String[] { "day", "hour", "minute" } },
+			{ 3L, null, new String[] { "foo", "bar", "tar" } }, // null enum-name
+	};
 	
-	final Map<String, String[]> enums_bad_enumName_blank = ImmutableMap.of(
-			"authentication-type", new String[] { "simple", "kerberos" },
-			"time-unit", new String[] { "day", "hour", "minute" },
-			"  ", new String[] { "foo", "bar", "tar" } // enum name is all spaces
-	);
+	final Object[][] enums_bad_enumName_blank = new Object[][] {
+			//  { id, enum-name,             enum-values }
+			{ 1L, "authentication-type", new String[] { "simple", "kerberos" } },
+			{ 1L, "time-unit", new String[] { "day", "hour", "minute" } },
+			{ 2L, "  ", new String[] { "foo", "bar", "tar" } }, // enum name is all spaces
+	};
 	
-	final Map<String, String[]> enums_bad_Elements_empty = ImmutableMap.of(
-			"authentication-type", new String[] { "simple", "kerberos" },
-			"time-unit", new String[] { "day", "hour", "minute" },
-			"anEnum", new String[] { } // enum elements collection is empty
-	);
+	final Object[][] enums_bad_Elements_empty = new Object[][] {
+			//  { id, enum-name,             enum-values }
+			{ null, "authentication-type", new String[] { "simple", "kerberos" } }, // null id
+			{ 1L, "time-unit", new String[] { "day", "hour", "minute" } },
+			{ 2L, "anEnum", new String[] { } }, // enum elements collection is empty
+	};
 	
-	final Map<String, String[]> enums_bad_enumName_duplicate_exact = ImmutableMap.of(
-			"authentication-type", new String[] { "simple", "kerberos" },
-			"time-unit", new String[] { "day", "hour", "minute" }
-	);
-	
-	final Map<String, String[]> enums_bad_enumName_duplicate_differentCase = ImmutableMap.of(
-			"authentication-type", new String[] { "simple", "kerberos" },
-			"time-unit", new String[] { "day", "hour", "minute" },
-			"Authentication-Type", new String[] { } // duplicate enum-name different in case
-	);
+	final Object[][] enums_bad_enumName_duplicate_differentCase = new Object[][] {
+			//  { id, enum-name,             enum-values }
+			{ 1L, "authentication-type", new String[] { "simple", "kerberos" } }, 
+			{ 1L, "time-unit", new String[] { "day", "hour", "minute" } },
+			{ 1L, "Authentication-Type", new String[] { } },// duplicate enum-name different in case
+	};
 	
 	@Test
 	public final void test_isValidEnums_happyPath() {
@@ -290,6 +305,7 @@ public class TestRangerServiceDefValidator {
 		input = _utils.createEnumDefs(enums_bad_enumName_blank);
 		_failures.clear(); assertFalse(_validator.isValidEnums(input, _failures));
 		_utils.checkFailureForMissingValue(_failures, "enum def name");
+		_utils.checkFailureForSemanticError(_failures, "enum def id", "1");
 		
 		// enum elements collection should not be null or empty
 		input = _utils.createEnumDefs(enums_good);
@@ -303,6 +319,7 @@ public class TestRangerServiceDefValidator {
 		input = _utils.createEnumDefs(enums_bad_Elements_empty);
 		_failures.clear(); assertFalse(_validator.isValidEnums(input, _failures));
 		_utils.checkFailureForMissingValue(_failures, "enum values", "anEnum");
+		_utils.checkFailureForMissingValue(_failures, "enum def id");
 	
 		// enum names should be distinct -- exact match
 		input = _utils.createEnumDefs(enums_good);
@@ -359,11 +376,144 @@ public class TestRangerServiceDefValidator {
 		// element names should be distinct - case insensitive
 		input = _utils.createEnumElementDefs(new String[] { "simple", "kerberos", "kerberos" }); // duplicate name - exact match
 		_failures.clear(); assertFalse(_validator.isValidEnumElements(input, _failures, "anEnum"));
-		_utils.checkFailureForSemanticError(_failures, "enum element name", "anEnum");
+		_utils.checkFailureForSemanticError(_failures, "enum element name", "kerberos");
 		
 		input = _utils.createEnumElementDefs(new String[] { "simple", "kerberos", "kErbErOs" }); // duplicate name - different case
 		_failures.clear(); assertFalse(_validator.isValidEnumElements(input, _failures, "anEnum"));
-		_utils.checkFailureForSemanticError(_failures, "enum element name", "anEnum");
+		_utils.checkFailureForSemanticError(_failures, "enum element name", "kErbErOs");
+	}
+
+	Object[][] invalidResources = new Object[][] {
+		//  { id,   level,      name }
+			{ null, null,       null }, // everything is null
+			{ 1L,     -10, "database" }, // -ve value for level is ok
+			{ 1L,      10,    "table" }, // id is duplicate
+			{ 2L,     -10, "DataBase" }, // (in different case) but name and level are duplicate
+			{ 3L,      30,       "  " } // Name is all whitespace
+	};
+
+	@Test
+	public final void test_isValidResources() {
+		// null/empty resources are an error
+		when(_serviceDef.getResources()).thenReturn(null);
+		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
+		_utils.checkFailureForMissingValue(_failures, "resources");
+		
+		List<RangerResourceDef> resources = new ArrayList<RangerResourceDef>();
+		when(_serviceDef.getResources()).thenReturn(resources);
+		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
+		_utils.checkFailureForMissingValue(_failures, "resources");
+		
+		resources.addAll(_utils.createResourceDefsWithIds(invalidResources));
+		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
+		_utils.checkFailureForMissingValue(_failures, "resource name");
+		_utils.checkFailureForMissingValue(_failures, "resource id");
+		_utils.checkFailureForSemanticError(_failures, "resource id", "1"); // id 1 is duplicate
+		_utils.checkFailureForSemanticError(_failures, "resource name", "DataBase");
+	}
+	
+	@Test
+	public final void test_isValidResourceGraph() {
+		Object[][] data_bad = new Object[][] {
+			//  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp, parent-level, level }
+				{ "db",            null, null, null, null, "" ,             10 },
+				{ "table",         null, null, null, null, "db",            20 },   // same as db's level
+				{ "column-family", null, null, null, null, "table",         null }, // level is null!
+				{ "column",        null, null, null, null, "column-family", 20 },   // level is duplicate for [db->table->column-family-> column] hierarchy 
+				{ "udf",           null, null, null, null, "db",            10 },   // udf's id conflicts with that of db in the [db->udf] hierarchy
+		};
+		
+		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(data_bad);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		when(_serviceDef.getName()).thenReturn("service-name");
+		when(_serviceDef.getUpdateTime()).thenReturn(new Date());
+		
+		_failures.clear(); assertFalse(_validator.isValidResourceGraph(_serviceDef, _failures));
+		_utils.checkFailureForMissingValue(_failures, "resource level");
+		_utils.checkFailureForSemanticError(_failures, "resource level", "20"); // level 20 is duplicate for 1 hierarchy
+		_utils.checkFailureForSemanticError(_failures, "resource level", "10"); // level 10 is duplicate for another hierarchy
+		
+		Object[][] data_good = new Object[][] {
+			//  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp, parent-level, level }
+				{ "db",     null, null, null, null, "" ,     -10 }, // -ve level is ok
+				{ "table",  null, null, null, null, "db",    0 },   // 0 level is ok
+				{ "column", null, null, null, null, "table", 10 },  // level is null!
+				{ "udf",    null, null, null, null, "db",    0 },   // should not conflict as it belong to a different hierarchy
+		};
+		resourceDefs = _utils.createResourceDefs(data_good);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		_failures.clear(); assertTrue(_validator.isValidResourceGraph(_serviceDef, _failures));
+		assertTrue(_failures.isEmpty());
+	}
+	
+	@Test
+	public final void test_isValidResources_happyPath() {
+		Object[][] data = new Object[][] {
+			//  { id,   level,      name }
+				{ 1L,     -10, "database" }, // -ve value for level
+				{ 3L,       0,    "table" }, // it is ok for id and level to skip values
+				{ 5L,      10,   "column" }, // it is ok for level to skip values
+		};
+		List<RangerResourceDef> resources = _utils.createResourceDefsWithIds(data);
+		when(_serviceDef.getResources()).thenReturn(resources);
+		assertTrue(_validator.isValidResources(_serviceDef, _failures));
+		assertTrue(_failures.isEmpty());
+	}
+
+	@Test
+	public final void test_isValidConfigs_failures() {
+		assertTrue(_validator.isValidConfigs(null, null, _failures));
+		assertTrue(_failures.isEmpty());
+		
+		Object[][] config_def_data_bad = new Object[][] {
+			//  { id,  name, type, subtype, default-value }	
+				{ null, null, "" }, // id and name both null, type is empty
+				{ 1L, "security", "blah" }, // bad type for service def
+				{ 1L, "port", "int" }, // duplicate id
+				{ 2L, "security", "string" }, // duplicate name 
+				{ 3L, "timeout", "enum", "units", null }, // , sub-type (units) is not among known enum types 
+				{ 4L, "auth", "enum", "authentication-type", "dimple" }, // default value is not among known values for the enum (sub-type) 
+		};
+		
+		List<RangerServiceConfigDef> configs = _utils.createServiceDefConfigs(config_def_data_bad);
+		List<RangerEnumDef> enumDefs = _utils.createEnumDefs(enums_good);
+		assertFalse(_validator.isValidConfigs(configs, enumDefs, _failures));
+		_utils.checkFailureForMissingValue(_failures, "config def name");
+		_utils.checkFailureForMissingValue(_failures, "config def id");
+		_utils.checkFailureForMissingValue(_failures, "config def type");
+		_utils.checkFailureForSemanticError(_failures, "config def name", "security"); // there were two configs with same name as security
+		_utils.checkFailureForSemanticError(_failures, "config def id", "1"); // a config with duplicate had id of 1
+		_utils.checkFailureForSemanticError(_failures, "config def type", "security"); // type for config security was invalid
+		_utils.checkFailureForSemanticError(_failures, "config def subtype", "timeout"); // type for config security was invalid
+		_utils.checkFailureForSemanticError(_failures, "config def default value", "auth"); // type for config security was invalid
+	}
+
+	@Test
+	public final void test_isValidPolicyConditions() {
+		// null/empty policy conditions are ok
+		assertTrue(_validator.isValidPolicyConditions(null, _failures));
+		assertTrue(_failures.isEmpty());
+		List<RangerPolicyConditionDef> conditionDefs = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
+		assertTrue(_validator.isValidPolicyConditions(conditionDefs, _failures));
+		assertTrue(_failures.isEmpty());
+		
+		Object[][] policyCondition_data = {
+			//  { id, name, evaluator }	
+				{ null, null, null}, // everything null!
+				{ 1L, "condition-1", null }, // missing evaluator
+				{ 1L, "condition-2", "" }, // duplicate id, missing evaluator
+				{ 2L, "condition-1", "com.evaluator" }, // duplicate name
+		};
+		
+		conditionDefs.addAll(_utils.createPolicyConditionDefs(policyCondition_data));
+		_failures.clear(); assertFalse(_validator.isValidPolicyConditions(conditionDefs, _failures));
+		_utils.checkFailureForMissingValue(_failures, "policy condition def id");
+		_utils.checkFailureForMissingValue(_failures, "policy condition def name");
+		_utils.checkFailureForMissingValue(_failures, "policy condition def evaluator");
+		_utils.checkFailureForSemanticError(_failures, "policy condition def id", "1");
+		_utils.checkFailureForSemanticError(_failures, "policy condition def name", "condition-1");
+		_utils.checkFailureForMissingValue(_failures, "policy condition def evaluator", "condition-2");
+		_utils.checkFailureForMissingValue(_failures, "policy condition def evaluator", "condition-1");
 	}
 	
 	private ValidationTestUtils _utils = new ValidationTestUtils();

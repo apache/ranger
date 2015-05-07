@@ -79,12 +79,9 @@ public class RangerServiceValidator extends RangerValidator {
 				.build());
 			valid = false;
 		} else if (getService(id) == null) {
-			failures.add(new ValidationFailureDetailsBuilder()
-				.field("id")
-				.isSemanticallyIncorrect()
-				.becauseOf("no service found for id[" + id + "]")
-				.build());
-			valid = false;
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No service found for id[" + id + "]! ok!");
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

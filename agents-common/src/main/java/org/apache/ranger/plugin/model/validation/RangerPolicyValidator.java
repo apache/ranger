@@ -90,12 +90,9 @@ public class RangerPolicyValidator extends RangerValidator {
 				.build());
 			valid = false;
 		} else if (getPolicy(id) == null) {
-			failures.add(new ValidationFailureDetailsBuilder()
-				.field("id")
-				.isSemanticallyIncorrect()
-				.becauseOf("no policy found for id[" + id + "]")
-				.build());
-			valid = false;
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No policy found for id[" + id + "]! ok!");
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
