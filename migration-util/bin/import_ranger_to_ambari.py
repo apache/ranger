@@ -1033,30 +1033,36 @@ def import_properties_from_file(install_properties_path, properties_from_file=No
 	if properties_from_file is None:
 		print('properties_from_file is none initializing to dict')
 		properties_from_file = dict()
-	install_properties_file = open(install_properties_path)
-	for each_line in install_properties_file.read().split('\n'):
-		each_line = each_line.strip()
-		if len(each_line) == 0: continue
-		if '#https.service.port' in each_line:
-			each_line = each_line.strip('#')
-		if '#' in each_line: continue
-		key, value = each_line.strip().split("=", 1)
-		key = key.strip()
-		value = value.strip()
-		properties_from_file[key] = value
+	if os.path.isfile(install_properties_path):
+		install_properties_file = open(install_properties_path)
+		for each_line in install_properties_file.read().split('\n'):
+			each_line = each_line.strip()
+			if len(each_line) == 0: continue
+			if '#https.service.port' in each_line:
+				each_line = each_line.strip('#')
+			if '#' in each_line: continue
+			key, value = each_line.strip().split("=", 1)
+			key = key.strip()
+			value = value.strip()
+			properties_from_file[key] = value
+	else:
+		print('Property file not found at path : ' + str(install_properties_path))
 	return properties_from_file
 
 
 def import_properties_from_xml(xml_path, properties_from_xml=None):
 	print('getting values from file : ' + str(xml_path))
-	xml = ET.parse(xml_path)
-	root = xml.getroot()
-	if properties_from_xml is None:
-		properties_from_xml = dict()
-	for child in root.findall('property'):
-		name = child.find("name").text.strip()
-		value = child.find("value").text.strip() if child.find("value").text is not None  else ""
-		properties_from_xml[name] = value
+	if os.path.isfile(xml_path):
+		xml = ET.parse(xml_path)
+		root = xml.getroot()
+		if properties_from_xml is None:
+			properties_from_xml = dict()
+		for child in root.findall('property'):
+			name = child.find("name").text.strip()
+			value = child.find("value").text.strip() if child.find("value").text is not None  else ""
+			properties_from_xml[name] = value
+	else:
+		print('XML file not found at path : ' + str(xml_path))
 	return properties_from_xml
 
 
@@ -1073,11 +1079,11 @@ def get_authentication_method():
 		if( ('authentication-provider' in str(child_nodes.tag)) and  not('-ref' in str(child_nodes.attrib)) ):
 			reference_auth_method = child_nodes.attrib['ref']
 
-	if('jaasAuthProvider' in reference_auth_method):
+	if( reference_auth_method is not None and 'jaasAuthProvider' in reference_auth_method):
 		authentication_method = 'UNIX'
-	elif('activeDirectoryAuthenticationProvider' in reference_auth_method):
+	elif( reference_auth_method is not None and 'activeDirectoryAuthenticationProvider' in reference_auth_method):
 		authentication_method = 'ACTIVE_DIRECTORY'
-	elif('ldapAuthProvider' in reference_auth_method):
+	elif( reference_auth_method is not None and 'ldapAuthProvider' in reference_auth_method):
 		authentication_method = 'LDAP'
 	else:
 		authentication_method = 'NONE'
