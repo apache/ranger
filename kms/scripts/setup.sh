@@ -501,6 +501,7 @@ setup_install_files(){
 	fi
 	cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
         chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
+        chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf/
 
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/lib"
