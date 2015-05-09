@@ -614,7 +614,7 @@ public class ServiceRESTStore implements ServiceStore {
 	}
 
 	@Override
-	public List<RangerPolicy> getPoliciesByResourceSignature(String hexSignature) throws Exception {
+	public List<RangerPolicy> getPoliciesByResourceSignature(String serviceName, String policySignature, Boolean isPolicyEnabled) throws Exception {
 		throw new UnsupportedOperationException("Querying policies by resource signature is not supported!");
 	}
 }

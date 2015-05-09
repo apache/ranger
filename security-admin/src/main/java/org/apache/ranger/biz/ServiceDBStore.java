@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -116,7 +115,6 @@ import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
-import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1211,8 +1209,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	@Override
-	public List<RangerPolicy> getPoliciesByResourceSignature(String hexSignature) throws Exception {
-		List<XXPolicy> xxPolicies = daoMgr.getXXPolicy().findByResourceSignature(hexSignature);
+	public List<RangerPolicy> getPoliciesByResourceSignature(String serviceName, String policySignature, Boolean isPolicyEnabled) throws Exception {
+
+		List<XXPolicy> xxPolicies = daoMgr.getXXPolicy().findByResourceSignatureByPolicyStatus(serviceName, policySignature, isPolicyEnabled);
 		List<RangerPolicy> policies = new ArrayList<RangerPolicy>(xxPolicies.size());
 		for (XXPolicy xxPolicy : xxPolicies) {
 			RangerPolicy policy = policyService.getPopulatedViewObject(xxPolicy);
@@ -1299,9 +1298,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
 
 		policy.setVersion(new Long(1));
-		RangerPolicyResourceSignature signature = factory.createPolicyResourceSignature(policy);
-		String hexSignature = signature.getSignature();
-		policy.setResourceSignature(hexSignature);
+		updatePolicySignature(policy);
 
 		if(populateExistingBaseFields) {
 			assignedIdPolicyService.setPopulateExistingBaseFields(true);
@@ -1376,6 +1373,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		
 		policy.setVersion(version);
+		updatePolicySignature(policy);
 		
 		policy = policyService.update(policy);
 		XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
@@ -1987,4 +1985,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return policy;
 	}
 
+	void updatePolicySignature(RangerPolicy policy) {
+		RangerPolicyResourceSignature policySignature = factory.createPolicyResourceSignature(policy);
+		String signature = policySignature.getSignature();
+		policy.setResourceSignature(signature);
+		if (LOG.isDebugEnabled()) {
+			String message = String.format("Setting signature on policy id=%d, name=%s to [%s]", policy.getId(), policy.getName(), signature);
+			LOG.debug(message);
+		}
+	}
 }
