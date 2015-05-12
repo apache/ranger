@@ -15,4 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ "${JAVA_HOME}" != "" ]
+then
+	export JAVA_HOME
+	PATH="${JAVA_HOME}/bin:${PATH}"
+	export PATH
+fi
+
 ./setup.py
