@@ -126,6 +126,11 @@
 		<fileMode>755</fileMode>
 	</file>
 	<file>
+		<source>security-admin/scripts/ranger_credential_helper.py</source>
+	  <outputDirectory>/</outputDirectory>
+	  <fileMode>755</fileMode>
+	</file>
+	<file>
 		<source>agents-common/scripts/enable-agent.sh</source>
 		<outputDirectory>/</outputDirectory>
 		<destName>disable-hdfs-plugin.sh</destName>
