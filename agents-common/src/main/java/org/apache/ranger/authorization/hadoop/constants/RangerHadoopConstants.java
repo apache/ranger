@@ -49,7 +49,8 @@ public class RangerHadoopConstants {
 	public static final String AUDITLOG_HADOOP_MODULE_ACL_NAME_PROP    	= "xasecure.auditlog.hadoopAcl.name" ;
 	
 	public static final String DEFAULT_LOG_FIELD_DELIMITOR  			= "|" ;
-	public static final String DEFAULT_RANGER_MODULE_ACL_NAME  		= "xasecure-acl" ;
+	public static final String DEFAULT_XASECURE_MODULE_ACL_NAME  	= "xasecure-acl" ;
+	public static final String DEFAULT_RANGER_MODULE_ACL_NAME  		= "ranger-acl" ;
 	public static final String DEFAULT_HADOOP_MODULE_ACL_NAME    		= "hadoop-acl" ;
 	
 

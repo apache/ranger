@@ -69,7 +69,7 @@
 	<!-- 
 	<property>
 		<name>xasecure.auditlog.xasecureAcl.name</name>
-		<value>xasecure-acl</value>
+		<value>ranger-acl</value>
 		<description>
 			The module name listed in the auditlog when the permission check is done by RangerACL
 		</description>
