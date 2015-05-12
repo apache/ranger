@@ -7,7 +7,7 @@
 	"resources": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "topology",
 			"type": "string",
 			"level": 10,
@@ -26,7 +26,7 @@
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "service",
 			"type": "string",
 			"level": 20,
@@ -48,7 +48,7 @@
 	"accessTypes": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "allow",
 			"label": "Allow"
 		}
@@ -57,7 +57,7 @@
 	"configs": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "username",
 			"type": "string",
 			"mandatory": true,
@@ -68,7 +68,7 @@
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "password",
 			"type": "password",
 			"mandatory": true,
@@ -79,7 +79,7 @@
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "knox.url",
 			"type": "string",
 			"mandatory": true,
@@ -90,7 +90,7 @@
 		},
 
 		{
-			"id": 4,
+			"itemId": 4,
 			"name": "commonNameForCertificate",
 			"type": "string",
 			"mandatory": false,
@@ -114,7 +114,7 @@
 	"policyConditions": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "ip-range",
 			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
 			"evaluatorOptions": { },

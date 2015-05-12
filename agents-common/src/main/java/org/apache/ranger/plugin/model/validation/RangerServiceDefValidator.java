@@ -238,7 +238,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 			for (RangerAccessTypeDef def : accessTypeDefs) {
 				String name = def.getName();
 				valid = isUnique(name, accessNames, "access type name", "access types", failures) && valid;
-				valid = isUnique(def.getId(), ids, "access type id", "access types", failures) && valid;
+				valid = isUnique(def.getItemId(), ids, "access type itemId", "access types", failures) && valid;
 				if (CollectionUtils.isNotEmpty(def.getImpliedGrants())) {
 					defsWithImpliedGrants.add(def);
 				}
@@ -288,7 +288,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 			Set<Long> ids = new HashSet<Long>();
 			Set<String> names = new HashSet<String>();
 			for (RangerPolicyConditionDef conditionDef : policyConditions) {
-				valid = isUnique(conditionDef.getId(), ids, "policy condition def id", "policy condition defs", failures) && valid;
+				valid = isUnique(conditionDef.getItemId(), ids, "policy condition def itemId", "policy condition defs", failures) && valid;
 				String name = conditionDef.getName();
 				valid = isUnique(name, names, "policy condition def name", "policy condition defs", failures) && valid;
 				if (StringUtils.isBlank(conditionDef.getEvaluator())) {
@@ -323,7 +323,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 			Set<Long> ids = new HashSet<Long>(configs.size());
 			Set<String> names = new HashSet<String>(configs.size());
 			for (RangerServiceConfigDef aConfig : configs) {
-				valid = isUnique(aConfig.getId(), ids, "config def id", "config defs", failures) && valid;
+				valid = isUnique(aConfig.getItemId(), ids, "config def itemId", "config defs", failures) && valid;
 				String configName = aConfig.getName();
 				valid = isUnique(configName, names, "config def name", "config defs", failures) && valid;
 				String type = aConfig.getType();
@@ -445,7 +445,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 				 * While id is the natural key, name is a surrogate key.  At several places code expects resource name to be unique within a service.
 				 */
 				valid = isUnique(resource.getName(), names, "resource name", "resources", failures) && valid;
-				valid = isUnique(resource.getId(), ids, "resource id", "resources", failures) && valid;
+				valid = isUnique(resource.getItemId(), ids, "resource itemId", "resources", failures) && valid;
 			}
 		}
 
@@ -508,7 +508,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 					// enum-names and ids must non-blank and be unique to a service definition
 					String enumName = enumDef.getName(); 
 					valid = isUnique(enumName, names, "enum def name", "enum defs", failures) && valid;
-					valid = isUnique(enumDef.getId(), ids, "enum def id", "enum defs", failures) && valid;		
+					valid = isUnique(enumDef.getItemId(), ids, "enum def itemId", "enum defs", failures) && valid;		
 					// enum must contain at least one valid value and those values should be non-blank and distinct
 					if (CollectionUtils.isEmpty(enumDef.getElements())) {
 						failures.add(new ValidationFailureDetailsBuilder()
@@ -565,7 +565,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 					valid = false;
 				} else {
 					valid = isUnique(elementDef.getName(), enumName, elementNames, "enum element name", "enum elements", failures) && valid;
-					valid = isUnique(elementDef.getId(), enumName, ids, "enum element id", "enum elements", failures) && valid;
+					valid = isUnique(elementDef.getItemId(), enumName, ids, "enum element itemId", "enum elements", failures) && valid;
 				}
 			}
 		}

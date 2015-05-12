@@ -7,7 +7,7 @@
 	"resources": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "table",
 			"type": "string",
 			"level": 10,
@@ -26,7 +26,7 @@
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "column-family",
 			"type": "string",
 			"level": 20,
@@ -45,7 +45,7 @@
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "column",
 			"type": "string",
 			"level": 30,
@@ -67,25 +67,25 @@
 	"accessTypes": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "read",
 			"label": "Read"
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "write",
 			"label": "Write"
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "create",
 			"label": "Create"
 		},
 
 		{
-			"id": 4,
+			"itemId": 4,
 			"name": "admin",
 			"label": "Admin",
 			"impliedGrants": 
@@ -100,7 +100,7 @@
 	"configs": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "username",
 			"type": "string",
 			"subType": "",
@@ -112,7 +112,7 @@
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "password",
 			"type": "password",
 			"subType": "",
@@ -124,7 +124,7 @@
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "hadoop.security.authentication",
 			"type": "enum",
 			"subType": "authnType",
@@ -136,7 +136,7 @@
 		},
 
 		{
-			"id": 4,
+			"itemId": 4,
 			"name": "hbase.master.kerberos.principal",
 			"type": "string",
 			"subType": "",
@@ -145,7 +145,7 @@
 		},
 
 		{
-			"id": 5,
+			"itemId": 5,
 			"name": "hbase.security.authentication",
 			"type": "enum",
 			"subType": "authnType",
@@ -157,7 +157,7 @@
 		},
 
 		{
-			"id": 6,
+			"itemId": 6,
 			"name": "hbase.zookeeper.property.clientPort",
 			"type": "int",
 			"subType": "",
@@ -169,7 +169,7 @@
 		},
 
 		{
-			"id": 7,
+			"itemId": 7,
 			"name": "hbase.zookeeper.quorum",
 			"type": "string",
 			"subType": "",
@@ -180,7 +180,7 @@
 		},
 
 		{
-			"id": 8,
+			"itemId": 8,
 			"name": "zookeeper.znode.parent",
 			"type": "string",
 			"subType": "",
@@ -192,7 +192,7 @@
 		},
 		
 		{
-			"id": 9,
+			"itemId": 9,
 			"name": "commonNameForCertificate",
 			"type": "string",
 			"subType": "",
@@ -207,18 +207,18 @@
 	"enums": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "authnType",
 			"elements": 
 			[
 				{
-					"id": 1,
+					"itemId": 1,
 					"name": "simple",
 					"label": "Simple"
 				},
 
 				{
-					"id": 2,
+					"itemId": 2,
 					"name": "kerberos",
 					"label": "Kerberos"
 				}

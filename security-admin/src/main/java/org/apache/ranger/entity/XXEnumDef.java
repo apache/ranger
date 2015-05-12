@@ -49,6 +49,15 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
 	protected Long defId;
 
 	/**
+	 * itemId of the XXEnumDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "item_id")
+	protected Long itemId;
+
+	/**
 	 * name of the XXEnumDef
 	 * <ul>
 	 * </ul>
@@ -104,6 +113,26 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
 	 */
 	public Long getDefid() {
 		return this.defId;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> itemId</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param defId
+	 *            Value to set member attribute <b> itemId</b>
+	 */
+	public void setItemId(Long itemId) {
+		this.itemId = itemId;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>itemId</b>
+	 * 
+	 * @return Long - value of member attribute <b>itemId</b> .
+	 */
+	public Long getItemId() {
+		return this.itemId;
 	}
 
 	/**
@@ -173,6 +202,13 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
 		} else if (!defId.equals(other.defId)) {
 			return false;
 		}
+		if (itemId == null) {
+			if (other.itemId != null) {
+				return false;
+			}
+		} else if (!itemId.equals(other.itemId)) {
+			return false;
+		}
 		if (defaultIndex == null) {
 			if (other.defaultIndex != null) {
 				return false;
@@ -205,7 +241,7 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
 	@Override
 	public String toString() {
 		return "XXEnumDef [" + super.toString() + " id=" + id + ", defId="
-				+ defId + ", name=" + name + ", defaultIndex=" + defaultIndex
+				+ defId + ", itemId=" + itemId + ", name=" + name + ", defaultIndex=" + defaultIndex
 				+ "]";
 	}
 

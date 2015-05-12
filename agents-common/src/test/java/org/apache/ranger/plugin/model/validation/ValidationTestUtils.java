@@ -153,7 +153,7 @@ public class ValidationTestUtils {
 			return result;
 		}
 		for (Object[] entry : data) {
-			Long id = (Long)entry[0];
+			Long itemId = (Long)entry[0];
 			String accessType = (String)entry[1];
 			String[] impliedAccessArray = (String[])entry[2];
 			List<String> impliedAccesses = null;
@@ -163,7 +163,7 @@ public class ValidationTestUtils {
 			RangerAccessTypeDef aTypeDef = mock(RangerAccessTypeDef.class);
 			when(aTypeDef.getName()).thenReturn(accessType);
 			when(aTypeDef.getImpliedGrants()).thenReturn(impliedAccesses);
-			when(aTypeDef.getId()).thenReturn(id);
+			when(aTypeDef.getItemId()).thenReturn(itemId);
 			result.add(aTypeDef);
 		}
 		return result;
@@ -313,12 +313,12 @@ public class ValidationTestUtils {
 		for (Object[] row : data) {
 			RangerResourceDef aDef = null;
 			if (row != null) {
-				Long id = (Long)row[0];
+				Long itemId = (Long)row[0];
 				Integer level = (Integer)row[1];
 				String name = (String)row[2];
 				aDef = mock(RangerResourceDef.class);
 				when(aDef.getName()).thenReturn(name);
-				when(aDef.getId()).thenReturn(id);
+				when(aDef.getItemId()).thenReturn(itemId);
 				when(aDef.getLevel()).thenReturn(level);
 			}
 			defs.add(aDef);
@@ -348,7 +348,7 @@ public class ValidationTestUtils {
 			case 2:
 				when(aDef.getName()).thenReturn((String)row[1]);
 			case 1:
-				when(aDef.getId()).thenReturn((Long) row[0]);
+				when(aDef.getItemId()).thenReturn((Long) row[0]);
 			}
 			output.add(aDef);
 		}
@@ -372,7 +372,7 @@ public class ValidationTestUtils {
 				String enumName = (String) row[1];
 				when(enumDef.getName()).thenReturn(enumName);
 			case 1:
-				when(enumDef.getId()).thenReturn((Long)row[0]);
+				when(enumDef.getItemId()).thenReturn((Long)row[0]);
 			}
 			defs.add(enumDef);
 		}
@@ -421,8 +421,8 @@ public class ValidationTestUtils {
 				String name = (String)row[1];
 				when(configDef.getName()).thenReturn(name);
 			case 1: // id
-				Long id = (Long)row[0];
-				when(configDef.getId()).thenReturn(id);
+				Long itemId = (Long)row[0];
+				when(configDef.getItemId()).thenReturn(itemId);
 			}
 			result.add(configDef);
 		}
@@ -434,7 +434,7 @@ public class ValidationTestUtils {
 		if (input != null) {
 			for (Object[] row : input) {
 				RangerPolicyConditionDef conditionDef = mock(RangerPolicyConditionDef.class);
-				when(conditionDef.getId()).thenReturn((Long)row[0]);
+				when(conditionDef.getItemId()).thenReturn((Long)row[0]);
 				when(conditionDef.getName()).thenReturn((String)row[1]);
 				when(conditionDef.getEvaluator()).thenReturn((String)row[2]);
 				result.add(conditionDef);

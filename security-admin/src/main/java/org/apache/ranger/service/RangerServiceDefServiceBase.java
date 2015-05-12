@@ -103,12 +103,9 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 		
-		if(operationContext == OPERATION_UPDATE_CONTEXT) {
-			xObj.setId(vObj.getId());
-		}
-		
 		xObj = (XXServiceConfigDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
+		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
 		xObj.setType(vObj.getType());
 		xObj.setSubtype(vObj.getSubType());
@@ -128,7 +125,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 
 	public RangerServiceConfigDef populateXXToRangerServiceConfigDef(XXServiceConfigDef xObj) {
 		RangerServiceConfigDef vObj = new RangerServiceConfigDef();
-		vObj.setId(xObj.getId());
+		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setType(xObj.getType());
 		vObj.setSubType(xObj.getSubtype());
@@ -152,12 +149,9 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 		
-		if(operationContext == OPERATION_UPDATE_CONTEXT) {
-			xObj.setId(vObj.getId());
-		}
-		
 		xObj = (XXResourceDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
+		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
 		xObj.setType(vObj.getType());
 		xObj.setLevel(vObj.getLevel());
@@ -181,7 +175,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	
 	public RangerResourceDef populateXXToRangerResourceDef(XXResourceDef xObj) {
 		RangerResourceDef vObj = new RangerResourceDef();
-		vObj.setId(xObj.getId());
+		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setType(xObj.getType());
 		vObj.setLevel(xObj.getLevel());		
@@ -214,12 +208,9 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 		
-		if(operationContext == OPERATION_UPDATE_CONTEXT) {
-			xObj.setId(vObj.getId());
-		}
-		
 		xObj = (XXAccessTypeDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
+		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
@@ -229,7 +220,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	
 	public RangerAccessTypeDef populateXXToRangerAccessTypeDef(XXAccessTypeDef xObj) {
 		RangerAccessTypeDef vObj = new RangerAccessTypeDef();
-		vObj.setId(xObj.getId());
+		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
@@ -246,12 +237,9 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 		
-		if(operationContext == OPERATION_UPDATE_CONTEXT) {
-			xObj.setId(vObj.getId());
-		}
-		
 		xObj = (XXPolicyConditionDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
+		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
 		xObj.setEvaluator(vObj.getEvaluator());
 		xObj.setEvaluatoroptions(mapToJsonString(vObj.getEvaluatorOptions()));
@@ -269,7 +257,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	
 	public RangerPolicyConditionDef populateXXToRangerPolicyConditionDef(XXPolicyConditionDef xObj) {
 		RangerPolicyConditionDef vObj = new RangerPolicyConditionDef();
-		vObj.setId(xObj.getId());
+		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setEvaluator(xObj.getEvaluator());
 		vObj.setEvaluatorOptions(jsonStringToMap(xObj.getEvaluatoroptions()));
@@ -290,13 +278,10 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 			LOG.error("RangerServiceDefServiceBase.populateRangerContextEnricherDefToXX, serviceDef can not be null");
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
-		
-		if(operationContext == OPERATION_UPDATE_CONTEXT) {
-			xObj.setId(vObj.getId());
-		}
-		
+
 		xObj = (XXContextEnricherDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
+		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
 		xObj.setEnricher(vObj.getEnricher());
 		xObj.setEnricherOptions(mapToJsonString(vObj.getEnricherOptions()));
@@ -306,7 +291,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	
 	public RangerContextEnricherDef populateXXToRangerContextEnricherDef(XXContextEnricherDef xObj) {
 		RangerContextEnricherDef vObj = new RangerContextEnricherDef();
-		vObj.setId(xObj.getId());
+		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setEnricher(xObj.getEnricher());
 		vObj.setEnricherOptions(jsonStringToMap(xObj.getEnricherOptions()));
@@ -319,13 +304,10 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 			LOG.error("RangerServiceDefServiceBase.populateRangerEnumDefToXX, serviceDef can not be null");
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
-		
-		if(operationContext == OPERATION_UPDATE_CONTEXT) {
-			xObj.setId(vObj.getId());
-		}
-		
+
 		xObj = (XXEnumDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
+		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
 		xObj.setDefaultindex(vObj.getDefaultIndex());
 		return xObj;
@@ -333,7 +315,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	
 	public RangerEnumDef populateXXToRangerEnumDef(XXEnumDef xObj) {
 		RangerEnumDef vObj = new RangerEnumDef();
-		vObj.setId(xObj.getId());
+		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setDefaultIndex(xObj.getDefaultindex());
 		
@@ -355,13 +337,10 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 			LOG.error("RangerServiceDefServiceBase.populateRangerEnumElementDefToXX, enumDef can not be null");
 			throw restErrorUtil.createRESTException("enumDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
-		
-		if(operationContext == OPERATION_UPDATE_CONTEXT) {
-			xObj.setId(vObj.getId());
-		}
-		
+
 		xObj = (XXEnumElementDef) rangerAuditFields.populateAuditFields(xObj, enumDef);
 		xObj.setEnumdefid(enumDef.getId());
+		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
@@ -371,7 +350,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	
 	public RangerEnumElementDef populateXXToRangerEnumElementDef(XXEnumElementDef xObj) {
 		RangerEnumElementDef vObj = new RangerEnumElementDef();
-		vObj.setId(xObj.getId());
+		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());

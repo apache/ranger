@@ -48,6 +48,15 @@ public class XXServiceConfigDef extends XXDBBase implements
 	 */
 	@Column(name = "def_id")
 	protected Long defId;
+	
+	/**
+	 * itemId of the XXServiceConfigDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "item_id")
+	protected Long itemId;
 
 	/**
 	 * name of the XXServiceConfigDef
@@ -213,6 +222,26 @@ public class XXServiceConfigDef extends XXDBBase implements
 	 */
 	public Long getDefid() {
 		return this.defId;
+	}
+	
+	/**
+	 * This method sets the value to the member attribute <b> itemId</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param itemId
+	 *            Value to set member attribute <b> itemId</b>
+	 */
+	public void setItemId(Long itemId) {
+		this.itemId = itemId;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>itemId</b>
+	 * 
+	 * @return Long - value of member attribute <b>itemId</b> .
+	 */
+	public Long getItemId() {
+		return this.itemId;
 	}
 
 	/**
@@ -498,6 +527,13 @@ public class XXServiceConfigDef extends XXDBBase implements
 		} else if (!defId.equals(other.defId)) {
 			return false;
 		}
+		if (itemId == null) {
+			if (other.itemId != null) {
+				return false;
+			}
+		} else if (!itemId.equals(other.itemId)) {
+			return false;
+		}
 		if (defaultValue == null) {
 			if (other.defaultValue != null) {
 				return false;
@@ -592,6 +628,7 @@ public class XXServiceConfigDef extends XXDBBase implements
 	public String toString() {
 		return "XXServiceConfigDef [" + super.toString() + " id=" + id
 				+ ", defId=" + defId + ", name=" + name + ", type=" + type
+				+ ", itemId=" + itemId
 				+ ", subType=" + subType + ", isMandatory=" + isMandatory
 				+ ", defaultValue=" + defaultValue + ", label=" + label
 				+ ", validationRegEx=" + validationRegEx

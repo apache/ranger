@@ -49,6 +49,15 @@ public class XXEnumElementDef extends XXDBBase implements java.io.Serializable {
 	protected Long enumDefId;
 
 	/**
+	 * itemId of the XXEnumDefElement
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "item_id")
+	protected Long itemId;
+
+	/**
 	 * name of the XXEnumDefElement
 	 * <ul>
 	 * </ul>
@@ -122,6 +131,26 @@ public class XXEnumElementDef extends XXDBBase implements java.io.Serializable {
 	 */
 	public Long getEnumdefid() {
 		return this.enumDefId;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> itemId</b> .
+	 * You cannot set null to the attribute.
+	 * 
+	 * @param itemId
+	 *            Value to set member attribute <b> itemId</b>
+	 */
+	public void setItemId(Long itemId) {
+		this.itemId = itemId;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>itemId</b>
+	 * 
+	 * @return Long - value of member attribute <b>itemId</b> .
+	 */
+	public Long getItemId() {
+		return this.itemId;
 	}
 
 	/**
@@ -277,7 +306,7 @@ public class XXEnumElementDef extends XXDBBase implements java.io.Serializable {
 	@Override
 	public String toString() {
 		return "XXEnumElementDef [" + super.toString() + " id=" + id
-				+ ", enumDefId=" + enumDefId + ", name=" + name + ", label="
+				+ ", enumDefId=" + enumDefId + "itemId=" + itemId + ", name=" + name + ", label="
 				+ label + ", rbKeyLabel=" + rbKeyLabel + ", order=" + order
 				+ "]";
 	}

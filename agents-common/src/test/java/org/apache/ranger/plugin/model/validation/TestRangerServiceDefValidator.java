@@ -246,7 +246,7 @@ public class TestRangerServiceDefValidator {
 		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_bad_unknownType);
 		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
 		_utils.checkFailureForSemanticError(_failures, "implied grants", "execute");
-		_utils.checkFailureForSemanticError(_failures, "access type id", "1"); // id 1 is duplicated
+		_utils.checkFailureForSemanticError(_failures, "access type itemId", "1"); // id 1 is duplicated
 		
 		// access type with implied grant referring to itself
 		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_bad_selfReference);
@@ -305,7 +305,7 @@ public class TestRangerServiceDefValidator {
 		input = _utils.createEnumDefs(enums_bad_enumName_blank);
 		_failures.clear(); assertFalse(_validator.isValidEnums(input, _failures));
 		_utils.checkFailureForMissingValue(_failures, "enum def name");
-		_utils.checkFailureForSemanticError(_failures, "enum def id", "1");
+		_utils.checkFailureForSemanticError(_failures, "enum def itemId", "1");
 		
 		// enum elements collection should not be null or empty
 		input = _utils.createEnumDefs(enums_good);
@@ -319,7 +319,7 @@ public class TestRangerServiceDefValidator {
 		input = _utils.createEnumDefs(enums_bad_Elements_empty);
 		_failures.clear(); assertFalse(_validator.isValidEnums(input, _failures));
 		_utils.checkFailureForMissingValue(_failures, "enum values", "anEnum");
-		_utils.checkFailureForMissingValue(_failures, "enum def id");
+		_utils.checkFailureForMissingValue(_failures, "enum def itemId");
 	
 		// enum names should be distinct -- exact match
 		input = _utils.createEnumDefs(enums_good);
@@ -407,8 +407,8 @@ public class TestRangerServiceDefValidator {
 		resources.addAll(_utils.createResourceDefsWithIds(invalidResources));
 		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
 		_utils.checkFailureForMissingValue(_failures, "resource name");
-		_utils.checkFailureForMissingValue(_failures, "resource id");
-		_utils.checkFailureForSemanticError(_failures, "resource id", "1"); // id 1 is duplicate
+		_utils.checkFailureForMissingValue(_failures, "resource itemId");
+		_utils.checkFailureForSemanticError(_failures, "resource itemId", "1"); // id 1 is duplicate
 		_utils.checkFailureForSemanticError(_failures, "resource name", "DataBase");
 	}
 	
@@ -479,10 +479,10 @@ public class TestRangerServiceDefValidator {
 		List<RangerEnumDef> enumDefs = _utils.createEnumDefs(enums_good);
 		assertFalse(_validator.isValidConfigs(configs, enumDefs, _failures));
 		_utils.checkFailureForMissingValue(_failures, "config def name");
-		_utils.checkFailureForMissingValue(_failures, "config def id");
+		_utils.checkFailureForMissingValue(_failures, "config def itemId");
 		_utils.checkFailureForMissingValue(_failures, "config def type");
 		_utils.checkFailureForSemanticError(_failures, "config def name", "security"); // there were two configs with same name as security
-		_utils.checkFailureForSemanticError(_failures, "config def id", "1"); // a config with duplicate had id of 1
+		_utils.checkFailureForSemanticError(_failures, "config def itemId", "1"); // a config with duplicate had id of 1
 		_utils.checkFailureForSemanticError(_failures, "config def type", "security"); // type for config security was invalid
 		_utils.checkFailureForSemanticError(_failures, "config def subtype", "timeout"); // type for config security was invalid
 		_utils.checkFailureForSemanticError(_failures, "config def default value", "auth"); // type for config security was invalid
@@ -507,10 +507,10 @@ public class TestRangerServiceDefValidator {
 		
 		conditionDefs.addAll(_utils.createPolicyConditionDefs(policyCondition_data));
 		_failures.clear(); assertFalse(_validator.isValidPolicyConditions(conditionDefs, _failures));
-		_utils.checkFailureForMissingValue(_failures, "policy condition def id");
+		_utils.checkFailureForMissingValue(_failures, "policy condition def itemId");
 		_utils.checkFailureForMissingValue(_failures, "policy condition def name");
 		_utils.checkFailureForMissingValue(_failures, "policy condition def evaluator");
-		_utils.checkFailureForSemanticError(_failures, "policy condition def id", "1");
+		_utils.checkFailureForSemanticError(_failures, "policy condition def itemId", "1");
 		_utils.checkFailureForSemanticError(_failures, "policy condition def name", "condition-1");
 		_utils.checkFailureForMissingValue(_failures, "policy condition def evaluator", "condition-2");
 		_utils.checkFailureForMissingValue(_failures, "policy condition def evaluator", "condition-1");

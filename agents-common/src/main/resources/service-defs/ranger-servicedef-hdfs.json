@@ -7,7 +7,7 @@
 	"resources": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "path",
 			"type": "path",
 			"level": 10,
@@ -29,19 +29,19 @@
 	"accessTypes": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "read",
 			"label": "Read"
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "write",
 			"label": "Write"
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "execute",
 			"label": "Execute"
 		}
@@ -50,7 +50,7 @@
 	"configs": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "username",
 			"type": "string",
 			"subType": "",
@@ -62,7 +62,7 @@
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "password",
 			"type": "password",
 			"subType": "",
@@ -74,7 +74,7 @@
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "fs.default.name",
 			"type": "string",
 			"subType": "",
@@ -86,7 +86,7 @@
 		},
 
 		{
-			"id": 4,
+			"itemId": 4,
 			"name": "hadoop.security.authorization",
 			"type": "bool",
 			"subType": "YesTrue:NoFalse",
@@ -99,7 +99,7 @@
 		},
 
 		{
-			"id": 5,
+			"itemId": 5,
 			"name": "hadoop.security.authentication",
 			"type": "enum",
 			"subType": "authnType",
@@ -112,7 +112,7 @@
 		},
 
 		{
-			"id": 6,
+			"itemId": 6,
 			"name": "hadoop.security.auth_to_local",
 			"type": "string",
 			"subType": "",
@@ -123,7 +123,7 @@
 		},
 
 		{
-			"id": 7,
+			"itemId": 7,
 			"name": "dfs.datanode.kerberos.principal",
 			"type": "string",
 			"subType": "",
@@ -134,7 +134,7 @@
 		},
 
 		{
-			"id": 8,
+			"itemId": 8,
 			"name": "dfs.namenode.kerberos.principal",
 			"type": "string",
 			"subType": "",
@@ -145,7 +145,7 @@
 		},
 
 		{
-			"id": 9,
+			"itemId": 9,
 			"name": "dfs.secondary.namenode.kerberos.principal",
 			"type": "string",
 			"subType": "",
@@ -156,7 +156,7 @@
 		},
 
 		{
-			"id": 10,
+			"itemId": 10,
 			"name": "hadoop.rpc.protection",
 			"type": "enum",
 			"subType": "rpcProtection",
@@ -169,7 +169,7 @@
 		},
 
 		{
-			"id": 11,
+			"itemId": 11,
 			"name": "commonNameForCertificate",
 			"type": "string",
 			"subType": "",
@@ -184,18 +184,18 @@
 	"enums": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "authnType",
 			"elements": 
 			[
 				{
-					"id": 1,
+					"itemId": 1,
 					"name": "simple",
 					"label": "Simple"
 				},
 
 				{
-					"id": 2,
+					"itemId": 2,
 					"name": "kerberos",
 					"label": "Kerberos"
 				}
@@ -205,24 +205,24 @@
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "rpcProtection",
 			"elements": 
 			[
 				{
-					"id": 1,
+					"itemId": 1,
 					"name": "authentication",
 					"label": "Authentication"
 				},
 
 				{
-					"id": 2,
+					"itemId": 2,
 					"name": "integrity",
 					"label": "Integrity"
 				},
 
 				{
-					"id": 3,
+					"itemId": 3,
 					"name": "privacy",
 					"label": "Privacy"
 				}

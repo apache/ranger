@@ -5,7 +5,7 @@
 	"description":"Apache Kafka",
 	"resources":[
 		{
-			"id":1,
+			"itemId":1,
 			"name":"topic",
 			"type":"string",
 			"level":1,
@@ -28,42 +28,42 @@
 	],
 	"accessTypes":[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name":"publish",
 			"label":"Publish"
 		},
 		{
-			"id": 2,
+			"itemId": 2,
 			"name":"consume",
 			"label":"Consume"
 		},
 		{
-			"id": 3,
+			"itemId": 3,
 			"name":"create",
 			"label":"Create"
 		},
 		{
-			"id": 4,
+			"itemId": 4,
 			"name":"delete",
 			"label":"Delete"
 		},
 		{
-			"id": 5,
+			"itemId": 5,
 			"name":"configure",
 			"label":"Configure"
 		},
 		{
-			"id": 6,
+			"itemId": 6,
 			"name":"describe",
 			"label":"Describe"
 		},
 		{
-			"id": 7,
+			"itemId": 7,
 			"name":"replicate",
 			"label":"Replicate"
 		},
 		{
-			"id": 8,
+			"itemId": 8,
 			"name":"connect",
 			"label":"Connect"
 		}
@@ -71,21 +71,21 @@
 	],
 	"configs":[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name":"username",
 			"type":"string",
 			"mandatory":true,
 			"label":"Username"
 		},
 		{
-			"id": 2,
+			"itemId": 2,
 			"name":"password",
 			"type":"password",
 			"mandatory":true,
 			"label":"Password"
 		},
 		{
-			"id": 3,
+			"itemId": 3,
 			"name":"zookeeper.connect",
 			"type":"string",
 			"mandatory":true,
@@ -93,7 +93,7 @@
 			"label":"Zookeeper Connect String"
 		},
 		{
-			"id": 4,
+			"itemId": 4,
 			"name":"commonNameForCertificate",
 			"type":"string",
 			"mandatory":false,
@@ -109,7 +109,7 @@
 	],
 	"policyConditions":[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "ip-range",
 			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
 			"evaluatorOptions": { },

@@ -6,7 +6,7 @@
 	"resources": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "keyname",
 			"type": "string",
 			"level": 10,
@@ -28,55 +28,55 @@
 	"accessTypes": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "create",
 			"label": "Create"
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "delete",
 			"label": "Delete"
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "rollover",
 			"label": "Rollover"
 		},
 		
 		{
-			"id": 4,
+			"itemId": 4,
 			"name": "setkeymaterial",
 			"label": "Set Key Material"
 		},	
 		
 		{
-			"id": 5,
+			"itemId": 5,
 			"name": "get",
 			"label": "Get"
 		},
 		
 		{
-			"id": 6,
+			"itemId": 6,
 			"name": "getkeys",
 			"label": "Get Keys"
 		},
 		
 		{
-			"id": 7,
+			"itemId": 7,
 			"name": "getmetadata",
 			"label": "Get Metadata"
 		},
 		
 		{
-			"id": 8,
+			"itemId": 8,
 			"name": "generateeek",
 			"label": "Generate EEK"
 		},
 		
 		{
-			"id": 9,
+			"itemId": 9,
 			"name": "decrypteek",
 			"label": "Decrypt EEK"
 		}	
@@ -85,7 +85,7 @@
 	"configs": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "provider",
 			"type": "string",
 			"mandatory": true,
@@ -93,7 +93,7 @@
 		},
 		
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "username",
 			"type": "string",
 			"mandatory": true,
@@ -101,7 +101,7 @@
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "password",
 			"type": "password",
 			"mandatory": true,

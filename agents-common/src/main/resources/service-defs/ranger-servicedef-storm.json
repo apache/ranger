@@ -7,7 +7,7 @@
 	"resources": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "topology",
 			"type": "string",
 			"level": 10,
@@ -28,7 +28,7 @@
 	"accessTypes": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "submitTopology",
 			"label": "Submit Topology",
 			"impliedGrants":
@@ -39,79 +39,79 @@
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "fileUpload",
 			"label": "File Upload"
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "getNimbusConf",
 			"label": "Get Nimbus Conf"
 		},
 
 		{
-			"id": 4,
+			"itemId": 4,
 			"name": "getClusterInfo",
 			"label": "Get Cluster Info"
 		},
 
 		{
-			"id": 5,
+			"itemId": 5,
 			"name": "fileDownload",
 			"label": "File Download"
 		},
 
 		{
-			"id": 6,
+			"itemId": 6,
 			"name": "killTopology",
 			"label": "Kill Topology"
 		},
 
 		{
-			"id": 7,
+			"itemId": 7,
 			"name": "rebalance",
 			"label": "Rebalance"
 		},
 
 		{
-			"id": 8,
+			"itemId": 8,
 			"name": "activate",
 			"label": "Activate"
 		},
 
 		{
-			"id": 9,
+			"itemId": 9,
 			"name": "deactivate",
 			"label": "Deactivate"
 		},
 
 		{
-			"id": 10,
+			"itemId": 10,
 			"name": "getTopologyConf",
 			"label": "Get Topology Conf"
 		},
 
 		{
-			"id": 11,
+			"itemId": 11,
 			"name": "getTopology",
 			"label": "Get Topology"
 		},
 
 		{
-			"id": 12,
+			"itemId": 12,
 			"name": "getUserTopology",
 			"label": "Get User Topology"
 		},
 
 		{
-			"id": 13,
+			"itemId": 13,
 			"name": "getTopologyInfo",
 			"label": "Get Topology Info"
 		},
 
 		{
-			"id": 14,
+			"itemId": 14,
 			"name": "uploadNewCredentials",
 			"label": "Upload New Credential"
 		}
@@ -120,7 +120,7 @@
 	"configs": 
 	[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "username",
 			"type": "string",
 			"mandatory": true,
@@ -131,7 +131,7 @@
 		},
 
 		{
-			"id": 2,
+			"itemId": 2,
 			"name": "password",
 			"type": "password",
 			"mandatory": true,
@@ -142,7 +142,7 @@
 		},
 
 		{
-			"id": 3,
+			"itemId": 3,
 			"name": "nimbus.url",
 			"type": "string",
 			"mandatory": true,
@@ -154,7 +154,7 @@
 		},
 
 		{
-			"id": 4,
+			"itemId": 4,
 			"name": "commonNameForCertificate",
 			"type": "string",
 			"mandatory": false,

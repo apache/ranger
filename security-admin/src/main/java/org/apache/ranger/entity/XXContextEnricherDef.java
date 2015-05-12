@@ -50,6 +50,15 @@ public class XXContextEnricherDef extends XXDBBase implements
 	protected Long defId;
 
 	/**
+	 * itemId of the XXContextEnricherDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "item_id")
+	protected Long itemId;
+
+	/**
 	 * name of the XXContextEnricherDef
 	 * <ul>
 	 * </ul>
@@ -114,6 +123,26 @@ public class XXContextEnricherDef extends XXDBBase implements
 	 */
 	public void setDefid(Long defId) {
 		this.defId = defId;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>itemId</b>
+	 * 
+	 * @return Long - value of member attribute <b>itemId</b> .
+	 */
+	public Long getItemId() {
+		return this.itemId;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> defId</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param defId
+	 *            Value to set member attribute <b> defId</b>
+	 */
+	public void setItemId(Long itemId) {
+		this.itemId = itemId;
 	}
 
 	/**
@@ -232,6 +261,13 @@ public class XXContextEnricherDef extends XXDBBase implements
 		} else if (!defId.equals(other.defId)) {
 			return false;
 		}
+		if (itemId == null) {
+			if (other.itemId != null) {
+				return false;
+			}
+		} else if (!itemId.equals(other.itemId)) {
+			return false;
+		}
 		if (enricher == null) {
 			if (other.enricher != null) {
 				return false;
@@ -277,7 +313,7 @@ public class XXContextEnricherDef extends XXDBBase implements
 	 */
 	@Override
 	public String toString() {
-		return "XXContextEnricherDef [id=" + id + ", defId=" + defId
+		return "XXContextEnricherDef [id=" + id + ", defId=" + defId + ", itemId=" + itemId
 				+ ", name=" + name + ", enricher=" + enricherOptions
 				+ ", enricherOptions=" + enricherOptions + ", order=" + order
 				+ "]";

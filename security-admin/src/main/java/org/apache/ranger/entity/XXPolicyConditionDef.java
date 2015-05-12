@@ -51,6 +51,15 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	protected Long defId;
 
 	/**
+	 * itemId of the XXPolicyConditionDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "item_id")
+	protected Long itemId;
+
+	/**
 	 * name of the XXPolicyConditionDef
 	 * <ul>
 	 * </ul>
@@ -187,6 +196,26 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	 */
 	public void setDefid(Long defId) {
 		this.defId = defId;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>itemId</b>
+	 * 
+	 * @return Long - value of member attribute <b>itemId</b> .
+	 */
+	public Long getItemId() {
+		return this.itemId;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> itemId</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param itemId
+	 *            Value to set member attribute <b> itemId</b>
+	 */
+	public void setItemId(Long itemId) {
+		this.itemId = itemId;
 	}
 
 	/**
@@ -441,6 +470,13 @@ public class XXPolicyConditionDef extends XXDBBase implements
 		} else if (!defId.equals(other.defId)) {
 			return false;
 		}
+		if (itemId == null) {
+			if (other.itemId != null) {
+				return false;
+			}
+		} else if (!itemId.equals(other.itemId)) {
+			return false;
+		}
 		if (description == null) {
 			if (other.description != null) {
 				return false;
@@ -522,7 +558,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	 */
 	@Override
 	public String toString() {
-		return "XXPolicyConditionDef [id=" + id + ", defId=" + defId
+		return "XXPolicyConditionDef [id=" + id + ", defId=" + defId + ", itemId=" + itemId
 				+ ", name=" + name + ", evaluator=" + evaluator
 				+ ", evaluatorOptions=" + evaluatorOptions + ", label=" + label
 				+ ", validationRegEx=" + validationRegEx

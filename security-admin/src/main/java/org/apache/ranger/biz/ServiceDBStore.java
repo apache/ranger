@@ -433,7 +433,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (RangerServiceConfigDef config : configs) {
 			boolean found = false;
 			for (XXServiceConfigDef xConfig : xxConfigs) {
-				if (config.getId() != null && config.getId().equals(xConfig.getId())) {
+				if (config.getItemId() != null && config.getItemId().equals(xConfig.getItemId())) {
 					found = true;
 					xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
@@ -453,7 +453,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (XXServiceConfigDef xConfig : xxConfigs) {
 			boolean found = false;
 			for (RangerServiceConfigDef config : configs) {
-				if (xConfig.getId() != null && xConfig.getId().equals(config.getId())) {
+				if (xConfig.getItemId() != null && xConfig.getItemId().equals(config.getItemId())) {
 					found = true;
 					break;
 				}
@@ -467,7 +467,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (RangerResourceDef resource : resources) {
 			boolean found = false;
 			for (XXResourceDef xRes : xxResources) {
-				if (resource.getId() != null && resource.getId().equals(xRes.getId())) {
+				if (resource.getItemId() != null && resource.getItemId().equals(xRes.getItemId())) {
 					found = true;
 					xRes = serviceDefService.populateRangerResourceDefToXX(resource, xRes, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
@@ -490,7 +490,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (XXResourceDef xRes : xxResources) {
 			boolean found = false;
 			for (RangerResourceDef resource : resources) {
-				if (xRes.getId() != null && xRes.getId().equals(resource.getId())) {
+				if (xRes.getItemId() != null && xRes.getItemId().equals(resource.getItemId())) {
 					found = true;
 					break;
 				}
@@ -510,7 +510,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (RangerAccessTypeDef access : accessTypes) {
 			boolean found = false;
 			for (XXAccessTypeDef xAccess : xxAccessTypes) {
-				if (access.getId() != null && access.getId().equals(xAccess.getId())) {
+				if (access.getItemId() != null && access.getItemId().equals(xAccess.getItemId())) {
 					found = true;
 					xAccess = serviceDefService.populateRangerAccessTypeDefToXX(access, xAccess, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
@@ -574,7 +574,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (XXAccessTypeDef xAccess : xxAccessTypes) {
 			boolean found = false;
 			for (RangerAccessTypeDef access : accessTypes) {
-				if (xAccess.getId() != null && xAccess.getId().equals(access.getId())) {
+				if (xAccess.getItemId() != null && xAccess.getItemId().equals(access.getItemId())) {
 					found = true;
 					break;
 				}
@@ -594,7 +594,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (RangerPolicyConditionDef condition : policyConditions) {
 			boolean found = false;
 			for (XXPolicyConditionDef xCondition : xxPolicyConditions) {
-				if (condition.getId() != null && condition.getId().equals(xCondition.getId())) {
+				if (condition.getItemId() != null && condition.getItemId().equals(xCondition.getItemId())) {
 					found = true;
 					xCondition = serviceDefService.populateRangerPolicyConditionDefToXX(condition, xCondition,
 							createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
@@ -614,7 +614,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for(XXPolicyConditionDef xCondition : xxPolicyConditions) {
 			boolean found = false;
 			for(RangerPolicyConditionDef condition : policyConditions) {
-				if(xCondition.getId() != null && xCondition.getId().equals(condition.getId())) {
+				if(xCondition.getItemId() != null && xCondition.getItemId().equals(condition.getItemId())) {
 					found = true;
 					break;
 				}
@@ -638,7 +638,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (RangerContextEnricherDef context : contextEnrichers) {
 			boolean found = false;
 			for (XXContextEnricherDef xContext : xxContextEnrichers) {
-				if (context.getId() != null && context.getId().equals(xContext.getId())) {
+				if (context.getItemId() != null && context.getItemId().equals(xContext.getItemId())) {
 					found = true;
 					xContext = serviceDefService.populateRangerContextEnricherDefToXX(context, xContext, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
@@ -657,7 +657,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (XXContextEnricherDef xContext : xxContextEnrichers) {
 			boolean found = false;
 			for (RangerContextEnricherDef context : contextEnrichers) {
-				if (xContext.getId() != null && xContext.getId().equals(context.getId())) {
+				if (xContext.getItemId() != null && xContext.getItemId().equals(context.getItemId())) {
 					found = true;
 					break;
 				}
@@ -671,7 +671,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (RangerEnumDef enumDef : enums) {
 			boolean found = false;
 			for (XXEnumDef xEnumDef : xxEnums) {
-				if (enumDef.getId() != null && enumDef.getId().equals(xEnumDef.getId())) {
+				if (enumDef.getItemId() != null && enumDef.getItemId().equals(xEnumDef.getItemId())) {
 					found = true;
 					xEnumDef = serviceDefService.populateRangerEnumDefToXX(enumDef, xEnumDef, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
@@ -684,7 +684,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					for (RangerEnumElementDef eleDef : enumEleDefs) {
 						boolean foundEle = false;
 						for (XXEnumElementDef xEleDef : xxEnumEleDefs) {
-							if (eleDef.getId() != null && eleDef.getId().equals(xEleDef.getId())) {
+							if (eleDef.getItemId() != null && eleDef.getItemId().equals(xEleDef.getItemId())) {
 								foundEle = true;
 								xEleDef = serviceDefService.populateRangerEnumElementDefToXX(eleDef, xEleDef, xEnumDef,
 										RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
@@ -702,7 +702,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					for (XXEnumElementDef xxEleDef : xxEnumEleDefs) {
 						boolean foundEle = false;
 						for (RangerEnumElementDef enumEle : enumEleDefs) {
-							if (xxEleDef.getId() != null && xxEleDef.getId().equals(enumEle.getId())) {
+							if (xxEleDef.getId() != null && xxEleDef.getId().equals(enumEle.getItemId())) {
 								foundEle = true;
 								break;
 							}
@@ -735,7 +735,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (XXEnumDef xEnumDef : xxEnums) {
 			boolean found = false;
 			for (RangerEnumDef enumDef : enums) {
-				if (xEnumDef.getId() != null && xEnumDef.getId().equals(enumDef.getId())) {
+				if (xEnumDef.getItemId() != null && xEnumDef.getItemId().equals(enumDef.getItemId())) {
 					found = true;
 					break;
 				}

@@ -49,6 +49,15 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	protected Long defId;
 
 	/**
+	 * itemId of the XXAccessTypeDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "item_id")
+	protected Long itemId;
+
+	/**
 	 * name of the XXAccessTypeDef
 	 * <ul>
 	 * </ul>
@@ -122,6 +131,26 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	 */
 	public Long getDefid() {
 		return this.defId;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> itemId</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param itemId
+	 *            Value to set member attribute <b> itemId</b>
+	 */
+	public void setItemId(Long itemId) {
+		this.itemId = itemId;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>itemId</b>
+	 * 
+	 * @return Long - value of member attribute <b>itemId</b> .
+	 */
+	public Long getItemId() {
+		return this.itemId;
 	}
 
 	/**
@@ -231,6 +260,13 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 		} else if (!defId.equals(other.defId)) {
 			return false;
 		}
+		if (itemId == null) {
+			if (other.itemId != null) {
+				return false;
+			}
+		} else if (!itemId.equals(other.itemId)) {
+			return false;
+		}
 		if (id == null) {
 			if (other.id != null) {
 				return false;
@@ -277,7 +313,7 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	@Override
 	public String toString() {
 		return "XXAccessTypeDef [" + super.toString() + " id=" + id
-				+ ", defId=" + defId + ", name=" + name + ", label=" + label
+				+ ", defId=" + defId + ", itemId=" + itemId + ", name=" + name + ", label=" + label
 				+ ", rbKeyLabel=" + rbKeyLabel + ", order=" + order + "]";
 	}
 

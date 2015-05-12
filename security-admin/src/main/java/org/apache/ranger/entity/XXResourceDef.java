@@ -49,6 +49,15 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	protected Long defId;
 
 	/**
+	 * itemId of the XXResourceDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "item_id")
+	protected Long itemId;
+
+	/**
 	 * name of the XXResourceDef
 	 * <ul>
 	 * </ul>
@@ -248,6 +257,26 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	 */
 	public void setDefid(Long defId) {
 		this.defId = defId;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>itemId</b>
+	 * 
+	 * @return Long - value of member attribute <b>itemId</b> .
+	 */
+	public Long getItemId() {
+		return this.itemId;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> itemId</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param itemId
+	 *            Value to set member attribute <b> itemId</b>
+	 */
+	public void setItemId(Long itemId) {
+		this.itemId = itemId;
 	}
 
 	/**
@@ -639,6 +668,13 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 		} else if (!defId.equals(other.defId)) {
 			return false;
 		}
+		if (itemId == null) {
+			if (other.itemId != null) {
+				return false;
+			}
+		} else if (!itemId.equals(other.itemId)) {
+			return false;
+		}
 		if (description == null) {
 			if (other.description != null) {
 				return false;
@@ -754,7 +790,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	@Override
 	public String toString() {
 		return "XXResourceDef [" + super.toString() + " id=" + id + ", defId="
-				+ defId + ", name=" + name + ", type=" + type + ", level="
+				+ defId + ", itemId=" + itemId + ", name=" + name + ", type=" + type + ", level="
 				+ level + ", parent=" + parent + ", mandatory=" + mandatory
 				+ ", lookUpSupported=" + lookUpSupported
 				+ ", recursiveSupported=" + recursiveSupported

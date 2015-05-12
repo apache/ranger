@@ -5,7 +5,7 @@
 	"description":"Solr",
 	"resources":[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name":"collection",
 			"type":"string",
 			"level":10,
@@ -23,7 +23,7 @@
 			"description":"Solr Collection"
 		},
 		{
-			"id": 2,
+			"itemId": 2,
 			"name":"field",
 			"type":"string",
 			"level":20,
@@ -44,22 +44,22 @@
 	],
 	"accessTypes":[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name":"create",
 			"label":"Create"
 		},
 		{
-			"id": 2,
+			"itemId": 2,
 			"name":"update",
 			"label":"Update"
 		},
 		{
-			"id": 3,
+			"itemId": 3,
 			"name":"query",
 			"label":"Query"
 		},
 		{
-			"id": 4,
+			"itemId": 4,
 			"name":"solr_admin",
 			"label":"Solr Admin"
 		}
@@ -67,7 +67,7 @@
 	],
 	"configs":[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name":"username",
 			"type":"string",
 			"mandatory":true,
@@ -77,7 +77,7 @@
 			"label":"Username"
 		},
 		{
-			"id": 2,
+			"itemId": 2,
 			"name":"password",
 			"type":"password",
 			"mandatory":true,
@@ -87,7 +87,7 @@
 			"label":"Password"
 		},
 		{
-			"id": 3,
+			"itemId": 3,
 			"name":"solr.url",
 			"type":"string",
 			"mandatory":true,
@@ -98,7 +98,7 @@
 			"label":"Solr URL"
 		},
 		{
-			"id": 4,
+			"itemId": 4,
 			"name":"commonNameForCertificate",
 			"type":"string",
 			"mandatory":false,
@@ -117,7 +117,7 @@
 	],
 	"policyConditions":[
 		{
-			"id": 1,
+			"itemId": 1,
 			"name": "ip-range",
 			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
 			"evaluatorOptions": { },
