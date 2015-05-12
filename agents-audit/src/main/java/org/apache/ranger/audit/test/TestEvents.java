@@ -125,7 +125,7 @@ public class TestEvents {
 
         event.setClientIP("127.0.0.1");
         event.setAccessResult((short)(idx % 2 > 0 ? 1 : 0));
-        event.setAclEnforcer("xasecure-acl");
+        event.setAclEnforcer("ranger-acl");
 
         switch(idx % 5) {
             case 0:
