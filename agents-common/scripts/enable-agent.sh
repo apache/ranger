@@ -175,7 +175,7 @@ fi
 ambari_hive_install="N"
 if  [ "${HCOMPONENT_NAME}" = "hive" ]
 then
-	HCOMPONENT_CONF_SERVER_DIR="${HCOMPONENT_CONF_DIR}"/../conf.server
+	HCOMPONENT_CONF_SERVER_DIR="${HCOMPONENT_CONF_DIR}"/conf.server
 	if [ -d "${HCOMPONENT_CONF_SERVER_DIR}" ]
 	then 
 		ambari_hive_install="Y"
