@@ -270,21 +270,21 @@ public abstract class RangerValidator {
 		return policies;
 	}
 	
-	List<RangerPolicy> getPoliciesForResourceSignature(String hexSignature) {
+	List<RangerPolicy> getPoliciesForResourceSignature(String serviceName, String policySignature) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerValidator.getPolicies(" + hexSignature + ")");
+			LOG.debug(String.format("==> RangerValidator.getPoliciesForResourceSignature(%s, %s)", serviceName, policySignature));
 		}
 
 		List<RangerPolicy> policies = null;
 		try {
-			policies = _store.getPoliciesByResourceSignature(hexSignature);
+			policies = _store.getPoliciesByResourceSignature(serviceName, policySignature, true); // only look for enabled policies
 		} catch (Exception e) {
 			LOG.debug("Encountred exception while retrieving policies from service store!", e);
 		}
 		
 		if(LOG.isDebugEnabled()) {
 			int count = policies == null ? 0 : policies.size();
-			LOG.debug("<== RangerValidator.getPolicies(" + hexSignature + "): count[" + count + "], " + policies);
+			LOG.debug(String.format("<== RangerValidator.getPoliciesForResourceSignature(%s, %s): count[%d], %s", serviceName, policySignature, count, policies));
 		}
 		return policies;
 	}

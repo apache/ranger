@@ -66,7 +66,7 @@ public interface ServiceStore {
 
 	List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception;
 
-	List<RangerPolicy> getPoliciesByResourceSignature(String hexSignature) throws Exception;
+	List<RangerPolicy> getPoliciesByResourceSignature(String serviceName, String policySignature, Boolean isPolicyEnabled) throws Exception;
 
 	List<RangerPolicy> getServicePolicies(Long serviceId, SearchFilter filter) throws Exception;
 

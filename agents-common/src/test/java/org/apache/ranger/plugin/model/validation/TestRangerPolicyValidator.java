@@ -252,7 +252,7 @@ public class TestRangerPolicyValidator {
 		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(policySignature);
 		// setup the store to indicate that no other policy exists with matching signature
 		when(policySignature.getSignature()).thenReturn("hash-1");
-		when(_store.getPoliciesByResourceSignature("hash-1")).thenReturn(null);
+		when(_store.getPoliciesByResourceSignature("service-name", "hash-1", true)).thenReturn(null);
 		// we are reusing the same policies collection here -- which is fine
 		for (Action action : cu) {
 			if (action == Action.CREATE) {
@@ -447,7 +447,7 @@ public class TestRangerPolicyValidator {
 		RangerPolicyResourceSignature signature = mock(RangerPolicyResourceSignature.class);
 		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(signature);
 		when(signature.getSignature()).thenReturn("hash-1");
-		when(_store.getPoliciesByResourceSignature("hash-1")).thenReturn(null); // store does not have any policies for that signature hash 
+		when(_store.getPoliciesByResourceSignature("service-name", "hash-1", true)).thenReturn(null); // store does not have any policies for that signature hash 
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
@@ -460,7 +460,7 @@ public class TestRangerPolicyValidator {
 		}
 		
 		// Check if error around resource signature clash are reported.  have Store return policies for same signature
-		when(_store.getPoliciesByResourceSignature("hash-1")).thenReturn(existingPolicies);
+		when(_store.getPoliciesByResourceSignature("service-name", "hash-1", true)).thenReturn(existingPolicies);
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
@@ -676,35 +676,55 @@ public class TestRangerPolicyValidator {
 		String hash = "hash-1";
 		when(signature.getSignature()).thenReturn(hash);
 		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(signature);
+		when(_policy.getService()).thenReturn("service-name");
 		List<RangerPolicy> policies = null;
-		when(_store.getPoliciesByResourceSignature(hash)).thenReturn(policies);
+		when(_store.getPoliciesByResourceSignature("service-name", hash, true)).thenReturn(policies);
 		policies = new ArrayList<RangerPolicy>();
 		for (Action action : cu) {
 			assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, action));
 			assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, action));
 		}
 		/* 
-		 * If store does have any policy then test should fail with appropriate error message.
-		 * For create any match is a problem
+		 * If store has a policy with matching signature then the check should fail with appropriate error message.
+		 * - For create any match is a problem
+		 * - Signature check can never fail for disabled policies! 
 		 */
 		RangerPolicy policy1 = mock(RangerPolicy.class); policies.add(policy1);
-		when(_store.getPoliciesByResourceSignature(hash)).thenReturn(policies);
-		assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.CREATE));
+		when(_store.getPoliciesByResourceSignature("service-name", hash, true)).thenReturn(policies);
+		when(_policy.getIsEnabled()).thenReturn(true); // ensure policy is enabled
+		_failures.clear(); assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.CREATE));
 		_utils.checkFailureForSemanticError(_failures, "resources");
+		// same check should pass if the policy is disabled
+		when(_policy.getIsEnabled()).thenReturn(false);
+		_failures.clear(); assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.CREATE));
+		assertTrue("failures collection wasn't empty!", _failures.isEmpty());
+
 		// For Update match with itself is not a problem as long as it isn't itself, i.e. same id.
+		when(_policy.getIsEnabled()).thenReturn(true); // ensure policy is enabled
 		when(policy1.getId()).thenReturn(103L);
 		when(_policy.getId()).thenReturn(103L);
 		assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
+		
 		// matching policy can't be some other policy (i.e. different id) because that implies a conflict.
 		when(policy1.getId()).thenReturn(104L);
 		assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
 		_utils.checkFailureForSemanticError(_failures, "resources");
+		// same check should pass if the policy is disabled
+		when(_policy.getIsEnabled()).thenReturn(false);
+		_failures.clear(); assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
+		assertTrue("failures collection wasn't empty!", _failures.isEmpty());
+		
 		// And validation should never pass if there are more than one policies with matching signature, regardless of their ID!!
 		RangerPolicy policy2 = mock(RangerPolicy.class);
 		when(policy2.getId()).thenReturn(103L);  // has same id as the policy being tested (_policy)
 		policies.add(policy2);
+		when(_policy.getIsEnabled()).thenReturn(true); // ensure policy is enabled
 		assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
 		_utils.checkFailureForSemanticError(_failures, "resources");
+		// same check should pass if the policy is disabled
+		when(_policy.getIsEnabled()).thenReturn(false);
+		_failures.clear(); assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
+		assertTrue("failures collection wasn't empty!", _failures.isEmpty());
 	}
 	
 	@Test

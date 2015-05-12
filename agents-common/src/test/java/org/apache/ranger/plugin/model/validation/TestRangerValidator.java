@@ -199,10 +199,12 @@ public class TestRangerValidator {
 	public final void test_getPoliciesForResourceSignature() throws Exception {
 		// return null if store returns null or throws an exception
 		String hexSignature = "aSignature";
-		when(_store.getPoliciesByResourceSignature(hexSignature)).thenReturn(null);
-		assertNull(_validator.getPoliciesForResourceSignature(hexSignature));
-		when(_store.getPoliciesByResourceSignature(hexSignature)).thenThrow(new Exception());
-		assertNull(_validator.getPoliciesForResourceSignature(hexSignature));
+		String serviceName = "service-name";
+		boolean isPolicyEnabled = true;
+		when(_store.getPoliciesByResourceSignature(serviceName, hexSignature, isPolicyEnabled)).thenReturn(null);
+		assertNull(_validator.getPoliciesForResourceSignature(serviceName, hexSignature));
+		when(_store.getPoliciesByResourceSignature(serviceName, hexSignature, isPolicyEnabled)).thenThrow(new Exception());
+		assertNull(_validator.getPoliciesForResourceSignature(serviceName, hexSignature));
 
 		// what ever store returns should come back
 		hexSignature = "anotherSignature";
@@ -211,8 +213,8 @@ public class TestRangerValidator {
 		policies.add(policy1);
 		RangerPolicy policy2 = mock(RangerPolicy.class);
 		policies.add(policy2);
-		when(_store.getPoliciesByResourceSignature(hexSignature)).thenReturn(policies);
-		List<RangerPolicy> result = _validator.getPoliciesForResourceSignature(hexSignature);
+		when(_store.getPoliciesByResourceSignature(serviceName, hexSignature, isPolicyEnabled)).thenReturn(policies);
+		List<RangerPolicy> result = _validator.getPoliciesForResourceSignature(serviceName, hexSignature);
 		assertTrue(result.contains(policy1) && result.contains(policy2));
 	}
 

@@ -72,13 +72,30 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 	}
 	
-	public List<XXPolicy> findByResourceSignature(String resSignature) {
-		if (resSignature == null) {
+	public List<XXPolicy> findByResourceSignatureByPolicyStatus(String serviceName, String policySignature, Boolean isPolicyEnabled) {
+		if (policySignature == null || serviceName == null || isPolicyEnabled == null) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicy.findByResourceSignatureByPolicyStatus", tClass)
+					.setParameter("resSignature", policySignature)
+					.setParameter("serviceName", serviceName)
+					.setParameter("isPolicyEnabled", isPolicyEnabled)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
+	}
+
+	public List<XXPolicy> findByResourceSignature(String serviceName, String policySignature) {
+		if (policySignature == null || serviceName == null) {
 			return new ArrayList<XXPolicy>();
 		}
 		try {
 			return getEntityManager().createNamedQuery("XXPolicy.findByResourceSignature", tClass)
-					.setParameter("resSignature", resSignature).getResultList();
+					.setParameter("resSignature", policySignature)
+					.setParameter("serviceName", serviceName)
+					.getResultList();
 		} catch (NoResultException e) {
 			return new ArrayList<XXPolicy>();
 		}

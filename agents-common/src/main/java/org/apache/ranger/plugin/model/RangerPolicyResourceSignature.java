@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
 public class RangerPolicyResourceSignature {
 
+	static final int _SignatureVersion = 1;
 	private static final Log LOG = LogFactory.getLog(RangerPolicyResourceSignature.class);
 	static final RangerPolicyResourceSignature _EmptyResourceSignature = new RangerPolicyResourceSignature((RangerPolicy)null);
 	
@@ -42,7 +43,8 @@ public class RangerPolicyResourceSignature {
 
 	public RangerPolicyResourceSignature(RangerPolicy policy) {
 		_policy = policy;
-		String asString = getResourceString(_policy);
+		PolicySerializer serializer = new PolicySerializer(_policy);
+		String asString = serializer.toString();
 		if (asString == null) {
 			_string = "";
 		} else {
@@ -93,40 +95,62 @@ public class RangerPolicyResourceSignature {
 		return String.format("%s: %s", _hash, _string);
 	}
 
-	String getResourceString(RangerPolicy policy) {
-		// invalid/empty policy gets a deterministic signature as if it had an
-		// empty resource string
-		if (!isPolicyValidForResourceSignatureComputation(policy)) {
-			return null;
+	static class PolicySerializer {
+		final RangerPolicy _policy;
+		PolicySerializer(RangerPolicy policy) {
+			_policy = policy;
 		}
-		Map<String, RangerPolicyResourceView> resources = new TreeMap<String, RangerPolicyResourceView>();
-		for (Map.Entry<String, RangerPolicyResource> entry : policy.getResources().entrySet()) {
-			String resourceName = entry.getKey();
-			RangerPolicyResourceView resourceView = new RangerPolicyResourceView(entry.getValue());
-			resources.put(resourceName, resourceView);
+
+		boolean isPolicyValidForResourceSignatureComputation() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("==> RangerPolicyResourceSignature.isPolicyValidForResourceSignatureComputation(%s)", _policy));
+			}
+			
+			boolean valid = false;
+			if (_policy == null) {
+				LOG.debug("isPolicyValidForResourceSignatureComputation: policy was null!");
+			} else if (_policy.getResources() == null) {
+				LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection on policy was null!");
+			} else if (_policy.getResources().containsKey(null)) {
+				LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection has resource with null name!");
+			} else {
+				valid = true;
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("<== RangerPolicyResourceSignature.isPolicyValidForResourceSignatureComputation(%s): %s", _policy, valid));
+			}
+			return valid;
 		}
-		String result = resources.toString();
-		return result;
+		
+		@Override
+		public String toString() {
+			// invalid/empty policy gets a deterministic signature as if it had an
+			// empty resource string
+			if (!isPolicyValidForResourceSignatureComputation()) {
+				return null;
+			}
+			int type = 0;
+			if (_policy.getPolicyType() != null) {
+				type = _policy.getPolicyType();
+			}
+			Map<String, ResourceSerializer> resources = new TreeMap<String, ResourceSerializer>();
+			for (Map.Entry<String, RangerPolicyResource> entry : _policy.getResources().entrySet()) {
+				String resourceName = entry.getKey();
+				ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
+				resources.put(resourceName, resourceView);
+			}
+			String resource = resources.toString();
+			String result = String.format("{version=%d,type=%d,resource=%s}", _SignatureVersion, type, resource);
+			return result;
+		}
+
 	}
 
-	boolean isPolicyValidForResourceSignatureComputation(RangerPolicy policy) {
-		boolean valid = false;
-		if (policy == null) {
-			LOG.debug("isPolicyValidForResourceSignatureComputation: policy was null!");
-		} else if (policy.getResources() == null) {
-			LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection on policy was null!");
-		} else if (policy.getResources().containsKey(null)) {
-			LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection has resource with null name!");
-		} else {
-			valid = true;
-		}
-		return valid;
-	}
-
-	static class RangerPolicyResourceView {
+	static class ResourceSerializer {
 		final RangerPolicyResource _policyResource;
 
-		RangerPolicyResourceView(RangerPolicyResource policyResource) {
+		ResourceSerializer(RangerPolicyResource policyResource) {
 			_policyResource = policyResource;
 		}
 

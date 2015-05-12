@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -81,7 +82,10 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		addPredicateForIsRecursive(filter.getParam(SearchFilter.IS_RECURSIVE), predicates);
 		addPredicateForUserName(filter.getParam(SearchFilter.USER), predicates);
 		addPredicateForGroupName(filter.getParam(SearchFilter.GROUP), predicates);
-		addPredicateForResourceSignature(filter.getParam(SearchFilter.RESOURCE_SIGNATURE), predicates);
+		addPredicateForResourceSignature(
+				filter.getParam(SearchFilter.SERVICE_NAME), 
+				filter.getParam(SearchFilter.RESOURCE_SIGNATURE), 
+				filter.getParam(SearchFilter.IS_ENABLED), predicates);
 		addPredicateForResources(filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true), predicates);
 
 		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
@@ -685,9 +689,13 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		return ret;
 	}
 
-	private Predicate addPredicateForResourceSignature(final String hexSignature, List<Predicate> predicates) {
+	private Predicate addPredicateForResourceSignature(final String serviceName, String signature, String isPolicyEnabled, List<Predicate> predicates) {
 
-		Predicate ret = createPredicateForResourceSignature(hexSignature);
+		boolean enabled = false;
+		if ("1".equals(isPolicyEnabled)) {
+			enabled = true;
+		}
+		Predicate ret = createPredicateForResourceSignature(serviceName, signature, enabled);
 
 		if(predicates != null && ret != null) {
 			predicates.add(ret);
@@ -695,15 +703,16 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 		return ret;
 	}
-
+	
 	/**
-	 * NOTE: Null or empty hexSignature, though invalid, is supported in search.
-	 * @param hexSignature
+	 * @param serviceName
+	 * @param policySignature
+	 * @param isPolicyEnabled
 	 * @return
 	 */
-	public Predicate createPredicateForResourceSignature(final String hexSignature) {
+	public Predicate createPredicateForResourceSignature(final String serviceName, final String policySignature, final Boolean isPolicyEnabled) {
 
-		if(StringUtils.isEmpty(hexSignature)) {
+		if (StringUtils.isEmpty(policySignature) || StringUtils.isEmpty(serviceName) || isPolicyEnabled == null) {
 			return null;
 		}
 
@@ -719,7 +728,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 				if (object instanceof RangerPolicy) {
 					RangerPolicy policy = (RangerPolicy)object;
 
-					ret = StringUtils.equals(hexSignature, policy.getResourceSignature());
+					ret = StringUtils.equals(policy.getResourceSignature(), policySignature) &&
+							Objects.equals(policy.getService(), serviceName) &&
+							Objects.equals(policy.getIsEnabled(), isPolicyEnabled);
 				} else {
 					ret = true;
 				}

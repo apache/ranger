@@ -178,6 +178,7 @@ public class RangerPolicyValidator extends RangerValidator {
 				}
 			}
 			RangerService service = null;
+			boolean serviceNameValid = false;
 			if (StringUtils.isBlank(serviceName)) {
 				failures.add(new ValidationFailureDetailsBuilder()
 				.field("service")
@@ -194,6 +195,8 @@ public class RangerPolicyValidator extends RangerValidator {
 						.becauseOf("service does not exist")
 						.build());
 					valid = false;
+				} else {
+					serviceNameValid = true;
 				}
 			}
 			List<RangerPolicyItem> policyItems = policy.getPolicyItems();
@@ -221,7 +224,9 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = isValidPolicyItems(policyItems, failures, serviceDef) && valid;
 				}
 			}
-			valid = isValidResources(policy, failures, action, isAdmin, serviceDef, serviceName) && valid;
+			if (serviceNameValid) { // resource checks can't be done meaningfully otherwise
+				valid = isValidResources(policy, failures, action, isAdmin, serviceDef) && valid;
+			}
 		}
 		
 		if(LOG.isDebugEnabled()) {
@@ -230,10 +235,11 @@ public class RangerPolicyValidator extends RangerValidator {
 		return valid;
 	}
 	
-	boolean isValidResources(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action, boolean isAdmin, final RangerServiceDef serviceDef, final String serviceName) {
+	boolean isValidResources(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action, 
+			boolean isAdmin, final RangerServiceDef serviceDef) {
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerPolicyValidator.isValidResources(%s, %s, %s, %s, %s, %s)", policy, failures, action, isAdmin, serviceDef, serviceName));
+			LOG.debug(String.format("==> RangerPolicyValidator.isValidResources(%s, %s, %s, %s, %s)", policy, failures, action, isAdmin, serviceDef));
 		}
 		
 		boolean valid = true;
@@ -248,7 +254,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerPolicyValidator.isValidResources(%s, %s, %s, %s, %s, %s): %s", policy, failures, action, isAdmin, serviceDef, serviceName, valid));
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidResources(%s, %s, %s, %s, %s): %s", policy, failures, action, isAdmin, serviceDef, valid));
 		}
 		return valid;
 	}
@@ -260,19 +266,23 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 
 		boolean valid = true;
-		RangerPolicyResourceSignature policySignature = _factory.createPolicyResourceSignature(policy);
-		String signature = policySignature.getSignature();
-		List<RangerPolicy> policies = getPoliciesForResourceSignature(signature);
-		if (CollectionUtils.isNotEmpty(policies)) {
-			RangerPolicy matchedPolicy = policies.iterator().next();
-			// there shouldn't be a matching policy for create.  During update only match should be to itself
-			if (action == Action.CREATE || (action == Action.UPDATE && (policies.size() > 1 || !matchedPolicy.getId().equals(policy.getId())))) {
-				failures.add(new ValidationFailureDetailsBuilder()
-					.field("resources")
-					.isSemanticallyIncorrect()
-					.becauseOf("found another policy[" + matchedPolicy.getName() + "] with matching resources[" + matchedPolicy.getResources() + "]!")
-					.build());
-				valid = false;
+		if (!Boolean.TRUE.equals(policy.getIsEnabled())) {
+			LOG.debug("Policy is disabled. Skipping resource uniqueness validation.");
+		} else {
+			RangerPolicyResourceSignature policySignature = _factory.createPolicyResourceSignature(policy);
+			String signature = policySignature.getSignature();
+			List<RangerPolicy> policies = getPoliciesForResourceSignature(policy.getService(), signature);
+			if (CollectionUtils.isNotEmpty(policies)) {
+				RangerPolicy matchedPolicy = policies.iterator().next();
+				// there shouldn't be a matching policy for create.  During update only match should be to itself
+				if (action == Action.CREATE || (action == Action.UPDATE && (policies.size() > 1 || !matchedPolicy.getId().equals(policy.getId())))) {
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("resources")
+						.isSemanticallyIncorrect()
+						.becauseOf("found another policy[" + matchedPolicy.getName() + "] with matching resources[" + matchedPolicy.getResources() + "]!")
+						.build());
+					valid = false;
+				}
 			}
 		}
 
