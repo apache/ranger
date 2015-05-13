@@ -702,7 +702,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					for (XXEnumElementDef xxEleDef : xxEnumEleDefs) {
 						boolean foundEle = false;
 						for (RangerEnumElementDef enumEle : enumEleDefs) {
-							if (xxEleDef.getId() != null && xxEleDef.getId().equals(enumEle.getItemId())) {
+							if (xxEleDef.getItemId() != null && xxEleDef.getItemId().equals(enumEle.getItemId())) {
 								foundEle = true;
 								break;
 							}
