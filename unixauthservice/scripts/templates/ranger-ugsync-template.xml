@@ -177,4 +177,8 @@
 		<name>ranger.usersync.policymgr.keystore</name>
 		<value></value>
 	</property>
+	<property>
+		<name>ranger.usersync.sync.source</name>
+		<value></value>
+	</property>
 </configuration>
