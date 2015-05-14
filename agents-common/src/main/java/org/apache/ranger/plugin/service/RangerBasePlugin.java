@@ -311,6 +311,10 @@ public class RangerBasePlugin {
 			accessRequest.setUser(request.getGrantor());
 			accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
 			accessRequest.setAction(action);
+			accessRequest.setClientIPAddress(request.getClientIPAddress());
+			accessRequest.setClientType(request.getClientType());
+			accessRequest.setRequestData(request.getRequestData());
+			accessRequest.setSessionId(request.getSessionId());
 
 			// call isAccessAllowed() to determine if audit is enabled or not
 			RangerAccessResult accessResult = policyEngine.isAccessAllowed(accessRequest, null);

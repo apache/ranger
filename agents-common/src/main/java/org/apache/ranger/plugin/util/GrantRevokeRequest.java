@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.util;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -52,13 +53,17 @@ public class GrantRevokeRequest implements Serializable {
 	private Boolean             enableAudit                = Boolean.TRUE;
 	private Boolean             replaceExistingPermissions = Boolean.FALSE;
 	private Boolean             isRecursive                = Boolean.FALSE;
+	private String              clientIPAddress            = null;
+	private String              clientType                 = null;
+	private String              requestData                = null;
+	private String              sessionId                  = null;
 
 
 	public GrantRevokeRequest() {
-		this(null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null, null, null);
 	}
 
-	public GrantRevokeRequest(String grantor, Map<String, String> resource, Set<String> users, Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions, Boolean isRecursive) {
+	public GrantRevokeRequest(String grantor, Map<String, String> resource, Set<String> users, Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress, String clientType, String requestData, String sessionId) {
 		setGrantor(grantor);
 		setResource(resource);
 		setUsers(users);
@@ -68,6 +73,10 @@ public class GrantRevokeRequest implements Serializable {
 		setEnableAudit(enableAudit);
 		setReplaceExistingPermissions(replaceExistingPermissions);
 		setIsRecursive(isRecursive);
+		setClientIPAddress(clientIPAddress);
+		setClientType(clientType);
+		setRequestData(requestData);
+		setSessionId(sessionId);
 	}
 
 	/**
@@ -196,6 +205,62 @@ public class GrantRevokeRequest implements Serializable {
 		this.isRecursive = isRecursive == null ? Boolean.FALSE : isRecursive;
 	}
 
+	/**
+	 * @return the clientIPAddress
+	 */
+	public String getClientIPAddress() {
+		return clientIPAddress;
+	}
+
+	/**
+	 * @param clientIPAddress the clientIPAddress to set
+	 */
+	public void setClientIPAddress(String clientIPAddress) {
+		this.clientIPAddress = clientIPAddress;
+	}
+
+	/**
+	 * @return the clientType
+	 */
+	public String getClientType() {
+		return clientType;
+	}
+
+	/**
+	 * @param clientType the clientType to set
+	 */
+	public void setClientType(String clientType) {
+		this.clientType = clientType;
+	}
+
+	/**
+	 * @return the requestData
+	 */
+	public String getRequestData() {
+		return requestData;
+	}
+
+	/**
+	 * @param requestData the requestData to set
+	 */
+	public void setRequestData(String requestData) {
+		this.requestData = requestData;
+	}
+
+	/**
+	 * @return the sessionId
+	 */
+	public String getSessionId() {
+		return sessionId;
+	}
+
+	/**
+	 * @param sessionId the sessionId to set
+	 */
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
+	}
+
 
 	@Override
 	public String toString( ) {
@@ -247,6 +312,10 @@ public class GrantRevokeRequest implements Serializable {
 		sb.append("enableAudit={").append(enableAudit).append("} ");
 		sb.append("replaceExistingPermissions={").append(replaceExistingPermissions).append("} ");
 		sb.append("isRecursive={").append(isRecursive).append("} ");
+		sb.append("clientIPAddress={").append(clientIPAddress).append("} ");
+		sb.append("clientType={").append(clientType).append("} ");
+		sb.append("requestData={").append(requestData).append("} ");
+		sb.append("sessionId={").append(sessionId).append("} ");
 
 		sb.append("}");
 

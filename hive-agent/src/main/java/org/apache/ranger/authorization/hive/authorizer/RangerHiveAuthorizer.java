@@ -47,6 +47,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilege;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivObjectActionType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
@@ -64,7 +65,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final char COLUMN_SEP = ',';
 
 	private static volatile RangerHivePlugin hivePlugin = null ;
-
 
 	public RangerHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
 								  HiveConf                   hiveConf,
@@ -873,6 +873,18 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		mapResource.put(RangerHiveResource.KEY_COLUMN, column);
 
 		ret.setResource(mapResource);
+
+		SessionState ss = SessionState.get();
+		if(ss != null) {
+			ret.setClientIPAddress(ss.getUserIpAddress());
+			ret.setSessionId(ss.getSessionId());
+			ret.setRequestData(ss.getCmd());
+		}
+
+		HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
+		if(sessionContext != null) {
+			ret.setClientType(sessionContext.getClientType() == null ? null : sessionContext.getClientType().toString());
+		}
 
 		for(HivePrincipal principal : hivePrincipals) {
 			switch(principal.getType()) {

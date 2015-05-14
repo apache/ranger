@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -194,8 +195,13 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	
 	private String getRemoteAddress() {
-		InetAddress    remoteAddr = RpcServer.getRemoteAddress();
-		String         strAddr    = remoteAddr != null ? remoteAddr.getHostAddress() : null;
+		InetAddress remoteAddr = RpcServer.getRemoteAddress();
+
+		if(remoteAddr == null) {
+			remoteAddr = RpcServer.getRemoteIp();
+		}
+
+		String strAddr = remoteAddr != null ? remoteAddr.getHostAddress() : null;
 
 		return strAddr;
 	}
@@ -1166,6 +1172,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		ret.setEnableAudit(Boolean.TRUE);
 		ret.setReplaceExistingPermissions(Boolean.TRUE);
 		ret.setResource(mapResource);
+		ret.setClientIPAddress(getRemoteAddress());
 
 		if(userName.startsWith(GROUP_PREFIX)) {
 			ret.getGroups().add(userName.substring(GROUP_PREFIX.length()));
@@ -1258,6 +1265,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		ret.setEnableAudit(Boolean.TRUE);
 		ret.setReplaceExistingPermissions(Boolean.TRUE);
 		ret.setResource(mapResource);
+		ret.setClientIPAddress(getRemoteAddress());
 
 		if(userName.startsWith(GROUP_PREFIX)) {
 			ret.getGroups().add(userName.substring(GROUP_PREFIX.length()));
