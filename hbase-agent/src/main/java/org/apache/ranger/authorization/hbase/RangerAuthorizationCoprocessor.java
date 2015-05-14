@@ -159,8 +159,15 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	protected boolean isSpecialTable(byte[] tableName) {
 		return isSpecialTable(Bytes.toString(tableName));
 	}
-	protected boolean isSpecialTable(String tableNameStr) {
-		return tableNameStr.equals("hbase:meta") ||  tableNameStr.equals("-ROOT-") || tableNameStr.equals(".META.");
+	protected boolean isSpecialTable(String input) {
+		final String[] specialTables = new String[] { "hbase:meta", "-ROOT-", ".META."}; 
+		for (String specialTable : specialTables ) {
+			if (specialTable.equals(input)) {
+				return true;
+			}
+		}
+			
+		return false;
 	}
 	protected boolean isAccessForMetaTables(RegionCoprocessorEnvironment env) {
 		HRegionInfo hri = env.getRegion().getRegionInfo();
