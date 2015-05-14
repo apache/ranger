@@ -19,28 +19,27 @@
 
 package org.apache.ranger.services.hive.client;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.TimedEventUtil;
-import org.apache.ranger.services.hive.client.HiveClient;
 
 
 public class HiveConnectionMgr {
 
 	private static Logger LOG = Logger.getLogger(HiveConnectionMgr.class);
 	
-	protected HashMap<String, HiveClient> 	hiveConnectionCache;
-	protected HashMap<String, Boolean> 		repoConnectStatusMap;
+	protected ConcurrentMap<String, HiveClient> 	hiveConnectionCache;
+	protected ConcurrentMap<String, Boolean> 		repoConnectStatusMap;
 
 
 	 public	HiveConnectionMgr() {
-		 hiveConnectionCache = new HashMap<String, HiveClient>();
-		 repoConnectStatusMap = new HashMap<String, Boolean>();
+		 hiveConnectionCache = new ConcurrentHashMap<String, HiveClient>();
+		 repoConnectStatusMap = new ConcurrentHashMap<String, Boolean>();
 	 }
 	 
 
@@ -49,36 +48,44 @@ public class HiveConnectionMgr {
 			
 			if (serviceType != null) {
 				// get it from the cache
-				synchronized (hiveConnectionCache) {
-					hiveClient = hiveConnectionCache.get(serviceType);
-					if (hiveClient == null) {
-						if (configs != null) {
-						
-							final Callable<HiveClient> connectHive = new Callable<HiveClient>() {
-								@Override
-								public HiveClient call() throws Exception {
-									return new HiveClient(serviceName, configs);
-								}
-							};
-							try {
-								hiveClient = TimedEventUtil.timedTask(connectHive, 5, TimeUnit.SECONDS);
-							} catch(Exception e){
-								LOG.error("Error connecting hive repository : "+ 
-										serviceName +" using config : "+ configs, e);
+				hiveClient = hiveConnectionCache.get(serviceName);
+				if (hiveClient == null) {
+					if (configs != null) {
+					
+						final Callable<HiveClient> connectHive = new Callable<HiveClient>() {
+							@Override
+							public HiveClient call() throws Exception {
+								return new HiveClient(serviceName, configs);
 							}
-							hiveConnectionCache.put(serviceName, hiveClient);
-							repoConnectStatusMap.put(serviceName, true);
-						} else {
-							LOG.error("Connection Config not defined for asset :"
-									+ serviceName, new Throwable());
-						}
-					} else {
+						};
 						try {
-							List<String> testConnect = hiveClient.getDatabaseList("*",null);
-						} catch(Exception e) {
-							hiveConnectionCache.remove(serviceType);
-							hiveClient = getHiveConnection(serviceName,serviceType,configs);
+							hiveClient = TimedEventUtil.timedTask(connectHive, 5, TimeUnit.SECONDS);
+						} catch(Exception e){
+							LOG.error("Error connecting hive repository : "+ 
+									serviceName +" using config : "+ configs, e);
 						}
+						HiveClient oldClient = hiveConnectionCache.putIfAbsent(serviceName, hiveClient);
+						if (oldClient != null) {
+							// in the meantime someone else has put a valid client into the cache, let's use that instead.
+							hiveClient.close();
+							hiveClient = oldClient;
+						}
+						repoConnectStatusMap.put(serviceName, true);
+					} else {
+						LOG.error("Connection Config not defined for asset :"
+								+ serviceName, new Throwable());
+					}
+				} else {
+					try {
+						hiveClient.getDatabaseList("*",null);
+					} catch(Exception e) {
+						hiveConnectionCache.remove(serviceName);
+						/*
+						 * There is a possiblity that some other thread is also using this connection that we are going to close but
+						 * presumably the connection is bad which is why we are closing it, so damage should not be much.
+						 */
+						hiveClient.close();
+						hiveClient = getHiveConnection(serviceName,serviceType,configs);
 					}
 				}
 			} else {

@@ -317,7 +317,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	                        if (column != null) {
 		                        column = column.trim();
 	                        }
-		            		if(StringUtils.isEmpty(column)) {
+		            		if(StringUtils.isBlank(column)) {
 		            			continue;
 		            		}
 	
