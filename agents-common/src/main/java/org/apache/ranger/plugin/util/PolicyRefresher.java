@@ -45,9 +45,9 @@ public class PolicyRefresher extends Thread {
 	private final String            cacheFile;
 	private final Gson              gson;
 
-	private long 	pollingIntervalMs     = 30 * 1000;
-	private long 	lastKnownVersion  	  = -1;
-	private boolean policyCacheLoadedOnce = false;
+	private long 	pollingIntervalMs   = 30 * 1000;
+	private long 	lastKnownVersion    = -1;
+	private boolean policiesSetInPlugin = false;
 
 
 	public PolicyRefresher(RangerBasePlugin plugIn, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, long pollingIntervalMs, String cacheDir) {
@@ -128,6 +128,9 @@ public class PolicyRefresher extends Thread {
 
 
 	public void startRefresher() {
+
+		loadPolicy();
+
 		super.start();
 	}
 
@@ -142,61 +145,17 @@ public class PolicyRefresher extends Thread {
 	}
 
 	public void run() {
-		boolean loadFromCacheFlag = false;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").run()");
 		}
 
 		while(true) {
-			try {
-				ServicePolicies svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(lastKnownVersion);
-
-				boolean isUpdated = svcPolicies != null;
-
-				if(isUpdated) {
-					long newVersion = svcPolicies.getPolicyVersion() == null ? -1 : svcPolicies.getPolicyVersion().longValue();
-
-		        	if(!StringUtils.equals(serviceName, svcPolicies.getServiceName())) {
-		        		LOG.warn("PolicyRefresher(serviceName=" + serviceName + "): ignoring unexpected serviceName '" + svcPolicies.getServiceName() + "' in service-store");
-
-		        		svcPolicies.setServiceName(serviceName);
-		        	}
-
-					LOG.info("PolicyRefresher(serviceName=" + serviceName + "): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
-
-					saveToCache(svcPolicies);
-
-		        	lastKnownVersion = newVersion;
-
-					plugIn.setPolicies(svcPolicies);
-				} else {
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion);
-					}
-				}
-
-				loadFromCacheFlag	  = false;
-
-				policyCacheLoadedOnce = false;
-
-			} catch(Exception excp) {
-				loadFromCacheFlag = true;
-				LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policies. Will continue to use last known version of policies (" + lastKnownVersion + ")", excp);
-			} finally {
-				if (loadFromCacheFlag && !policyCacheLoadedOnce) {
-					//If ConnectionTime or PolicyAdmin down, fetch the Policy from Local Cache and load
-					LOG.info("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policy from Policy Manager. Loading Policies from local Cache. lastKnownVersion=" + lastKnownVersion);
-					loadFromCache();
-					policyCacheLoadedOnce = true;
-				}
-			}
-
+			loadPolicy();
 			try {
 				Thread.sleep(pollingIntervalMs);
 			} catch(InterruptedException excp) {
 				LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
-
 				break;
 			}
 		}
@@ -206,58 +165,126 @@ public class PolicyRefresher extends Thread {
 		}
 	}
 
-	private void loadFromCache() {
+	private void loadPolicy() {
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadPolicy()");
+		}
+
+		//load policy from PolicyAmdin
+		ServicePolicies svcPolicies = loadPolicyfromPolicyAdmin();
+
+		if ( svcPolicies == null) {
+		  //if Policy fetch from Policy Admin Fails, load from cache
+		  if (!policiesSetInPlugin) {
+			   svcPolicies = loadFromCache();
+			}
+		} else {
+			saveToCache(svcPolicies);
+		}
+
+		if (svcPolicies != null) {
+			plugIn.setPolicies(svcPolicies);
+			policiesSetInPlugin = true;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadPolicy()");
+		}
+	}
+
+	private ServicePolicies loadPolicyfromPolicyAdmin() { 
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadPolicyfromPolicyAdmin()");
+		}
+
+		ServicePolicies svcPolicies = null;
+
+		try {
+			svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(lastKnownVersion);
+
+			boolean isUpdated = svcPolicies != null;
+
+			if(isUpdated) {
+				long newVersion = svcPolicies.getPolicyVersion() == null ? -1 : svcPolicies.getPolicyVersion().longValue();
+
+				if(!StringUtils.equals(serviceName, svcPolicies.getServiceName())) {
+					LOG.warn("PolicyRefresher(serviceName=" + serviceName + "): ignoring unexpected serviceName '" + svcPolicies.getServiceName() + "' in service-store");
+
+					svcPolicies.setServiceName(serviceName);
+				}
+
+				LOG.info("PolicyRefresher(serviceName=" + serviceName + "): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
+
+			   	lastKnownVersion = newVersion;
+
+			} else {
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion);
+				}
+			}
+   		 } catch(Exception excp) {
+   			LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policies. Will continue to use last known version of policies (" + lastKnownVersion + ")", excp);
+   		 }
+
+		 if(LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadPolicyfromPolicyAdmin()");
+		 }
+
+		 return svcPolicies;
+	}
+
+
+	private ServicePolicies loadFromCache() {
+
+		ServicePolicies policies = null;
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadFromCache()");
 		}
 
-		RangerBasePlugin plugIn = this.plugIn;
+		File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
 
-		if(plugIn != null) {
-	    	File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
+    	if(cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
+    		Reader reader = null;
 
-	    	if(cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
-	    		Reader reader = null;
+    		try {
+	        	reader = new FileReader(cacheFile);
 
-	    		try {
-		        	reader = new FileReader(cacheFile);
+		        policies = gson.fromJson(reader, ServicePolicies.class);
 
-			        ServicePolicies policies = gson.fromJson(reader, ServicePolicies.class);
+		        if(policies != null) {
+		        	if(!StringUtils.equals(serviceName, policies.getServiceName())) {
+		        		LOG.warn("ignoring unexpected serviceName '" + policies.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
 
-			        if(policies != null) {
-			        	if(!StringUtils.equals(serviceName, policies.getServiceName())) {
-			        		LOG.warn("ignoring unexpected serviceName '" + policies.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
-
-			        		policies.setServiceName(serviceName);
-			        	}
-
-			        	lastKnownVersion = policies.getPolicyVersion() == null ? -1 : policies.getPolicyVersion().longValue();
-
-			        	plugIn.setPolicies(policies);
-			        }
-		        } catch (Exception excp) {
-		        	LOG.error("failed to load policies from cache file " + cacheFile.getAbsolutePath(), excp);
-		        } finally {
-		        	if(reader != null) {
-		        		try {
-		        			reader.close();
-		        		} catch(Exception excp) {
-		        			LOG.error("error while closing opened cache file " + cacheFile.getAbsolutePath(), excp);
-		        		}
+		        		policies.setServiceName(serviceName);
 		        	}
-		        }
-			} else {
-				LOG.warn("cache file does not exist or not readble '" + (cacheFile == null ? null : cacheFile.getAbsolutePath()) + "'");
-			}
+
+		        	lastKnownVersion = policies.getPolicyVersion() == null ? -1 : policies.getPolicyVersion().longValue();
+		         }
+	        } catch (Exception excp) {
+	        	LOG.error("failed to load policies from cache file " + cacheFile.getAbsolutePath(), excp);
+	        } finally {
+	        	if(reader != null) {
+	        		try {
+	        			reader.close();
+	        		} catch(Exception excp) {
+	        			LOG.error("error while closing opened cache file " + cacheFile.getAbsolutePath(), excp);
+	        		}
+	        	}
+	        }
 		} else {
-			LOG.warn("policyEngine is null");
+			LOG.warn("cache file does not exist or not readble '" + (cacheFile == null ? null : cacheFile.getAbsolutePath()) + "'");
 		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadFromCache()");
 		}
-	}
 
+		return policies;
+	}
+	
 	private void saveToCache(ServicePolicies policies) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
