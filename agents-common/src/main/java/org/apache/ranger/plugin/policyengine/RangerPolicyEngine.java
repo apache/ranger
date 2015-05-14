@@ -24,11 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
 public interface RangerPolicyEngine {
 	public static final String GROUP_PUBLIC   = "public";
@@ -40,17 +38,13 @@ public interface RangerPolicyEngine {
 
 	RangerServiceDef getServiceDef();
 
-	List<RangerPolicy> getPolicies();
-
 	long getPolicyVersion();
-
-	List<RangerPolicyEvaluator> getPolicyEvaluators();
-
-	List<RangerContextEnricher> getContextEnrichers();
-
 
 	RangerAccessResult createAccessResult(RangerAccessRequest request);
 
+	void enrichContext(RangerAccessRequest request);
+
+	void enrichContext(Collection<RangerAccessRequest> requests);
 
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor);
 

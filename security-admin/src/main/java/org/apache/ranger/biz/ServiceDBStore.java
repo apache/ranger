@@ -99,8 +99,9 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.store.ServicePredicateUtil;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.service.RangerAuditFields;
@@ -127,7 +128,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 
 @Component
-public class ServiceDBStore extends AbstractServiceStore {
+public class ServiceDBStore implements ServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
 
 	@Autowired
@@ -181,6 +182,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 	
 	public static final String HIDDEN_PASSWORD_STR = "*****";
 	public static final String CONFIG_KEY_PASSWORD = "password";
+
+	private ServicePredicateUtil predicateUtil = null;
 	
 	@Override
 	public void init() throws Exception {
@@ -205,6 +208,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
 					final ServiceDBStore dbStore = this;
+					predicateUtil = new ServicePredicateUtil(dbStore);
+
 
 					txTemplate.execute(new TransactionCallback<Object>() {
 						@Override
@@ -926,7 +931,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerServiceDefList svcDefList = serviceDefService.searchRangerServiceDefs(filter);
 
-		applyFilter(svcDefList.getServiceDefs(), filter);
+		predicateUtil.applyFilter(svcDefList.getServiceDefs(), filter);
 
 		List<RangerServiceDef> ret = svcDefList.getServiceDefs();
 
@@ -944,7 +949,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerServiceDefList svcDefList = serviceDefService.searchRangerServiceDefs(filter);
 
-		applyFilter(svcDefList.getServiceDefs(), filter);
+		predicateUtil.applyFilter(svcDefList.getServiceDefs(), filter);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedServiceDefs(" + filter + ")");
@@ -959,18 +964,27 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDefDBStore.createService(" + service + ")");
 		}
 
+		if (service == null) {
+			throw restErrorUtil.createRESTException(
+					"Service object cannot be null.",
+					MessageEnums.ERROR_CREATING_OBJECT);
+		}
+
 		boolean createDefaultPolicy = true;
-		UserSessionBase usb = ContextUtil.getCurrentUserSession();
-		List<String> userRoleList=usb.getUserRoleList();
 		boolean isAllowed=false;
+
+		UserSessionBase usb = ContextUtil.getCurrentUserSession();
+
+		List<String> userRoleList = usb == null ? null : usb.getUserRoleList();
 		if (userRoleList != null && userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
-			if(service!=null && "KMS".equalsIgnoreCase(service.getType())){
-				isAllowed=true;
+			if ("KMS".equalsIgnoreCase(service.getType())) {
+				isAllowed = true;
 			}
 		}
 		if (usb != null && usb.isUserAdmin() || populateExistingBaseFields) {
-			isAllowed=true;
+			isAllowed = true;
 		}
+
 		if (isAllowed) {
 			Map<String, String> configs = service.getConfigs();
 			Map<String, String> validConfigs = validateRequiredConfigParams(
@@ -1246,7 +1260,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerServiceList serviceList = svcService.searchRangerServices(filter);
 
-		applyFilter(serviceList.getServices(), filter);
+		predicateUtil.applyFilter(serviceList.getServices(), filter);
 
 		List<RangerService> ret = serviceList.getServices();
 
@@ -1264,7 +1278,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerServiceList serviceList = svcService.searchRangerServices(filter);
 
-		applyFilter(serviceList.getServices(), filter);
+		predicateUtil.applyFilter(serviceList.getServices(), filter);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getPaginatedServices()");
@@ -1450,7 +1464,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
 
-		applyFilter(policyList.getPolicies(), filter);
+		predicateUtil.applyFilter(policyList.getPolicies(), filter);
 
 		List<RangerPolicy> ret = policyList.getPolicies();
 
@@ -1471,7 +1485,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("before filter: count=" + policyList.getListSize());
 		}
-		applyFilter(policyList.getPolicies(), filter);
+		predicateUtil.applyFilter(policyList.getPolicies(), filter);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("after filter: count=" + policyList.getListSize());
 		}
