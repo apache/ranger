@@ -37,11 +37,13 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.store.ServicePredicateUtil;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 
-public class ServiceFileStore extends BaseFileStore {
+public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceFileStore.class);
 
 	public static final String PROPERTY_SERVICE_FILE_STORE_DIR = "ranger.service.store.file.dir";
@@ -51,12 +53,15 @@ public class ServiceFileStore extends BaseFileStore {
 	private long   nextServiceId    = 0;
 	private long   nextPolicyId     = 0;
 
+	private ServicePredicateUtil predicateUtil = null;
+
 	public ServiceFileStore() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceFileStore.ServiceFileStore()");
 		}
 
 		dataDir = RangerConfiguration.getInstance().get(PROPERTY_SERVICE_FILE_STORE_DIR, "file:///etc/ranger/data");
+		predicateUtil = new ServicePredicateUtil(this);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.ServiceFileStore()");
@@ -69,6 +74,7 @@ public class ServiceFileStore extends BaseFileStore {
 		}
 
 		this.dataDir = dataDir;
+		predicateUtil = new ServicePredicateUtil(this);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.ServiceFileStore()");
@@ -257,9 +263,9 @@ public class ServiceFileStore extends BaseFileStore {
 		List<RangerServiceDef> ret = getAllServiceDefs();
 
 		if(ret != null && filter != null && !filter.isEmpty()) {
-			CollectionUtils.filter(ret, getPredicate(filter));
+			CollectionUtils.filter(ret, predicateUtil.getPredicate(filter));
 
-			Comparator<RangerBaseModelObject> comparator = getSorter(filter);
+			Comparator<RangerBaseModelObject> comparator = predicateUtil.getSorter(filter);
 
 			if(comparator != null) {
 				Collections.sort(ret, comparator);
@@ -442,9 +448,9 @@ public class ServiceFileStore extends BaseFileStore {
 		List<RangerService> ret = getAllServices();
 
 		if(ret != null && filter != null && !filter.isEmpty()) {
-			CollectionUtils.filter(ret, getPredicate(filter));
+			CollectionUtils.filter(ret, predicateUtil.getPredicate(filter));
 
-			Comparator<RangerBaseModelObject> comparator = getSorter(filter);
+			Comparator<RangerBaseModelObject> comparator = predicateUtil.getSorter(filter);
 
 			if(comparator != null) {
 				Collections.sort(ret, comparator);
@@ -622,7 +628,7 @@ public class ServiceFileStore extends BaseFileStore {
 
 		List<RangerPolicy> ret = getAllPolicies();
 
-		CollectionUtils.filter(ret, createPredicateForResourceSignature(serviceName, policySignature, isPolicyEnabled));
+		CollectionUtils.filter(ret, predicateUtil.createPredicateForResourceSignature(policySignature));
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("<== ServiceFileStore.getPoliciesByResourceSignature(%s, %s, %s): count[%d]: %s", 
@@ -641,9 +647,9 @@ public class ServiceFileStore extends BaseFileStore {
 		List<RangerPolicy> ret = getAllPolicies();
 
 		if(ret != null && filter != null && !filter.isEmpty()) {
-			CollectionUtils.filter(ret, getPredicate(filter));
+			CollectionUtils.filter(ret, predicateUtil.getPredicate(filter));
 
-			Comparator<RangerBaseModelObject> comparator = getSorter(filter);
+			Comparator<RangerBaseModelObject> comparator = predicateUtil.getSorter(filter);
 
 			if(comparator != null) {
 				Collections.sort(ret, comparator);
@@ -745,7 +751,7 @@ public class ServiceFileStore extends BaseFileStore {
 		}
 
 		if(ret != null && ret.getPolicies() != null) {
-			Collections.sort(ret.getPolicies(), idComparator);
+			Collections.sort(ret.getPolicies(), predicateUtil.idComparator);
 		}
 
 		return ret;
@@ -876,10 +882,10 @@ public class ServiceFileStore extends BaseFileStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, idComparator);
+			Collections.sort(ret, predicateUtil.idComparator);
 
 			for(RangerServiceDef sd : ret) {
-				Collections.sort(sd.getResources(), resourceLevelComparator);
+				Collections.sort(sd.getResources(), predicateUtil.resourceLevelComparator);
 			}
 		}
 
@@ -906,7 +912,7 @@ public class ServiceFileStore extends BaseFileStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, idComparator);
+			Collections.sort(ret, predicateUtil.idComparator);
 		}
 
 		return ret;
@@ -928,7 +934,7 @@ public class ServiceFileStore extends BaseFileStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, idComparator);
+			Collections.sort(ret, predicateUtil.idComparator);
 		}
 
 		if(LOG.isDebugEnabled()) {

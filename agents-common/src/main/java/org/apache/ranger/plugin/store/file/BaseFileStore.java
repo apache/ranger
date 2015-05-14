@@ -41,12 +41,11 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.store.AbstractServiceStore;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public abstract class BaseFileStore extends AbstractServiceStore {
+public class BaseFileStore {
 	private static final Log LOG = LogFactory.getLog(BaseFileStore.class);
 
 	private Gson   gsonBuilder = null;
@@ -56,7 +55,6 @@ public abstract class BaseFileStore extends AbstractServiceStore {
 	protected static final String FILE_PREFIX_SERVICE     = "ranger-service-";
 	protected static final String FILE_PREFIX_POLICY      = "ranger-policy-";
 	protected static final String FILE_SUFFIX_JSON        = ".json";
-
 
 	protected void initStore(String dataDir) {
 		this.dataDir = dataDir;

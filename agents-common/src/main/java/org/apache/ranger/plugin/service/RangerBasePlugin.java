@@ -148,7 +148,7 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			enrichRequest(request, policyEngine);
+			policyEngine.enrichContext(request);
 
 			return policyEngine.isAccessAllowed(request, resultProcessor);
 		}
@@ -160,7 +160,7 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			enrichRequests(requests, policyEngine);
+			policyEngine.enrichContext(requests);
 
 			return policyEngine.isAccessAllowed(requests, resultProcessor);
 		}
@@ -269,36 +269,6 @@ public class RangerBasePlugin {
 			LOG.debug("<== RangerAdminRESTClient.createAdminClient(" + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
 		}
 		return ret;
-	}
-
-	private void enrichRequest(RangerAccessRequest request, RangerPolicyEngine policyEngine) {
-		if(request == null || policyEngine == null) {
-			return;
-		}
-
-		List<RangerContextEnricher> enrichers = policyEngine.getContextEnrichers();
-
-		if(! CollectionUtils.isEmpty(enrichers)) {
-			for(RangerContextEnricher enricher : enrichers) {
-				enricher.enrich(request);
-			}
-		}
-	}
-
-	private void enrichRequests(Collection<RangerAccessRequest> requests, RangerPolicyEngine policyEngine) {
-		if(CollectionUtils.isEmpty(requests) || policyEngine == null) {
-			return;
-		}
-
-		List<RangerContextEnricher> enrichers = policyEngine.getContextEnrichers();
-
-		if(! CollectionUtils.isEmpty(enrichers)) {
-			for(RangerContextEnricher enricher : enrichers) {
-				for(RangerAccessRequest request : requests) {
-					enricher.enrich(request);
-				}
-			}
-		}
 	}
 
 	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {

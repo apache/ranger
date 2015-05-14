@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
@@ -72,28 +73,53 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public List<RangerPolicy> getPolicies() {
-		return policyRepository.getPolicies();
-	}
-
-	@Override
 	public long getPolicyVersion() {
 		return policyRepository.getPolicyVersion();
 	}
 
 	@Override
-	public List<RangerPolicyEvaluator> getPolicyEvaluators() {
-		return policyRepository.getPolicyEvaluators();
-	}
-
-	@Override
-	public List<RangerContextEnricher> getContextEnrichers() {
-		return policyRepository.getContextEnrichers();
-	}
-
-	@Override
 	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
 		return new RangerAccessResult(this.getServiceName(), policyRepository.getServiceDef(), request);
+	}
+
+	@Override
+	public void enrichContext(RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.enrichContext(" + request + ")");
+		}
+
+		List<RangerContextEnricher> enrichers = policyRepository.getContextEnrichers();
+
+		if(request != null && !CollectionUtils.isEmpty(enrichers)) {
+			for(RangerContextEnricher enricher : enrichers) {
+				enricher.enrich(request);
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.enrichContext(" + request + ")");
+		}
+	}
+
+	@Override
+	public void enrichContext(Collection<RangerAccessRequest> requests) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.enrichContext(" + requests + ")");
+		}
+
+		List<RangerContextEnricher> enrichers = policyRepository.getContextEnrichers();
+
+		if(!CollectionUtils.isEmpty(requests) && !CollectionUtils.isEmpty(enrichers)) {
+			for(RangerContextEnricher enricher : enrichers) {
+				for(RangerAccessRequest request : requests) {
+					enricher.enrich(request);
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.enrichContext(" + requests + ")");
+		}
 	}
 
 	@Override

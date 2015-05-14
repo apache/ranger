@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -44,7 +43,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 
-public abstract class AbstractServiceStore implements ServiceStore {
+public class AbstractPredicateUtil {
 	private static Map<String, Comparator<RangerBaseModelObject>> sorterMap  = new HashMap<String, Comparator<RangerBaseModelObject>>();
 
 	public void applyFilter(List<? extends RangerBaseModelObject> objList, SearchFilter filter) {
@@ -71,26 +70,25 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 
 		List<Predicate> predicates = new ArrayList<Predicate>();
+		
+		addPredicates(filter, predicates);
 
-		addPredicateForServiceType(filter.getParam(SearchFilter.SERVICE_TYPE), predicates);
+		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
+
+		return ret;
+	}
+
+	public void addPredicates(SearchFilter filter, List<Predicate> predicates) {
 		addPredicateForServiceTypeId(filter.getParam(SearchFilter.SERVICE_TYPE_ID), predicates);
 		addPredicateForServiceName(filter.getParam(SearchFilter.SERVICE_NAME), predicates);
-		addPredicateForServiceId(filter.getParam(SearchFilter.SERVICE_ID), predicates);
 		addPredicateForPolicyName(filter.getParam(SearchFilter.POLICY_NAME), predicates);
 		addPredicateForPolicyId(filter.getParam(SearchFilter.POLICY_ID), predicates);
 		addPredicateForIsEnabled(filter.getParam(SearchFilter.IS_ENABLED), predicates);
 		addPredicateForIsRecursive(filter.getParam(SearchFilter.IS_RECURSIVE), predicates);
 		addPredicateForUserName(filter.getParam(SearchFilter.USER), predicates);
 		addPredicateForGroupName(filter.getParam(SearchFilter.GROUP), predicates);
-		addPredicateForResourceSignature(
-				filter.getParam(SearchFilter.SERVICE_NAME), 
-				filter.getParam(SearchFilter.RESOURCE_SIGNATURE), 
-				filter.getParam(SearchFilter.IS_ENABLED), predicates);
+		addPredicateForResourceSignature(filter.getParam(SearchFilter.RESOURCE_SIGNATURE), predicates);
 		addPredicateForResources(filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true), predicates);
-
-		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
-
-		return ret;
 	}
 
 	public Comparator<RangerBaseModelObject> getSorter(SearchFilter filter) {
@@ -105,7 +103,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		return ret;
 	}
 
-	protected final static Comparator<RangerBaseModelObject> idComparator = new Comparator<RangerBaseModelObject>() {
+	public final static Comparator<RangerBaseModelObject> idComparator = new Comparator<RangerBaseModelObject>() {
 		@Override
 		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
 			Long val1 = (o1 != null) ? o1.getId() : null;
@@ -197,7 +195,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 	};
 
-	protected final static Comparator<RangerResourceDef> resourceLevelComparator = new Comparator<RangerResourceDef>() {
+	public final static Comparator<RangerResourceDef> resourceLevelComparator = new Comparator<RangerResourceDef>() {
 		@Override
 		public int compare(RangerResourceDef o1, RangerResourceDef o2) {
 			Integer val1 = (o1 != null) ? o1.getLevel() : null;
@@ -216,69 +214,6 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		sorterMap.put(SearchFilter.POLICY_ID, idComparator);
 		sorterMap.put(SearchFilter.CREATE_TIME, createTimeComparator);
 		sorterMap.put(SearchFilter.UPDATE_TIME, updateTimeComparator);
-	}
-
-	private String getServiceType(String serviceName) {
-		RangerService service = null;
-
-		try {
-			service = getServiceByName(serviceName);
-		} catch(Exception excp) {
-			// ignore
-		}
-
-		return service != null ? service.getType() : null;
-	}
-
-	private Long getServiceId(String serviceName) {
-		RangerService service = null;
-
-		try {
-			service = getServiceByName(serviceName);
-		} catch(Exception excp) {
-			// ignore
-		}
-
-		return service != null ? service.getId() : null;
-	}
-
-	private Predicate addPredicateForServiceType(final String serviceType, List<Predicate> predicates) {
-		if(StringUtils.isEmpty(serviceType)) {
-			return null;
-		}
-
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-				if(object == null) {
-					return false;
-				}
-
-				boolean ret = false;
-
-				if(object instanceof RangerPolicy) {
-					RangerPolicy policy = (RangerPolicy)object;
-
-					ret = StringUtils.equals(serviceType, getServiceType(policy.getService()));
-				} else if(object instanceof RangerService) {
-					RangerService service = (RangerService)object;
-
-					ret = StringUtils.equals(serviceType, service.getType());
-				} else if(object instanceof RangerServiceDef) {
-					RangerServiceDef serviceDef = (RangerServiceDef)object;
-
-					ret = StringUtils.equals(serviceType, serviceDef.getName());
-				}
-
-				return ret;
-			}
-		};
-
-		if(predicates != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
 	}
 
 	private Predicate addPredicateForServiceTypeId(final String serviceTypeId, List<Predicate> predicates) {
@@ -348,48 +283,6 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		};
 
 		if(ret != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
-	}
-
-	private Predicate addPredicateForServiceId(final String serviceId, List<Predicate> predicates) {
-		if(StringUtils.isEmpty(serviceId)) {
-			return null;
-		}
-
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-				if(object == null) {
-					return false;
-				}
-
-				boolean ret = false;
-
-				if(object instanceof RangerPolicy) {
-					RangerPolicy policy = (RangerPolicy)object;
-					Long         svcId  = getServiceId(policy.getService());
-
-					if(svcId != null) {
-						ret = StringUtils.equals(serviceId, svcId.toString());
-					}
-				} else if(object instanceof RangerService) {
-					RangerService service = (RangerService)object;
-
-					if(service.getId() != null) {
-						ret = StringUtils.equals(serviceId, service.getId().toString());
-					}
-				} else {
-					ret = true;
-				}
-
-				return ret;
-			}
-		};
-
-		if(predicates != null) {
 			predicates.add(ret);
 		}
 
@@ -689,13 +582,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		return ret;
 	}
 
-	private Predicate addPredicateForResourceSignature(final String serviceName, String signature, String isPolicyEnabled, List<Predicate> predicates) {
+	private Predicate addPredicateForResourceSignature(String signature, List<Predicate> predicates) {
 
-		boolean enabled = false;
-		if ("1".equals(isPolicyEnabled)) {
-			enabled = true;
-		}
-		Predicate ret = createPredicateForResourceSignature(serviceName, signature, enabled);
+		Predicate ret = createPredicateForResourceSignature(signature);
 
 		if(predicates != null && ret != null) {
 			predicates.add(ret);
@@ -705,14 +594,12 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	}
 	
 	/**
-	 * @param serviceName
 	 * @param policySignature
-	 * @param isPolicyEnabled
 	 * @return
 	 */
-	public Predicate createPredicateForResourceSignature(final String serviceName, final String policySignature, final Boolean isPolicyEnabled) {
+	public Predicate createPredicateForResourceSignature(final String policySignature) {
 
-		if (StringUtils.isEmpty(policySignature) || StringUtils.isEmpty(serviceName) || isPolicyEnabled == null) {
+		if (StringUtils.isEmpty(policySignature)) {
 			return null;
 		}
 
@@ -728,9 +615,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 				if (object instanceof RangerPolicy) {
 					RangerPolicy policy = (RangerPolicy)object;
 
-					ret = StringUtils.equals(policy.getResourceSignature(), policySignature) &&
-							Objects.equals(policy.getService(), serviceName) &&
-							Objects.equals(policy.getIsEnabled(), isPolicyEnabled);
+					ret = StringUtils.equals(policy.getResourceSignature(), policySignature);
 				} else {
 					ret = true;
 				}
