@@ -45,9 +45,9 @@ public class PolicyRefresher extends Thread {
 	private final String            cacheFile;
 	private final Gson              gson;
 
-	private long pollingIntervalMs = 30 * 1000;
-	private long lastKnownVersion  = -1;
-
+	private long 	pollingIntervalMs     = 30 * 1000;
+	private long 	lastKnownVersion  	  = -1;
+	private boolean policyCacheLoadedOnce = false;
 
 
 	public PolicyRefresher(RangerBasePlugin plugIn, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, long pollingIntervalMs, String cacheDir) {
@@ -128,8 +128,6 @@ public class PolicyRefresher extends Thread {
 
 
 	public void startRefresher() {
-		loadFromCache();
-
 		super.start();
 	}
 
@@ -144,6 +142,8 @@ public class PolicyRefresher extends Thread {
 	}
 
 	public void run() {
+		boolean loadFromCacheFlag = false;
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").run()");
 		}
@@ -175,8 +175,21 @@ public class PolicyRefresher extends Thread {
 						LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): no update found. lastKnownVersion=" + lastKnownVersion);
 					}
 				}
+
+				loadFromCacheFlag	  = false;
+
+				policyCacheLoadedOnce = false;
+
 			} catch(Exception excp) {
+				loadFromCacheFlag = true;
 				LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policies. Will continue to use last known version of policies (" + lastKnownVersion + ")", excp);
+			} finally {
+				if (loadFromCacheFlag && !policyCacheLoadedOnce) {
+					//If ConnectionTime or PolicyAdmin down, fetch the Policy from Local Cache and load
+					LOG.info("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policy from Policy Manager. Loading Policies from local Cache. lastKnownVersion=" + lastKnownVersion);
+					loadFromCache();
+					policyCacheLoadedOnce = true;
+				}
 			}
 
 			try {

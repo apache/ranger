@@ -83,6 +83,8 @@ public class RangerRESTClient {
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE				 = "SunX509" ;
 	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE					     = "SSL" ;
 
+	public static final int	   RANGER_POLICYMGR_CLIENT_CONNECTION_TIMEOUT		 = 120000;
+	public static final int    RANGER_POLICYMGR_CLIENT_READ_TIMEOUT			     = 30000;
 
 	private String  mUrl               = null;
 	private String  mSslConfigFileName = null;
@@ -198,6 +200,10 @@ public class RangerRESTClient {
 		if(!StringUtils.isEmpty(mUsername) || !StringUtils.isEmpty(mPassword)) {
 			client.addFilter(new HTTPBasicAuthFilter(mUsername, mPassword)); 
 		}
+
+		// Set Connection Timeout and ReadTime for the PolicyRefresh
+		client.setConnectTimeout(RANGER_POLICYMGR_CLIENT_CONNECTION_TIMEOUT);
+		client.setReadTimeout(RANGER_POLICYMGR_CLIENT_READ_TIMEOUT);
 
 		return client;
 	}
