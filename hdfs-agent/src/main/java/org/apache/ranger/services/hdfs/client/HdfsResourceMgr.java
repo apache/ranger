@@ -105,8 +105,11 @@ public class HdfsResourceMgr {
 						}
 
 					};
-
-					resultList = TimedEventUtil.timedTask(callableObj, 5,TimeUnit.SECONDS); 
+					if ( callableObj != null) {
+						synchronized(hdfsClient) {
+							resultList = TimedEventUtil.timedTask(callableObj, 5,TimeUnit.SECONDS); 
+						}
+					}
 					if(LOG.isDebugEnabled()) {
 						LOG.debug("Resource dir : " + userInput
 							+ " wild card to match : " + wildCardToMatch

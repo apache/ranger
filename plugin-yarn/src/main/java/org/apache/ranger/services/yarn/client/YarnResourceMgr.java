@@ -84,7 +84,9 @@ public class YarnResourceMgr {
         final YarnClient yarnClient = YarnConnectionMgr.getYarnClient(url, username, password);
         List<String> topologyList = null;
 	    if (yarnClient != null) {
-		    topologyList = yarnClient.getQueueList(yarnQueueName, yarnQueueList);
+	    	synchronized(yarnClient) {
+	    		topologyList = yarnClient.getQueueList(yarnQueueName, yarnQueueList);
+	    	}
 	    }
         return topologyList;
     }

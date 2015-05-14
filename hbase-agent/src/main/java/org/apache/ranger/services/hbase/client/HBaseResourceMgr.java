@@ -136,8 +136,10 @@ public class HBaseResourceMgr {
 						}
 					}
 					if (callableObj != null) {
-						resultList = TimedEventUtil.timedTask(callableObj, 5,
-								TimeUnit.SECONDS);
+						synchronized(hBaseClient) {
+							resultList = TimedEventUtil.timedTask(callableObj, 5,
+									TimeUnit.SECONDS);
+						}
 					}
 					
 				}

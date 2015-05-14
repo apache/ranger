@@ -54,8 +54,8 @@ public class KMSResourceMgr {
         String 		 userInput 				  = context.getUserInput();
 		Map<String, List<String>> resourceMap = context.getResources();
 	    List<String> 		resultList        = null;
-		List<String> 		kmsKeyList 	  = null;
-		String  			kmsKeyName     = null;
+		List<String> 		kmsKeyList 	      = null;
+		String  			kmsKeyName        = null;
 		
 		if ( resourceMap != null && !resourceMap.isEmpty() && resourceMap.get(KMSKEY) != null ) {
 			kmsKeyName = userInput;
@@ -78,8 +78,11 @@ public class KMSResourceMgr {
     }
 
     public static List<String> getKMSResource(String url, String username, String password,String kmsKeyName, List<String> kmsKeyList) {
+    	List<String> topologyList = null;
         final KMSClient KMSClient = KMSConnectionMgr.getKMSClient(url, username, password);
-        List<String> topologyList = KMSClient.getKeyList(kmsKeyName, kmsKeyList);
+        synchronized(KMSClient){
+        	topologyList = KMSClient.getKeyList(kmsKeyName, kmsKeyList);
+        }
         return topologyList;
     }    
 }

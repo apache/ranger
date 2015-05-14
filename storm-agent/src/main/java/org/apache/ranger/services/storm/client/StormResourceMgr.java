@@ -72,7 +72,6 @@ public class StormResourceMgr {
                 LOG.error("Connection Config is empty");
 
         } else {
-                
                 String url 		= configs.get("nimbus.url");
                 String username = configs.get("username");
                 String password = configs.get("password");
@@ -82,12 +81,15 @@ public class StormResourceMgr {
     }
 
     public static List<String> getStormResources(String url, String username, String password,String topologyName, List<String> StormTopologyList) {
+    	List<String> topologyList	  = null;
         final StormClient stormClient = StormConnectionMgr.getStormClient(url, username, password);
 	    if (stormClient == null) {
 		    LOG.error("Storm Client is null");
 		    return new ArrayList<String>();
 	    }
-        List<String> topologyList = stormClient.getTopologyList(topologyName,StormTopologyList) ;
+	    synchronized(stormClient){
+	    	topologyList = stormClient.getTopologyList(topologyName,StormTopologyList) ;
+	    }
         return topologyList;
     }
     

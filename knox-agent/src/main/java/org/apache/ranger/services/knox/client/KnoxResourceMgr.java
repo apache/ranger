@@ -101,10 +101,10 @@ public class KnoxResourceMgr {
 		}
 		
 		final KnoxClient knoxClient = new KnoxConnectionMgr().getKnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword); 
-		resultList = KnoxClient.getKnoxResources(knoxClient, knoxTopologyName, knoxServiceName,knoxTopologyList,knoxServiceList);
-
+		
+		synchronized(knoxClient) {
+			resultList = KnoxClient.getKnoxResources(knoxClient, knoxTopologyName, knoxServiceName,knoxTopologyList,knoxServiceList);
+		}
 		return  resultList;
 	}
-	
-	
 }
