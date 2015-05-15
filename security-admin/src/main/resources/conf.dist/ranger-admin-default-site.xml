@@ -395,14 +395,41 @@
 		<value>ranger.auditdb.password</value>
 		<description></description>
 	</property>
+
 	<property>
 		<name>ranger.ldap.binddn.credential.alias</name>
 		<value>ranger.ldap.binddn.password</value>
 		<description></description>
 	</property>
+
 	<property>
 		<name>ranger.ldap.ad.binddn.credential.alias</name>
 		<value>ranger.ad.binddn.password</value>
 		<description></description>
 	</property>
+
+	<property>
+		<name>ranger.resource.lookup.timeout.value.in.ms</name>
+		<value>1000</value>
+		<description></description>
+	</property>
+
+	<property>
+		<name>ranger.validate.config.timeout.value.in.ms</name>
+		<value>10000</value>
+		<description></description>
+	</property>
+
+	<property>
+		<name>ranger.timed.executor.max.threadpool.size</name>
+		<value>10</value>
+		<description></description>
+	</property>
+
+	<property>
+		<name>ranger.timed.executor.queue.size</name>
+		<value>100</value>
+		<description></description>
+	</property>
+
 </configuration>
