@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.service;
+package org.apache.ranger.common;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;

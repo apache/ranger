@@ -23,13 +23,18 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.TimedExecutor;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -54,6 +59,9 @@ public class ServiceMgr {
 	@Autowired
 	ServiceDBStore svcDBStore;
 	
+	@Autowired
+	TimedExecutor timedExecutor;
+
 	public List<String> lookupResource(String serviceName, ResourceLookupContext context, ServiceStore svcStore) throws Exception {
 		List<String> 	  ret = null;
 		
@@ -69,18 +77,9 @@ public class ServiceMgr {
 		}
 
 		if(svc != null) {
-			ClassLoader clsLoader = Thread.currentThread().getContextClassLoader();
-
-			try {
-				Thread.currentThread().setContextClassLoader(svc.getClass().getClassLoader());
-
-				ret = svc.lookupResource(context);
-			} catch (Exception e) {
-				LOG.error("==> ServiceMgr.lookupResource Error:" + e);
-				throw e;
-			} finally {
-				Thread.currentThread().setContextClassLoader(clsLoader);
-			}
+			LookupCallable callable = new LookupCallable(svc, context);
+			long time = getTimeoutValueForLookupInMilliSeconds(svc);
+			ret = timedExecutor.timedTask(callable, time, TimeUnit.MILLISECONDS);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -103,12 +102,11 @@ public class ServiceMgr {
 		}
 
 		if(svc != null) {
-			ClassLoader clsLoader = Thread.currentThread().getContextClassLoader();
-
 			try {
-				Thread.currentThread().setContextClassLoader(svc.getClass().getClassLoader());
-
-				HashMap<String, Object> responseData = svc.validateConfig();
+				// Timeout value use during validate config is 10 times that used during lookup
+				long time = getTimeoutValueForValidateConfigInMilliSeconds(svc);
+				ValidateCallable callable = new ValidateCallable(svc);
+				HashMap<String, Object> responseData = timedExecutor.timedTask(callable, time, TimeUnit.MILLISECONDS);
 
 				ret = generateResponseForTestConn(responseData, "");
 			} catch (Exception e) {
@@ -120,8 +118,6 @@ public class ServiceMgr {
 				}
 				ret = generateResponseForTestConn(respData, msg);
 				LOG.error("==> ServiceMgr.validateConfig Error:" + e);
-			} finally {
-				Thread.currentThread().setContextClassLoader(clsLoader);
 			}
 		}
 
@@ -343,6 +339,150 @@ public class ServiceMgr {
 		vXResponse.setMsgDesc(description);
 		vXResponse.setStatusCode(statusCode);
 		return vXResponse;
+	}
+	
+	static final long _DefaultTimeoutValue_Lookp = 1000; // 1 s
+	static final long _DefaultTimeoutValue_ValidateConfig = 10000; // 10 s
+
+	long getTimeoutValueForLookupInMilliSeconds(RangerBaseService svc) {
+		return getTimeoutValueInMilliSeconds("resource.lookup", svc, _DefaultTimeoutValue_Lookp);
+	}
+	
+	long getTimeoutValueForValidateConfigInMilliSeconds(RangerBaseService svc) {
+		return getTimeoutValueInMilliSeconds("validate.config", svc, _DefaultTimeoutValue_ValidateConfig);
+	}
+	
+	long getTimeoutValueInMilliSeconds(final String type, RangerBaseService svc, long defaultValue) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> ServiceMgr.getTimeoutValueInMilliSeconds (%s, %s)", type, svc));
+		}
+		String propertyName = type + ".timeout.value.in.ms"; // type == "lookup" || type == "validate-config"
+
+		Long result = null;
+		Map<String, String> config = svc.getConfigs();
+		if (config != null && config.containsKey(propertyName)) {
+			result = parseLong(config.get(propertyName));
+		}
+		if (result != null) {
+			LOG.debug("Found override in service config!");
+		} else {
+			String[] keys = new String[] {
+					"ranger.service." + svc.getServiceName() + "." + propertyName,
+					"ranger.servicetype." + svc.getServiceType() + "." + propertyName,
+					"ranger." + propertyName
+			};
+			for (String key : keys) {
+				String value = PropertiesUtil.getProperty(key);
+				if (value != null) {
+					result = parseLong(value);
+					if (result != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Using the value[" + value + "] found in property[" + key + "]");
+						}
+						break;
+					}
+				}
+			}
+		}
+		if (result == null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No overrides found in service config of properties file.  Using supplied default of[" + defaultValue + "]!");
+			}
+			result = defaultValue;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== ServiceMgr.getTimeoutValueInMilliSeconds (%s, %s): %s", type, svc, result));
+		}
+		return result;
+	}
+	
+	Long parseLong(String str) {
+		try {
+			return Long.valueOf(str);
+		} catch (NumberFormatException e) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("ServiceMgr.parseLong: could not parse [" + str + "] as Long! Returning null");
+			}
+			return null;
+		}
+	}
+	
+	abstract static class TimedCallable<T> implements Callable<T> {
+
+		final RangerBaseService svc;
+		final Date creation; // NOTE: This would be different from when the callable was actually offered to the executor
+
+		public TimedCallable(RangerBaseService svc) {
+			this.svc = svc;
+			this.creation = new Date();
+		}
+
+		@Override
+		public T call() throws Exception {
+			Date start = null;
+			if (LOG.isDebugEnabled()) {
+				start = new Date();
+				LOG.debug("==> TimedCallable: " + toString());
+			}
+
+			ClassLoader clsLoader = Thread.currentThread().getContextClassLoader();
+			try {
+				Thread.currentThread().setContextClassLoader(svc.getClass().getClassLoader());
+				return actualCall();
+			} catch (Exception e) {
+				LOG.error("TimedCallable.call: Error:" + e);
+				throw e;
+			} finally {
+				Thread.currentThread().setContextClassLoader(clsLoader);
+				if (LOG.isDebugEnabled()) {
+					Date finish = new Date();
+					long waitTime = start.getTime() - creation.getTime();
+					long executionTime = finish.getTime() - start.getTime();
+					LOG.debug(String.format("<== TimedCallable: %s: wait time[%d ms], execution time [%d ms]", toString(), waitTime, executionTime));
+				}
+			}
+		}
+
+		abstract T actualCall() throws Exception;
+	}
+
+	static class LookupCallable extends TimedCallable<List<String>> {
+
+		final ResourceLookupContext context;
+
+		public LookupCallable(final RangerBaseService svc, final ResourceLookupContext context) {
+			super(svc);
+			this.context = context;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("lookup resource[%s] for service[%s], ", context.toString(), svc.getServiceName());
+		}
+
+		@Override
+		public List<String> actualCall() throws Exception {
+			List<String> ret = svc.lookupResource(context);
+			return ret;
+		}
+	}
+
+	static class ValidateCallable extends TimedCallable<HashMap<String, Object>> {
+
+		public ValidateCallable(RangerBaseService svc) {
+			super(svc);
+		}
+
+		@Override
+		public String toString() {
+			return String.format("validate config for service[%s]", svc.getServiceName());
+		}
+
+		@Override
+		public HashMap<String, Object> actualCall() throws Exception {
+			return svc.validateConfig();
+		}
 	}
 }
 
