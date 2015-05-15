@@ -51,7 +51,7 @@ public class ServiceSolrClient {
 	}
 
 	SolrClient solrClient = null;
-	boolean isSolrCloud = false;
+	boolean isSolrCloud = true;
 
 	String serviceName = null;
 	private static final String errMessage = " You can still save the repository and start creating "

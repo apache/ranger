@@ -5,7 +5,7 @@
 	"description":"Solr",
 	"resources":[
 		{
-			"itemId": 1,
+			"itemId":100,
 			"name":"collection",
 			"type":"string",
 			"level":10,
@@ -15,51 +15,36 @@
 			"recursiveSupported":false,
 			"excludesSupported":true,
 			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions":{ "wildCard":true, "ignoreCase":true },
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
 			"validationRegEx":"",
 			"validationMessage":"",
 			"uiHint":"",
 			"label":"Solr Collection",
 			"description":"Solr Collection"
-		},
-		{
-			"itemId": 2,
-			"name":"field",
-			"type":"string",
-			"level":20,
-			"parent":"collection",
-			"mandatory":true,
-			"lookupSupported":true,
-			"recursiveSupported":false,
-			"excludesSupported":true,
-			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions":{ "wildCard":true, "ignoreCase":true },
-			"validationRegEx":"",
-			"validationMessage":"",
-			"uiHint":"",
-			"label":"Field",
-			"description":"Field"
 		}
 		
 	],
 	"accessTypes":[
 		{
-			"itemId": 1,
-			"name":"create",
-			"label":"Create"
-		},
-		{
-			"itemId": 2,
-			"name":"update",
-			"label":"Update"
-		},
-		{
-			"itemId": 3,
+			"itemId":100,
 			"name":"query",
 			"label":"Query"
 		},
 		{
-			"itemId": 4,
+			"itemId":200,
+			"name":"update",
+			"label":"Update"
+		},
+		{
+			"itemId":300,
+			"name":"others",
+			"label":"Others"
+		},
+		{
+			"itemId":900,
 			"name":"solr_admin",
 			"label":"Solr Admin"
 		}
@@ -67,7 +52,7 @@
 	],
 	"configs":[
 		{
-			"itemId": 1,
+			"itemId":100,
 			"name":"username",
 			"type":"string",
 			"mandatory":true,
@@ -77,7 +62,7 @@
 			"label":"Username"
 		},
 		{
-			"itemId": 2,
+			"itemId":200,
 			"name":"password",
 			"type":"password",
 			"mandatory":true,
@@ -87,7 +72,7 @@
 			"label":"Password"
 		},
 		{
-			"itemId": 3,
+			"itemId":400,
 			"name":"solr.url",
 			"type":"string",
 			"mandatory":true,
@@ -98,14 +83,14 @@
 			"label":"Solr URL"
 		},
 		{
-			"itemId": 4,
+			"itemId":500,
 			"name":"commonNameForCertificate",
 			"type":"string",
 			"mandatory":false,
 			"validationRegEx":"",
 			"validationMessage":"",
 			"uiHint":"",
-			"label":"Common Name for Certificate"
+			"label":"Ranger Plugin SSL CName"
 		}
 		
 	],
@@ -117,15 +102,18 @@
 	],
 	"policyConditions":[
 		{
-			"itemId": 1,
-			"name": "ip-range",
-			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
-			"evaluatorOptions": { },
+			"itemId":100,
+			"name":"ip-range",
+			"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+			"evaluatorOptions":{
+				
+			},
 			"validationRegEx":"",
-			"validationMessage": "",
+			"validationMessage":"",
 			"uiHint":"",
-			"label": "IP Address Range",
-			"description": "IP Address Range"
+			"label":"IP Address Range",
+			"description":"IP Address Range"
 		}
+		
 	]
 }

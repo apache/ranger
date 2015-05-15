@@ -34,9 +34,11 @@ public class ServiceSolrConnectionMgr {
 			Map<String, String> configs) throws Exception {
 		String url = configs.get("solr.url");
 		if (url != null) {
+			//TODO: Determine whether the instance is SolrCloud
+			boolean isSolrCloud = true;
 			SolrClient solrClient = new HttpSolrClient(url);
 			ServiceSolrClient serviceSolrClient = new ServiceSolrClient(
-					serviceName, solrClient, false);
+					serviceName, solrClient, isSolrCloud);
 			return serviceSolrClient;
 		}
 		// TODO: Need to add method to create SolrClient using ZooKeeper for

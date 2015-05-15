@@ -100,13 +100,12 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setAccessType(request.getAction());
 			ret.setAccessResult((short)(result.getIsAllowed() ? 1 : 0));
 			ret.setPolicyId(result.getPolicyId());
-			ret.setAclEnforcer("ranger-acl"); // TODO: review
 			ret.setAction(request.getAccessType());
 			ret.setClientIP(request.getClientIPAddress());
 			ret.setClientType(request.getClientType());
-			ret.setAgentHostname(null);
-			ret.setAgentId(null);
-			ret.setEventId(null);
+
+			populateDefaults(ret);
+
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -153,23 +152,31 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		}
 
 		if(auditEvent != null) {
-			if (auditEvent.getAgentHostname() == null || auditEvent.getAgentHostname().isEmpty()) {
-				auditEvent.setAgentHostname(MiscUtil.getHostname());
-			}
-
-			if (auditEvent.getLogType() == null || auditEvent.getLogType().isEmpty()) {
-				auditEvent.setLogType("RangerAudit");
-			}
-
-			if (auditEvent.getEventId() == null || auditEvent.getEventId().isEmpty()) {
-				auditEvent.setEventId(MiscUtil.generateUniqueId());
-			}
+			populateDefaults(auditEvent);
 			AuditProviderFactory.getAuditProvider().log(auditEvent);
 		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultAuditHandler.logAuthzAudit(" + auditEvent + ")");
 		}
+	}
+
+	private void populateDefaults(AuthzAuditEvent auditEvent) {
+		if( auditEvent.getAclEnforcer() == null || auditEvent.getAclEnforcer().isEmpty()) {
+			auditEvent.setAclEnforcer("ranger-acl"); // TODO: review
+		}
+
+		if (auditEvent.getAgentHostname() == null || auditEvent.getAgentHostname().isEmpty()) {
+			auditEvent.setAgentHostname(MiscUtil.getHostname());
+		}
+
+		if (auditEvent.getLogType() == null || auditEvent.getLogType().isEmpty()) {
+			auditEvent.setLogType("RangerAudit");
+		}
+
+		if (auditEvent.getEventId() == null || auditEvent.getEventId().isEmpty()) {
+			auditEvent.setEventId(MiscUtil.generateUniqueId());
+		}		
 	}
 
 	public void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents) {

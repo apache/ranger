@@ -88,7 +88,7 @@
   <module>knox-agent</module>
   <module>storm-agent</module>
   <module>plugin-kafka</module>
-  <module>plugin-solr</module>
+  <!-- <module>plugin-solr</module> -->
   <module>plugin-yarn</module>
   <module>ranger_solrj</module>
   <module>security-admin</module>
@@ -160,7 +160,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
 		<slf4j-api.version>1.7.5</slf4j-api.version>
-		<!--<solr.version>5.0.0</solr.version>-->
+		<solr.version>5.1.0</solr.version>
 		<ranger.solrj.version>${project.version}</ranger.solrj.version>
 		<springframework.spring.version>2.5.6</springframework.spring.version>
 		<!--
@@ -217,6 +217,12 @@
          <modules>
             <module>unixauthnative</module>
           </modules>
+      </profile>
+      <profile>
+          <id>solr-security</id>
+         <modules>
+        	 <module>plugin-solr</module>         
+         </modules>
       </profile>
   </profiles>
   <distributionManagement>
@@ -482,6 +488,7 @@
           <exclude>**/.externalToolBuilders/*</exclude>
           <exclude>*.patch</exclude>
           <exclude>atlassian-ide-plugin.xml</exclude>
+	  <exclude>**/.pydevproject</exclude>
         </excludes>
 
       </configuration>
