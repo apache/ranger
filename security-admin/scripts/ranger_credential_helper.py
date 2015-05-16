@@ -19,6 +19,14 @@ import os
 from subprocess import  Popen,PIPE
 from optparse import OptionParser
 
+if os.getenv('JAVA_HOME') is None:
+	print "[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------"
+	sys.exit(1)
+
+JAVA_BIN=os.path.join(os.getenv('JAVA_HOME'),'bin','java')
+print "Using Java:" + str(JAVA_BIN)
+
+
 
 def main():
 
@@ -43,7 +51,7 @@ def call_keystore(libpath, filepath, aliasKey, aliasValue='', getorcreate='get')
 	finalLibPath = libpath.replace('\\','/').replace('//','/')
 	finalFilePath = 'jceks://file/'+filepath.replace('\\','/').replace('//','/')
 	if getorcreate == 'create':
-		commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
+		commandtorun = [JAVA_BIN, '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
 		p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
 		output, error = p.communicate()
 		statuscode = p.returncode
@@ -53,7 +61,7 @@ def call_keystore(libpath, filepath, aliasKey, aliasValue='', getorcreate='get')
 			print "Error creating Alias!! Error: " + str(error)
 		
 	elif getorcreate == 'get':
-		commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
+		commandtorun = [JAVA_BIN, '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
 		p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
 		output, error = p.communicate()
 		statuscode = p.returncode
