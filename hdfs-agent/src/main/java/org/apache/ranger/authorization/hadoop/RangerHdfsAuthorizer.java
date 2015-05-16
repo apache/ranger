@@ -198,7 +198,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			try {
-				if(plugin != null && (access != null || ancestorAccess != null || parentAccess != null || subAccess != null) && !ArrayUtils.isEmpty(inodes)) {
+				if(plugin != null && !ArrayUtils.isEmpty(inodes)) {
 					auditHandler = new RangerHdfsAuditHandler(path);
 
 					if(ancestorIndex >= inodes.length) {
@@ -222,10 +222,21 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					}
 
 					// checkAncestorAccess
-					if(accessGranted && ancestorAccess != null && ancestor != null) {
-						INodeAttributes ancestorAttribs = inodeAttrs.length > ancestorIndex ? inodeAttrs[ancestorIndex] : null;
+					if(accessGranted && ancestor != null) {
+						FsAction               accessToCheck     = ancestorAccess;
+						RangerHdfsAuditHandler auditHandlerToUse = auditHandler;
 
-						accessGranted = isAccessAllowed(ancestor, ancestorAttribs, ancestorAccess, user, groups, fsOwner, superGroup, plugin, auditHandler);
+						// if ancestorAccess is not specified and none of other access is specified, then check for traverse access (EXECUTE) to the ancestor
+						if(ancestorAccess == null && access == null && parentAccess == null && subAccess == null) {
+							accessToCheck = FsAction.EXECUTE;
+							auditHandlerToUse = null; // don't audit this access
+						}
+
+						if(accessToCheck != null) {
+							INodeAttributes ancestorAttribs = inodeAttrs.length > ancestorIndex ? inodeAttrs[ancestorIndex] : null;
+	
+							accessGranted = isAccessAllowed(ancestor, ancestorAttribs, accessToCheck, user, groups, fsOwner, superGroup, plugin, auditHandlerToUse);
+						}
 					}
 
 					// checkParentAccess
@@ -253,7 +264,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 							if (!(cList.isEmpty() && ignoreEmptyDir)) {
 								INodeAttributes dirAttribs = dir.getSnapshotINode(snapshotId);
 
-								accessGranted = isAccessAllowed(dir, dirAttribs, access, user, groups, fsOwner, superGroup, plugin, auditHandler);
+								accessGranted = isAccessAllowed(dir, dirAttribs, subAccess, user, groups, fsOwner, superGroup, plugin, auditHandler);
 
 								if(! accessGranted) {
 									break;
