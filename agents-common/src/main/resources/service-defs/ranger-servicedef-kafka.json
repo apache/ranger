@@ -59,9 +59,15 @@
 		},
 		{
 			"itemId": 7,
-			"name":"kafka_admin",
-			"label":"Kafka Admin"
+			"name":"replicate",
+			"label":"Replicate"
+		},
+		{
+			"itemId": 8,
+			"name":"connect",
+			"label":"Connect"
 		}
+		
 	],
 	"configs":[
 		{
@@ -91,7 +97,7 @@
 			"name":"commonNameForCertificate",
 			"type":"string",
 			"mandatory":false,
-			"label":"Ranger Plugin SSL CName"
+			"label":"Common Name for Certificate"
 		}
 		
 	],
