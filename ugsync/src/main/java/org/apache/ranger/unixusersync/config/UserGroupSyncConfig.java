@@ -164,6 +164,7 @@ public class UserGroupSyncConfig  {
 	private static final String DEFAULT_POLICYMGR_USERNAME = "rangerusersync";
 
 	private static final String DEFAULT_POLICYMGR_PASSWORD = "rangerusersync";
+	private static final String SYNC_SOURCE = "ranger.usersync.sync.source";
 	private Properties prop = new Properties() ;
 	
 	private static volatile UserGroupSyncConfig me = null ;
@@ -364,8 +365,15 @@ public class UserGroupSyncConfig  {
 	public UserGroupSource getUserGroupSource() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SOURCE_CLASS_PARAM) ;
 
-		if(val == null) {
-			val = UGSYNC_SOURCE_CLASS;
+		if(val == null || val.trim().isEmpty()) {
+			String syncSource=getSyncSource();
+			if(syncSource!=null && syncSource.equalsIgnoreCase("UNIX")){
+				val = UGSYNC_SOURCE_CLASS;
+			}else if(syncSource!=null && syncSource.equalsIgnoreCase("LDAP")){
+				val = LGSYNC_SOURCE_CLASS;
+			}else{
+				val = UGSYNC_SOURCE_CLASS;
+			}
 		}
 
 		Class<UserGroupSource> ugSourceClass = (Class<UserGroupSource>)Class.forName(val);
@@ -379,7 +387,7 @@ public class UserGroupSyncConfig  {
 	public UserGroupSink getUserGroupSink() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SINK_CLASS_PARAM) ;
 
-		if(val == null) {
+		if(val == null || val.trim().isEmpty()) {
 			val = UGSYNC_SINK_CLASS;
 		}
 
@@ -678,5 +686,17 @@ public class UserGroupSyncConfig  {
 
 	public String getDefaultPolicyMgrPassword(){
 		return DEFAULT_POLICYMGR_PASSWORD;
+	}
+	public String getSyncSource() {
+		String syncSource=null;
+		if(prop!=null && prop.containsKey(SYNC_SOURCE)){
+			syncSource=prop.getProperty(SYNC_SOURCE);
+			if(syncSource==null||syncSource.trim().isEmpty()){
+				syncSource=null;
+			}else{
+				syncSource=syncSource.trim();
+			}
+		}
+		return syncSource;
 	}
 }

@@ -194,6 +194,7 @@ def convertInstallPropsToXML(props):
 		else:
 			print "ERROR: Invalid value (%s) defined for %s in install.properties. Only valid values are %s" % (syncSource, SYNC_SOURCE_KEY,SYNC_SOURCE_LIST)
 			sys.exit(1)
+		ret['ranger.usersync.sync.source'] = syncSource
 		del ret['SYNC_SOURCE']
 	else:
 		print "ERROR: No value defined for SYNC_SOURCE in install.properties. valid values are %s" % (SYNC_SOURCE_KEY, SYNC_SOURCE_LIST)
