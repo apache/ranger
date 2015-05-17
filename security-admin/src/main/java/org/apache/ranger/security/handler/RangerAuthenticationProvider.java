@@ -233,7 +233,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return null;
 			}
 		} catch (Exception e) {
-			logger.error("LDAP Authentication Failed:"+e.getMessage());
+			logger.debug("LDAP Authentication Failed:", e);
 		}
 		return null;
 	}
@@ -275,7 +275,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return null;
 			}
 		}catch (Exception e) {
-			logger.error("AD Authentication Failed:"+e.getMessage());
+			logger.debug("AD Authentication Failed:", e);
 		}
 		return authentication;
 	}
@@ -333,7 +333,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return null;
 			}
 		} catch (Exception e) {
-			logger.error("Unix Authentication Failed:"+e.getMessage());
+			logger.debug("Unix Authentication Failed:", e);
 		}
 
 		return authentication;
@@ -367,7 +367,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String rangerADBindDN = PropertiesUtil.getProperty("ranger.ldap.ad.bind.dn", "");
 			String rangerADBindPassword = PropertiesUtil.getProperty("ranger.ldap.ad.bind.password", "");
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
-
+			String rangerLdapReferral = PropertiesUtil.getProperty("ranger.ldap.ad.referral", "follow");
 			String userName = authentication.getName();
 			String userPassword = "";
 			if (authentication.getCredentials() != null) {
@@ -377,7 +377,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			LdapContextSource ldapContextSource = new DefaultSpringSecurityContextSource(rangerADURL);
 			ldapContextSource.setUserDn(rangerADBindDN);
 			ldapContextSource.setPassword(rangerADBindPassword);
-			ldapContextSource.setReferral("follow");
+			ldapContextSource.setReferral(rangerLdapReferral);
 			ldapContextSource.setCacheEnvironmentProperties(true);
 			ldapContextSource.setAnonymousReadOnly(false);
 			ldapContextSource.setPooled(true);
@@ -405,7 +405,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return null;
 			}
 		} catch (Exception e) {
-			logger.error("AD Authentication Failed:"+e.getMessage());
+			logger.debug("AD Authentication Failed:", e);
 		}
 		return authentication;
 	}
@@ -421,7 +421,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String rangerLdapBase = PropertiesUtil.getProperty("ranger.ldap.base.dn", "");
 			String rangerLdapBindDN = PropertiesUtil.getProperty("ranger.ldap.bind.dn", "");
 			String rangerLdapBindPassword = PropertiesUtil.getProperty("ranger.ldap.bind.password", "");
-
+			String rangerLdapReferral = PropertiesUtil.getProperty("ranger.ldap.referral", "follow");
 			String userName = authentication.getName();
 			String userPassword = "";
 			if (authentication.getCredentials() != null) {
@@ -431,7 +431,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			LdapContextSource ldapContextSource = new DefaultSpringSecurityContextSource(rangerLdapURL);
 			ldapContextSource.setUserDn(rangerLdapBindDN);
 			ldapContextSource.setPassword(rangerLdapBindPassword);
-			ldapContextSource.setReferral("follow");
+			ldapContextSource.setReferral(rangerLdapReferral);
 			ldapContextSource.setCacheEnvironmentProperties(false);
 			ldapContextSource.setAnonymousReadOnly(true);
 			ldapContextSource.setPooled(true);
@@ -466,7 +466,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return null;
 			}
 		} catch (Exception e) {
-			logger.error("LDAP Authentication Failed:"+e.getMessage());
+			logger.debug("LDAP Authentication Failed:", e);
 		}
 		return authentication;
 	}

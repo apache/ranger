@@ -132,6 +132,11 @@
 		<value>ROLE_USER</value>
 	</property>
 	<property>
+		<name>ranger.ldap.referral</name>
+		<value></value>
+		<description>follow or ignore</description>
+	</property>
+	<property>
 		<name>ranger.ldap.ad.domain</name>
 		<value>example.com</value>
 		<description></description>
@@ -158,6 +163,11 @@
 		<description>AD bind password</description>
 	</property>
 
+	<property>
+		<name>ranger.ldap.ad.referral</name>
+		<value></value>
+		<description>follow or ignore</description>
+	</property>
 	<property>
 		<name>ranger.service.https.attrib.ssl.enabled</name>
 		<value>false</value>

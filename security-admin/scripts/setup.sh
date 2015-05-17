@@ -1234,6 +1234,10 @@ do_authentication_setup(){
 				newPropertyValue="${xa_ldap_bind_dn}"
 				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
+				propertyName=ranger.ldap.referral
+				newPropertyValue="${xa_ldap_referral}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
 				keystore="${cred_keystore_filename}"
 
 				if [ "${keystore}" != "" ]
@@ -1309,6 +1313,10 @@ do_authentication_setup(){
 
 				propertyName=ranger.ldap.ad.bind.dn
 				newPropertyValue="${xa_ldap_ad_bind_dn}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+				propertyName=ranger.ldap.ad.referral
+				newPropertyValue="${xa_ldap_ad_referral}"
 				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
 				keystore="${cred_keystore_filename}"
