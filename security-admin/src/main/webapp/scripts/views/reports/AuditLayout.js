@@ -1110,7 +1110,13 @@ define(function(require) {
 								return html;
 							}
 						})
-					}
+					},
+					syncStatus : {
+						cell : 'string',
+						label	: 'Status',
+						editable:false,
+						sortable:false
+					},
 			};
 			return this.policyExportAuditList.constructor.getTableCols(cols, this.policyExportAuditList);
 		},

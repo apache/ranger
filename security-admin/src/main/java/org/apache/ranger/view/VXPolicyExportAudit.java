@@ -73,6 +73,8 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 	 */
 	protected int httpRetCode;
 
+	protected String syncStatus;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -198,6 +200,15 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 		return this.httpRetCode;
 	}
 
+	
+	public String getSyncStatus() {
+		return syncStatus;
+	}
+
+	public void setSyncStatus(String syncStatus) {
+		this.syncStatus = syncStatus;
+	}
+
 	@Override
 	public int getMyClassType( ) {
 	    return AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT;
@@ -217,6 +228,7 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 		str += "repositoryName={" + repositoryName + "} ";
 		str += "exportedJson={" + exportedJson + "} ";
 		str += "httpRetCode={" + httpRetCode + "} ";
+		str += "syncStatus={" + syncStatus + "} ";
 		str += "}";
 		return str;
 	}

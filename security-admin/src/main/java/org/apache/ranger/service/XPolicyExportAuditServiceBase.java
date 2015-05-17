@@ -26,6 +26,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.MapUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.view.VXPolicyExportAudit;
@@ -62,6 +63,7 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
 		vObj.setRepositoryName( mObj.getRepositoryName());
 		vObj.setExportedJson( mObj.getExportedJson());
 		vObj.setHttpRetCode( mObj.getHttpRetCode());
+		vObj.setSyncStatus( MapUtil.getPolicyExportAuditSyncStatus(mObj.getHttpRetCode()));
 		return vObj;
 	}
 
