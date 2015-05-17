@@ -84,7 +84,10 @@ ExceptionMappingAuthenticationFailureHandler {
 				if(msg.equalsIgnoreCase("Bad credentials")){
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("The username or password you entered is incorrect..");
-				}else{
+				}else if(msg.contains("Could not get JDBC Connection; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!")){
+					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+					vXResponse.setMsgDesc("Unable to connect to DB..");
+				}else if(msg.contains("Communications link failure")){
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("Unable to connect to DB..");
 				}

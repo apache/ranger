@@ -147,11 +147,11 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 		<!-- LDAP_SEC_SETTINGS_END -->
 		<!-- UNIX_SEC_SETTINGS_START -->
 		<!-- UNIX_SEC_SETTINGS_END -->
-		<security:authentication-provider user-service-ref="userService">
+		<!-- <security:authentication-provider user-service-ref="userService">
 			<security:password-encoder hash="md5">
 				<security:salt-source user-property="username"/>
 			</security:password-encoder>
-		</security:authentication-provider>
+		</security:authentication-provider> -->
 		<!--   security:authentication-provider ref="rememberMeAuthenticationProvider"/ -->
 	</security:authentication-manager>
 

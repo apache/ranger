@@ -28,11 +28,14 @@ import java.util.HashMap;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
+
 import org.apache.log4j.Logger;
 import org.apache.ranger.authentication.unix.jaas.RoleUserAuthorityGranter;
 import org.apache.ranger.common.PropertiesUtil;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.jaas.DefaultJaasAuthenticationProvider;
 import org.springframework.security.authentication.jaas.memory.InMemoryConfiguration;
@@ -49,10 +52,25 @@ import org.springframework.security.ldap.authentication.LdapAuthenticator;
 import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authentication.dao.ReflectionSaltSource;
+import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
+import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.apache.ranger.biz.UserMgr;
 
 
 
 public class RangerAuthenticationProvider implements AuthenticationProvider {
+
+	@Autowired
+	@Qualifier("userService")
+	private JdbcUserDetailsManager userDetailsService;
+
+	@Autowired
+	UserMgr userMgr;
 	private static Logger logger = Logger.getLogger(RangerAuthenticationProvider.class);
 	private String rangerAuthenticationMethod;
 
@@ -65,6 +83,9 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 	@Override
 	public Authentication authenticate(Authentication authentication)
 			throws AuthenticationException {
+		if(rangerAuthenticationMethod==null){
+			rangerAuthenticationMethod="NONE";
+		}
 		if (authentication != null && rangerAuthenticationMethod!=null) {
 			if (rangerAuthenticationMethod.equalsIgnoreCase("LDAP")) {
 				authentication=getLdapAuthentication(authentication);
@@ -89,11 +110,50 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				}
 			}
 			if (rangerAuthenticationMethod.equalsIgnoreCase("UNIX")) {
-				return getUnixAuthentication(authentication);
+				authentication= getUnixAuthentication(authentication);
+				if(authentication!=null && authentication.isAuthenticated()){
+					return authentication;
+				}
 			}
-			return null;
+			String encoder="SHA256";
+			try{
+				authentication=getJDBCAuthentication(authentication,encoder);
+			}catch (BadCredentialsException e) {
+			}catch (AuthenticationServiceException e) {
+			}catch (AuthenticationException e) {
+			}catch (Exception e) {
+			}
+			if(authentication!=null && authentication.isAuthenticated()){
+				return authentication;
+			}
+			if(authentication!=null && !authentication.isAuthenticated()){
+				encoder="MD5";
+				String userName = authentication.getName();
+				String userPassword = null;
+				if (authentication.getCredentials() != null) {
+					userPassword = authentication.getCredentials().toString();
+				}
+				try{
+					authentication=getJDBCAuthentication(authentication,encoder);
+				}catch (BadCredentialsException e) {
+					throw e;
+				}catch (AuthenticationServiceException e) {
+					throw e;
+				}catch (AuthenticationException e) {
+					throw e;
+				}catch (Exception e) {
+					throw e;
+				}
+				if(authentication!=null && authentication.isAuthenticated()){
+					userMgr.updatePasswordInSHA256(userName,userPassword);
+					return authentication;
+				}else{
+					return authentication;
+				}
+			}
+			return authentication;
 		}
-		return null;
+		return authentication;
 	}
 
 	private Authentication getLdapAuthentication(Authentication authentication) {
@@ -407,6 +467,50 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			}
 		} catch (Exception e) {
 			logger.error("LDAP Authentication Failed:"+e.getMessage());
+		}
+		return authentication;
+	}
+
+	private Authentication getJDBCAuthentication(Authentication authentication,String encoder) throws AuthenticationException{
+		try {
+
+			ReflectionSaltSource saltSource = new ReflectionSaltSource();
+			saltSource.setUserPropertyToUse("username");
+
+			DaoAuthenticationProvider authenticator = new DaoAuthenticationProvider();
+			authenticator.setUserDetailsService(userDetailsService);
+			if(encoder!=null && "SHA256".equalsIgnoreCase(encoder)){
+				authenticator.setPasswordEncoder( new ShaPasswordEncoder(256));
+			}else if(encoder!=null && "MD5".equalsIgnoreCase(encoder)){
+				authenticator.setPasswordEncoder( new Md5PasswordEncoder());
+			}
+
+			authenticator.setSaltSource(saltSource);
+
+			String userName = authentication.getName();
+			String userPassword = "";
+			if (authentication.getCredentials() != null) {
+				userPassword = authentication.getCredentials().toString();
+			}
+			String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
+			if (userName != null && userPassword != null && !userName.trim().isEmpty()&& !userPassword.trim().isEmpty()) {
+				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+				grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+				grantedAuths.add(new SimpleGrantedAuthority("ROLE_SYS_ADMIN"));
+				grantedAuths.add(new SimpleGrantedAuthority("ROLE_KEY_ADMIN"));
+				final UserDetails principal = new User(userName, userPassword,grantedAuths);
+				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
+				authentication= authenticator.authenticate(finalAuthentication);
+				return authentication;
+			}
+		} catch (BadCredentialsException e) {
+			throw e;
+		}catch (AuthenticationServiceException e) {
+			throw e;
+		}catch (AuthenticationException e) {
+			throw e;
+		}catch (Exception e) {
+			throw e;
 		}
 		return authentication;
 	}

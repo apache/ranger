@@ -64,13 +64,14 @@ import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
 
 @Component
 public class UserMgr {
 
 	static final Logger logger = Logger.getLogger(UserMgr.class);
 	private static final Md5PasswordEncoder md5Encoder = new Md5PasswordEncoder();
-
+	private static final ShaPasswordEncoder sha256Encoder = new ShaPasswordEncoder(256);
 	@Autowired
 	RangerDaoManager daoManager;
 
@@ -1108,7 +1109,7 @@ public class UserMgr {
 	}
 
 	public String encrypt(String loginId, String password) {
-		String saltEncodedpasswd = md5Encoder.encodePassword(password, loginId);
+		String saltEncodedpasswd = sha256Encoder.encodePassword(password, loginId);
 		return saltEncodedpasswd;
 	}
 
@@ -1246,6 +1247,25 @@ public class UserMgr {
 			xXPortalUser.setPassword(encryptedNewPwd);
 			xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
 		}
+		return xXPortalUser;
+	}
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
+	public XXPortalUser updatePasswordInSHA256(String userName,String userPassword) {
+		if (userName == null || userPassword == null
+				|| userName.trim().isEmpty() || userPassword.trim().isEmpty()){
+				return null;
+		}
+
+		XXPortalUser xXPortalUser = this.findByLoginId(userName);
+
+		if (xXPortalUser == null) {
+			return null;
+		}
+
+		String encryptedNewPwd = encrypt(xXPortalUser.getLoginId(),userPassword);
+		xXPortalUser.setPassword(encryptedNewPwd);
+		xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
+
 		return xXPortalUser;
 	}
 }
