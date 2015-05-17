@@ -417,7 +417,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 	             * at the end. If this check fails, the store has been tampered
 	             * with
 	             */
-	             if (password != null) {	                
+	             if (computed != null) {	                
 	                int counter = 0; 
 	                for (int i = computed.length-1; i >= 0; i--) {
 	                    if (computed[i] != data[data.length-(1+counter)]) {

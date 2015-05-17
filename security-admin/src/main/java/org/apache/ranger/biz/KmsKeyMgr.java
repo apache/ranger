@@ -141,11 +141,8 @@ public class KmsKeyMgr {
 		deleteRest = deleteRest.replaceAll(Pattern.quote("${userName}"), currentUserLoginId);
 		String uri = provider + (provider.endsWith("/") ? deleteRest : ("/" + deleteRest));
 		WebResource r = c.resource(uri) ;
-		ClientResponse response = r.delete(ClientResponse.class) ;
-		logger.debug("delete RESPONSE: [" + response.toString() + "]") ;			
-		if (response.getStatus() == 200) {
-			logger.debug("Alias "+name+" deleted successfully");
-		}		
+		String response = r.delete(String.class) ;
+		logger.debug("delete RESPONSE: [" + response + "]") ;			
 	}
 
 	public VXKmsKey createKey(String provider, VXKmsKey vXKey){

@@ -325,10 +325,14 @@ define(function(require){
 							XAUtil.notifySuccess('Success', localization.tt('msg.keyDeleteMsg'));
 							that.renderKeyTab();
 							that.collection.fetch();
-						},
-						'error': function (model, response, options) {
+						},						
+						'error' : function(model,resp){
+							var errorMsg = 'Error deleting key!';
 							XAUtil.blockUI('unblock');
-							XAUtil.notifyError('Error', 'Error deleting key!');
+							if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
+								errorMsg = resp.responseJSON.msgDesc;
+							}
+							XAUtil.notifyError('Error', errorMsg);
 						}
 					});
 				}
@@ -355,9 +359,13 @@ define(function(require){
 							that.renderKeyTab();
 							that.collection.fetch();
 						},
-						'error': function (model, response, options) {
-							XAUtil.blockUI('unblock');
-							XAUtil.notifyError('Error', 'Error rollovering key!');
+						'error' : function(model,resp){
+                            var errorMsg = 'Error rollovering key!';
+                            XAUtil.blockUI('unblock');
+                            if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
+                                    errorMsg = resp.responseJSON.msgDesc;
+                            }
+                            XAUtil.notifyError('Error', errorMsg);
 						}
 					});
 				}

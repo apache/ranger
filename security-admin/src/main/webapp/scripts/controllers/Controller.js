@@ -408,7 +408,7 @@ define(function(require) {
 		   var KmsKey		= require('models/VXKmsKey');
 		   
 		   App.rContent.show(new view({
-			   model : new KmsKey({'length' : 128, 'cipher' : 'AES' }),
+			   model : new KmsKey({'length' : 128, 'cipher' : 'AES/CTR/NoPadding' }),
 			   kmsServiceName : kmsServiceName
 		   }));
 	   },

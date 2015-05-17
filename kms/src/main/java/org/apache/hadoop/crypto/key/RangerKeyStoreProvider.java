@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
-
+import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.KeyProviderFactory;
@@ -46,7 +46,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
 import org.apache.log4j.Logger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+@InterfaceAudience.Private
 public class RangerKeyStoreProvider extends KeyProvider{
 	
 	static final Logger logger = Logger.getLogger(RangerKeyStoreProvider.class);
@@ -66,6 +70,8 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	private boolean changed = false;
 	private final Map<String, Metadata> cache = new HashMap<String, Metadata>();
 	private DaoManager daoManager;
+	
+	private Lock readLock;
 
 	public RangerKeyStoreProvider(Configuration conf) throws Throwable {
 		super(conf);
@@ -90,12 +96,12 @@ public class RangerKeyStoreProvider extends KeyProvider{
 		try {
 			loadKeys(masterKey);
 		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
 			throw new IOException("Can't load Keys");
 		}catch(CertificateException e){
-			e.printStackTrace();
 			throw new IOException("Can't load Keys");
 		}
+		ReadWriteLock lock = new ReentrantReadWriteLock(true);
+	    readLock = lock.readLock();
 	}
 
 	public static Configuration getDBKSConf() {
@@ -159,7 +165,6 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	          String attribute = om.writeValueAsString(attributes);
 			  dbStore.engineSetKeyEntry(versionName, new SecretKeySpec(material, cipher), masterKey, cipher, bitLength, description, version, attribute);
 		} catch (KeyStoreException e) {
-			e.printStackTrace();
 			throw new IOException("Can't store key " + versionName,e);
 		}
 		changed = true;
@@ -187,7 +192,6 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	          dbStore.engineDeleteEntry(name);
 	        }
 	      } catch (KeyStoreException e) {
-	    	  e.printStackTrace();
 	        throw new IOException("Problem removing " + name + " from " + this, e);
 	      }
 	      cache.remove(name);
@@ -208,46 +212,45 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	          String attributes = om.writeValueAsString(metadata.getAttributes());
 	          dbStore.engineSetKeyEntry(entry.getKey(), new KeyMetadata(metadata), masterKey, metadata.getAlgorithm(), metadata.getBitLength(), metadata.getDescription(), metadata.getVersions(), attributes);
 	        } catch (KeyStoreException e) {
-	        	e.printStackTrace();
 	          throw new IOException("Can't set metadata key " + entry.getKey(),e );
 	        }
 	      }
 	      try {
 	          dbStore.engineStore(null, masterKey);
 	        } catch (NoSuchAlgorithmException e) {
-	        	e.printStackTrace();
 	          throw new IOException("No such algorithm storing key", e);
 	        } catch (CertificateException e) {
-	        	e.printStackTrace();
 	          throw new IOException("Certificate exception storing key", e);
 	        }
 	      changed = false;
 		 }catch (IOException ioe) {
-			 ioe.printStackTrace();
 	          throw ioe;
 	     }
 	}
 
 	@Override
 	public KeyVersion getKeyVersion(String versionName) throws IOException {
-	      SecretKeySpec key = null;
-	      try {
-	        if (!dbStore.engineContainsAlias(versionName)) {
-	          return null;
-	        }
-	        key = (SecretKeySpec) dbStore.engineGetKey(versionName, masterKey);
-	      } catch (NoSuchAlgorithmException e) {
-	    	  e.printStackTrace();
-	        throw new IOException("Can't get algorithm for key " + key, e);
-	      } catch (UnrecoverableKeyException e) {
-	    	  e.printStackTrace();
-	        throw new IOException("Can't recover key " + key, e);
-	      }
-		if (key == null) {
-			return null;
-		} else {
-			return new KeyVersion(getBaseName(versionName), versionName, key.getEncoded());
-		}
+		readLock.lock();
+	    try {
+	    	SecretKeySpec key = null;
+	    	try {
+	    		if (!dbStore.engineContainsAlias(versionName)) {
+	    			return null;
+	    		}
+	    		key = (SecretKeySpec) dbStore.engineGetKey(versionName, masterKey);
+	    	} catch (NoSuchAlgorithmException e) {
+	    		throw new IOException("Can't get algorithm for key " + key, e);
+	    	} catch (UnrecoverableKeyException e) {
+	    		throw new IOException("Can't recover key " + key, e);
+	    	}
+	    	if (key == null) {
+	    		return null;
+	    	} else {
+	    		return new KeyVersion(getBaseName(versionName), versionName, key.getEncoded());
+	    	}
+	    } finally {
+	        readLock.unlock();
+	    }
 	}
 
 	@Override
@@ -286,23 +289,30 @@ public class RangerKeyStoreProvider extends KeyProvider{
 
 	@Override
 	public Metadata getMetadata(String name) throws IOException {
-		  if (cache.containsKey(name)) {
-	        return cache.get(name);
-	      }
-	      try {
-	        if (!dbStore.engineContainsAlias(name)) {
-	          return null;
-	        }
-	        Metadata meta = ((KeyMetadata) dbStore.engineGetKey(name, masterKey)).metadata;
-	        cache.put(name, meta);
-	        return meta;
-	      } catch (NoSuchAlgorithmException e) {
-	    	  e.printStackTrace();
-	        throw new IOException("Can't get algorithm for " + name, e);
-	      } catch (UnrecoverableKeyException e) {
-	    	  e.printStackTrace();
-	        throw new IOException("Can't recover key for " + name, e);
-	      }	      
+		readLock.lock();
+	    try {
+	    	if (cache.containsKey(name)) {
+	    		return cache.get(name);
+	    	}
+	    	try {
+	    		if (!dbStore.engineContainsAlias(name)) {
+	    			return null;
+	    		}
+	    		Key key = dbStore.engineGetKey(name, masterKey);
+	    		if(key != null){
+	    			Metadata meta = ((KeyMetadata) key).metadata;
+	    			cache.put(name, meta);
+	    			return meta;
+	    		}
+	    	} catch (NoSuchAlgorithmException e) {
+	    		throw new IOException("Can't get algorithm for " + name, e);
+	    	} catch (UnrecoverableKeyException e) {
+	    		throw new IOException("Can't recover key for " + name, e);
+	    	}
+	    	return null;
+		} finally {
+	      readLock.unlock();
+	    }
 	}
 
 	@Override
