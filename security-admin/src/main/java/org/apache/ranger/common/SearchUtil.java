@@ -70,6 +70,7 @@ public class SearchUtil {
 				request.getParameter("startIndex"), 0,
 				"Invalid value for parameter startIndex",
 				MessageEnums.INVALID_INPUT_DATA, null, "startIndex");
+		startIndex = startIndex < 0 ? 0 : startIndex;
 		searchCriteria.setStartIndex(startIndex);
 
 		int pageSize = restErrorUtil.parseInt(request.getParameter("pageSize"),
@@ -120,6 +121,7 @@ public class SearchUtil {
 				request.getParameter("startIndex"), 0,
 				"Invalid value for parameter startIndex",
 				MessageEnums.INVALID_INPUT_DATA, null, "startIndex");
+		startIndex = startIndex < 0 ? 0 : startIndex;
 		searchCriteria.setStartIndex(startIndex);
 
 		int pageSize = restErrorUtil.parseInt(request.getParameter("pageSize"),

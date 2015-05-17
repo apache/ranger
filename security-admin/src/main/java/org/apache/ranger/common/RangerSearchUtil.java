@@ -152,6 +152,7 @@ public class RangerSearchUtil extends SearchUtil {
 		int startIndex = restErrorUtil.parseInt(request.getParameter(SearchFilter.START_INDEX), 0,
 				"Invalid value for parameter startIndex", MessageEnums.INVALID_INPUT_DATA, null,
 				SearchFilter.START_INDEX);
+		startIndex = startIndex < 0 ? 0 : startIndex;
 		ret.setStartIndex(startIndex);
 
 		int pageSize = restErrorUtil.parseInt(request.getParameter(SearchFilter.PAGE_SIZE),
