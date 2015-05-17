@@ -20,13 +20,11 @@ from subprocess import  Popen,PIPE
 from optparse import OptionParser
 
 if os.getenv('JAVA_HOME') is None:
-	print "[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------"
-	sys.exit(1)
-
-JAVA_BIN=os.path.join(os.getenv('JAVA_HOME'),'bin','java')
+	print "[W] ---------- JAVA_HOME environment property not defined, using java in path. ----------"
+	JAVA_BIN='java'
+else:
+	JAVA_BIN=os.path.join(os.getenv('JAVA_HOME'),'bin','java')
 print "Using Java:" + str(JAVA_BIN)
-
-
 
 def main():
 
