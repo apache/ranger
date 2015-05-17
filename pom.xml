@@ -87,8 +87,6 @@
   <module>hive-agent</module>
   <module>knox-agent</module>
   <module>storm-agent</module>
-  <module>plugin-kafka</module>
-  <!-- <module>plugin-solr</module> -->
   <module>plugin-yarn</module>
   <module>ranger_solrj</module>
   <module>security-admin</module>
@@ -222,6 +220,12 @@
           <id>solr-security</id>
          <modules>
         	 <module>plugin-solr</module>         
+         </modules>
+      </profile>
+      <profile>
+          <id>kafka-security</id>
+         <modules>
+        	 <module>plugin-kafka</module>         
          </modules>
       </profile>
   </profiles>
@@ -375,15 +379,14 @@
              <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
              <descriptor>src/main/assembly/knox-agent.xml</descriptor>
              <descriptor>src/main/assembly/storm-agent.xml</descriptor>
-	     <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
+	         <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
              <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
-	     <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
+	         <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
              <descriptor>src/main/assembly/admin-web.xml</descriptor>
              <descriptor>src/main/assembly/usersync.xml</descriptor>
              <descriptor>src/main/assembly/migration-util.xml</descriptor>
              <descriptor>src/main/assembly/kms.xml</descriptor>
              <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-	     <!--<descriptor>src/main/assembly/plugin-kms.xml</descriptor>-->
            </descriptors>
          </configuration>
       </plugin>
