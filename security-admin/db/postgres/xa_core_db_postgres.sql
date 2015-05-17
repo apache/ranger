@@ -907,6 +907,7 @@ CREATE INDEX x_policy_cr_time ON x_policy(create_time);
 CREATE INDEX x_policy_up_time ON x_policy(update_time);
 CREATE INDEX x_policy_service ON x_policy(service);
 CREATE INDEX x_resource_def_parent ON x_resource_def(parent);
+CREATE INDEX x_policy_resource_signature ON x_policy(resource_signature);
 DROP VIEW IF EXISTS vx_trx_log;
 CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
 

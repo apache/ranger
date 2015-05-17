@@ -443,4 +443,5 @@ CREATE INDEX x_policy_cr_time ON x_policy(create_time);
 CREATE INDEX x_policy_up_time ON x_policy(update_time);
 CREATE INDEX x_policy_service ON x_policy(service);
 CREATE INDEX x_resource_def_parent ON x_resource_def(parent);
+CREATE INDEX x_policy_resource_signature ON x_policy(resource_signature);
 commit;

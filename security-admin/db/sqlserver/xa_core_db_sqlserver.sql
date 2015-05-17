@@ -2634,6 +2634,12 @@ CREATE NONCLUSTERED INDEX [x_policy_service] ON [x_policy]
 )
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
 GO
+CREATE NONCLUSTERED INDEX [x_policy_resource_signature] ON [x_policy]
+(
+   [resource_signature] ASC
+)
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+GO
 CREATE NONCLUSTERED INDEX [x_resource_def_parent] ON [x_resource_def]
 (
    [parent] ASC
