@@ -203,7 +203,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		  		KMSWebApp.getUnauthorizedCallsMeter().mark();
 		  		KMSWebApp.getKMSAudit().unauthorized(ugi, operation, key);
 		  		throw new AuthorizationException(String.format(
-		  				(key != null) ? UNAUTHORIZED_MSG_WITH_KEY
+		  				(!key.equals("")) ? UNAUTHORIZED_MSG_WITH_KEY
 	                        : UNAUTHORIZED_MSG_WITHOUT_KEY,
 	                        ugi.getShortUserName(), operation, key));
 		  	}
