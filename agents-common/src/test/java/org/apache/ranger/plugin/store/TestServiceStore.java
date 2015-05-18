@@ -123,7 +123,7 @@ public class TestServiceStore {
 
 		int initServiceCount = services == null ? 0 : services.size();
 
-		RangerService svc = new RangerService(sdName, serviceName, "test service description", null);
+		RangerService svc = new RangerService(sdName, serviceName, "test service description", null, null);
 
 		RangerService createdSvc = svcStore.createService(svc);
 		assertNotNull("createService() failed", createdSvc);

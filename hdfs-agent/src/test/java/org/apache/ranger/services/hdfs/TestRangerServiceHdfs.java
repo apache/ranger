@@ -56,7 +56,7 @@ public class TestRangerServiceHdfs {
 		buildLookupContext();
 
 		sd		 = new RangerServiceDef(sdName, "org.apache.ranger.service.hdfs.RangerServiceHdfs", "TestService", "test servicedef description", null, null, null, null, null, null);
-		svc   	 = new RangerService(sdName, serviceName, "unit test hdfs resource lookup and validateConfig",configs);
+		svc   	 = new RangerService(sdName, serviceName, "unit test hdfs resource lookup and validateConfig", null, configs);
 		svcHdfs = new RangerServiceHdfs();
 		svcHdfs.init(sd, svc);
 	}

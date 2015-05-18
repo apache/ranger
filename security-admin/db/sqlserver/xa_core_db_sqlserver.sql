@@ -1526,6 +1526,11 @@ BEGIN
     ALTER TABLE [dbo].[x_service] DROP CONSTRAINT x_service_FK_type
 END
 GO
+IF (OBJECT_ID('x_service_FK_tag_service') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_service] DROP CONSTRAINT x_service_FK_tag_service
+END
+GO
 IF (OBJECT_ID('x_policy_FK_added_by_id') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_policy] DROP CONSTRAINT x_policy_FK_added_by_id
@@ -1783,6 +1788,7 @@ CREATE TABLE [dbo].[x_service] (
 	[policy_update_time] [datetime2] DEFAULT NULL NULL,
 	[description] [varchar](1024) DEFAULT NULL NULL,
 	[is_enabled] [tinyint] DEFAULT 0 NOT NULL,                        
+	[tag_service] [bigint] DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
@@ -2269,6 +2275,11 @@ ALTER TABLE [dbo].[x_service]  WITH CHECK ADD  CONSTRAINT [x_service_FK_type] FO
 REFERENCES [dbo].[x_service_def] ([id])
 GO
 ALTER TABLE [dbo].[x_service] CHECK CONSTRAINT [x_service_FK_type]
+GO
+ALTER TABLE [dbo].[x_service]  WITH CHECK ADD  CONSTRAINT [x_service_FK_tag_service] FOREIGN KEY([tag_service])
+REFERENCES [dbo].[x_service] ([id])
+GO
+ALTER TABLE [dbo].[x_service] CHECK CONSTRAINT [x_service_FK_tag_service]
 GO
 ALTER TABLE [dbo].[x_policy]  WITH CHECK ADD  CONSTRAINT [x_policy_FK_added_by_id] FOREIGN KEY([added_by_id])
 REFERENCES [dbo].[x_portal_user] ([id])

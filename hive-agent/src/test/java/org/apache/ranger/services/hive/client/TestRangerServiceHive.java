@@ -57,7 +57,7 @@ public class TestRangerServiceHive {
 		buildLookupContext();
 				
 		sd		= new RangerServiceDef(sdName, "org.apache.ranger.services.hive.RangerServiceHive", "TestHiveService", "test servicedef description", null, null, null, null, null, null);
-		svc   	= new RangerService(sdName, serviceName, "unit test hive resource lookup and validateConfig", configs);
+		svc   	= new RangerService(sdName, serviceName, "unit test hive resource lookup and validateConfig", null, configs);
 		svcHive = new RangerServiceHive();
 		svcHive.init(sd, svc);
 	}

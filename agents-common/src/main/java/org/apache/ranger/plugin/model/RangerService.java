@@ -44,6 +44,7 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	private String              type             = null;
 	private String              name             = null;
 	private String              description      = null;
+	private String              tagService       = null;
 	private Map<String, String> configs          = null;
 	private Long                policyVersion    = null;
 	private Date                policyUpdateTime = null;
@@ -53,7 +54,7 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 * @param type
 	 */
 	public RangerService() {
-		this(null, null, null, null);
+		this(null, null, null, null, null);
 	}
 
 	/**
@@ -61,13 +62,15 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 * @param name
 	 * @param description
 	 * @param configs
+	 * @param tagServiceName
 	 */
-	public RangerService(String type, String name, String description, Map<String, String> configs) {
+	public RangerService(String type, String name, String description, String tagService, Map<String, String> configs) {
 		super();
 
 		setType(type);
 		setName(name);
 		setDescription(description);
+		setTagService(tagService);
 		setConfigs(configs);
 	}
 
@@ -81,6 +84,7 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		setName(other.getName());
 		setDescription(other.getDescription());
 		setConfigs(other.getConfigs());
+		setTagService(other.tagService);
 	}
 
 	/**
@@ -123,6 +127,20 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 */
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	/**
+	 * @return the tagService
+	 */
+	public String getTagService() {
+		return tagService;
+	}
+
+	/**
+	 * @param tagServiceName the tagServiceName to set
+	 */
+	public void setTagService(String tagService) {
+		this.tagService = tagService;
 	}
 
 	/**
@@ -197,6 +215,7 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		sb.append("name={").append(name).append("} ");
 		sb.append("type={").append(type).append("} ");
 		sb.append("description={").append(description).append("} ");
+		sb.append("tagService={").append(tagService).append("} ");
 
 		sb.append("configs={");
 		if(configs != null) {

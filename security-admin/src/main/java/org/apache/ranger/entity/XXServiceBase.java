@@ -68,6 +68,15 @@ public abstract class XXServiceBase extends XXDBBase {
 	protected String name;
 
 	/**
+	 * tagService of the XXService
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "tag_service")
+	protected Long tagService;
+
+	/**
 	 * policyVersion of the XXService
 	 * <ul>
 	 * </ul>
@@ -177,6 +186,25 @@ public abstract class XXServiceBase extends XXDBBase {
 	 */
 	public String getName() {
 		return this.name;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> tagService</b> .
+	 * 
+	 * @param tagService
+	 *            Value to set member attribute <b> tagService</b>
+	 */
+	public void setTagService(Long tagService) {
+		this.tagService = tagService;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>tagService</b>
+	 * 
+	 * @return Long - value of member attribute <b>tagService</b> .
+	 */
+	public Long getTagService() {
+		return this.tagService;
 	}
 
 	/**
@@ -297,6 +325,13 @@ public abstract class XXServiceBase extends XXDBBase {
 		} else if (!name.equals(other.name)) {
 			return false;
 		}
+		if (tagService == null) {
+			if (other.tagService != null) {
+				return false;
+			}
+		} else if (!tagService.equals(other.tagService)) {
+			return false;
+		}
 		if (policyUpdateTime == null) {
 			if (other.policyUpdateTime != null) {
 				return false;
@@ -343,7 +378,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	@Override
 	public String toString() {
 		return "XXServiceBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", type=" + type
-				+ ", name=" + name + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
+				+ ", name=" + name + ", tagService=" + tagService + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
 				+ ", description=" + description + ", isEnabled=" + isEnabled + "]";
 	}
 
