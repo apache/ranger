@@ -316,10 +316,13 @@ public class KMS {
           }
         }
     );
-
     Object json = KMSServerJSONUtils.toJSON(keyVersion);
-    kmsAudit.ok(user, KMSOp.GET_CURRENT_KEY, name, "");
-    return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
+    if (keyVersion != null) {
+    	kmsAudit.ok(user, KMSOp.GET_CURRENT_KEY, name, "");
+    	return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
+    }else{
+    	return Response.status(404).type(MediaType.APPLICATION_JSON).entity(json).build();
+    }
   }
 
   @GET
