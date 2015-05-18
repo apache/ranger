@@ -20,7 +20,9 @@
 package org.apache.ranger.plugin.store;
 
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
-import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.Date;
 import java.util.List;
@@ -28,11 +30,11 @@ import java.util.UUID;
 
 public abstract class AbstractTagStore implements TagStore {
 	protected void preCreate(RangerBaseModelObject obj) throws Exception {
-		obj.setId(new Long(0));
+		obj.setId(0L);
 		obj.setGuid(UUID.randomUUID().toString());
 		obj.setCreateTime(new Date());
 		obj.setUpdateTime(obj.getCreateTime());
-		obj.setVersion(new Long(1));
+		obj.setVersion(1L);
 	}
 
 	protected void postCreate(RangerBaseModelObject obj) throws Exception {
@@ -40,7 +42,7 @@ public abstract class AbstractTagStore implements TagStore {
 
 	protected void preUpdate(RangerBaseModelObject obj) throws Exception {
 		if(obj.getId() == null) {
-			obj.setId(new Long(0));
+			obj.setId(0L);
 		}
 
 		if(obj.getGuid() == null) {
@@ -54,9 +56,9 @@ public abstract class AbstractTagStore implements TagStore {
 		Long version = obj.getVersion();
 
 		if(version == null) {
-			version = new Long(1);
+			version = 1L;
 		} else {
-			version = new Long(version.longValue() + 1);
+			version =  version + 1;
 		}
 
 		obj.setVersion(version);
@@ -85,4 +87,27 @@ public abstract class AbstractTagStore implements TagStore {
 		}
 		return ret;
 	}
+
+	@Override
+	public PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception {
+		List<RangerTagDef> list = getTagDefs(filter);
+
+		return new PList<RangerTagDef>(list, 0, list.size(),
+				(long)list.size(), list.size(), filter.getSortType(), filter.getSortBy());
+	}
+
+	public PList<RangerResource> getPaginatedResources(String tagServiceName, String serviceType) throws Exception {
+		List<RangerResource> list = getResources(tagServiceName, serviceType);
+
+		return new PList<RangerResource>(list, 0, list.size(),
+				(long)list.size(), list.size(), null, null);
+	}
+
+	public PList<RangerResource> getPaginatedResources(SearchFilter filter) throws Exception {
+		List<RangerResource> list = getResources(filter);
+
+		return new PList<RangerResource>(list, 0, list.size(),
+				(long)list.size(), list.size(), filter.getSortType(), filter.getSortBy());
+	}
+
 }

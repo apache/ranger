@@ -29,10 +29,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
 public interface RangerPolicyEngine {
-	public static final String GROUP_PUBLIC   = "public";
-	public static final String ANY_ACCESS     = "_any";
-	public static final String ADMIN_ACCESS   = "_admin";
-	public static final long   UNKNOWN_POLICY = -1;
+	String GROUP_PUBLIC   = "public";
+	String ANY_ACCESS     = "_any";
+	String ADMIN_ACCESS   = "_admin";
+
+	String KEY_CONTEXT_TAGS    = "TAGS";
+	String KEY_CONTEXT_TAG_OBJECT    = "TAG_OBJECT";
 
 	String getServiceName();
 

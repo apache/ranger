@@ -56,7 +56,6 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.updateTagServiceDefForAccessTypes()");
 		}
-		return;
 	}
 
 	@Override
@@ -65,94 +64,43 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	}
 
 	@Override
-	public RangerServiceDefPaginatedList getPaginatedServiceDefs(SearchFilter filter) throws Exception {
+	public PList<RangerServiceDef> getPaginatedServiceDefs(SearchFilter filter) throws Exception {
 		List<RangerServiceDef> resultList = getServiceDefs(filter);
 
-		RangerServiceDefPaginatedList ret = new RangerServiceDefPaginatedList();
-
-		ret.setResultSize(resultList.size());
-		ret.setPageSize(resultList.size());
-		ret.setSortBy(filter.getSortBy());
-		ret.setSortType(filter.getSortType());
-		ret.setStartIndex(0);
-		ret.setTotalCount(resultList.size());
-
-		ret.setServiceDefs(resultList);
-
-		return ret;
+		return new PList<RangerServiceDef>(resultList, 0, resultList.size(),
+				(long)resultList.size(), resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
 	@Override
-	public RangerServicePaginatedList getPaginatedServices(SearchFilter filter) throws Exception {
+	public PList<RangerService> getPaginatedServices(SearchFilter filter) throws Exception {
 		List<RangerService> resultList = getServices(filter);
 
-		RangerServicePaginatedList ret = new RangerServicePaginatedList();
-
-		ret.setResultSize(resultList.size());
-		ret.setPageSize(resultList.size());
-		ret.setSortBy(filter.getSortBy());
-		ret.setSortType(filter.getSortType());
-		ret.setStartIndex(0);
-		ret.setTotalCount(resultList.size());
-
-		ret.setServices(resultList);
-
-		return ret;
+		return new PList<RangerService>(resultList, 0, resultList.size(), (long)resultList.size(),
+				resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
 	@Override
-	public 	RangerPolicyPaginatedList getPaginatedPolicies(SearchFilter filter) throws Exception {
+	public 	PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception {
 		List<RangerPolicy> resultList = getPolicies(filter);
 
-		RangerPolicyPaginatedList ret = new RangerPolicyPaginatedList();
-
-		ret.setResultSize(resultList.size());
-		ret.setPageSize(resultList.size());
-		ret.setSortBy(filter.getSortBy());
-		ret.setSortType(filter.getSortType());
-		ret.setStartIndex(0);
-		ret.setTotalCount(resultList.size());
-
-		ret.setPolicies(resultList);
-
-		return ret;
+		return new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
+				resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
 	@Override
-	public RangerPolicyPaginatedList getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
+	public PList<RangerPolicy> getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
 		List<RangerPolicy> resultList = getServicePolicies(serviceId, filter);
 
-		RangerPolicyPaginatedList ret = new RangerPolicyPaginatedList();
-
-		ret.setResultSize(resultList.size());
-		ret.setPageSize(resultList.size());
-		ret.setSortBy(filter.getSortBy());
-		ret.setSortType(filter.getSortType());
-		ret.setStartIndex(0);
-		ret.setTotalCount(resultList.size());
-
-		ret.setPolicies(resultList);
-
-		return ret;
+		return new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
+				resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
 	@Override
-	public 	RangerPolicyPaginatedList getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception {
+	public 	PList<RangerPolicy> getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception {
 		List<RangerPolicy> resultList = getServicePolicies(serviceName, filter);
 
-		RangerPolicyPaginatedList ret = new RangerPolicyPaginatedList();
-
-		ret.setResultSize(resultList.size());
-		ret.setPageSize(resultList.size());
-		ret.setSortBy(filter.getSortBy());
-		ret.setSortType(filter.getSortType());
-		ret.setStartIndex(0);
-		ret.setTotalCount(resultList.size());
-
-		ret.setPolicies(resultList);
-
-		return ret;
-
+		return new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
+				resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
 	@Override
@@ -189,17 +137,17 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	}
 
 	protected void preCreate(RangerBaseModelObject obj) throws Exception {
-		obj.setId(new Long(0));
+		obj.setId(0L);
 		obj.setGuid(UUID.randomUUID().toString());
 		obj.setCreateTime(new Date());
 		obj.setUpdateTime(obj.getCreateTime());
-		obj.setVersion(new Long(1));
+		obj.setVersion(1L);
 	}
 
 	protected void preCreate(RangerService service) throws Exception {
 		preCreate((RangerBaseModelObject)service);
 
-		service.setPolicyVersion(new Long(0));
+		service.setPolicyVersion(0L);
 		service.setPolicyUpdateTime(service.getCreateTime());
 	}
 
@@ -211,7 +159,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 	protected void preUpdate(RangerBaseModelObject obj) throws Exception {
 		if(obj.getId() == null) {
-			obj.setId(new Long(0));
+			obj.setId(0L);
 		}
 
 		if(obj.getGuid() == null) {
@@ -225,9 +173,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		Long version = obj.getVersion();
 
 		if(version == null) {
-			version = new Long(1);
+			version = 1L;
 		} else {
-			version = new Long(version.longValue() + 1);
+			version = version + 1;
 		}
 
 		obj.setVersion(version);
@@ -323,7 +271,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 		String serviceDefName = serviceDef.getName();
 
-		RangerServiceDef tagServiceDef = null;
+		RangerServiceDef tagServiceDef;
 		try {
 			tagServiceDef = this.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
 		} catch (Exception e) {
@@ -438,7 +386,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 			return;
 		}
 
-		RangerServiceDef tagServiceDef = null;
+		RangerServiceDef tagServiceDef;
 		try {
 			tagServiceDef = this.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
 		} catch (Exception e) {
@@ -464,6 +412,6 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	}
 
 	protected long getNextVersion(Long currentVersion) {
-		return currentVersion == null ? 1L : currentVersion.longValue() + 1;
+		return currentVersion == null ? 1L : currentVersion + 1;
 	}
 }

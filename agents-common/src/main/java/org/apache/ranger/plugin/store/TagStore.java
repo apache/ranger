@@ -44,6 +44,7 @@ public interface TagStore {
 
     List<RangerTagDef> getTagDefs(SearchFilter filter) throws Exception;
 
+    PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception;
 
     RangerResource createResource(RangerResource resource) throws Exception;
 
@@ -55,5 +56,9 @@ public interface TagStore {
 
     List<RangerResource> getResources(String tagServiceName, String serviceType) throws Exception;
 
+    PList<RangerResource> getPaginatedResources(String tagServiceName, String serviceType) throws Exception;
+
     List<RangerResource> getResources(SearchFilter filter) throws Exception;
+    PList<RangerResource> getPaginatedResources(SearchFilter filter) throws Exception;
+
 }

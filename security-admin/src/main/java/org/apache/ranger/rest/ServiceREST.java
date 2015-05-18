@@ -74,9 +74,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.plugin.store.RangerPolicyPaginatedList;
-import org.apache.ranger.plugin.store.RangerServiceDefPaginatedList;
-import org.apache.ranger.plugin.store.RangerServicePaginatedList;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -303,7 +301,8 @@ public class ServiceREST {
 		}
 
 		RangerServiceDefList ret = null;
-		RangerServiceDefPaginatedList paginatedSvcDefs = null;
+
+		PList<RangerServiceDef> paginatedSvcDefs = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, serviceDefService.sortFields);
 
@@ -316,7 +315,8 @@ public class ServiceREST {
 		}
 
 		ret = new RangerServiceDefList();
-		ret.setServiceDefs(paginatedSvcDefs.getServiceDefs());
+
+		ret.setServiceDefs(paginatedSvcDefs.getList());
 		ret.setPageSize(paginatedSvcDefs.getPageSize());
 		ret.setResultSize(paginatedSvcDefs.getResultSize());
 		ret.setStartIndex(paginatedSvcDefs.getStartIndex());
@@ -478,7 +478,8 @@ public class ServiceREST {
 		}
 
 		RangerServiceList ret = null;
-		RangerServicePaginatedList paginatedSvcs = null;
+
+		PList<RangerService> paginatedSvcs = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, svcService.sortFields);
 
@@ -492,7 +493,8 @@ public class ServiceREST {
 
 		ret = new RangerServiceList();
 
-		ret.setServices(paginatedSvcs.getServices());
+
+		ret.setServices(paginatedSvcs.getList());
 		ret.setPageSize(paginatedSvcs.getPageSize());
 		ret.setResultSize(paginatedSvcs.getResultSize());
 		ret.setStartIndex(paginatedSvcs.getStartIndex());
@@ -1006,7 +1008,8 @@ public class ServiceREST {
 		}
 
 		RangerPolicyList ret = null;
-		RangerPolicyPaginatedList paginatedPolicies = null;
+
+		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
@@ -1014,7 +1017,8 @@ public class ServiceREST {
 			paginatedPolicies = svcStore.getPaginatedPolicies(filter);
 
 			ret = new RangerPolicyList();
-			ret.setPolicies(paginatedPolicies.getPolicies());
+
+			ret.setPolicies(paginatedPolicies.getList());
 			ret.setPageSize(paginatedPolicies.getPageSize());
 			ret.setResultSize(paginatedPolicies.getResultSize());
 			ret.setStartIndex(paginatedPolicies.getStartIndex());
@@ -1098,7 +1102,8 @@ public class ServiceREST {
 		}
 
 		RangerPolicyList ret = null;
-		RangerPolicyPaginatedList paginatedPolicies = null;
+
+		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
@@ -1106,7 +1111,8 @@ public class ServiceREST {
 			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceId, filter);
 
 			ret = new RangerPolicyList();
-			ret.setPolicies(paginatedPolicies.getPolicies());
+
+			ret.setPolicies(paginatedPolicies.getList());
 			ret.setPageSize(paginatedPolicies.getPageSize());
 			ret.setResultSize(paginatedPolicies.getResultSize());
 			ret.setStartIndex(paginatedPolicies.getStartIndex());
@@ -1142,7 +1148,8 @@ public class ServiceREST {
 		}
 
 		RangerPolicyList ret = null;
-		RangerPolicyPaginatedList paginatedPolicies = null;
+
+		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
@@ -1150,7 +1157,8 @@ public class ServiceREST {
 			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceName, filter);
 
 			ret = new RangerPolicyList();
-			ret.setPolicies(paginatedPolicies.getPolicies());
+
+			ret.setPolicies(paginatedPolicies.getList());
 			ret.setPageSize(paginatedPolicies.getPageSize());
 			ret.setResultSize(paginatedPolicies.getResultSize());
 			ret.setStartIndex(paginatedPolicies.getStartIndex());

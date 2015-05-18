@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,25 +17,33 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.contextenricher;
+package org.apache.ranger.plugin.conditionevaluator;
 
-
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-public interface RangerContextEnricher {
-	void setContextEnricherDef(RangerContextEnricherDef enricherDef);
+public class RangerTagAttributeEvaluator extends RangerAbstractConditionEvaluator {
+	private static final Log LOG = LogFactory.getLog(RangerTagAttributeEvaluator.class);
 
-	void setContextServiceName(String serviceName);
+	@Override
+	public void init() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerTagAttributeEvaluator.init(" + condition + ")");
+		}
 
-	void setContextServiceDef(RangerServiceDef serviceDef);
+		super.init();
+	}
 
-	void setContextComponentServiceName(String componentServiceName);
+	@Override
+	public boolean isMatched(RangerAccessRequest request) {
+		// TODO
+		// Set up environment: selected parts of request
+		// Invoke python interpreter
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("RangerTagAttributeEvaluator.isMatched()");
+		}
+		return true;
+	}
 
-	void setContextComponentServiceDef(RangerServiceDef componentServiceDef);
-
-	void init();
-
-	void enrich(RangerAccessRequest request);
 }

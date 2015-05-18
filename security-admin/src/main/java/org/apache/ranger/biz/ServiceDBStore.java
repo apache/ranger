@@ -949,7 +949,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	@Override
-	public RangerServiceDefPaginatedList getPaginatedServiceDefs(SearchFilter filter) throws Exception {
+
+	public PList<RangerServiceDef> getPaginatedServiceDefs(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedServiceDefs(" + filter + ")");
 		}
@@ -961,17 +962,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedServiceDefs(" + filter + ")");
 		}
-		RangerServiceDefPaginatedList ret = new RangerServiceDefPaginatedList();
-		ret.setServiceDefs(svcDefList.getServiceDefs());
-		ret.setResultSize(svcDefList.getResultSize());
-		ret.setPageSize(svcDefList.getPageSize());
-		ret.setSortBy(svcDefList.getSortBy());
-		ret.setSortType(svcDefList.getSortType());
-		ret.setStartIndex(svcDefList.getStartIndex());
-		ret.setTotalCount(svcDefList.getTotalCount());
 
+		return new PList<RangerServiceDef>(svcDefList.getServiceDefs(), svcDefList.getStartIndex(), svcDefList.getPageSize(), svcDefList.getTotalCount(),
+				svcDefList.getResultSize(), svcDefList.getSortType(), svcDefList.getSortBy());
 
-		return ret;
 	}
 
 	@Override
@@ -1068,6 +1062,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			List<XXTrxLog> trxLogList = svcService.getTransactionLog(createdService, RangerServiceService.OPERATION_CREATE_CONTEXT);
 			bizUtil.createTrxLog(trxLogList);
 
+			if (createdService.getType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+				createDefaultPolicy = false;
+			}
 			if (createDefaultPolicy) {
 				createDefaultPolicy(xCreatedService, vXUser);
 			}
@@ -1287,7 +1284,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	public RangerServicePaginatedList getPaginatedServices(SearchFilter filter) throws Exception {
+	public PList<RangerService> getPaginatedServices(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedServices()");
 		}
@@ -1300,16 +1297,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("<== ServiceDBStore.getPaginatedServices()");
 		}
 
-		RangerServicePaginatedList ret = new RangerServicePaginatedList();
-		ret.setServices(serviceList.getServices());
-		ret.setResultSize(serviceList.getResultSize());
-		ret.setPageSize(serviceList.getPageSize());
-		ret.setSortBy(serviceList.getSortBy());
-		ret.setSortType(serviceList.getSortType());
-		ret.setStartIndex(serviceList.getStartIndex());
-		ret.setTotalCount(serviceList.getTotalCount());
+		return new PList<RangerService>(serviceList.getServices(), serviceList.getStartIndex(), serviceList.getPageSize(), serviceList.getTotalCount(),
+				serviceList.getResultSize(), serviceList.getSortType(), serviceList.getSortBy());
 
-		return ret;
 	}
 
 	@Override
@@ -1500,7 +1490,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	public RangerPolicyPaginatedList getPaginatedPolicies(SearchFilter filter) throws Exception {
+
+	public PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedPolicies(+ " + filter + ")");
 		}
@@ -1519,16 +1510,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("<== ServiceDBStore.getPaginatedPolicies(" + filter + "): count=" + policyList.getListSize());
 		}
 
-		RangerPolicyPaginatedList ret = new RangerPolicyPaginatedList();
-		ret.setPolicies(policyList.getPolicies());
-		ret.setResultSize(policyList.getResultSize());
-		ret.setPageSize(policyList.getPageSize());
-		ret.setSortBy(policyList.getSortBy());
-		ret.setSortType(policyList.getSortType());
-		ret.setStartIndex(policyList.getStartIndex());
-		ret.setTotalCount(policyList.getTotalCount());
 
-		return ret;
+		return new PList<RangerPolicy>(policyList.getPolicies(), policyList.getStartIndex(), policyList.getPageSize(), policyList.getTotalCount(),
+				policyList.getResultSize(), policyList.getSortType(), policyList.getSortBy());
+
 	}
 
 	@Override
@@ -1548,7 +1533,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	public RangerPolicyPaginatedList getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
+
+	public PList<RangerPolicy> getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceId + ")");
 		}
@@ -1559,11 +1545,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw new Exception("service does not exist - id='" + serviceId);
 		}
 
-		RangerPolicyPaginatedList ret = getPaginatedServicePolicies(service.getName(), filter);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDBStore.getPaginatedServicePolicies(" + serviceId + ")");
-		}
+		PList<RangerPolicy> ret = getPaginatedServicePolicies(service.getName(), filter);
+
 		return ret;
 	}
 
@@ -1594,12 +1578,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	public RangerPolicyPaginatedList getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception {
+
+	public PList<RangerPolicy> getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceName + ")");
 		}
 
-		RangerPolicyPaginatedList ret = null;
+
+		PList<RangerPolicy> ret = null;
 
 		try {
 			if (filter == null) {

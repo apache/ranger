@@ -36,7 +36,91 @@
      ]
     }
   ],
+  "tagPolicyInfo": {
 
+    "serviceName":"tagdev",
+    "serviceDef": {
+      "name": "_tag_",
+      "id": 101,
+      "resources": [
+        {
+          "itemId": 1,
+          "name": "tag",
+          "type": "string",
+          "level": 1,
+          "parent": "",
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": true,
+            "ignoreCase": false
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "",
+          "label": "TAG",
+          "description": "TAG"
+        }
+      ],
+      "accessTypes": [
+        {
+          "name": "hdfs:read",
+          "label": "hdfs:Read"
+        },
+        {
+          "name": "hdfs:write",
+          "label": "hdfs:Write"
+        },
+        {
+          "name": "hdfs:execute",
+          "label": "hdfs:Execute"
+        }
+      ],
+      "contextEnrichers" : [
+        {
+          "name" : "test_enricher",
+          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerFileBasedTagProvider",
+          "enricherOptions" : {"wildCard":true, "ignoreCase":true, "dataFile":"/etc/ranger/data/resourceTags.txt"}
+        }
+      ],
+      "policyConditions": [
+        {
+          "itemId":1,
+          "name":"Default_TagAttributeValueEvaluator",
+          "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerTagAttributeEvaluator",
+          "evaluatorOptions" : {"interpreter":"python"},
+          "label":"Python-Script",
+          "description": "Python script to execute"
+        }
+      ]
+    },
+    "tagPolicies":[
+      {"id":5,"name":"allow somethingelse tag","isEnabled":true,"isAuditEnabled":true,"policyType":0,
+        "resources":{"tag":{"values":["restricte?"],"isRecursive":false}},
+        "policyItems":[
+          {"accesses":[{"type":"hdfs:read","isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false,
+          "conditions" : [{"type":"Default_TagAttributeValueEvaluator", "values":["Test_Script"]}]}
+          ]
+      }
+      ,
+      {"id":4,"name":"allow partial-match tag","isEnabled":true,"isAuditEnabled":true,
+        "resources":{"tag":{"values":["restr*"],"isRecursive":false}},
+        "policyItems":[
+          {"accesses":[{"type":"hdfs:write","isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false}
+        ]
+      }
+      ,
+      {"id":3,"name":"restricted tags","isEnabled":true,"isAuditEnabled":true,"policyType":0,
+        "resources":{"tag":{"values":["res*"],"isRecursive":false}},
+        "policyItems":[
+          {"accesses":[{"type":"hdfs:write","isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false}
+        ]
+      }
+    ]
+  },
   "tests":[
     {"name":"ALLOW 'read /finance/restricted/sales.db' for g=finance",
      "request":{

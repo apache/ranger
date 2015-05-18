@@ -123,6 +123,10 @@ public class RangerBasePlugin {
 						propertyPrefix
 								+ ".policyengine.option.disable.custom.conditions",
 						false);
+		policyEngineOptions.disableTagPolicyEvaluation = RangerConfiguration
+				.getInstance().getBoolean(
+						propertyPrefix
+								+ ".policyengine.option.disable.tagpolicy.evaluation", false);
 
 		RangerAdminClient admin = createAdminClient(propertyPrefix);
 

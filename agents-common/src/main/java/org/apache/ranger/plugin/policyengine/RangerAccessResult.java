@@ -23,9 +23,9 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 
 
 public class RangerAccessResult {
-	private String              serviceName = null;
-	private RangerServiceDef    serviceDef  = null;
-	private RangerAccessRequest request     = null;
+	private final String              serviceName;
+	private final RangerServiceDef    serviceDef;
+	private final RangerAccessRequest request;
 
 	private boolean isAccessDetermined = false;
 	private boolean  isAllowed = false;
@@ -34,7 +34,7 @@ public class RangerAccessResult {
 	private long     policyId  = -1;
 	private String   reason    = null;
 
-	public RangerAccessResult(String serviceName, RangerServiceDef serviceDef, RangerAccessRequest request) {
+	public RangerAccessResult(final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
 		this.serviceName = serviceName;
 		this.serviceDef  = serviceDef;
 		this.request     = request;
@@ -45,6 +45,14 @@ public class RangerAccessResult {
 		this.policyId    = -1;
 		this.reason      = null;
 	}
+
+	public void setAccessResultFrom(final RangerAccessResult other) {
+		this.isAccessDetermined = other.getIsAccessDetermined();
+		this.isAllowed   = other.getIsAllowed();
+		this.policyId    = other.getPolicyId();
+		this.reason      = other.getReason();
+	}
+
 
 	/**
 	 * @return the serviceName
@@ -129,7 +137,7 @@ public class RangerAccessResult {
 	}
 
 	/**
-	 * @return the policyId
+	 * @param policyId the policyId to set
 	 */
 	public void setPolicyId(long policyId) {
 		this.policyId = policyId;

@@ -46,7 +46,8 @@ public interface ServiceStore {
 
 	List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception;
 
-	RangerServiceDefPaginatedList getPaginatedServiceDefs(SearchFilter filter) throws Exception;
+
+	PList<RangerServiceDef> getPaginatedServiceDefs(SearchFilter filter) throws Exception;
 
 	RangerService createService(RangerService service) throws Exception;
 
@@ -60,7 +61,7 @@ public interface ServiceStore {
 
 	List<RangerService> getServices(SearchFilter filter) throws Exception;
 
-	RangerServicePaginatedList getPaginatedServices(SearchFilter filter) throws Exception;
+	PList<RangerService> getPaginatedServices(SearchFilter filter) throws Exception;
 
 	RangerPolicy createPolicy(RangerPolicy policy) throws Exception;
 
@@ -72,17 +73,19 @@ public interface ServiceStore {
 
 	List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception;
 
-	RangerPolicyPaginatedList getPaginatedPolicies(SearchFilter filter) throws Exception;
+
+	PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception;
 
 	List<RangerPolicy> getPoliciesByResourceSignature(String serviceName, String policySignature, Boolean isPolicyEnabled) throws Exception;
 
 	List<RangerPolicy> getServicePolicies(Long serviceId, SearchFilter filter) throws Exception;
 
-	RangerPolicyPaginatedList getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception;
+
+	PList<RangerPolicy> getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception;
 
 	List<RangerPolicy> getServicePolicies(String serviceName, SearchFilter filter) throws Exception;
 
-	RangerPolicyPaginatedList getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception;
+	PList<RangerPolicy> getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception;
 
 	ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
 

@@ -226,6 +226,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             boolean matchResult = false;
             boolean isHeadMatchAttempted = false;
             boolean headMatchResult = false;
+			final boolean isPolicyFinalDecider = isFinalDecider();
 
             if (!result.getIsAuditedDetermined()) {
                 // Need to match request.resource first. If it matches (or head matches), then only more progress can be made
@@ -270,6 +271,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                     evaluatePolicyItemsForAccess(policy, request, result);
                 }
             }
+			if ((matchResult || headMatchResult) && !result.getIsAccessDetermined() && isPolicyFinalDecider) {
+				result.setIsAllowed(false);
+				result.setPolicyId(getPolicy().getId());
+			}
         }
 
         if(LOG.isDebugEnabled()) {
@@ -869,5 +874,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		return ret;
+	}
+	@Override
+	public boolean isFinalDecider() {
+		return getPolicy().isFinalDecider();
 	}
 }

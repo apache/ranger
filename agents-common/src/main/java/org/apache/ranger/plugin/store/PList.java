@@ -21,7 +21,8 @@ package org.apache.ranger.plugin.store;
 
 import java.util.List;
 
-public abstract class PList implements java.io.Serializable {
+public class PList<T> implements java.io.Serializable {
+
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -51,35 +52,39 @@ public abstract class PList implements java.io.Serializable {
 
 	protected long queryTimeMS = System.currentTimeMillis();
 
-
+	protected List<T> list;
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public PList() {
-	}
-
-	/**
-	 * Initialize with existing list
-	 *
-	 * @param objectList
-	 */
-	public PList(@SuppressWarnings("rawtypes") List objectList) {
-		int size = 0;
-		if (objectList != null) {
-			size = objectList.size();
-		}
-
 		startIndex = 0;
-		pageSize = size;
-		totalCount = size;
-		resultSize = size;
+		pageSize = 0;
+		totalCount = 0;
+		resultSize = 0;
 		sortType = null;
 		sortBy = null;
 	}
 
-	abstract public int getListSize();
+	public PList(List<T> list, int startIndex, int pageSize, long totalCount, int resultSize, String sortType, String sortBy) {
+		this.list = list;
+		this.startIndex = startIndex;
+		this.pageSize = pageSize;
+		this.totalCount = totalCount;
+		this.resultSize = resultSize;
+		this.sortType = sortType;
+		this.sortBy = sortBy;
 
-	abstract public List<?> getList();
+	}
+
+	public int getListSize() {
+		return list == null ? 0 : list.size();
+	}
+
+	public void setList(List<T> list) {this.list = list;}
+
+	public List<T> getList() {
+		return list;
+	}
 
 	/**
 	 * This method sets the value to the member attribute <b>startIndex</b>. You

@@ -41,6 +41,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RangerPolicy extends RangerBaseModelObject implements java.io.Serializable {
+	public static final int FINAL_ACCESS_DECIDER_POLICY_TYPE = 1;
+
 	private static final long serialVersionUID = 1L;
 
 	private String                            service        	= null;
@@ -54,7 +56,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 
 	/**
-	 * @param type
+	 * @param
 	 */
 	public RangerPolicy() {
 		this(null, null, null, null, null, null, null);
@@ -106,7 +108,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	/**
-	 * @param type the type to set
+	 * @param service the type to set
 	 */
 	public void setService(String service) {
 		this.service = service;
@@ -176,7 +178,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	/**
-	 * @param isEnabled the isEnabled to set
+	 * @param isAuditEnabled the isEnabled to set
 	 */
 	public void setIsAuditEnabled(Boolean isAuditEnabled) {
 		this.isAuditEnabled = isAuditEnabled == null ? Boolean.TRUE : isAuditEnabled;
@@ -190,7 +192,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	/**
-	 * @param configs the resources to set
+	 * @param resources the resources to set
 	 */
 	public void setResources(Map<String, RangerPolicyResource> resources) {
 		if(this.resources == null) {
@@ -238,6 +240,14 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 	}
 
+	public boolean isFinalDecider() {
+		boolean isFinalDecidingPolicy = true;
+
+		if (getPolicyType() == null || getPolicyType() != FINAL_ACCESS_DECIDER_POLICY_TYPE) {
+			isFinalDecidingPolicy = false;
+		}
+		return isFinalDecidingPolicy;
+	}
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -832,7 +842,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 
 		/**
-		 * @param value the value to set
+		 * @param values the value to set
 		 */
 		public void setValues(List<String> values) {
 			if (CollectionUtils.isEmpty(values)) {

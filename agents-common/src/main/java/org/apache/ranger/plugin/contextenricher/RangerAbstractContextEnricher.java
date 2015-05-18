@@ -27,6 +27,8 @@ import java.util.Properties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 
 
@@ -34,6 +36,10 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	private static final Log LOG = LogFactory.getLog(RangerAbstractContextEnricher.class);
 
 	protected RangerContextEnricherDef enricherDef;
+	protected String serviceName;
+	protected RangerServiceDef serviceDef;
+	protected String componentServiceName;
+	protected RangerServiceDef componentServiceDef;
 
 	private Map<String, String> options = null;
 
@@ -53,6 +59,26 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}
+	}
+
+	@Override
+	public void setContextServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	@Override
+	public void setContextServiceDef(RangerServiceDef serviceDef) {
+		this.serviceDef = serviceDef;
+	}
+
+	@Override
+	public void setContextComponentServiceName(String componentServiceName) {
+		this.componentServiceName = componentServiceName;
+	}
+
+	@Override
+	public void setContextComponentServiceDef(RangerServiceDef componentServiceDef) {
+		this.componentServiceDef = componentServiceDef;
 	}
 
 	public String getOption(String name) {

@@ -19,13 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import static org.junit.Assert.*;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.util.List;
-
+import com.google.gson.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
@@ -34,12 +28,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 
 public class TestPolicyEngine {
@@ -100,10 +94,27 @@ public class TestPolicyEngine {
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
 
-		policyEngine = new RangerPolicyEngineImpl(servicePolicies);
+		if (null != testCase.tagPolicyInfo) {
+			ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
+			tagPolicies.setServiceName(testCase.tagPolicyInfo.serviceName);
+			tagPolicies.setServiceDef(testCase.tagPolicyInfo.serviceDef);
+			tagPolicies.setPolicies(testCase.tagPolicyInfo.tagPolicies);
+
+			servicePolicies.setTagPolicies(tagPolicies);
+		}
+
+		String componentName = testCase.serviceDef.getName();
+
+		RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
+
+		// Uncomment next line for testing tag-policy evaluation
+		// policyEngineOptions.disableTagPolicyEvaluation = false;
+
+		policyEngine = new RangerPolicyEngineImpl(servicePolicies, policyEngineOptions);
 
 		for(TestData test : testCase.tests) {
 			RangerAccessResult expected = test.result;
+			policyEngine.enrichContext(test.request);
 			RangerAccessResult result   = policyEngine.isAccessAllowed(test.request, null);
 
 			assertNotNull("result was null! - " + test.name, result);
@@ -117,12 +128,19 @@ public class TestPolicyEngine {
 		public String             serviceName;
 		public RangerServiceDef   serviceDef;
 		public List<RangerPolicy> policies;
+		public TagPolicyInfo	tagPolicyInfo;
 		public List<TestData>     tests;
 		
 		class TestData {
 			public String              name;
 			public RangerAccessRequest request;
 			public RangerAccessResult  result;
+		}
+
+		class TagPolicyInfo {
+			public String	serviceName;
+			public RangerServiceDef serviceDef;
+			public List<RangerPolicy> tagPolicies;
 		}
 	}
 	
