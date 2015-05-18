@@ -45,52 +45,43 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public class BaseFileStore {
-	private static final Log LOG = LogFactory.getLog(BaseFileStore.class);
+public class FileStoreUtil {
+	private static final Log LOG = LogFactory.getLog(FileStoreUtil.class);
 
 	private Gson   gsonBuilder = null;
 	private String dataDir     = null;
 
-	protected static final String FILE_PREFIX_SERVICE_DEF = "ranger-servicedef-";
-	protected static final String FILE_PREFIX_SERVICE     = "ranger-service-";
-	protected static final String FILE_PREFIX_POLICY      = "ranger-policy-";
-	protected static final String FILE_SUFFIX_JSON        = ".json";
+	private static final String FILE_SUFFIX_JSON        = ".json";
 
-	protected void initStore(String dataDir) {
+	public void initStore(String dataDir) {
 		this.dataDir = dataDir;
 
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 		} catch(Throwable excp) {
-			LOG.fatal("BaseFileStore.init(): failed to create GsonBuilder object", excp);
+			LOG.fatal("FileStoreUtil.init(): failed to create GsonBuilder object", excp);
 		}
 	}
 	
-	protected String getDataDir() {
+	public String getDataDir() {
 		return dataDir;
 	}
 
-	protected String getServiceDefFile(Long id) {
-		String filePath = dataDir + Path.SEPARATOR + FILE_PREFIX_SERVICE_DEF + id + FILE_SUFFIX_JSON;
+	public String getDataFile(String filePrefix, Long id) {
+		String filePath = dataDir + Path.SEPARATOR + filePrefix + id + FILE_SUFFIX_JSON;
 
 		return filePath;
 	}
 
-	protected String getServiceFile(Long id) {
-		String filePath = dataDir + Path.SEPARATOR + FILE_PREFIX_SERVICE + id + FILE_SUFFIX_JSON;
+	public String getDataFile(String filePrefix, Long parentId, Long objectId) {
+		String filePath = dataDir + Path.SEPARATOR + filePrefix + parentId + "-" + objectId + FILE_SUFFIX_JSON;
 
 		return filePath;
 	}
 
-	protected String getPolicyFile(Long serviceId, Long policyId) {
-		String filePath = dataDir + Path.SEPARATOR + FILE_PREFIX_POLICY + serviceId + "-" + policyId + FILE_SUFFIX_JSON;
-
-		return filePath;
-	}
-
-	protected <T> T loadFromResource(String resource, Class<T> cls) throws Exception {
+	public <T> T loadFromResource(String resource, Class<T> cls) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> BaseFileStore.loadFromResource(" + resource + ")");
+			LOG.debug("==> FileStoreUtil.loadFromResource(" + resource + ")");
 		}
 
 		InputStream inStream = this.getClass().getResourceAsStream(resource);
@@ -98,15 +89,15 @@ public class BaseFileStore {
 		T ret = loadFromStream(inStream, cls);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== BaseFileStore.loadFromResource(" + resource + "): " + ret);
+			LOG.debug("<== FileStoreUtil.loadFromResource(" + resource + "): " + ret);
 		}
 
 		return ret;
 	}
 
-	protected <T> T loadFromStream(InputStream inStream, Class<T> cls) throws Exception {
+	public <T> T loadFromStream(InputStream inStream, Class<T> cls) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> BaseFileStore.loadFromStream()");
+			LOG.debug("==> FileStoreUtil.loadFromStream()");
 		}
 
 		InputStreamReader reader = new InputStreamReader(inStream);
@@ -114,15 +105,15 @@ public class BaseFileStore {
 		T ret = gsonBuilder.fromJson(reader, cls);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== BaseFileStore.loadFromStream(): " + ret);
+			LOG.debug("<== FileStoreUtil.loadFromStream(): " + ret);
 		}
 
 		return ret;
 	}
 
-	protected <T> T loadFromFile(Path filePath, Class<T> cls) throws Exception {
+	public <T> T loadFromFile(Path filePath, Class<T> cls) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> BaseFileStore.loadFromFile(" + filePath + ")");
+			LOG.debug("==> FileStoreUtil.loadFromFile(" + filePath + ")");
 		}
 
 		T                 ret    = null;
@@ -138,15 +129,15 @@ public class BaseFileStore {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== BaseFileStore.loadFromFile(" + filePath + "): " + ret);
+			LOG.debug("<== FileStoreUtil.loadFromFile(" + filePath + "): " + ret);
 		}
 
 		return ret;
 	}
 
-	protected <T> List<T> loadFromDir(Path dirPath, final String filePrefix, Class<T> cls) throws Exception {
+	public <T> List<T> loadFromDir(Path dirPath, final String filePrefix, Class<T> cls) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> BaseFileStore.loadFromDir()");
+			LOG.debug("==> FileStoreUtil.loadFromDir()");
 		}
 
 		List<T> ret = new ArrayList<T>();
@@ -182,15 +173,15 @@ public class BaseFileStore {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== BaseFileStore.loadFromDir(): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== FileStoreUtil.loadFromDir(): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;
 	}
 
-	protected <T> T saveToFile(T obj, Path filePath, boolean overWrite) throws Exception {
+	public <T> T saveToFile(T obj, Path filePath, boolean overWrite) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> BaseFileStore.saveToFile(" + filePath + ")");
+			LOG.debug("==> FileStoreUtil.saveToFile(" + filePath + ")");
 		}
 
 		OutputStreamWriter writer = null;
@@ -207,14 +198,14 @@ public class BaseFileStore {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== BaseFileStore.saveToFile(" + filePath + "): " + obj);
+			LOG.debug("<== FileStoreUtil.saveToFile(" + filePath + "): " + obj);
 		}
 
 		return obj;
 	}
 
-	protected boolean deleteFile(Path filePath) throws Exception {
-		LOG.debug("==> BaseFileStore.deleteFile(" + filePath + ")");
+	public boolean deleteFile(Path filePath) throws Exception {
+		LOG.debug("==> FileStoreUtil.deleteFile(" + filePath + ")");
 
 		FileSystem fileSystem = getFileSystem(filePath);
 
@@ -226,14 +217,14 @@ public class BaseFileStore {
 			ret = true; // nothing to delete
 		}
 
-		LOG.debug("<== BaseFileStore.deleteFile(" + filePath + "): " + ret);
+		LOG.debug("<== FileStoreUtil.deleteFile(" + filePath + "): " + ret);
 
 		return ret;
 	}
 
-	protected boolean renamePath(Path oldPath, Path newPath) throws Exception {
+	public boolean renamePath(Path oldPath, Path newPath) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> BaseFileStore.renamePath(" + oldPath + "," + newPath + ")");
+			LOG.debug("==> FileStoreUtil.renamePath(" + oldPath + "," + newPath + ")");
 		}
 
 		FileSystem fileSystem = getFileSystem(oldPath);
@@ -249,58 +240,45 @@ public class BaseFileStore {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== BaseFileStore.renamePath(" + oldPath + "," + newPath + "): " + ret);
+			LOG.debug("<== FileStoreUtil.renamePath(" + oldPath + "," + newPath + "): " + ret);
 		}
 
 		return ret;
 	}
 
-	protected RangerServiceDef saveToFile(RangerServiceDef serviceDef, boolean overWrite) throws Exception {
+	public RangerServiceDef saveToFile(RangerServiceDef serviceDef, String filePrefix, boolean overWrite) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> BaseFileStore.saveToFile(" + serviceDef + "," + overWrite + ")");
+			LOG.debug("==> FileStoreUtil.saveToFile(" + serviceDef + "," + overWrite + ")");
 		}
 
-		Path filePath = new Path(getServiceDefFile(serviceDef.getId()));
+		Path filePath = new Path(getDataFile(filePrefix, serviceDef.getId()));
 
 		RangerServiceDef ret = saveToFile(serviceDef, filePath, overWrite);
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== BaseFileStore.saveToFile(" + serviceDef + "," + overWrite + "): ");
+			LOG.debug("<== FileStoreUtil.saveToFile(" + serviceDef + "," + overWrite + "): ");
 		}
 
 		return ret;
 	}
 
-	protected RangerService saveToFile(RangerService service, boolean overWrite) throws Exception {
-		Path filePath = new Path(getServiceFile(service.getId()));
+	public RangerService saveToFile(RangerService service, String filePrefix,boolean overWrite) throws Exception {
+		Path filePath = new Path(getDataFile(filePrefix, service.getId()));
 
 		RangerService ret = saveToFile(service, filePath, overWrite);
 		
 		return ret;
 	}
 
-	protected RangerPolicy saveToFile(RangerPolicy policy, long serviceId, boolean overWrite) throws Exception {
-		Path filePath = new Path(getPolicyFile(serviceId, policy.getId()));
+	public RangerPolicy saveToFile(RangerPolicy policy, String filePrefix, long serviceId, boolean overWrite) throws Exception {
+		Path filePath = new Path(getDataFile(filePrefix, serviceId, policy.getId()));
 
 		RangerPolicy ret = saveToFile(policy, filePath, overWrite);
 
 		return ret;
 	}
 
-	protected long getMaxId(List<? extends RangerBaseModelObject> objs) {
-		long ret = -1;
-
-		if(objs != null) {
-			for(RangerBaseModelObject obj : objs) {
-				if(obj.getId() > ret) {
-					ret = obj.getId();
-				}
-			}
-		}
-
-		return ret;
-	}
-	protected FileSystem getFileSystem(Path filePath) throws Exception {
+	public FileSystem getFileSystem(Path filePath) throws Exception {
 		Configuration conf        = new Configuration();
 		FileSystem    fileSystem  = filePath.getFileSystem(conf);
 		
@@ -335,61 +313,5 @@ public class BaseFileStore {
 				// ignore
 			}
 		}
-	}
-
-	protected void preCreate(RangerBaseModelObject obj) {
-		obj.setId(new Long(0));
-		obj.setGuid(UUID.randomUUID().toString());
-		obj.setCreateTime(new Date());
-		obj.setUpdateTime(obj.getCreateTime());
-		obj.setVersion(new Long(1));
-	}
-
-	protected void preCreate(RangerService service) {
-		preCreate((RangerBaseModelObject)service);
-
-		service.setPolicyVersion(new Long(0));
-		service.setPolicyUpdateTime(service.getCreateTime());
-	}
-
-	protected void postCreate(RangerBaseModelObject obj) {
-		// TODO:
-	}
-
-	protected void preUpdate(RangerBaseModelObject obj) {
-		if(obj.getId() == null) {
-			obj.setId(new Long(0));
-		}
-
-		if(obj.getGuid() == null) {
-			obj.setGuid(UUID.randomUUID().toString());
-		}
-
-		if(obj.getCreateTime() == null) {
-			obj.setCreateTime(new Date());
-		}
-
-		Long version = obj.getVersion();
-		
-		if(version == null) {
-			version = new Long(1);
-		} else {
-			version = new Long(version.longValue() + 1);
-		}
-		
-		obj.setVersion(version);
-		obj.setUpdateTime(new Date());
-	}
-
-	protected void postUpdate(RangerBaseModelObject obj) {
-		// TODO:
-	}
-
-	protected void preDelete(RangerBaseModelObject obj) {
-		// TODO:
-	}
-
-	protected void postDelete(RangerBaseModelObject obj) {
-		// TODO:
 	}
 }

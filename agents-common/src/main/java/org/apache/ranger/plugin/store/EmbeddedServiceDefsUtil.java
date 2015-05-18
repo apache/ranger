@@ -43,6 +43,7 @@ public class EmbeddedServiceDefsUtil {
 	private static final Log LOG = LogFactory.getLog(EmbeddedServiceDefsUtil.class);
 
 
+	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "_tag_";
 	public static final String EMBEDDED_SERVICEDEF_HDFS_NAME  = "hdfs";
 	public static final String EMBEDDED_SERVICEDEF_HBASE_NAME = "hbase";
 	public static final String EMBEDDED_SERVICEDEF_HIVE_NAME  = "hive";
@@ -55,6 +56,7 @@ public class EmbeddedServiceDefsUtil {
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
 	private boolean          createEmbeddedServiceDefs = true;
+	private RangerServiceDef tagServiceDef  = null;
 	private RangerServiceDef hdfsServiceDef  = null;
 	private RangerServiceDef hBaseServiceDef = null;
 	private RangerServiceDef hiveServiceDef  = null;
@@ -82,6 +84,7 @@ public class EmbeddedServiceDefsUtil {
 
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 
+			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 			hdfsServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HDFS_NAME);
 			hBaseServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HBASE_NAME);
 			hiveServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HIVE_NAME);
@@ -89,12 +92,17 @@ public class EmbeddedServiceDefsUtil {
 			stormServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_STORM_NAME);
 			yarnServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_YARN_NAME);
 			kmsServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KMS_NAME);
+
+			// Ensure that tag service def is updated with access types of all service defs
+			store.updateTagServiceDefForAccessTypes();
 		} catch(Throwable excp) {
 			LOG.fatal("EmbeddedServiceDefsUtil.init(): failed", excp);
 		}
 
 		LOG.info("<== EmbeddedServiceDefsUtil.init()");
 	}
+
+	public long getTagServiceDefId() { return getId(tagServiceDef); }
 
 	public long getHdfsServiceDefId() {
 		return getId(hdfsServiceDef);
@@ -141,7 +149,8 @@ public class EmbeddedServiceDefsUtil {
 				ret = loadEmbeddedServiceDef(serviceDefName);
 
 				LOG.info("creating embedded service-def " + serviceDefName);
-				store.createServiceDef(ret);
+				ret = store.createServiceDef(ret);
+				LOG.info("created embedded service-def " + serviceDefName);
 			}
 		} catch(Exception excp) {
 			LOG.fatal("EmbeddedServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);

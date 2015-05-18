@@ -58,6 +58,8 @@ import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.plugin.store.RangerPolicyPaginatedList;
+import org.apache.ranger.plugin.store.RangerServicePaginatedList;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -697,7 +699,7 @@ public class TestServiceREST {
 	@Test
 	public void test21countPolicies() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		RangerPolicyList ret  = Mockito.mock(RangerPolicyList.class);
+		RangerPolicyPaginatedList ret  = Mockito.mock(RangerPolicyPaginatedList.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
@@ -723,7 +725,7 @@ public class TestServiceREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		RangerPolicy rangerPolicy = rangerPolicy();
 		
-		RangerPolicyList ret  = Mockito.mock(RangerPolicyList.class);
+		RangerPolicyPaginatedList ret  = Mockito.mock(RangerPolicyPaginatedList.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
@@ -748,7 +750,7 @@ public class TestServiceREST {
 	public void test23getServicePoliciesByName() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		RangerPolicy rangerPolicy = rangerPolicy();
-		RangerPolicyList ret  = Mockito.mock(RangerPolicyList.class);
+		RangerPolicyPaginatedList ret  = Mockito.mock(RangerPolicyPaginatedList.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
@@ -858,7 +860,7 @@ public class TestServiceREST {
 	@Test
 	public void test34countServices() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		RangerServiceList ret  = Mockito.mock(RangerServiceList.class);
+		RangerServicePaginatedList ret  = Mockito.mock(RangerServicePaginatedList.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
@@ -868,7 +870,7 @@ public class TestServiceREST {
 		
 		Mockito.when(
 				svcStore.getPaginatedServices(filter))
-				.thenReturn(ret);	
+				.thenReturn(ret);
 		Long data = serviceREST.countServices(request);
 		Assert.assertNotNull(data);
 		Mockito.verify(searchUtil).getSearchFilter(request, policyService.sortFields);

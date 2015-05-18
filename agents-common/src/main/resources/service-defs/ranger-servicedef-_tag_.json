@@ -1,0 +1,73 @@
+{
+  "name": "_tag_",
+  "implClass": "org.apache.ranger.services.tag.RangerServiceTag",
+  "label": "TAG",
+  "description": "TAG Service Definition",
+  "guid": "0d047248-baff-4cf9-8e9e-d5d377284b2e",
+  "resources":
+  [
+    {
+      "itemId":1,
+      "name": "tag",
+      "type": "string",
+      "level": 1,
+      "parent": "",
+      "mandatory": true,
+      "lookupSupported": true,
+      "recursiveSupported": false,
+      "excludesSupported": false,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard":true, "ignoreCase":false },
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "TAG",
+      "description": "TAG"
+    }
+  ],
+
+  "accessTypes":
+  [
+
+  ],
+
+  "configs":
+  [
+    {
+      "itemId": 1,
+      "name": "username",
+      "type": "string",
+      "mandatory": false,
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Username"
+    },
+
+    {
+      "itemId": 2,
+      "name": "password",
+      "type": "password",
+      "mandatory": false,
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Password"
+    }
+  ],
+
+  "enums":
+  [
+
+  ],
+
+  "contextEnrichers":
+  [
+
+  ],
+
+  "policyConditions":
+  [
+
+  ]
+}

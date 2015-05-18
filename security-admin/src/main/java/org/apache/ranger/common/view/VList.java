@@ -95,6 +95,7 @@ public abstract class VList extends ViewBaseBean implements
     public void setStartIndex(int startIndex) {
 	this.startIndex = startIndex;
     }
+    public int getStartIndex() { return startIndex; }
 
 
     /**
@@ -107,7 +108,7 @@ public abstract class VList extends ViewBaseBean implements
     public void setPageSize(int pageSize) {
 	this.pageSize = pageSize;
     }
-
+    public int getPageSize() { return pageSize; }
 
     /**
      * This method sets the value to the member attribute <b>totalCount</b>. You
@@ -119,6 +120,7 @@ public abstract class VList extends ViewBaseBean implements
     public void setTotalCount(long totalCount) {
 	this.totalCount = totalCount;
     }
+    public long getTotalCount() { return totalCount; }
 
     
 
@@ -152,7 +154,7 @@ public abstract class VList extends ViewBaseBean implements
     public void setSortType(String sortType) {
 	this.sortType = sortType;
     }
-
+    public String getSortType() { return sortType; }
 
 
     /**
@@ -165,6 +167,7 @@ public abstract class VList extends ViewBaseBean implements
     public void setSortBy(String sortBy) {
 	this.sortBy = sortBy;
     }
+    public String getSortBy() { return sortBy; }
 
    
 

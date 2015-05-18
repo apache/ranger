@@ -1672,6 +1672,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setImpliedGrants(impliedGrants);
 		}
 
+		public RangerAccessTypeDef(RangerAccessTypeDef other) {
+			this.setName(other.getName());
+			this.setLabel(other.getLabel());
+			this.setRbKeyLabel(other.getRbKeyLabel());
+			this.setImpliedGrants(other.getImpliedGrants());
+		}
+
 		/**
 		 * @return the itemId
 		 */

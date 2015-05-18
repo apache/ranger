@@ -36,17 +36,22 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.store.file.FileStoreUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
-
-public class ServiceFileStore extends BaseFileStore implements ServiceStore {
+public class ServiceFileStore extends AbstractServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceFileStore.class);
 
 	public static final String PROPERTY_SERVICE_FILE_STORE_DIR = "ranger.service.store.file.dir";
+
+	protected static final String FILE_PREFIX_SERVICE_DEF = "ranger-servicedef-";
+	protected static final String FILE_PREFIX_SERVICE     = "ranger-service-";
+	protected static final String FILE_PREFIX_POLICY      = "ranger-policy-";
 
 	private String dataDir          = null;
 	private long   nextServiceDefId = 0;
@@ -54,14 +59,16 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	private long   nextPolicyId     = 0;
 
 	private ServicePredicateUtil predicateUtil = null;
+	private FileStoreUtil fileStoreUtil = null;
 
 	public ServiceFileStore() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceFileStore.ServiceFileStore()");
 		}
 
-		dataDir = RangerConfiguration.getInstance().get(PROPERTY_SERVICE_FILE_STORE_DIR, "file:///etc/ranger/data");
+		this.dataDir = RangerConfiguration.getInstance().get(PROPERTY_SERVICE_FILE_STORE_DIR, "file:///etc/ranger/data");
 		predicateUtil = new ServicePredicateUtil(this);
+		fileStoreUtil = new FileStoreUtil();
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.ServiceFileStore()");
@@ -75,6 +82,8 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		this.dataDir = dataDir;
 		predicateUtil = new ServicePredicateUtil(this);
+		fileStoreUtil = new FileStoreUtil();
+		fileStoreUtil.initStore(dataDir);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceFileStore.ServiceFileStore()");
@@ -87,7 +96,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			LOG.debug("==> ServiceFileStore.init()");
 		}
 
-		super.initStore(dataDir);
+		fileStoreUtil.initStore(dataDir);
 
 		EmbeddedServiceDefsUtil.instance().init(this);
 
@@ -115,7 +124,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			serviceDef.setId(nextServiceDefId++);
 
-			ret = saveToFile(serviceDef, false);
+			ret = fileStoreUtil.saveToFile(serviceDef, FILE_PREFIX_SERVICE_DEF, false);
 
 			postCreate(ret);
 		} catch(Exception excp) {
@@ -161,7 +170,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			preUpdate(existing);
 
-			ret = saveToFile(existing, true);
+			ret = fileStoreUtil.saveToFile(existing, FILE_PREFIX_SERVICE_DEF, true);
 
 			postUpdate(ret);
 		} catch(Exception excp) {
@@ -194,9 +203,9 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		try {
 			preDelete(existing);
 
-			Path filePath = new Path(getServiceDefFile(id));
+			Path filePath = new Path(fileStoreUtil.getDataFile(FILE_PREFIX_SERVICE_DEF, id));
 
-			deleteFile(filePath);
+			fileStoreUtil.deleteFile(filePath);
 
 			postDelete(existing);
 		} catch(Exception excp) {
@@ -299,7 +308,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			service.setId(nextServiceId++);
 
-			ret = saveToFile(service, false);
+			ret = fileStoreUtil.saveToFile(service, FILE_PREFIX_SERVICE, false);
 
 			postCreate(service);
 		} catch(Exception excp) {
@@ -344,7 +353,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			preUpdate(existing);
 
-			ret = saveToFile(existing, true);
+			ret = fileStoreUtil.saveToFile(existing, FILE_PREFIX_SERVICE, true);
 
 			postUpdate(ret);
 
@@ -375,13 +384,13 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		try {
-			Path filePath = new Path(getServiceFile(id));
+			Path filePath = new Path(fileStoreUtil.getDataFile(FILE_PREFIX_SERVICE, id));
 
 			preDelete(existing);
 
 			handleServiceDelete(existing);
 
-			deleteFile(filePath);
+			fileStoreUtil.deleteFile(filePath);
 
 			postDelete(existing);
 		} catch(Exception excp) {
@@ -402,9 +411,9 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		RangerService ret = null;
 
 		try {
-			Path filePath = new Path(getServiceFile(id));
+			Path filePath = new Path(fileStoreUtil.getDataFile(FILE_PREFIX_SERVICE, id));
 	
-			ret = loadFromFile(filePath,  RangerService.class);
+			ret = fileStoreUtil.loadFromFile(filePath,  RangerService.class);
 		} catch(Exception excp) {
 			LOG.error("ServiceFileStore.getService(" + id + "): failed to read service", excp);
 		}
@@ -489,7 +498,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			policy.setId(nextPolicyId++);
 
-			ret = saveToFile(policy, service.getId(), false);
+			ret = fileStoreUtil.saveToFile(policy, FILE_PREFIX_POLICY, service.getId(), false);
 
 			handlePolicyUpdate(service);
 
@@ -544,7 +553,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 			preUpdate(existing);
 
-			ret = saveToFile(existing, service.getId(), true);
+			ret = fileStoreUtil.saveToFile(existing, FILE_PREFIX_POLICY, service.getId(), true);
 
 			handlePolicyUpdate(service);
 
@@ -581,9 +590,9 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		try {
 			preDelete(existing);
 
-			Path filePath = new Path(getPolicyFile(service.getId(), existing.getId()));
+			Path filePath = new Path(fileStoreUtil.getDataFile(FILE_PREFIX_POLICY, service.getId(), existing.getId()));
 
-			deleteFile(filePath);
+			fileStoreUtil.deleteFile(filePath);
 
 			handlePolicyUpdate(service);
 
@@ -768,7 +777,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	
 					preUpdate(policy);
 	
-					saveToFile(policy, service.getId(), true);
+					fileStoreUtil.saveToFile(policy, FILE_PREFIX_POLICY, service.getId(), true);
 	
 					postUpdate(policy);
 				}
@@ -787,9 +796,9 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 				preDelete(policy);
 
-				Path filePath = new Path(getPolicyFile(service.getId(), policy.getId()));
+				Path filePath = new Path(fileStoreUtil.getDataFile(FILE_PREFIX_POLICY, service.getId(), policy.getId()));
 
-				deleteFile(filePath);
+				fileStoreUtil.deleteFile(filePath);
 
 				postDelete(policy);
 			}
@@ -812,7 +821,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		service.setPolicyVersion(policyVersion);
 		service.setPolicyUpdateTime(new Date());
 
-		saveToFile(service, true);
+		fileStoreUtil.saveToFile(service, FILE_PREFIX_SERVICE, true);
 	}
 
 	private RangerPolicy findPolicyByName(String serviceName, String policyName) throws Exception {
@@ -853,7 +862,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 
 		try {
 			// load service definitions from file system
-			List<RangerServiceDef> sds = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE_DEF, RangerServiceDef.class);
+			List<RangerServiceDef> sds = fileStoreUtil.loadFromDir(new Path(fileStoreUtil.getDataDir()), FILE_PREFIX_SERVICE_DEF, RangerServiceDef.class);
 			
 			if(sds != null) {
 				for(RangerServiceDef sd : sds) {
@@ -900,7 +909,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		List<RangerService> ret = null;
 
 		try {
-			ret = loadFromDir(new Path(getDataDir()), FILE_PREFIX_SERVICE, RangerService.class);
+			ret = fileStoreUtil.loadFromDir(new Path(fileStoreUtil.getDataDir()), FILE_PREFIX_SERVICE, RangerService.class);
 
 			nextServiceId = getMaxId(ret) + 1;
 		} catch(Exception excp) {
@@ -926,7 +935,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		List<RangerPolicy> ret = null;
 
 		try {
-			ret = loadFromDir(new Path(getDataDir()), FILE_PREFIX_POLICY, RangerPolicy.class);
+			ret = fileStoreUtil.loadFromDir(new Path(fileStoreUtil.getDataDir()), FILE_PREFIX_POLICY, RangerPolicy.class);
 
 			nextPolicyId  = getMaxId(ret) + 1;
 		} catch(Exception excp) {

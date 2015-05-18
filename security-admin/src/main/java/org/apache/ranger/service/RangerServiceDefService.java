@@ -20,10 +20,7 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.RangerConstants;
-import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.*;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXContextEnricherDef;
@@ -164,17 +161,28 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 		RangerServiceDefList retList = new RangerServiceDefList();
 
 		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields, retList);
-		List<String> userRoleList = ContextUtil.getCurrentUserSession().getUserRoleList();
-		for (XXServiceDef xSvcDef : xSvcDefList) {
-			if(userRoleList != null && !userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-				if(xSvcDef!=null && !"KMS".equalsIgnoreCase(xSvcDef.getName())){
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+		if (userSession == null) {
+			// Internal user
+			for (XXServiceDef xSvcDef : xSvcDefList) {
+				if (xSvcDef != null) {
 					serviceDefList.add(populateViewBean(xSvcDef));
 				}
 			}
-			else if(userRoleList != null && userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-				if(xSvcDef!=null && "KMS".equalsIgnoreCase(xSvcDef.getName())){
-					serviceDefList.add(populateViewBean(xSvcDef));
-					break;
+		} else {
+			List<String> userRoleList = userSession.getUserRoleList();
+			for (XXServiceDef xSvcDef : xSvcDefList) {
+				if(userRoleList != null && !userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
+					if(xSvcDef!=null && !"KMS".equalsIgnoreCase(xSvcDef.getName())){
+						serviceDefList.add(populateViewBean(xSvcDef));
+					}
+				}
+				else if(userRoleList != null && userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
+					if(xSvcDef!=null && "KMS".equalsIgnoreCase(xSvcDef.getName())){
+						serviceDefList.add(populateViewBean(xSvcDef));
+						break;
+					}
 				}
 			}
 		}
@@ -182,6 +190,5 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 
 		return retList;
 	}
-
 
 }

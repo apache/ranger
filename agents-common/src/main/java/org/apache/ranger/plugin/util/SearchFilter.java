@@ -50,6 +50,15 @@ public class SearchFilter {
 	public static final String SORT_BY         = "sortBy";
 	public static final String RESOURCE_SIGNATURE = "resourceSignature:";     // search
 
+	public static final String TAG_DEF_ID       = "tagDefId"; // search
+	public static final String TAG_DEF_NAME     = "tagDefName"; // search
+	public static final String TAG_RESOURCE_ID  = "tagResourceId"; // search
+	public static final String TAG_RESOURCE_SERVICE_NAME = "tagResourceServiceName";  // search
+	public static final String TAG_RESOURCE_SERVICE_TYPE = "tagResourceServiceType"; // search
+
+
+
+
 	private Map<String, String> params     = null;
 	private int                 startIndex = 0;
 	private int                 maxRows    = Integer.MAX_VALUE;

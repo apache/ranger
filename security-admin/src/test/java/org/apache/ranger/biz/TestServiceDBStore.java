@@ -85,6 +85,9 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.store.RangerPolicyPaginatedList;
+import org.apache.ranger.plugin.store.RangerServiceDefPaginatedList;
+import org.apache.ranger.plugin.store.RangerServicePaginatedList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -539,12 +542,9 @@ public class TestServiceDBStore {
 		Mockito.when(serviceDefService.searchRangerServiceDefs(filter))
 				.thenReturn(serviceDefList);
 
-		RangerServiceDefList dbServiceDefList = serviceDBStore
+		RangerServiceDefPaginatedList dbServiceDefList = serviceDBStore
 				.getPaginatedServiceDefs(filter);
 		Assert.assertNotNull(dbServiceDefList);
-		Assert.assertEquals(dbServiceDefList, serviceDefList);
-		Assert.assertEquals(dbServiceDefList.getList(),
-				serviceDefList.getList());
 		Assert.assertEquals(dbServiceDefList.getServiceDefs(),
 				serviceDefList.getServiceDefs());
 		Mockito.verify(serviceDefService).searchRangerServiceDefs(filter);
@@ -1066,11 +1066,9 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.searchRangerServices(filter)).thenReturn(
 				serviceListObj);
 
-		RangerServiceList dbServiceList = serviceDBStore
+		RangerServicePaginatedList dbServiceList = serviceDBStore
 				.getPaginatedServices(filter);
 		Assert.assertNotNull(dbServiceList);
-		Assert.assertEquals(dbServiceList, serviceListObj);
-		Assert.assertEquals(dbServiceList.getList(), serviceListObj.getList());
 		Assert.assertEquals(dbServiceList.getServices(),
 				serviceListObj.getServices());
 
@@ -1703,7 +1701,7 @@ public class TestServiceDBStore {
 		Mockito.when(policyService.searchRangerPolicies(filter)).thenReturn(
 				policyListObj);
 
-		RangerPolicyList dbRangerPolicyList = serviceDBStore
+		RangerPolicyPaginatedList dbRangerPolicyList = serviceDBStore
 				.getPaginatedPolicies(filter);
 		Assert.assertNotNull(dbRangerPolicyList);
 		Mockito.verify(policyService).searchRangerPolicies(filter);
@@ -1787,7 +1785,7 @@ public class TestServiceDBStore {
 		Mockito.when(policyService.searchRangerPolicies(filter)).thenReturn(
 				policyList);
 
-		RangerPolicyList dbRangerPolicyList = serviceDBStore
+		RangerPolicyPaginatedList dbRangerPolicyList = serviceDBStore
 				.getPaginatedServicePolicies(serviceName, filter);
 		Assert.assertNotNull(dbRangerPolicyList);
 		Mockito.verify(policyService).searchRangerPolicies(filter);
@@ -1802,7 +1800,7 @@ public class TestServiceDBStore {
 		RangerService rangerService = rangerService();
 		Mockito.when(svcService.read(rangerService.getId())).thenReturn(
 				rangerService);
-		RangerPolicyList dbRangerPolicyList = serviceDBStore
+		RangerPolicyPaginatedList dbRangerPolicyList = serviceDBStore
 				.getPaginatedServicePolicies(rangerService.getId(), filter);
 		Assert.assertNull(dbRangerPolicyList);
 		Mockito.verify(svcService).read(rangerService.getId());

@@ -74,6 +74,10 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.plugin.store.RangerPolicyPaginatedList;
+import org.apache.ranger.plugin.store.RangerServiceDefPaginatedList;
+import org.apache.ranger.plugin.store.RangerServicePaginatedList;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -299,16 +303,26 @@ public class ServiceREST {
 		}
 
 		RangerServiceDefList ret = null;
+		RangerServiceDefPaginatedList paginatedSvcDefs = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, serviceDefService.sortFields);
 
 		try {
-			ret = svcStore.getPaginatedServiceDefs(filter);
+			paginatedSvcDefs = svcStore.getPaginatedServiceDefs(filter);
 		} catch (Exception excp) {
 			LOG.error("getServiceDefs() failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
+
+		ret = new RangerServiceDefList();
+		ret.setServiceDefs(paginatedSvcDefs.getServiceDefs());
+		ret.setPageSize(paginatedSvcDefs.getPageSize());
+		ret.setResultSize(paginatedSvcDefs.getResultSize());
+		ret.setStartIndex(paginatedSvcDefs.getStartIndex());
+		ret.setTotalCount(paginatedSvcDefs.getTotalCount());
+		ret.setSortBy(paginatedSvcDefs.getSortBy());
+		ret.setSortType(paginatedSvcDefs.getSortType());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServiceDefs(): count=" + (ret == null ? 0 : ret.getListSize()));
@@ -464,16 +478,27 @@ public class ServiceREST {
 		}
 
 		RangerServiceList ret = null;
+		RangerServicePaginatedList paginatedSvcs = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, svcService.sortFields);
 
 		try {
-			ret = svcStore.getPaginatedServices(filter);
+			paginatedSvcs = svcStore.getPaginatedServices(filter);
 		} catch (Exception excp) {
 			LOG.error("getServices() failed", excp);
 
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
+
+		ret = new RangerServiceList();
+
+		ret.setServices(paginatedSvcs.getServices());
+		ret.setPageSize(paginatedSvcs.getPageSize());
+		ret.setResultSize(paginatedSvcs.getResultSize());
+		ret.setStartIndex(paginatedSvcs.getStartIndex());
+		ret.setTotalCount(paginatedSvcs.getTotalCount());
+		ret.setSortBy(paginatedSvcs.getSortBy());
+		ret.setSortType(paginatedSvcs.getSortType());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServices(): count=" + (ret == null ? 0 : ret.getListSize()));
@@ -981,11 +1006,21 @@ public class ServiceREST {
 		}
 
 		RangerPolicyList ret = null;
+		RangerPolicyPaginatedList paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
-			ret = svcStore.getPaginatedPolicies(filter);
+			paginatedPolicies = svcStore.getPaginatedPolicies(filter);
+
+			ret = new RangerPolicyList();
+			ret.setPolicies(paginatedPolicies.getPolicies());
+			ret.setPageSize(paginatedPolicies.getPageSize());
+			ret.setResultSize(paginatedPolicies.getResultSize());
+			ret.setStartIndex(paginatedPolicies.getStartIndex());
+			ret.setTotalCount(paginatedPolicies.getTotalCount());
+			ret.setSortBy(paginatedPolicies.getSortBy());
+			ret.setSortType(paginatedPolicies.getSortType());
 
 			applyAdminAccessFilter(ret);
 		} catch (Exception excp) {
@@ -1063,11 +1098,21 @@ public class ServiceREST {
 		}
 
 		RangerPolicyList ret = null;
+		RangerPolicyPaginatedList paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
-			ret = svcStore.getPaginatedServicePolicies(serviceId, filter);
+			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceId, filter);
+
+			ret = new RangerPolicyList();
+			ret.setPolicies(paginatedPolicies.getPolicies());
+			ret.setPageSize(paginatedPolicies.getPageSize());
+			ret.setResultSize(paginatedPolicies.getResultSize());
+			ret.setStartIndex(paginatedPolicies.getStartIndex());
+			ret.setTotalCount(paginatedPolicies.getTotalCount());
+			ret.setSortBy(paginatedPolicies.getSortBy());
+			ret.setSortType(paginatedPolicies.getSortType());
 
 			applyAdminAccessFilter(ret);
 		} catch (Exception excp) {
@@ -1097,11 +1142,21 @@ public class ServiceREST {
 		}
 
 		RangerPolicyList ret = null;
+		RangerPolicyPaginatedList paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
-			ret = svcStore.getPaginatedServicePolicies(serviceName, filter);
+			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceName, filter);
+
+			ret = new RangerPolicyList();
+			ret.setPolicies(paginatedPolicies.getPolicies());
+			ret.setPageSize(paginatedPolicies.getPageSize());
+			ret.setResultSize(paginatedPolicies.getResultSize());
+			ret.setStartIndex(paginatedPolicies.getStartIndex());
+			ret.setTotalCount(paginatedPolicies.getTotalCount());
+			ret.setSortBy(paginatedPolicies.getSortBy());
+			ret.setSortType(paginatedPolicies.getSortType());
 
 			applyAdminAccessFilter(ret);
 		} catch (Exception excp) {
@@ -1380,7 +1435,13 @@ public class ServiceREST {
 	@GET
 	@Path("/policy/{policyId}/versionList")
 	public VXString getPolicyVersionList(@PathParam("policyId") Long policyId) {
-		return svcStore.getPolicyVersionList(policyId);
+
+		String policyVersionListStr = svcStore.getPolicyForVersionNumber(policyId);
+
+		VXString ret = new VXString();
+		ret.setValue(policyVersionListStr);
+
+		return ret;
 	}
 
 	@GET
