@@ -16,38 +16,44 @@
 --}}
 <div class="nav-collapse collapse" >
 	<ul class="nav page-nav" >
-		<!-- <li class="active">
-			<a href="#" id="nav1"><i class="icon-dashboard"></i> {{tt 'h.dashboard'}} </a>
-		</li> -->
-		{{#hasAccessToTab 'Policy Manager'}}
-		<li >
-			<a href="#!/policymanager" id="nav2"><i class="icon-shield"></i>{{tt 'h.policyManager'}} </a>
+		<li class="active dropdown">
+			<a href="javascript:;" id="nav2"><i class="icon-shield"></i>Access Manager</a>
+			<ul class="dropdown-menu">
+				{{#hasAccessToTab 'Resource Based Policies'}}
+					<li><a href="#!/policymanager"><i class="icon-file"></i>Resource Based Policies</a></li>
+				{{/hasAccessToTab}}
+				{{#hasAccessToTab 'Reports'}}
+					<li><a href="#!/reports/userAccess"><i class="icon-beaker"></i>Reports</a></li>
+				{{/hasAccessToTab}}
+				<!-- <li><a href="#">Tag Based Policies</a></li> -->
+			</ul>
 		</li>
-		{{/hasAccessToTab}}
-		{{#hasAccessToTab  'Users/Groups'}}
-		<li>
-			<a href="#!/users/usertab" id="nav3"><i class="icon-group"></i> {{tt 'h.usersOrGroups'}} </a>
-		</li>
-		{{/hasAccessToTab}}
-		{{#hasAccessToTab  'Analytics'}}
-		<li>
-			<a href="#!/reports/userAccess" id="nav4"><i class="icon-beaker"></i> {{tt 'h.analytics'}} </a>
-		</li>
-		{{/hasAccessToTab}}
 		{{#hasAccessToTab  'Audit'}}
-		<li>
-			<a href="#!/reports/audit/bigData" id="nav5"><i class=" icon-file-alt"></i> {{tt 'h.audit'}} </a>
-		</li>
+			<li>
+				<a href="#!/reports/audit/bigData" id="nav3"><i class=" icon-file-alt"></i> {{tt 'h.audit'}} </a>
+			</li>
 		{{/hasAccessToTab}}
-		{{#isSystemAdmin .}}
-		<li>
-			<a href="#!/permissions" id="nav6"><i class=" icon-file-alt"></i> {{tt 'h.permissions'}} </a>
+		
+		<li class="dropdown">
+			<a href="javascript:;" id="nav4"><i class="icon-lock"></i> {{tt 'h.encryption'}} </a>
+			<ul class="dropdown-menu">
+				{{#hasAccessToTab  'Key Manager'}}
+					<li><a href="#!/kms/keys/new/manage/service"><i class="icon-key"></i>Key Manager </a></li>
+				{{/hasAccessToTab}}
+				<!-- <li><a href="#">Encryption Policies</a></li> -->
+			</ul>
 		</li>
-		{{/isSystemAdmin}}
-	 	{{#hasAccessToTab  'KMS'}}
-		<li>
-			<a href="#!/kms/keys/new/manage/service" id="nav7"><i class="icon-key"></i> {{tt 'h.kms'}} </a>
+		<li class="dropdown">
+			<a href="javascript:;" id="nav5"><i class="icon-gear"></i> {{tt 'h.settings'}} </a>
+			<ul class="dropdown-menu">
+				{{#hasAccessToTab  'Users/Groups'}}
+					<li><a href="#!/users/usertab"><i class="icon-group"></i>{{tt 'h.usersOrGroups'}}</a></li>
+				{{/hasAccessToTab}}	
+				{{#isSystemAdmin .}}
+					<li><a href="#!/permissions"><i class="icon-file-alt"></i> {{tt 'h.permissions'}}</a></li>
+				{{/isSystemAdmin}}	
+			</ul>
 		</li>
-		{{/hasAccessToTab}}
+		
 	</ul>
 </div>

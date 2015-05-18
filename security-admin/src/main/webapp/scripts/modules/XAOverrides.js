@@ -480,7 +480,7 @@
 		  				}
 			  			//reset values
 			  			that.value.isExcludes = false;
-			  			that.value.isRecursive = true;
+			  			that.value.isRecursive = false;
 			  			that.$excludeSupport.trigger('toggleOn');
 			  			that.$recursiveSupport.trigger('toggleOn');
 			  			($(e.currentTarget).addClass('dirtyField'))

@@ -110,12 +110,12 @@ define(function(require) {
 				title: 'h.managePolices'
 			},
 			PolicyCreate: { 
-				href : '#!/policy/create',
+				href : 'javascipt:;',
 				text: 'h.createPolicy',
 				title: 'h.createPolicy'
 			},
 			PolicyEdit: { 
-				href : '#!/policy/create',
+				href : 'javascipt:;',
 				text: 'h.editPolicy',
 				title: 'h.editPolicy'
 			},
@@ -198,8 +198,8 @@ define(function(require) {
 				}
 				return {
 					href : href,
-					text : 'lbl.editAsset',
-					title: 'lbl.editAsset'
+					text : 'lbl.editService',
+					title: 'lbl.editService'
 				};
 			},
 
@@ -210,8 +210,8 @@ define(function(require) {
 				}
 				return {
 					href : href,
-					text : 'lbl.createAsset',
-					title: 'lbl.createAsset'
+					text : 'lbl.createService',
+					title: 'lbl.createService'
 				};
 			},
 			ServiceEdit : function(options){
@@ -224,8 +224,8 @@ define(function(require) {
 				}
 				return {
 					href : href,
-					text : 'lbl.editAsset',
-					title: 'lbl.editAsset'
+					text : 'lbl.editService',
+					title: 'lbl.editService'
 				};
 			},
 			ManagePolicies : function(options){

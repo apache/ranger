@@ -1009,17 +1009,35 @@ define(function(require) {
 			var that = this;
 			var vXPortalUser = SessionMgr.getUserProfile();
 			var denyControllerActions = [];
-			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),
-					'moduleName');
-			var groupModuleNames = _.pluck(
-					vXPortalUser.get('groupPermissions'), 'moduleName');
+			var denyModulesObj = [];
+			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
+			var groupModuleNames = _.pluck(vXPortalUser.get('groupPermissions'), 'moduleName');
 			var moduleNames = _.union(userModuleNames, groupModuleNames);
-			var denyModulesObj = _.omit(XAGlobals.ListOfModuleActions,
-					moduleNames);
+			//TODO
+			/*if($.inArray('Policy Manager',moduleNames) >= 0){
+				moduleNames.push('Resource Based Policies')
+			}
+			if($.inArray('Analytics',moduleNames) >= 0){
+				moduleNames.push('Reports')
+			}
+			if($.inArray('KMS',moduleNames) >= 0){
+				moduleNames.push('Key Manager')
+			}*/
+			_.each(XAGlobals.ListOfModuleActions,function(val,key){
+				if(!_.isArray(val)){
+					_.each(val,function(val1,key1){
+						if($.inArray(key1,moduleNames) < 0){
+							denyModulesObj = val1.concat(denyModulesObj)
+						}
+					});
+				}else{
+					if($.inArray(key,moduleNames) < 0){
+						denyModulesObj = val.concat(denyModulesObj)
+					}
+				}
+			});
 			if (!_.isEmpty(denyModulesObj)) {
-				_.each(denyModulesObj, function(deniedModule) {
-					denyControllerActions.push(_.values(deniedModule));
-				});
+				denyControllerActions.push(_.values(denyModulesObj));
 				denyControllerActions = _.flatten(denyControllerActions);
 			}
 
@@ -1041,5 +1059,23 @@ define(function(require) {
 	XAUtils.getRangerServiceByName = function(name) {
 		return "service/plugins/services/name/" + name;
 	};
+	XAUtils.setLocationHash = function(userModuleNames) {
+		var XALinks     = require('modules/XALinks');
+		var SessionMgr  = require('mgrs/SessionMgr');
+		if (_.contains(userModuleNames, XAEnums.MenuPermissions.XA_RESOURCE_BASED_POLICIES.label)){
+			   location.hash = XALinks.get('ServiceManager').href;
+		   }else if(_.contains(userModuleNames,XAEnums.MenuPermissions.XA_USER_GROUPS.label)){
+		       location.hash = XALinks.get('Users').href;
+		   }else if(_.contains(userModuleNames, XAEnums.MenuPermissions.XA_REPORTS.label)){
+		       location.hash = XALinks.get('UserAccessReport').href;
+		   }else if(_.contains(userModuleNames, XAEnums.MenuPermissions.XA_AUDITS.label)){
+		       location.hash = XALinks.get('AuditReport').href +'/bigData';
+		   }else if(SessionMgr.isSystemAdmin()){
+			   location.hash = XALinks.get('ModulePermissions').href;
+		   }else{
+				//If a user doesnot has access to any tab - taking user to by default Profile page.
+			   location.hash = XALinks.get('UserProfile').href;
+		   }
+	}
 	return XAUtils;
 });

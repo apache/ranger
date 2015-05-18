@@ -355,6 +355,14 @@ define(function(require) {
 		
         
 	});
+	
+	XAEnums.MenuPermissions =  mergeParams(XAEnums.MenuPermissions, {
+		XA_RESOURCE_BASED_POLICIES:{value:0, label:'Resource Based Policies', rbkey:'xa.enum.MenuPermissions.XA_RESOURCE_BASED_POLICIES', tt: 'lbl.XAPermForType_XA_PERM_FOR_UNKNOWN'},
+		XA_USER_GROUPS:{value:1, label:'Users/Groups', rbkey:'xa.enum.MenuPermissions.XA_USER_GROUP', tt: 'lbl.XAPermForType_XA_PERM_FOR_USER'},
+		XA_REPORTS:{value:2, label:'Reports', rbkey:'xa.enum.MenuPermissions.XA_REPORTS', tt: 'lbl.XAPermForType_XA_PERM_FOR_GROUP'},
+		XA_AUDITS:{value:3, label:'Audit', rbkey:'xa.enum.MenuPermissions.XA_AUDITS', tt: 'lbl.XAPermForType_XA_PERM_FOR_GROUP'},
+		XA_KEY_MANAGER:{value:4, label:'Key Manager', rbkey:'xa.enum.MenuPermissions.XA_KEY_MANAGER', tt: 'lbl.XAPermForType_XA_PERM_FOR_GROUP'}
+	});
 
 	return XAEnums;
 });
