@@ -25,7 +25,7 @@ CREATE TABLE `x_modules_master` (
 PRIMARY KEY (`id`)
 );
 
-INSERT INTO `x_modules_master` VALUES (1,now(),now(),1,1,'Policy Manager',''),(2,now(),now(),1,1,'Users/Groups',''),(3,now(),now(),1,1,'Analytics',''),(4,now(),now(),1,1,'Audit',''),(5,now(),now(),1,1,'KMS','');
+INSERT INTO `x_modules_master` VALUES (1,now(),now(),1,1,'Resource Based Policies',''),(2,now(),now(),1,1,'Users/Groups',''),(3,now(),now(),1,1,'Reports',''),(4,now(),now(),1,1,'Audit',''),(5,now(),now(),1,1,'Key Manager','');
 
 DROP TABLE IF EXISTS `x_user_module_perm`;
 CREATE TABLE `x_user_module_perm` (

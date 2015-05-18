@@ -172,12 +172,11 @@ define(function(require) {
 					<th class="renderable pid"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
-					<th class="renderable cip">Repository</th>\
+					<th class="renderable cip">Service</th>\
 					<th class="renderable name"  ></th>\
 					<th class="renderable cip"></th>\
 					<th class="renderable cip"></th>\
 					<th class="renderable cip"> </th>\
-					<th class="renderable aip" > </th>\
 					<th class="renderable aip" > </th>\
 					<th class="renderable aip" > </th>\
 				</tr>');
@@ -266,14 +265,14 @@ define(function(require) {
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 			                      {text : 'Today',label :'today'},{text : 'User',label :'requestUser'},
-			                      {text : 'Resource Name',label :'resourcePath'},{text : 'Policy ID',label :'policyId'},
-			                      {text : 'Resource Type',label :'resourceType'},{text : 'Repository Name',label :'repoName'},
-			                      {text : 'Repository Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
+			                      {text : 'Service Name',label :'resourcePath'},{text : 'Policy ID',label :'policyId'},
+			                      {text : 'Resource Type',label :'resourceType'},{text : 'Service Name',label :'repoName'},
+			                      {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
 			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Audit Type',label :'auditType'},{text : 'Session ID',label :'sessionId'},
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Client Type',label :'clientType'}];
-            var searchOpt = ['Start Date','End Date','User','Repository Name','Repository Type','Resource Name','Access Type','Result','Access Enforcer','Client IP'];//,'Policy ID'
+            var searchOpt = ['Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP'];//,'Policy ID'
             this.clearVisualSearch(this.accessAuditList, serverAttrName);
             
 			//'Resource Type','Audit Type','Session IP','Client Type','Today',
@@ -296,13 +295,13 @@ define(function(require) {
 						});
 						
 						switch (facet) {
-							case 'Repository Name':
+							case 'Service Name':
 								var assetList 	= new VXAssetList();
 								assetList.fetch().done(function(){
 									callback(assetList.map(function(model){return model.get('name');}));
 								});
 								break;
-							case 'Repository Type':
+							case 'Service Type':
 								var serviceList =  that.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('name').toUpperCase()}; })
 								callback(serviceList);
 								break;
@@ -467,11 +466,11 @@ define(function(require) {
 		},
 		addSearchForAgentTab : function(){
 			var that = this;
-			var searchOpt = ["Export Date", "Repository Name", "Plugin Id", "Plugin IP", "Http Response Code"];
+			var searchOpt = ["Export Date", "Service Name", "Plugin Id", "Plugin IP", "Http Response Code"];
 			searchOpt = _.without(searchOpt,'Export Date');
 			searchOpt = _.union(searchOpt, ['Start Date','End Date']);//'Today'
 			var serverAttrName  = [{text : "Plugin Id", label :"agentId"}, {text : "Plugin IP", label :"clientIP"},
-			                       {text : "Repository Name", label :"repositoryName"},{text : "Http Response Code", label :"httpRetCode"},
+			                       {text : "Service Name", label :"repositoryName"},{text : "Http Response Code", label :"httpRetCode"},
 			                       {text : "Export Date", label :"createDate"},
 			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                   {text : 'Today',label :'today'}];
@@ -597,7 +596,7 @@ define(function(require) {
 				gridOpts : {
 					row : TableRow,
 					header : XABackgrid,
-					emptyText : 'No repository found!!'
+					emptyText : 'No service found!!'
 				}
 			}));	
 		},
@@ -627,7 +626,7 @@ define(function(require) {
 							var action = model.get('action'), name = _.escape(model.get('objectName')),
 								label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue), html = '';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
-								html = 	'Repository '+action+'d '+'<b>'+name+'</b>';
+								html = 	'Service '+action+'d '+'<b>'+name+'</b>';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value|| rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value)
 								html = 	'Policy '+action+'d '+'<b>'+name+'</b>';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
@@ -915,14 +914,6 @@ define(function(require) {
 						sortable:false,
 						editable:false
 					},
-					eventDuration : {
-						label : 'Event Duration(ms)',
-						cell: "string",
-						click : false,
-						drag : false,
-						sortable:false,
-						editable:false
-					}
 			};
 			return this.accessAuditList.constructor.getTableCols(cols, this.accessAuditList);
 		},
@@ -1072,7 +1063,7 @@ define(function(require) {
 					},
 					repositoryName : {
 						cell : 'html',
-						label	: localization.tt('lbl.repositoryName'),
+						label	: localization.tt('lbl.serviceName'),
 						editable:false,
 						sortable:false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {

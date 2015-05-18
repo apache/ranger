@@ -141,37 +141,7 @@ define(function(require){
 					XAUtil.allowNavigation();
 					var msg = that.editMode ? 'Module Permissions updated successfully' :'Module Permissions created successfully';
 					XAUtil.notifySuccess('Success', msg);
-					if(that.editMode){
-						App.appRouter.navigate("#!/permissions",{trigger: true});
-						return;
-					}
 					App.appRouter.navigate("#!/permissions",{trigger: true});
-
-					var modulePermissionList = new VXModuleDefList();
-
-				   modulePermissionList.fetch({
-					   cache:false
-				   }).done(function(){
-						var newColl = modulePermissionList;
-						modulePermissionList.getLastPage({
-							cache : false,
-							success : function(collection, response, options){
-								App.rContent.show(new UserTableLayout({
-									collection : collection,
-								}));
-								newColl = collection;
-							}
-						}).done(function(){
-							var model = newColl.get(that.model.id);
-							if(model){
-								model.trigger("model:highlightBackgridRow");
-							}
-						});
-
-						App.rContent.show(new UserTableLayout({
-							collection : modulePermissionList
-						}));
-				   });
 				}   ,
 				error : function(model,resp){
 					XAUtil.blockUI('unblock');

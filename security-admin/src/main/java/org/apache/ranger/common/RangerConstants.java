@@ -66,12 +66,12 @@ public class RangerConstants extends RangerCommonEnums {
 	public static final String SENDGRID_REPLY_TO = "replyto";
 
 	//Permission Names
-	public static final String MODULE_POLICY_MANAGER="Policy Manager";
+	public static final String MODULE_RESOURCE_BASED_POLICIES="Resource Based Policies";
 	public static final String MODULE_USER_GROUPS="Users/Groups";
-	public static final String MODULE_ANALYTICS="Analytics";
+	public static final String MODULE_REPORTS="Reports";
 	public static final String MODULE_AUDIT="Audit";
 	public static final String MODULE_PERMISSION="Permissions";
-	public static final String MODULE_KMS="KMS";
+	public static final String MODULE_KEY_MANAGER="Key Manager";
 
 	// User create validation errors
 	public enum ValidationUserProfile {
