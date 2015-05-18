@@ -50,7 +50,7 @@ public class ServicePolicies implements java.io.Serializable {
 	private Date               policyUpdateTime;
 	private List<RangerPolicy> policies;
 	private RangerServiceDef   serviceDef;
-
+	private TagPolicies        tagPolicies;
 
 	/**
 	 * @return the serviceName
@@ -124,6 +124,18 @@ public class ServicePolicies implements java.io.Serializable {
 	public void setServiceDef(RangerServiceDef serviceDef) {
 		this.serviceDef = serviceDef;
 	}
+	/**
+	 * @return the tagPolicies
+	 */
+	public ServicePolicies.TagPolicies getTagPolicies() {
+		return tagPolicies;
+	}
+	/**
+	 * @param tagPolicies the tagPolicies to set
+	 */
+	public void setTagPolicies(ServicePolicies.TagPolicies tagPolicies) {
+		this.tagPolicies = tagPolicies;
+	}
 	
 	@Override
 	public String toString() {
@@ -134,6 +146,105 @@ public class ServicePolicies implements java.io.Serializable {
 			.add("policyUpdateTime", policyUpdateTime)
 			.add("policies", policies)
 			.add("serviceDef", serviceDef)
+			.add("tagPolicies", tagPolicies)
 			.toString();
+	}
+
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class TagPolicies {
+		private String             serviceName;
+		private Long               serviceId;
+		private Long               policyVersion;
+		private Date               policyUpdateTime;
+		private List<RangerPolicy> policies;
+		private RangerServiceDef   serviceDef;
+		/**
+		 * @return the serviceName
+		 */
+		public String getServiceName() {
+			return serviceName;
+		}
+		/**
+		 * @param serviceName the serviceName to set
+		 */
+		public void setServiceName(String serviceName) {
+			this.serviceName = serviceName;
+		}
+		/**
+		 * @return the serviceId
+		 */
+		public Long getServiceId() {
+			return serviceId;
+		}
+		/**
+		 * @param serviceId the serviceId to set
+		 */
+		public void setServiceId(Long serviceId) {
+			this.serviceId = serviceId;
+		}
+		/**
+		 * @return the policyVersion
+		 */
+		public Long getPolicyVersion() {
+			return policyVersion;
+		}
+		/**
+		 * @param policyVersion the policyVersion to set
+		 */
+		public void setPolicyVersion(Long policyVersion) {
+			this.policyVersion = policyVersion;
+		}
+		/**
+		 * @return the policyUpdateTime
+		 */
+		public Date getPolicyUpdateTime() {
+			return policyUpdateTime;
+		}
+		/**
+		 * @param policyUpdateTime the policyUpdateTime to set
+		 */
+		public void setPolicyUpdateTime(Date policyUpdateTime) {
+			this.policyUpdateTime = policyUpdateTime;
+		}
+		/**
+		 * @return the policies
+		 */
+		public List<RangerPolicy> getPolicies() {
+			return policies;
+		}
+		/**
+		 * @param policies the policies to set
+		 */
+		public void setPolicies(List<RangerPolicy> policies) {
+			this.policies = policies;
+		}
+		/**
+		 * @return the serviceDef
+		 */
+		public RangerServiceDef getServiceDef() {
+			return serviceDef;
+		}
+		/**
+		 * @param serviceDef the serviceDef to set
+		 */
+		public void setServiceDef(RangerServiceDef serviceDef) {
+			this.serviceDef = serviceDef;
+		}
+
+		@Override
+		public String toString() {
+			return Objects.toStringHelper(this.getClass())
+				.add("serviceName", serviceName)
+				.add("serviceId", serviceId)
+				.add("policyVersion", policyVersion)
+				.add("policyUpdateTime", policyUpdateTime)
+				.add("policies", policies)
+				.add("serviceDef", serviceDef)
+				.toString();
+		}
 	}
 }

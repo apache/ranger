@@ -1608,6 +1608,29 @@ public class ServiceDBStore implements ServiceStore {
 				throw new Exception("service-def does not exist. id=" + serviceDbObj.getType());
 			}
 
+			ServicePolicies.TagPolicies tagPolicies = null;
+
+			if(serviceDbObj.getTagService() != null) {
+				XXService tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
+
+				if(tagServiceDbObj != null) {
+					RangerServiceDef tagServiceDef = getServiceDef(tagServiceDbObj.getType());
+
+					if(tagServiceDef == null) {
+						throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
+					}
+
+					tagPolicies = new ServicePolicies.TagPolicies();
+
+					tagPolicies.setServiceId(tagServiceDbObj.getId());
+					tagPolicies.setServiceName(tagServiceDbObj.getName());
+					tagPolicies.setPolicyVersion(tagServiceDbObj.getPolicyVersion());
+					tagPolicies.setPolicyUpdateTime(tagServiceDbObj.getPolicyUpdateTime());
+					tagPolicies.setPolicies(getServicePolicies(tagServiceDbObj.getName(), null));
+					tagPolicies.setServiceDef(tagServiceDef);
+				}
+			}
+
 			List<RangerPolicy> policies = getServicePolicies(serviceName, null);
 
 			ret = new ServicePolicies();
@@ -1618,6 +1641,7 @@ public class ServiceDBStore implements ServiceStore {
 			ret.setPolicyUpdateTime(serviceDbObj.getPolicyUpdateTime());
 			ret.setPolicies(policies);
 			ret.setServiceDef(serviceDef);
+			ret.setTagPolicies(tagPolicies);
 		}
 
 		if(LOG.isDebugEnabled()) {
