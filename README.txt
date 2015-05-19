@@ -10,16 +10,23 @@ Build Process
 
 3. After the above build command execution, you should see the following TAR files in the target folder:
 
-	ranger-<version-number>-admin.tar.gz
-	ranger-<version-number>-usersync.tar.gz
-	ranger-<version-number>-hdfs-plugin.tar.gz
-	ranger-<version-number>-hive-plugin.tar.gz
-	ranger-<version-number>-hbase-plugin.tar.gz
-	ranger-<version-number>-knox-plugin.tar.gz
-	ranger-<version-number>-storm-plugin.tar.gz
+
+   ranger-<version>-admin.tar.gz
+   ranger-<version>-hbase-plugin.tar.gz
+   ranger-<version>-hdfs-plugin.tar.gz
+   ranger-<version>-hive-plugin.tar.gz
+   ranger-<version>-kafka-plugin.tar.gz
+   ranger-<version>-kms.tar.gz
+   ranger-<version>-knox-plugin.tar.gz
+   ranger-<version>-migration-util.tar.gz
+   ranger-<version>-solr-plugin.tar.gz
+   ranger-<version>-src.tar.gz
+   ranger-<version>-storm-plugin.tar.gz
+   ranger-<version>-usersync.tar.gz
+   ranger-<version>-yarn-plugin.tar.gz
 
 Importing Apache Ranger Project into Eclipse
-====================================
+============================================
 
 1. Create a Eclipse workspace called 'ranger'
 
@@ -39,6 +46,7 @@ Installation Host Information
 	(c)  HBase Plugin needs to be installed on both Master and Regional Server nodes.
 	(d)  Knox Plugin needs to be installed on Knox hosts.
 	(e)  Storm Plugin needs to be installed on Storm hosts.
+    (f)  Kafka/Solr Plugin needs to be installed on their respective component hosts.
 
 Installation Process
 ~~~~~~~~~~~~~~~~~~~~
@@ -51,8 +59,8 @@ Installation Process
 
 4. Modify the install.properties file with appropriate variables
 
-5. If the module has install.sh, 
-	Execute ./install.sh
+5. If the module has setup.sh, 
+	Execute ./setup.sh
 
    If the install.sh file does not exists, 
 	Execute ./enable-<component>-plugin.sh
