@@ -51,7 +51,6 @@
 				<exclude name="*/bin/**" />
 				<exclude name="*/target/**" />
 				<exclude name="**/.DS_Store" />
-				<exclude name="release-build.xml" />
 				<exclude name="target/**" />
 			</tarfileset>
 		</tar>
