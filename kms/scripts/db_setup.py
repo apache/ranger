@@ -32,9 +32,11 @@ os_name = platform.system()
 os_name = os_name.upper()
 
 if os_name == "LINUX":
-	RANGER_KMS_HOME = os.getcwd()
+    RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+    if RANGER_KMS_HOME is None:
+        RANGER_KMS_HOME = os.getcwd()
 elif os_name == "WINDOWS":
-	RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+    RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
 
 def check_output(query):
 	if os_name == "LINUX":
@@ -119,7 +121,7 @@ class MysqlConf(BaseDB):
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,self.host,db_name,user,password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,path,self.host,db_name,user,password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
 		return jisql_cmd
@@ -189,7 +191,7 @@ class OracleConf(BaseDB):
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, self.host, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, user, password)
 		return jisql_cmd
@@ -275,7 +277,7 @@ class PostgresConf(BaseDB):
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, db_name, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,self.host, db_name, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
 		return jisql_cmd
@@ -345,7 +347,7 @@ class SqlServerConf(BaseDB):
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, user, password, self.host,db_name)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, user, password, self.host,db_name)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
 		return jisql_cmd
