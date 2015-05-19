@@ -108,7 +108,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			rangerResource.setValue(KEY_TOPIC, resource.name());
 		} else if (resource.resourceType().equals(ResourceType.CLUSTER)) {
 			rangerResource.setValue(KEY_CLUSTER, resource.name());
-		} else if (resource.resourceType().equals(ResourceType.GROUP)) {
+		} else if (resource.resourceType().equals(ResourceType.CONSUMER_GROUP)) {
 			rangerResource.setValue(KEY_CONSUMER_GROUP, resource.name());
 		} else {
 			logger.fatal("Unsupported resourceType=" + resource.resourceType());
