@@ -1835,3 +1835,7 @@ td.select-row-cell {
 	float: left;
 	margin: 2px;
 }
+
+#r_topNav .dropdown-menu {
+	margin:0;
+}

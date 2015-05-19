@@ -266,20 +266,20 @@ public class XUserMgr extends XUserMgrBase {
 			if (role.equals(RangerConstants.ROLE_USER)) {
 
 				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_ANALYTICS),
+						moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),
 						isCreate);
 				insertMappingUserPermisson(
 						vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_POLICY_MANAGER),
+						moduleNameId.get(RangerConstants.MODULE_REPORTS),
 						isCreate);
 			} else if (role.equals(RangerConstants.ROLE_SYS_ADMIN)) {
 
 				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_ANALYTICS),
+						moduleNameId.get(RangerConstants.MODULE_REPORTS),
 						isCreate);
 				insertMappingUserPermisson(
 						vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_POLICY_MANAGER),
+						moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),
 						isCreate);
 				insertMappingUserPermisson(vXPortalUser.getId(),
 						moduleNameId.get(RangerConstants.MODULE_AUDIT),
@@ -295,16 +295,13 @@ public class XUserMgr extends XUserMgrBase {
 						isCreate);
 			} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
 				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_KMS), isCreate);
+						moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
 				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_ANALYTICS),
+						moduleNameId.get(RangerConstants.MODULE_REPORTS),
 						isCreate);
 				insertMappingUserPermisson(
 						vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_POLICY_MANAGER),
-						isCreate);
-				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_AUDIT),
+						moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),
 						isCreate);
 			}
 

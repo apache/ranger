@@ -57,7 +57,7 @@ define(function(require) {
 	   
 	   //************** Analytics(reports)  Related *********************/
 	   userAccessReportAction : function(){
-		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Analytics.value });
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var view				= require('views/reports/UserAccessLayout');
 		   var RangerPolicyList 	= require('collections/RangerPolicyList');
 		   var VXGroupList		= require('collections/VXGroupList');
@@ -132,7 +132,7 @@ define(function(require) {
 	   /************** UserORGroups Related *********************/
 	   userManagerAction :function(tab){
 		   MAppState.set({
-				'currentTab' : XAGlobals.AppTabs.Users.value
+				'currentTab' : XAGlobals.AppTabs.Settings.value
 			});
 		   var view 		= require('views/users/UserTableLayout');
 		   var VXUserList	= require('collections/VXUserList');
@@ -148,7 +148,7 @@ define(function(require) {
 	   },
 	   userCreateAction : function(){
 		   MAppState.set({
-				'currentTab' : XAGlobals.AppTabs.Users.value
+				'currentTab' : XAGlobals.AppTabs.Settings.value
 			});
 		   var view 		= require('views/users/UserCreate');
 		   var VXUser		= require('models/VXUser');
@@ -167,7 +167,7 @@ define(function(require) {
 	   },
 	   userEditAction : function(userId){
 		   MAppState.set({
-				'currentTab' : XAGlobals.AppTabs.Users.value
+				'currentTab' : XAGlobals.AppTabs.Settings.value
 			});
 		   var view 		= require('views/users/UserCreate');
 		   var VXUser		= require('models/VXUser');
@@ -184,7 +184,7 @@ define(function(require) {
 	   },
 	   groupCreateAction : function(){
 		   MAppState.set({
-				'currentTab' : XAGlobals.AppTabs.Users.value
+				'currentTab' : XAGlobals.AppTabs.Settings.value
 			});
 		   var view 		= require('views/users/GroupCreate');
 		   var VXGroup		= require('models/VXGroup');
@@ -198,7 +198,7 @@ define(function(require) {
 	   },
 	   groupEditAction : function(groupId){
 		   MAppState.set({
-				'currentTab' : XAGlobals.AppTabs.Users.value
+				'currentTab' : XAGlobals.AppTabs.Settings.value
 			});
 		   var view 		= require('views/users/GroupCreate');
 		   var VXGroup		= require('models/VXGroup');
@@ -220,7 +220,7 @@ define(function(require) {
    	   /************************************************************/
 
 	   serviceManagerAction :function(){
-		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   console.log('Policy Manager action called..');
 		   var view 				= require('views/policymanager/ServiceLayout');
 		   var RangerServiceDefList	= require('collections/RangerServiceDefList');
@@ -240,7 +240,7 @@ define(function(require) {
 	   },
 
 	   serviceCreateAction :function(serviceTypeId){
-    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var view				= require('views/service/ServiceCreate');
 		   var RangerServiceDef	= require('models/RangerServiceDef');
 		   var RangerService	= require('models/RangerService');
@@ -254,7 +254,7 @@ define(function(require) {
 		   }));
 	   },
 	   serviceEditAction :function(serviceTypeId, serviceId){
-    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var view				= require('views/service/ServiceCreate');
 		   var RangerServiceDef	= require('models/RangerServiceDef');
 		   var RangerService	= require('models/RangerService');
@@ -273,7 +273,7 @@ define(function(require) {
 	   },
 	   
 	   policyManageAction :function(serviceId){
-		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var XAUtil			= require('utils/XAUtils');
 		   var view 			= require('views/policies/RangerPolicyTableLayout');
 		   var RangerService	= require('models/RangerService');
@@ -296,7 +296,7 @@ define(function(require) {
 		   }));
 	   },
 	   RangerPolicyCreateAction :function(serviceId){
-    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 
 		   var view 			= require('views/policies/RangerPolicyCreate');
 		   var RangerService	= require('models/RangerService');
@@ -313,7 +313,7 @@ define(function(require) {
 		   });
 	   },
 	   RangerPolicyEditAction :function(serviceId, policyId){
-    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.PolicyManager.value });
+    	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 
 		   var view 			= require('views/policies/RangerPolicyCreate');
 		   var RangerService	= require('models/RangerService');
@@ -336,7 +336,7 @@ define(function(require) {
 	   },
 	   /************PERMISSIONS LISTING *****************************************/
 	   modulePermissionsAction :function(){
-		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Permissions.value });
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Settings.value });
 		   var view 			= require('views/permissions/ModulePermsTableLayout');
 		   var ModulePermission	= require('models/VXModuleDef');
 		   var ModulePermissionList	= require('collections/VXModuleDefList');
@@ -354,7 +354,7 @@ define(function(require) {
 	   },
 	   modulePermissionEditAction : function(moduleId){
 		   MAppState.set({
-				'currentTab' : XAGlobals.AppTabs.Permissions.value
+				'currentTab' : XAGlobals.AppTabs.Settings.value
 			});
 		   var view 				= require('views/permissions/ModulePermissionCreate');
 		   var ModulePermission		= require('models/VXModuleDef');
@@ -371,29 +371,16 @@ define(function(require) {
 		   });
 	   },
 	   postLoginDefaultView : function(){
-                var SessionMgr  = require('mgrs/SessionMgr');
-                var XAGlobals   = require('utils/XAGlobals');
-                var XALinks             = require('modules/XALinks');
-                var vXPortalUser = SessionMgr.getUserProfile();
-                var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
-                if (_.contains(userModuleNames, 'Policy Manager')){
-                        location.hash = XALinks.get('ServiceManager').href;
-                }else if(_.contains(userModuleNames, 'Users/Groups')){
-                        location.hash = XALinks.get('Users').href;
-                }else if(_.contains(userModuleNames, 'Analytics')){
-                        location.hash = XALinks.get('UserAccessReport').href;
-                }else if(_.contains(userModuleNames, 'Audit')){
-                        location.hash = XALinks.get('AuditReport').href +'/bigData';
-		}else if(SessionMgr.isSystemAdmin()){
-			location.hash = XALinks.get('ModulePermissions').href;
-		}else{
-			//If a user doesnot has access to any tab - taking user to by default Profile page.
-			location.hash = XALinks.get('UserProfile').href;
-		}
-           },
+		   var SessionMgr  = require('mgrs/SessionMgr');
+		   var XAGlobals   = require('utils/XAGlobals');
+		   var XAUtils	   = require('utils/XAUtils');
+		   var vXPortalUser = SessionMgr.getUserProfile();
+		   var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
+		   XAUtils.setLocationHash(userModuleNames);
+       },
 	   /************** KMS *********************/
 	   kmsManagerAction :function(kmsManagePage, kmsServiceName){
-		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.KMS.value });
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Encryption.value });
 		   var view 		= require('views/kms/KMSTableLayout');
 		   var KmsKeyList	= require('collections/VXKmsKeyList');
 		   App.rContent.show(new view({
@@ -403,7 +390,7 @@ define(function(require) {
 		   }));
 	   },
 	   kmsKeyCreateAction : function(kmsServiceName){
-		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.KMS.value });
+		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Encryption.value });
 		   var view 		= require('views/kms/KmsKeyCreate');
 		   var KmsKey		= require('models/VXKmsKey');
 		   

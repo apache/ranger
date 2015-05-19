@@ -57,7 +57,7 @@ define(function(require){
 			return _.extend(attrs,{
 				name : {
 					type		: 'Text',
-					title		: 'Repository Name *',
+					title		: 'Service Name *',
 					validators	: ['required'],
 					editorAttrs 	:{ maxlength: 255},
 

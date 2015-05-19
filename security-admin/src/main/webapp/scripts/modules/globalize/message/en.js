@@ -223,7 +223,10 @@ define(function(require) {
 				version							: 'Version',
 				attributes						: 'Attributes',
 				material						: 'Material',
-				addNewConfig					: 'Add New Configurations'
+				addNewConfig					: 'Add New Configurations',
+				createService					: 'Create Service',
+				editService						: 'Edit Service',
+				serviceDetails					: 'Service Details'
 			},
 			btn : {
 				add							: 'Add',
@@ -287,8 +290,10 @@ define(function(require) {
 				permissions					: 'Permissions',
 				kms							: 'KMS',
 				keyCreate					: 'Key Create',
-				keyEdit					: 'Key Edit',
+				keyEdit						: 'Key Edit',
 				searchForKeys				:"Search for your keys...",
+				encryption					: 'Encryption',
+				settings					: 'Settings',
 				
 				
 			},
