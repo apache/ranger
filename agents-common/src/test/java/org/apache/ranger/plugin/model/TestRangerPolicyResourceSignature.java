@@ -154,7 +154,7 @@ public class TestRangerPolicyResourceSignature {
 		// null policy returns signature of empty resource
 		RangerPolicy policy = null;
 		PolicySerializer serializer = new PolicySerializer(policy);
-		assertTrue("Null policy", serializer.toString() == null);
+		assertTrue("Null policy", serializer.toString() == "");
 		
 		policy = mock(RangerPolicy.class);
 		when(policy.getPolicyType()).thenReturn(null);

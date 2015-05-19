@@ -44,12 +44,7 @@ public class RangerPolicyResourceSignature {
 	public RangerPolicyResourceSignature(RangerPolicy policy) {
 		_policy = policy;
 		PolicySerializer serializer = new PolicySerializer(_policy);
-		String asString = serializer.toString();
-		if (asString == null) {
-			_string = "";
-		} else {
-			_string = asString;
-		}
+		_string = serializer.toString();
 		_hash = DigestUtils.md5Hex(_string);
 	}
 
@@ -128,7 +123,7 @@ public class RangerPolicyResourceSignature {
 			// invalid/empty policy gets a deterministic signature as if it had an
 			// empty resource string
 			if (!isPolicyValidForResourceSignatureComputation()) {
-				return null;
+				return "";
 			}
 			int type = 0;
 			if (_policy.getPolicyType() != null) {
