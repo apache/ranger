@@ -31,9 +31,11 @@ os_name = platform.system()
 os_name = os_name.upper()
 
 if os_name == "LINUX":
+    RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+    if RANGER_KMS_HOME is None:
         RANGER_KMS_HOME = os.getcwd()
 elif os_name == "WINDOWS":
-        RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+    RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
 
 def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
     finalLibPath = libpath.replace('\\','/').replace('//','/')
@@ -81,7 +83,7 @@ def populate_global_dict():
 	elif os_name == "WINDOWS":
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
 	library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
-	read_config_file = open(os.path.join(os.getcwd(),'install.properties'))
+	read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
 	for each_line in read_config_file.read().split('\n') :
 		if len(each_line) == 0 : continue
 		if re.search('=', each_line):
@@ -136,9 +138,9 @@ class MysqlConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		#TODO: User array for forming command
-		path = os.getcwd()
+		path = RANGER_KMS_HOME
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,self.host,db_name,user,password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,path,self.host,db_name,user,password)
 		elif os_name == "WINDOWS":
 			self.JAVA_BIN = self.JAVA_BIN.strip("'")
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
@@ -321,9 +323,9 @@ class OracleConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password):
 		#TODO: User array for forming command
-		path = os.getcwd()
+		path = RANGER_KMS_HOME
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, self.host, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, user, password)
 		return jisql_cmd
@@ -517,10 +519,10 @@ class PostgresConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
-		path = os.getcwd()
+		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, self.host, db_name, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,self.host, db_name, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s:5432/%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
 		return jisql_cmd
@@ -714,10 +716,10 @@ class SqlServerConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
-		path = os.getcwd()
+		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, user, password, self.host,db_name)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password, self.host,db_name)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver mssql -cstring jdbc:sqlserver://%s:1433;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
 		return jisql_cmd
@@ -1043,7 +1045,7 @@ def main(argv):
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN)
-		xa_db_core_file = os.path.join(os.getcwd(),mysql_core_file)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME,mysql_core_file)
 
 	elif XA_DB_FLAVOR == "ORACLE":
 		ORACLE_CONNECTOR_JAR=CONNECTOR_JAR
@@ -1052,17 +1054,17 @@ def main(argv):
 		elif os_name == "WINDOWS":
 			xa_db_root_user = xa_db_root_user
 		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN)
-		xa_db_core_file = os.path.join(os.getcwd(),oracle_core_file)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME,oracle_core_file)
 
 	elif XA_DB_FLAVOR == "POSTGRES":
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
-		xa_db_core_file = os.path.join(os.getcwd(),postgres_core_file)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME,postgres_core_file)
 
 	elif XA_DB_FLAVOR == "MSSQL":
 		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
-		xa_db_core_file = os.path.join(os.getcwd(),sqlserver_core_file)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME,sqlserver_core_file)
 	else:
 		log("[E] ---------- NO SUCH SUPPORTED DB FLAVOUR.. ----------", "error")
 		sys.exit(1)
