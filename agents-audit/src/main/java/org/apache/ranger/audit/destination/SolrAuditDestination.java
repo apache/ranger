@@ -61,9 +61,13 @@ public class SolrAuditDestination extends AuditDestination {
 			if (solrClient == null) {
 				String urls = MiscUtil.getStringProperty(props, propPrefix
 						+ "." + PROP_SOLR_URLS);
+				if( urls != null) {
+					urls = urls.trim();
+				}
 				if (urls != null && urls.equalsIgnoreCase("NONE")) {
 					urls = null;
 				}
+				
 
 				List<String> solrURLs = new ArrayList<String>();
 				String zkHosts = null;

@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
 /**
  * This class should be generated per request and flushed at the end of the
@@ -32,7 +31,6 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 public class RangerMultiResourceAuditHandler extends RangerDefaultAuditHandler {
 
 	Collection<AuthzAuditEvent> auditEvents = new ArrayList<AuthzAuditEvent>();
-	boolean deniedExists = false;
 
 	public RangerMultiResourceAuditHandler() {
 	}

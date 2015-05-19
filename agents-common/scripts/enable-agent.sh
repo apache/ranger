@@ -128,7 +128,12 @@ then
 	HCOMPONENT_INSTALL_DIR_NAME=${HCOMPONENT_NAME}
 fi
 
-hdir=${PROJ_INSTALL_DIR}/../${HCOMPONENT_INSTALL_DIR_NAME}
+firstletter=${HCOMPONENT_INSTALL_DIR_NAME:0:1}
+if [ "$firstletter" = "/" ]; then
+    hdir=${HCOMPONENT_INSTALL_DIR_NAME}
+else
+    hdir=${PROJ_INSTALL_DIR}/../${HCOMPONENT_INSTALL_DIR_NAME}
+fi
 
 #
 # TEST - START
@@ -142,11 +147,24 @@ fi
 #
 HCOMPONENT_INSTALL_DIR=`(cd ${hdir} ; pwd)`
 HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/lib
-if [ "${HCOMPONENT_NAME}" = "knox" ]
-then
+if [ "${HCOMPONENT_NAME}" = "knox" ]; then
 	HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/ext
+elif [ "${HCOMPONENT_NAME}" = "solr" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/solr-webapp/webapp/WEB-INF/lib
 fi
+
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
+if [ "${HCOMPONENT_NAME}" = "solr" ]; then
+    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/solr-webapp/webapp/WEB-INF/classes
+    if [ ! -d $HCOMPONENT_CONF_DIR ]; then	
+	install_owner=`ls -ld | cut -f 3 -d " "`
+	echo "INFO: Creating $HCOMPONENT_CONF_DIR" 
+	mkdir -p $HCOMPONENT_CONF_DIR
+	echo "INFO: Changing ownership of  $HCOMPONENT_CONF_DIR to $install_owner" 
+	chown $install_owner:$install_owner $HCOMPONENT_CONF_DIR
+    fi    
+fi
+
 HCOMPONENT_ARCHIVE_CONF_DIR=${HCOMPONENT_CONF_DIR}/.archive
 SET_ENV_SCRIPT=${HCOMPONENT_CONF_DIR}/${SET_ENV_SCRIPT_NAME}
 
@@ -220,6 +238,8 @@ create_jceks() {
 	
 	rm -f ${tempFile}
 }
+
+log "${HCOMPONENT_NAME}: lib folder=$HCOMPONENT_LIB_DIR conf folder=$HCOMPONENT_CONF_DIR"
 
 #
 # If there is a set-ranger-${COMPONENT}-env.sh, install it
