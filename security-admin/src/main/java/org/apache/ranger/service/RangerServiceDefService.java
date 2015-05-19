@@ -26,6 +26,7 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
@@ -158,13 +159,14 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 		return this.populateViewBean(xServiceDef);
 	}
 	@Override
-	@SuppressWarnings("unchecked")
 	public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
 		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
 		RangerServiceDefList retList = new RangerServiceDefList();
 
 		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields, retList);
-		List<String> userRoleList = ContextUtil.getCurrentUserSession().getUserRoleList();
+		UserSessionBase sessionBase = ContextUtil.getCurrentUserSession();
+		List<String> userRoleList = (sessionBase != null) ? sessionBase.getUserRoleList() : null;
+
 		for (XXServiceDef xSvcDef : xSvcDefList) {
 			if(userRoleList != null && !userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
 				if(xSvcDef!=null && !"KMS".equalsIgnoreCase(xSvcDef.getName())){
