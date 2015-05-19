@@ -57,7 +57,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	public static final String ACCESS_TYPE_UPDATE = "update";
 	public static final String ACCESS_TYPE_QUERY = "query";
 	public static final String ACCESS_TYPE_OTHER = "other";
-	public static final String ACCESS_TYPE_ADMIN = "admin";
+	public static final String ACCESS_TYPE_ADMIN = "solr_admin";
 
 	private static volatile RangerBasePlugin solrPlugin = null;
 

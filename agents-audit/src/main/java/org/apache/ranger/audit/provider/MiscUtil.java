@@ -370,7 +370,7 @@ public class MiscUtil {
 	public static List<String> toArray(String destListStr, String delim) {
 		List<String> list = new ArrayList<String>();
 		if (destListStr != null && !destListStr.isEmpty()) {
-			StringTokenizer tokenizer = new StringTokenizer(destListStr, delim);
+			StringTokenizer tokenizer = new StringTokenizer(destListStr, delim.trim());
 			while (tokenizer.hasMoreTokens()) {
 				list.add(tokenizer.nextToken());
 			}
