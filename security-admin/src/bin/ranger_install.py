@@ -893,11 +893,81 @@ def update_properties():
     else:
         propertyName="ranger.jpa.jdbc.password"
         newPropertyValue=os.getenv("RANGER_ADMIN_DB_PASSWORD")
-        cObj.set('dummysection',propertyName,newPropertyValue)
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
         propertyName="ranger.jpa.audit.jdbc.password"
         newPropertyValue=os.getenv("RANGER_AUDIT_DB_PASSWORD")
-        cObj.set('dummysection',propertyName,newPropertyValue)
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+    if os.getenv("RANGER_AUTHENTICATION_METHOD") == "LDAP":
+        propertyName="ranger.authentication.method"
+        newPropertyValue=os.getenv("RANGER_AUTHENTICATION_METHOD")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.ldap.url"
+        newPropertyValue=os.getenv("RANGER_LDAP_URL")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.ldap.user.dnpattern"
+        newPropertyValue=os.getenv("RANGER_LDAP_USERDNPATTERN")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.ldap.group.searchbase"
+        newPropertyValue=os.getenv("RANGER_LDAP_GROUPSEARCHBASE")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.ldap.group.searchfilter"
+        newPropertyValue=os.getenv("RANGER_LDAP_GROUPSEARCHFILTER")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.ldap.group.roleattribute"
+        newPropertyValue=os.getenv("RANGER_LDAP_GROUPROLEATTRIBUTE")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+	
+	propertyName="ranger.ldap.base.dn"
+        newPropertyValue=os.getenv("RANGER_LDAP_BASE_DN")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+	propertyName="ranger.ldap.bind.dn"
+	newPropertyValue=os.getenv("RANGER_LDAP_BIND_DN")
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+	
+	propertyName="ranger.ldap.bind.password"
+	newPropertyValue="_"
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+	
+        propertyName="ranger.ldap.referral"
+        newPropertyValue=os.getenv("RANGER_LDAP_REFERRAL")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+         
+    elif os.getenv("RANGER_AUTHENTICATION_METHOD") == "ACTIVE_DIRECTORY":
+        propertyName="ranger.authentication.method"
+        newPropertyValue=os.getenv("RANGER_AUTHENTICATION_METHOD")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.ldap.ad.domain"
+        newPropertyValue=os.getenv("RANGER_LDAP_AD_DOMAIN")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.ldap.ad.url"
+        newPropertyValue=os.getenv("RANGER_LDAP_AD_URL")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+     	propertyName="ranger.ldap.ad.base.dn"
+        newPropertyValue=os.getenv("RANGER_LDAP_AD_BASE_DN")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+	propertyName="ranger.ldap.ad.bind.dn"
+	newPropertyValue=os.getenv("RANGER_LDAP_AD_BIND_DN")
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+	propertyName="ranger.ldap.ad.bind.password"
+	newPropertyValue="_"
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+	
+        propertyName="ranger.ad.referral"
+        newPropertyValue=os.getenv("RANGER_LDAP_AD_REFERRAL")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
 def setup_authentication(authentication_method, xmlPath):
    if authentication_method == "UNIX":
