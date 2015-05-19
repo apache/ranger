@@ -213,6 +213,25 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					INode parent   = inodes.length > 1 ? inodes[inodes.length - 2] : null;
 					INode inode    = inodes[inodes.length - 1];
 
+					boolean noAccessToCheck = access == null && parentAccess == null && ancestorAccess == null && subAccess == null;
+
+					if(noAccessToCheck) { // check for traverse (EXECUTE) access on the path (if path is a directory) or its parent (if path is a file)
+						INode           node        = null;
+						INodeAttributes nodeAttribs = null;
+
+						if(inode != null && inode.isDirectory()) {
+							node        = inode;
+							nodeAttribs = inodeAttrs.length > 0 ? inodeAttrs[inodeAttrs.length - 1] : null;
+						} else if(parent != null) {
+							node        = parent;
+							nodeAttribs = inodeAttrs.length > 1 ? inodeAttrs[inodeAttrs.length - 2] : null;
+						}
+
+						if(node != null) {
+							accessGranted = isAccessAllowed(node, nodeAttribs, FsAction.EXECUTE, user, groups, fsOwner, superGroup, plugin, null);
+						}
+					}
+
 					// checkStickyBit
 					if (accessGranted && parentAccess != null && parentAccess.implies(FsAction.WRITE) && parent != null && inode != null) {
 						if (parent.getFsPermission() != null && parent.getFsPermission().getStickyBit()) {
@@ -222,21 +241,10 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					}
 
 					// checkAncestorAccess
-					if(accessGranted && ancestor != null) {
-						FsAction               accessToCheck     = ancestorAccess;
-						RangerHdfsAuditHandler auditHandlerToUse = auditHandler;
+					if(accessGranted && ancestorAccess != null && ancestor != null) {
+						INodeAttributes ancestorAttribs = inodeAttrs.length > ancestorIndex ? inodeAttrs[ancestorIndex] : null;
 
-						// if ancestorAccess is not specified and none of other access is specified, then check for traverse access (EXECUTE) to the ancestor
-						if(ancestorAccess == null && access == null && parentAccess == null && subAccess == null) {
-							accessToCheck = FsAction.EXECUTE;
-							auditHandlerToUse = null; // don't audit this access
-						}
-
-						if(accessToCheck != null) {
-							INodeAttributes ancestorAttribs = inodeAttrs.length > ancestorIndex ? inodeAttrs[ancestorIndex] : null;
-	
-							accessGranted = isAccessAllowed(ancestor, ancestorAttribs, accessToCheck, user, groups, fsOwner, superGroup, plugin, auditHandlerToUse);
-						}
+						accessGranted = isAccessAllowed(ancestor, ancestorAttribs, ancestorAccess, user, groups, fsOwner, superGroup, plugin, auditHandler);
 					}
 
 					// checkParentAccess
