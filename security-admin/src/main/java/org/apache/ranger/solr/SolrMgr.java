@@ -48,6 +48,8 @@ public class SolrMgr {
 	Date lastConnectTime = null;
 	volatile boolean initDone = false;
 
+	final static String SOLR_URLS_PROP = "ranger.audit.solr.urls";
+
 	public SolrMgr() {
 
 	}
@@ -58,16 +60,22 @@ public class SolrMgr {
 				if (!initDone) {
 					if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
 						String solrURL = PropertiesUtil
-								.getProperty("ranger.audit.solr.urls");
+								.getProperty(SOLR_URLS_PROP);
 
 						if (solrURL == null) {
-							//Let's try older property name
+							// Try with url
+							solrURL = PropertiesUtil
+									.getProperty("ranger.audit.solr.url");
+						}
+						if (solrURL == null) {
+							// Let's try older property name
 							solrURL = PropertiesUtil
 									.getProperty("ranger.solr.url");
 						}
 						if (solrURL == null || solrURL.isEmpty()
 								|| solrURL.equalsIgnoreCase("none")) {
-							logger.fatal("Solr URL for Audit is empty");
+							logger.fatal("Solr URL for Audit is empty. Please set property "
+									+ SOLR_URLS_PROP);
 						} else {
 							try {
 								solrClient = new HttpSolrClient(solrURL);
