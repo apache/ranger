@@ -431,5 +431,9 @@
 		<value>100</value>
 		<description></description>
 	</property>
-
+	<property>
+		<name>ranger.solr.audit.credential.alias</name>
+		<value>ranger.solr.password</value>
+		<description></description>
+	</property>
 </configuration>

@@ -1263,6 +1263,14 @@ def main(argv):
 	log("[I] --------- Verifying Ranger DB connection ---------","info")
 	xa_sqlObj.check_connection(db_name, db_user, db_password)
 
+	if 'audit_store' in globalDict:
+		audit_store = globalDict['audit_store']
+	else:
+		audit_store = None
+
+	if audit_store is None or audit_store == "":
+		audit_store = "db"
+	audit_store=audit_store.lower()
 	if len(argv)==1:
 
 		log("[I] --------- Verifying Ranger DB tables ---------","info")
@@ -1278,10 +1286,11 @@ def main(argv):
 			xa_sqlObj.upgrade_db(db_name, db_user, db_password, xa_db_version_file)
 		log("[I] --------- Applying Ranger DB patches ---------","info")
 		xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
-		log("[I] --------- Starting Audit Operation ---------","info")
-		audit_sqlObj.auditdb_operation(xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_file, xa_access_audit)
-		log("[I] --------- Applying Audit DB patches ---------","info")
-		audit_sqlObj.apply_auditdb_patches(xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_patch_file, xa_access_audit)
+		if audit_store == "db":
+			log("[I] --------- Starting Audit Operation ---------","info")
+			audit_sqlObj.auditdb_operation(xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_file, xa_access_audit)
+			log("[I] --------- Applying Audit DB patches ---------","info")
+			audit_sqlObj.apply_auditdb_patches(xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_patch_file, xa_access_audit)
 #	'''
 	if len(argv)>1:
 		for i in range(len(argv)):

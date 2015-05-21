@@ -133,6 +133,25 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 			}
 		}
 	}
+	if(propertiesMap!=null && propertiesMap.containsKey("ranger.audit.source.type")){
+		String auditStore=propertiesMap.get("ranger.audit.source.type");
+		if(auditStore!=null && (auditStore.equalsIgnoreCase("solr"))){
+			if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.solr.audit.credential.alias")){
+				String path=propertiesMap.get("ranger.credential.provider.path");
+				String alias=propertiesMap.get("ranger.solr.audit.credential.alias");
+				if(path!=null && alias!=null){
+					String solrAuditPassword=CredentialReader.getDecryptedString(path.trim(), alias.trim());
+					if(solrAuditPassword!=null&& !solrAuditPassword.trim().isEmpty() &&
+							!solrAuditPassword.trim().equalsIgnoreCase("none")){
+						propertiesMap.put("ranger.solr.audit.user.password", solrAuditPassword);
+						props.put("ranger.solr.audit.user.password", solrAuditPassword);
+					}else{
+						logger.info("Credential keystore password not applied for Solr ; clear text password shall be applicable");
+					}
+				}
+			}
+		}
+	}
 	super.processProperties(beanFactory, props);
     }
 
