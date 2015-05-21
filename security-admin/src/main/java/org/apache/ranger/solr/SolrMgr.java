@@ -58,8 +58,15 @@ public class SolrMgr {
 				if (!initDone) {
 					if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
 						String solrURL = PropertiesUtil
-								.getProperty("ranger.solr.url");
-						if (solrURL == null || solrURL.isEmpty()) {
+								.getProperty("ranger.audit.solr.urls");
+
+						if (solrURL == null) {
+							//Let's try older property name
+							solrURL = PropertiesUtil
+									.getProperty("ranger.solr.url");
+						}
+						if (solrURL == null || solrURL.isEmpty()
+								|| solrURL.equalsIgnoreCase("none")) {
 							logger.fatal("Solr URL for Audit is empty");
 						} else {
 							try {
@@ -70,18 +77,22 @@ public class SolrMgr {
 								} else {
 									if (solrClient instanceof HttpSolrClient) {
 										HttpSolrClient httpSolrClient = (HttpSolrClient) solrClient;
-										httpSolrClient.setAllowCompression(true);
-										httpSolrClient.setConnectionTimeout(1000);
+										httpSolrClient
+												.setAllowCompression(true);
+										httpSolrClient
+												.setConnectionTimeout(1000);
 										// httpSolrClient.setSoTimeout(10000);
 										httpSolrClient.setMaxRetries(1);
-										httpSolrClient.setRequestWriter(new BinaryRequestWriter());
+										httpSolrClient
+												.setRequestWriter(new BinaryRequestWriter());
 									}
 									initDone = true;
 								}
 
 							} catch (Throwable t) {
-								logger.fatal("Can't connect to Solr server. URL="
-										+ solrURL, t);
+								logger.fatal(
+										"Can't connect to Solr server. URL="
+												+ solrURL, t);
 							}
 						}
 					}
