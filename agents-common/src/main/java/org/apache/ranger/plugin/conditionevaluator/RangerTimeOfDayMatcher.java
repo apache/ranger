@@ -31,21 +31,21 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-public class RangerTimeOfDayMatcher implements RangerConditionEvaluator {
+public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 
 	private static final Log LOG = LogFactory.getLog(RangerTimeOfDayMatcher.class);
 	boolean _allowAny = false;
 	List<int[]> _durations = new ArrayList<int[]>();
 	
 	@Override
-	public void init(RangerPolicyConditionDef conditionDef, RangerPolicyItemCondition condition) {
+	public void init() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerTimeOfDayMatcher.init(" + condition + ")");
 		}
+
+		super.init();
 
 		if (condition == null) {
 			LOG.debug("init: null policy condition! Will match always!");

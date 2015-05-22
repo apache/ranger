@@ -178,7 +178,9 @@ public class RangerTimeOfDayMatcherTest {
 		when(itemCondition.getValues()).thenReturn(Arrays.asList("2:45a.m. -7:00 AM", "  9:15AM- 5:30P.M. "));
 
 		RangerTimeOfDayMatcher matcher = new RangerTimeOfDayMatcher();
-		matcher.init(null, itemCondition);
+		matcher.setConditionDef(null);
+		matcher.setPolicyItemCondition(itemCondition);
+		matcher.init();
 		
 		Object[][] input = new Object[][] {
 				{ 1, 0, false },

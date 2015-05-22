@@ -24,7 +24,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 public interface RangerConditionEvaluator {
+	void setConditionDef(RangerPolicyConditionDef conditionDef);
 
-	void init(RangerPolicyConditionDef conditionDef, RangerPolicyItemCondition condition);
+	void setPolicyItemCondition(RangerPolicyItemCondition condition);
+
+
+	void init();
+
 	boolean isMatched(RangerAccessRequest request);
 }

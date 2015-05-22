@@ -25,7 +25,6 @@ import java.util.Properties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 
@@ -36,12 +35,12 @@ public class RangerCountryProvider extends RangerAbstractContextEnricher {
 	private Properties userCountryMap = null;
 	
 	@Override
-	public void init(RangerContextEnricherDef enricherDef) {
+	public void init() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerCountryProvider.init(" + enricherDef + ")");
 		}
 		
-		super.init(enricherDef);
+		super.init();
 		
 		contextName = getOption("contextName", "COUNTRY");
 

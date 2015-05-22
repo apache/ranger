@@ -147,7 +147,8 @@ public class RangerPolicyRepository {
         }
 
         if(ret != null) {
-            ret.init(enricherDef);
+        	ret.setContextEnricherDef(enricherDef);
+            ret.init();
         }
 
         if(LOG.isDebugEnabled()) {

@@ -145,7 +145,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 								if (anEvaluator == null) {
 									LOG.error("initializeConditionEvaluators: Serious Configuration error: Couldn't instantiate condition evaluator for class[" + evaluatorClassName + "].  All checks for condition[" + conditionName + "] disabled.");
 								} else {
-									anEvaluator.init(conditionDef, condition);
+									anEvaluator.setConditionDef(conditionDef);
+									anEvaluator.setPolicyItemCondition(condition);
+									anEvaluator.init();
 									result.put(conditionName, anEvaluator);
 								}
 							}
@@ -649,7 +651,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			}
 
 			if (ret != null) {
-				ret.init(resourceDef.getMatcherOptions(), resource);
+				ret.setResourceDef(resourceDef);
+				ret.setPolicyResource(resource);
+				ret.init();
 			}
 		} else {
 			LOG.error("RangerDefaultPolicyEvaluator: RangerResourceDef is null");

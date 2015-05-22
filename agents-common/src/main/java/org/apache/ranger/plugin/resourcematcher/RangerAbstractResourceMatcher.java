@@ -41,9 +41,9 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	public final static String OPTION_IGNORE_CASE = "ignoreCase";
 	public final static String OPTION_WILD_CARD   = "wildCard";
 
-	private RangerResourceDef    resourceDef    = null;
-	private RangerPolicyResource policyResource = null;
-	private Map<String, String>  options        = null;
+	protected RangerResourceDef    resourceDef    = null;
+	protected RangerPolicyResource policyResource = null;
+	protected Map<String, String>  options        = null;
 
 	protected boolean      optIgnoreCase = false;
 	protected boolean      optWildCard   = false;
@@ -53,13 +53,21 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	protected boolean      isMatchAny       = false;
 
 	@Override
-	public void init(Map<String, String> options, RangerPolicyResource policyResource) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ")");
-		}
+	public void setResourceDef(RangerResourceDef resourceDef) {
+		this.resourceDef = resourceDef;
+		this.options     = resourceDef != null ? resourceDef.getMatcherOptions() : null;
+	}
 
-		this.options        = options;
+	@Override
+	public void setPolicyResource(RangerPolicyResource policyResource) {
 		this.policyResource = policyResource;
+	}
+
+	@Override
+	public void init() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractResourceMatcher.init()");
+		}
 
 		optIgnoreCase = getBooleanOption(OPTION_IGNORE_CASE, true);
 		optWildCard   = getBooleanOption(OPTION_WILD_CARD, true);
@@ -86,7 +94,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractResourceMatcher.init(" + resourceDef + ", " + policyResource + ")");
+			LOG.debug("<== RangerAbstractResourceMatcher.init()");
 		}
 	}
 

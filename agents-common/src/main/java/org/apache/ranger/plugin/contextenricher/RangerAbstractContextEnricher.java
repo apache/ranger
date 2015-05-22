@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.contextenricher;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -34,10 +33,17 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractContextEnricher.class);
 
+	protected RangerContextEnricherDef enricherDef;
+
 	private Map<String, String> options = null;
 
 	@Override
-	public void init(RangerContextEnricherDef enricherDef) {
+	public void setContextEnricherDef(RangerContextEnricherDef enricherDef) {
+		this.enricherDef = enricherDef;
+	}
+	
+	@Override
+	public void init() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}

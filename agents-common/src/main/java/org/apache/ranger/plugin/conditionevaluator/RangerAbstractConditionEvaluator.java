@@ -17,16 +17,27 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.contextenricher;
+package org.apache.ranger.plugin.conditionevaluator;
+
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 
 
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+public abstract class RangerAbstractConditionEvaluator implements RangerConditionEvaluator {
+	protected RangerPolicyConditionDef  conditionDef = null;
+	protected RangerPolicyItemCondition condition    = null;
 
-public interface RangerContextEnricher {
-	void setContextEnricherDef(RangerContextEnricherDef enricherDef);
+	@Override
+	public void setConditionDef(RangerPolicyConditionDef conditionDef) {
+		this.conditionDef = conditionDef;
+	}
 
-	void init();
+	@Override
+	public void setPolicyItemCondition(RangerPolicyItemCondition condition) {
+		this.condition = condition;
+	}
 
-	void enrich(RangerAccessRequest request);
+	@Override
+	public void init() {
+	}
 }
