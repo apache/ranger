@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.store;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,8 +30,11 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public abstract class AbstractServiceStore implements ServiceStore {
@@ -39,6 +43,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 	private static final int MAX_ACCESS_TYPES_IN_SERVICE_DEF = 1000;
 
+
 	@Override
 	public void updateTagServiceDefForAccessTypes() throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -46,9 +51,6 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 		List<RangerServiceDef> allServiceDefs = getServiceDefs(new SearchFilter());
 		for (RangerServiceDef serviceDef : allServiceDefs) {
-			if (StringUtils.isEmpty(serviceDef.getName()) || serviceDef.getName().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-				continue;
-			}
 			updateTagServiceDefForUpdatingAccessTypes(serviceDef);
 		}
 		if (LOG.isDebugEnabled()) {
@@ -203,7 +205,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 	protected void postCreate(RangerBaseModelObject obj) throws Exception {
 		if(obj instanceof RangerServiceDef) {
-			updateTagServiceDefForAddingAccessTypes((RangerServiceDef)obj);
+			updateTagServiceDefForUpdatingAccessTypes((RangerServiceDef)obj);
 		}
 	}
 
@@ -234,7 +236,10 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 	protected void postUpdate(RangerBaseModelObject obj) throws Exception {
 		if(obj instanceof RangerServiceDef) {
-			updateTagServiceDefForUpdatingAccessTypes((RangerServiceDef) obj);
+			RangerServiceDef serviceDef = (RangerServiceDef)obj;
+
+			updateTagServiceDefForUpdatingAccessTypes(serviceDef);
+			updateServicesForServiceDefUpdate(serviceDef);
 		}
 	}
 
@@ -261,40 +266,58 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		return ret;
 	}
 
-	private void updateTagServiceDefForAddingAccessTypes(RangerServiceDef serviceDef) throws Exception {
-		if (serviceDef.getName().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-			return;
-		}
+	// when a service-def is updated, the updated service-def should be made available to plugins
+	//   this is achieved by incrementing policyVersion of all its services
+	protected void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) throws Exception {
+		boolean isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
-		RangerServiceDef tagServiceDef = null;
-		try {
-			tagServiceDef = this.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
-		} catch (Exception e) {
-			LOG.error("AbstractServiceStore.updateTagServiceDefForAddingAccessTypes -- Could not find TAG ServiceDef.. ", e);
-			throw e;
-		}
-		List<RangerServiceDef.RangerAccessTypeDef> accessTypes = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		SearchFilter filter = new SearchFilter();
 
-		for (RangerServiceDef.RangerAccessTypeDef accessType : serviceDef.getAccessTypes()) {
-			RangerServiceDef.RangerAccessTypeDef newAccessType = new RangerServiceDef.RangerAccessTypeDef(accessType);
+		filter.setParam(SearchFilter.SERVICE_TYPE, serviceDef.getName());
 
-			newAccessType.setItemId(serviceDef.getId()*(MAX_ACCESS_TYPES_IN_SERVICE_DEF + 1) + accessType.getItemId());
-			newAccessType.setName(serviceDef.getName() + ":" + accessType.getName());
-			accessTypes.add(newAccessType);
-		}
+		List<RangerService> services = getServices(filter);
 
-		tagServiceDef.getAccessTypes().addAll(accessTypes);
-		try {
-			updateServiceDef(tagServiceDef);
-			LOG.info("AbstractServiceStore.updateTagServiceDefForAddingAccessTypes -- updated TAG service def with " + serviceDef.getName() + " access types");
-		} catch (Exception e) {
-			LOG.error("AbstractServiceStore.updateTagServiceDefForAddingAccessTypes -- Failed to update TAG ServiceDef.. ", e);
-			throw e;
+		if(CollectionUtils.isNotEmpty(services)) {
+			for(RangerService service : services) {
+				service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
+				service.setPolicyUpdateTime(serviceDef.getUpdateTime());
+
+				updateService(service);
+
+				if(isTagServiceDef) {
+					filter = new SearchFilter();
+
+					filter.setParam(SearchFilter.TAG_SERVICE_NAME, service.getName());
+
+					List<RangerService> referrringServices = getServices(filter);
+
+					if(CollectionUtils.isNotEmpty(referrringServices)) {
+						for(RangerService referringService : referrringServices) {
+							referringService.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
+							referringService.setPolicyUpdateTime(serviceDef.getUpdateTime());
+
+							updateService(referringService);
+						}
+					}
+				}
+			}
 		}
 	}
 
+	private RangerServiceDef.RangerAccessTypeDef findAccessTypeDef(long itemId, List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs) {
+		RangerServiceDef.RangerAccessTypeDef ret = null;
+
+		for(RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+			if(itemId == accessTypeDef.getItemId()) {
+				ret = accessTypeDef;
+				break;
+			}
+		}
+		return ret;
+	}
+
 	private void updateTagServiceDefForUpdatingAccessTypes(RangerServiceDef serviceDef) throws Exception {
-		if (serviceDef.getName().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+		if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
 			return;
 		}
 
@@ -308,35 +331,106 @@ public abstract class AbstractServiceStore implements ServiceStore {
 			throw e;
 		}
 
-		List<RangerServiceDef.RangerAccessTypeDef> tagSvcDefAccessTypes = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		List<RangerServiceDef.RangerAccessTypeDef> toAdd    = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		List<RangerServiceDef.RangerAccessTypeDef> toUpdate = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		List<RangerServiceDef.RangerAccessTypeDef> toDelete = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
 
-		for (RangerServiceDef.RangerAccessTypeDef accessType : tagServiceDef.getAccessTypes()) {
-			if (accessType.getName().startsWith(serviceDefName + ":")) {
-				RangerServiceDef.RangerAccessTypeDef tagSvcDefAccessType = new RangerServiceDef.RangerAccessTypeDef(accessType);
-				tagSvcDefAccessTypes.add(tagSvcDefAccessType);
+		List<RangerServiceDef.RangerAccessTypeDef> svcDefAccessTypes = serviceDef.getAccessTypes();
+		List<RangerServiceDef.RangerAccessTypeDef> tagDefAccessTypes = tagServiceDef.getAccessTypes();
+
+		long itemIdOffset = serviceDef.getId() * (MAX_ACCESS_TYPES_IN_SERVICE_DEF + 1);
+
+		for (RangerServiceDef.RangerAccessTypeDef svcAccessType : svcDefAccessTypes) {
+			long tagAccessTypeItemId = svcAccessType.getItemId() + itemIdOffset;
+
+			RangerServiceDef.RangerAccessTypeDef tagAccessType = findAccessTypeDef(tagAccessTypeItemId, tagDefAccessTypes);
+
+			if(tagAccessType == null) {
+				tagAccessType = new RangerServiceDef.RangerAccessTypeDef();
+
+				tagAccessType.setItemId(tagAccessTypeItemId);
+				tagAccessType.setName(serviceDefName + ":" + svcAccessType.getName());
+				tagAccessType.setLabel(svcAccessType.getLabel());
+				tagAccessType.setRbKeyLabel(svcAccessType.getRbKeyLabel());
+
+				tagAccessType.setImpliedGrants(new HashSet<String>());
+				if(CollectionUtils.isNotEmpty(svcAccessType.getImpliedGrants())) {
+					for(String svcImpliedGrant : svcAccessType.getImpliedGrants()) {
+						tagAccessType.getImpliedGrants().add(serviceDefName + ":" + svcImpliedGrant);
+					}
+				}
+
+				toAdd.add(tagAccessType);
 			}
 		}
 
-		List<RangerServiceDef.RangerAccessTypeDef> svcDefAccessTypes = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		for (RangerServiceDef.RangerAccessTypeDef tagAccessType : tagDefAccessTypes) {
+			if (tagAccessType.getName().startsWith(serviceDefName + ":")) {
+				long svcAccessTypeItemId = tagAccessType.getItemId() - itemIdOffset;
 
-		for (RangerServiceDef.RangerAccessTypeDef accessType : serviceDef.getAccessTypes()) {
-			RangerServiceDef.RangerAccessTypeDef svcDefAccessType = new RangerServiceDef.RangerAccessTypeDef(accessType);
-			svcDefAccessType.setItemId(serviceDef.getId()*(MAX_ACCESS_TYPES_IN_SERVICE_DEF + 1) + accessType.getItemId());
-			svcDefAccessType.setName(serviceDefName + ":" + accessType.getName());
-			svcDefAccessTypes.add(svcDefAccessType);
+				RangerServiceDef.RangerAccessTypeDef svcAccessType = findAccessTypeDef(svcAccessTypeItemId, svcDefAccessTypes);
+
+				if(svcAccessType == null) { // accessType has been deleted in service
+					toDelete.add(tagAccessType);
+					continue;
+				}
+
+				boolean isUpdated = false;
+
+				if(! Objects.equals(tagAccessType.getName().substring(serviceDefName.length() + 1), svcAccessType.getName())) {
+					isUpdated = true;
+				} else if(! Objects.equals(tagAccessType.getLabel(), svcAccessType.getLabel())) {
+					isUpdated = true;
+				} else if(! Objects.equals(tagAccessType.getRbKeyLabel(), svcAccessType.getRbKeyLabel())) {
+					isUpdated = true;
+				} else {
+					Collection<String> tagImpliedGrants = tagAccessType.getImpliedGrants();
+					Collection<String> svcImpliedGrants = svcAccessType.getImpliedGrants();
+
+					int tagImpliedGrantsLen = tagImpliedGrants == null ? 0 : tagImpliedGrants.size();
+					int svcImpliedGrantsLen = svcImpliedGrants == null ? 0 : svcImpliedGrants.size();
+
+					if(tagImpliedGrantsLen != svcImpliedGrantsLen) {
+						isUpdated = true;
+					} else if(tagImpliedGrantsLen > 0) {
+						for(String svcImpliedGrant : svcImpliedGrants) {
+							if(! tagImpliedGrants.contains(serviceDefName + ":" + svcImpliedGrant)) {
+								isUpdated = true;
+								break;
+							}
+						}
+					}
+				}
+
+				if(isUpdated) {
+					tagAccessType.setName(serviceDefName + ":" + svcAccessType.getName());
+					tagAccessType.setLabel(svcAccessType.getLabel());
+					tagAccessType.setRbKeyLabel(svcAccessType.getRbKeyLabel());
+
+					tagAccessType.setImpliedGrants(new HashSet<String>());
+					if(CollectionUtils.isNotEmpty(svcAccessType.getImpliedGrants())) {
+						for(String svcImpliedGrant : svcAccessType.getImpliedGrants()) {
+							tagAccessType.getImpliedGrants().add(serviceDefName + ":" + svcImpliedGrant);
+						}
+					}
+
+					toUpdate.add(tagAccessType);
+				}
+			}
 		}
 
-		tagServiceDef.getAccessTypes().removeAll(tagSvcDefAccessTypes);
-		tagServiceDef.getAccessTypes().addAll(svcDefAccessTypes);
+		if(CollectionUtils.isNotEmpty(toAdd) || CollectionUtils.isNotEmpty(toUpdate) || CollectionUtils.isNotEmpty(toDelete)) {
+			tagDefAccessTypes.addAll(toAdd);
+			tagDefAccessTypes.removeAll(toDelete);
 
-		try {
-			updateServiceDef(tagServiceDef);
-			LOG.info("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes -- updated TAG service def with " + serviceDefName + " access types");
-		} catch (Exception e) {
-			LOG.error("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes -- Failed to update TAG ServiceDef.. ", e);
-			throw e;
+			try {
+				updateServiceDef(tagServiceDef);
+				LOG.info("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes -- updated TAG service def with " + serviceDefName + " access types");
+			} catch (Exception e) {
+				LOG.error("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes -- Failed to update TAG ServiceDef.. ", e);
+				throw e;
+			}
 		}
-
 	}
 
 	private void updateTagServiceDefForDeletingAccessTypes(String serviceDefName) throws Exception {
@@ -355,8 +449,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 		for (RangerServiceDef.RangerAccessTypeDef accessType : tagServiceDef.getAccessTypes()) {
 			if (accessType.getName().startsWith(serviceDefName + ":")) {
-				RangerServiceDef.RangerAccessTypeDef newAccessType = new RangerServiceDef.RangerAccessTypeDef(accessType);
-				accessTypes.add(newAccessType);
+				accessTypes.add(accessType);
 			}
 		}
 
@@ -368,5 +461,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes -- Failed to update TAG ServiceDef.. ", e);
 			throw e;
 		}
+	}
+
+	protected long getNextVersion(Long currentVersion) {
+		return currentVersion == null ? 1L : currentVersion.longValue() + 1;
 	}
 }

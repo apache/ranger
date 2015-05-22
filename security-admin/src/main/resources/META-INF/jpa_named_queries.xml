@@ -352,6 +352,10 @@
 		<query>select obj from XXService obj where obj.type = :serviceDefId</query>
 	</named-query>
 
+	<named-query name="XXService.findByTagServiceId">
+		<query>select obj from XXService obj where obj.tagService = :tagServiceId</query>
+	</named-query>
+
 	<!-- XXPolicyResource -->
 	<named-query name="XXPolicyResource.findByResDefIdAndPolicyId">
 		<query>select obj from XXPolicyResource obj where 

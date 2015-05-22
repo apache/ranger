@@ -39,7 +39,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
-import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.file.FileStoreUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -809,19 +808,29 @@ public class ServiceFileStore extends AbstractServiceStore {
 		if(service == null) {
 			return;
 		}
-		
-		Long policyVersion = service.getPolicyVersion();
 
-		if(policyVersion == null) {
-			policyVersion = new Long(1);
-		} else {
-			policyVersion = new Long(policyVersion.longValue() + 1);
-		}
-		
-		service.setPolicyVersion(policyVersion);
+		service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
 		service.setPolicyUpdateTime(new Date());
 
 		fileStoreUtil.saveToFile(service, FILE_PREFIX_SERVICE, true);
+
+		boolean isTagServiceDef = StringUtils.equals(service.getType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+
+		if(isTagServiceDef) {
+			SearchFilter filter = new SearchFilter();
+			filter.setParam(SearchFilter.TAG_SERVICE_NAME, service.getName());
+
+			List<RangerService> referringServices = getServices(filter);
+
+			if(CollectionUtils.isNotEmpty(referringServices)) {
+				for(RangerService referringService : referringServices) {
+					referringService.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
+					referringService.setPolicyUpdateTime(service.getPolicyUpdateTime());
+
+					fileStoreUtil.saveToFile(referringService, FILE_PREFIX_SERVICE, true);
+				}
+			}
+		}
 	}
 
 	private RangerPolicy findPolicyByName(String serviceName, String policyName) throws Exception {

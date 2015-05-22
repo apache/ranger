@@ -42,6 +42,8 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 
 		addPredicateForServiceType(filter.getParam(SearchFilter.SERVICE_TYPE), predicates);
 		addPredicateForServiceId(filter.getParam(SearchFilter.SERVICE_ID), predicates);
+		addPredicateForTagSeviceName(filter.getParam(SearchFilter.TAG_SERVICE_NAME), predicates);
+		addPredicateForTagSeviceId(filter.getParam(SearchFilter.TAG_SERVICE_ID), predicates);
 	}
 
 	private String getServiceType(String serviceName) {
@@ -138,6 +140,81 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 
 					if(service.getId() != null) {
 						ret = StringUtils.equals(serviceId, service.getId().toString());
+					}
+				} else {
+					ret = true;
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForTagSeviceName(final String tagServiceName, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(tagServiceName)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerService) {
+					RangerService service = (RangerService)object;
+
+					ret = StringUtils.equals(tagServiceName, service.getTagService());
+				} else {
+					ret = true;
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForTagSeviceId(final String tagServiceId, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(tagServiceId)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerService) {
+					RangerService service = (RangerService)object;
+
+					if(! StringUtils.isEmpty(service.getTagService())) {
+						RangerService tagService = null;
+
+						try {
+							tagService = serviceStore.getServiceByName(service.getTagService());
+						} catch(Exception excp) {
+						}
+
+						ret = tagService != null && tagService.getId() != null && StringUtils.equals(tagServiceId, tagService.getId().toString());
 					}
 				} else {
 					ret = true;

@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1798,21 +1799,29 @@ public class ServiceDBStore extends AbstractServiceStore {
 			return;
 		}
 
-		Long policyVersion = service.getPolicyVersion();
-
-		if(policyVersion == null) {
-			policyVersion = new Long(1);
-		} else {
-			policyVersion = new Long(policyVersion.longValue() + 1);
-		}
-
-		service.setPolicyVersion(policyVersion);
+		service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
 		service.setPolicyUpdateTime(new Date());
 
 		serviceDbObj.setPolicyVersion(service.getPolicyVersion());
 		serviceDbObj.setPolicyUpdateTime(service.getPolicyUpdateTime());
 
 		serviceDao.update(serviceDbObj);
+
+		// if this is a tag service, update all services that refer to this tag service
+		// so that next policy-download from plugins will get updated tag policies
+		boolean isTagService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getTagServiceDefId();
+		if(isTagService) {
+			List<XXService> referringServices = serviceDao.findByTagServiceId(serviceDbObj.getId());
+
+			if(CollectionUtils.isNotEmpty(referringServices)) {
+				for(XXService referringService : referringServices) {
+					referringService.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
+					referringService.setPolicyUpdateTime(service.getPolicyUpdateTime());
+
+					serviceDao.update(referringService);
+				}
+			}
+		}
 	}
 
 	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems, XXServiceDef xServiceDef) {
@@ -2066,4 +2075,39 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
+	// when a service-def is updated, the updated service-def should be made available to plugins
+	//   this is achieved by incrementing policyVersion of all services of this service-def
+	protected void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) throws Exception {
+		if(serviceDef == null) {
+			return;
+		}
+
+		boolean isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+
+		XXServiceDao serviceDao = daoMgr.getXXService();
+
+		List<XXService> services = serviceDao.findByServiceDefId(serviceDef.getId());
+
+		if(CollectionUtils.isNotEmpty(services)) {
+			for(XXService service : services) {
+				service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
+				service.setPolicyUpdateTime(serviceDef.getUpdateTime());
+
+				serviceDao.update(service);
+
+				if(isTagServiceDef) {
+					List<XXService> referrringServices = serviceDao.findByTagServiceId(service.getId());
+
+					if(CollectionUtils.isNotEmpty(referrringServices)) {
+						for(XXService referringService : referrringServices) {
+							referringService.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
+							referringService.setPolicyUpdateTime(serviceDef.getUpdateTime());
+
+							serviceDao.update(referringService);
+						}
+					}
+				}
+			}
+		}
+	}
 }
