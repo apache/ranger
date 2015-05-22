@@ -22,7 +22,7 @@ then
 	exit;
 fi
 action=$1
-
+action=`echo $action | tr '[:lower:]' '[:upper:]'`
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 RANGER_KMS_DIR=`(cd $realScriptDir; pwd)`
@@ -74,16 +74,16 @@ KMS_CONF_DIR=${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/conf
 
 JAVA_OPTS="${JAVA_OPTS} -Dcatalina.base=${RANGER_KMS_EWS_DIR} -Dkms.config.dir=${KMS_CONF_DIR} -Dkms.log.dir=${TOMCAT_LOG_DIR} -cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_LIB_DIR}/*:${RANGER_KMS_EWS_DIR}/webapp/lib/*:${JAVA_HOME}/lib/* "
 
-if [ "${action^^}" == "START" ]; then
+if [ "${action}" == "START" ]; then
 	echo "+ java -D${PROC_NAME} ${JAVA_OPTS} ${START_CLASS_NAME} ${KMS_CONFIG_FILENAME} "
 	java -D${PROC_NAME} ${JAVA_OPTS} ${START_CLASS_NAME} ${KMS_CONFIG_FILENAME} > ${TOMCAT_LOG_FILE} 2>&1 &
 	echo "Apache Ranger KMS has started."
 	exit
-elif [ "${action^^}" == "STOP" ]; then
+elif [ "${action}" == "STOP" ]; then
 	java ${JAVA_OPTS} ${STOP_CLASS_NAME} ${KMS_CONFIG_FILENAME} > ${TOMCAT_STOP_LOG_FILE} 2>&1
 	echo "Apache Ranger KMS has been stopped."
 	exit
-elif [ "${action^^}" == "RESTART" ]; then
+elif [ "${action}" == "RESTART" ]; then
 	echo "Restarting Apache Ranger KMS"
 	java ${JAVA_OPTS} ${STOP_CLASS_NAME} ${KMS_CONFIG_FILENAME} > ${TOMCAT_STOP_LOG_FILE} 2>&1
 	echo "Apache Ranger KMS has been stopped."
@@ -91,7 +91,7 @@ elif [ "${action^^}" == "RESTART" ]; then
 	java -D${PROC_NAME} ${JAVA_OPTS} ${START_CLASS_NAME} ${KMS_CONFIG_FILENAME} > ${TOMCAT_LOG_FILE} 2>&1 &
 	echo "Apache Ranger KMS has started successfully."
 	exit
-elif [ "${action^^}" == "VERSION" ]; then
+elif [ "${action}" == "VERSION" ]; then
 	( cd ${RANGER_KMS_LIB_DIR} ; java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo )
 	exit
 else 
