@@ -157,7 +157,7 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.solr.url</name>
+		<name>ranger.audit.solr.urls</name>
 		<value></value>
 	</property>
 	<property>

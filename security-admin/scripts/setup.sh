@@ -157,10 +157,13 @@ init_variables(){
 	getPropertyFromFile 'db_password' $PROPFILE db_password
 	if [ "${audit_store}" == "solr" ]
 	then
-	    getPropertyFromFile 'audit_solr_url' $PROPFILE audit_solr_url
+		getPropertyFromFile 'audit_solr_urls' $PROPFILE audit_solr_urls
+		getPropertyFromFile 'audit_solr_user' $PROPFILE audit_solr_user
+		getPropertyFromFile 'audit_solr_password' $PROPFILE audit_solr_password
+		getPropertyFromFile 'audit_solr_zookeepers' $PROPFILE audit_solr_zookeepers
 	else
-	    getPropertyFromFile 'audit_db_user' $PROPFILE audit_db_user
-	    getPropertyFromFile 'audit_db_password' $PROPFILE audit_db_password
+		getPropertyFromFile 'audit_db_user' $PROPFILE audit_db_user
+		getPropertyFromFile 'audit_db_password' $PROPFILE audit_db_password
 	fi
 }
 
@@ -872,11 +875,11 @@ update_properties() {
 	fi
 
 	if [ "${audit_store}" == "solr" ]
-        then
-			propertyName=ranger.solr.url
-                newPropertyValue=${audit_solr_url}
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-        fi
+	then
+		propertyName=ranger.audit.solr.urls
+		newPropertyValue=${audit_solr_urls}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
 
 	propertyName=ranger.audit.source.type
         newPropertyValue=${audit_store}
@@ -982,6 +985,50 @@ update_properties() {
 		newPropertyValue="${audit_db_password}"
 			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	    fi
+	fi
+	if [ "${audit_store}" == "solr" ]
+	then
+		if [ "${audit_solr_zookeepers}" != "" ]
+		then
+			propertyName=ranger.audit.solr.zookeepers
+			newPropertyValue=${audit_solr_zookeepers}
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
+		if [ "${audit_solr_user}" != "" ] && [ "${audit_solr_password}" != "" ]
+		then
+			propertyName=ranger.solr.audit.user
+			newPropertyValue=${audit_solr_user}
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+			if [ "${keystore}" != "" ]
+			then
+				echo "Starting configuration for solr credentials:"
+				mkdir -p `dirname "${keystore}"`
+				audit_solr_password_alias=ranger.solr.password
+
+				$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$audit_solr_password_alias" -value "$audit_solr_password" -provider jceks://file$keystore
+
+				propertyName=ranger.solr.audit.credential.alias
+				newPropertyValue="${audit_solr_password_alias}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+				propertyName=ranger.solr.audit.user.password
+				newPropertyValue="_"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			else
+				propertyName=ranger.solr.audit.user.password
+				newPropertyValue="${audit_solr_password}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			fi
+
+			if test -f $keystore; then
+				chown -R ${unix_user}:${unix_group} ${keystore}
+			else
+				propertyName=ranger.solr.audit.user.password
+				newPropertyValue="${audit_solr_password}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			fi
+		fi
 	fi
 }
 

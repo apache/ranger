@@ -2,8 +2,10 @@
   "testCases":[
   	{
       "name":"value=simple; wildCard=true; ignoreCase=true",
-	  "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+	    "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple"]
       },
@@ -19,8 +21,10 @@
   	,
   	{
       "name":"value=simple; wildCard=true; ignoreCase=true; isExcludes=true",
-	  "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple"],
       	"isExcludes":true
@@ -37,8 +41,10 @@
   	,
   	{
       "name":"value=simple; wildCard=true; ignoreCase=false",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":false},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":false}
+      },
       "policyResource":{
       	"values": ["simple"]
       },
@@ -54,8 +60,10 @@
   	,
   	{
       "name":"value=SiMpLe; wildCard=true; ignoreCase=false",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":false},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":false}
+      },
       "policyResource":{
       	"values": ["SiMpLe"]
       },
@@ -71,8 +79,10 @@
   	,
   	{
       "name":"value=simple*; wildCard=true; ignoreCase=true",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple*"]
       },
@@ -97,8 +107,10 @@
   	,
   	{
       "name":"value=simple*string; wildCard=true; ignoreCase=true",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple*string"]
       },
@@ -123,8 +135,10 @@
   	,
   	{
       "name":"value=simple*test*string; wildCard=true; ignoreCase=true",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple*test*string"]
       },
@@ -152,8 +166,10 @@
   	,
   	{
       "name":"value=*simple; wildCard=true; ignoreCase=true",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["*simple"]
       },
@@ -184,8 +200,10 @@
   	,
   	{
       "name":"value=simple*; wildCard=true; ignoreCase=false",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":false},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":false}
+      },
       "policyResource":{
       	"values": ["simple*"]
       },
@@ -207,8 +225,10 @@
   	,
   	{
       "name":"value=simple?; wildCard=true; ignoreCase=true",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple?"]
       },
@@ -239,8 +259,10 @@
   	,
   	{
       "name":"value=simple?string; wildCard=true; ignoreCase=true",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple?string"]
       },
@@ -265,8 +287,10 @@
   	,
   	{
       "name":"value=simple?string?; wildCard=true; ignoreCase=true",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple?string?"]
       },
@@ -294,8 +318,10 @@
   	,
   	{
       "name":"value=simple1,simple2,wild*,onechar?,star*onechar?; wildCard=true; ignoreCase=true",	
-      "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
+      "resourceDef":{
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{"wildCard":true, "ignoreCase":true}
+      },
       "policyResource":{
       	"values": ["simple1","simple2","wild*","onechar?","star*onechar?"]
       },

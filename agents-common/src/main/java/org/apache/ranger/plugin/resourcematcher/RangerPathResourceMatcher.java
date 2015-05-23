@@ -22,7 +22,6 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
@@ -30,7 +29,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
 
 public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
@@ -44,12 +42,12 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 	private List<String> policyValuesForMatch = null;
 
 	@Override
-	public void init(Map<String, String> options, RangerPolicyResource policyResource) {
+	public void init() {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPathResourceMatcher.init(" + options + ", " + policyResource + ")");
+			LOG.debug("==> RangerPathResourceMatcher.init()");
 		}
 
-		super.init(options, policyResource);
+		super.init();
 
 		policyIsRecursive = policyResource == null ? false : policyResource.getIsRecursive();
 		pathSeparatorChar = getCharOption(OPTION_PATH_SEPERATOR, DEFAULT_PATH_SEPERATOR_CHAR);
@@ -69,7 +67,7 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPathResourceMatcher.init(" + options + ", " + policyResource + ")");
+			LOG.debug("<== RangerPathResourceMatcher.init()");
 		}
 	}
 

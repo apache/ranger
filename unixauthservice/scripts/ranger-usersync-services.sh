@@ -21,7 +21,7 @@ if [[ -z $1 ]]; then
         exit;
 fi
 action=$1
-
+action=`echo $action | tr '[:lower:]' '[:upper:]'`
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 cd $realScriptDir
@@ -30,7 +30,7 @@ cdir=`pwd`
 pidf=/var/run/ranger/usersync.pid
 
 
-if [ ${action^^} == "START" ]; then
+if [ "${action}" == "START" ]; then
 
 	#Export JAVA_HOME
 	. ${cdir}/conf/java_home.sh
@@ -76,7 +76,7 @@ if [ ${action^^} == "START" ]; then
 	fi
 	exit;
 
-elif [ ${action^^} == "STOP" ]; then
+elif [ "${action}" == "STOP" ]; then
 
     if [ -f $pidf ]; then
             pidf=/var/run/ranger/usersync.pid
@@ -90,13 +90,13 @@ elif [ ${action^^} == "STOP" ]; then
 
 	exit;
 	
-elif [ ${action^^} == "RESTART" ]; then
+elif [ "${action}" == "RESTART" ]; then
 	echo "Stopping Ranger Usersync"
 	${cdir}/ranger-usersync-services.sh stop
 	echo "Starting Apache Ranger Usersync"
 	${cdir}/ranger-usersync-services.sh start
 	exit;
-elif [ ${action^^} == "VERSION" ]; then
+elif [ "${action}" == "VERSION" ]; then
 	cd ${cdir}/lib
 	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo
 	exit

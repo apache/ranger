@@ -21,7 +21,7 @@ if [[ -z $1 ]]; then
 	exit;
 fi
 action=$1
-
+action=`echo $action | tr '[:lower:]' '[:upper:]'`
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 XAPOLICYMGR_DIR=`(cd $realScriptDir/..; pwd)`
@@ -63,19 +63,19 @@ stop(){
 
 }
 
-if [ ${action^^} == "START" ]; then
+if [ "${action}" == "START" ]; then
 	start;
 	exit;
-elif [ ${action^^} == "STOP" ]; then
+elif [ "${action}" == "STOP" ]; then
 	stop;
 	exit;
-elif [ ${action^^} == "RESTART" ]; then
+elif [ "${action}" == "RESTART" ]; then
 	echo "Restarting Apache Ranger Admin"
 	stop;
 	sleep 2
 	start;
 	exit;
-elif [ ${action^^} == "VERSION" ]; then
+elif [ "${action}" == "VERSION" ]; then
 	cd ${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/lib
 	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo
 	exit;

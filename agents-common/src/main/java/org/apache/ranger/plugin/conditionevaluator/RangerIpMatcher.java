@@ -29,8 +29,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 /**
@@ -38,7 +36,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
  * @author alal
  *
  */
-public class RangerIpMatcher implements RangerConditionEvaluator {
+public class RangerIpMatcher extends RangerAbstractConditionEvaluator {
 
 	private static final Log LOG = LogFactory.getLog(RangerIpMatcher.class);
 	private List<String> _exactIps = new ArrayList<String>();
@@ -46,10 +44,12 @@ public class RangerIpMatcher implements RangerConditionEvaluator {
 	private boolean _allowAny = false;
 	
 	@Override
-	public void init(final RangerPolicyConditionDef conditionDef, final RangerPolicyItemCondition condition) {
+	public void init() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerIpMatcher.init(" + condition + ")");
 		}
+
+		super.init();
 
 		// NOTE: this evaluator does not use conditionDef!
 		if (condition == null) {

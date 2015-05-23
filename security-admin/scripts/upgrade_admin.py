@@ -107,7 +107,7 @@ config2xmlMAP = {
 	'xa.logs.base.dir':'ranger.logs.base.dir',
 	'xa.scheduler.enabled':'ranger.scheduler.enabled',
 	'xa.audit.store':'ranger.audit.source.type',
-	'audit_solr_url':'ranger.solr.url',
+	'audit_solr_urls':'ranger.audit.solr.urls',
 	'auditDB.jdbc.dialect':'ranger.jpa.audit.jdbc.dialect',
 	'auditDB.jdbc.driver':'ranger.jpa.audit.jdbc.driver',
 	'auditDB.jdbc.url':'ranger.jpa.audit.jdbc.url',

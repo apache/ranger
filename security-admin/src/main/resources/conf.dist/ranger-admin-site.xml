@@ -46,7 +46,7 @@
 		<description></description>
 	</property>
 	<property>
-		<name>ranger.solr.url</name>
+		<name>ranger.audit.solr.urls</name>
 		<value>http://##solr_host##:6083/solr/ranger_audits</value>
 		<description></description>
 	</property>
@@ -202,5 +202,19 @@
 		<name>ranger.service.https.attrib.keystore.file</name>
 		<value>/etc/ranger/admin/keys/server.jks</value>
 	</property>
-
+	<property>
+		<name>ranger.solr.audit.user</name>
+		<value></value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.solr.audit.user.password</name>
+		<value></value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.audit.solr.zookeepers</name>
+		<value></value>
+		<description></description>
+	</property>
 </configuration>

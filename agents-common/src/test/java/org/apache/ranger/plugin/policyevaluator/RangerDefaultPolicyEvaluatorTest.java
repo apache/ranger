@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.plugin.conditionevaluator.RangerAbstractConditionEvaluator;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -210,11 +211,11 @@ public class RangerDefaultPolicyEvaluatorTest {
 	 * @author alal
 	 *
 	 */
-	static class AlwaysPass implements RangerConditionEvaluator {
+	static class AlwaysPass extends RangerAbstractConditionEvaluator {
 
 		@Override
-		public void init(RangerPolicyConditionDef conditionDef, RangerPolicyItemCondition condition) {
-			// empty body!
+		public void init() {
+			super.init();
 		}
 		@Override
 		public boolean isMatched(RangerAccessRequest request) {
@@ -223,11 +224,11 @@ public class RangerDefaultPolicyEvaluatorTest {
 		
 	}
 	
-	static class AlwaysFail implements RangerConditionEvaluator {
+	static class AlwaysFail extends RangerAbstractConditionEvaluator {
 
 		@Override
-		public void init(RangerPolicyConditionDef conditionDef, RangerPolicyItemCondition condition) {
-			// empty body
+		public void init() {
+			super.init();
 		}
 
 		@Override

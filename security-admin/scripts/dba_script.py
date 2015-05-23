@@ -1373,6 +1373,14 @@ def main(argv):
 		log("[E] ---------- NO SUCH SUPPORTED DB FLAVOUR.. ----------", "error")
 		sys.exit(1)
 
+	if 'audit_store' in globalDict:
+		audit_store = globalDict['audit_store']
+	else:
+		audit_store = None
+
+	if audit_store is None or audit_store == "":
+		audit_store = "db"
+	audit_store=audit_store.lower()
 	# Methods Begin
 	if DBA_MODE == "TRUE" :
 		if (dryMode==True):
@@ -1392,7 +1400,8 @@ def main(argv):
 			log("[I] ---------- Granting permission to Ranger Admin db user ----------","info")
 			xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, is_revoke,dryMode)
 			# Ranger Admin DB Host AND Ranger Audit DB Host are Different OR Same
-			log("[I] ---------- Verifying/Creating audit user --------- ","info")
-			audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode)
+			if audit_store == "db":
+				log("[I] ---------- Verifying/Creating audit user --------- ","info")
+				audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode)
 			log("[I] ---------- Ranger Policy Manager DB and User Creation Process Completed..  ---------- ","info")
 main(sys.argv)

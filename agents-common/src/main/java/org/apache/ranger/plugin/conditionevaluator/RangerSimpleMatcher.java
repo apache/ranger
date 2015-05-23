@@ -28,11 +28,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-public class RangerSimpleMatcher implements RangerConditionEvaluator {
+public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 
 	private static final Log LOG = LogFactory.getLog(RangerSimpleMatcher.class);
 
@@ -43,10 +41,12 @@ public class RangerSimpleMatcher implements RangerConditionEvaluator {
 	private List<String> _values = new ArrayList<String>();
 	
 	@Override
-	public void init(RangerPolicyConditionDef conditionDef, RangerPolicyItemCondition condition) {
+	public void init() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerSimpleMatcher.init(" + condition + ")");
 		}
+
+		super.init();
 
 		if (condition == null) {
 			LOG.debug("init: null policy condition! Will match always!");

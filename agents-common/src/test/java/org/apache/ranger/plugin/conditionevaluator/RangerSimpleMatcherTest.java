@@ -64,38 +64,52 @@ public class RangerSimpleMatcherTest {
 
 		RangerSimpleMatcher matcher = new RangerSimpleMatcher();
 		// Matcher initialized with null policy should behave sensibly!  It matches everything!
-		matcher.init(null, null);
+		matcher.setConditionDef(null);
+		matcher.setPolicyItemCondition(null);
+		matcher.init();
 		assertTrue(matcher.isMatched(request));
 		
 		RangerPolicyItemCondition policyItemCondition = mock(RangerPolicyItemCondition.class);
-		matcher.init(null, policyItemCondition);
+		matcher.setConditionDef(null);
+		matcher.setPolicyItemCondition(policyItemCondition);
+		matcher.init();
 		assertTrue(matcher.isMatched(request));
 		
 		RangerPolicyConditionDef conditionDef = mock(RangerPolicyConditionDef.class);
-		matcher.init(conditionDef, null);
+		matcher.setConditionDef(conditionDef);
+		matcher.setPolicyItemCondition(null);
+		matcher.init();
 		assertTrue(matcher.isMatched(request));
 		
 		// so should a policy item condition with initialized with null list of values 
 		when(policyItemCondition.getValues()).thenReturn(null);
-		matcher.init(conditionDef, policyItemCondition);
+		matcher.setConditionDef(conditionDef);
+		matcher.setPolicyItemCondition(policyItemCondition);
+		matcher.init();
 		assertTrue(matcher.isMatched(request));
 
 		// not null item condition with empty condition list
 		List<String> values = new ArrayList<String>();
 		when(policyItemCondition.getValues()).thenReturn(values);
-		matcher.init(conditionDef, policyItemCondition);
+		matcher.setConditionDef(conditionDef);
+		matcher.setPolicyItemCondition(policyItemCondition);
+		matcher.init();
 		assertTrue(matcher.isMatched(request));
 
 		// values as sensible items in it, however, the conditionDef has null evaluator option, so that too suppresses any check
 		values.add("AB");
 		when(policyItemCondition.getValues()).thenReturn(values);
 		when(conditionDef.getEvaluatorOptions()).thenReturn(null);
-		matcher.init(conditionDef, policyItemCondition);
+		matcher.setConditionDef(conditionDef);
+		matcher.setPolicyItemCondition(policyItemCondition);
+		matcher.init();
 		assertTrue(matcher.isMatched(request));
 
 		// If evaluator option on the condition def is non-null then it starts to evaluate for real
 		when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOptions);
-		matcher.init(conditionDef, policyItemCondition);
+		matcher.setConditionDef(conditionDef);
+		matcher.setPolicyItemCondition(policyItemCondition);
+		matcher.init();
 		assertTrue(matcher.isMatched(request));
 	}
 	
@@ -103,7 +117,9 @@ public class RangerSimpleMatcherTest {
 		RangerSimpleMatcher matcher = new RangerSimpleMatcher();
 
 		if (ipArray == null) {
-			matcher.init(null, null);
+			matcher.setConditionDef(null);
+			matcher.setPolicyItemCondition(null);
+			matcher.init();
 		} else {
 			RangerPolicyItemCondition condition = mock(RangerPolicyItemCondition.class);
 			List<String> addresses = Arrays.asList(ipArray);
@@ -112,7 +128,9 @@ public class RangerSimpleMatcherTest {
 			RangerPolicyConditionDef conditionDef = mock(RangerPolicyConditionDef.class);
 
 			when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOptions);
-			matcher.init(conditionDef, condition);
+			matcher.setConditionDef(conditionDef);
+			matcher.setPolicyItemCondition(condition);
+			matcher.init();
 		}
 		
 		return matcher;

@@ -24,9 +24,9 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase;
 import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase.OneTest;
 import org.junit.After;
@@ -89,7 +89,7 @@ public class TestResourceMatcher {
 		assertTrue("invalid input: " + testName, testCases != null && testCases.testCases != null);
 
 		for(TestCase testCase : testCases.testCases) {
-			RangerResourceMatcher matcher = createResourceMatcher(testCase.matcher, testCase.matcherOptions, testCase.policyResource);
+			RangerResourceMatcher matcher = createResourceMatcher(testCase.resourceDef, testCase.policyResource);
 			
 			for(OneTest oneTest : testCase.tests) {
 				if(oneTest == null) {
@@ -104,14 +104,16 @@ public class TestResourceMatcher {
 		}
 	}
 
-	private RangerResourceMatcher createResourceMatcher(String className, Map<String, String> options, RangerPolicyResource policyResource) throws Exception {
+	private RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource policyResource) throws Exception {
 		RangerResourceMatcher ret = null;
 
 		@SuppressWarnings("unchecked")
-		Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>) Class.forName(className);
+		Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>) Class.forName(resourceDef.getMatcher());
 
 		ret = matcherClass.newInstance();
-		ret.init(options, policyResource);
+		ret.setResourceDef(resourceDef);
+		ret.setPolicyResource(policyResource);
+		ret.init();
 
 		return ret;
 	}
@@ -121,8 +123,7 @@ public class TestResourceMatcher {
 
 		class TestCase {
 			public String               name;
-			public String               matcher;
-			public Map<String, String>  matcherOptions;
+			public RangerResourceDef    resourceDef;
 			public RangerPolicyResource policyResource;
 			public List<OneTest>        tests;
 

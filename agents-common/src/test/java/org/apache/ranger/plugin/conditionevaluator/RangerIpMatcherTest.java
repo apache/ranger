@@ -228,12 +228,16 @@ public class RangerIpMatcherTest {
 		RangerIpMatcher matcher = new RangerIpMatcher();
 
 		if (ipArray == null) {
-			matcher.init(null, null);
+			matcher.setConditionDef(null);
+			matcher.setPolicyItemCondition(null);
+			matcher.init();
 		} else {
 			RangerPolicyItemCondition condition = mock(RangerPolicyItemCondition.class);
 			List<String> addresses = Arrays.asList(ipArray);
 			when(condition.getValues()).thenReturn(addresses);
-			matcher.init(null, condition);
+			matcher.setConditionDef(null);
+			matcher.setPolicyItemCondition(condition);
+			matcher.init();
 		}
 		
 		return matcher;
