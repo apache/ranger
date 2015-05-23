@@ -33,7 +33,9 @@ pidf=/var/run/ranger/usersync.pid
 if [ "${action}" == "START" ]; then
 
 	#Export JAVA_HOME
-	. ${cdir}/conf/java_home.sh
+	if [ -f ${cdir}/conf/java_home.sh ]; then
+		. ${cdir}/conf/java_home.sh
+	fi
 
 	for custom_env_script in `find ${cdir}/conf/ -name "ranger-usersync-env*"`; do
         	if [ -f $custom_env_script ]; then

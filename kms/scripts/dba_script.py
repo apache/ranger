@@ -177,6 +177,7 @@ class MysqlConf(BaseDB):
 	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
 		if self.check_connection('mysql', root_user, db_root_password):
 			hosts_arr =["%", "localhost"]
+			hosts_arr.append(self.host)
 			for host in hosts_arr:
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
 				if self.verify_user(root_user, db_root_password, host, db_user, get_cmd,dryMode):
@@ -269,6 +270,7 @@ class MysqlConf(BaseDB):
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, is_revoke,dryMode):
 		hosts_arr =["%", "localhost"]
+		hosts_arr.append(self.host)
 		'''
 			if is_revoke:
 				for host in hosts_arr:
