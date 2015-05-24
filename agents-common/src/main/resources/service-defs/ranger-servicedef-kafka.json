@@ -28,58 +28,49 @@
 	],
 	"accessTypes":[
 		{
-			"itemId": 1,
+			"itemId":1,
 			"name":"publish",
 			"label":"Publish"
 		},
 		{
-			"itemId": 2,
+			"itemId":2,
 			"name":"consume",
 			"label":"Consume"
 		},
 		{
-			"itemId": 3,
-			"name":"create",
-			"label":"Create"
-		},
-		{
-			"itemId": 4,
-			"name":"delete",
-			"label":"Delete"
-		},
-		{
-			"itemId": 5,
+			"itemId":5,
 			"name":"configure",
 			"label":"Configure"
 		},
 		{
-			"itemId": 6,
+			"itemId":6,
 			"name":"describe",
 			"label":"Describe"
 		},
 		{
-			"itemId": 7,
+			"itemId":7,
 			"name":"kafka_admin",
 			"label":"Kafka Admin"
 		}
+		
 	],
 	"configs":[
 		{
-			"itemId": 1,
+			"itemId":1,
 			"name":"username",
 			"type":"string",
 			"mandatory":true,
 			"label":"Username"
 		},
 		{
-			"itemId": 2,
+			"itemId":2,
 			"name":"password",
 			"type":"password",
 			"mandatory":true,
 			"label":"Password"
 		},
 		{
-			"itemId": 3,
+			"itemId":3,
 			"name":"zookeeper.connect",
 			"type":"string",
 			"mandatory":true,
@@ -87,7 +78,7 @@
 			"label":"Zookeeper Connect String"
 		},
 		{
-			"itemId": 4,
+			"itemId":4,
 			"name":"commonNameForCertificate",
 			"type":"string",
 			"mandatory":false,
@@ -103,15 +94,17 @@
 	],
 	"policyConditions":[
 		{
-			"itemId": 1,
-			"name": "ip-range",
-			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
-			"evaluatorOptions": { },
+			"itemId":1,
+			"name":"ip-range",
+			"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+			"evaluatorOptions":{
+				
+			},
 			"validationRegEx":"",
-			"validationMessage": "",
+			"validationMessage":"",
 			"uiHint":"",
-			"label": "IP Address Range",
-			"description": "IP Address Range"
+			"label":"IP Address Range",
+			"description":"IP Address Range"
 		}
 		
 	]
