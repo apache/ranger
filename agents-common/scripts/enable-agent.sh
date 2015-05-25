@@ -151,6 +151,8 @@ if [ "${HCOMPONENT_NAME}" = "knox" ]; then
 	HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/ext
 elif [ "${HCOMPONENT_NAME}" = "solr" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/solr-webapp/webapp/WEB-INF/lib
+elif [ "${HCOMPONENT_NAME}" = "kafka" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/libs
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
@@ -163,6 +165,8 @@ if [ "${HCOMPONENT_NAME}" = "solr" ]; then
 	echo "INFO: Changing ownership of  $HCOMPONENT_CONF_DIR to $install_owner" 
 	chown $install_owner:$install_owner $HCOMPONENT_CONF_DIR
     fi    
+elif [ "${HCOMPONENT_NAME}" = "kafka" ]; then
+    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/config
 fi
 
 HCOMPONENT_ARCHIVE_CONF_DIR=${HCOMPONENT_CONF_DIR}/.archive

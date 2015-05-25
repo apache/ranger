@@ -2062,7 +2062,7 @@ CREATE TABLE [dbo].[x_service_config_map] (
 	[upd_by_id] [bigint] DEFAULT NULL NULL,
 	[service] [bigint] NOT NULL, 
 	[config_key] [varchar](1024) DEFAULT NULL NULL,   
-	[config_value] [varchar](1024) DEFAULT NULL NULL,    
+	[config_value] [varchar](4000) DEFAULT NULL NULL,    
     PRIMARY KEY CLUSTERED 
 (
 	[id] ASC

@@ -302,7 +302,7 @@ CREATE TABLE `x_service_config_map` (
 `upd_by_id` bigint(20) DEFAULT NULL,
 `service` bigint(20) NOT NULL, 
 `config_key` varchar(1024) DEFAULT NULL,   
-`config_value` varchar(1024) DEFAULT NULL,    
+`config_value` varchar(4000) DEFAULT NULL,    
 primary key (`id`),    
 CONSTRAINT `x_service_config_map_FK_` FOREIGN KEY (`service`) REFERENCES `x_service` (`id`),
 CONSTRAINT `x_service_config_map_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),

@@ -181,6 +181,7 @@ class MysqlConf(BaseDB):
 
 	def grant_audit_db_user(self, db_user, audit_db_name, audit_db_user, audit_db_password, db_password,TABLE_NAME):
 		hosts_arr =["%", "localhost"]
+		hosts_arr.append(self.host)
 		for host in hosts_arr:
 			log("[I] ---------------Granting privileges TO '"+ audit_db_user + "' on '" + audit_db_name+"'-------------" , "info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password, audit_db_name)

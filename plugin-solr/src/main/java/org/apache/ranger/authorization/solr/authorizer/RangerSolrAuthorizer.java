@@ -223,6 +223,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 		String userName = null;
 		if (principal != null) {
 			userName = principal.getName();
+			userName = StringUtils.substringBefore(userName, "/");
 			userName = StringUtils.substringBefore(userName, "@");
 		}
 

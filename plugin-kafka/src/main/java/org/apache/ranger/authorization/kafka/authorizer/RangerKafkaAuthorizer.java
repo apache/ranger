@@ -30,6 +30,7 @@ import kafka.security.auth.ResourceType;
 import kafka.server.KafkaConfig;
 import kafka.network.RequestChannel.Session;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -50,15 +51,17 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public static final String KEY_CLUSTER = "cluster";
 	public static final String KEY_CONSUMER_GROUP = "consumer_group";
 
-	public static final String ACCESS_TYPE_READ = "read";
-	public static final String ACCESS_TYPE_WRITE = "write";
+	public static final String ACCESS_TYPE_READ = "consume";
+	public static final String ACCESS_TYPE_WRITE = "publish";
 	public static final String ACCESS_TYPE_CREATE = "create";
 	public static final String ACCESS_TYPE_DELETE = "delete";
-	public static final String ACCESS_TYPE_ALTER = "alter";
+	public static final String ACCESS_TYPE_CONFIGURE = "configure";
 	public static final String ACCESS_TYPE_DESCRIBE = "describe";
 	public static final String ACCESS_TYPE_KAFKA_ADMIN = "kafka_admin";
 
 	private static volatile RangerBasePlugin rangerPlugin = null;
+	long lastLogTime = 0;
+	int errorLogFreq = 30000; // Log after every 30 seconds
 
 	public RangerKafkaAuthorizer() {
 		if (rangerPlugin == null) {
@@ -79,20 +82,33 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		rangerPlugin.setResultProcessor(auditHandler);
 	}
 
-	// TODO: Fix this after Session is fixed
-	// @Override
+	@Override
 	public boolean authorize(Session session, Operation operation,
 			Resource resource) {
 
 		String userName = null;
+		if (session.principal() != null) {
+			userName = session.principal().getName();
+			userName = StringUtils.substringBefore(userName, "/");
+			userName = StringUtils.substringBefore(userName, "@");
+		}
 		java.util.Set<String> userGroups = getGroupsForUser(userName);
-		String ip = null;
+		String ip = session.host();
+
 		Date eventTime = StringUtil.getUTCDate();
 		String accessType = mapToRangerAccessType(operation);
+		boolean validationFailed = false;
+		String validationStr = "";
+
 		if (accessType == null) {
-			logger.fatal("Unsupported access type. session=" + session
-					+ ", operation=" + operation + ", resource=" + resource);
-			return false;
+			if (rangerPlugin
+					.logErrorMessage("Unsupported access type. operation="
+							+ operation)) {
+				logger.fatal("Unsupported access type. session=" + session
+						+ ", operation=" + operation + ", resource=" + resource);
+			}
+			validationFailed = true;
+			validationStr += "Unsupported access type. operation=" + operation;
 		}
 		String action = accessType;
 
@@ -103,25 +119,49 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		rangerRequest.setAccessTime(eventTime);
 
 		RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
-
-		if (resource.resourceType().equals(ResourceType.TOPIC)) {
-			rangerResource.setValue(KEY_TOPIC, resource.name());
-		} else if (resource.resourceType().equals(ResourceType.CLUSTER)) {
-			rangerResource.setValue(KEY_CLUSTER, resource.name());
-		} else if (resource.resourceType().equals(ResourceType.CONSUMER_GROUP)) {
-			rangerResource.setValue(KEY_CONSUMER_GROUP, resource.name());
-		} else {
-			logger.fatal("Unsupported resourceType=" + resource.resourceType());
-			return false;
-		}
-
 		rangerRequest.setResource(rangerResource);
 		rangerRequest.setAccessType(accessType);
 		rangerRequest.setAction(action);
 		rangerRequest.setRequestData(resource.name());
 
-		RangerAccessResult result = rangerPlugin.isAccessAllowed(rangerRequest);
-		return result.getIsAllowed();
+		if (resource.resourceType().equals(ResourceType.TOPIC)) {
+			rangerResource.setValue(KEY_TOPIC, resource.name());
+		} else if (resource.resourceType().equals(ResourceType.CLUSTER)) {
+			// CLUSTER should go as null
+			// rangerResource.setValue(KEY_CLUSTER, resource.name());
+		} else if (resource.resourceType().equals(ResourceType.CONSUMER_GROUP)) {
+			rangerResource.setValue(KEY_CONSUMER_GROUP, resource.name());
+		} else {
+			logger.fatal("Unsupported resourceType=" + resource.resourceType());
+			validationFailed = true;
+		}
+
+		boolean returnValue = true;
+		if (validationFailed) {
+			rangerPlugin.logErrorMessage(validationStr + ", request="
+					+ rangerRequest);
+			returnValue = false;
+		} else {
+
+			try {
+				RangerAccessResult result = rangerPlugin
+						.isAccessAllowed(rangerRequest);
+				if (result == null) {
+					logger.error("Ranger Plugin returned null. Returning false");
+					returnValue = false;
+				} else {
+					returnValue = result.getIsAllowed();
+				}
+			} catch (Throwable t) {
+				logger.error("Error while calling isAccessAllowed(). request="
+						+ rangerRequest, t);
+			}
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("rangerRequest=" + rangerRequest + ", return="
+					+ returnValue);
+		}
+		return returnValue;
 	}
 
 	/*
@@ -210,12 +250,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			return ACCESS_TYPE_READ;
 		} else if (operation.equals(Operation.WRITE)) {
 			return ACCESS_TYPE_WRITE;
-		} else if (operation.equals(Operation.CREATE)) {
-			return ACCESS_TYPE_CREATE;
-		} else if (operation.equals(Operation.DELETE)) {
-			return ACCESS_TYPE_DELETE;
 		} else if (operation.equals(Operation.ALTER)) {
-			return ACCESS_TYPE_ALTER;
+			return ACCESS_TYPE_CONFIGURE;
 		} else if (operation.equals(Operation.DESCRIBE)) {
 			return ACCESS_TYPE_DESCRIBE;
 		} else if (operation.equals(Operation.CLUSTER_ACTION)) {
