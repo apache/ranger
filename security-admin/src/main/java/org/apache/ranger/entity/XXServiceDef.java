@@ -94,6 +94,15 @@ public class XXServiceDef extends XXDBBase implements java.io.Serializable {
 	protected String description;
 
 	/**
+	 * options of the XXServiceDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "options")
+	protected String options;
+
+	/**
 	 * rbKeyLabel of the XXServiceDef
 	 * <ul>
 	 * </ul>
@@ -255,6 +264,25 @@ public class XXServiceDef extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b> options</b> .
+	 *
+	 * @param options
+	 *            Value to set member attribute <b> options</b>
+	 */
+	public void setOptions(String options) {
+		this.options = options;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>options</b>
+	 *
+	 * @return String - value of member attribute <b>options</b> .
+	 */
+	public String getOptions() {
+		return this.options;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> rbKeyLabel</b> .
 	 * You cannot set null to the attribute.
 	 * 
@@ -371,6 +399,13 @@ public class XXServiceDef extends XXDBBase implements java.io.Serializable {
 				return false;
 			}
 		} else if (!name.equals(other.name)) {
+			return false;
+		}
+		if (options == null) {
+			if (other.options != null) {
+				return false;
+			}
+		} else if (!options.equals(other.options)) {
 			return false;
 		}
 		if (rbKeyDescription == null) {

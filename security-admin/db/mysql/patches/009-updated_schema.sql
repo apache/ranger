@@ -29,6 +29,7 @@ CREATE TABLE `x_service_def` (
 `impl_class_name` varchar(1024) DEFAULT NULL,
 `label` varchar(1024) DEFAULT NULL,
 `description` varchar(1024) DEFAULT NULL,
+`options` varchar(1024) DEFAULT NULL,
 `rb_key_label` varchar(1024) DEFAULT NULL,
 `rb_key_description` varchar(1024) DEFAULT NULL,
 `is_enabled` tinyint DEFAULT 1,

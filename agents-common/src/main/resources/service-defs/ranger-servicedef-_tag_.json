@@ -4,6 +4,10 @@
   "label": "TAG",
   "description": "TAG Service Definition",
   "guid": "0d047248-baff-4cf9-8e9e-d5d377284b2e",
+  "options":
+  {
+    "ui.pages":"tag-based-policies"
+  },
   "resources":
   [
     {

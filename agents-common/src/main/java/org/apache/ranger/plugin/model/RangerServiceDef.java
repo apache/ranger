@@ -49,6 +49,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	private String                         description      = null;
 	private String                         rbKeyLabel       = null;
 	private String                         rbKeyDescription = null;
+	private Map<String, String>            options          = null;
 	private List<RangerServiceConfigDef>   configs          = null;
 	private List<RangerResourceDef>        resources        = null;
 	private List<RangerAccessTypeDef>      accessTypes      = null;
@@ -58,7 +59,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 	public RangerServiceDef() {
-		this(null, null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null);
 	}
 
 	/**
@@ -66,6 +67,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param implClass
 	 * @param label
 	 * @param description
+	 * @param options
 	 * @param configs
 	 * @param resources
 	 * @param accessTypes
@@ -73,7 +75,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param contextEnrichers
 	 * @param enums
 	 */
-	public RangerServiceDef(String name, String implClass, String label, String description, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
+	public RangerServiceDef(String name, String implClass, String label, String description, Map<String, String> options, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
 		super();
 
 		setName(name);
@@ -81,6 +83,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		setLabel(label);
 		setDescription(description);
 		setConfigs(configs);
+		setOptions(options);
 		setResources(resources);
 		setAccessTypes(accessTypes);
 		setPolicyConditions(policyConditions);
@@ -213,6 +216,32 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		if(configs != null) {
 			for(RangerServiceConfigDef config : configs) {
 				this.configs.add(config);
+			}
+		}
+	}
+
+	/**
+	 * @return the options
+	 */
+	public Map<String, String> getOptions() {
+		return options;
+	}
+
+	/**
+	 * @param options the options to set
+	 */
+	public void setOptions(Map<String, String> options) {
+		if(this.options == null) {
+			this.options = new HashMap<String, String>();
+		} else if(this.options == options) {
+			return;
+		}
+
+		this.options.clear();
+
+		if(options != null) {
+			for(Map.Entry<String, String> entry : options.entrySet()) {
+				this.options.put(entry.getKey(), entry.getValue());
 			}
 		}
 	}
@@ -377,6 +406,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		sb.append("description={").append(description).append("} ");
 		sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
 		sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
+
+		sb.append("options={");
+		if(options != null) {
+			for(Map.Entry<String, String> entry : options.entrySet()) {
+				sb.append(entry.getKey()).append("=").append(entry.getValue()).append(" ");
+			}
+		}
+		sb.append("} ");
 
 		sb.append("configs={");
 		if(configs != null) {

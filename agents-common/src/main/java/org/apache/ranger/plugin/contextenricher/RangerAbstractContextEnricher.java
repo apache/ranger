@@ -41,7 +41,6 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	protected String componentServiceName;
 	protected RangerServiceDef componentServiceDef;
 
-	private Map<String, String> options = null;
 
 	@Override
 	public void setContextEnricherDef(RangerContextEnricherDef enricherDef) {
@@ -53,8 +52,6 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}
-
-		options = enricherDef.getEnricherOptions();
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
@@ -84,6 +81,8 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	public String getOption(String name) {
 		String ret = null;
 
+		Map<String, String> options = enricherDef != null ? enricherDef.getEnricherOptions() : null;
+
 		if(options != null && name != null) {
 			ret = options.get(name);
 		}
@@ -92,35 +91,34 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public String getOption(String name, String defaultValue) {
-		String ret = getOption(name);
+		String ret = defaultValue;
+		String val = getOption(name);
 
-		if(StringUtils.isEmpty(ret)) {
-			ret = defaultValue;
+		if(val != null) {
+			ret = val;
 		}
 
 		return ret;
 	}
 
-	public boolean getBooleanOption(String name) {
-		String val = getOption(name);
-
-		boolean ret = StringUtils.isEmpty(val) ? false : Boolean.parseBoolean(val);
-
-		return ret;
-	}
-
 	public boolean getBooleanOption(String name, boolean defaultValue) {
-		String strVal = getOption(name);
+		boolean ret = defaultValue;
+		String  val = getOption(name);
 
-		boolean ret = StringUtils.isEmpty(strVal) ? defaultValue : Boolean.parseBoolean(strVal);
+		if(val != null) {
+			ret = Boolean.parseBoolean(val);
+		}
 
 		return ret;
 	}
 
 	public char getCharOption(String name, char defaultValue) {
-		String strVal = getOption(name);
+		char   ret = defaultValue;
+		String val = getOption(name);
 
-		char ret = StringUtils.isEmpty(strVal) ? defaultValue : strVal.charAt(0);
+		if(! StringUtils.isEmpty(val)) {
+			ret = val.charAt(0);
+		}
 
 		return ret;
 	}

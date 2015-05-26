@@ -1759,6 +1759,7 @@ CREATE TABLE [dbo].[x_service_def](
 	[impl_class_name] [varchar](1024) DEFAULT NULL NULL,
 	[label] [varchar](1024) DEFAULT NULL NULL,
 	[description] [varchar](1024) DEFAULT NULL NULL,
+	[options] [varchar](1024) DEFAULT NULL NULL,
 	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,
 	[rb_key_description] [varchar](1024) DEFAULT NULL NULL,
 	[is_enabled] [tinyint] DEFAULT 1 NULL,

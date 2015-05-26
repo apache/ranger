@@ -43,7 +43,6 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 	protected RangerResourceDef    resourceDef    = null;
 	protected RangerPolicyResource policyResource = null;
-	protected Map<String, String>  options        = null;
 
 	protected boolean      optIgnoreCase = false;
 	protected boolean      optWildCard   = false;
@@ -55,7 +54,6 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	@Override
 	public void setResourceDef(RangerResourceDef resourceDef) {
 		this.resourceDef = resourceDef;
-		this.options     = resourceDef != null ? resourceDef.getMatcherOptions() : null;
 	}
 
 	@Override
@@ -133,6 +131,8 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	public String getOption(String name) {
 		String ret = null;
 
+		Map<String, String> options = resourceDef != null ? resourceDef.getMatcherOptions() : null;
+
 		if(options != null && name != null) {
 			ret = options.get(name);
 		}
@@ -141,35 +141,34 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	}
 
 	public String getOption(String name, String defaultValue) {
-		String ret = getOption(name);
+		String ret = defaultValue;
+		String val = getOption(name);
 
-		if(StringUtils.isEmpty(ret)) {
-			ret = defaultValue;
+		if(val != null) {
+			ret = val;
 		}
 
 		return ret;
 	}
 
-	public boolean getBooleanOption(String name) {
-		String val = getOption(name);
-
-		boolean ret = StringUtils.isEmpty(val) ? false : Boolean.parseBoolean(val);
-
-		return ret;
-	}
-
 	public boolean getBooleanOption(String name, boolean defaultValue) {
-		String strVal = getOption(name);
+		boolean ret = defaultValue;
+		String  val = getOption(name);
 
-		boolean ret = StringUtils.isEmpty(strVal) ? defaultValue : Boolean.parseBoolean(strVal);
+		if(val != null) {
+			ret = Boolean.parseBoolean(val);
+		}
 
 		return ret;
 	}
 
 	public char getCharOption(String name, char defaultValue) {
-		String strVal = getOption(name);
+		char   ret = defaultValue;
+		String val = getOption(name);
 
-		char ret = StringUtils.isEmpty(strVal) ? defaultValue : strVal.charAt(0);
+		if(! StringUtils.isEmpty(val)) {
+			ret = val.charAt(0);
+		}
 
 		return ret;
 	}
@@ -211,8 +210,8 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		sb.append("isMatchAny={").append(isMatchAny).append("} ");
 
 		sb.append("options={");
-		if(options != null) {
-			for(Map.Entry<String, String> e : options.entrySet()) {
+		if(resourceDef != null && resourceDef.getMatcherOptions() != null) {
+			for(Map.Entry<String, String> e : resourceDef.getMatcherOptions().entrySet()) {
 				sb.append(e.getKey()).append("=").append(e.getValue()).append(OPTIONS_SEP);
 			}
 		}

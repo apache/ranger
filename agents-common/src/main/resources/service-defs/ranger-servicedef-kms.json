@@ -3,6 +3,11 @@
 	"implClass": "org.apache.ranger.services.kms.RangerServiceKMS",
 	"label": "KMS",
 	"description": "KMS",
+    "options":
+    {
+        "ui.pages":"encryption",
+        "security.allowed.roles":"keyadmin"
+    },
 	"resources": 
 	[
 		{

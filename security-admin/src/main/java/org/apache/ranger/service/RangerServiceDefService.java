@@ -77,6 +77,8 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 	protected RangerServiceDef populateViewBean(XXServiceDef xServiceDef) {
 		RangerServiceDef serviceDef = super.populateViewBean(xServiceDef);
 		Long serviceDefId = xServiceDef.getId();
+
+		serviceDef.setOptions(jsonStringToMap(xServiceDef.getOptions()));
 		
 		List<XXServiceConfigDef> xConfigs = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
 		if (!stringUtil.isEmpty(xConfigs)) {
