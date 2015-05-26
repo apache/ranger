@@ -24,14 +24,17 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
+import javax.security.auth.Subject;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.ProviderUtils;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
@@ -43,6 +46,8 @@ import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class KMSClient {
 
@@ -50,7 +55,7 @@ public class KMSClient {
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 
-	private static final String KMS_LIST_API_ENDPOINT = "v1/keys/names?user.name=${userName}"; // GET
+	private static final String KMS_LIST_API_ENDPOINT = "v1/keys/names"; // GET
 
 	private static final String errMessage = " You can still save the repository and start creating "
 			+ "policies, but you would not be able to use autocomplete for "
@@ -64,7 +69,6 @@ public class KMSClient {
 		this.provider = provider;
 		this.username = username;
 		this.password = password;
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Kms Client is build with url [" + provider + "] user: ["
 					+ username + "]");
@@ -137,24 +141,42 @@ public class KMSClient {
 		for (int i = 0; i < providers.length; i++) {
 			lret  = new ArrayList<String>();
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Getting Kms Key list for keyNameMatching : "
-						+ keyNameMatching);
+				LOG.debug("Getting Kms Key list for keyNameMatching : " + keyNameMatching);
 			}
-			String keyLists = KMS_LIST_API_ENDPOINT.replaceAll(
-					Pattern.quote("${userName}"), username);
-			String uri = providers[i]
-					+ (providers[i].endsWith("/") ? keyLists : ("/" + keyLists));
+			String uri = providers[i] + (providers[i].endsWith("/") ? KMS_LIST_API_ENDPOINT : ("/" + KMS_LIST_API_ENDPOINT));
 			Client client = null;
 			ClientResponse response = null;
-
+			boolean isKerberose = false;
 			try {
-				client = Client.create();
-
-				WebResource webResource = client.resource(uri);
-
-				response = webResource.accept(EXPECTED_MIME_TYPE).get(
-						ClientResponse.class);
-
+				ClientConfig cc = new DefaultClientConfig();
+				cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
+				client = Client.create(cc);
+				
+				if(username.contains("@")){
+					isKerberose = true;
+				}
+				
+				if(!isKerberose){
+					uri = uri.concat("?user.name="+username);
+					WebResource webResource = client.resource(uri);
+					response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+				}else{
+					String shortName = new HadoopKerberosName(username).getShortName();
+					uri = uri.concat("?doAs="+shortName);
+					Subject sub = new Subject();
+					if (username.contains("@")) {
+						sub = SecureClientLogin.loginUserWithPassword(username, password);						
+					} else {
+						sub = SecureClientLogin.login(username);						
+					}
+					final WebResource webResource = client.resource(uri);
+					response = Subject.doAs(sub, new PrivilegedAction<ClientResponse>() {
+						@Override
+						public ClientResponse run() {
+							return webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+						}
+					});
+				}
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("getKeyList():calling " + uri);
 				}
@@ -192,12 +214,22 @@ public class KMSClient {
 						LOG.info("getKeyList():response.getStatus()= "
 								+ response.getStatus() + " for URL " + uri
 								+ ", so returning null list");
-						return lret;
+						String msgDesc = response.getEntity(String.class);
+						HadoopException hdpException = new HadoopException(msgDesc);
+						hdpException.generateResponseDataMap(false, msgDesc,
+								msgDesc + errMsg, null, null);
+						lret = null;
+						throw hdpException;
 					} else if (response.getStatus() == 403) {
 						LOG.info("getKeyList():response.getStatus()= "
 								+ response.getStatus() + " for URL " + uri
 								+ ", so returning null list");
-						return lret;
+						String msgDesc = response.getEntity(String.class);
+						HadoopException hdpException = new HadoopException(msgDesc);
+						hdpException.generateResponseDataMap(false, msgDesc,
+								msgDesc + errMsg, null, null);
+						lret = null;
+						throw hdpException;
 					} else {
 						LOG.info("getKeyList():response.getStatus()= "
 								+ response.getStatus() + " for URL " + uri
