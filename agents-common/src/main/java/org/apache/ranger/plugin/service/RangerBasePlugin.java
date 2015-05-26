@@ -43,23 +43,25 @@ import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
+
 public class RangerBasePlugin {
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
 
-	private String serviceType = null;
-	private String appId = null;
-	private String serviceName = null;
-	private PolicyRefresher refresher = null;
-	private RangerPolicyEngine policyEngine = null;
+	private String                    serviceType  = null;
+	private String                    appId        = null;
+	private String                    serviceName  = null;
+	private PolicyRefresher           refresher    = null;
+	private RangerPolicyEngine        policyEngine = null;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 	private RangerAccessResultProcessor resultProcessor = null;
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
 	int logInterval = 30000; // 30 seconds
 
+
 	public RangerBasePlugin(String serviceType, String appId) {
 		this.serviceType = serviceType;
-		this.appId = appId;
+		this.appId       = appId;
 	}
 
 	public String getServiceType() {
@@ -75,8 +77,7 @@ public class RangerBasePlugin {
 	public int getServiceDefId() {
 		RangerServiceDef serviceDef = getServiceDef();
 
-		return serviceDef != null && serviceDef.getId() != null ? serviceDef
-				.getId().intValue() : -1;
+		return serviceDef != null && serviceDef.getId() != null ? serviceDef.getId().intValue() : -1;
 	}
 
 	public String getAppId() {
@@ -90,50 +91,29 @@ public class RangerBasePlugin {
 	public void init() {
 		cleanup();
 
-		RangerConfiguration.getInstance().addResourcesForServiceType(
-				serviceType);
+		RangerConfiguration.getInstance().addResourcesForServiceType(serviceType);
 		RangerConfiguration.getInstance().initAudit(appId);
 
-		String propertyPrefix = "ranger.plugin." + serviceType;
-		long pollingIntervalMs = RangerConfiguration.getInstance().getLong(
-				propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
-		String cacheDir = RangerConfiguration.getInstance().get(
-				propertyPrefix + ".policy.cache.dir");
+		String propertyPrefix    = "ranger.plugin." + serviceType;
+		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
+		String cacheDir          = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.cache.dir");
 
-		serviceName = RangerConfiguration.getInstance().get(
-				propertyPrefix + ".service.name");
+		serviceName = RangerConfiguration.getInstance().get(propertyPrefix + ".service.name");
 
-		policyEngineOptions.evaluatorType = RangerConfiguration.getInstance()
-				.get(propertyPrefix + ".policyengine.option.evaluator.type",
-						RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED);
-		policyEngineOptions.cacheAuditResults = RangerConfiguration
-				.getInstance().getBoolean(
-						propertyPrefix
-								+ ".policyengine.option.cache.audit.results",
-						true);
-		policyEngineOptions.disableContextEnrichers = RangerConfiguration
-				.getInstance()
-				.getBoolean(
-						propertyPrefix
-								+ ".policyengine.option.disable.context.enrichers",
-						false);
-		policyEngineOptions.disableCustomConditions = RangerConfiguration
-				.getInstance()
-				.getBoolean(
-						propertyPrefix
-								+ ".policyengine.option.disable.custom.conditions",
-						false);
+		policyEngineOptions.evaluatorType           = RangerConfiguration.getInstance().get(propertyPrefix + ".policyengine.option.evaluator.type", RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED);
+		policyEngineOptions.cacheAuditResults       = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", true);
+		policyEngineOptions.disableContextEnrichers = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", false);
+		policyEngineOptions.disableCustomConditions = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", false);
+
 
 		RangerAdminClient admin = createAdminClient(propertyPrefix);
 
-		refresher = new PolicyRefresher(this, serviceType, appId, serviceName,
-				admin, pollingIntervalMs, cacheDir);
+		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);
 		refresher.startRefresher();
 	}
 
 	public void setPolicies(ServicePolicies policies) {
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(policies,
-				policyEngineOptions);
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(policies, policyEngineOptions);
 
 		this.policyEngine = policyEngine;
 	}
@@ -141,11 +121,11 @@ public class RangerBasePlugin {
 	public void cleanup() {
 		PolicyRefresher refresher = this.refresher;
 
-		this.serviceName = null;
+		this.serviceName  = null;
 		this.policyEngine = null;
-		this.refresher = null;
+		this.refresher    = null;
 
-		if (refresher != null) {
+		if(refresher != null) {
 			refresher.stopRefresher();
 		}
 	}
@@ -162,16 +142,14 @@ public class RangerBasePlugin {
 		return isAccessAllowed(request, resultProcessor);
 	}
 
-	public Collection<RangerAccessResult> isAccessAllowed(
-			Collection<RangerAccessRequest> requests) {
+	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests) {
 		return isAccessAllowed(requests, resultProcessor);
 	}
 
-	public RangerAccessResult isAccessAllowed(RangerAccessRequest request,
-			RangerAccessResultProcessor resultProcessor) {
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
-		if (policyEngine != null) {
+		if(policyEngine != null) {
 			policyEngine.enrichContext(request);
 
 			return policyEngine.isAccessAllowed(request, resultProcessor);
@@ -180,12 +158,10 @@ public class RangerBasePlugin {
 		return null;
 	}
 
-	public Collection<RangerAccessResult> isAccessAllowed(
-			Collection<RangerAccessRequest> requests,
-			RangerAccessResultProcessor resultProcessor) {
+	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
-		if (policyEngine != null) {
+		if(policyEngine != null) {
 			policyEngine.enrichContext(requests);
 
 			return policyEngine.isAccessAllowed(requests, resultProcessor);
@@ -197,26 +173,24 @@ public class RangerBasePlugin {
 	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
-		if (policyEngine != null) {
+		if(policyEngine != null) {
 			return policyEngine.createAccessResult(request);
 		}
 
 		return null;
 	}
 
-	public void grantAccess(GrantRevokeRequest request,
-			RangerAccessResultProcessor resultProcessor) throws Exception {
-		if (LOG.isDebugEnabled()) {
+	public void grantAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
 
-		PolicyRefresher refresher = this.refresher;
-		RangerAdminClient admin = refresher == null ? null : refresher
-				.getRangerAdminClient();
-		boolean isSuccess = false;
+		PolicyRefresher   refresher = this.refresher;
+		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+		boolean           isSuccess = false;
 
 		try {
-			if (admin == null) {
+			if(admin == null) {
 				throw new Exception("ranger-admin client is null");
 			}
 
@@ -227,24 +201,22 @@ public class RangerBasePlugin {
 			auditGrantRevoke(request, "grant", isSuccess, resultProcessor);
 		}
 
-		if (LOG.isDebugEnabled()) {
+		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
 	}
 
-	public void revokeAccess(GrantRevokeRequest request,
-			RangerAccessResultProcessor resultProcessor) throws Exception {
-		if (LOG.isDebugEnabled()) {
+	public void revokeAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.revokeAccess(" + request + ")");
 		}
 
-		PolicyRefresher refresher = this.refresher;
-		RangerAdminClient admin = refresher == null ? null : refresher
-				.getRangerAdminClient();
-		boolean isSuccess = false;
+		PolicyRefresher   refresher = this.refresher;
+		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+		boolean           isSuccess = false;
 
 		try {
-			if (admin == null) {
+			if(admin == null) {
 				throw new Exception("ranger-admin client is null");
 			}
 
@@ -255,72 +227,59 @@ public class RangerBasePlugin {
 			auditGrantRevoke(request, "revoke", isSuccess, resultProcessor);
 		}
 
-		if (LOG.isDebugEnabled()) {
+		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAdminRESTClient.revokeAccess(" + request + ")");
 		}
 	}
 
+
 	private RangerAdminClient createAdminClient(String propertyPrefix) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.createAdminClient("
-					+ propertyPrefix + ")");
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.createAdminClient(" + propertyPrefix + ")");
 		}
 
 		RangerAdminClient ret = null;
 
 		String propertyName = propertyPrefix + ".policy.source.impl";
-		String policySourceImpl = RangerConfiguration.getInstance().get(
-				propertyName);
+		String policySourceImpl = RangerConfiguration.getInstance().get(propertyName);
 
-		if (StringUtils.isEmpty(policySourceImpl)) {
+		if(StringUtils.isEmpty(policySourceImpl)) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug(String
-						.format("Value for property[%s] was null or empty. Unxpected! Will use policy source of type[%s]",
-								propertyName,
-								RangerAdminRESTClient.class.getName()));
+				LOG.debug(String.format("Value for property[%s] was null or empty. Unxpected! Will use policy source of type[%s]", propertyName, RangerAdminRESTClient.class.getName()));
 			}
 		} else {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug(String.format("Value for property[%s] was [%s].",
-						propertyName, policySourceImpl));
+				LOG.debug(String.format("Value for property[%s] was [%s].", propertyName, policySourceImpl));
 			}
 			try {
 				@SuppressWarnings("unchecked")
-				Class<RangerAdminClient> adminClass = (Class<RangerAdminClient>) Class
-						.forName(policySourceImpl);
-
+				Class<RangerAdminClient> adminClass = (Class<RangerAdminClient>)Class.forName(policySourceImpl);
+				
 				ret = adminClass.newInstance();
 			} catch (Exception excp) {
-				LOG.error("failed to instantiate policy source of type '"
-						+ policySourceImpl
-						+ "'. Will use policy source of type '"
-						+ RangerAdminRESTClient.class.getName() + "'", excp);
+				LOG.error("failed to instantiate policy source of type '" + policySourceImpl + "'. Will use policy source of type '" + RangerAdminRESTClient.class.getName() + "'", excp);
 			}
 		}
 
-		if (ret == null) {
+		if(ret == null) {
 			ret = new RangerAdminRESTClient();
 		}
 
 		ret.init(serviceName, appId, propertyPrefix);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.createAdminClient("
-					+ propertyPrefix + "): policySourceImpl="
-					+ policySourceImpl + ", client=" + ret);
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.createAdminClient(" + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
 		}
 		return ret;
 	}
 
-	private void auditGrantRevoke(GrantRevokeRequest request, String action,
-			boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
+	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
-		if (request != null && resultProcessor != null && policyEngine != null) {
+		if(request != null && resultProcessor != null && policyEngine != null) {
 			RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
-
-			accessRequest.setResource(new RangerAccessResourceImpl(request
-					.getResource()));
+	
+			accessRequest.setResource(new RangerAccessResourceImpl(request.getResource()));
 			accessRequest.setUser(request.getGrantor());
 			accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
 			accessRequest.setAction(action);
@@ -330,14 +289,13 @@ public class RangerBasePlugin {
 			accessRequest.setSessionId(request.getSessionId());
 
 			// call isAccessAllowed() to determine if audit is enabled or not
-			RangerAccessResult accessResult = policyEngine.isAccessAllowed(
-					accessRequest, null);
+			RangerAccessResult accessResult = policyEngine.isAccessAllowed(accessRequest, null);
 
-			if (accessResult != null && accessResult.getIsAudited()) {
+			if(accessResult != null && accessResult.getIsAudited()) {
 				accessRequest.setAccessType(action);
 				accessResult.setIsAllowed(isSuccess);
 
-				if (!isSuccess) {
+				if(! isSuccess) {
 					accessResult.setPolicyId(-1);
 				}
 
@@ -345,7 +303,7 @@ public class RangerBasePlugin {
 			}
 		}
 	}
-
+	
 	public boolean logErrorMessage(String message) {
 		LogHistory log = logHistoryList.get(message);
 		if (log == null) {
@@ -365,4 +323,5 @@ public class RangerBasePlugin {
 		long lastLogTime;
 		String message;
 	}
+
 }
