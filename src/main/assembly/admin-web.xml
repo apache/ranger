@@ -266,8 +266,73 @@
 	    <include>org.apache.ranger:jisql</include>
      </includes>
     </moduleSet>
+    
+    	     <moduleSet>
+     			<binaries>
+        			<includeDependencies>true</includeDependencies>
+        			<outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/kafka</outputDirectory>
+        			<unpack>false</unpack>
+        			<directoryMode>755</directoryMode>
+        			<fileMode>644</fileMode>
+     			</binaries>
+     			<includes>
+       				<include>security_plugins.ranger-kafka-plugin:ranger-kafka-plugin</include>
+     			</includes>
+    		</moduleSet>
+    		
+    		<moduleSet>
+     			<binaries>
+        			<includeDependencies>true</includeDependencies>
+        			<outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/solr</outputDirectory>
+        			<unpack>false</unpack>
+        			<directoryMode>755</directoryMode>
+        			<fileMode>644</fileMode>
+     			</binaries>
+     			<includes>
+       				<include>security_plugins.ranger-solr-plugin:ranger-solr-plugin</include>
+     			</includes>
+    		</moduleSet>
   </moduleSets> 	
 
+<!-- 
+  <profiles>
+      <profile>
+          <id>kafka-security</id>
+          <moduleSets>
+     		<moduleSet>
+     			<binaries>
+        			<includeDependencies>true</includeDependencies>
+        			<outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/kafka</outputDirectory>
+        			<unpack>false</unpack>
+        			<directoryMode>755</directoryMode>
+        			<fileMode>644</fileMode>
+     			</binaries>
+     			<includes>
+       				<include>security_plugins.ranger-kafka-plugin:ranger-kafka-plugin</include>
+     			</includes>
+    		</moduleSet>
+    	</moduleSets>
+      </profile>
+      <profile>
+          <id>solr-security</id>
+          <moduleSets>
+     		<moduleSet>
+     			<binaries>
+        			<includeDependencies>true</includeDependencies>
+        			<outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/solr</outputDirectory>
+        			<unpack>false</unpack>
+        			<directoryMode>755</directoryMode>
+        			<fileMode>644</fileMode>
+     			</binaries>
+     			<includes>
+       				<include>security_plugins.ranger-solr-plugin:ranger-solr-plugin</include>
+     			</includes>
+    		</moduleSet>
+    	</moduleSets>
+      </profile>
+      
+  </profiles>
+   -->
   <fileSets>
 	<fileSet>
 		<outputDirectory>/ews</outputDirectory>
