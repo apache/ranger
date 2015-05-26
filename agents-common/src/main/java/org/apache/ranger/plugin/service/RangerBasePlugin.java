@@ -310,7 +310,6 @@ public class RangerBasePlugin {
 			log = new LogHistory();
 			logHistoryList.put(message, log);
 		}
-		log.lifetimeCounter++;
 		if ((System.currentTimeMillis() - log.lastLogTime) > logInterval) {
 			log.lastLogTime = System.currentTimeMillis();
 			int counter = log.counter;
@@ -329,7 +328,6 @@ public class RangerBasePlugin {
 	static class LogHistory {
 		long lastLogTime = 0;
 		int counter=0;
-		int lifetimeCounter = 0;
 	}
 
 }
