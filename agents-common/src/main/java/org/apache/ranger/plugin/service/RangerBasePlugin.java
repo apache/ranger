@@ -308,20 +308,28 @@ public class RangerBasePlugin {
 		LogHistory log = logHistoryList.get(message);
 		if (log == null) {
 			log = new LogHistory();
-			log.message = message;
-			log.lastLogTime = 0;
+			logHistoryList.put(message, log);
 		}
+		log.lifetimeCounter++;
 		if ((System.currentTimeMillis() - log.lastLogTime) > logInterval) {
 			log.lastLogTime = System.currentTimeMillis();
+			int counter = log.counter;
+			log.counter = 0;
+			if( counter > 0) {
+				message += ". Messages suppressed before: " + counter;
+			}
 			LOG.error(message);
 			return true;
+		} else {
+			log.counter++;
 		}
 		return false;
 	}
 
-	class LogHistory {
-		long lastLogTime;
-		String message;
+	static class LogHistory {
+		long lastLogTime = 0;
+		int counter=0;
+		int lifetimeCounter = 0;
 	}
 
 }
