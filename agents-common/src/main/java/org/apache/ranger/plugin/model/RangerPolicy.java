@@ -41,13 +41,18 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RangerPolicy extends RangerBaseModelObject implements java.io.Serializable {
-	public static final int FINAL_ACCESS_DECIDER_POLICY_TYPE = 1;
 
+	// For future use
 	private static final long serialVersionUID = 1L;
+
+	public static final int POLICY_TYPE_DEFAULT = 0x0;
+	public static final int POLICY_TYPE_FINAL = 0x1 << 0;
+	public static final int POLICY_TYPE_DENIER = 0x1 << 1;
+
 
 	private String                            service        	= null;
 	private String                            name           	= null;
-	private Integer                           policyType     	= null;
+	private Integer                           policyType     	= POLICY_TYPE_DEFAULT;
 	private String                            description    	= null;
 	private String							  resourceSignature = null;
 	private Boolean                           isAuditEnabled 	= null;
@@ -59,7 +64,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param
 	 */
 	public RangerPolicy() {
-		this(null, null, null, null, null, null, null);
+		this(null, null, POLICY_TYPE_DEFAULT, null, null, null, null);
 	}
 
 	/**
@@ -212,6 +217,14 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 	}
 
+	final public void setPolicyTypeDefault() {
+		policyType = POLICY_TYPE_DEFAULT;
+	}
+
+	final public void setPolicyTypeFinal() {
+		this.policyType |= POLICY_TYPE_FINAL;
+	}
+
 	/**
 	 * @return the policyItems
 	 */
@@ -240,14 +253,17 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 	}
 
-	public boolean isFinalDecider() {
+	final public boolean isPolicyTypeFinal() {
 		boolean isFinalDecidingPolicy = true;
 
-		if (getPolicyType() == null || getPolicyType() != FINAL_ACCESS_DECIDER_POLICY_TYPE) {
+		if (this.policyType == null) {
+			isFinalDecidingPolicy = false;
+		} else if ((this.policyType.intValue() & POLICY_TYPE_FINAL) == 0x0) {
 			isFinalDecidingPolicy = false;
 		}
 		return isFinalDecidingPolicy;
 	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();

@@ -19,7 +19,11 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -111,8 +115,19 @@ public class RangerResource extends RangerBaseModelObject {
 
     public static class RangerResourceTag implements java.io.Serializable {
 
+        private static Gson gsonBuilder;
+
         private String name             = null;
         private Map<String, Object> attributeValues  = null;   // Will be JSON string with (name, value) pairs of tag attributes in database
+
+        @JsonIgnore
+        private transient String jSONRepresentation = null;
+
+        static {
+            gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
+                    .setPrettyPrinting()
+                    .create();
+        }
 
         public RangerResourceTag(String name, Map<String, Object> attributeValues) {
             super();
@@ -134,10 +149,31 @@ public class RangerResource extends RangerBaseModelObject {
 
         public void setName(String name) {
             this.name = name;
+            this.jSONRepresentation = null;
         }
 
         public void setAttributeValues(Map<String, Object> attributeValues) {
             this.attributeValues = attributeValues;
+            this.jSONRepresentation = null;
+        }
+
+        public String getJSONRepresentation() {
+            if (StringUtils.isEmpty(jSONRepresentation)) {
+                jSONRepresentation = gsonBuilder.toJson(this);
+            }
+            return jSONRepresentation;
+        }
+        public RangerResourceTag deepCopy() {
+
+            RangerResourceTag tag;
+
+            if (StringUtils.isEmpty(getJSONRepresentation())) {
+                tag = new RangerResourceTag();
+            } else {
+                tag = gsonBuilder.fromJson(jSONRepresentation, this.getClass());
+            }
+
+            return tag;
         }
     }
 }

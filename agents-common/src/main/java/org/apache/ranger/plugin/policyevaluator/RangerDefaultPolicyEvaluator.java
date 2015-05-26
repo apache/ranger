@@ -226,7 +226,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             boolean matchResult = false;
             boolean isHeadMatchAttempted = false;
             boolean headMatchResult = false;
-			final boolean isPolicyFinalDecider = isFinalDecider();
+			final boolean isPolicyFinalDecider = isFinal();
 
             if (!result.getIsAuditedDetermined()) {
                 // Need to match request.resource first. If it matches (or head matches), then only more progress can be made
@@ -876,7 +876,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 	@Override
-	public boolean isFinalDecider() {
-		return getPolicy().isFinalDecider();
+	public boolean isFinal() {
+		return getPolicy().isPolicyTypeFinal();
 	}
 }

@@ -28,7 +28,6 @@ import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
-import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -201,13 +200,11 @@ public class RangerPolicyRepository {
         RangerPolicyEvaluator ret;
 
         if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_DEFAULT)) {
-            ret = new RangerDefaultPolicyEvaluator();
+            ret = new RangerOptimizedPolicyEvaluator();
         } else if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED)) {
             ret = new RangerOptimizedPolicyEvaluator();
-        } else if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED)) {
-            ret = new RangerCachedPolicyEvaluator();
         } else {
-            ret = new RangerDefaultPolicyEvaluator();
+            ret = new RangerCachedPolicyEvaluator();
         }
 
         ret.init(policy, serviceDef, options);

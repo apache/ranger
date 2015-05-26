@@ -54,6 +54,8 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private static final int RANGER_POLICY_EVAL_IS_RECURSIVE_PREMIUM                          = 25;
     private static final int RANGER_POLICY_EVAL_PUBLIC_GROUP_ACCESS_PREMIUM                   = 25;
     private static final int RANGER_POLICY_EVAL_ALL_ACCESS_TYPES_PREMIUM                      = 25;
+    private static final int RANGER_POLICY_EVAL_FINAL_POLICY_PREMIUM                            = 400;
+
     private static final int RANGER_POLICY_EVAL_RESERVED_SLOTS_NUMBER                         = 10000;
     private static final int RANGER_POLICY_EVAL_RESERVED_SLOTS_PER_LEVEL_NUMBER               = 1000;
 
@@ -195,6 +197,10 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         priorityLevel -= users.size();
 
         priorityLevel -= Math.round(((float)RANGER_POLICY_EVAL_ALL_ACCESS_TYPES_PREMIUM * accessPerms.size()) / serviceDef.getAccessTypes().size());
+
+        if (policy.isPolicyTypeFinal()) {
+            priorityLevel -= RANGER_POLICY_EVAL_FINAL_POLICY_PREMIUM;
+        }
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerOptimizedPolicyEvaluator.computeEvalOrder(), policyName:" + policy.getName() + ", priority:" + priorityLevel);

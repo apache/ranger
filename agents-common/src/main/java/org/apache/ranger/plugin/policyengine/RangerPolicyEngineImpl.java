@@ -393,7 +393,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 						evaluator.evaluate(tagEvalRequest, tagEvalResult);
 
-						if (evaluator.isFinalDecider() ||
+						if (evaluator.isFinal() ||
 								(tagEvalResult.getIsAccessDetermined() && tagEvalResult.getIsAuditedDetermined())) {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval for  tag-policy-id=" + tagEvalResult.getPolicyId() + " for tag (" + resourceTag.getName() + ") with authorization=" + tagEvalResult.getIsAllowed());

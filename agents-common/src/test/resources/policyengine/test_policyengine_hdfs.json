@@ -91,9 +91,9 @@
           "itemId":1,
           "name":"Default_TagAttributeValueEvaluator",
           "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerTagAttributeEvaluator",
-          "evaluatorOptions" : {"interpreter":"python"},
-          "label":"Python-Script",
-          "description": "Python script to execute"
+          "evaluatorOptions" : {"interpreter":"JavaScript"},
+          "label":"JavaScript script",
+          "description": "JavaScript script to execute"
         }
       ]
     },
@@ -102,7 +102,8 @@
         "resources":{"tag":{"values":["restricte?"],"isRecursive":false}},
         "policyItems":[
           {"accesses":[{"type":"hdfs:read","isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false,
-          "conditions" : [{"type":"Default_TagAttributeValueEvaluator", "values":["Test_Script"]}]}
+          "conditions" : [{"type":"Default_TagAttributeValueEvaluator", "values":[
+            "result.setFailed(); var tagName = tag.name; var attrValues = tag.attributeValues; var expiryDate = attrValues[\"expiry_date\"]; println(expiryDate); result.setSucceeded();"]}]}
           ]
       }
       ,
