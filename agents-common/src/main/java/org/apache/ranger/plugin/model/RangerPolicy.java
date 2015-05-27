@@ -221,8 +221,13 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		policyType = POLICY_TYPE_DEFAULT;
 	}
 
-	final public void setPolicyTypeFinal() {
-		this.policyType |= POLICY_TYPE_FINAL;
+	final public void setPolicyTypeFinal(boolean set) {
+
+		if (set) {
+			this.policyType |= POLICY_TYPE_FINAL;
+		} else {
+			this.policyType &= (~POLICY_TYPE_FINAL);
+		}
 	}
 
 	/**
