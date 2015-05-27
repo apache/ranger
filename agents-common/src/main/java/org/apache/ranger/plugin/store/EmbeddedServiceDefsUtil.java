@@ -51,6 +51,8 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_STORM_NAME = "storm";
 	public static final String EMBEDDED_SERVICEDEF_YARN_NAME  = "yarn";
 	public static final String EMBEDDED_SERVICEDEF_KMS_NAME  = "kms";
+	public static final String EMBEDDED_SERVICEDEF_KAFKA_NAME  = "kafka";
+	public static final String EMBEDDED_SERVICEDEF_SOLR_NAME  = "solr";
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
@@ -64,6 +66,8 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef stormServiceDef = null;
 	private RangerServiceDef yarnServiceDef  = null;
 	private RangerServiceDef kmsServiceDef  = null;
+	private RangerServiceDef kafkaServiceDef  = null;
+	private RangerServiceDef solrServiceDef  = null;
 
 	private Gson gsonBuilder = null;
 
@@ -92,6 +96,8 @@ public class EmbeddedServiceDefsUtil {
 			stormServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_STORM_NAME);
 			yarnServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_YARN_NAME);
 			kmsServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KMS_NAME);
+			kafkaServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KAFKA_NAME);
+			solrServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SOLR_NAME);
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
@@ -132,6 +138,14 @@ public class EmbeddedServiceDefsUtil {
 		return getId(kmsServiceDef);
 	}
 	
+	public long getKafkaServiceDefId() {
+		return getId(kafkaServiceDef);
+	}
+
+	public long getSolrServiceDefId() {
+		return getId(solrServiceDef);
+	}
+
 	private long getId(RangerServiceDef serviceDef) {
 		return serviceDef == null || serviceDef.getId() == null ? -1 : serviceDef.getId().longValue();
 	}
