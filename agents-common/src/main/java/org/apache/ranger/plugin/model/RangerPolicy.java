@@ -46,8 +46,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private static final long serialVersionUID = 1L;
 
 	public static final int POLICY_TYPE_DEFAULT = 0x0;
-	public static final int POLICY_TYPE_FINAL = 0x1 << 0;
-	public static final int POLICY_TYPE_DENIER = 0x1 << 1;
+	public static final int POLICY_TYPE_MASK_FINAL = 0x1 << 0;
+	public static final int POLICY_TYPE_MASK_DENIER = 0x1 << 1;
 
 
 	private String                            service        	= null;
@@ -224,9 +224,9 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	final public void setPolicyTypeFinal(boolean set) {
 
 		if (set) {
-			this.policyType |= POLICY_TYPE_FINAL;
+			this.policyType |= POLICY_TYPE_MASK_FINAL;
 		} else {
-			this.policyType &= (~POLICY_TYPE_FINAL);
+			this.policyType &= (~POLICY_TYPE_MASK_FINAL);
 		}
 	}
 
@@ -263,7 +263,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		if (this.policyType == null) {
 			isFinalDecidingPolicy = false;
-		} else if ((this.policyType.intValue() & POLICY_TYPE_FINAL) == 0x0) {
+		} else if ((this.policyType & POLICY_TYPE_MASK_FINAL) == 0x0) {
 			isFinalDecidingPolicy = false;
 		}
 		return isFinalDecidingPolicy;

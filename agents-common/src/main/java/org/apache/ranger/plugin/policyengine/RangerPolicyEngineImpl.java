@@ -480,8 +480,8 @@ class RangerTagResource extends RangerAccessResourceImpl {
 	private static final String KEY_TAG = "tag";
 
 
-	public RangerTagResource(String tag) {
-		super.setValue(KEY_TAG, tag);
+	public RangerTagResource(String tagName) {
+		super.setValue(KEY_TAG, tagName);
 	}
 }
 
@@ -496,10 +496,10 @@ class RangerTagAccessRequest extends RangerAccessRequestImpl {
 		super.setRequestData(request.getRequestData());
 
 		Map<String, Object> requestContext = request.getContext();
-		if (requestContext == null) {
-			requestContext = new HashMap<String, Object>();
-		}
+
 		requestContext.put(RangerPolicyEngine.KEY_CONTEXT_TAG_OBJECT, resourceTag);
+		requestContext.put(RangerPolicyEngine.KEY_CONTEXT_RESOURCE, request.getResource());
+
 		super.setContext(requestContext);
 
 		super.setClientType(request.getClientType());

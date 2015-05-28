@@ -19,21 +19,14 @@
 
 package org.apache.ranger.plugin.model;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class represents a RangerResource including the service-type (such as hdfs, hive, etc.) in which it is supported.
@@ -53,54 +46,54 @@ import java.util.Map;
 public class RangerResource extends RangerBaseModelObject {
     private static final long serialVersionUID = 1L;
 
-    private String serviceType                      = null; // one of any supported by any component
-    private Map<String, RangerPolicy.RangerPolicyResource> resourceSpec        = null; //
-    private String tagServiceName                   = null;
-    private List<RangerResourceTag> tagsAndValues   = null;
+    private String componentType                                                = null; // one of any supported by any component
+    private String tagServiceName                                               = null;
+    private Map<String, RangerPolicy.RangerPolicyResource> resourceSpec         = null;
+    private List<RangerResourceTag> tags                                        = null;
 
-    public RangerResource(String serviceType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpecs, String tagServiceName, List<RangerResourceTag> tagsAndValues) {
+    public RangerResource(String componentType, String tagServiceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec, List<RangerResourceTag> tags) {
         super();
-        setServiceType(serviceType);
-        setResourceSpecs(resourceSpecs);
+        setComponentType(componentType);
         setTagServiceName(tagServiceName);
-        setTagsAndValues(tagsAndValues);
+        setResourceSpec(resourceSpec);
+        setTags(tags);
     }
 
     public RangerResource() {
         this(null, null, null, null);
     }
 
-    public String getServiceType() {
-        return serviceType;
-    }
-
-    public Map<String, RangerPolicy.RangerPolicyResource> getResourceSpecs() {
-        return resourceSpec;
+    public String getComponentType() {
+        return componentType;
     }
 
     public String getTagServiceName() {
         return tagServiceName;
     }
 
-    public List<RangerResourceTag> getTagsAndValues() {
-        return tagsAndValues;
+    public Map<String, RangerPolicy.RangerPolicyResource> getResourceSpec() {
+        return resourceSpec;
+    }
+
+    public List<RangerResourceTag> getTags() {
+        return tags;
     }
 
     // And corresponding set methods
-    public void setServiceType(String serviceType) {
-        this.serviceType = serviceType == null ? new String() : serviceType;
-    }
-
-    public void setResourceSpecs(Map<String, RangerPolicy.RangerPolicyResource> fullName) {
-        this.resourceSpec = resourceSpec == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resourceSpec;
+    public void setComponentType(String componentType) {
+        this.componentType = componentType;
     }
 
     public void setTagServiceName(String tagServiceName) {
-        this.tagServiceName = tagServiceName == null ? new String() : tagServiceName;
+        this.tagServiceName = tagServiceName;
     }
 
-    public void setTagsAndValues(List<RangerResourceTag> tagsAndValues) {
-        this.tagsAndValues = tagsAndValues == null ? new ArrayList<RangerResourceTag>() : tagsAndValues;
+    public void setResourceSpec(Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
+        this.resourceSpec = resourceSpec == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resourceSpec;
+    }
+
+    public void setTags(List<RangerResourceTag> tags) {
+        this.tags = tags == null ? new ArrayList<RangerResourceTag>() : tags;
     }
 
     /**
@@ -115,21 +108,10 @@ public class RangerResource extends RangerBaseModelObject {
 
     public static class RangerResourceTag implements java.io.Serializable {
 
-        private static Gson gsonBuilder;
+        private String                  name                = null;
+        private Map<String, String>     attributeValues     = null;
 
-        private String name             = null;
-        private Map<String, Object> attributeValues  = null;   // Will be JSON string with (name, value) pairs of tag attributes in database
-
-        @JsonIgnore
-        private transient String jSONRepresentation = null;
-
-        static {
-            gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-                    .setPrettyPrinting()
-                    .create();
-        }
-
-        public RangerResourceTag(String name, Map<String, Object> attributeValues) {
+        public RangerResourceTag(String name, Map<String, String> attributeValues) {
             super();
             setName(name);
             setAttributeValues(attributeValues);
@@ -142,38 +124,11 @@ public class RangerResource extends RangerBaseModelObject {
         public String getName() {
             return name;
         }
+        public void setName(String name) { this.name = name; }
 
-        public Map<String, Object> getAttributeValues() {
+        public Map<String, String> getAttributeValues() {
             return attributeValues;
         }
-
-        public void setName(String name) {
-            this.name = name;
-            this.jSONRepresentation = null;
-        }
-
-        public void setAttributeValues(Map<String, Object> attributeValues) {
-            this.attributeValues = attributeValues;
-            this.jSONRepresentation = null;
-        }
-
-        public String getJSONRepresentation() {
-            if (StringUtils.isEmpty(jSONRepresentation)) {
-                jSONRepresentation = gsonBuilder.toJson(this);
-            }
-            return jSONRepresentation;
-        }
-        public RangerResourceTag deepCopy() {
-
-            RangerResourceTag tag;
-
-            if (StringUtils.isEmpty(getJSONRepresentation())) {
-                tag = new RangerResourceTag();
-            } else {
-                tag = gsonBuilder.fromJson(jSONRepresentation, this.getClass());
-            }
-
-            return tag;
-        }
+        public void setAttributeValues(Map<String, String> attributeValues) { this.attributeValues = attributeValues; }
     }
 }

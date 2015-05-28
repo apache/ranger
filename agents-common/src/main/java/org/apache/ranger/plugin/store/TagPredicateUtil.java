@@ -165,7 +165,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 				if (object instanceof RangerResource) {
 					RangerResource rangerResource = (RangerResource) object;
 
-					ret = StringUtils.equals(type, rangerResource.getServiceType());
+					ret = StringUtils.equals(type, rangerResource.getComponentType());
 				}
 
 				return ret;

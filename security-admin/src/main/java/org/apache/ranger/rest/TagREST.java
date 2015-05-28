@@ -19,18 +19,16 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.model.RangerResource;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.file.TagFileStore;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.owasp.html.TagBalancingHtmlStreamEventReceiver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +55,7 @@ public class TagREST {
     TagFileStore tagStore;
     */
 
-    private TagFileStore tagStore = null;
+    private TagFileStore tagStore;
     public TagREST() {
         tagStore = TagFileStore.getInstance();
     }
@@ -71,7 +69,7 @@ public class TagREST {
             LOG.debug("==> TagREST.createTagDef(" + tagDef + ")");
         }
 
-        RangerTagDef ret = null;
+        RangerTagDef ret;
 
         try {
             //RangerTagDefValidator validator = validatorFactory.getTagDefValidator(tagStore);
@@ -106,7 +104,7 @@ public class TagREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "tag name mismatch", true);
         }
 
-        RangerTagDef ret = null;
+        RangerTagDef ret;
 
         try {
             ret = tagStore.updateTagDef(tagDef);
@@ -153,7 +151,7 @@ public class TagREST {
             LOG.debug("==> TagREST.getTagDefByName(" + name + ")");
         }
 
-        RangerTagDef ret = null;
+        RangerTagDef ret;
 
         try {
             ret = tagStore.getTagDef(name);
@@ -182,7 +180,7 @@ public class TagREST {
             LOG.debug("==> TagREST.getTagDefs()");
         }
 
-        List<RangerTagDef> ret = null;
+        List<RangerTagDef> ret;
 
         try {
             ret = tagStore.getTagDefs(new SearchFilter());
@@ -212,7 +210,7 @@ public class TagREST {
             LOG.debug("==> TagREST.createResource(" + resource + ")");
         }
 
-        RangerResource ret = null;
+        RangerResource ret;
 
         try {
             //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
@@ -246,14 +244,14 @@ public class TagREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "resource id mismatch", true);
         }
 
-        RangerResource ret = null;
+        RangerResource ret;
 
         try {
             //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
             //validator.validate(resource, Action.UPDATE);
             ret = tagStore.updateResource(resource);
         } catch(Exception excp) {
-            LOG.error("updateResource(" + ret + ") failed", excp);
+            LOG.error("updateResource(" + id + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
@@ -272,12 +270,12 @@ public class TagREST {
 
     public RangerResource updateResource(@PathParam("id") final Long id, @DefaultValue(TagRESTConstants.ACTION_ADD) @QueryParam(TagRESTConstants.ACTION_OP) String op, List<RangerResource.RangerResourceTag> resourceTagList) {
 
-        RangerResource ret = null;
+        RangerResource ret;
 
         if (op.equals(TagRESTConstants.ACTION_ADD) ||
                 op.equals(TagRESTConstants.ACTION_REPLACE) ||
                 op.equals(TagRESTConstants.ACTION_DELETE)) {
-            RangerResource oldResource = null;
+            RangerResource oldResource;
             try {
                 oldResource = tagStore.getResource(id);
             } catch (Exception excp) {
@@ -285,24 +283,29 @@ public class TagREST {
 
                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
             }
-            List<RangerResource.RangerResourceTag> oldTagsAndValues = oldResource.getTagsAndValues();
+            List<RangerResource.RangerResourceTag> oldTagsAndValues = oldResource.getTags();
 
-            if (op.equals(TagRESTConstants.ACTION_ADD)) {
-                oldTagsAndValues.addAll(resourceTagList);
-                oldResource.setTagsAndValues(oldTagsAndValues);
-            } else if (op.equals(TagRESTConstants.ACTION_REPLACE)) {
-                oldResource.setTagsAndValues(resourceTagList);
-            } else if (op.equals(TagRESTConstants.ACTION_DELETE)) {
-                oldTagsAndValues.removeAll(resourceTagList);
-                oldResource.setTagsAndValues(oldTagsAndValues);
+            switch (op) {
+                case TagRESTConstants.ACTION_ADD:
+                    oldTagsAndValues.addAll(resourceTagList);
+                    break;
+                case TagRESTConstants.ACTION_REPLACE:
+                    oldResource.setTags(resourceTagList);
+                    break;
+                case TagRESTConstants.ACTION_DELETE:
+                    oldTagsAndValues.removeAll(resourceTagList);
+                    break;
+                default:
+                    break;
             }
+            oldResource.setTags(oldTagsAndValues);
 
             try {
                 //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
                 //validator.validate(resource, Action.UPDATE);
                 ret = tagStore.updateResource(oldResource);
             } catch (Exception excp) {
-                LOG.error("updateResource(" + ret + ") failed", excp);
+                LOG.error("updateResource(" + id + ") failed", excp);
 
                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
             }
@@ -347,7 +350,7 @@ public class TagREST {
             LOG.debug("==> TagREST.getResource(" + id + ")");
         }
 
-        RangerResource ret = null;
+        RangerResource ret;
 
         try {
             ret = tagStore.getResource(id);
@@ -377,7 +380,7 @@ public class TagREST {
             LOG.debug("==> TagREST.getResources(" + tagServiceName + ", " + serviceType + ")");
         }
 
-        List<RangerResource> ret = null;
+        List<RangerResource> ret;
 
         try {
             ret = tagStore.getResources(tagServiceName, serviceType);
@@ -394,7 +397,7 @@ public class TagREST {
         List<RangerResource> toBeFilteredOut = new ArrayList<RangerResource>();
 
         for (RangerResource rangerResource : ret) {
-            if (rangerResource.getTagsAndValues().isEmpty()) {
+            if (CollectionUtils.isEmpty(rangerResource.getTags())) {
                 toBeFilteredOut.add(rangerResource);
             }
         }

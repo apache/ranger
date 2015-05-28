@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.contextenricher;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -95,7 +94,7 @@ public class RangerFileBasedTagProvider extends RangerAbstractContextEnricher {
 
 					context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
 				} catch (Exception e) {
-					LOG.error("RangerFileBasedTagProvider.enrich(): error parsing file " + this.dataFile + "exception=" + e);
+					LOG.error("RangerFileBasedTagProvider.enrich(): error parsing file " + this.dataFile + ", exception=" + e);
 				}
 			} else {
 				if(LOG.isDebugEnabled()) {

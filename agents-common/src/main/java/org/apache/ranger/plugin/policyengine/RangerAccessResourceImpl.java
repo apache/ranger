@@ -168,6 +168,11 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
+	public RangerAccessResource getReadOnlyCopy() {
+		return new RangerAccessResourceReadOnly(this);
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if(obj == null || !(obj instanceof RangerAccessResourceImpl)) {
 			return false;

@@ -79,20 +79,6 @@ public class TagFileStore extends AbstractTagStore {
 		}
 	}
 
-	public TagFileStore(String dataDir) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.TagFileStore()");
-		}
-
-		this.tagDataDir = dataDir;
-		fileStoreUtil = new FileStoreUtil();
-
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.TagFileStore()");
-		}
-	}
-
 	@Override
 	public void init() throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -130,7 +116,7 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception(tagDef.getName() + ": tag-def already exists (id=" + existing.getId() + ")");
 		}
 
-		RangerTagDef ret = null;
+		RangerTagDef ret;
 
 		try {
 			preCreate(tagDef);
@@ -165,7 +151,7 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception(tagDef.getName() + ": tag-def does not exist (id=" + tagDef.getId() + ")");
 		}
 
-		RangerTagDef ret = null;
+		RangerTagDef ret;
 
 		try {
 			preUpdate(existing);
@@ -225,14 +211,16 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.getTagDef(" + name + ")");
 		}
 
-		RangerTagDef ret = null;
+		RangerTagDef ret;
 
-		if (name != null) {
+		if (StringUtils.isNotBlank(name)) {
 			SearchFilter filter = new SearchFilter(SearchFilter.TAG_DEF_NAME, name);
 
 			List<RangerTagDef> tagDefs = getTagDefs(filter);
 
 			ret = CollectionUtils.isEmpty(tagDefs) ? null : tagDefs.get(0);
+		} else {
+			ret = null;
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -248,7 +236,7 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.getTagDefById(" + id + ")");
 		}
 
-		RangerTagDef ret = null;
+		RangerTagDef ret;
 
 		if (id != null) {
 			SearchFilter filter = new SearchFilter(SearchFilter.TAG_DEF_ID, id.toString());
@@ -256,6 +244,8 @@ public class TagFileStore extends AbstractTagStore {
 			List<RangerTagDef> tagDefs = getTagDefs(filter);
 
 			ret = CollectionUtils.isEmpty(tagDefs) ? null : tagDefs.get(0);
+		} else {
+			ret = null;
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -274,7 +264,7 @@ public class TagFileStore extends AbstractTagStore {
 
 		List<RangerTagDef> ret = getAllTagDefs();
 
-		if (ret != null && filter != null && !filter.isEmpty()) {
+		if (CollectionUtils.isNotEmpty(ret) && filter != null && !filter.isEmpty()) {
 			CollectionUtils.filter(ret, predicateUtil.getPredicate(filter));
 
 			//Comparator<RangerBaseModelObject> comparator = getSorter(filter);
@@ -306,7 +296,7 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception(resource.getId() + ": resource already exists (id=" + existing.getId() + ")");
 		}
 
-		RangerResource ret = null;
+		RangerResource ret;
 
 		try {
 			preCreate(resource);
@@ -340,15 +330,15 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception(resource.getId() + ": resource does not exist (id=" + resource.getId() + ")");
 		}
 
-		RangerResource ret = null;
+		RangerResource ret;
 
 		try {
 			preUpdate(existing);
 
-			existing.setServiceType(resource.getServiceType());
-			existing.setResourceSpecs(resource.getResourceSpecs());
+			existing.setComponentType(resource.getComponentType());
+			existing.setResourceSpec(resource.getResourceSpec());
 			existing.setTagServiceName(resource.getTagServiceName());
-			existing.setTagsAndValues(resource.getTagsAndValues());
+			existing.setTags(resource.getTags());
 
 			ret = fileStoreUtil.saveToFile(existing, new Path(fileStoreUtil.getDataFile(FILE_PREFIX_TAG_RESOURCE, existing.getId())), true);
 
@@ -363,7 +353,7 @@ public class TagFileStore extends AbstractTagStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagFileStore.updateResource(" + resource + ")");
 		}
-		return null;
+		return ret;
 	}
 
 	@Override
@@ -400,7 +390,7 @@ public class TagFileStore extends AbstractTagStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getResource(" + id + ")");
 		}
-		RangerResource ret = null;
+		RangerResource ret;
 
 		if (id != null) {
 			SearchFilter filter = new SearchFilter(SearchFilter.TAG_RESOURCE_ID, id.toString());
@@ -408,6 +398,8 @@ public class TagFileStore extends AbstractTagStore {
 			List<RangerResource> resources = getResources(filter);
 
 			ret = CollectionUtils.isEmpty(resources) ? null : resources.get(0);
+		} else {
+			ret = null;
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagFileStore.getResource(" + id + ")");
@@ -420,19 +412,15 @@ public class TagFileStore extends AbstractTagStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getResources(" + tagServiceName + ", " + serviceType + ")");
 		}
-		List<RangerResource> ret = null;
+		List<RangerResource> ret;
 
 		SearchFilter filter = new SearchFilter();
 
-		if (tagServiceName == null || tagServiceName.isEmpty()) {
-			// Get all tagged resources
-		} else {
+		if (StringUtils.isNotBlank(tagServiceName)) {
 			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, tagServiceName);
 		}
 
-		if (serviceType == null || serviceType.isEmpty()) {
-			// Get all tagged resources
-		} else {
+		if (StringUtils.isNotBlank(serviceType)) {
 			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_TYPE, serviceType);
 		}
 
@@ -453,7 +441,7 @@ public class TagFileStore extends AbstractTagStore {
 
 		List<RangerResource> ret = getAllTaggedResources();
 
-		if (ret != null && filter != null && !filter.isEmpty()) {
+		if (CollectionUtils.isNotEmpty(ret) && filter != null && !filter.isEmpty()) {
 			CollectionUtils.filter(ret, predicateUtil.getPredicate(filter));
 
 			//Comparator<RangerBaseModelObject> comparator = getSorter(filter);
@@ -481,7 +469,7 @@ public class TagFileStore extends AbstractTagStore {
 			// load Tag definitions from file system
 			List<RangerTagDef> sds = fileStoreUtil.loadFromDir(new Path(fileStoreUtil.getDataDir()), FILE_PREFIX_TAG_DEF, RangerTagDef.class);
 
-			if (sds != null) {
+			if (CollectionUtils.isNotEmpty(sds)) {
 				for (RangerTagDef sd : sds) {
 					if (sd != null) {
 						// if the TagDef is already found, remove the earlier definition
@@ -504,16 +492,14 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getAllTagDefs(): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== TagFileStore.getAllTagDefs(): count=" + ret.size());
 		}
 
-		if (ret != null) {
-			//Collections.sort(ret, idComparator);
+		//Collections.sort(ret, idComparator);
 
-			//for (RangerTagDef sd : ret) {
+		//for (RangerTagDef sd : ret) {
 			//Collections.sort(sd.getResources(), resourceLevelComparator);
-			//}
-		}
+		//}
 
 		return ret;
 	}
@@ -529,7 +515,7 @@ public class TagFileStore extends AbstractTagStore {
 			// load resource definitions from file system
 			List<RangerResource> resources = fileStoreUtil.loadFromDir(new Path(fileStoreUtil.getDataDir()), FILE_PREFIX_TAG_RESOURCE, RangerResource.class);
 
-			if (resources != null) {
+			if (CollectionUtils.isNotEmpty(resources)) {
 				for (RangerResource resource : resources) {
 					if (resource != null) {
 						// if the RangerResource is already found, remove the earlier definition
@@ -551,16 +537,15 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getAllTaggedResources(): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== TagFileStore.getAllTaggedResources(): count=" + ret.size());
 		}
 
-		if (ret != null) {
-			//Collections.sort(ret, idComparator);
 
-			//for (RangerTagDef sd : ret) {
+		//Collections.sort(ret, idComparator);
+
+		//for (RangerTagDef sd : ret) {
 			//Collections.sort(sd.getResources(), resourceLevelComparator);
-			//}
-		}
+		//}
 
 		return ret;
 	}

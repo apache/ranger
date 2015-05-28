@@ -49,4 +49,6 @@ public interface RangerAccessRequest {
 	String getSessionId();
 	
 	Map<String, Object> getContext();
+
+	RangerAccessRequest getReadOnlyCopy();
 }
