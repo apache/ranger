@@ -36,6 +36,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
+import com.google.common.collect.Lists;
+
 public class RangerServiceDefHelper {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceDefHelper.class);
@@ -238,10 +240,20 @@ public class RangerServiceDefHelper {
 			Set<String> sources = graph.getSources();
 			Set<String> sinks = graph.getSinks();
 			for (String source : sources) {
-				for (String sink : sinks) {
-					List<String> path = graph.getAPath(source, sink, new HashSet<String>());
-					if (!path.isEmpty()) {
-						hierarchies.add(path);
+				/*
+				 * A disconnected node, i.e. one that does not have any arc coming into or out of it is a hierarchy in itself!
+				 * A source by definition does not have any arcs coming into it.  So if it also doesn't have any neighbors then we know
+				 * it is a disconnected node.
+				 */
+				if (!graph.hasNeighbors(source)) {
+					List<String> path = Lists.newArrayList(source);
+					hierarchies.add(path);
+				} else {
+					for (String sink : sinks) {
+						List<String> path = graph.getAPath(source, sink, new HashSet<String>());
+						if (!path.isEmpty()) {
+							hierarchies.add(path);
+						}
 					}
 				}
 			}
@@ -328,6 +340,14 @@ public class RangerServiceDefHelper {
 		}
 
 		/**
+		 * Returns true if the node "from" has any neighbor.
+		 * @param from
+		 * @return
+		 */
+		boolean hasNeighbors(String from) {
+			return _nodes.containsKey(from) && _nodes.get(from).size() > 0;
+		}
+		/**
 		 * Return the set of nodes with in degree of 0, i.e. those that are not in any other nodes' list of neighbors
 		 * 
 		 * @return
@@ -339,7 +359,7 @@ public class RangerServiceDefHelper {
 				sources.removeAll(nbrs); // A source in a DAG can't be a neighbor of any other node
 			}
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Returning sinks: " + sources);
+				LOG.debug("Returning sources: " + sources);
 			}
 			return sources;
 		}
