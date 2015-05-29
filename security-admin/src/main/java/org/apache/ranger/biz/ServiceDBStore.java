@@ -1810,7 +1810,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems, XXServiceDef xServiceDef) {
+	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems, XXServiceDef xServiceDef) throws Exception {
 		
 		for (int itemOrder = 0; itemOrder < policyItems.size(); itemOrder++) {
 			RangerPolicyItem policyItem = policyItems.get(itemOrder);
@@ -1830,9 +1830,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						.findByNameAndServiceId(access.getType(),
 								xPolicy.getService());
 				if (xAccTypeDef == null) {
-					LOG.info("One of given accessType is not valid for this policy. access: "
-							+ access.getType() + ", Ignoring this access");
-					continue;
+					throw new Exception(access.getType() + ": is not a valid access-type. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
 				}
 
 				XXPolicyItemAccess xPolItemAcc = new XXPolicyItemAccess();
@@ -1851,9 +1849,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				XXUser xUser = daoMgr.getXXUser().findByUserName(user);
 				if(xUser == null) {
-					LOG.info("User does not exists with username: " 
-							+ user + ", Ignoring permissions given to this user for policy");
-					continue;
+					throw new Exception(user + ": user does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
 				}
 				XXPolicyItemUserPerm xUserPerm = new XXPolicyItemUserPerm();
 				xUserPerm = (XXPolicyItemUserPerm) rangerAuditFields.populateAuditFields(xUserPerm, xPolicyItem);
@@ -1869,9 +1865,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				XXGroup xGrp = daoMgr.getXXGroup().findByGroupName(group);
 				if(xGrp == null) {
-					LOG.info("Group does not exists with groupName: " 
-							+ group + ", Ignoring permissions given to this group for policy");
-					continue;
+					throw new Exception(group + ": group does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
 				}
 				XXPolicyItemGroupPerm xGrpPerm = new XXPolicyItemGroupPerm();
 				xGrpPerm = (XXPolicyItemGroupPerm) rangerAuditFields.populateAuditFields(xGrpPerm, xPolicyItem);
@@ -1888,10 +1882,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 								xServiceDef.getId(), condition.getType());
 				
 				if(xPolCond == null) {
-					LOG.info("PolicyCondition is not valid, condition: "
-							+ condition.getType()
-							+ ", Ignoring creation of this policy condition");
-					continue;
+					throw new Exception(condition.getType() + ": is not a valid condition-type. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
 				}
 				
 				for(int i = 0; i < condition.getValues().size(); i++) {
@@ -1908,7 +1899,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private void createNewResourcesForPolicy(RangerPolicy policy, XXPolicy xPolicy, Map<String, RangerPolicyResource> resources) {
+	private void createNewResourcesForPolicy(RangerPolicy policy, XXPolicy xPolicy, Map<String, RangerPolicyResource> resources) throws Exception {
 		
 		for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
 			RangerPolicyResource policyRes = resource.getValue();
@@ -1916,9 +1907,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			XXResourceDef xResDef = daoMgr.getXXResourceDef()
 					.findByNameAndPolicyId(resource.getKey(), policy.getId());
 			if (xResDef == null) {
-				LOG.info("No Such Resource found, resourceName : "
-						+ resource.getKey() + ", Ignoring this resource.");
-				continue;
+				throw new Exception(resource.getKey() + ": is not a valid resource-type. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
 			}
 
 			XXPolicyResource xPolRes = new XXPolicyResource();
