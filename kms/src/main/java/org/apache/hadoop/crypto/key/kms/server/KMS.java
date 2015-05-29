@@ -30,6 +30,7 @@ import org.apache.hadoop.crypto.key.kms.KMSClientProvider;
 import org.apache.hadoop.crypto.key.kms.server.KMSACLsType.Type;
 import org.apache.hadoop.security.token.delegation.web.HttpUserGroupInformation;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -39,6 +40,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -74,13 +76,13 @@ public class KMS {
   }
 
   private void assertAccess(Type aclType, UserGroupInformation ugi,
-      KMSOp operation) throws AccessControlException {
-    KMSWebApp.getACLs().assertAccess(aclType, ugi, operation, null);
+      KMSOp operation, String clientIp) throws AccessControlException {
+    KMSWebApp.getACLs().assertAccess(aclType, ugi, operation, null, clientIp);
   }
   
   private void assertAccess(Type aclType, UserGroupInformation ugi,
-      KMSOp operation, String key) throws AccessControlException {
-    KMSWebApp.getACLs().assertAccess(aclType, ugi, operation, key);
+      KMSOp operation, String key, String clientIp) throws AccessControlException {
+    KMSWebApp.getACLs().assertAccess(aclType, ugi, operation, key, clientIp);
   }
 
   private static KeyProvider.KeyVersion removeKeyMaterial(
@@ -99,12 +101,12 @@ public class KMS {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @SuppressWarnings("unchecked")
-  public Response createKey(Map jsonKey) throws Exception {
+  public Response createKey(Map jsonKey, @Context HttpServletRequest request) throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
     UserGroupInformation user = HttpUserGroupInformation.get();
     final String name = (String) jsonKey.get(KMSRESTConstants.NAME_FIELD);
-    KMSClientProvider.checkNotEmpty(name, KMSRESTConstants.NAME_FIELD);
-    assertAccess(Type.CREATE, user, KMSOp.CREATE_KEY, name);
+    KMSClientProvider.checkNotEmpty(name, KMSRESTConstants.NAME_FIELD);    
+    assertAccess(Type.CREATE, user, KMSOp.CREATE_KEY, name, request.getRemoteAddr());
     String cipher = (String) jsonKey.get(KMSRESTConstants.CIPHER_FIELD);
     final String material = (String) jsonKey.get(KMSRESTConstants.MATERIAL_FIELD);
     int length = (jsonKey.containsKey(KMSRESTConstants.LENGTH_FIELD))
@@ -115,7 +117,7 @@ public class KMS {
         jsonKey.get(KMSRESTConstants.ATTRIBUTES_FIELD);
     if (material != null) {
       assertAccess(Type.SET_KEY_MATERIAL, user,
-          KMSOp.CREATE_KEY, name);
+          KMSOp.CREATE_KEY, name, request.getRemoteAddr());
     }
     final KeyProvider.Options options = new KeyProvider.Options(
         KMSWebApp.getConfiguration());
@@ -144,7 +146,7 @@ public class KMS {
     kmsAudit.ok(user, KMSOp.CREATE_KEY, name, "UserProvidedMaterial:" +
         (material != null) + " Description:" + description);
 
-    if (!KMSWebApp.getACLs().hasAccess(Type.GET, user)) {
+    if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, request.getRemoteAddr())) {
       keyVersion = removeKeyMaterial(keyVersion);
     }
     Map json = KMSServerJSONUtils.toJSON(keyVersion);
@@ -158,11 +160,11 @@ public class KMS {
 
   @DELETE
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}")
-  public Response deleteKey(@PathParam("name") final String name)
+  public Response deleteKey(@PathParam("name") final String name, @Context HttpServletRequest request)
       throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
     UserGroupInformation user = HttpUserGroupInformation.get();
-    assertAccess(Type.DELETE, user, KMSOp.DELETE_KEY, name);
+    assertAccess(Type.DELETE, user, KMSOp.DELETE_KEY, name, request.getRemoteAddr());
     KMSClientProvider.checkNotEmpty(name, "name");
 
     user.doAs(new PrivilegedExceptionAction<Void>() {
@@ -184,16 +186,16 @@ public class KMS {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response rolloverKey(@PathParam("name") final String name,
-      Map jsonMaterial) throws Exception {
+      Map jsonMaterial, @Context HttpServletRequest request) throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
     UserGroupInformation user = HttpUserGroupInformation.get();
-    assertAccess(Type.ROLLOVER, user, KMSOp.ROLL_NEW_VERSION, name);
+    assertAccess(Type.ROLLOVER, user, KMSOp.ROLL_NEW_VERSION, name, request.getRemoteAddr());
     KMSClientProvider.checkNotEmpty(name, "name");
     final String material = (String)
         jsonMaterial.get(KMSRESTConstants.MATERIAL_FIELD);
     if (material != null) {
       assertAccess(Type.SET_KEY_MATERIAL, user,
-          KMSOp.ROLL_NEW_VERSION, name);
+          KMSOp.ROLL_NEW_VERSION, name, request.getRemoteAddr());
     }
 
     KeyProvider.KeyVersion keyVersion = user.doAs(
@@ -212,7 +214,7 @@ public class KMS {
     kmsAudit.ok(user, KMSOp.ROLL_NEW_VERSION, name, "UserProvidedMaterial:" +
         (material != null) + " NewVersion:" + keyVersion.getVersionName());
 
-    if (!KMSWebApp.getACLs().hasAccess(Type.GET, user)) {
+    if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, request.getRemoteAddr())) {
       keyVersion = removeKeyMaterial(keyVersion);
     }
     Map json = KMSServerJSONUtils.toJSON(keyVersion);
@@ -223,12 +225,12 @@ public class KMS {
   @Path(KMSRESTConstants.KEYS_METADATA_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKeysMetadata(@QueryParam(KMSRESTConstants.KEY)
-      List<String> keyNamesList) throws Exception {
+      List<String> keyNamesList, @Context HttpServletRequest request) throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
     UserGroupInformation user = HttpUserGroupInformation.get();
     final String[] keyNames = keyNamesList.toArray(
         new String[keyNamesList.size()]);
-    assertAccess(Type.GET_METADATA, user, KMSOp.GET_KEYS_METADATA);
+    assertAccess(Type.GET_METADATA, user, KMSOp.GET_KEYS_METADATA, request.getRemoteAddr());
 
     KeyProvider.Metadata[] keysMeta = user.doAs(
         new PrivilegedExceptionAction<KeyProvider.Metadata[]>() {
@@ -247,10 +249,10 @@ public class KMS {
   @GET
   @Path(KMSRESTConstants.KEYS_NAMES_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getKeyNames() throws Exception {
+  public Response getKeyNames(@Context HttpServletRequest request) throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
     UserGroupInformation user = HttpUserGroupInformation.get();
-    assertAccess(Type.GET_KEYS, user, KMSOp.GET_KEYS);
+    assertAccess(Type.GET_KEYS, user, KMSOp.GET_KEYS, request.getRemoteAddr());
 
     List<String> json = user.doAs(
         new PrivilegedExceptionAction<List<String>>() {
@@ -267,21 +269,21 @@ public class KMS {
 
   @GET
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}")
-  public Response getKey(@PathParam("name") String name)
+  public Response getKey(@PathParam("name") String name, @Context HttpServletRequest request)
       throws Exception {
-    return getMetadata(name);
+    return getMetadata(name, request);
   }
 
   @GET
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" +
       KMSRESTConstants.METADATA_SUB_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMetadata(@PathParam("name") final String name)
+  public Response getMetadata(@PathParam("name") final String name, @Context HttpServletRequest request)
       throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
     KMSClientProvider.checkNotEmpty(name, "name");
     KMSWebApp.getAdminCallsMeter().mark();
-    assertAccess(Type.GET_METADATA, user, KMSOp.GET_METADATA, name);
+    assertAccess(Type.GET_METADATA, user, KMSOp.GET_METADATA, name, request.getRemoteAddr());
 
     KeyProvider.Metadata metadata = user.doAs(
         new PrivilegedExceptionAction<KeyProvider.Metadata>() {
@@ -301,12 +303,12 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" +
       KMSRESTConstants.CURRENT_VERSION_SUB_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getCurrentVersion(@PathParam("name") final String name)
+  public Response getCurrentVersion(@PathParam("name") final String name, @Context HttpServletRequest request)
       throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
     KMSClientProvider.checkNotEmpty(name, "name");
     KMSWebApp.getKeyCallsMeter().mark();
-    assertAccess(Type.GET, user, KMSOp.GET_CURRENT_KEY, name);
+    assertAccess(Type.GET, user, KMSOp.GET_CURRENT_KEY, name, request.getRemoteAddr());
 
     KeyVersion keyVersion = user.doAs(
         new PrivilegedExceptionAction<KeyVersion>() {
@@ -329,11 +331,11 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_VERSION_RESOURCE + "/{versionName:.*}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKeyVersion(
-      @PathParam("versionName") final String versionName) throws Exception {
+      @PathParam("versionName") final String versionName, @Context HttpServletRequest request) throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
     KMSClientProvider.checkNotEmpty(versionName, "versionName");
     KMSWebApp.getKeyCallsMeter().mark();
-    assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION);
+    assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, request.getRemoteAddr());
 
     KeyVersion keyVersion = user.doAs(
         new PrivilegedExceptionAction<KeyVersion>() {
@@ -360,7 +362,7 @@ public class KMS {
           @PathParam("name") final String name,
           @QueryParam(KMSRESTConstants.EEK_OP) String edekOp,
           @DefaultValue("1")
-          @QueryParam(KMSRESTConstants.EEK_NUM_KEYS) final int numKeys)
+          @QueryParam(KMSRESTConstants.EEK_NUM_KEYS) final int numKeys, @Context HttpServletRequest request)
           throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
     KMSClientProvider.checkNotEmpty(name, "name");
@@ -368,7 +370,7 @@ public class KMS {
 
     Object retJSON;
     if (edekOp.equals(KMSRESTConstants.EEK_GENERATE)) {
-      assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name);
+      assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, request.getRemoteAddr());
 
       final List<EncryptedKeyVersion> retEdeks =
           new LinkedList<EncryptedKeyVersion>();
@@ -412,7 +414,7 @@ public class KMS {
   public Response decryptEncryptedKey(
       @PathParam("versionName") final String versionName,
       @QueryParam(KMSRESTConstants.EEK_OP) String eekOp,
-      Map jsonPayload)
+      Map jsonPayload, @Context HttpServletRequest request)
       throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
     KMSClientProvider.checkNotEmpty(versionName, "versionName");
@@ -425,7 +427,7 @@ public class KMS {
         (String) jsonPayload.get(KMSRESTConstants.MATERIAL_FIELD);
     Object retJSON;
     if (eekOp.equals(KMSRESTConstants.EEK_DECRYPT)) {
-      assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, keyName);
+      assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, keyName, request.getRemoteAddr());
       KMSClientProvider.checkNotNull(ivStr, KMSRESTConstants.IV_FIELD);
       final byte[] iv = Base64.decodeBase64(ivStr);
       KMSClientProvider.checkNotNull(encMaterialStr,
@@ -461,12 +463,12 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" +
       KMSRESTConstants.VERSIONS_SUB_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getKeyVersions(@PathParam("name") final String name)
+  public Response getKeyVersions(@PathParam("name") final String name, @Context HttpServletRequest request)
       throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
     KMSClientProvider.checkNotEmpty(name, "name");
     KMSWebApp.getKeyCallsMeter().mark();
-    assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSIONS, name);
+    assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSIONS, name, request.getRemoteAddr());
 
     List<KeyVersion> ret = user.doAs(
         new PrivilegedExceptionAction<List<KeyVersion>>() {

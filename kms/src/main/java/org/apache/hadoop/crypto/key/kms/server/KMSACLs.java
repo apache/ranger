@@ -195,7 +195,7 @@ public class KMSACLs implements Runnable, KeyACLs {
    * @return true is user has access
    */
   @Override
-  public boolean hasAccess(Type type, UserGroupInformation ugi) {
+  public boolean hasAccess(Type type, UserGroupInformation ugi, String clientIp) {
     boolean access = acls.get(type).isUserAllowed(ugi);
     if (access) {
       AccessControlList blacklist = blacklistedAcls.get(type);
@@ -206,9 +206,9 @@ public class KMSACLs implements Runnable, KeyACLs {
 
   @Override
   public void assertAccess(Type aclType,
-      UserGroupInformation ugi, KMSOp operation, String key)
+      UserGroupInformation ugi, KMSOp operation, String key, String clientIp)
       throws AccessControlException {
-    if (!KMSWebApp.getACLs().hasAccess(aclType, ugi)) {
+    if (!KMSWebApp.getACLs().hasAccess(aclType, ugi, clientIp)) {
       KMSWebApp.getUnauthorizedCallsMeter().mark();
       KMSWebApp.getKMSAudit().unauthorized(ugi, operation, key);
       throw new AuthorizationException(String.format(

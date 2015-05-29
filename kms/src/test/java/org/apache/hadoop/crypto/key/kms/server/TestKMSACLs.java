@@ -25,17 +25,19 @@ import org.junit.Test;
 
 public class TestKMSACLs {
 
+  String ipAddress = "192.168.90.1";
+  
   @Test
   public void testDefaults() {
     KMSACLs acls = new KMSACLs(new Configuration(false));
     for (Type type : Type.values()) {
       Assert.assertTrue(acls.hasAccess(type,
-          UserGroupInformation.createRemoteUser("foo")));
+          UserGroupInformation.createRemoteUser("foo"), ipAddress));
     }
   }
 
   @Test
-  public void testCustom() {
+  public void testCustom()  {
     Configuration conf = new Configuration(false);
     for (Type type : Type.values()) {
       conf.set(type.getAclConfigKey(), type.toString() + " ");
@@ -43,10 +45,9 @@ public class TestKMSACLs {
     KMSACLs acls = new KMSACLs(conf);
     for (Type type : Type.values()) {
       Assert.assertTrue(acls.hasAccess(type,
-          UserGroupInformation.createRemoteUser(type.toString())));
+          UserGroupInformation.createRemoteUser(type.toString()), ipAddress));
       Assert.assertFalse(acls.hasAccess(type,
-          UserGroupInformation.createRemoteUser("foo")));
+          UserGroupInformation.createRemoteUser("foo"), ipAddress));
     }
   }
-
 }

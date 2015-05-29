@@ -20,6 +20,7 @@
 package org.apache.ranger.authorization.kms.authorizer;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -138,11 +139,10 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	   * @return true is user has access
 	   */
 	  @Override
-	  public boolean hasAccess(Type type, UserGroupInformation ugi) {
+	  public boolean hasAccess(Type type, UserGroupInformation ugi, String clientIp) {
 		  if(LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerKmsAuthorizer.hasAccess(" + type + ", " + ugi + ")");
 			}
-
 			boolean ret = false;
 			RangerKMSPlugin plugin = kmsPlugin;
 			String rangerAccessType = getRangerAccessType(type);
@@ -153,7 +153,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		    }
 		    
 			if(plugin != null && ret) {				
-				RangerKMSAccessRequest request = new RangerKMSAccessRequest("", rangerAccessType, ugi);
+				RangerKMSAccessRequest request = new RangerKMSAccessRequest("", rangerAccessType, ugi, clientIp);
 				RangerAccessResult result = plugin.isAccessAllowed(request);
 				ret = result == null ? false : result.getIsAllowed();
 			}
@@ -165,11 +165,10 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 			return ret;
 	  }
 	  
-	  public boolean hasAccess(Type type, UserGroupInformation ugi, String keyName) {
+	  public boolean hasAccess(Type type, UserGroupInformation ugi, String keyName, String clientIp) {
 		  if(LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerKmsAuthorizer.hasAccess(" + type + ", " + ugi + " , "+keyName+")");
 			}
-
 			boolean ret = false;
 			RangerKMSPlugin plugin = kmsPlugin;
 			String rangerAccessType = getRangerAccessType(type);
@@ -180,7 +179,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		    }
 		    
 			if(plugin != null && ret) {				
-				RangerKMSAccessRequest request = new RangerKMSAccessRequest(keyName, rangerAccessType, ugi);
+				RangerKMSAccessRequest request = new RangerKMSAccessRequest(keyName, rangerAccessType, ugi, clientIp);
 				RangerAccessResult result = plugin.isAccessAllowed(request);
 				ret = result == null ? false : result.getIsAllowed();
 			}
@@ -193,13 +192,13 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  }
 
 	  @Override
-	  public void assertAccess(Type aclType, UserGroupInformation ugi, KMSOp operation, String key)
+	  public void assertAccess(Type aclType, UserGroupInformation ugi, KMSOp operation, String key, String clientIp)
 	      throws AccessControlException {
 		    if(LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerKmsAuthorizer.assertAccess(" + key + ", " + ugi +", " + aclType + ")");
 			}
 		  	key = (key == null)?"":key;
-		  	if (!hasAccess(aclType, ugi, key)) {
+		  	if (!hasAccess(aclType, ugi, key, clientIp)) {
 		  		KMSWebApp.getUnauthorizedCallsMeter().mark();
 		  		KMSWebApp.getKMSAudit().unauthorized(ugi, operation, key);
 		  		throw new AuthorizationException(String.format(
@@ -217,7 +216,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerKmsAuthorizer.hasAccessToKey(" + keyName + ", " + ugi +", " + opType + ")");
 			}
-
+			
 			return true;
 	 }
 
@@ -331,22 +330,13 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	}
 
 	class RangerKMSAccessRequest extends RangerAccessRequestImpl {
-		public RangerKMSAccessRequest(String keyName, String accessType, UserGroupInformation ugi) {
+		public RangerKMSAccessRequest(String keyName, String accessType, UserGroupInformation ugi, String clientIp) {
 			super.setResource(new RangerKMSResource(keyName));
 			super.setAccessType(accessType);
 			super.setUser(ugi.getShortUserName());
 			super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
 			super.setAccessTime(StringUtil.getUTCDate());
-			super.setClientIPAddress(getRemoteIp());			
+			super.setClientIPAddress(clientIp);			
 			super.setAction(accessType);
-		}
-		
-		private static String getRemoteIp() {
-			String ret = null ;
-			InetAddress ip = Server.getRemoteIp() ;
-			if (ip != null) {
-				ret = ip.getHostAddress();
-			}
-			return ret ;
 		}
 	}
