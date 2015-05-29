@@ -31,9 +31,9 @@ public interface RangerContextEnricher {
 
 	void setContextServiceDef(RangerServiceDef serviceDef);
 
-	void setContextComponentServiceName(String componentServiceName);
+	//void setContextComponentServiceName(String componentServiceName);
 
-	void setContextComponentServiceDef(RangerServiceDef componentServiceDef);
+	//void setContextComponentServiceDef(RangerServiceDef componentServiceDef);
 
 	void init();
 

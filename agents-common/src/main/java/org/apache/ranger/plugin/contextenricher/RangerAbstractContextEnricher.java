@@ -27,7 +27,6 @@ import java.util.Properties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 
@@ -38,9 +37,6 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	protected RangerContextEnricherDef enricherDef;
 	protected String serviceName;
 	protected RangerServiceDef serviceDef;
-	protected String componentServiceName;
-	protected RangerServiceDef componentServiceDef;
-
 
 	@Override
 	public void setContextEnricherDef(RangerContextEnricherDef enricherDef) {
@@ -66,16 +62,6 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	@Override
 	public void setContextServiceDef(RangerServiceDef serviceDef) {
 		this.serviceDef = serviceDef;
-	}
-
-	@Override
-	public void setContextComponentServiceName(String componentServiceName) {
-		this.componentServiceName = componentServiceName;
-	}
-
-	@Override
-	public void setContextComponentServiceDef(RangerServiceDef componentServiceDef) {
-		this.componentServiceDef = componentServiceDef;
 	}
 
 	public String getOption(String name) {
@@ -118,6 +104,17 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 		if(! StringUtils.isEmpty(val)) {
 			ret = val.charAt(0);
+		}
+
+		return ret;
+	}
+
+	public long getLongOption(String name, long defaultValue) {
+		long ret = defaultValue;
+		String  val = getOption(name);
+
+		if(val != null) {
+			ret = Long.parseLong(val);
 		}
 
 		return ret;

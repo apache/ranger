@@ -17,24 +17,22 @@
  * under the License.
  */
 
-package org.apache.ranger.rest;
+package org.apache.ranger.plugin.contextenricher;
 
-public class TagRESTConstants {
-	public static final String TAGDEF_NAME_AND_VERSION = "tag-def/v1";
-	static final String TAGS_RESOURCE = "tags";
-	static final String TAG_RESOURCE = "tag";
-	static final String RESOURCES_RESOURCE = "resources";
-	static final String RESOURCES_IF_UPDATED_RESOURCE = "resources";
-	static final String RESOURCE_RESOURCE = "resource";
-	static final String ACTION_SUB_RESOURCE = "update";
-	static final String ACTION_OP = "op";
-	static final String ACTION_ADD = "add";
-	static final String ACTION_REPLACE = "replace";
-	static final String ACTION_DELETE = "delete";
+import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
-	public static final String TAG_SERVICE_NAME_PARAM = "tagservicename";
-	public static final String COMPONENT_TYPE_PARAM = "componenttype";
+public class RangerTaggedResourceMatcher {
+	private final RangerResource rangerResource;
+	private final RangerPolicyResourceMatcher policyResourceMatcher;
 
+	public RangerTaggedResourceMatcher(final RangerResource rangerResource, RangerPolicyResourceMatcher policyResourceMatcher) {
+		this.rangerResource = rangerResource;
+		this.policyResourceMatcher = policyResourceMatcher;
+	}
 
+	public RangerResource getRangerResource() { return rangerResource; }
+
+	public RangerPolicyResourceMatcher getPolicyResourceMatcher() { return policyResourceMatcher; }
 
 }

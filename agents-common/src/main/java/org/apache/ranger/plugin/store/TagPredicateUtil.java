@@ -46,7 +46,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		addPredicateForTagDefName(filter.getParam(SearchFilter.TAG_DEF_NAME), predicates);
 
 		addPredicateForTagResourceServiceName(filter.getParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME), predicates);
-		addPredicateForTagResourceServiceType(filter.getParam(SearchFilter.TAG_RESOURCE_SERVICE_TYPE), predicates);
+		addPredicateForTagResourceComponentType(filter.getParam(SearchFilter.TAG_RESOURCE_COMPONENT_TYPE), predicates);
 
 		addPredicateForTagResourceId(filter.getParam(SearchFilter.TAG_RESOURCE_ID), predicates);
 	}
@@ -147,7 +147,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagResourceServiceType(final String type, List<Predicate> predicates) {
+	private Predicate addPredicateForTagResourceComponentType(final String type, List<Predicate> predicates) {
 		if (type == null || StringUtils.isEmpty(type)) {
 			return null;
 		}

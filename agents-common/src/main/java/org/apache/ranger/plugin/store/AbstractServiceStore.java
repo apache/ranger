@@ -40,6 +40,7 @@ import java.util.UUID;
 public abstract class AbstractServiceStore implements ServiceStore {
 	private static final Log LOG = LogFactory.getLog(AbstractServiceStore.class);
 
+	public static final String COMPONENT_ACCESSTYPE_SEPARATOR = ":";
 
 	private static final int MAX_ACCESS_TYPES_IN_SERVICE_DEF = 1000;
 
@@ -314,7 +315,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 				tagAccessType.setImpliedGrants(new HashSet<String>());
 				if(CollectionUtils.isNotEmpty(svcAccessType.getImpliedGrants())) {
 					for(String svcImpliedGrant : svcAccessType.getImpliedGrants()) {
-						tagAccessType.getImpliedGrants().add(serviceDefName + ":" + svcImpliedGrant);
+						tagAccessType.getImpliedGrants().add(serviceDefName + COMPONENT_ACCESSTYPE_SEPARATOR + svcImpliedGrant);
 					}
 				}
 
@@ -323,7 +324,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 
 		for (RangerServiceDef.RangerAccessTypeDef tagAccessType : tagDefAccessTypes) {
-			if (tagAccessType.getName().startsWith(serviceDefName + ":")) {
+			if (tagAccessType.getName().startsWith(serviceDefName + COMPONENT_ACCESSTYPE_SEPARATOR)) {
 				long svcAccessTypeItemId = tagAccessType.getItemId() - itemIdOffset;
 
 				RangerServiceDef.RangerAccessTypeDef svcAccessType = findAccessTypeDef(svcAccessTypeItemId, svcDefAccessTypes);
@@ -352,7 +353,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 						isUpdated = true;
 					} else if(tagImpliedGrantsLen > 0) {
 						for(String svcImpliedGrant : svcImpliedGrants) {
-							if(! tagImpliedGrants.contains(serviceDefName + ":" + svcImpliedGrant)) {
+							if(! tagImpliedGrants.contains(serviceDefName + COMPONENT_ACCESSTYPE_SEPARATOR + svcImpliedGrant)) {
 								isUpdated = true;
 								break;
 							}
@@ -361,14 +362,14 @@ public abstract class AbstractServiceStore implements ServiceStore {
 				}
 
 				if(isUpdated) {
-					tagAccessType.setName(serviceDefName + ":" + svcAccessType.getName());
+					tagAccessType.setName(serviceDefName + COMPONENT_ACCESSTYPE_SEPARATOR + svcAccessType.getName());
 					tagAccessType.setLabel(svcAccessType.getLabel());
 					tagAccessType.setRbKeyLabel(svcAccessType.getRbKeyLabel());
 
 					tagAccessType.setImpliedGrants(new HashSet<String>());
 					if(CollectionUtils.isNotEmpty(svcAccessType.getImpliedGrants())) {
 						for(String svcImpliedGrant : svcAccessType.getImpliedGrants()) {
-							tagAccessType.getImpliedGrants().add(serviceDefName + ":" + svcImpliedGrant);
+							tagAccessType.getImpliedGrants().add(serviceDefName + COMPONENT_ACCESSTYPE_SEPARATOR + svcImpliedGrant);
 						}
 					}
 
@@ -413,7 +414,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		List<RangerServiceDef.RangerAccessTypeDef> accessTypes = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
 
 		for (RangerServiceDef.RangerAccessTypeDef accessType : tagServiceDef.getAccessTypes()) {
-			if (accessType.getName().startsWith(serviceDefName + ":")) {
+			if (accessType.getName().startsWith(serviceDefName + COMPONENT_ACCESSTYPE_SEPARATOR)) {
 				accessTypes.add(accessType);
 			}
 		}

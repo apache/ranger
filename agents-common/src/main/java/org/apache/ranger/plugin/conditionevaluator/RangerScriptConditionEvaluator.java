@@ -24,14 +24,12 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -61,8 +59,16 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 			engineName = "JavaScript";
 		}
 
-		ScriptEngineManager manager = new ScriptEngineManager();
-		scriptEngine = manager.getEngineByName(engineName);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("RangerScriptConditionEvaluator.init() - engineName=" + engineName);
+		}
+
+		try {
+			ScriptEngineManager manager = new ScriptEngineManager();
+			scriptEngine = manager.getEngineByName(engineName);
+		} catch (Exception exp) {
+			LOG.error("RangerScriptConditionEvaluator.init() failed with exception=" + exp);
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerScriptConditionEvaluator.init(" + condition + ")");
@@ -74,55 +80,48 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==>RangerScriptConditionEvaluator.isMatched()");
 		}
+		boolean result = false;
 
-		Boolean result = false;
+		if (scriptEngine != null) {
 
-		List<String> values = condition.getValues();
+			List<String> values = condition.getValues();
 
-		if (!CollectionUtils.isEmpty(values)) {
+			if (CollectionUtils.isNotEmpty(values)) {
 
-			// Evaluate the first string
-			String value = values.get(0);
-			if (StringUtils.isNotBlank(value)) {
+				String value = values.get(0);
+				if (StringUtils.isNotBlank(value)) {
 
-				RangerAccessRequest readOnlyRequest = request.getReadOnlyCopy();
+					RangerAccessRequest readOnlyRequest = request.getReadOnlyCopy();
 
-				@SuppressWarnings("unchecked")
-				List<RangerResource.RangerResourceTag> tagsList = (List <RangerResource.RangerResourceTag>)readOnlyRequest.getContext().get("TAGS");
+					RangerScriptExecutionContext context = new RangerScriptExecutionContext(readOnlyRequest);
 
-				Bindings bindings   = scriptEngine.createBindings();
+					Bindings bindings = scriptEngine.createBindings();
 
-				if (CollectionUtils.isNotEmpty(tagsList)) {
-					List<RangerResource.RangerResourceTag> readOnlyTags = Collections.unmodifiableList(tagsList);
-					bindings.put("tags", readOnlyTags);
-				}
+					bindings.put("ctx", context);
 
-				bindings.put("request", readOnlyRequest);
-				bindings.put("ctx", readOnlyRequest.getContext());
-				bindings.put("result", result);
+					String script = value.trim();
 
-				String script = value.trim();
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={" + script + "}");
-				}
-				try {
-
-					Object ret = scriptEngine.eval(script, bindings);
-
-					if (ret == null) {
-						ret = bindings.get("result");
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={" + script + "}");
 					}
-					if (ret != null && ret instanceof Boolean) {
-						result = (Boolean) ret;
+					try {
+
+						Object ret = scriptEngine.eval(script, bindings);
+
+						if (ret == null) {
+							ret = context.getResult();
+						}
+						if (ret instanceof Boolean) {
+							result = (Boolean) ret;
+						}
+
+					} catch (NullPointerException nullp) {
+						LOG.error("RangerScriptConditionEvaluator.isMatched(): eval called with NULL argument(s)");
+
+					} catch (ScriptException exception) {
+						LOG.error("RangerScriptConditionEvaluator.isMatched(): failed to evaluate script," +
+								" exception=" + exception);
 					}
-
-				} catch (NullPointerException nullp) {
-					LOG.error("RangerScriptConditionEvaluator.isMatched(): eval called with NULL argument(s)");
-
-				} catch (ScriptException exception) {
-					LOG.error("RangerScriptConditionEvaluator.isMatched(): failed to evaluate script," +
-							" exception=" + exception);
 				}
 			}
 		}

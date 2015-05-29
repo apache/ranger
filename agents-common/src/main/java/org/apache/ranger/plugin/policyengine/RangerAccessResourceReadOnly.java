@@ -19,11 +19,11 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class RangerAccessResourceReadOnly implements RangerAccessResource {
 
@@ -35,8 +35,19 @@ public class RangerAccessResourceReadOnly implements RangerAccessResource {
 		this.source = source;
 
 		// Cached here for reducing access overhead
-		this.keys = Collections.unmodifiableSet(source.getKeys());
-		this.map = Collections.unmodifiableMap(source.getAsMap());
+		Set<String> sourceKeys = source.getKeys();
+
+		if (CollectionUtils.isEmpty(sourceKeys)) {
+			sourceKeys = new HashSet<String>();
+		}
+		this.keys = Collections.unmodifiableSet(sourceKeys);
+
+		Map<String, String> sourceMap = source.getAsMap();
+
+		if (MapUtils.isEmpty(sourceMap)) {
+			sourceMap = new HashMap<String, String>();
+		}
+		this.map = Collections.unmodifiableMap(sourceMap);
 	}
 
 	public String getOwnerUser() { return source.getOwnerUser(); }

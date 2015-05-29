@@ -408,9 +408,9 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerResource> getResources(String tagServiceName, String serviceType) throws Exception {
+	public List<RangerResource> getResources(String tagServiceName, String componentType) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getResources(" + tagServiceName + ", " + serviceType + ")");
+			LOG.debug("==> TagFileStore.getResources(" + tagServiceName + ", " + componentType + ")");
 		}
 		List<RangerResource> ret;
 
@@ -420,14 +420,14 @@ public class TagFileStore extends AbstractTagStore {
 			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, tagServiceName);
 		}
 
-		if (StringUtils.isNotBlank(serviceType)) {
-			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_TYPE, serviceType);
+		if (StringUtils.isNotBlank(componentType)) {
+			filter.setParam(SearchFilter.TAG_RESOURCE_COMPONENT_TYPE, componentType);
 		}
 
 		ret = getResources(filter);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getResources(" + tagServiceName + ", " + serviceType + ")");
+			LOG.debug("<== TagFileStore.getResources(" + tagServiceName + ", " + componentType + ")");
 
 		}
 		return ret;

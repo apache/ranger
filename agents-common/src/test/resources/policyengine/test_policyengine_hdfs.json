@@ -67,23 +67,45 @@
       ],
       "accessTypes": [
         {
+          "itemId": 1,
           "name": "hdfs:read",
           "label": "hdfs:Read"
         },
         {
+          "itemId": 2,
           "name": "hdfs:write",
           "label": "hdfs:Write"
         },
         {
+          "itemId": 3,
           "name": "hdfs:execute",
           "label": "hdfs:Execute"
         }
-      ],
-      "contextEnrichers" : [
+        ,
         {
-          "name" : "test_enricher",
-          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerFileBasedTagProvider",
-          "enricherOptions" : {"wildCard":true, "ignoreCase":true, "dataFile":"/etc/ranger/data/resourceTags.txt"}
+          "itemId": 4,
+          "name": "hive:grant",
+          "label": "hive:grant"
+        }
+        ,
+        {
+          "itemId": 5,
+          "name": "kms:dek",
+          "label": "kms:dek"
+        }
+        ,
+        {
+          "itemId": 6,
+          "name": "delete",
+          "label": "delete"
+        }
+      ],
+      "contextEnrichers": [
+        {
+          "itemId": 1,
+          "name" : "TagEnricher",
+          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
+          "enricherOptions" : {"TagProviderType":"FILESTORE_BASED_TAG_PROVIDER", "pollingInterval":30000, "dataFile":"/etc/ranger/data/resourceTags.txt"}
         }
       ],
       "policyConditions": [
@@ -101,15 +123,17 @@
       {"id":5,"name":"allow somethingelse tag","isEnabled":true,"isAuditEnabled":true,"policyType":0,
         "resources":{"tag":{"values":["restricte?"],"isRecursive":false}},
         "policyItems":[
-          {"accesses":[{"type":"hdfs:read","isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false,
+          {"accesses":[{"type":"hdfs:read", "isAllowed":true}, {"type":"hive:grant", "isAllowed":true}, {"type":"delete", "isAllowed":true}, {"type":":write", "isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false,
           "conditions" : [{"type":"ScriptConditionEvaluator", "values": [
-            "var accessTime = request.getAccessTime(); println('accessTime=' + accessTime); result = true;"
+            "importPackage(java.util); var accessTime = ctx.accessTime; print('accessTime=' + accessTime); var accessDate = ctx.getAsDate(accessTime); println('accessDate=' + accessDate); var currentDate = new Date(); println('currentDate=' + currentDate); println('current=' +currentDate.getTime()); println('access='+ accessDate.getTime()); result = true;"
             ,
-            "var accessTime = request.accessTime; println('accessTime=' + accessTime); result = true;"
+            "importPackage(java.util); var accessTime = ctx.accessTime; var currentTime = Date(); print('accessTime=' + accessTime); println('currentTime=' + currentTime); accessTime.after(currentTime)"
             ,
             "var ownerUser = request.resource.getOwnerUser(); println('ownerUser=' + ownerUser); result = true;"
             ,
             "var ownerUser = request.resource.ownerUser; println('ownerUser=' + ownerUser); result = true;"
+            ,
+            "var tagName = ctx.currentTagName; println('tagName=' + tagName); ctx.result = true;"
             ,
             "var resource = ctx.get('RESOURCE').getAsMap(); println('resource path=' + resource.get('path')); result = true;"
 

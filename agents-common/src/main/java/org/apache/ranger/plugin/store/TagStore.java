@@ -54,11 +54,10 @@ public interface TagStore {
 
     RangerResource getResource(Long id) throws Exception;
 
-    List<RangerResource> getResources(String tagServiceName, String serviceType) throws Exception;
-
-    PList<RangerResource> getPaginatedResources(String tagServiceName, String serviceType) throws Exception;
+    List<RangerResource> getResources(String tagServiceName, String componentType) throws Exception;
 
     List<RangerResource> getResources(SearchFilter filter) throws Exception;
+
     PList<RangerResource> getPaginatedResources(SearchFilter filter) throws Exception;
 
 }

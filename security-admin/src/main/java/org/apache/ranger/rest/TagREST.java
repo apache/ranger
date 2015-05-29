@@ -375,17 +375,17 @@ public class TagREST {
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
     public List<RangerResource> getResources(@DefaultValue("") @QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
-                                             @DefaultValue("") @QueryParam(TagRESTConstants.SERVICE_TYPE_PARAM) String serviceType) {
+                                             @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getResources(" + tagServiceName + ", " + serviceType + ")");
+            LOG.debug("==> TagREST.getResources(" + tagServiceName + ", " + componentType + ")");
         }
 
         List<RangerResource> ret;
 
         try {
-            ret = tagStore.getResources(tagServiceName, serviceType);
+            ret = tagStore.getResources(tagServiceName, componentType);
         } catch(Exception excp) {
-            LOG.error("getResources(" + tagServiceName + ", " + serviceType + ") failed", excp);
+            LOG.error("getResources(" + tagServiceName + ", " + componentType + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }

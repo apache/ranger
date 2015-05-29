@@ -33,7 +33,6 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.*;
 
-
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineImpl.class);
 
@@ -41,10 +40,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private final RangerPolicyRepository tagPolicyRepository;
 	
 	private final List<RangerContextEnricher> allContextEnrichers;
-
-	public RangerPolicyEngineImpl(ServicePolicies servicePolicies) {
-		this(servicePolicies, null);
-	}
 
 	public RangerPolicyEngineImpl(ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
 		if (LOG.isDebugEnabled()) {
@@ -68,8 +63,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerPolicyEngineImpl : Building tag-policy-repository for tag-service " + tagPolicies.getServiceName());
 			}
-			tagPolicyRepository = new RangerPolicyRepository(tagPolicies, options, servicePolicies.getServiceName(),
-					servicePolicies.getServiceDef());
+
+			tagPolicyRepository = new RangerPolicyRepository(tagPolicies, options, servicePolicies.getServiceDef());
 
 		} else {
 			if (LOG.isDebugEnabled()) {
@@ -318,7 +313,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if (ret != null && request != null) {
 
-			if (tagPolicyRepository != null) {
+			if (tagPolicyRepository != null && CollectionUtils.isNotEmpty(tagPolicyRepository.getPolicies())) {
 
 				RangerAccessResult tagAccessResult = isAccessAllowedForTagPolicies(request);
 
@@ -394,7 +389,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + resourceTag.getName() + ")");
 					}
 
-					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(resourceTag, getServiceDef().getName(), request);
+					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(resourceTag, tagPolicyRepository.getServiceDef(), request);
+
 					RangerAccessResult tagEvalResult = createAccessResult(tagEvalRequest);
 
 					for (RangerPolicyEvaluator evaluator : evaluators) {
@@ -501,18 +497,19 @@ class RangerTagResource extends RangerAccessResourceImpl {
 	private static final String KEY_TAG = "tag";
 
 
-	public RangerTagResource(String tagName) {
+	public RangerTagResource(String tagName, RangerServiceDef tagServiceDef) {
 		super.setValue(KEY_TAG, tagName);
+		super.setServiceDef(tagServiceDef);
 	}
 }
 
 class RangerTagAccessRequest extends RangerAccessRequestImpl {
-	public RangerTagAccessRequest(RangerResource.RangerResourceTag resourceTag, String componentName, RangerAccessRequest request) {
-		super.setResource(new RangerTagResource(resourceTag.getName()));
+	public RangerTagAccessRequest(RangerResource.RangerResourceTag resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
+		super.setResource(new RangerTagResource(resourceTag.getName(), tagServiceDef));
 		super.setUser(request.getUser());
 		super.setUserGroups(request.getUserGroups());
 		super.setAction(request.getAction());
-		super.setAccessType(componentName + ":" + request.getAccessType());
+		super.setAccessType(request.getAccessType());
 		super.setAccessTime(request.getAccessTime());
 		super.setRequestData(request.getRequestData());
 

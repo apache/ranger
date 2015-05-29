@@ -96,13 +96,6 @@ public abstract class AbstractTagStore implements TagStore {
 				(long)list.size(), list.size(), filter.getSortType(), filter.getSortBy());
 	}
 
-	public PList<RangerResource> getPaginatedResources(String tagServiceName, String serviceType) throws Exception {
-		List<RangerResource> list = getResources(tagServiceName, serviceType);
-
-		return new PList<RangerResource>(list, 0, list.size(),
-				(long)list.size(), list.size(), null, null);
-	}
-
 	public PList<RangerResource> getPaginatedResources(SearchFilter filter) throws Exception {
 		List<RangerResource> list = getResources(filter);
 
