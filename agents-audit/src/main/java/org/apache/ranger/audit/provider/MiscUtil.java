@@ -29,6 +29,7 @@ import java.util.StringTokenizer;
 import java.util.UUID;
 
 import org.apache.log4j.helpers.LogLog;
+import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -376,6 +377,20 @@ public class MiscUtil {
 			}
 		}
 		return list;
+	}
+	
+	public static String getCredentialString(String url,String alias) {
+		String ret = null;
+
+		if(url != null && alias != null) {
+			char[] cred = RangerCredentialProvider.getInstance().getCredentialString(url,alias);
+
+			if ( cred != null ) {
+				ret = new String(cred);	
+			}
+		}
+		
+		return ret;
 	}
 
 }

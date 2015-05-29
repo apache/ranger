@@ -105,6 +105,9 @@ public class HDFSAuditDestination extends AuditDestination {
 
 	@Override
 	synchronized public boolean logJSON(Collection<String> events) {
+		if (!initDone) {
+			return false;
+		}
 		if (isStopped) {
 			logError("log() called after stop was requested. name=" + getName());
 			return false;

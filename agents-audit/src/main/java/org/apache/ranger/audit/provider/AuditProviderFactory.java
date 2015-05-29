@@ -24,6 +24,7 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.destination.DBAuditDestination;
 import org.apache.ranger.audit.destination.FileAuditDestination;
 import org.apache.ranger.audit.destination.HDFSAuditDestination;
 import org.apache.ranger.audit.destination.SolrAuditDestination;
@@ -415,7 +416,7 @@ public class AuditProviderFactory {
 			} else if (providerName.equals("kafka")) {
 				provider = new KafkaAuditProvider();
 			} else if (providerName.equals("db")) {
-				provider = new DbAuditProvider();
+				provider = new DBAuditDestination();
 			} else if (providerName.equals("log4j")) {
 				provider = new Log4jAuditProvider();
 			} else if (providerName.equals("batch")) {

@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+
 import com.google.gson.GsonBuilder;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,7 +34,9 @@ import java.util.Properties;
 public abstract class BaseAuditHandler implements AuditHandler {
 	private static final Log LOG = LogFactory.getLog(BaseAuditHandler.class);
 
-	private static final String AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP = "xasecure.audit.log.failure.report.min.interval.ms";
+	static final String AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP = "xasecure.audit.log.failure.report.min.interval.ms";
+	protected static final String AUDIT_DB_CREDENTIAL_PROVIDER_FILE   = "xasecure.audit.credential.provider.file";
+
 
 	private int mLogFailureReportMinIntervalInMs = 60 * 1000;
 
