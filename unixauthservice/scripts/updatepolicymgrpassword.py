@@ -23,6 +23,8 @@ import platform
 import fileinput
 import getpass
 import shutil
+from xml.etree import ElementTree as ET
+import update_property
 from os.path import basename
 from subprocess import Popen,PIPE
 from datetime import date
@@ -52,75 +54,37 @@ def log(msg,type):
 	if type == 'error':
 		logging.error(" %s",msg)
 
-def populate_global_dict():
-	global globalDict
-	read_config_file = open(os.path.join(os.getcwd(),'install.properties'))
-	for each_line in read_config_file.read().split('\n') :
-		if len(each_line) == 0 : continue
-		if re.search('=', each_line):
-			key , value = each_line.strip().split("=",1)
-			key = key.strip()
-			value = value.strip()
-			globalDict[key] = value
-
-def ModConfig(File, Variable, Setting):
-	"""
-	Modify Config file variable with new setting
-	"""
-	VarFound = False
-	AlreadySet = False
-	V=str(Variable)
-	S=str(Setting)
-	# use quotes if setting has spaces #
-	if ' ' in S:
-		S = '"%s"' % S
-
-	for line in fileinput.input(File, inplace = 1):
-		# process lines that look like config settings #
-		if not line.lstrip(' ').startswith('#') and '=' in line:
-			_infile_var = str(line.split('=')[0].rstrip(' '))
-			_infile_set = str(line.split('=')[1].lstrip(' ').rstrip())
-			# only change the first matching occurrence #
-			if VarFound == False and _infile_var.rstrip(' ') == V:
-				VarFound = True
-				# don't change it if it is already set #
-				if _infile_set.lstrip(' ') == S:
-					AlreadySet = True
-				else:
-					line = "%s = %s\n" % (V, S)
-
-		sys.stdout.write(line)
-
-	# Append the variable if it wasn't found #
-	if not VarFound:
-		print "property '%s' not found.  Adding it to %s" % (V, File)
-		with open(File, "a") as f:
-			f.write("%s = %s\n" % (V, S))
-	elif AlreadySet == True:
-		print "property '%s' unchanged" % (V)
+def import_properties_from_xml(xml_path, properties_from_xml=None):
+	print('getting values from file : ' + str(xml_path))
+	if os.path.isfile(xml_path):
+		xml = ET.parse(xml_path)
+		root = xml.getroot()
+		if properties_from_xml is None:
+			properties_from_xml = dict()
+		for child in root.findall('property'):
+			name = child.find("name").text.strip()
+			value = child.find("value").text.strip() if child.find("value").text is not None  else ""
+			properties_from_xml[name] = value
 	else:
-		print "property '%s' modified to '%s'" % (V, S)
+		print('XML file not found at path : ' + str(xml_path))
+	return properties_from_xml
 
-	return
 
 def main():
-
+	global globalDict
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
-	populate_global_dict()
 
-	SYNC_LDAP_BIND_KEYSTOREPATH=globalDict['CRED_KEYSTORE_FILENAME']
-	SYNC_POLICY_MGR_ALIAS="policymgr.user.password"
-	SYNC_POLICY_MGR_PASSWORD = ''
-	SYNC_POLICY_MGR_USERNAME = ''
-	JAVA_BIN = ''
-	unix_user = "ranger"
-	unix_group = "ranger"
+	CFG_FILE=os.path.join(os.getcwd(),'conf','ranger-ugsync-site.xml')
+	if os.path.isfile(CFG_FILE):
+		pass
+	else:
+		log("[E] Required file not found: ["+CFG_FILE+"]","error")
+		sys.exit(1)
 
 	if os.environ['JAVA_HOME'] == "":
 		log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")
 		sys.exit(1)
-
 	JAVA_BIN=os.path.join(os.environ['JAVA_HOME'],'bin','java')
 	if os_name == "WINDOWS" :
 		JAVA_BIN = JAVA_BIN+'.exe'
@@ -130,8 +94,16 @@ def main():
 		while os.path.isfile(JAVA_BIN) == False:
 			log("Enter java executable path: :","info")
 			JAVA_BIN=raw_input()
-
 	log("[I] Using Java:" + str(JAVA_BIN),"info")
+
+	globalDict=import_properties_from_xml(CFG_FILE,globalDict)
+	SYNC_LDAP_BIND_KEYSTOREPATH=globalDict['ranger.usersync.credstore.filename']
+	log("[I] SYNC_LDAP_BIND_KEYSTOREPATH:" + str(SYNC_LDAP_BIND_KEYSTOREPATH),"info")
+	SYNC_POLICY_MGR_ALIAS="ranger.usersync.policymgr.password"
+	SYNC_POLICY_MGR_PASSWORD = ''
+	SYNC_POLICY_MGR_USERNAME = ''
+	unix_user = "ranger"
+	unix_group = "ranger"
 
 	while SYNC_POLICY_MGR_USERNAME == "":
 		print "Enter policymgr user name:"
@@ -148,24 +120,17 @@ def main():
 			cmd="chown %s:%s %s" %(unix_user,unix_group,SYNC_LDAP_BIND_KEYSTOREPATH)
 			ret=subprocess.call(shlex.split(cmd))
 			if ret == 0:
-				CFG_FILE=os.path.join(os.getcwd(),'conf','unixauthservice.properties')
-				NEW_CFG_FILE=os.path.join(os.getcwd(),'conf','unixauthservice.properties.tmp')
 				if os.path.isfile(CFG_FILE):
-					shutil.copyfile(CFG_FILE, NEW_CFG_FILE)
-					ModConfig(NEW_CFG_FILE, "userSync.policyMgrUserName", SYNC_POLICY_MGR_USERNAME)
-					ModConfig(NEW_CFG_FILE, "userSync.policyMgrKeystore", SYNC_LDAP_BIND_KEYSTOREPATH)
-					ModConfig(NEW_CFG_FILE, "userSync.policyMgrAlias", SYNC_POLICY_MGR_ALIAS)
-					now = datetime.now()
-					shutil.copyfile(CFG_FILE, CFG_FILE+"."+now.strftime('%Y%m%d%H%M%S'))
-					shutil.copyfile(NEW_CFG_FILE,CFG_FILE)
+					update_property.write_properties_to_xml(CFG_FILE,"ranger.usersync.policymgr.username",SYNC_POLICY_MGR_USERNAME)
+					update_property.write_properties_to_xml(CFG_FILE,"ranger.usersync.policymgr.keystore",SYNC_LDAP_BIND_KEYSTOREPATH)
+					update_property.write_properties_to_xml(CFG_FILE,"ranger.usersync.policymgr.alias",SYNC_POLICY_MGR_ALIAS)
 				else:
-					log("[E] Required file not found: ["+CFG_FILE+"]","error")				
+					log("[E] Required file not found: ["+CFG_FILE+"]","error")
 			else:
 				log("[E] unable to execute command ["+cmd+"]","error")
 		else:
 			log("[E] unable to execute command ["+cmd+"]","error")
 	else:
 		log("[E] Input Error","error")
-
 
 main()
