@@ -114,11 +114,18 @@ public abstract class AuditQueue extends BaseAuditHandler {
 		return consumer;
 	}
 
+	public boolean isDrainMaxTimeElapsed() {
+		return (stopTime - System.currentTimeMillis()) > AUDIT_CONSUMER_THREAD_WAIT_MS;
+	}
+	
 	public boolean isDrain() {
 		return isDrain;
 	}
 
 	public void setDrain(boolean isDrain) {
+		if (isDrain && stopTime != 0) {
+			stopTime = System.currentTimeMillis();
+		}
 		this.isDrain = isDrain;
 	}
 

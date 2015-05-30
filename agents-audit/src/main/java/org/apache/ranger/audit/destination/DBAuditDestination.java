@@ -119,8 +119,8 @@ public class DBAuditDestination extends AuditDestination {
 					+ PROP_DB_JDBC_URL);
 			dbUser = MiscUtil.getStringProperty(props, propPrefix + "."
 					+ PROP_DB_USER);
-			String dbPassword = MiscUtil.getStringProperty(props, propPrefix
-					+ "." + PROP_DB_PASSWORD);
+			String dbPasswordFromProp = MiscUtil.getStringProperty(props,
+					propPrefix + "." + PROP_DB_PASSWORD);
 			String tmpAlias = MiscUtil.getStringProperty(props, propPrefix
 					+ "." + PROP_DB_PASSWORD_ALIAS);
 			dbPasswordAlias = tmpAlias != null ? tmpAlias : dbPasswordAlias;
@@ -142,16 +142,22 @@ public class DBAuditDestination extends AuditDestination {
 						+ propPrefix + "." + PROP_DB_USER);
 				return;
 			}
+			String dbPassword = MiscUtil.getCredentialString(credFile,
+					dbPasswordAlias);
+
 			if (dbPassword == null || dbPassword.isEmpty()) {
-				logger.warn("DB password not provided. Will assume empty for now. Set property name "
-						+ propPrefix + "." + PROP_DB_PASSWORD);
-			} else {
-				dbPassword = MiscUtil.getCredentialString(credFile,
-						dbPasswordAlias);
+				// If password is not in credential store, let's try password
+				// from property
+				dbPassword = dbPasswordFromProp;
+			}
+
+			if (dbPassword == null || dbPassword.isEmpty()) {
+				logger.warn("DB password not provided. Will assume it is empty and continue");
 			}
 			logger.info("JDBC Driver=" + jdbcDriver + ", JDBC URL=" + jdbcURL
 					+ ", dbUser=" + dbUser + ", passwordAlias="
-					+ dbPasswordAlias + ", credFile=" + credFile);
+					+ dbPasswordAlias + ", credFile=" + credFile
+					+ ", usingPassword=" + (dbPassword == null ? "no" : "yes"));
 
 			Map<String, String> dbProperties = new HashMap<String, String>();
 			dbProperties.put("javax.persistence.jdbc.driver", jdbcDriver);
@@ -170,7 +176,7 @@ public class DBAuditDestination extends AuditDestination {
 			daoManager.setEntityManagerFactory(entityManagerFactory);
 
 			// this forces the connection to be made to DB
-			if (daoManager.getEntityManager() != null) {
+			if (daoManager.getEntityManager() == null) {
 				logger.error("Error connecting audit database. EntityManager is null. dbURL="
 						+ jdbcURL + ", dbUser=" + dbUser);
 			}

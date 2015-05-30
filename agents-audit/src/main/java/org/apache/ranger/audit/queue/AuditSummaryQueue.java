@@ -123,10 +123,6 @@ public class AuditSummaryQueue extends AuditQueue implements Runnable {
 	@Override
 	public void stop() {
 		logger.info("Stop called. name=" + getName());
-		if (stopTime != 0) {
-			stopTime = System.currentTimeMillis();
-		}
-
 		setDrain(true);
 		try {
 			if (consumerThread != null) {
@@ -179,7 +175,7 @@ public class AuditSummaryQueue extends AuditQueue implements Runnable {
 				}
 			} catch (InterruptedException e) {
 				logger.info(
-						"Caught exception in consumer thread. Mostly server is shutting down.",
+						"Caught exception in consumer thread. Shutdown might be in progress",
 						e);
 			} catch (Throwable t) {
 				logger.error("Caught error during processing request.", t);
@@ -223,16 +219,16 @@ public class AuditSummaryQueue extends AuditQueue implements Runnable {
 				summaryMap.clear();
 			}
 
-			if (isDrain() && summaryMap.isEmpty() && queue.isEmpty()) {
-				break;
-			}
-			if (isDrain()
-					&& (stopTime - System.currentTimeMillis()) > AUDIT_CONSUMER_THREAD_WAIT_MS) {
-				logger.warn("Exiting polling loop to max time allowed. name="
-						+ getName() + ", waited for "
-						+ (stopTime - System.currentTimeMillis()) + " ms");
-
-				break;
+			if (isDrain()) {
+				if (summaryMap.isEmpty() && queue.isEmpty()) {
+					break;
+				}
+				if (isDrainMaxTimeElapsed()) {
+					logger.warn("Exiting polling loop because max time allowed reached. name="
+							+ getName()
+							+ ", waited for "
+							+ (stopTime - System.currentTimeMillis()) + " ms");
+				}
 			}
 
 		}

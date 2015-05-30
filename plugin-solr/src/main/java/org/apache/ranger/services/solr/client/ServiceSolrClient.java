@@ -72,7 +72,6 @@ public class ServiceSolrClient {
 
 	public HashMap<String, Object> testConnection() throws Exception {
 		String errMsg = errMessage;
-		boolean connectivityStatus = false;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 
 		try {
@@ -80,13 +79,13 @@ public class ServiceSolrClient {
 			// If it doesn't throw exception, then assume the instance is
 			// reachable
 			String successMsg = "TestConnection Successful";
-			BaseClient.generateResponseDataMap(connectivityStatus, successMsg,
+			BaseClient.generateResponseDataMap(true, successMsg,
 					successMsg, null, null, responseData);
 		} catch (IOException e) {
 			LOG.error("Error connecting to Solr. solrClient=" + solrClient, e);
 			String failureMsg = "Unable to connect to Solr instance."
 					+ e.getMessage();
-			BaseClient.generateResponseDataMap(connectivityStatus, failureMsg,
+			BaseClient.generateResponseDataMap(false, failureMsg,
 					failureMsg + errMsg, null, null, responseData);
 
 		}
