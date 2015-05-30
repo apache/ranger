@@ -91,7 +91,7 @@ define(function(require) {
 				selectUsers : {
 					type : 'Select2Remote',
 					editorAttrs  : {'placeholder' :'Select User','tokenSeparators': [",", " "],multiple:true},
-					pluginAttr: this.getPlugginAttr(true,{'lookupURL':"service/users",'permList':that.model.get('userPermList'),'idKey':'userId','textKey':'userName'}),
+					pluginAttr: this.getPlugginAttr(true,{'lookupURL':"service/xusers/users",'permList':that.model.get('userPermList'),'idKey':'userId','textKey':'userName'}),
 					title : localization.tt('lbl.selectUser')+' *',
 				},
 				isAllowed : {
@@ -170,16 +170,16 @@ define(function(require) {
 						cache: false,
 						data: function (term, page) {
 							//To be checked
-							//return {name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
-							return {loginId : term};
+							return {name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
+//							return {loginId : term};
 						},
 						results: function (data, page) {
 							var results = [];
 							if(data.resultSize != "0"){
 								if(!_.isUndefined(data.vXGroups))
 									results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
-								else if(!_.isUndefined(data.vXPortalUsers))
-									results = data.vXPortalUsers.map(function(m, i){	return {id : m.id+"", text: m.loginId};	});
+								else if(!_.isUndefined(data.vXUsers))
+									results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
 							}
 							return { results : results};
 						},

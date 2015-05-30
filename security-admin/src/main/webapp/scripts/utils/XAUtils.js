@@ -473,30 +473,32 @@ define(function(require) {
 
 		var newGroupArr = _.map(groupArr, function(name, i) {
 			if (i >= 4) {
-				return '<span class="label label-info" policy-' + type
+				return '<span class="label label-info float-left-margin-2" policy-' + type
 						+ '-id="' + model.id + '" style="display:none;">'
 						+ name + '</span>';
 			} else if (i == 3 && groupArr.length > 4) {
 				showMoreLess = true;
-				return '<span class="label label-info" policy-' + type
+				return '<span class="label label-info float-left-margin-2" policy-' + type
 						+ '-id="' + model.id + '">' + name + '</span>';
 			} else {
-				return '<span class="label label-info" policy-' + type
+				return '<span class="label label-info float-left-margin-2" policy-' + type
 						+ '-id="' + model.id + '">' + name + '</span>';
 			}
 		});
 		if (showMoreLess) {
 			newGroupArr
-					.push('<span class="pull-left"><a href="javascript:void(0);" data-id="showMore" class="" policy-'
+					.push('<span class="pull-left float-left-margin-2"><a href="javascript:void(0);" data-id="showMore" class="" policy-'
 							+ type
 							+ '-id="'
 							+ model.id
-							+ '"><code style=""> + More..</code></a></span><span class="pull-left" ><a href="javascript:void(0);" data-id="showLess" class="" policy-'
+							+ '"><code style=""> + More..</code></a></span><span class="pull-left float-left-margin-2" ><a href="javascript:void(0);" data-id="showLess" class="" policy-'
 							+ type
 							+ '-id="'
 							+ model.id
 							+ '" style="display:none;"><code> - Less..</code></a></span>');
 		}
+		newGroupArr.unshift('<div data-id="groupsDiv">');
+		newGroupArr.push('</div>');
 		return newGroupArr.length ? newGroupArr.join(' ') : '--';
 
 	};
@@ -517,30 +519,32 @@ define(function(require) {
 
 		var newObjArr = _.map(objArr, function(name, i) {
 			if (i >= 4) {
-				return '<span class="label label-info" policy-' + userOrGroups
+				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
 						+ '-id="' + model.id + '" style="display:none;">'
 						+ name + '</span>';
 			} else if (i == 3 && objArr.length > 4) {
 				showMoreLess = true;
-				return '<span class="label label-info" policy-' + userOrGroups
+				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
 						+ '-id="' + model.id + '">' + name + '</span>';
 			} else {
-				return '<span class="label label-info" policy-' + userOrGroups
+				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
 						+ '-id="' + model.id + '">' + name + '</span>';
 			}
 		});
 		if (showMoreLess) {
 			newObjArr
-					.push('<span class="pull-left"><a href="javascript:void(0);" data-id="showMore" class="" policy-'
+					.push('<span class="pull-left float-left-margin-2"><a href="javascript:void(0);" data-id="showMore" class="" policy-'
 							+ userOrGroups
 							+ '-id="'
 							+ model.id
-							+ '"><code style=""> + More..</code></a></span><span class="pull-left" ><a href="javascript:void(0);" data-id="showLess" class="" policy-'
+							+ '"><code style=""> + More..</code></a></span><span class="pull-left float-left-margin-2" ><a href="javascript:void(0);" data-id="showLess" class="" policy-'
 							+ userOrGroups
 							+ '-id="'
 							+ model.id
 							+ '" style="display:none;"><code> - Less..</code></a></span>');
 		}
+		newObjArr.unshift('<div data-id="groupsDiv">');
+		newObjArr.push('</div>');
 		return newObjArr.length ? newObjArr.join(' ') : '--';
 
 	};
