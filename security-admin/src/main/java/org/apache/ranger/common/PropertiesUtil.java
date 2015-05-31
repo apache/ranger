@@ -222,4 +222,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	}
 	return Boolean.parseBoolean(value);
     }
+	public static Map<String, String> getPropertiesMap() {
+		return propertiesMap;
+	}
 }

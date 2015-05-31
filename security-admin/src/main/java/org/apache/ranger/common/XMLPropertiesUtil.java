@@ -84,7 +84,7 @@ public class XMLPropertiesUtil extends DefaultPropertiesPersister {
 					properties.put(propertyName, propertyValue);
 
 				}
-				logger.info("ranger site properties loaded successfully.");
+				//logger.info("ranger site properties loaded successfully.");
 			}
 		} catch (Exception e) {
 			logger.error("Error loading : ", e);

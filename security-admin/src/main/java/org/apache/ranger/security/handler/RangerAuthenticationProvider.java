@@ -19,7 +19,6 @@
 
 package org.apache.ranger.security.handler;
 
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -288,27 +287,20 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			DefaultJaasAuthenticationProvider jaasAuthenticationProvider = new DefaultJaasAuthenticationProvider();
 			String loginModuleName = "org.apache.ranger.authentication.unix.jaas.RemoteUnixLoginModule";
 			LoginModuleControlFlag controlFlag = LoginModuleControlFlag.REQUIRED;
-			Map<String, String> options = (Map<String, String>) new HashMap<String, String>();
-			options.put("configFile", "ranger-admin-site.xml");
+			Map<String, String> options = PropertiesUtil.getPropertiesMap();
 			AppConfigurationEntry appConfigurationEntry = new AppConfigurationEntry(
 					loginModuleName, controlFlag, options);
 			AppConfigurationEntry[] appConfigurationEntries = new AppConfigurationEntry[] { appConfigurationEntry };
-			Map<String, AppConfigurationEntry[]> appConfigurationEntriesOptions = (Map<String, AppConfigurationEntry[]>) new HashMap<String, AppConfigurationEntry[]>();
+			Map<String, AppConfigurationEntry[]> appConfigurationEntriesOptions = new HashMap<String, AppConfigurationEntry[]>();
 			appConfigurationEntriesOptions.put("SPRINGSECURITY",
 					appConfigurationEntries);
 			Configuration configuration = new InMemoryConfiguration(
 					appConfigurationEntriesOptions);
-
 			jaasAuthenticationProvider.setConfiguration(configuration);
-
 			RoleUserAuthorityGranter authorityGranter = new RoleUserAuthorityGranter();
-
-			authorityGranter.grant((Principal) authentication.getPrincipal());
-
 			RoleUserAuthorityGranter[] authorityGranters = new RoleUserAuthorityGranter[] { authorityGranter };
-
 			jaasAuthenticationProvider.setAuthorityGranters(authorityGranters);
-
+			jaasAuthenticationProvider.afterPropertiesSet();
 			String userName = authentication.getName();
 			String userPassword = "";
 			if (authentication.getCredentials() != null) {
