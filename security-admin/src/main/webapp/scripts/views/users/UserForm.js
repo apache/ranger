@@ -98,7 +98,13 @@ define(function(require){
 				userRoleList : {
 					type : 'Select',
 					options : function(callback, editor){
-						var userTypes = _.filter(XAEnums.UserRoles,function(m){return m.label != 'Unknown'});
+
+						var userTypes = _.filter(XAEnums.UserRoles,function(m){
+							if(!SessionMgr.isKeyAdmin())
+								return m.label != 'Unknown'	&& m.label != 'KeyAdmin';
+							else
+								return m.label != 'Unknown'
+						});
 						var nvPairs = XAUtils.enumToSelectPairs(userTypes);
 						callback(nvPairs);
 					},
@@ -141,7 +147,9 @@ define(function(require){
 						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN')){
 							this.fields.userRoleList.editor.$el.attr('disabled',false);
 						}else{
-							this.fields.userRoleList.editor.$el.attr('disabled',true);
+							if(!SessionMgr.isKeyAdmin()){
+								this.fields.userRoleList.editor.$el.attr('disabled',true);
+							}
 						}
 					}else{
 						this.fields.userRoleList.editor.$el.attr('disabled',true);

@@ -637,7 +637,7 @@ public class UserMgr {
 		}
 
 		// Admin
-		if (sess.isUserAdmin()
+		if (sess.isUserAdmin() || sess.isKeyAdmin()
 				|| sess.getXXPortalUser().getId().equals(user.getId())) {
 			userProfile.setLoginId(user.getLoginId());
 			userProfile.setStatus(user.getStatus());
@@ -661,7 +661,7 @@ public class UserMgr {
 			}
 		}
 
-		if (sess.isUserAdmin()
+		if (sess.isUserAdmin() || sess.isKeyAdmin()
 				|| sess.getXXPortalUser().getId().equals(user.getId())) {
 			userProfile.setId(user.getId());
 			List<XXUserPermission> xUserPermissions = daoManager
@@ -1009,7 +1009,7 @@ public class UserMgr {
 				return null;
 			}
 			// Admin
-			if (!sess.isUserAdmin()) {
+			if (!sess.isUserAdmin() && !sess.isKeyAdmin()) {
 				logger.error(
 						"SECURITY WARNING: User trying to add non public role. userId="
 								+ userId + ", role=" + userRole + ", session="
@@ -1063,7 +1063,7 @@ public class UserMgr {
 		if (sess != null) {
 
 			// Admin
-			if (sess != null && sess.isUserAdmin()) {
+			if (sess != null && sess.isUserAdmin() || sess.isKeyAdmin()) {
 				return;
 			}
 

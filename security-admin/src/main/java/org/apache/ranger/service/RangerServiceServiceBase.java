@@ -32,6 +32,7 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerServiceList;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,15 +99,42 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 
 	@SuppressWarnings("unchecked")
 	public RangerServiceList searchRangerServices(SearchFilter searchFilter) {
-		List<RangerService> serviceList = new ArrayList<RangerService>();
 		RangerServiceList retList = new RangerServiceList();
 
+		int startIndex = searchFilter.getStartIndex();
+		int pageSize = searchFilter.getMaxRows();
+		searchFilter.setStartIndex(0);
+		searchFilter.setMaxRows(Integer.MAX_VALUE);
+
 		List<XXService> xSvcList = (List<XXService>) searchResources(searchFilter, searchFields, sortFields, retList);
+		List<XXService> permittedServices = new ArrayList<XXService>();
+
 		for (XXService xSvc : xSvcList) {
-			serviceList.add(populateViewBean((T) xSvc));
+			if(bizUtil.hasAccess(xSvc, null)){
+				permittedServices.add(xSvc);
+			}
 		}
-		retList.setServices(serviceList);
+
+		if(permittedServices.size() > 0) {
+			populatePageList(permittedServices, startIndex, pageSize, retList);
+		}
+
 		return retList;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void populatePageList(List<XXService> xxObjList, int startIndex, int pageSize,
+			RangerServiceList retList) {
+		List<RangerService> onePageList = new ArrayList<RangerService>();
+
+		for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
+			onePageList.add(populateViewBean((T)xxObjList.get(i)));
+		}
+		retList.setServices(onePageList);
+		retList.setStartIndex(startIndex);
+		retList.setPageSize(pageSize);
+		retList.setResultSize(onePageList.size());
+		retList.setTotalCount(xxObjList.size());
 	}
 
 }

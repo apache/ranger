@@ -531,9 +531,8 @@ public class SearchUtil {
 						&& (((Collection) paramValue).size()) >=1) {
 					whereClause.append(" and ")
 							.append(searchField.getFieldName())
-							.append(" in ( :")
-							.append(searchField.getClientFieldName())
-							.append(")");
+							.append(" in :")
+							.append(searchField.getClientFieldName());
 				}
 			}
 			else if (searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {

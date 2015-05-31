@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -42,6 +43,7 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.common.view.VList;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
@@ -49,17 +51,28 @@ import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceBase;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.RangerBaseModelObject;
+import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.AbstractBaseResourceService;
+import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.VXDataObject;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXStringList;
+import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.sun.xml.internal.rngom.xml.sax.XmlBaseHandler;
 
 @Component
 public class RangerBizUtil {
@@ -1371,6 +1384,135 @@ public class RangerBizUtil {
 
 	public void setAuditDBType(String auditDBType) {
 		this.auditDBType = auditDBType;
+	}
+
+	/**
+	 * return true id current logged in session is owned by keyadmin
+	 *
+	 * @return
+	 */
+	public boolean isKeyAdmin() {
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		if (currentUserSession == null) {
+			logger.debug("Unable to find session.");
+			return false;
+		}
+
+		if (currentUserSession.isKeyAdmin()) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * @param xxDbBase
+	 * @param baseModel
+	 * @return Boolean
+	 *
+	 * @NOTE: Kindly check all the references of this function before making any changes
+	 */
+	public Boolean hasAccess(XXDBBase xxDbBase, RangerBaseModelObject baseModel) {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session == null) {
+			logger.info("User session not found, granting access.");
+			return true;
+		}
+
+		boolean isKeyAdmin = session.isKeyAdmin();
+		boolean isSysAdmin = session.isUserAdmin();
+		boolean isUser = false;
+
+		List<String> roleList = session.getUserRoleList();
+		if (roleList.contains(RangerConstants.ROLE_USER)) {
+			isUser = true;
+		}
+
+		if (xxDbBase != null && xxDbBase instanceof XXServiceDef) {
+			XXServiceDef xServiceDef = (XXServiceDef) xxDbBase;
+			String implClass = xServiceDef.getImplclassname();
+			if (implClass == null) {
+				return false;
+			}
+
+			if (isKeyAdmin && implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				return true;
+			} else if ((isSysAdmin || isUser) && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				return true;
+			}
+		}
+
+		if (xxDbBase != null && xxDbBase instanceof XXService) {
+
+			// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
+			// services including KMS
+			if (isSysAdmin) {
+				return true;
+			}
+
+			XXService xService = (XXService) xxDbBase;
+			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+			String implClass = xServiceDef.getImplclassname();
+			if (implClass == null) {
+				return false;
+			}
+
+			if (isKeyAdmin && implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				return true;
+			} else if (isUser && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				return true;
+			}
+			// else if ((isSysAdmin || isUser) && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+			// return true;
+			// }
+		}
+		return false;
+	}
+
+	public void hasAdminPermissions(String objType) {
+
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+
+		if (session == null) {
+			throw restErrorUtil.createRESTException("UserSession cannot be null, only Admin can create/update/delete "
+					+ objType, MessageEnums.OPER_NO_PERMISSION);
+		}
+
+		if (!session.isKeyAdmin() && !session.isUserAdmin()) {
+			throw restErrorUtil.createRESTException(
+					"User is not allowed to update service-def, only Admin can create/update/delete " + objType,
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+	}
+
+	public void hasKMSPermissions(String objType, String implClassName) {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+
+		if (session.isKeyAdmin() && !implClassName.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+			throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType,
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+
+		// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
+		// services including KMS
+
+		if (objType.equalsIgnoreCase("Service-Def") && session.isUserAdmin() && implClassName.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+			throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType,
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+	}
+
+	public boolean checkUserAccessible(VXUser vXUser) {
+		if(isKeyAdmin() && vXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN)) {
+			throw restErrorUtil.createRESTException("Logged in user is not allowd to create/update user",
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+
+		if(isAdmin() && vXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN)) {
+			throw restErrorUtil.createRESTException("Logged in user is not allowd to create/update user",
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+
+		return true;
 	}
 
 }

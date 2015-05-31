@@ -160,30 +160,39 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 	}
 	@Override
 	public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
-		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
+		//List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
 		RangerServiceDefList retList = new RangerServiceDefList();
-
+		int startIndex = searchFilter.getStartIndex();
+		int pageSize = searchFilter.getMaxRows();
+		searchFilter.setStartIndex(0);
+		searchFilter.setMaxRows(Integer.MAX_VALUE);
 		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields, retList);
 		UserSessionBase sessionBase = ContextUtil.getCurrentUserSession();
-		List<String> userRoleList = (sessionBase != null) ? sessionBase.getUserRoleList() : null;
-
+		//List<String> userRoleList = (sessionBase != null) ? sessionBase.getUserRoleList() : null;
+		List<XXServiceDef> permittedServiceDefs = new ArrayList<XXServiceDef>();
 		for (XXServiceDef xSvcDef : xSvcDefList) {
-			if(userRoleList != null && !userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-				if(xSvcDef!=null && !"KMS".equalsIgnoreCase(xSvcDef.getName())){
-					serviceDefList.add(populateViewBean(xSvcDef));
-				}
-			}
-			else if(userRoleList != null && userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-				if(xSvcDef!=null && "KMS".equalsIgnoreCase(xSvcDef.getName())){
-					serviceDefList.add(populateViewBean(xSvcDef));
-					break;
-				}
+			if(bizUtil.hasAccess(xSvcDef, null)){
+				permittedServiceDefs.add(xSvcDef);
 			}
 		}
-		retList.setServiceDefs(serviceDefList);
-
+		//retList.setServiceDefs(serviceDefList);
+		if(permittedServiceDefs.size() > 0) {
+			populatePageList(permittedServiceDefs, startIndex, pageSize, retList);
+		}
 		return retList;
 	}
 
+	private void populatePageList(List<XXServiceDef> xxObjList, int startIndex, int pageSize,
+			RangerServiceDefList retList) {
+		List<RangerServiceDef> onePageList = new ArrayList<RangerServiceDef>();
 
+		for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
+			onePageList.add(populateViewBean(xxObjList.get(i)));
+		}
+		retList.setServiceDefs(onePageList);
+		retList.setStartIndex(startIndex);
+		retList.setPageSize(pageSize);
+		retList.setResultSize(onePageList.size());
+		retList.setTotalCount(xxObjList.size());
+	}
 }

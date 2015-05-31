@@ -656,6 +656,7 @@ public class ServiceDBStore implements ServiceStore {
 				XXContextEnricherDef xContext = new XXContextEnricherDef();
 				xContext = serviceDefService.populateRangerContextEnricherDefToXX(context, xContext, createdSvcDef,
 						RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+				xContext = xxContextEnricherDao.create(xContext);
 				context = serviceDefService.populateXXToRangerContextEnricherDef(xContext);
 			}
 		}
@@ -754,9 +755,23 @@ public class ServiceDBStore implements ServiceStore {
 			}
 		}
 	}
-	
+
 	@Override
 	public void deleteServiceDef(Long serviceDefId) throws Exception {
+
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session == null) {
+			throw restErrorUtil.createRESTException(
+					"UserSession cannot be null, only Admin can update service-def",
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+
+		if (!session.isKeyAdmin() && !session.isUserAdmin()) {
+			throw restErrorUtil.createRESTException(
+					"User is not allowed to update service-def, only Admin can update service-def",
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+
 		deleteServiceDef(serviceDefId, false);
 	}
 
@@ -847,7 +862,7 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("<== ServiceDefDBStore.deleteServiceDef(" + serviceDefId + ")");
 		}
 	}
-	
+
 	public void deleteXXAccessTypeDef(XXAccessTypeDef xAccess) {
 		List<XXAccessTypeDefGrants> atdGrantsList = daoMgr.getXXAccessTypeDefGrants().findByATDId(xAccess.getId());
 
@@ -865,7 +880,7 @@ public class ServiceDBStore implements ServiceStore {
 	public void deleteXXResourceDef(XXResourceDef xRes) {
 
 		List<XXResourceDef> xChildObjs = daoMgr.getXXResourceDef().findByParentResId(xRes.getId());
-		for(XXResourceDef childRes : xChildObjs) {			
+		for(XXResourceDef childRes : xChildObjs) {
 			deleteXXResourceDef(childRes);
 		}
 
@@ -891,10 +906,8 @@ public class ServiceDBStore implements ServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDefDBStore.getServiceDef(" + id + ")");
 		}
-		
-		RangerServiceDef ret = null;
 
-		ret = serviceDefService.read(id);
+		RangerServiceDef ret = serviceDefService.read(id);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.getServiceDef(" + id + "): " + ret);
 		}
@@ -907,9 +920,9 @@ public class ServiceDBStore implements ServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDefDBStore.getServiceDefByName(" + name + ")");
 		}
-		
+
 		RangerServiceDef ret = null;
-		
+
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(name);
 
 		if(xServiceDef != null) {
@@ -965,134 +978,11 @@ public class ServiceDBStore implements ServiceStore {
 		}
 
 		if (service == null) {
-			throw restErrorUtil.createRESTException(
-					"Service object cannot be null.",
+			throw restErrorUtil.createRESTException("Service object cannot be null.",
 					MessageEnums.ERROR_CREATING_OBJECT);
 		}
 
 		boolean createDefaultPolicy = true;
-		boolean isAllowed=false;
-
-		UserSessionBase usb = ContextUtil.getCurrentUserSession();
-
-		List<String> userRoleList = usb == null ? null : usb.getUserRoleList();
-		if (userRoleList != null && userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
-			if ("KMS".equalsIgnoreCase(service.getType())) {
-				isAllowed = true;
-			}
-		}
-		if (usb != null && usb.isUserAdmin() || populateExistingBaseFields) {
-			isAllowed = true;
-		}
-
-		if (isAllowed) {
-			Map<String, String> configs = service.getConfigs();
-			Map<String, String> validConfigs = validateRequiredConfigParams(
-					service, configs);
-			if (validConfigs == null) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("==> ConfigParams cannot be null, ServiceDefDBStore.createService(" + service + ")");
-				}
-				throw restErrorUtil.createRESTException(
-						"ConfigParams cannot be null.",
-						MessageEnums.ERROR_CREATING_OBJECT);
-			}
-
-			// While creating, value of version should be 1.
-			service.setVersion(new Long(1));
-			
-			if(populateExistingBaseFields) {
-				svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
-				service = svcServiceWithAssignedId.create(service);
-				svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
-				createDefaultPolicy = false;
-			} else {
-				service = svcService.create(service);
-			}
-			XXService xCreatedService = daoMgr.getXXService().getById(service.getId());
-			VXUser vXUser = null;
-
-			XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
-			for (Entry<String, String> configMap : validConfigs.entrySet()) {
-				String configKey = configMap.getKey();
-				String configValue = configMap.getValue();
-
-				if(StringUtils.equalsIgnoreCase(configKey, "username")) {
-					String userName = stringUtil.getValidUserName(configValue);
-					XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
-					if (xxUser != null) {
-						vXUser = xUserService.populateViewBean(xxUser);
-					} else {
-						vXUser = new VXUser();
-						vXUser.setName(userName);
-						vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
-						vXUser = xUserMgr.createXUser(vXUser);
-					}
-				}
-
-				if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
-					String encryptedPwd = PasswordUtils.encryptPassword(configValue);
-					String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
-
-					if (StringUtils.equals(decryptedPwd, configValue)) {
-						configValue = encryptedPwd;
-					}
-				}
-
-				XXServiceConfigMap xConfMap = new XXServiceConfigMap();
-				xConfMap = (XXServiceConfigMap) rangerAuditFields.populateAuditFields(xConfMap, xCreatedService);
-				xConfMap.setServiceId(xCreatedService.getId());
-				xConfMap.setConfigkey(configKey);
-				xConfMap.setConfigvalue(configValue);
-				xConfMap = xConfMapDao.create(xConfMap);
-			}
-			RangerService createdService = svcService.getPopulatedViewObject(xCreatedService);
-			dataHistService.createObjectDataHistory(createdService, RangerDataHistService.ACTION_CREATE);
-			
-			List<XXTrxLog> trxLogList = svcService.getTransactionLog(createdService, RangerServiceService.OPERATION_CREATE_CONTEXT);
-			bizUtil.createTrxLog(trxLogList);
-
-			if (createDefaultPolicy) {
-				createDefaultPolicy(xCreatedService, vXUser);
-			}
-
-			return createdService;
-		} else {
-			LOG.debug("Logged in user doesn't have admin access to create repository.");
-			throw restErrorUtil.createRESTException(
-							"Sorry, you don't have permission to perform the operation",
-							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-
-		}
-	}
-
-	@Override
-	public RangerService updateService(RangerService service) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.updateService()");
-		}
-			
-		XXService existing = daoMgr.getXXService().getById(service.getId());
-
-		if(existing == null) {
-			throw restErrorUtil.createRESTException(
-					"no service exists with ID=" + service.getId(),
-					MessageEnums.DATA_NOT_FOUND);
-		}
-		
-		String existingName = existing.getName();
-
-		boolean renamed = !StringUtils.equalsIgnoreCase(service.getName(), existingName);
-		
-		if(renamed) {
-			XXService newNameService = daoMgr.getXXService().findByName(service.getName());
-
-			if(newNameService != null) {
-				throw restErrorUtil.createRESTException("another service already exists with name '"
-						+ service.getName() + "'. ID=" + newNameService.getId(), MessageEnums.DATA_NOT_UPDATABLE);
-			}
-		}
-		
 		Map<String, String> configs = service.getConfigs();
 		Map<String, String> validConfigs = validateRequiredConfigParams(service, configs);
 		if (validConfigs == null) {
@@ -1101,9 +991,114 @@ public class ServiceDBStore implements ServiceStore {
 			}
 			throw restErrorUtil.createRESTException("ConfigParams cannot be null.", MessageEnums.ERROR_CREATING_OBJECT);
 		}
-		
+
+		// While creating, value of version should be 1.
+		service.setVersion(new Long(1));
+
+		if (populateExistingBaseFields) {
+			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
+			service = svcServiceWithAssignedId.create(service);
+			svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
+			createDefaultPolicy = false;
+		} else {
+			service = svcService.create(service);
+		}
+		XXService xCreatedService = daoMgr.getXXService().getById(service.getId());
+		VXUser vXUser = null;
+
+		XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
+		for (Entry<String, String> configMap : validConfigs.entrySet()) {
+			String configKey = configMap.getKey();
+			String configValue = configMap.getValue();
+
+			if (StringUtils.equalsIgnoreCase(configKey, "username")) {
+				String userName = stringUtil.getValidUserName(configValue);
+				XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+				if (xxUser != null) {
+					vXUser = xUserService.populateViewBean(xxUser);
+				} else {
+					vXUser = new VXUser();
+					vXUser.setName(userName);
+					vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+
+					UserSessionBase usb = ContextUtil.getCurrentUserSession();
+					if (usb != null && !usb.isUserAdmin()) {
+						throw restErrorUtil.createRESTException("User does not exist with given username: ["
+								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
+					}
+					vXUser = xUserMgr.createXUser(vXUser);
+				}
+			}
+
+			if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
+				String encryptedPwd = PasswordUtils.encryptPassword(configValue);
+				String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+
+				if (StringUtils.equals(decryptedPwd, configValue)) {
+					configValue = encryptedPwd;
+				}
+			}
+
+			XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+			xConfMap = (XXServiceConfigMap) rangerAuditFields.populateAuditFields(xConfMap, xCreatedService);
+			xConfMap.setServiceId(xCreatedService.getId());
+			xConfMap.setConfigkey(configKey);
+			xConfMap.setConfigvalue(configValue);
+			xConfMap = xConfMapDao.create(xConfMap);
+		}
+		RangerService createdService = svcService.getPopulatedViewObject(xCreatedService);
+		dataHistService.createObjectDataHistory(createdService, RangerDataHistService.ACTION_CREATE);
+
+		List<XXTrxLog> trxLogList = svcService.getTransactionLog(createdService,
+				RangerServiceService.OPERATION_CREATE_CONTEXT);
+		bizUtil.createTrxLog(trxLogList);
+
+		if (createDefaultPolicy) {
+			createDefaultPolicy(xCreatedService, vXUser);
+		}
+
+		return createdService;
+
+	}
+
+	@Override
+	public RangerService updateService(RangerService service) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.updateService()");
+		}
+
+		XXService existing = daoMgr.getXXService().getById(service.getId());
+
+		if(existing == null) {
+			throw restErrorUtil.createRESTException(
+					"no service exists with ID=" + service.getId(),
+					MessageEnums.DATA_NOT_FOUND);
+		}
+
+		String existingName = existing.getName();
+
+		boolean renamed = !StringUtils.equalsIgnoreCase(service.getName(), existingName);
+
+		if(renamed) {
+			XXService newNameService = daoMgr.getXXService().findByName(service.getName());
+
+			if(newNameService != null) {
+				throw restErrorUtil.createRESTException("another service already exists with name '"
+						+ service.getName() + "'. ID=" + newNameService.getId(), MessageEnums.DATA_NOT_UPDATABLE);
+			}
+		}
+
+		Map<String, String> configs = service.getConfigs();
+		Map<String, String> validConfigs = validateRequiredConfigParams(service, configs);
+		if (validConfigs == null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> ConfigParams cannot be null, ServiceDefDBStore.createService(" + service + ")");
+			}
+			throw restErrorUtil.createRESTException("ConfigParams cannot be null.", MessageEnums.ERROR_CREATING_OBJECT);
+		}
+
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
-	
+
 		Long version = service.getVersion();
 		if(version == null) {
 			version = new Long(1);
@@ -1123,9 +1118,9 @@ public class ServiceDBStore implements ServiceStore {
 		}
 
 		XXService xUpdService = daoMgr.getXXService().getById(service.getId());
-		
+
 		String oldPassword = null;
-		
+
 		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
 		for(XXServiceConfigMap dbConfigMap : dbConfigMaps) {
 			if(StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), CONFIG_KEY_PASSWORD)) {
@@ -1133,13 +1128,13 @@ public class ServiceDBStore implements ServiceStore {
 			}
 			daoMgr.getXXServiceConfigMap().remove(dbConfigMap);
 		}
-		
+
 		VXUser vXUser = null;
 		XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
 		for (Entry<String, String> configMap : validConfigs.entrySet()) {
 			String configKey = configMap.getKey();
 			String configValue = configMap.getValue();
-			
+
 			if(StringUtils.equalsIgnoreCase(configKey, "username")) {
 				String userName = stringUtil.getValidUserName(configValue);
 				XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
@@ -1149,6 +1144,11 @@ public class ServiceDBStore implements ServiceStore {
 					vXUser = new VXUser();
 					vXUser.setName(userName);
 					vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+					UserSessionBase usb = ContextUtil.getCurrentUserSession();
+					if (usb != null && !usb.isUserAdmin()) {
+						throw restErrorUtil.createRESTException("User does not exist with given username: ["
+								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
+					}
 					vXUser = xUserMgr.createXUser(vXUser);
 				}
 			}
@@ -1192,19 +1192,19 @@ public class ServiceDBStore implements ServiceStore {
 		if(service == null) {
 			throw new Exception("no service exists with ID=" + id);
 		}
-		
+
 		List<XXPolicy> policies = daoMgr.getXXPolicy().findByServiceId(service.getId());
 		for(XXPolicy policy : policies) {
 			LOG.info("Deleting Policy, policyName: " + policy.getName());
 			deletePolicy(policy.getId());
 		}
-		
+
 		XXServiceConfigMapDao configDao = daoMgr.getXXServiceConfigMap();
 		List<XXServiceConfigMap> configs = configDao.findByServiceId(service.getId());
 		for (XXServiceConfigMap configMap : configs) {
 			configDao.remove(configMap);
 		}
-		
+
 		Long version = service.getVersion();
 		if(version == null) {
 			version = new Long(1);
@@ -1213,11 +1213,11 @@ public class ServiceDBStore implements ServiceStore {
 			version = new Long(version.longValue() + 1);
 		}
 		service.setVersion(version);
-		
+
 		svcService.delete(service);
-		
+
 		dataHistService.createObjectDataHistory(service, RangerDataHistService.ACTION_DELETE);
-		
+
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
 		bizUtil.createTrxLog(trxLogList);
 	}
@@ -1240,7 +1240,24 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getService()");
 		}
-		return svcService.read(id);
+
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session == null) {
+			throw restErrorUtil.createRESTException("UserSession cannot be null.",
+					MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+		}
+
+		XXService xService = daoMgr.getXXService().getById(id);
+
+		// TODO: As of now we are allowing SYS_ADMIN to read all the
+		// services including KMS
+
+		if (!bizUtil.hasAccess(xService, null)) {
+			throw restErrorUtil.createRESTException("Logged in user is not allowed to read service, id: " + id,
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+
+		return svcService.getPopulatedViewObject(xService);
 	}
 
 	@Override
@@ -1249,6 +1266,20 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDBStore.getServiceByName()");
 		}
 		XXService xService = daoMgr.getXXService().findByName(name);
+
+		// TODO: As of now we are allowing SYS_ADMIN to read all the
+		// services including KMS
+
+		if (ContextUtil.getCurrentUserSession() != null) {
+			if (xService == null) {
+				return null;
+			}
+			if (!bizUtil.hasAccess(xService, null)) {
+				throw restErrorUtil.createRESTException("Logged in user is not allowed to read service, name: " + name,
+						MessageEnums.OPER_NO_PERMISSION);
+			}
+		}
+
 		return xService == null ? null : svcService.getPopulatedViewObject(xService);
 	}
 
@@ -1291,7 +1322,7 @@ public class ServiceDBStore implements ServiceStore {
 	public RangerPolicy createPolicy(RangerPolicy policy) throws Exception {
 
 		RangerService service = getServiceByName(policy.getService());
-		
+
 		if(service == null) {
 			throw new Exception("service does not exist - name=" + policy.getService());
 		}
@@ -1350,7 +1381,7 @@ public class ServiceDBStore implements ServiceStore {
 		}
 
 		RangerService service = getServiceByName(policy.getService());
-		
+
 		if(service == null) {
 			throw new Exception("service does not exist - name=" + policy.getService());
 		}
@@ -1365,7 +1396,7 @@ public class ServiceDBStore implements ServiceStore {
 			throw new Exception("policy id=" + policy.getId() + " already exists in service " + existing.getService() + ". It can not be moved to service " + policy.getService());
 		}
 		boolean renamed = !StringUtils.equalsIgnoreCase(policy.getName(), existing.getName());
-		
+
 		if(renamed) {
 			XXPolicy newNamePolicy = daoMgr.getXXPolicy().findByNameAndServiceId(policy.getName(), service.getId());
 
@@ -1471,7 +1502,7 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getPolicies()");
 		}
-		
+
 		return ret;
 	}
 
@@ -1481,7 +1512,7 @@ public class ServiceDBStore implements ServiceStore {
 		}
 
 		RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
-		
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("before filter: count=" + policyList.getListSize());
 		}
@@ -1502,13 +1533,13 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceId + ")");
 		}
-		
-		RangerService service = getService(serviceId);
 
-		if(service == null) {
+		XXService service = daoMgr.getXXService().getById(serviceId);
+
+		if (service == null) {
 			throw new Exception("service does not exist - id='" + serviceId);
 		}
-		
+
 		List<RangerPolicy> ret = getServicePolicies(service.getName(), filter);
 
 		return ret;
@@ -1519,7 +1550,7 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceId + ")");
 		}
 
-		RangerService service = getService(serviceId);
+		XXService service = daoMgr.getXXService().getById(serviceId);
 
 		if (service == null) {
 			throw new Exception("service does not exist - id='" + serviceId);
@@ -1626,7 +1657,7 @@ public class ServiceDBStore implements ServiceStore {
 
 		return ret;
 	}
-	
+
 	private void createDefaultPolicy(XXService createdService, VXUser vXUser) throws Exception {
 		RangerPolicy policy = new RangerPolicy();
 		String policyName=createdService.getName()+"-"+1+"-"+DateUtil.dateToString(DateUtil.getUTCDate(),"yyyyMMddHHmmss");
@@ -1721,7 +1752,7 @@ public class ServiceDBStore implements ServiceStore {
 		}
 		return validConfigs;
 	}
-	
+
 	private void handlePolicyUpdate(RangerService service) throws Exception {
 		updatePolicyVersion(service);
 	}

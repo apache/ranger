@@ -103,7 +103,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				"XXPortalUser xXPortalUser", "xXPortalUser.loginId = obj.name "));
 		
 		searchFields.add(new SearchField("userRoleList", "xXPortalUserRole.userRole",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL,
+				SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL,
 				"XXPortalUser xXPortalUser, XXPortalUserRole xXPortalUserRole", 
 				"xXPortalUser.id=xXPortalUserRole.userId and xXPortalUser.loginId = obj.name "));
 		
@@ -113,6 +113,10 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 		searchFields.add(new SearchField("status", "xXPortalUser.status",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,
 				"XXPortalUser xXPortalUser", "xXPortalUser.loginId = obj.name "));
+		searchFields.add(new SearchField("userRole", "xXPortalUserRole.userRole",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL,
+				"XXPortalUser xXPortalUser, XXPortalUserRole xXPortalUserRole",
+				"xXPortalUser.id=xXPortalUserRole.userId and xXPortalUser.loginId = obj.name "));
 
 		
 		createdByUserId = new Long(PropertiesUtil.getIntProperty("ranger.xuser.createdByUserId", 1));

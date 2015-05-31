@@ -27,6 +27,7 @@ define(function(require){
 	var XAUtil			= require('utils/XAUtils');
 	var XABackgrid		= require('views/common/XABackgrid');
 	var localization	= require('utils/XALangSupport');
+	var SessionMgr  	= require('mgrs/SessionMgr');
 
 	var VXGroupList		= require('collections/VXGroupList');
 	var VXGroup			= require('models/VXGroup');
@@ -61,7 +62,8 @@ define(function(require){
     		btnShowHide		: '[data-action="showHide"]',
 			visibilityDropdown		: '[data-id="visibilityDropdown"]',
 			activeStatusDropdown		: '[data-id="activeStatusDropdown"]',
-			activeStatusDiv		:'[data-id="activeStatusDiv"]'
+			activeStatusDiv		:'[data-id="activeStatusDiv"]',
+			addNewBtnDiv	: '[data-id="addNewBtnDiv"]'
     	},
 
 		/** ui events hash */
@@ -203,8 +205,10 @@ define(function(require){
 			}	
 			this.collection.selectNone();
 			this.renderUserListTable();
+			_.extend(this.collection.queryParams, XAUtil.getUserDataParams())
 			this.collection.fetch({
-				cache:true
+				cache:true,
+//				data : XAUtil.getUserDataParams(),
 			}).done(function(){
 				if(!_.isString(that.ui.addNewGroup)){
 					that.ui.addNewGroup.hide();
@@ -212,6 +216,7 @@ define(function(require){
 					that.ui.activeStatusDiv.show();
 				}
 				that.$('.wrap-header').text('User List');
+				that.checkRoleKeyAdmin();
 			});
 		},
 		renderGroupTab : function(){
@@ -230,6 +235,7 @@ define(function(require){
 				that.$('.wrap-header').text('Group List');
 				that.$('ul').find('[data-js="groups"]').addClass('active');
 				that.$('ul').find('[data-js="users"]').removeClass();
+				that.checkRoleKeyAdmin();
 			});
 		},
 		renderUserListTable : function(){
@@ -472,7 +478,7 @@ define(function(require){
 				var userRoleList = _.map(XAEnums.UserRoles,function(obj,key){return {label:obj.label,value:key};});
 				serverAttrName  = [	{text : "User Name", label :"name"},
 									{text : "Email Address", label :"emailAddress"},
-				                   {text : "Role", label :"userRoleList", 'multiple' : true, 'optionsArr' : userRoleList},
+				                   {text : "Role", label :"userRole", 'multiple' : true, 'optionsArr' : userRoleList},
 				                   	{text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus)},
 				                   {text : "User Source", label :"userSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.UserTypes)},
 				                   {text : "User Status", label :"status", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.ActiveStatus)},
@@ -539,6 +545,11 @@ define(function(require){
 			$('[data-id="showLess"][policy-group-id="'+id+'"]').hide();
 			$('[data-id="showMore"][policy-group-id="'+id+'"]').show();
 			$('[data-id="showMore"][policy-group-id="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups')
+		},
+		checkRoleKeyAdmin : function() {
+			if(SessionMgr.isKeyAdmin()){
+				this.ui.addNewBtnDiv.children().hide()
+			}
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){

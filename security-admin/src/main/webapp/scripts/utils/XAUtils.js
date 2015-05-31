@@ -1080,6 +1080,18 @@ define(function(require) {
 				//If a user doesnot has access to any tab - taking user to by default Profile page.
 			   location.hash = XALinks.get('UserProfile').href;
 		   }
-	}
+	};
+	XAUtils.getUserDataParams = function(){
+		var SessionMgr  = require('mgrs/SessionMgr');
+		var userRoleList = []
+		_.each(XAEnums.UserRoles,function(val, key){
+			if(SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_SYS_ADMIN.value != val.value){
+				userRoleList.push(key)
+			}else if(!SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value != val.value){
+				userRoleList.push(key)
+			}
+		})
+		return {'userRoleList' : userRoleList };
+	};
 	return XAUtils;
 });

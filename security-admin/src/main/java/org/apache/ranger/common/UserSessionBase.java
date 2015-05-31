@@ -33,6 +33,7 @@ public class UserSessionBase implements Serializable {
 	XXPortalUser xXPortalUser;
 	XXAuthSession xXAuthSession;
 	private boolean userAdmin;
+	private boolean keyAdmin = false;
 	private int authProvider = RangerConstants.USER_APP;
 	private List<String> userRoleList = new ArrayList<String>();
 	int clientTimeOffsetInMinute = 0;
@@ -110,6 +111,14 @@ public class UserSessionBase implements Serializable {
 
 	public void setClientTimeOffsetInMinute(int clientTimeOffsetInMinute) {
 		this.clientTimeOffsetInMinute = clientTimeOffsetInMinute;
+	}
+
+	public boolean isKeyAdmin() {
+		return keyAdmin;
+	}
+
+	public void setKeyAdmin(boolean keyAdmin) {
+		this.keyAdmin = keyAdmin;
 	}
 
 }

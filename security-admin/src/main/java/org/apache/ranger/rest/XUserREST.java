@@ -33,6 +33,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -134,6 +135,9 @@ public class XUserREST {
 	
 	@Autowired
 	AuthSessionService authSessionService;
+
+	@Autowired
+	RangerBizUtil bizUtil;
 
 	// Handle XGroup
 	@GET
@@ -263,6 +267,8 @@ public class XUserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXUser secureCreateXUser(VXUser vXUser) {
+
+		bizUtil.checkUserAccessible(vXUser);
 		return xUserMgr.createXUser(vXUser);
 	}
 
@@ -277,6 +283,8 @@ public class XUserREST {
 	@Path("/secure/users/{id}")
 	@Produces({ "application/xml", "application/json" })
 	public VXUser secureUpdateXUser(VXUser vXUser) {
+
+		bizUtil.checkUserAccessible(vXUser);
 		return xUserMgr.updateXUser(vXUser);
 	}
 
@@ -317,8 +325,9 @@ public class XUserREST {
 		searchUtil.extractInt(request, searchCriteria, "userSource", "User Source");
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
 		searchUtil.extractInt(request, searchCriteria, "status", "User Status");
-		searchUtil.extractString(request, searchCriteria, "userRoleList", "User Role",
+		searchUtil.extractStringList(request, searchCriteria, "userRoleList", "User Role List", "userRoleList", null,
 				null);
+		searchUtil.extractString(request, searchCriteria, "userRole", "UserRole", null);
 		return xUserMgr.searchXUsers(searchCriteria);
 	}
 

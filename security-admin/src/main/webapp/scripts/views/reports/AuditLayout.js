@@ -30,6 +30,7 @@ define(function(require) {
 	var XABackgrid		= require('views/common/XABackgrid');
 	var XATableLayout	= require('views/common/XATableLayout');
 	var localization	= require('utils/XALangSupport');
+	var SessionMgr 		= require('mgrs/SessionMgr');
 	
 	var VXAuthSession				= require('collections/VXAuthSessionList');
 	var VXTrxLogList   				= require('collections/VXTrxLogList');
@@ -731,6 +732,9 @@ define(function(require) {
 					var self = this;
 					var policyId = this.model.get('policyId');
 					var	serviceDef = that.serviceDefList.findWhere({'id':this.model.get('repoType')});
+					if(_.isUndefined(serviceDef)){
+						return ;
+					}
 					var eventTime = this.model.get('eventTime');
 
 					var policy = new RangerPolicy({
@@ -786,12 +790,19 @@ define(function(require) {
 								if(rawValue == -1){
 									return '--';
 								}	
-								var rangerService = new RangerService();
+								/*var rangerService = new RangerService();
 								rangerService.urlRoot += '/name/'+model.get('repoName'); 
 								rangerService.fetch({
 								  cache : false,
 								  async : false
-								});
+								});*/
+
+//								if (SessionMgr.isKeyAdmin()) {
+									var serviceDef = that.serviceDefList.findWhere({'id' : model.get('repoType')})
+									if(_.isUndefined(serviceDef)){
+										return rawValue;
+									}
+//								}
 								var href = 'javascript:void(0)';
 								return '<a href="'+href+'" title="'+rawValue+'">'+rawValue+'</a>';
 							}
@@ -831,17 +842,8 @@ define(function(require) {
 						editable:false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
-								var html='';
-								var repoType = model.get('repoType');
-								that.serviceDefList.each(function(m){
-									if(parseInt(repoType) == m.id){
-										rawValue = _.escape(rawValue);
-										html =  '<div title="'+rawValue+'">'+rawValue+'</div>\
-										<div title="'+rawValue+'" style="border-top: 1px solid #ddd;">'+_.escape(m.get('name'))+'</div>';
-										return ;
-									}	
-								});
-								return html;
+								return '<div title="'+rawValue+'">'+_.escape(rawValue)+'</div>\
+								<div title="'+model.get('serviceType')+'" style="border-top: 1px solid #ddd;">'+_.escape(model.get('serviceType'))+'</div>';;
 							}
 						})
 					},

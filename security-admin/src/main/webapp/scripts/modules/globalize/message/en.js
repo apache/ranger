@@ -226,7 +226,8 @@ define(function(require) {
 				addNewConfig					: 'Add New Configurations',
 				createService					: 'Create Service',
 				editService						: 'Edit Service',
-				serviceDetails					: 'Service Details'
+				serviceDetails					: 'Service Details',
+				serviceName						: 'Service Name'
 			},
 			btn : {
 				add							: 'Add',

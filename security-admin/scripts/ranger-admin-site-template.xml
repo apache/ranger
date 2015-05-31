@@ -49,7 +49,7 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.service.https.attrib.client.auth</name>
+		<name>ranger.service.https.attrib.clientAuth</name>
 		<value></value>
 	</property>
 	<property>
