@@ -33,6 +33,7 @@ import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConfigUtil;
@@ -1109,7 +1110,13 @@ public class UserMgr {
 	}
 
 	public String encrypt(String loginId, String password) {
-		String saltEncodedpasswd = sha256Encoder.encodePassword(password, loginId);
+		String sha256PasswordUpdateDisable=PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
+		String saltEncodedpasswd="";
+		if("false".equalsIgnoreCase(sha256PasswordUpdateDisable)){
+			saltEncodedpasswd = sha256Encoder.encodePassword(password, loginId);
+		}else{
+			saltEncodedpasswd = md5Encoder.encodePassword(password, loginId);
+		}
 		return saltEncodedpasswd;
 	}
 

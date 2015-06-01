@@ -436,4 +436,9 @@
 		<value>ranger.solr.password</value>
 		<description></description>
 	</property>
+	<property>
+		<name>ranger.sha256Password.update.disable</name>
+		<value>false</value>
+		<description></description>
+	</property>
 </configuration>

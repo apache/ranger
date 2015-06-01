@@ -82,6 +82,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 	@Override
 	public Authentication authenticate(Authentication authentication)
 			throws AuthenticationException {
+		String sha256PasswordUpdateDisable=PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
 		if(rangerAuthenticationMethod==null){
 			rangerAuthenticationMethod="NONE";
 		}
@@ -144,7 +145,9 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 					throw e;
 				}
 				if(authentication!=null && authentication.isAuthenticated()){
-					userMgr.updatePasswordInSHA256(userName,userPassword);
+					if("false".equalsIgnoreCase(sha256PasswordUpdateDisable)){
+						userMgr.updatePasswordInSHA256(userName,userPassword);
+					}
 					return authentication;
 				}else{
 					return authentication;
