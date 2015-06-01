@@ -33,6 +33,8 @@ import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAccessAudit;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -147,6 +149,13 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 		vObj.setSequenceNumber( mObj.getSequenceNumber());
 		vObj.setEventCount( mObj.getEventCount());
 		vObj.setEventDuration( mObj.getEventDuration());
+
+		XXService xService = daoManager.getXXService().findByName(mObj.getRepoName());
+		if (xService != null) {
+			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+			vObj.setServiceType(xServiceDef.getName());
+		}
+
 		return vObj;
 	}
 

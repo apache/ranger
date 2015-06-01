@@ -292,14 +292,15 @@ def init_variables(switch):
                 conf_dict['SQL_CONNECTOR_JAR'] = os.path.join(dir,filename)
 				
                     				
-    conf_dict['db_host']=os.getenv("RANGER_ADMIN_DB_HOST")
+    conf_dict['db_host']=os.getenv("RANGER_ADMIN_DB_HOST") + ":" + os.getenv("RANGER_ADMIN_DB_PORT")
     conf_dict['db_name']=os.getenv("RANGER_ADMIN_DB_DBNAME")
     conf_dict['db_user']=os.getenv("RANGER_ADMIN_DB_USERNAME")
     conf_dict['db_password']=os.getenv("RANGER_ADMIN_DB_PASSWORD")
     conf_dict['audit_db_name']=os.getenv("RANGER_AUDIT_DB_DBNAME")
     conf_dict['audit_db_user']=os.getenv("RANGER_AUDIT_DB_USERNAME")
     conf_dict['audit_db_password']=os.getenv("RANGER_AUDIT_DB_PASSWORD")
-
+    conf_dict['RANGER_ADMIN_DB_PORT']=os.getenv("RANGER_ADMIN_DB_PORT")
+    conf_dict['RANGER_AUDIT_DB_PORT']=os.getenv("RANGER_AUDIT_DB_PORT")
     db_dir = os.path.join(conf_dict['RANGER_ADMIN_HOME'] , "db")
     conf_dict['mysql_core_file']=os.path.join(db_dir,'mysql','xa_core_db.sql')
     conf_dict['mysql_audit_file']=os.path.join(db_dir,'mysql','xa_audit_db.sql')
@@ -714,6 +715,8 @@ def update_properties():
     db_user = conf_dict["RANGER_ADMIN_DB_USERNAME"]
     db_password = conf_dict["RANGER_ADMIN_DB_PASSWORD"]
     db_name = conf_dict["RANGER_ADMIN_DB_NAME"]
+    RANGER_ADMIN_DB_PORT = conf_dict["RANGER_ADMIN_DB_PORT"]
+    RANGER_AUDIT_DB_PORT = conf_dict["RANGER_AUDIT_DB_PORT"]
 
     audit_db_user = conf_dict["RANGER_AUDIT_DB_USERNAME"]
     audit_db_password = conf_dict["RANGER_AUDIT_DB_PASSWORD"]
@@ -734,7 +737,7 @@ def update_properties():
     log("SQL_HOST is : " + MYSQL_HOST,"debug")
     if RANGER_DB_FLAVOR == "MYSQL":
             propertyName="ranger.jpa.jdbc.url"
-            newPropertyValue="jdbc:log4jdbc:mysql://" + MYSQL_HOST + ":3306/" + db_name
+            newPropertyValue="jdbc:log4jdbc:mysql://%s:%s/%s" %(MYSQL_HOST ,RANGER_ADMIN_DB_PORT, db_name)
             updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
             propertyName="ranger.jpa.jdbc.user"
@@ -746,7 +749,7 @@ def update_properties():
             updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 		
             propertyName="ranger.jpa.audit.jdbc.url"
-            newPropertyValue="jdbc:log4jdbc:mysql://"+MYSQL_HOST+":3306/"+audit_db_name
+            newPropertyValue="jdbc:log4jdbc:mysql://%s:%s/%s" %(MYSQL_HOST, RANGER_AUDIT_DB_PORT, audit_db_name)
             updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
             propertyName="ranger.jpa.jdbc.dialect"
@@ -767,7 +770,7 @@ def update_properties():
     
     elif RANGER_DB_FLAVOR == "ORACLE":
             propertyName="ranger.jpa.jdbc.url"
-            newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(db_user, db_password, MYSQL_HOST)
+            newPropertyValue="jdbc:oracle:thin:@%s" %(MYSQL_HOST)
             updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 			
             propertyName="ranger.jpa.jdbc.user"
@@ -779,7 +782,7 @@ def update_properties():
             updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 			
             propertyName="ranger.jpa.audit.jdbc.url"
-            newPropertyValue="jdbc:oracle:thin:%s/%s@%s:1521/XE" %(audit_db_user, audit_db_password, MYSQL_HOST)
+            newPropertyValue="jdbc:oracle:thin:@%s" %(MYSQL_HOST)
             updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
             propertyName="ranger.jpa.jdbc.dialect"
@@ -800,7 +803,7 @@ def update_properties():
 
     elif RANGER_DB_FLAVOR == "POSTGRES":
         propertyName="ranger.jpa.jdbc.url"
-        newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, db_name)
+        newPropertyValue="jdbc:postgresql://%s:%s/%s" %(MYSQL_HOST, RANGER_ADMIN_DB_PORT, db_name)
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 		
         propertyName="ranger.jpa.jdbc.user"
@@ -812,7 +815,7 @@ def update_properties():
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 		
         propertyName="ranger.jpa.audit.jdbc.url"
-        newPropertyValue="jdbc:postgresql://%s/%s" %(MYSQL_HOST, audit_db_name)
+        newPropertyValue="jdbc:postgresql://%s:%s/%s" %(MYSQL_HOST, RANGER_AUDIT_DB_PORT, audit_db_name)
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
         propertyName="ranger.jpa.jdbc.dialect"
@@ -834,7 +837,7 @@ def update_properties():
 
     elif RANGER_DB_FLAVOR == "MSSQL":
         propertyName="ranger.jpa.jdbc.url"
-        newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" %(MYSQL_HOST, db_name)
+        newPropertyValue="jdbc:sqlserver://%s:%s;databaseName=%s" %(MYSQL_HOST, RANGER_ADMIN_DB_PORT, db_name)
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
         propertyName="ranger.jpa.jdbc.user"
@@ -846,14 +849,14 @@ def update_properties():
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 		
         propertyName="ranger.jpa.audit.jdbc.url"
-        newPropertyValue="jdbc:sqlserver://%s;databaseName=%s" % (MYSQL_HOST, audit_db_name)
+        newPropertyValue="jdbc:sqlserver://%s:%s;databaseName=%s" % (MYSQL_HOST, RANGER_AUDIT_DB_PORT, audit_db_name)
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
         propertyName="ranger.jpa.jdbc.dialect"
         newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
 
-        propertyName="ranger.jpa.jdbc.dialect"
+        propertyName="ranger.jpa.audit.jdbc.dialect"
         newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
 

@@ -141,8 +141,12 @@ def getPropertiesKeyList(configFileName):
 def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
     tree = ET.parse(xmlTemplateFileName)
     root = tree.getroot()
+    prop_arr =["ranger.usersync.ldap.ldapbindpassword", "ranger.usersync.keystore.password","ranger.usersync.truststore.password","ranger.usersync.policymgr"]
     for config in root.findall('property'):
         name = config.find('name').text
+        if name in prop_arr:
+            config.find('value').text = "_"
+            continue
         if (name in prop.keys()):
             config.find('value').text = str(prop[name])
         #else:

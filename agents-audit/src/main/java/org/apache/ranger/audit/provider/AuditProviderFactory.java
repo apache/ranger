@@ -24,8 +24,10 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.destination.DBAuditDestination;
 import org.apache.ranger.audit.destination.FileAuditDestination;
 import org.apache.ranger.audit.destination.HDFSAuditDestination;
+import org.apache.ranger.audit.destination.Log4JAuditDestination;
 import org.apache.ranger.audit.destination.SolrAuditDestination;
 import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
 import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
@@ -61,6 +63,7 @@ public class AuditProviderFactory {
 	private static AuditProviderFactory sFactory;
 
 	private AuditHandler mProvider = null;
+	private String componentAppType = "";
 	private boolean mInitDone = false;
 
 	private AuditProviderFactory() {
@@ -104,7 +107,7 @@ public class AuditProviderFactory {
 			// return;
 		}
 		mInitDone = true;
-
+		componentAppType = appType;
 		MiscUtil.setApplicationType(appType);
 
 		boolean isEnabled = MiscUtil.getBooleanProperty(props,
@@ -239,7 +242,7 @@ public class AuditProviderFactory {
 			AuditAsyncQueue asyncQueue = new AuditAsyncQueue(consumer);
 			propPrefix = BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "async";
 			asyncQueue.init(props, propPrefix);
-
+			asyncQueue.setParentPath(componentAppType);
 			mProvider = asyncQueue;
 			LOG.info("Starting audit queue " + mProvider.getName());
 			mProvider.start();
@@ -415,9 +418,9 @@ public class AuditProviderFactory {
 			} else if (providerName.equals("kafka")) {
 				provider = new KafkaAuditProvider();
 			} else if (providerName.equals("db")) {
-				provider = new DbAuditProvider();
+				provider = new DBAuditDestination();
 			} else if (providerName.equals("log4j")) {
-				provider = new Log4jAuditProvider();
+				provider = new Log4JAuditDestination();
 			} else if (providerName.equals("batch")) {
 				provider = new AuditBatchQueue(consumer);
 			} else if (providerName.equals("async")) {

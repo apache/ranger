@@ -149,9 +149,49 @@ public class TestRangerServiceDefHelper {
 			assertTrue(expectedHierarchies.contains(resourceNames));
 			expectedHierarchies.remove(resourceNames);
 		}
-		assertTrue(expectedHierarchies.isEmpty()); // make sure we saw got back hierarchies
+		assertTrue("Missing hierarchies: " + expectedHierarchies.toString(), expectedHierarchies.isEmpty()); // make sure we got back all hierarchies
 	}
 
+	@Test
+	public final void test_isResourceGraphValid_forest_singleNodeTrees() {
+		/*
+		 * Create a service-def which is a forest with a few single node trees
+		 * 
+		 *   Database
+		 *   
+		 *   Server
+		 *      
+		 *   Namespace -> package
+		 *       |
+		 *       v
+		 *     function
+		 *     
+		 * Check that helper corrects reports back all of the hierarchies: levels in it and their order.   
+		 */
+		RangerResourceDef database = createResourceDef("database", "");
+		RangerResourceDef server = createResourceDef("server", "");
+		RangerResourceDef namespace = createResourceDef("namespace", "");
+		RangerResourceDef function = createResourceDef("function", "namespace");
+		RangerResourceDef Package = createResourceDef("package", "namespace"); 
+		List<RangerResourceDef> resourceDefs = Lists.newArrayList(database, server, namespace, function, Package);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		_helper = new RangerServiceDefHelper(_serviceDef);
+		assertTrue(_helper.isResourceGraphValid());
+		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies();
+
+		Set<List<String>> expectedHierarchies = new HashSet<List<String>>(); 
+		expectedHierarchies.add(Lists.newArrayList("database"));
+		expectedHierarchies.add(Lists.newArrayList("server"));
+		expectedHierarchies.add(Lists.newArrayList("namespace", "package"));
+		expectedHierarchies.add(Lists.newArrayList("namespace", "function"));
+		
+		for (List<RangerResourceDef> aHierarchy : hierarchies) {
+			List<String> resourceNames = _helper.getAllResourceNames(aHierarchy);
+			assertTrue(expectedHierarchies.contains(resourceNames));
+			expectedHierarchies.remove(resourceNames);
+		}
+		assertTrue("Missing hierarchies: " + expectedHierarchies.toString(), expectedHierarchies.isEmpty()); // make sure we got back all hierarchies
+	}
 	@Test
 	public final void test_cacheBehavior() {
 		// wipe the cache clean

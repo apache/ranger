@@ -397,6 +397,41 @@ public class XUserMgr extends XUserMgrBase {
 		Collection<Long> groupIdList = vXUser.getGroupIdList();
 		XXPortalUser xXPortalUser = new XXPortalUser();
 		xXPortalUser = userMgr.updateUserWithPass(vXPortalUser);
+		//update permissions start
+		Collection<String> roleListUpdatedProfile =new ArrayList<String>();
+		if (oldUserProfile != null && oldUserProfile.getId() != null) {
+			if(vXUser!=null && vXUser.getUserRoleList()!=null){
+				Collection<String> roleListOldProfile = oldUserProfile.getUserRoleList();
+				Collection<String> roleListNewProfile = vXUser.getUserRoleList();
+				if(roleListNewProfile!=null && roleListOldProfile!=null){
+					for (String role : roleListNewProfile) {
+						if(role!=null && !roleListOldProfile.contains(role)){
+							roleListUpdatedProfile.add(role);
+						}
+					}
+					
+				}
+			}
+		}
+		if(roleListUpdatedProfile!=null && roleListUpdatedProfile.size()>0){
+			vXPortalUser.setUserRoleList(roleListUpdatedProfile);
+			List<XXUserPermission> xuserPermissionList = daoManager
+					.getXXUserPermission()
+					.findByUserPermissionId(vXPortalUser.getId());
+			if (xuserPermissionList!=null && xuserPermissionList.size()>0){
+				for (XXUserPermission xXUserPermission : xuserPermissionList) {
+					if (xXUserPermission != null) {
+						try {
+							xUserPermissionService.deleteResource(xXUserPermission.getId());
+						} catch (Exception e) {
+							logger.error(e.getMessage());
+						}
+					}
+				}
+			}
+			assignPermissionToUser(vXPortalUser,true);
+		}
+		//update permissions end
 		Collection<String> roleList = new ArrayList<String>();
 		if (xXPortalUser != null) {
 			roleList = userMgr.getRolesForUser(xXPortalUser);

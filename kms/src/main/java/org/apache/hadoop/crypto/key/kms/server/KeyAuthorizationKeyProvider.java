@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
+import org.apache.hadoop.crypto.key.kms.server.KMSACLsType.Type;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -86,10 +87,10 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
 	
 	public void stopReloader();
 
-	public boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi);
+	public boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, String clientIp);
 
 	public void assertAccess(KMSACLsType.Type aclType, UserGroupInformation ugi,
-			KMSOp operation, String key) throws AccessControlException;
+			KMSOp operation, String key, String clientIp) throws AccessControlException;
   }
 
   private final KeyProviderCryptoExtension provider;

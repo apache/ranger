@@ -37,7 +37,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
-
+	static long sequenceNumber = 0;
 
 	public RangerDefaultAuditHandler() {
 	}
@@ -176,7 +176,8 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 		if (auditEvent.getEventId() == null || auditEvent.getEventId().isEmpty()) {
 			auditEvent.setEventId(MiscUtil.generateUniqueId());
-		}		
+		}
+		auditEvent.setSeqNum(sequenceNumber++);
 	}
 
 	public void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents) {

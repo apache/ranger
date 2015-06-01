@@ -175,12 +175,20 @@ public class SessionMgr {
 				userSession.getUserId());
 		for (XXPortalUserRole gjUserRole : roleList) {
 			String userRole = gjUserRole.getUserRole();
-
 			strRoleList.add(userRole);
-			if (userRole.equals(RangerConstants.ROLE_SYS_ADMIN)) {
-				userSession.setUserAdmin(true);
-			}
 		}
+
+		if (strRoleList.contains(RangerConstants.ROLE_SYS_ADMIN)) {
+			userSession.setUserAdmin(true);
+			userSession.setKeyAdmin(false);
+		} else if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
+			userSession.setKeyAdmin(true);
+			userSession.setUserAdmin(false);
+		} else if (strRoleList.size() == 1 && strRoleList.get(0).equals(RangerConstants.ROLE_USER)) {
+			userSession.setKeyAdmin(false);
+			userSession.setUserAdmin(false);
+		}
+
 		userSession.setUserRoleList(strRoleList);
 	}
 

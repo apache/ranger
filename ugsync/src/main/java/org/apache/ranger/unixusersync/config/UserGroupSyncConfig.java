@@ -88,7 +88,7 @@ public class UserGroupSyncConfig  {
 	
 	private static final String LGSYNC_LDAP_BIND_DN = "ranger.usersync.ldap.binddn";
 	
-	private static final String LGSYNC_LDAP_BIND_KEYSTORE = "ranger.usersync.ldap.bindkeystore";
+	private static final String LGSYNC_LDAP_BIND_KEYSTORE = "ranger.usersync.credstore.filename";
 	
 	private static final String LGSYNC_LDAP_BIND_ALIAS = "ranger.usersync.ldap.bindalias";
 	
@@ -422,18 +422,17 @@ public class UserGroupSyncConfig  {
 		if (prop == null) {
 			return null;
 		}
-		if(prop.containsKey(LGSYNC_LDAP_BIND_KEYSTORE) &&  prop.containsKey(LGSYNC_LDAP_BIND_ALIAS)){
+		if(prop.containsKey(LGSYNC_LDAP_BIND_KEYSTORE)){
 			String path=prop.getProperty(LGSYNC_LDAP_BIND_KEYSTORE);
-			String alias=prop.getProperty(LGSYNC_LDAP_BIND_ALIAS);
+			String alias=LGSYNC_LDAP_BIND_ALIAS;
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
 					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
 					if(password!=null&& !password.trim().isEmpty() && !password.trim().equalsIgnoreCase("none")){
 						prop.setProperty(LGSYNC_LDAP_BIND_PASSWORD,password);
-						//System.out.println("Password IS :"+password);
 					}
 				}
-			}		
+			}
 		}
 		return prop.getProperty(LGSYNC_LDAP_BIND_PASSWORD);
 	}

@@ -33,6 +33,9 @@ public abstract class AuditQueue extends BaseAuditHandler {
 	public static final int AUDIT_MAX_QUEUE_SIZE_DEFAULT = 1024 * 1024;
 	public static final int AUDIT_BATCH_INTERVAL_DEFAULT_MS = 1000;
 	public static final int AUDIT_BATCH_SIZE_DEFAULT = 1000;
+	
+	//This is the max time the consumer thread will wait before exiting the loop 
+	public static final int AUDIT_CONSUMER_THREAD_WAIT_MS = 5000;
 
 	private int maxQueueSize = AUDIT_MAX_QUEUE_SIZE_DEFAULT;
 	private int maxBatchInterval = AUDIT_BATCH_INTERVAL_DEFAULT_MS;
@@ -57,6 +60,9 @@ public abstract class AuditQueue extends BaseAuditHandler {
 	protected int fileSpoolMaxWaitTime = 5 * 60 * 1000; // Default 5 minutes
 	protected int fileSpoolDrainThresholdPercent = 80;
 
+	//This is set when the first time stop is called.
+	protected long stopTime = 0;
+	
 	/**
 	 * @param consumer
 	 */
@@ -104,15 +110,31 @@ public abstract class AuditQueue extends BaseAuditHandler {
 
 	}
 
+	@Override
+	public void setName(String name) {
+		super.setName(name);
+		if( consumer != null && consumer instanceof BaseAuditHandler) {
+			BaseAuditHandler base = (BaseAuditHandler) consumer;
+			base.setParentPath(getName());
+		}
+	}
+
 	public AuditHandler getConsumer() {
 		return consumer;
 	}
 
+	public boolean isDrainMaxTimeElapsed() {
+		return (stopTime - System.currentTimeMillis()) > AUDIT_CONSUMER_THREAD_WAIT_MS;
+	}
+	
 	public boolean isDrain() {
 		return isDrain;
 	}
 
 	public void setDrain(boolean isDrain) {
+		if (isDrain && stopTime != 0) {
+			stopTime = System.currentTimeMillis();
+		}
 		this.isDrain = isDrain;
 	}
 

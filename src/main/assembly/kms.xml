@@ -100,6 +100,8 @@
 					<include>org.xerial.snappy:snappy-java</include>
 					<include>xmlenc:xmlenc</include>
 					<include>org.tukaani:xz</include>
+					<include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
+		    		<include>org.noggit:noggit:jar:${noggit.version}</include>
 	            </includes>
             </dependencySet>
         </dependencySets>

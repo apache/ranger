@@ -673,6 +673,10 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if(ret!=null){
 			 String username = config.getPolicyMgrUserName();
 			 String password = config.getPolicyMgrPassword();
+			 if(username==null||password==null||username.trim().isEmpty()||password.trim().isEmpty()){
+				 username=config.getDefaultPolicyMgrUserName();
+				 password=config.getDefaultPolicyMgrPassword();
+			 }
 			 if(username!=null && password!=null){
 				 ret.addFilter(new HTTPBasicAuthFilter(username, password));
 			 }

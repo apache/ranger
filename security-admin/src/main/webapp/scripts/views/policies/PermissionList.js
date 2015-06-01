@@ -28,6 +28,8 @@ define(function(require) {
 	var XAEnums			= require('utils/XAEnums');
 	var XAUtil			= require('utils/XAUtils');
 	var localization	= require('utils/XALangSupport');
+	var SessionMgr 		= require('mgrs/SessionMgr');
+
 	var VXGroup			= require('models/VXGroup');
 	var VXGroupList			= require('collections/VXGroupList');
 	var VXUserList			= require('collections/VXUserList');
@@ -198,7 +200,16 @@ define(function(require) {
 					url: url,
 					dataType: 'json',
 					data: function (term, page) {
-						return {name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
+						var data = { name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value };
+						var userRoleList = []
+						_.each(XAEnums.UserRoles,function(val, key){
+							if(SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value == val.value){
+								userRoleList.push(key)
+							}else if(!SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value != val.value){
+								userRoleList.push(key)
+							}
+						})
+						return _.extend(data,{'userRoleList' : userRoleList });
 					},
 					results: function (data, page) { 
 						var results = [] , selectedVals = [];

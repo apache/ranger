@@ -275,8 +275,14 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		try {
 			tagServiceDef = this.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
 		} catch (Exception e) {
-			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes -- Could not find TAG ServiceDef.. ", e);
+			LOG.error("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes" + serviceDef.getName() + "): could not find TAG ServiceDef.. ", e);
 			throw e;
+		}
+
+		if(tagServiceDef == null) {
+			LOG.error("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes(" + serviceDef.getName() + "): could not fund TAG ServiceDef.. ");
+
+			return;
 		}
 
 		List<RangerServiceDef.RangerAccessTypeDef> toAdd    = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
@@ -390,9 +396,16 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		try {
 			tagServiceDef = this.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
 		} catch (Exception e) {
-			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes -- Could not find TAG ServiceDef.. ", e);
+			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes(" + serviceDefName + "): could not fund TAG ServiceDef.. ", e);
 			throw e;
 		}
+
+		if(tagServiceDef == null) {
+			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes(" + serviceDefName + "): could not fund TAG ServiceDef.. ");
+
+			return;
+		}
+
 		List<RangerServiceDef.RangerAccessTypeDef> accessTypes = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
 
 		for (RangerServiceDef.RangerAccessTypeDef accessType : tagServiceDef.getAccessTypes()) {

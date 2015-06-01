@@ -80,7 +80,7 @@
 <!-- #Role list -->
 	<property>
 		<name>ranger.users.roles.list</name>
-		<value>ROLE_SYS_ADMIN, ROLE_USER, ROLE_OTHER, ROLE_ANON</value>
+		<value>ROLE_SYS_ADMIN, ROLE_USER, ROLE_OTHER, ROLE_ANON, ROLE_KEY_ADMIN</value>
 	</property>
 <!-- #Mail listing -->
 	<property>
@@ -434,6 +434,11 @@
 	<property>
 		<name>ranger.solr.audit.credential.alias</name>
 		<value>ranger.solr.password</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.sha256Password.update.disable</name>
+		<value>false</value>
 		<description></description>
 	</property>
 </configuration>

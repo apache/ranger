@@ -102,10 +102,10 @@ public class EmbeddedServer {
 			ssl.setScheme("https");
 			ssl.setAttribute("SSLEnabled", "true");
 			ssl.setAttribute("sslProtocol", getConfig("ranger.service.https.attrib.ssl.protocol", "TLS"));
-			ssl.setAttribute("clientAuth", getConfig("ranger.service.https.attrib.client.auth", "false"));
+			ssl.setAttribute("clientAuth", getConfig("ranger.service.https.attrib.clientAuth", "false"));
 			ssl.setAttribute("keyAlias", getConfig("ranger.service.https.attrib.keystore.keyalias"));
 			ssl.setAttribute("keystorePass", getConfig("ranger.service.https.attrib.keystore.pass"));
-			ssl.setAttribute("keystoreFile", getConfig("ranger.service.https.attrib.keystore.file"));
+			ssl.setAttribute("keystoreFile", getConfig("ranger.https.attrib.keystore.file"));
 			
 			String enabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);

@@ -102,9 +102,13 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 	 */
 	@Override
 	public void stop() {
+		logger.info("Stop called. name=" + getName());
 		setDrain(true);
 		try {
 			if (consumerThread != null) {
+				logger.info("Interrupting consumerThread. name=" + getName()
+						+ ", consumer="
+						+ (consumer == null ? null : consumer.getName()));
 				consumerThread.interrupt();
 			}
 		} catch (Throwable t) {
@@ -138,21 +142,37 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 				}
 			} catch (InterruptedException e) {
 				logger.info(
-						"Caught exception in consumer thread. Mostly to about loop",
+						"Caught exception in consumer thread. Shutdown might be in progress",
 						e);
 			} catch (Throwable t) {
 				logger.error("Caught error during processing request.", t);
 			}
-			if (isDrain() && queue.isEmpty()) {
-				break;
+			if (isDrain()) {
+				if (queue.isEmpty()) {
+					break;
+				}
+				if (isDrainMaxTimeElapsed()) {
+					logger.warn("Exiting polling loop because max time allowed reached. name="
+							+ getName()
+							+ ", waited for "
+							+ (stopTime - System.currentTimeMillis()) + " ms");
+				}
 			}
 		}
+		logger.info("Exiting polling loop. name=" + getName());
+
 		try {
+			// Call stop on the consumer
+			logger.info("Calling to stop consumer. name=" + getName()
+					+ ", consumer.name=" + consumer.getName());
+
 			// Call stop on the consumer
 			consumer.stop();
 		} catch (Throwable t) {
 			logger.error("Error while calling stop on consumer.", t);
 		}
+		logger.info("Exiting consumerThread.run() method. name=" + getName());
+
 	}
 
 }

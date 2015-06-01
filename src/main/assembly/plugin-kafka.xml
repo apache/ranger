@@ -36,6 +36,8 @@
 							</include>
 							<include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop-common.version}
 							</include>
+							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}
+							</include>
 							<include>com.google.code.gson:gson</include>
 							<include>org.eclipse.persistence:eclipselink</include>
 							<include>org.eclipse.persistence:javax.persistence</include>

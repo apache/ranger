@@ -152,6 +152,17 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 			}
 		}
 	}
+	if(propertiesMap!=null){
+		String sha256PasswordUpdateDisable="false";
+		if(propertiesMap.containsKey("ranger.sha256Password.update.disable")){
+			sha256PasswordUpdateDisable=propertiesMap.get("ranger.sha256Password.update.disable");
+			if(sha256PasswordUpdateDisable==null || sha256PasswordUpdateDisable.trim().isEmpty()|| !"true".equalsIgnoreCase(sha256PasswordUpdateDisable)){
+				sha256PasswordUpdateDisable="false";
+			}
+		}
+		propertiesMap.put("ranger.sha256Password.update.disable", sha256PasswordUpdateDisable);
+		props.put("ranger.sha256Password.update.disable", sha256PasswordUpdateDisable);
+	}
 	super.processProperties(beanFactory, props);
     }
 
@@ -222,4 +233,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	}
 	return Boolean.parseBoolean(value);
     }
+	public static Map<String, String> getPropertiesMap() {
+		return propertiesMap;
+	}
 }

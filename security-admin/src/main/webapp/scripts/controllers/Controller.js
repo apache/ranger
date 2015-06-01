@@ -134,6 +134,7 @@ define(function(require) {
 		   MAppState.set({
 				'currentTab' : XAGlobals.AppTabs.Settings.value
 			});
+		   var XAUtil		= require('utils/XAUtils');
 		   var view 		= require('views/users/UserTableLayout');
 		   var VXUserList	= require('collections/VXUserList');
 		   var userList 	= new VXUserList();
@@ -142,8 +143,9 @@ define(function(require) {
 			   collection : userList,
 			   tab :tab
 		   }));
+		   _.extend(userList.queryParams, XAUtil.getUserDataParams())
 		   userList.fetch({
-			   cache:true
+			   cache:false,
 		   });
 	   },
 	   userCreateAction : function(){

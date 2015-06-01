@@ -431,6 +431,16 @@
     		<artifactId>credentialbuilder</artifactId>
 	    	<version>${project.version}</version>  	
      </dependency>
+     <dependency>
+	  	<groupId>org.apache.httpcomponents</groupId>
+    		<artifactId>httpmime</artifactId>
+	    	<version>${httpcomponent.httpmime.version}</version>  	
+     </dependency>
+     <dependency>
+	  	<groupId>org.noggit</groupId>
+    		<artifactId>noggit</artifactId>
+	    	<version>${noggit.version}</version>  	
+     </dependency>
   </dependencies>
   <build>
   <pluginManagement>

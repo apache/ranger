@@ -56,7 +56,10 @@ import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPolicyExportAudit;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -76,6 +79,7 @@ import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -143,6 +147,9 @@ public class ServiceREST {
 	@Autowired
 	RangerValidatorFactory validatorFactory; 
 
+	@Autowired
+	RangerDaoManager daoManager;
+
 	public ServiceREST() {
 	}
 
@@ -161,6 +168,10 @@ public class ServiceREST {
 		try {
 			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 			validator.validate(serviceDef, Action.CREATE);
+
+			bizUtil.hasAdminPermissions("Service-Def");
+			bizUtil.hasKMSPermissions("Service-Def", serviceDef.getImplClass());
+
 			ret = svcStore.createServiceDef(serviceDef);
 		} catch(Exception excp) {
 			LOG.error("createServiceDef(" + serviceDef + ") failed", excp);
@@ -189,6 +200,10 @@ public class ServiceREST {
 		try {
 			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 			validator.validate(serviceDef, Action.UPDATE);
+
+			bizUtil.hasAdminPermissions("Service-Def");
+			bizUtil.hasKMSPermissions("Service-Def", serviceDef.getImplClass());
+
 			ret = svcStore.updateServiceDef(serviceDef);
 		} catch(Exception excp) {
 			LOG.error("updateServiceDef(" + serviceDef + ") failed", excp);
@@ -215,7 +230,11 @@ public class ServiceREST {
 		try {
 			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 			validator.validate(id, Action.DELETE);
-			
+
+			bizUtil.hasAdminPermissions("Service-Def");
+			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(id);
+			bizUtil.hasKMSPermissions("Service-Def", xServiceDef.getImplclassname());
+
 			String forceDeleteStr = request.getParameter("forceDelete");
 			boolean forceDelete = false;
 			if(!StringUtils.isEmpty(forceDeleteStr) && forceDeleteStr.equalsIgnoreCase("true")) {
@@ -245,6 +264,13 @@ public class ServiceREST {
 		RangerServiceDef ret = null;
 
 		try {
+			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(id);
+			if (!bizUtil.hasAccess(xServiceDef, null)) {
+				throw restErrorUtil.createRESTException(
+						"User is not allowed to access service-def, id: " + xServiceDef.getId(),
+						MessageEnums.OPER_NO_PERMISSION);
+			}
+
 			ret = svcStore.getServiceDef(id);
 		} catch(Exception excp) {
 			LOG.error("getServiceDef(" + id + ") failed", excp);
@@ -274,6 +300,15 @@ public class ServiceREST {
 		RangerServiceDef ret = null;
 
 		try {
+			XXServiceDef xServiceDef = daoManager.getXXServiceDef().findByName(name);
+			if (xServiceDef != null) {
+				if (!bizUtil.hasAccess(xServiceDef, null)) {
+					throw restErrorUtil.createRESTException(
+							"User is not allowed to access service-def: " + xServiceDef.getName(),
+							MessageEnums.OPER_NO_PERMISSION);
+				}
+			}
+
 			ret = svcStore.getServiceDefByName(name);
 		} catch(Exception excp) {
 			LOG.error("getServiceDefByName(" + name + ") failed", excp);
@@ -314,15 +349,17 @@ public class ServiceREST {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
-		ret = new RangerServiceDefList();
+		if(paginatedSvcDefs != null) {
+			ret = new RangerServiceDefList();
 
-		ret.setServiceDefs(paginatedSvcDefs.getList());
-		ret.setPageSize(paginatedSvcDefs.getPageSize());
-		ret.setResultSize(paginatedSvcDefs.getResultSize());
-		ret.setStartIndex(paginatedSvcDefs.getStartIndex());
-		ret.setTotalCount(paginatedSvcDefs.getTotalCount());
-		ret.setSortBy(paginatedSvcDefs.getSortBy());
-		ret.setSortType(paginatedSvcDefs.getSortType());
+			ret.setServiceDefs(paginatedSvcDefs.getList());
+			ret.setPageSize(paginatedSvcDefs.getPageSize());
+			ret.setResultSize(paginatedSvcDefs.getResultSize());
+			ret.setStartIndex(paginatedSvcDefs.getStartIndex());
+			ret.setTotalCount(paginatedSvcDefs.getTotalCount());
+			ret.setSortBy(paginatedSvcDefs.getSortBy());
+			ret.setSortType(paginatedSvcDefs.getSortType());
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServiceDefs(): count=" + (ret == null ? 0 : ret.getListSize()));
@@ -344,7 +381,15 @@ public class ServiceREST {
 		try {
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.CREATE);
-			
+
+			bizUtil.hasAdminPermissions("Services");
+
+			// TODO: As of now we are allowing SYS_ADMIN to create all the
+			// services including KMS
+
+			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
+			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
+
 			ret = svcStore.createService(service);
 		} catch(Exception excp) {
 			LOG.error("createService(" + service + ") failed", excp);
@@ -373,6 +418,15 @@ public class ServiceREST {
 		try {
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.UPDATE);
+
+			bizUtil.hasAdminPermissions("Services");
+
+			// TODO: As of now we are allowing SYS_ADMIN to create all the
+			// services including KMS
+
+			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
+			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
+
 			ret = svcStore.updateService(service);
 		} catch(Exception excp) {
 			LOG.error("updateService(" + service + ") failed", excp);
@@ -399,6 +453,16 @@ public class ServiceREST {
 		try {
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(id, Action.DELETE);
+
+			bizUtil.hasAdminPermissions("Services");
+
+			// TODO: As of now we are allowing SYS_ADMIN to create all the
+			// services including KMS
+
+			XXService service = daoManager.getXXService().getById(id);
+			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
+			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
+
 			svcStore.deleteService(id);
 		} catch(Exception excp) {
 			LOG.error("deleteService(" + id + ") failed", excp);
@@ -491,16 +555,18 @@ public class ServiceREST {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 		}
 
-		ret = new RangerServiceList();
+		if(paginatedSvcs != null) {
+			ret = new RangerServiceList();
 
 
-		ret.setServices(paginatedSvcs.getList());
-		ret.setPageSize(paginatedSvcs.getPageSize());
-		ret.setResultSize(paginatedSvcs.getResultSize());
-		ret.setStartIndex(paginatedSvcs.getStartIndex());
-		ret.setTotalCount(paginatedSvcs.getTotalCount());
-		ret.setSortBy(paginatedSvcs.getSortBy());
-		ret.setSortType(paginatedSvcs.getSortType());
+			ret.setServices(paginatedSvcs.getList());
+			ret.setPageSize(paginatedSvcs.getPageSize());
+			ret.setResultSize(paginatedSvcs.getResultSize());
+			ret.setStartIndex(paginatedSvcs.getStartIndex());
+			ret.setTotalCount(paginatedSvcs.getTotalCount());
+			ret.setSortBy(paginatedSvcs.getSortBy());
+			ret.setSortType(paginatedSvcs.getSortType());
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServices(): count=" + (ret == null ? 0 : ret.getListSize()));
@@ -1016,17 +1082,19 @@ public class ServiceREST {
 		try {
 			paginatedPolicies = svcStore.getPaginatedPolicies(filter);
 
-			ret = new RangerPolicyList();
+			if(paginatedPolicies != null) {
+				ret = new RangerPolicyList();
 
-			ret.setPolicies(paginatedPolicies.getList());
-			ret.setPageSize(paginatedPolicies.getPageSize());
-			ret.setResultSize(paginatedPolicies.getResultSize());
-			ret.setStartIndex(paginatedPolicies.getStartIndex());
-			ret.setTotalCount(paginatedPolicies.getTotalCount());
-			ret.setSortBy(paginatedPolicies.getSortBy());
-			ret.setSortType(paginatedPolicies.getSortType());
+				ret.setPolicies(paginatedPolicies.getList());
+				ret.setPageSize(paginatedPolicies.getPageSize());
+				ret.setResultSize(paginatedPolicies.getResultSize());
+				ret.setStartIndex(paginatedPolicies.getStartIndex());
+				ret.setTotalCount(paginatedPolicies.getTotalCount());
+				ret.setSortBy(paginatedPolicies.getSortBy());
+				ret.setSortType(paginatedPolicies.getSortType());
 
-			applyAdminAccessFilter(ret);
+				applyAdminAccessFilter(ret);
+			}
 		} catch (Exception excp) {
 			LOG.error("getPolicies() failed", excp);
 
@@ -1110,17 +1178,19 @@ public class ServiceREST {
 		try {
 			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceId, filter);
 
-			ret = new RangerPolicyList();
+			if(paginatedPolicies != null) {
+				ret = new RangerPolicyList();
 
-			ret.setPolicies(paginatedPolicies.getList());
-			ret.setPageSize(paginatedPolicies.getPageSize());
-			ret.setResultSize(paginatedPolicies.getResultSize());
-			ret.setStartIndex(paginatedPolicies.getStartIndex());
-			ret.setTotalCount(paginatedPolicies.getTotalCount());
-			ret.setSortBy(paginatedPolicies.getSortBy());
-			ret.setSortType(paginatedPolicies.getSortType());
+				ret.setPolicies(paginatedPolicies.getList());
+				ret.setPageSize(paginatedPolicies.getPageSize());
+				ret.setResultSize(paginatedPolicies.getResultSize());
+				ret.setStartIndex(paginatedPolicies.getStartIndex());
+				ret.setTotalCount(paginatedPolicies.getTotalCount());
+				ret.setSortBy(paginatedPolicies.getSortBy());
+				ret.setSortType(paginatedPolicies.getSortType());
 
-			applyAdminAccessFilter(ret);
+				applyAdminAccessFilter(ret);
+			}
 		} catch (Exception excp) {
 			LOG.error("getServicePolicies(" + serviceId + ") failed", excp);
 
@@ -1133,7 +1203,7 @@ public class ServiceREST {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count="
-					+ ret.getListSize());
+					+ (ret == null ? 0 : ret.getListSize()));
 		}
 		return ret;
 	}
@@ -1156,17 +1226,19 @@ public class ServiceREST {
 		try {
 			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceName, filter);
 
-			ret = new RangerPolicyList();
+			if(paginatedPolicies != null) {
+				ret = new RangerPolicyList();
 
-			ret.setPolicies(paginatedPolicies.getList());
-			ret.setPageSize(paginatedPolicies.getPageSize());
-			ret.setResultSize(paginatedPolicies.getResultSize());
-			ret.setStartIndex(paginatedPolicies.getStartIndex());
-			ret.setTotalCount(paginatedPolicies.getTotalCount());
-			ret.setSortBy(paginatedPolicies.getSortBy());
-			ret.setSortType(paginatedPolicies.getSortType());
+				ret.setPolicies(paginatedPolicies.getList());
+				ret.setPageSize(paginatedPolicies.getPageSize());
+				ret.setResultSize(paginatedPolicies.getResultSize());
+				ret.setStartIndex(paginatedPolicies.getStartIndex());
+				ret.setTotalCount(paginatedPolicies.getTotalCount());
+				ret.setSortBy(paginatedPolicies.getSortBy());
+				ret.setSortType(paginatedPolicies.getSortType());
 
-			applyAdminAccessFilter(ret);
+				applyAdminAccessFilter(ret);
+			}
 		} catch (Exception excp) {
 			LOG.error("getServicePolicies(" + serviceName + ") failed", excp);
 
@@ -1179,7 +1251,7 @@ public class ServiceREST {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count="
-					+ ret.getListSize());
+					+ (ret == null ? 0 : ret.getListSize()));
 		}
 
 		return ret;
@@ -1444,12 +1516,9 @@ public class ServiceREST {
 	@Path("/policy/{policyId}/versionList")
 	public VXString getPolicyVersionList(@PathParam("policyId") Long policyId) {
 
-		String policyVersionListStr = svcStore.getPolicyForVersionNumber(policyId);
+		VXString policyVersionListStr = svcStore.getPolicyVersionList(policyId);
 
-		VXString ret = new VXString();
-		ret.setValue(policyVersionListStr);
-
-		return ret;
+		return policyVersionListStr;
 	}
 
 	@GET
@@ -1468,8 +1537,9 @@ public class ServiceREST {
 
 	private void applyAdminAccessFilter(List<RangerPolicy> policies) {
 		boolean isAdmin = bizUtil.isAdmin();
+		boolean isKeyAdmin = bizUtil.isKeyAdmin();
 
-		if(!isAdmin && !CollectionUtils.isEmpty(policies)) {
+		if(!isAdmin && !isKeyAdmin && !CollectionUtils.isEmpty(policies)) {
 			String                          userName      = bizUtil.getCurrentUserLoginId();
 			Set<String>                     userGroups    = userMgr.getGroupsForUser(userName);
 			Map<String, RangerPolicyEngine> policyEngines = new HashMap<String, RangerPolicyEngine>();
@@ -1494,13 +1564,39 @@ public class ServiceREST {
 					i--;
 				}
 			}
+		} else if (isAdmin && !CollectionUtils.isEmpty(policies)) {
+			for (int i = 0; i < policies.size(); i++) {
+
+				XXService xService = daoManager.getXXService().findByName(policies.get(i).getService());
+				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+
+				if (xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					policies.remove(i);
+					i--;
+				}
+			}
+		} else if (isKeyAdmin && !CollectionUtils.isEmpty(policies)) {
+			for (int i = 0; i < policies.size(); i++) {
+
+				XXService xService = daoManager.getXXService().findByName(policies.get(i).getService());
+				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+
+				if (!xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					policies.remove(i);
+					i--;
+				}
+			}
 		}
 	}
 
 	void ensureAdminAccess(String serviceName, Map<String, RangerPolicyResource> resources) {
 		boolean isAdmin = bizUtil.isAdmin();
+		boolean isKeyAdmin = bizUtil.isKeyAdmin();
 
-		if(!isAdmin) {
+		XXService xService = daoManager.getXXService().findByName(serviceName);
+		XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+
+		if(!isAdmin && !isKeyAdmin) {
 			RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
 			String             userName     = bizUtil.getCurrentUserLoginId();
 			Set<String>        userGroups   = userMgr.getGroupsForUser(userName);
@@ -1510,6 +1606,18 @@ public class ServiceREST {
 			if(!isAllowed) {
 				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,
 						"User '" + userName + "' does not have delegated-admin privilege on given resources", true);
+			}
+		} else if (isAdmin) {
+			if (xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				throw restErrorUtil.createRESTException(
+						"KMS Policies/Services/Service-Defs are not accessible for logged in user.",
+						MessageEnums.OPER_NO_PERMISSION);
+			}
+		} else if (isKeyAdmin) {
+			if (!xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				throw restErrorUtil.createRESTException(
+						"Only KMS Policies/Services/Service-Defs are accessible for logged in user.",
+						MessageEnums.OPER_NO_PERMISSION);
 			}
 		}
 	}

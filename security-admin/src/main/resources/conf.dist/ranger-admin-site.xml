@@ -180,7 +180,7 @@
 
 	<property>
 		<name>ranger.service.https.attrib.keystore.pass</name>
-		<value>ranger</value>
+		<value>_</value>
 	</property>
 
 	<property>

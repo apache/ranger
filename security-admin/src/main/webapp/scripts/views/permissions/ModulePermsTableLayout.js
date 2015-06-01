@@ -183,6 +183,7 @@ define(function(require){
 			$td.find('['+attrName+'="'+id+'"]').show();
 			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').show();
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').hide();
+			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').addClass('set-height-groups');
 		},
 		onShowLess : function(e){
 			var attrName = 'policy-groups-id';
@@ -195,6 +196,7 @@ define(function(require){
 			$td.find('['+attrName+'="'+id+'"]').slice(4).hide();
 			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').hide();
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').show();
+			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups');
 		},
 		addVisualSearch : function(){
 			var that = this;

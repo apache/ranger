@@ -39,9 +39,11 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 
 	Thread consumerThread = null;
 	static int threadCount = 0;
+	static final String DEFAULT_NAME = "summary";
 
 	public AuditBatchQueue(AuditHandler consumer) {
 		super(consumer);
+		setName(DEFAULT_NAME);
 	}
 
 	/*
@@ -119,10 +121,15 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 	 */
 	@Override
 	public void stop() {
+		logger.info("Stop called. name=" + getName());
 		setDrain(true);
 		flush();
 		try {
 			if (consumerThread != null) {
+				logger.info("Interrupting consumerThread. name=" + getName()
+						+ ", consumer="
+						+ (consumer == null ? null : consumer.getName()));
+
 				consumerThread.interrupt();
 			}
 		} catch (Throwable t) {
@@ -202,6 +209,8 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 		long lastDispatchTime = System.currentTimeMillis();
 		boolean isDestActive = true;
 		while (true) {
+			logStatusIfRequired(true);
+
 			// Time to next dispatch
 			long nextDispatchDuration = lastDispatchTime
 					- System.currentTimeMillis() + getMaxBatchInterval();
@@ -257,13 +266,14 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				}
 			} catch (InterruptedException e) {
 				logger.info(
-						"Caught exception in consumer thread. Mostly to abort loop",
+						"Caught exception in consumer thread. Shutdown might be in progress",
 						e);
 				setDrain(true);
 			} catch (Throwable t) {
 				logger.error("Caught error during processing request.", t);
 			}
 
+			addTotalCount(localBatchBuffer.size());
 			if (localBatchBuffer.size() > 0 && isToSpool) {
 				// Let spool to the file directly
 				if (isDestActive) {
@@ -274,6 +284,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				// Just before stashing
 				lastDispatchTime = System.currentTimeMillis();
 				fileSpooler.stashLogs(localBatchBuffer);
+				addStashedCount(localBatchBuffer.size());
 				localBatchBuffer.clear();
 			} else if (localBatchBuffer.size() > 0
 					&& (isDrain()
@@ -292,12 +303,15 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 						// Transient error. Stash and move on
 						fileSpooler.stashLogs(localBatchBuffer);
 						isDestActive = false;
+						addStashedCount(localBatchBuffer.size());
 					} else {
 						// We need to drop this event
+						addFailedCount(localBatchBuffer.size());
 						logFailedEvent(localBatchBuffer);
 					}
 				} else {
 					isDestActive = true;
+					addSuccessCount(localBatchBuffer.size());
 				}
 				localBatchBuffer.clear();
 			}
@@ -310,6 +324,12 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				} else {
 					break;
 				}
+				if (isDrainMaxTimeElapsed()) {
+					logger.warn("Exiting polling loop because max time allowed reached. name="
+							+ getName()
+							+ ", waited for "
+							+ (stopTime - System.currentTimeMillis()) + " ms");
+				}
 			}
 		}
 
@@ -317,6 +337,9 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				+ consumer.getName());
 		try {
 			// Call stop on the consumer
+			logger.info("Calling to stop consumer. name=" + getName()
+					+ ", consumer.name=" + consumer.getName());
+
 			consumer.stop();
 			if (fileSpoolerEnabled) {
 				fileSpooler.stop();
@@ -324,5 +347,6 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 		} catch (Throwable t) {
 			logger.error("Error while calling stop on consumer.", t);
 		}
+		logger.info("Exiting consumerThread.run() method. name=" + getName());
 	}
 }

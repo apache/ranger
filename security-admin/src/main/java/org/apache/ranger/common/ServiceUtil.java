@@ -1305,27 +1305,29 @@ public class ServiceUtil {
 		try {
 			service = svcStore.getServiceByName(serviceName);
 		} catch (Exception e) {
-			LOG.error("Requested Service not found");
+			LOG.error("Requested Service not found. serviceName=" + serviceName);
 			throw restErrorUtil.createRESTException("Serivce:" + serviceName + " not found",  
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		if(service==null){
-			LOG.error("Requested Service not found");
+			LOG.error("Requested Service not found. Service name is null.");
 			throw restErrorUtil.createRESTException("No Data Found.",
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		if(!service.getIsEnabled()){
-			LOG.error("Requested Service is disabled");
+			LOG.error("Requested Service is disabled. serviceName=" + serviceName);
 			throw restErrorUtil.createRESTException("Unauthorized access.",
 					MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
 		}		
 		if (!httpEnabled) {
 			if (!isSecure) {
+				LOG.error("Unauthorized access. Only https is allowed. serviceName=" + serviceName);
 				throw restErrorUtil.createRESTException("Unauthorized access -"
 						+ " only https allowed",
 						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
 			}
 			if (certchain == null || certchain.length == 0) {
+				LOG.error("Unauthorized access. Unable to get client certificate. serviceName=" + serviceName);
 				throw restErrorUtil.createRESTException("Unauthorized access -"
 						+ " unable to get client certificate",
 						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
@@ -1344,13 +1346,14 @@ public class ServiceUtil {
 					}
 				}
 				if (commonName == null) {
+					LOG.error("Unauthorized access. CName is null. serviceName=" + serviceName);
 					throw restErrorUtil.createRESTException(
 							"Unauthorized access - Unable to find Common Name from ["
 									+ dn + "]",
 							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
 				}
 			} catch (InvalidNameException e) {
-				LOG.error("Invalid Common Name.", e);
+				LOG.error("Invalid Common Name. CName=" + commonName + ", serviceName=" + serviceName, e);
 				throw restErrorUtil.createRESTException(
 						"Unauthorized access - Invalid Common Name",
 						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
@@ -1362,6 +1365,8 @@ public class ServiceUtil {
 			String cnFromConfig = configMap.get("commonNameForCertificate");
 			if (cnFromConfig == null
 					|| !commonName.equalsIgnoreCase(cnFromConfig)) {
+				LOG.error("Unauthorized access. expected [" + cnFromConfig + "], found [" 
+					+ commonName + "], serviceName=" + serviceName);
 				throw restErrorUtil.createRESTException(
 						"Unauthorized access. expected [" + cnFromConfig
 								+ "], found [" + commonName + "]",

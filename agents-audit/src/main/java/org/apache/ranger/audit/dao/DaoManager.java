@@ -49,6 +49,8 @@ public class DaoManager extends DaoManagerBase {
 
 				sEntityManager.set(em);
 			}
+		} else {
+			logger.error("EntityManagerFactory was not set in this thread.", new Throwable());
 		}
 
 		return em;

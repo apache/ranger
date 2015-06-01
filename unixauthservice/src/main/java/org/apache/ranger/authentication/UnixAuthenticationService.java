@@ -184,7 +184,7 @@ public class UnixAuthenticationService {
 										.item(0).getTextContent().trim();
 							}
 	
-							LOG.info("Adding Property:[" + propertyName + "] Value:["+ propertyValue + "]");
+							//LOG.info("Adding Property:[" + propertyName + "] Value:["+ propertyValue + "]");
 							if (prop.get(propertyName) != null ) {
 								prop.remove(propertyName) ;
 	 						}

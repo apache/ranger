@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+
 import com.google.gson.GsonBuilder;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,7 +34,8 @@ import java.util.Properties;
 public abstract class BaseAuditHandler implements AuditHandler {
 	private static final Log LOG = LogFactory.getLog(BaseAuditHandler.class);
 
-	private static final String AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP = "xasecure.audit.log.failure.report.min.interval.ms";
+	static final String AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP = "xasecure.audit.log.failure.report.min.interval.ms";
+	protected static final String AUDIT_DB_CREDENTIAL_PROVIDER_FILE = "xasecure.audit.credential.provider.file";
 
 	private int mLogFailureReportMinIntervalInMs = 60 * 1000;
 
@@ -49,12 +51,28 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	protected String propPrefix = PROP_DEFAULT_PREFIX;
 
 	protected String providerName = null;
+	protected String parentPath = null;
 
 	protected int failedRetryTimes = 3;
 	protected int failedRetrySleep = 3 * 1000;
 
 	int errorLogIntervalMS = 30 * 1000; // Every 30 seconds
 	long lastErrorLogMS = 0;
+
+	long totalCount = 0;
+	long totalSuccessCount = 0;
+	long totalFailedCount = 0;
+	long totalStashedCount = 0;
+	long totalDeferredCount = 0;
+
+	long lastIntervalCount = 0;
+	long lastIntervalSuccessCount = 0;
+	long lastIntervalFailedCount = 0;
+	long lastStashedCount = 0;
+	long lastDeferredCount = 0;
+
+	long lastStatusLogTime = System.currentTimeMillis();
+	long statusLogIntervalMS = 1 * 60 * 1000;
 
 	protected Properties props = null;
 
@@ -78,14 +96,14 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		String name = MiscUtil.getStringProperty(props, basePropertyName + "."
 				+ PROP_NAME);
 		if (name != null && !name.isEmpty()) {
-			providerName = name;
+			setName(name);
 		}
 		if (providerName == null) {
-			providerName = finalToken;
+			setName(finalToken);
 			LOG.info("Using providerName from property prefix. providerName="
-					+ providerName);
+					+ getName());
 		}
-		LOG.info("providerName=" + providerName);
+		LOG.info("providerName=" + getName());
 
 		try {
 			new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
@@ -143,13 +161,124 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		return log(eventList);
 	}
 
+	public String getParentPath() {
+		return parentPath;
+	}
+
+	public void setParentPath(String parentPath) {
+		this.parentPath = parentPath;
+	}
+
 	public void setName(String name) {
 		providerName = name;
 	}
 
 	@Override
 	public String getName() {
+		if (parentPath != null) {
+			return parentPath + "." + providerName;
+		}
 		return providerName;
+	}
+
+	public long addTotalCount(int count) {
+		totalCount += count;
+		return totalCount;
+	}
+
+	public long addSuccessCount(int count) {
+		totalSuccessCount += count;
+		return totalSuccessCount;
+	}
+
+	public long addFailedCount(int count) {
+		totalFailedCount += count;
+		return totalFailedCount;
+	}
+
+	public long addStashedCount(int count) {
+		totalStashedCount += count;
+		return totalStashedCount;
+	}
+
+	public long addDeferredCount(int count) {
+		totalDeferredCount += count;
+		return totalDeferredCount;
+	}
+
+	public long getTotalCount() {
+		return totalCount;
+	}
+
+	public long getTotalSuccessCount() {
+		return totalSuccessCount;
+	}
+
+	public long getTotalFailedCount() {
+		return totalFailedCount;
+	}
+
+	public long getTotalStashedCount() {
+		return totalStashedCount;
+	}
+
+	public long getLastStashedCount() {
+		return lastStashedCount;
+	}
+
+	public long getTotalDeferredCount() {
+		return totalDeferredCount;
+	}
+
+	public long getLastDeferredCount() {
+		return lastDeferredCount;
+	}
+
+	public void logStatusIfRequired(boolean ifRequired) {
+		long currTime = System.currentTimeMillis();
+		if (!ifRequired || (currTime - lastStatusLogTime) > statusLogIntervalMS) {
+			long diffTime = currTime - lastStatusLogTime;
+			lastStatusLogTime = currTime;
+
+			long diffCount = totalCount - lastIntervalCount;
+			if (diffCount == 0) {
+				return;
+			}
+			long diffSuccess = totalSuccessCount - lastIntervalSuccessCount;
+			long diffFailed = totalFailedCount - lastIntervalFailedCount;
+			long diffStashed = totalStashedCount - lastStashedCount;
+			long diffDeferred = totalDeferredCount - lastDeferredCount;
+
+			lastIntervalCount = totalCount;
+			lastIntervalSuccessCount = totalSuccessCount;
+			lastIntervalFailedCount = totalFailedCount;
+			lastStashedCount = totalStashedCount;
+			lastDeferredCount = totalDeferredCount;
+
+			String msg = "Audit Status Log: name="
+					+ getName()
+					+ ", interval="
+					+ formatIntervalForLog(diffTime)
+					+ ", events="
+					+ diffCount
+					+ (diffSuccess > 0 ? (", succcessCount=" + diffSuccess)
+							: "")
+					+ (diffFailed > 0 ? (", failedCount=" + diffFailed) : "")
+					+ (diffStashed > 0 ? (", stashedCount=" + diffStashed) : "")
+					+ (diffDeferred > 0 ? (", deferredCount=" + diffDeferred)
+							: "")
+					+ ", totalEvents="
+					+ totalCount
+					+ (totalSuccessCount > 0 ? (", totalSuccessCount=" + totalSuccessCount)
+							: "")
+					+ (totalFailedCount > 0 ? (", totalFailedCount=" + totalFailedCount)
+							: "")
+					+ (totalStashedCount > 0 ? (", totalStashedCount=" + totalStashedCount)
+							: "")
+					+ (totalDeferredCount > 0 ? (", totalDeferredCount=" + totalDeferredCount)
+							: "");
+			LOG.info(msg);
+		}
 	}
 
 	public void logError(String msg) {

@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.ranger.common.*;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
@@ -157,40 +158,38 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 		return this.populateViewBean(xServiceDef);
 	}
 	@Override
-	@SuppressWarnings("unchecked")
 	public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
-		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
+		//List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
 		RangerServiceDefList retList = new RangerServiceDefList();
-
+		int startIndex = searchFilter.getStartIndex();
+		int pageSize = searchFilter.getMaxRows();
+		searchFilter.setStartIndex(0);
+		searchFilter.setMaxRows(Integer.MAX_VALUE);
 		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields, retList);
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-
-		if (userSession == null) {
-			// Internal user
-			for (XXServiceDef xSvcDef : xSvcDefList) {
-				if (xSvcDef != null) {
-					serviceDefList.add(populateViewBean(xSvcDef));
-				}
-			}
-		} else {
-			List<String> userRoleList = userSession.getUserRoleList();
-			for (XXServiceDef xSvcDef : xSvcDefList) {
-				if(userRoleList != null && !userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-					if(xSvcDef!=null && !"KMS".equalsIgnoreCase(xSvcDef.getName())){
-						serviceDefList.add(populateViewBean(xSvcDef));
-					}
-				}
-				else if(userRoleList != null && userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)){
-					if(xSvcDef!=null && "KMS".equalsIgnoreCase(xSvcDef.getName())){
-						serviceDefList.add(populateViewBean(xSvcDef));
-						break;
-					}
-				}
+		List<XXServiceDef> permittedServiceDefs = new ArrayList<XXServiceDef>();
+		for (XXServiceDef xSvcDef : xSvcDefList) {
+			if(bizUtil.hasAccess(xSvcDef, null)){
+				permittedServiceDefs.add(xSvcDef);
 			}
 		}
-		retList.setServiceDefs(serviceDefList);
-
+		//retList.setServiceDefs(serviceDefList);
+		if(permittedServiceDefs.size() > 0) {
+			populatePageList(permittedServiceDefs, startIndex, pageSize, retList);
+		}
 		return retList;
 	}
 
+	private void populatePageList(List<XXServiceDef> xxObjList, int startIndex, int pageSize,
+			RangerServiceDefList retList) {
+		List<RangerServiceDef> onePageList = new ArrayList<RangerServiceDef>();
+
+		for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
+			onePageList.add(populateViewBean(xxObjList.get(i)));
+		}
+		retList.setServiceDefs(onePageList);
+		retList.setStartIndex(startIndex);
+		retList.setPageSize(pageSize);
+		retList.setResultSize(onePageList.size());
+		retList.setTotalCount(xxObjList.size());
+	}
 }

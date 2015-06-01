@@ -88,6 +88,10 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	 */
 	protected int repoType;
 	/**
+	 * Service Type ~~ repoType
+	 */
+	protected String serviceType;
+	/**
 	 * Reason of result
 	 */
 	protected String resultReason;
@@ -305,6 +309,20 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	}
 
 	/**
+	 * @return the serviceType
+	 */
+	public String getServiceType() {
+		return serviceType;
+	}
+
+	/**
+	 * @param serviceType the serviceType to set
+	 */
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b>resultReason</b>.
 	 * You cannot set null to the attribute.
 	 * @param resultReason Value to set member attribute <b>resultReason</b>
@@ -486,6 +504,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "policyId={" + policyId + "} ";
 		str += "repoName={" + repoName + "} ";
 		str += "repoType={" + repoType + "} ";
+		str += "serviceType={" + serviceType + "} ";
 		str += "resultReason={" + resultReason + "} ";
 		str += "sessionId={" + sessionId + "} ";
 		str += "eventTime={" + eventTime + "} ";

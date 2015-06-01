@@ -98,7 +98,13 @@ define(function(require){
 				userRoleList : {
 					type : 'Select',
 					options : function(callback, editor){
-						var userTypes = _.filter(XAEnums.UserRoles,function(m){return m.label != 'Unknown'});
+
+						var userTypes = _.filter(XAEnums.UserRoles,function(m){
+							if(!SessionMgr.isKeyAdmin())
+								return m.label != 'Unknown'	&& m.label != 'KeyAdmin';
+							else
+								return m.label != 'Unknown' && m.label != 'Admin';
+						});
 						var nvPairs = XAUtils.enumToSelectPairs(userTypes);
 						callback(nvPairs);
 					},
@@ -141,7 +147,9 @@ define(function(require){
 						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN')){
 							this.fields.userRoleList.editor.$el.attr('disabled',false);
 						}else{
-							this.fields.userRoleList.editor.$el.attr('disabled',true);
+							if(!SessionMgr.isKeyAdmin()){
+								this.fields.userRoleList.editor.$el.attr('disabled',true);
+							}
 						}
 					}else{
 						this.fields.userRoleList.editor.$el.attr('disabled',true);
@@ -222,7 +230,15 @@ define(function(require){
 		},
 		beforeSavePasswordDetail : function(){
 			this.model.unset('passwordConfirm');
-			this.model.unset('userRoleList');
+			//FOR USER ROLE
+			if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_USER.value){
+				this.model.set('userRoleList',["ROLE_USER"]);
+			}else if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
+				this.model.set('userRoleList',["ROLE_KEY_ADMIN"]);
+			}else{
+				this.model.set('userRoleList',["ROLE_SYS_ADMIN"]);
+			}
+//			this.model.unset('userRoleList');
 			
 		},
 		/** all post render plugin initialization */
