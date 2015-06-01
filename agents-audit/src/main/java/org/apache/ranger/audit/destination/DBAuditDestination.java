@@ -78,25 +78,32 @@ public class DBAuditDestination extends AuditDestination {
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
 		boolean retValue = false;
-
-		if (!beginTransaction()) {
-			return false;
-		}
-		boolean isFailed = false;
-		for (AuditEventBase event : events) {
-			try {
-				event.persist(daoManager);
-			} catch (Throwable t) {
-				logger.error("Error persisting data. event=" + event, t);
-				isFailed = true;
-				break;
+		logStatusIfRequired(true);
+		addTotalCount(events.size());
+		
+		if (beginTransaction()) {
+			boolean isFailed = false;
+			for (AuditEventBase event : events) {
+				try {
+					event.persist(daoManager);
+				} catch (Throwable t) {
+					logger.error("Error persisting data. event=" + event, t);
+					isFailed = true;
+					break;
+				}
+			}
+			if (isFailed) {
+				retValue = false;
+				rollbackTransaction();
+			} else {
+				retValue = commitTransaction();
 			}
 		}
-		if (isFailed) {
-			retValue = false;
-			rollbackTransaction();
+		
+		if (retValue) {
+			addSuccessCount(events.size());
 		} else {
-			retValue = commitTransaction();
+			addDeferredCount(events.size());
 		}
 		return retValue;
 	}
@@ -179,6 +186,9 @@ public class DBAuditDestination extends AuditDestination {
 			if (daoManager.getEntityManager() == null) {
 				logger.error("Error connecting audit database. EntityManager is null. dbURL="
 						+ jdbcURL + ", dbUser=" + dbUser);
+			} else {
+				logger.info("Connected to audit database. dbURL=" + jdbcURL
+						+ ", dbUser=" + dbUser);
 			}
 
 		} catch (Throwable t) {

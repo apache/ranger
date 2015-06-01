@@ -106,8 +106,11 @@ public class FileAuditDestination extends AuditDestination {
 
 	@Override
 	synchronized public boolean logJSON(Collection<String> events) {
+		logStatusIfRequired(true);
 		if (isStopped) {
 			logError("log() called after stop was requested. name=" + getName());
+			addTotalCount(events.size());
+			addDeferredCount(events.size());
 			return false;
 		}
 
@@ -118,9 +121,11 @@ public class FileAuditDestination extends AuditDestination {
 			}
 			out.flush();
 		} catch (Throwable t) {
+			addDeferredCount(events.size());
 			logError("Error writing to log file.", t);
 			return false;
 		}
+		addSuccessCount(events.size());
 		return true;
 	}
 
@@ -133,6 +138,8 @@ public class FileAuditDestination extends AuditDestination {
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
 		if (isStopped) {
+			addTotalCount(events.size());
+			addDeferredCount(events.size());
 			logError("log() called after stop was requested. name=" + getName());
 			return false;
 		}
@@ -141,6 +148,9 @@ public class FileAuditDestination extends AuditDestination {
 			try {
 				jsonList.add(MiscUtil.stringify(event));
 			} catch (Throwable t) {
+				addTotalCount(1);
+				addFailedCount(1);
+				logFailedEvent(event);
 				logger.error("Error converting to JSON. event=" + event);
 			}
 		}

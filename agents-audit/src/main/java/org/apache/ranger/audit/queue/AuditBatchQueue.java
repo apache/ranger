@@ -39,9 +39,11 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 
 	Thread consumerThread = null;
 	static int threadCount = 0;
+	static final String DEFAULT_NAME = "summary";
 
 	public AuditBatchQueue(AuditHandler consumer) {
 		super(consumer);
+		setName(DEFAULT_NAME);
 	}
 
 	/*
@@ -207,6 +209,8 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 		long lastDispatchTime = System.currentTimeMillis();
 		boolean isDestActive = true;
 		while (true) {
+			logStatusIfRequired(true);
+
 			// Time to next dispatch
 			long nextDispatchDuration = lastDispatchTime
 					- System.currentTimeMillis() + getMaxBatchInterval();
@@ -269,6 +273,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				logger.error("Caught error during processing request.", t);
 			}
 
+			addTotalCount(localBatchBuffer.size());
 			if (localBatchBuffer.size() > 0 && isToSpool) {
 				// Let spool to the file directly
 				if (isDestActive) {
@@ -279,6 +284,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				// Just before stashing
 				lastDispatchTime = System.currentTimeMillis();
 				fileSpooler.stashLogs(localBatchBuffer);
+				addStashedCount(localBatchBuffer.size());
 				localBatchBuffer.clear();
 			} else if (localBatchBuffer.size() > 0
 					&& (isDrain()
@@ -297,12 +303,15 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 						// Transient error. Stash and move on
 						fileSpooler.stashLogs(localBatchBuffer);
 						isDestActive = false;
+						addStashedCount(localBatchBuffer.size());
 					} else {
 						// We need to drop this event
+						addFailedCount(localBatchBuffer.size());
 						logFailedEvent(localBatchBuffer);
 					}
 				} else {
 					isDestActive = true;
+					addSuccessCount(localBatchBuffer.size());
 				}
 				localBatchBuffer.clear();
 			}

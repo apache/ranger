@@ -32,9 +32,11 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 			.getLog(MultiDestAuditProvider.class);
 
 	protected List<AuditHandler> mProviders = new ArrayList<AuditHandler>();
-
+	static final String DEFAULT_NAME = "multi_dest";
+	
 	public MultiDestAuditProvider() {
 		LOG.info("MultiDestAuditProvider: creating..");
+		setName(DEFAULT_NAME);
 	}
 
 	public MultiDestAuditProvider(AuditHandler provider) {
@@ -57,12 +59,28 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 		}
 	}
 
+	
+	@Override
+	public void setName(String name) {
+		super.setName(name);
+		for (AuditHandler provider : mProviders) {
+			if( provider instanceof BaseAuditHandler) {
+				BaseAuditHandler baseAuditHander = (BaseAuditHandler) provider;
+				baseAuditHander.setParentPath(getName());
+			}
+		}
+	}
+
 	public void addAuditProvider(AuditHandler provider) {
 		if (provider != null) {
 			LOG.info("MultiDestAuditProvider.addAuditProvider(providerType="
 					+ provider.getClass().getCanonicalName() + ")");
 
 			mProviders.add(provider);
+			if( provider instanceof BaseAuditHandler) {
+				BaseAuditHandler baseAuditHander = (BaseAuditHandler) provider;
+				baseAuditHander.setParentPath(getName());
+			}
 		}
 	}
 

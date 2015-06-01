@@ -81,7 +81,7 @@ public class Log4jAuditProvider extends AuditDestination {
 		for (String event : events) {
 			logJSON(event);
 		}
-		return false;
+		return true;
 	}
 
 	@Override

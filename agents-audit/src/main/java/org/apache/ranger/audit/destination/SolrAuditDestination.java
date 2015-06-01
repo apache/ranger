@@ -103,10 +103,14 @@ public class SolrAuditDestination extends AuditDestination {
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
 		try {
+			logStatusIfRequired(true);
+			addTotalCount(events.size());
+			
 			if (solrClient == null) {
 				connect();
 				if (solrClient == null) {
-					// Solr is still not initialized. So need to throw error
+					// Solr is still not initialized. So need return error
+					addDeferredCount(events.size());
 					return false;
 				}
 			}
@@ -121,12 +125,17 @@ public class SolrAuditDestination extends AuditDestination {
 			try {
 				UpdateResponse response = solrClient.add(docs);
 				if (response.getStatus() != 0) {
+					addFailedCount(events.size());
 					logFailedEvent(events, response.toString());
+				} else {
+					addSuccessCount(events.size());
 				}
 			} catch (SolrException ex) {
+				addFailedCount(events.size());
 				logFailedEvent(events, ex);
 			}
 		} catch (Throwable t) {
+			addDeferredCount(events.size());
 			logError("Error sending message to Solr", t);
 			return false;
 		}

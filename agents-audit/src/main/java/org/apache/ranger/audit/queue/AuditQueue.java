@@ -19,10 +19,12 @@
 
 package org.apache.ranger.audit.queue;
 
+import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.BaseAuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -108,6 +110,34 @@ public abstract class AuditQueue extends BaseAuditHandler {
 			LOG.info("File spool is disabled for " + getName());
 		}
 
+	}
+
+	
+	@Override
+	public boolean log(Collection<AuditEventBase> events) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void start() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void stop() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setName(String name) {
+		super.setName(name);
+		if( consumer != null && consumer instanceof BaseAuditHandler) {
+			BaseAuditHandler base = (BaseAuditHandler) consumer;
+			base.setParentPath(getName());
+		}
 	}
 
 	public AuditHandler getConsumer() {

@@ -105,10 +105,15 @@ public class HDFSAuditDestination extends AuditDestination {
 
 	@Override
 	synchronized public boolean logJSON(Collection<String> events) {
+		logStatusIfRequired(true);
+		addTotalCount(events.size());
+
 		if (!initDone) {
+			addDeferredCount(events.size());
 			return false;
 		}
 		if (isStopped) {
+			addDeferredCount(events.size());
 			logError("log() called after stop was requested. name=" + getName());
 			return false;
 		}
@@ -120,9 +125,11 @@ public class HDFSAuditDestination extends AuditDestination {
 			}
 			out.flush();
 		} catch (Throwable t) {
+			addDeferredCount(events.size());
 			logError("Error writing to log file.", t);
 			return false;
 		}
+		addSuccessCount(events.size());
 		return true;
 	}
 
@@ -135,6 +142,8 @@ public class HDFSAuditDestination extends AuditDestination {
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
 		if (isStopped) {
+			logStatusIfRequired(true);
+			addTotalCount(events.size());
 			logError("log() called after stop was requested. name=" + getName());
 			return false;
 		}
@@ -144,6 +153,8 @@ public class HDFSAuditDestination extends AuditDestination {
 				jsonList.add(MiscUtil.stringify(event));
 			} catch (Throwable t) {
 				logger.error("Error converting to JSON. event=" + event);
+				addFailedCount(1);
+				logFailedEvent(event);
 			}
 		}
 		return logJSON(jsonList);

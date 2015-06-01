@@ -76,7 +76,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			// no change
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
-
+			LOG.error("Error getting policies. request=" + webResource.toString() 
+					+ ", response=" + response.toString() + ", serviceName=" + serviceName);
 			throw new Exception(resp.getMessage());
 		}
 
@@ -106,7 +107,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 			throw new Exception("HTTP " + response.getStatus());
 		} else if(response == null) {
-			throw new Exception("unknown error");
+			throw new Exception("unknown error during grantAccess. serviceName="  + serviceName);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -133,7 +134,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 			throw new Exception("HTTP " + response.getStatus());
 		} else if(response == null) {
-			throw new Exception("unknown error");
+			throw new Exception("unknown error. revokeAccess(). serviceName=" + serviceName);
 		}
 
 		if(LOG.isDebugEnabled()) {
