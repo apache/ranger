@@ -77,7 +77,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("Error getting policies. request=" + webResource.toString() 
-					+ ", response=" + response.toString() + ", serviceName=" + serviceName);
+					+ ", response=" + resp.toString() + ", serviceName=" + serviceName);
 			throw new Exception(resp.getMessage());
 		}
 
