@@ -612,7 +612,7 @@ public class UserMgr {
 
 		VXPortalUser userProfile = new VXPortalUser();
 		gjUserToUserProfile(user, userProfile);
-		if (sess.isUserAdmin()
+		if (sess.isUserAdmin() || sess.isKeyAdmin()
 				|| sess.getXXPortalUser().getId().equals(user.getId())) {
 			if (userRoleList == null) {
 				userRoleList = new ArrayList<String>();
@@ -984,7 +984,7 @@ public class UserMgr {
 		}
 		if (!publicRole) {
 			UserSessionBase sess = ContextUtil.getCurrentUserSession();
-			if (sess == null || !sess.isUserAdmin()) {
+			if (sess == null || (!sess.isUserAdmin() && !sess.isKeyAdmin())) {
 				return false;
 			}
 		}
@@ -1090,7 +1090,7 @@ public class UserMgr {
 		if (sess != null) {
 
 			// Admin
-			if (sess != null && sess.isUserAdmin()) {
+			if (sess != null && sess.isUserAdmin() || sess.isKeyAdmin()) {
 				return;
 			}
 

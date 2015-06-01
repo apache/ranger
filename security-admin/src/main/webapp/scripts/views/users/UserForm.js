@@ -103,7 +103,7 @@ define(function(require){
 							if(!SessionMgr.isKeyAdmin())
 								return m.label != 'Unknown'	&& m.label != 'KeyAdmin';
 							else
-								return m.label != 'Unknown'
+								return m.label != 'Unknown' && m.label != 'Admin';
 						});
 						var nvPairs = XAUtils.enumToSelectPairs(userTypes);
 						callback(nvPairs);
@@ -230,7 +230,15 @@ define(function(require){
 		},
 		beforeSavePasswordDetail : function(){
 			this.model.unset('passwordConfirm');
-			this.model.unset('userRoleList');
+			//FOR USER ROLE
+			if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_USER.value){
+				this.model.set('userRoleList',["ROLE_USER"]);
+			}else if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
+				this.model.set('userRoleList',["ROLE_KEY_ADMIN"]);
+			}else{
+				this.model.set('userRoleList',["ROLE_SYS_ADMIN"]);
+			}
+//			this.model.unset('userRoleList');
 			
 		},
 		/** all post render plugin initialization */

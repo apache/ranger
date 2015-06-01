@@ -38,6 +38,7 @@ define(function(require) {
 	var VXPolicyExportAuditList 	= require('collections/VXPolicyExportAuditList');
 	var RangerServiceDefList 		= require('collections/RangerServiceDefList');
 	var RangerService				= require('models/RangerService');
+	var RangerServiceList			= require('collections/RangerServiceList');
 	var AuditlayoutTmpl 			= require('hbs!tmpl/reports/AuditLayout_tmpl');
 	var vOperationDiffDetail		= require('views/reports/OperationDiffDetail');
 	var RangerPolicy 				= require('models/RangerPolicy');
@@ -266,8 +267,8 @@ define(function(require) {
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 			                      {text : 'Today',label :'today'},{text : 'User',label :'requestUser'},
-			                      {text : 'Service Name',label :'resourcePath'},{text : 'Policy ID',label :'policyId'},
-			                      {text : 'Resource Type',label :'resourceType'},{text : 'Service Name',label :'repoName'},
+			                      {text : 'Resource Name',label :'resourcePath'},{text : 'Policy ID',label :'policyId'},
+			                      {text : 'Service Name',label :'repoName'},
 			                      {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
 			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
@@ -297,9 +298,9 @@ define(function(require) {
 						
 						switch (facet) {
 							case 'Service Name':
-								var assetList 	= new VXAssetList();
-								assetList.fetch().done(function(){
-									callback(assetList.map(function(model){return model.get('name');}));
+								var serviceList 	= new RangerServiceList();
+								serviceList.fetch().done(function(){
+									callback(serviceList.map(function(model){return model.get('name');}));
 								});
 								break;
 							case 'Service Type':
