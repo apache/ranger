@@ -227,7 +227,8 @@ define(function(require) {
 				createService					: 'Create Service',
 				editService						: 'Edit Service',
 				serviceDetails					: 'Service Details',
-				serviceName						: 'Service Name'
+				serviceName						: 'Service Name',
+				isFinalPolicy					: 'Is Final Policy'
 			},
 			btn : {
 				add							: 'Add',

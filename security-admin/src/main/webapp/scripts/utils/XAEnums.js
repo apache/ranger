@@ -116,7 +116,8 @@ define(function(require) {
 		Service_HIVE:{value:2, label:'hive', rbkey:'xa.enum.AssetType.ASSET_HIVE', tt: 'lbl.AssetType_ASSET_HIVE'},
 		Service_HBASE:{value:3, label:'hbase', rbkey:'xa.enum.AssetType.ASSET_HBASE', tt: 'lbl.AssetType_ASSET_HBASE'},
 		Service_KNOX:{value:4, label:'knox', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
-		Service_STORM:{value:5, label:'storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'}
+		Service_STORM:{value:5, label:'storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'},
+		SERVICE_TAG:{value:6, label:'_tag_', rbkey:'xa.enum.ServiceType.SERVICE_TAG', tt: 'lbl.ServiceType_SERVICE_TAG'}
 	});
 
 	XAEnums.AuthStatus = mergeParams(XAEnums.AuthStatus, {

@@ -37,27 +37,7 @@
 
   "configs":
   [
-    {
-      "itemId": 1,
-      "name": "username",
-      "type": "string",
-      "mandatory": false,
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Username"
-    },
-
-    {
-      "itemId": 2,
-      "name": "password",
-      "type": "password",
-      "mandatory": false,
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Password"
-    }
+  
   ],
 
   "enums":

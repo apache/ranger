@@ -61,6 +61,9 @@ define(function(require){
 		},
         
     	breadCrumbs : function(){
+    		if(this.rangerService.get('type') == XAEnums.ServiceType.SERVICE_TAG.label){
+    			return [XALinks.get('TagBasedServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
+    		}
     		return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
 //    		return [];
    		},        

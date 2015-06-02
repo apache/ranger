@@ -46,7 +46,12 @@ define(function(require){
 				services : groupedServices
 			};
 		},
-    	breadCrumbs :[XALinks.get('ServiceManager')],
+    	breadCrumbs :function(){
+    		if(this.type == "tag"){
+    			return [XALinks.get('TagBasedServiceManager')];
+    		}
+    		return [XALinks.get('ServiceManager')];
+    	},
 
 		/** Layout sub regions */
     	regions: {},
@@ -69,7 +74,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a Servicemanagerlayout Layout");
 			this.services = new RangerServiceList();	
-			_.extend(this, _.pick(options, 'collection'));
+			_.extend(this, _.pick(options, 'collection','type'));
 			this.bindEvents();
 			this.initializeServices();
 		},

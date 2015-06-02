@@ -48,10 +48,11 @@ define(function(require){
 		},
         
 		breadCrumbs :function(){
+			var name  = this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? 'ServiceManager' : 'TagBasedServiceManager'; 
 			if(this.model.isNew())
-				return [XALinks.get('ServiceManager'), XALinks.get('ServiceCreate', {model:this.model})];
+				return [XALinks.get(name), XALinks.get('ServiceCreate', {model:this.model})];
 			else
-				return [XALinks.get('ServiceManager'), XALinks.get('ServiceEdit',{model:this.model})];
+				return [XALinks.get(name), XALinks.get('ServiceEdit',{model:this.model})];
 		},        
 
 		/** Layout sub regions */
@@ -154,13 +155,11 @@ define(function(require){
 					var msg = that.editService ? 'Service updated successfully' :'Service created successfully';
 					XAUtil.notifySuccess('Success', msg);
 					
-					if(that.editService){
-						App.appRouter.navigate("#!/policymanager",{trigger: true});
+					if(XAEnums.ServiceType.SERVICE_TAG.label == that.model.get('type')){
+						App.appRouter.navigate("#!/policymanager/tag",{trigger: true});
 						return;
 					}
-					
-					App.appRouter.navigate("#!/policymanager",{trigger: true});
-					
+					App.appRouter.navigate("#!/policymanager/resource",{trigger: true});
 				},
 				error: function (model, response, options) {
 					XAUtil.blockUI('unblock');
@@ -269,7 +268,12 @@ define(function(require){
 		},
 		onCancel : function(){
 			XAUtil.allowNavigation();
-			App.appRouter.navigate("#!/policymanager",{trigger: true});
+			if(XAEnums.ServiceType.SERVICE_TAG.label == this.model.get('type')){
+				App.appRouter.navigate("#!/policymanager/tag",{trigger: true});
+				return;
+			}
+			App.appRouter.navigate("#!/policymanager/resource",{trigger: true});
+//			App.appRouter.navigate("#!/policymanager",{trigger: true});
 		},
 		/** on close */
 		onClose: function(){

@@ -30,8 +30,9 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 	return Backbone.Marionette.AppRouter.extend({
 		/** Backbone routes hash */
 		appRoutes: {
-			""							: "postLoginDefaultView",//"dashboardAction",
-			"!/policymanager"			: "serviceManagerAction",
+			""									: "postLoginDefaultView",//"dashboardAction",
+			"!/policymanager/:resource"			: "serviceManagerAction",
+			"!/policymanager/:tag"				: "serviceManagerAction",
 
 			/****** Analytics Report related **********************/
 			"!/reports/userAccess"		: "userAccessReportAction",

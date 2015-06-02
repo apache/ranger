@@ -50,7 +50,12 @@ define(function(require) {
 				title: 'h.repositoryManager'
 			},
 			ServiceManager :{
-				href : '#!/policymanager', 
+				href : '#!/policymanager/resource', 
+				text : 'h.serviceManager',
+				title: 'h.serviceManager'
+			},
+			TagBasedServiceManager :{
+				href : '#!/policymanager/tag', 
 				text : 'h.serviceManager',
 				title: 'h.serviceManager'
 			},

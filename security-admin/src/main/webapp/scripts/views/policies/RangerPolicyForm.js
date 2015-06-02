@@ -88,7 +88,7 @@ define(function(require){
 		getSchema : function(){
 			var attrs = {};
 			var basicSchema = ['name','isEnabled']
-			var schemaNames = ['description', 'isAuditEnabled'];
+			var schemaNames = this.getPolicyBaseFieldNames();
 			
 			var formDataType = new BackboneFormDataType();
 			attrs = formDataType.getFormElements(this.rangerServiceDefModel.get('resources'),this.rangerServiceDefModel.get('enums'), attrs, this);
@@ -261,6 +261,10 @@ define(function(require){
 			_.each(this.model.attributes.resources,function(obj,key){
 				this.model.unset(key, obj.values.toString())
 			},this)*/
+			
+			if(!_.isUndefined(this.model.get('policyType'))){
+				this.model.set('policyType',this.model.get('policyType') ? 1 : 0)
+			}
 			
 		},
 		setPermissionsToColl : function(list, policyItemList) {
@@ -551,6 +555,10 @@ define(function(require){
 			}
 			return obj;
 		},
+		getPolicyBaseFieldNames : function(){
+			 var fields = ['description', 'isAuditEnabled','policyType'];
+			 return this.rangerServiceDefModel.get('name') == XAEnums.ServiceType.SERVICE_TAG.label ?  fields : fields.slice(0,fields.indexOf("policyType"));
+		}
 	});
 
 	return RangerPolicyForm;

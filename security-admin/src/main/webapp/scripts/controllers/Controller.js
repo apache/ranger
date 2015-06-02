@@ -221,24 +221,38 @@ define(function(require) {
    	   //************** Generic design Related *********************/
    	   /************************************************************/
 
-	   serviceManagerAction :function(){
+	   serviceManagerAction :function(type){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
-		   console.log('Policy Manager action called..');
+		   var XAUtil				= require('utils/XAUtils');
+		   var XAEnums				= require('utils/XAEnums');
 		   var view 				= require('views/policymanager/ServiceLayout');
 		   var RangerServiceDefList	= require('collections/RangerServiceDefList');
+		   var RangerServiceDef		= require('models/RangerServiceDef');
+		   
 		   var collection 			= new RangerServiceDefList();
 		   collection.queryParams.sortBy = 'serviceTypeId';
-		   collection.fetch({
-			   cache : false,
-			   async:false
-		   }).done(function(){
-			   if(App.rContent.currentView) App.rContent.currentView.close();
-			   //TODO FROM SERVER SIDE IT SHOULD GIVE SORTBY `ID` BY DEFAULT
-//			   collection = collection.sort()
-			   App.rContent.show(new view({
-				   collection : collection
-			   }));
-		   });
+		   
+		   if(type == 'tag'){
+			   var tagServiceDef	= new RangerServiceDef();
+			   tagServiceDef.url 	= XAUtil.getRangerServiceDef(XAEnums.ServiceType.SERVICE_TAG.label)
+			   tagServiceDef.fetch({
+				   cache : false,
+				   async:false
+			   })
+			   collection.add(tagServiceDef);
+		   }else{
+			   collection.fetch({
+				   cache : false,
+				   async:false
+			   });
+			   var coll = collection.filter(function(model){ return model.get('name') != XAEnums.ServiceType.SERVICE_TAG.label})
+			   collection.reset(coll)
+		   }
+//		   if(App.rContent.currentView) App.rContent.currentView.close();
+		   App.rContent.show(new view({
+			   collection : collection,
+			   type	: type
+		   }));
 	   },
 
 	   serviceCreateAction :function(serviceTypeId){

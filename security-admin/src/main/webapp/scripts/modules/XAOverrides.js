@@ -267,7 +267,7 @@
 	 
 		render: function() {
 			var self = this;
-			this.setOptions(this.schema.options);
+//			this.setOptions(this.schema.options);
 			setTimeout(function () {
 			    self.$el.select2(self.pluginAttr);
 			},0);			

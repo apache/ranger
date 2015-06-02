@@ -80,6 +80,10 @@ define(function(require){
 					offText		: 'NO',
 					switchOn	: true
 				},
+				policyType : {
+					type		: 'Checkbox',
+					title		: localization.tt("lbl.isFinalPolicy"),
+				},
 			});
 		},
 

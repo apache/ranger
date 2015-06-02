@@ -20,12 +20,14 @@
 			<a href="javascript:;" id="nav2"><i class="icon-shield"></i>Access Manager</a>
 			<ul class="dropdown-menu">
 				{{#hasAccessToTab 'Resource Based Policies'}}
-					<li><a href="#!/policymanager"><i class="icon-file"></i>Resource Based Policies</a></li>
+					<li><a href="#!/policymanager/resource"><i class="icon-file"></i>Resource Based Policies</a></li>
 				{{/hasAccessToTab}}
 				{{#hasAccessToTab 'Reports'}}
 					<li><a href="#!/reports/userAccess"><i class="icon-beaker"></i>Reports</a></li>
 				{{/hasAccessToTab}}
-				<!-- <li><a href="#">Tag Based Policies</a></li> -->
+				{{#hasAccessToTab 'Tag Based Policies'}}
+				<li><a href="#!/policymanager/tag"><i class="icon-tag"></i>Tag Based Policies</a></li>
+				{{/hasAccessToTab}}
 			</ul>
 		</li>
 		{{#hasAccessToTab  'Audit'}}
