@@ -42,9 +42,9 @@ public interface RangerPolicyEngine {
 
 	RangerAccessResult createAccessResult(RangerAccessRequest request);
 
-	void enrichContext(RangerAccessRequest request);
+	void preProcess(RangerAccessRequest request);
 
-	void enrichContext(Collection<RangerAccessRequest> requests);
+	void preProcess(Collection<RangerAccessRequest> requests);
 
 	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor);
 

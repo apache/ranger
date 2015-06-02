@@ -103,6 +103,8 @@ public class TestPolicyEngine {
 		policyEngine = new RangerPolicyEngineImpl(servicePolicies);
 
 		for(TestData test : testCase.tests) {
+			policyEngine.preProcess(test.request);
+
 			RangerAccessResult expected = test.result;
 			RangerAccessResult result   = policyEngine.isAccessAllowed(test.request, null);
 

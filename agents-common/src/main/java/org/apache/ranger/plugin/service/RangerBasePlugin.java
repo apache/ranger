@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,14 +31,7 @@ import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
@@ -150,7 +144,7 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			policyEngine.enrichContext(request);
+			policyEngine.preProcess(request);
 
 			return policyEngine.isAccessAllowed(request, resultProcessor);
 		}
@@ -162,7 +156,7 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			policyEngine.enrichContext(requests);
+			policyEngine.preProcess(requests);
 
 			return policyEngine.isAccessAllowed(requests, resultProcessor);
 		}

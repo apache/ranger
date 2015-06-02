@@ -191,7 +191,7 @@ public class RangerPolicyRepository {
         Boolean value = null;
 
         if (accessAuditCache != null) {
-	        value = accessAuditCache.get(request.getResource().getAsString(getServiceDef()));
+	        value = accessAuditCache.get(request.getResource().getAsString());
         }
 
         if ((value != null)) {
@@ -211,7 +211,7 @@ public class RangerPolicyRepository {
         }
 
         if ((ret.getIsAuditedDetermined() == true)) {
-            String strResource = request.getResource().getAsString(getServiceDef());
+            String strResource = request.getResource().getAsString();
 
             Boolean value = ret.getIsAudited() ? Boolean.TRUE : Boolean.FALSE;
 

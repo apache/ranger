@@ -8,3 +8,5 @@
 /target/
 winpkg/target
 .DS_Store
+.gitignore
+.idea

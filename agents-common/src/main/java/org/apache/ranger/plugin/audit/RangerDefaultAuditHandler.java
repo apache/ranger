@@ -85,8 +85,8 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		if(request != null && result != null && result.getIsAudited()) {
 			RangerServiceDef     serviceDef   = result.getServiceDef();
 			RangerAccessResource resource     = request.getResource();
-			String               resourceType = resource == null ? null : resource.getLeafName(serviceDef);
-			String               resourcePath = resource == null ? null : resource.getAsString(serviceDef);
+			String               resourceType = resource == null ? null : resource.getLeafName();
+			String               resourcePath = resource == null ? null : resource.getAsString();
 
 			ret = createAuthzAuditEvent();
 
