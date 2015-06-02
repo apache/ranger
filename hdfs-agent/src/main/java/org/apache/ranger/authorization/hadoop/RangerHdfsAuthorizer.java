@@ -480,8 +480,8 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		RangerAccessRequest  request      = result.getAccessRequest();
 		RangerServiceDef     serviceDef   = result.getServiceDef();
 		RangerAccessResource resource     = request.getResource();
-		String               resourceType = resource != null ? resource.getLeafName(serviceDef) : null;
-		String               resourcePath = resource != null ? resource.getAsString(serviceDef) : null;
+		String               resourceType = resource != null ? resource.getLeafName() : null;
+		String               resourcePath = resource != null ? resource.getAsString() : null;
 
 		auditEvent.setUser(request.getUser());
 		auditEvent.setResourceType(resourceType) ;

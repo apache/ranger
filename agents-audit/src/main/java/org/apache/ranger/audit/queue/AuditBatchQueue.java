@@ -39,7 +39,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 
 	Thread consumerThread = null;
 	static int threadCount = 0;
-	static final String DEFAULT_NAME = "summary";
+	static final String DEFAULT_NAME = "batch";
 
 	public AuditBatchQueue(AuditHandler consumer) {
 		super(consumer);
@@ -209,7 +209,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 		long lastDispatchTime = System.currentTimeMillis();
 		boolean isDestActive = true;
 		while (true) {
-			logStatusIfRequired(true);
+			logStatusIfRequired();
 
 			// Time to next dispatch
 			long nextDispatchDuration = lastDispatchTime
@@ -347,6 +347,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 		} catch (Throwable t) {
 			logger.error("Error while calling stop on consumer.", t);
 		}
+		logStatus();
 		logger.info("Exiting consumerThread.run() method. name=" + getName());
 	}
 }

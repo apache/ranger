@@ -34,11 +34,13 @@ public interface RangerAccessResource {
 
 	public abstract String getValue(String name);
 
+	public RangerServiceDef getServiceDef();
+
 	public Set<String> getKeys();
 
-	public String getLeafName(RangerServiceDef serviceDef);
+	public String getLeafName();
 
-	public String getAsString(RangerServiceDef serviceDef);
+	public String getAsString();
 
 	public Map<String, String> getAsMap();
 

@@ -120,42 +120,50 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public void enrichContext(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.enrichContext(" + request + ")");
+	public void preProcess(RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.preProcess(" + request + ")");
 		}
+
+		setResourceServiceDef(request);
 
 		List<RangerContextEnricher> enrichers = allContextEnrichers;
 
-		if (request != null && !CollectionUtils.isEmpty(enrichers)) {
-			for (RangerContextEnricher enricher : enrichers) {
+		if(!CollectionUtils.isEmpty(enrichers)) {
+			for(RangerContextEnricher enricher : enrichers) {
 				enricher.enrich(request);
 			}
 		}
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.enrichContext(" + request + ")");
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.preProcess(" + request + ")");
 		}
 	}
 
 	@Override
-	public void enrichContext(Collection<RangerAccessRequest> requests) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.enrichContext(" + requests + ")");
+	public void preProcess(Collection<RangerAccessRequest> requests) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.preProcess(" + requests + ")");
 		}
 
-		List<RangerContextEnricher> enrichers = allContextEnrichers;
+		if(CollectionUtils.isNotEmpty(requests)) {
+			for(RangerAccessRequest request : requests) {
+				setResourceServiceDef(request);
+			}
 
-		if (!CollectionUtils.isEmpty(requests) && !CollectionUtils.isEmpty(enrichers)) {
-			for (RangerContextEnricher enricher : enrichers) {
-				for (RangerAccessRequest request : requests) {
-					enricher.enrich(request);
+			List<RangerContextEnricher> enrichers = allContextEnrichers;
+
+			if(CollectionUtils.isNotEmpty(enrichers)) {
+				for(RangerContextEnricher enricher : enrichers) {
+					for(RangerAccessRequest request : requests) {
+						enricher.enrich(request);
+					}
 				}
 			}
 		}
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.enrichContext(" + requests + ")");
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.preProcess(" + requests + ")");
 		}
 	}
 
@@ -454,6 +462,19 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		return result;
+	}
+
+	private void setResourceServiceDef(RangerAccessRequest request) {
+		RangerAccessResource resource = request.getResource();
+
+		if (resource.getServiceDef() == null) {
+			if (resource instanceof RangerMutableResource) {
+				RangerMutableResource mutable = (RangerMutableResource) resource;
+				mutable.setServiceDef(getServiceDef());
+			} else {
+				LOG.debug("RangerPolicyEngineImpl.setResourceServiceDef(): Cannot set ServiceDef in RangerResource.");
+			}
+		}
 	}
 
 	@Override

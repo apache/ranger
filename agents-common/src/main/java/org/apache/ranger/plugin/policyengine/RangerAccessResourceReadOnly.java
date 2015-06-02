@@ -45,11 +45,13 @@ public class RangerAccessResourceReadOnly implements RangerAccessResource {
 
 	public String getValue(String name) { return source.getValue(name); }
 
+	public RangerServiceDef getServiceDef() { return source.getServiceDef(); }
+
 	public Set<String> getKeys() { return keys; }
 
-	public String getLeafName(RangerServiceDef serviceDef) { return source.getLeafName(serviceDef); }
+	public String getLeafName() { return source.getLeafName(); }
 
-	public String getAsString(RangerServiceDef serviceDef) { return source.getAsString(serviceDef); }
+	public String getAsString() { return source.getAsString(); }
 
 	public Map<String, String> getAsMap() { return map; }
 

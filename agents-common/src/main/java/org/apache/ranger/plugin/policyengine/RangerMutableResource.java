@@ -20,8 +20,11 @@
 package org.apache.ranger.plugin.policyengine;
 
 
+import org.apache.ranger.plugin.model.RangerServiceDef;
+
 public interface RangerMutableResource extends RangerAccessResource {
 	void setOwnerUser(String ownerUser);
 
 	void setValue(String type, String value);
+	void setServiceDef(RangerServiceDef serviceDef);
 }

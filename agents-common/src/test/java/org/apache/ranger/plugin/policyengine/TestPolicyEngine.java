@@ -113,8 +113,9 @@ public class TestPolicyEngine {
 		policyEngine = new RangerPolicyEngineImpl(servicePolicies, policyEngineOptions);
 
 		for(TestData test : testCase.tests) {
+			policyEngine.preProcess(test.request);
+
 			RangerAccessResult expected = test.result;
-			policyEngine.enrichContext(test.request);
 			RangerAccessResult result   = policyEngine.isAccessAllowed(test.request, null);
 
 			assertNotNull("result was null! - " + test.name, result);

@@ -52,7 +52,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result, String accessType, String resourcePath) {
 		RangerAccessRequest  request      = result.getAccessRequest();
 		RangerAccessResource resource     = request.getResource();
-		String               resourceType = resource != null ? resource.getLeafName(result.getServiceDef()) : null;
+		String               resourceType = resource != null ? resource.getLeafName() : null;
 
 		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 		auditEvent.setAclEnforcer(RangerModuleName);
@@ -89,7 +89,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			accessType = request.getAccessType();
 		}
 
-		String resourcePath = resource != null ? resource.getAsString(result.getServiceDef()) : null;
+		String resourcePath = resource != null ? resource.getAsString() : null;
 
 		return createAuditEvent(result, accessType, resourcePath);
 	}

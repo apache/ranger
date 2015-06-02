@@ -35,6 +35,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 	private Map<String, String> elements         = null;
 	private String              stringifiedValue = null;
 	private String              leafName         = null;
+	private RangerServiceDef    serviceDef       = null;
 
 
 	public RangerAccessResourceImpl() {
@@ -109,7 +110,18 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
-	public String getLeafName(RangerServiceDef serviceDef) {
+	public void setServiceDef(final RangerServiceDef serviceDef) {
+		this.serviceDef = serviceDef;
+		this.stringifiedValue = this.leafName = null;
+	}
+
+	@Override
+	public RangerServiceDef getServiceDef() {
+		return this.serviceDef;
+	}
+
+	@Override
+	public String getLeafName() {
 		String ret = leafName;
 
 		if(ret == null) {
@@ -134,7 +146,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
-	public String getAsString(RangerServiceDef serviceDef) {
+	public String getAsString() {
 		String ret = stringifiedValue;
 
 		if(ret == null) {

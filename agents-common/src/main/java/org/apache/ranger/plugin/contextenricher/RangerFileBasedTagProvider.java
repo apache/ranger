@@ -79,7 +79,7 @@ public class RangerFileBasedTagProvider extends RangerAbstractContextEnricher {
 			// Provider is file-based.
 			// tags are a JSON strings
 
-			String requestedResource = request.getResource().getAsString(componentServiceDef);
+			String requestedResource = request.getResource().getAsString();
 
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("RangerFileBasedTagProvider.enrich(): requestedResource = '"+ requestedResource +"'");

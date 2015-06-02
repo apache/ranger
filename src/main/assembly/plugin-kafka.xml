@@ -125,9 +125,6 @@
 		<fileSet>
 			<outputDirectory>/install/conf.templates/enable</outputDirectory>
 			<directory>plugin-kafka/conf</directory>
-			<excludes>
-				<exclude>*.sh</exclude>
-			</excludes>
 			<fileMode>700</fileMode>
 		</fileSet>
 		<fileSet>

@@ -93,13 +93,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 			// Master Key does not exists
 	        throw new IOException("Ranger MasterKey does not exists");
 		}
-		try {
-			loadKeys(masterKey);
-		} catch (NoSuchAlgorithmException e) {
-			throw new IOException("Can't load Keys");
-		}catch(CertificateException e){
-			throw new IOException("Can't load Keys");
-		}
+        reloadKeys() ;
 		ReadWriteLock lock = new ReentrantReadWriteLock(true);
 	    readLock = lock.readLock();
 	}
@@ -145,6 +139,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	@Override
 	public KeyVersion createKey(String name, byte[] material, Options options)
 			throws IOException {
+          reloadKeys() ;
 		  if (dbStore.engineContainsAlias(name) || cache.containsKey(name)) {
 			  throw new IOException("Key " + name + " already exists");
 		  }
@@ -275,7 +270,8 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	@Override
 	public List<String> getKeys() throws IOException {
 		ArrayList<String> list = new ArrayList<String>();
-        String alias = null;
+		String alias = null;
+		reloadKeys() ;
 	    Enumeration<String> e = dbStore.engineAliases();
 		while (e.hasMoreElements()) {
 		   alias = e.nextElement();
@@ -289,8 +285,9 @@ public class RangerKeyStoreProvider extends KeyProvider{
 
 	@Override
 	public Metadata getMetadata(String name) throws IOException {
-		readLock.lock();
 	    try {
+			readLock.lock();
+            reloadKeys() ;
 	    	if (cache.containsKey(name)) {
 	    		return cache.get(name);
 	    	}
@@ -345,6 +342,16 @@ public class RangerKeyStoreProvider extends KeyProvider{
 			}
 		}
 	}
+    
+    private void reloadKeys() throws IOException {
+        try {
+            loadKeys(masterKey);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException("Can't load Keys");
+        }catch(CertificateException e){
+            throw new IOException("Can't load Keys");
+        }
+    }
 	
 	/**
 	 * The factory to create JksProviders, which is used by the ServiceLoader.

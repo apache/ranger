@@ -62,7 +62,7 @@ public class RangerResourceAccessCacheImpl implements RangerResourceAccessCache 
 
     @Override
     public LookupResult lookup(RangerAccessResource resource) {
-        String strResource = resource.getAsString(serviceDef);
+        String strResource = resource.getAsString();
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceAccessCacheImpl.lookup(" + strResource + ")");
@@ -91,7 +91,7 @@ public class RangerResourceAccessCacheImpl implements RangerResourceAccessCache 
 
     @Override
     public void add(RangerAccessResource resource, CacheType cacheType) {
-        String strResource = resource.getAsString(serviceDef);
+        String strResource = resource.getAsString();
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceAccessCacheImpl.add(" + strResource + ", " + cacheType + ")");
