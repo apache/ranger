@@ -106,7 +106,7 @@ public class FileAuditDestination extends AuditDestination {
 
 	@Override
 	synchronized public boolean logJSON(Collection<String> events) {
-		logStatusIfRequired(true);
+		logStatusIfRequired();
 		addTotalCount(events.size());
 
 		if (isStopped) {
@@ -183,6 +183,7 @@ public class FileAuditDestination extends AuditDestination {
 			}
 			logWriter = null;
 		}
+		logStatus();
 	}
 
 	// Helper methods in this class

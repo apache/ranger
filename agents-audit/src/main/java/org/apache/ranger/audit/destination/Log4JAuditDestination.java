@@ -59,10 +59,17 @@ public class Log4JAuditDestination extends AuditDestination {
 				+ ", loggerName=" + loggerName);
 	}
 
+	
+	@Override
+	public void stop() {
+		super.stop();
+		logStatus();
+	}
+
 	@Override
 	public boolean log(AuditEventBase event) {
 		if (!auditLogger.isInfoEnabled()) {
-			logStatusIfRequired(true);
+			logStatusIfRequired();
 			addTotalCount(1);
 			return true;
 		}
@@ -77,7 +84,7 @@ public class Log4JAuditDestination extends AuditDestination {
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
 		if (!auditLogger.isInfoEnabled()) {
-			logStatusIfRequired(true);
+			logStatusIfRequired();
 			addTotalCount(events.size());
 			return true;
 		}
@@ -90,7 +97,7 @@ public class Log4JAuditDestination extends AuditDestination {
 
 	@Override
 	public boolean logJSON(String event) {
-		logStatusIfRequired(true);
+		logStatusIfRequired();
 		addTotalCount(1);
 		if (!auditLogger.isInfoEnabled()) {
 			return true;
@@ -106,7 +113,7 @@ public class Log4JAuditDestination extends AuditDestination {
 	@Override
 	public boolean logJSON(Collection<String> events) {
 		if (!auditLogger.isInfoEnabled()) {
-			logStatusIfRequired(true);
+			logStatusIfRequired();
 			addTotalCount(events.size());
 			return true;
 		}

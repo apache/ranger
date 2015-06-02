@@ -33,13 +33,16 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 
 	protected List<AuditHandler> mProviders = new ArrayList<AuditHandler>();
 	static final String DEFAULT_NAME = "multi_dest";
-	
+
 	public MultiDestAuditProvider() {
 		LOG.info("MultiDestAuditProvider: creating..");
 		setName(DEFAULT_NAME);
 	}
 
 	public MultiDestAuditProvider(AuditHandler provider) {
+		LOG.info("MultiDestAuditProvider(): provider="
+				+ (provider == null ? null : provider.getName()));
+		setName(DEFAULT_NAME);
 		addAuditProvider(provider);
 	}
 
@@ -59,12 +62,22 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 		}
 	}
 
-	
+	@Override
+	public void setParentPath(String parentPath) {
+		super.setParentPath(parentPath);
+		for (AuditHandler provider : mProviders) {
+			if (provider instanceof BaseAuditHandler) {
+				BaseAuditHandler baseAuditHander = (BaseAuditHandler) provider;
+				baseAuditHander.setParentPath(getName());
+			}
+		}
+	}
+
 	@Override
 	public void setName(String name) {
 		super.setName(name);
 		for (AuditHandler provider : mProviders) {
-			if( provider instanceof BaseAuditHandler) {
+			if (provider instanceof BaseAuditHandler) {
 				BaseAuditHandler baseAuditHander = (BaseAuditHandler) provider;
 				baseAuditHander.setParentPath(getName());
 			}
@@ -77,7 +90,7 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 					+ provider.getClass().getCanonicalName() + ")");
 
 			mProviders.add(provider);
-			if( provider instanceof BaseAuditHandler) {
+			if (provider instanceof BaseAuditHandler) {
 				BaseAuditHandler baseAuditHander = (BaseAuditHandler) provider;
 				baseAuditHander.setParentPath(getName());
 			}

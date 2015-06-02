@@ -234,9 +234,17 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		return lastDeferredCount;
 	}
 
-	public void logStatusIfRequired(boolean ifRequired) {
+	public void logStatusIfRequired() {
 		long currTime = System.currentTimeMillis();
-		if (!ifRequired || (currTime - lastStatusLogTime) > statusLogIntervalMS) {
+		if ((currTime - lastStatusLogTime) > statusLogIntervalMS) {
+			logStatus();
+		}
+	}
+
+	public void logStatus() {
+		try {
+			long currTime = System.currentTimeMillis();
+
 			long diffTime = currTime - lastStatusLogTime;
 			lastStatusLogTime = currTime;
 
@@ -278,6 +286,8 @@ public abstract class BaseAuditHandler implements AuditHandler {
 					+ (totalDeferredCount > 0 ? (", totalDeferredCount=" + totalDeferredCount)
 							: "");
 			LOG.info(msg);
+		} catch (Throwable t) {
+			LOG.error("Error while printing stats. auditProvider=" + getName());
 		}
 	}
 

@@ -78,7 +78,7 @@ public class DBAuditDestination extends AuditDestination {
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
 		boolean retValue = false;
-		logStatusIfRequired(true);
+		logStatusIfRequired();
 		addTotalCount(events.size());
 		
 		if (beginTransaction()) {
@@ -210,6 +210,7 @@ public class DBAuditDestination extends AuditDestination {
 			entityManagerFactory = null;
 			daoManager = null;
 		}
+		logStatus();
 	}
 
 	private EntityManager getEntityManager() {

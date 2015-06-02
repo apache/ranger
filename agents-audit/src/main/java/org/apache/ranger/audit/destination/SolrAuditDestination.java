@@ -55,6 +55,12 @@ public class SolrAuditDestination extends AuditDestination {
 		super.init(props, propPrefix);
 		connect();
 	}
+	
+	@Override
+	public void stop() {
+		super.stop();
+		logStatus();
+	}
 
 	synchronized void connect() {
 		if (solrClient == null) {
@@ -103,7 +109,7 @@ public class SolrAuditDestination extends AuditDestination {
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
 		try {
-			logStatusIfRequired(true);
+			logStatusIfRequired();
 			addTotalCount(events.size());
 			
 			if (solrClient == null) {
