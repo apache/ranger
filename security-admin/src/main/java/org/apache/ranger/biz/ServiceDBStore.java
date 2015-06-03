@@ -110,6 +110,7 @@ import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
 import org.apache.ranger.service.RangerServiceDefService;
+import org.apache.ranger.service.RangerServiceDefWithAssignedIdService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.RangerServiceWithAssignedIdService;
 import org.apache.ranger.service.XUserService;
@@ -173,6 +174,9 @@ public class ServiceDBStore implements ServiceStore {
     
     @Autowired
     RangerServiceWithAssignedIdService svcServiceWithAssignedId;
+    
+    @Autowired
+    RangerServiceDefWithAssignedIdService svcDefServiceWithAssignedId;
 
     @Autowired
     RangerFactory factory;
@@ -251,15 +255,21 @@ public class ServiceDBStore implements ServiceStore {
 		List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers();
 		List<RangerEnumDef> enums = serviceDef.getEnums();
 
-		// following fields will be auto populated
-		serviceDef.setId(null);
-		serviceDef.setCreateTime(null);
-		serviceDef.setUpdateTime(null);
 		
 		// While creating, value of version should be 1.
 		serviceDef.setVersion(new Long(1));
 		
-		serviceDef = serviceDefService.create(serviceDef);
+		if (populateExistingBaseFields) {
+			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(true);
+			svcDefServiceWithAssignedId.create(serviceDef);
+			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(false);
+		} else {
+			// following fields will be auto populated
+			serviceDef.setId(null);
+			serviceDef.setCreateTime(null);
+			serviceDef.setUpdateTime(null);
+			serviceDef = serviceDefService.create(serviceDef);
+		}
 		Long serviceDefId = serviceDef.getId();
 		XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 		
@@ -1970,10 +1980,12 @@ public class ServiceDBStore implements ServiceStore {
 		return true;
 	}
 
+	@Override
 	public Boolean getPopulateExistingBaseFields() {
 		return populateExistingBaseFields;
 	}
 
+	@Override
 	public void setPopulateExistingBaseFields(Boolean populateExistingBaseFields) {
 		this.populateExistingBaseFields = populateExistingBaseFields;
 	}

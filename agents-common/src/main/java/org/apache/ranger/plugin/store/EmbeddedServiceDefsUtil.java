@@ -169,7 +169,13 @@ public class EmbeddedServiceDefsUtil {
 				ret = loadEmbeddedServiceDef(serviceDefName);
 
 				LOG.info("creating embedded service-def " + serviceDefName);
-				ret = store.createServiceDef(ret);
+				if (ret.getId() != null) {
+					store.setPopulateExistingBaseFields(true);
+					store.createServiceDef(ret);
+					store.setPopulateExistingBaseFields(false);
+				} else {
+					store.createServiceDef(ret);
+				}
 			}
 		} catch(Exception excp) {
 			LOG.fatal("EmbeddedServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);

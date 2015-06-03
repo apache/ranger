@@ -54,6 +54,7 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	private long   nextPolicyId     = 0;
 
 	private ServicePredicateUtil predicateUtil = null;
+	private Boolean populateExistingBaseFields = false;
 
 	public ServiceFileStore() {
 		if(LOG.isDebugEnabled()) {
@@ -942,5 +943,15 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public void setPopulateExistingBaseFields(Boolean populateExistingBaseFields) {
+		this.populateExistingBaseFields = populateExistingBaseFields;
+	}
+
+	@Override
+	public Boolean getPopulateExistingBaseFields() {
+		return populateExistingBaseFields;
 	}
 }

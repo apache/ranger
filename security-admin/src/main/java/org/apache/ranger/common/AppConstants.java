@@ -521,7 +521,7 @@ public class AppConstants extends RangerCommonEnums {
 	/**
 	 * CLASS_TYPE_XA_KMS_KEY is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_KMS_KEY".
 	 */
-	public static final int CLASS_TYPE_XA_KMS_KEY = 1037;	
+	public static final int CLASS_TYPE_XA_KMS_KEY = 1037;
 	/**
 	 * CLASS_TYPE_RANGER_POLICY_WITH_ASSIGNED_ID is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_WITH_ASSIGNED_ID".
 	 */
@@ -530,11 +530,15 @@ public class AppConstants extends RangerCommonEnums {
 	 * CLASS_TYPE_RANGER_SERVICE_WITH_ASSIGNED_ID is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_SERVICE_WITH_ASSIGNED_ID".
 	 */
 	public static final int CLASS_TYPE_RANGER_SERVICE_WITH_ASSIGNED_ID = 1039;
+	/**
+	 * CLASS_TYPE_RANGER_SERVICE_DEF_WITH_ASSIGNED_ID is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_SERVICE_DEF_WITH_ASSIGNED_ID".
+	 */
+	public static final int CLASS_TYPE_RANGER_SERVICE_DEF_WITH_ASSIGNED_ID = 1040;
 
 	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1039;
+	public static final int ClassTypes_MAX = 1040;
 	
 	/***************************************************************
 	 * Enum values for Default SortOrder

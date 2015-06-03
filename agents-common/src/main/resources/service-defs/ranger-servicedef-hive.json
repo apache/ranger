@@ -1,4 +1,5 @@
 {
+	"id":3,
 	"name": "hive",
 	"implClass": "org.apache.ranger.services.hive.RangerServiceHive",
 	"label": "Hive Server2",

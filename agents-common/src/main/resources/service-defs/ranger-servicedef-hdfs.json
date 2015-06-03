@@ -1,4 +1,5 @@
 {
+	"id":1,
 	"name": "hdfs",
 	"implClass": "org.apache.ranger.services.hdfs.RangerServiceHdfs",
 	"label": "HDFS Repository",

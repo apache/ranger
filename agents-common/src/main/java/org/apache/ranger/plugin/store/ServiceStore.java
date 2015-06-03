@@ -73,4 +73,8 @@ public interface ServiceStore {
 	List<RangerPolicy> getServicePolicies(String serviceName, SearchFilter filter) throws Exception;
 
 	ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
+
+	void setPopulateExistingBaseFields(Boolean populateExistingBaseFields);
+
+	Boolean getPopulateExistingBaseFields();
 }

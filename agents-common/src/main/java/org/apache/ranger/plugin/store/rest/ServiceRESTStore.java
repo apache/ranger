@@ -69,6 +69,8 @@ public class ServiceRESTStore implements ServiceStore {
 	public final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
 
 	public static final String REST_MIME_TYPE_JSON = "application/json" ;
+	
+	private Boolean populateExistingBaseFields = false;
 
 	private RangerRESTClient restClient;
 
@@ -616,5 +618,15 @@ public class ServiceRESTStore implements ServiceStore {
 	@Override
 	public List<RangerPolicy> getPoliciesByResourceSignature(String serviceName, String policySignature, Boolean isPolicyEnabled) throws Exception {
 		throw new UnsupportedOperationException("Querying policies by resource signature is not supported!");
+	}
+
+	@Override
+	public void setPopulateExistingBaseFields(Boolean populateExistingBaseFields) {
+		this.populateExistingBaseFields = populateExistingBaseFields;
+	}
+
+	@Override
+	public Boolean getPopulateExistingBaseFields() {
+		return populateExistingBaseFields;
 	}
 }
