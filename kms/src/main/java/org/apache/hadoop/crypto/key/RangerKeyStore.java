@@ -29,6 +29,8 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.DigestInputStream;
 import java.security.DigestOutputStream;
 import java.security.Key;
@@ -122,8 +124,7 @@ public class RangerKeyStore extends KeyStoreSpi {
      * @exception UnrecoverableKeyException if the key cannot be recovered
      * (e.g., the given password is wrong).
      */
-    public Key engineGetKey(String alias, char[] password)
-        throws NoSuchAlgorithmException, UnrecoverableKeyException
+    public Key engineGetKey(String alias, char[] password)throws NoSuchAlgorithmException, UnrecoverableKeyException
     {
     	Key key = null;
 
@@ -132,9 +133,20 @@ public class RangerKeyStore extends KeyStoreSpi {
         if (!(entry instanceof SecretKeyEntry)) {
             return null;
         }
-
-        KeyProtector keyProtector = new KeyProtector(password);
-        key = keyProtector.unseal(((SecretKeyEntry)entry).sealedKey);
+        
+        Class<?> c = null;
+    	Object o = null;
+		try {
+			c = Class.forName("com.sun.crypto.provider.KeyProtector");
+			Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
+	        constructor.setAccessible(true);
+	        o = constructor.newInstance(password);	 
+	        Method m = c.getDeclaredMethod("unseal", SealedObject.class);
+            m.setAccessible(true);
+			key = (Key) m.invoke(o, ((SecretKeyEntry)entry).sealedKey);			
+		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			logger.error(e.getMessage());
+		}
         return key;        
     }
 
@@ -184,12 +196,26 @@ public class RangerKeyStore extends KeyStoreSpi {
     {
         synchronized(entries) {
             try {
-                KeyProtector keyProtector = new KeyProtector(password);
-
+            	
+            	Class<?> c = null;
+            	Object o = null;
+        		try {
+        			c = Class.forName("com.sun.crypto.provider.KeyProtector");
+        			Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
+        	        constructor.setAccessible(true);
+        	        o = constructor.newInstance(password);        	        
+        		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        			logger.error(e.getMessage());
+        			throw new KeyStoreException(e.getMessage());
+        		}
+        		
                 SecretKeyEntry entry = new SecretKeyEntry();
                 entry.date = new Date();
                 // seal and store the key
-                entry.sealedKey = keyProtector.seal(key);
+                Method m = c.getDeclaredMethod("seal", Key.class);
+                m.setAccessible(true);
+                entry.sealedKey = (SealedObject) m.invoke(o, key);
+                
                 entry.cipher_field = cipher;
                 entry.bit_length = bitLength;
                 entry.description = description;
@@ -197,7 +223,8 @@ public class RangerKeyStore extends KeyStoreSpi {
                 entry.attributes = attributes;
                 entries.put(alias.toLowerCase(), entry);                
             } catch (Exception e) {
-                throw new KeyStoreException(e.getMessage());
+            	logger.error(e.getMessage());
+            	throw new KeyStoreException(e.getMessage());
             }      
         }
     }
@@ -225,6 +252,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 				  rangerKMSDao.deleteByAlias(alias);
 			  }			  
 		}catch(Exception e){
+			logger.error(e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -352,6 +380,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 				  }
 			  }
   		}catch(Exception e){
+  			logger.error(e.getMessage());
   			e.printStackTrace();
   		}
 	}
@@ -617,8 +646,22 @@ public class RangerKeyStore extends KeyStoreSpi {
 							  }
 		                      String keyName = alias.split("@")[0] ;
 		                      entry.attributes = "{\"key.acl.name\":\"" +  keyName + "\"}" ;
-							  KeyProtector keyProtector = new KeyProtector(masterKey);
-							  entry.sealedKey = keyProtector.seal(k);
+		                      Class<?> c = null;
+		                  	  Object o = null;
+		                  	  try {
+		              			c = Class.forName("com.sun.crypto.provider.KeyProtector");
+		              			Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
+		              	        constructor.setAccessible(true);
+		              	        o = constructor.newInstance(masterKey);     
+		              	        // seal and store the key
+			                    Method m = c.getDeclaredMethod("seal", Key.class);
+			                    m.setAccessible(true);
+			                    entry.sealedKey = (SealedObject) m.invoke(o, k);
+		                  	  } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		                  		  logger.error(e.getMessage());
+		                  		  throw new IOException(e.getMessage());
+		                  	  }
+		                  	  
  	                          entry.date = ks.getCreationDate(alias);
 		                      entry.version = (alias.split("@").length == 2)?(Integer.parseInt(alias.split("@")[1])):0;
 		    				  entry.description = k.getFormat()+" - "+ks.getType();

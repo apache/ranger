@@ -29,8 +29,8 @@ import org.apache.hadoop.hbase.security.User;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.base.Objects;
@@ -202,6 +202,13 @@ public class AuthorizationSession {
 			LOG.debug(message);
 		}
 		return this;
+	}
+	
+	void logCapturedEvents() {
+		if (_auditHandler != null) {
+			List<AuthzAuditEvent> events = _auditHandler.getCapturedEvents();
+			_auditHandler.logAuthzAudits(events);
+		}
 	}
 	
 	void publishResults() throws AccessDeniedException {
