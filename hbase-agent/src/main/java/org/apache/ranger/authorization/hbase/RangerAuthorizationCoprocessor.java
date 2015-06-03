@@ -37,7 +37,6 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -980,17 +979,49 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	public void preModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
 		requireGlobalPermission("modifyNamespace", ns.getName(), Action.ADMIN);
 	}
+
 	@Override
-	public void preGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList,  List<HTableDescriptor> descriptors) throws IOException {
-		if (tableNamesList == null || tableNamesList.isEmpty()) { // If the list is empty, this is a request for all table descriptors and requires GLOBAL ADMIN privs.
-			requireGlobalPermission("getTableDescriptors", WILDCARD, Action.ADMIN);
-		} else { // Otherwise, if the requestor has ADMIN or CREATE privs for all listed tables, the request can be granted.
-			for (TableName tableName: tableNamesList) {
-				requirePermission("getTableDescriptors", tableName.getName(), null, null, Action.CREATE);
+	public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList, List<HTableDescriptor> descriptors, String regex) throws IOException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
+					descriptors == null ? 0 : descriptors.size(), regex));
+		}
+
+		if (CollectionUtils.isNotEmpty(descriptors)) {
+			// Retains only those which passes authorization checks
+			User user = getActiveUser();
+			String access = _authUtils.getAccess(Action.CREATE);
+			HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
+			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
+				.operation("getTableDescriptors")
+				.otherInformation("regex=" + regex)
+				.remoteAddress(getRemoteAddress())
+				.auditHandler(auditHandler)
+				.user(user)
+				.access(access);
+	
+			Iterator<HTableDescriptor> itr = descriptors.iterator();
+			while (itr.hasNext()) {
+				HTableDescriptor htd = itr.next();
+				String tableName = htd.getTableName().getNameAsString();
+				session.table(tableName).buildRequest().authorize();
+				if (!session.isAuthorized()) {
+					itr.remove();
+					auditHandler.discardMostRecentEvent();
+				}
+			}
+			if (descriptors.size() > 0) {
+				session.logCapturedEvents();
 			}
 		}
+		
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
+					descriptors == null ? 0 : descriptors.size(), regex));
+		}
 	}
-	@Override
+
+    @Override
 	public void preMerge(ObserverContext<RegionServerCoprocessorEnvironment> ctx, Region regionA, Region regionB) throws IOException {
 		requirePermission("mergeRegions", regionA.getTableDesc().getTableName().getName(), null, null, Action.ADMIN);
 	}
