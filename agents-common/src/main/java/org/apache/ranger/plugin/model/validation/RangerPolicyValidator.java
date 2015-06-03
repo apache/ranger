@@ -20,7 +20,7 @@
 package org.apache.ranger.plugin.model.validation;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,9 +38,6 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class RangerPolicyValidator extends RangerValidator {
 
@@ -304,51 +301,38 @@ public class RangerPolicyValidator extends RangerValidator {
 		RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef);
 		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(); // this can be empty but not null!
 		if (hierarchies.isEmpty()) {
-			LOG.debug("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies!  Skipping this check!");
+			LOG.warn("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies, possibly due to a old/migrated service def!  Skipping this check!");
 		} else {
-			Iterator<List<RangerResourceDef>> iterator = hierarchies.iterator();
-			boolean foundHierarchyMatch = false;
-			Set<String> missingResourcesCopyForErrorMessage = null; // used to give more helpful error message to the user
-			while (iterator.hasNext() && !foundHierarchyMatch) {
-				List<RangerResourceDef> aHierarchy = iterator.next();
-				Set<String> mandatoryResources = defHelper.getMandatoryResourceNames(aHierarchy);
-				Set<String> missingResources = Sets.difference(mandatoryResources, policyResources);
-				if (missingResources.isEmpty()) {
-					foundHierarchyMatch = true;
-				} else {
-					/*
-					 * Since user does not specify which hierarchy the policy is for, it is tricky to guess her intention and give error message about 
-					 * what resource is really missing.  For example if only db is speicifed then it is tricky to say if just UDF was missed or TBL and COL were missed. 
-					 * So we punt and capture the first hierarchy that does not match.  And if policy does not match any hierarchies then we use this cached value
-					 * to report error back to the user.  Ideal solution is to require user to specify hierarhcy in policy in case of multi-hierarchy policies.
-					 */
-					missingResourcesCopyForErrorMessage = ImmutableSet.copyOf(missingResources);
-				}
-			}
 			/*
-			 * We have evaluated all valid resource hierarchies for the service.  But policy did not have mandatory resources required by any of those hierarchies!
+			 * A policy is for a single hierarchy however, it doesn't specify which one.  So we have to guess which hierarchy(s) it possibly be for.  First, see if the policy could be for 
+			 * any of the known hierarchies?  A candidate hierarchy is one whose resource levels are a superset of those in the policy.
+			 * Why?  What we want to catch at this stage is policies that straddles multiple hierarchies, e.g. db, udf and column for a hive policy.
+			 * This has the side effect of catch spurious levels specified on the policy, e.g. having a level "blah" on a hive policy.  
 			 */
-			if (!foundHierarchyMatch) {
+			Set<List<RangerResourceDef>> candidateHierarchies = filterHierarchies_hierarchyHasAllPolicyResources(policyResources, hierarchies, defHelper);
+			if (candidateHierarchies.isEmpty()) {
+				// let's build a helpful message for user
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("resources")
-					.subField(missingResourcesCopyForErrorMessage.iterator().next()) // We return any one missing resource here!
-					.isMissing()
-					.becauseOf("required resources [" + missingResourcesCopyForErrorMessage + "] are missing")
+					.subField("incompatible")
+					.isSemanticallyIncorrect()
+					.becauseOf(String.format("policy resources [%s] were incompatible with all the hierarchies for this service defs! Valid hierarchies are: %s", 
+							policyResources.toString(), toStringHierarchies_all(hierarchies, defHelper)))
 					.build());
 				valid = false;
 			}
 			/*
-			 * Since policy does not specify which hierarchy it belongs to, we can't reliably check if a policy is specifying levels not relevant for it.  However, we can 
-			 * do a secular check if we got a level that is not applicable to any hierarchy for the service.
+			 * Among the candidate hierarchies there should be at least one for which policy specifies all of the mandatory resources.  Note that there could be multiple 
+			 * hierarchies that meet that criteria, e.g. a hive policy that specified only DB.  It is not clear if it belongs to DB->UDF or DB->TBL->COL hierarchy.
+			 * However, if both UDF and TBL were required then we can detect that policy does not specify mandatory levels for any of the candidate hierarchies.
 			 */
-			Set<String> allResource = defHelper.getResorceMap().keySet();
-			Set<String> unknownResources = Sets.difference(policyResources, allResource);
-			if (!unknownResources.isEmpty()) {
+			Set<List<RangerResourceDef>> validHierarchies = filterHierarchies_mandatoryResourcesSpecifiedInPolicy(policyResources, candidateHierarchies, defHelper);
+			if (validHierarchies.isEmpty()) {
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("resources")
-					.subField(unknownResources.iterator().next()) // we return any one parameter!
+					.subField("missing mandatory")
 					.isSemanticallyIncorrect()
-					.becauseOf("resource[" + unknownResources + "] is not valid for service-def[" + serviceDef.getName() + "]")
+					.becauseOf("policy is missing required resources. Mandatory fields of potential hierarchies are: " + toStringHierarchies_mandatory(candidateHierarchies, defHelper))
 					.build());
 				valid = false;
 			}
@@ -358,6 +342,79 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceNames(%s, %s, %s): %s", policy, failures, serviceDef, valid));
 		}
 		return valid;
+	}
+	
+	/**
+	 * String representation of mandatory resources of all the hierarchies suitable of showing to user.  Mandatory resources within a hierarchy are not ordered per the hierarchy. 
+	 * @param hierarchies
+	 * @param defHelper
+	 * @return
+	 */
+	String toStringHierarchies_mandatory(Set<List<RangerResourceDef>> hierarchies, RangerServiceDefHelper defHelper) {
+
+		// helper function skipping sanity checks of getting null arguments passed
+		StringBuilder builder = new StringBuilder();
+		for (List<RangerResourceDef> aHierarchy : hierarchies) {
+			builder.append(defHelper.getMandatoryResourceNames(aHierarchy));
+			builder.append(" ");
+		}
+		return builder.toString();
+	}
+	
+	/**
+	 * String representation of all resources of all hierarchies.  Resources within a hierarchy are ordered per the hierarchy.
+	 * @param hierarchies
+	 * @param defHelper
+	 * @return
+	 */
+	String toStringHierarchies_all(Set<List<RangerResourceDef>> hierarchies, RangerServiceDefHelper defHelper) {
+
+		// helper function skipping sanity checks of getting null arguments passed
+		StringBuilder builder = new StringBuilder();
+		for (List<RangerResourceDef> aHierarchy : hierarchies) {
+			builder.append(defHelper.getAllResourceNamesOrdered(aHierarchy));
+			builder.append(" ");
+		}
+		return builder.toString();
+	}
+	/**
+	 * Returns the subset of all hierarchies that are a superset of the policy's resources. 
+	 * @param policyResources
+	 * @param hierarchies
+	 * @return
+	 */
+	Set<List<RangerResourceDef>> filterHierarchies_hierarchyHasAllPolicyResources(Set<String> policyResources, Set<List<RangerResourceDef>> hierarchies, RangerServiceDefHelper defHelper) {
+		
+		// helper function skipping sanity checks of getting null arguments passed
+		Set<List<RangerResourceDef>> result = new HashSet<List<RangerResourceDef>>(hierarchies.size());
+		for (List<RangerResourceDef> aHierarchy : hierarchies) {
+			Set<String> hierarchyResources = defHelper.getAllResourceNames(aHierarchy);
+			if (hierarchyResources.containsAll(policyResources)) {
+				result.add(aHierarchy);
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns the subset of hierarchies all of whose mandatory resources were found in policy's resource set.  candidate hierarchies are expected to have passed 
+	 * <code>filterHierarchies_hierarchyHasAllPolicyResources</code> check first.
+	 * @param policyResources
+	 * @param hierarchies
+	 * @param defHelper
+	 * @return
+	 */
+	Set<List<RangerResourceDef>> filterHierarchies_mandatoryResourcesSpecifiedInPolicy(Set<String> policyResources, Set<List<RangerResourceDef>> hierarchies, RangerServiceDefHelper defHelper) {
+		
+		// helper function skipping sanity checks of getting null arguments passed
+		Set<List<RangerResourceDef>> result = new HashSet<List<RangerResourceDef>>(hierarchies.size());
+		for (List<RangerResourceDef> aHierarchy : hierarchies) {
+			Set<String> mandatoryResources = defHelper.getMandatoryResourceNames(aHierarchy);
+			if (policyResources.containsAll(mandatoryResources)) {
+				result.add(aHierarchy);
+			}
+		}
+		return result;
 	}
 	
 	boolean isValidResourceFlags(final Map<String, RangerPolicyResource> inputPolicyResources, final List<ValidationFailureDetails> failures,

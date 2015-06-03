@@ -142,6 +142,19 @@ public class TestRangerPolicyValidator {
 			{"extra", new String[] { "extra1", "extra2" }, null, null } // spurious "extra" specified
 	};
 
+	private final Object[][] policyResourceMap_bad_multiple_hierarchies = new Object[][] {
+			// resource-name, values, excludes, recursive
+			{  "db", new String[] { "db1", "db2" }, null, true }, 
+			{ "tbl", new String[] { "tbl11", "tbl2" }, null, true }, 
+			{ "col", new String[] { "col1", "col2" }, true, true },
+			{ "udf", new String[] { "extra1", "extra2" }, null, null } // either udf or tbl/db/col should be specified, not both
+	};
+
+	private final Object[][] policyResourceMap_bad_multiple_hierarchies_missing_mandatory = new Object[][] {
+			// resource-name, values, excludes, recursive
+			{  "db", new String[] { "db1", "db2" }, null, true }
+	};
+
 	@Test
 	public final void testIsValid_long() throws Exception {
 		// this validation should be removed if we start supporting other than delete action
@@ -454,8 +467,6 @@ public class TestRangerPolicyValidator {
 				_utils.checkFailureForSemanticError(_failures, "resource-values", "col"); // for spurious resource: "extra"
 				_utils.checkFailureForSemanticError(_failures, "isRecursive", "db"); // for specifying it as true when def did not allow it
 				_utils.checkFailureForSemanticError(_failures, "isExcludes", "col"); // for specifying it as true when def did not allow it
-				_utils.checkFailureForMissingValue(_failures, "resources", "tbl"); // for missing resource: tbl
-				_utils.checkFailureForSemanticError(_failures, "resources", "extra"); // for spurious resource: "extra"
 			}
 		}
 		
@@ -755,8 +766,19 @@ public class TestRangerPolicyValidator {
 		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);				
 		when(_policy.getResources()).thenReturn(policyResources);
 		assertFalse("Missing required resource and unknown resource", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
-		_utils.checkFailureForMissingValue(_failures, "resources", new String[] {"tbl", "udf"} );
-		_utils.checkFailureForSemanticError(_failures, "resources", "extra");
+		_utils.checkFailureForSemanticError(_failures, "resources");
+		
+		// another bad resource map that straddles multiple hierarchies
+		policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad_multiple_hierarchies);
+		when(_policy.getResources()).thenReturn(policyResources);
+		_failures.clear(); assertFalse("Policy with resources for multiple hierarchies", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+		_utils.checkFailureForSemanticError(_failures, "resources", "incompatible");
+		
+		// another bad policy resource map that could match multiple hierarchies but is short on mandatory resources for all of those matches
+		policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad_multiple_hierarchies_missing_mandatory);
+		when(_policy.getResources()).thenReturn(policyResources);
+		_failures.clear(); assertFalse("Policy with resources for multiple hierarchies missing mandatory resources for all pontential matches", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+		_utils.checkFailureForSemanticError(_failures, "resources", "missing mandatory");
 	}
 	
 	
