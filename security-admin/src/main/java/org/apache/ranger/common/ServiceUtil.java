@@ -1310,8 +1310,8 @@ public class ServiceUtil {
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		if(service==null){
-			LOG.error("Requested Service not found. Service name is null.");
-			throw restErrorUtil.createRESTException("No Data Found.",
+			LOG.error("Requested Service not found. serviceName=" + serviceName);
+			throw restErrorUtil.createRESTException("Serivce:" + serviceName + " not found",
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		if(!service.getIsEnabled()){

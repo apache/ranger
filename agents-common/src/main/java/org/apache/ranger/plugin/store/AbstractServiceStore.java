@@ -269,9 +269,13 @@ public abstract class AbstractServiceStore implements ServiceStore {
 			return;
 		}
 
+		if(EmbeddedServiceDefsUtil.instance().getTagServiceDefId() == -1) {
+			LOG.info("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes(" + serviceDef.getName() + "): tag service-def does not exist");
+		}
+
 		String serviceDefName = serviceDef.getName();
 
-		RangerServiceDef tagServiceDef;
+		RangerServiceDef tagServiceDef = null;
 		try {
 			tagServiceDef = this.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
 		} catch (Exception e) {

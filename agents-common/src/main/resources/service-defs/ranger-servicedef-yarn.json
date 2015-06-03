@@ -103,16 +103,6 @@
 
 	"policyConditions": 
 	[
-		{
-			"itemId": 1,
-			"name": "ip-range",
-			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
-			"evaluatorOptions": { },
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "IP Address Range",
-			"description": "IP Address Range"
-		}
+
 	]
 }
