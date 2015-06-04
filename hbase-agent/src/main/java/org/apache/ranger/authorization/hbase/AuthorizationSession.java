@@ -179,9 +179,9 @@ public class AuthorizationSession {
 	
 	AuthorizationSession authorize() {
 		if (LOG.isDebugEnabled()) {
-			String message = "authorize: " + getRequestMessage();
-			LOG.debug(message);
+			LOG.debug("==> AuthorizationSession.authorize: " + getRequestMessage());
 		}
+		
 		if (_request == null) {
 			String message = String.format("Invalid state transition: buildRequest() must be called before authorize().  This request would ultimately get denied.!");
 			throw new IllegalStateException(message);
@@ -195,11 +195,11 @@ public class AuthorizationSession {
 			}
 			_result = _authorizer.isAccessAllowed(_request, _auditHandler);
 		}
+		
 		if (LOG.isDebugEnabled()) {
 			boolean allowed = isAuthorized();
 			String reason = getDenialReason();
-			String message = "AuthorizationSession.authorize: " + getLogMessage(allowed, reason);
-			LOG.debug(message);
+			LOG.debug("<== AuthorizationSession.authorize: " + getLogMessage(allowed, reason));
 		}
 		return this;
 	}
@@ -212,7 +212,10 @@ public class AuthorizationSession {
 	}
 	
 	void publishResults() throws AccessDeniedException {
-
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> AuthorizationSession.publishResults()");
+		}
+		
 		boolean authorized = isAuthorized();
 		if (_auditHandler != null) {
 			List<AuthzAuditEvent> events = null;
@@ -226,7 +229,7 @@ public class AuthorizationSession {
 					events = theseEvents;
 				}
 			} else {
-				AuthzAuditEvent event = _auditHandler.discardMostRecentEvent();
+				AuthzAuditEvent event = _auditHandler.getAndDiscardMostRecentEvent();
 				if (event != null) {
 					events = Lists.newArrayList(event);
 				}
@@ -244,9 +247,13 @@ public class AuthorizationSession {
 			String reason = getDenialReason();
 			String message = getLogMessage(false, reason);
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("AuthorizationSession.publishResults: throwing exception: " + message);
+				LOG.debug("<== AuthorizationSession.publishResults: throwing exception: " + message);
 			}
 			throw new AccessDeniedException("Insufficient permissions for user '" + _user.getName() + "' (action=" + _access + ")");
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== AuthorizationSession.publishResults()");
 		}
 	}
 	

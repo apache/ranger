@@ -37,10 +37,10 @@ public interface HbaseAuditHandler extends RangerAccessResultProcessor {
 	 * After this call the last set of audit events won't be returned by <code>getCapturedEvents</code>. 
 	 * @return
 	 */
-	AuthzAuditEvent discardMostRecentEvent();
+	AuthzAuditEvent getAndDiscardMostRecentEvent();
 	
 	/**
-	 * This is a complement to <code>discardMostRecentEvent</code> to set the most recent events.  Often useful to un-pop audit messages that were take out.
+	 * This is a complement to <code>getAndDiscardMostRecentEvent</code> to set the most recent events.  Often useful to un-pop audit messages that were take out.
 	 * @param capturedEvents
 	 */
 	void setMostRecentEvent(AuthzAuditEvent capturedEvents);
