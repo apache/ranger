@@ -116,6 +116,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	private static final String GROUP_PREFIX = "@";
 		
 	private static final String WILDCARD = "*";
+	private static final String NAMESPACE_SEPARATOR = ":";
 	
     private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
 
@@ -1147,6 +1148,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		UserPermission      userPerm  = up == null ? null : ProtobufUtil.toUserPermission(up);
 		Permission.Action[] actions   = userPerm == null ? null : userPerm.getActions();
 		String              userName  = userPerm == null ? null : Bytes.toString(userPerm.getUser());
+		String              nameSpace = null;
 		String              tableName = null;
 		String              colFamily = null;
 		String              qualifier = null;
@@ -1175,18 +1177,21 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			break;
 
 			case Namespace:
-			default:
-				LOG.warn("grant(): ignoring type '" + perm.getType().name() + "'");
+				nameSpace = userPerm.getNamespace();
 			break;
 		}
 		
-		if(StringUtil.isEmpty(tableName) && StringUtil.isEmpty(colFamily) && StringUtil.isEmpty(qualifier)) {
-			throw new Exception("grant(): table/columnFamily/columnQualifier not specified");
+		if(StringUtil.isEmpty(nameSpace) && StringUtil.isEmpty(tableName) && StringUtil.isEmpty(colFamily) && StringUtil.isEmpty(qualifier)) {
+			throw new Exception("grant(): namespace/table/columnFamily/columnQualifier not specified");
 		}
 
 		tableName = StringUtil.isEmpty(tableName) ? WILDCARD : tableName;
 		colFamily = StringUtil.isEmpty(colFamily) ? WILDCARD : colFamily;
 		qualifier = StringUtil.isEmpty(qualifier) ? WILDCARD : qualifier;
+
+		if(! StringUtil.isEmpty(nameSpace)) {
+			tableName = nameSpace + NAMESPACE_SEPARATOR + tableName;
+		}
 
 		User   activeUser = getActiveUser();
 		String grantor    = activeUser != null ? activeUser.getShortName() : null;
@@ -1244,6 +1249,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 		UserPermission      userPerm  = up == null ? null : ProtobufUtil.toUserPermission(up);
 		String              userName  = userPerm == null ? null : Bytes.toString(userPerm.getUser());
+		String              nameSpace = null;
 		String              tableName = null;
 		String              colFamily = null;
 		String              qualifier = null;
@@ -1268,18 +1274,21 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			break;
 
 			case Namespace:
-			default:
-				LOG.warn("revoke(): ignoring type '" + perm.getType().name() + "'");
+				nameSpace = userPerm.getNamespace();
 			break;
 		}
-		
-		if(StringUtil.isEmpty(tableName) && StringUtil.isEmpty(colFamily) && StringUtil.isEmpty(qualifier)) {
+
+		if(StringUtil.isEmpty(nameSpace) && StringUtil.isEmpty(tableName) && StringUtil.isEmpty(colFamily) && StringUtil.isEmpty(qualifier)) {
 			throw new Exception("revoke(): table/columnFamily/columnQualifier not specified");
 		}
 
 		tableName = StringUtil.isEmpty(tableName) ? WILDCARD : tableName;
 		colFamily = StringUtil.isEmpty(colFamily) ? WILDCARD : colFamily;
 		qualifier = StringUtil.isEmpty(qualifier) ? WILDCARD : qualifier;
+
+		if(! StringUtil.isEmpty(nameSpace)) {
+			tableName = nameSpace + NAMESPACE_SEPARATOR + tableName;
+		}
 
 		User   activeUser = getActiveUser();
 		String grantor    = activeUser != null ? activeUser.getShortName() : null;
