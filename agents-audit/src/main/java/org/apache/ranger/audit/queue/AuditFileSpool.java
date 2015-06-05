@@ -28,6 +28,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -107,6 +108,8 @@ public class AuditFileSpool implements Runnable {
 	boolean isWriting = true;
 	boolean isDrain = false;
 	boolean isDestDown = true;
+
+	int ugiVersion = -1;
 
 	private Gson gson = null;
 
@@ -751,9 +754,27 @@ public class AuditFileSpool implements Runnable {
 	 */
 	@Override
 	public void run() {
+		try {
+			PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
+				public Void run() {
+					runDoAs();
+					return null;
+				};
+			};
+			logger.info("Running fileSpool " + consumerProvider.getName()
+					+ " as user " + MiscUtil.getUGILoginUser());
+			MiscUtil.getUGILoginUser().doAs(action);
+		} catch (Throwable t) {
+			logger.fatal("Exited thread without abnormaly. queue="
+					+ consumerProvider.getName(), t);
+		}
+	}
+
+	public void runDoAs() {
 		// boolean isResumed = false;
 		while (true) {
 			try {
+
 				// Let's pause between each iteration
 				if (currentConsumerIndexRecord == null) {
 					currentConsumerIndexRecord = indexQueue.poll(
@@ -843,9 +864,7 @@ public class AuditFileSpool implements Runnable {
 					closeFileIfNeeded();
 				}
 			} catch (InterruptedException e) {
-				logger.info(
-						"Caught exception in consumer thread. Shutdown might be in progress",
-						e);
+				logger.info("Caught exception in consumer thread. Shutdown might be in progress");
 			} catch (Throwable t) {
 				logger.error("Exception in destination writing thread.", t);
 			}

@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -83,7 +82,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		RangerAccessRequest request = result != null ? result.getAccessRequest() : null;
 
 		if(request != null && result != null && result.getIsAudited()) {
-			RangerServiceDef     serviceDef   = result.getServiceDef();
+			//RangerServiceDef     serviceDef   = result.getServiceDef();
 			RangerAccessResource resource     = request.getResource();
 			String               resourceType = resource == null ? null : resource.getLeafName();
 			String               resourcePath = resource == null ? null : resource.getAsString();

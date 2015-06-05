@@ -93,15 +93,6 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 		if (logStdOut) {
 			String path = request.getRequestUri().getPath();
 
-			// mediaType=multipart/form-data;boundary=----WebKitFormBoundaryTHan76r5AkgpAuVG
-			if (request.getMediaType() != null) {
-				// logger.info("DELETE ME: mediaType=" + request.getMediaType()
-				// + ", getType()" + request.getMediaType().getType()
-				// + ", getSubType()="
-				// + request.getMediaType().getSubtype());
-			} else {
-				logger.info("DELETE ME: mediaType is null. path=" + path);
-			}
 			if ((request.getMediaType() == null || !request.getMediaType()
 					.getType().equals("multipart"))
 					&& !path.endsWith("/service/general/logs")) {

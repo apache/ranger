@@ -47,7 +47,11 @@
 		{
 			"itemId":900,
 			"name":"solr_admin",
-			"label":"Solr Admin"
+			"label":"Solr Admin",
+			"impliedGrants":[
+				"query,update,others"
+			]
+			
 		}
 		
 	],
