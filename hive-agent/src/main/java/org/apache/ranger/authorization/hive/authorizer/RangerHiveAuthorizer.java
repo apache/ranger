@@ -312,6 +312,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		            	List<RangerAccessRequest> colRequests = new ArrayList<RangerAccessRequest>();
 	
 		            	String[] columns = StringUtils.split(resource.getColumn(), COLUMN_SEP);
+
+		            	// in case of multiple columns, original request is not sent to the plugin; hence service-def will not be set
+		            	resource.setServiceDef(hivePlugin.getServiceDef());
 	
 		            	for(String column : columns) {
 	                        if (column != null) {

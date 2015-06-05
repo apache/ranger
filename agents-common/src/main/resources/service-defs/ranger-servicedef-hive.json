@@ -131,7 +131,17 @@
 		{
 			"itemId": 8,
 			"name": "all",
-			"label": "All"
+			"label": "All",
+			"impliedGrants":
+			[
+				"select",
+				"update",
+				"create",
+				"drop",
+				"alter",
+				"index",
+				"lock"
+			]
 		}
 	],
 
