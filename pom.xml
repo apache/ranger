@@ -105,6 +105,7 @@
 		<asm.version>3.1</asm.version>
 		<c3p0.version>0.9.1.2</c3p0.version>
 		<cglib.version>2.2.0-b23</cglib.version>
+        <codehaus.jackson.storm.version>1.9.13</codehaus.jackson.storm.version>
 		<codehaus.jackson.version>1.8.1</codehaus.jackson.version>
 		<commons.beanutils.collections.version>1.8.3</commons.beanutils.collections.version>
 		<commons.beanutils.core.version>1.8.3</commons.beanutils.core.version>
