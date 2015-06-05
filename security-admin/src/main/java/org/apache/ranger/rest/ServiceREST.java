@@ -1197,6 +1197,9 @@ public class ServiceREST {
 		String          logMsg   = null;
 
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
+			if(lastKnownVersion == null) {
+				lastKnownVersion = new Long(-1);
+			}
 			
 			try {
 				ret = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
