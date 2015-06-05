@@ -568,6 +568,232 @@
 			  },
 			});
 	  
+	// bootstrap-editable ============================================
+	  /**
+	   ********************** custom type created for tag based policies
+	  List of taglistcheck. 
+	  Internally value stored as javascript array of values.
+
+	  @class tagchecklist
+	  @extends list
+	  @final
+	  @example
+	  <a href="#" id="options" data-type="tagchecklist" data-pk="1" data-url="/post" data-title="Select options"></a>
+	  **/
+	  (function ($) {
+	      "use strict";
+	      
+	      var TagChecklist = function (options) {
+	          this.init('tagchecklist', options, TagChecklist.defaults);
+	      };
+
+	      $.fn.editableutils.inherit(TagChecklist, $.fn.editabletypes.list);
+
+	      $.extend(TagChecklist.prototype, {
+	          renderList: function() {
+	              var $label='', $div='', that = this;
+	              this.$tpl.empty();
+	              
+	              if(!$.isArray(this.sourceData)) {
+	                  return;
+	              }
+
+	              this.servicePerms = _.groupBy(this.sourceData,function(obj){ 
+	              	var val = obj.value; 
+	              	return val.substr(0,val.indexOf(":"));
+	              });
+	              var $table = $('<table>', {'class':'table table-policy-condition' });
+	              var $tbody = $('<tbody>');
+	              var $selectAllTr = $('<tr><th></th><td><i class="pull-right">Select / Deselect All</i></td><td><label><input type="checkbox" value="selectall" data-js="selectall"></label></td></tr>')
+	              
+	              $tbody.append($selectAllTr);
+	              $table.append($tbody);
+	              _.each(this.servicePerms, function(permissions,service) {
+	  				var $tr = $('<tr>');
+	  				var $th = $('<th>').text(service);
+	  				var $td = $('<td>');
+	  				var $selectAllPerComponent = $('<td><label><input type="checkbox" value="selectall" data-js="'+service+'selectall"></label></td>')
+	  				_.each(permissions, function(perm){ 
+	  					$label = $('<label>').append($('<input>', {
+	  											type: 'checkbox',
+	  											value: perm.value,
+	  											'data-js' : perm.value
+	  										}))
+	  										.append($('<span>').text(' '+perm.text));
+	  					$td.append($label)
+	  				})
+	  				$tr.append($th)
+	  				$tr.append($td)
+	  				$tr.append($selectAllPerComponent)
+	  				$tbody.append($tr)
+	  				
+	  			}, this);
+	              $('<div>').append($table).appendTo(this.$tpl);
+	              
+	              this.$input = this.$tpl.find('input[type="checkbox"]');
+	              this.setClass();
+	              
+	              this.$tpl.find('[data-js$="selectall"]').on('click',function(elem){
+	            	  console.log(elem)
+	            	  var $elem = $(elem.currentTarget);
+	            	  if($elem.attr('data-js') == "selectall"){
+	            		  that.$input.prop('checked',$elem.is(':checked'))
+	            	  }else if($elem.attr('data-js').indexOf("selectall") >= 0){
+	            		  var idx = $elem.attr('data-js').indexOf("selectall")
+	            		  var service = $elem.attr('data-js').substr(0,idx)
+	            		  that.$tpl.find('[type="checkbox"][data-js^="'+service+'"]').prop('checked',$elem.is(':checked'))
+	            		  var selectall = false;
+            			  selectall = true;
+            			  _.each(that.$tpl.find('[data-js$="selectall"]'), function(ele,i ){
+            				  if($(ele).attr('data-js') != "selectall"){
+            					  selectall = selectall && $(ele).is(':checked')
+            					  if(!selectall) return;
+            				  }
+            			  })
+            			  that.$tpl.find('[data-js="selectall"]').prop('checked',selectall)
+	            	  }
+	              })
+	              
+	              this.$tpl.find('input[type="checkbox"][data-js*=":"]').on('click',function(elem){
+	            	  	  //to handle selectall option for component level 
+	            		  var selectall = true;
+            			  _.each($(this).parent().parent().find('input'), function(ele){ 
+            				  selectall  = $(ele).is(':checked') && selectall
+            				  if(!selectall) return;
+	            		  })
+            			  var val = $(this).attr('data-js')
+	            		  var service = val.substr(0,val.indexOf(":"))
+	                	  that.$tpl.find('[data-js="'+service+'selectall"]').prop('checked',selectall)
+	                	  //to handle selectall option
+	                	  selectall = true;
+            			  _.each(that.$tpl.find('[data-js$="selectall"]'), function(ele,i ){
+            				  if($(ele).attr('data-js') != "selectall"){
+            					  selectall = selectall && $(ele).is(':checked')
+            					  if(!selectall) return;
+            				  }
+            			  })
+            			  that.$tpl.find('[data-js="selectall"]').prop('checked',selectall)
+	                	  
+	              })
+	          },
+	         
+	         value2str: function(value) {
+	             return $.isArray(value) ? value.sort().join($.trim(this.options.separator)) : '';
+	         },  
+	         
+	         //parse separated string
+	          str2value: function(str) {
+	             var reg, value = null;
+	             if(typeof str === 'string' && str.length) {
+	                 reg = new RegExp('\\s*'+$.trim(this.options.separator)+'\\s*');
+	                 value = str.split(reg);
+	             } else if($.isArray(str)) {
+	                 value = str; 
+	             } else {
+	                 value = [str];
+	             }
+	             return value;
+	          },       
+	         
+	         //set checked on required checkboxes
+	         value2input: function(value) {
+	        	 var that = this;
+	              this.$input.prop('checked', false);
+	              if($.isArray(value) && value.length) {
+	                 this.$input.each(function(i, el) {
+	                     var $el = $(el);
+	                     // cannot use $.inArray as it performs strict comparison
+	                     $.each(value, function(j, val){
+	                         /*jslint eqeq: true*/
+	                         if($el.val() == val) {
+	                         /*jslint eqeq: false*/                           
+	                             $el.prop('checked', true);
+	                         }
+	                     });
+	                 }); 
+	                 //set checkall option for perticular service if all perms are checked
+	                 _.each(this.$tpl.find('[data-js$="selectall"]'), function(elem){
+	                	 var val = $(elem).attr('data-js')
+	                	 if(val != "selectall"){
+	                		 var service = val.substr(0,val.indexOf("selectall"))
+	                		 $(elem).find('[data-js^="'+service+'"]')
+	                		 var serviceCheckbox = $(elem).parent().parent().siblings('td').find('input[type="checkbox"]')
+	                		 var checkall = true;
+	                		 _.each(serviceCheckbox, function(ele){ 
+	                			 checkall  = $(ele).is(':checked') && checkall
+	                			 if(!checkall) return;
+	                		 })
+	                		 $(elem).prop('checked', checkall)
+	                		 
+	                		 checkall = true;
+	                		 var selectAllChbx = that.$tpl.find('[data-js$="selectall"]')
+	                		 _.each(selectAllChbx, function(ele){
+	                			 if($(ele).attr('data-js') == "selectall") return;
+	                			 checkall  = $(ele).is(':checked') && checkall
+	                			 if(!checkall) return;
+	                		 })
+	                		 that.$tpl.find('[data-js="selectall"]').prop('checked', checkall)
+	                		 
+	                	 }
+	                 })
+	              }  
+	          },  
+	          
+	         input2value: function() { 
+	             var checked = [];
+	             this.$input.filter(':checked').each(function(i, el) {
+	                 checked.push($(el).val());
+	             });
+	             return checked;
+	         },            
+	            
+	         //collect text of checked boxes
+	          value2htmlFinal: function(value, element) {
+	             var html = [],
+	                 checked = $.fn.editableutils.itemsByValue(value, this.sourceData),
+	                 escape = this.options.escape;
+	                 
+	             if(checked.length) {
+	                 $.each(checked, function(i, v) {
+	                     var text = escape ? $.fn.editableutils.escape(v.text) : v.text; 
+	                     html.push(text); 
+	                 });
+	                 $(element).html(html.join('<br>'));
+	             } else {
+	                 $(element).empty(); 
+	             }
+	          },
+	      });      
+
+	      TagChecklist.defaults = $.extend({}, $.fn.editabletypes.list.defaults, {
+	          /**
+	          @property tpl 
+	          @default <div></div>
+	          **/         
+	          tpl:'<div class="editable-checklist"></div>',
+	          
+	          /**
+	          @property inputclass 
+	          @type string
+	          @default null
+	          **/         
+	          inputclass: null,        
+	          
+	          /**
+	          Separator of values when reading from `data-value` attribute
+
+	          @property separator 
+	          @type string
+	          @default ','
+	          **/         
+	          separator: ','
+	      });
+
+	      $.fn.editabletypes.tagchecklist = TagChecklist;      
+
+	  }(window.jQuery));
+
+
 	  
 	  	
 	//Scroll to top functionality on all views -- if the scroll height is > 500 px.

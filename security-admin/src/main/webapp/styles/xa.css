@@ -598,12 +598,12 @@ table td.backgrid-filter .clear {
   background-color: #eeeeee;
 }
 
-table.table-permission tr th:last-child, table.table-permission tr td:last-child {
+/*table.table-permission tr th:last-child, table.table-permission tr td:last-child {
   border: 0;
   padding-left: 6%;
   color: transparent;
   background-color: #fff;
-}
+}*/
 
 .table-permission thead tr {
   color: #4F4F4F;
@@ -1838,4 +1838,33 @@ td.select-row-cell {
 
 #r_topNav .dropdown-menu {
 	margin:0;
+}
+
+.table-policy-condition th,
+.table-policy-condition td {
+  border: none !important;
+  white-space: nowrap;
+  color: #444444 !important;
+}
+
+.table-policy-condition tr:nth-child(even) td, .table-policy-condition tr:nth-child(even) th  {background-color: #E4F4D8;}
+.table-policy-condition tr:nth-child(odd) td, .table-policy-condition tr:nth-child(odd) th  {background-color: #DEEEF9;}
+
+.table-policy-condition label {
+  float: left;
+  margin-right: 10px;
+}
+.label-lightblue, .label-lightgreen {text-shadow:none; display: block; margin-bottom: 2px;}
+.label-lightblue {background-color: #DEEEF9; color: #000;}
+.label-lightgreen {background-color: #E4F4D8; color: #000;}
+
+input[type="radio"], input[type="checkbox"] {margin-top: 0;}
+
+.table-policy-condition td:nth-child(3) {
+  border-left: 2px solid #fff !important;
+}
+.table-policy-condition td:nth-child(3) label {
+  float: none;
+  text-align: center;
+  margin-left: 10px;
 }

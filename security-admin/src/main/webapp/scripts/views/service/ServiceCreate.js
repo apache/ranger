@@ -268,7 +268,7 @@ define(function(require){
 		},
 		onCancel : function(){
 			XAUtil.allowNavigation();
-			if(XAEnums.ServiceType.SERVICE_TAG.label == this.model.get('type')){
+			if(XAEnums.ServiceType.SERVICE_TAG.label == this.rangerServiceDefModel.get('name')){
 				App.appRouter.navigate("#!/policymanager/tag",{trigger: true});
 				return;
 			}

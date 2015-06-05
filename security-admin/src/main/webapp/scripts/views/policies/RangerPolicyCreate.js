@@ -48,11 +48,11 @@ define(function(require){
     		};
     	},
     	breadCrumbs :function(){
-	    	
+    		var name  = this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? 'ServiceManager' : 'TagBasedServiceManager';
     		if(this.model.isNew())
-    			return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyCreate')];
+    			return [XALinks.get(name),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyCreate')];
     		else
-    			return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyEdit')];
+    			return [XALinks.get(name),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyEdit')];
     	} ,        
 
 		/** Layout sub regions */

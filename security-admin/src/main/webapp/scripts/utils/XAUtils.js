@@ -1007,26 +1007,17 @@ define(function(require) {
 	};
 	XAUtils.filterAllowedActions = function(controller) {
 		var SessionMgr = require('mgrs/SessionMgr');
-		if (!SessionMgr.isSystemAdmin()) {
-
 			var XAGlobals = require('utils/XAGlobals');
 			var that = this;
 			var vXPortalUser = SessionMgr.getUserProfile();
 			var denyControllerActions = [];
 			var denyModulesObj = [];
 			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
+			//TODO Temporary fix for tag based policies : need to come from server
+			userModuleNames.push('Tag Based Policies')
 			var groupModuleNames = _.pluck(vXPortalUser.get('groupPermissions'), 'moduleName');
 			var moduleNames = _.union(userModuleNames, groupModuleNames);
-			//TODO
-			/*if($.inArray('Policy Manager',moduleNames) >= 0){
-				moduleNames.push('Resource Based Policies')
-			}
-			if($.inArray('Analytics',moduleNames) >= 0){
-				moduleNames.push('Reports')
-			}
-			if($.inArray('KMS',moduleNames) >= 0){
-				moduleNames.push('Key Manager')
-			}*/
+			
 			_.each(XAGlobals.ListOfModuleActions,function(val,key){
 				if(!_.isArray(val)){
 					_.each(val,function(val1,key1){
@@ -1056,8 +1047,6 @@ define(function(require) {
 					}
 				});
 			}
-
-		}
 		return controller;
 	};
 	XAUtils.getRangerServiceByName = function(name) {

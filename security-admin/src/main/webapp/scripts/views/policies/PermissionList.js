@@ -66,7 +66,7 @@ define(function(require) {
 		},
 
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes','policyConditions','userList'));
+			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes','policyConditions','userList','rangerServiceDefModel'));
 			this.setupPermissionsAndConditions();
 			
 		},
@@ -82,7 +82,11 @@ define(function(require) {
 			this.dropDownChange(this.ui.selectGroups);
 			this.dropDownChange(this.ui.selectUsers);
 			//render permissions and policy conditions
-			this.renderPerms();
+			if(this.rangerServiceDefModel.get('name') == XAEnums.ServiceType.SERVICE_TAG.label){
+				this.renderPermsForTagBasedPolicies()
+			}else{
+				this.renderPerms();
+			}
 			this.renderPolicyCondtion();
 		},
 		setupFormForEditMode : function() {
@@ -300,6 +304,75 @@ define(function(require) {
 			});
 			
 		},
+		renderPermsForTagBasedPolicies :function(){
+			var that = this;
+			this.ui.addPerms.attr('data-type','tagchecklist')
+			this.ui.addPerms.attr('title','Components Permissions')
+			this.ui.delegatedAdmin.parent('td').hide();
+			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
+//			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
+			//create x-editable for permissions
+			this.ui.addPerms.editable({
+			    emptytext : 'Add Permissions',
+				source: this.perms,
+				value : this.permsIds,
+				display: function(values,srcData) {
+					if(_.isNull(values) || _.isEmpty(values)){
+						$(this).empty();
+						that.model.unset('accesses');
+						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addPermissionsSpan.attr('title','add');
+						return;
+					}
+					if(_.contains(values,"-1")){
+						values = _.without(values,"-1")
+					}
+					//To remove selectall options
+					values = _.uniq(values);
+					if(values.indexOf("selectall") >= 0){
+						values.splice(values.indexOf("selectall"), 1)
+					}
+//			    	that.checkDirtyFieldForGroup(values);
+					
+					
+					var permTypeArr = [];
+					var valArr = _.map(values, function(id){
+						if(!_.isUndefined(id)){
+							var obj = _.findWhere(srcData,{'value' : id});
+							permTypeArr.push({permType : obj.value});
+							return "<span class='label label-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
+						}
+					});
+					var perms = []
+					if(that.model.has('accesses')){
+							perms = that.model.get('accesses');
+					}
+					
+					var items=[];
+					_.each(that.accessItems, function(item){ 
+						if($.inArray( item.type, values) >= 0){
+							item.isAllowed = true;
+							items.push(item) ;
+						}
+					},this);
+					// Save form data to model
+					that.model.set('accesses', items);
+					$(this).html(_.uniq(valArr).join(" "));
+					that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addPermissionsSpan.attr('title','edit');
+				},
+			}).on('click', function(e) {
+				e.stopPropagation();
+				e.preventDefault();
+				that.clickOnPermissions(that);
+			});
+			that.ui.addPermissionsSpan.click(function(e) {
+				e.stopPropagation();
+				that.$('a[data-js="permissions"]').editable('toggle');
+				that.clickOnPermissions(that);
+			});
+			
+		},
 		clickOnPermissions : function(that) {
 			var selectAll = true;
 			var checklist = that.$('.editable-checklist').find('input[type="checkbox"]')
@@ -472,7 +545,8 @@ define(function(require) {
 				'userList' 	: this.userList,
 				'policyType'	: this.policyType,
 				'accessTypes'	: this.accessTypes,
-				'policyConditions' : this.rangerServiceDefModel.get('policyConditions')
+				'policyConditions' : this.rangerServiceDefModel.get('policyConditions'),
+				'rangerServiceDefModel' : this.rangerServiceDefModel
 			};
 		},
 		events : {
@@ -513,8 +587,12 @@ define(function(require) {
 		},
 		getPermHeaders : function(){
 			var permList = [];
-			permList.unshift(localization.tt('lbl.delegatedAdmin'));
-			permList.unshift(localization.tt('lbl.permissions'));
+			if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
+				permList.unshift(localization.tt('lbl.delegatedAdmin'));
+				permList.unshift(localization.tt('lbl.permissions'));
+			}else{
+				permList.unshift(localization.tt('lbl.componentPermissions'));
+			}
 			if(!_.isEmpty(this.rangerServiceDefModel.get('policyConditions'))){
 				permList.unshift(localization.tt('h.policyCondition'));
 			}
