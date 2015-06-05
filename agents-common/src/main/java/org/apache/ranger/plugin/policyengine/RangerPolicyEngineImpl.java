@@ -320,6 +320,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				if (tagAccessResult.getIsAccessDetermined()) {
 
 					if (LOG.isDebugEnabled()) {
+						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedNoAudit() - access determined by tag policy. No resource policies will be evaluated, request=" + request + ", result=" + tagAccessResult);
+
 						LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + "): " + tagAccessResult);
 					}
 
@@ -376,15 +378,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			if (!CollectionUtils.isEmpty(evaluators = tagPolicyRepository.getPolicyEvaluators())) {
 
-				boolean someTagPolicyDeniedAccess = false;
-				boolean someTagPolicyAllowedAccess = false;
-				boolean someTagPolicyRequiredAudit = false;
-				RangerAccessResult allowedAccessResult = createAccessResult(request);
-				RangerAccessResult deniedAccessResult = createAccessResult(request);
+				boolean someTagAllowedAudit = false;
+
+				RangerAccessResult savedAccessResult = createAccessResult(request);
 
 				List<RangerTagAuditEvent> tagAuditEvents = new ArrayList<RangerTagAuditEvent>();
 
 				for (RangerResource.RangerResourceTag resourceTag : resourceTags) {
+
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + resourceTag.getName() + ")");
 					}
@@ -400,14 +401,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						if (evaluator.isFinal() ||
 								(tagEvalResult.getIsAccessDetermined() && tagEvalResult.getIsAuditedDetermined())) {
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval for  tag-policy-id=" + tagEvalResult.getPolicyId() + " for tag (" + resourceTag.getName() + ") with authorization=" + tagEvalResult.getIsAllowed());
+								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + resourceTag.getName() + ") with authorization=" + tagEvalResult.getIsAllowed());
 							}
-							break;
+							break;			// Break out of policy-evaluation loop for this tag
 						}
 					}
 
 					if (tagEvalResult.getIsAuditedDetermined()) {
-						someTagPolicyRequiredAudit = true;
+						someTagAllowedAudit = true;
 						// And generate an audit event
 						if (tagEvalResult.getIsAccessDetermined()) {
 							RangerTagAuditEvent event = new RangerTagAuditEvent(resourceTag.getName(), tagEvalResult);
@@ -416,34 +417,29 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					}
 
 					if (tagEvalResult.getIsAccessDetermined()) {
-						if (tagEvalResult.getIsAllowed()) {
+
+						savedAccessResult.setAccessResultFrom(tagEvalResult);
+
+						if (!tagEvalResult.getIsAllowed()) {
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: access allowed");
+								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag-policies as tag (" + resourceTag.getName() + "), tag-policy-id=" + tagEvalResult.getPolicyId() + " denied access.");
 							}
-							someTagPolicyAllowedAccess = true;
-							allowedAccessResult.setAccessResultFrom(tagEvalResult);
-						} else {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: access denied");
-							}
-							someTagPolicyDeniedAccess = true;
-							deniedAccessResult.setAccessResultFrom(tagEvalResult);
+							break;		// Break out of tags evaluation loop altogether
 						}
 					}
 				}
 
-				if (someTagPolicyDeniedAccess) {
-					result.setAccessResultFrom(deniedAccessResult);
-				} else if (someTagPolicyAllowedAccess) {
-					result.setAccessResultFrom(allowedAccessResult);
-				}
+				result.setAccessResultFrom(savedAccessResult);
 
-				if (someTagPolicyRequiredAudit) {
+				if (someTagAllowedAudit) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: at least one tag-policy requires audit");
+						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: at least one tag-policy requires generation of audit event");
 					}
 					result.setIsAudited(true);
-					RangerTagAuditEvent.processTagEvents(tagAuditEvents, someTagPolicyDeniedAccess);
+
+					boolean isAccessDenied = result.getIsAccessDetermined() && !result.getIsAllowed();
+
+					RangerTagAuditEvent.processTagEvents(tagAuditEvents, isAccessDenied);
 					// Set processed list into result
 					// result.setAuxilaryAuditInfo(tagAuditEvents);
 				}
@@ -454,7 +450,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ")" );
+			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + result + ")" );
 		}
 
 		return result;

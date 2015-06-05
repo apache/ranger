@@ -1133,6 +1133,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		service.setVersion(version);
 
+		service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
+
 		if(populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
 			service = svcServiceWithAssignedId.update(service);

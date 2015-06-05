@@ -54,7 +54,7 @@
       "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
       "enricherOptions" : {
         "TagProviderType":"FILESTORE_BASED_TAG_PROVIDER",
-        "pollingInterval":10000
+        "pollingInterval":60000
       }
     }
   ],

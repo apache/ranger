@@ -121,10 +121,12 @@
     },
     "tagPolicies":[
       {"id":5,"name":"allow somethingelse tag","isEnabled":true,"isAuditEnabled":true,"policyType":0,
-        "resources":{"tag":{"values":["restricte?"],"isRecursive":false}},
+        "resources":{"tag":{"values":["pii"],"isRecursive":false}},
         "policyItems":[
           {"accesses":[{"type":"hdfs:read", "isAllowed":true}, {"type":"hive:grant", "isAllowed":true}, {"type":"delete", "isAllowed":true}, {"type":":write", "isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false,
           "conditions" : [{"type":"ScriptConditionEvaluator", "values": [
+            "importPackage(java.util); var accessDate = ctx.getAsDate(ctx.accessTime); var expiryDate =ctx.getTagAttributeAsDate('pii','expiry'); expiryDate.getTime() < accessDate.getTime();"
+            ,
             "importPackage(java.util); var accessTime = ctx.accessTime; print('accessTime=' + accessTime); var accessDate = ctx.getAsDate(accessTime); println('accessDate=' + accessDate); var currentDate = new Date(); println('currentDate=' + currentDate); println('current=' +currentDate.getTime()); println('access='+ accessDate.getTime()); result = true;"
             ,
             "importPackage(java.util); var accessTime = ctx.accessTime; var currentTime = Date(); print('accessTime=' + accessTime); println('currentTime=' + currentTime); accessTime.after(currentTime)"
