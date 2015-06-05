@@ -1683,6 +1683,13 @@ public class ServiceDBStore implements ServiceStore {
 		List<XXResourceDef> resDefList = daoMgr.getXXResourceDef().findByServiceDefId(createdService.getType());
 		
 		for(XXResourceDef resDef : resDefList) {
+			// for hive, 2 policies should be created: 1) database/table/column 2) database/udf
+			// until we support multiple default policies creation - one for each resource hierarchy,
+			// lets just skip udf in the resoure list
+			if("udf".equalsIgnoreCase(resDef.getName())) {
+				continue;
+			}
+
 			RangerPolicyResource polRes = new RangerPolicyResource();
 			polRes.setIsExcludes(false);
 			polRes.setIsRecursive(false);
