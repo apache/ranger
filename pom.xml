@@ -90,6 +90,7 @@
   <module>plugin-yarn</module>
   <module>ranger_solrj</module>
   <module>security-admin</module>
+  <module>plugin-solr</module>
   <module>ugsync</module>
   <module>unixauthclient</module>
   <module>unixauthservice</module>
@@ -147,6 +148,7 @@
 		<jersey-client.version>2.6</jersey-client.version>
 		<junit.version>4.11</junit.version>
 		<kafka.version>0.8.2.0</kafka.version>
+		<!--<kafka.version>0.8.2.2.3.0.0-2208</kafka.version>-->
 		<mockito.version>1.8.4</mockito.version>
 		<hamcrest-version>1.3</hamcrest-version>
 		<knox.gateway.version>0.6.0</knox.gateway.version>
@@ -158,7 +160,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
 		<slf4j-api.version>1.7.5</slf4j-api.version>
-		<solr.version>5.1.0</solr.version>
+		<solr.version>5.2.0</solr.version>
 		<ranger.solrj.version>${project.version}</ranger.solrj.version>
 		<springframework.spring.version>2.5.6</springframework.spring.version>
 		<!--
@@ -216,12 +218,14 @@
             <module>unixauthnative</module>
           </modules>
       </profile>
+<!--
       <profile>
           <id>solr-security</id>
          <modules>
         	 <module>plugin-solr</module>         
          </modules>
       </profile>
+-->
       <profile>
           <id>kafka-security</id>
          <modules>
@@ -256,6 +260,31 @@
                 <enabled>false</enabled>
             </snapshots>
           </repository>
+	  <repository>
+            <id>apache.solr.rc</id>
+            <name>Apache Solr RC builds</name>
+            <url>https://dist.apache.org/repos/dist/dev/lucene/lucene-solr-5.2.0-RC4-rev1683206/solr/maven</url>
+            <releases>
+            	<enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+          </repository>
+	  <repository>
+            <id>apache.lucene.rc</id>
+            <name>Apache Lucene RC builds</name>
+            <url>https://dist.apache.org/repos/dist/dev/lucene/lucene-solr-5.2.0-RC4-rev1683206/lucene/maven</url>
+            <releases>
+            	<enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+          </repository>
+
+	  
+
   </repositories>
 	<dependencyManagement>
 		<dependencies>
