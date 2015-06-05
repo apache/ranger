@@ -96,4 +96,7 @@ public interface ServiceStore {
 	String getPolicyForVersionNumber(Long policyId);
 
 
-	}
+	void setPopulateExistingBaseFields(Boolean populateExistingBaseFields);
+
+	Boolean getPopulateExistingBaseFields();
+}

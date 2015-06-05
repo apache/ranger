@@ -158,6 +158,9 @@ public abstract class RangerDaoManagerBase {
 		if (classType == AppConstants.CLASS_TYPE_RANGER_GROUP_PERMISSION) {
 			return getXXUserPermission();
 		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_SERVICE_DEF_WITH_ASSIGNED_ID) {
+			return getXXServiceDefWithAssignedId();
+		}
 		
 		logger.error("No DaoManager found for classType=" + classType, new Throwable());
 		return null;
@@ -283,6 +286,9 @@ public abstract class RangerDaoManagerBase {
 		}
 		if (className.equals("XXGroupPermission")) {
 			return getXXGroupPermission();
+		}
+		if (className.equals("XXServiceDefWithAssignedId")) {
+			return getXXServiceDefWithAssignedId();
 		}
 		
 		logger.error("No DaoManager found for className=" + className, new Throwable());
@@ -454,6 +460,10 @@ public abstract class RangerDaoManagerBase {
 
 	public XXGroupPermissionDao getXXGroupPermission(){
 		return new XXGroupPermissionDao(this);
+	}
+	
+	public XXServiceDefWithAssignedIdDao getXXServiceDefWithAssignedId() {
+		return new XXServiceDefWithAssignedIdDao(this);
 	}
 
 }

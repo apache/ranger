@@ -29,6 +29,10 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.SearchField.DATA_TYPE;
+import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDBBase;
@@ -38,6 +42,7 @@ import org.apache.ranger.entity.XXPolicyConditionDef;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceDefBase;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
@@ -50,7 +55,7 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V extends RangerServiceDef>
+public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef>
 		extends RangerBaseModelService<T, V> {
 	private static final Log LOG = LogFactory.getLog(RangerServiceDefServiceBase.class);
 
@@ -63,9 +68,92 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 	@Autowired
 	GUIDUtil guidUtil;
 	
+	public RangerServiceDefServiceBase() {
+		super();
+		
+		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
+		
+		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
+		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE_ID, "obj.id"));
+		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE, "obj.name"));
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	protected RangerServiceDef populateViewBean(XXServiceDefBase xServiceDef) {
+		RangerServiceDef serviceDef = super.populateViewBean((T) xServiceDef);
+		Long serviceDefId = xServiceDef.getId();
+
+		List<XXServiceConfigDef> xConfigs = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
+		if (!stringUtil.isEmpty(xConfigs)) {
+			List<RangerServiceConfigDef> configs = new ArrayList<RangerServiceConfigDef>();
+			for (XXServiceConfigDef xConfig : xConfigs) {
+				RangerServiceConfigDef config = populateXXToRangerServiceConfigDef(xConfig);
+				configs.add(config);
+			}
+			serviceDef.setConfigs(configs);
+		}
+
+		List<XXResourceDef> xResources = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
+		if (!stringUtil.isEmpty(xResources)) {
+			List<RangerResourceDef> resources = new ArrayList<RangerResourceDef>();
+			for (XXResourceDef xResource : xResources) {
+				RangerResourceDef resource = populateXXToRangerResourceDef(xResource);
+				resources.add(resource);
+			}
+			serviceDef.setResources(resources);
+		}
+
+		List<XXAccessTypeDef> xAccessTypes = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
+		if (!stringUtil.isEmpty(xAccessTypes)) {
+			List<RangerAccessTypeDef> accessTypes = new ArrayList<RangerAccessTypeDef>();
+			for (XXAccessTypeDef xAtd : xAccessTypes) {
+				RangerAccessTypeDef accessType = populateXXToRangerAccessTypeDef(xAtd);
+				accessTypes.add(accessType);
+			}
+			serviceDef.setAccessTypes(accessTypes);
+		}
+
+		List<XXPolicyConditionDef> xPolicyConditions = daoMgr.getXXPolicyConditionDef()
+				.findByServiceDefId(serviceDefId);
+		if (!stringUtil.isEmpty(xPolicyConditions)) {
+			List<RangerPolicyConditionDef> policyConditions = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
+			for (XXPolicyConditionDef xPolicyCondDef : xPolicyConditions) {
+				RangerPolicyConditionDef policyCondition = populateXXToRangerPolicyConditionDef(xPolicyCondDef);
+				policyConditions.add(policyCondition);
+			}
+			serviceDef.setPolicyConditions(policyConditions);
+		}
+
+		List<XXContextEnricherDef> xContextEnrichers = daoMgr.getXXContextEnricherDef()
+				.findByServiceDefId(serviceDefId);
+		if (!stringUtil.isEmpty(xContextEnrichers)) {
+			List<RangerContextEnricherDef> contextEnrichers = new ArrayList<RangerServiceDef.RangerContextEnricherDef>();
+			for (XXContextEnricherDef xContextEnricherDef : xContextEnrichers) {
+				RangerContextEnricherDef contextEnricher = populateXXToRangerContextEnricherDef(xContextEnricherDef);
+				contextEnrichers.add(contextEnricher);
+			}
+			serviceDef.setContextEnrichers(contextEnrichers);
+		}
+
+		List<XXEnumDef> xEnumList = daoMgr.getXXEnumDef().findByServiceDefId(serviceDefId);
+		if (!stringUtil.isEmpty(xEnumList)) {
+			List<RangerEnumDef> enums = new ArrayList<RangerEnumDef>();
+			for (XXEnumDef xEnum : xEnumList) {
+				RangerEnumDef vEnum = populateXXToRangerEnumDef(xEnum);
+				enums.add(vEnum);
+			}
+			serviceDef.setEnums(enums);
+		}
+		return serviceDef;
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
-	protected XXServiceDef mapViewToEntityBean(RangerServiceDef vObj, XXServiceDef xObj, int operationContext) {
+	protected XXServiceDefBase mapViewToEntityBean(RangerServiceDef vObj, XXServiceDefBase xObj, int operationContext) {
 		
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 		
@@ -84,7 +172,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDef xObj) {
+	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDefBase xObj) {
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
 		vObj.setName(xObj.getName());
@@ -361,20 +449,41 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDef, V exte
 
 	@SuppressWarnings("unchecked")
 	public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
-		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
 		RangerServiceDefList retList = new RangerServiceDefList();
-
-		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields, retList);
+		int startIndex = searchFilter.getStartIndex();
+		int pageSize = searchFilter.getMaxRows();
+		searchFilter.setStartIndex(0);
+		searchFilter.setMaxRows(Integer.MAX_VALUE);
+		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields,
+				retList);
+		List<XXServiceDef> permittedServiceDefs = new ArrayList<XXServiceDef>();
 		for (XXServiceDef xSvcDef : xSvcDefList) {
-			serviceDefList.add(populateViewBean((T) xSvcDef));
+			if (bizUtil.hasAccess(xSvcDef, null)) {
+				permittedServiceDefs.add(xSvcDef);
+			}
 		}
-
-		retList.setServiceDefs(serviceDefList);
-
+		if (permittedServiceDefs.size() > 0) {
+			populatePageList(permittedServiceDefs, startIndex, pageSize, retList);
+		}
 		return retList;
+
 	}
 
-	protected String mapToJsonString(Map<String, String> map) {
+	private void populatePageList(List<XXServiceDef> xxObjList, int startIndex, int pageSize,
+			RangerServiceDefList retList) {
+		List<RangerServiceDef> onePageList = new ArrayList<RangerServiceDef>();
+
+		for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
+			onePageList.add(populateViewBean(xxObjList.get(i)));
+		}
+		retList.setServiceDefs(onePageList);
+		retList.setStartIndex(startIndex);
+		retList.setPageSize(pageSize);
+		retList.setResultSize(onePageList.size());
+		retList.setTotalCount(xxObjList.size());
+	}
+	
+	private String mapToJsonString(Map<String, String> map) {
 		String ret = null;
 
 		if(map != null) {

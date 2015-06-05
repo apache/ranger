@@ -1,4 +1,5 @@
 {
+	"id":5,
 	"name": "knox",
 	"implClass": "org.apache.ranger.services.knox.RangerServiceKnox",
 	"label": "Knox Gateway",

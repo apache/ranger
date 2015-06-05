@@ -179,7 +179,13 @@ public class EmbeddedServiceDefsUtil {
 				ret = loadEmbeddedServiceDef(serviceDefName);
 
 				LOG.info("creating embedded service-def " + serviceDefName);
-				ret = store.createServiceDef(ret);
+				if (ret.getId() != null) {
+					store.setPopulateExistingBaseFields(true);
+					ret = store.createServiceDef(ret);
+					store.setPopulateExistingBaseFields(false);
+				} else {
+					ret = store.createServiceDef(ret);
+				}
 				LOG.info("created embedded service-def " + serviceDefName);
 			}
 		} catch(Exception excp) {

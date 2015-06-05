@@ -145,7 +145,7 @@ public class TestRangerServiceDefHelper {
 		expectedHierarchies.add(Lists.newArrayList("namespace", "function"));
 		
 		for (List<RangerResourceDef> aHierarchy : hierarchies) {
-			List<String> resourceNames = _helper.getAllResourceNames(aHierarchy);
+			List<String> resourceNames = _helper.getAllResourceNamesOrdered(aHierarchy);
 			assertTrue(expectedHierarchies.contains(resourceNames));
 			expectedHierarchies.remove(resourceNames);
 		}
@@ -186,7 +186,7 @@ public class TestRangerServiceDefHelper {
 		expectedHierarchies.add(Lists.newArrayList("namespace", "function"));
 		
 		for (List<RangerResourceDef> aHierarchy : hierarchies) {
-			List<String> resourceNames = _helper.getAllResourceNames(aHierarchy);
+			List<String> resourceNames = _helper.getAllResourceNamesOrdered(aHierarchy);
 			assertTrue(expectedHierarchies.contains(resourceNames));
 			expectedHierarchies.remove(resourceNames);
 		}

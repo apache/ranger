@@ -268,9 +268,7 @@ public class RangerBasePlugin {
 	}
 
 	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
-		if(request != null && resultProcessor != null && policyEngine != null) {
+		if(request != null && resultProcessor != null) {
 			RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
 	
 			accessRequest.setResource(new RangerAccessResourceImpl(request.getResource()));
@@ -283,7 +281,7 @@ public class RangerBasePlugin {
 			accessRequest.setSessionId(request.getSessionId());
 
 			// call isAccessAllowed() to determine if audit is enabled or not
-			RangerAccessResult accessResult = policyEngine.isAccessAllowed(accessRequest, null);
+			RangerAccessResult accessResult = isAccessAllowed(accessRequest, null);
 
 			if(accessResult != null && accessResult.getIsAudited()) {
 				accessRequest.setAccessType(action);

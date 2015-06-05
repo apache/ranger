@@ -59,6 +59,7 @@ public class ServiceFileStore extends AbstractServiceStore {
 
 	private ServicePredicateUtil predicateUtil = null;
 	private FileStoreUtil fileStoreUtil = null;
+	private Boolean populateExistingBaseFields = false;
 
 	public ServiceFileStore() {
 		if(LOG.isDebugEnabled()) {
@@ -960,5 +961,15 @@ public class ServiceFileStore extends AbstractServiceStore {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public void setPopulateExistingBaseFields(Boolean populateExistingBaseFields) {
+		this.populateExistingBaseFields = populateExistingBaseFields;
+	}
+
+	@Override
+	public Boolean getPopulateExistingBaseFields() {
+		return populateExistingBaseFields;
 	}
 }

@@ -119,7 +119,25 @@ public class RangerServiceDefHelper {
 		return result;
 	}
 	
-	public List<String> getAllResourceNames(List<RangerResourceDef> hierarchy) {
+	/**
+	 * Set view of a hierarchy's resource names for efficient searching
+	 * @param hierarchy
+	 * @return
+	 */
+	public Set<String> getAllResourceNames(List<RangerResourceDef> hierarchy) {
+		Set<String> result = new HashSet<String>(hierarchy.size());
+		for (RangerResourceDef resourceDef : hierarchy) {
+			result.add(resourceDef.getName());
+		}
+		return result;
+	}
+	
+	/**
+	 * Resources names matching the order of list of resource defs passed in.
+	 * @param hierarchy
+	 * @return
+	 */
+	public List<String> getAllResourceNamesOrdered(List<RangerResourceDef> hierarchy) {
 		List<String> result = new ArrayList<String>(hierarchy.size());
 		for (RangerResourceDef resourceDef : hierarchy) {
 			result.add(resourceDef.getName());

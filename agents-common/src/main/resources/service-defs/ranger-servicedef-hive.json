@@ -1,4 +1,5 @@
 {
+	"id":3,
 	"name": "hive",
 	"implClass": "org.apache.ranger.services.hive.RangerServiceHive",
 	"label": "Hive Server2",
@@ -130,7 +131,17 @@
 		{
 			"itemId": 8,
 			"name": "all",
-			"label": "All"
+			"label": "All",
+			"impliedGrants":
+			[
+				"select",
+				"update",
+				"create",
+				"drop",
+				"alter",
+				"index",
+				"lock"
+			]
 		}
 	],
 
