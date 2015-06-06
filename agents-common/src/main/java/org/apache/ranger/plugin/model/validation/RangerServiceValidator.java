@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
 
 import com.google.common.collect.Sets;
@@ -112,20 +113,20 @@ public class RangerServiceValidator extends RangerValidator {
 			Long id = service.getId();
 			if (action == Action.UPDATE) { // id is ignored for CREATE
 				if (id == null) {
-					String message = "service id was null/empty/blank"; 
+					String message = "service id was null/empty/blank";
 					LOG.debug(message);
 					failures.add(new ValidationFailureDetailsBuilder()
-						.field("id")
-						.isMissing()
-						.becauseOf(message)
-						.build());
+							.field("id")
+							.isMissing()
+							.becauseOf(message)
+							.build());
 					valid = false;
 				} else if (getService(id) == null) {
 					failures.add(new ValidationFailureDetailsBuilder()
-						.field("id")
-						.isSemanticallyIncorrect()
-						.becauseOf("no service exists with id[" + id +"]")
-						.build());
+							.field("id")
+							.isSemanticallyIncorrect()
+							.becauseOf("no service exists with id[" + id + "]")
+							.build());
 					valid = false;
 				}
 			}
@@ -133,29 +134,29 @@ public class RangerServiceValidator extends RangerValidator {
 			boolean nameSpecified = StringUtils.isNotBlank(name);
 			RangerServiceDef serviceDef = null;
 			if (!nameSpecified) {
-				String message = "service name[" + name + "] was null/empty/blank"; 
+				String message = "service name[" + name + "] was null/empty/blank";
 				LOG.debug(message);
 				failures.add(new ValidationFailureDetailsBuilder()
-					.field("name")
-					.isMissing()
-					.becauseOf(message)
-					.build());
+						.field("name")
+						.isMissing()
+						.becauseOf(message)
+						.build());
 				valid = false;
 			} else {
 				RangerService otherService = getService(name);
 				if (otherService != null && action == Action.CREATE) {
 					failures.add(new ValidationFailureDetailsBuilder()
-						.field("name")
-						.isSemanticallyIncorrect()
-						.becauseOf("service with the name[" + name + "] already exists")
-						.build());
+							.field("name")
+							.isSemanticallyIncorrect()
+							.becauseOf("service with the name[" + name + "] already exists")
+							.build());
 					valid = false;
-				} else if (otherService != null && otherService.getId() !=null && otherService.getId() != id) {
+				} else if (otherService != null && otherService.getId() != null && otherService.getId() != id) {
 					failures.add(new ValidationFailureDetailsBuilder()
-						.field("id/name")
-						.isSemanticallyIncorrect()
-						.becauseOf("id/name conflict: another service already exists with name[" + name + "], its id is [" + otherService.getId() + "]")
-						.build());
+							.field("id/name")
+							.isSemanticallyIncorrect()
+							.becauseOf("id/name conflict: another service already exists with name[" + name + "], its id is [" + otherService.getId() + "]")
+							.build());
 					valid = false;
 				}
 			}
@@ -163,19 +164,19 @@ public class RangerServiceValidator extends RangerValidator {
 			boolean typeSpecified = StringUtils.isNotBlank(type);
 			if (!typeSpecified) {
 				failures.add(new ValidationFailureDetailsBuilder()
-					.field("type")
-					.isMissing()
-					.becauseOf("service def [" + type + "] was null/empty/blank")
-					.build());
+						.field("type")
+						.isMissing()
+						.becauseOf("service def [" + type + "] was null/empty/blank")
+						.build());
 				valid = false;
 			} else {
 				serviceDef = getServiceDef(type);
 				if (serviceDef == null) {
 					failures.add(new ValidationFailureDetailsBuilder()
-						.field("type")
-						.isSemanticallyIncorrect()
-						.becauseOf("service def named[" + type + "] not found")
-						.build());
+							.field("type")
+							.isSemanticallyIncorrect()
+							.becauseOf("service def named[" + type + "] not found")
+							.build());
 					valid = false;
 				}
 			}
@@ -186,16 +187,56 @@ public class RangerServiceValidator extends RangerValidator {
 				Set<String> missingParameters = Sets.difference(reqiredParameters, inputParameters);
 				if (!missingParameters.isEmpty()) {
 					failures.add(new ValidationFailureDetailsBuilder()
-						.field("configuration")
-						.subField(missingParameters.iterator().next()) // we return any one parameter!
-						.isMissing()
-						.becauseOf("required configuration parameter is missing; missing parameters: " + missingParameters)
+							.field("configuration")
+							.subField(missingParameters.iterator().next()) // we return any one parameter!
+							.isMissing()
+							.becauseOf("required configuration parameter is missing; missing parameters: " + missingParameters)
+							.build());
+					valid = false;
+				}
+			}
+
+			String tagServiceName = service.getTagService();
+
+			if (StringUtils.isNotBlank(tagServiceName) && StringUtils.equals(type, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+				failures.add(new ValidationFailureDetailsBuilder()
+						.field("tag_service")
+						.isSemanticallyIncorrect()
+						.becauseOf("tag service cannot be part of any other service")
 						.build());
+				valid = false;
+			}
+
+			boolean needToEnsureServiceType = false;
+
+			if (action == Action.UPDATE) {
+				RangerService otherService = getService(name);
+				String otherTagServiceName = otherService == null ? null : otherService.getTagService();
+
+				if (StringUtils.isNotBlank(tagServiceName)) {
+					if (!StringUtils.equals(tagServiceName, otherTagServiceName)) {
+						needToEnsureServiceType = true;
+					}
+				}
+			} else {    // action == Action.CREATE
+				if (StringUtils.isNotBlank(tagServiceName)) {
+					needToEnsureServiceType = true;
+				}
+			}
+
+			if (needToEnsureServiceType) {
+				RangerService maybeTagService = getService(tagServiceName);
+				if (maybeTagService == null || !StringUtils.equals(maybeTagService.getType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("tag_service")
+							.isSemanticallyIncorrect()
+							.becauseOf("tag service name does not refer to existing tag service:" + tagServiceName)
+							.build());
 					valid = false;
 				}
 			}
 		}
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerServiceValidator.isValid(" + service + "): " + valid);
 		}

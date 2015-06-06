@@ -1134,7 +1134,36 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		service.setVersion(version);
 
-		service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
+		boolean hasTagServiceValueChanged = false;
+		Long existingTagServiceValue = existing.getTagService();
+		String newTagServiceName = service.getTagService();
+		Long newTagServiceValue = null;
+
+		if (StringUtils.isNotBlank(newTagServiceName)) {
+			RangerService tmp = getServiceByName(newTagServiceName);
+
+			if (tmp == null || !tmp.getType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("ServiceDBStore.updateService() - " + newTagServiceName + " does not refer to a valid tag service.(" + service + ")");
+				}
+				throw restErrorUtil.createRESTException("Invalid tag service name " + newTagServiceName, MessageEnums.ERROR_CREATING_OBJECT);
+
+			} else {
+				newTagServiceValue = tmp.getId();
+			}
+		}
+
+		if (existingTagServiceValue == null) {
+			if (newTagServiceValue != null) {
+				hasTagServiceValueChanged = true;
+			}
+		} else if (!existingTagServiceValue.equals(newTagServiceValue)) {
+			hasTagServiceValueChanged = true;
+		}
+
+		if (hasTagServiceValueChanged) {
+			service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
+		}
 
 		if(populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
