@@ -19,6 +19,7 @@
 
 package org.apache.ranger.audit.queue;
 
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
+import org.apache.ranger.audit.provider.MiscUtil;
 
 /**
  * This is a non-blocking queue with no limit on capacity.
@@ -124,6 +126,26 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 	 */
 	@Override
 	public void run() {
+		try {
+			if (isConsumerDestination) {
+				PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
+					public Void run() {
+						runDoAs();
+						return null;
+					};
+				};
+				logger.info("Running queue " + getName() + " as user "
+						+ MiscUtil.getUGILoginUser());
+				MiscUtil.getUGILoginUser().doAs(action);
+			} else {
+				runDoAs();
+			}
+		} catch (Throwable t) {
+			logger.fatal("Exited thread abnormaly. queue=" + getName(), t);
+		}
+	}
+
+	public void runDoAs() {
 		while (true) {
 			try {
 				AuditEventBase event = null;
@@ -141,9 +163,7 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 					consumer.log(eventList);
 				}
 			} catch (InterruptedException e) {
-				logger.info(
-						"Caught exception in consumer thread. Shutdown might be in progress",
-						e);
+				logger.info("Caught exception in consumer thread. Shutdown might be in progress");
 			} catch (Throwable t) {
 				logger.error("Caught error during processing request.", t);
 			}
@@ -172,7 +192,6 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 			logger.error("Error while calling stop on consumer.", t);
 		}
 		logger.info("Exiting consumerThread.run() method. name=" + getName());
-
 	}
 
 }

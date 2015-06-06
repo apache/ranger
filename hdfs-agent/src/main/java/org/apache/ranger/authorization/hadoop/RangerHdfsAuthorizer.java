@@ -49,7 +49,6 @@ import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.hadoop.exceptions.RangerAccessControlException;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -478,7 +477,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		}
 
 		RangerAccessRequest  request      = result.getAccessRequest();
-		RangerServiceDef     serviceDef   = result.getServiceDef();
+//		RangerServiceDef     serviceDef   = result.getServiceDef();
 		RangerAccessResource resource     = request.getResource();
 		String               resourceType = resource != null ? resource.getLeafName() : null;
 		String               resourcePath = resource != null ? resource.getAsString() : null;

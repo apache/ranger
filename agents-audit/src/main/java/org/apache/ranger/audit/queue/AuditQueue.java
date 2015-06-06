@@ -23,6 +23,7 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.BaseAuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -61,6 +62,7 @@ public abstract class AuditQueue extends BaseAuditHandler {
 	protected int fileSpoolMaxWaitTime = 5 * 60 * 1000; // Default 5 minutes
 	protected int fileSpoolDrainThresholdPercent = 80;
 
+	boolean isConsumerDestination = false;
 	// This is set when the first time stop is called.
 	protected long stopTime = 0;
 
@@ -72,6 +74,12 @@ public abstract class AuditQueue extends BaseAuditHandler {
 		if (consumer instanceof BaseAuditHandler) {
 			BaseAuditHandler baseAuditHander = (BaseAuditHandler) consumer;
 			baseAuditHander.setParentPath(getName());
+		}
+
+		if (consumer != null && consumer instanceof AuditDestination) {
+			// If consumer is destination, then the thread should run as server
+			// user
+			isConsumerDestination = true;
 		}
 	}
 

@@ -17,17 +17,25 @@
 package org.apache.ranger.audit.provider;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.rmi.dgc.VMID;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
+import javax.security.auth.Subject;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 
@@ -35,6 +43,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class MiscUtil {
+	private static final Log logger = LogFactory.getLog(MiscUtil.class);
+
 	public static final String TOKEN_START = "%";
 	public static final String TOKEN_END = "%";
 	public static final String TOKEN_HOSTNAME = "hostname";
@@ -51,6 +61,11 @@ public class MiscUtil {
 
 	private static Gson sGsonBuilder = null;
 	private static String sApplicationType = null;
+	private static UserGroupInformation ugiLoginUser = null;
+	private static Subject subjectLoginUser = null;
+
+	private static Map<String, LogHistory> logHistoryList = new Hashtable<String,LogHistory>();
+	private static int logInterval = 30000; // 30 seconds
 
 	static {
 		try {
@@ -371,26 +386,127 @@ public class MiscUtil {
 	public static List<String> toArray(String destListStr, String delim) {
 		List<String> list = new ArrayList<String>();
 		if (destListStr != null && !destListStr.isEmpty()) {
-			StringTokenizer tokenizer = new StringTokenizer(destListStr, delim.trim());
+			StringTokenizer tokenizer = new StringTokenizer(destListStr,
+					delim.trim());
 			while (tokenizer.hasMoreTokens()) {
 				list.add(tokenizer.nextToken());
 			}
 		}
 		return list;
 	}
-	
-	public static String getCredentialString(String url,String alias) {
+
+	public static String getCredentialString(String url, String alias) {
 		String ret = null;
 
-		if(url != null && alias != null) {
-			char[] cred = RangerCredentialProvider.getInstance().getCredentialString(url,alias);
+		if (url != null && alias != null) {
+			char[] cred = RangerCredentialProvider.getInstance()
+					.getCredentialString(url, alias);
 
-			if ( cred != null ) {
-				ret = new String(cred);	
+			if (cred != null) {
+				ret = new String(cred);
 			}
 		}
-		
+
 		return ret;
+	}
+
+	/**
+	 * @param ugiLoginUser
+	 */
+	public static void setUGILoginUser(UserGroupInformation newUGI, Subject newSubject) {
+		if (newUGI != null) {
+			UserGroupInformation.setLoginUser(newUGI);
+			ugiLoginUser = newUGI;
+			logger.info("Setting UGI=" + newUGI );
+		} else {
+			logger.error("UGI is null. Not setting it.");
+			ugiLoginUser = null;
+		}
+		logger.info("Setting SUBJECT");
+		subjectLoginUser = newSubject;
+	}
+
+	public static UserGroupInformation getUGILoginUser() {
+		if (ugiLoginUser == null) {
+			try {
+				ugiLoginUser = UserGroupInformation.getLoginUser();
+			} catch (IOException e) {
+				logger.error("Error getting UGI.", e);
+			}
+		}
+		return ugiLoginUser;
+	}
+
+	
+	public static Subject getSubjectLoginUser() {
+		return subjectLoginUser;
+	}
+
+	/**
+	 * @param userName
+	 * @return
+	 */
+	static public Set<String> getGroupsForRequestUser(String userName) {
+		if (userName == null) {
+			return null;
+		}
+		try {
+			UserGroupInformation ugi = UserGroupInformation
+					.createRemoteUser(userName);
+			// UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
+			String groups[] = ugi.getGroupNames();
+			if (groups != null && groups.length > 0) {
+				java.util.Set<String> groupsSet = new java.util.HashSet<String>();
+				for (int i = 0; i < groups.length; i++) {
+					groupsSet.add(groups[i]);
+				}
+				return groupsSet;
+			}
+		} catch (Throwable e) {
+			logErrorMessageByInterval(
+					logger, "Error getting groups for users. userName=" + userName, e);
+		}
+		return null;
+	}
+
+	static public boolean logErrorMessageByInterval(Log useLogger, String message) {
+		return logErrorMessageByInterval(useLogger, message, null);
+	}
+
+	/**
+	 * @param string
+	 * @param e
+	 */
+	static public boolean logErrorMessageByInterval(Log useLogger, String message, Throwable e) {
+		LogHistory log = logHistoryList.get(message);
+		if (log == null) {
+			log = new LogHistory();
+			logHistoryList.put(message, log);
+		}
+		if ((System.currentTimeMillis() - log.lastLogTime) > logInterval) {
+			log.lastLogTime = System.currentTimeMillis();
+			int counter = log.counter;
+			log.counter = 0;
+			if (counter > 0) {
+				message += ". Messages suppressed before: " + counter;
+			}
+			if (e == null) {
+				useLogger.error(message);
+			} else {
+				useLogger.error(message, e);
+			}
+			
+			return true;
+		} else {
+			log.counter++;
+		}
+		return false;
+
+	}
+
+	static class LogHistory {
+		long lastLogTime = 0;
+		int counter = 0;
 	}
 
 }

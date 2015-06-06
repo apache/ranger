@@ -54,6 +54,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAgentService;
 import org.apache.ranger.service.XAssetService;
@@ -508,6 +509,7 @@ public class AssetREST {
 		boolean           isSecure    = request.isSecure();
 		String            policyCount = request.getParameter("policyCount");
 		String            agentId     = request.getParameter("agentId");
+		Long              lastKnowPolicyVersion = new Long(-1);
 
 		if (ipAddress == null) {  
 			ipAddress = request.getRemoteAddr();
@@ -515,12 +517,19 @@ public class AssetREST {
 
 		boolean httpEnabled = PropertiesUtil.getBooleanProperty("ranger.service.http.enabled",true);
 
-		RangerService      service  = serviceREST.getServiceByName(repository);
-		List<RangerPolicy> policies = serviceREST.getServicePolicies(repository, request).getPolicies();
+		ServicePolicies servicePolicies = null;
 
-		long             policyUpdTime = (service != null && service.getPolicyUpdateTime() != null) ? service.getPolicyUpdateTime().getTime() : 0l;
-		VXAsset          vAsset        = serviceUtil.toVXAsset(service);
-		List<VXResource> vResourceList = new ArrayList<VXResource>();
+		try {
+			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, agentId, request);
+		} catch(Exception excp) {
+			logger.error("failed to retrieve policies for repository " + repository, excp);
+		}
+
+		RangerService      service       = serviceREST.getServiceByName(repository);
+		List<RangerPolicy> policies      = servicePolicies != null ? servicePolicies.getPolicies() : null;
+		long               policyUpdTime = (servicePolicies != null && servicePolicies.getPolicyUpdateTime() != null) ? servicePolicies.getPolicyUpdateTime().getTime() : 0l;
+		VXAsset            vAsset        = serviceUtil.toVXAsset(service);
+		List<VXResource>   vResourceList = new ArrayList<VXResource>();
 		
 		if(policies != null) {
 			for(RangerPolicy policy : policies) {

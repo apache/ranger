@@ -119,6 +119,10 @@ public class HDFSAuditDestination extends AuditDestination {
 		}
 
 		try {
+			if (logger.isDebugEnabled()) {
+				logger.debug("UGI=" + MiscUtil.getUGILoginUser()
+						+ ". Will write to HDFS file=" + currentFileName);
+			}
 			PrintWriter out = getLogFileStream();
 			for (String event : events) {
 				out.println(event);
@@ -154,7 +158,7 @@ public class HDFSAuditDestination extends AuditDestination {
 				jsonList.add(MiscUtil.stringify(event));
 			} catch (Throwable t) {
 				logger.error("Error converting to JSON. event=" + event);
-				addTotalCount(1);				
+				addTotalCount(1);
 				addFailedCount(1);
 				logFailedEvent(event);
 			}

@@ -125,9 +125,8 @@ public class AuditProviderFactory {
 
 		List<AuditHandler> providers = new ArrayList<AuditHandler>();
 
-		// TODO: Delete me
 		for (Object propNameObj : props.keySet()) {
-			LOG.info("DELETE ME: " + propNameObj.toString() + "="
+			LOG.info("AUDIT PROPERTY: " + propNameObj.toString() + "="
 					+ props.getProperty(propNameObj.toString()));
 		}
 

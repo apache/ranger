@@ -19,7 +19,10 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
+import java.security.Principal;
 import java.util.Date;
+
+import javax.security.auth.Subject;
 
 import kafka.security.auth.Acl;
 import kafka.security.auth.Authorizer;
@@ -28,11 +31,14 @@ import kafka.security.auth.Operation;
 import kafka.security.auth.Resource;
 import kafka.security.auth.ResourceType;
 import kafka.server.KafkaConfig;
+import kafka.common.security.LoginManager;
 import kafka.network.RequestChannel.Session;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -64,9 +70,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	int errorLogFreq = 30000; // Log after every 30 seconds
 
 	public RangerKafkaAuthorizer() {
-		if (rangerPlugin == null) {
-			rangerPlugin = new RangerBasePlugin("kafka", "kafka");
-		}
 	}
 
 	/*
@@ -76,23 +79,70 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	 */
 	@Override
 	public void initialize(KafkaConfig kafkaConfig) {
-		rangerPlugin.init();
-		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 
-		rangerPlugin.setResultProcessor(auditHandler);
+		if (rangerPlugin == null) {
+			rangerPlugin = new RangerBasePlugin("kafka", "kafka");
+
+			try {
+				Subject subject = LoginManager.subject();
+				logger.info("SUBJECT "
+						+ (subject == null ? "not found" : "found"));
+				if (subject != null) {
+					logger.info("SUBJECT.PRINCIPALS.size()="
+							+ subject.getPrincipals().size());
+					java.util.Set<Principal> principals = subject
+							.getPrincipals();
+					for (Principal principal : principals) {
+						logger.info("SUBJECT.PRINCIPAL.NAME="
+								+ principal.getName());
+					}
+					try {
+						// Do not remove the below statement. The default
+						// getLoginUser does some initialization which is needed
+						// for getUGIFromSubject() to work.
+						logger.info("Default UGI before using Subject from Kafka:"
+								+ UserGroupInformation.getLoginUser());
+					} catch (Throwable t) {
+						logger.error(t);
+					}
+					UserGroupInformation ugi = UserGroupInformation
+							.getUGIFromSubject(subject);
+					logger.info("SUBJECT.UGI.NAME=" + ugi.getUserName()
+							+ ", ugi=" + ugi);
+					MiscUtil.setUGILoginUser(ugi, subject);
+				} else {
+					logger.info("Server username is not available");
+				}
+				logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
+			} catch (Throwable t) {
+				logger.error("Error getting principal.", t);
+			}
+
+			logger.info("Calling plugin.init()");
+			rangerPlugin.init();
+
+			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+			rangerPlugin.setResultProcessor(auditHandler);
+		}
 	}
 
 	@Override
 	public boolean authorize(Session session, Operation operation,
 			Resource resource) {
 
+		if (rangerPlugin == null) {
+			MiscUtil.logErrorMessageByInterval(logger,
+					"Authorizer is still not initialized");
+			return false;
+		}
 		String userName = null;
 		if (session.principal() != null) {
 			userName = session.principal().getName();
 			userName = StringUtils.substringBefore(userName, "/");
 			userName = StringUtils.substringBefore(userName, "@");
 		}
-		java.util.Set<String> userGroups = getGroupsForUser(userName);
+		java.util.Set<String> userGroups = MiscUtil
+				.getGroupsForRequestUser(userName);
 		String ip = session.host();
 
 		Date eventTime = StringUtil.getUTCDate();
@@ -101,9 +151,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		String validationStr = "";
 
 		if (accessType == null) {
-			if (rangerPlugin
-					.logErrorMessage("Unsupported access type. operation="
-							+ operation)) {
+			if (MiscUtil.logErrorMessageByInterval(logger,
+					"Unsupported access type. operation=" + operation)) {
 				logger.fatal("Unsupported access type. session=" + session
 						+ ", operation=" + operation + ", resource=" + resource);
 			}
@@ -138,8 +187,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 		boolean returnValue = true;
 		if (validationFailed) {
-			rangerPlugin.logErrorMessage(validationStr + ", request="
-					+ rangerRequest);
+			MiscUtil.logErrorMessageByInterval(logger, validationStr
+					+ ", request=" + rangerRequest);
 			returnValue = false;
 		} else {
 
@@ -226,19 +275,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		Set<Acl> aclList = new HashSet<Acl>();
 		logger.error("getAcls() is not supported by Ranger for Kafka");
 		return aclList;
-	}
-
-	/**
-	 * @param userName
-	 * @return
-	 */
-	private java.util.Set<String> getGroupsForUser(String userName) {
-		if (userName == null) {
-			return null;
-		}
-
-		// TODO: Need to implement this method
-		return null;
 	}
 
 	/**

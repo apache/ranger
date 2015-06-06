@@ -17,4 +17,4 @@
 
 curr_dir=`pwd`
 cd `dirname $0`; script_dir=`pwd`; cd $curr_dir
-export CLASSPATH="$CLASSPATH:${script_dir}:/etc/kafka/conf"
+export CLASSPATH="$CLASSPATH:${script_dir}:/etc/kafka/conf:/usr/hdp/current/hadoop-hdfs-client/*:/usr/hdp/current/hadoop-hdfs-client/lib/*:/etc/hadoop/conf"

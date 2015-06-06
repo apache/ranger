@@ -31,17 +31,29 @@
 		{
 			"itemId":1,
 			"name":"publish",
-			"label":"Publish"
+			"label":"Publish",
+			"impliedGrants":[
+				"describe"
+			]
+			
 		},
 		{
 			"itemId":2,
 			"name":"consume",
-			"label":"Consume"
+			"label":"Consume",
+			"impliedGrants":[
+				"describe"
+			]
+			
 		},
 		{
 			"itemId":5,
 			"name":"configure",
-			"label":"Configure"
+			"label":"Configure",
+			"impliedGrants":[
+				"describe"
+			]
+			
 		},
 		{
 			"itemId":6,
@@ -51,7 +63,14 @@
 		{
 			"itemId":7,
 			"name":"kafka_admin",
-			"label":"Kafka Admin"
+			"label":"Kafka Admin",
+			"impliedGrants":[
+				"publish",
+				"consume",
+				"configure",
+				"describe"
+			]
+			
 		}
 		
 	],

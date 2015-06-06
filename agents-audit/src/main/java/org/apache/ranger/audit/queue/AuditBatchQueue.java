@@ -19,6 +19,7 @@
 
 package org.apache.ranger.audit.queue;
 
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -30,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
+import org.apache.ranger.audit.provider.MiscUtil;
 
 public class AuditBatchQueue extends AuditQueue implements Runnable {
 	private static final Log logger = LogFactory.getLog(AuditBatchQueue.class);
@@ -206,6 +208,26 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 	 */
 	@Override
 	public void run() {
+		try {
+			if (isConsumerDestination) {
+				PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
+					public Void run() {
+						runDoAs();
+						return null;
+					};
+				};
+				logger.info("Running queue " + getName() + " as user "
+						+ MiscUtil.getUGILoginUser());
+				MiscUtil.getUGILoginUser().doAs(action);
+			} else {
+				runDoAs();
+			}
+		} catch (Throwable t) {
+			logger.fatal("Exited thread abnormaly. queue=" + getName(), t);
+		}
+	}
+
+	public void runDoAs() {
 		long lastDispatchTime = System.currentTimeMillis();
 		boolean isDestActive = true;
 		while (true) {
@@ -265,9 +287,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 					lastDispatchTime = System.currentTimeMillis();
 				}
 			} catch (InterruptedException e) {
-				logger.info(
-						"Caught exception in consumer thread. Shutdown might be in progress",
-						e);
+				logger.info("Caught exception in consumer thread. Shutdown might be in progress");
 				setDrain(true);
 			} catch (Throwable t) {
 				logger.error("Caught error during processing request.", t);
