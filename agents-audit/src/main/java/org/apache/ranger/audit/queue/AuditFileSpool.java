@@ -109,8 +109,6 @@ public class AuditFileSpool implements Runnable {
 	boolean isDrain = false;
 	boolean isDestDown = true;
 
-	int ugiVersion = -1;
-
 	private Gson gson = null;
 
 	public AuditFileSpool(AuditQueue queueProvider,
@@ -755,15 +753,19 @@ public class AuditFileSpool implements Runnable {
 	@Override
 	public void run() {
 		try {
-			PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
-				public Void run() {
-					runDoAs();
-					return null;
+			if (MiscUtil.getUGILoginUser() != null) {
+				PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
+					public Void run() {
+						runDoAs();
+						return null;
+					};
 				};
-			};
-			logger.info("Running fileSpool " + consumerProvider.getName()
-					+ " as user " + MiscUtil.getUGILoginUser());
-			MiscUtil.getUGILoginUser().doAs(action);
+				logger.info("Running fileSpool " + consumerProvider.getName()
+						+ " as user " + MiscUtil.getUGILoginUser());
+				MiscUtil.getUGILoginUser().doAs(action);
+			} else {
+				runDoAs();
+			}
 		} catch (Throwable t) {
 			logger.fatal("Exited thread without abnormaly. queue="
 					+ consumerProvider.getName(), t);

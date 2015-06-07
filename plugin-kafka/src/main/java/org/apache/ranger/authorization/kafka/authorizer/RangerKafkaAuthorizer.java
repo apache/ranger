@@ -135,6 +135,12 @@ public class RangerKafkaAuthorizer implements Authorizer {
 					"Authorizer is still not initialized");
 			return false;
 		}
+		
+		//TODO: If resource type if consumer group, then allow it by default
+		if(resource.resourceType().equals(ResourceType.CLUSTER)) {
+			return true;
+		}
+		
 		String userName = null;
 		if (session.principal() != null) {
 			userName = session.principal().getName();
