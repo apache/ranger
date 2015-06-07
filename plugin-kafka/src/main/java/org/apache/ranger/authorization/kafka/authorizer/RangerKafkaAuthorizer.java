@@ -137,7 +137,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		}
 		
 		//TODO: If resource type if consumer group, then allow it by default
-		if(resource.resourceType().equals(ResourceType.CLUSTER)) {
+		if(resource.resourceType().equals(ResourceType.CONSUMER_GROUP)) {
 			return true;
 		}
 		
