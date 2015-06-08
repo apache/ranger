@@ -44,11 +44,8 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 import javax.crypto.SealedObject;
 import javax.xml.bind.DatatypeConverter;
@@ -61,10 +58,6 @@ import org.apache.ranger.kms.dao.RangerKMSDao;
 
 /**
  * This class provides the Database store implementation.
- *
- *
- * @see KeyProtector
- *
  */
 
 public class RangerKeyStore extends KeyStoreSpi {
@@ -89,46 +82,27 @@ public class RangerKeyStore extends KeyStoreSpi {
         int version;
     }
 
-    /**
-     * keys are stored in a hashtable.
-     * Hash entries are keyed by alias names.
-     */
-    private final Hashtable<String, Object> entries;
+    private final Hashtable<String, Object> keyEntries ;
     
     RangerKeyStore() {
-        entries = new Hashtable<String, Object>();
+        keyEntries = new Hashtable<String, Object>();
     }
 
     RangerKeyStore(DaoManager daoManager) {
-    	entries = new Hashtable<String, Object>();
+    	keyEntries = new Hashtable<String, Object>();
     	this.daoManager = daoManager;
 	}
 
-	// convert an alias to internal form, overridden in subclasses:
     String convertAlias(String alias){
     	return alias.toLowerCase();
     }
 
-    /**
-     * Returns the key associated with the given alias, using the given
-     * password to recover it.
-     *
-     * @param alias the alias name
-     * @param password the password for recovering the key
-     *
-     * @return the requested key, or null if the given alias does not exist
-     * or does not identify a <i>key entry</i>.
-     *
-     * @exception NoSuchAlgorithmException if the algorithm for recovering the
-     * key cannot be found
-     * @exception UnrecoverableKeyException if the key cannot be recovered
-     * (e.g., the given password is wrong).
-     */
+    @Override
     public Key engineGetKey(String alias, char[] password)throws NoSuchAlgorithmException, UnrecoverableKeyException
     {
     	Key key = null;
 
-        Object entry = entries.get(alias.toLowerCase());
+        Object entry = keyEntries.get(alias.toLowerCase());
 
         if (!(entry instanceof SecretKeyEntry)) {
             return null;
@@ -150,16 +124,9 @@ public class RangerKeyStore extends KeyStoreSpi {
         return key;        
     }
 
-    /**
-     * Returns the creation date of the entry identified by the given alias.
-     *
-     * @param alias the alias name
-     *
-     * @return the creation date of this entry, or null if the given alias does
-     * not exist
-     */
+    @Override
     public Date engineGetCreationDate(String alias) {
-        Object entry = entries.get(convertAlias(alias));
+        Object entry = keyEntries.get(convertAlias(alias));
         if (entry != null) {
                return new Date(((KeyEntry)entry).date.getTime());
         } else {
@@ -167,34 +134,11 @@ public class RangerKeyStore extends KeyStoreSpi {
         }
     }
 
-    /**
-     * Assigns the given key to the given alias, protecting
-     * it with the given password as defined in PKCS8.
-     *
-     * <p>The given java.security.PrivateKey <code>key</code> must
-     * be accompanied by a certificate chain certifying the
-     * corresponding public key.
-     *
-     * <p>If the given alias already exists, the keystore information
-     * associated with it is overridden by the given key and certificate
-     * chain.
-     *
-     * @param alias the alias name
-     * @param key the key to be associated with the alias
-     * @param password the password to protect the key
-     * @param cipher the cipher used for the key
-     * @param bitLength bit length for the key
-     * @param description Description for the key
-     * @param version Key version
-     * @param attributes key attributes 
-     *
-     * @exception KeyStoreException if the given key is not a private key,
-     * cannot be protected, or this operation fails for some other reason
-     */
-    public void engineSetKeyEntry(String alias, Key key, char[] password, String cipher, int bitLength, String description, int version, String attributes)
+
+    public void addKeyEntry(String alias, Key key, char[] password, String cipher, int bitLength, String description, int version, String attributes)
         throws KeyStoreException
     {
-        synchronized(entries) {
+        synchronized(keyEntries) {
             try {
             	
             	Class<?> c = null;
@@ -221,7 +165,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                 entry.description = description;
                 entry.version = version;
                 entry.attributes = attributes;
-                entries.put(alias.toLowerCase(), entry);                
+                keyEntries.put(alias.toLowerCase(), entry);                
             } catch (Exception e) {
             	logger.error(e.getMessage());
             	throw new KeyStoreException(e.getMessage());
@@ -229,22 +173,17 @@ public class RangerKeyStore extends KeyStoreSpi {
         }
     }
 
-    /**
-     * Deletes the entry identified by the given alias from this database.
-     *
-     * @param alias the alias name
-     *
-     * @exception KeyStoreException if the entry cannot be removed.
-     */
+    @Override
     public void engineDeleteEntry(String alias)
         throws KeyStoreException
     {
-        synchronized(entries) {
+        synchronized(keyEntries) {
         		dbOperationDelete(convertAlias(alias));
-        		entries.remove(convertAlias(alias));	
+        		keyEntries.remove(convertAlias(alias));	
         }
     }
 
+    
     private void dbOperationDelete(String alias) {
     	try{
 			  if(daoManager != null){
@@ -257,61 +196,36 @@ public class RangerKeyStore extends KeyStoreSpi {
 		}
 	}
 
-	/**
-     * Lists all the alias names of this database.
-     *
-     * @return enumeration of the alias names
-     */
+
+    @Override
     public Enumeration<String> engineAliases() {
-        return entries.keys();
+        return keyEntries.keys();
     }
 
-    /**
-     * Checks if the given alias exists in this database.
-     *
-     * @param alias the alias name
-     *
-     * @return true if the alias exists, false otherwise
-     */
+    @Override
     public boolean engineContainsAlias(String alias) {
-        return entries.containsKey(convertAlias(alias));
+        return keyEntries.containsKey(convertAlias(alias));
     }
 
-    /**
-     * Retrieves the number of entries in this database.
-     *
-     * @return the number of entries in this database
-     */
+    @Override
     public int engineSize() {
-        return entries.size();
+        return keyEntries.size();
     }
 
-    /**
-     * Stores this keystore to the provided ranger database, and protects its
-     * integrity with the given password.
-     *
-     * @param stream null.
-     * @param password the password to generate the keystore integrity check
-     *
-     * @exception IOException if there was an I/O problem with data
-     * @exception NoSuchAlgorithmException if the appropriate data integrity
-     * algorithm could not be found
-     * @exception CertificateException if any of the certificates included in
-     * the keystore data could not be stored
-     */
+    @Override
     public void engineStore(OutputStream stream, char[] password)
         throws IOException, NoSuchAlgorithmException, CertificateException
     {
-        synchronized(entries) {
+        synchronized(keyEntries) {
             // password is mandatory when storing
             if (password == null) {
                 throw new IllegalArgumentException("Ranger Master Key can't be null");
             }
 
-            MessageDigest md = getPreKeyedHash(password);            
+            MessageDigest md = getKeyedMessageDigest(password);            
             
            	byte digest[] = md.digest();    
-           	for (Enumeration<String> e = entries.keys(); e.hasMoreElements();) {
+           	for (Enumeration<String> e = keyEntries.keys(); e.hasMoreElements();) {
             	ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(new DigestOutputStream(baos, md));
                 
@@ -319,16 +233,11 @@ public class RangerKeyStore extends KeyStoreSpi {
             	try{
             	
             		String alias = e.nextElement();
-            		Object entry = entries.get(alias);
+            		Object entry = keyEntries.get(alias);
 
-                    // write the sealed key
                     oos = new ObjectOutputStream(dos);
                     oos.writeObject(((SecretKeyEntry)entry).sealedKey);
-                    /*
-                     * Write the keyed hash which is used to detect tampering with
-                     * the keystore (such as deleting or modifying key or
-                     * certificate entries).
-                     */
+                    
                     dos.write(digest);
                     dos.flush();
                     Long creationDate = ((SecretKeyEntry)entry).date.getTime();
@@ -397,27 +306,12 @@ public class RangerKeyStore extends KeyStoreSpi {
 		return xxRangerKeyStore;
 	}
 
-	/**
-     * Loads the keystore from the given ranger database.
-     *
-     * <p>If a password is given, it is used to check the integrity of the
-     * keystore data. Otherwise, the integrity of the keystore is not checked.
-     *
-     * @param stream the input stream from which the keystore is loaded
-     * @param password the (optional) password used to check the integrity of
-     * the keystore.
-     *
-     * @exception IOException if there is an I/O or format problem with the
-     * keystore data
-     * @exception NoSuchAlgorithmException if the algorithm used to check
-     * the integrity of the keystore cannot be found
-     * @exception CertificateException if any of the certificates in the
-     * keystore could not be loaded
-     */
-    public void engineLoad(InputStream stream, char[] password)
+
+	@Override
+	public void engineLoad(InputStream stream, char[] password)
         throws IOException	, NoSuchAlgorithmException, CertificateException
     {
-        synchronized(entries) {
+        synchronized(keyEntries) {
         	List<XXRangerKeyStore> rangerKeyDetails = dbOperationLoad();
             DataInputStream dis;
             MessageDigest md = null;
@@ -426,8 +320,8 @@ public class RangerKeyStore extends KeyStoreSpi {
         		return;
         	}
 			
-			entries.clear();     
-			md = getPreKeyedHash(password);
+			keyEntries.clear();     
+			md = getKeyedMessageDigest(password);
 
 			byte computed[];
             computed = md.digest();
@@ -441,11 +335,6 @@ public class RangerKeyStore extends KeyStoreSpi {
             		logger.error("No Key found for alias "+rangerKey.getAlias());
             	}
             	
-            	/*
-	             * If a password has been provided, we check the keyed digest
-	             * at the end. If this check fails, the store has been tampered
-	             * with
-	             */
 	             if (computed != null) {	                
 	                int counter = 0; 
 	                for (int i = computed.length-1; i >= 0; i--) {
@@ -493,7 +382,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 					}
 
 					//Add the entry to the list
-					entries.put(alias, entry);		            
+					keyEntries.put(alias, entry);		            
 				 }finally {
 	                if (ois != null) {
 	                    ois.close();
@@ -521,28 +410,30 @@ public class RangerKeyStore extends KeyStoreSpi {
      * To guard against tampering with the keystore, we append a keyed
      * hash with a bit of whitener.
      */
-    private MessageDigest getPreKeyedHash(char[] password)
+    
+    private final String SECRET_KEY_HASH_WORD = "Apache Ranger" ;
+    
+    private MessageDigest getKeyedMessageDigest(char[] aKeyPassword)
         throws NoSuchAlgorithmException, UnsupportedEncodingException
     {
         int i, j;
 
         MessageDigest md = MessageDigest.getInstance("SHA");
-        byte[] passwdBytes = new byte[password.length * 2];
-        for (i=0, j=0; i<password.length; i++) {
-            passwdBytes[j++] = (byte)(password[i] >> 8);
-            passwdBytes[j++] = (byte)password[i];
+        byte[] keyPasswordBytes = new byte[aKeyPassword.length * 2];
+        for (i=0, j=0; i<aKeyPassword.length; i++) {
+            keyPasswordBytes[j++] = (byte)(aKeyPassword[i] >> 8);
+            keyPasswordBytes[j++] = (byte)aKeyPassword[i];
         }
-        md.update(passwdBytes);
-        for (i=0; i<passwdBytes.length; i++)
-            passwdBytes[i] = 0;
-        md.update("Mighty Aphrodite".getBytes("UTF8"));
+        md.update(keyPasswordBytes);
+        for (i=0; i<keyPasswordBytes.length; i++)
+            keyPasswordBytes[i] = 0;
+        md.update(SECRET_KEY_HASH_WORD.getBytes("UTF8"));
         return md;
     }
 
 	@Override
 	public void engineSetKeyEntry(String arg0, byte[] arg1, Certificate[] arg2)
 			throws KeyStoreException {	
-		
 	}
 
 	@Override
@@ -579,33 +470,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 	public void engineSetKeyEntry(String alias, Key key, char[] password,
 			Certificate[] chain) throws KeyStoreException {
 	}
-	
-	public Map<String, String> getPropertiesWithPrefix(Properties props, String prefix) {
-		Map<String, String> prefixedProperties = new HashMap<String, String>();
 
-		if(props != null && prefix != null) {
-			for(String key : props.stringPropertyNames()) {
-				if(key == null) {
-					continue;
-				}
-
-				String val = props.getProperty(key);
-
-				if(key.startsWith(prefix)) {
-					key = key.substring(prefix.length());
-
-					if(key == null) {
-						continue;
-					}
-
-					prefixedProperties.put(key, val);
-				}
-			}
-		}
-
-		return prefixedProperties;
-	}	
-	
 	//
 	// The method is created to support JKS migration (from hadoop-common KMS keystore to RangerKMS keystore)
 	//
@@ -616,13 +481,13 @@ public class RangerKeyStore extends KeyStoreSpi {
 	public void engineLoadKeyStoreFile(InputStream stream, char[] storePass, char[] keyPass, char[] masterKey, String fileFormat)
 	        throws IOException, NoSuchAlgorithmException, CertificateException
 	{
-			synchronized(entries) {
+			synchronized(keyEntries) {
 				KeyStore ks;
 				
 				try {
 					ks = KeyStore.getInstance(fileFormat);
 					ks.load(stream, storePass);
-					entries.clear();     
+					keyEntries.clear();     
 					for (Enumeration<String> name = ks.aliases(); name.hasMoreElements();){
 						  	  SecretKeyEntry entry = new SecretKeyEntry();
 							  String alias = (String) name.nextElement();
@@ -665,7 +530,7 @@ public class RangerKeyStore extends KeyStoreSpi {
  	                          entry.date = ks.getCreationDate(alias);
 		                      entry.version = (alias.split("@").length == 2)?(Integer.parseInt(alias.split("@")[1])):0;
 		    				  entry.description = k.getFormat()+" - "+ks.getType();
-		                      entries.put(alias, entry);		
+		                      keyEntries.put(alias, entry);		
 		                      System.out.println("+ adding key alias [" + alias + "]") ;
 		    	            }
 				} catch (Throwable t) {

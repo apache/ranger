@@ -420,7 +420,6 @@ public class MiscUtil {
 			logger.info("Setting UGI=" + newUGI );
 		} else {
 			logger.error("UGI is null. Not setting it.");
-			ugiLoginUser = null;
 		}
 		logger.info("Setting SUBJECT");
 		subjectLoginUser = newSubject;

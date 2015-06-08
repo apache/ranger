@@ -262,6 +262,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(true);
 			svcDefServiceWithAssignedId.create(serviceDef);
 			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(false);
+			daoMgr.getXXServiceDef().updateSequence();
 		} else {
 			// following fields will be auto populated
 			serviceDef.setId(null);

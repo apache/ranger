@@ -421,7 +421,7 @@ public class ServiceUtil {
 		return ret;
 	}
 
-	private static String toAccessType(int permType) {
+	public static String toAccessType(int permType) {
 		String ret = null;
 
 		for(Map.Entry<String, Integer> e : mapAccessTypeToPermType.entrySet()) {

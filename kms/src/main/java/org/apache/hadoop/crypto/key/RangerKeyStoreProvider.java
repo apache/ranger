@@ -158,7 +158,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 		try {
 	          ObjectMapper om = new ObjectMapper();
 	          String attribute = om.writeValueAsString(attributes);
-			  dbStore.engineSetKeyEntry(versionName, new SecretKeySpec(material, cipher), masterKey, cipher, bitLength, description, version, attribute);
+			  dbStore.addKeyEntry(versionName, new SecretKeySpec(material, cipher), masterKey, cipher, bitLength, description, version, attribute);
 		} catch (KeyStoreException e) {
 			throw new IOException("Can't store key " + versionName,e);
 		}
@@ -205,7 +205,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	          Metadata metadata = entry.getValue();
 	          ObjectMapper om = new ObjectMapper();
 	          String attributes = om.writeValueAsString(metadata.getAttributes());
-	          dbStore.engineSetKeyEntry(entry.getKey(), new KeyMetadata(metadata), masterKey, metadata.getAlgorithm(), metadata.getBitLength(), metadata.getDescription(), metadata.getVersions(), attributes);
+	          dbStore.addKeyEntry(entry.getKey(), new KeyMetadata(metadata), masterKey, metadata.getAlgorithm(), metadata.getBitLength(), metadata.getDescription(), metadata.getVersions(), attributes);
 	        } catch (KeyStoreException e) {
 	          throw new IOException("Can't set metadata key " + entry.getKey(),e );
 	        }

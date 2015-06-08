@@ -147,7 +147,7 @@ public class AuditSummaryQueue extends AuditQueue implements Runnable {
 	@Override
 	public void run() {
 		try {
-			if (isConsumerDestination) {
+			if (isConsumerDestination && MiscUtil.getUGILoginUser() != null) {
 				PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
 					public Void run() {
 						runDoAs();
