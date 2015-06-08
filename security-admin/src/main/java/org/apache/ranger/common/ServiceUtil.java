@@ -378,7 +378,7 @@ public class ServiceUtil {
 	private Map<String, RangerPolicy.RangerPolicyResource> toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, Map<String, RangerPolicy.RangerPolicyResource> resources) {
 		Map<String, RangerPolicy.RangerPolicyResource> ret = resources == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resources;
 
-		if(resourceString != null) {
+		if(StringUtils.isNotBlank(resourceString)) {
 			RangerPolicy.RangerPolicyResource resource = ret.get(resourceType);
 
 			if(resource == null) {
