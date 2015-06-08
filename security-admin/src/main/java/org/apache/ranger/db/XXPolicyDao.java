@@ -113,4 +113,14 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 	}
 
+	public void updateSequence() {
+		Long maxId = getMaxIdOfXXPolicy();
+
+		if(maxId == null) {
+			return;
+		}
+
+		updateSequence("X_POLICY_SEQ", maxId + 1);
+	}
+
 }

@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
@@ -1344,38 +1345,37 @@ public class RangerBizUtil {
 	}
 
 	public static int getDBFlavor() {
+		String[] propertyNames = { "xa.db.flavor",
+									"ranger.jpa.jdbc.dialect",
+									"ranger.jpa.jdbc.url",
+									"ranger.jpa.jdbc.driver"
+								};
 
-		String dbFlavor = "";
-		boolean dbFlavorPropFound = true;
+		for(String propertyName : propertyNames) {
+			String propertyValue = PropertiesUtil.getProperty(propertyName);
 
-		dbFlavor = PropertiesUtil.getProperty("xa.db.flavor");
-		if (dbFlavor == null || dbFlavor.trim().isEmpty()) {
-			dbFlavor = PropertiesUtil.getProperty("ranger.jpa.jdbc.dialect");
-			dbFlavorPropFound = false;
-		}
+			if(StringUtils.isBlank(propertyValue)) {
+				continue;
+			}
 
-		if (dbFlavor != null && !dbFlavor.trim().isEmpty()) {
-			if (dbFlavorPropFound) {
-				if ("MYSQL".equalsIgnoreCase(dbFlavor)) {
-					return AppConstants.DB_FLAVOR_MYSQL;
-				} else if ("ORACLE".equalsIgnoreCase(dbFlavor)) {
-					return AppConstants.DB_FLAVOR_ORACLE;
-				} else {
-					return AppConstants.DB_FLAVOR_UNKNOWN;
-				}
+			if (StringUtils.containsIgnoreCase(propertyValue, "mysql")) {
+				return AppConstants.DB_FLAVOR_MYSQL;
+			} else if (StringUtils.containsIgnoreCase(propertyValue, "oracle")) {
+				return AppConstants.DB_FLAVOR_ORACLE;
+			} else if (StringUtils.containsIgnoreCase(propertyValue, "postgresql")) {
+				return AppConstants.DB_FLAVOR_POSTGRES;
+			} else if (StringUtils.containsIgnoreCase(propertyValue, "sqlserver")) {
+				return AppConstants.DB_FLAVOR_SQLSERVER;
 			} else {
-				if (dbFlavor.toUpperCase().contains("MYSQL")) {
-					return AppConstants.DB_FLAVOR_MYSQL;
-				} else if (dbFlavor.toUpperCase().contains("ORACLE")) {
-					return AppConstants.DB_FLAVOR_ORACLE;
-				} else {
-					return AppConstants.DB_FLAVOR_UNKNOWN;
+				if(logger.isDebugEnabled()) {
+					logger.debug("DB Falvor could not be determined from property - " + propertyName + "=" + propertyValue);
 				}
 			}
-		} else {
-			logger.error("Property : xa.db.flavor or ranger.jpa.jdbc.dialect, not found");
-			return AppConstants.DB_FLAVOR_UNKNOWN;
 		}
+
+		logger.error("DB Falvor could not be determined");
+
+		return AppConstants.DB_FLAVOR_UNKNOWN;
 	}
 
 	public String getAuditDBType() {

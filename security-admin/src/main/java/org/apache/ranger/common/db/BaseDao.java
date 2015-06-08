@@ -32,6 +32,8 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.RangerDaoManagerBase;
 
@@ -208,6 +210,25 @@ public abstract class BaseDao<T> {
 				Long.class);
 		ret = qry.getSingleResult();
 		return ret;
+	}
+
+	public void updateSequence(String seqName, long nextValue) {
+		if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_ORACLE) {
+			String[] queries = {
+					"ALTER SEQUENCE " + seqName + " INCREMENT BY " + (nextValue - 1),
+					"select " + seqName + ".nextval from dual",
+					"ALTER SEQUENCE " + seqName + " INCREMENT BY 1 NOCACHE NOCYCLE"
+			};
+
+			for(String query : queries) {
+				getEntityManager().createNativeQuery(query).executeUpdate();
+			}
+		} else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_POSTGRES) {
+			String query = "SELECT setval('" + seqName + "', " + nextValue + ")";
+
+			getEntityManager().createNativeQuery(query).getSingleResult();
+		}
+
 	}
 
 }

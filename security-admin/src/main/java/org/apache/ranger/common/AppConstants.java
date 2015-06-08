@@ -364,6 +364,14 @@ public class AppConstants extends RangerCommonEnums {
 	 * DB Favor Oracle
 	 */
 	public static final int DB_FLAVOR_ORACLE = 2;
+	/**
+	 * DB Favor Postgres
+	 */
+	public static final int DB_FLAVOR_POSTGRES = 3;
+	/**
+	 * DB Favor SQLServer
+	 */
+	public static final int DB_FLAVOR_SQLSERVER = 4;
 
 
 	/***************************************************************

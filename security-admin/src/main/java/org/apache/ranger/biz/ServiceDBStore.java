@@ -263,6 +263,7 @@ public class ServiceDBStore implements ServiceStore {
 			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(true);
 			svcDefServiceWithAssignedId.create(serviceDef);
 			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(false);
+			daoMgr.getXXServiceDef().updateSequence();
 		} else {
 			// following fields will be auto populated
 			serviceDef.setId(null);
