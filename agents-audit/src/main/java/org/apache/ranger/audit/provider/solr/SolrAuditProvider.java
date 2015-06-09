@@ -268,6 +268,7 @@ public class SolrAuditProvider extends AuditDestination {
 		doc.addField("reason", auditEvent.getResultReason());
 		doc.addField("action", auditEvent.getAction());
 		doc.addField("evtTime", auditEvent.getEventTime());
+		doc.addField("tags", auditEvent.getTags());
 		return doc;
 	}
 	

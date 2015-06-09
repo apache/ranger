@@ -43,7 +43,7 @@ public class EmbeddedServiceDefsUtil {
 	private static final Log LOG = LogFactory.getLog(EmbeddedServiceDefsUtil.class);
 
 
-	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "_tag_";
+	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
 	public static final String EMBEDDED_SERVICEDEF_HDFS_NAME  = "hdfs";
 	public static final String EMBEDDED_SERVICEDEF_HBASE_NAME = "hbase";
 	public static final String EMBEDDED_SERVICEDEF_HIVE_NAME  = "hive";

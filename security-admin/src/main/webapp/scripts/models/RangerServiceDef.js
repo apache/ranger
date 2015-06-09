@@ -101,7 +101,7 @@ define(function(require){
 				url: "service/plugins/services",
 				dataType: 'json',
 				data: function (term, page) {
-					return { name : term, serviceType : '_tag_' };
+					return { name : term, serviceType : 'tag' };
 				},
 				results: function (data, page) { 
 					var results = [];

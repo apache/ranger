@@ -317,16 +317,20 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 				RangerAccessResult tagAccessResult = isAccessAllowedForTagPolicies(request);
 
-				if (tagAccessResult.getIsAccessDetermined()) {
+				if (tagAccessResult.getIsAccessDetermined() && tagAccessResult.getIsAuditedDetermined()) {
 
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedNoAudit() - access determined by tag policy. No resource policies will be evaluated, request=" + request + ", result=" + tagAccessResult);
+						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedNoAudit() - access and audit determined by tag policy. No resource policies will be evaluated, request=" + request + ", result=" + tagAccessResult);
 
 						LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + "): " + tagAccessResult);
 					}
 
 					return tagAccessResult;
 				}
+
+				ret.setAccessResultFrom(tagAccessResult);
+				ret.setAuditResultFrom(tagAccessResult);
+
 			}
 
 			List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();

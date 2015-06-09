@@ -50,7 +50,7 @@
 
     "serviceName":"tagdev",
     "serviceDef": {
-      "name": "_tag_",
+      "name": "tag",
       "id": 100,
       "resources": [
         {

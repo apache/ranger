@@ -722,6 +722,7 @@ CREATE TABLE `xa_access_audit` (
   `request_data` varchar(2000) DEFAULT NULL,
   `resource_path` varchar(2000) DEFAULT NULL,
   `resource_type` varchar(255) DEFAULT NULL,
+  `tags` varchar(2000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `xa_access_audit_FK_added_by_id` (`added_by_id`),
   KEY `xa_access_audit_FK_upd_by_id` (`upd_by_id`),

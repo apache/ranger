@@ -21,6 +21,7 @@
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -32,6 +33,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.SequenceGenerator;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.model.EnumRepositoryType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 
@@ -62,6 +65,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 	private String clientType;
 	private String clientIP;
 	private String requestData;
+	private String tags;
 
 
 	public AuthzAuditEventDbObj() {
@@ -88,6 +92,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 		this.clientType     = event.getClientType();
 		this.clientIP       = event.getClientIP();
 		this.requestData    = event.getRequestData();
+		this.tags           = StringUtils.join(event.getTags(), ", ");
 	}
 
 	@Id
@@ -255,4 +260,14 @@ public class AuthzAuditEventDbObj implements Serializable {
 	public void setRequestData(String requestData) {
 		this.requestData = requestData;
 	}
+
+	@Column(name = "tags")
+	public String getTags() {
+		return this.tags;
+	}
+
+	public void setTags(String tags) {
+		this.tags = tags;
+	}
+
 }

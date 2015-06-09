@@ -53,6 +53,10 @@ public class RangerAccessResult {
 		this.reason      = other.getReason();
 	}
 
+	public void setAuditResultFrom(final RangerAccessResult other) {
+		this.isAuditedDetermined = other.getIsAuditedDetermined();
+		this.isAudited = other.getIsAudited();
+	}
 
 	/**
 	 * @return the serviceName

@@ -181,6 +181,7 @@ public class SolrAuditDestination extends AuditDestination {
 		doc.addField("seq_num", auditEvent.getSeqNum());
 		doc.setField("event_count", auditEvent.getEventCount());
 		doc.setField("event_dur_ms", auditEvent.getEventDurationMS());
+		doc.setField("tags", auditEvent.getTags());
 
 		return doc;
 	}

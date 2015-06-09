@@ -40,7 +40,7 @@
 
     "serviceName":"tagdev",
     "serviceDef": {
-      "name": "_tag_",
+      "name": "tag",
       "id": 100,
       "resources": [
         {
@@ -120,11 +120,12 @@
       ]
     },
     "tagPolicies":[
-      {"id":1,"name":"test_policy","isEnabled":true,"isAuditEnabled":true,"policyType":0,
+      {"id":101,"name":"test_policy","isEnabled":true,"isAuditEnabled":true,"policyType":1,
         "resources":{"tag":{"values":["PII"],"isRecursive":false}},
         "policyItems":[
           {"accesses":[{"type":"hdfs:read", "isAllowed":true}, {"type":"hive:grant", "isAllowed":true}, {"type":"delete", "isAllowed":true}, {"type":":write", "isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false,
           "conditions" : [{"type":"ScriptConditionEvaluator", "values": [
+            "ctx.result = true;",
             "importPackage(java.util); var accessDate = ctx.getAsDate(ctx.accessTime); var expiryDate =ctx.getTagAttributeAsDate('pii','expiry'); expiryDate.getTime() < accessDate.getTime();"
           ]
                           }]
@@ -137,9 +138,10 @@
     {"name":"ALLOW 'read /finance/restricted/sales.db' for g=finance",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
-      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db"
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
+       "context": {"TAGS":"[{\"name\":\"PII\"}]"}
      },
-     "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+     "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     }
   ]
 }

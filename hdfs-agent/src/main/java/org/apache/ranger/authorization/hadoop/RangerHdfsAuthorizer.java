@@ -442,8 +442,8 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 	private boolean         isAuditEnabled = false;
 	private AuthzAuditEvent auditEvent     = null;
+	private final String pathToBeValidated;
 
-	private static final String    RangerModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME) ;
 	private static final String    HadoopModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_HADOOP_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_HADOOP_MODULE_ACL_NAME) ;
 	private static final String    excludeUserList  = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_HDFS_EXCLUDE_LIST_PROP, RangerHadoopConstants.AUDITLOG_EMPTY_STRING) ;
 	private static HashSet<String> excludeUsers     = null ;
@@ -462,8 +462,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 	}
 
 	public RangerHdfsAuditHandler(String pathToBeValidated) {
-		auditEvent = new AuthzAuditEvent();
-		auditEvent.setResourcePath(pathToBeValidated);
+		this.pathToBeValidated = pathToBeValidated;
 	}
 
 	@Override
@@ -476,22 +475,15 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 			isAuditEnabled = true;
 		}
 
+		auditEvent = super.getAuthzEvents(result);
+
 		RangerAccessRequest  request      = result.getAccessRequest();
-//		RangerServiceDef     serviceDef   = result.getServiceDef();
 		RangerAccessResource resource     = request.getResource();
-		String               resourceType = resource != null ? resource.getLeafName() : null;
 		String               resourcePath = resource != null ? resource.getAsString() : null;
 
-		auditEvent.setUser(request.getUser());
-		auditEvent.setResourceType(resourceType) ;
-		auditEvent.setAccessType(request.getAction());
-		auditEvent.setAccessResult((short)(result.getIsAllowed() ? 1 : 0));
-		auditEvent.setClientIP(request.getClientIPAddress());
 		auditEvent.setEventTime(request.getAccessTime());
-		auditEvent.setAclEnforcer(RangerModuleName);
-		auditEvent.setPolicyId(result.getPolicyId());
-		auditEvent.setRepositoryType(result.getServiceType());
-		auditEvent.setRepositoryName(result.getServiceName());
+		auditEvent.setAccessType(request.getAction());
+		auditEvent.setResourcePath(this.pathToBeValidated);
 		auditEvent.setResultReason(resourcePath);
 
 		if(LOG.isDebugEnabled()) {

@@ -22,6 +22,9 @@ package org.apache.ranger.plugin.policyengine;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.audit.provider.AuditHandler;
+import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -31,11 +34,14 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import static org.junit.Assert.*;
 
@@ -52,6 +58,45 @@ public class TestPolicyEngine {
 									   .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
 									   .registerTypeAdapter(RangerAccessResource.class,  new RangerResourceDeserializer())
 									   .create();
+
+		// For setting up auditProvider
+		Properties auditProperties = new Properties();
+
+		String AUDIT_PROPERTIES_FILE = "xasecure-audit.properties";
+
+		File propFile = new File(AUDIT_PROPERTIES_FILE);
+
+		if(propFile.exists()) {
+			System.out.println("Loading Audit properties file" + AUDIT_PROPERTIES_FILE);
+
+			auditProperties.load(new FileInputStream(propFile));
+		} else {
+			System.out.println("Audit properties file missing: " + AUDIT_PROPERTIES_FILE);
+
+			auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.url", "jdbc:mysql://node-1:3306/xasecure_audit");
+			auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.user", "xalogger");
+			auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.password", "xalogger");
+			auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.driver", "com.mysql.jdbc.Driver");
+
+			auditProperties.setProperty("xasecure.audit.is.enabled", "false"); // Set this to true to enable audit logging
+			auditProperties.setProperty("xasecure.audit.log4j.is.enabled", "false");
+			auditProperties.setProperty("xasecure.audit.log4j.is.async", "false");
+			auditProperties.setProperty("xasecure.audit.log4j.async.max.queue.size", "100000");
+			auditProperties.setProperty("xasecure.audit.log4j.async.max.flush.interval.ms", "30000");
+			auditProperties.setProperty("xasecure.audit.db.is.enabled", "true");
+			auditProperties.setProperty("xasecure.audit.db.is.async", "false");
+			auditProperties.setProperty("xasecure.audit.db.async.max.queue.size", "100000");
+			auditProperties.setProperty("xasecure.audit.db.async.max.flush.interval.ms", "30000");
+			auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
+		}
+
+		AuditProviderFactory.getInstance().init(auditProperties, "hdfs"); // second parameter does not matter for v2
+
+		AuditHandler provider = AuditProviderFactory.getAuditProvider();
+
+		System.out.println("provider=" + provider.toString());
+
+
 	}
 
 	@AfterClass
@@ -182,7 +227,9 @@ public class TestPolicyEngine {
 			policyEngine.preProcess(request);
 
 			RangerAccessResult expected = test.result;
-			RangerAccessResult result   = policyEngine.isAccessAllowed(request, null);
+			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
+
+			RangerAccessResult result   = policyEngine.isAccessAllowed(request, auditHandler);
 
 			assertNotNull("result was null! - " + test.name, result);
 			assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());

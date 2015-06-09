@@ -99,6 +99,7 @@ CREATE TABLE xa_access_audit (
 	request_data VARCHAR(2000) DEFAULT NULL NULL ,
 	resource_path VARCHAR(2000) DEFAULT NULL NULL ,
 	resource_type VARCHAR(255) DEFAULT NULL NULL ,
+	tags VARCHAR(2000) DEFAULT NULL NULL ,
 	PRIMARY KEY (id)
 );
 
