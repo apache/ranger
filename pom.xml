@@ -149,7 +149,7 @@
 		<jersey-client.version>2.6</jersey-client.version>
 		<junit.version>4.11</junit.version>
 		<kafka.version>0.8.2.0</kafka.version>
-		<!--<kafka.version>0.8.2.2.3.0.0-2208</kafka.version>-->
+		<!-- <kafka.version>0.8.2.2.3.0.0-2208</kafka.version> -->
 		<mockito.version>1.8.4</mockito.version>
 		<hamcrest-version>1.3</hamcrest-version>
 		<knox.gateway.version>0.6.0</knox.gateway.version>
@@ -219,14 +219,6 @@
             <module>unixauthnative</module>
           </modules>
       </profile>
-<!--
-      <profile>
-          <id>solr-security</id>
-         <modules>
-        	 <module>plugin-solr</module>         
-         </modules>
-      </profile>
--->
       <profile>
           <id>kafka-security</id>
          <modules>
@@ -261,31 +253,6 @@
                 <enabled>false</enabled>
             </snapshots>
           </repository>
-	  <repository>
-            <id>apache.solr.rc</id>
-            <name>Apache Solr RC builds</name>
-            <url>https://dist.apache.org/repos/dist/dev/lucene/lucene-solr-5.2.0-RC4-rev1683206/solr/maven</url>
-            <releases>
-            	<enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-          </repository>
-	  <repository>
-            <id>apache.lucene.rc</id>
-            <name>Apache Lucene RC builds</name>
-            <url>https://dist.apache.org/repos/dist/dev/lucene/lucene-solr-5.2.0-RC4-rev1683206/lucene/maven</url>
-            <releases>
-            	<enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-          </repository>
-
-	  
-
   </repositories>
 	<dependencyManagement>
 		<dependencies>
