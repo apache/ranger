@@ -111,11 +111,10 @@ public class PasswordValidator implements Runnable {
 			
 		}
 		catch(Throwable t) {
-			if (writer != null){
+			if (userName != null && writer != null ) {
 				String res = "FAILED: unable to validate due to error " + t ;
 				writer.println(res) ;
 				LOG.error("Response [" + res + "] for user: " + userName, t);
-
 			}
 		}
 		finally {

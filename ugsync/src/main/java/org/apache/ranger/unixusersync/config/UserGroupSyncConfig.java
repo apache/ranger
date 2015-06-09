@@ -40,9 +40,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import org.apache.log4j.Logger;
+
+
+
 public class UserGroupSyncConfig  {
 
 	public static final String CONFIG_FILE = "ranger-ugsync-site.xml" ;
+    private static final Logger LOG = Logger.getLogger(UserGroupSyncConfig.class) ;
 
 	public static final String DEFAULT_CONFIG_FILE = "ranger-ugsync-default-site.xml" ;
 	
@@ -70,6 +75,8 @@ public class UserGroupSyncConfig  {
 	
 	private static final String UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM = "ranger.usersync.sleeptimeinmillisbetweensynccycle" ;
 	
+	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE = 30000L ;
+
 	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE = 300000L ;
 	
 	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE = 21600000L ;
@@ -356,27 +363,37 @@ public class UserGroupSyncConfig  {
 		}
 		else {
 			long ret = Long.parseLong(val) ;
+			if (ret < UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE) { 
+				LOG.info("Sleep Time Between Cycle can not be lower than [" + UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE  + "] millisec. resetting to min value.") ;
+				ret = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE ;
+			}
 			return ret;
 		}
-		
 	}
 	
 	
 	public UserGroupSource getUserGroupSource() throws Throwable {
+
 		String val =  prop.getProperty(UGSYNC_SOURCE_CLASS_PARAM) ;
 
+		String syncSource = null ;
+
 		if(val == null || val.trim().isEmpty()) {
-			String syncSource=getSyncSource();
-			if(syncSource!=null && syncSource.equalsIgnoreCase("UNIX")){
-				val = UGSYNC_SOURCE_CLASS;
-			}else if(syncSource!=null && syncSource.equalsIgnoreCase("LDAP")){
-				val = LGSYNC_SOURCE_CLASS;
-			}else{
-				val = UGSYNC_SOURCE_CLASS;
-			}
+			syncSource=getSyncSource();
+		}
+		else {
+			syncSource = val ;
 		}
 
-		Class<UserGroupSource> ugSourceClass = (Class<UserGroupSource>)Class.forName(val);
+		String className = val ;
+
+		if(syncSource!=null && syncSource.equalsIgnoreCase("UNIX")){
+			className = UGSYNC_SOURCE_CLASS;
+		}else if(syncSource!=null && syncSource.equalsIgnoreCase("LDAP")){
+			className = LGSYNC_SOURCE_CLASS;
+		}
+
+		Class<UserGroupSource> ugSourceClass = (Class<UserGroupSource>)Class.forName(className);
 
 		UserGroupSource ret = ugSourceClass.newInstance();
 

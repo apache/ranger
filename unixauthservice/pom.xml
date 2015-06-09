@@ -97,7 +97,17 @@
       </dependency>   
     </dependencies>
 
-
+	<build>
+		<resources>
+        	<resource>
+            	<targetPath>${project.build.outputDirectory}/</targetPath>
+            	<directory>conf.dist</directory>
+            	<includes>
+                	<include>log4j.xml</include>
+            	</includes>
+        	</resource>
+    	</resources>
+	</build>
 
 </project>
 
