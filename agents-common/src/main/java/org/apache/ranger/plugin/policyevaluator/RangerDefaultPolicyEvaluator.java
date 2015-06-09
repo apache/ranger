@@ -153,7 +153,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                     evaluatePolicyItemsForAccess(request, result);
                 }
             }
-			if ((matchResult || headMatchResult) && !result.getIsAccessDetermined() && isFinalPolicy) {
+			if (isFinalPolicy
+					&& !result.getIsAccessDetermined()
+					&& (matchResult || headMatchResult)) {
 				result.setIsAllowed(false);
 				result.setPolicyId(getPolicy().getId());
 			}

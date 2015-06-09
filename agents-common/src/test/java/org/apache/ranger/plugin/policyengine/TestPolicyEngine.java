@@ -20,7 +20,10 @@
 package org.apache.ranger.plugin.policyengine;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -32,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -62,8 +66,22 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hdfsForTag() {
+		String[] hdfsTestResourceFiles = { "/policyengine/test_policyengine_tag_hdfs.json" };
+
+		runTestsFromResourceFiles(hdfsTestResourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hive() {
 		String[] hiveTestResourceFiles = { "/policyengine/test_policyengine_hive.json" };
+
+		runTestsFromResourceFiles(hiveTestResourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_hiveForTag() {
+		String[] hiveTestResourceFiles = { "/policyengine/test_policyengine_tag_hive.json" };
 
 		runTestsFromResourceFiles(hiveTestResourceFiles);
 	}
@@ -115,15 +133,56 @@ public class TestPolicyEngine {
 		RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 
 		// Uncomment next line for testing tag-policy evaluation
-		// policyEngineOptions.disableTagPolicyEvaluation = false;
+		policyEngineOptions.disableTagPolicyEvaluation = false;
 
 		policyEngine = new RangerPolicyEngineImpl(servicePolicies, policyEngineOptions);
 
+		RangerAccessRequest request = null;
+
 		for(TestData test : testCase.tests) {
-			policyEngine.preProcess(test.request);
+			if (test.request.getContext().containsKey(RangerPolicyEngine.KEY_CONTEXT_TAGS)) {
+				// Create a new AccessRequest
+				RangerAccessRequestImpl newRequest =
+						new RangerAccessRequestImpl(test.request.getResource(), test.request.getAccessType(),
+								test.request.getUser(), test.request.getUserGroups());
+
+				newRequest.setClientType(test.request.getClientType());
+				newRequest.setAccessTime(test.request.getAccessTime());
+				newRequest.setAction(test.request.getAction());
+				newRequest.setClientIPAddress(test.request.getClientIPAddress());
+				newRequest.setRequestData(test.request.getRequestData());
+				newRequest.setSessionId(test.request.getSessionId());
+
+				Map<String, Object> context = test.request.getContext();
+				String tagsJsonString = (String) context.get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
+				context.remove(RangerPolicyEngine.KEY_CONTEXT_TAGS);
+
+				if(!StringUtils.isEmpty(tagsJsonString)) {
+					try {
+						Type listType = new TypeToken<List<RangerResource.RangerResourceTag>>() {
+						}.getType();
+						List<RangerResource.RangerResourceTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
+
+						context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
+					} catch (Exception e) {
+						System.err.println("TestPolicyEngine.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
+								tagsJsonString + ", exception=" + e);
+					}
+				}
+
+
+				newRequest.setContext(context);
+
+				request = newRequest;
+
+			}
+			else {
+				request = test.request;
+			}
+			policyEngine.preProcess(request);
 
 			RangerAccessResult expected = test.result;
-			RangerAccessResult result   = policyEngine.isAccessAllowed(test.request, null);
+			RangerAccessResult result   = policyEngine.isAccessAllowed(request, null);
 
 			assertNotNull("result was null! - " + test.name, result);
 			assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());

@@ -226,6 +226,66 @@ public final class RangerScriptExecutionContext {
 
 	}
 
+	public final boolean isAccessedAfter(String tagName, String attributeName) {
+
+		boolean ret = false;
+
+		Date accessDate = getAccessTime();
+
+		Date expiryDate = getTagAttributeAsDate(tagName, attributeName);
+
+		if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
+			ret = true;
+		}
+
+		return ret;
+	}
+
+	public final boolean isAccessedAfter(String attributeName) {
+
+		boolean ret = false;
+
+		Date accessDate = getAccessTime();
+
+		Date expiryDate = getAsDate(getAttributeValue(attributeName));
+
+		if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
+			ret = true;
+		}
+
+		return ret;
+	}
+
+	public final boolean isAccessedBefore(String tagName, String attributeName) {
+
+		boolean ret = true;
+
+		Date accessDate = getAccessTime();
+
+		Date expiryDate = getTagAttributeAsDate(tagName, attributeName);
+
+		if (expiryDate == null || accessDate.after(expiryDate)) {
+			ret = false;
+		}
+
+		return ret;
+	}
+
+	public final boolean isAccessedBefore(String attributeName) {
+
+		boolean ret = true;
+
+		Date accessDate = getAccessTime();
+
+		Date expiryDate = getAsDate(getAttributeValue(attributeName));
+
+		if (expiryDate == null || accessDate.after(expiryDate)) {
+			ret = false;
+		}
+
+		return ret;
+	}
+
 	private List<RangerResource.RangerResourceTag> getAllTags() {
 
 		@SuppressWarnings("unchecked")

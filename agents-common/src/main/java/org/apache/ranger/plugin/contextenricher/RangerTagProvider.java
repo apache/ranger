@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.contextenricher;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -31,6 +32,7 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class RangerTagProvider extends RangerAbstractContextEnricher implements RangerTagReceiver {
 	private static final Log LOG = LogFactory.getLog(RangerTagProvider.class);
@@ -93,6 +95,13 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 
 		if (CollectionUtils.isNotEmpty(matchedTags)) {
 			request.getContext().put(RangerPolicyEngine.KEY_CONTEXT_TAGS, matchedTags);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("RangerTagProvider.enrich(" + request + ") - " + matchedTags.size() + " tags found by enricher.");
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("RangerTagProvider.enrich(" + request + ") - no tags found by enricher.");
+			}
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -109,10 +118,15 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 
 			for (RangerResource taggedResource : resources) {
 				RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+
 				matcher.setServiceDef(this.serviceDef);
-
-
 				matcher.setPolicyResources(taggedResource.getResourceSpec());
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("RangerTagProvider.setRangerResources() - Initializing matcher with (resource=" + taggedResource
+							+ ", serviceDef=" + this.serviceDef.getName() + ")" );
+
+				}
 				matcher.init();
 
 				RangerTaggedResourceMatcher taggedResourceMatcher = new RangerTaggedResourceMatcher(taggedResource, matcher);
@@ -121,9 +135,7 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 			}
 		}
 
-		if (CollectionUtils.isNotEmpty(resourceMatchers)) {
-			taggedResourceMatchers = resourceMatchers;
-		}
+		taggedResourceMatchers = resourceMatchers;
 
 		if (tagRefresher != null && !tagRefresher.getIsStarted()) {
 			tagRefresher.startRetriever();
@@ -144,14 +156,22 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 				RangerResource taggedResource = resourceMatcher.getRangerResource();
 				RangerPolicyResourceMatcher matcher = resourceMatcher.getPolicyResourceMatcher();
 
-				boolean isMatched = matcher.isMatch(resource);
+				boolean matchResult = matcher.isExactHeadMatch(resource);
 
-				if (isMatched) {
+				if (matchResult) {
 					if (ret == null) {
 						ret = new ArrayList<RangerResource.RangerResourceTag>();
 					}
 					ret.addAll(taggedResource.getTags());
 				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			if (CollectionUtils.isEmpty(ret)) {
+				LOG.debug("RangerTagProvider.findMatchingTags(" + resource + ") - No tags Found ");
+			} else {
+				LOG.debug("RangerTagProvider.findMatchingTags(" + resource + ") - " + ret.size() + " tags Found ");
 			}
 		}
 

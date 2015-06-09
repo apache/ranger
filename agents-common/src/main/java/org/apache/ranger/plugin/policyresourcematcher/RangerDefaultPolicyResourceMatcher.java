@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -32,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
@@ -45,6 +47,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 	protected Map<String, RangerPolicyResource> policyResources = null;
 
 	private Map<String, RangerResourceMatcher> matchers = null;
+	private List<RangerResourceDef> firstValidResourceDefHierarchy;
 
 	@Override
 	public void setServiceDef(RangerServiceDef serviceDef) {
@@ -62,23 +65,103 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 			LOG.debug("==> RangerDefaultPolicyResourceMatcher.init()");
 		}
 
-		this.matchers = new HashMap<String, RangerResourceMatcher>();
+		String errorText = "";
 
-		if(policyResources != null && serviceDef != null) {
-			for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-				String               resourceName   = resourceDef.getName();
-				RangerPolicyResource policyResource = policyResources.get(resourceName);
+		if(policyResources != null && policyResources.size() > 0 && serviceDef != null) {
 
-				if(policyResource != null) {
-					RangerResourceMatcher matcher = createResourceMatcher(resourceDef, policyResource);
+			Set<String> policyResourceKeySet = policyResources.keySet();
 
-					if(matcher != null) {
-						matchers.put(resourceName, matcher);
-					} else {
-						LOG.error("failed to find matcher for resource " + resourceName);
+			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
+			Set<List<RangerResourceDef>> validResourceHierarchies = serviceDefHelper.getResourceHierarchies();
+
+			for (List<RangerResourceDef> validResourceHierarchy : validResourceHierarchies) {
+
+				Set<String> resourceDefNameSet = serviceDefHelper.getAllResourceNames(validResourceHierarchy);
+
+				if ((Sets.difference(policyResourceKeySet, resourceDefNameSet)).isEmpty()) {
+
+					firstValidResourceDefHierarchy = validResourceHierarchy;
+					break;
+
+				}
+
+			}
+
+			if (firstValidResourceDefHierarchy != null) {
+				List<String> resourceDefNameOrderedList = serviceDefHelper.getAllResourceNamesOrdered(firstValidResourceDefHierarchy);
+
+				boolean foundGapsInResourceSpecs = false;
+				boolean skipped = false;
+
+				for (String resourceDefName : resourceDefNameOrderedList) {
+					RangerPolicyResource policyResource = policyResources.get(resourceDefName);
+					if (policyResource == null) {
+						skipped = true;
+					} else if (skipped) {
+						foundGapsInResourceSpecs = true;
+						break;
 					}
 				}
+
+				if (foundGapsInResourceSpecs) {
+
+					errorText = "policyResources does not specify contiguous sequence in any valid resourcedef hiearchy.";
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("RangerDefaultPolicyResourceMatcher.init() failed: Gaps found in policyResources, internal error, skipping..");
+					}
+					firstValidResourceDefHierarchy = null;
+
+				} else {
+
+					matchers = new HashMap<String, RangerResourceMatcher>();
+
+					for (RangerResourceDef resourceDef : firstValidResourceDefHierarchy) {
+
+						String resourceName = resourceDef.getName();
+						RangerPolicyResource policyResource = policyResources.get(resourceName);
+
+						if (policyResource != null) {
+							RangerResourceMatcher matcher = createResourceMatcher(resourceDef, policyResource);
+
+							if (matcher != null) {
+								matchers.put(resourceName, matcher);
+							} else {
+								LOG.error("failed to find matcher for resource " + resourceName);
+							}
+						} else {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("RangerDefaultPolicyResourceMatcher.init() - no matcher created for " + resourceName + ". Continuing ...");
+							}
+						}
+					}
+				}
+			} else {
+				errorText = "policyResources elements are not part of any valid resourcedef hierarchy.";
 			}
+		} else {
+			errorText = " policyResources is null or empty, or serviceDef is null.";
+		}
+
+		if(matchers == null) {
+			Set<String> policyResourceKeys = policyResources == null ? null : policyResources.keySet();
+			String keysString = "";
+			if (CollectionUtils.isNotEmpty(policyResourceKeys)) {
+				for (String policyResourceKeyName : policyResourceKeys) {
+					keysString += " " + policyResourceKeyName + " ";
+				}
+			}
+			String serviceDefName = serviceDef == null ? "" : serviceDef.getName();
+			String validHierarchy = "";
+			if (CollectionUtils.isNotEmpty(firstValidResourceDefHierarchy)) {
+				RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
+				List<String> resourceDefNameOrderedList = serviceDefHelper.getAllResourceNamesOrdered(firstValidResourceDefHierarchy);
+
+				for (String resourceDefName : resourceDefNameOrderedList) {
+					validHierarchy += " " + resourceDefName + " ";
+				}
+			}
+			LOG.warn("RangerDefaultPolicyResourceMatcher.init() failed: " + errorText + " (serviceDef=" + serviceDefName + ", policyResourceKeys=" + keysString
+			+ ", validHierarchy=" + validHierarchy + ")");
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -233,56 +316,27 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
 	@Override
 	public boolean isHeadMatch(RangerAccessResource resource) {
+
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyResourceMatcher.matchResourceHead(" + resource + ")");
+			LOG.debug("==> RangerDefaultPolicyResourceMatcher.isHeadMatch(" + resource + ")");
 		}
-		boolean ret; 
+
+		boolean ret = false;
 		
-		if (resource == null || CollectionUtils.isEmpty(resource.getKeys())) { // sanity-check, firewalling
-			LOG.debug("isHeadMatch: resource was null/empty!");
+		if (matchers == null) {
+
+			LOG.debug("RangerDefaultPolicyResourceMatcher.isHeadMatch(): PolicyResourceMatcher not initialized correctly!!!");
+			ret = false;
+
+		} else if (resource == null || CollectionUtils.isEmpty(resource.getKeys())) { // sanity-check, firewalling
+
+			LOG.debug("RangerDefaultPolicyResourceMatcher.isHeadMatch: resource was null/empty!");
 			ret = true; // null resource matches anything
-		} else if (serviceDef == null) { // sanity-check, firewalling
-			LOG.debug("isHeadMatch: service-def was null!");
-			ret = false; // null policy can never match a non-empty resource 
-		} else if (policyResources == null) {
-			LOG.debug("isHeadMatch: policyResources were null!");
-			ret = false; // null policy can never match a non-empty resource 
-		} else if (matchers == null || matchers.size() != policyResources.size()) { // sanity-check, firewalling
-			LOG.debug("isHeadMatch: matchers could be found for some of the policy resources");
-			ret = false; // empty policy can never match a non-empty resources and can't be evaluated meaningfully in matchers are absent
+
 		} else {
-			if (!Sets.difference(resource.getKeys(), matchers.keySet()).isEmpty()) { // e.g. avoid using udf policy for resource that has more than db specified and vice-versa
-				LOG.debug("isHeadMatch: resource/policy resource-keys mismatch. policy is incompatible with resource; can't match.");
-				ret = false;
-			} else {
-				Set<String> policyResourceNames = matchers.keySet();
-				boolean skipped = false;
-				boolean matched = true;
-				Iterator<RangerResourceDef> iterator = serviceDef.getResources().iterator();
-				while (iterator.hasNext() && matched) {
-					RangerResourceDef resourceDef = iterator.next();
-					String resourceName = resourceDef.getName();
-					// we only work with resources that are relevant to this policy
-					if (policyResourceNames.contains(resourceName)) {
-						String resourceValue = resource.getValue(resourceName);
-						if (StringUtils.isEmpty(resourceValue)) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Skipping matching for " + resourceName + " since it is null/empty on resource");
-							}
-							skipped = true; // once we skip a level all lower levels must be skippable, too
-						} else if (skipped == true) {
-							LOG.debug("isHeadMatch: found a lower level resource when a higer level resource was absent!");
-							matched = false;
-						} else if (!matchers.get(resourceName).isMatch(resourceValue)) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("isHeadMatch: matcher for " + resourceName + " failed");
-							}
-							matched = false;
-						}
-					}
-				}
-				ret = matched;
-			}
+
+			ret = newIsHeadMatch(resource);
+
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -290,6 +344,90 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 		}
 
 		return ret;
+	}
+
+	@Override
+	public boolean isExactHeadMatch(RangerAccessResource resource) {
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyResourceMatcher.isExactHeadMatch(" + resource + ")");
+		}
+
+		boolean ret = false;
+
+		if (matchers == null) {
+
+			LOG.debug("RangerDefaultPolicyResourceMatcher.isExactHeadMatch(): PolicyResourceMatcher not initialized correctly!!!");
+			ret = false;
+
+		} else if (resource == null || CollectionUtils.isEmpty(resource.getKeys())) { // sanity-check, firewalling
+
+			LOG.debug("RangerDefaultPolicyResourceMatcher.isExactHeadMatch: resource was null/empty!");
+			ret = false;
+
+		} else if (matchers.size() > resource.getKeys().size()) {
+
+			LOG.debug("RangerDefaultPolicyResourceMatcher.isExactHeadMatch: more levels specified in PolicyResourceMatcher than in resource being matched!!");
+			ret = false;
+
+		} else {
+
+			ret = newIsHeadMatch(resource);
+
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyResourceMatcher.isExactHeadMatch(" + resource + ")" + ret);
+		}
+
+		return ret;
+	}
+
+	private boolean newIsHeadMatch(RangerAccessResource resource) {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyResourceMatcher.newIsHeadMatch(" + resource + ")");
+		}
+
+		boolean skipped = false;
+		boolean matched = true;
+
+		for (RangerResourceDef resourceDef : firstValidResourceDefHierarchy) {
+
+			String resourceName = resourceDef.getName();
+			String resourceValue = resource.getValue(resourceName);
+			RangerResourceMatcher matcher = matchers.get(resourceName);
+
+			if (matcher != null) {
+
+				if (StringUtils.isNotBlank(resourceValue)) {
+
+					if (!skipped) {
+
+						matched = matcher.isMatch(resourceValue);
+
+					} else {
+
+						matched = false;
+
+					}
+				} else {
+
+					skipped = true;
+
+				}
+			}
+
+			if (!matched) {
+				break;
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyResourceMatcher.newIsHeadMatch(" + resource + "): " + matched);
+		}
+
+		return matched;
 	}
 
 	@Override

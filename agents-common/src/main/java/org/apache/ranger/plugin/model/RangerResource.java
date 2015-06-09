@@ -96,6 +96,46 @@ public class RangerResource extends RangerBaseModelObject {
         this.tags = tags == null ? new ArrayList<RangerResourceTag>() : tags;
     }
 
+    @Override
+    public String toString( ) {
+        StringBuilder sb = new StringBuilder();
+
+        toString(sb);
+
+        return sb.toString();
+    }
+
+    public StringBuilder toString(StringBuilder sb) {
+
+        sb.append("{ ");
+
+        sb.append("componentType={").append(componentType).append("} ");
+        sb.append("tagServiceName={").append(tagServiceName).append("} ");
+
+        sb.append("RangerResource={");
+        if(resourceSpec != null) {
+            for(Map.Entry<String, RangerPolicy.RangerPolicyResource> e : resourceSpec.entrySet()) {
+                sb.append(e.getKey()).append("={");
+                e.getValue().toString(sb);
+                sb.append("} ");
+            }
+        }
+        sb.append("} ");
+
+        sb.append("Tags={");
+        if (tags != null) {
+            for (RangerResourceTag tag : tags) {
+                sb.append("{");
+                tag.toString(sb);
+                sb.append("} ");
+            }
+        }
+        sb.append("} ");
+
+        sb.append(" }");
+
+        return sb;
+    }
     /**
      * Represents a tag and its attribute-values for a resource.
      */
@@ -130,5 +170,35 @@ public class RangerResource extends RangerBaseModelObject {
             return attributeValues;
         }
         public void setAttributeValues(Map<String, String> attributeValues) { this.attributeValues = attributeValues; }
+
+        @Override
+        public String toString( ) {
+            StringBuilder sb = new StringBuilder();
+
+            toString(sb);
+
+            return sb.toString();
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+
+            sb.append("{ ");
+
+            sb.append("name={").append(name).append("} ");
+
+            sb.append("attributeValues={");
+            if(attributeValues != null) {
+                for(Map.Entry<String, String> e : attributeValues.entrySet()) {
+                    sb.append(e.getKey()).append("={");
+                    sb.append(e.getValue());
+                    sb.append("} ");
+                }
+            }
+            sb.append("} ");
+
+            sb.append(" }");
+
+            return sb;
+        }
     }
 }

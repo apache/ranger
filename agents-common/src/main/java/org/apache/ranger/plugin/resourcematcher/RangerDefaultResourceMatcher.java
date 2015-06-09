@@ -60,6 +60,20 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 			ret = !ret;
 		}
 
+		if (ret == false) {
+			if(LOG.isDebugEnabled()) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("[");
+				for (String policyValue: policyValues) {
+					sb.append(policyValue);
+					sb.append(" ");
+				}
+				sb.append("]");
+
+				LOG.debug("RangerDefaultResourceMatcher.isMatch returns FALSE, (resource=" + resource + ", policyValues=" + sb.toString() + ")");
+			}
+		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultResourceMatcher.isMatch(" + resource + "): " + ret);
 		}

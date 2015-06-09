@@ -1,0 +1,146 @@
+{
+  "serviceName":"hdfsdev",
+
+  "serviceDef":{
+    "name":"hdfs",
+    "id":1,
+    "resources":[
+    {"name":"path","type":"path","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Resource Path","description":"HDFS file or directory path"}
+    ],
+    "accessTypes":[
+      {"name":"read","label":"Read"},
+      {"name":"write","label":"Write"},
+      {"name":"execute","label":"Execute"}
+    ]
+  },
+
+  "policies":[
+    {"id":1,"name":"audit-all-access under /finance/restricted/","isEnabled":true,"isAuditEnabled":true,
+     "resources":{"path":{"values":["/finance/restricted/"],"isRecursive":true}},
+     "policyItems":[
+       {"accesses":[],"users":[],"groups":["public"],"delegateAdmin":false}
+     ]
+    }
+    ,
+    {"id":2,"name":"allow-read-to-all under /public/","isEnabled":true,"isAuditEnabled":false,
+     "resources":{"path":{"values":["/public/*"],"isRecursive":true}},
+     "policyItems":[
+       {"accesses":[{"type":"read","isAllowed":true},{"type":"execute","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+     ]
+    }
+    ,
+    {"id":3,"name":"allow-read-to-finance under /finance/restricted","isEnabled":true,"isAuditEnabled":true,
+     "resources":{"path":{"values":["/finance/restricted"],"isRecursive":true}},
+     "policyItems":[
+       {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["finance"],"delegateAdmin":false}
+     ]
+    }
+  ],
+  "tagPolicyInfo": {
+
+    "serviceName":"tagdev",
+    "serviceDef": {
+      "name": "_tag_",
+      "id": 100,
+      "resources": [
+        {
+          "itemId": 1,
+          "name": "tag",
+          "type": "string",
+          "level": 1,
+          "parent": "",
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": true,
+            "ignoreCase": false
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "",
+          "label": "TAG",
+          "description": "TAG"
+        }
+      ],
+      "accessTypes": [
+        {
+          "itemId": 1,
+          "name": "hdfs:read",
+          "label": "hdfs:Read"
+        },
+        {
+          "itemId": 2,
+          "name": "hdfs:write",
+          "label": "hdfs:Write"
+        },
+        {
+          "itemId": 3,
+          "name": "hdfs:execute",
+          "label": "hdfs:Execute"
+        }
+        ,
+        {
+          "itemId": 4,
+          "name": "hive:grant",
+          "label": "hive:grant"
+        }
+        ,
+        {
+          "itemId": 5,
+          "name": "kms:dek",
+          "label": "kms:dek"
+        }
+        ,
+        {
+          "itemId": 6,
+          "name": "delete",
+          "label": "delete"
+        }
+      ],
+      "contextEnrichers": [
+        {
+          "itemId": 1,
+          "name" : "TagEnricher",
+          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
+          "enricherOptions" : {"TagProviderType":"FILESTORE_BASED_TAG_PROVIDER", "pollingInterval":-1, "dataFile":"/etc/ranger/data/resourceTags.txt"}
+        }
+      ],
+      "policyConditions": [
+        {
+          "itemId":1,
+          "name":"ScriptConditionEvaluator",
+          "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+          "evaluatorOptions" : {"engineName":"JavaScript"},
+          "label":"Script",
+          "description": "Script to execute"
+        }
+      ]
+    },
+    "tagPolicies":[
+      {"id":1,"name":"test_policy","isEnabled":true,"isAuditEnabled":true,"policyType":0,
+        "resources":{"tag":{"values":["PII"],"isRecursive":false}},
+        "policyItems":[
+          {"accesses":[{"type":"hdfs:read", "isAllowed":true}, {"type":"hive:grant", "isAllowed":true}, {"type":"delete", "isAllowed":true}, {"type":":write", "isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false,
+          "conditions" : [{"type":"ScriptConditionEvaluator", "values": [
+            "importPackage(java.util); var accessDate = ctx.getAsDate(ctx.accessTime); var expiryDate =ctx.getTagAttributeAsDate('pii','expiry'); expiryDate.getTime() < accessDate.getTime();"
+          ]
+                          }]
+          }
+        ]
+      }
+    ]
+  },
+  "tests":[
+    {"name":"ALLOW 'read /finance/restricted/sales.db' for g=finance",
+     "request":{
+      "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db"
+     },
+     "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+    }
+  ]
+}
+

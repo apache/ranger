@@ -1,0 +1,269 @@
+{
+  "serviceName":"hivedev",
+
+  "serviceDef":{
+    "name":"hive",
+    "id":3,
+    "resources":[
+      {"name":"database","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Database","description":"Hive Database"},
+      {"name":"table","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Table","description":"Hive Table"},
+      {"name":"udf","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive UDF","description":"Hive UDF"},
+      {"name":"column","level":3,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Column","description":"Hive Column"}
+    ],
+    "accessTypes":[
+      {"name":"select","label":"Select"},
+      {"name":"update","label":"Update"},
+      {"name":"create","label":"Create"},
+      {"name":"drop","label":"Drop"},
+      {"name":"alter","label":"Alter"},
+      {"name":"index","label":"Index"},
+      {"name":"lock","label":"Lock"},
+      {"name":"all","label":"All",
+        "impliedGrants": [
+          "select",
+          "update",
+          "create",
+          "drop",
+          "alter",
+          "index",
+          "lock"
+        ]
+      }
+    ]
+  },
+
+  "policies":[
+    {"id":101,"name":"db=*: audit-all-access","isEnabled":true,"isAuditEnabled":true,
+     "resources":{"database":{"values":["*"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+     "policyItems":[
+       {"accesses":[{"type":"all","isAllowed":true}],"users":["hive", "user1", "user2"],"groups":["public"],"delegateAdmin":false}
+     ]
+    },
+    {"id":102,"name":"db=*, udf=*: audit-all-access","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"database":{"values":["*"]},"udf":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"all","isAllowed":true}],"users":["hive", "user1", "user2"],"groups":["public"],"delegateAdmin":false}
+      ]
+    }
+  ],
+  "tagPolicyInfo": {
+
+    "serviceName":"tagdev",
+    "serviceDef": {
+      "name": "_tag_",
+      "id": 100,
+      "resources": [
+        {
+          "itemId": 1,
+          "name": "tag",
+          "type": "string",
+          "level": 1,
+          "parent": "",
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": true,
+            "ignoreCase": false
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "",
+          "label": "TAG",
+          "description": "TAG"
+        }
+      ],
+      "accessTypes": [
+        {
+          "itemId": 1,
+          "name": "hive:select",
+          "label": "hive:select"
+        },
+        {
+          "itemId": 2,
+          "name": "hive:update",
+          "label": "hive:update"
+        },
+        {
+          "itemId": 3,
+          "name": "hive:create",
+          "label": "hive:create"
+        }
+      ,
+        {
+          "itemId": 4,
+          "name": "hive:grant",
+          "label": "hive:grant"
+        }
+      ,
+        {
+          "itemId": 5,
+          "name": "hive:drop",
+          "label": "hive:drop"
+        }
+      ,
+        {
+          "itemId": 6,
+          "name": "hive:alter",
+          "label": "hive:alter"
+        },
+        {
+          "itemId": 7,
+          "name": "hive:index",
+          "label": "hive:index"
+        },
+        {
+          "itemId": 8,
+          "name": "hive:lock",
+          "label": "hive:lock"
+        },
+        {
+          "itemId": 9,
+          "name": "hive:all",
+          "label": "hive:all"
+        }
+      ],
+      "contextEnrichers": [
+        {
+          "itemId": 1,
+          "name" : "TagEnricher",
+          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
+          "enricherOptions" : {"TagProviderType":"FILESTORE_BASED_TAG_PROVIDER", "pollingInterval":-1, "dataFile":"/etc/ranger/data/resourceTags.txt"}
+        }
+      ],
+      "policyConditions": [
+        {
+          "itemId":1,
+          "name":"ScriptConditionEvaluator",
+          "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+          "evaluatorOptions" : {"engineName":"JavaScript"},
+          "label":"Script",
+          "description": "Script to execute"
+        }
+      ]
+    },
+    "tagPolicies":[
+      {"id":1,"name":"RESTRICTED_TAG_POLICY","isEnabled":true,"isAuditEnabled":true,"policyType":0,
+        "resources":{"tag":{"values":["RESTRICTED"],"isRecursive":false}},
+        "policyItems":[
+          {
+            "accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
+            "conditions":[{
+              "type":"ScriptConditionEvaluator",
+              "values":["if ( ctx.isAccessedBefore('expiry') ) ctx.result = true;"]
+            }]
+          }
+        ]
+      },
+      {"id":2,"name":"PII_TAG_POLICY","isEnabled":true,"isAuditEnabled":true,"policyType":0,
+        "resources":{"tag":{"values":["PII"],"isRecursive":false}},
+        "policyItems":[
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false}
+        ]
+      },
+      {"id":3,"name":"PII_TAG_POLICY-FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+        "resources":{"tag":{"values":["PII-FINAL"],"isRecursive":false}},
+        "policyItems":[
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false}
+        ]
+      },
+      {"id":4,"name":"RESTRICTED_TAG_POLICY_FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+        "resources":{"tag":{"values":["RESTRICTED-FINAL"],"isRecursive":false}},
+        "policyItems":[
+          {
+            "accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
+            "conditions":[{
+              "type":"ScriptConditionEvaluator",
+              "values":["if ( ctx.isAccessedBefore('expiry') ) ctx.result = true;"]
+            }]
+          }
+        ]
+      }
+    ]
+  },
+
+  "tests":[
+    {"name":"ALLOW 'select ssn from employee.personal;' for user1",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
+        "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1",
+        "context": {"TAGS":"[{\"name\":\"RESTRICTED\", \"attributeValues\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":1}
+    },
+    {"name":"DENY 'select ssn from employee.personal;' for user2",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
+        "accessType":"select","user":"user2","userGroups":[],"requestData":"select ssn from employee.personal;' for user2",
+        "context": {"TAGS":"[{\"name\":\"RESTRICTED-FINAL\", \"attributeValues\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":4}
+    },
+    {"name":"ALLOW 'select name from employee.personal;' for user1 - no tag",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal", "column":"name"}},
+        "accessType":"select","user":"user1","userGroups":[],"requestData":"select name from employee.personal;' for user1"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+    },
+    {"name":"ALLOW 'select name from employee.personal;' for user2 - no tag",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal", "column":"name"}},
+        "accessType":"select","user":"user2","userGroups":[],"requestData":"select name from employee.personal;' for user2"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+    },
+    {"name":"ALLOW 'select name from default.table1;' for hive",
+      "request":{
+        "resource":{"elements":{"database":"default", "table":"table1", "column":"name"}},
+        "accessType":"select","user":"hive","userGroups":[],"requestData":"select name from default.table1;' for hive",
+        "context": {"TAGS":"[{\"name\":\"PII\", \"attributeValues\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+    },
+    {"name":"ALLOW 'desc default.table1;' for hive",
+      "request":{
+        "resource":{"elements":{"database":"default", "table":"table1"}},
+        "accessType":"","user":"hive","userGroups":[],"requestData":"desc default.table1;' for hive",
+        "context": {"TAGS":"[{\"name\":\"PII\", \"attributeValues\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+    },
+    {"name":"DENY 'desc default.table1;' for user1",
+      "request":{
+        "resource":{"elements":{"database":"default", "table":"table1"}},
+        "accessType":"","user":"user1","userGroups":[],"requestData":"desc default.table1;' for user1",
+        "context": {"TAGS":"[{\"name\":\"PII-FINAL\", \"attributeValues\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+    },
+    {"name":"ALLOW 'use default;' for hive",
+      "request":{
+        "resource":{"elements":{"database":"default"}},
+        "accessType":"","user":"hive","userGroups":[],"requestData":"use default",
+        "context": {"TAGS":"[{\"name\":\"PII-FINAL\", \"attributeValues\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+    },
+    {"name":"DENY 'use default;' for user1",
+      "request":{
+        "resource":{"elements":{"database":"default"}},
+        "accessType":"","user":"user1","userGroups":[],"requestData":"use default for user1",
+        "context": {"TAGS":"[{\"name\":\"PII-FINAL\", \"attributeValues\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+    },
+    {"name":"ALLOW 'select * from default.table1;' for hive",
+      "request":{
+        "resource":{"elements":{"database":"default", "table":"table1", "column":"name"}},
+        "accessType":"select","user":"hive","userGroups":[],"requestData":"select * from default.table1",
+        "context": {"TAGS":"[{\"name\":\"PII\", \"attributeValues\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+    }
+
+  ]
+}
+
