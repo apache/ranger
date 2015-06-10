@@ -20,11 +20,9 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
@@ -68,6 +66,11 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
+	public boolean isAuditEnabled() {
+		return policy != null && policy.getIsAuditEnabled();
+	}
+
+	@Override
 	public int compareTo(RangerPolicyEvaluator other) {
 		if(LOG.isDebugEnabled()) {
 		LOG.debug("==> RangerAbstractPolicyEvaluator.compareTo()");
@@ -76,13 +79,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 		int result = Integer.compare(this.getEvalOrder(), other.getEvalOrder());
 
 		if (result == 0) {
-			Map<String, RangerConditionEvaluator> myConditionEvaluators    = this.getConditionEvaluators();
-			Map<String, RangerConditionEvaluator> otherConditionEvaluators = other.getConditionEvaluators();
-
-			int myConditionEvaluatorCount    = myConditionEvaluators == null ? 0 : myConditionEvaluators.size();
-			int otherConditionEvaluatorCount = otherConditionEvaluators == null ? 0 : otherConditionEvaluators.size();
-
-			result = Integer.compare(myConditionEvaluatorCount, otherConditionEvaluatorCount);
+			result = Integer.compare(getCustomConditionsCount(), other.getCustomConditionsCount());
 		}
 
 		if(LOG.isDebugEnabled()) {

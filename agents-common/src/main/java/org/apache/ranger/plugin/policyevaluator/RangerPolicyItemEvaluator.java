@@ -16,45 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.ranger.plugin.policyevaluator;
 
-
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
-public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator> {
-	public static final String EVALUATOR_TYPE_DEFAULT   = "default";
-	public static final String EVALUATOR_TYPE_OPTIMIZED = "optimized";
-	public static final String EVALUATOR_TYPE_CACHED    = "cached";
+public interface RangerPolicyItemEvaluator {
 
-	void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options);
+	void init();
+
+	/*
+	RangerServiceDef getServiceDef();
 
 	RangerPolicy getPolicy();
 
-	RangerServiceDef getServiceDef();
+	RangerPolicyItem getPolicyItem();
 
-	int getEvalOrder();
+	long getPolicyId();
+	*/
 
-	int getCustomConditionsCount();
+	List<RangerConditionEvaluator> getConditionEvaluators();
 
-	boolean isAuditEnabled();
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
 
-	boolean isMatch(RangerAccessResource resource);
+	boolean matchUserGroup(String user, Set<String> userGroups);
 
-	boolean isSingleAndExactMatch(RangerAccessResource resource);
+	boolean matchAccessType(String accessType);
 
-	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
-
-	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
+	boolean matchCustomConditions(RangerAccessRequest request);
 }

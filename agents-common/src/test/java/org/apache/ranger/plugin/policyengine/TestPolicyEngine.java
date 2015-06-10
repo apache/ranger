@@ -81,6 +81,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(hbaseTestResourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_conditions() {
+		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_conditions.json" };
+
+		runTestsFromResourceFiles(conditionsTestResourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
