@@ -51,7 +51,7 @@ public class RangerTimeOfDayMatcherTest {
 		String[] durations = new String[] { 
 				"9am-5pm", " 9Am -5 Pm", " 9Am -5 Pm", "9 AM -5 p.m.", "9a.M - 5Pm.",
 				"9:30am-5:30pm", " 9:00Am -5:59 Pm",
-				"   9   am   -  4 pm  "
+				"   9   am   -  4 pm  ", "9pm-5AM"
 		};
 		check(durations, true);
 	}
@@ -60,7 +60,6 @@ public class RangerTimeOfDayMatcherTest {
 	public void test_patterMatching_unexpectedMatches() {
 		// even semantically illegal durations work -- parsing is just for format not for semantics!
 		String[] durations = new String[] {
-				"9pm-5AM",   // illegal duration where start > end is allows parsed as right!
 				"00PM-44PM",  // any two digits are allowed!
 				"9:0am-5:7pm", // Minute part can be one digit
 		};
@@ -101,6 +100,7 @@ public class RangerTimeOfDayMatcherTest {
 				{ "9 AM -5 p.m.", "9", null, "A", "5", null, "p" },
 				{ "9:30AM - 5:15pm", "9", "30", "A", "5", "15", "p" },
 				{ "9:30 AM - 5:15 p.m.", "9", "30", "A", "5", "15", "p" },
+				{ "9pm-5am", "9", null, "p", "5", null, "a"},
 		};
 		checkGroups(input);
 	}
@@ -125,7 +125,7 @@ public class RangerTimeOfDayMatcherTest {
 		Object[][] input = new Object[][] {
 				{ "9am-5pm", true, 9*60, (12+5)*60 },
 				{ "1 PM - 10P.M.", true, (12+1)*60, (12+10)*60 },
-				{ "1PM - 9AM", false, null, null }, // illegal duration should come back as null
+				{ "1PM - 9AM", true, (12+1)*60, 9*60 },
 				{ "1PM", false, null, null }, // illegal patterns should come back as null, too
 		};
 		for (Object[] data: input) {
@@ -175,7 +175,7 @@ public class RangerTimeOfDayMatcherTest {
 	@Test
 	public void test_end2end_happyPath() {
 		RangerPolicyItemCondition itemCondition = mock(RangerPolicyItemCondition.class);
-		when(itemCondition.getValues()).thenReturn(Arrays.asList("2:45a.m. -7:00 AM", "  9:15AM- 5:30P.M. "));
+		when(itemCondition.getValues()).thenReturn(Arrays.asList("2:45a.m. -7:00 AM", "  9:15AM- 5:30P.M. ", "11pm-2am"));
 
 		RangerTimeOfDayMatcher matcher = new RangerTimeOfDayMatcher();
 		matcher.setConditionDef(null);
@@ -183,7 +183,9 @@ public class RangerTimeOfDayMatcherTest {
 		matcher.init();
 		
 		Object[][] input = new Object[][] {
-				{ 1, 0, false },
+				{ 1, 0, true },
+				{ 2, 0, true },
+				{ 2, 1, false },
 				{ 2, 44, false },
 				{ 2, 45, true },
 				{ 3, 0, true },
@@ -196,7 +198,8 @@ public class RangerTimeOfDayMatcherTest {
 				{17, 30, true}, 
 				{17, 31, false}, 
 				{18, 0, false },
-				{23, 0, false },
+				{22, 59, false },
+				{23, 0, true },
 		};
 		
 		RangerAccessRequest request = mock(RangerAccessRequest.class);
