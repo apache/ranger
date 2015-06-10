@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConfigUtil;
@@ -47,7 +48,8 @@ public class RangerAuthenticationEntryPoint extends
 		LoginUrlAuthenticationEntryPoint {
 	public static final int SC_AUTHENTICATION_TIMEOUT = 419;
 
-	static Logger logger = Logger.getLogger(RangerAuthenticationEntryPoint.class);
+	static Logger logger = Logger
+			.getLogger(RangerAuthenticationEntryPoint.class);
 	static int ajaxReturnCode = -1;
 
 	@Autowired
@@ -55,6 +57,9 @@ public class RangerAuthenticationEntryPoint extends
 
 	@Autowired
 	JSONUtil jsonUtil;
+	
+	@Autowired
+	SessionMgr sessionMgr;
 
 	public RangerAuthenticationEntryPoint() {
 		super();
@@ -63,7 +68,8 @@ public class RangerAuthenticationEntryPoint extends
 		}
 
 		if (ajaxReturnCode < 0) {
-		ajaxReturnCode = PropertiesUtil.getIntProperty("ranger.ajax.auth.required.code", 401);
+			ajaxReturnCode = PropertiesUtil.getIntProperty(
+					"ranger.ajax.auth.required.code", 401);
 		}
 	}
 
@@ -71,35 +77,33 @@ public class RangerAuthenticationEntryPoint extends
 	public void commence(HttpServletRequest request,
 			HttpServletResponse response, AuthenticationException authException)
 			throws IOException, ServletException {
-		HttpSession httpSession = request.getSession();
 		String ajaxRequestHeader = request.getHeader("X-Requested-With");
 		if (logger.isDebugEnabled()) {
 			logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 		}
 
-		String requestURL = (request.getRequestURL() != null) ? request.getRequestURL().toString() : "";
-		String servletPath = PropertiesUtil.getProperty("ranger.servlet.mapping.url.pattern", "service");
-		String reqServletPath = configUtil.getWebAppRootURL() + "/" + servletPath;
+		String requestURL = (request.getRequestURL() != null) ? request
+				.getRequestURL().toString() : "";
+		String servletPath = PropertiesUtil.getProperty(
+				"ranger.servlet.mapping.url.pattern", "service");
+		String reqServletPath = configUtil.getWebAppRootURL() + "/"
+				+ servletPath;
 
-		response.setContentType("application/json;charset=UTF-8");
-		response.setHeader("Cache-Control", "no-cache");
-		// getting the current date in milliseconds
-		Date curentDate = new Date();
-		Long currentDateInMillis = (long) (((((curentDate.getHours() * 60) + curentDate
-				.getMinutes()) * 60) + curentDate.getSeconds()) * 1000);
-		// checking session timeout occurence
-		if (httpSession.getMaxInactiveInterval() * 60000 >= (currentDateInMillis - httpSession
-				.getLastAccessedTime())) {
-			ajaxRequestHeader = null;
-			VXResponse vXResponse = new VXResponse();
+		if ("XMLHttpRequest".equals(ajaxRequestHeader)) {
+			try {
 
-			vXResponse.setStatusCode(SC_AUTHENTICATION_TIMEOUT);
-			vXResponse.setMsgDesc("Session Timeout");
+				VXResponse vXResponse = new VXResponse();
 
-			response.setStatus(SC_AUTHENTICATION_TIMEOUT);
-			response.getWriter()
-					.write(jsonUtil.writeObjectAsString(vXResponse));
+				vXResponse.setStatusCode(SC_AUTHENTICATION_TIMEOUT);
+				vXResponse.setMsgDesc("Session Timeout");
 
+				response.setStatus(SC_AUTHENTICATION_TIMEOUT);
+				response.getWriter().write(
+						jsonUtil.writeObjectAsString(vXResponse));
+			} catch (IOException e) {
+				logger.info("Error while writing JSON in HttpServletResponse");
+			}
+			return;
 		} else {
 			try {
 

@@ -155,9 +155,11 @@ define(function(require){
 					if(obj.type == 'bool'){
 						config[obj.name] = that.getBooleanForConfig(obj, that.model);
 					}else{
-						config[obj.name] = that.model.get(obj.name).toString();
+						config[obj.name] = _.isNull(that.model.get(obj.name)) ? "" : that.model.get(obj.name).toString();
 					}
-					that.model.unset(obj.name);
+					if(!_.isNull(obj.name)) {
+						that.model.unset(obj.name);
+					}
 				}
 			});
 			this.extraConfigColl.each(function(obj){ config[obj.get('name')] = obj.get('value');})
