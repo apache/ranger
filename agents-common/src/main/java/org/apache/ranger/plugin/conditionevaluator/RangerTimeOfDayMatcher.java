@@ -72,7 +72,7 @@ public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTimeOfDayMatcher.init(" + condition + "): countries[" + _durations + "]");
+			LOG.debug("<== RangerTimeOfDayMatcher.init(" + condition + "): durations[" + toString() + "]");
 		}
 	}
 
@@ -105,17 +105,13 @@ public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 					endMinute = Integer.parseInt(m.group(7));
 				}
 				String endType = m.group(8).toUpperCase();
-				if (startType.equals("P") && endType.equals("A")) {
-					LOG.warn("extractDuration: Invalid duration:" + value);
-				} else {
-					if (startType.equals("P")) {
-						startHour += 12;
-					}
-					if (endType.equals("P")) {
-						endHour += 12;
-					}
-					result = new int[] { (startHour*60)+startMin, (endHour*60)+endMinute };
+				if (startType.equals("P")) {
+					startHour += 12;
 				}
+				if (endType.equals("P")) {
+					endHour += 12;
+				}
+				result = new int[] { (startHour*60)+startMin, (endHour*60)+endMinute };
 			}
 		}
 
@@ -145,12 +141,12 @@ public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 			calendar.setTime(date);
 			int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 			int minutes = calendar.get(Calendar.MINUTE);
-			if (durationMatched(_durations, hourOfDay, minutes)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("isMatched: None of the durations contains this hour of day[" + hourOfDay + "]");
-				}
-			} else {
+			if (! durationMatched(_durations, hourOfDay, minutes)) {
 				matched = false;
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("isMatched: None of the durations contains this hour of day[" + hourOfDay + "] and minutes[" + minutes + "]");
+				}
 			}
 		}
 		
@@ -166,36 +162,32 @@ public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 			int start = aDuration[0];
 			int end = aDuration[1];
 			int minutesOfDay = hourOfDay*60 + minutes;
-			if (start <= minutesOfDay && minutesOfDay <= end) {
-				return true;
+			if(start < end) {
+				if (start <= minutesOfDay && minutesOfDay <= end) {
+					return true;
+				}
+			} else {
+				if(start <= minutesOfDay || minutesOfDay <= end) {
+					return true;
+				}
 			}
 		}
 		return false;
 	}
 
-	String extractValue(final RangerAccessRequest request, String key) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSimpleMatcher.extractValue(" + request+ ")");
-		}
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
 
-		String value = null;
-		if (request == null) {
-			LOG.debug("isMatched: Unexpected: null request.  Returning null!");
-		} else if (request.getContext() == null) {
-			LOG.debug("isMatched: Context map of request is null.  Ok. Returning null!");
-		} else if (CollectionUtils.isEmpty(request.getContext().entrySet())) {
-			LOG.debug("isMatched: Missing context on request.  Ok. Condition isn't applicable.  Returning null!");
-		} else if (!request.getContext().containsKey(key)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("isMatched: Unexpected: Context did not have data for condition[" + key + "]. Returning null!");
-			}
-		} else {
-			value = (String)request.getContext().get(key);
+		sb.append("RangerTimeOfDayMatcher {");
+		sb.append("_allowAny=" + _allowAny).append(" ");
+		sb.append("_durations=[");
+		for(int[] duration : _durations) {
+			sb.append("{start=" + duration[0] + "; end=" + duration[1] + "} ");
 		}
+		sb.append("]");
+		sb.append("}");
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSimpleMatcher.extractValue(" + request+ "): " + value);
-		}
-		return value;
+		return sb.toString();
 	}
 }

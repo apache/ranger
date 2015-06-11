@@ -34,7 +34,7 @@
          <class>org.apache.ranger.entity.XXAuditMap</class>
          <class>org.apache.ranger.entity.XXPolicyExportAudit</class>
          <class>org.apache.ranger.entity.XXTrxLog</class>
-         <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+         <shared-cache-mode>NONE</shared-cache-mode>
 
 		<properties>
 			<property name="eclipselink.logging.level" value="WARNING"/>
@@ -42,7 +42,7 @@
 	</persistence-unit>
 	<persistence-unit name="loggingPU">
         <class>org.apache.ranger.entity.XXAccessAudit</class>
-        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+        <shared-cache-mode>NONE</shared-cache-mode>
 
 		<properties>
 			<property name="eclipselink.logging.level" value="WARNING"/>

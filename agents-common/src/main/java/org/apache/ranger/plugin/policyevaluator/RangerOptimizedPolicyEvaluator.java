@@ -237,7 +237,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 	}
 
 	@Override
-    protected void evaluatePolicyItemsForAccess(RangerPolicy policy, RangerAccessRequest request, RangerAccessResult result) {
+    protected void evaluatePolicyItemsForAccess(RangerAccessRequest request, RangerAccessResult result) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerOptimizedPolicyEvaluator.evaluatePolicyItemsForAccess()");
         }
@@ -247,7 +247,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 
             if (request.isAccessTypeAny() || (request.isAccessTypeDelegatedAdmin() && delegateAdmin) || hasAllPerms || accessPerms.contains(request.getAccessType())) {
                 // No need to reject based on aggregated access permissions
-                super.evaluatePolicyItemsForAccess(policy, request, result);
+                super.evaluatePolicyItemsForAccess(request, result);
             }
         }
         if(LOG.isDebugEnabled()) {

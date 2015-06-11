@@ -64,8 +64,8 @@ public class UserGroupSync implements Runnable {
 				}
 				catch(Throwable t) {
 					LOG.error("Failed to initialize UserGroup source/sink. Will retry after " + sleepTimeBetweenCycleInMillis + " milliseconds. Error details: ", t) ;
-
 					try {
+						LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds") ;
 						Thread.sleep(sleepTimeBetweenCycleInMillis) ;
 					} catch (Exception e) {
 						LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to initialize UserGroup source/sink", e) ;
@@ -77,6 +77,7 @@ public class UserGroupSync implements Runnable {
 
 			while (! shutdownFlag ) {
 				try {
+					LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds") ;
 					Thread.sleep(sleepTimeBetweenCycleInMillis);
 				} catch (InterruptedException e) {
 					LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize UserGroup information", e) ;

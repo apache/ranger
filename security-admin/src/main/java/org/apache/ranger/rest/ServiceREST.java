@@ -173,10 +173,12 @@ public class ServiceREST {
 			bizUtil.hasKMSPermissions("Service-Def", serviceDef.getImplClass());
 
 			ret = svcStore.createServiceDef(serviceDef);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("createServiceDef(" + serviceDef + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -205,10 +207,12 @@ public class ServiceREST {
 			bizUtil.hasKMSPermissions("Service-Def", serviceDef.getImplClass());
 
 			ret = svcStore.updateServiceDef(serviceDef);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("updateServiceDef(" + serviceDef + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -242,10 +246,12 @@ public class ServiceREST {
 			}
 			
 			svcStore.deleteServiceDef(id, forceDelete);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("deleteServiceDef(" + id + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -272,10 +278,12 @@ public class ServiceREST {
 			}
 
 			ret = svcStore.getServiceDef(id);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("getServiceDef(" + id + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(ret == null) {
@@ -310,10 +318,12 @@ public class ServiceREST {
 			}
 
 			ret = svcStore.getServiceDefByName(name);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("getServiceDefByName(" + name + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(ret == null) {
@@ -343,10 +353,12 @@ public class ServiceREST {
 
 		try {
 			paginatedSvcDefs = svcStore.getPaginatedServiceDefs(filter);
-		} catch (Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
 			LOG.error("getServiceDefs() failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(paginatedSvcDefs != null) {
@@ -391,10 +403,12 @@ public class ServiceREST {
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 
 			ret = svcStore.createService(service);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("createService(" + service + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -428,10 +442,12 @@ public class ServiceREST {
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 
 			ret = svcStore.updateService(service);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("updateService(" + service + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -464,10 +480,12 @@ public class ServiceREST {
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 
 			svcStore.deleteService(id);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("deleteService(" + id + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -487,10 +505,12 @@ public class ServiceREST {
 
 		try {
 			ret = svcStore.getService(id);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("getService(" + id + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(ret == null) {
@@ -516,10 +536,12 @@ public class ServiceREST {
 
 		try {
 			ret = svcStore.getServiceByName(name);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("getServiceByName(" + name + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(ret == null) {
@@ -549,10 +571,12 @@ public class ServiceREST {
 
 		try {
 			paginatedSvcs = svcStore.getPaginatedServices(filter);
-		} catch (Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
 			LOG.error("getServices() failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(paginatedSvcs != null) {
@@ -583,10 +607,12 @@ public class ServiceREST {
 
 		try {
 			ret = svcStore.getServices(filter);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("getServices() failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -611,10 +637,12 @@ public class ServiceREST {
 			List<RangerService> services = getServices(request).getServices();
 			
 			ret = new Long(services == null ? 0 : services.size());
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("countServices() failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -636,10 +664,12 @@ public class ServiceREST {
 
 		try {
 			ret = serviceMgr.validateConfig(service, svcStore);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("validateConfig(" + service + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -661,10 +691,12 @@ public class ServiceREST {
 
 		try {
 			ret = serviceMgr.lookupResource(serviceName,context, svcStore);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("lookupResource(" + serviceName + ", " + context + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -810,10 +842,10 @@ public class ServiceREST {
 				}
 			} catch(WebApplicationException excp) {
 				throw excp;
-			} catch(Exception excp) {
+			} catch(Throwable excp) {
 				LOG.error("grantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
 	
-				throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+				throw restErrorUtil.createRESTException(excp.getMessage());
 			}
 	
 			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
@@ -907,10 +939,10 @@ public class ServiceREST {
 				}
 			} catch(WebApplicationException excp) {
 				throw excp;
-			} catch(Exception excp) {
+			} catch(Throwable excp) {
 				LOG.error("revokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
 	
-				throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+				throw restErrorUtil.createRESTException(excp.getMessage());
 			}
 	
 			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
@@ -957,14 +989,12 @@ public class ServiceREST {
 			ensureAdminAccess(policy.getService(), policy.getResources());
 
 			ret = svcStore.createPolicy(policy);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("createPolicy(" + policy + ") failed", excp);
 
-			if(excp instanceof WebApplicationException) {
-				throw (WebApplicationException)excp;
-			}
-
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -991,10 +1021,12 @@ public class ServiceREST {
 			ensureAdminAccess(policy.getService(), policy.getResources());
 
 			ret = svcStore.updatePolicy(policy);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("updatePolicy(" + policy + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1021,10 +1053,12 @@ public class ServiceREST {
 			ensureAdminAccess(policy.getService(), policy.getResources());
 
 			svcStore.deletePolicy(id);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("deletePolicy(" + id + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1048,10 +1082,12 @@ public class ServiceREST {
 			if(ret != null) {
 				ensureAdminAccess(ret.getService(), ret.getResources());
 			}
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("getPolicy(" + id + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(ret == null) {
@@ -1095,10 +1131,12 @@ public class ServiceREST {
 
 				applyAdminAccessFilter(ret);
 			}
-		} catch (Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
 			LOG.error("getPolicies() failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1118,10 +1156,12 @@ public class ServiceREST {
 			ret = svcStore.getPolicies(filter);
 
 			applyAdminAccessFilter(ret);
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("getPolicies() failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1147,10 +1187,12 @@ public class ServiceREST {
 			applyAdminAccessFilter(policies);
 			
 			ret = new Long(policies == null ? 0 : policies.size());
-		} catch(Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
 			LOG.error("countPolicies() failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1191,10 +1233,12 @@ public class ServiceREST {
 
 				applyAdminAccessFilter(ret);
 			}
-		} catch (Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
 			LOG.error("getServicePolicies(" + serviceId + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if (ret == null) {
@@ -1239,10 +1283,12 @@ public class ServiceREST {
 
 				applyAdminAccessFilter(ret);
 			}
-		} catch (Exception excp) {
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
 			LOG.error("getServicePolicies(" + serviceName + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			throw restErrorUtil.createRESTException(excp.getMessage());
 		}
 
 		if (ret == null) {
@@ -1284,7 +1330,7 @@ public class ServiceREST {
 					httpCode = HttpServletResponse.SC_OK;
 					logMsg   = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
 				}
-			} catch(Exception excp) {
+			} catch(Throwable excp) {
 				LOG.error("getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed", excp);
 	
 				httpCode = HttpServletResponse.SC_BAD_REQUEST;

@@ -320,6 +320,10 @@ public class RangerPolicyValidator extends RangerValidator {
 							policyResources.toString(), toStringHierarchies_all(hierarchies, defHelper)))
 					.build());
 				valid = false;
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("isValidResourceNames: Found compatible hierarchies: " + toStringHierarchies_all(candidateHierarchies, defHelper));
+				}
 			}
 			/*
 			 * Among the candidate hierarchies there should be at least one for which policy specifies all of the mandatory resources.  Note that there could be multiple 
@@ -335,6 +339,10 @@ public class RangerPolicyValidator extends RangerValidator {
 					.becauseOf("policy is missing required resources. Mandatory fields of potential hierarchies are: " + toStringHierarchies_mandatory(candidateHierarchies, defHelper))
 					.build());
 				valid = false;
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("isValidResourceNames: Found hierarchies with all mandatory fields specified: " + toStringHierarchies_mandatory(validHierarchies, defHelper));
+				}
 			}
 		}
 

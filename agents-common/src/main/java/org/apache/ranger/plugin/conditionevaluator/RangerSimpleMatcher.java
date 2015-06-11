@@ -82,15 +82,13 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 			LOG.debug("==> RangerSimpleMatcher.isMatched(" + request + ")");
 		}
 
-		boolean matched = true;
+		boolean matched = false;
+
 		if (_allowAny) {
-			LOG.debug("isMatched: allowAny flag is true.  Matched!");
+			matched = true;
 		} else {
 			String requestValue = extractValue(request, _contextName);
-			if (requestValue == null) {
-				LOG.debug("isMatched: couldn't get value from request.  Ok.  Implicitly matched!");
-			} else {
-				matched = false;
+			if (StringUtils.isNotBlank(requestValue)) {
 				for (String policyValue : _values) {
 					if (FilenameUtils.wildcardMatch(requestValue, policyValue)) {
 						matched = true;

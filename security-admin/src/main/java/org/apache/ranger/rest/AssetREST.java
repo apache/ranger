@@ -34,6 +34,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -650,13 +651,15 @@ public class AssetREST {
 			GrantRevokeRequest grantRevokeRequest = serviceUtil.toGrantRevokeRequest(vXPolicy);
 			try {
 				ret = serviceREST.grantAccess(serviceName, grantRevokeRequest, request);
-			} catch (Exception e) {
-				  logger.error( HttpServletResponse.SC_BAD_REQUEST + "Grant Access Failed for the request " + vXPolicy ); 
-				  throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Grant Access Failed for the request " + e.getMessage(), true);
+			} catch(WebApplicationException excp) {
+				throw excp;
+			} catch (Throwable e) {
+				  logger.error( HttpServletResponse.SC_BAD_REQUEST + "Grant Access Failed for the request " + vXPolicy, e);
+				  throw restErrorUtil.createRESTException("Grant Access Failed for the request: " + vXPolicy + ". " + e.getMessage());
 			}
 		} else {
-			 logger.error( HttpServletResponse.SC_BAD_REQUEST + "Bad Request parameter " + vXPolicy ); 
-			 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Bad Request parameter " , true);
+			 logger.error( HttpServletResponse.SC_BAD_REQUEST + "Bad Request parameter");
+			 throw restErrorUtil.createRESTException("Bad Request parameter");
 		}
 		
 		if(logger.isDebugEnabled()) {
@@ -683,13 +686,15 @@ public class AssetREST {
 			GrantRevokeRequest grantRevokeRequest = serviceUtil.toGrantRevokeRequest(vXPolicy);
 			try {
 				 ret = serviceREST.revokeAccess(serviceName, grantRevokeRequest, request);
-			} catch (Exception e) {
-				  logger.error( HttpServletResponse.SC_BAD_REQUEST + "Revoke Access Failed for the request " + vXPolicy ); 
-				  throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Grant Access Failed for the request " + e.getMessage(), true);
+			} catch(WebApplicationException excp) {
+				throw excp;
+			} catch (Throwable e) {
+				  logger.error( HttpServletResponse.SC_BAD_REQUEST + "Revoke Access Failed for the request " + vXPolicy, e);
+				  throw restErrorUtil.createRESTException("Revoke Access Failed for the request: " + vXPolicy + ". " + e.getMessage());
 			}
 		} else {
-			 logger.error( HttpServletResponse.SC_BAD_REQUEST + "Bad Request parameter " + vXPolicy ); 
-			 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Bad Request parameter " , true);
+			 logger.error( HttpServletResponse.SC_BAD_REQUEST + "Bad Request parameter");
+			 throw restErrorUtil.createRESTException("Bad Request parameter");
 		}
 		
 		if(logger.isDebugEnabled()) {

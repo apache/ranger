@@ -23,7 +23,6 @@ package org.apache.ranger.plugin.policyevaluator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -43,9 +42,11 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 
 	RangerServiceDef getServiceDef();
 
-	Map<String, RangerConditionEvaluator> getConditionEvaluators();
-
 	int getEvalOrder();
+
+	int getCustomConditionsCount();
+
+	boolean isAuditEnabled();
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
 

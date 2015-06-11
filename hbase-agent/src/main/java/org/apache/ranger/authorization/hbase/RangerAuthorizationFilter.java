@@ -20,69 +20,127 @@
 package org.apache.ranger.authorization.hbase;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
+import com.google.common.base.Objects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.filter.FilterBase;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 
 public class RangerAuthorizationFilter extends FilterBase {
 
 	private static final Log LOG = LogFactory.getLog(RangerAuthorizationFilter.class.getName());
-	final Map<String, Set<String>> _cache;
+	final Set<String> _familiesAccessAllowed;
+	final Set<String> _familiesAccessDenied;
+	final Set<String> _familiesAccessIndeterminate;
+	final Map<String, Set<String>> _columnsAccessAllowed;
+	final AuthorizationSession _session;
+	final HbaseAuditHandler _auditHandler = HbaseFactory.getInstance().getAuditHandler();
 
-	public RangerAuthorizationFilter(Map<String, Set<String>> cache) {
-		_cache = cache;
+	public RangerAuthorizationFilter(AuthorizationSession session, Set<String> familiesAccessAllowed, Set<String> familiesAccessDenied, Set<String> familiesAccessIndeterminate,
+									 Map<String, Set<String>> columnsAccessAllowed) {
+		// the class assumes that all of these can be empty but none of these can be null
+		_familiesAccessAllowed = familiesAccessAllowed;
+		_familiesAccessDenied = familiesAccessDenied;
+		_familiesAccessIndeterminate = familiesAccessIndeterminate;
+		_columnsAccessAllowed = columnsAccessAllowed;
+		// this session should have everything set on it except family and column which would be altered based on need
+		_session = session;
+		// we don't want to audit denial, so we need to make sure the hander is what we need it to be.
+		_session.auditHandler(_auditHandler);
 	}
 	
 	@SuppressWarnings("deprecation")
 	@Override
 	public ReturnCode filterKeyValue(Cell kv) throws IOException {
-		
-		if (_cache == null || _cache.isEmpty()) {
-			LOG.debug("filterKeyValue: if cache is null or empty then there is no hope for any access. Denied!");
-			return ReturnCode.NEXT_COL;
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> filterKeyValue");
 		}
-		
+
+		String family = null;
 		byte[] familyBytes = kv.getFamily();
-		if (familyBytes == null || familyBytes.length == 0) {
-			LOG.debug("filterKeyValue: null/empty families in request! Denied!");
-			return ReturnCode.NEXT_COL;
+		if (familyBytes != null && familyBytes.length > 0) {
+			family = Bytes.toString(familyBytes);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("filterKeyValue: evaluating family[" + family + "].");
+			}
 		}
-		String family = Bytes.toString(familyBytes);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("filterKeyValue: Evaluating family[" + family + "]");
-		}
-		
-		if (!_cache.containsKey(family)) {
-			LOG.debug("filterKeyValue: Cache map did not contain the family, i.e. nothing in family has access! Denied!");
-			return ReturnCode.NEXT_COL;
-		}
-		Set<String> columns = _cache.get(family);
-		
-		if (CollectionUtils.isEmpty(columns)) {
-			LOG.debug("filterKeyValue: empty/null column set in cache for family implies family level access. No need to bother with column level.  Allowed!");
-			return ReturnCode.INCLUDE;
-		}		
-		byte[] columnBytes = kv.getQualifier();
-		if (columnBytes == null || columnBytes.length == 0) {
-			LOG.debug("filterKeyValue: empty/null column set in request implies family level access, which isn't available.  Denied!");
-			return ReturnCode.NEXT_COL;
-		}
-		String column = Bytes.toString(columnBytes);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("filterKeyValue: Evaluating column[" + column + "]");
-		}
-		if (columns.contains(column)) {
-			LOG.debug("filterKeyValue: cache contains Column in column-family's collection.  Access allowed!");
-			return ReturnCode.INCLUDE;
+		String column = null;
+		if (kv.getQualifier() != null && kv.getQualifier().length > 0) {
+			column = Bytes.toString(kv.getQualifier());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("filterKeyValue: evaluating column[" + column + "].");
+			}
 		} else {
-			LOG.debug("filterKeyValue: cache missing Column in column-family's collection.  Access denied!");
-			return ReturnCode.NEXT_COL;
+			LOG.warn("filterKeyValue: empty/null column set! Unexpected!");
 		}
+
+		ReturnCode result = ReturnCode.NEXT_COL;
+		boolean authCheckNeeded = false;
+		if (family == null) {
+			LOG.warn("filterKeyValue: Unexpected - null/empty family! Access denied!");
+		} else if (_familiesAccessDenied.contains(family)) {
+			LOG.debug("filterKeyValue: family found in access denied families cache.  Access denied.");
+		} else if (_columnsAccessAllowed.containsKey(family)) {
+			LOG.debug("filterKeyValue: family found in column level access results cache.");
+			if (_columnsAccessAllowed.get(family).contains(column)) {
+				LOG.debug("filterKeyValue: family/column found in column level access results cache. Access allowed.");
+				result = ReturnCode.INCLUDE;
+			} else {
+				LOG.debug("filterKeyValue: family/column not in column level access results cache. Access denied.");
+			}
+		} else if (_familiesAccessAllowed.contains(family)) {
+			LOG.debug("filterKeyValue: family found in access allowed families cache.  Must re-authorize for correct audit generation.");
+			authCheckNeeded = true;
+		} else if (_familiesAccessIndeterminate.contains(family)) {
+			LOG.debug("filterKeyValue: family found in indeterminate families cache.  Evaluating access...");
+			authCheckNeeded = true;
+		} else {
+			LOG.warn("filterKeyValue: Unexpected - alien family encountered that wasn't seen by pre-hook!  Access Denied.!");
+		}
+
+		if (authCheckNeeded) {
+			LOG.debug("filterKeyValue: Checking authorization...");
+			_session.columnFamily(family)
+					.column(column)
+					.buildRequest()
+					.authorize();
+			// must always purge the captured audit event out of the audit handler to avoid messing up the next check
+			AuthzAuditEvent auditEvent = _auditHandler.getAndDiscardMostRecentEvent();
+			if (_session.isAuthorized()) {
+				LOG.debug("filterKeyValue: Access granted.");
+				result = ReturnCode.INCLUDE;
+				if (auditEvent != null) {
+					LOG.debug("filterKeyValue: access is audited.");
+					_auditHandler.logAuthzAudits(Collections.singletonList(auditEvent));
+				} else {
+					LOG.debug("filterKeyValue: no audit event returned.  Access not audited.");
+				}
+			} else {
+				LOG.debug("filterKeyValue: Access denied.  Denial not audited.");
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("filterKeyValue: " + result);
+		}
+		return result;
 	}
+
+	@Override
+	public String toString() {
+		return Objects.toStringHelper(getClass())
+				.add("familiesAccessAllowed", _familiesAccessAllowed)
+				.add("familiesAccessDenied", _familiesAccessDenied)
+				.add("familiesAccessUnknown", _familiesAccessIndeterminate)
+				.add("columnsAccessAllowed", _columnsAccessAllowed)
+				.toString();
+
+	}
+
 }

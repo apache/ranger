@@ -289,6 +289,15 @@ public class RESTErrorUtil {
 		return webAppEx;
 	}
 
+	public WebApplicationException createRESTException(String errorMessage) {
+		VXResponse gjResponse = new VXResponse();
+		gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
+		gjResponse.setMsgDesc(errorMessage);
+		WebApplicationException webAppEx = createRESTException(gjResponse);
+		logger.info("Operation error. response=" + gjResponse, webAppEx);
+		return webAppEx;
+	}
+
 	public WebApplicationException createRESTException(String errorMessage,
 			MessageEnums messageEnum) {
 		List<VXMessage> messageList = new ArrayList<VXMessage>();

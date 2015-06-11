@@ -743,9 +743,7 @@ public class TestServiceREST {
 		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
 				userGroupsList);
 
-		Mockito.when(
-				restErrorUtil.createRESTException(
-						HttpServletResponse.SC_BAD_REQUEST, null, true))
+		Mockito.when(restErrorUtil.createRESTException((String)null))
 				.thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 
@@ -781,9 +779,7 @@ public class TestServiceREST {
 		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
 				userGroupsList);
 
-		Mockito.when(
-				restErrorUtil.createRESTException(
-						HttpServletResponse.SC_BAD_REQUEST, null, true))
+		Mockito.when(restErrorUtil.createRESTException((String)null))
 				.thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		RangerPolicy dbRangerPolicy = serviceREST.updatePolicy(rangerPolicy);
@@ -816,9 +812,7 @@ public class TestServiceREST {
 		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
 				userGroupsList);
 
-		Mockito.when(
-				restErrorUtil.createRESTException(
-						HttpServletResponse.SC_BAD_REQUEST, null, true))
+		Mockito.when(restErrorUtil.createRESTException((String)null))
 				.thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		serviceREST.deletePolicy(rangerPolicy.getId());
@@ -849,9 +843,7 @@ public class TestServiceREST {
 		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
 				userGroupsList);
 
-		Mockito.when(
-				restErrorUtil.createRESTException(
-						HttpServletResponse.SC_BAD_REQUEST, null, true))
+		Mockito.when(restErrorUtil.createRESTException((String)null))
 				.thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		RangerPolicy dbRangerPolicy = serviceREST.getPolicy(rangerPolicy
