@@ -58,7 +58,8 @@ public class AuthorizationSession {
 	// Passing a null handler to policy engine would suppress audit logging.
 	HbaseAuditHandler _auditHandler = null;
 	boolean _superUser = false; // is this session for a super user?
-	
+	private RangerAccessRequest.ResourceMatchingScope _resourceMatchingScope = RangerAccessRequest.ResourceMatchingScope.SELF;
+
 	// internal state per-authorization
 	RangerAccessRequest _request;
 	RangerAccessResult _result;
@@ -169,6 +170,7 @@ public class AuthorizationSession {
 		request.setAction(_operation);
 		request.setRequestData(_otherInformation);
 		request.setClientIPAddress(_remoteAddress);
+		request.setResourceMatchingScope(_resourceMatchingScope);
 		
 		_request = request;
 		if (LOG.isDebugEnabled()) {
@@ -311,6 +313,7 @@ public class AuthorizationSession {
 			.add("table", _table)
 			.add("column", _column)
 			.add("column-family", _columnFamily)
+			.add("resource-matching-scope", _resourceMatchingScope)
 			.toString();
 	}
 
@@ -369,5 +372,10 @@ public class AuthorizationSession {
 			result.setIsAudited(audited);
 		}
 		return result;
+	}
+
+	AuthorizationSession resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope scope) {
+		_resourceMatchingScope = scope;
+		return this;
 	}
 }
