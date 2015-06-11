@@ -21,6 +21,8 @@ package org.apache.ranger.authorization.hbase;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellScanner;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -59,6 +61,8 @@ import org.apache.hadoop.hbase.replication.ReplicationEndpoint;
  */
 public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObserver
 		implements MasterObserver, RegionServerObserver, BulkLoadObserver {
+
+	private static final Log LOG = LogFactory.getLog(RangerAuthorizationCoprocessorBase.class.getName());
 
 	@Override
 	public void preMergeCommit(
@@ -227,10 +231,19 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
 
 	@Override
 	public void preGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList,  List<HTableDescriptor> descriptors) throws IOException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
+					descriptors == null ? 0 : descriptors.size()));
+		}
+
 	}
 	
 	@Override
 	public void preGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList, List<HTableDescriptor> descriptors, String regex) throws IOException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
+					descriptors == null ? 0 : descriptors.size(), regex));
+		}
 	}
 
     public  void preGetTableNames(ObserverContext<MasterCoprocessorEnvironment> ctx, List<HTableDescriptor> descriptors, String regex) throws IOException {

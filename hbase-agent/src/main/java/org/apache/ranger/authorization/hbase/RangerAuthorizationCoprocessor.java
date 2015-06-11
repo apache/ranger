@@ -97,8 +97,8 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 
@@ -408,7 +408,8 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("evaluateAccess: no family level access [" + family + "].  Checking if has partial access (of any type)...");
 					}
-					session.access(RangerPolicyEngine.ANY_ACCESS)
+
+					session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
 							.buildRequest()
 							.authorize();
 					auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for failure
@@ -421,17 +422,17 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 						familesAccessIndeterminate.add(family);
 					} else {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("evaluateAccess: has no access of any (of any type) in family [" + family + "]");
+							LOG.debug("evaluateAccess: has no access of ["+ access + "] type in family [" + family + "]");
 						}
 						familesAccessDenied.add(family);
-						denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s, no columns found.", user.getName(), operation, table, family);
+						denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s.", user.getName(), operation, table, family);
 						if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
 							LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
 							deniedEvent = auditEvent;
 						}
 					}
-					// Restore the access back
-					session.access(access);
+					// Restore the headMatch setting
+					session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
 				}
 			} else {
 				LOG.debug("evaluateAccess: columns collection not empty.  Skipping Family level check, will do finer level access check.");

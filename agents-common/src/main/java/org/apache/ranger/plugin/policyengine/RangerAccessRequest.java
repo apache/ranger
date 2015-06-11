@@ -49,4 +49,8 @@ public interface RangerAccessRequest {
 	String getSessionId();
 	
 	Map<String, Object> getContext();
+
+	ResourceMatchingScope getResourceMatchingScope();
+
+	enum ResourceMatchingScope {SELF, SELF_OR_DESCENDANTS}
 }
