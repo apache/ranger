@@ -17,6 +17,8 @@
 
 package org.apache.ranger.kms.dao;
 
+import java.util.List;
+
 import org.apache.ranger.entity.XXRangerKeyStore;
 
 public class RangerKMSDao extends BaseDao<XXRangerKeyStore> {
@@ -31,5 +33,10 @@ public class RangerKMSDao extends BaseDao<XXRangerKeyStore> {
 	
 	public int deleteByAlias(String alias){
 		return super.deleteByAlias("XXRangerKeyStore.deleteByAlias", alias);
+	}
+	
+	public List<XXRangerKeyStore> getAllKeys(){
+		List<XXRangerKeyStore> xxr = super.getAllKeys("XXRangerKeyStore.getAllKeys");
+		return xxr;
 	}
 }

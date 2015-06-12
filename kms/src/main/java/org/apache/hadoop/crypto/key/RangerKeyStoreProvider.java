@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProvider;
@@ -46,6 +47,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
 import org.apache.log4j.Logger;
+
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -93,7 +95,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 			// Master Key does not exists
 	        throw new IOException("Ranger MasterKey does not exists");
 		}
-        reloadKeys() ;
+        reloadKeys();
 		ReadWriteLock lock = new ReentrantReadWriteLock(true);
 	    readLock = lock.readLock();
 	}
@@ -133,13 +135,13 @@ public class RangerKeyStoreProvider extends KeyProvider{
 		}
 	
 	private void loadKeys(char[] masterKey) throws NoSuchAlgorithmException, CertificateException, IOException {
-		dbStore.engineLoad(null, masterKey);		
+		dbStore.engineLoad(null, masterKey);
 	}
 
 	@Override
 	public KeyVersion createKey(String name, byte[] material, Options options)
 			throws IOException {
-          reloadKeys() ;
+		  reloadKeys() ;
 		  if (dbStore.engineContainsAlias(name) || cache.containsKey(name)) {
 			  throw new IOException("Key " + name + " already exists");
 		  }
@@ -158,7 +160,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 		try {
 	          ObjectMapper om = new ObjectMapper();
 	          String attribute = om.writeValueAsString(attributes);
-			  dbStore.addKeyEntry(versionName, new SecretKeySpec(material, cipher), masterKey, cipher, bitLength, description, version, attribute);
+	          dbStore.addKeyEntry(versionName, new SecretKeySpec(material, cipher), masterKey, cipher, bitLength, description, version, attribute);			
 		} catch (KeyStoreException e) {
 			throw new IOException("Can't store key " + versionName,e);
 		}
@@ -168,7 +170,8 @@ public class RangerKeyStoreProvider extends KeyProvider{
 
 	@Override
 	public void deleteKey(String name) throws IOException {
-	      Metadata meta = getMetadata(name);
+		  reloadKeys();
+		  Metadata meta = getMetadata(name);
 	      if (meta == null) {
 	        throw new IOException("Key " + name + " does not exist");
 	      }
@@ -190,7 +193,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	        throw new IOException("Problem removing " + name + " from " + this, e);
 	      }
 	      cache.remove(name);
-	      changed = true;		
+	      changed = true;	
 	}
 
 	@Override
@@ -212,15 +215,18 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	      }
 	      try {
 	          dbStore.engineStore(null, masterKey);
+	          reloadKeys();
 	        } catch (NoSuchAlgorithmException e) {
 	          throw new IOException("No such algorithm storing key", e);
 	        } catch (CertificateException e) {
 	          throw new IOException("Certificate exception storing key", e);
-	        }
+	        }	      
 	      changed = false;
 		 }catch (IOException ioe) {
+			  cache.clear();
+			  reloadKeys();
 	          throw ioe;
-	     }
+	     }		 
 	}
 
 	@Override
@@ -230,14 +236,20 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	    	SecretKeySpec key = null;
 	    	try {
 	    		if (!dbStore.engineContainsAlias(versionName)) {
-	    			return null;
-	    		}
+  	    		        dbStore.engineLoad(null, masterKey);
+	    			if (!dbStore.engineContainsAlias(versionName)) {
+	    				return null;
+	    			}
+			}
 	    		key = (SecretKeySpec) dbStore.engineGetKey(versionName, masterKey);
 	    	} catch (NoSuchAlgorithmException e) {
 	    		throw new IOException("Can't get algorithm for key " + key, e);
 	    	} catch (UnrecoverableKeyException e) {
 	    		throw new IOException("Can't recover key " + key, e);
 	    	}
+		catch (CertificateException e) {
+	    		throw new IOException("Certificate exception storing key", e);
+		}
 	    	if (key == null) {
 	    		return null;
 	    	} else {
@@ -285,15 +297,18 @@ public class RangerKeyStoreProvider extends KeyProvider{
 
 	@Override
 	public Metadata getMetadata(String name) throws IOException {
-	    try {
+		try {
 			readLock.lock();
-            reloadKeys() ;
-	    	if (cache.containsKey(name)) {
-	    		return cache.get(name);
+            if (cache.containsKey(name)) {
+	    		Metadata meta = cache.get(name);
+	    		return meta;
 	    	}
 	    	try {
 	    		if (!dbStore.engineContainsAlias(name)) {
-	    			return null;
+	    			dbStore.engineLoad(null, masterKey);
+	    			if (!dbStore.engineContainsAlias(name)) {
+	    				return null;
+	    			}
 	    		}
 	    		Key key = dbStore.engineGetKey(name, masterKey);
 	    		if(key != null){
@@ -307,13 +322,18 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	    		throw new IOException("Can't recover key for " + name, e);
 	    	}
 	    	return null;
-		} finally {
+		}
+		catch(Exception e){
+			throw new IOException("Please try again ", e);
+		}
+		 finally {
 	      readLock.unlock();
 	    }
 	}
 
 	@Override
 	public KeyVersion rollNewVersion(String name, byte[] material)throws IOException {
+		reloadKeys();
 		Metadata meta = getMetadata(name);
         if (meta == null) {
 	        throw new IOException("Key " + name + " not found");
@@ -345,12 +365,13 @@ public class RangerKeyStoreProvider extends KeyProvider{
     
     private void reloadKeys() throws IOException {
         try {
-            loadKeys(masterKey);
+        	cache.clear();
+            loadKeys(masterKey);           
         } catch (NoSuchAlgorithmException e) {
             throw new IOException("Can't load Keys");
         }catch(CertificateException e){
             throw new IOException("Can't load Keys");
-        }
+        } 
     }
 	
 	/**

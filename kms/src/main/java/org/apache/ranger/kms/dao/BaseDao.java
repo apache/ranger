@@ -177,9 +177,8 @@ public abstract class BaseDao<T> {
 		
 		TypedQuery<T> qry = getEntityManager().createQuery(
 				"SELECT t FROM " + tClass.getSimpleName() + " t", tClass);
-
+		qry.setHint("eclipselink.refresh", "true");
 		ret = qry.getResultList();
-
 		return ret;
 	}
 
@@ -189,9 +188,8 @@ public abstract class BaseDao<T> {
 		TypedQuery<Long> qry = getEntityManager().createQuery(
 				"SELECT count(t) FROM " + tClass.getSimpleName() + " t",
 				Long.class);
-
+		qry.setHint("eclipselink.refresh", "true");
 		ret = qry.getSingleResult();
-
 		return ret;
 	}
 
@@ -257,5 +255,15 @@ public abstract class BaseDao<T> {
 			rollbackTransaction();
 		}		
 		return 0;
+	}
+
+	public List<T> getAllKeys(String namedQuery) {
+		try {
+			return getEntityManager()
+					.createNamedQuery(namedQuery, tClass).setHint("eclipselink.refresh", "true").getResultList();
+		} catch (NoResultException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

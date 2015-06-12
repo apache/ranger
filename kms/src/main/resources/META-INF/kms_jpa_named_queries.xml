@@ -23,6 +23,11 @@
 			   WHERE obj.alias=:alias
 		</query>
 	</named-query>
+	
+	<named-query name="XXRangerKeyStore.getAllKeys">
+		<query>SELECT Obj FROM XXRangerKeyStore obj
+		</query>
+	</named-query>
 
 	<named-query name="XXRangerKeyStore.deleteByAlias">
 		<query>DELETE FROM XXRangerKeyStore obj

@@ -17,6 +17,7 @@
 
 package org.apache.ranger.entity;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,6 +29,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
+@Cacheable(false)
 @Table(name="ranger_keystore")
 @XmlRootElement
 public class XXRangerKeyStore extends XXDBBase implements java.io.Serializable {
