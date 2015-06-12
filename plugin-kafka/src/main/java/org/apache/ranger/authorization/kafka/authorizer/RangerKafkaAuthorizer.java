@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Date;
 
@@ -81,43 +82,19 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public void initialize(KafkaConfig kafkaConfig) {
 
 		if (rangerPlugin == null) {
-			rangerPlugin = new RangerBasePlugin("kafka", "kafka");
-
 			try {
 				Subject subject = LoginManager.subject();
-				logger.info("SUBJECT "
-						+ (subject == null ? "not found" : "found"));
-				if (subject != null) {
-					logger.info("SUBJECT.PRINCIPALS.size()="
-							+ subject.getPrincipals().size());
-					java.util.Set<Principal> principals = subject
-							.getPrincipals();
-					for (Principal principal : principals) {
-						logger.info("SUBJECT.PRINCIPAL.NAME="
-								+ principal.getName());
-					}
-					try {
-						// Do not remove the below statement. The default
-						// getLoginUser does some initialization which is needed
-						// for getUGIFromSubject() to work.
-						logger.info("Default UGI before using Subject from Kafka:"
-								+ UserGroupInformation.getLoginUser());
-					} catch (Throwable t) {
-						logger.error(t);
-					}
-					UserGroupInformation ugi = UserGroupInformation
-							.getUGIFromSubject(subject);
-					logger.info("SUBJECT.UGI.NAME=" + ugi.getUserName()
-							+ ", ugi=" + ugi);
+				UserGroupInformation ugi = MiscUtil
+						.createUGIFromSubject(subject);
+				if (ugi != null) {
 					MiscUtil.setUGILoginUser(ugi, subject);
-				} else {
-					logger.info("Server username is not available");
 				}
 				logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
 			} catch (Throwable t) {
 				logger.error("Error getting principal.", t);
 			}
 
+			rangerPlugin = new RangerBasePlugin("kafka", "kafka");
 			logger.info("Calling plugin.init()");
 			rangerPlugin.init();
 
@@ -135,12 +112,12 @@ public class RangerKafkaAuthorizer implements Authorizer {
 					"Authorizer is still not initialized");
 			return false;
 		}
-		
-		//TODO: If resource type if consumer group, then allow it by default
-		if(resource.resourceType().equals(ResourceType.CONSUMER_GROUP)) {
+
+		// TODO: If resource type if consumer group, then allow it by default
+		if (resource.resourceType().equals(ResourceType.CONSUMER_GROUP)) {
 			return true;
 		}
-		
+
 		String userName = null;
 		if (session.principal() != null) {
 			userName = session.principal().getName();

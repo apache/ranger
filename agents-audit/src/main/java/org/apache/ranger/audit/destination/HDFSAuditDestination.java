@@ -216,7 +216,7 @@ public class HDFSAuditDestination extends AuditDestination {
 			FileSystem fileSystem = FileSystem.get(uri, conf);
 
 			Path hdfPath = new Path(fullPath);
-			logger.info("Checking whether log file exists. hdfPath=" + fullPath);
+			logger.info("Checking whether log file exists. hdfPath=" + fullPath + ", UGI=" + MiscUtil.getUGILoginUser());
 			int i = 0;
 			while (fileSystem.exists(hdfPath)) {
 				i++;
