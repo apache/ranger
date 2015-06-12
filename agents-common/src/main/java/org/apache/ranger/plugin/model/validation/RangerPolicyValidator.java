@@ -322,26 +322,26 @@ public class RangerPolicyValidator extends RangerValidator {
 				valid = false;
 			} else {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("isValidResourceNames: Found compatible hierarchies: " + toStringHierarchies_all(candidateHierarchies, defHelper));
+					LOG.debug("isValidResourceNames: Found [" + candidateHierarchies.size() + "] compatible hierarchies: " + toStringHierarchies_all(candidateHierarchies, defHelper));
 				}
-			}
-			/*
-			 * Among the candidate hierarchies there should be at least one for which policy specifies all of the mandatory resources.  Note that there could be multiple 
-			 * hierarchies that meet that criteria, e.g. a hive policy that specified only DB.  It is not clear if it belongs to DB->UDF or DB->TBL->COL hierarchy.
-			 * However, if both UDF and TBL were required then we can detect that policy does not specify mandatory levels for any of the candidate hierarchies.
-			 */
-			Set<List<RangerResourceDef>> validHierarchies = filterHierarchies_mandatoryResourcesSpecifiedInPolicy(policyResources, candidateHierarchies, defHelper);
-			if (validHierarchies.isEmpty()) {
-				failures.add(new ValidationFailureDetailsBuilder()
-					.field("resources")
-					.subField("missing mandatory")
-					.isSemanticallyIncorrect()
-					.becauseOf("policy is missing required resources. Mandatory fields of potential hierarchies are: " + toStringHierarchies_mandatory(candidateHierarchies, defHelper))
-					.build());
-				valid = false;
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("isValidResourceNames: Found hierarchies with all mandatory fields specified: " + toStringHierarchies_mandatory(validHierarchies, defHelper));
+				/*
+				 * Among the candidate hierarchies there should be at least one for which policy specifies all of the mandatory resources.  Note that there could be multiple
+				 * hierarchies that meet that criteria, e.g. a hive policy that specified only DB.  It is not clear if it belongs to DB->UDF or DB->TBL->COL hierarchy.
+				 * However, if both UDF and TBL were required then we can detect that policy does not specify mandatory levels for any of the candidate hierarchies.
+				 */
+				Set<List<RangerResourceDef>> validHierarchies = filterHierarchies_mandatoryResourcesSpecifiedInPolicy(policyResources, candidateHierarchies, defHelper);
+				if (validHierarchies.isEmpty()) {
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("resources")
+						.subField("missing mandatory")
+						.isSemanticallyIncorrect()
+						.becauseOf("policy is missing required resources. Mandatory fields of potential hierarchies are: " + toStringHierarchies_mandatory(candidateHierarchies, defHelper))
+						.build());
+					valid = false;
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("isValidResourceNames: Found hierarchies with all mandatory fields specified: " + toStringHierarchies_mandatory(validHierarchies, defHelper));
+					}
 				}
 			}
 		}
