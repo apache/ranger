@@ -100,6 +100,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -1065,7 +1066,7 @@ public class ServiceDBStore implements ServiceStore {
 		bizUtil.createTrxLog(trxLogList);
 
 		if (createDefaultPolicy) {
-			createDefaultPolicy(xCreatedService, vXUser);
+			createDefaultPolicies(xCreatedService, vXUser);
 		}
 
 		return createdService;
@@ -1669,9 +1670,20 @@ public class ServiceDBStore implements ServiceStore {
 		return ret;
 	}
 
-	private void createDefaultPolicy(XXService createdService, VXUser vXUser) throws Exception {
+	private void createDefaultPolicies(XXService createdService, VXUser vXUser) throws Exception {
+		// we need to create one policy for each resource hierarchy
+		RangerServiceDef serviceDef = getServiceDef(createdService.getType());
+		RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+		int i = 1;
+		for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies()) {
+			createDefaultPolicy(createdService, vXUser, aHierarchy, i);
+			i++;
+		}
+	}
+
+	private void createDefaultPolicy(XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy, int num) throws Exception {
 		RangerPolicy policy = new RangerPolicy();
-		String policyName=createdService.getName()+"-"+1+"-"+DateUtil.dateToString(DateUtil.getUTCDate(),"yyyyMMddHHmmss");
+		String policyName=createdService.getName()+"-"+num+"-"+DateUtil.dateToString(DateUtil.getUTCDate(),"yyyyMMddHHmmss");
 		
 		policy.setIsEnabled(true);
 		policy.setVersion(1L);
@@ -1680,34 +1692,7 @@ public class ServiceDBStore implements ServiceStore {
 		policy.setDescription("Default Policy for Service: " + createdService.getName());
 		policy.setIsAuditEnabled(true);
 		
-		Map<String, RangerPolicyResource> resources = new HashMap<String, RangerPolicyResource>();
-		List<XXResourceDef> resDefList = daoMgr.getXXResourceDef().findByServiceDefId(createdService.getType());
-		
-		for(XXResourceDef resDef : resDefList) {
-			// for hive, 2 policies should be created: 1) database/table/column 2) database/udf
-			// until we support multiple default policies creation - one for each resource hierarchy,
-			// lets just skip udf in the resoure list
-			if("udf".equalsIgnoreCase(resDef.getName())) {
-				continue;
-			}
-
-			RangerPolicyResource polRes = new RangerPolicyResource();
-			polRes.setIsExcludes(false);
-			polRes.setIsRecursive(false);
-
-			String value = "*";
-			if("path".equalsIgnoreCase(resDef.getName())) {
-				value = "/*";
-			}
-
-			if(resDef.getRecursivesupported()) {
-				polRes.setIsRecursive(Boolean.TRUE);
-			}
-
-			polRes.setValue(value);
-			resources.put(resDef.getName(), polRes);
-		}
-		policy.setResources(resources);
+		policy.setResources(createDefaultPolicyResource(resourceHierarchy));
 		
 		if (vXUser != null) {
 			List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
@@ -1742,6 +1727,28 @@ public class ServiceDBStore implements ServiceStore {
 		policy = createPolicy(policy);
 	}
 
+	Map<String, RangerPolicyResource> createDefaultPolicyResource(List<RangerResourceDef> resourceHierarchy) throws Exception {
+		Map<String, RangerPolicyResource> resourceMap = new HashMap<>();
+
+		for (RangerResourceDef resourceDef : resourceHierarchy) {
+			RangerPolicyResource polRes = new RangerPolicyResource();
+			polRes.setIsExcludes(false);
+			polRes.setIsRecursive(false);
+
+			String value = "*";
+			if("path".equalsIgnoreCase(resourceDef.getName())) {
+				value = "/*";
+			}
+
+			if(resourceDef.getRecursiveSupported()) {
+				polRes.setIsRecursive(Boolean.TRUE);
+			}
+
+			polRes.setValue(value);
+			resourceMap.put(resourceDef.getName(), polRes);
+		}
+		return resourceMap;
+	}
 
 	private Map<String, String> validateRequiredConfigParams(RangerService service, Map<String, String> configs) {
 		if(LOG.isDebugEnabled()) {
