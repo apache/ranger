@@ -37,8 +37,6 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -435,7 +433,8 @@ public class MiscUtil {
 				// Do not remove the below statement. The default
 				// getLoginUser does some initialization which is needed
 				// for getUGIFromSubject() to work.
-				logger.info("Default UGI before using Subject from Kafka:"
+				UserGroupInformation.getLoginUser();
+				logger.info("Default UGI before using new Subject:"
 						+ UserGroupInformation.getLoginUser());
 			} catch (Throwable t) {
 				logger.error(t);
@@ -549,7 +548,7 @@ public class MiscUtil {
 	public static void authWithKerberos(String keytab, String principal,
 			String nameRules) {
 
-		if (keytab == null) {
+		if (keytab == null || principal == null) {
 			return;
 		}
 		Subject serverSubject = new Subject();
@@ -570,44 +569,60 @@ public class MiscUtil {
 				KerberosName.setRules(nameRules);
 			}
 
-			List<LoginContext> loginContexts = new ArrayList<LoginContext>();
-			for (String spnegoPrincipal : spnegoPrincipals) {
-				try {
-					logger.info("Login using keytab " + keytab
-							+ ", for principal " + spnegoPrincipal);
-					final KerberosConfiguration kerberosConfiguration = new KerberosConfiguration(
-							keytab, spnegoPrincipal);
-					final LoginContext loginContext = new LoginContext("",
-							serverSubject, null, kerberosConfiguration);
-					loginContext.login();
-					successLoginCount++;
-					logger.info("Login success keytab " + keytab
-							+ ", for principal " + spnegoPrincipal);
-					loginContexts.add(loginContext);
-				} catch (Throwable t) {
-					logger.error("Login failed keytab " + keytab
-							+ ", for principal " + spnegoPrincipal, t);
+			boolean useKeytab = true;
+			if (!useKeytab) {
+				logger.info("Creating UGI with subject");
+				List<LoginContext> loginContexts = new ArrayList<LoginContext>();
+				for (String spnegoPrincipal : spnegoPrincipals) {
+					try {
+						logger.info("Login using keytab " + keytab
+								+ ", for principal " + spnegoPrincipal);
+						final KerberosConfiguration kerberosConfiguration = new KerberosConfiguration(
+								keytab, spnegoPrincipal);
+						final LoginContext loginContext = new LoginContext("",
+								serverSubject, null, kerberosConfiguration);
+						loginContext.login();
+						successLoginCount++;
+						logger.info("Login success keytab " + keytab
+								+ ", for principal " + spnegoPrincipal);
+						loginContexts.add(loginContext);
+					} catch (Throwable t) {
+						logger.error("Login failed keytab " + keytab
+								+ ", for principal " + spnegoPrincipal, t);
+					}
+					if (successLoginCount > 0) {
+						logger.info("Total login success count="
+								+ successLoginCount);
+						try {
+							UserGroupInformation
+									.loginUserFromSubject(serverSubject);
+							// UserGroupInformation ugi =
+							// createUGIFromSubject(serverSubject);
+							// if (ugi != null) {
+							// setUGILoginUser(ugi, serverSubject);
+							// }
+						} catch (Throwable e) {
+							logger.error("Error creating UGI from subject. subject="
+									+ serverSubject);
+						}
+					} else {
+						logger.error("Total logins were successfull from keytab="
+								+ keytab + ", principal=" + principal);
+					}
 				}
+			} else {
+				logger.info("Creating UGI from keytab directly. keytab="
+						+ keytab + ", principal=" + spnegoPrincipals[0]);
+				UserGroupInformation ugi = UserGroupInformation
+						.loginUserFromKeytabAndReturnUGI(spnegoPrincipals[0],
+								keytab);
+				MiscUtil.setUGILoginUser(ugi, null);
 			}
+
 		} catch (Throwable t) {
 			logger.error("Failed to login as [" + spnegoPrincipals + "]", t);
 		}
 
-		if (successLoginCount > 0) {
-			logger.info("Total login success count=" + successLoginCount);
-			try {
-				UserGroupInformation ugi = createUGIFromSubject(serverSubject);
-				if (ugi != null) {
-					setUGILoginUser(ugi, serverSubject);
-				}
-			} catch (Throwable e) {
-				logger.error("Error creating UGI from subject. subject="
-						+ serverSubject);
-			}
-		} else {
-			logger.error("Total logins were successfull from keytab=" + keytab
-					+ ", principal=" + principal);
-		}
 	}
 
 	static class LogHistory {

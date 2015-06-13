@@ -169,6 +169,10 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		this.parentPath = parentPath;
 	}
 
+	public String getFinalPath() {
+		return getName();
+	}
+
 	public void setName(String name) {
 		providerName = name;
 	}
@@ -249,13 +253,15 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			lastStatusLogTime = currTime;
 
 			long diffCount = totalCount - lastIntervalCount;
-			if (diffCount == 0) {
-				return;
-			}
 			long diffSuccess = totalSuccessCount - lastIntervalSuccessCount;
 			long diffFailed = totalFailedCount - lastIntervalFailedCount;
 			long diffStashed = totalStashedCount - lastStashedCount;
 			long diffDeferred = totalDeferredCount - lastDeferredCount;
+
+			if (diffCount == 0 && diffSuccess == 0 && diffFailed == 0
+					&& diffStashed == 0 && diffDeferred == 0) {
+				return;
+			}
 
 			lastIntervalCount = totalCount;
 			lastIntervalSuccessCount = totalSuccessCount;
@@ -263,8 +269,15 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			lastStashedCount = totalStashedCount;
 			lastDeferredCount = totalDeferredCount;
 
+			String finalPath = "";
+			String tFinalPath = getFinalPath();
+			if (!getName().equals(tFinalPath)) {
+				finalPath = ", finalDestination=" + tFinalPath;
+			}
+
 			String msg = "Audit Status Log: name="
 					+ getName()
+					+ finalPath
 					+ ", interval="
 					+ formatIntervalForLog(diffTime)
 					+ ", events="
