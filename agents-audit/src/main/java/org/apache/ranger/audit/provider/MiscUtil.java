@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.rmi.dgc.VMID;
+import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,17 +31,24 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
-
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.Configuration;
+import javax.security.auth.login.LoginContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 
 public class MiscUtil {
 	private static final Log logger = LogFactory.getLog(MiscUtil.class);
@@ -64,7 +72,7 @@ public class MiscUtil {
 	private static UserGroupInformation ugiLoginUser = null;
 	private static Subject subjectLoginUser = null;
 
-	private static Map<String, LogHistory> logHistoryList = new Hashtable<String,LogHistory>();
+	private static Map<String, LogHistory> logHistoryList = new Hashtable<String, LogHistory>();
 	private static int logInterval = 30000; // 30 seconds
 
 	static {
@@ -410,19 +418,52 @@ public class MiscUtil {
 		return ret;
 	}
 
+	public static UserGroupInformation createUGIFromSubject(Subject subject)
+			throws IOException {
+		logger.info("SUBJECT " + (subject == null ? "not found" : "found"));
+		UserGroupInformation ugi = null;
+		if (subject != null) {
+			logger.info("SUBJECT.PRINCIPALS.size()="
+					+ subject.getPrincipals().size());
+			java.util.Set<Principal> principals = subject.getPrincipals();
+			for (Principal principal : principals) {
+				logger.info("SUBJECT.PRINCIPAL.NAME=" + principal.getName());
+			}
+			try {
+				// Do not remove the below statement. The default
+				// getLoginUser does some initialization which is needed
+				// for getUGIFromSubject() to work.
+				UserGroupInformation.getLoginUser();
+				logger.info("Default UGI before using new Subject:"
+						+ UserGroupInformation.getLoginUser());
+			} catch (Throwable t) {
+				logger.error(t);
+			}
+			ugi = UserGroupInformation.getUGIFromSubject(subject);
+			logger.info("SUBJECT.UGI.NAME=" + ugi.getUserName() + ", ugi="
+					+ ugi);
+		} else {
+			logger.info("Server username is not available");
+		}
+		return ugi;
+	}
+
 	/**
 	 * @param ugiLoginUser
 	 */
-	public static void setUGILoginUser(UserGroupInformation newUGI, Subject newSubject) {
+	public static void setUGILoginUser(UserGroupInformation newUGI,
+			Subject newSubject) {
 		if (newUGI != null) {
 			UserGroupInformation.setLoginUser(newUGI);
 			ugiLoginUser = newUGI;
-			logger.info("Setting UGI=" + newUGI );
+			logger.info("Setting UGI=" + newUGI);
 		} else {
 			logger.error("UGI is null. Not setting it.");
 		}
-		logger.info("Setting SUBJECT");
-		subjectLoginUser = newSubject;
+		if (newSubject != null) {
+			logger.info("Setting SUBJECT");
+			subjectLoginUser = newSubject;
+		}
 	}
 
 	public static UserGroupInformation getUGILoginUser() {
@@ -436,7 +477,6 @@ public class MiscUtil {
 		return ugiLoginUser;
 	}
 
-	
 	public static Subject getSubjectLoginUser() {
 		return subjectLoginUser;
 	}
@@ -462,13 +502,14 @@ public class MiscUtil {
 				return groupsSet;
 			}
 		} catch (Throwable e) {
-			logErrorMessageByInterval(
-					logger, "Error getting groups for users. userName=" + userName, e);
+			logErrorMessageByInterval(logger,
+					"Error getting groups for users. userName=" + userName, e);
 		}
 		return null;
 	}
 
-	static public boolean logErrorMessageByInterval(Log useLogger, String message) {
+	static public boolean logErrorMessageByInterval(Log useLogger,
+			String message) {
 		return logErrorMessageByInterval(useLogger, message, null);
 	}
 
@@ -476,7 +517,8 @@ public class MiscUtil {
 	 * @param string
 	 * @param e
 	 */
-	static public boolean logErrorMessageByInterval(Log useLogger, String message, Throwable e) {
+	static public boolean logErrorMessageByInterval(Log useLogger,
+			String message, Throwable e) {
 		LogHistory log = logHistoryList.get(message);
 		if (log == null) {
 			log = new LogHistory();
@@ -494,7 +536,7 @@ public class MiscUtil {
 			} else {
 				useLogger.error(message, e);
 			}
-			
+
 			return true;
 		} else {
 			log.counter++;
@@ -503,9 +545,143 @@ public class MiscUtil {
 
 	}
 
+	public static void authWithKerberos(String keytab, String principal,
+			String nameRules) {
+
+		if (keytab == null || principal == null) {
+			return;
+		}
+		Subject serverSubject = new Subject();
+		int successLoginCount = 0;
+		String[] spnegoPrincipals = null;
+		try {
+			if (principal.equals("*")) {
+				spnegoPrincipals = KerberosUtil.getPrincipalNames(keytab,
+						Pattern.compile("HTTP/.*"));
+				if (spnegoPrincipals.length == 0) {
+					logger.error("No principals found in keytab=" + keytab);
+				}
+			} else {
+				spnegoPrincipals = new String[] { principal };
+			}
+
+			if (nameRules != null) {
+				KerberosName.setRules(nameRules);
+			}
+
+			boolean useKeytab = true;
+			if (!useKeytab) {
+				logger.info("Creating UGI with subject");
+				List<LoginContext> loginContexts = new ArrayList<LoginContext>();
+				for (String spnegoPrincipal : spnegoPrincipals) {
+					try {
+						logger.info("Login using keytab " + keytab
+								+ ", for principal " + spnegoPrincipal);
+						final KerberosConfiguration kerberosConfiguration = new KerberosConfiguration(
+								keytab, spnegoPrincipal);
+						final LoginContext loginContext = new LoginContext("",
+								serverSubject, null, kerberosConfiguration);
+						loginContext.login();
+						successLoginCount++;
+						logger.info("Login success keytab " + keytab
+								+ ", for principal " + spnegoPrincipal);
+						loginContexts.add(loginContext);
+					} catch (Throwable t) {
+						logger.error("Login failed keytab " + keytab
+								+ ", for principal " + spnegoPrincipal, t);
+					}
+					if (successLoginCount > 0) {
+						logger.info("Total login success count="
+								+ successLoginCount);
+						try {
+							UserGroupInformation
+									.loginUserFromSubject(serverSubject);
+							// UserGroupInformation ugi =
+							// createUGIFromSubject(serverSubject);
+							// if (ugi != null) {
+							// setUGILoginUser(ugi, serverSubject);
+							// }
+						} catch (Throwable e) {
+							logger.error("Error creating UGI from subject. subject="
+									+ serverSubject);
+						}
+					} else {
+						logger.error("Total logins were successfull from keytab="
+								+ keytab + ", principal=" + principal);
+					}
+				}
+			} else {
+				logger.info("Creating UGI from keytab directly. keytab="
+						+ keytab + ", principal=" + spnegoPrincipals[0]);
+				UserGroupInformation ugi = UserGroupInformation
+						.loginUserFromKeytabAndReturnUGI(spnegoPrincipals[0],
+								keytab);
+				MiscUtil.setUGILoginUser(ugi, null);
+			}
+
+		} catch (Throwable t) {
+			logger.error("Failed to login as [" + spnegoPrincipals + "]", t);
+		}
+
+	}
+
 	static class LogHistory {
 		long lastLogTime = 0;
 		int counter = 0;
+	}
+
+	/**
+	 * Kerberos context configuration for the JDK GSS library.
+	 */
+	private static class KerberosConfiguration extends Configuration {
+		private String keytab;
+		private String principal;
+
+		public KerberosConfiguration(String keytab, String principal) {
+			this.keytab = keytab;
+			this.principal = principal;
+		}
+
+		@Override
+		public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
+			Map<String, String> options = new HashMap<String, String>();
+			if (IBM_JAVA) {
+				options.put("useKeytab", keytab.startsWith("file://") ? keytab
+						: "file://" + keytab);
+				options.put("principal", principal);
+				options.put("credsType", "acceptor");
+			} else {
+				options.put("keyTab", keytab);
+				options.put("principal", principal);
+				options.put("useKeyTab", "true");
+				options.put("storeKey", "true");
+				options.put("doNotPrompt", "true");
+				options.put("useTicketCache", "true");
+				options.put("renewTGT", "true");
+				options.put("isInitiator", "false");
+			}
+			options.put("refreshKrb5Config", "true");
+			String ticketCache = System.getenv("KRB5CCNAME");
+			if (ticketCache != null) {
+				if (IBM_JAVA) {
+					options.put("useDefaultCcache", "true");
+					// The first value searched when "useDefaultCcache" is used.
+					System.setProperty("KRB5CCNAME", ticketCache);
+					options.put("renewTGT", "true");
+					options.put("credsType", "both");
+				} else {
+					options.put("ticketCache", ticketCache);
+				}
+			}
+			if (logger.isDebugEnabled()) {
+				options.put("debug", "true");
+			}
+
+			return new AppConfigurationEntry[] { new AppConfigurationEntry(
+					KerberosUtil.getKrb5LoginModuleName(),
+					AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
+					options), };
+		}
 	}
 
 }

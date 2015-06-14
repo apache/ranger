@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMSACLsType;
@@ -40,6 +41,7 @@ import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -81,15 +83,52 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
 	  private static volatile RangerKMSPlugin kmsPlugin = null;
 
+	  /**
+	   * Constant that identifies the authentication mechanism.
+	   */
+	  public static final String TYPE = "kerberos";
+
+	  /**
+	   * Constant for the configuration property that indicates the kerberos principal.
+	   */
+	  public static final String PRINCIPAL = TYPE + ".principal";
+
+	  /**
+	   * Constant for the configuration property that indicates the keytab file path.
+	   */
+	  public static final String KEYTAB = TYPE + ".keytab";
+
+	  /**
+	   * Constant for the configuration property that indicates the Kerberos name
+	   * rules for the Kerberos principals.
+	   */
+	  public static final String NAME_RULES = TYPE + ".name.rules";
+
 	  RangerKmsAuthorizer(Configuration conf) {
+		  LOG.info("RangerKmsAuthorizer(conf)...");
+		  authWithKerberos();
 		  if (conf == null) {
 		      conf = loadACLs();		      
 		  }
 		  setKMSACLs(conf);	
 		  init(conf);
+		  
 	  }
 
-	  public RangerKmsAuthorizer() {		  
+	  /**
+	 * 
+	 */
+	private void authWithKerberos() {
+		//Let's if we can create the login user UGI
+		Configuration kconf = new Configuration();		
+		kconf.addResource("kms-site.xml");
+		String keytab =  kconf.get("hadoop.kms.authentication.kerberos.keytab");
+		String principal = kconf.get("hadoop.kms.authentication.kerberos.principal");
+	    String nameRules = kconf.get(NAME_RULES);
+		MiscUtil.authWithKerberos(keytab, principal, nameRules);
+	}
+
+	public RangerKmsAuthorizer() {		  
 	    this(null);
 	  }
 	  
@@ -241,6 +280,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 						plugin.init();
 						
 						kmsPlugin = plugin;
+						
 					}
 				}
 			}
@@ -306,6 +346,8 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		}
 	}
 
+
+	
 	class RangerKMSPlugin extends RangerBasePlugin {
 		public RangerKMSPlugin() {
 			super("kms", "kms");
