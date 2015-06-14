@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -225,7 +226,18 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			List<RangerHiveAccessRequest> requests = new ArrayList<RangerHiveAccessRequest>();
 
-			if(inputHObjs != null) {
+			if(CollectionUtils.isEmpty(inputHObjs)) {
+				// this should happen only for SHOWDATABASES
+				if (hiveOpType == HiveOperationType.SHOWDATABASES) {
+					RangerHiveResource resource = new RangerHiveResource(HiveObjectType.DATABASE, null);
+					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
+					requests.add(request);
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("RangerHiveAuthorizer.checkPrivileges: Unexpected operation type[" + hiveOpType + "] received with empty input objects list!");
+					}
+				}
+			} else {
 				for(HivePrivilegeObject hiveObj : inputHObjs) {
 					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj);
 
@@ -283,105 +295,60 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 			}
 
-			if (isMetaDataOperation(hiveOpType)) {
-				RangerHiveResource resource = getHiveResource(hiveOpType);
-				RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, context, sessionContext);
-				RangerAccessResult result = hivePlugin.isAccessAllowed(request);
-				if (result == null) {
-					LOG.error("Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
-					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege",
-							 user, hiveOpType));
-				} else if (!result.getIsAllowed()) {
-					String path = resource.getAsString();
-					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", 
-							user, hiveOpType.name(), path));
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(String.format("[%s] allowed on resource[%s]: request[%s], result[%s]", hiveOpType, resource, request, result));
-					}
-					if (result.getIsAudited()) {
-						auditHandler.logAuditEventForFiltering(result, hiveOpType);
-					}
-				}
-			} else {
-				for(RangerHiveAccessRequest request : requests) {
-		            RangerHiveResource resource = (RangerHiveResource)request.getResource();
-		            RangerAccessResult result   = null;
-	
-		            if(resource.getObjectType() == HiveObjectType.COLUMN && StringUtils.contains(resource.getColumn(), COLUMN_SEP)) {
-		            	List<RangerAccessRequest> colRequests = new ArrayList<RangerAccessRequest>();
-	
-		            	String[] columns = StringUtils.split(resource.getColumn(), COLUMN_SEP);
+			for(RangerHiveAccessRequest request : requests) {
+				RangerHiveResource resource = (RangerHiveResource)request.getResource();
+				RangerAccessResult result   = null;
 
-		            	// in case of multiple columns, original request is not sent to the plugin; hence service-def will not be set
-		            	resource.setServiceDef(hivePlugin.getServiceDef());
-	
-		            	for(String column : columns) {
-	                        if (column != null) {
-		                        column = column.trim();
-	                        }
-		            		if(StringUtils.isBlank(column)) {
-		            			continue;
-		            		}
-	
-		                	RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTable(), column);
-	
-		            		RangerHiveAccessRequest colRequest = request.copy();
-		            		colRequest.setResource(colResource);
-	
-		            		colRequests.add(colRequest);
-		            	}
-	
-		            	Collection<RangerAccessResult> colResults = hivePlugin.isAccessAllowed(colRequests, auditHandler);
-	
-		            	if(colResults != null) {
-			            	for(RangerAccessResult colResult : colResults) {
-			            		result = colResult;
-	
-			            		if(!result.getIsAllowed()) {
-			            			break;
-			            		}
-			            	}
-		            	}
-		            } else {
-			            result = hivePlugin.isAccessAllowed(request, auditHandler);
-		            }
-	
-					if(result != null && !result.getIsAllowed()) {
-						String path = resource.getAsString();
-		
-						throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
-															 user, request.getHiveAccessType().name(), path));
+				if(resource.getObjectType() == HiveObjectType.COLUMN && StringUtils.contains(resource.getColumn(), COLUMN_SEP)) {
+					List<RangerAccessRequest> colRequests = new ArrayList<RangerAccessRequest>();
+
+					String[] columns = StringUtils.split(resource.getColumn(), COLUMN_SEP);
+
+					// in case of multiple columns, original request is not sent to the plugin; hence service-def will not be set
+					resource.setServiceDef(hivePlugin.getServiceDef());
+
+					for(String column : columns) {
+						if (column != null) {
+							column = column.trim();
+						}
+						if(StringUtils.isBlank(column)) {
+							continue;
+						}
+
+						RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTable(), column);
+
+						RangerHiveAccessRequest colRequest = request.copy();
+						colRequest.setResource(colResource);
+
+						colRequests.add(colRequest);
 					}
+
+					Collection<RangerAccessResult> colResults = hivePlugin.isAccessAllowed(colRequests, auditHandler);
+
+					if(colResults != null) {
+						for(RangerAccessResult colResult : colResults) {
+							result = colResult;
+
+							if(!result.getIsAllowed()) {
+								break;
+							}
+						}
+					}
+				} else {
+					result = hivePlugin.isAccessAllowed(request, auditHandler);
+				}
+
+				if(result != null && !result.getIsAllowed()) {
+					String path = resource.getAsString();
+
+					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
+														 user, request.getHiveAccessType().name(), path));
 				}
 			}
 		} finally {
 			auditHandler.flushAudit();
 		}
 	}
-
-	boolean isMetaDataOperation(HiveOperationType hiveOpType) {
-		boolean result;
-		
-		switch (hiveOpType) {
-		/*
-		 * Uncomment this part when hive bug is resolved.
-		 * 
-		case SHOWTABLES:
-			result = true;
-			break;
-		 *	
-		 */
-		case SHOWDATABASES: // we don't want to authorize for show databases either since any call with _any privilages runs into a problem.
-		case SHOWTABLES:    // currently does not work since we don't get the database name in the context to do this check correctly. 
-		case DESCDATABASE:  // currently does not work since we don't get the database name in the context to do this check correctly.  
-		default:
-			result = false;
-			break;
-		}
-		return result;
-	}
-
 
 	/**
 	 * Check if user has privileges to do this action on these objects
@@ -456,37 +423,24 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					} else if (!result.getIsAllowed()) {
 						if (!LOG.isDebugEnabled()) {
 							String path = resource.getAsString();
-							LOG.debug(String.format("filterListCmdObjects: Permission denied: user [%s] does not have [%s] privilege on [%s]", user, request.getHiveAccessType().name(), path));
+							LOG.debug(String.format("filterListCmdObjects: Permission denied: user [%s] does not have [%s] privilege on [%s]. resource[%s], request[%s], result[%s]",
+									user, request.getHiveAccessType().name(), path, resource, request, result));
 						}
 					} else {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug(String.format("filterListCmdObjects: resource[%s]: allowed!: request[%s], result[%s]", resource, request, result));
+							LOG.debug(String.format("filterListCmdObjects: access allowed. resource[%s], request[%s], result[%s]", resource, request, result));
 						}
 						ret.add(privilegeObject);
 					}
 				}
 			}
 		}
+
 		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("filterListCmdObjects: number of output objects[%d]", ret == null ? 0: ret.size()));
-			LOG.debug(String.format("<== filterListCmdObjects(%s, %s): %s", objs, context, ret));
+			int count = ret == null ? 0 : ret.size();
+			LOG.debug(String.format("<== filterListCmdObjects: count[%d], ret[%s]", count, ret));
 		}
-		
 		return ret;
-	}
-	
-	RangerHiveResource getHiveResource(HiveOperationType hiveOperationType) {
-		RangerHiveResource hiveResource;
-		switch (hiveOperationType) {
-		case SHOWDATABASES:
-		case SHOWTABLES:
-			// any database
-			hiveResource = new RangerHiveResource(HiveObjectType.DATABASE, null);
-			break;
-		default:
-			hiveResource = null;
-		}
-		return hiveResource;
 	}
 
 	RangerHiveResource createHiveResource(HivePrivilegeObject privilegeObject) {
@@ -691,6 +645,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					accessType = HiveAccessType.LOCK;
 				break;
 
+				/*
+				 * SELECT access is done for many of these metadata operations since hive does not call back for filtering.
+				 * Overtime these should move to _any/USE access (as hive adds support for filtering).
+				 */
 				case QUERY:
 				case SHOW_TABLESTATUS:
 				case SHOW_CREATETABLE:
@@ -703,8 +661,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					accessType = HiveAccessType.SELECT;
 				break;
 
+				// any access done for metadata access of actions that have support from hive for filtering
+				case SHOWDATABASES:
 				case SWITCHDATABASE:
 				case DESCDATABASE:
+				case SHOWTABLES:
 					accessType = HiveAccessType.USE;
 				break;
 
@@ -733,10 +694,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case RESET:
 				case SET:
 				case SHOWCONF:
-				case SHOWDATABASES:
 				case SHOWFUNCTIONS:
 				case SHOWLOCKS:
-				case SHOWTABLES:
 				case SHOW_COMPACTIONS:
 				case SHOW_GRANT:
 				case SHOW_ROLES:

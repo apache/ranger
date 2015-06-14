@@ -150,38 +150,6 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		}
 	}
 
-    public void logAuditEventForFiltering(RangerAccessResult result, HiveOperationType hiveOpType) {
-		
-		if(! result.getIsAudited()) {
-			return;
-		}
-		
-		RangerHiveAccessRequest request  = (RangerHiveAccessRequest)result.getAccessRequest();
-		RangerHiveResource      resource = (RangerHiveResource)request.getResource();
-		String resourcePath = resource.getObjectType().toString();
-    	String accessType = getAccessTypeForMetaOperation(hiveOpType);
-		
-    	AuthzAuditEvent auditEvent = createAuditEvent(result, accessType, resourcePath);
-
-		addAuthzAuditEvent(auditEvent);
-    }
-
-	String getAccessTypeForMetaOperation(HiveOperationType hiveOperationType) {
-		String result;
-		switch (hiveOperationType) {
-		case SHOWDATABASES:
-			result = "SHOW DATABASES";
-			break;
-		case SHOWTABLES:
-			result = "SHOW TABLES";
-			break;
-		default:
-			result = "OTHER METADATA OP";
-			break;
-		}
-		return result;
-	}
-
 	public void logAuditEventForDfs(String userName, String dfsCommand, boolean accessGranted, int repositoryType, String repositoryName) {
 		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 

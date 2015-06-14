@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class providing the REST bindings, via Jersey, for the KMS.
@@ -66,6 +68,8 @@ public class KMS {
     GET_KEY_VERSIONS, GET_METADATA, GET_KEY_VERSION, GET_CURRENT_KEY,
     GENERATE_EEK, DECRYPT_EEK
   }
+
+  private static final String KEY_NAME_VALIDATION = "[a-z,A-Z,0-9](?!.*--)(?!.*__)(?!.*-_)(?!.*_-)[\\w\\-\\_]*";
 
   private KeyProviderCryptoExtension provider;
   private KMSAudit kmsAudit;
@@ -105,7 +109,8 @@ public class KMS {
     KMSWebApp.getAdminCallsMeter().mark();
     UserGroupInformation user = HttpUserGroupInformation.get();
     final String name = (String) jsonKey.get(KMSRESTConstants.NAME_FIELD);
-    KMSClientProvider.checkNotEmpty(name, KMSRESTConstants.NAME_FIELD);    
+    KMSClientProvider.checkNotEmpty(name, KMSRESTConstants.NAME_FIELD);  
+    validateKeyName(name);
     assertAccess(Type.CREATE, user, KMSOp.CREATE_KEY, name, request.getRemoteAddr());
     String cipher = (String) jsonKey.get(KMSRESTConstants.CIPHER_FIELD);
     final String material = (String) jsonKey.get(KMSRESTConstants.MATERIAL_FIELD);
@@ -156,6 +161,15 @@ public class KMS {
     String keyURL = requestURL + KMSRESTConstants.KEY_RESOURCE + "/" + name;
     return Response.created(getKeyURI(name)).type(MediaType.APPLICATION_JSON).
         header("Location", keyURL).entity(json).build();
+  }
+
+  private void validateKeyName(String name) {
+	  Pattern pattern = Pattern.compile(KEY_NAME_VALIDATION);
+	  Matcher matcher = pattern.matcher(name);
+	  if(!matcher.matches()){
+		  throw new IllegalArgumentException("Key Name : " + name +
+		          ", should start with alpha/numeric letters and can have special characters - (hypen) or _ (underscore)");
+	  }
   }
 
   @DELETE

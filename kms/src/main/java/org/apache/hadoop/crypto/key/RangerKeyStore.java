@@ -82,14 +82,12 @@ public class RangerKeyStore extends KeyStoreSpi {
         int version;
     }
 
-    private final Hashtable<String, Object> keyEntries ;
+    private Hashtable<String, Object> keyEntries = new Hashtable<String, Object>();
     
     RangerKeyStore() {
-        keyEntries = new Hashtable<String, Object>();
     }
 
     RangerKeyStore(DaoManager daoManager) {
-    	keyEntries = new Hashtable<String, Object>();
     	this.daoManager = daoManager;
 	}
 
@@ -117,7 +115,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 	        o = constructor.newInstance(password);	 
 	        Method m = c.getDeclaredMethod("unseal", SealedObject.class);
             m.setAccessible(true);
-			key = (Key) m.invoke(o, ((SecretKeyEntry)entry).sealedKey);			
+			key = (Key) m.invoke(o, ((SecretKeyEntry)entry).sealedKey);
 		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			logger.error(e.getMessage());
 		}
@@ -313,6 +311,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     {
         synchronized(keyEntries) {
         	List<XXRangerKeyStore> rangerKeyDetails = dbOperationLoad();
+        		
             DataInputStream dis;
             MessageDigest md = null;
            
@@ -372,7 +371,6 @@ public class RangerKeyStore extends KeyStoreSpi {
 					entry.description = rangerKey.getDescription();
 					entry.version = rangerKey.getVersion();
 					entry.attributes = rangerKey.getAttributes();
-
 					//read the sealed key
 					try {
 						ois = new ObjectInputStream(dis);
@@ -380,7 +378,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 					} catch (ClassNotFoundException cnfe) {
 						throw new IOException(cnfe.getMessage());
 					}
-
+					
 					//Add the entry to the list
 					keyEntries.put(alias, entry);		            
 				 }finally {
@@ -398,7 +396,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     		try{
 			  if(daoManager != null){
 				  RangerKMSDao rangerKMSDao = new RangerKMSDao(daoManager);
-				  return rangerKMSDao.getAll();
+				  return rangerKMSDao.getAllKeys();
 			  }			  
     		}catch(Exception e){
     			e.printStackTrace();
@@ -531,7 +529,6 @@ public class RangerKeyStore extends KeyStoreSpi {
 		                      entry.version = (alias.split("@").length == 2)?(Integer.parseInt(alias.split("@")[1])):0;
 		    				  entry.description = k.getFormat()+" - "+ks.getType();
 		                      keyEntries.put(alias, entry);		
-		                      System.out.println("+ adding key alias [" + alias + "]") ;
 		    	            }
 				} catch (Throwable t) {
 					logger.error("Unable to load keystore file ", t);

@@ -20,9 +20,12 @@
 		<mapping-file>META-INF/kms_jpa_named_queries.xml</mapping-file>
 		<class>org.apache.ranger.entity.XXRangerMasterKey</class>
 		<class>org.apache.ranger.entity.XXRangerKeyStore</class>
-
+		<shared-cache-mode>NONE</shared-cache-mode>
+		
 		<properties>
-			<property name="eclipselink.logging.level" value="SEVERE"/>
+			<property name="eclipselink.logging.level" value="WARNING"/>
+			<property name="eclipselink.cache.shared.default" value="false"/>
+			<property name="eclipselink.query-results-cache" value="false"/> 
 		</properties>
 	</persistence-unit>
 </persistence>

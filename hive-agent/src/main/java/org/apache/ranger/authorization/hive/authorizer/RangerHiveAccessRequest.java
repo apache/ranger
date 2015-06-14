@@ -81,7 +81,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 	}
 
 	public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> groups, HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
-		this(resource, user, groups, "OTHER", HiveAccessType.USE, context, sessionContext);
+		this(resource, user, groups, "METADATA OPERATION", HiveAccessType.USE, context, sessionContext);
 	}
 
 	public HiveAccessType getHiveAccessType() {

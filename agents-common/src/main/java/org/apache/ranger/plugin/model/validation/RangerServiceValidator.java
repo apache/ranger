@@ -151,7 +151,7 @@ public class RangerServiceValidator extends RangerValidator {
 							.becauseOf("service with the name[" + name + "] already exists")
 							.build());
 					valid = false;
-				} else if (otherService != null && otherService.getId() != null && otherService.getId() != id) {
+				} else if (otherService != null && otherService.getId() !=null && !otherService.getId().equals(id)) {
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("id/name")
 							.isSemanticallyIncorrect()
