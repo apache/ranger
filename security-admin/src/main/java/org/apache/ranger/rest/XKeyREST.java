@@ -79,8 +79,7 @@ public class XKeyREST {
 	public VXKmsKeyList searchKeys(@Context HttpServletRequest request, @QueryParam("provider") String provider) {
 		VXKmsKeyList vxKmsKeyList = new VXKmsKeyList();
 		try{
-			vxKmsKeyList = keyMgr.searchKeys(provider);
-			vxKmsKeyList = keyMgr.getFilteredKeyList(request, vxKmsKeyList);
+			vxKmsKeyList = keyMgr.searchKeys(request, provider);
 		}catch(Exception e){
 			handleError(e);						
 		}
