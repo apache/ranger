@@ -23,6 +23,8 @@ import java.util.List;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
+import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXDataHist;
 
@@ -52,8 +54,22 @@ public class XXDataHistDao extends BaseDao<XXDataHist> {
 			return null;
 		}
 		try {
-			String queryStr = "select obj.* from x_data_hist obj where obj.obj_class_type = "+classType
-					+ " and obj.obj_id = "+objId + " and obj.create_time <= '" + eventTime + "' ORDER BY obj.id DESC";
+
+			int dbFlavor = RangerBizUtil.getDBFlavor();
+
+			String queryStr = "";
+
+			if (dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
+				queryStr = "select obj.* from x_data_hist obj where obj.obj_class_type = " + classType
+						+ " and obj.obj_id = " + objId
+						+ " and to_date(obj.create_time, 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') <= to_date('" + eventTime
+						+ "', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') ORDER BY obj.id DESC";
+			} else {
+				queryStr = "select obj.* from x_data_hist obj where obj.obj_class_type = " + classType
+						+ " and obj.obj_id = " + objId + " and obj.create_time <= '" + eventTime
+						+ "' ORDER BY obj.id DESC";
+			}
+
 			Query jpaQuery = getEntityManager().createNativeQuery(queryStr, tClass).setMaxResults(1);
 			
 			return (XXDataHist) jpaQuery.getSingleResult();
