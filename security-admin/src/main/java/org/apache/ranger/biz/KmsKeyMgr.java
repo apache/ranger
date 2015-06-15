@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +101,7 @@ public class KmsKeyMgr {
 	RangerDaoManagerBase rangerDaoManagerBase;
 	
 	@SuppressWarnings("unchecked")
-	public VXKmsKeyList searchKeys(String repoName) throws Exception{
+	public VXKmsKeyList searchKeys(HttpServletRequest request, String repoName) throws Exception{
 		String providers[] = null;
 		try {
 			providers = getKMSURL(repoName);
@@ -147,6 +148,16 @@ public class KmsKeyMgr {
 				Gson gson = new GsonBuilder().create();
 				logger.debug(" Search Key RESPONSE: [" + response + "]");
 				keys = gson.fromJson(response, List.class);
+				Collections.sort(keys);
+				VXKmsKeyList vxKmsKeyList2 = new VXKmsKeyList();
+				List<VXKmsKey> vXKeys2 = new ArrayList<VXKmsKey>();
+				for (String name : keys) {
+					VXKmsKey key = new VXKmsKey();
+					key.setName(name);
+					vXKeys2.add(key);
+				}
+				vxKmsKeyList2.setVXKeys(vXKeys2);
+				vxKmsKeyList = getFilteredKeyList(request, vxKmsKeyList2);
 				break;
 			} catch (Exception e) {
 				if (e instanceof UniformInterfaceException || i == providers.length - 1)
@@ -155,15 +166,35 @@ public class KmsKeyMgr {
 					continue;
 			}
 		}
-		if (keys != null && keys.size() > 0) {
-			for (String name : keys) {
-				VXKmsKey key = getKeyFromUri(connProvider, name, isKerberos, repoName);
-				vXKeys.add(key);
+		//details
+		if (vxKmsKeyList != null && vxKmsKeyList.getVXKeys() != null && vxKmsKeyList.getVXKeys().size() > 0) {
+			List<VXKmsKey> lstKMSKey = vxKmsKeyList.getVXKeys();
+			int startIndex=restErrorUtil.parseInt(
+					request.getParameter("startIndex"), 0,
+					"Invalid value for parameter startIndex",
+					MessageEnums.INVALID_INPUT_DATA, null, "startIndex");
+			startIndex = startIndex < 0 ? 0 : startIndex;
+			
+			int pageSize=restErrorUtil.parseInt(
+					request.getParameter("pageSize"), 0,
+					"Invalid value for parameter pageSize",
+					MessageEnums.INVALID_INPUT_DATA, null, "pageSize");
+			pageSize = pageSize < 0 ? 0 : pageSize;			
+			
+			vxKmsKeyList.setResultSize(lstKMSKey.size());
+			vxKmsKeyList.setTotalCount(lstKMSKey.size());
+			if((startIndex+pageSize) <= lstKMSKey.size()){
+				lstKMSKey = lstKMSKey.subList(startIndex, (startIndex+pageSize));}
+			else{
+				startIndex = startIndex >= lstKMSKey.size() ? 0 : startIndex;
+				lstKMSKey = lstKMSKey.subList(startIndex, lstKMSKey.size());
 			}
-			vxKmsKeyList.setResultSize(vXKeys.size());
-			vxKmsKeyList.setTotalCount(vXKeys.size());
-			vxKmsKeyList.setStartIndex(0);
-			vxKmsKeyList.setPageSize(vXKeys.size());
+			for (VXKmsKey kmsKey : lstKMSKey) {
+				VXKmsKey key = getKeyFromUri(connProvider, kmsKey.getName(), isKerberos, repoName);
+				vXKeys.add(key);
+			}			
+			vxKmsKeyList.setStartIndex(startIndex);
+			vxKmsKeyList.setPageSize(pageSize);
 		}
 		vxKmsKeyList.setVXKeys(vXKeys);
 		return vxKmsKeyList;
@@ -540,7 +571,7 @@ public class KmsKeyMgr {
 	public VXKmsKeyList getFilteredKeyList(HttpServletRequest request, VXKmsKeyList vXKmsKeyList){
 		List<SortField> sortFields = new ArrayList<SortField>();
 		sortFields.add(new SortField(KeySearchFilter.KEY_NAME, KeySearchFilter.KEY_NAME));
-		
+
 		KeySearchFilter filter = getKeySearchFilter(request, sortFields);
 		
 		Predicate pred = getPredicate(filter);
@@ -631,7 +662,6 @@ public class KmsKeyMgr {
 		String sortBy = restErrorUtil.validateString(request.getParameter(KeySearchFilter.SORT_BY),
 				StringUtil.VALIDATION_ALPHA, "Invalid value for parameter sortBy", MessageEnums.INVALID_INPUT_DATA,
 				null, KeySearchFilter.SORT_BY);
-
 		boolean sortSet = false;
 		if (!StringUtils.isEmpty(sortBy)) {
 			for (SortField sortField : sortFields) {
