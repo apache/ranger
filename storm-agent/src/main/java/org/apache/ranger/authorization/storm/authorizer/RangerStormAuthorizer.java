@@ -21,6 +21,7 @@
 
 import java.security.Principal;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.storm.StormRangerPlugin;
@@ -29,6 +30,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 import backtype.storm.Config;
 import backtype.storm.security.auth.IAuthorizer;
@@ -39,7 +42,9 @@ public class RangerStormAuthorizer implements IAuthorizer {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerStormAuthorizer.class);
 	
 	static final StormRangerPlugin plugin = new StormRangerPlugin();
-	
+
+	static final Set<String> noAuthzOperations = Sets.newHashSet(new String[] { "getNimbusConf", "getClusterInfo" });
+
 	/**
      * permit() method is invoked for each incoming Thrift request.
      * @param context request context includes info about 
@@ -53,7 +58,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 		
 		boolean accessAllowed = false ;
 		boolean isAuditEnabled = false;
-		
+
 		String topologyName = null ;
 		
 		try {
@@ -76,39 +81,42 @@ public class RangerStormAuthorizer implements IAuthorizer {
 					LOG.debug("TOPOLOGY CONFIG MAP is passed as null.") ;
 				}
 			}
-	
-			String userName = null ;
-			String[] groups = null ;
-	
-			Principal user = aRequestContext.principal() ;
-			
-			if (user != null) {
-				userName = user.getName() ;
-				if (userName != null) {
-					UserGroupInformation ugi = UserGroupInformation.createRemoteUser(userName) ;
-					userName = ugi.getShortUserName() ;
-					groups = ugi.getGroupNames() ;
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("User found from principal [" + user.getName() + "] => user:[" + userName + "], groups:[" + StringUtil.toString(groups) + "]") ;
-					}
 
+			if(noAuthzOperations.contains(aOperationName)) {
+				accessAllowed = true;
+			} else {
+				String userName = null ;
+				String[] groups = null ;
+	
+				Principal user = aRequestContext.principal() ;
+			
+				if (user != null) {
+					userName = user.getName() ;
+					if (userName != null) {
+						UserGroupInformation ugi = UserGroupInformation.createRemoteUser(userName) ;
+						userName = ugi.getShortUserName() ;
+						groups = ugi.getGroupNames() ;
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("User found from principal [" + user.getName() + "] => user:[" + userName + "], groups:[" + StringUtil.toString(groups) + "]") ;
+						}
+					}
 				}
-			}
 				
 				
-			if (userName != null) {
-				String clientIp =  (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress() ) ;
-				RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName); 
-				RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
-				accessAllowed = result != null && result.getIsAllowed();
-				isAuditEnabled = result != null && result.getIsAudited();
+				if (userName != null) {
+					String clientIp =  (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress() ) ;
+					RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName); 
+					RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
+					accessAllowed = result != null && result.getIsAllowed();
+					isAuditEnabled = result != null && result.getIsAudited();
 				
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("User found from principal [" + userName + "], groups [" + StringUtil.toString(groups) + "]: verifying using [" + plugin.getClass().getName() + "], allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("User found from principal [" + userName + "], groups [" + StringUtil.toString(groups) + "]: verifying using [" + plugin.getClass().getName() + "], allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
+					}
 				}
-			}
-			else {
-				LOG.info("NULL User found from principal [" + user + "]: Skipping authorization;  allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
+				else {
+					LOG.info("NULL User found from principal [" + user + "]: Skipping authorization;  allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
+				}
 			}
 		}
 		catch(Throwable t) {

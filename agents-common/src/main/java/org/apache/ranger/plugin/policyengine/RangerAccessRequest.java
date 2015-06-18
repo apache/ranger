@@ -51,4 +51,8 @@ public interface RangerAccessRequest {
 	Map<String, Object> getContext();
 
 	RangerAccessRequest getReadOnlyCopy();
+
+	ResourceMatchingScope getResourceMatchingScope();
+
+	enum ResourceMatchingScope {SELF, SELF_OR_DESCENDANTS}
 }

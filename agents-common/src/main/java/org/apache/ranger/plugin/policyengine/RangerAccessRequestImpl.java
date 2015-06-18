@@ -44,6 +44,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 
 	private boolean isAccessTypeAny            = false;
 	private boolean isAccessTypeDelegatedAdmin = false;
+	private ResourceMatchingScope resourceMatchingScope = ResourceMatchingScope.SELF;
 
 	public RangerAccessRequestImpl() {
 		this(null, null, null, null);
@@ -121,6 +122,11 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
+	public ResourceMatchingScope getResourceMatchingScope() {
+		return resourceMatchingScope;
+	}
+
+	@Override
 	public boolean isAccessTypeAny() {
 		return isAccessTypeAny;
 	}
@@ -176,6 +182,8 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.sessionId = sessionId;
 	}
 
+	public void setResourceMatchingScope(ResourceMatchingScope scope) { this.resourceMatchingScope = scope; }
+
 	public void setContext(Map<String, Object> context) {
 		this.context = (context == null) ? new HashMap<String, Object>() : context;
 	}
@@ -210,7 +218,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("action={").append(action).append("} ");
 		sb.append("requestData={").append(requestData).append("} ");
 		sb.append("sessionId={").append(sessionId).append("} ");
-
+		sb.append("resourceMatchingScope={").append(resourceMatchingScope).append("} ");
 
 		sb.append("context={");
 		if(context != null) {

@@ -83,4 +83,6 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 	@Override
 	public RangerAccessRequest getReadOnlyCopy() { return this; }
 
+	@Override
+	public ResourceMatchingScope getResourceMatchingScope() { return source.getResourceMatchingScope(); }
 }
