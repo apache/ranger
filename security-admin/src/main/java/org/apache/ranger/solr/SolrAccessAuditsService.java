@@ -32,6 +32,8 @@ import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField.SORT_ORDER;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
@@ -59,6 +61,9 @@ public class SolrAccessAuditsService {
 
 	@Autowired
 	StringUtil stringUtil;
+
+	@Autowired
+	RangerDaoManager daoManager;
 
 	public List<SortField> sortFields = new ArrayList<SortField>();
 	public List<SearchField> searchFields = new ArrayList<SearchField>();
@@ -221,6 +226,10 @@ public class SolrAccessAuditsService {
 		value = doc.getFieldValue("repoType");
 		if (value != null) {
 			accessAudit.setRepoType(solrUtil.toInt(value));
+			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
+			if (xServiceDef != null) {
+				accessAudit.setServiceType(xServiceDef.getName());
+			}
 		}
 		value = doc.getFieldValue("resType");
 		if (value != null) {

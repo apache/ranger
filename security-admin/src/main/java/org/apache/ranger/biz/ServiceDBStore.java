@@ -262,9 +262,13 @@ public class ServiceDBStore implements ServiceStore {
 		
 		if (populateExistingBaseFields) {
 			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(true);
+			daoMgr.getXXServiceDef().setIdentityInsert(true);
+
 			svcDefServiceWithAssignedId.create(serviceDef);
+
 			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(false);
 			daoMgr.getXXServiceDef().updateSequence();
+			daoMgr.getXXServiceDef().setIdentityInsert(false);
 		} else {
 			// following fields will be auto populated
 			serviceDef.setId(null);
@@ -1009,7 +1013,12 @@ public class ServiceDBStore implements ServiceStore {
 
 		if (populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
+			daoMgr.getXXService().setIdentityInsert(true);
+
 			service = svcServiceWithAssignedId.create(service);
+
+			daoMgr.getXXService().setIdentityInsert(false);
+			daoMgr.getXXService().updateSequence();
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
 			createDefaultPolicy = false;
 		} else {
@@ -1359,7 +1368,12 @@ public class ServiceDBStore implements ServiceStore {
 
 		if(populateExistingBaseFields) {
 			assignedIdPolicyService.setPopulateExistingBaseFields(true);
+			daoMgr.getXXPolicy().setIdentityInsert(true);
+
 			policy = assignedIdPolicyService.create(policy);
+
+			daoMgr.getXXPolicy().setIdentityInsert(false);
+			daoMgr.getXXPolicy().updateSequence();
 			assignedIdPolicyService.setPopulateExistingBaseFields(false);
 		} else {
 			policy = policyService.create(policy);

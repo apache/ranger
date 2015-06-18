@@ -327,6 +327,7 @@ class MysqlConf(BaseDB):
 		version = ""
 		className = ""
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 
 		if not os.path.exists(javaFiles):
@@ -366,7 +367,7 @@ class MysqlConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
+						get_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
 						elif os_name == "WINDOWS":
@@ -591,6 +592,7 @@ class OracleConf(BaseDB):
 		version = ""
 		className = ""
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 
 		if not os.path.exists(javaFiles):
@@ -630,7 +632,7 @@ class OracleConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":	
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
+						get_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
 						elif os_name == "WINDOWS":
@@ -838,6 +840,7 @@ class PostgresConf(BaseDB):
 		version = ""
 		className = ""
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 
 		if not os.path.exists(javaFiles):
@@ -877,7 +880,7 @@ class PostgresConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":	
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
+						get_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
 						elif os_name == "WINDOWS":
@@ -1073,6 +1076,7 @@ class SqlServerConf(BaseDB):
 		version = ""
 		className = ""
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 
 		if not os.path.exists(javaFiles):
@@ -1112,7 +1116,7 @@ class SqlServerConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":	
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_cmd = "%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,path,className)
+						get_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
 						elif os_name == "WINDOWS":
