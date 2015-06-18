@@ -23,12 +23,15 @@
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
 import org.apache.log4j.Logger;
@@ -229,6 +232,37 @@ public abstract class BaseDao<T> {
 			getEntityManager().createNativeQuery(query).getSingleResult();
 		}
 
+	}
+
+	public void setIdentityInsert(boolean identityInsert) {
+		if (RangerBizUtil.getDBFlavor() != AppConstants.DB_FLAVOR_SQLSERVER) {
+			logger.debug("Ignoring BaseDao.setIdentityInsert(). This should be executed if DB flavor is sqlserver.");
+			return;
+		}
+
+		EntityManager entityMgr = getEntityManager();
+
+		String identityInsertStr;
+		if (identityInsert) {
+			identityInsertStr = "ON";
+		} else {
+			identityInsertStr = "OFF";
+		}
+
+		Table table = tClass.getAnnotation(Table.class);
+
+		if(table == null) {
+			throw new NullPointerException("Required annotation `Table` not found");
+		}
+
+		String tableName = table.name();
+
+		Connection conn = entityMgr.unwrap(Connection.class);
+		try {
+			conn.createStatement().execute("SET IDENTITY_INSERT " + tableName + " " + identityInsertStr);
+		} catch (SQLException e) {
+			logger.error("Error while settion identity_insert " + identityInsertStr, e);
+		}
 	}
 
 }

@@ -1160,13 +1160,17 @@ public class TestServiceDBStore {
 
 	@Test
 	public void test19createService() throws Exception {
-		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);		
 		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
 				.mock(XXServiceConfigMapDao.class);
 		XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
 				.mock(XXServiceConfigDefDao.class);
 		XXService xService = Mockito.mock(XXService.class);
+		XXService xService2 = new XXService();
+		xService2.setId(1L);
+		xService2.setName("Test");
+		xService2.setType(1L);
 		XXUser xUser = Mockito.mock(XXUser.class);
 
 		RangerService rangerService = rangerService();
@@ -1183,8 +1187,7 @@ public class TestServiceDBStore {
 		Mockito.when(xServiceConfigDefDao.findByServiceDefName(userName))
 				.thenReturn(svcConfDefList);
 
-		Mockito.when(svcServiceWithAssignedId.create(rangerService))
-				.thenReturn(rangerService);
+		Mockito.when(svcService.create(rangerService)).thenReturn(rangerService);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
@@ -1207,18 +1210,21 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		serviceDBStore.setPopulateExistingBaseFields(true);
+		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+		Mockito.when(xServiceDao.getById(Mockito.anyLong())).thenReturn(xService2);		
 
 		Mockito.when(
 				rangerAuditFields.populateAuditFields(
 						Mockito.isA(XXServiceConfigMap.class),
 						Mockito.isA(XXService.class))).thenReturn(xConfMap);
-
-		RangerService dbRangerService = serviceDBStore
-				.createService(rangerService);
-		serviceDBStore.setPopulateExistingBaseFields(false);
-		Assert.assertNotNull(dbRangerService);
-		Mockito.verify(daoManager).getXXService();
+		
+		RangerServiceDef ran = new RangerServiceDef();
+		ran.setName("Test");
+		Mockito.when(serviceDefService.read(1L)).thenReturn(ran);
+		
+		serviceDBStore.createService(rangerService);
+		
+		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXService();
 		Mockito.verify(daoManager).getXXServiceConfigMap();
 	}
 
