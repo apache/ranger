@@ -106,9 +106,10 @@ public abstract class RangerValidator {
 			LOG.warn("serializeFailures: called while list of failures is null/empty!");
 		} else {
 			StringBuilder builder = new StringBuilder();
-			for (ValidationFailureDetails aFailure : failures) {
-				builder.append(aFailure.toString());
-				builder.append(";");
+			for (int i = 0; i < failures.size(); i++) {
+				builder.append(String.format("(%d)", i));
+				builder.append(failures.get(i).toString());
+				builder.append(" ");
 			}
 			message = builder.toString();
 		}
@@ -651,4 +652,39 @@ public abstract class RangerValidator {
 		return result;
 	}
 
+	static Map<Integer, Integer> createMap(int[][] data) {
+		Map<Integer, Integer> result = new HashMap<>();
+		if (data != null) {
+			for (int[] row : data) {
+				Integer key = row[0];
+				Integer value = row[1];
+				if (result.containsKey(key)) {
+					LOG.warn("createMap: Internal error: duplicate key: multiple rows found for [" + key + "]. Skipped");
+				} else {
+					result.put(key, value);
+				}
+			}
+		}
+		return result;
+	}
+
+	static Map<Integer, String> createMap(Object[][] data) {
+		Map<Integer, String> result = new HashMap<>();
+		if (data != null) {
+			for (Object[] row : data) {
+				Integer key = (Integer)row[0];
+				String value = (String)row[1];
+				if (key == null) {
+					LOG.warn("createMap: error converting key[" + row[0] + "] to Integer! Sipped!");
+				} else if (StringUtils.isEmpty(value)) {
+					LOG.warn("createMap: empty/null value.  Skipped!");
+				} else if (result.containsKey(key)) {
+					LOG.warn("createMap: Internal error: duplicate key.  Multiple rows found for [" + key + "]. Skipped");
+				} else {
+					result.put(key, value);
+				}
+			}
+		}
+		return result;
+	}
 }
