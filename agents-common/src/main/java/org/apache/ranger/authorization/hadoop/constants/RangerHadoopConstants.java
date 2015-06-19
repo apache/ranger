@@ -41,17 +41,22 @@ public class RangerHadoopConstants {
 	public static final String STORM_ACCESS_VERIFIER_CLASS_NAME_PROP 	= "storm.authorization.verifier.classname" ;
 	public static final String STORM_ACCESS_VERIFIER_CLASS_NAME_DEFAULT_VALUE = "org.apache.ranger.pdp.storm.RangerAuthorizer" ;
 
+	public static final String  RANGER_ADD_YARN_PERMISSION_PROP    = "ranger.add-yarn-authorization" ;
+	public static final boolean RANGER_ADD_YARN_PERMISSION_DEFAULT = true ;
+
 	//
 	// Loging constants 
 	//
 	public static final String AUDITLOG_FIELD_DELIMITER_PROP 			= "xasecure.auditlog.fieldDelimiterString";
 	public static final String AUDITLOG_RANGER_MODULE_ACL_NAME_PROP  	= "xasecure.auditlog.xasecureAcl.name" ;
 	public static final String AUDITLOG_HADOOP_MODULE_ACL_NAME_PROP    	= "xasecure.auditlog.hadoopAcl.name" ;
+	public static final String AUDITLOG_YARN_MODULE_ACL_NAME_PROP    	= "ranger.auditlog.yarnAcl.name" ;
 	
 	public static final String DEFAULT_LOG_FIELD_DELIMITOR  			= "|" ;
 	public static final String DEFAULT_XASECURE_MODULE_ACL_NAME  	= "xasecure-acl" ;
 	public static final String DEFAULT_RANGER_MODULE_ACL_NAME  		= "ranger-acl" ;
 	public static final String DEFAULT_HADOOP_MODULE_ACL_NAME    		= "hadoop-acl" ;
+	public static final String DEFAULT_YARN_MODULE_ACL_NAME    		= "yarn-acl" ;
 	
 
 	public static final String AUDITLOG_FIELDINFO_VISIBLE_PROP 			= "xasecure.auditlog.fieldInfoVisible" ;
