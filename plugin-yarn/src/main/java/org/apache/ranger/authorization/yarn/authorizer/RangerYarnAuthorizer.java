@@ -21,13 +21,9 @@
 package org.apache.ranger.authorization.yarn.authorizer;
 
 import java.net.InetAddress;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -35,14 +31,16 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.yarn.security.*;
+import org.apache.hadoop.yarn.security.PrivilegedEntity.EntityType;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
-import org.apache.ranger.plugin.util.GrantRevokeRequest;
 
 import com.google.common.collect.Sets;
 
@@ -51,11 +49,14 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 	public static final String ACCESS_TYPE_SUBMIT_APP  = "submit-app";
 	public static final String ACCESS_TYPE_ADMIN       = "admin";
 
+	private static boolean yarnAuthEnabled = RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_DEFAULT;
+
 	private static final Log LOG = LogFactory.getLog(RangerYarnAuthorizer.class);
 
 	private static volatile RangerYarnPlugin yarnPlugin = null;
 
 	private AccessControlList admins = null;
+	private Map<PrivilegedEntity, Map<AccessType, AccessControlList>> yarnAcl = new HashMap<PrivilegedEntity, Map<AccessType, AccessControlList>>();
 
 	@Override
 	public void init(Configuration conf) {
@@ -78,6 +79,8 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 			}
 		}
 
+		RangerYarnAuthorizer.yarnAuthEnabled = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_DEFAULT);
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerYarnAuthorizer.init()");
 		}
@@ -86,23 +89,34 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 	@Override
 	public boolean checkPermission(AccessType accessType, PrivilegedEntity entity, UserGroupInformation ugi) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.checkPermission(" + accessType + ", " + entity + ", " + ugi + ")");
+			LOG.debug("==> RangerYarnAuthorizer.checkPermission(" + accessType + ", " + toString(entity) + ", " + ugi + ")");
 		}
 
-		boolean ret = false;
-
-		RangerYarnPlugin plugin = yarnPlugin;
+		boolean                ret          = false;
+		RangerYarnPlugin       plugin       = yarnPlugin;
+		RangerYarnAuditHandler auditHandler = null;
+		RangerAccessResult     result       = null;
 
 		if(plugin != null) {
 			RangerYarnAccessRequest request = new RangerYarnAccessRequest(entity, getRangerAccessType(accessType), accessType.name(), ugi);
 
-			RangerAccessResult result = plugin.isAccessAllowed(request);
+			auditHandler = new RangerYarnAuditHandler();
 
+			result = plugin.isAccessAllowed(request, auditHandler);
+		}
+
+		if(RangerYarnAuthorizer.yarnAuthEnabled && (result == null || !result.getIsAccessDetermined())) {
+			ret = isAllowedByYarnAcl(accessType, entity, ugi, auditHandler);
+		} else {
 			ret = result == null ? false : result.getIsAllowed();
 		}
 
+		if(auditHandler != null) {
+			auditHandler.flushAudit();
+		}
+
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.checkPermission(" + accessType + ", " + entity + ", " + ugi + "): " + ret);
+			LOG.debug("<== RangerYarnAuthorizer.checkPermission(" + accessType + ", " + toString(entity) + ", " + ugi + "): " + ret);
 		}
 
 		return ret;
@@ -116,6 +130,8 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 
 		boolean ret = false;
 		
+		AccessControlList admins = this.admins;
+
 		if(admins != null) {
 			ret = admins.isUserAllowed(ugi);
 		}
@@ -143,58 +159,51 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 	@Override
 	public void setPermission(PrivilegedEntity entity, Map<AccessType, AccessControlList> permission, UserGroupInformation ugi) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.setPermission(" + entity + ", " + permission + ", " + ugi + ")");
+			LOG.debug("==> RangerYarnAuthorizer.setPermission(" + toString(entity) + ", " + permission + ", " + ugi + ")");
 		}
 
-		RangerYarnPlugin plugin = yarnPlugin;
+		yarnAcl.put(entity, permission);
 
-		if(plugin != null && entity != null && !MapUtils.isEmpty(permission) && ugi != null) {
-			RangerYarnResource resource = new RangerYarnResource(entity);
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerYarnAuthorizer.setPermission(" + toString(entity) + ", " + permission + ", " + ugi + ")");
+		}
+	}
 
-			GrantRevokeRequest request = new GrantRevokeRequest();
-			request.setResource(resource.getAsMap());
-			request.setGrantor(ugi.getShortUserName());
-			request.setDelegateAdmin(Boolean.FALSE);
-			request.setEnableAudit(Boolean.TRUE);
-			request.setReplaceExistingPermissions(Boolean.FALSE);
-			request.setIsRecursive(Boolean.TRUE);
+	public boolean isAllowedByYarnAcl(AccessType accessType, PrivilegedEntity entity, UserGroupInformation ugi, RangerYarnAuditHandler auditHandler) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerYarnAuthorizer.isAllowedByYarnAcl(" + accessType + ", " + toString(entity) + ", " + ugi + ")");
+		}
 
-			for(Map.Entry<AccessType, AccessControlList> e : permission.entrySet()) {
-				AccessType        accessType = e.getKey();
-				AccessControlList acl        = e.getValue();
-				
-				Set<String> accessTypes = new HashSet<String>();
-				accessTypes.add(getRangerAccessType(accessType));
-				request.setAccessTypes(accessTypes);
+		boolean ret = false;
 
-				if(acl.isAllAllowed()) {
-					Set<String> publicGroup = new HashSet<String>();
-					publicGroup.add(RangerPolicyEngine.GROUP_PUBLIC);
+		for(Map.Entry<PrivilegedEntity, Map<AccessType, AccessControlList>> e : yarnAcl.entrySet()) {
+			PrivilegedEntity                   aclEntity         = e.getKey();
+			Map<AccessType, AccessControlList> entityPermissions = e.getValue();
 
-					request.setUsers(null);
-					request.setGroups(publicGroup);
-				} else if(CollectionUtils.isEmpty(acl.getUsers()) && CollectionUtils.isEmpty(acl.getGroups())) {
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("grantAccess(): empty users and groups - skipped");
-					}
+			AccessControlList acl = entityPermissions == null ? null : entityPermissions.get(accessType);
 
-					continue;
-				} else {
-					request.setUsers(getSet(acl.getUsers()));
-					request.setGroups(getSet(acl.getGroups()));
-				}
-
-				try {
-					plugin.grantAccess(request, plugin.getResultProcessor());
-				} catch(Exception excp) {
-					LOG.error("grantAccess(" + request + ") failed", excp);
-				}
+			if(acl == null || !acl.isUserAllowed(ugi)) {
+				continue;
 			}
+
+			if(! isSelfOrChildOf(entity, aclEntity)) {
+				continue;
+			}
+
+			ret = true;
+
+			break;
+		}
+
+		if(auditHandler != null) {
+			auditHandler.logYarnAclEvent(ret);
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.setPermission(" + entity + ", " + permission + ", " + ugi + ")");
+			LOG.debug("<== RangerYarnAuthorizer.isAllowedByYarnAcl(" + accessType + ", " + toString(entity) + ", " + ugi + "): " + ret);
 		}
+
+		return ret;
 	}
 
 	private static String getRangerAccessType(AccessType accessType) {
@@ -213,21 +222,31 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 		return ret;
 	}
 
-	private Set<String> getSet(Collection<String> strings) {
-		Set<String> ret = null;
+	private boolean isSelfOrChildOf(PrivilegedEntity queue, PrivilegedEntity parentQueue) {
+		boolean ret = queue.equals(parentQueue);
 
-		if(! CollectionUtils.isEmpty(strings)) {
-			if(strings instanceof Set<?>) {
-				ret = (Set<String>)strings;
-			} else {
-				ret = new HashSet<String>();
-				for(String str : strings) {
-					ret.add(str);
+		if(!ret && queue.getType() == EntityType.QUEUE) {
+			String queueName       = queue.getName();
+			String parentQueueName = parentQueue.getName();
+
+			if(queueName.contains(".") && !StringUtil.isEmpty(parentQueueName)) {
+				if(parentQueueName.charAt(parentQueueName.length() - 1) != '.') {
+					parentQueueName += ".";
 				}
+
+				ret = queueName.startsWith(parentQueueName);
 			}
 		}
 
 		return ret;
+	}
+
+	private String toString(PrivilegedEntity entity) {
+		if(entity != null) {
+			return "{name=" + entity.getName() + "; type=" + entity.getType() + "}";
+		}
+
+		return "null";
 	}
 }
 
@@ -272,5 +291,64 @@ class RangerYarnAccessRequest extends RangerAccessRequestImpl {
 			ret = ip.getHostAddress();
 		}
 		return ret ;
+	}
+}
+
+class RangerYarnAuditHandler extends RangerDefaultAuditHandler {
+	private static final Log LOG = LogFactory.getLog(RangerYarnAuditHandler.class);
+
+	private static final String YarnModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_YARN_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_YARN_MODULE_ACL_NAME) ;
+
+	private boolean         isAuditEnabled = false;
+	private AuthzAuditEvent auditEvent     = null;
+
+	public RangerYarnAuditHandler() {
+	}
+
+	@Override
+	public void processResult(RangerAccessResult result) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerYarnAuditHandler.logAudit(" + result + ")");
+		}
+
+		if(! isAuditEnabled && result.getIsAudited()) {
+			isAuditEnabled = true;
+		}
+
+		auditEvent = super.getAuthzEvents(result);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerYarnAuditHandler.logAudit(" + result + "): " + auditEvent);
+		}
+	}
+
+	public void logYarnAclEvent(boolean accessGranted) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerYarnAuditHandler.logYarnAclEvent(" + accessGranted + ")");
+		}
+
+		if(auditEvent != null) {
+			auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
+			auditEvent.setAclEnforcer(YarnModuleName);
+			auditEvent.setPolicyId(-1);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerYarnAuditHandler.logYarnAclEvent(" + accessGranted + "): " + auditEvent);
+		}
+	}
+
+	public void flushAudit() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerYarnAuditHandler.flushAudit(" + isAuditEnabled + ", " + auditEvent + ")");
+		}
+
+		if(isAuditEnabled) {
+			super.logAuthzAudit(auditEvent);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerYarnAuditHandler.flushAudit(" + isAuditEnabled + ", " + auditEvent + ")");
+		}
 	}
 }
