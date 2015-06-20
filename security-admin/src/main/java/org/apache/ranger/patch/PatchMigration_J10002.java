@@ -20,10 +20,13 @@ package org.apache.ranger.patch;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -90,6 +93,15 @@ public class PatchMigration_J10002 extends BaseLoader {
 
 	private static int policyCounter = 0;
 	private static int serviceCounter = 0;
+
+	static Set<String> unsupportedLegacyPermTypes = new HashSet<String>();
+
+	static {
+		unsupportedLegacyPermTypes.add("Unknown");
+		unsupportedLegacyPermTypes.add("Reset");
+		unsupportedLegacyPermTypes.add("Obfuscate");
+		unsupportedLegacyPermTypes.add("Mask");
+	}
 
 	public static void main(String[] args) {
 		logger.info("main()");
@@ -451,6 +463,10 @@ public class PatchMigration_J10002 extends BaseLoader {
 				}
 
 				String accessType = ServiceUtil.toAccessType(permMap.getPermType());
+				if(StringUtils.isBlank(accessType) || unsupportedLegacyPermTypes.contains(accessType)) {
+					logger.info(accessType + ": is not a valid access-type, ignoring accesstype for policy: " + xRes.getPolicyName());
+					continue;
+				}
 
 				if(StringUtils.equalsIgnoreCase(accessType, "Admin")) {
 					policyItem.setDelegateAdmin(Boolean.TRUE);
@@ -462,6 +478,16 @@ public class PatchMigration_J10002 extends BaseLoader {
 				}
 
 				ipAddress = permMap.getIpAddress();
+			}
+
+			if(CollectionUtils.isEmpty(accessList)) {
+				logger.info("no access specified. ignoring policyItem for policy: " + xRes.getPolicyName());
+				continue;
+			}
+
+			if(CollectionUtils.isEmpty(userList) && CollectionUtils.isEmpty(groupList)) {
+				logger.info("no user or group specified. ignoring policyItem for policy: " + xRes.getPolicyName());
+				continue;
 			}
 
 			policyItem.setUsers(userList);
