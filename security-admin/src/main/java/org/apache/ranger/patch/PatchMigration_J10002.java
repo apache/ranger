@@ -471,10 +471,10 @@ public class PatchMigration_J10002 extends BaseLoader {
 				if(StringUtils.equalsIgnoreCase(accessType, "Admin")) {
 					policyItem.setDelegateAdmin(Boolean.TRUE);
 					if ( svcDef.getId() == EmbeddedServiceDefsUtil.instance().getHBaseServiceDefId()) {
-						accessList.add(new RangerPolicyItemAccess(accessType));
+						addAccessType(accessType, accessList);
 					}
 				} else {
-					accessList.add(new RangerPolicyItemAccess(accessType));
+					addAccessType(accessType, accessList);
 				}
 
 				ipAddress = permMap.getIpAddress();
@@ -509,7 +509,23 @@ public class PatchMigration_J10002 extends BaseLoader {
 
 		return policyItems;
 	}
-	
+
+	private void addAccessType(String accessType, List<RangerPolicyItemAccess> accessList) {
+		boolean alreadyExists = false;
+
+		for(RangerPolicyItemAccess access : accessList) {
+			if(StringUtils.equalsIgnoreCase(accessType, access.getType())) {
+				alreadyExists = true;
+
+				break;
+			}
+		}
+
+		if(!alreadyExists) {
+			accessList.add(new RangerPolicyItemAccess(accessType));
+		}
+	}
+
 	private void updateSequences() {
 		daoMgr.getXXServiceDef().updateSequence();
 		daoMgr.getXXService().updateSequence();
