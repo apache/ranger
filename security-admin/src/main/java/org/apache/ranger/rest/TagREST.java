@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.file.TagFileStore;
 import org.apache.ranger.plugin.store.rest.ServiceRESTStore;
@@ -220,12 +220,12 @@ public class TagREST {
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
     //@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public RangerResource createResource(RangerResource resource) {
+    public RangerTaggedResource createResource(RangerTaggedResource resource) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.createResource(" + resource + ")");
         }
 
-        RangerResource ret;
+        RangerTaggedResource ret;
 
         try {
             //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
@@ -248,7 +248,7 @@ public class TagREST {
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "/{id}")
     @Produces({ "application/json", "application/xml" })
     //@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public RangerResource updateResource(@PathParam("id") Long id, RangerResource resource) {
+    public RangerTaggedResource updateResource(@PathParam("id") Long id, RangerTaggedResource resource) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.updateResource(" + id + ")");
         }
@@ -259,7 +259,7 @@ public class TagREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "resource id mismatch", true);
         }
 
-        RangerResource ret;
+        RangerTaggedResource ret;
 
         try {
             //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
@@ -283,14 +283,14 @@ public class TagREST {
     @Produces({ "application/json", "application/xml" })
     //@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 
-    public RangerResource updateResource(@PathParam("id") final Long id, @DefaultValue(TagRESTConstants.ACTION_ADD) @QueryParam(TagRESTConstants.ACTION_OP) String op, List<RangerResource.RangerResourceTag> resourceTagList) {
+    public RangerTaggedResource updateResource(@PathParam("id") final Long id, @DefaultValue(TagRESTConstants.ACTION_ADD) @QueryParam(TagRESTConstants.ACTION_OP) String op, List<RangerTaggedResource.RangerResourceTag> resourceTagList) {
 
-        RangerResource ret;
+        RangerTaggedResource ret;
 
         if (op.equals(TagRESTConstants.ACTION_ADD) ||
                 op.equals(TagRESTConstants.ACTION_REPLACE) ||
                 op.equals(TagRESTConstants.ACTION_DELETE)) {
-            RangerResource oldResource;
+            RangerTaggedResource oldResource;
             try {
                 oldResource = tagStore.getResource(id);
             } catch (Exception excp) {
@@ -298,7 +298,7 @@ public class TagREST {
 
                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
             }
-            List<RangerResource.RangerResourceTag> oldTagsAndValues = oldResource.getTags();
+            List<RangerTaggedResource.RangerResourceTag> oldTagsAndValues = oldResource.getTags();
 
             switch (op) {
                 case TagRESTConstants.ACTION_ADD:
@@ -360,12 +360,12 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "/{id}")
     @Produces({ "application/json", "application/xml" })
-    public RangerResource getResource(@PathParam("id") Long id) {
+    public RangerTaggedResource getResource(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getResource(" + id + ")");
         }
 
-        RangerResource ret;
+        RangerTaggedResource ret;
 
         try {
             ret = tagStore.getResource(id);
@@ -389,13 +389,13 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public List<RangerResource> getResources(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
+    public List<RangerTaggedResource> getResources(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
                                              @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getResources(" + tagServiceName + ", " + componentType + ")");
         }
 
-        List<RangerResource> ret = null;
+        List<RangerTaggedResource> ret = null;
 
         try {
             ret = tagStore.getResources(tagServiceName, componentType);
@@ -409,9 +409,9 @@ public class TagREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
         }
 
-        List<RangerResource> toBeFilteredOut = new ArrayList<RangerResource>();
+        List<RangerTaggedResource> toBeFilteredOut = new ArrayList<RangerTaggedResource>();
 
-        for (RangerResource rangerResource : ret) {
+        for (RangerTaggedResource rangerResource : ret) {
             if (CollectionUtils.isEmpty(rangerResource.getTags())) {
                 toBeFilteredOut.add(rangerResource);
             }
@@ -477,30 +477,29 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.RESOURCES_BY_SPEC_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public List<RangerResource> getResourcesBySpec(@QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) throws Exception {
-
+    public List<RangerTaggedResource> getResourcesBySpec(@QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) throws Exception {
         return null;
     }
 
     @PUT
     @Path(TagRESTConstants.RESOURCE_SET_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public String setResource(RangerResource rangerResource, String componentType) {
+    public String setResource(RangerTaggedResource rangerResource, String componentType) {
         return null;
     }
 
     @PUT
     @Path(TagRESTConstants.RESOURCES_SET_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public Map<String, RangerPolicy.RangerPolicyResource> setResources(List<RangerResource> resources, String componentType) {
+    public Map<String, RangerPolicy.RangerPolicyResource> setResources(List<RangerTaggedResource> resources, String componentType) {
         return null;
     }
 
     @PUT
     @Path(TagRESTConstants.RESOURCE_UPDATE_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public String updateResourceTags(RangerResource resource, String componentType, List<RangerResource.RangerResourceTag> tagsToAdd,
-                                 List<RangerResource.RangerResourceTag> tagsToDelete) {
+    public String updateResourceTags(RangerTaggedResource resource, String componentType, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
+                                 List<RangerTaggedResource.RangerResourceTag> tagsToDelete) {
         return null;
     }
 }

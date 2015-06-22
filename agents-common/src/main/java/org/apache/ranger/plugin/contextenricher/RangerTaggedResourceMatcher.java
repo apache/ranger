@@ -19,19 +19,19 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
 public class RangerTaggedResourceMatcher {
-	private final RangerResource rangerResource;
+	private final RangerTaggedResource rangerResource;
 	private final RangerPolicyResourceMatcher policyResourceMatcher;
 
-	public RangerTaggedResourceMatcher(final RangerResource rangerResource, RangerPolicyResourceMatcher policyResourceMatcher) {
+	public RangerTaggedResourceMatcher(final RangerTaggedResource rangerResource, RangerPolicyResourceMatcher policyResourceMatcher) {
 		this.rangerResource = rangerResource;
 		this.policyResourceMatcher = policyResourceMatcher;
 	}
 
-	public RangerResource getRangerResource() { return rangerResource; }
+	public RangerTaggedResource getRangerTaggedResource() { return rangerResource; }
 
 	public RangerPolicyResourceMatcher getPolicyResourceMatcher() { return policyResourceMatcher; }
 

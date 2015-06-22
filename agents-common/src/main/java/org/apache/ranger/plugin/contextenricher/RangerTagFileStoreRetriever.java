@@ -21,7 +21,7 @@ package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.store.file.TagFileStore;
 
 import java.util.List;
@@ -55,7 +55,7 @@ public class RangerTagFileStoreRetriever extends RangerTagRefresher {
 	@Override
 	public void retrieveTags() {
 		if (tagFileStore != null) {
-			List<RangerResource> resources = null;
+			List<RangerTaggedResource> resources = null;
 
 			try {
 				resources = tagFileStore.getResources(tagServiceName, componentType);
@@ -64,7 +64,7 @@ public class RangerTagFileStoreRetriever extends RangerTagRefresher {
 			}
 
 			if (receiver != null) {
-				receiver.setRangerResources(resources);
+				receiver.setRangerTaggedResources(resources);
 			} else {
 				LOG.error("RangerTagFileStoreRetriever.retrieveTags() - No receiver to send resources to !!");
 			}

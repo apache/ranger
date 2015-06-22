@@ -24,7 +24,7 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.PredicateUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 
@@ -127,8 +127,8 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 					return ret;
 				}
 
-				if (object instanceof RangerResource) {
-					RangerResource rangerResource = (RangerResource) object;
+				if (object instanceof RangerTaggedResource) {
+					RangerTaggedResource rangerResource = (RangerTaggedResource) object;
 
 					ret = StringUtils.equals(name, rangerResource.getTagServiceName());
 				}
@@ -159,8 +159,8 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 					return ret;
 				}
 
-				if (object instanceof RangerResource) {
-					RangerResource rangerResource = (RangerResource) object;
+				if (object instanceof RangerTaggedResource) {
+					RangerTaggedResource rangerResource = (RangerTaggedResource) object;
 
 					ret = StringUtils.equals(type, rangerResource.getComponentType());
 				}
@@ -190,8 +190,8 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 					return ret;
 				}
 
-				if (object instanceof RangerResource) {
-					RangerResource rangerResource = (RangerResource) object;
+				if (object instanceof RangerTaggedResource) {
+					RangerTaggedResource rangerResource = (RangerTaggedResource) object;
 
 					ret = StringUtils.equals(id, rangerResource.getId().toString());
 				}

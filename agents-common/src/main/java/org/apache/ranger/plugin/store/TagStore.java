@@ -20,7 +20,7 @@
 package org.apache.ranger.plugin.store;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 
@@ -51,21 +51,21 @@ public interface TagStore {
 
     PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception;
 
-    RangerResource createResource(RangerResource resource) throws Exception;
+    RangerTaggedResource createResource(RangerTaggedResource resource) throws Exception;
 
-    RangerResource updateResource(RangerResource resource) throws Exception;
+    RangerTaggedResource updateResource(RangerTaggedResource resource) throws Exception;
 
     void deleteResource(Long id) throws Exception;
 
-    RangerResource getResource(Long id) throws Exception;
+    RangerTaggedResource getResource(Long id) throws Exception;
 
-    public List<RangerResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception;
+    public List<RangerTaggedResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception;
 
-    List<RangerResource> getResources(String tagServiceName, String componentType) throws Exception;
+    List<RangerTaggedResource> getResources(String tagServiceName, String componentType) throws Exception;
 
-    List<RangerResource> getResources(SearchFilter filter) throws Exception;
+    List<RangerTaggedResource> getResources(SearchFilter filter) throws Exception;
 
-    PList<RangerResource> getPaginatedResources(SearchFilter filter) throws Exception;
+    PList<RangerTaggedResource> getPaginatedResources(SearchFilter filter) throws Exception;
 
     Set<String> getTags(String tagServiceName, String serviceType) throws Exception;
 

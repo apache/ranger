@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
@@ -290,12 +290,12 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerResource createResource(RangerResource resource) throws Exception {
+	public RangerTaggedResource createResource(RangerTaggedResource resource) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.createResource(" + resource + ")");
 		}
 
-		RangerResource existing = null;
+		RangerTaggedResource existing = null;
 		if (resource.getId() != null) {
 			existing = getResource(resource.getId());
 		}
@@ -304,13 +304,13 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception(resource.getId() + ": resource already exists (id=" + existing.getId() + ")");
 		}
 
-		List<RangerResource> existingResources = getResources(resource.getComponentType(), resource.getResourceSpec());
+		List<RangerTaggedResource> existingResources = getResources(resource.getComponentType(), resource.getResourceSpec());
 
 		if (CollectionUtils.isNotEmpty(existingResources)) {
 			throw new Exception("resource(s) with same specification already exists");
 		}
 
-		RangerResource ret;
+		RangerTaggedResource ret;
 
 		try {
 			preCreate(resource);
@@ -334,17 +334,17 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerResource updateResource(RangerResource resource) throws Exception {
+	public RangerTaggedResource updateResource(RangerTaggedResource resource) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.updateResource(" + resource + ")");
 		}
-		RangerResource existing = getResource(resource.getId());
+		RangerTaggedResource existing = getResource(resource.getId());
 
 		if (existing == null) {
 			throw new Exception(resource.getId() + ": resource does not exist (id=" + resource.getId() + ")");
 		}
 
-		RangerResource ret;
+		RangerTaggedResource ret;
 
 		try {
 			preUpdate(existing);
@@ -376,7 +376,7 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.deleteResource(" + id + ")");
 		}
 
-		RangerResource existing = getResource(id);
+		RangerTaggedResource existing = getResource(id);
 
 		if (existing == null) {
 			throw new Exception("no resource exists with ID=" + id);
@@ -400,16 +400,16 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerResource getResource(Long id) throws Exception {
+	public RangerTaggedResource getResource(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getResource(" + id + ")");
 		}
-		RangerResource ret;
+		RangerTaggedResource ret;
 
 		if (id != null) {
 			SearchFilter filter = new SearchFilter(SearchFilter.TAG_RESOURCE_ID, id.toString());
 
-			List<RangerResource> resources = getResources(filter);
+			List<RangerTaggedResource> resources = getResources(filter);
 
 			ret = CollectionUtils.isEmpty(resources) ? null : resources.get(0);
 		} else {
@@ -422,7 +422,7 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception {
+	public List<RangerTaggedResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getResources( " + componentType + " )");
 		}
@@ -432,7 +432,7 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception("TagFileStore.getResources() - TagFileStore object does not have reference to a valid ServiceStore.");
 		}
 
-		List<RangerResource> ret = null;
+		List<RangerTaggedResource> ret = null;
 		RangerServiceDef serviceDef = null;
 
 		try {
@@ -445,10 +445,11 @@ public class TagFileStore extends AbstractTagStore {
 		if (MapUtils.isNotEmpty(resourceSpec)) {
 
 			ret = getResources(null, componentType);
-			List<RangerResource> notMatchedResources = new ArrayList<>();
+
+			List<RangerTaggedResource> notMatchedResources = new ArrayList<>();
 
 			if (CollectionUtils.isNotEmpty(ret)) {
-				for (RangerResource resource : ret) {
+				for (RangerTaggedResource resource : ret) {
 
 					RangerDefaultPolicyResourceMatcher policyResourceMatcher =
 							new RangerDefaultPolicyResourceMatcher();
@@ -480,11 +481,11 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerResource> getResources(String tagServiceName, String componentType) throws Exception {
+	public List<RangerTaggedResource> getResources(String tagServiceName, String componentType) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getResources(" + tagServiceName + ", " + componentType + ")");
 		}
-		List<RangerResource> ret;
+		List<RangerTaggedResource> ret;
 
 		SearchFilter filter = new SearchFilter();
 
@@ -506,12 +507,12 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerResource> getResources(SearchFilter filter) throws Exception {
+	public List<RangerTaggedResource> getResources(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getResources()");
 		}
 
-		List<RangerResource> ret = getAllTaggedResources();
+		List<RangerTaggedResource> ret = getAllTaggedResources();
 
 		if (CollectionUtils.isNotEmpty(ret) && filter != null && !filter.isEmpty()) {
 			CollectionUtils.filter(ret, predicateUtil.getPredicate(filter));
@@ -576,23 +577,23 @@ public class TagFileStore extends AbstractTagStore {
 		return ret;
 	}
 
-	private List<RangerResource> getAllTaggedResources() throws Exception {
+	private List<RangerTaggedResource> getAllTaggedResources() throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getAllTaggedResources()");
 		}
 
-		List<RangerResource> ret = new ArrayList<RangerResource>();
+		List<RangerTaggedResource> ret = new ArrayList<RangerTaggedResource>();
 
 		try {
 			// load resource definitions from file system
-			List<RangerResource> resources = fileStoreUtil.loadFromDir(new Path(fileStoreUtil.getDataDir()), FILE_PREFIX_TAG_RESOURCE, RangerResource.class);
+			List<RangerTaggedResource> resources = fileStoreUtil.loadFromDir(new Path(fileStoreUtil.getDataDir()), FILE_PREFIX_TAG_RESOURCE, RangerTaggedResource.class);
 
 			if (CollectionUtils.isNotEmpty(resources)) {
-				for (RangerResource resource : resources) {
+				for (RangerTaggedResource resource : resources) {
 					if (resource != null) {
-						// if the RangerResource is already found, remove the earlier definition
+						// if the RangerTaggedResource is already found, remove the earlier definition
 						for (int i = 0; i < ret.size(); i++) {
-							RangerResource currResource = ret.get(i);
+							RangerTaggedResource currResource = ret.get(i);
 
 							if (ObjectUtils.equals(currResource.getId(), resource.getId())) {
 								ret.remove(i);
@@ -631,13 +632,13 @@ public class TagFileStore extends AbstractTagStore {
 
 		Set<String> ret = new HashSet<String>();
 
-		List<RangerResource> resources = getResources(tagServiceName, componentType);
+		List<RangerTaggedResource> resources = getResources(tagServiceName, componentType);
 		if (CollectionUtils.isNotEmpty(resources)) {
-			for (RangerResource resource : resources) {
-				List<RangerResource.RangerResourceTag> tags = resource.getTags();
+			for (RangerTaggedResource resource : resources) {
+				List<RangerTaggedResource.RangerResourceTag> tags = resource.getTags();
 
 				if (CollectionUtils.isNotEmpty(tags)) {
-					for (RangerResource.RangerResourceTag tag : tags) {
+					for (RangerTaggedResource.RangerResourceTag tag : tags) {
 						ret.add(tag.getName());
 					}
 				}

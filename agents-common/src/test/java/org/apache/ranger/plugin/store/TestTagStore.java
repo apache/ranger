@@ -126,7 +126,6 @@ public class TestTagStore {
 		}
 
 		fs.delete(filePath, true);
-
 		*/
 	}
 
@@ -134,11 +133,11 @@ public class TestTagStore {
 	public void testTagStore() throws Exception {
 
 		/*
-		List<RangerResource> taggedResources = tagStore.getResources(filter);
+		List<RangerTaggedResource> taggedResources = tagStore.getResources(filter);
 
 		int initResourceCount = taggedResources == null ? 0 : taggedResources.size();
 
-		RangerResource rr = new RangerResource();
+		RangerTaggedResource rr = new RangerTaggedResource();
 		rr.setComponentType("hive");
 		rr.setTagServiceName("tagdev");
 
@@ -158,14 +157,14 @@ public class TestTagStore {
 
 		rr.setResourceSpec(resourceSpec);
 
-		List<RangerResource.RangerResourceTag> tags = new ArrayList<>();
+		List<RangerTaggedResource.RangerResourceTag> tags = new ArrayList<>();
 
-		tags.add(new RangerResource.RangerResourceTag("PII", null));
-		tags.add(new RangerResource.RangerResourceTag("FINANCE", null));
+		tags.add(new RangerTaggedResource.RangerResourceTag("PII", null));
+		tags.add(new RangerTaggedResource.RangerResourceTag("FINANCE", null));
 
 		rr.setTags(tags);
 
-		RangerResource createdResource = tagStore.createResource(rr);
+		RangerTaggedResource createdResource = tagStore.createResource(rr);
 
 		assertNotNull("createResource() failed", createdResource);
 
@@ -178,6 +177,6 @@ public class TestTagStore {
 		resourceSpec.remove("column");
 		taggedResources = tagStore.getResources("hive", resourceSpec);
 		assertEquals("createResource() failed", initResourceCount, taggedResources == null ? 0 : taggedResources.size());
-*/
+		*/
 	}
 }

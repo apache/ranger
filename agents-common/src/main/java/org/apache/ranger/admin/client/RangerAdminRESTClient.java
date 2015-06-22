@@ -30,7 +30,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.model.RangerResource;
+
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
@@ -183,14 +184,15 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 	}
 
-	public  List<RangerResource> getTaggedResources(String componentType) throws Exception {
+
+	public  List<RangerTaggedResource> getTaggedResources(String componentType) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.getTaggedResources(" +  serviceName + ", " + componentType + "): ");
 		}
 
 		ParameterizedType parameterizedGenericType = new ParameterizedType() {
 			public Type[] getActualTypeArguments() {
-				return new Type[] { new RangerResource().getClass() };
+				return new Type[] { new RangerTaggedResource().getClass() };
 			}
 
 			public Type getRawType() {
@@ -202,11 +204,11 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			}
 		};
 
-		GenericType<List<RangerResource>> genericType = new GenericType<List<RangerResource>>(
+		GenericType<List<RangerTaggedResource>> genericType = new GenericType<List<RangerTaggedResource>>(
 				parameterizedGenericType) {
 		};
 
-		List<RangerResource> ret;
+		List<RangerTaggedResource> ret;
 
 		WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_GET_TAGGED_RESOURCES)
 				.queryParam(RangerRESTUtils.TAG_SERVICE_NAME_PARAM, serviceName)

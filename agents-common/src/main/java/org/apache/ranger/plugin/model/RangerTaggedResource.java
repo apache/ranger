@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.*;
 
 /**
- * This class represents a RangerResource including the service-type (such as hdfs, hive, etc.) in which it is supported.
+ * This class represents a RangerTaggedResource including the service-type (such as hdfs, hive, etc.) in which it is supported.
  * This implies that there is one-to-one mapping between service-type and the resource-type which is a valid assumption.
  * Service-type must be one of service-types supported by Ranger.
  *
@@ -43,7 +43,7 @@ import java.util.*;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 
-public class RangerResource extends RangerBaseModelObject {
+public class RangerTaggedResource extends RangerBaseModelObject {
     private static final long serialVersionUID = 1L;
 
     private String componentType                                                = null; // one of any supported by any component
@@ -51,7 +51,7 @@ public class RangerResource extends RangerBaseModelObject {
     private Map<String, RangerPolicy.RangerPolicyResource> resourceSpec         = null;
     private List<RangerResourceTag> tags                                        = null;
 
-    public RangerResource(String componentType, String tagServiceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec, List<RangerResourceTag> tags) {
+    public RangerTaggedResource(String componentType, String tagServiceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec, List<RangerResourceTag> tags) {
         super();
         setComponentType(componentType);
         setTagServiceName(tagServiceName);
@@ -59,7 +59,7 @@ public class RangerResource extends RangerBaseModelObject {
         setTags(tags);
     }
 
-    public RangerResource() {
+    public RangerTaggedResource() {
         this(null, null, null, null);
     }
 
@@ -112,7 +112,7 @@ public class RangerResource extends RangerBaseModelObject {
         sb.append("componentType={").append(componentType).append("} ");
         sb.append("tagServiceName={").append(tagServiceName).append("} ");
 
-        sb.append("RangerResource={");
+        sb.append("RangerTaggedResource={");
         if(resourceSpec != null) {
             for(Map.Entry<String, RangerPolicy.RangerPolicyResource> e : resourceSpec.entrySet()) {
                 sb.append(e.getKey()).append("={");

@@ -29,7 +29,7 @@ import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.policyengine.*;
 
 
@@ -209,10 +209,10 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 		if (contextObj != null) {
 			@SuppressWarnings("unchecked")
-			List<RangerResource.RangerResourceTag> resourceTags = (List<RangerResource.RangerResourceTag>) contextObj;
+			List<RangerTaggedResource.RangerResourceTag> resourceTags = (List<RangerTaggedResource.RangerResourceTag>) contextObj;
 
 			if (CollectionUtils.isNotEmpty(resourceTags)) {
-				for (RangerResource.RangerResourceTag resourceTag : resourceTags) {
+				for (RangerTaggedResource.RangerResourceTag resourceTag : resourceTags) {
 					tags.add(resourceTag.getName());
 				}
 			}

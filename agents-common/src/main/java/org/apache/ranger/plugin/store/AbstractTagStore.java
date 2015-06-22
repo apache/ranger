@@ -20,7 +20,7 @@
 package org.apache.ranger.plugin.store;
 
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 
@@ -114,10 +114,10 @@ public abstract class AbstractTagStore implements TagStore {
 				(long)list.size(), list.size(), filter.getSortType(), filter.getSortBy());
 	}
 
-	public PList<RangerResource> getPaginatedResources(SearchFilter filter) throws Exception {
-		List<RangerResource> list = getResources(filter);
+	public PList<RangerTaggedResource> getPaginatedResources(SearchFilter filter) throws Exception {
+		List<RangerTaggedResource> list = getResources(filter);
 
-		return new PList<RangerResource>(list, 0, list.size(),
+		return new PList<RangerTaggedResource>(list, 0, list.size(),
 				(long)list.size(), list.size(), filter.getSortType(), filter.getSortBy());
 	}
 

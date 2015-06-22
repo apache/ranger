@@ -30,7 +30,7 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 
@@ -88,9 +88,9 @@ public class RangerFileBasedTagProvider extends RangerAbstractContextEnricher {
 
 			if(!StringUtils.isEmpty(tagsJsonString) && context != null) {
 				try {
-					Type listType = new TypeToken<List<RangerResource.RangerResourceTag>>() {
+					Type listType = new TypeToken<List<RangerTaggedResource.RangerResourceTag>>() {
 					}.getType();
-					List<RangerResource.RangerResourceTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
+					List<RangerTaggedResource.RangerResourceTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
 
 					context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
 				} catch (Exception e) {

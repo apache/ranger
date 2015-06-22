@@ -23,7 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
@@ -91,7 +91,7 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 
 		List<RangerTaggedResourceMatcher> taggedResourceMatchersCopy = taggedResourceMatchers;
 
-		List<RangerResource.RangerResourceTag> matchedTags = findMatchingTags(request.getResource(), taggedResourceMatchersCopy);
+		List<RangerTaggedResource.RangerResourceTag> matchedTags = findMatchingTags(request.getResource(), taggedResourceMatchersCopy);
 
 		if (CollectionUtils.isNotEmpty(matchedTags)) {
 			request.getContext().put(RangerPolicyEngine.KEY_CONTEXT_TAGS, matchedTags);
@@ -110,20 +110,20 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 	}
 
 	@Override
-	public void setRangerResources(final List<RangerResource> resources) {
+	public void setRangerTaggedResources(final List<RangerTaggedResource> resources) {
 
 		List<RangerTaggedResourceMatcher> resourceMatchers = new ArrayList<RangerTaggedResourceMatcher>();
 
 		if (CollectionUtils.isNotEmpty(resources)) {
 
-			for (RangerResource taggedResource : resources) {
+			for (RangerTaggedResource taggedResource : resources) {
 				RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
 
 				matcher.setServiceDef(this.serviceDef);
 				matcher.setPolicyResources(taggedResource.getResourceSpec());
 
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerTagProvider.setRangerResources() - Initializing matcher with (resource=" + taggedResource
+					LOG.debug("RangerTagProvider.setRangerTaggedResources() - Initializing matcher with (resource=" + taggedResource
 							+ ", serviceDef=" + this.serviceDef.getName() + ")" );
 
 				}
@@ -142,25 +142,25 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 		}
 	}
 
-	static private List<RangerResource.RangerResourceTag> findMatchingTags(final RangerAccessResource resource, final List<RangerTaggedResourceMatcher> resourceMatchers) {
+	static private List<RangerTaggedResource.RangerResourceTag> findMatchingTags(final RangerAccessResource resource, final List<RangerTaggedResourceMatcher> resourceMatchers) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerTagProvider.findMatchingTags(" + resource + ")");
 		}
 
-		List<RangerResource.RangerResourceTag> ret = null;
+		List<RangerTaggedResource.RangerResourceTag> ret = null;
 
 		if (CollectionUtils.isNotEmpty(resourceMatchers)) {
 
 			for (RangerTaggedResourceMatcher resourceMatcher : resourceMatchers) {
 
-				RangerResource taggedResource = resourceMatcher.getRangerResource();
+				RangerTaggedResource taggedResource = resourceMatcher.getRangerTaggedResource();
 				RangerPolicyResourceMatcher matcher = resourceMatcher.getPolicyResourceMatcher();
 
 				boolean matchResult = matcher.isExactHeadMatch(resource);
 
 				if (matchResult) {
 					if (ret == null) {
-						ret = new ArrayList<RangerResource.RangerResourceTag>();
+						ret = new ArrayList<RangerTaggedResource.RangerResourceTag>();
 					}
 					ret.addAll(taggedResource.getTags());
 				}

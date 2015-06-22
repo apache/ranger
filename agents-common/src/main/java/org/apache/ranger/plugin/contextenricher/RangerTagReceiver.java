@@ -19,10 +19,10 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 
 import java.util.List;
 
 public interface RangerTagReceiver {
-	void setRangerResources(final List<RangerResource> resources);
+	void setRangerTaggedResources(final List<RangerTaggedResource> resources);
 }

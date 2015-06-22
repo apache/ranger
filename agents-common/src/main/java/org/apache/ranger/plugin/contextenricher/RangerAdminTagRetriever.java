@@ -23,7 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +73,7 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 	@Override
 	public void retrieveTags() {
 		if (rangerAdminRESTClient != null) {
-			List<RangerResource> resources = null;
+			List<RangerTaggedResource> resources = null;
 
 			try {
 				resources = rangerAdminRESTClient.getTaggedResources(componentType);
@@ -82,7 +82,7 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 			}
 
 			if (receiver != null && resources != null) {
-				receiver.setRangerResources(resources);
+				receiver.setRangerTaggedResources(resources);
 			} else {
 				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to !!");
 			}

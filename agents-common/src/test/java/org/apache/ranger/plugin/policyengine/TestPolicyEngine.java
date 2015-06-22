@@ -26,7 +26,7 @@ import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerResource;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -204,9 +204,9 @@ public class TestPolicyEngine {
 
 				if(!StringUtils.isEmpty(tagsJsonString)) {
 					try {
-						Type listType = new TypeToken<List<RangerResource.RangerResourceTag>>() {
+						Type listType = new TypeToken<List<RangerTaggedResource.RangerResourceTag>>() {
 						}.getType();
-						List<RangerResource.RangerResourceTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
+						List<RangerTaggedResource.RangerResourceTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
 
 						context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
 					} catch (Exception e) {
