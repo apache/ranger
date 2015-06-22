@@ -22,8 +22,15 @@ package org.apache.ranger.rest;
 public class TagRESTConstants {
 	public static final String TAGDEF_NAME_AND_VERSION = "tag-def/v1";
 	static final String TAGS_RESOURCE = "tags";
+	static final String TAGNAMES_RESOURCE = "tag-names";
 	static final String TAG_RESOURCE = "tag";
 	static final String RESOURCES_RESOURCE = "resources";
+	static final String RESOURCES_BY_SPEC_RESOURCE = "resources-by-spec";
+	static final String RESOURCE_SET_RESOURCE = "set-resource";
+	static final String RESOURCES_SET_RESOURCE = "set-resources";
+	static final String RESOURCE_UPDATE_RESOURCE = "update-resource";
+
+	static final String LOOKUP_TAGS_RESOURCE = "lookup-tags";
 	static final String RESOURCES_IF_UPDATED_RESOURCE = "resources";
 	static final String RESOURCE_RESOURCE = "resource";
 	static final String ACTION_SUB_RESOURCE = "update";
@@ -34,6 +41,7 @@ public class TagRESTConstants {
 
 	public static final String TAG_SERVICE_NAME_PARAM = "tagservicename";
 	public static final String COMPONENT_TYPE_PARAM = "componenttype";
+	public static final String TAG_PATTERN_PARAM = "tagpattern";
 
 
 

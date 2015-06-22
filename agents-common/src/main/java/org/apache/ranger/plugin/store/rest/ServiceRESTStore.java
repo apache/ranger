@@ -89,8 +89,11 @@ public class ServiceRESTStore extends AbstractServiceStore {
 	public void init() throws Exception {
 		String restUrl       = RangerConfiguration.getInstance().get("ranger.service.store.rest.url");
 		String sslConfigFile = RangerConfiguration.getInstance().get("ranger.service.store.rest.ssl.config.file");
+		String userName = RangerConfiguration.getInstance().get("ranger.service.store.rest.basicauth.username");
+		String password = RangerConfiguration.getInstance().get("ranger.service.store.rest.basicauth.password");
 
 		restClient = new RangerRESTClient(restUrl, sslConfigFile);
+		restClient.setBasicAuthInfo(userName, password);
 	}
 
 	@Override

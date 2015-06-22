@@ -21,17 +21,26 @@
 
 
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.plugin.model.RangerResource;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.ServicePolicies;
+
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 public class RangerAdminRESTClient implements RangerAdminClient {
@@ -159,4 +168,100 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		
 		return ret;
 	}
+
+	public void init(String serviceName, Map<String, String> configs) {
+		this.serviceName = serviceName;
+		// Get all configuration parameter to connect to DGI from configs
+		String url               = configs.get("URL");
+		String sslConfigFileName = configs.get("SSL_CONFIG_FILE_NAME");
+		String userName = configs.get("username");
+		String password = configs.get("password");
+
+		init(url, sslConfigFileName);
+		if (restClient != null) {
+			restClient.setBasicAuthInfo(userName, password);
+		}
+	}
+
+	public  List<RangerResource> getTaggedResources(String componentType) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getTaggedResources(" +  serviceName + ", " + componentType + "): ");
+		}
+
+		ParameterizedType parameterizedGenericType = new ParameterizedType() {
+			public Type[] getActualTypeArguments() {
+				return new Type[] { new RangerResource().getClass() };
+			}
+
+			public Type getRawType() {
+				return List.class;
+			}
+
+			public Type getOwnerType() {
+				return List.class;
+			}
+		};
+
+		GenericType<List<RangerResource>> genericType = new GenericType<List<RangerResource>>(
+				parameterizedGenericType) {
+		};
+
+		List<RangerResource> ret;
+
+		WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_GET_TAGGED_RESOURCES)
+				.queryParam(RangerRESTUtils.TAG_SERVICE_NAME_PARAM, serviceName)
+				.queryParam(RangerRESTUtils.COMPONENT_TYPE_PARAM, componentType);
+		ClientResponse response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
+
+		if(response != null && response.getStatus() == 200) {
+			ret = response.getEntity(genericType);
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("Error getting taggedResources. request=" + webResource.toString()
+					+ ", response=" + resp.toString() + ", serviceName=" + serviceName + ", componentType=" + componentType);
+			throw new Exception(resp.getMessage());
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getTaggedResources(" +  serviceName + ", " + componentType + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	public Set<String> getTagNames(String componentType, String tagNamePattern) throws Exception {
+		// TODO
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getTagNames(" +  serviceName + ", " + componentType
+					+ ", " + tagNamePattern + "): ");
+		}
+
+		Set<String> ret = null;
+
+		WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_LOOKUP_TAG_NAMES)
+				.queryParam(RangerRESTUtils.TAG_SERVICE_NAME_PARAM, serviceName)
+				.queryParam(RangerRESTUtils.TAG_PATTERN_PARAM, tagNamePattern);
+
+		if (StringUtils.isNotBlank(componentType)) {
+			webResource.queryParam(RangerRESTUtils.COMPONENT_TYPE_PARAM, componentType);
+		}
+
+		ClientResponse response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
+
+		if(response != null && response.getStatus() == 200) {
+			ret = (Set<String>)response.getEntity(Set.class);
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("Error getting taggedResources. request=" + webResource.toString()
+					+ ", response=" + resp.toString() + ", serviceName=" + serviceName + ", componentType=" + componentType);
+			throw new Exception(resp.getMessage());
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getTagNames(" +  serviceName + ", " + componentType + ", " + tagNamePattern + "): " + ret);
+		}
+
+		return ret;
+	}
+
 }

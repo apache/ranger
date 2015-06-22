@@ -219,6 +219,10 @@ public class ServiceMgr {
 							ret = (Class<RangerBaseService>)cls;
 
 							serviceTypeClassMap.put(serviceType, ret);
+
+							if(LOG.isDebugEnabled()) {
+								LOG.debug("ServiceMgr.getClassForServiceType(" + serviceType + "): service-class " + clsName + " added to cache");
+							}
 						} catch (Exception excp) {
 							LOG.warn("ServiceMgr.getClassForServiceType(" + serviceType + "): failed to find service-class '" + clsName + "'. Resource lookup will not be available", excp);
 							//Let's propagate the error

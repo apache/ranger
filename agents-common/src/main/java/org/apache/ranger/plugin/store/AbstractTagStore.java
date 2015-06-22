@@ -29,6 +29,24 @@ import java.util.List;
 import java.util.UUID;
 
 public abstract class AbstractTagStore implements TagStore {
+
+	protected ServiceStore svcStore;
+
+	@Override
+	public void init() throws Exception {
+
+		if (svcStore == null) {
+			throw new Exception("TagStore does not reference a valid ServiceStore");
+		}
+
+		svcStore.init();
+	}
+
+	@Override
+	final public void setServiceStore(ServiceStore svcStore) {
+		this.svcStore = svcStore;
+	}
+
 	protected void preCreate(RangerBaseModelObject obj) throws Exception {
 		obj.setId(0L);
 		obj.setGuid(UUID.randomUUID().toString());

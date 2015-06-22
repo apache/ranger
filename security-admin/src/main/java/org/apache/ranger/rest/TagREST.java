@@ -22,10 +22,13 @@ package org.apache.ranger.rest;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.file.TagFileStore;
+import org.apache.ranger.plugin.store.rest.ServiceRESTStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -37,6 +40,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Path(TagRESTConstants.TAGDEF_NAME_AND_VERSION)
 
@@ -52,12 +57,22 @@ public class TagREST {
 
     /*
     @Autowired
+    ServiceRESTStore svcStore;
+    */
+
+    @Autowired
+    ServiceDBStore svcStore;
+
+    /*
+    @Autowired
     TagFileStore tagStore;
     */
 
     private TagFileStore tagStore;
+
     public TagREST() {
         tagStore = TagFileStore.getInstance();
+        tagStore.setServiceStore(svcStore);
     }
 
     @POST
@@ -374,13 +389,13 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public List<RangerResource> getResources(@DefaultValue("") @QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
-                                             @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) {
+    public List<RangerResource> getResources(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
+                                             @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getResources(" + tagServiceName + ", " + componentType + ")");
         }
 
-        List<RangerResource> ret;
+        List<RangerResource> ret = null;
 
         try {
             ret = tagStore.getResources(tagServiceName, componentType);
@@ -408,5 +423,84 @@ public class TagREST {
         }
 
         return ret;
+    }
+    @GET
+    @Path(TagRESTConstants.TAGNAMES_RESOURCE)
+    @Produces({ "application/json", "application/xml" })
+    public Set<String> getTagNames(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
+                                   @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) {
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getTagNames(" + tagServiceName + ")");
+        }
+        Set<String> tagNames = null;
+
+        try {
+            tagNames = tagStore.getTags(tagServiceName, componentType);
+        } catch(Exception excp) {
+            LOG.error("getTags(" + tagServiceName + ") failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getTagNames(" + tagServiceName + ")");
+        }
+        return tagNames;
+    }
+
+    @GET
+    @Path(TagRESTConstants.LOOKUP_TAGS_RESOURCE)
+    @Produces({ "application/json", "application/xml" })
+    public Set<String> lookupTags(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
+                                  @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType,
+                                    @DefaultValue(".*") @QueryParam(TagRESTConstants.TAG_PATTERN_PARAM) String tagNamePattern) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.lookupTags(" + tagServiceName  + ", " + tagNamePattern + ")");
+        }
+        Set<String> matchingTagNames = null;
+
+        try {
+            matchingTagNames = tagStore.lookupTags(tagServiceName, componentType, tagNamePattern);
+        } catch(Exception excp) {
+            LOG.error("lookupTags(" + tagServiceName + ") failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.lookupTags(" + tagServiceName + ")");
+        }
+        return matchingTagNames;
+    }
+
+    @GET
+    @Path(TagRESTConstants.RESOURCES_BY_SPEC_RESOURCE)
+    @Produces({ "application/json", "application/xml" })
+    public List<RangerResource> getResourcesBySpec(@QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) throws Exception {
+
+        return null;
+    }
+
+    @PUT
+    @Path(TagRESTConstants.RESOURCE_SET_RESOURCE)
+    @Produces({ "application/json", "application/xml" })
+    public String setResource(RangerResource rangerResource, String componentType) {
+        return null;
+    }
+
+    @PUT
+    @Path(TagRESTConstants.RESOURCES_SET_RESOURCE)
+    @Produces({ "application/json", "application/xml" })
+    public Map<String, RangerPolicy.RangerPolicyResource> setResources(List<RangerResource> resources, String componentType) {
+        return null;
+    }
+
+    @PUT
+    @Path(TagRESTConstants.RESOURCE_UPDATE_RESOURCE)
+    @Produces({ "application/json", "application/xml" })
+    public String updateResourceTags(RangerResource resource, String componentType, List<RangerResource.RangerResourceTag> tagsToAdd,
+                                 List<RangerResource.RangerResourceTag> tagsToDelete) {
+        return null;
     }
 }

@@ -19,11 +19,14 @@
 
 package org.apache.ranger.plugin.store;
 
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface to backing store for the top-level TAG model objects
@@ -31,6 +34,8 @@ import java.util.List;
 
 public interface TagStore {
     void init() throws Exception;
+
+    void setServiceStore(ServiceStore svcStore);
 
     RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception;
 
@@ -54,10 +59,15 @@ public interface TagStore {
 
     RangerResource getResource(Long id) throws Exception;
 
+    public List<RangerResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception;
+
     List<RangerResource> getResources(String tagServiceName, String componentType) throws Exception;
 
     List<RangerResource> getResources(SearchFilter filter) throws Exception;
 
     PList<RangerResource> getPaginatedResources(SearchFilter filter) throws Exception;
 
+    Set<String> getTags(String tagServiceName, String serviceType) throws Exception;
+
+    Set<String> lookupTags(String tagServiceName, String serviceType, String tagNamePattern) throws Exception;
 }

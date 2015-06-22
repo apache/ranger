@@ -42,5 +42,7 @@ public interface RangerPolicyResourceMatcher {
 
 	boolean isExactHeadMatch(RangerAccessResource resource);
 
+	boolean isSingleAndExactMatch(Map<String, RangerPolicyResource> resources);
+
 	StringBuilder toString(StringBuilder sb);
 }

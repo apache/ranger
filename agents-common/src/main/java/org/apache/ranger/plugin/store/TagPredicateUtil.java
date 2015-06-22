@@ -32,11 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TagPredicateUtil extends AbstractPredicateUtil {
-	private TagStore tagStore = null;
-	public TagPredicateUtil(TagStore tagStore) {
-		super();
-		this.tagStore = tagStore;
-	}
+
+	public TagPredicateUtil() { super(); }
 
 	@Override
 	public void addPredicates(SearchFilter filter, List<Predicate> predicates) {

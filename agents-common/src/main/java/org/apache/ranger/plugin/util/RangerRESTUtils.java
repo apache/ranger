@@ -40,6 +40,14 @@ public class RangerRESTUtils {
 	public static final String REST_URL_SERVICE_GRANT_ACCESS              = "/service/plugins/services/grant/";
 	public static final String REST_URL_SERVICE_REVOKE_ACCESS             = "/service/plugins/services/revoke/";
 
+	public static final String REST_URL_GET_TAGGED_RESOURCES = "/service/tag-def/v1/resources";
+	public static final String TAG_SERVICE_NAME_PARAM = "tagservicename";
+	public static final String COMPONENT_TYPE_PARAM = "componenttype";
+	public static final String TAG_PATTERN_PARAM = "tagpattern";
+
+	public static final String REST_URL_GET_TAG_NAMES = "/service/tag-def/v1/tag-names";
+	public static final String REST_URL_LOOKUP_TAG_NAMES = "/service/tag-def/v1/lookup-tags";
+
 	public static final String REST_EXPECTED_MIME_TYPE = "application/json" ;
 	public static final String REST_MIME_TYPE_JSON     = "application/json" ;
 

@@ -499,4 +499,57 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 		return ret;
 	}
 
+	@Override
+	public boolean isSingleAndExactMatch(Map<String, RangerPolicyResource> resources) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyResourceMatcher.isSingleAndExactMatch(" + resources + ")");
+		}
+
+		boolean ret = false;
+
+		if(serviceDef != null && serviceDef.getResources() != null) {
+			Collection<String> resourceKeys = resources == null ? null : resources.keySet();
+			Collection<String> policyKeys   = matchers == null ? null : matchers.keySet();
+
+			boolean keysMatch = false;
+
+			if (resourceKeys != null && policyKeys != null) {
+				keysMatch = CollectionUtils.isEqualCollection(resourceKeys, policyKeys);
+			}
+
+			if(keysMatch) {
+				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+					String                resourceName   = resourceDef.getName();
+					RangerPolicyResource  resourceValues = resources == null ? null : resources.get(resourceName);
+					RangerResourceMatcher matcher        = matchers == null ? null : matchers.get(resourceName);
+
+					if(resourceValues == null || CollectionUtils.isEmpty(resourceValues.getValues())) {
+						ret = matcher == null;
+					} else if(matcher != null) {
+						for(String resourceValue : resourceValues.getValues()) {
+							ret = matcher.isMatch(resourceValue);
+
+							if(! ret) {
+								break;
+							}
+						}
+					}
+
+					if(! ret) {
+						break;
+					}
+				}
+			} else {
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("isSingleAndExactMatch(): keysMatch=false. resourceKeys=" + resourceKeys + "; policyKeys=" + policyKeys);
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyResourceMatcher.isSingleAndExactMatch(" + resources + "): " + ret);
+		}
+
+		return ret;
+	}
 }
