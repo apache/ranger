@@ -1078,6 +1078,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMap = xConfMapDao.create(xConfMap);
 		}
 		RangerService createdService = svcService.getPopulatedViewObject(xCreatedService);
+
+		if (createdService == null) {
+			throw restErrorUtil.createRESTException("Could not create service - Internal error ", MessageEnums.ERROR_CREATING_OBJECT);
+		}
+
 		dataHistService.createObjectDataHistory(createdService, RangerDataHistService.ACTION_CREATE);
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(createdService,
@@ -1760,7 +1765,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	private void createDefaultPolicies(XXService createdService, VXUser vXUser) throws Exception {
+	void createDefaultPolicies(XXService createdService, VXUser vXUser) throws Exception {
 		// we need to create one policy for each resource hierarchy
 		RangerServiceDef serviceDef = getServiceDef(createdService.getType());
 		RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
@@ -1768,7 +1773,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies()) {
 			createDefaultPolicy(createdService, vXUser, aHierarchy, i);
 			i++;
-		}
+		};
 	}
 
 	private void createDefaultPolicy(XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy, int num) throws Exception {

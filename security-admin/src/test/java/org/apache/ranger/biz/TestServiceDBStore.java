@@ -1170,10 +1170,6 @@ public class TestServiceDBStore {
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
 				.mock(XXServiceConfigDefDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		XXService xService2 = new XXService();
-		xService2.setId(1L);
-		xService2.setName("Test");
-		xService2.setType(1L);
 		XXUser xUser = Mockito.mock(XXUser.class);
 
 		RangerService rangerService = rangerService();
@@ -1213,9 +1209,6 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
-		Mockito.when(xServiceDao.getById(Mockito.anyLong())).thenReturn(xService2);		
-
 		Mockito.when(
 				rangerAuditFields.populateAuditFields(
 						Mockito.isA(XXServiceConfigMap.class),
@@ -1224,8 +1217,12 @@ public class TestServiceDBStore {
 		RangerServiceDef ran = new RangerServiceDef();
 		ran.setName("Test");
 		Mockito.when(serviceDefService.read(1L)).thenReturn(ran);
-		
-		serviceDBStore.createService(rangerService);
+
+		ServiceDBStore spy = Mockito.spy(serviceDBStore);
+
+		Mockito.doNothing().when(spy).createDefaultPolicies(xService, vXUser);
+
+		spy.createService(rangerService);
 		
 		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXService();
 		Mockito.verify(daoManager).getXXServiceConfigMap();
