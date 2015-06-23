@@ -477,14 +477,16 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 		auditEvent = super.getAuthzEvents(result);
 
-		RangerAccessRequest  request      = result.getAccessRequest();
-		RangerAccessResource resource     = request.getResource();
-		String               resourcePath = resource != null ? resource.getAsString() : null;
+		if (auditEvent != null) {
+			RangerAccessRequest request = result.getAccessRequest();
+			RangerAccessResource resource = request.getResource();
+			String resourcePath = resource != null ? resource.getAsString() : null;
 
-		auditEvent.setEventTime(request.getAccessTime());
-		auditEvent.setAccessType(request.getAction());
-		auditEvent.setResourcePath(this.pathToBeValidated);
-		auditEvent.setResultReason(resourcePath);
+			auditEvent.setEventTime(request.getAccessTime());
+			auditEvent.setAccessType(request.getAction());
+			auditEvent.setResourcePath(this.pathToBeValidated);
+			auditEvent.setResultReason(resourcePath);
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerHdfsAuditHandler.logAudit(" + result + "): " + auditEvent);
@@ -496,11 +498,13 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 			LOG.debug("==> RangerHdfsAuditHandler.logHadoopEvent(" + path + ", " + action + ", " + accessGranted + ")");
 		}
 
-		auditEvent.setResultReason(path);
-		auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
-		auditEvent.setAccessType(action == null ? null : action.toString());
-		auditEvent.setAclEnforcer(HadoopModuleName);
-		auditEvent.setPolicyId(-1);
+		if(auditEvent != null) {
+			auditEvent.setResultReason(path);
+			auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
+			auditEvent.setAccessType(action == null ? null : action.toString());
+			auditEvent.setAclEnforcer(HadoopModuleName);
+			auditEvent.setPolicyId(-1);
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerHdfsAuditHandler.logHadoopEvent(" + path + ", " + action + ", " + accessGranted + "): " + auditEvent);
@@ -512,7 +516,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 			LOG.debug("==> RangerHdfsAuditHandler.flushAudit(" + isAuditEnabled + ", " + auditEvent + ")");
 		}
 
-		if(isAuditEnabled && !StringUtils.isEmpty(auditEvent.getAccessType())) {
+		if(isAuditEnabled && auditEvent != null && !StringUtils.isEmpty(auditEvent.getAccessType())) {
 			String username = auditEvent.getUser();
 
 			boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username)) ;
