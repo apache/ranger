@@ -190,6 +190,7 @@ class OracleConf(BaseDB):
 		#path = os.getcwd()
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+                self.JAVA_BIN = self.JAVA_BIN + " -Djava.security.egd=file:///dev/urandom "
 		if os_name == "LINUX":
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, self.host, user, password)
 		elif os_name == "WINDOWS":

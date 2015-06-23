@@ -333,10 +333,13 @@ class OracleConf(BaseDB):
 	def get_jisql_cmd(self, user, password):
 		#TODO: User array for forming command
 		path = RANGER_ADMIN_HOME
+                #print "self.JAVA_BIN=" + self.JAVA_BIN
+                self.JAVA_BIN = self.JAVA_BIN + " -Djava.security.egd=file:///dev/urandom "
 		if os_name == "LINUX":
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, self.host, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u %s -p %s -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, user, password)
+                #print jisql_cmd
 		return jisql_cmd
 
 	def check_connection(self, db_name, db_user, db_password):
