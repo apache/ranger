@@ -429,9 +429,6 @@ CREATE INDEX x_user_FK_upd_by_id ON x_user (upd_by_id);
 CREATE INDEX x_user_FK_cred_store_id ON x_user (cred_store_id);
 CREATE INDEX x_user_cr_time ON x_user (create_time);
 CREATE INDEX x_user_up_time ON  x_user(update_time);
-
-CREATE OR REPLACE PUBLIC SYNONYM xa_access_audit FOR xa_access_audit;
-CREATE OR REPLACE PUBLIC SYNONYM XA_ACCESS_AUDIT_SEQ FOR XA_ACCESS_AUDIT_SEQ;
 commit;
 insert into x_portal_user (
        id,CREATE_TIME, UPDATE_TIME,
