@@ -51,7 +51,8 @@ public class RangerTimeOfDayMatcherTest {
 		String[] durations = new String[] { 
 				"9am-5pm", " 9Am -5 Pm", " 9Am -5 Pm", "9 AM -5 p.m.", "9a.M - 5Pm.",
 				"9:30am-5:30pm", " 9:00Am -5:59 Pm",
-				"   9   am   -  4 pm  ", "9pm-5AM"
+				"   9   am   -  4 pm  ", "9pm-5AM",
+				"11am-12pm", "11pm-12am", "12am-12pm", "12pm-12am"
 		};
 		check(durations, true);
 	}
@@ -101,6 +102,10 @@ public class RangerTimeOfDayMatcherTest {
 				{ "9:30AM - 5:15pm", "9", "30", "A", "5", "15", "p" },
 				{ "9:30 AM - 5:15 p.m.", "9", "30", "A", "5", "15", "p" },
 				{ "9pm-5am", "9", null, "p", "5", null, "a"},
+				{ "11am-12pm", "11", null, "a", "12", null, "p" },
+				{ "11pm-12am", "11", null, "p", "12", null, "a" },
+				{ "12am-12pm", "12", null, "a", "12", null, "p" },
+				{ "12pm-12am", "12", null, "p", "12", null, "a" },
 		};
 		checkGroups(input);
 	}
@@ -126,6 +131,10 @@ public class RangerTimeOfDayMatcherTest {
 				{ "9am-5pm", true, 9*60, (12+5)*60 },
 				{ "1 PM - 10P.M.", true, (12+1)*60, (12+10)*60 },
 				{ "1PM - 9AM", true, (12+1)*60, 9*60 },
+				{ "11am-12pm", true, 11*60, 12*60 },
+				{ "11pm-12am", true, (12+11)*60, 0*60 },
+				{ "12am-12pm", true, 0*60, 12*60 },
+				{ "12pm-12am", true, 12*60, 0*60 },
 				{ "1PM", false, null, null }, // illegal patterns should come back as null, too
 		};
 		for (Object[] data: input) {
@@ -202,6 +211,50 @@ public class RangerTimeOfDayMatcherTest {
 				{23, 0, true },
 		};
 		
+		RangerAccessRequest request = mock(RangerAccessRequest.class);
+		for (Object[] data : input) {
+			int hour = (int)data[0];
+			int minute = (int)data[1];
+			Calendar c = new GregorianCalendar(2015, Calendar.APRIL, 1, hour, minute);
+			Date aDate = c.getTime();
+			when(request.getAccessTime()).thenReturn(aDate);
+			boolean matchExpected = (boolean)data[2];
+			if (matchExpected) {
+				assertTrue("" + hour, matcher.isMatched(request));
+			} else {
+				assertFalse("" + hour, matcher.isMatched(request));
+			}
+		}
+	}
+
+	@Test
+	public void test_end2end_happyPath_12_oClock() {
+		RangerPolicyItemCondition itemCondition = mock(RangerPolicyItemCondition.class);
+		when(itemCondition.getValues()).thenReturn(Arrays.asList("12am-1am", "11am-12pm", "12pm-1pm", "11pm-12am"));
+
+		RangerTimeOfDayMatcher matcher = new RangerTimeOfDayMatcher();
+		matcher.setConditionDef(null);
+		matcher.setPolicyItemCondition(itemCondition);
+		matcher.init();
+
+		Object[][] input = new Object[][] {
+				{ 0, 00, true },
+				{ 0, 01, true },
+				{ 1, 00, true },
+				{ 1, 01, false },
+				{ 10, 59, false },
+				{ 11, 00, true },
+				{ 11, 59, true },
+				{ 12, 00, true },
+				{ 12, 01, true },
+				{ 12, 59, true },
+				{ 13, 00, true },
+				{ 13, 01, false },
+				{22, 59, false },
+				{23, 0, true },
+				{23, 59, true },
+		};
+
 		RangerAccessRequest request = mock(RangerAccessRequest.class);
 		for (Object[] data : input) {
 			int hour = (int)data[0];
