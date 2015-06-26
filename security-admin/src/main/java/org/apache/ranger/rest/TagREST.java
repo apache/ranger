@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.file.TagFileStore;
@@ -386,6 +387,8 @@ public class TagREST {
         return ret;
     }
 
+    // This API is typically used by plug-in to get all tagged resources from RangerAdmin
+
     @GET
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
@@ -424,6 +427,10 @@ public class TagREST {
 
         return ret;
     }
+
+    // This API is typically used by GUI to get all available tags from RangerAdmin Can be used to validate configuration
+    // parameters of a tag-service
+
     @GET
     @Path(TagRESTConstants.TAGNAMES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
@@ -448,6 +455,9 @@ public class TagREST {
         }
         return tagNames;
     }
+
+    // This API is typically used by GUI to help lookup available tags from RangerAdmin to help tag-policy writer. It
+    // may also be used to validate configuration parameters of a tag-service
 
     @GET
     @Path(TagRESTConstants.LOOKUP_TAGS_RESOURCE)
@@ -474,10 +484,12 @@ public class TagREST {
         return matchingTagNames;
     }
 
+    // The following APIs will be typically used by tag-sync module
+
     @GET
-    @Path(TagRESTConstants.RESOURCES_BY_SPEC_RESOURCE)
+    @Path(TagRESTConstants.RESOURCES_ALL_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public List<RangerTaggedResource> getResourcesBySpec(@QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) throws Exception {
+    public List<RangerTaggedResource> getAllTaggedResources() throws Exception {
         return null;
     }
 
@@ -491,7 +503,7 @@ public class TagREST {
     @PUT
     @Path(TagRESTConstants.RESOURCES_SET_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public Map<String, RangerPolicy.RangerPolicyResource> setResources(List<RangerTaggedResource> resources, String componentType) {
+    public Map<String, RangerTaggedResource> setResources(List<RangerTaggedResource> resources, String componentType) {
         return null;
     }
 

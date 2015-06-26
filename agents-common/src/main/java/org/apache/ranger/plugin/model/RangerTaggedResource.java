@@ -46,50 +46,28 @@ import java.util.*;
 public class RangerTaggedResource extends RangerBaseModelObject {
     private static final long serialVersionUID = 1L;
 
-    private String componentType                                                = null; // one of any supported by any component
-    private String tagServiceName                                               = null;
-    private Map<String, RangerPolicy.RangerPolicyResource> resourceSpec         = null;
-    private List<RangerResourceTag> tags                                        = null;
+    private RangerTaggedResourceKey          key;
+    private List<RangerResourceTag> tags;
 
-    public RangerTaggedResource(String componentType, String tagServiceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec, List<RangerResourceTag> tags) {
-        super();
-        setComponentType(componentType);
-        setTagServiceName(tagServiceName);
-        setResourceSpec(resourceSpec);
+    public RangerTaggedResource(RangerTaggedResourceKey key, List<RangerResourceTag> tags) {
+        setKey(key);
         setTags(tags);
     }
 
     public RangerTaggedResource() {
-        this(null, null, null, null);
+        this(null, null);
     }
 
-    public String getComponentType() {
-        return componentType;
-    }
-
-    public String getTagServiceName() {
-        return tagServiceName;
-    }
-
-    public Map<String, RangerPolicy.RangerPolicyResource> getResourceSpec() {
-        return resourceSpec;
-    }
+    public RangerTaggedResourceKey getKey() { return key; }
 
     public List<RangerResourceTag> getTags() {
         return tags;
     }
 
     // And corresponding set methods
-    public void setComponentType(String componentType) {
-        this.componentType = componentType;
-    }
 
-    public void setTagServiceName(String tagServiceName) {
-        this.tagServiceName = tagServiceName;
-    }
-
-    public void setResourceSpec(Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
-        this.resourceSpec = resourceSpec == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resourceSpec;
+    public void setKey(RangerTaggedResourceKey key) {
+        this.key = key == null ? new RangerTaggedResourceKey() : key;
     }
 
     public void setTags(List<RangerResourceTag> tags) {
@@ -109,16 +87,9 @@ public class RangerTaggedResource extends RangerBaseModelObject {
 
         sb.append("{ ");
 
-        sb.append("componentType={").append(componentType).append("} ");
-        sb.append("tagServiceName={").append(tagServiceName).append("} ");
-
-        sb.append("RangerTaggedResource={");
-        if(resourceSpec != null) {
-            for(Map.Entry<String, RangerPolicy.RangerPolicyResource> e : resourceSpec.entrySet()) {
-                sb.append(e.getKey()).append("={");
-                e.getValue().toString(sb);
-                sb.append("} ");
-            }
+        sb.append("key={");
+        if (key != null) {
+            key.toString(sb);
         }
         sb.append("} ");
 
@@ -164,12 +135,16 @@ public class RangerTaggedResource extends RangerBaseModelObject {
         public String getName() {
             return name;
         }
+
         public void setName(String name) { this.name = name; }
 
         public Map<String, String> getAttributeValues() {
             return attributeValues;
         }
-        public void setAttributeValues(Map<String, String> attributeValues) { this.attributeValues = attributeValues; }
+
+        public void setAttributeValues(Map<String, String> attributeValues) {
+            this.attributeValues = attributeValues == null ? new HashMap<String, String>() : attributeValues;
+        }
 
         @Override
         public String toString( ) {

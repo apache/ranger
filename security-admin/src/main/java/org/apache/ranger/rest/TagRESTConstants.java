@@ -25,10 +25,10 @@ public class TagRESTConstants {
 	static final String TAGNAMES_RESOURCE = "tag-names";
 	static final String TAG_RESOURCE = "tag";
 	static final String RESOURCES_RESOURCE = "resources";
-	static final String RESOURCES_BY_SPEC_RESOURCE = "resources-by-spec";
 	static final String RESOURCE_SET_RESOURCE = "set-resource";
 	static final String RESOURCES_SET_RESOURCE = "set-resources";
 	static final String RESOURCE_UPDATE_RESOURCE = "update-resource";
+	static final String RESOURCES_ALL_RESOURCE = "all-resources";
 
 	static final String LOOKUP_TAGS_RESOURCE = "lookup-tags";
 	static final String RESOURCES_IF_UPDATED_RESOURCE = "resources";

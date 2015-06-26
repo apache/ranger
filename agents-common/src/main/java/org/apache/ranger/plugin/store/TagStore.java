@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.store;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -59,8 +60,6 @@ public interface TagStore {
 
     RangerTaggedResource getResource(Long id) throws Exception;
 
-    public List<RangerTaggedResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception;
-
     List<RangerTaggedResource> getResources(String tagServiceName, String componentType) throws Exception;
 
     List<RangerTaggedResource> getResources(SearchFilter filter) throws Exception;
@@ -70,4 +69,7 @@ public interface TagStore {
     Set<String> getTags(String tagServiceName, String serviceType) throws Exception;
 
     Set<String> lookupTags(String tagServiceName, String serviceType, String tagNamePattern) throws Exception;
+
+    //List<RangerTaggedResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception;
+    List<RangerTaggedResource> getResources(RangerTaggedResourceKey key) throws Exception;
 }

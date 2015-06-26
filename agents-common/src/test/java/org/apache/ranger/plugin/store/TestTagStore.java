@@ -90,7 +90,6 @@ public class TestTagStore {
 		tagStore.setServiceStore(new ServiceRESTStore());
 		tagStore.init();
 		*/
-
 	}
 
 	//@AfterClass
@@ -138,8 +137,8 @@ public class TestTagStore {
 		int initResourceCount = taggedResources == null ? 0 : taggedResources.size();
 
 		RangerTaggedResource rr = new RangerTaggedResource();
-		rr.setComponentType("hive");
-		rr.setTagServiceName("tagdev");
+		rr.getKey().setComponentType("hive");
+		rr.getKey().setTagServiceName("tagdev");
 
 		Map<String, RangerPolicyResource> resourceSpec = new HashMap<>();
 
@@ -155,7 +154,7 @@ public class TestTagStore {
 		policyResource.setValues(Arrays.asList("column1", "ssn", "vendor"));
 		resourceSpec.put("column", policyResource);
 
-		rr.setResourceSpec(resourceSpec);
+		rr.getKey().setResourceSpec(resourceSpec);
 
 		List<RangerTaggedResource.RangerResourceTag> tags = new ArrayList<>();
 
@@ -171,11 +170,11 @@ public class TestTagStore {
 		taggedResources = tagStore.getResources(filter);
 		assertEquals("createResource() failed", initResourceCount + 1, taggedResources == null ? 0 : taggedResources.size());
 
-		taggedResources = tagStore.getResources("hive", resourceSpec);
+		taggedResources = tagStore.getResources(rr.getKey());
 		assertEquals("createResource() failed", initResourceCount + 1, taggedResources == null ? 0 : taggedResources.size());
 
-		resourceSpec.remove("column");
-		taggedResources = tagStore.getResources("hive", resourceSpec);
+		rr.getKey().getResourceSpec().remove("column");
+		taggedResources = tagStore.getResources(rr.getKey());
 		assertEquals("createResource() failed", initResourceCount, taggedResources == null ? 0 : taggedResources.size());
 		*/
 	}

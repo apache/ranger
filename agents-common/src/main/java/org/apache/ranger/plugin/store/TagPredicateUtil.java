@@ -130,7 +130,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 				if (object instanceof RangerTaggedResource) {
 					RangerTaggedResource rangerResource = (RangerTaggedResource) object;
 
-					ret = StringUtils.equals(name, rangerResource.getTagServiceName());
+					ret = StringUtils.equals(name, rangerResource.getKey().getTagServiceName());
 				}
 
 				return ret;
@@ -162,7 +162,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 				if (object instanceof RangerTaggedResource) {
 					RangerTaggedResource rangerResource = (RangerTaggedResource) object;
 
-					ret = StringUtils.equals(type, rangerResource.getComponentType());
+					ret = StringUtils.equals(type, rangerResource.getKey().getComponentType());
 				}
 
 				return ret;

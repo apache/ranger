@@ -27,10 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.AbstractTagStore;
@@ -304,7 +301,7 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception(resource.getId() + ": resource already exists (id=" + existing.getId() + ")");
 		}
 
-		List<RangerTaggedResource> existingResources = getResources(resource.getComponentType(), resource.getResourceSpec());
+		List<RangerTaggedResource> existingResources = getResources(resource.getKey());
 
 		if (CollectionUtils.isNotEmpty(existingResources)) {
 			throw new Exception("resource(s) with same specification already exists");
@@ -349,9 +346,9 @@ public class TagFileStore extends AbstractTagStore {
 		try {
 			preUpdate(existing);
 
-			existing.setComponentType(resource.getComponentType());
-			existing.setResourceSpec(resource.getResourceSpec());
-			existing.setTagServiceName(resource.getTagServiceName());
+			existing.getKey().setComponentType(resource.getKey().getComponentType());
+			existing.getKey().setResourceSpec(resource.getKey().getResourceSpec());
+			existing.getKey().setTagServiceName(resource.getKey().getTagServiceName());
 			existing.setTags(resource.getTags());
 
 			ret = fileStoreUtil.saveToFile(existing, new Path(fileStoreUtil.getDataFile(FILE_PREFIX_TAG_RESOURCE, existing.getId())), true);
@@ -422,9 +419,10 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerTaggedResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception {
+	public List<RangerTaggedResource> getResources(RangerTaggedResourceKey key) throws Exception {
+
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getResources( " + componentType + " )");
+			LOG.debug("==> TagFileStore.getResources( " + key.getTagServiceName() + ", " + key.getComponentType() + " )");
 		}
 
 		if (this.svcStore == null) {
@@ -436,16 +434,15 @@ public class TagFileStore extends AbstractTagStore {
 		RangerServiceDef serviceDef = null;
 
 		try {
-			serviceDef = svcStore.getServiceDefByName(componentType);
+			serviceDef = svcStore.getServiceDefByName(key.getComponentType());
 		} catch (Exception exception) {
-			LOG.error("TagFileStore.getResource - failed to get serviceDef for " + componentType);
-			throw new Exception("Invalid component-type: " + componentType);
+			LOG.error("TagFileStore.getResource - failed to get serviceDef for " + key.getComponentType());
+			throw new Exception("Invalid component-type: " + key.getComponentType());
 		}
 
-		if (MapUtils.isNotEmpty(resourceSpec)) {
+		if (MapUtils.isNotEmpty(key.getResourceSpec())) {
 
-			ret = getResources(null, componentType);
-
+			ret = getResources(key.getTagServiceName(), key.getComponentType());
 			List<RangerTaggedResource> notMatchedResources = new ArrayList<>();
 
 			if (CollectionUtils.isNotEmpty(ret)) {
@@ -454,13 +451,13 @@ public class TagFileStore extends AbstractTagStore {
 					RangerDefaultPolicyResourceMatcher policyResourceMatcher =
 							new RangerDefaultPolicyResourceMatcher();
 
-					policyResourceMatcher.setPolicyResources(resource.getResourceSpec());
+					policyResourceMatcher.setPolicyResources(resource.getKey().getResourceSpec());
 
 					policyResourceMatcher.setServiceDef(serviceDef);
 
 					policyResourceMatcher.init();
 
-					boolean isMatch = policyResourceMatcher.isSingleAndExactMatch(resourceSpec);
+					boolean isMatch = policyResourceMatcher.isSingleAndExactMatch(key.getResourceSpec());
 
 					if (! isMatch) {
 						notMatchedResources.add(resource);
@@ -475,7 +472,7 @@ public class TagFileStore extends AbstractTagStore {
 			ret = null;
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getResources(" + componentType + ") = " + ret);
+			LOG.debug("==> TagFileStore.getResources( " + key.getTagServiceName() + ", " + key.getComponentType() + " )" + ret);
 		}
 		return ret;
 	}
