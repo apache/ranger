@@ -147,6 +147,9 @@ class BaseDB(object):
 	def execute_java_patches(xa_db_host, db_user, db_password, db_name):
 		log("[I] ----------------- Executing java patches ------------", "info")
 
+	def create_synonym(db_name, db_user, db_password,audit_db_user):
+		log("[I] ----------------- Creating Synonym ------------", "info")
+
 class MysqlConf(BaseDB):
 	# Constructor
 	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN):
@@ -398,6 +401,7 @@ class OracleConf(BaseDB):
 	def get_jisql_cmd(self, user, password):
 		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+                self.JAVA_BIN = self.JAVA_BIN + " -Djava.security.egd=file:///dev/urandom "
 		if os_name == "LINUX":
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring jdbc:oracle:thin:@%s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, user, password)
 		elif os_name == "WINDOWS":
@@ -463,6 +467,26 @@ class OracleConf(BaseDB):
 			else:
 				log("[E] "+name + " import failed!","error")
 				sys.exit(1)
+
+	def create_synonym(self,db_name, db_user, db_password,audit_db_user):
+		log("[I] ----------------- Creating Synonym ------------", "info")
+		get_cmd = self.get_jisql_cmd(db_user, db_password)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query 'CREATE OR REPLACE SYNONYM %s.XA_ACCESS_AUDIT FOR %s.XA_ACCESS_AUDIT;'" % (audit_db_user,db_user)
+			ret = subprocess.call(shlex.split(query))
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"CREATE OR REPLACE SYNONYM %s.XA_ACCESS_AUDIT FOR %s.XA_ACCESS_AUDIT;\" -c ;" % (audit_db_user,db_user)
+			ret = subprocess.call(query)
+		if ret != 0:
+			sys.exit(1)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query 'CREATE OR REPLACE SYNONYM %s.XA_ACCESS_AUDIT_SEQ FOR %s.XA_ACCESS_AUDIT_SEQ;'" % (audit_db_user,db_user)
+			ret = subprocess.call(shlex.split(query))
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"CREATE OR REPLACE SYNONYM %s.XA_ACCESS_AUDIT_SEQ FOR %s.XA_ACCESS_AUDIT_SEQ;\" -c ;" % (audit_db_user,db_user)
+			ret = subprocess.call(query)
+		if ret != 0:
+			sys.exit(1)
 
 	def import_db_patches(self, db_name, db_user, db_password, file_name):
 		if os.path.isfile(file_name):
@@ -632,7 +656,7 @@ class OracleConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":	
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
+						get_cmd = "%s -Djava.security.egd=file:///dev/urandom -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
 						if os_name == "LINUX":
 							ret = subprocess.call(shlex.split(get_cmd))
 						elif os_name == "WINDOWS":
@@ -1284,6 +1308,10 @@ def main(argv):
 		else:
 			log("[I] --------- Importing Ranger Core DB Schema ---------","info")
 			xa_sqlObj.import_db_file(db_name, db_user, db_password, xa_db_core_file)
+			if XA_DB_FLAVOR == "ORACLE":
+				if xa_sqlObj.check_table(db_name, db_user, db_password, xa_access_audit):
+					if db_user != audit_db_user:
+						xa_sqlObj.create_synonym(db_name, db_user, db_password,audit_db_user)
 		log("[I] --------- Verifying upgrade history table ---------","info")
 		output = xa_sqlObj.check_table(db_name, db_user, db_password, x_db_version)
 		if output == False:

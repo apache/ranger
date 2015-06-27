@@ -105,12 +105,22 @@ public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 					endMinute = Integer.parseInt(m.group(7));
 				}
 				String endType = m.group(8).toUpperCase();
-				if (startType.equals("P")) {
+				if(startHour == 12) {
+					if(startType.equals("A")) {
+						startHour = 0;
+					}
+				} else if (startType.equals("P")) {
 					startHour += 12;
 				}
-				if (endType.equals("P")) {
+
+				if(endHour == 12) {
+					if(endType.equals("A")) {
+						endHour = 0;
+					}
+				} else if (endType.equals("P")) {
 					endHour += 12;
 				}
+
 				result = new int[] { (startHour*60)+startMin, (endHour*60)+endMinute };
 			}
 		}

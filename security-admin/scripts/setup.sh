@@ -797,11 +797,11 @@ update_properties() {
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
 	then
 		propertyName=ranger.jpa.jdbc.url
-		newPropertyValue="jdbc:oracle:thin:\@//${DB_HOST}"
+		newPropertyValue="jdbc:oracle:thin:@${DB_HOST}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:oracle:thin:\@//${DB_HOST}"
+		newPropertyValue="jdbc:oracle:thin:@${DB_HOST}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect
