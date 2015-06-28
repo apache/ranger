@@ -29,11 +29,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
-import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.TagPredicateUtil;
-import org.apache.ranger.plugin.store.rest.ServiceRESTStore;
+import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.TagServiceResources;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -56,7 +56,7 @@ public class TagFileStore extends AbstractTagStore {
 
 	private volatile static TagFileStore instance = null;
 
-	public static TagFileStore getInstance() {
+	public static TagStore getInstance() {
 		if (instance == null) {
 			synchronized (TagFileStore.class) {
 				if (instance == null) {
@@ -287,36 +287,51 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerTaggedResource createResource(RangerTaggedResource resource) throws Exception {
+	public RangerTaggedResource createResource(RangerTaggedResource resource, boolean createOrUpdate) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.createResource(" + resource + ")");
 		}
 
+		RangerTaggedResource ret = null;
 		RangerTaggedResource existing = null;
-		if (resource.getId() != null) {
-			existing = getResource(resource.getId());
-		}
+		boolean updateResource = false;
+
+		existing = getResource(resource.getKey());
 
 		if (existing != null) {
-			throw new Exception(resource.getId() + ": resource already exists (id=" + existing.getId() + ")");
+			if (!createOrUpdate) {
+				throw new Exception("resource(s) with same specification already exists");
+			} else {
+				updateResource = true;
+			}
 		}
 
-		List<RangerTaggedResource> existingResources = getResources(resource.getKey());
+		if (! updateResource) {
+			if (resource.getId() != null) {
+				existing = getResource(resource.getId());
+			}
 
-		if (CollectionUtils.isNotEmpty(existingResources)) {
-			throw new Exception("resource(s) with same specification already exists");
+			if (existing != null) {
+				if (! createOrUpdate) {
+					throw new Exception(resource.getId() + ": resource already exists (id=" + existing.getId() + ")");
+				} else {
+					updateResource = true;
+				}
+			}
 		}
-
-		RangerTaggedResource ret;
 
 		try {
-			preCreate(resource);
+			if (updateResource) {
+				ret = updateResource(resource);
+			} else {
+				preCreate(resource);
 
-			resource.setId(nextTagResourceId);
+				resource.setId(nextTagResourceId);
 
-			ret = fileStoreUtil.saveToFile(resource, new Path(fileStoreUtil.getDataFile(FILE_PREFIX_TAG_RESOURCE, nextTagResourceId++)), false);
+				ret = fileStoreUtil.saveToFile(resource, new Path(fileStoreUtil.getDataFile(FILE_PREFIX_TAG_RESOURCE, nextTagResourceId++)), false);
 
-			postCreate(ret);
+				postCreate(ret);
+			}
 		} catch (Exception excp) {
 			LOG.warn("TagFileStore.createResource(): failed to save resource '" + resource.getId() + "'", excp);
 
@@ -341,7 +356,7 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception(resource.getId() + ": resource does not exist (id=" + resource.getId() + ")");
 		}
 
-		RangerTaggedResource ret;
+		RangerTaggedResource ret = null;
 
 		try {
 			preUpdate(existing);
@@ -419,18 +434,22 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerTaggedResource> getResources(RangerTaggedResourceKey key) throws Exception {
+	public RangerTaggedResource getResource(RangerTaggedResourceKey key) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getResources( " + key.getTagServiceName() + ", " + key.getComponentType() + " )");
+			LOG.debug("==> TagFileStore.getResource( " + key.getTagServiceName() + ", " + key.getComponentType() + " )");
 		}
 
 		if (this.svcStore == null) {
-			LOG.error("TagFileStore.getResources() - TagFileStore object does not have reference to a valid ServiceStore.");
+			LOG.error("TagFileStore.getResource() - TagFileStore object does not have reference to a valid ServiceStore.");
 			throw new Exception("TagFileStore.getResources() - TagFileStore object does not have reference to a valid ServiceStore.");
 		}
 
-		List<RangerTaggedResource> ret = null;
+		if (key == null) {
+			LOG.error("TagFileStore.getResource() - parameter 'key' is null");
+			throw new Exception("TagFileStore.getResources() - parameter 'key' is null.");
+		}
+
 		RangerServiceDef serviceDef = null;
 
 		try {
@@ -440,13 +459,17 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception("Invalid component-type: " + key.getComponentType());
 		}
 
+		List<RangerTaggedResource> resources = null;
+
 		if (MapUtils.isNotEmpty(key.getResourceSpec())) {
 
-			ret = getResources(key.getTagServiceName(), key.getComponentType());
+			TagServiceResources tagServiceResources = getResources(key.getTagServiceName(), key.getComponentType(), 0L);
+			resources = tagServiceResources.getTaggedResources();
+
 			List<RangerTaggedResource> notMatchedResources = new ArrayList<>();
 
-			if (CollectionUtils.isNotEmpty(ret)) {
-				for (RangerTaggedResource resource : ret) {
+			if (CollectionUtils.isNotEmpty(resources)) {
+				for (RangerTaggedResource resource : resources) {
 
 					RangerDefaultPolicyResourceMatcher policyResourceMatcher =
 							new RangerDefaultPolicyResourceMatcher();
@@ -457,7 +480,7 @@ public class TagFileStore extends AbstractTagStore {
 
 					policyResourceMatcher.init();
 
-					boolean isMatch = policyResourceMatcher.isSingleAndExactMatch(key.getResourceSpec());
+					boolean isMatch = policyResourceMatcher.isExactMatch(key.getResourceSpec());
 
 					if (! isMatch) {
 						notMatchedResources.add(resource);
@@ -466,23 +489,27 @@ public class TagFileStore extends AbstractTagStore {
 
 				}
 
-				ret.removeAll(notMatchedResources);
+				resources.removeAll(notMatchedResources);
 			}
 		} else {
-			ret = null;
+			resources = null;
 		}
+
+		RangerTaggedResource ret = (resources == null || CollectionUtils.isEmpty(resources)) ? null : resources.get(0);
+
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getResources( " + key.getTagServiceName() + ", " + key.getComponentType() + " )" + ret);
+			LOG.debug("==> TagFileStore.getResource( " + key.getTagServiceName() + ", " + key.getComponentType() + " )" + ret);
 		}
+
 		return ret;
 	}
 
 	@Override
-	public List<RangerTaggedResource> getResources(String tagServiceName, String componentType) throws Exception {
+	public TagServiceResources getResources(String tagServiceName, String componentType, Long lastTimeStamp) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getResources(" + tagServiceName + ", " + componentType + ")");
+			LOG.debug("==> TagFileStore.getResources(" + tagServiceName + ", " + componentType + ", " + lastTimeStamp + ")");
 		}
-		List<RangerTaggedResource> ret;
+		List<RangerTaggedResource> taggedResources;
 
 		SearchFilter filter = new SearchFilter();
 
@@ -494,13 +521,25 @@ public class TagFileStore extends AbstractTagStore {
 			filter.setParam(SearchFilter.TAG_RESOURCE_COMPONENT_TYPE, componentType);
 		}
 
-		ret = getResources(filter);
+		if (lastTimeStamp != null) {
+			filter.setParam(SearchFilter.TAG_RESOURCE_TIMESTAMP, Long.toString(lastTimeStamp.longValue()));
+		}
+
+		taggedResources = getResources(filter);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getResources(" + tagServiceName + ", " + componentType + ")");
+			LOG.debug("<== TagFileStore.getResources(" + tagServiceName + ", " + componentType + ", " + lastTimeStamp + ")");
 
 		}
+
+		TagServiceResources ret = new TagServiceResources();
+		ret.setTaggedResources(taggedResources);
+		// TBD
+		ret.setLastUpdateTime(new Date());
+		ret.setVersion(1L);
+
 		return ret;
+
 	}
 
 	@Override
@@ -621,22 +660,24 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public Set<String> getTags(String tagServiceName, String componentType) throws Exception {
+	public List<String> getTags(String tagServiceName, String componentType) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getTags(" + tagServiceName + ", " + componentType + ")");
 		}
 
-		Set<String> ret = new HashSet<String>();
+		SortedSet<String> tagNameSet = new TreeSet<String>();
 
-		List<RangerTaggedResource> resources = getResources(tagServiceName, componentType);
+		TagServiceResources tagServiceResources = getResources(tagServiceName, componentType, 0L);
+		List<RangerTaggedResource> resources = tagServiceResources.getTaggedResources();
+
 		if (CollectionUtils.isNotEmpty(resources)) {
 			for (RangerTaggedResource resource : resources) {
 				List<RangerTaggedResource.RangerResourceTag> tags = resource.getTags();
 
 				if (CollectionUtils.isNotEmpty(tags)) {
 					for (RangerTaggedResource.RangerResourceTag tag : tags) {
-						ret.add(tag.getName());
+						tagNameSet.add(tag.getName());
 					}
 				}
 			}
@@ -646,22 +687,22 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("<== TagFileStore.getTags(" + tagServiceName + ", " + componentType + ")");
 		}
 
-		return ret;
+		return new ArrayList<String>(tagNameSet);
 	}
 
 	@Override
-	public Set<String> lookupTags(String tagServiceName, String componentType, String tagNamePattern) throws Exception {
+	public List<String> lookupTags(String tagServiceName, String componentType, String tagNamePattern) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.lookupTags(" + tagServiceName + ", " + componentType + ", " + tagNamePattern + ")");
 		}
 
-		Set<String> tagNameSet = getTags(tagServiceName, componentType);
-		Set<String> matchedTagSet = new HashSet<String>();
+		List<String> tagNameList = getTags(tagServiceName, componentType);
+		List<String> matchedTagList = new ArrayList<String>();
 
-		if (CollectionUtils.isNotEmpty(tagNameSet)) {
+		if (CollectionUtils.isNotEmpty(tagNameList)) {
 			Pattern p = Pattern.compile(tagNamePattern);
-			for (String tagName : tagNameSet) {
+			for (String tagName : tagNameList) {
 				Matcher m = p.matcher(tagName);
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("TagFileStore.lookupTags) - Trying to match .... tagNamePattern=" + tagNamePattern + ", tagName=" + tagName);
@@ -670,7 +711,7 @@ public class TagFileStore extends AbstractTagStore {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("TagFileStore.lookupTags) - Match found.... tagNamePattern=" + tagNamePattern + ", tagName=" + tagName);
 					}
-					matchedTagSet.add(tagName);
+					matchedTagList.add(tagName);
 				}
 			}
 		}
@@ -679,7 +720,7 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("<== TagFileStore.lookupTags(" + tagServiceName + ", " + componentType + ", " + tagNamePattern + ")");
 		}
 
-		return matchedTagSet;
+		return matchedTagList;
 	}
 }
 

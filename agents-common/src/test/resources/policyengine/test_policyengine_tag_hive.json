@@ -130,7 +130,7 @@
           "itemId": 1,
           "name" : "TagEnricher",
           "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
-          "enricherOptions" : {"TagProviderType":"FILESTORE_BASED_TAG_PROVIDER", "pollingInterval":-1, "dataFile":"/etc/ranger/data/resourceTags.txt"}
+          "enricherOptions" : {"TagProviderType":"RANGER_ADMIN_TAG_PROVIDER", "pollingInterval":-1, "useTestTagProvider":"true", "dataFile":"/etc/ranger/data/resourceTags.txt"}
         }
       ],
       "policyConditions": [

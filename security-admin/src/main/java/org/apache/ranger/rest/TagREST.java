@@ -28,9 +28,11 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.file.TagFileStore;
 import org.apache.ranger.plugin.store.rest.ServiceRESTStore;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.TagServiceResources;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -40,9 +42,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Path(TagRESTConstants.TAGDEF_NAME_AND_VERSION)
 
@@ -69,7 +70,7 @@ public class TagREST {
     TagFileStore tagStore;
     */
 
-    private TagFileStore tagStore;
+    private TagStore tagStore;
 
     public TagREST() {
         tagStore = TagFileStore.getInstance();
@@ -231,7 +232,7 @@ public class TagREST {
         try {
             //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
             //validator.validate(resource, Action.CREATE);
-            ret = tagStore.createResource(resource);
+            ret = tagStore.createResource(resource, false);
         } catch(Exception excp) {
             LOG.error("createResource(" + resource + ") failed", excp);
 
@@ -387,60 +388,47 @@ public class TagREST {
         return ret;
     }
 
-    // This API is typically used by plug-in to get all tagged resources from RangerAdmin
+    // This API is typically used by plug-in to get selected tagged resources from RangerAdmin
 
     @GET
-    @Path(TagRESTConstants.RESOURCES_RESOURCE)
+    @Path(TagRESTConstants.RESOURCES_UPDATED_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public List<RangerTaggedResource> getResources(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
-                                             @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) {
+    public TagServiceResources getResources(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
+                                                   @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType,
+                                                   @QueryParam(TagRESTConstants.TAG_TIMESTAMP_PARAM) Long lastTimestamp) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getResources(" + tagServiceName + ", " + componentType + ")");
+            LOG.debug("==> TagREST.getResources(" + tagServiceName + ", " + componentType + ", " + lastTimestamp + ")");
         }
 
-        List<RangerTaggedResource> ret = null;
+        TagServiceResources ret = null;
 
         try {
-            ret = tagStore.getResources(tagServiceName, componentType);
+            ret = tagStore.getResources(tagServiceName, componentType, lastTimestamp);
         } catch(Exception excp) {
             LOG.error("getResources(" + tagServiceName + ", " + componentType + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
-        if(ret == null) {
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
-        }
-
-        List<RangerTaggedResource> toBeFilteredOut = new ArrayList<RangerTaggedResource>();
-
-        for (RangerTaggedResource rangerResource : ret) {
-            if (CollectionUtils.isEmpty(rangerResource.getTags())) {
-                toBeFilteredOut.add(rangerResource);
-            }
-        }
-        ret.removeAll(toBeFilteredOut);
-
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.getResources(" + tagServiceName + "): " + ret);
+            LOG.debug("<==> TagREST.getResources(" + tagServiceName + ", " + componentType + ", " + lastTimestamp + ")");
         }
 
         return ret;
     }
 
-    // This API is typically used by GUI to get all available tags from RangerAdmin Can be used to validate configuration
-    // parameters of a tag-service
+    // This API is typically used by GUI to get all available tags from RangerAdmin
 
     @GET
     @Path(TagRESTConstants.TAGNAMES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public Set<String> getTagNames(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
+    public List<String> getTagNames(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
                                    @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) {
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getTagNames(" + tagServiceName + ")");
         }
-        Set<String> tagNames = null;
+        List<String> tagNames = null;
 
         try {
             tagNames = tagStore.getTags(tagServiceName, componentType);
@@ -462,13 +450,13 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.LOOKUP_TAGS_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public Set<String> lookupTags(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
-                                  @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType,
+    public List<String> lookupTags(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
+                                    @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType,
                                     @DefaultValue(".*") @QueryParam(TagRESTConstants.TAG_PATTERN_PARAM) String tagNamePattern) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.lookupTags(" + tagServiceName  + ", " + tagNamePattern + ")");
         }
-        Set<String> matchingTagNames = null;
+        List<String> matchingTagNames = null;
 
         try {
             matchingTagNames = tagStore.lookupTags(tagServiceName, componentType, tagNamePattern);
@@ -486,32 +474,124 @@ public class TagREST {
 
     // The following APIs will be typically used by tag-sync module
 
+    // to get all tagged resources in RangerAdmin
+
     @GET
     @Path(TagRESTConstants.RESOURCES_ALL_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public List<RangerTaggedResource> getAllTaggedResources() throws Exception {
-        return null;
+    public TagServiceResources getAllTaggedResources() throws Exception {
+        String emptyString = "";
+        return getResources(emptyString, emptyString, 0L);
     }
+
+    // to create or update a tagged resource with associated tags in RangerAdmin
 
     @PUT
     @Path(TagRESTConstants.RESOURCE_SET_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public String setResource(RangerTaggedResource rangerResource, String componentType) {
-        return null;
+    public RangerTaggedResource setResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.setResource()");
+        }
+
+        RangerTaggedResource ret = null;
+
+        RangerTaggedResource  taggedResource = new RangerTaggedResource(key, tags);
+
+        try {
+            ret = tagStore.createResource(taggedResource, true);        // Create or Update
+        } catch(Exception excp) {
+            LOG.error("setResource() failed", excp);
+            LOG.error("Could not create taggedResource, " + taggedResource);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.setResource()");
+        }
+
+        return ret;
     }
+
+    // to create or update a list of tagged resources with associated tags in RangerAdmin
 
     @PUT
     @Path(TagRESTConstants.RESOURCES_SET_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public Map<String, RangerTaggedResource> setResources(List<RangerTaggedResource> resources, String componentType) {
-        return null;
+    public List<RangerTaggedResource> setResources(List<RangerTaggedResourceKey> keys, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.setResources()");
+        }
+        List<RangerTaggedResource> ret = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(keys)) {
+            for (RangerTaggedResourceKey key : keys) {
+                try {
+                    RangerTaggedResource taggedResource = setResource(key, tags);
+                    if (taggedResource != null) {
+                        ret.add(taggedResource);
+                    }
+                }
+                catch(Exception e) {
+                    // Ignore
+                }
+            }
+        }
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.setResources()");
+        }
+        return ret;
     }
+
+    // to update a tagged resource by adding or removing tags from it in RangerAdmin
 
     @PUT
     @Path(TagRESTConstants.RESOURCE_UPDATE_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public String updateResourceTags(RangerTaggedResource resource, String componentType, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
-                                 List<RangerTaggedResource.RangerResourceTag> tagsToDelete) {
-        return null;
+    public RangerTaggedResource updateResourceTags(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
+                                 List<RangerTaggedResource.RangerResourceTag> tagsToDelete) throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.updateResource()");
+        }
+
+        RangerTaggedResource ret = null;
+        RangerTaggedResource oldResource = null;
+        try {
+            oldResource = tagStore.getResource(key);
+        } catch (Exception excp) {
+            LOG.error("getResource(" + key + ") failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if (oldResource != null) {
+            List<RangerTaggedResource.RangerResourceTag> tags = oldResource.getTags();
+
+            if (CollectionUtils.isNotEmpty(tagsToAdd)) {
+                tags.addAll(tagsToAdd);
+            }
+
+            if (CollectionUtils.isNotEmpty(tagsToDelete)) {
+                tags.removeAll(tagsToDelete);
+            }
+
+            oldResource.setTags(tags);
+
+            try {
+                ret = tagStore.updateResource(oldResource);
+            } catch (Exception excp) {
+                LOG.error("updateResource(" + key + ") failed", excp);
+
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+            }
+        } else {
+            LOG.error("updateResourceTags() could not find tagged resource with key=" + key);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.updateResource()");
+        }
+
+        return ret;
     }
 }

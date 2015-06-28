@@ -17,15 +17,32 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.contextenricher;
+package org.apache.ranger.plugin.util;
 
-import java.util.Map;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.common.RangerConfigPropertyRepository;
 
-public interface RangerTagRetriever {
+public class RangerPluginConfigPropertyRepository extends RangerConfigPropertyRepository {
 
-	void init (Map<String, String> options);
+	public static RangerConfigPropertyRepository getInstance() {
+		RangerConfigPropertyRepository ret = instance;
 
-	void setReceiver(RangerTagReceiver receiver);
+		if (ret == null) {
+			synchronized(RangerConfigPropertyRepository.class) {
+				ret = instance;
+				if (ret == null) {
+					ret = instance = new RangerPluginConfigPropertyRepository();
+				}
+			}
+		}
 
-	void retrieveTags();
+		return ret;
+	}
+
+	@Override
+	protected final String getPropertyValue(String propertyName) {
+		return RangerConfiguration.getInstance().get(propertyName);
+	}
+
+	private RangerPluginConfigPropertyRepository() {}
 }

@@ -19,11 +19,15 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.file.TagFileStore;
+import org.apache.ranger.plugin.util.TagServiceResources;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -33,18 +37,21 @@ public class RangerTagFileStoreRetriever extends RangerTagRefresher {
 	private final String componentType;
 	private final String tagServiceName;
 	private RangerTagReceiver receiver;
-	private TagFileStore tagFileStore;
+
+	private TagStore tagStore;
+	private Long lastTimestamp;
 
 	public RangerTagFileStoreRetriever(final String componentType, final String tagServiceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
 		super(pollingIntervalMs);
 		this.componentType = componentType;
 		this.tagServiceName = tagServiceName;
+		this.lastTimestamp = 0L;
 		setReceiver(enricher);
 	}
 
 	@Override
-	public void init(Map<String, Object> options) {
-		tagFileStore = TagFileStore.getInstance();
+	public void init(Map<String, String> options) {
+		tagStore = TagFileStore.getInstance();
 	}
 
 	@Override
@@ -54,19 +61,22 @@ public class RangerTagFileStoreRetriever extends RangerTagRefresher {
 
 	@Override
 	public void retrieveTags() {
-		if (tagFileStore != null) {
+		if (tagStore != null) {
 			List<RangerTaggedResource> resources = null;
 
 			try {
-				resources = tagFileStore.getResources(tagServiceName, componentType);
+				long before = new Date().getTime();
+				TagServiceResources tagServiceResources = tagStore.getResources(tagServiceName, componentType, lastTimestamp);
+				resources = tagServiceResources.getTaggedResources();
+				lastTimestamp = before;
 			} catch (Exception exp) {
 				LOG.error("RangerTagFileStoreRetriever.retrieveTags() - Error retrieving resources");
 			}
 
-			if (receiver != null) {
+			if (receiver != null && CollectionUtils.isNotEmpty(resources)) {
 				receiver.setRangerTaggedResources(resources);
 			} else {
-				LOG.error("RangerTagFileStoreRetriever.retrieveTags() - No receiver to send resources to !!");
+				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to .. OR .. no updates to tagged resources!!");
 			}
 		} else {
 			LOG.error("RangerTagFileStoreRetriever.retrieveTags() - No TagFileStore ...");

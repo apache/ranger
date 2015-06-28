@@ -19,49 +19,55 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.admin.client.RangerAdminRESTClient;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.TagServiceResources;
+import org.apache.ranger.services.tag.RangerServiceTag;
 
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 public class RangerAdminTagRetriever extends RangerTagRefresher {
 	private static final Log LOG = LogFactory.getLog(RangerAdminTagRetriever.class);
+	private static String propertyPrefixPreamble = "ranger.plugin.";
+	private static String appId = "tag-retriever";
 
 	private final String componentType;
 	private final String tagServiceName;
+	private final String propertyPrefix;
+
 	private RangerTagReceiver receiver;
-	private RangerAdminRESTClient rangerAdminRESTClient;
+	private RangerAdminClient adminClient;
+	private Long lastTimestamp;
 
 	public RangerAdminTagRetriever(final String componentType, final String tagServiceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
 		super(pollingIntervalMs);
 		this.componentType = componentType;
 		this.tagServiceName = tagServiceName;
 		setReceiver(enricher);
+		propertyPrefix = propertyPrefixPreamble + componentType;
+		this.lastTimestamp = 0L;
 	}
 
 	@Override
-	public void init(Map<String, Object> options) {
+	public void init(Map<String, String> options) {
 
-		String propertyPrefix    = "ranger.plugin.tag";
-		String url               = RangerConfiguration.getInstance().get(propertyPrefix + ".provider.rest.url", "http://node-1.example.com:6080");
-		String sslConfigFileName = RangerConfiguration.getInstance().get(propertyPrefix + ".provider.rest.ssl.config.file", "abcd");
-		String userName               = RangerConfiguration.getInstance().get(propertyPrefix + ".provider.login.username", "admin");
-		String password = RangerConfiguration.getInstance().get(propertyPrefix + ".provider.login.password", "admin");
+		if (MapUtils.isNotEmpty(options)) {
+			String useTestTagProvider = options.get("useTestTagProvider");
 
-		Map<String, String> configs = new HashMap<String, String>();
-
-		configs.put("URL", url);
-		configs.put("SSL_CONFIG_FILE_NAME", sslConfigFileName);
-		configs.put("username", userName);
-		configs.put("password", password);
-
-		rangerAdminRESTClient = new RangerAdminRESTClient();
-		rangerAdminRESTClient.init(tagServiceName, configs);
+			if (useTestTagProvider != null && useTestTagProvider.equals("true")) {
+				adminClient = RangerServiceTag.createAdminClient(tagServiceName);
+			}
+		}
+		if (adminClient == null) {
+			adminClient = RangerBasePlugin.createAdminClient(tagServiceName, appId, propertyPrefix);
+		}
 
 	}
 
@@ -72,22 +78,25 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 
 	@Override
 	public void retrieveTags() {
-		if (rangerAdminRESTClient != null) {
+		if (adminClient != null) {
 			List<RangerTaggedResource> resources = null;
 
 			try {
-				resources = rangerAdminRESTClient.getTaggedResources(componentType);
+				long before = new Date().getTime();
+				TagServiceResources taggedResources = adminClient.getTaggedResources(tagServiceName, componentType, lastTimestamp);
+				resources = taggedResources.getTaggedResources();
+				lastTimestamp = before;
 			} catch (Exception exp) {
 				LOG.error("RangerAdminTagRetriever.retrieveTags() - Error retrieving resources");
 			}
 
-			if (receiver != null && resources != null) {
+			if (receiver != null && CollectionUtils.isNotEmpty(resources)) {
 				receiver.setRangerTaggedResources(resources);
 			} else {
-				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to !!");
+				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to .. OR .. no updates to tagged resources!!");
 			}
 		} else {
-			LOG.error("RangerAdminTagRetriever.retrieveTags() - No TagFileStore ...");
+			LOG.error("RangerAdminTagRetriever.retrieveTags() - No Tag Provider ...");
 		}
 	}
 

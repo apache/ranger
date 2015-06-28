@@ -17,15 +17,34 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.contextenricher;
+package org.apache.ranger.common;
 
-import java.util.Map;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-public interface RangerTagRetriever {
+/**
+ * Interface to get configuration values for Ranger (both security-admin and agents-common)
+ */
 
-	void init (Map<String, String> options);
+public abstract class RangerConfigPropertyRepository {
+	private static final Log LOG = LogFactory.getLog(RangerConfigPropertyRepository.class);
 
-	void setReceiver(RangerTagReceiver receiver);
 
-	void retrieveTags();
+	protected static volatile RangerConfigPropertyRepository instance = null;
+
+	public static String getProperty(String name) {
+
+		String ret = null;
+
+		if (instance != null) {
+			ret = instance.getPropertyValue(name);
+		} else {
+			LOG.error("RangerConfigPropertyRepository.getPropery() - Object not created correctly.");
+		}
+
+		return ret;
+	}
+
+	abstract protected String getPropertyValue(String name);
+
 }

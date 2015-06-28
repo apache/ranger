@@ -44,6 +44,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 
 		addPredicateForTagResourceServiceName(filter.getParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME), predicates);
 		addPredicateForTagResourceComponentType(filter.getParam(SearchFilter.TAG_RESOURCE_COMPONENT_TYPE), predicates);
+		addPredicateForTagResourceTimestamp(filter.getParamAsLong(SearchFilter.TAG_RESOURCE_TIMESTAMP), predicates);
 
 		addPredicateForTagResourceId(filter.getParam(SearchFilter.TAG_RESOURCE_ID), predicates);
 	}
@@ -206,4 +207,39 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 
 		return ret;
 	}
-}
+	private Predicate addPredicateForTagResourceTimestamp(final Long lastTimestamp, List<Predicate> predicates) {
+		final int uploadInterval = 1*1000;
+		// Assumption: it may take maximum of one second for a taggedResource to be persisted after the timestamp
+		// was generated for it. The round-trip time is already taken into consideration by client.
+
+
+		if (lastTimestamp == null) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+
+				boolean ret = false;
+
+				if (object == null) {
+					return ret;
+				}
+
+				if (object instanceof RangerTaggedResource) {
+					RangerTaggedResource rangerResource = (RangerTaggedResource) object;
+
+					ret = rangerResource.getUpdateTime().getTime() >= (lastTimestamp - uploadInterval);
+				}
+
+				return ret;
+			}
+		};
+
+		if (predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}}

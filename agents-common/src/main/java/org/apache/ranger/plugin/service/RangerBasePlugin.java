@@ -35,6 +35,7 @@ import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
+import org.apache.ranger.plugin.util.RangerPluginConfigPropertyRepository;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 
@@ -56,6 +57,8 @@ public class RangerBasePlugin {
 	public RangerBasePlugin(String serviceType, String appId) {
 		this.serviceType = serviceType;
 		this.appId       = appId;
+
+		RangerPluginConfigPropertyRepository.getInstance();
 	}
 
 	public String getServiceType() {
@@ -100,7 +103,7 @@ public class RangerBasePlugin {
 		policyEngineOptions.disableCustomConditions = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", false);
 		policyEngineOptions.disableTagPolicyEvaluation = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.tagpolicy.evaluation", false);
 
-		RangerAdminClient admin = createAdminClient(propertyPrefix);
+		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
 
 		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);
 		refresher.startRefresher();
@@ -226,10 +229,9 @@ public class RangerBasePlugin {
 		}
 	}
 
-
-	private RangerAdminClient createAdminClient(String propertyPrefix) {
+	public static RangerAdminClient createAdminClient(String rangerServiceName, String applicationId, String propertyPrefix) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.createAdminClient(" + propertyPrefix + ")");
+			LOG.debug("==> RangerAdminRESTClient.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + ")");
 		}
 
 		RangerAdminClient ret = null;
@@ -259,10 +261,10 @@ public class RangerBasePlugin {
 			ret = new RangerAdminRESTClient();
 		}
 
-		ret.init(serviceName, appId, propertyPrefix);
+		ret.init(rangerServiceName, applicationId, propertyPrefix);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.createAdminClient(" + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
+			LOG.debug("<== RangerAdminRESTClient.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
 		}
 		return ret;
 	}

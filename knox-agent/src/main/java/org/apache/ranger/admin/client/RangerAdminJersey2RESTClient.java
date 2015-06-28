@@ -21,6 +21,7 @@ package org.apache.ranger.admin.client;
 
 import java.lang.reflect.Type;
 import java.util.Date;
+import java.util.List;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -33,10 +34,9 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.AccessControlException;
-import org.apache.ranger.plugin.util.GrantRevokeRequest;
-import org.apache.ranger.plugin.util.RangerRESTUtils;
-import org.apache.ranger.plugin.util.RangerSslHelper;
-import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
+import org.apache.ranger.plugin.util.*;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -203,6 +203,16 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		}
 	}
 
+	@Override
+	public TagServiceResources getTaggedResources(String tagServiceName, String componentType, Long lastTimestamp) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.getTaggedResource() -- *** NOT IMPLEMENTED *** ");
+	}
+
+	@Override
+	public List<String> getTagNames(String tagServiceName, String componentType, String tagNamePattern) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.getTagNames() -- *** NOT IMPLEMENTED *** ");
+	}
+
 	// We get date from the policy manager as unix long!  This deserializer exists to deal with it.  Remove this class once we start send date/time per RFC 3339
 	public static class GsonUnixDateDeserializer implements JsonDeserializer<Date> {
 
@@ -210,6 +220,28 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			return new Date(json.getAsJsonPrimitive().getAsLong());
 		}
+
+	}
+
+	@Override
+	public TagServiceResources getAllTaggedResources() throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.getAllTaggedResources() -- *** NOT IMPLEMENTED *** ");
+	}
+
+	@Override
+	public List<RangerTaggedResource> setResources(List<RangerTaggedResourceKey> keys, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.setResources() -- *** NOT IMPLEMENTED *** ");
+	}
+
+	@Override
+	public RangerTaggedResource setResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.setResource() -- *** NOT IMPLEMENTED *** ");
+	}
+
+	@Override
+	public RangerTaggedResource updateResourceTags(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
+								   List<RangerTaggedResource.RangerResourceTag> tagsToDelete) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.updateResourceTags() -- *** NOT IMPLEMENTED *** ");
 
 	}
 

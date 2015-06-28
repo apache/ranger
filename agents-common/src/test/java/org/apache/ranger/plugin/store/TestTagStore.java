@@ -76,6 +76,10 @@ public class TestTagStore {
 				"                <value>admin</value>\n" +
 				"        </property>\n" +
 				"        <property>\n" +
+				"                <name>ranger.plugin.tag.policy.rest.url</name>\n" +
+				"                <value>http://node-1.example.com:6080</value>\n" +
+				"        </property>\n" +
+				"        <property>\n" +
 				"                <name>ranger.tag.store.file.dir</name>\n" +
 				"                <value>file:///etc/ranger/data</value>\n" +
 				"        </property>\n" +
@@ -87,8 +91,12 @@ public class TestTagStore {
 		config.addResource(filePath);
 
 		tagStore = TagFileStore.getInstance();
-		tagStore.setServiceStore(new ServiceRESTStore());
 		tagStore.init();
+
+		ServiceStore svcStore = new ServiceRESTStore();
+		svcStore.init();
+
+		tagStore.setServiceStore(svcStore);
 		*/
 	}
 
@@ -133,6 +141,7 @@ public class TestTagStore {
 
 		/*
 		List<RangerTaggedResource> taggedResources = tagStore.getResources(filter);
+		RangerTaggedResource taggedResource = null;
 
 		int initResourceCount = taggedResources == null ? 0 : taggedResources.size();
 
@@ -163,19 +172,19 @@ public class TestTagStore {
 
 		rr.setTags(tags);
 
-		RangerTaggedResource createdResource = tagStore.createResource(rr);
+		RangerTaggedResource createdResource = tagStore.createResource(rr, false);
 
 		assertNotNull("createResource() failed", createdResource);
 
 		taggedResources = tagStore.getResources(filter);
 		assertEquals("createResource() failed", initResourceCount + 1, taggedResources == null ? 0 : taggedResources.size());
 
-		taggedResources = tagStore.getResources(rr.getKey());
-		assertEquals("createResource() failed", initResourceCount + 1, taggedResources == null ? 0 : taggedResources.size());
+		taggedResource = tagStore.getResource(rr.getKey());
+		assertNotNull("createResource() failed", taggedResource);
 
 		rr.getKey().getResourceSpec().remove("column");
-		taggedResources = tagStore.getResources(rr.getKey());
-		assertEquals("createResource() failed", initResourceCount, taggedResources == null ? 0 : taggedResources.size());
+		taggedResource = tagStore.getResource(rr.getKey());
+		assertNull("createResource() failed", taggedResource);
 		*/
 	}
 }

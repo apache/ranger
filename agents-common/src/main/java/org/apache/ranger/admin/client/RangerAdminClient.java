@@ -20,8 +20,13 @@
  package org.apache.ranger.admin.client;
 
 
+import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.TagServiceResources;
+
+import java.util.List;
 
 
 public interface RangerAdminClient {
@@ -32,4 +37,18 @@ public interface RangerAdminClient {
 	void grantAccess(GrantRevokeRequest request) throws Exception;
 
 	void revokeAccess(GrantRevokeRequest request) throws Exception;
+
+	TagServiceResources getTaggedResources(String tagServiceName, String componentType, Long lastTimestamp) throws Exception;
+
+	List<String> getTagNames(String tagServiceName, String componentType, String tagNamePattern) throws Exception;
+
+	TagServiceResources getAllTaggedResources() throws Exception;
+
+	List<RangerTaggedResource> setResources(List<RangerTaggedResourceKey> keys, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception;
+
+	RangerTaggedResource setResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception;
+
+	RangerTaggedResource updateResourceTags(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
+							  List<RangerTaggedResource.RangerResourceTag> tagsToDelete) throws Exception;
+
 }

@@ -22,22 +22,25 @@ package org.apache.ranger.plugin.policyengine;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
+import org.apache.ranger.plugin.util.RangerPluginConfigPropertyRepository;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -54,10 +57,10 @@ public class TestPolicyEngine {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-									   .setPrettyPrinting()
-									   .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
-									   .registerTypeAdapter(RangerAccessResource.class,  new RangerResourceDeserializer())
-									   .create();
+				.setPrettyPrinting()
+				.registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
+				.registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
+				.create();
 
 		// For setting up auditProvider
 		Properties auditProperties = new Properties();
@@ -66,7 +69,7 @@ public class TestPolicyEngine {
 
 		File propFile = new File(AUDIT_PROPERTIES_FILE);
 
-		if(propFile.exists()) {
+		if (propFile.exists()) {
 			System.out.println("Loading Audit properties file" + AUDIT_PROPERTIES_FILE);
 
 			auditProperties.load(new FileInputStream(propFile));
@@ -96,6 +99,32 @@ public class TestPolicyEngine {
 
 		System.out.println("provider=" + provider.toString());
 
+		// For setting up TestTagProvider
+
+		Path filePath = new Path("file:///tmp/ranger-admin-test-site.xml");
+		Configuration config = new Configuration();
+
+		FileSystem fs = filePath.getFileSystem(config);
+
+		FSDataOutputStream outStream = fs.create(filePath, true);
+		OutputStreamWriter writer = null;
+
+
+		writer = new OutputStreamWriter(outStream);
+
+		writer.write("<configuration>\n" +
+				"        <property>\n" +
+				"                <name>ranger.plugin.tag.policy.rest.url</name>\n" +
+				"                <value>http://node-1.example.com:6080</value>\n" +
+				"        </property>\n" +
+				"</configuration>\n");
+
+		writer.close();
+
+		RangerConfiguration rangerConfig = RangerConfiguration.getInstance();
+		rangerConfig.addResource(filePath);
+
+		RangerPluginConfigPropertyRepository.getInstance();
 
 	}
 

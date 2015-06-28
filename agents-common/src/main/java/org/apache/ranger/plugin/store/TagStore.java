@@ -24,6 +24,7 @@ import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.TagServiceResources;
 
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ public interface TagStore {
 
     PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception;
 
-    RangerTaggedResource createResource(RangerTaggedResource resource) throws Exception;
+    RangerTaggedResource createResource(RangerTaggedResource resource, boolean createOrUpdate) throws Exception;
 
     RangerTaggedResource updateResource(RangerTaggedResource resource) throws Exception;
 
@@ -60,16 +61,15 @@ public interface TagStore {
 
     RangerTaggedResource getResource(Long id) throws Exception;
 
-    List<RangerTaggedResource> getResources(String tagServiceName, String componentType) throws Exception;
+    TagServiceResources getResources(String tagServiceName, String componentType, Long lastTimestamp) throws Exception;
 
     List<RangerTaggedResource> getResources(SearchFilter filter) throws Exception;
 
     PList<RangerTaggedResource> getPaginatedResources(SearchFilter filter) throws Exception;
 
-    Set<String> getTags(String tagServiceName, String serviceType) throws Exception;
+    List<String> getTags(String tagServiceName, String serviceType) throws Exception;
 
-    Set<String> lookupTags(String tagServiceName, String serviceType, String tagNamePattern) throws Exception;
+    List<String> lookupTags(String tagServiceName, String serviceType, String tagNamePattern) throws Exception;
 
-    //List<RangerTaggedResource> getResources(String componentType, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception;
-    List<RangerTaggedResource> getResources(RangerTaggedResourceKey key) throws Exception;
+    RangerTaggedResource getResource(RangerTaggedResourceKey key) throws Exception;
 }

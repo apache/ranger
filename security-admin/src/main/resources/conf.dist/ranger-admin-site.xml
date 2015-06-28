@@ -202,6 +202,7 @@
 		<name>ranger.service.https.attrib.keystore.file</name>
 		<value>/etc/ranger/admin/keys/server.jks</value>
 	</property>
+
 	<property>
 		<name>ranger.solr.audit.user</name>
 		<value></value>

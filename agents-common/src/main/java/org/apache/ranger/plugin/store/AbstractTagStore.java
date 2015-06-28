@@ -34,12 +34,7 @@ public abstract class AbstractTagStore implements TagStore {
 
 	@Override
 	public void init() throws Exception {
-
-		if (svcStore == null) {
-			throw new Exception("TagStore does not reference a valid ServiceStore");
-		}
-
-		svcStore.init();
+		// Empty
 	}
 
 	@Override

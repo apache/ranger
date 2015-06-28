@@ -500,9 +500,9 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 	}
 
 	@Override
-	public boolean isSingleAndExactMatch(Map<String, RangerPolicyResource> resources) {
+	public boolean isExactMatch(Map<String, RangerPolicyResource> resources) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyResourceMatcher.isSingleAndExactMatch(" + resources + ")");
+			LOG.debug("==> RangerDefaultPolicyResourceMatcher.isExactMatch(" + resources + ")");
 		}
 
 		boolean ret = false;
@@ -521,18 +521,12 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
 					String                resourceName   = resourceDef.getName();
 					RangerPolicyResource  resourceValues = resources == null ? null : resources.get(resourceName);
-					RangerResourceMatcher matcher        = matchers == null ? null : matchers.get(resourceName);
+					RangerPolicyResource  policyValues   = policyResources == null ? null : policyResources.get(resourceName);
 
 					if(resourceValues == null || CollectionUtils.isEmpty(resourceValues.getValues())) {
-						ret = matcher == null;
-					} else if(matcher != null) {
-						for(String resourceValue : resourceValues.getValues()) {
-							ret = matcher.isMatch(resourceValue);
-
-							if(! ret) {
-								break;
-							}
-						}
+						ret = (policyValues == null || CollectionUtils.isEmpty(policyValues.getValues()));
+					} else if(policyValues != null && CollectionUtils.isNotEmpty(policyValues.getValues())) {
+						ret = CollectionUtils.isEqualCollection(resourceValues.getValues(), policyValues.getValues());
 					}
 
 					if(! ret) {
@@ -541,13 +535,13 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 				}
 			} else {
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("isSingleAndExactMatch(): keysMatch=false. resourceKeys=" + resourceKeys + "; policyKeys=" + policyKeys);
+					LOG.debug("isExactMatch(): keysMatch=false. resourceKeys=" + resourceKeys + "; policyKeys=" + policyKeys);
 				}
 			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyResourceMatcher.isSingleAndExactMatch(" + resources + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyResourceMatcher.isExactMatch(" + resources + "): " + ret);
 		}
 
 		return ret;

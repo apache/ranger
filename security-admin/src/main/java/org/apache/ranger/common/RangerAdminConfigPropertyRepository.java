@@ -17,15 +17,29 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.contextenricher;
+package org.apache.ranger.common;
 
-import java.util.Map;
+public class RangerAdminConfigPropertyRepository extends RangerConfigPropertyRepository {
 
-public interface RangerTagRetriever {
+	public static RangerConfigPropertyRepository getInstance() {
+		RangerConfigPropertyRepository ret = instance;
 
-	void init (Map<String, String> options);
+		if (ret == null) {
+			synchronized(RangerConfigPropertyRepository.class) {
+				ret = instance;
+				if (ret == null) {
+					ret = instance = new RangerAdminConfigPropertyRepository();
+				}
+			}
+		}
 
-	void setReceiver(RangerTagReceiver receiver);
+		return ret;
+	}
 
-	void retrieveTags();
+	@Override
+	protected final String getPropertyValue(String propertyName) {
+		return PropertiesUtil.getProperty(propertyName);
+	}
+
+	private RangerAdminConfigPropertyRepository() {}
 }

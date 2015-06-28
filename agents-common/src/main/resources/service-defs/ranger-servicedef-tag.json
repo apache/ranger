@@ -7,8 +7,7 @@
   "guid": "0d047248-baff-4cf9-8e9e-d5d377284b2e",
   "options":
   {
-    "ui.pages":"tag-based-policies",
-    "ui.isMultiline":"true"
+    "ui.pages":"tag-based-policies"
   },
   "resources":
   [
@@ -92,7 +91,7 @@
       "name" : "TagEnricher",
       "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
       "enricherOptions" : {
-        "TagProviderType":"FILESTORE_BASED_TAG_PROVIDER",
+        "TagProviderType":"RANGER_ADMIN_TAG_PROVIDER",
         "pollingInterval":60000
       }
     }
@@ -104,7 +103,7 @@
       "itemId":1,
       "name":"ScriptConditionEvaluator",
       "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
-      "evaluatorOptions" : {"engineName":"JavaScript"},
+      "evaluatorOptions" : {"engineName":"JavaScript", "ui.isMultiline":"true" },
       "label":"Script",
       "description": "Script to execute"
     }

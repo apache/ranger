@@ -3,19 +3,28 @@ package org.apache.ranger.services.tag;
 import java.util.*;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.store.TagStore;
+import org.apache.ranger.plugin.store.file.TagFileStore;
 
 public class RangerServiceTag extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceTag.class);
 
 	public static final String TAG	= "tag";
+
+	public static final String propertyPrefix = "ranger.plugin.tag";
+
+	public static final String applicationId = "Ranger-GUI";
 
 	public RangerServiceTag() {
 		super();
@@ -29,39 +38,24 @@ public class RangerServiceTag extends RangerBaseService {
 	@Override
 	public HashMap<String,Object> validateConfig() throws Exception {
 		HashMap<String, Object> ret = new HashMap<String, Object>();
-		String 	serviceName  	    = getServiceName();
-		boolean connectivityStatus = false;
-		String message = null;
+		String 	serviceName         = getServiceName();
+		boolean connectivityStatus  = false;
+		String message              = null;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceTag.validateConfig -  Service: (" + serviceName + " )");
 		}
 
-		if (MapUtils.isEmpty(configs)) {
-			message = "Configuration is null or empty";
+		RangerAdminClient adminClient = createAdminClient(serviceName);
 
-		} else {
-			String url = configs.get("URL");
-			String sslConfigFileName = configs.get("SSL_CONFIG_FILE_NAME");
-			String userName = configs.get("username");
-			String password = configs.get("password");
-
-			if (url == null || sslConfigFileName == null || userName == null || password == null) {
-				message = "Either URL, SSL_CONFIG_FILE_NAME, username or password not provided in configuration";
-			} else {
-
-				RangerAdminRESTClient adminRESTClient = new RangerAdminRESTClient();
-				adminRESTClient.init(serviceName, configs);
-
-				try {
-					adminRESTClient.getTagNames(null, ".*");	// Dont care about componentType
-					connectivityStatus = true;
-				} catch (Exception e) {
-					LOG.error("RangerServiceTag.validateConfig() Error:" + e);
-					connectivityStatus = false;
-					message = "Cannot connect to TagResource Repository, " + e;
-				}
-			}
+		try {
+			adminClient.getTagNames(serviceName, null, ".*");	// Don't care about componentType
+			connectivityStatus = true;
+		} catch (Exception e) {
+			LOG.error("RangerServiceTag.validateConfig() Error:" + e);
+			connectivityStatus = false;
+			message = "Cannot connect to TagResource Repository, Exception={" + e + "}. " + "Please check "
+					+ propertyPrefix + " sub-properties.";
 		}
 
 		ret.put("connectivityStatus", connectivityStatus);
@@ -77,70 +71,63 @@ public class RangerServiceTag extends RangerBaseService {
 	@Override
 	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
 		String 	serviceName  	   = getServiceName();
-		Map<String,String> configs = getConfigs();
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceTag.lookupResource -  Context: (" + context + ")");
 		}
 
-		Set<String> tagNameSet = new HashSet<>();
+		List<String> tagNameList = new ArrayList<>();
 
-		if (MapUtils.isNotEmpty(configs)) {
-			String url = configs.get("URL");
-			String sslConfigFileName = configs.get("SSL_CONFIG_FILE_NAME");
-			String userName = configs.get("username");
-			String password = configs.get("password");
+		if (context != null) {
 
-			if (url != null && sslConfigFileName != null && userName != null && password != null) {
+			String userInput = context.getUserInput();
+			String resource = context.getResourceName();
+			Map<String, List<String>> resourceMap = context.getResources();
+			final List<String> userProvidedTagList = new ArrayList<>();
 
-				if (context != null) {
+			if (resource != null && resourceMap != null && resourceMap.get(TAG) != null) {
 
-					String userInput = context.getUserInput();
-					String resource = context.getResourceName();
-					Map<String, List<String>> resourceMap = context.getResources();
-					final Set<String> userProvidedTagSet = new HashSet<String>();
-
-					if (resource != null && resourceMap != null && resourceMap.get(TAG) != null) {
-
-						for (String tag : resourceMap.get(TAG)) {
-							userProvidedTagSet.add(tag);
-						}
-
-						try {
-							String suffix = ".*";
-							String tagNamePattern;
-
-							if (userInput == null) {
-								tagNamePattern = suffix;
-							} else {
-								tagNamePattern = userInput + suffix;
-							}
-
-							if(LOG.isDebugEnabled()) {
-								LOG.debug("RangerServiceTag.lookupResource -  tagNamePattern : (" + tagNamePattern + ")");
-							}
-
-							RangerAdminRESTClient adminRESTClient = new RangerAdminRESTClient();
-							adminRESTClient.init(serviceName, configs);
-
-							tagNameSet = adminRESTClient.getTagNames(null, tagNamePattern); // Dont care about componentType
-
-							tagNameSet.removeAll(userProvidedTagSet);
-
-						} catch (Exception e) {
-							LOG.error("RangerServiceTag.lookupResource -  Error : " + e);
-						}
-					}
+				for (String tag : resourceMap.get(TAG)) {
+					userProvidedTagList.add(tag);
 				}
 
-			}
+				String suffix = ".*";
+				String tagNamePattern;
 
+				if (userInput == null) {
+					tagNamePattern = suffix;
+				} else {
+					tagNamePattern = userInput + suffix;
+				}
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("RangerServiceTag.lookupResource -  tagNamePattern : (" + tagNamePattern + ")");
+				}
+
+				try {
+
+					RangerAdminClient adminClient = createAdminClient(serviceName);
+
+					tagNameList = adminClient.getTagNames(serviceName, null, tagNamePattern); // Don't care about componentType
+
+					tagNameList.removeAll(userProvidedTagList);
+
+				} catch (Exception e) {
+					LOG.error("RangerServiceTag.lookupResource -  Exception={" + e + "}. " + "Please check " +
+							propertyPrefix + " sub-properties.");
+				}
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerServiceTag.lookupResource()");
 		}
 
-		return new ArrayList<String>(tagNameSet);
+		return tagNameList;
 	}
+
+	public static RangerAdminClient createAdminClient( String tagServiceName ) {
+		return RangerBasePlugin.createAdminClient(tagServiceName, applicationId, propertyPrefix);
+	}
+
 }

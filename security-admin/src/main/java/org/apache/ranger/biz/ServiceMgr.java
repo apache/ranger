@@ -40,6 +40,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.view.VXMessage;
@@ -77,9 +78,13 @@ public class ServiceMgr {
 		}
 
 		if(svc != null) {
-			LookupCallable callable = new LookupCallable(svc, context);
-			long time = getTimeoutValueForLookupInMilliSeconds(svc);
-			ret = timedExecutor.timedTask(callable, time, TimeUnit.MILLISECONDS);
+			if (StringUtils.equals(svc.getServiceDef().getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+				ret = svc.lookupResource(context);
+			} else {
+				LookupCallable callable = new LookupCallable(svc, context);
+				long time = getTimeoutValueForLookupInMilliSeconds(svc);
+				ret = timedExecutor.timedTask(callable, time, TimeUnit.MILLISECONDS);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

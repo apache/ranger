@@ -56,6 +56,8 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 
 		super.init();
 
+		Map<String, String> options = enricherDef != null ? enricherDef.getEnricherOptions() : null;
+
 		String tagProviderTypeString = getOption("TagProviderType", "FILE_BASED_TAG_PROVIDER");
 		long pollingIntervalMs = getLongOption("pollingInterval", 60 * 1000);
 
@@ -74,7 +76,7 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 
 		// Provide additional options
 		if (tagRefresher != null) {
-			tagRefresher.init(null);
+			tagRefresher.init(options);
 			tagRefresher.retrieveTags();
 		}
 

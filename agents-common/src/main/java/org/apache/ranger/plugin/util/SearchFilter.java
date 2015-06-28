@@ -55,6 +55,7 @@ public class SearchFilter {
 	public static final String TAG_RESOURCE_ID  = "tagResourceId"; // search
 	public static final String TAG_RESOURCE_SERVICE_NAME = "tagResourceServiceName";  // search
 	public static final String TAG_RESOURCE_COMPONENT_TYPE = "tagResourceComponentType"; // search
+	public static final String TAG_RESOURCE_TIMESTAMP = "tagResourceTimestamp"; // search
 
 
 
@@ -88,6 +89,18 @@ public class SearchFilter {
 
 	public String getParam(String name) {
 		return params == null ? null : params.get(name);
+	}
+
+	public Long getParamAsLong(String name) {
+
+		String stringValue =  params == null ? null : params.get(name);
+		Long ret = null;
+		try {
+			ret = Long.valueOf(stringValue);
+		} catch (NumberFormatException exception) {
+			// Ignore
+		}
+		return ret;
 	}
 
 	public void setParam(String name, String value) {
