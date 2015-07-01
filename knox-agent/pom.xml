@@ -105,7 +105,7 @@
 			<version>${hadoop.version}</version>
 	   </dependency>
 	   <dependency>
-		<groupId>org.htrace</groupId>
+		<groupId>org.apache.htrace</groupId>
 		<artifactId>htrace-core</artifactId>
 		<version>${htrace-core.version}</version>
 	   </dependency>

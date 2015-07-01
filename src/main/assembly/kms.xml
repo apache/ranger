@@ -81,7 +81,7 @@
 					<include>org.apache.curator:curator-recipes</include>
 					<include>com.google.code.gson:gson</include>
 					<include>org.apache.hadoop:hadoop-annotations</include>
-    				<include>org.htrace:htrace-core</include>
+    				<include>org.apache.htrace:htrace-core</include>
 					<include>org.apache.httpcomponents:httpcore</include>
 					<include>org.codehaus.jackson:jackson-core-asl</include>
 					<include>org.codehaus.jackson:jackson-jaxrs</include>
@@ -103,7 +103,7 @@
 		    		<include>org.noggit:noggit:jar:${noggit.version}</include>
 		    		<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-		    		<include>org.htrace:htrace-core:jar:${htrace-core.version}</include>
+		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
 	            </includes>
             </dependencySet>
         </dependencySets>
@@ -139,7 +139,7 @@
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
                     <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-		    		<include>org.htrace:htrace-core:jar:${htrace-core.version}</include>
+		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
                 </includes>
                 <unpack>false</unpack>
             </dependencySet>

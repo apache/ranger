@@ -332,9 +332,9 @@
       <version>${hadoop-auth.version}</version>
     </dependency>
     <dependency>
-		<groupId>org.htrace</groupId>
+		<groupId>org.apache.htrace</groupId>
 		<artifactId>htrace-core</artifactId>
-		<version>3.0.4</version>
+		<version>${htrace-core.version}</version>
 	</dependency>
 	<dependency>
 		<groupId>org.apache.httpcomponents</groupId>
