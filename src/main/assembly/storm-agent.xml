@@ -52,6 +52,10 @@
 		    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponent.httpcore.version}</include>
 		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
 		    <include>org.noggit:noggit:jar:${noggit.version}</include>
+		    <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
+		    <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
+		    <include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
+		    <include>commons-cli:commons-cli:jar:${commons.cli.version}</include>
                 </includes>
             </dependencySet>
             <dependencySet>

@@ -332,9 +332,9 @@
       <version>${hadoop-auth.version}</version>
     </dependency>
     <dependency>
-		<groupId>org.htrace</groupId>
+		<groupId>org.apache.htrace</groupId>
 		<artifactId>htrace-core</artifactId>
-		<version>3.0.4</version>
+		<version>${htrace-core.version}</version>
 	</dependency>
 	<dependency>
 		<groupId>org.apache.httpcomponents</groupId>
@@ -441,6 +441,11 @@
     		<artifactId>noggit</artifactId>
 	    	<version>${noggit.version}</version>  	
      </dependency>
+     <dependency>
+			<groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+			<version>${hadoop.version}</version>
+	 </dependency>
   </dependencies>
   <build>
   <pluginManagement>
