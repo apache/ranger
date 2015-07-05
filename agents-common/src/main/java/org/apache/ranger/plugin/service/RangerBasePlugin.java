@@ -58,7 +58,7 @@ public class RangerBasePlugin {
 		this.serviceType = serviceType;
 		this.appId       = appId;
 
-		RangerPluginConfigPropertyRepository.getInstance();
+		RangerPluginConfigPropertyRepository.init();
 	}
 
 	public String getServiceType() {

@@ -124,7 +124,7 @@ public class TestPolicyEngine {
 		RangerConfiguration rangerConfig = RangerConfiguration.getInstance();
 		rangerConfig.addResource(filePath);
 
-		RangerPluginConfigPropertyRepository.getInstance();
+		RangerPluginConfigPropertyRepository.init();
 
 	}
 

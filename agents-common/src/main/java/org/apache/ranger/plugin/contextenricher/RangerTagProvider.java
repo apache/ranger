@@ -58,7 +58,7 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 
 		Map<String, String> options = enricherDef != null ? enricherDef.getEnricherOptions() : null;
 
-		String tagProviderTypeString = getOption("TagProviderType", "FILE_BASED_TAG_PROVIDER");
+		String tagProviderTypeString = getOption("tagProviderType", "RANGER_ADMIN_TAG_PROVIDER");
 		long pollingIntervalMs = getLongOption("pollingInterval", 60 * 1000);
 
 		if (tagProviderTypeString.equals(TagProviderTypeEnum.FILESTORE_BASED_TAG_PROVIDER.toString())) {

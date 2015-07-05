@@ -24,7 +24,7 @@ import org.apache.ranger.common.RangerConfigPropertyRepository;
 
 public class RangerPluginConfigPropertyRepository extends RangerConfigPropertyRepository {
 
-	public static RangerConfigPropertyRepository getInstance() {
+	public static RangerConfigPropertyRepository init() {
 		RangerConfigPropertyRepository ret = instance;
 
 		if (ret == null) {

@@ -91,7 +91,7 @@
       "name" : "TagEnricher",
       "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
       "enricherOptions" : {
-        "TagProviderType":"RANGER_ADMIN_TAG_PROVIDER",
+        "tagProviderType":"RANGER_ADMIN_TAG_PROVIDER",
         "pollingInterval":60000
       }
     }

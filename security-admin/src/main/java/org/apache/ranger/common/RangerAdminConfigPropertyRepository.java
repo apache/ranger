@@ -21,7 +21,7 @@ package org.apache.ranger.common;
 
 public class RangerAdminConfigPropertyRepository extends RangerConfigPropertyRepository {
 
-	public static RangerConfigPropertyRepository getInstance() {
+	public static RangerConfigPropertyRepository init() {
 		RangerConfigPropertyRepository ret = instance;
 
 		if (ret == null) {

@@ -211,7 +211,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			synchronized(ServiceDBStore.class) {
 				if(!legacyServiceDefsInitDone) {
 
-					RangerAdminConfigPropertyRepository.getInstance();
+					RangerAdminConfigPropertyRepository.init();
 					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
 					final ServiceDBStore dbStore = this;
