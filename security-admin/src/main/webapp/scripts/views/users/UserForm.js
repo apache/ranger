@@ -144,7 +144,8 @@ define(function(require){
 				
 				if(SessionMgr.getUserProfile().get('loginId') != "admin"){
 					if(this.model.get('name') != "admin"){
-						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN')){
+						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN') 
+								|| _.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_KEY_ADMIN')){
 							this.fields.userRoleList.editor.$el.attr('disabled',false);
 						}else{
 							if(!SessionMgr.isKeyAdmin()){
