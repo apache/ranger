@@ -39,8 +39,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -73,6 +75,10 @@ public class TagREST {
     private TagStore tagStore;
 
     public TagREST() {
+    }
+
+    @PostConstruct
+    public void initStore() {
         tagStore = TagFileStore.getInstance();
         tagStore.setServiceStore(svcStore);
     }
