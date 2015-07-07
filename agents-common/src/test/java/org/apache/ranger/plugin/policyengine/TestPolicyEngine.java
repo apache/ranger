@@ -34,7 +34,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
-import org.apache.ranger.plugin.util.RangerPluginConfigPropertyRepository;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -123,8 +122,6 @@ public class TestPolicyEngine {
 
 		RangerConfiguration rangerConfig = RangerConfiguration.getInstance();
 		rangerConfig.addResource(filePath);
-
-		RangerPluginConfigPropertyRepository.init();
 
 	}
 

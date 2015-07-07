@@ -33,6 +33,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
@@ -44,7 +45,6 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.RangerAdminConfigPropertyRepository;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
@@ -211,7 +211,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 			synchronized(ServiceDBStore.class) {
 				if(!legacyServiceDefsInitDone) {
 
-					RangerAdminConfigPropertyRepository.init();
+					if (! RangerConfiguration.getInstance().addAdminResources()) {
+						LOG.error("Could not add ranger-admin resources to RangerConfiguration.");
+					}
+
 					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
 					final ServiceDBStore dbStore = this;

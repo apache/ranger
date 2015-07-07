@@ -52,6 +52,28 @@ public class RangerConfiguration extends Configuration {
 		}
 	}
 
+	public boolean addAdminResources() {
+		String defaultCfg = "ranger-admin-default-site.xml";
+		String addlCfg = "ranger-admin-site.xml";
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> addAdminResources()");
+		}
+		boolean ret = true;
+
+		if (! addResourceIfReadable(defaultCfg)) {
+			ret = false;
+		}
+
+		if (! addResourceIfReadable(addlCfg)) {
+			ret = false;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== addAdminResources(), result=" + ret);
+		}
+		return ret;
+	}
 
 	private boolean addResourceIfReadable(String aResourceName) {
 		
@@ -62,8 +84,8 @@ public class RangerConfiguration extends Configuration {
 
 		String fName = getFileLocation(aResourceName) ;
 		if (fName != null) {
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("<== addResourceIfReadable(" + aResourceName + "): resource file is " + fName);
+			if(LOG.isInfoEnabled()) {
+				LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fName);
 			}
 
 			File f = new File(fName) ;
@@ -74,23 +96,17 @@ public class RangerConfiguration extends Configuration {
 					addResource(fUrl) ;
 					ret = true;
 				} catch (MalformedURLException e) {
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("Unable to find URL for the resource name [" + aResourceName +"]. Ignoring the resource:" + aResourceName);
-					}
+					LOG.error("Unable to find URL for the resource name [" + aResourceName + "]. Ignoring the resource:" + aResourceName);
 				}
 			} else {
-				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== addResourceIfReadable(" + aResourceName + "): resource not readable");
-				}
+				LOG.error("addResourceIfReadable(" + aResourceName + "): resource not readable");
 			}
 		} else {
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("<== addResourceIfReadable(" + aResourceName + "): couldn't find resource file location");
-			}
+			LOG.error("addResourceIfReadable(" + aResourceName + "): couldn't find resource file location");
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== addResourceIfReadable(" + aResourceName + ")");
+			LOG.debug("<== addResourceIfReadable(" + aResourceName + "), result=" + ret);
 		}
 		return ret;
 	}

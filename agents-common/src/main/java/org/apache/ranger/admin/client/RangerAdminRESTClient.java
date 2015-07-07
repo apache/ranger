@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 
-import org.apache.ranger.common.RangerConfigPropertyRepository;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.util.*;
@@ -75,8 +75,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		this.serviceName = serviceName;
 		this.pluginId    = restUtils.getPluginId(serviceName, appId);
 
-		String url               = RangerConfigPropertyRepository.getProperty(propertyPrefix + ".policy.rest.url");
-		String sslConfigFileName = RangerConfigPropertyRepository.getProperty(propertyPrefix + ".policy.rest.ssl.config.file");
+		String url               = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
+		String sslConfigFileName = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
 
 		if (url == null) {
 
@@ -84,7 +84,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 				LOG.info("RangerAdminRESTClient.init() : no such property " + propertyPrefix + ".policy.rest.url, using value of ranger.externalurl property instead.");
 			}
 
-			url = RangerConfigPropertyRepository.getProperty("ranger.externalurl");
+			url = RangerConfiguration.getInstance().get("ranger.externalurl");
 		}
 
 		if(LOG.isDebugEnabled()) {

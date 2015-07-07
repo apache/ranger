@@ -35,7 +35,6 @@ import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
-import org.apache.ranger.plugin.util.RangerPluginConfigPropertyRepository;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 
@@ -57,8 +56,6 @@ public class RangerBasePlugin {
 	public RangerBasePlugin(String serviceType, String appId) {
 		this.serviceType = serviceType;
 		this.appId       = appId;
-
-		RangerPluginConfigPropertyRepository.init();
 	}
 
 	public String getServiceType() {
