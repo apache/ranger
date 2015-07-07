@@ -130,7 +130,7 @@
           "itemId": 1,
           "name" : "TagEnricher",
           "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
-          "enricherOptions" : {"tagProviderType":"RANGER_ADMIN_TAG_PROVIDER", "pollingInterval":-1, "useTestTagProvider":"true", "dataFile":"/etc/ranger/data/resourceTags.txt"}
+          "enricherOptions" : {"tagProviderType":"FILESTORE_BASED_TAG_PROVIDER", "pollingInterval":-1, "useTestTagProvider":"true", "dataFile":"/etc/ranger/data/resourceTags.txt"}
         }
       ],
       "policyConditions": [
@@ -204,14 +204,17 @@
     {"name":"ALLOW 'select name from employee.personal;' for user1 - no tag",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"name"}},
-        "accessType":"select","user":"user1","userGroups":[],"requestData":"select name from employee.personal;' for user1"
+        "accessType":"select","user":"user1","userGroups":[],"requestData":"select name from employee.personal;' for user1",
+        "context": {"TAGS":""}
+
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"ALLOW 'select name from employee.personal;' for user2 - no tag",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"name"}},
-        "accessType":"select","user":"user2","userGroups":[],"requestData":"select name from employee.personal;' for user2"
+        "accessType":"select","user":"user2","userGroups":[],"requestData":"select name from employee.personal;' for user2",
+        "context": {"TAGS":""}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },

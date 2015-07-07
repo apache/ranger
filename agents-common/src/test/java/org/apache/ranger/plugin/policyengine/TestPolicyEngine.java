@@ -214,6 +214,7 @@ public class TestPolicyEngine {
 		RangerAccessRequest request = null;
 
 		for(TestData test : testCase.tests) {
+
 			if (test.request.getContext().containsKey(RangerPolicyEngine.KEY_CONTEXT_TAGS)) {
 				// Create a new AccessRequest
 				RangerAccessRequestImpl newRequest =
@@ -244,16 +245,24 @@ public class TestPolicyEngine {
 					}
 				}
 
-
 				newRequest.setContext(context);
+
+				// accessResource.ServiceDef is set here, so that we can skip call to policyEngine.preProcess() which
+				// sets the serviceDef in the resource AND calls enrichers. We dont want enrichers to be called when
+				// context already contains tags -- This may change when we want enrichers to enrich request in the
+				// presence of tags!!!
+
+				// Safe cast
+				RangerAccessResourceImpl accessResource = (RangerAccessResourceImpl) test.request.getResource();
+				accessResource.setServiceDef(testCase.serviceDef);
 
 				request = newRequest;
 
 			}
 			else {
 				request = test.request;
+				policyEngine.preProcess(request);
 			}
-			policyEngine.preProcess(request);
 
 			RangerAccessResult expected = test.result;
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();

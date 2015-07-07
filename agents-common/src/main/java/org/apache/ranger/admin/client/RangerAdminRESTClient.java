@@ -79,11 +79,12 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		String sslConfigFileName = RangerConfigPropertyRepository.getProperty(propertyPrefix + ".policy.rest.ssl.config.file");
 
 		if (url == null) {
-			// Use externalurl
-			if(LOG.isDebugEnabled()) {
-				LOG.info("RangerAdminRESTClient.init() : null url found for property " + propertyPrefix + ".policy.rest.url, using value of ranger.externalurl property instead.");
-				url = RangerConfigPropertyRepository.getProperty("ranger.externalurl");
+
+			if(LOG.isInfoEnabled()) {
+				LOG.info("RangerAdminRESTClient.init() : no such property " + propertyPrefix + ".policy.rest.url, using value of ranger.externalurl property instead.");
 			}
+
+			url = RangerConfigPropertyRepository.getProperty("ranger.externalurl");
 		}
 
 		if(LOG.isDebugEnabled()) {
