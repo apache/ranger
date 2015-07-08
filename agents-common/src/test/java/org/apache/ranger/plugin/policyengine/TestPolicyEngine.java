@@ -41,6 +41,9 @@ import org.junit.Test;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -98,6 +101,7 @@ public class TestPolicyEngine {
 
 		System.out.println("provider=" + provider.toString());
 
+/*
 		// For setting up TestTagProvider
 
 		Path filePath = new Path("file:///tmp/ranger-admin-test-site.xml");
@@ -106,14 +110,16 @@ public class TestPolicyEngine {
 		FileSystem fs = filePath.getFileSystem(config);
 
 		FSDataOutputStream outStream = fs.create(filePath, true);
-		OutputStreamWriter writer = null;
 
-
-		writer = new OutputStreamWriter(outStream);
+		OutputStreamWriter writer = new OutputStreamWriter(outStream);
 
 		writer.write("<configuration>\n" +
 				"        <property>\n" +
 				"                <name>ranger.plugin.tag.policy.rest.url</name>\n" +
+				"                <value>http://node-1.example.com:6080</value>\n" +
+				"        </property>\n" +
+				"        <property>\n" +
+				"                <name>ranger.externalurl</name>\n" +
 				"                <value>http://node-1.example.com:6080</value>\n" +
 				"        </property>\n" +
 				"</configuration>\n");
@@ -122,7 +128,7 @@ public class TestPolicyEngine {
 
 		RangerConfiguration rangerConfig = RangerConfiguration.getInstance();
 		rangerConfig.addResource(filePath);
-
+*/
 	}
 
 	@AfterClass

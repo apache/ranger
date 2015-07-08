@@ -11,6 +11,28 @@
       {"name":"read","label":"Read"},
       {"name":"write","label":"Write"},
       {"name":"execute","label":"Execute"}
+    ],
+    "contextEnrichers":
+    [
+      {
+        "itemId":1,
+        "name" : "GeolocationEnricher",
+        "enricher" : "org.apache.ranger.plugin.contextenricher.RangerFileBasedGeolocationProvider",
+        "enricherOptions" : {
+          "geolocation.source.loader.options": "{'FilePath':'/geo/geo.txt', 'ForceRead':'false', 'IPInDotFormat':'true' }"
+          ,"geolocation.meta.prefix": "TEST_"
+        }
+      }
+    ],
+    "policyConditions": [
+      {
+        "itemId":1,
+        "name":"ScriptConditionEvaluator",
+        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+        "evaluatorOptions" : {"engineName":"JavaScript"},
+        "label":"Script",
+        "description": "Script to execute"
+      }
     ]
   },
 
@@ -32,24 +54,48 @@
     {"id":3,"name":"allow-read-to-finance under /finance/restricted","isEnabled":true,"isAuditEnabled":true,
      "resources":{"path":{"values":["/finance/restricted"],"isRecursive":true}},
      "policyItems":[
-       {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["finance"],"delegateAdmin":false}
+       {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["finance"],"delegateAdmin":false,
+         "conditions":[{
+           "type":"ScriptConditionEvaluator",
+           "values":["var country_code = ctx.getGeolocation('LOCATION_TEST_COUNTRY_CODE'); ctx.result = !!country_code;"]
+         }]}
      ]
     }
   ],
 
   "tests":[
-    {"name":"ALLOW 'read /finance/restricted/sales.db' for g=finance",
+    {"name":"ALLOW 'read /finance/restricted/sales.db' for g=finance; valid clientIPAddress",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
-      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db"
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
+       "clientIPAddress":"255.255.255.255"
      },
      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
     ,
+    {"name":"DENY 'read /finance/restricted/sales.db' for g=finance; invalid clientIPAddress",
+      "request":{
+        "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
+        "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
+        "clientIPAddress":"128.101.101.99"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    }
+  ,
+    {"name":"ALLOW 'read /finance/restricted/sales.db' for g=finance; no clientIPAddress",
+      "request":{
+        "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
+        "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    }
+  ,
     {"name":"ALLOW 'read /finance/restricted/hr/payroll.db' for g=finance",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/hr/payroll.db"}},
-      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/hr/payroll.db"
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/hr/payroll.db",
+       "clientIPAddress":"128.101.101.101"
+
      },
      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
@@ -57,7 +103,8 @@
     {"name":"DENY 'read /operations/visitors.db' for g=finance",
      "request":{
       "resource":{"elements":{"path":"/operations/visitors.db"}},
-      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /operations/visitors.db"
+      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /operations/visitors.db",
+       "clientIPAddress":"128.101.101.99"
      },
      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
     }

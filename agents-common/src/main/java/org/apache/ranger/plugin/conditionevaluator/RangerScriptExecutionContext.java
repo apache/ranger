@@ -300,4 +300,13 @@ public final class RangerScriptExecutionContext {
 		}
 		return ret;
 	}
+
+	public final String getGeolocation(String attributeName) {
+		String ret = null;
+
+		if (StringUtils.isNotBlank(attributeName)) {
+			ret = (String) getEvaluationContext().get(attributeName);
+		}
+		return ret;
+	}
 }

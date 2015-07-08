@@ -237,7 +237,6 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	public RangerTaggedResource updateTagsForResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
 								   List<RangerTaggedResource.RangerResourceTag> tagsToDelete) throws Exception {
 		throw new Exception("RangerAdminjersey2RESTClient.updateTagsForResource() -- *** NOT IMPLEMENTED *** ");
-
 	}
 
 	// package level methods left so (and not private only for testability!)  Not intended for use outside this class!!

@@ -303,7 +303,7 @@
 				<artifactId>gson</artifactId>
 				<version>${gson.version}</version>
 			</dependency>
-		</dependencies>
+		  </dependencies>
 	</dependencyManagement>
   <build>
   	<pluginManagement>
