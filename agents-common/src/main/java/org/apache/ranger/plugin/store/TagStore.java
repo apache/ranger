@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.store;
 
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
@@ -27,8 +26,6 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.TagServiceResources;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Interface to backing store for the top-level TAG model objects
@@ -53,23 +50,23 @@ public interface TagStore {
 
     PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception;
 
-    RangerTaggedResource createResource(RangerTaggedResource resource, boolean createOrUpdate) throws Exception;
+    RangerTaggedResource createTaggedResource(RangerTaggedResource resource, boolean createOrUpdate) throws Exception;
 
-    RangerTaggedResource updateResource(RangerTaggedResource resource) throws Exception;
+    RangerTaggedResource updateTaggedResource(RangerTaggedResource resource) throws Exception;
 
     void deleteResource(Long id) throws Exception;
 
     RangerTaggedResource getResource(Long id) throws Exception;
 
-    TagServiceResources getResources(String tagServiceName, String componentType, Long lastTimestamp) throws Exception;
+    TagServiceResources getResources(String serviceName, Long lastTimestamp) throws Exception;
 
     List<RangerTaggedResource> getResources(SearchFilter filter) throws Exception;
 
     PList<RangerTaggedResource> getPaginatedResources(SearchFilter filter) throws Exception;
 
-    List<String> getTags(String tagServiceName, String serviceType) throws Exception;
+    List<String> getTags(String serviceName) throws Exception;
 
-    List<String> lookupTags(String tagServiceName, String serviceType, String tagNamePattern) throws Exception;
+    List<String> lookupTags(String serviceName, String tagNamePattern) throws Exception;
 
     RangerTaggedResource getResource(RangerTaggedResourceKey key) throws Exception;
 }

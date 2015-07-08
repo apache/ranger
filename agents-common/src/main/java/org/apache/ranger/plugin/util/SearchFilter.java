@@ -54,7 +54,6 @@ public class SearchFilter {
 	public static final String TAG_DEF_NAME     = "tagDefName"; // search
 	public static final String TAG_RESOURCE_ID  = "tagResourceId"; // search
 	public static final String TAG_RESOURCE_SERVICE_NAME = "tagResourceServiceName";  // search
-	public static final String TAG_RESOURCE_COMPONENT_TYPE = "tagResourceComponentType"; // search
 	public static final String TAG_RESOURCE_TIMESTAMP = "tagResourceTimestamp"; // search
 
 

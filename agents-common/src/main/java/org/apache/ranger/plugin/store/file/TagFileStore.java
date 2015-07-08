@@ -287,7 +287,7 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerTaggedResource createResource(RangerTaggedResource resource, boolean createOrUpdate) throws Exception {
+	public RangerTaggedResource createTaggedResource(RangerTaggedResource resource, boolean createOrUpdate) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.createResource(" + resource + ")");
 		}
@@ -322,7 +322,7 @@ public class TagFileStore extends AbstractTagStore {
 
 		try {
 			if (updateResource) {
-				ret = updateResource(resource);
+				ret = updateTaggedResource(resource);
 			} else {
 				preCreate(resource);
 
@@ -346,7 +346,7 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerTaggedResource updateResource(RangerTaggedResource resource) throws Exception {
+	public RangerTaggedResource updateTaggedResource(RangerTaggedResource resource) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.updateResource(" + resource + ")");
 		}
@@ -361,9 +361,8 @@ public class TagFileStore extends AbstractTagStore {
 		try {
 			preUpdate(existing);
 
-			existing.getKey().setComponentType(resource.getKey().getComponentType());
 			existing.getKey().setResourceSpec(resource.getKey().getResourceSpec());
-			existing.getKey().setTagServiceName(resource.getKey().getTagServiceName());
+			existing.getKey().setServiceName(resource.getKey().getServiceName());
 			existing.setTags(resource.getTags());
 
 			ret = fileStoreUtil.saveToFile(existing, new Path(fileStoreUtil.getDataFile(FILE_PREFIX_TAG_RESOURCE, existing.getId())), true);
@@ -437,7 +436,7 @@ public class TagFileStore extends AbstractTagStore {
 	public RangerTaggedResource getResource(RangerTaggedResourceKey key) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getResource( " + key.getTagServiceName() + ", " + key.getComponentType() + " )");
+			LOG.debug("==> TagFileStore.getResource( " + key.getServiceName() + " )");
 		}
 
 		if (this.svcStore == null) {
@@ -450,20 +449,28 @@ public class TagFileStore extends AbstractTagStore {
 			throw new Exception("TagFileStore.getResources() - parameter 'key' is null.");
 		}
 
+		RangerService service = null;
+		try {
+			service = svcStore.getServiceByName(key.getServiceName());
+		} catch(Exception excp) {
+			LOG.error("TagFileStore.getResource - failed to get service " + key.getServiceName());
+			throw new Exception("Invalid service: " + key.getServiceName());
+		}
+
 		RangerServiceDef serviceDef = null;
 
 		try {
-			serviceDef = svcStore.getServiceDefByName(key.getComponentType());
+			serviceDef = svcStore.getServiceDefByName(service.getType());
 		} catch (Exception exception) {
-			LOG.error("TagFileStore.getResource - failed to get serviceDef for " + key.getComponentType());
-			throw new Exception("Invalid component-type: " + key.getComponentType());
+			LOG.error("TagFileStore.getResource - failed to get serviceDef for " + service.getType());
+			throw new Exception("Invalid component-type: " + service.getType());
 		}
 
 		List<RangerTaggedResource> resources = null;
 
 		if (MapUtils.isNotEmpty(key.getResourceSpec())) {
 
-			TagServiceResources tagServiceResources = getResources(key.getTagServiceName(), key.getComponentType(), 0L);
+			TagServiceResources tagServiceResources = getResources(key.getServiceName(), 0L);
 			resources = tagServiceResources.getTaggedResources();
 
 			List<RangerTaggedResource> notMatchedResources = new ArrayList<>();
@@ -498,27 +505,23 @@ public class TagFileStore extends AbstractTagStore {
 		RangerTaggedResource ret = (resources == null || CollectionUtils.isEmpty(resources)) ? null : resources.get(0);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getResource( " + key.getTagServiceName() + ", " + key.getComponentType() + " )" + ret);
+			LOG.debug("==> TagFileStore.getResource( " + key.getServiceName() + " )" + ret);
 		}
 
 		return ret;
 	}
 
 	@Override
-	public TagServiceResources getResources(String tagServiceName, String componentType, Long lastTimeStamp) throws Exception {
+	public TagServiceResources getResources(String serviceName, Long lastTimeStamp) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getResources(" + tagServiceName + ", " + componentType + ", " + lastTimeStamp + ")");
+			LOG.debug("==> TagFileStore.getResources(" + serviceName + ", " + lastTimeStamp + ")");
 		}
 		List<RangerTaggedResource> taggedResources;
 
 		SearchFilter filter = new SearchFilter();
 
-		if (StringUtils.isNotBlank(tagServiceName)) {
-			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, tagServiceName);
-		}
-
-		if (StringUtils.isNotBlank(componentType)) {
-			filter.setParam(SearchFilter.TAG_RESOURCE_COMPONENT_TYPE, componentType);
+		if (StringUtils.isNotBlank(serviceName)) {
+			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, serviceName);
 		}
 
 		if (lastTimeStamp != null) {
@@ -528,7 +531,7 @@ public class TagFileStore extends AbstractTagStore {
 		taggedResources = getResources(filter);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getResources(" + tagServiceName + ", " + componentType + ", " + lastTimeStamp + ")");
+			LOG.debug("<== TagFileStore.getResources(" + serviceName + ", " + lastTimeStamp + ")");
 
 		}
 
@@ -660,15 +663,15 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<String> getTags(String tagServiceName, String componentType) throws Exception {
+	public List<String> getTags(String serviceName) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getTags(" + tagServiceName + ", " + componentType + ")");
+			LOG.debug("==> TagFileStore.getTags(" + serviceName + ")");
 		}
 
 		SortedSet<String> tagNameSet = new TreeSet<String>();
 
-		TagServiceResources tagServiceResources = getResources(tagServiceName, componentType, 0L);
+		TagServiceResources tagServiceResources = getResources(serviceName, 0L);
 		List<RangerTaggedResource> resources = tagServiceResources.getTaggedResources();
 
 		if (CollectionUtils.isNotEmpty(resources)) {
@@ -684,20 +687,20 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getTags(" + tagServiceName + ", " + componentType + ")");
+			LOG.debug("<== TagFileStore.getTags(" + serviceName + ")");
 		}
 
 		return new ArrayList<String>(tagNameSet);
 	}
 
 	@Override
-	public List<String> lookupTags(String tagServiceName, String componentType, String tagNamePattern) throws Exception {
+	public List<String> lookupTags(String serviceName, String tagNamePattern) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.lookupTags(" + tagServiceName + ", " + componentType + ", " + tagNamePattern + ")");
+			LOG.debug("==> TagFileStore.lookupTags(" + serviceName + ", " + tagNamePattern + ")");
 		}
 
-		List<String> tagNameList = getTags(tagServiceName, componentType);
+		List<String> tagNameList = getTags(serviceName);
 		List<String> matchedTagList = new ArrayList<String>();
 
 		if (CollectionUtils.isNotEmpty(tagNameList)) {
@@ -717,7 +720,7 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.lookupTags(" + tagServiceName + ", " + componentType + ", " + tagNamePattern + ")");
+			LOG.debug("<== TagFileStore.lookupTags(" + serviceName + ", " + tagNamePattern + ")");
 		}
 
 		return matchedTagList;

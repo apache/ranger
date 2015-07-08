@@ -24,13 +24,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.file.TagFileStore;
-import org.apache.ranger.plugin.store.rest.ServiceRESTStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.TagServiceResources;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +42,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Path(TagRESTConstants.TAGDEF_NAME_AND_VERSION)
@@ -238,7 +235,7 @@ public class TagREST {
         try {
             //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
             //validator.validate(resource, Action.CREATE);
-            ret = tagStore.createResource(resource, false);
+            ret = tagStore.createTaggedResource(resource, false);
         } catch(Exception excp) {
             LOG.error("createResource(" + resource + ") failed", excp);
 
@@ -272,7 +269,7 @@ public class TagREST {
         try {
             //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
             //validator.validate(resource, Action.UPDATE);
-            ret = tagStore.updateResource(resource);
+            ret = tagStore.updateTaggedResource(resource);
         } catch(Exception excp) {
             LOG.error("updateResource(" + id + ") failed", excp);
 
@@ -326,7 +323,7 @@ public class TagREST {
             try {
                 //RangerResourceValidator validator = validatorFactory.getResourceValidator(tagStore);
                 //validator.validate(resource, Action.UPDATE);
-                ret = tagStore.updateResource(oldResource);
+                ret = tagStore.updateTaggedResource(oldResource);
             } catch (Exception excp) {
                 LOG.error("updateResource(" + id + ") failed", excp);
 
@@ -399,25 +396,24 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.RESOURCES_UPDATED_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public TagServiceResources getResources(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
-                                                   @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType,
+    public TagServiceResources getResources(@QueryParam(TagRESTConstants.SERVICE_NAME_PARAM) String serviceName,
                                                    @QueryParam(TagRESTConstants.TAG_TIMESTAMP_PARAM) Long lastTimestamp) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getResources(" + tagServiceName + ", " + componentType + ", " + lastTimestamp + ")");
+            LOG.debug("==> TagREST.getResources(" + serviceName + ", " + lastTimestamp + ")");
         }
 
         TagServiceResources ret = null;
 
         try {
-            ret = tagStore.getResources(tagServiceName, componentType, lastTimestamp);
+            ret = tagStore.getResources(serviceName, lastTimestamp);
         } catch(Exception excp) {
-            LOG.error("getResources(" + tagServiceName + ", " + componentType + ") failed", excp);
+            LOG.error("getResources(" + serviceName + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<==> TagREST.getResources(" + tagServiceName + ", " + componentType + ", " + lastTimestamp + ")");
+            LOG.debug("<==> TagREST.getResources(" + serviceName + ", " + lastTimestamp + ")");
         }
 
         return ret;
@@ -428,24 +424,23 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.TAGNAMES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public List<String> getTagNames(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
-                                   @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType) {
+    public List<String> getTagNames(@QueryParam(TagRESTConstants.SERVICE_NAME_PARAM) String serviceName) {
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getTagNames(" + tagServiceName + ")");
+            LOG.debug("==> TagREST.getTagNames(" + serviceName + ")");
         }
         List<String> tagNames = null;
 
         try {
-            tagNames = tagStore.getTags(tagServiceName, componentType);
+            tagNames = tagStore.getTags(serviceName);
         } catch(Exception excp) {
-            LOG.error("getTags(" + tagServiceName + ") failed", excp);
+            LOG.error("getTags(" + serviceName + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.getTagNames(" + tagServiceName + ")");
+            LOG.debug("<== TagREST.getTagNames(" + serviceName + ")");
         }
         return tagNames;
     }
@@ -456,24 +451,23 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.LOOKUP_TAGS_RESOURCE)
     @Produces({ "application/json", "application/xml" })
-    public List<String> lookupTags(@QueryParam(TagRESTConstants.TAG_SERVICE_NAME_PARAM) String tagServiceName,
-                                    @DefaultValue("") @QueryParam(TagRESTConstants.COMPONENT_TYPE_PARAM) String componentType,
+    public List<String> lookupTags(@QueryParam(TagRESTConstants.SERVICE_NAME_PARAM) String serviceName,
                                     @DefaultValue(".*") @QueryParam(TagRESTConstants.TAG_PATTERN_PARAM) String tagNamePattern) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.lookupTags(" + tagServiceName  + ", " + tagNamePattern + ")");
+            LOG.debug("==> TagREST.lookupTags(" + serviceName  + ", " + tagNamePattern + ")");
         }
         List<String> matchingTagNames = null;
 
         try {
-            matchingTagNames = tagStore.lookupTags(tagServiceName, componentType, tagNamePattern);
+            matchingTagNames = tagStore.lookupTags(serviceName, tagNamePattern);
         } catch(Exception excp) {
-            LOG.error("lookupTags(" + tagServiceName + ") failed", excp);
+            LOG.error("lookupTags(" + serviceName + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.lookupTags(" + tagServiceName + ")");
+            LOG.debug("<== TagREST.lookupTags(" + serviceName + ")");
         }
         return matchingTagNames;
     }
@@ -487,7 +481,7 @@ public class TagREST {
     @Produces({ "application/json", "application/xml" })
     public TagServiceResources getAllTaggedResources() throws Exception {
         String emptyString = "";
-        return getResources(emptyString, emptyString, 0L);
+        return getResources(emptyString, 0L);
     }
 
     // to create or update a tagged resource with associated tags in RangerAdmin
@@ -505,7 +499,7 @@ public class TagREST {
         RangerTaggedResource  taggedResource = new RangerTaggedResource(key, tags);
 
         try {
-            ret = tagStore.createResource(taggedResource, true);        // Create or Update
+            ret = tagStore.createTaggedResource(taggedResource, true);        // Create or Update
         } catch(Exception excp) {
             LOG.error("setResource() failed", excp);
             LOG.error("Could not create taggedResource, " + taggedResource);
@@ -584,7 +578,7 @@ public class TagREST {
             oldResource.setTags(tags);
 
             try {
-                ret = tagStore.updateResource(oldResource);
+                ret = tagStore.updateTaggedResource(oldResource);
             } catch (Exception excp) {
                 LOG.error("updateResource(" + key + ") failed", excp);
 

@@ -204,12 +204,12 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public TagServiceResources getTaggedResources(String tagServiceName, String componentType, Long lastTimestamp) throws Exception {
+	public TagServiceResources getTaggedResources(Long lastTimestamp) throws Exception {
 		throw new Exception("RangerAdminjersey2RESTClient.getTaggedResource() -- *** NOT IMPLEMENTED *** ");
 	}
 
 	@Override
-	public List<String> getTagNames(String tagServiceName, String componentType, String tagNamePattern) throws Exception {
+	public List<String> getTagNames(String tagNamePattern) throws Exception {
 		throw new Exception("RangerAdminjersey2RESTClient.getTagNames() -- *** NOT IMPLEMENTED *** ");
 	}
 
@@ -224,24 +224,19 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public TagServiceResources getAllTaggedResources() throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.getAllTaggedResources() -- *** NOT IMPLEMENTED *** ");
+	public List<RangerTaggedResource> setTagsForResources(List<RangerTaggedResourceKey> keys, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.setTagsForResources() -- *** NOT IMPLEMENTED *** ");
 	}
 
 	@Override
-	public List<RangerTaggedResource> setResources(List<RangerTaggedResourceKey> keys, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.setResources() -- *** NOT IMPLEMENTED *** ");
+	public RangerTaggedResource setTagsForResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.setTagsForResource() -- *** NOT IMPLEMENTED *** ");
 	}
 
 	@Override
-	public RangerTaggedResource setResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.setResource() -- *** NOT IMPLEMENTED *** ");
-	}
-
-	@Override
-	public RangerTaggedResource updateResourceTags(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
+	public RangerTaggedResource updateTagsForResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
 								   List<RangerTaggedResource.RangerResourceTag> tagsToDelete) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.updateResourceTags() -- *** NOT IMPLEMENTED *** ");
+		throw new Exception("RangerAdminjersey2RESTClient.updateTagsForResource() -- *** NOT IMPLEMENTED *** ");
 
 	}
 

@@ -25,32 +25,24 @@ import java.util.Map;
 public class RangerTaggedResourceKey implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String componentType                                                = null; // one of any supported by any component
-	private String tagServiceName                                               = null;
-	private Map<String, RangerPolicy.RangerPolicyResource> resourceSpec         = null;
+	private String                                         serviceName  = null;
+	private Map<String, RangerPolicy.RangerPolicyResource> resourceSpec = null;
 
-	public RangerTaggedResourceKey() { this(null, null, null); }
+	public RangerTaggedResourceKey() { this(null, null); }
 
-	public RangerTaggedResourceKey(String componentType, String tagServiceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
+	public RangerTaggedResourceKey(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
 		super();
 
-		setComponentType(componentType);
-		setTagServiceName(tagServiceName);
+		setServiceName(serviceName);
 		setResourceSpec(resourceSpec);
 	}
 
-	public String getComponentType() { return componentType;}
-
-	public String getTagServiceName() { return tagServiceName; }
+	public String getServiceName() { return serviceName; }
 
 	public Map<String, RangerPolicy.RangerPolicyResource> getResourceSpec() { return resourceSpec; }
 
-	public void setComponentType(String componentType) {
-		this.componentType = componentType;
-	}
-
-	public void setTagServiceName(String tagServiceName) {
-		this.tagServiceName = tagServiceName;
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
 	}
 
 	public void setResourceSpec(Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
@@ -70,8 +62,7 @@ public class RangerTaggedResourceKey implements java.io.Serializable {
 
 		sb.append("{ ");
 
-		sb.append("componentType={").append(componentType).append("} ");
-		sb.append("tagServiceName={").append(tagServiceName).append("} ");
+		sb.append("tagServiceName={").append(serviceName).append("} ");
 
 		sb.append("resourceSpec={");
 		if(resourceSpec != null) {

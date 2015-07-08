@@ -2,9 +2,7 @@ package org.apache.ranger.services.tag;
 
 import java.util.*;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
-import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
@@ -12,9 +10,6 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.store.TagStore;
-import org.apache.ranger.plugin.store.file.TagFileStore;
 
 public class RangerServiceTag extends RangerBaseService {
 
@@ -49,7 +44,7 @@ public class RangerServiceTag extends RangerBaseService {
 		RangerAdminClient adminClient = createAdminClient(serviceName);
 
 		try {
-			adminClient.getTagNames(serviceName, null, ".*");	// Don't care about componentType
+			adminClient.getTagNames(".*");
 			connectivityStatus = true;
 		} catch (Exception e) {
 			LOG.error("RangerServiceTag.validateConfig() Error:" + e);
@@ -108,7 +103,7 @@ public class RangerServiceTag extends RangerBaseService {
 
 					RangerAdminClient adminClient = createAdminClient(serviceName);
 
-					tagNameList = adminClient.getTagNames(serviceName, null, tagNamePattern); // Don't care about componentType
+					tagNameList = adminClient.getTagNames(tagNamePattern);
 
 					tagNameList.removeAll(userProvidedTagList);
 

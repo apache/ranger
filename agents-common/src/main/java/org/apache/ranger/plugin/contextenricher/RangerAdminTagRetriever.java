@@ -38,20 +38,18 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 	private static String propertyPrefixPreamble = "ranger.plugin.";
 	private static String appId = "tag-retriever";
 
-	private final String componentType;
-	private final String tagServiceName;
+	private final String serviceName;
 	private final String propertyPrefix;
 
 	private RangerTagReceiver receiver;
 	private RangerAdminClient adminClient;
 	private Long lastTimestamp;
 
-	public RangerAdminTagRetriever(final String componentType, final String tagServiceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
+	public RangerAdminTagRetriever(final String serviceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
 		super(pollingIntervalMs);
-		this.componentType = componentType;
-		this.tagServiceName = tagServiceName;
+		this.serviceName = serviceName;
 		setReceiver(enricher);
-		propertyPrefix = propertyPrefixPreamble + componentType;
+		propertyPrefix = propertyPrefixPreamble + serviceName;
 		this.lastTimestamp = 0L;
 	}
 
@@ -62,11 +60,11 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 			String useTestTagProvider = options.get("useTestTagProvider");
 
 			if (useTestTagProvider != null && useTestTagProvider.equals("true")) {
-				adminClient = RangerServiceTag.createAdminClient(tagServiceName);
+				adminClient = RangerServiceTag.createAdminClient(serviceName);
 			}
 		}
 		if (adminClient == null) {
-			adminClient = RangerBasePlugin.createAdminClient(tagServiceName, appId, propertyPrefix);
+			adminClient = RangerBasePlugin.createAdminClient(serviceName, appId, propertyPrefix);
 		}
 
 	}
@@ -83,7 +81,7 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 
 			try {
 				long before = new Date().getTime();
-				TagServiceResources taggedResources = adminClient.getTaggedResources(tagServiceName, componentType, lastTimestamp);
+				TagServiceResources taggedResources = adminClient.getTaggedResources(lastTimestamp);
 				resources = taggedResources.getTaggedResources();
 				lastTimestamp = before;
 			} catch (Exception exp) {

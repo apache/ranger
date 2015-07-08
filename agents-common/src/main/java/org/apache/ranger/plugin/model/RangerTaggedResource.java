@@ -46,7 +46,7 @@ import java.util.*;
 public class RangerTaggedResource extends RangerBaseModelObject {
     private static final long serialVersionUID = 1L;
 
-    private RangerTaggedResourceKey          key;
+    private RangerTaggedResourceKey key;
     private List<RangerResourceTag> tags;
 
     public RangerTaggedResource(RangerTaggedResourceKey key, List<RangerResourceTag> tags) {
@@ -118,9 +118,10 @@ public class RangerTaggedResource extends RangerBaseModelObject {
     @XmlAccessorType(XmlAccessType.FIELD)
 
     public static class RangerResourceTag implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-        private String                  name                = null;
-        private Map<String, String>     attributeValues     = null;
+        private String              name            = null;
+        private Map<String, String> attributeValues = null;
 
         public RangerResourceTag(String name, Map<String, String> attributeValues) {
             super();

@@ -38,17 +38,15 @@ public interface RangerAdminClient {
 
 	void revokeAccess(GrantRevokeRequest request) throws Exception;
 
-	TagServiceResources getTaggedResources(String tagServiceName, String componentType, Long lastTimestamp) throws Exception;
+	TagServiceResources getTaggedResources(Long lastTimestamp) throws Exception;
 
-	List<String> getTagNames(String tagServiceName, String componentType, String tagNamePattern) throws Exception;
+	List<String> getTagNames(String tagNamePattern) throws Exception;
 
-	TagServiceResources getAllTaggedResources() throws Exception;
+	List<RangerTaggedResource> setTagsForResources(List<RangerTaggedResourceKey> keys, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception;
 
-	List<RangerTaggedResource> setResources(List<RangerTaggedResourceKey> keys, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception;
+	RangerTaggedResource setTagsForResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception;
 
-	RangerTaggedResource setResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception;
-
-	RangerTaggedResource updateResourceTags(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
+	RangerTaggedResource updateTagsForResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
 							  List<RangerTaggedResource.RangerResourceTag> tagsToDelete) throws Exception;
 
 }

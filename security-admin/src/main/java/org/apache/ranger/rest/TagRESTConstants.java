@@ -43,8 +43,7 @@ public class TagRESTConstants {
 	static final String ACTION_REPLACE = "replace";
 	static final String ACTION_DELETE = "delete";
 
-	public static final String TAG_SERVICE_NAME_PARAM = "tagservicename";
-	public static final String COMPONENT_TYPE_PARAM = "componenttype";
+	public static final String SERVICE_NAME_PARAM = "servicename";
 	public static final String TAG_TIMESTAMP_PARAM = "tagtimestamp";
 	public static final String TAG_PATTERN_PARAM = "tagpattern";
 

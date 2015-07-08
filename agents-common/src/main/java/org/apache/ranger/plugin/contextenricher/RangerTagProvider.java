@@ -22,7 +22,6 @@ package org.apache.ranger.plugin.contextenricher;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -62,10 +61,10 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 		long pollingIntervalMs = getLongOption("pollingInterval", 60 * 1000);
 
 		if (tagProviderTypeString.equals(TagProviderTypeEnum.FILESTORE_BASED_TAG_PROVIDER.toString())) {
-			tagRefresher = new RangerTagFileStoreRetriever(serviceDef.getName(), serviceName, pollingIntervalMs, this);
+			tagRefresher = new RangerTagFileStoreRetriever(serviceName, pollingIntervalMs, this);
 			tagProviderType = TagProviderTypeEnum.FILESTORE_BASED_TAG_PROVIDER;
 		} else if (tagProviderTypeString.equals(TagProviderTypeEnum.RANGER_ADMIN_TAG_PROVIDER.toString())) {
-			tagRefresher = new RangerAdminTagRetriever(serviceDef.getName(), serviceName, pollingIntervalMs, this);
+			tagRefresher = new RangerAdminTagRetriever(serviceName, pollingIntervalMs, this);
 			tagProviderType = TagProviderTypeEnum.RANGER_ADMIN_TAG_PROVIDER;
 		} else if (tagProviderTypeString.equals(TagProviderTypeEnum.EXTERNAL_SYSTEM_TAG_PROVIDER.toString())) {
 			// TODO

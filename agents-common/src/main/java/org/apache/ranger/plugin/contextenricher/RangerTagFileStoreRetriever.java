@@ -34,17 +34,15 @@ import java.util.Map;
 public class RangerTagFileStoreRetriever extends RangerTagRefresher {
 	private static final Log LOG = LogFactory.getLog(RangerTagFileStoreRetriever.class);
 
-	private final String componentType;
-	private final String tagServiceName;
+	private final String serviceName;
 	private RangerTagReceiver receiver;
 
 	private TagStore tagStore;
 	private Long lastTimestamp;
 
-	public RangerTagFileStoreRetriever(final String componentType, final String tagServiceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
+	public RangerTagFileStoreRetriever(final String serviceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
 		super(pollingIntervalMs);
-		this.componentType = componentType;
-		this.tagServiceName = tagServiceName;
+		this.serviceName = serviceName;
 		this.lastTimestamp = 0L;
 		setReceiver(enricher);
 	}
@@ -66,7 +64,7 @@ public class RangerTagFileStoreRetriever extends RangerTagRefresher {
 
 			try {
 				long before = new Date().getTime();
-				TagServiceResources tagServiceResources = tagStore.getResources(tagServiceName, componentType, lastTimestamp);
+				TagServiceResources tagServiceResources = tagStore.getResources(serviceName, lastTimestamp);
 				resources = tagServiceResources.getTaggedResources();
 				lastTimestamp = before;
 			} catch (Exception exp) {
