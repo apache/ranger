@@ -46,12 +46,13 @@ public class RangerPolicyRepository {
     private List<RangerPolicyEvaluator>       policyEvaluators;
     private final Map<String, Boolean>        accessAuditCache;
 
+    private final String                      componentServiceName;
     private final RangerServiceDef            componentServiceDef;
 
     RangerPolicyRepository(ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
         super();
 
-        this.serviceName = servicePolicies.getServiceName();
+        this.componentServiceName = this.serviceName = servicePolicies.getServiceName();
         this.componentServiceDef = this.serviceDef = servicePolicies.getServiceDef();
         this.policies = Collections.unmodifiableList(servicePolicies.getPolicies());
         this.policyVersion = servicePolicies.getPolicyVersion() != null ? servicePolicies.getPolicyVersion() : -1;
@@ -76,12 +77,15 @@ public class RangerPolicyRepository {
     }
 
     RangerPolicyRepository(ServicePolicies.TagPolicies tagPolicies, RangerPolicyEngineOptions options,
-                           RangerServiceDef componentServiceDef) {
+                           RangerServiceDef componentServiceDef, String componentServiceName) {
         super();
+
         this.serviceName = tagPolicies.getServiceName();
+        this.componentServiceName = componentServiceName;
 
         this.serviceDef = normalizeAccessTypeDefs(tagPolicies.getServiceDef(), componentServiceDef.getName());
         this.componentServiceDef = componentServiceDef;
+
         this.policies = Collections.unmodifiableList(normalizePolicyItemAccesses(tagPolicies.getPolicies(), componentServiceDef.getName()));
         this.policyVersion = tagPolicies.getPolicyVersion() != null ? tagPolicies.getPolicyVersion() : -1;
         this.accessAuditCache = null;
@@ -287,7 +291,7 @@ public class RangerPolicyRepository {
 
         if(ret != null) {
         	ret.setContextEnricherDef(enricherDef);
-            ret.setContextServiceName(serviceName);
+            ret.setContextServiceName(componentServiceName);
             ret.setContextServiceDef(componentServiceDef);
             ret.init();
         }

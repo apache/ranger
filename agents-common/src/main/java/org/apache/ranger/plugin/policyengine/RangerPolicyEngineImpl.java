@@ -64,7 +64,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				LOG.debug("RangerPolicyEngineImpl : Building tag-policy-repository for tag-service " + tagPolicies.getServiceName());
 			}
 
-			tagPolicyRepository = new RangerPolicyRepository(tagPolicies, options, servicePolicies.getServiceDef());
+			tagPolicyRepository = new RangerPolicyRepository(tagPolicies, options, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
 
 		} else {
 			if (LOG.isDebugEnabled()) {

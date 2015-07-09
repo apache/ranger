@@ -24,6 +24,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.TagServiceResources;
@@ -45,11 +46,11 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 	private RangerAdminClient adminClient;
 	private Long lastTimestamp;
 
-	public RangerAdminTagRetriever(final String serviceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
+	public RangerAdminTagRetriever(final String serviceName, final RangerServiceDef serviceDef, final long pollingIntervalMs, final RangerTagReceiver enricher) {
 		super(pollingIntervalMs);
 		this.serviceName = serviceName;
 		setReceiver(enricher);
-		propertyPrefix = propertyPrefixPreamble + serviceName;
+		propertyPrefix = propertyPrefixPreamble + serviceDef.getName();
 		this.lastTimestamp = 0L;
 	}
 

@@ -64,7 +64,7 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 			tagRefresher = new RangerTagFileStoreRetriever(serviceName, pollingIntervalMs, this);
 			tagProviderType = TagProviderTypeEnum.FILESTORE_BASED_TAG_PROVIDER;
 		} else if (tagProviderTypeString.equals(TagProviderTypeEnum.RANGER_ADMIN_TAG_PROVIDER.toString())) {
-			tagRefresher = new RangerAdminTagRetriever(serviceName, pollingIntervalMs, this);
+			tagRefresher = new RangerAdminTagRetriever(serviceName, serviceDef, pollingIntervalMs, this);
 			tagProviderType = TagProviderTypeEnum.RANGER_ADMIN_TAG_PROVIDER;
 		} else if (tagProviderTypeString.equals(TagProviderTypeEnum.EXTERNAL_SYSTEM_TAG_PROVIDER.toString())) {
 			// TODO
