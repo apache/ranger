@@ -68,6 +68,7 @@ public class StormRangerPlugin extends RangerBasePlugin {
 		}
 		request.setAccessType(_operation);
 		request.setClientIPAddress(_clientIp);
+		request.setAction(_operation);
 		// build resource and connect stuff into request
 		RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
 		resource.setValue(ResourceName.Topology, _topology);
