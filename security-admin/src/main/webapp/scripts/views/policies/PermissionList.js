@@ -204,16 +204,7 @@ define(function(require) {
 					url: url,
 					dataType: 'json',
 					data: function (term, page) {
-						var data = { name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value };
-						var userRoleList = []
-						_.each(XAEnums.UserRoles,function(val, key){
-							if(SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value == val.value){
-								userRoleList.push(key)
-							}else if(!SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value != val.value){
-								userRoleList.push(key)
-							}
-						})
-						return _.extend(data,{'userRoleList' : userRoleList });
+						return {name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
 					},
 					results: function (data, page) { 
 						var results = [] , selectedVals = [];
