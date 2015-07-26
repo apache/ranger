@@ -18,6 +18,8 @@
  */
 package com.xasecure.authorization.hbase;
 
+import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
+import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
 import org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor;
 
 /**
@@ -28,6 +30,6 @@ import org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor;
  * This class is final because if one needs to customize coprocessor it is expected that RangerAuthorizationCoprocessor would be modified/extended as that is
  * the "real" coprocessor!  This class, hence, should NEVER be more than an EMPTY shell!
  */
-public final class XaSecureAuthorizationCoprocessor extends RangerAuthorizationCoprocessor {
+public final class XaSecureAuthorizationCoprocessor extends RangerAuthorizationCoprocessor implements AccessControlProtos.AccessControlService.Interface, CoprocessorService {
 
 }
