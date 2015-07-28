@@ -941,7 +941,7 @@ define(function(require) {
 
 		$.extend(PolicyConditions.prototype, {
 			render : function() {
-				this.$input = this.$tpl.find('input');
+				this.$input = this.$tpl.find('input, textarea');
 				var pluginOpts = {
 					tags : true,
 					width : '220px',
@@ -949,7 +949,12 @@ define(function(require) {
 					minimumInputLength : 1,
 					tokenSeparators : [ ",", ";" ],
 				}
-				this.$input.select2(pluginOpts);
+				_.each(this.$input, function(elem){
+					if($(elem).is('input')){
+						$(elem).select2(pluginOpts);
+				    }	
+				})
+						
 			},
 
 			value2str : function(value) {
@@ -964,8 +969,14 @@ define(function(require) {
 
 			value2input : function(value) {
 				_.each(value, function(val, name) {
-					this.$input.filter('[name=' + name + ']').select2('val',
-							value[name]);
+					var elem = this.$input.filter('[name=' + name + ']');
+					if((elem).is('input')){
+						elem.select2('val',
+								value[name]);
+					}else{
+						elem.val(value[name])
+					}
+					
 				}, this);
 			},
 
@@ -973,8 +984,11 @@ define(function(require) {
 				var obj = {};
 				_.each(this.$input, function(input) {
 					var name = input.name;
-					var val = this.$input.filter('[name="' + name + '"]')
-							.select2('val');
+					if($(input).is('input')){
+						var val = this.$input.filter('[name="' + name + '"]').select2('val');
+					}else{
+						var val = $(input).val();
+					}
 					obj[name] = val;
 				}, this);
 

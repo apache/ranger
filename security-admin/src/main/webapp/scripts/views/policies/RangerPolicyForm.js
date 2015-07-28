@@ -518,8 +518,8 @@ define(function(require){
 			return JSON.stringify(context);
 		},
 		formValidation : function(){
-			var groupSet = false,permSet = false,groupPermSet = false;
-			var userSet=false, userPerm = false, userPermSet =false,breakFlag =false;
+			var groupSet = false,permSet = false,groupPermSet = false,
+			userSet=false, userPerm = false, userPermSet =false,breakFlag =false, condSet = false;
 			console.log('validation called..');
 			this.formInputList.each(function(m){
 				if(_.isEmpty(m.attributes)) return;
@@ -539,12 +539,16 @@ define(function(require){
 						}
 					}
 				}
+				if(m.has('conditions')){
+					condSet = m.has('conditions') ? true : false;
+				}
 			});
 			
 			var auditStatus = this.fields.isAuditEnabled.editor.getValue();
 			var obj = { groupPermSet	: groupPermSet , groupSet : groupSet,	
 						userSet 		: userSet, isUsers:userPermSet,
-						auditLoggin : auditStatus 
+						auditLoggin 	: auditStatus,
+						condSet			: condSet,
 					};
 			if(groupSet || userSet){
 				obj['permSet'] = groupSet ? permSet : false;

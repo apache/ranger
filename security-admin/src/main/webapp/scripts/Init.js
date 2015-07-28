@@ -93,7 +93,10 @@
        },
        'bootbox' : {
          deps: ['jquery'] 
-       }       
+       },
+       'esprima': {
+    	   'exports' : 'esprima'
+       },
     },
 
     paths: {
@@ -145,6 +148,7 @@
         'i18nprecompile'			: '../libs/bower/require-handlebars-plugin/js/i18nprecompile',
         'json2'						: '../libs/bower/require-handlebars-plugin/js/json2',
         'hbs'						: '../libs/bower/require-handlebars-plugin/js/hbs',
+        'esprima'					: '../libs/bower/esprima/esprima',
 
         'tmpl'						: '../templates'
     },

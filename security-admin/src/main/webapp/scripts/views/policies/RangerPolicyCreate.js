@@ -141,7 +141,12 @@ define(function(require){
 			var validateObj = this.form.formValidation();
 			valid = (validateObj.groupSet && validateObj.permSet) || (validateObj.userSet && validateObj.userPerm);
 			if(!valid){
-				if(validateObj.groupSet && (!validateObj.permSet)){
+				if((!validateObj.groupSet && !validateObj.userSet) && (validateObj.condSet)) {
+					this.popupCallBack(localization.tt('msg.addUserOrGroupForPC'),validateObj);
+				}else if((!validateObj.groupSet && !validateObj.userSet) && (validateObj.permSet)) {
+					this.popupCallBack(localization.tt('msg.addUserOrGroup'),validateObj);
+					
+				}else if(validateObj.groupSet && (!validateObj.permSet)){
 					this.popupCallBack(localization.tt('msg.addGroupPermission'),validateObj);
 				}else if((!validateObj.groupSet) && (validateObj.permSet)) {
 					this.popupCallBack(localization.tt('msg.addGroup'),validateObj);

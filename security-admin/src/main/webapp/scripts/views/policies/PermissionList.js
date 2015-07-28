@@ -34,6 +34,7 @@ define(function(require) {
 	var VXGroupList			= require('collections/VXGroupList');
 	var VXUserList			= require('collections/VXUserList');
 	require('bootstrap-editable');
+	require('esprima');
     	
 	var FormInputItem = Backbone.Marionette.ItemView.extend({
 		_msvName : 'FormInputItem',
@@ -384,15 +385,20 @@ define(function(require) {
 			var that = this;
 			
 			if(this.policyConditions.length > 0){
-				var tmpl = _.map(this.policyConditions,function(obj){ 
+				var tmpl = _.map(this.policyConditions,function(obj){
+					if(!_.isUndefined(obj.evaluatorOptions) && !_.isUndefined(obj.evaluatorOptions['ui.isMultiline']) && Boolean(obj.evaluatorOptions['ui.isMultiline'])){
+						return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span><i title="JavaScript Condition Examples :\ncountry_code == \'USA\', time_range >= 900 && time_range <= 1800 etc." class="icon-info-sign" style="float: right;margin-top: 6px;"></i>\
+						</label><textarea name="'+obj.name+'" placeholder="Please enter condtion.."></textarea></div>'
+					}
 					return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span></label><input type="text" name="'+obj.name+'" ></div>'
+						
 				});
 				//Create new bootstrap x-editable `policyConditions` dataType for policy conditions 
 				XAUtil.customXEditableForPolicyCond(tmpl.join(''));
 				//create x-editable for policy conditions
 				this.$('#policyConditions').editable({
 					emptytext : 'Add Conditions',
-					value : this.conditions, 
+					value : this.conditions,
 					display: function(value) {
 						var continue_ = false, i = 0;
 						if(!value) {
@@ -401,14 +407,19 @@ define(function(require) {
 						}
 						_.each(value, function(val, name){ if(!_.isEmpty(val)) continue_ = true; });
 						if(continue_){
+							//Generate html to show on UI
 							var html = _.map(value, function(val,name) {
 								var label = (i%2 == 0) ? 'label label-inverse' : 'label';
+								if(_.isEmpty(val)){
+									return ''; 
+								}
 								i++;
-								return _.isEmpty(val) ? '' : '<span class="'+label+'">'+name+' : '+ val + '</span>';	
+								return '<span class="'+label+'" >'+name+' : '+ val + '</span>';
 							});
 							var cond = _.map(value, function(val, name) {
 								return {'type' : name, 'values' : !_.isArray(val) ?  val.split(',') : val};
 							});
+							
 							that.model.set('conditions', cond);
 							$(this).html(html);
 							that.ui.addConditionsSpan.find('i').attr('class', 'icon-pencil');
@@ -419,12 +430,39 @@ define(function(require) {
 							that.ui.addConditionsSpan.find('i').attr('class', 'icon-plus');
 							that.ui.addConditionsSpan.attr('title','add');
 						}
-					}
+					},
+					validate:function(value){
+						var error = {'flag' : false};
+						_.each(value, function(val, name){
+							var tmp = _.findWhere(that.multiLinecond, { 'name' : name});
+							if(!_.isUndefined(tmp)){
+								try {
+									var t = esprima.parse(val);
+								}catch(e){
+									if(!error.flag){
+										console.log(e.message)
+										error.flag = true;
+										error.message = e.message;
+										error.fieldName = name;
+									}
+								}
+							}
+						})
+						$('.editableform').find('.editable-error-block').remove();
+						if(error.flag){
+							$('.editableform').find('.editable-error-block').remove();
+							$('.editableform').find('[name="'+error.fieldName+'"]').parent().append('<div class="editable-error-block help-block" style="display: none;"></div>')
+							return error.message;
+						}
+				    },
 				});
 				that.ui.addConditionsSpan.click(function(e) {
 					e.stopPropagation();
 					that.$('#policyConditions').editable('toggle');
 				});
+				//to show only mutiline line policy codition 
+				this.multiLinecond = _.filter(that.policyConditions, function(m){ return (!_.isUndefined(m.evaluatorOptions['ui.isMultiline']) && m.evaluatorOptions['ui.isMultiline']) });
+				this.multiLinecond = _.isArray(this.multiLinecond) ? this.multiLinecond : [this.multiLinecond];
 				
 			}
 		},

@@ -326,7 +326,9 @@ define(function(require) {
 				policyDisabledMsg		  : 'This policy is currently in disabled state.',
 				noRecordsFound			  : 'No Records Found',
 				keyDeleteMsg			  : 'Key deleted successfully',
-				rolloverSuccessfully	  : 'Key rollover successfully'
+				rolloverSuccessfully	  : 'Key rollover successfully',
+				addUserOrGroup			  : 'Please select group/user for the selected permission, else group/user will not be added.',
+				addUserOrGroupForPC		  : 'Please select group/user for the added policy condition, else group/user will not be added.',
 				
 				
 				
