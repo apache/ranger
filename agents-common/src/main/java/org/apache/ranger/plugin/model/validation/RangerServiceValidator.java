@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -67,16 +68,21 @@ public class RangerServiceValidator extends RangerValidator {
 
 		boolean valid = true;
 		if (action != Action.DELETE) {
-			failures.add(new ValidationFailureDetailsBuilder()
-				.isAnInternalError()
-				.becauseOf("unsupported action[" + action + "]; isValid(Long) is only supported for DELETE")
-				.build());
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_UNSUPPORTED_ACTION;
+			failures.add(new RangerServiceValidationErrorBuilder()
+					.isAnInternalError()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(action))
+					.build());
 			valid = false;
 		} else if (id == null) {
-			failures.add(new ValidationFailureDetailsBuilder()
-				.field("id")
-				.isMissing()
-				.build());
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_MISSING_FIELD;
+			failures.add(new RangerServiceValidationErrorBuilder()
+					.field("id")
+					.isMissing()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(id))
+					.build());
 			valid = false;
 		} else if (getService(id) == null) {
 			if (LOG.isDebugEnabled()) {
@@ -100,32 +106,34 @@ public class RangerServiceValidator extends RangerValidator {
 		
 		boolean valid = true;
 		if (service == null) {
-			String message = "service object passed in was null";
-			LOG.debug(message);
-			failures.add(new ValidationFailureDetailsBuilder()
-				.field("service")
-				.isMissing()
-				.becauseOf(message)
-				.build());
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_NULL_SERVICE_OBJECT;
+			failures.add(new RangerServiceValidationErrorBuilder()
+					.field("service")
+					.isMissing()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage())
+					.build());
 			valid = false;
 		} else {
 			Long id = service.getId();
 			if (action == Action.UPDATE) { // id is ignored for CREATE
 				if (id == null) {
-					String message = "service id was null/empty/blank"; 
-					LOG.debug(message);
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("id")
-						.isMissing()
-						.becauseOf(message)
-						.build());
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_EMPTY_SERVICE_ID;
+					failures.add(new RangerServiceValidationErrorBuilder()
+							.field("id")
+							.isMissing()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage())
+							.build());
 					valid = false;
 				} else if (getService(id) == null) {
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("id")
-						.isSemanticallyIncorrect()
-						.becauseOf("no service exists with id[" + id +"]")
-						.build());
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_ID;
+					failures.add(new RangerServiceValidationErrorBuilder()
+							.field("id")
+							.isSemanticallyIncorrect()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(id))
+							.build());
 					valid = false;
 				}
 			}
@@ -133,48 +141,56 @@ public class RangerServiceValidator extends RangerValidator {
 			boolean nameSpecified = StringUtils.isNotBlank(name);
 			RangerServiceDef serviceDef = null;
 			if (!nameSpecified) {
-				String message = "service name[" + name + "] was null/empty/blank"; 
-				LOG.debug(message);
-				failures.add(new ValidationFailureDetailsBuilder()
-					.field("name")
-					.isMissing()
-					.becauseOf(message)
-					.build());
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_NAME;
+				failures.add(new RangerServiceValidationErrorBuilder()
+						.field("name")
+						.isMissing()
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(name))
+						.build());
 				valid = false;
 			} else {
 				RangerService otherService = getService(name);
 				if (otherService != null && action == Action.CREATE) {
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("name")
-						.isSemanticallyIncorrect()
-						.becauseOf("service with the name[" + name + "] already exists")
-						.build());
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT;
+					failures.add(new RangerServiceValidationErrorBuilder()
+							.field("name")
+							.isSemanticallyIncorrect()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(name))
+							.build());
 					valid = false;
 				} else if (otherService != null && otherService.getId() !=null && !otherService.getId().equals(id)) {
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("id/name")
-						.isSemanticallyIncorrect()
-						.becauseOf("id/name conflict: another service already exists with name[" + name + "], its id is [" + otherService.getId() + "]")
-						.build());
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT;
+					failures.add(new RangerServiceValidationErrorBuilder()
+							.field("id/name")
+							.isSemanticallyIncorrect()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(name, otherService.getId()))
+							.build());
 					valid = false;
 				}
 			}
 			String type = service.getType();
 			boolean typeSpecified = StringUtils.isNotBlank(type);
 			if (!typeSpecified) {
-				failures.add(new ValidationFailureDetailsBuilder()
-					.field("type")
-					.isMissing()
-					.becauseOf("service def [" + type + "] was null/empty/blank")
-					.build());
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_MISSING_SERVICE_DEF;
+				failures.add(new RangerServiceValidationErrorBuilder()
+						.field("type")
+						.isMissing()
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(type))
+						.build());
 				valid = false;
 			} else {
 				serviceDef = getServiceDef(type);
 				if (serviceDef == null) {
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("type")
-						.isSemanticallyIncorrect()
-						.becauseOf("service def named[" + type + "] not found")
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_DEF;
+					failures.add(new RangerServiceValidationErrorBuilder()
+							.field("type")
+							.isSemanticallyIncorrect()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(type))
 						.build());
 					valid = false;
 				}
@@ -185,12 +201,14 @@ public class RangerServiceValidator extends RangerValidator {
 				Set<String> inputParameters = getServiceConfigParameters(service);
 				Set<String> missingParameters = Sets.difference(reqiredParameters, inputParameters);
 				if (!missingParameters.isEmpty()) {
-					failures.add(new ValidationFailureDetailsBuilder()
-						.field("configuration")
-						.subField(missingParameters.iterator().next()) // we return any one parameter!
-						.isMissing()
-						.becauseOf("required configuration parameter is missing; missing parameters: " + missingParameters)
-						.build());
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_REQUIRED_PARM_MISSING;
+					failures.add(new RangerServiceValidationErrorBuilder()
+							.field("configuration")
+							.subField(missingParameters.iterator().next()) // we return any one parameter!
+							.isMissing()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(missingParameters))
+							.build());
 					valid = false;
 				}
 			}
@@ -201,4 +219,27 @@ public class RangerServiceValidator extends RangerValidator {
 		}
 		return valid;
 	}
+
+	static class RangerServiceValidationErrorBuilder extends ValidationFailureDetailsBuilder {
+
+		@Override
+		ValidationFailureDetails build() {
+			return new RangerPolicyValidationFailure(_errorCode, _fieldName, _subFieldName, _missing, _semanticError, _internalError, _reason);
+		}
+	}
+
+	static class RangerPolicyValidationFailure extends  ValidationFailureDetails {
+
+		public RangerPolicyValidationFailure(int errorCode, String fieldName, String subFieldName, boolean missing, boolean semanticError, boolean internalError, String reason) {
+			super(errorCode, fieldName, subFieldName, missing, semanticError, internalError, reason);
+		}
+
+		// TODO remove and move to baseclass when all 3 move to new message framework
+		@Override
+		public String toString() {
+			LOG.debug("RangerServiceValidationFailure.toString");
+			return String.format("%s: %d, %s", "Policy validation failure", _errorCode, _reason);
+		}
+	}
+
 }

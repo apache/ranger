@@ -27,9 +27,6 @@ import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by alal on 6/17/15.
- */
 public class TestValidationFailureDetails {
 
     @Test
