@@ -46,17 +46,26 @@ import java.util.*;
 public class RangerTaggedResource extends RangerBaseModelObject {
     private static final long serialVersionUID = 1L;
 
+    private String                  externalId;
     private RangerTaggedResourceKey key;
     private List<RangerResourceTag> tags;
 
-    public RangerTaggedResource(RangerTaggedResourceKey key, List<RangerResourceTag> tags) {
+    public RangerTaggedResource(String externalId, RangerTaggedResourceKey key, List<RangerResourceTag> tags) {
+        super();
+        setExternalId(externalId);
         setKey(key);
         setTags(tags);
     }
 
-    public RangerTaggedResource() {
-        this(null, null);
+    public RangerTaggedResource(RangerTaggedResourceKey key, List<RangerResourceTag> tags) {
+        this(null, key, tags);
     }
+
+    public RangerTaggedResource() {
+        this(null, null, null);
+    }
+
+    public String getExternalId() { return externalId; }
 
     public RangerTaggedResourceKey getKey() { return key; }
 
@@ -65,6 +74,10 @@ public class RangerTaggedResource extends RangerBaseModelObject {
     }
 
     // And corresponding set methods
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
 
     public void setKey(RangerTaggedResourceKey key) {
         this.key = key == null ? new RangerTaggedResourceKey() : key;
@@ -87,6 +100,7 @@ public class RangerTaggedResource extends RangerBaseModelObject {
 
         sb.append("{ ");
 
+        sb.append("externalId={").append(externalId).append("} ");
         sb.append("key={");
         if (key != null) {
             key.toString(sb);
@@ -120,18 +134,30 @@ public class RangerTaggedResource extends RangerBaseModelObject {
     public static class RangerResourceTag implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
+        private String              externalId      = null;
         private String              name            = null;
         private Map<String, String> attributeValues = null;
 
-        public RangerResourceTag(String name, Map<String, String> attributeValues) {
+        public RangerResourceTag(String externalId, String name, Map<String, String> attributeValues) {
             super();
+            setExternalId(externalId);
             setName(name);
             setAttributeValues(attributeValues);
         }
 
-        public RangerResourceTag() {
-            this(null, null);
+        public RangerResourceTag(String name, Map<String, String> attributeValues) {
+            this(null, name, attributeValues);
         }
+
+        public RangerResourceTag() {
+            this(null, null, null);
+        }
+
+        public String getExternalId() {
+            return externalId;
+        }
+
+        public void setExternalId(String externalId) { this.externalId = externalId; }
 
         public String getName() {
             return name;
@@ -160,6 +186,7 @@ public class RangerTaggedResource extends RangerBaseModelObject {
 
             sb.append("{ ");
 
+            sb.append("externalId={").append(externalId).append("} ");
             sb.append("name={").append(name).append("} ");
 
             sb.append("attributeValues={");
