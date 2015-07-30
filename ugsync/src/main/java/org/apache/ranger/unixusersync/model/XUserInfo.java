@@ -28,7 +28,6 @@ public class XUserInfo {
 	private String 	description ;
 	
 	private List<String>  	groupNameList = new ArrayList<String>() ;
-	private List<String>    groupIdList   = new ArrayList<String>() ;
 	
 	public String getId() {
 		return id;
@@ -55,14 +54,6 @@ public class XUserInfo {
 	
 	public List<String> getGroupNameList() {
 		return groupNameList;
-	}
-	
-	public List<String> getGroupIdList() {
-		return groupIdList;
-	}
-	
-	public void setGroupIdList(List<String> groupIdList) {
-		this.groupIdList = groupIdList;
 	}
 
 	public List<String> getGroups() {
