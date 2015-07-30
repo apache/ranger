@@ -63,7 +63,7 @@ import org.apache.ranger.unixusersync.model.XUserGroupInfo;
 import org.apache.ranger.unixusersync.model.XUserInfo;
 import org.apache.ranger.unixusersync.model.UserGroupInfo;
 import org.apache.ranger.usergroupsync.UserGroupSink;
-import org.mortbay.log.Log;
+import org.apache.ranger.usersync.util.UserSyncUtil;
 
 public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
@@ -603,25 +603,38 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 
 	private void delXUserGroupInfo(XUserInfo aUserInfo, XGroupInfo aGroupInfo) {
-		
-		Client c = getClient() ;
-	    
-	    String uri = PM_DEL_USER_GROUP_LINK_URI.replaceAll(Pattern.quote("${groupName}"), aGroupInfo.getName()).replaceAll(Pattern.quote("${userName}"), aUserInfo.getName()) ;
-	    
-	    WebResource r = c.resource(getURL(uri)) ;
-	    
-	    ClientResponse response = r.delete(ClientResponse.class) ;
-	    
-	    LOG.debug("RESPONSE: [" + response.toString() + "]") ;
+	
+		String groupName = aGroupInfo.getName();
 
-	    
-	    if (response.getStatus() == 200) {
-	    	delUserGroupFromList(aUserInfo, aGroupInfo) ;
-	    }
+		String userName  = aUserInfo.getName();
 		
+		try {
+
+			Client c = getClient() ;
+
+			String uri = PM_DEL_USER_GROUP_LINK_URI.replaceAll(Pattern.quote("${groupName}"), 
+					   UserSyncUtil.encodeURIParam(groupName)).replaceAll(Pattern.quote("${userName}"), UserSyncUtil.encodeURIParam(userName));
+
+			WebResource r = c.resource(getURL(uri)) ;
+
+		    ClientResponse response = r.delete(ClientResponse.class) ;
+
+		    if ( LOG.isDebugEnabled() ) {
+		    	LOG.debug("RESPONSE: [" + response.toString() + "]") ;
+		    }
+
+		    if (response.getStatus() == 200) {
+		    	delUserGroupFromList(aUserInfo, aGroupInfo) ;
+		    }
+ 
+		} catch (Exception e) {
+
+			LOG.warn( "ERROR: Unable to delete GROUP: " + groupName  + " from USER:" + userName , e) ;
+		}
+
 	}
 	
-	
+
 	private MUserInfo addMUser(String aUserName) {
 		
 		MUserInfo ret = null ;
