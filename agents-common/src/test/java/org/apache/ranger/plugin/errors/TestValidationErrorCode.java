@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.errors;
 
 import com.google.common.collect.ImmutableSet;
 import junit.framework.TestCase;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -67,6 +68,19 @@ public class TestValidationErrorCode extends TestCase {
                 assertFalse(anEnum.toString() + ": contains " + token + ". Check for wongly numberd substition variable placeholders.",
                         anEnum._template.contains(token));
             }
+        }
+    }
+
+    /**
+     * Test if the values assigned to the validation error code are unique or not.
+     */
+    public void testValidationErrorCodesUnique() {
+        Set<Integer> errorCodes = new HashSet<>();
+        for (ValidationErrorCode anEnum : ValidationErrorCode.values()) {
+            int errorCode = anEnum.getErrorCode();
+            // errorCode that we see must not have been seen so far.
+            assertFalse("ValidationErrorCode: error code [" + errorCode + "] used multiple times!", errorCodes.contains(errorCode));
+            errorCodes.add(errorCode);
         }
     }
 }
