@@ -48,11 +48,6 @@ public class ValidationFailureDetails {
 		_reason = reason;
 	}
 
-	// TODO - legacy signature remove after all 3 are ported over to new message framework
-	public ValidationFailureDetails(String fieldName, String subFieldName, boolean missing, boolean semanticError, boolean internalError, String reason) {
-		this(-1, fieldName, subFieldName, missing, semanticError, internalError, reason);
-	}
-
 	public String getFieldName() {
 		return _fieldName;
 	}
@@ -76,23 +71,11 @@ public class ValidationFailureDetails {
 		return _subFieldName;
 	}
 
-	// matches "{blah}", "{{blah}", "{   }" and yields variables names like "blah", "{blah", "   ", etc. for substitution
-	static final Pattern _Pattern = Pattern.compile("\\{([^\\}]+)\\}");
-
-	public String substituteVariables(String template) {
-		return template.replace("{field}", _fieldName == null ? "" : _fieldName)
-				.replace("{sub-field}", _subFieldName == null ? "" : _subFieldName)
-				.replace("{reason}", _reason == null ? "" : _reason);
-	}
-
-	// TODO legacy implementation.  Remove when all
 	@Override
 	public String toString() {
 		LOG.debug("ValidationFailureDetails.toString()");
-		return String.format("Field[%s]%s is %s: reason[%s]", 
-				_fieldName, 
-				_subFieldName == null ? "" : ", subField[" + _subFieldName + "]",
-				getType(), _reason);
+		return String.format("%s: error code[%d], reason[%s], field[%s], subfield[%s], type[%s]", "Policy validation failure",
+				_errorCode, _reason, _fieldName, _subFieldName, getType());
 	}
 
 	@Override

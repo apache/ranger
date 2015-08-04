@@ -49,7 +49,7 @@ public class ValidationFailureDetailsBuilder {
 	}
 	
 	ValidationFailureDetails build() {
-		return new ValidationFailureDetails(_fieldName, _subFieldName, _missing, _semanticError, _internalError, _reason);
+		return new ValidationFailureDetails(_errorCode, _fieldName, _subFieldName, _missing, _semanticError, _internalError, _reason);
 	}
 
 	ValidationFailureDetailsBuilder subField(String missingParameter) {
