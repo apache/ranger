@@ -69,7 +69,7 @@ public class RangerServiceValidator extends RangerValidator {
 		boolean valid = true;
 		if (action != Action.DELETE) {
 			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_UNSUPPORTED_ACTION;
-			failures.add(new RangerServiceValidationErrorBuilder()
+			failures.add(new ValidationFailureDetailsBuilder()
 					.isAnInternalError()
 					.errorCode(error.getErrorCode())
 					.becauseOf(error.getMessage(action))
@@ -77,7 +77,7 @@ public class RangerServiceValidator extends RangerValidator {
 			valid = false;
 		} else if (id == null) {
 			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_MISSING_FIELD;
-			failures.add(new RangerServiceValidationErrorBuilder()
+			failures.add(new ValidationFailureDetailsBuilder()
 					.field("id")
 					.isMissing()
 					.errorCode(error.getErrorCode())
@@ -107,7 +107,7 @@ public class RangerServiceValidator extends RangerValidator {
 		boolean valid = true;
 		if (service == null) {
 			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_NULL_SERVICE_OBJECT;
-			failures.add(new RangerServiceValidationErrorBuilder()
+			failures.add(new ValidationFailureDetailsBuilder()
 					.field("service")
 					.isMissing()
 					.errorCode(error.getErrorCode())
@@ -119,7 +119,7 @@ public class RangerServiceValidator extends RangerValidator {
 			if (action == Action.UPDATE) { // id is ignored for CREATE
 				if (id == null) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_EMPTY_SERVICE_ID;
-					failures.add(new RangerServiceValidationErrorBuilder()
+					failures.add(new ValidationFailureDetailsBuilder()
 							.field("id")
 							.isMissing()
 							.errorCode(error.getErrorCode())
@@ -128,7 +128,7 @@ public class RangerServiceValidator extends RangerValidator {
 					valid = false;
 				} else if (getService(id) == null) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_ID;
-					failures.add(new RangerServiceValidationErrorBuilder()
+					failures.add(new ValidationFailureDetailsBuilder()
 							.field("id")
 							.isSemanticallyIncorrect()
 							.errorCode(error.getErrorCode())
@@ -142,7 +142,7 @@ public class RangerServiceValidator extends RangerValidator {
 			RangerServiceDef serviceDef = null;
 			if (!nameSpecified) {
 				ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_NAME;
-				failures.add(new RangerServiceValidationErrorBuilder()
+				failures.add(new ValidationFailureDetailsBuilder()
 						.field("name")
 						.isMissing()
 						.errorCode(error.getErrorCode())
@@ -153,7 +153,7 @@ public class RangerServiceValidator extends RangerValidator {
 				RangerService otherService = getService(name);
 				if (otherService != null && action == Action.CREATE) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT;
-					failures.add(new RangerServiceValidationErrorBuilder()
+					failures.add(new ValidationFailureDetailsBuilder()
 							.field("name")
 							.isSemanticallyIncorrect()
 							.errorCode(error.getErrorCode())
@@ -162,7 +162,7 @@ public class RangerServiceValidator extends RangerValidator {
 					valid = false;
 				} else if (otherService != null && otherService.getId() !=null && !otherService.getId().equals(id)) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT;
-					failures.add(new RangerServiceValidationErrorBuilder()
+					failures.add(new ValidationFailureDetailsBuilder()
 							.field("id/name")
 							.isSemanticallyIncorrect()
 							.errorCode(error.getErrorCode())
@@ -175,7 +175,7 @@ public class RangerServiceValidator extends RangerValidator {
 			boolean typeSpecified = StringUtils.isNotBlank(type);
 			if (!typeSpecified) {
 				ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_MISSING_SERVICE_DEF;
-				failures.add(new RangerServiceValidationErrorBuilder()
+				failures.add(new ValidationFailureDetailsBuilder()
 						.field("type")
 						.isMissing()
 						.errorCode(error.getErrorCode())
@@ -186,7 +186,7 @@ public class RangerServiceValidator extends RangerValidator {
 				serviceDef = getServiceDef(type);
 				if (serviceDef == null) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_DEF;
-					failures.add(new RangerServiceValidationErrorBuilder()
+					failures.add(new ValidationFailureDetailsBuilder()
 							.field("type")
 							.isSemanticallyIncorrect()
 							.errorCode(error.getErrorCode())
@@ -202,7 +202,7 @@ public class RangerServiceValidator extends RangerValidator {
 				Set<String> missingParameters = Sets.difference(reqiredParameters, inputParameters);
 				if (!missingParameters.isEmpty()) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_REQUIRED_PARM_MISSING;
-					failures.add(new RangerServiceValidationErrorBuilder()
+					failures.add(new ValidationFailureDetailsBuilder()
 							.field("configuration")
 							.subField(missingParameters.iterator().next()) // we return any one parameter!
 							.isMissing()
@@ -219,27 +219,4 @@ public class RangerServiceValidator extends RangerValidator {
 		}
 		return valid;
 	}
-
-	static class RangerServiceValidationErrorBuilder extends ValidationFailureDetailsBuilder {
-
-		@Override
-		ValidationFailureDetails build() {
-			return new RangerPolicyValidationFailure(_errorCode, _fieldName, _subFieldName, _missing, _semanticError, _internalError, _reason);
-		}
-	}
-
-	static class RangerPolicyValidationFailure extends  ValidationFailureDetails {
-
-		public RangerPolicyValidationFailure(int errorCode, String fieldName, String subFieldName, boolean missing, boolean semanticError, boolean internalError, String reason) {
-			super(errorCode, fieldName, subFieldName, missing, semanticError, internalError, reason);
-		}
-
-		// TODO remove and move to baseclass when all 3 move to new message framework
-		@Override
-		public String toString() {
-			LOG.debug("RangerServiceValidationFailure.toString");
-			return String.format("%s: %d, %s", "Policy validation failure", _errorCode, _reason);
-		}
-	}
-
 }
