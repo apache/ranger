@@ -72,30 +72,9 @@ def populate_global_dict():
 			key , value = each_line.strip().split("=",1)
 			key = key.strip()
 			if 'PASSWORD' in key:
-				jceks_file_path = os.path.join(RANGER_KMS_HOME, 'jceks','ranger_db.jceks')
-				statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
-				if statuscode == 1:
-					value = ''
+				value = ''
 			value = value.strip()
 			globalDict[key] = value
-
-def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
-    finalLibPath = libpath.replace('\\','/').replace('//','/')
-    finalFilePath = 'jceks://file/'+filepath.replace('\\','/').replace('//','/')
-    if getorcreate == 'create':
-        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
-        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        output, error = p.communicate()
-        statuscode = p.returncode
-        return statuscode
-    elif getorcreate == 'get':
-        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
-        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        output, error = p.communicate()
-        statuscode = p.returncode
-        return statuscode, output
-    else:
-        print 'proper command not received for input need get or create'
 
 class BaseDB(object):
 

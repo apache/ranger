@@ -37,25 +37,6 @@ if os_name == "LINUX":
 elif os_name == "WINDOWS":
     RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
 
-def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
-    finalLibPath = libpath.replace('\\','/').replace('//','/')
-    finalFilePath = 'jceks://file/'+filepath.replace('\\','/').replace('//','/')
-    if getorcreate == 'create':
-        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'create', aliasKey, '-value', aliasValue, '-provider',finalFilePath]
-        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        output, error = p.communicate()
-        statuscode = p.returncode
-        return statuscode
-    elif getorcreate == 'get':
-        commandtorun = ['java', '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
-        p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        output, error = p.communicate()
-        statuscode = p.returncode
-        return statuscode, output
-    else:
-        print 'proper command not received for input need get or create'
-
-
 def check_output(query):
 	if os_name == "LINUX":
 		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
@@ -83,17 +64,14 @@ def populate_global_dict():
 	elif os_name == "WINDOWS":
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
 	library_path = os.path.join(RANGER_KMS_HOME,"cred","lib","*")
-	read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
+        read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
 	for each_line in read_config_file.read().split('\n') :
 		if len(each_line) == 0 : continue
 		if re.search('=', each_line):
 			key , value = each_line.strip().split("=",1)
 			key = key.strip()
 			if 'PASSWORD' in key:
-				jceks_file_path = os.path.join(RANGER_KMS_HOME, 'jceks','ranger_db.jceks')
-				statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
-				if statuscode == 1:
-					value = ''
+				value = ''
 			value = value.strip()
 			globalDict[key] = value
 
