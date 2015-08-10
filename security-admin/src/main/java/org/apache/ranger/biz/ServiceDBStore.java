@@ -133,6 +133,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class ServiceDBStore extends AbstractServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
 
+	public static final String RANGER_DEFAULT_TAGPOLICY_TAG_PREFIX = "ranger.default.tagpolicy.tag.";
+	public static final String RANGER_DEFAULT_TAGPOLICY_TAG_NAME = RANGER_DEFAULT_TAGPOLICY_TAG_PREFIX + "name";
+	public static final String RANGER_DEFAULT_TAGPOLICY_TAG_ATTRIBUTE_NAME = RANGER_DEFAULT_TAGPOLICY_TAG_PREFIX + "attribute.name";
+	public static final String RANGER_DEFAULT_TAGPOLICY_TAG_SCRIPT_FORMAT = RANGER_DEFAULT_TAGPOLICY_TAG_PREFIX + "%1$s." + "script";
+
+
 	@Autowired
 	RangerServiceDefService serviceDefService;
  
@@ -1095,10 +1101,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 				RangerServiceService.OPERATION_CREATE_CONTEXT);
 		bizUtil.createTrxLog(trxLogList);
 
-		if (createdService.getType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-			createDefaultPolicy = false;
-		}
-
 		if (createDefaultPolicy) {
 			createDefaultPolicies(xCreatedService, vXUser);
 		}
@@ -1772,14 +1774,125 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	void createDefaultPolicies(XXService createdService, VXUser vXUser) throws Exception {
-		// we need to create one policy for each resource hierarchy
 		RangerServiceDef serviceDef = getServiceDef(createdService.getType());
-		RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-		int i = 1;
-		for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies()) {
-			createDefaultPolicy(createdService, vXUser, aHierarchy, i);
-			i++;
-		};
+
+		if (serviceDef.getName().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+			createDefaultTagPolicy(createdService);
+		} else {
+			// we need to create one policy for each resource hierarchy
+			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+			int i = 1;
+			for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies()) {
+				createDefaultPolicy(createdService, vXUser, aHierarchy, i);
+				i++;
+			}
+		}
+	}
+
+	private void createDefaultTagPolicy(XXService createdService) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.createDefaultTagPolicy() ");
+		}
+
+		String tagResourceDefName = null;
+		String tagPolicyConditionName = null;
+
+		RangerServiceDef tagServiceDef = getServiceDef(createdService.getType());
+		List<RangerResourceDef> tagResourceDef = tagServiceDef.getResources();
+		if (tagResourceDef != null && tagResourceDef.size() > 0) {
+			// Assumption : First (and perhaps the only) resourceDef is the name of the tag resource
+			RangerResourceDef theTagResourceDef = tagResourceDef.get(0);
+			tagResourceDefName = theTagResourceDef.getName();
+		} else {
+			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy: Cannot get tagResourceDef Name.");
+		}
+
+		List<RangerPolicyConditionDef> policyConditions = tagServiceDef.getPolicyConditions();
+		if (policyConditions != null && policyConditions.size() > 0) {
+			// Assumption : First (and perhaps the only) policyConditionDef is javascript evaluator
+			RangerPolicyConditionDef condition = policyConditions.get(0);
+			tagPolicyConditionName = condition.getName();
+		} else {
+			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy: Cannot get tagPolicyConditionDef Name.");
+		}
+
+		String tagName = RangerConfiguration.getInstance().get(RANGER_DEFAULT_TAGPOLICY_TAG_NAME, "EXPIRES_ON");
+		String tagAttributeName = RangerConfiguration.getInstance().get(RANGER_DEFAULT_TAGPOLICY_TAG_ATTRIBUTE_NAME, "expiry_date");
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("ServiceDBStore.createDefaultTagPolicy() - tagResourceDefName=" + tagResourceDefName +
+					", tagPolicyConditionName=" + tagPolicyConditionName + ", tagName=" + tagName +
+					", tagAttributeName=" + tagAttributeName);
+		}
+
+		if (tagResourceDefName != null && tagPolicyConditionName != null && tagName != null && tagAttributeName != null) {
+
+			String policyName = createdService.getName() + "-" + tagName;
+
+			RangerPolicy policy = new RangerPolicy();
+
+			policy.setIsEnabled(true);
+			policy.setVersion(1L);
+			policy.setName(policyName);
+			policy.setService(createdService.getName());
+			policy.setDescription("Default Policy for TAG: " + tagName + " for TAG Service: " + createdService.getName());
+			policy.setIsAuditEnabled(true);
+			policy.setPolicyTypeFinal(true);
+
+			Map<String, RangerPolicyResource> resourceMap = new HashMap<>();
+
+			RangerPolicyResource polRes = new RangerPolicyResource();
+			polRes.setIsExcludes(false);
+			polRes.setIsRecursive(false);
+			polRes.setValue(tagName);
+			resourceMap.put(tagResourceDefName, polRes);
+
+			policy.setResources(resourceMap);
+
+			List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
+
+			RangerPolicyItem policyItem = new RangerPolicyItem();
+
+			List<String> groups = new ArrayList<String>();
+			groups.add(RangerConstants.GROUP_PUBLIC);
+			policyItem.setGroups(groups);
+
+			List<XXAccessTypeDef> accessTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(createdService.getType());
+			List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+			for (XXAccessTypeDef accessTypeDef : accessTypeDefs) {
+				RangerPolicyItemAccess access = new RangerPolicyItemAccess();
+				access.setType(accessTypeDef.getName());
+				access.setIsAllowed(true);
+				accesses.add(access);
+			}
+			policyItem.setAccesses(accesses);
+
+			List<RangerPolicyItemCondition> policyItemConditions = new ArrayList<RangerPolicyItemCondition>();
+			String propertyName = String.format(RANGER_DEFAULT_TAGPOLICY_TAG_SCRIPT_FORMAT, tagName);
+			String scriptFormat = RangerConfiguration.getInstance().get(propertyName, "if (ctx.isAccessedAfter('%1$s', '%2$s')) { ctx.result = false;} else { ctx.result = true;}");
+			String formattedScript = String.format(scriptFormat, tagName, tagAttributeName);
+			List<String> javascriptScriptList = new ArrayList<String>();
+			javascriptScriptList.add(formattedScript);
+			RangerPolicyItemCondition policyItemCondition = new RangerPolicyItemCondition(tagPolicyConditionName, javascriptScriptList);
+			policyItemConditions.add(policyItemCondition);
+
+			policyItem.setConditions(policyItemConditions);
+			policyItem.setDelegateAdmin(true);
+
+			policyItems.add(policyItem);
+
+			policy.setPolicyItems(policyItems);
+
+			policy = createPolicy(policy);
+		} else {
+			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy, tagResourceDefName=" + tagResourceDefName +
+					", tagPolicyConditionName=" + tagPolicyConditionName + ", defaultTagName=" + tagName +
+					", defaultTagAttributeName=" + tagAttributeName);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.createDefaultTagPolicy()");
+		}
 	}
 
 	private void createDefaultPolicy(XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy, int num) throws Exception {
