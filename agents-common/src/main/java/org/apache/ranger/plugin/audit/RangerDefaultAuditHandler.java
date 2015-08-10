@@ -98,7 +98,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setEventTime(request.getAccessTime());
 			ret.setUser(request.getUser());
 			ret.setAction(request.getAccessType());
-			ret.setAccessResult((short)(result.getIsAllowed() ? 1 : 0));
+			ret.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
 			ret.setPolicyId(result.getPolicyId());
 			ret.setAccessType(request.getAction());
 			ret.setClientIP(request.getClientIPAddress());
@@ -108,7 +108,6 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setTags(getTags(request));
 
 			populateDefaults(ret);
-
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -180,6 +179,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		if (auditEvent.getEventId() == null || auditEvent.getEventId().isEmpty()) {
 			auditEvent.setEventId(MiscUtil.generateUniqueId());
 		}
+
 		auditEvent.setSeqNum(sequenceNumber++);
 	}
 
@@ -208,13 +208,16 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		Set<String> tags = new HashSet<String>();
 
 		if (contextObj != null) {
-			@SuppressWarnings("unchecked")
-			List<RangerTaggedResource.RangerResourceTag> resourceTags = (List<RangerTaggedResource.RangerResourceTag>) contextObj;
-
-			if (CollectionUtils.isNotEmpty(resourceTags)) {
-				for (RangerTaggedResource.RangerResourceTag resourceTag : resourceTags) {
-					tags.add(resourceTag.getName());
+			try {
+				@SuppressWarnings("unchecked")
+				List<RangerTaggedResource.RangerResourceTag> resourceTags = (List<RangerTaggedResource.RangerResourceTag>) contextObj;
+				if (CollectionUtils.isNotEmpty(resourceTags)) {
+					for (RangerTaggedResource.RangerResourceTag resourceTag : resourceTags) {
+						tags.add(resourceTag.getName());
+					}
 				}
+			} catch (Throwable t) {
+				LOG.error("RangerDefaultAuditHandler.getTags(), exception when getting tags from context, exception=" + t);
 			}
 		}
 		return tags;

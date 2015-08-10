@@ -20,12 +20,19 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 
 
 public abstract class RangerAbstractConditionEvaluator implements RangerConditionEvaluator {
+	protected RangerServiceDef serviceDef = null;
 	protected RangerPolicyConditionDef  conditionDef = null;
 	protected RangerPolicyItemCondition condition    = null;
+
+	@Override
+	public void setServiceDef(RangerServiceDef serviceDef) {
+		this.serviceDef = serviceDef;
+	}
 
 	@Override
 	public void setConditionDef(RangerPolicyConditionDef conditionDef) {

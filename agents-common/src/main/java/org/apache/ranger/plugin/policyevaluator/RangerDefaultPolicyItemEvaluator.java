@@ -66,6 +66,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 				RangerConditionEvaluator conditionEvaluator = newConditionEvaluator(conditionDef.getEvaluator());
 
 				if (conditionEvaluator != null) {
+					conditionEvaluator.setServiceDef(serviceDef);
 					conditionEvaluator.setConditionDef(conditionDef);
 					conditionEvaluator.setPolicyItemCondition(condition);
 					conditionEvaluator.init();

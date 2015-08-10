@@ -101,6 +101,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		ret.setRequestData(getRequestData());
 		ret.setClientType(getClientType());
 		ret.setSessionId(getSessionId());
+		ret.setContext(getContext());
 		ret.accessType = accessType;
 
 		return ret;

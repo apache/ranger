@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
@@ -27,6 +28,8 @@ public interface RangerConditionEvaluator {
 	void setConditionDef(RangerPolicyConditionDef conditionDef);
 
 	void setPolicyItemCondition(RangerPolicyItemCondition condition);
+
+	void setServiceDef(RangerServiceDef serviceDef);
 
 
 	void init();

@@ -34,6 +34,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
+import org.apache.ranger.plugin.util.RangerRequestedResources;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -177,6 +178,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_hive_mutex_conditions() {
+		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_hive_mutex_conditions.json" };
+
+		runTestsFromResourceFiles(conditionsTestResourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
@@ -218,7 +226,8 @@ public class TestPolicyEngine {
 
 		for(TestData test : testCase.tests) {
 
-			if (test.request.getContext().containsKey(RangerPolicyEngine.KEY_CONTEXT_TAGS)) {
+			if (test.request.getContext().containsKey(RangerPolicyEngine.KEY_CONTEXT_TAGS) ||
+					test.request.getContext().containsKey(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 				// Create a new AccessRequest
 				RangerAccessRequestImpl newRequest =
 						new RangerAccessRequestImpl(test.request.getResource(), test.request.getAccessType(),
@@ -232,22 +241,43 @@ public class TestPolicyEngine {
 				newRequest.setSessionId(test.request.getSessionId());
 
 				Map<String, Object> context = test.request.getContext();
-				String tagsJsonString = (String) context.get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
-				context.remove(RangerPolicyEngine.KEY_CONTEXT_TAGS);
+				if (test.request.getContext().containsKey(RangerPolicyEngine.KEY_CONTEXT_TAGS)) {
+					String tagsJsonString = (String) context.get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
+					context.remove(RangerPolicyEngine.KEY_CONTEXT_TAGS);
 
-				if(!StringUtils.isEmpty(tagsJsonString)) {
-					try {
-						Type listType = new TypeToken<List<RangerTaggedResource.RangerResourceTag>>() {
-						}.getType();
-						List<RangerTaggedResource.RangerResourceTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
+					if (!StringUtils.isEmpty(tagsJsonString)) {
+						try {
+							Type listType = new TypeToken<List<RangerTaggedResource.RangerResourceTag>>() {
+							}.getType();
+							List<RangerTaggedResource.RangerResourceTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
 
-						context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
-					} catch (Exception e) {
-						System.err.println("TestPolicyEngine.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
-								tagsJsonString + ", exception=" + e);
+							context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
+						} catch (Exception e) {
+							System.err.println("TestPolicyEngine.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
+									tagsJsonString + ", exception=" + e);
+						}
+					}
+				} else if (test.request.getContext().containsKey(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES)) {
+					String resourcesJsonString = (String) context.get(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES);
+					context.remove(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES);
+					if (!StringUtils.isEmpty(resourcesJsonString)) {
+						try {
+							/*
+							Reader stringReader = new StringReader(resourcesJsonString);
+							RangerRequestedResources resources = gsonBuilder.fromJson(stringReader, RangerRequestedResources.class);
+							*/
+
+							Type myType = new TypeToken<RangerRequestedResources>() {
+							}.getType();
+							RangerRequestedResources resources = gsonBuilder.fromJson(resourcesJsonString, myType);
+
+							context.put(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES, resources);
+						} catch (Exception e) {
+							System.err.println("TestPolicyEngine.runTests(): error parsing REQUESTED_RESOURCES string in file " + testName + ", resourcesJsonString=" +
+									resourcesJsonString + ", exception=" + e);
+						}
 					}
 				}
-
 				newRequest.setContext(context);
 
 				// accessResource.ServiceDef is set here, so that we can skip call to policyEngine.preProcess() which
@@ -261,6 +291,8 @@ public class TestPolicyEngine {
 
 				request = newRequest;
 
+			} else
+			if (test.request.getContext().containsKey(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 			}
 			else {
 				request = test.request;

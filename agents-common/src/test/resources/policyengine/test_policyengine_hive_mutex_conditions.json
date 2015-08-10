@@ -1,0 +1,178 @@
+{
+  "serviceName":"hivedev",
+
+  "serviceDef":{
+    "name":"hive",
+    "id":3,
+    "resources":[
+      {"name":"database","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Database","description":"Hive Database"},
+      {"name":"table","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Table","description":"Hive Table"},
+      {"name":"udf","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive UDF","description":"Hive UDF"},
+      {"name":"column","level":3,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Column","description":"Hive Column"}
+    ],
+    "accessTypes":[
+      {"name":"select","label":"Select"},
+      {"name":"update","label":"Update"},
+      {"name":"create","label":"Create"},
+      {"name":"drop","label":"Drop"},
+      {"name":"alter","label":"Alter"},
+      {"name":"index","label":"Index"},
+      {"name":"lock","label":"Lock"},
+      {"name":"all","label":"All"}
+    ],
+    "policyConditions":[
+      {
+        "itemId":1,
+        "name":"not-accessed-together",
+        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerHiveResourcesNotAccessedTogetherCondition",
+        "evaluatorOptions" : {"ui.isMultiline":"false" },
+        "label":"Not Accessed Together?",
+        "description": "List of Hive resources"
+      }
+    ]
+  },
+
+  "policies":[
+    {"id":1,"name":"db=default; allow_exclusive select with mutual exclusion of col* for user1","isEnabled":true,"isAuditEnabled":true,"policyType":2,
+      "resources":{"database":{"values":["d*"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"select"}],"users":["user1"],"groups":[],"delegateAdmin":false, "conditions":[{"type":"not-accessed-together","values":["default.testTable.col*"]}]},
+        {"accesses":[{"type":"select"}],"users":["user2"],"groups":[],"delegateAdmin":false, "conditions":[{"type":"not-accessed-together","values":["default.testTable.col1", "default.testTable.name"]}]},
+        {"accesses":[{"type":"select"}],"users":["admin"],"groups":["admin"],"delegateAdmin":false}
+      ]
+    }
+  ],
+
+  "tests":[
+    {
+      "name": "DENY 'select col1, col2 from default.testtable;' to user1",
+      "request": {
+        "resource": {
+          "elements": {
+            "database": "default",
+            "table": "testTable",
+            "column": "col1"
+          }
+        },
+        "accessType": "select",
+        "user": "user1",
+        "userGroups": [
+
+        ],
+        "requestData": "select col1,col2 from default.testtable",
+        "context": {
+          "REQUESTED_RESOURCES": "{\"requestedResources\":[ {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"col1\"} }, {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"col2\"} } ]}"
+        }
+      },
+      "result": {
+        "isAudited": true,
+        "isAllowed": false,
+        "policyId": 1
+      }
+    }
+    , {
+      "name": "DENY 'select col1, name from default.testtable;' to user2",
+      "request": {
+        "resource": {
+          "elements": {
+            "database": "default",
+            "table": "testTable",
+            "column": "col1"
+          }
+        },
+        "accessType": "select",
+        "user": "user2",
+        "userGroups": [
+        ],
+        "requestData": "select col1,name from default.testtable",
+        "context": {
+          "REQUESTED_RESOURCES": "{\"requestedResources\":[ {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"col1\"} }, {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"name\"} } ]}"
+        }
+      },
+      "result": {
+        "isAudited": true,
+        "isAllowed": false,
+        "policyId": 1
+      }
+    }
+    ,
+    {
+      "name": "ALLOW 'select col1, col2 from default.testtable;' to admin",
+      "request": {
+        "resource": {
+          "elements": {
+            "database": "default",
+            "table": "testTable",
+            "column": "col1"
+          }
+        },
+        "accessType": "select",
+        "user": "admin",
+        "userGroups": [
+        ],
+        "requestData": "select col1,col2 from default.testtable",
+        "context": {
+          "REQUESTED_RESOURCES": "{\"requestedResources\":[ {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"col1\"} }, {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"col2\"} } ]}"
+        }
+      },
+      "result": {
+        "isAudited": true,
+        "isAllowed": true,
+        "policyId": 1
+      }
+    }
+    ,{
+      "name": "ALLOW 'select col2, name from default.testtable;' to user1",
+      "request": {
+        "resource": {
+          "elements": {
+            "database": "default",
+            "table": "testTable",
+            "column": "col1"
+          }
+        },
+        "accessType": "select",
+        "user": "user1",
+        "userGroups": [
+          "public"
+        ],
+        "requestData": "select col2,name from default.testtable",
+        "context": {
+          "REQUESTED_RESOURCES": "{\"requestedResources\":[ {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"col2\"} }, {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"name\"} } ]}"
+        }
+      },
+      "result": {
+        "isAudited": true,
+        "isAllowed": true,
+        "policyId": 1
+      }
+    }
+    ,{
+      "name": "ALLOW 'select col2, col2 from default.testtable;' to user1",
+      "request": {
+        "resource": {
+          "elements": {
+            "database": "default",
+            "table": "testTable",
+            "column": "col1"
+          }
+        },
+        "accessType": "select",
+        "user": "user1",
+        "userGroups": [
+          "public"
+        ],
+        "requestData": "select col2 from default.testtable",
+        "context": {
+          "REQUESTED_RESOURCES": "{\"requestedResources\":[ {\"elements\":{\"database\":\"default\",\"table\":\"testTable\",\"column\":\"col2\"} } ]}"
+        }
+      },
+      "result": {
+        "isAudited": true,
+        "isAllowed": true,
+        "policyId": 1
+      }
+    }
+  ]
+}
+
