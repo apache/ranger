@@ -31,6 +31,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
@@ -78,15 +79,20 @@ public class RangerServiceDefValidator extends RangerValidator {
 
 		boolean valid = true;
 		if (action != Action.DELETE) {
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_UNSUPPORTED_ACTION;
 			failures.add(new ValidationFailureDetailsBuilder()
-				.isAnInternalError()
-				.becauseOf("unsupported action[" + action + "]; isValid(Long) is only supported for DELETE")
-				.build());
+					.isAnInternalError()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(action))
+					.build());
 			valid = false;
 		} else if (id == null) {
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_MISSING_FIELD;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.field("id")
 				.isMissing()
+				.errorCode(error.getErrorCode())
+				.becauseOf(error.getMessage("id"))
 				.build());
 			valid = false;
 		} else if (getServiceDef(id) == null) {
@@ -111,12 +117,12 @@ public class RangerServiceDefValidator extends RangerValidator {
 		}
 		boolean valid = true;
 		if (serviceDef == null) {
-			String message = "service def object passed in was null";
-			LOG.debug(message);
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_NULL_SERVICE_DEF_OBJECT;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.field("service def")
 				.isMissing()
-				.becauseOf(message)
+				.errorCode(error.getErrorCode())
+				.becauseOf(error.getMessage(action))
 				.build());
 			valid = false;
 		} else {
@@ -154,19 +160,21 @@ public class RangerServiceDefValidator extends RangerValidator {
 
 		if (action == Action.UPDATE) { // id is ignored for CREATE
 			if (id == null) {
-				String message = "service def id was null/empty/blank"; 
-				LOG.debug(message);
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_EMPTY_SERVICE_DEF_ID;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("id")
 					.isMissing()
-					.becauseOf(message)
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage())
 					.build());
 				valid = false;
 			} else if (getServiceDef(id) == null) {
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_DEF_ID;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("id")
 					.isSemanticallyIncorrect()
-					.becauseOf("no service def exists with id[" + id +"]")
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(id))
 					.build());
 				valid = false;
 			}
@@ -185,28 +193,32 @@ public class RangerServiceDefValidator extends RangerValidator {
 		boolean valid = true;
 
 		if (StringUtils.isBlank(name)) {
-			String message = "service def name[" + name + "] was null/empty/blank"; 
-			LOG.debug(message);
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_DEF_NAME;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.field("name")
 				.isMissing()
-				.becauseOf(message)
+				.errorCode(error.getErrorCode())
+				.becauseOf(error.getMessage(name))
 				.build());
 			valid = false;
 		} else {
 			RangerServiceDef otherServiceDef = getServiceDef(name);
 			if (otherServiceDef != null && action == Action.CREATE) {
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_SERVICE_DEF_NAME_CONFICT;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("name")
 					.isSemanticallyIncorrect()
-					.becauseOf("service def with the name[" + name + "] already exists")
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(name))
 					.build());
 				valid = false;
 			} else if (otherServiceDef != null && !Objects.equals(id, otherServiceDef.getId())) {
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_ID_NAME_CONFLICT;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("id/name")
 					.isSemanticallyIncorrect()
-					.becauseOf("id/name conflict: another service def already exists with name[" + name + "], its id is [" + otherServiceDef.getId() + "]")
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(name, otherServiceDef.getId()))
 					.build());
 				valid = false;
 			}
@@ -225,10 +237,12 @@ public class RangerServiceDefValidator extends RangerValidator {
 		
 		boolean valid = true;
 		if (CollectionUtils.isEmpty(accessTypeDefs)) {
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_MISSING_FIELD;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.field("access types")
 				.isMissing()
-				.becauseOf("access types collection was null/empty")
+				.errorCode(error.getErrorCode())
+				.becauseOf(error.getMessage("access types"))
 				.build());
 			valid = false;
 		} else {
@@ -248,22 +262,26 @@ public class RangerServiceDefValidator extends RangerValidator {
 				Collection<String> impliedGrants = getImpliedGrants(def);
 				Set<String> unknownAccessTypes = Sets.difference(Sets.newHashSet(impliedGrants), accessNames);
 				if (!unknownAccessTypes.isEmpty()) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_IMPLIED_GRANT_UNKNOWN_ACCESS_TYPE;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("implied grants")
 						.subField(unknownAccessTypes.iterator().next())  // we return just on item here.  Message has all unknow items
 						.isSemanticallyIncorrect()
-						.becauseOf("implied grant[" + impliedGrants + "] contains an unknown access types[" + unknownAccessTypes + "]")
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(impliedGrants, unknownAccessTypes))
 						.build());
 					valid = false;
 				}
 				// implied grant should not imply itself! 
 				String name = def.getName(); // note: this name could be null/blank/empty!
 				if (impliedGrants.contains(name)) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_IMPLIED_GRANT_IMPLIES_ITSELF;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("implied grants")
 						.subField(name)
 						.isSemanticallyIncorrect()
-						.becauseOf("implied grants list [" + impliedGrants + "] for access type[" + name + "] contains itself")
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(impliedGrants, name))
 						.build());
 					valid = false;
 				}
@@ -292,13 +310,13 @@ public class RangerServiceDefValidator extends RangerValidator {
 				String name = conditionDef.getName();
 				valid = isUnique(name, names, "policy condition def name", "policy condition defs", failures) && valid;
 				if (StringUtils.isBlank(conditionDef.getEvaluator())) {
-					String reason = String.format("evaluator on policy condition definition[%s] was null/empty!", name);
-					LOG.debug(reason);
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_POLICY_CONDITION_NULL_EVALUATOR;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("policy condition def evaluator")
 						.subField(name)
 						.isMissing()
-						.becauseOf(reason)
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(name))
 						.build());
 					valid = false;
 				}
@@ -355,12 +373,13 @@ public class RangerServiceDefValidator extends RangerValidator {
 			String configName = configDef.getName();
 			
 			if (!enumTypes.contains(subType)) {
-				String reason = String.format("subtype[%s] of service def config[%s] was not among defined enums[%s]", subType, configName, enumTypes);
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONFIG_DEF_UNKNOWN_ENUM;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("config def subtype")
 					.subField(configName)
 					.isSemanticallyIncorrect()
-					.becauseOf(reason)
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(subType, configName, enumTypes))
 					.build());
 				valid = false;
 			} else {
@@ -370,13 +389,14 @@ public class RangerServiceDefValidator extends RangerValidator {
 					RangerEnumDef enumDef = enumDefsMap.get(subType);
 					Set<String> enumValues = getEnumValues(enumDef);
 					if (!enumValues.contains(defaultValue)) {
-						String reason = String.format("default value[%s] of service def config[%s] was not among the valid values[%s] of enums[%s]", defaultValue, configName, enumValues, subType);
+						ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONFIG_DEF_UNKNOWN_ENUM_VALUE;
 						failures.add(new ValidationFailureDetailsBuilder()
-							.field("config def default value")
-							.subField(configName)
-							.isSemanticallyIncorrect()
-							.becauseOf(reason)
-							.build());
+								.field("config def default value")
+								.subField(configName)
+								.isSemanticallyIncorrect()
+								.errorCode(error.getErrorCode())
+								.becauseOf(error.getMessage(defaultValue, configName, enumValues, subType))
+								.build());
 						valid = false;
 					}
 				}
@@ -397,21 +417,23 @@ public class RangerServiceDefValidator extends RangerValidator {
 
 		Set<String> validTypes = ImmutableSet.of("bool", "enum", "int", "string", "password", "path");
 		if (StringUtils.isBlank(type)) {
-			String reason = String.format("type of service def config[%s] was null/empty", configName);
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONFIG_DEF_MISSING_TYPE;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.field("config def type")
 				.subField(configName)
 				.isMissing()
-				.becauseOf(reason)
+				.errorCode(error.getErrorCode())
+				.becauseOf(error.getMessage(configName))
 				.build());
 			valid = false;
 		} else if (!validTypes.contains(type)) {
-			String reason = String.format("type[%s] of service def config[%s] is not among valid types: %s", type, configName, validTypes);
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONFIG_DEF_INVALID_TYPE;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.field("config def type")
 				.subField(configName)
 				.isSemanticallyIncorrect()
-				.becauseOf(reason)
+				.errorCode(error.getErrorCode())
+				.becauseOf(error.getMessage(type, configName, validTypes))
 				.build());
 			valid = false;
 		}
@@ -430,11 +452,12 @@ public class RangerServiceDefValidator extends RangerValidator {
 
 		List<RangerResourceDef> resources = serviceDef.getResources();
 		if (CollectionUtils.isEmpty(resources)) {
-			String reason = "service def resources collection was null/empty";
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_MISSING_FIELD;
 			failures.add(new ValidationFailureDetailsBuilder()
 					.field("resources")
 					.isMissing()
-					.becauseOf(reason)
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage("resources"))
 					.build());
 			valid = false;
 		} else {
@@ -463,10 +486,12 @@ public class RangerServiceDefValidator extends RangerValidator {
 		// We don't want this helper to get into the cache or to use what is in the cache!!
 		RangerServiceDefHelper defHelper = _factory.createServiceDefHelper(serviceDef, false);
 		if (!defHelper.isResourceGraphValid()) {
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_RESOURCE_GRAPH_INVALID;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.field("resource graph")
 				.isSemanticallyIncorrect()
-				.becauseOf("Resource graph implied by various resources, e.g. parent value is invalid.  Valid graph must forest (union of disjoint trees).")
+				.errorCode(error.getErrorCode())
+				.becauseOf(error.getMessage())
 				.build());
 			valid = false;
 		}
@@ -498,10 +523,12 @@ public class RangerServiceDefValidator extends RangerValidator {
 			Set<Long> ids = new HashSet<Long>();
 			for (RangerEnumDef enumDef : enumDefs) {
 				if (enumDef == null) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NULL_OBJECT;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("enum def")
 						.isMissing()
-						.becauseOf("An enum def in enums collection is null")
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage())
 						.build());
 					valid = false;
 				} else {
@@ -511,11 +538,13 @@ public class RangerServiceDefValidator extends RangerValidator {
 					valid = isUnique(enumDef.getItemId(), ids, "enum def itemId", "enum defs", failures) && valid;		
 					// enum must contain at least one valid value and those values should be non-blank and distinct
 					if (CollectionUtils.isEmpty(enumDef.getElements())) {
+						ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NO_VALUES;
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("enum values")
 							.subField(enumName)
 							.isMissing()
-							.becauseOf("enum [" + enumName + "] does not have any elements")
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(enumName))
 							.build());
 						valid = false;
 					} else {
@@ -523,11 +552,13 @@ public class RangerServiceDefValidator extends RangerValidator {
 						// default index should be valid
 						int defaultIndex = getEnumDefaultIndex(enumDef);
 						if (defaultIndex < 0 || defaultIndex >= enumDef.getElements().size()) { // max index is one less than the size of the elements list
+							ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_INVALID_DEFAULT_INDEX;
 							failures.add(new ValidationFailureDetailsBuilder()
 								.field("enum default index")
 								.subField(enumName)
 								.isSemanticallyIncorrect()
-								.becauseOf("default index[" + defaultIndex + "] for enum [" + enumName + "] is invalid")
+								.errorCode(error.getErrorCode())
+								.becauseOf(error.getMessage(defaultIndex, enumName))
 								.build());
 							valid = false;
 						}
@@ -556,11 +587,13 @@ public class RangerServiceDefValidator extends RangerValidator {
 			Set<Long> ids = new HashSet<Long>();
 			for (RangerEnumElementDef elementDef : enumElementsDefs) {
 				if (elementDef == null) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NULL_ENUM_ELEMENT;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("enum element")
 						.subField(enumName)
 						.isMissing()
-						.becauseOf("An enum element in enum element collection of enum [" + enumName + "] is null")
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(enumName))
 						.build());
 					valid = false;
 				} else {

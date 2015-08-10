@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -68,16 +69,21 @@ public class RangerServiceValidator extends RangerValidator {
 
 		boolean valid = true;
 		if (action != Action.DELETE) {
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_UNSUPPORTED_ACTION;
 			failures.add(new ValidationFailureDetailsBuilder()
-				.isAnInternalError()
-				.becauseOf("unsupported action[" + action + "]; isValid(Long) is only supported for DELETE")
-				.build());
+					.isAnInternalError()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(action))
+					.build());
 			valid = false;
 		} else if (id == null) {
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_MISSING_FIELD;
 			failures.add(new ValidationFailureDetailsBuilder()
-				.field("id")
-				.isMissing()
-				.build());
+					.field("id")
+					.isMissing()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(id))
+					.build());
 			valid = false;
 		} else if (getService(id) == null) {
 			if (LOG.isDebugEnabled()) {
@@ -101,31 +107,33 @@ public class RangerServiceValidator extends RangerValidator {
 		
 		boolean valid = true;
 		if (service == null) {
-			String message = "service object passed in was null";
-			LOG.debug(message);
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_NULL_SERVICE_OBJECT;
 			failures.add(new ValidationFailureDetailsBuilder()
-				.field("service")
-				.isMissing()
-				.becauseOf(message)
-				.build());
+					.field("service")
+					.isMissing()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage())
+					.build());
 			valid = false;
 		} else {
 			Long id = service.getId();
 			if (action == Action.UPDATE) { // id is ignored for CREATE
 				if (id == null) {
-					String message = "service id was null/empty/blank";
-					LOG.debug(message);
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_EMPTY_SERVICE_ID;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("id")
 							.isMissing()
-							.becauseOf(message)
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage())
 							.build());
 					valid = false;
 				} else if (getService(id) == null) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_ID;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("id")
 							.isSemanticallyIncorrect()
-							.becauseOf("no service exists with id[" + id + "]")
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(id))
 							.build());
 					valid = false;
 				}
@@ -134,28 +142,32 @@ public class RangerServiceValidator extends RangerValidator {
 			boolean nameSpecified = StringUtils.isNotBlank(name);
 			RangerServiceDef serviceDef = null;
 			if (!nameSpecified) {
-				String message = "service name[" + name + "] was null/empty/blank";
-				LOG.debug(message);
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_NAME;
 				failures.add(new ValidationFailureDetailsBuilder()
 						.field("name")
 						.isMissing()
-						.becauseOf(message)
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(name))
 						.build());
 				valid = false;
 			} else {
 				RangerService otherService = getService(name);
 				if (otherService != null && action == Action.CREATE) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("name")
 							.isSemanticallyIncorrect()
-							.becauseOf("service with the name[" + name + "] already exists")
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(name))
 							.build());
 					valid = false;
 				} else if (otherService != null && otherService.getId() !=null && !otherService.getId().equals(id)) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("id/name")
 							.isSemanticallyIncorrect()
-							.becauseOf("id/name conflict: another service already exists with name[" + name + "], its id is [" + otherService.getId() + "]")
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(name, otherService.getId()))
 							.build());
 					valid = false;
 				}
@@ -163,20 +175,24 @@ public class RangerServiceValidator extends RangerValidator {
 			String type = service.getType();
 			boolean typeSpecified = StringUtils.isNotBlank(type);
 			if (!typeSpecified) {
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_MISSING_SERVICE_DEF;
 				failures.add(new ValidationFailureDetailsBuilder()
 						.field("type")
 						.isMissing()
-						.becauseOf("service def [" + type + "] was null/empty/blank")
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(type))
 						.build());
 				valid = false;
 			} else {
 				serviceDef = getServiceDef(type);
 				if (serviceDef == null) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_INVALID_SERVICE_DEF;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("type")
 							.isSemanticallyIncorrect()
-							.becauseOf("service def named[" + type + "] not found")
-							.build());
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(type))
+						.build());
 					valid = false;
 				}
 			}
@@ -186,11 +202,13 @@ public class RangerServiceValidator extends RangerValidator {
 				Set<String> inputParameters = getServiceConfigParameters(service);
 				Set<String> missingParameters = Sets.difference(reqiredParameters, inputParameters);
 				if (!missingParameters.isEmpty()) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_REQUIRED_PARM_MISSING;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("configuration")
 							.subField(missingParameters.iterator().next()) // we return any one parameter!
 							.isMissing()
-							.becauseOf("required configuration parameter is missing; missing parameters: " + missingParameters)
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(missingParameters))
 							.build());
 					valid = false;
 				}

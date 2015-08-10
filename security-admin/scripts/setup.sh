@@ -1214,6 +1214,11 @@ do_unixauth_setup() {
     ldap_file=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
     if test -f $ldap_file; then
 	log "[I] $ldap_file file found"
+	
+        propertyName=ranger.authentication.method
+        newPropertyValue="${authentication_method}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
         propertyName=ranger.unixauth.remote.login.enabled
         newPropertyValue="${remoteLoginEnabled}"
         updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
@@ -1414,6 +1419,17 @@ do_authentication_setup(){
     if [ $authentication_method = "UNIX" ] ; then
         do_unixauth_setup
     fi
+
+    if [ $authentication_method = "NONE" ] ; then
+         newPropertyValue='NONE'
+         ldap_file=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
+         if test -f $ldap_file; then
+                 propertyName=ranger.authentication.method
+                 newPropertyValue="${authentication_method}"
+                 updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+         fi
+    fi	
+	
     log "[I] Finished setup based on user authentication method=$authentication_method";
 }
 
