@@ -19,7 +19,7 @@
         "name" : "GeolocationEnricher",
         "enricher" : "org.apache.ranger.plugin.contextenricher.RangerFileBasedGeolocationProvider",
         "enricherOptions" : {
-          "geolocation.source.loader.options": "{'FilePath':'/geo/geo.txt', 'ForceRead':'false', 'IPInDotFormat':'true' }"
+          "geolocation.source.loader.options": "{'FilePath':'/etc/ranger/geo/geo.txt', 'ForceRead':'false', 'IPInDotFormat':'true' }"
           ,"geolocation.meta.prefix": "TEST_"
         }
       }
