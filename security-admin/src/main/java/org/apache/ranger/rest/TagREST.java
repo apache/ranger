@@ -23,6 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
@@ -53,32 +54,22 @@ public class TagREST {
 
     private static final Log LOG = LogFactory.getLog(TagREST.class);
 
-    @Autowired
-    RESTErrorUtil restErrorUtil;
+	@Autowired
+	RESTErrorUtil restErrorUtil;
 
-    /*
-    @Autowired
-    ServiceRESTStore svcStore;
-    */
+	@Autowired
+	ServiceDBStore svcStore;
 
-    @Autowired
-    ServiceDBStore svcStore;
+	@Autowired
+	TagDBStore tagStore;
 
-    /*
-    @Autowired
-    TagFileStore tagStore;
-    */
+	public TagREST() {
+	}
 
-    private TagStore tagStore;
+	@PostConstruct
+	public void initStore() {
 
-    public TagREST() {
-    }
-
-    @PostConstruct
-    public void initStore() {
-        tagStore = TagFileStore.getInstance();
-        tagStore.setServiceStore(svcStore);
-    }
+	}
 
     @POST
     @Path(TagRESTConstants.TAGS_RESOURCE)

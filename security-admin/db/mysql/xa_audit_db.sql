@@ -61,7 +61,6 @@ CREATE TABLE `xa_access_audit` (
   `request_data` varchar(4000) DEFAULT NULL,
   `resource_path` varchar(4000) DEFAULT NULL,
   `resource_type` varchar(255) DEFAULT NULL,
-  `tags` varchar(4000) DEFAULT NULL,
 
   PRIMARY KEY (`id`),
   KEY `xa_access_audit_added_by_id` (`added_by_id`),

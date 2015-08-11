@@ -542,11 +542,43 @@ public class AppConstants extends RangerCommonEnums {
 	 * CLASS_TYPE_RANGER_SERVICE_DEF_WITH_ASSIGNED_ID is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_SERVICE_DEF_WITH_ASSIGNED_ID".
 	 */
 	public static final int CLASS_TYPE_RANGER_SERVICE_DEF_WITH_ASSIGNED_ID = 1040;
+	/**
+	 * Class type of XXTagDef
+	 */
+	public static final int CLASS_TYPE_XA_TAG_DEF = 1041;
+	/**
+	 * Class type of XXTagAttributeDef
+	 */
+	public static final int CLASS_TYPE_XA_TAG_ATTR_DEF = 1042;
+	/**
+	 * Class type of XXTaggedResource
+	 */
+	public static final int CLASS_TYPE_XA_TAGGED_RESOURCE = 1043;
+	/**
+	 * Class type of XXTaggedResourceValue
+	 */
+	public static final int CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE = 1044;
+	/**
+	 * Class type of XXTaggedResourceValueMap
+	 */
+	public static final int CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE_MAP = 1045;
+	/**
+	 * Class type of XXTag
+	 */
+	public static final int CLASS_TYPE_XA_TAG = 1046;
+	/**
+	 * Class type of XXTagAttribute
+	 */
+	public static final int CLASS_TYPE_XA_TAG_ATTR = 1047;
+	/**
+	 * Class type of XXTagResourceMap
+	 */
+	public static final int CLASS_TYPE_XA_TAG_RESOURCE_MAP = 1048;
 
 	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1040;
+	public static final int ClassTypes_MAX = 1048;
 	
 	/***************************************************************
 	 * Enum values for Default SortOrder

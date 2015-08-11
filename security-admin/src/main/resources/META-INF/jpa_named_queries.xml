@@ -532,4 +532,51 @@
 			   xpu.id=:userId and gmp.isAllowed=:isAllowed
 		</query>
 	</named-query>
+	
+	<!-- Start ==> JPA Queries for Tag Based Policies  -->
+
+	<named-query name="XXTagAttributeDef.findByTagDefId">
+		<query>select obj from XXTagAttributeDef obj where obj.tagDefId = :tagDefId</query>
+	</named-query>
+	
+	<named-query name="XXTaggedResourceValue.findByTaggedResId">
+		<query>select obj from XXTaggedResourceValue obj where obj.taggedResourceId = :taggedResId</query>
+	</named-query>
+	
+	<named-query name="XXTaggedResourceValueMap.findByResValueId">
+		<query>select obj from XXTaggedResourceValueMap obj where obj.resValueId = :resValueId</query>
+	</named-query>
+
+	<named-query name="XXTaggedResourceValueMap.findValuesByResValueId">
+		<query>select obj.value from XXTaggedResourceValueMap obj where obj.resValueId = :resValueId</query>
+	</named-query>
+
+	<named-query name="XXTag.findByTaggedResource">
+		<query>select obj from XXTag obj, XXTagResourceMap tagResMap where 
+		tagResMap.taggedResId = :taggedResId and obj.id = tagResMap.tagId</query>
+	</named-query>
+	
+	<named-query name="XXTagAttribute.findByTagId">
+		<query>select obj from XXTagAttribute obj where obj.tagId = :tagId</query>
+	</named-query>
+	
+	<named-query name="XXTaggedResource.findByServiceId">
+		<query>select obj from XXTaggedResource obj where obj.serviceId = :serviceId</query>
+	</named-query>
+
+	<named-query name="XXTag.findTagNamesByServiceId">
+		<query>select obj.name from XXTag obj, XXTaggedResource tRes, XXTagResourceMap tResMap where 
+		tRes.serviceId = :serviceId and obj.id = tResMap.tagId and tRes.id = tResMap.taggedResId </query>
+	</named-query>	
+	
+	<named-query name="XXTagResourceMap.findByTaggedResourceId">
+		<query>select obj from XXTagResourceMap obj where obj.taggedResId = :taggedResId</query>
+	</named-query>
+	
+	<named-query name="XXTag.findTagsByExternalId">
+		<query>select obj from XXTag obj where obj.externalId = :externalId</query>
+	</named-query>
+
+	<!-- End <== JPA Queries for Tag Based Policies  -->
+	
 </entity-mappings>

@@ -29,7 +29,6 @@ CREATE TABLE `x_service_def` (
 `impl_class_name` varchar(1024) DEFAULT NULL,
 `label` varchar(1024) DEFAULT NULL,
 `description` varchar(1024) DEFAULT NULL,
-`options` varchar(1024) DEFAULT NULL,
 `rb_key_label` varchar(1024) DEFAULT NULL,
 `rb_key_description` varchar(1024) DEFAULT NULL,
 `is_enabled` tinyint DEFAULT 1,
@@ -58,7 +57,6 @@ CREATE TABLE `x_service` (
 `policy_update_time`datetime DEFAULT NULL,
 `description` varchar(1024) DEFAULT NULL,
 `is_enabled` tinyint(1) NOT NULL DEFAULT '0',   
-`tag_service` bigint(20) DEFAULT NULL,
 primary key (`id`),
 UNIQUE KEY `X_service_name` (`name`),
 KEY `x_service_added_by_id` (`added_by_id`),
@@ -68,8 +66,7 @@ KEY `x_service_up_time` (`update_time`),
 KEY `x_service_type` (`type`),  
 CONSTRAINT `x_service_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
-CONSTRAINT `x_service_FK_type` FOREIGN KEY (`type`) REFERENCES `x_service_def` (`id`),
-CONSTRAINT `x_service_FK_tag_service` FOREIGN KEY (`tag_service`) REFERENCES `x_service` (`id`)
+CONSTRAINT `x_service_FK_type` FOREIGN KEY (`type`) REFERENCES `x_service_def` (`id`)
 );
 
 DROP TABLE IF EXISTS `x_policy`;

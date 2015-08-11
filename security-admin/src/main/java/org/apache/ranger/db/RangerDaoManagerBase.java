@@ -29,6 +29,8 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXTagDef;
+import org.apache.ranger.entity.XXTaggedResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
@@ -162,6 +164,31 @@ public abstract class RangerDaoManagerBase {
 			return getXXServiceDefWithAssignedId();
 		}
 		
+		if (classType == AppConstants.CLASS_TYPE_XA_TAG_DEF) {
+			return getXXTagDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_TAG_ATTR_DEF) {
+			return getXXTagAttributeDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_TAGGED_RESOURCE) {
+			return getXXTaggedResource();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE) {
+			return getXXTaggedResourceValue();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE_MAP) {
+			return getXXTaggedResourceValueMap();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_TAG) {
+			return getXXTag();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_TAG_ATTR) {
+			return getXXTagAttribute();
+		}
+		if (classType == AppConstants.CLASS_TYPE_XA_TAG_RESOURCE_MAP) {
+			return getXXTagResourceMap();
+		}
+		
 		logger.error("No DaoManager found for classType=" + classType, new Throwable());
 		return null;
 	}
@@ -290,7 +317,32 @@ public abstract class RangerDaoManagerBase {
 		if (className.equals("XXServiceDefWithAssignedId")) {
 			return getXXServiceDefWithAssignedId();
 		}
-		
+
+		if (className.equals("XXTagDef")) {
+			return getXXTagDef();
+		}
+		if (className.equals("XXTagAttributeDef")) {
+			return getXXTagAttributeDef();
+		}
+		if (className.equals("XXTaggedResource")) {
+			return getXXTaggedResource();
+		}
+		if (className.equals("XXTaggedResourceValue")) {
+			return getXXTaggedResourceValue();
+		}
+		if (className.equals("XXTaggedResourceValueMap")) {
+			return getXXTaggedResourceValueMap();
+		}
+		if (className.equals("XXTag")) {
+			return getXXTag();
+		}
+		if (className.equals("XXTagAttribute")) {
+			return getXXTagAttribute();
+		}
+		if (className.equals("XXTagResourceMap")) {
+			return getXXTagResourceMap();
+		}
+
 		logger.error("No DaoManager found for className=" + className, new Throwable());
 		return null;
 	}
@@ -464,6 +516,38 @@ public abstract class RangerDaoManagerBase {
 	
 	public XXServiceDefWithAssignedIdDao getXXServiceDefWithAssignedId() {
 		return new XXServiceDefWithAssignedIdDao(this);
+	}
+
+	public XXTagDefDao getXXTagDef() {
+		return new XXTagDefDao(this);
+	}
+
+	public XXTagAttributeDefDao getXXTagAttributeDef() {
+		return new XXTagAttributeDefDao(this);
+	}
+
+	public XXTaggedResourceDao getXXTaggedResource() {
+		return new XXTaggedResourceDao(this);
+	}
+
+	public XXTaggedResourceValueDao getXXTaggedResourceValue() {
+		return new XXTaggedResourceValueDao(this);
+	}
+
+	public XXTaggedResourceValueMapDao getXXTaggedResourceValueMap() {
+		return new XXTaggedResourceValueMapDao(this);
+	}
+
+	public XXTagDao getXXTag() {
+		return new XXTagDao(this);
+	}
+
+	public XXTagAttributeDao getXXTagAttribute() {
+		return new XXTagAttributeDao(this);
+	}
+
+	public XXTagResourceMapDao getXXTagResourceMap() {
+		return new XXTagResourceMapDao(this);
 	}
 
 }
