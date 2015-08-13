@@ -1837,7 +1837,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policy.setService(createdService.getName());
 			policy.setDescription("Default Policy for TAG: " + tagName + " for TAG Service: " + createdService.getName());
 			policy.setIsAuditEnabled(true);
-			policy.setPolicyTypeFinal(true);
+			policy.setPolicyType(RangerPolicy.POLICY_TYPE_EXCLUSIVE_ALLOW);
 
 			Map<String, RangerPolicyResource> resourceMap = new HashMap<>();
 

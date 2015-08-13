@@ -312,46 +312,38 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerAccessResult ret = createAccessResult(request);
 
 		if (ret != null && request != null) {
-
 			if (tagPolicyRepository != null && CollectionUtils.isNotEmpty(tagPolicyRepository.getPolicies())) {
-
 				RangerAccessResult tagAccessResult = isAccessAllowedForTagPolicies(request);
 
-				if (tagAccessResult.getIsAccessDetermined() && tagAccessResult.getIsAuditedDetermined()) {
-
-					if (LOG.isDebugEnabled()) {
+				if (LOG.isDebugEnabled()) {
+					if (tagAccessResult.getIsAccessDetermined() && tagAccessResult.getIsAuditedDetermined()) {
 						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedNoAudit() - access and audit determined by tag policy. No resource policies will be evaluated, request=" + request + ", result=" + tagAccessResult);
-
-						LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + "): " + tagAccessResult);
 					}
-
-					return tagAccessResult;
 				}
 
 				ret.setAccessResultFrom(tagAccessResult);
 				ret.setAuditResultFrom(tagAccessResult);
-
 			}
 
-			List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();
+			if (!ret.getIsAccessDetermined() || !ret.getIsAuditedDetermined()) {
+				List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();
 
-			if (evaluators != null) {
+				if (CollectionUtils.isNotEmpty(evaluators)) {
+					boolean foundInCache = policyRepository.setAuditEnabledFromCache(request, ret);
 
-				boolean foundInCache = policyRepository.setAuditEnabledFromCache(request, ret);
+					for (RangerPolicyEvaluator evaluator : evaluators) {
+						evaluator.evaluate(request, ret);
 
-				for (RangerPolicyEvaluator evaluator : evaluators) {
-					evaluator.evaluate(request, ret);
+						// stop once isAccessDetermined==true && isAuditedDetermined==true
+						if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
+							break;
+						}
+					}
 
-					// stop once isAccessDetermined==true && isAuditedDetermined==true
-					if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
-						break;
+					if (!foundInCache) {
+						policyRepository.storeAuditEnabledInCache(request, ret);
 					}
 				}
-
-				if (!foundInCache) {
-					policyRepository.storeAuditEnabledInCache(request, ret);
-				}
-
 			}
 		}
 

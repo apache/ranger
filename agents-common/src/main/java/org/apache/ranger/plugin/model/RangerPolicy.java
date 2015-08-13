@@ -45,14 +45,14 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	// For future use
 	private static final long serialVersionUID = 1L;
 
-	public static final int POLICY_TYPE_DEFAULT = 0x0;
-	public static final int POLICY_TYPE_MASK_FINAL = 0x1 << 0;
-	public static final int POLICY_TYPE_MASK_DENIER = 0x1 << 1;
+	public static final int POLICY_TYPE_ALLOW           = 0;
+	public static final int POLICY_TYPE_DENY            = 1;
+	public static final int POLICY_TYPE_EXCLUSIVE_ALLOW = 2;
 
 
 	private String                            service        	= null;
 	private String                            name           	= null;
-	private Integer                           policyType     	= POLICY_TYPE_DEFAULT;
+	private Integer                           policyType     	= POLICY_TYPE_ALLOW;
 	private String                            description    	= null;
 	private String							  resourceSignature = null;
 	private Boolean                           isAuditEnabled 	= null;
@@ -64,7 +64,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param
 	 */
 	public RangerPolicy() {
-		this(null, null, POLICY_TYPE_DEFAULT, null, null, null, null);
+		this(null, null, POLICY_TYPE_ALLOW, null, null, null, null);
 	}
 
 	/**
@@ -217,19 +217,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 	}
 
-	final public void setPolicyTypeDefault() {
-		policyType = POLICY_TYPE_DEFAULT;
-	}
-
-	final public void setPolicyTypeFinal(boolean set) {
-
-		if (set) {
-			this.policyType |= POLICY_TYPE_MASK_FINAL;
-		} else {
-			this.policyType &= (~POLICY_TYPE_MASK_FINAL);
-		}
-	}
-
 	/**
 	 * @return the policyItems
 	 */
@@ -258,15 +245,22 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 	}
 
-	final public boolean isPolicyTypeFinal() {
-		boolean isFinalDecidingPolicy = true;
+	final public boolean isPolicyTypeAllow() {
+		boolean ret = this.policyType == null || this.policyType == POLICY_TYPE_ALLOW;
 
-		if (this.policyType == null) {
-			isFinalDecidingPolicy = false;
-		} else if ((this.policyType & POLICY_TYPE_MASK_FINAL) == 0x0) {
-			isFinalDecidingPolicy = false;
-		}
-		return isFinalDecidingPolicy;
+		return ret;
+	}
+
+	final public boolean isPolicyTypeDeny() {
+		boolean ret = this.policyType != null && this.policyType == POLICY_TYPE_DENY;
+
+		return ret;
+	}
+
+	final public boolean isPolicyTypeExclusiveAllow() {
+		boolean ret = this.policyType != null && this.policyType == POLICY_TYPE_EXCLUSIVE_ALLOW;
+
+		return ret;
 	}
 
 	@Override

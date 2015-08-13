@@ -100,6 +100,12 @@ define(function(require) {
 		STATUS_DELETED:{value:2, label:'Deleted', rbkey:'xa.enum.ActiveStatus.STATUS_DELETED', tt: 'lbl.ActiveStatus_STATUS_DELETED'}
 	});
 
+	XAEnums.PolicyType = mergeParams(XAEnums.PolicyType, {
+		POLICY_TYPE_ALLOW:{value:0, label:'Allow', rbkey:'xa.enum.PolicyType.POLICY_TYPE_ALLOW', tt: 'lbl.PolicyType_ALLOW'},
+		POLICY_TYPE_DENY:{value:1, label:'Deny', rbkey:'xa.enum.PolicyType.POLICY_TYPE_DENY', tt: 'lbl.PolicyType_DENY'},
+		POLICY_TYPE_EXCLUSIVE_ALLOW:{value:2, label:'Exclusive Allow', rbkey:'xa.enum.PolicyType.POLICY_TYPE_EXCLUSIVE_ALLOW', tt: 'lbl.PolicyType_EXCLUSIVE_ALLOW'}
+	});
+
 	XAEnums.AssetType = mergeParams(XAEnums.AssetType, {
 		ASSET_UNKNOWN:{value:0, label:'Unknown', rbkey:'xa.enum.AssetType.ASSET_UNKNOWN', tt: 'lbl.AssetType_ASSET_UNKNOWN'},
 		ASSET_HDFS:{value:1, label:'HDFS', rbkey:'xa.enum.AssetType.ASSET_HDFS', tt: 'lbl.AssetType_ASSET_HDFS'},
@@ -241,11 +247,6 @@ define(function(require) {
 		PWD_RESET_USED:{value:1, label:'Used', rbkey:'xa.enum.PasswordResetStatus.PWD_RESET_USED', tt: 'lbl.PasswordResetStatus_PWD_RESET_USED'},
 		PWD_RESET_EXPIRED:{value:2, label:'Expired', rbkey:'xa.enum.PasswordResetStatus.PWD_RESET_EXPIRED', tt: 'lbl.PasswordResetStatus_PWD_RESET_EXPIRED'},
 		PWD_RESET_DISABLED:{value:3, label:'Disabled', rbkey:'xa.enum.PasswordResetStatus.PWD_RESET_DISABLED', tt: 'lbl.PasswordResetStatus_PWD_RESET_DISABLED'}
-	});
-
-	XAEnums.PolicyType = mergeParams(XAEnums.PolicyType, {
-		POLICY_INCLUSION:{value:0, label:'Inclusion', rbkey:'xa.enum.PolicyType.POLICY_INCLUSION', tt: 'lbl.PolicyType_POLICY_INCLUSION'},
-		POLICY_EXCLUSION:{value:1, label:'Exclusion', rbkey:'xa.enum.PolicyType.POLICY_EXCLUSION', tt: 'lbl.PolicyType_POLICY_EXCLUSION'}
 	});
 
 	XAEnums.PriorityType = mergeParams(XAEnums.PriorityType, {

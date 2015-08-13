@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
@@ -54,7 +53,8 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private static final int RANGER_POLICY_EVAL_IS_RECURSIVE_PREMIUM                          = 25;
     private static final int RANGER_POLICY_EVAL_PUBLIC_GROUP_ACCESS_PREMIUM                   = 25;
     private static final int RANGER_POLICY_EVAL_ALL_ACCESS_TYPES_PREMIUM                      = 25;
-    private static final int RANGER_POLICY_EVAL_FINAL_POLICY_PREMIUM                            = 400;
+    private static final int RANGER_POLICY_EVAL_EXCLUSIVE_ALLOW_POLICY_PREMIUM                = 400;
+    private static final int RANGER_POLICY_EVAL_DENY_POLICY_PREMIUM                           = 600;
 
     private static final int RANGER_POLICY_EVAL_RESERVED_SLOTS_NUMBER                         = 10000;
     private static final int RANGER_POLICY_EVAL_RESERVED_SLOTS_PER_LEVEL_NUMBER               = 1000;
@@ -198,8 +198,10 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 
         priorityLevel -= Math.round(((float)RANGER_POLICY_EVAL_ALL_ACCESS_TYPES_PREMIUM * accessPerms.size()) / serviceDef.getAccessTypes().size());
 
-        if (policy.isPolicyTypeFinal()) {
-            priorityLevel -= RANGER_POLICY_EVAL_FINAL_POLICY_PREMIUM;
+        if (policy.isPolicyTypeDeny()) {
+            priorityLevel -= RANGER_POLICY_EVAL_DENY_POLICY_PREMIUM;
+        } else if (policy.isPolicyTypeExclusiveAllow()) {
+            priorityLevel -= RANGER_POLICY_EVAL_EXCLUSIVE_ALLOW_POLICY_PREMIUM;
         }
 
         if(LOG.isDebugEnabled()) {
@@ -237,25 +239,30 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 	}
 
 	@Override
-    protected void evaluatePolicyItemsForAccess(RangerAccessRequest request, RangerAccessResult result) {
+    protected boolean isPolicyItemsMatch(RangerAccessRequest request) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerOptimizedPolicyEvaluator.evaluatePolicyItemsForAccess()");
+            LOG.debug("==> RangerOptimizedPolicyEvaluator.isPolicyItemsMatch()");
         }
+
+        boolean ret = false;
 
         if (hasPublicGroup || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups())) {
             // No need to reject based on users and groups
 
             if (request.isAccessTypeAny() || (request.isAccessTypeDelegatedAdmin() && delegateAdmin) || hasAllPerms || accessPerms.contains(request.getAccessType())) {
                 // No need to reject based on aggregated access permissions
-                super.evaluatePolicyItemsForAccess(request, result);
+                ret = super.isPolicyItemsMatch(request);
             }
         }
+
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerOptimizedPolicyEvaluator.evaluatePolicyItemsForAccess()");
+            LOG.debug("<== RangerOptimizedPolicyEvaluator.isPolicyItemsMatch(): " + ret);
         }
 
+        return ret;
     }
-    private boolean checkIfHasAllPerms() {
+
+	private boolean checkIfHasAllPerms() {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerOptimizedPolicyEvaluator.checkIfHasAllPerms()");
         }

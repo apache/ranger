@@ -228,7 +228,9 @@ define(function(require) {
 				editService						: 'Edit Service',
 				serviceDetails					: 'Service Details',
 				serviceName						: 'Service Name',
-				isFinalPolicy					: 'Is Final Policy',
+				PolicyType_ALLOW				: 'Allow',
+				PolicyType_DENY					: 'Deny',
+				PolicyType_EXCLUSIVE_ALLOW		: 'Exclusive Allow',
 				componentPermissions			: 'Component Permissions'
 			},
 			btn : {

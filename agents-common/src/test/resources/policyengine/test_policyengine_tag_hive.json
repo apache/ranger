@@ -163,13 +163,13 @@
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false}
         ]
       },
-      {"id":3,"name":"PII_TAG_POLICY-FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+      {"id":3,"name":"PII_TAG_POLICY-FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":2,
         "resources":{"tag":{"values":["PII-FINAL"],"isRecursive":false}},
         "policyItems":[
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false}
         ]
       },
-      {"id":4,"name":"RESTRICTED_TAG_POLICY_FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+      {"id":4,"name":"RESTRICTED_TAG_POLICY_FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":2,
         "resources":{"tag":{"values":["RESTRICTED-FINAL"],"isRecursive":false}},
         "policyItems":[
           {

@@ -81,8 +81,11 @@ define(function(require){
 					switchOn	: true
 				},
 				policyType : {
-					type		: 'Checkbox',
-					title		: localization.tt("lbl.isFinalPolicy"),
+					type		: 'Radio',
+					options : function(callback, editor){
+						var nvPairs = XAUtils.enumToSelectPairs(XAEnums.PolicyType);
+						callback(nvPairs);
+					}
 				},
 			});
 		},

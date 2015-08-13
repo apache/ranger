@@ -76,18 +76,21 @@ define(function(require){
 			this.on('isEnabled:change', function(form, fieldEditor){
 				this.evIsEnabledChange(form, fieldEditor);
 			});
+			this.on('policyType:change', function(form, fieldEditor){
+				this.evPolicyTypeChange(form, fieldEditor);
+			});
 			this.on('policyForm:parentChildHideShow',this.renderParentChildHideShow);
 		},
 
 		/** fields for the form
 		*/
-		fields: ['name', 'description', 'isEnabled', 'isAuditEnabled'],
+		fields: ['name', 'policyType', 'description', 'isEnabled', 'isAuditEnabled'],
 		schema :function(){
 			return this.getSchema();
 		},
 		getSchema : function(){
 			var attrs = {};
-			var basicSchema = ['name','isEnabled']
+			var basicSchema = ['name','isEnabled','policyType']
 			var schemaNames = this.getPolicyBaseFieldNames();
 			
 			var formDataType = new BackboneFormDataType();
@@ -123,6 +126,9 @@ define(function(require){
 		evIsEnabledChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
 		},
+		evPolicyTypeChange : function(form, fieldEditor){
+			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
+		},
 		setupForm : function() {
 			if(!this.model.isNew()){
 				this.selectedResourceTypes = {};
@@ -144,6 +150,7 @@ define(function(require){
 			var that = this;
 			this.fields.isAuditEnabled.editor.setValue(this.model.get('isAuditEnabled'));
 			this.fields.isEnabled.editor.setValue(this.model.get('isEnabled'));
+			this.fields.policyType.editor.setValue(this.model.get('policyType'));
 			
 		},
 		/** all custom field rendering */
@@ -261,11 +268,6 @@ define(function(require){
 			_.each(this.model.attributes.resources,function(obj,key){
 				this.model.unset(key, obj.values.toString())
 			},this)*/
-			
-			if(!_.isUndefined(this.model.get('policyType'))){
-				this.model.set('policyType',this.model.get('policyType') ? 1 : 0)
-			}
-			
 		},
 		setPermissionsToColl : function(list, policyItemList) {
 			list.each(function(m){
@@ -560,8 +562,8 @@ define(function(require){
 			return obj;
 		},
 		getPolicyBaseFieldNames : function(){
-			 var fields = ['description', 'isAuditEnabled','policyType'];
-			 return this.rangerServiceDefModel.get('name') == XAEnums.ServiceType.SERVICE_TAG.label ?  fields : fields.slice(0,fields.indexOf("policyType"));
+			 var fields = ['description', 'isAuditEnabled'];
+			 return fields;
 		}
 	});
 

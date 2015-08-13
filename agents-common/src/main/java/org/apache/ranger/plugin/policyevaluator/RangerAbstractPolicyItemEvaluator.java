@@ -32,7 +32,6 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyItemEvaluator {
 	final RangerPolicyEngineOptions options;
 	final RangerServiceDef          serviceDef;
-	final RangerPolicy              policy;
 	final RangerPolicyItem          policyItem;
 	final long                      policyId;
 
@@ -40,7 +39,6 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 
 	RangerAbstractPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, RangerPolicyEngineOptions options) {
 		this.serviceDef = serviceDef;
-		this.policy     = policy;
 		this.policyItem = policyItem;
 		this.options    = options;
 		this.policyId   = policy != null && policy.getId() != null ? policy.getId() : -1;

@@ -57,6 +57,4 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
-
-	boolean isFinal();
-	}
+}
