@@ -78,59 +78,70 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 	@Override
 	public boolean isMatched(RangerAccessRequest request) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==>RangerScriptConditionEvaluator.isMatched()");
+			LOG.debug("==> RangerScriptConditionEvaluator.isMatched()");
 		}
 		boolean result = false;
 
 		if (scriptEngine != null) {
 
-			List<String> values = condition.getValues();
+			String script = getScript();
 
-			if (CollectionUtils.isNotEmpty(values)) {
+			if (StringUtils.isNotBlank(script)) {
 
-				String value = values.get(0);
-				if (StringUtils.isNotBlank(value)) {
+				RangerAccessRequest readOnlyRequest = request.getReadOnlyCopy();
 
-					RangerAccessRequest readOnlyRequest = request.getReadOnlyCopy();
+				RangerScriptExecutionContext context = new RangerScriptExecutionContext(readOnlyRequest);
 
-					RangerScriptExecutionContext context = new RangerScriptExecutionContext(readOnlyRequest);
+				Bindings bindings = scriptEngine.createBindings();
 
-					Bindings bindings = scriptEngine.createBindings();
+				bindings.put("ctx", context);
 
-					bindings.put("ctx", context);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={" + script + "}");
+				}
+				try {
 
-					String script = value.trim();
+					Object ret = scriptEngine.eval(script, bindings);
 
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={" + script + "}");
+					if (ret == null) {
+						ret = context.getResult();
 					}
-					try {
-
-						Object ret = scriptEngine.eval(script, bindings);
-
-						if (ret == null) {
-							ret = context.getResult();
-						}
-						if (ret instanceof Boolean) {
-							result = (Boolean) ret;
-						}
-
-					} catch (NullPointerException nullp) {
-						LOG.error("RangerScriptConditionEvaluator.isMatched(): eval called with NULL argument(s)");
-
-					} catch (ScriptException exception) {
-						LOG.error("RangerScriptConditionEvaluator.isMatched(): failed to evaluate script," +
-								" exception=" + exception);
+					if (ret instanceof Boolean) {
+						result = (Boolean) ret;
 					}
+
+				} catch (NullPointerException nullp) {
+					LOG.error("RangerScriptConditionEvaluator.isMatched(): eval called with NULL argument(s)");
+
+				} catch (ScriptException exception) {
+					LOG.error("RangerScriptConditionEvaluator.isMatched(): failed to evaluate script," +
+							" exception=" + exception);
 				}
 			}
+
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<==RangerScriptConditionEvaluator.isMatched(), result=" + result);
+			LOG.debug("<== RangerScriptConditionEvaluator.isMatched(), result=" + result);
 		}
 
 		return result;
 
+	}
+
+	protected String getScript() {
+		String ret = null;
+
+		List<String> values = condition.getValues();
+
+		if (CollectionUtils.isNotEmpty(values)) {
+
+			String value = values.get(0);
+			if (StringUtils.isNotBlank(value)) {
+				ret = value.trim();
+			}
+		}
+
+		return ret;
 	}
 }

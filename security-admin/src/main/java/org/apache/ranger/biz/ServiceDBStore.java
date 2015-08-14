@@ -132,12 +132,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
-
-	public static final String RANGER_DEFAULT_TAGPOLICY_TAG_PREFIX = "ranger.default.tagpolicy.tag.";
-	public static final String RANGER_DEFAULT_TAGPOLICY_TAG_NAME = RANGER_DEFAULT_TAGPOLICY_TAG_PREFIX + "name";
-	public static final String RANGER_DEFAULT_TAGPOLICY_TAG_ATTRIBUTE_NAME = RANGER_DEFAULT_TAGPOLICY_TAG_PREFIX + "attribute.name";
-	public static final String RANGER_DEFAULT_TAGPOLICY_TAG_SCRIPT_FORMAT = RANGER_DEFAULT_TAGPOLICY_TAG_PREFIX + "%1$s." + "script";
-
+	public static final String RANGER_TAG_EXPIRY_CONDITION_NAME = "enforce-expiry";
 
 	@Autowired
 	RangerServiceDefService serviceDefService;
@@ -1795,7 +1790,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		String tagResourceDefName = null;
-		String tagPolicyConditionName = null;
+		boolean isConditionDefFound = false;
 
 		RangerServiceDef tagServiceDef = getServiceDef(createdService.getType());
 		List<RangerResourceDef> tagResourceDef = tagServiceDef.getResources();
@@ -1807,25 +1802,23 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy: Cannot get tagResourceDef Name.");
 		}
 
-		List<RangerPolicyConditionDef> policyConditions = tagServiceDef.getPolicyConditions();
-		if (policyConditions != null && policyConditions.size() > 0) {
-			// Assumption : First (and perhaps the only) policyConditionDef is javascript evaluator
-			RangerPolicyConditionDef condition = policyConditions.get(0);
-			tagPolicyConditionName = condition.getName();
-		} else {
-			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy: Cannot get tagPolicyConditionDef Name.");
+		List<RangerPolicyConditionDef> policyConditionDefs = tagServiceDef.getPolicyConditions();
+
+		if (CollectionUtils.isNotEmpty(policyConditionDefs)) {
+			for (RangerPolicyConditionDef conditionDef : policyConditionDefs) {
+				if (conditionDef.getName().equals(RANGER_TAG_EXPIRY_CONDITION_NAME)) {
+					isConditionDefFound = true;
+					break;
+				}
+			}
+		}
+		if (!isConditionDefFound) {
+			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy: Cannot get tagPolicyConditionDef with name=" + RANGER_TAG_EXPIRY_CONDITION_NAME);
 		}
 
-		String tagName = RangerConfiguration.getInstance().get(RANGER_DEFAULT_TAGPOLICY_TAG_NAME, "EXPIRES_ON");
-		String tagAttributeName = RangerConfiguration.getInstance().get(RANGER_DEFAULT_TAGPOLICY_TAG_ATTRIBUTE_NAME, "expiry_date");
+		if (tagResourceDefName != null && isConditionDefFound) {
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("ServiceDBStore.createDefaultTagPolicy() - tagResourceDefName=" + tagResourceDefName +
-					", tagPolicyConditionName=" + tagPolicyConditionName + ", tagName=" + tagName +
-					", tagAttributeName=" + tagAttributeName);
-		}
-
-		if (tagResourceDefName != null && tagPolicyConditionName != null && tagName != null && tagAttributeName != null) {
+			String tagName = "EXPIRES_ON";
 
 			String policyName = createdService.getName() + "-" + tagName;
 
@@ -1835,11 +1828,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policy.setVersion(1L);
 			policy.setName(policyName);
 			policy.setService(createdService.getName());
-			policy.setDescription("Default Policy for TAG: " + tagName + " for TAG Service: " + createdService.getName());
+			policy.setDescription(tagName + " Policy for TAG Service: " + createdService.getName());
 			policy.setIsAuditEnabled(true);
 			policy.setPolicyType(RangerPolicy.POLICY_TYPE_EXCLUSIVE_ALLOW);
 
-			Map<String, RangerPolicyResource> resourceMap = new HashMap<>();
+			Map<String, RangerPolicyResource> resourceMap = new HashMap<String, RangerPolicyResource>();
 
 			RangerPolicyResource polRes = new RangerPolicyResource();
 			polRes.setIsExcludes(false);
@@ -1868,12 +1861,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policyItem.setAccesses(accesses);
 
 			List<RangerPolicyItemCondition> policyItemConditions = new ArrayList<RangerPolicyItemCondition>();
-			String propertyName = String.format(RANGER_DEFAULT_TAGPOLICY_TAG_SCRIPT_FORMAT, tagName);
-			String scriptFormat = RangerConfiguration.getInstance().get(propertyName, "if (ctx.isAccessedAfter('%1$s', '%2$s')) { ctx.result = false;} else { ctx.result = true;}");
-			String formattedScript = String.format(scriptFormat, tagName, tagAttributeName);
-			List<String> javascriptScriptList = new ArrayList<String>();
-			javascriptScriptList.add(formattedScript);
-			RangerPolicyItemCondition policyItemCondition = new RangerPolicyItemCondition(tagPolicyConditionName, javascriptScriptList);
+			List<String> values = new ArrayList<String>();
+			values.add("yes");
+			RangerPolicyItemCondition policyItemCondition = new RangerPolicyItemCondition(RANGER_TAG_EXPIRY_CONDITION_NAME, values);
 			policyItemConditions.add(policyItemCondition);
 
 			policyItem.setConditions(policyItemConditions);
@@ -1886,8 +1876,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policy = createPolicy(policy);
 		} else {
 			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy, tagResourceDefName=" + tagResourceDefName +
-					", tagPolicyConditionName=" + tagPolicyConditionName + ", defaultTagName=" + tagName +
-					", defaultTagAttributeName=" + tagAttributeName);
+					", tagPolicyConditionName=" + RANGER_TAG_EXPIRY_CONDITION_NAME);
 		}
 
 		if (LOG.isDebugEnabled()) {
