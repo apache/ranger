@@ -38,6 +38,8 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.model.RangerTaggedResource.RangerResourceTag;
+import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerTaggedResourceServiceBase<T extends XXTaggedResource, V extends RangerTaggedResource> extends RangerBaseModelService<T, V> {
@@ -142,6 +144,21 @@ public abstract class RangerTaggedResourceServiceBase<T extends XXTaggedResource
 		}
 		key.setResourceSpec(resourceSpec);
 		return key;
+	}
+
+	@SuppressWarnings("unchecked")
+	public PList<RangerTaggedResource> searchRangerTaggedResources(SearchFilter searchFilter) {
+		PList<RangerTaggedResource> retList = new PList<RangerTaggedResource>();
+		List<RangerTaggedResource> taggedResList = new ArrayList<RangerTaggedResource>();
+
+		List<XXTaggedResource> xTaggedResList = (List<XXTaggedResource>) searchRangerObjects(searchFilter, searchFields, sortFields, (PList<V>) retList);
+
+		for (XXTaggedResource xTaggedRes : xTaggedResList) {
+			RangerTaggedResource taggedRes = populateViewBean((T) xTaggedRes);
+			taggedResList.add(taggedRes);
+		}
+		retList.setList(taggedResList);
+		return retList;
 	}
 
 }

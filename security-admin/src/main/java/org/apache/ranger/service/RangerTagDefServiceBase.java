@@ -24,11 +24,14 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
+import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXTagAttributeDef;
 import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
+import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends RangerTagDef> extends
@@ -39,6 +42,9 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 
 	@Autowired
 	RangerAuditFields<XXDBBase> rangerAuditFields;
+	
+	@Autowired
+	RangerConfigUtil configUtil;
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -111,5 +117,22 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 		xTagAttrDef.setName(attrDef.getName());
 		xTagAttrDef.setType(attrDef.getType());
 		return xTagAttrDef;
+	}
+
+	@SuppressWarnings("unchecked")
+	public PList<RangerTagDef> searchRangerTagDefs(SearchFilter searchFilter) {
+		PList<RangerTagDef> retList = new PList<RangerTagDef>();
+		List<RangerTagDef> tagDefList = new ArrayList<RangerTagDef>();
+
+		List<XXTagDef> xTagDefList = (List<XXTagDef>) searchRangerObjects(searchFilter, searchFields, sortFields, (PList<V>) retList);
+
+		for (XXTagDef xTagDef : xTagDefList) {
+			RangerTagDef tagDef = populateViewBean((T) xTagDef);
+			tagDefList.add(tagDef);
+		}
+
+		retList.setList(tagDefList);
+
+		return retList;
 	}
 }

@@ -44,6 +44,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -400,7 +401,36 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		}
 		return resultList;
 	}
-	
+
+	protected List<T> searchRangerObjects(SearchFilter searchCriteria, List<SearchField> searchFieldList, List<SortField> sortFieldList, PList<V> pList) {
+
+		// Get total count of the rows which meet the search criteria
+		long count = -1;
+		if (searchCriteria.isGetCount()) {
+			count = getCountForSearchQuery(searchCriteria, searchFieldList);
+			if (count == 0) {
+				return Collections.emptyList();
+			}
+		}
+
+		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
+
+		String q = queryStr;
+		Query query = createQuery(q, sortClause, searchCriteria, searchFieldList, false);
+
+		List<T> resultList = getDao().executeQueryInSecurityContext(tEntityClass, query);
+
+		if (pList != null) {
+			pList.setResultSize(resultList.size());
+			pList.setPageSize(query.getMaxResults());
+			pList.setSortBy(searchCriteria.getSortBy());
+			pList.setSortType(searchCriteria.getSortType());
+			pList.setStartIndex(query.getFirstResult());
+			pList.setTotalCount(count);
+		}
+		return resultList;
+	}
+
 	protected long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {
 
 		String q = countQueryStr;

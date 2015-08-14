@@ -576,6 +576,10 @@
 	<named-query name="XXTag.findTagsByExternalId">
 		<query>select obj from XXTag obj where obj.externalId = :externalId</query>
 	</named-query>
+	
+	<named-query name="XXTagDef.findByName">
+		<query>select obj from XXTagDef obj where obj.name = :name</query>
+	</named-query>
 
 	<!-- End <== JPA Queries for Tag Based Policies  -->
 	

@@ -100,18 +100,18 @@ public class TagREST {
     }
 
     @PUT
-    @Path(TagRESTConstants.TAG_RESOURCE + "/{name}")
+    @Path(TagRESTConstants.TAG_RESOURCE + "/{id}")
     @Produces({ "application/json", "application/xml" })
     //@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 
-    public RangerTagDef updateTagDef(@PathParam("name") String name, RangerTagDef tagDef) {
+    public RangerTagDef updateTagDef(@PathParam("id") Long id, RangerTagDef tagDef) {
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.updateTagDef(" + name + ")");
+            LOG.debug("==> TagREST.updateTagDef(" + id + ")");
         }
-        if (tagDef.getName() == null) {
-            tagDef.setName(name);
-        } else if (!tagDef.getName().equals(name)) {
+        if (tagDef.getId() == null) {
+            tagDef.setId(id);
+        } else if (!tagDef.getId().equals(id)) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "tag name mismatch", true);
         }
 
@@ -120,49 +120,49 @@ public class TagREST {
         try {
             ret = tagStore.updateTagDef(tagDef);
         } catch (Exception excp) {
-            LOG.error("updateTagDef(" + name + ") failed", excp);
+            LOG.error("updateTagDef(" + id + ") failed", excp);
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.updateTagDef(" + name + ")");
+            LOG.debug("<== TagREST.updateTagDef(" + id + ")");
         }
 
         return ret;
     }
 
     @DELETE
-    @Path(TagRESTConstants.TAG_RESOURCE + "/{name}")
+    @Path(TagRESTConstants.TAG_RESOURCE + "/{id}")
     @Produces({ "application/json", "application/xml" })
     //@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public void deleteTagDef(@PathParam("name") String name) {
+    public void deleteTagDef(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.deleteTagDef(" + name + ")");
+            LOG.debug("==> TagREST.deleteTagDef(" + id + ")");
         }
 
         try {
             //RangerTagDefValidator validator = validatorFactory.getTagDefValidator(tagStore);
             //validator.validate(guid, Action.DELETE);
-            tagStore.deleteTagDef(name);
+            tagStore.deleteTagDefById(id);
         } catch(Exception excp) {
-            LOG.error("deleteTagDef(" + name + ") failed", excp);
+            LOG.error("deleteTagDef(" + id + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.deleteTagDef(" + name + ")");
+            LOG.debug("<== TagREST.deleteTagDef(" + id + ")");
         }
     }
 
     @GET
     @Path(TagRESTConstants.TAG_RESOURCE+"/{name}")
     @Produces({ "application/json", "application/xml" })
-    public RangerTagDef getTagDefByName(@PathParam("name") String name) {
+    public List<RangerTagDef> getTagDefByName(@PathParam("name") String name) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getTagDefByName(" + name + ")");
         }
 
-        RangerTagDef ret;
+        List<RangerTagDef> ret;
 
         try {
             ret = tagStore.getTagDef(name);

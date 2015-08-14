@@ -19,13 +19,22 @@
 
 package org.apache.ranger.service;
 
+import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SearchField.DATA_TYPE;
+import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, RangerTagDef> {
 
+	public RangerTagDefService() {
+		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.TAG_DEF_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+	}
+	
 	@Override
 	protected void validateForCreate(RangerTagDef vObj) {
 
@@ -34,6 +43,10 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
 	@Override
 	protected void validateForUpdate(RangerTagDef vObj, XXTagDef entityObj) {
 
+	}
+
+	public RangerTagDef getPopulatedViewObjject(XXTagDef xObj) {
+		return populateViewBean(xObj);
 	}
 
 }

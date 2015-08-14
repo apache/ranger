@@ -19,12 +19,20 @@
 
 package org.apache.ranger.service;
 
+import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SearchField.DATA_TYPE;
+import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXTaggedResource;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RangerTaggedResourceService extends RangerTaggedResourceServiceBase<XXTaggedResource, RangerTaggedResource> {
+
+	public RangerTaggedResourceService() {
+		searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+	}
 
 	@Override
 	protected void validateForCreate(RangerTaggedResource vObj) {

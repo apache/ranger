@@ -19,6 +19,12 @@
 
 package org.apache.ranger.db;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTagDef;
 
@@ -26,6 +32,19 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 
 	public XXTagDefDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
+	}
+
+	public List<XXTagDef> findByName(String name) {
+		if (StringUtils.isEmpty(name)) {
+			return new ArrayList<XXTagDef>();
+		}
+
+		try {
+			return getEntityManager().createNamedQuery("XXTagDef.findByName", tClass)
+					.setParameter("name", name).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagDef>();
+		}
 	}
 
 }

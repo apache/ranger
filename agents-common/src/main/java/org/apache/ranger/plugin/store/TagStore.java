@@ -42,7 +42,9 @@ public interface TagStore {
 
     void deleteTagDef(String name) throws Exception;
 
-    RangerTagDef getTagDef(String name) throws Exception;
+	void deleteTagDefById(Long id) throws Exception;
+
+	List<RangerTagDef> getTagDef(String name) throws Exception;
 
     RangerTagDef getTagDefById(Long id) throws Exception;
 

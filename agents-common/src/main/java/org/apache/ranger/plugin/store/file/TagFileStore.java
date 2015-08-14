@@ -115,10 +115,10 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.createTagDef(" + tagDef + ")");
 		}
 
-		RangerTagDef existing = getTagDef(tagDef.getName());
+		List<RangerTagDef> existing = getTagDef(tagDef.getName());
 
-		if (existing != null) {
-			throw new Exception(tagDef.getName() + ": tag-def already exists (id=" + existing.getId() + ")");
+		if (CollectionUtils.isNotEmpty(existing)) {
+			throw new Exception(tagDef.getName() + ": tag-def already exists (id=" + existing.get(0).getId() + ")");
 		}
 
 		RangerTagDef ret;
@@ -150,11 +150,22 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.updateTagDef(" + tagDef + ")");
 		}
 
-		RangerTagDef existing = getTagDef(tagDef.getName());
+		RangerTagDef existing = null;
 
-		if (existing == null) {
-			throw new Exception(tagDef.getName() + ": tag-def does not exist (id=" + tagDef.getId() + ")");
+		if(tagDef.getId() == null) {
+			List<RangerTagDef> existingDefs = getTagDef(tagDef.getName());
+
+			if (CollectionUtils.isEmpty(existingDefs)) {
+				throw new Exception("tag-def does not exist: name=" + tagDef.getName());
+			}
+		} else {
+			existing = this.getTagDefById(tagDef.getId());
+
+			if (existing == null) {
+				throw new Exception("tag-def does not exist: id=" + tagDef.getId());
+			}
 		}
+
 
 		RangerTagDef ret;
 
@@ -186,20 +197,22 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.deleteTagDef(" + name + ")");
 		}
 
-		RangerTagDef existing = getTagDef(name);
+		List<RangerTagDef> existingDefs = getTagDef(name);
 
-		if (existing == null) {
-			throw new Exception("no tag-def exists with ID=" + name);
+		if (CollectionUtils.isEmpty(existingDefs)) {
+			throw new Exception("no tag-def exists with name=" + name);
 		}
 
 		try {
-			Path filePath = new Path(fileStoreUtil.getDataFile(FILE_PREFIX_TAG_DEF, existing.getId()));
+			for(RangerTagDef existing : existingDefs) {
+				Path filePath = new Path(fileStoreUtil.getDataFile(FILE_PREFIX_TAG_DEF, existing.getId()));
 
-			preDelete(existing);
+				preDelete(existing);
 
-			fileStoreUtil.deleteFile(filePath);
+				fileStoreUtil.deleteFile(filePath);
 
-			postDelete(existing);
+				postDelete(existing);
+			}
 		} catch (Exception excp) {
 			throw new Exception("failed to delete tag-def with ID=" + name, excp);
 		}
@@ -211,19 +224,19 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerTagDef getTagDef(String name) throws Exception {
+	public List<RangerTagDef> getTagDef(String name) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getTagDef(" + name + ")");
 		}
 
-		RangerTagDef ret;
+		List<RangerTagDef> ret;
 
 		if (StringUtils.isNotBlank(name)) {
 			SearchFilter filter = new SearchFilter(SearchFilter.TAG_DEF_NAME, name);
 
 			List<RangerTagDef> tagDefs = getTagDefs(filter);
 
-			ret = CollectionUtils.isEmpty(tagDefs) ? null : tagDefs.get(0);
+			ret = CollectionUtils.isEmpty(tagDefs) ? null : tagDefs;
 		} else {
 			ret = null;
 		}
@@ -724,6 +737,12 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		return matchedTagList;
+	}
+
+	@Override
+	public void deleteTagDefById(Long id) throws Exception {
+		// TODO Auto-generated method stub
+
 	}
 }
 

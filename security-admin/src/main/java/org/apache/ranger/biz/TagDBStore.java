@@ -22,6 +22,7 @@ package org.apache.ranger.biz;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,6 +43,7 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.entity.XXTagAttribute;
+import org.apache.ranger.entity.XXTagAttributeDef;
 import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.entity.XXTaggedResource;
 import org.apache.ranger.entity.XXTaggedResourceValue;
@@ -51,6 +53,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.apache.ranger.plugin.model.RangerTaggedResource.RangerResourceTag;
 import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
@@ -102,44 +105,168 @@ public class TagDBStore implements TagStore {
 
 	@Override
 	public RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.createTagDef(" + tagDef + ")");
+		}
+
+		RangerTagDef ret;
+
+		try {
+			ret = rangerTagDefService.create(tagDef);
+
+			createTagAttributeDefs(ret.getId(), tagDef.getAttributeDefs());
+
+			ret = rangerTagDefService.read(ret.getId());
+
+		} catch (Exception e) {
+			throw errorUtil.createRESTException("failed to save tag-def [" + tagDef.getName() + "]", MessageEnums.ERROR_CREATING_OBJECT);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.createTagDef(" + tagDef + ")");
+		}
+
+		return ret;
 	}
 
 	@Override
-	public RangerTagDef updateTagDef(RangerTagDef TagDef) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+	public RangerTagDef updateTagDef(RangerTagDef tagDef) throws Exception {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.updateTagDef(" + tagDef + ")");
+		}
+
+		RangerTagDef existing = rangerTagDefService.read(tagDef.getId());
+		RangerTagDef ret = null;
+		if (existing == null) {
+			throw errorUtil.createRESTException("failed to update tag-def [" + tagDef.getName() + "], Reason: No TagDef found with id: [" + tagDef.getId() + "]",
+					MessageEnums.DATA_NOT_UPDATABLE);
+		}
+
+		if (StringUtils.isEmpty(tagDef.getCreatedBy())) {
+			tagDef.setCreatedBy(existing.getCreatedBy());
+		}
+		if (tagDef.getCreateTime() == null) {
+			tagDef.setCreateTime(existing.getCreateTime());
+		}
+		if (StringUtils.isEmpty(tagDef.getGuid())) {
+			tagDef.setGuid(existing.getGuid());
+		}
+
+		ret = rangerTagDefService.update(tagDef);
+
+		deleteTagAttributeDefs(ret.getId());
+
+		createTagAttributeDefs(ret.getId(), tagDef.getAttributeDefs());
+
+		return rangerTagDefService.read(ret.getId());
+	}
+
+	private List<XXTagAttributeDef> createTagAttributeDefs(Long tagDefId, List<RangerTagAttributeDef> tagAttrDefList) {
+
+		if (tagDefId == null) {
+			throw errorUtil.createRESTException("TagDBStore.createTagAttributeDefs(): Error creating tag-attr def. tagDefId can not be null.", MessageEnums.ERROR_CREATING_OBJECT);
+		}
+
+		if (CollectionUtils.isEmpty(tagAttrDefList)) {
+			return null;
+		}
+
+		List<XXTagAttributeDef> xTagAttrDefList = new ArrayList<XXTagAttributeDef>();
+		for (RangerTagDef.RangerTagAttributeDef attrDef : tagAttrDefList) {
+			XXTagAttributeDef xAttrDef = new XXTagAttributeDef();
+
+			xAttrDef.setGuid(guidUtil.genGUID());
+			xAttrDef.setTagDefId(tagDefId);
+			xAttrDef.setName(attrDef.getName());
+			xAttrDef.setType(attrDef.getType());
+			xAttrDef = (XXTagAttributeDef) rangerAuditFields.populateAuditFieldsForCreate(xAttrDef);
+
+			xAttrDef = daoManager.getXXTagAttributeDef().create(xAttrDef);
+
+			xTagAttrDefList.add(xAttrDef);
+		}
+		return xTagAttrDefList;
+	}
+
+	private void deleteTagAttributeDefs(Long tagDefId) {
+		if (tagDefId == null) {
+			return;
+		}
+		List<XXTagAttributeDef> tagAttrDefList = daoManager.getXXTagAttributeDef().findByTagDefId(tagDefId);
+
+		if (CollectionUtils.isEmpty(tagAttrDefList)) {
+			return;
+		}
+
+		for (XXTagAttributeDef xAttrDef : tagAttrDefList) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Deleting tag-attribute def [" + xAttrDef.getName() + "]");
+			}
+			daoManager.getXXTagAttributeDef().remove(xAttrDef);
+		}
 	}
 
 	@Override
 	public void deleteTagDef(String name) throws Exception {
-		// TODO Auto-generated method stub
 
+		if (StringUtils.isNotBlank(name)) {
+			return;
+		}
+
+		List<RangerTagDef> ret;
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Deleting all tag-defs with name [" + name + "]");
+		}
+
+		SearchFilter filter = new SearchFilter(SearchFilter.TAG_DEF_NAME, name);
+		ret = getTagDefs(filter);
+
+		for (RangerTagDef tagDef : ret) {
+			LOG.info("Deleting tag-def with name [" + name + "]");
+			rangerTagDefService.delete(tagDef);
+		}
 	}
 
 	@Override
-	public RangerTagDef getTagDef(String name) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+	public void deleteTagDefById(Long id) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Deleting tag-def [" + id + "]");
+		}
+
+		RangerTagDef tagDef = rangerTagDefService.read(id);
+
+		rangerTagDefService.delete(tagDef);
+	}
+
+	@Override
+	public List<RangerTagDef> getTagDef(String name) throws Exception {
+
+		List<RangerTagDef> ret;
+		if (StringUtils.isNotBlank(name)) {
+			SearchFilter filter = new SearchFilter(SearchFilter.TAG_DEF_NAME, name);
+			ret = getTagDefs(filter);
+		} else {
+			ret = null;
+		}
+		return ret;
 	}
 
 	@Override
 	public RangerTagDef getTagDefById(Long id) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		return rangerTagDefService.read(id);
 	}
 
 	@Override
 	public List<RangerTagDef> getTagDefs(SearchFilter filter) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		return getPaginatedTagDefs(filter).getList();
 	}
 
 	@Override
 	public PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		return rangerTagDefService.searchRangerTagDefs(filter);
 	}
 
 	@Override
@@ -319,6 +446,9 @@ public class TagDBStore implements TagStore {
 			if (resource.getCreateTime() == null) {
 				resource.setCreateTime(existing.getCreateTime());
 			}
+			if (StringUtils.isEmpty(resource.getGuid())) {
+				resource.setGuid(existing.getGuid());
+			}
 
 			ret = rangerTaggedResourceService.update(resource);
 			ret.setTags(resource.getTags());
@@ -410,20 +540,38 @@ public class TagDBStore implements TagStore {
 
 	@Override
 	public TagServiceResources getResources(String serviceName, Long lastTimestamp) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+
+		List<RangerTaggedResource> taggedResources;
+
+		SearchFilter filter = new SearchFilter();
+
+		if (StringUtils.isNotBlank(serviceName)) {
+			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, serviceName);
+		}
+
+		if (lastTimestamp != null) {
+			filter.setParam(SearchFilter.TAG_RESOURCE_TIMESTAMP, Long.toString(lastTimestamp.longValue()));
+		}
+
+		taggedResources = getResources(filter);
+
+		TagServiceResources ret = new TagServiceResources();
+		ret.setTaggedResources(taggedResources);
+		// TBD
+		ret.setLastUpdateTime(new Date());
+		ret.setVersion(1L);
+
+		return ret;
 	}
 
 	@Override
 	public List<RangerTaggedResource> getResources(SearchFilter filter) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		return getPaginatedResources(filter).getList();
 	}
 
 	@Override
 	public PList<RangerTaggedResource> getPaginatedResources(SearchFilter filter) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		return rangerTaggedResourceService.searchRangerTaggedResources(filter);
 	}
 
 	@Override
