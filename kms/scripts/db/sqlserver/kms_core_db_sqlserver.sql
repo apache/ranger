@@ -44,6 +44,7 @@ CREATE TABLE [dbo].[ranger_keystore](
 	[create_time] [datetime2] DEFAULT NULL NULL,
 	[update_time] [datetime2] DEFAULT NULL NULL,
 	[added_by_id] [bigint] DEFAULT NULL NULL,
+	[upd_by_id] [bigint] DEFAULT NULL NULL,
 	[kms_alias] [varchar](255) NOT NULL,
 	[kms_createdDate] [bigint] DEFAULT NULL NULL,
 	[kms_cipher] [varchar](255) DEFAULT NULL NULL,
