@@ -277,6 +277,19 @@ sanity_check_files() {
             log "[E] ${sqlserver_core_file} does not exists" ; exit 1;
         fi
     fi
+	if [ "${DB_FLAVOR}" == "SQLANYWHERE" ]
+	then
+		if [ "${LD_LIBRARY_PATH}" == "" ]
+		then
+			log "[E] LD_LIBRARY_PATH environment property not defined, aborting installation."
+			exit 1
+		fi
+		if test -f ${sqlanywhere_core_file}; then
+			log "[I] ${sqlanywhere_core_file} file found"
+		else
+			log "[E] ${sqlanywhere_core_file} does not exists" ; exit 1;
+		fi
+	fi
 }
 
 create_rollback_point() {
@@ -397,7 +410,20 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 	fi
+	if [ "${DB_FLAVOR}" == "SQLANYWHERE" ]
+	then
+		propertyName=ranger.ks.jpa.jdbc.url
+		newPropertyValue="jdbc:sqlanywhere:database=${db_name};host=${DB_HOST}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
+		propertyName=ranger.ks.jpa.jdbc.dialect
+		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.ks.jpa.jdbc.driver
+		newPropertyValue="sap.jdbc4.sqlanywhere.IDriver"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+	fi
 	keystore="${cred_keystore_filename}"
 
 	echo "Starting configuration for XA DB credentials:"

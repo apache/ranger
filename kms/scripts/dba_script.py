@@ -887,6 +887,177 @@ class SqlServerConf(BaseDB):
 			logFile("ALTER LOGIN [%s] WITH DEFAULT_DATABASE=[%s];" %(db_user, db_name))
 			logFile("USE %s EXEC sp_addrolemember N'db_owner', N'%s';" %(db_name, db_user))
 
+class SqlAnywhereConf(BaseDB):
+	# Constructor
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
+		self.host = host
+		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_BIN = JAVA_BIN
+
+	def get_jisql_cmd(self, user, password, db_name):
+		#TODO: User array for forming command
+		path = RANGER_KMS_HOME
+		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+		if os_name == "LINUX":
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
+		elif os_name == "WINDOWS":
+			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
+		return jisql_cmd
+	def verify_user(self, root_user, db_root_password, db_user,dryMode):
+		if dryMode == False:
+			log("[I] Verifying user " + db_user , "info")
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"select name from syslogins where name = '%s';\"" %(db_user)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select name from syslogins where name = '%s';\" -c ;" %(db_user)
+		output = check_output(query)
+		if output.strip(db_user + " |"):
+			return True
+		else:
+			return False
+
+	def check_connection(self, db_name, db_user, db_password):
+		log("[I] Checking connection", "info")
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"SELECT 1;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT 1;\" -c ;"
+		output = check_output(query)
+		if output.strip('1 |'):
+			log("[I] Connection success", "info")
+			return True
+		else:
+			log("[E] Can't establish connection", "error")
+			sys.exit(1)
+	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
+		if self.check_connection('', root_user, db_root_password):
+			if self.verify_user(root_user, db_root_password, db_user,dryMode):
+				if dryMode == False:
+					log("[I] SQL Anywhere user " + db_user + " already exists.", "info")
+			else:
+				if dryMode == False:
+					get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
+					log("[I] User does not exists, Creating Login user " + db_user, "info")
+					if os_name == "LINUX":
+						query = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user,db_password)
+						ret = subprocess.call(shlex.split(query))
+					elif os_name == "WINDOWS":
+						query = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user,db_password)
+						ret = subprocess.call(query)
+					if ret == 0:
+						if self.verify_user(root_user, db_root_password, db_user,dryMode):
+							 log("[I] SQL Anywhere user " + db_user + " created", "info")
+						else:
+							log("[E] SQL Anywhere user " +db_user+" creation failed..", "error")
+							sys.exit(1)
+					else:
+						log("[E] SQL Anywhere user " +db_user+" creation failed..", "error")
+						sys.exit(1)
+				else:
+					logFile("CREATE USER %s IDENTIFIED BY = '%s';" %(db_user,db_password))
+
+	def verify_db(self, root_user, db_root_password, db_name,dryMode):
+		if dryMode == False:
+			log("[I] Verifying database " + db_name, "info")
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"select alias from sa_db_info() where alias='%s';\"" %(db_name)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select alias from sa_db_info() where alias='%s';\" -c ;" %(db_name)
+		output = check_output(query)
+		if output.strip(db_name + " |"):
+			return True
+		else:
+			return False
+	def create_db(self, root_user, db_root_password, db_name, db_user, db_password,dryMode):
+		if self.verify_db(root_user, db_root_password, db_name,dryMode):
+			if dryMode == False:
+				log("[I] Database " + db_name + " already exists.","info")
+		else:
+			if dryMode == False:
+				log("[I] Database does not exist. Creating database : " + db_name,"info")
+				get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
+				if os_name == "LINUX":
+					query = get_cmd + " -c \; -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\"" %(db_name,db_user, db_password)
+					ret = subprocess.call(shlex.split(query))
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\" -c ;" %(db_name,db_user, db_password)
+					ret = subprocess.call(query)
+				if ret != 0:
+					log("[E] Database creation failed..","error")
+					sys.exit(1)
+				else:
+					self.start_db(root_user, db_root_password, db_name,dryMode)
+					if self.verify_db(root_user, db_root_password, db_name,dryMode):
+						self.create_user(root_user, db_name ,db_user, db_password, db_root_password,dryMode)
+						log("[I] Creating database " + db_name + " succeeded", "info")
+						return True
+					else:
+						log("[E] Database creation failed..","error")
+						sys.exit(1)
+			else:
+				logFile("create database '%s' dba user '%s' dba password '%s' database size 100MB;" %(db_name,db_user, db_password))
+
+	def create_user(self, root_user, db_name ,db_user, db_password, db_root_password,dryMode):
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"select name from syslogins where name ='%s';\"" %(db_user)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select name from syslogins where name ='%s';\" -c ;" %(db_user)
+		output = check_output(query)
+		if output.strip(db_user + " |"):
+			if dryMode == False:
+				log("[I] User "+db_user+" exist ","info")
+		else:
+			if dryMode == False:
+				if os_name == "LINUX":
+					query = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user, db_password)
+					ret = subprocess.call(shlex.split(query))
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user, db_password)
+					ret = subprocess.call(query)
+				if ret == 0:
+					if os_name == "LINUX":
+						query = get_cmd + " -c \; -query \"select name from syslogins where name ='%s';\"" %(db_user)
+					elif os_name == "WINDOWS":
+						query = get_cmd + " -query \"select name from syslogins where name ='%s';\" -c ;" %(db_user)
+					output = check_output(query)
+					if output.strip(db_user + " |"):
+						log("[I] User "+db_user+" exist ","info")
+					else:
+						log("[E] Database creation failed..","error")
+						sys.exit(1)
+				else:
+					log("[E] Database creation failed..","error")
+					sys.exit(1)
+			else:
+				logFile("CREATE USER %s IDENTIFIED BY '%s';" %(db_user, db_password))
+	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, is_revoke,dryMode):
+		if dryMode == False:
+			log("[I] Granting permission to user '" + db_user + "' on db '" + db_name + "'" , "info")
+			get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
+			if os_name == "LINUX":
+				query = get_cmd + " -c \; -query \"GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user, db_password)
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"GRANT CONNECT to %s IDENTIFIED BY '%s';\" -c ;" %(db_user, db_password)
+				ret = subprocess.call(query)
+			if ret != 0:
+				sys.exit(1)
+		else:
+			logFile("GRANT CONNECT to %s IDENTIFIED BY '%s';" %(db_user, db_password))
+
+	def start_db(self,root_user, db_root_password, db_name,dryMode):
+		if dryMode == False:
+			log("[I] Starting database " + db_name, "info")
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"start database '%s' autostop off;\"" %(db_name)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"start database '%s' autostop off;\" -c ;" %(db_name)
+		output = check_output(query)
 
 def main(argv):
 
@@ -967,7 +1138,7 @@ def main(argv):
 	else:
 		XA_DB_FLAVOR=''
 		while XA_DB_FLAVOR == "":
-			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL} :","info")
+			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL|SQLANYWHERE} :","info")
 			XA_DB_FLAVOR=raw_input()
 
 	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
@@ -1042,6 +1213,8 @@ def main(argv):
 	#sqlserver_core_file = globalDict['sqlserver_core_file']
 	sqlserver_core_file = os.path.join('db','sqlserver','xa_core_db_sqlserver.sql')
 
+	sqlanywhere_core_file = os.path.join('db','sqlanywhere','xa_core_db_sqlanywhere.sql')
+
 	x_db_version = 'x_db_version_h'
 	x_user = 'x_portal_user'
 
@@ -1068,6 +1241,16 @@ def main(argv):
 		SQLSERVER_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,sqlserver_core_file)
+
+	elif XA_DB_FLAVOR == "SQLANYWHERE":
+		if not os_name == "WINDOWS" :
+			if os.environ['LD_LIBRARY_PATH'] == "":
+				log("[E] ---------- LD_LIBRARY_PATH environment property not defined, aborting installation. ----------", "error")
+				sys.exit(1)
+		SQLANYWHERE_CONNECTOR_JAR=CONNECTOR_JAR
+		xa_sqlObj = SqlAnywhereConf(xa_db_host, SQLANYWHERE_CONNECTOR_JAR, JAVA_BIN)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME,sqlanywhere_core_file)
+
 	else:
 		log("[E] ---------- NO SUCH SUPPORTED DB FLAVOUR.. ----------", "error")
 		sys.exit(1)

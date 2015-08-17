@@ -20,6 +20,7 @@
  package org.apache.ranger.biz;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -135,16 +136,18 @@ public class SessionMgr {
 			userSession.setXXPortalUser(gjUser);
 			userSession.setXXAuthSession(gjAuthSession);
 			resetUserSessionForProfiles(userSession);
-
+			Calendar cal = Calendar.getInstance();
 			if (details != null) {
 				logger.info("Login Success: loginId=" + currentLoginId
 						+ ", sessionId=" + gjAuthSession.getId()
 						+ ", sessionId=" + details.getSessionId()
-						+ ", requestId=" + details.getRemoteAddress());
+						+ ", requestId=" + details.getRemoteAddress()
+						+ ", epoch=" + cal.getTimeInMillis());
 			} else {
 				logger.info("Login Success: loginId=" + currentLoginId
 						+ ", sessionId=" + gjAuthSession.getId()
-						+ ", details is null");
+						+ ", details is null"
+						+ ", epoch=" + cal.getTimeInMillis());
 			}
 
 		}

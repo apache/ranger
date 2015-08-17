@@ -382,6 +382,10 @@ then
 	then
 		export XAAUDIT_DB_JDBC_URL="jdbc:sqlserver://${audit_db_hostname};databaseName=${audit_db_name}"
 		export XAAUDIT_DB_JDBC_DRIVER="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+	elif [ "${db_flavor}" = "SQLANYWHERE" ]
+	then
+		export XAAUDIT_DB_JDBC_URL="jdbc:sqlanywhere:database=${audit_db_name};host=${audit_db_hostname}"
+		export XAAUDIT_DB_JDBC_DRIVER="sap.jdbc4.sqlanywhere.IDriver"
 	else
         echo "Audit is not specified with a valid db_flavor: [${db_flavor}]. Ignoring audit ..."
         export XAAUDIT_DB_JDBC_URL="jdbc:${db_flavor}://${audit_db_hostname}/${audit_db_name}"

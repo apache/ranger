@@ -214,6 +214,9 @@ import org.apache.util.outputformatter.JisqlFormatter;
  * </p>
  */
 public class Jisql {
+	//Sybase SQL Anywhere JDBC4-Type2 (Native) Driver
+	private static final String sapJDBC4SqlAnywhereDriverName= "sap.jdbc4.sqlanywhere.IDriver";
+	private static final String sybaseJDBC4SqlAnywhereDriverName= "sybase.jdbc4.sqlanywhere.IDriver";
     private static final String sybaseJConnect6DriverName = "com.sybase.jdbc3.jdbc.SybDriver";
     private static final String sybaseJConnect5DriverName = "com.sybase.jdbc2.jdbc.SybDriver";
     private static final String sybaseJConnect4DriverName = "com.sybase.jdbc.SybDriver";
@@ -518,6 +521,12 @@ public class Jisql {
         			// Ignore IOE when closing streams
         		}
         	}
+		if (resultSet != null) {
+			try {
+				resultSet.close();
+			} catch (SQLException sqle) {
+			}
+		}
             if (statement != null) {
                 try {
                     statement.close();
@@ -649,6 +658,10 @@ public class Jisql {
                 driverName = mySQLConnectJDriverName;
             else if (driverName.compareToIgnoreCase("mysqlcaucho") == 0)
                 driverName = mySQLCauchoDriverName;
+            else if (driverName.compareToIgnoreCase("sapsajdbc4") == 0)
+                driverName = sapJDBC4SqlAnywhereDriverName;
+            else if (driverName.compareToIgnoreCase("sybasesajdbc4") == 0)
+                driverName = sybaseJDBC4SqlAnywhereDriverName;
         }
 
         connectString = (String) options.valueOf("cstring");

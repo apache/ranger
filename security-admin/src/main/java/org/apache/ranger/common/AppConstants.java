@@ -372,6 +372,7 @@ public class AppConstants extends RangerCommonEnums {
 	 * DB Favor SQLServer
 	 */
 	public static final int DB_FLAVOR_SQLSERVER = 4;
+	public static final int DB_FLAVOR_SQLANYWHERE = 5;
 
 
 	/***************************************************************

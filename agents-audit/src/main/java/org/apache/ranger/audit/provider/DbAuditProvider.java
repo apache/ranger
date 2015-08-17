@@ -199,7 +199,7 @@ public class DbAuditProvider extends AuditDestination {
 		}
 
 		LOG.info("DbAuditProvider: init()");
-
+		LOG.info("java.library.path:"+System.getProperty("java.library.path"));
 		try {
 			entityManagerFactory = Persistence.createEntityManagerFactory("xa_server", mDbProperties);
 
