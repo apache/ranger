@@ -469,11 +469,11 @@ define(function(require) {
 		getSelectdValues : function($select, typeGroup){
 			var vals = [],selectedVals = [];
 			var name = typeGroup ? 'group' : 'user';
-			this.collection.each(function(m){
-				if(!_.isUndefined(m.get(name+'Name')) && !_.isNull(m.get(name+'Name'))){
-					vals.push.apply(vals, m.get(name+'Name').split(','));
-				}
-			});
+//			this.collection.each(function(m){
+//				if(!_.isUndefined(m.get(name+'Name')) && !_.isNull(m.get(name+'Name'))){
+//					vals.push.apply(vals, m.get(name+'Name').split(','));
+//				}
+//			});
 			if(!_.isEmpty($select.select2('data')))
 				selectedVals = _.map($select.select2('data'),function(obj){ return obj.text});
 			vals.push.apply(vals , selectedVals);
