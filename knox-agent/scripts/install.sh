@@ -215,6 +215,18 @@ then
 	newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
 	updatePropertyToFile $propertyName $newPropertyValue $to_file
 fi
+if [ "${DB_FLAVOR}" == "SQLANYWHERE" ]
+then
+	audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+	audit_db_name=`grep '^XAAUDIT.DB.DATABASE_NAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
+	propertyName=XAAUDIT.DB.JDBC_URL
+	newPropertyValue="jdbc:sqlanywhere:database=${audit_db_name};host=${audit_db_hostname}"
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+
+	propertyName=XAAUDIT.DB.JDBC_DRIVER
+	newPropertyValue="sap.jdbc4.sqlanywhere.IDriver"
+	updatePropertyToFile $propertyName $newPropertyValue $to_file
+fi
 for f in ${install_dir}/installer/conf/*-changes.cfg
 do
 	if [ -f ${f} ]

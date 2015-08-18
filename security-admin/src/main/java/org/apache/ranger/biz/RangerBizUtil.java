@@ -1366,6 +1366,10 @@ public class RangerBizUtil {
 				return AppConstants.DB_FLAVOR_POSTGRES;
 			} else if (StringUtils.containsIgnoreCase(propertyValue, "sqlserver")) {
 				return AppConstants.DB_FLAVOR_SQLSERVER;
+			} else if (StringUtils.containsIgnoreCase(propertyValue, "mssql")) {
+				return AppConstants.DB_FLAVOR_SQLSERVER;
+			} else if (StringUtils.containsIgnoreCase(propertyValue, "sqlanywhere")) {
+				return AppConstants.DB_FLAVOR_SQLANYWHERE;
 			} else {
 				if(logger.isDebugEnabled()) {
 					logger.debug("DB Falvor could not be determined from property - " + propertyName + "=" + propertyValue);

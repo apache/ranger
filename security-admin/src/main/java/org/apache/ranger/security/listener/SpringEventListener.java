@@ -19,6 +19,7 @@
 
  package org.apache.ranger.security.listener;
 
+import java.util.Calendar;
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.entity.XXAuthSession;
@@ -66,8 +67,9 @@ public class SpringEventListener implements
 		: "";
 	String sessionId = details != null ? details.getSessionId() : "";
 
+	Calendar cal = Calendar.getInstance();
 	logger.info("Login Successful:" + auth.getName() + " | Ip Address:"
-		+ remoteAddress + " | sessionId=" + sessionId);
+			+ remoteAddress + " | sessionId=" + sessionId +  " | Epoch=" +cal.getTimeInMillis() );
 
 	// success logins are processed further in
 	// AKASecurityContextFormationFilter

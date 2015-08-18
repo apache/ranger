@@ -381,6 +381,89 @@ class SqlServerConf(BaseDB):
 			log("[I] Table '" + TABLE_NAME + "' does not exist in database '" + db_name + "'","info")
 			return False
 
+class SqlAnywhereConf(BaseDB):
+	# Constructor
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
+		self.host = host
+		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_BIN = JAVA_BIN
+
+	def get_jisql_cmd(self, user, password, db_name):
+		path = RANGER_KMS_HOME
+		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+		if os_name == "LINUX":
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
+		elif os_name == "WINDOWS":
+			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
+		return jisql_cmd
+
+	def check_connection(self, db_name, db_user, db_password):
+		log("[I] Checking connection", "info")
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"SELECT 1;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT 1;\" -c ;"
+		output = check_output(query)
+		if output.strip('1 |'):
+			log("[I] Connection success", "info")
+			return True
+		else:
+			log("[E] Can't establish connection", "error")
+			sys.exit(1)
+
+	def import_db_file(self, db_name, db_user, db_password, file_name):
+		name = basename(file_name)
+		if os.path.isfile(file_name):
+			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
+			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+			if os_name == "LINUX":
+				query = get_cmd + " -input %s" %file_name
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -input %s" %file_name
+				ret = subprocess.call(query)
+			if ret == 0:
+				log("[I] "+name + " DB schema imported successfully","info")
+			else:
+				log("[E] "+name + " DB Schema import failed!","error")
+				sys.exit(1)
+		else:
+			log("[I] DB Schema file " + name+ " not found","error")
+			sys.exit(1)
+
+	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
+		self.set_options(db_name, db_user, db_password, TABLE_NAME)
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"SELECT name FROM sysobjects where name = '%s' and type='U';\"" %(TABLE_NAME)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT name FROM sysobjects where name = '%s' and type='U';\" -c ;" %(TABLE_NAME)
+		output = check_output(query)
+		if output.strip(TABLE_NAME + " |"):
+			log("[I] Table '" + TABLE_NAME + "' already exists in  database '" + db_name + "'","info")
+			return True
+		else:
+			log("[I] Table '" + TABLE_NAME + "' does not exist in database '" + db_name + "'","info")
+			return False
+
+	def set_options(self, db_name, db_user, db_password, TABLE_NAME):
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"set option public.reserved_keywords='LIMIT';\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"set option public.reserved_keywords='LIMIT';\" -c ;"
+		ret = subprocess.call(shlex.split(query))
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"set option public.max_statement_count=0;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"set option public.max_statement_count=0;\" -c;"
+		ret = subprocess.call(shlex.split(query))
+		if os_name == "LINUX":
+			query = get_cmd + " -c \; -query \"set option public.max_cursor_count=0;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"set option public.max_cursor_count=0;\" -c;"
+		ret = subprocess.call(shlex.split(query))
 
 def main(argv):
 	populate_global_dict()
@@ -422,6 +505,9 @@ def main(argv):
 	sqlserver_core_file = globalDict['sqlserver_core_file']
 	sqlserver_patches = os.path.join('db','sqlserver','patches')
 
+	sqlanywhere_core_file = globalDict['sqlanywhere_core_file']
+	sqlanywhere_patches = os.path.join('db','sqlanywhere','patches')
+
 	db_name = globalDict['db_name']
 	db_user = globalDict['db_user']
 	db_password = globalDict['db_password']
@@ -449,6 +535,16 @@ def main(argv):
 		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME , sqlserver_core_file)
+
+	elif XA_DB_FLAVOR == "SQLANYWHERE":
+		if not os_name == "WINDOWS" :
+			if os.environ['LD_LIBRARY_PATH'] == "":
+				log("[E] ---------- LD_LIBRARY_PATH environment property not defined, aborting installation. ----------", "error")
+				sys.exit(1)
+		SQLANYWHERE_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
+		xa_sqlObj = SqlAnywhereConf(xa_db_host, SQLANYWHERE_CONNECTOR_JAR, JAVA_BIN)
+		xa_db_core_file = os.path.join(RANGER_KMS_HOME , sqlanywhere_core_file)
+
 	else:
 		log("[E] --------- NO SUCH SUPPORTED DB FLAVOUR!! ---------", "error")
 		sys.exit(1)
