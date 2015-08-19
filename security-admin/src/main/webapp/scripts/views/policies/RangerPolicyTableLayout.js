@@ -169,6 +169,17 @@ define(function(require){
 					editable: false,
 					sortable : false
 				},	
+				policyType : {
+					cell : 'html',
+					label	: localization.tt("lbl.policyType"),
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue) {
+							return rawValue === 0 ? '<label label-success">Allow</label>' : rawValue === 1 ? '<label label-important">Deny</label>' : '<label label-success">Exclusive Allow</label>'; 
+						}
+					}),
+					editable: false,
+					sortable : false
+				},
 				isEnabled:{
 					label:localization.tt('lbl.status'),
 					cell :"html",
@@ -319,11 +330,13 @@ define(function(require){
 		addVisualSearch : function(){
 			var that = this;
 			var resourceSearchOpt = _.map(this.rangerServiceDefModel.get('resources'), function(resource){ return XAUtil.capitaliseFirstLetter(resource.name) });
-	
-			var searchOpt = ['Policy Name','Group Name','User Name','Status'];//,'Start Date','End Date','Today'];
+			
+			var PolicyListValue = _.map(XAEnums.PolicyType, function(type) { return { 'label': type.label, 'value': type.value};});
+			var searchOpt = ['Policy Name','Group Name','User Name','Status','Policy Type'];//,'Start Date','End Date','Today'];
 			searchOpt = _.union(searchOpt, resourceSearchOpt)
 			var serverAttrName  = [{text : "Policy Name", label :"policyName"},{text : "Group Name", label :"group"},
-			                       {text : "User Name", label :"user"}, {text : "Status", label :"isEnabled"}];
+			                       {text : "User Name", label :"user"}, {text : "Status", label :"isEnabled"},
+			                       {text : "Policy Type", label :"policyType",'multiple' : true, 'optionsArr' : PolicyListValue}];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                 //  {text : 'Today',label :'today'}];
 			var serverRsrcAttrName = _.map(resourceSearchOpt,function(opt){ 
@@ -341,6 +354,10 @@ define(function(require){
 									case 'Status':
 										callback(that.getActiveStatusNVList());
 										break;
+									case 'Policy Type':
+										callback(that.getNameOfPolicyTypeNVList());
+//										callback(XAUtil.enumToSelectLabelValuePairs(XAEnums.PolicyType));
+										break;		
 								/*	case 'Audit Status':
 										callback(XAUtil.enumToSelectLabelValuePairs(XAEnums.AuthType));
 										break;	
@@ -367,6 +384,9 @@ define(function(require){
 					return obj;
 			});
 			return _.map(activeStatusList, function(status) { return { 'label': status.label, 'value': status.label.toLowerCase()}; })
+		},
+		getNameOfPolicyTypeNVList : function() {
+			return _.map(XAEnums.PolicyType, function(type) { return { 'label': type.label, 'value': type.label};});
 		},
 		/** on close */
 		onClose: function(){

@@ -216,6 +216,20 @@ define(function(require){
 			if(!_.isUndefined(policyItems)){
 				this.getPolicyItems();
 			}
+			var policyType = this.collection.findWhere({'attributeName':'Policy Type'});
+			/*if(this.action == 'delete'){
+				this.template = PolicyOperationDiff_tmpl;
+			}*/
+			if(!_.isUndefined(policyType)){
+				if(!_.isEmpty(policyType.get('previousValue'))){
+					var tmp = this.collection.get(policyType.id);
+					tmp.set("previousValue", policyType.get('previousValue') ===  "0" ? 'Allow' : policyType.get('previousValue') ===  "1" ? 'Deny' : "Exclusive Allow");
+				}
+				if(!_.isEmpty(policyType.get('newValue'))){
+					var tmp = this.collection.get(policyType.id);
+					tmp.set("newValue", policyType.get('newValue') ===  "0" ? 'Allow' : policyType.get('newValue') ===  "1" ? 'Deny' : "Exclusive Allow");
+				}
+			}
 		},
 		getPolicyResources : function() {
 			var policyResources = this.collection.findWhere({'attributeName':'Policy Resources'});
