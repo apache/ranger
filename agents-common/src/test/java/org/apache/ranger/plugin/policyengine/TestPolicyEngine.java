@@ -31,7 +31,7 @@ import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
@@ -241,21 +241,19 @@ public class TestPolicyEngine {
 				newRequest.setSessionId(test.request.getSessionId());
 
 				Map<String, Object> context = test.request.getContext();
-				if (test.request.getContext().containsKey(RangerPolicyEngine.KEY_CONTEXT_TAGS)) {
-					String tagsJsonString = (String) context.get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
-					context.remove(RangerPolicyEngine.KEY_CONTEXT_TAGS);
+				String tagsJsonString = (String) context.get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
+				context.remove(RangerPolicyEngine.KEY_CONTEXT_TAGS);
 
-					if (!StringUtils.isEmpty(tagsJsonString)) {
-						try {
-							Type listType = new TypeToken<List<RangerTaggedResource.RangerResourceTag>>() {
-							}.getType();
-							List<RangerTaggedResource.RangerResourceTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
+				if(!StringUtils.isEmpty(tagsJsonString)) {
+					try {
+						Type listType = new TypeToken<List<RangerTag>>() {
+						}.getType();
+						List<RangerTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
 
-							context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
-						} catch (Exception e) {
-							System.err.println("TestPolicyEngine.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
-									tagsJsonString + ", exception=" + e);
-						}
+						context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
+					} catch (Exception e) {
+						System.err.println("TestPolicyEngine.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
+								tagsJsonString + ", exception=" + e);
 					}
 				} else if (test.request.getContext().containsKey(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 					String resourcesJsonString = (String) context.get(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES);

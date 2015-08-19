@@ -22,10 +22,9 @@ package org.apache.ranger.plugin.contextenricher;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.file.TagFileStore;
-import org.apache.ranger.plugin.util.TagServiceResources;
+import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.util.Date;
 import java.util.List;
@@ -38,12 +37,12 @@ public class RangerTagFileStoreRetriever extends RangerTagRefresher {
 	private RangerTagReceiver receiver;
 
 	private TagStore tagStore;
-	private Long lastTimestamp;
+	private long lastKnownVersion;
 
 	public RangerTagFileStoreRetriever(final String serviceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
 		super(pollingIntervalMs);
 		this.serviceName = serviceName;
-		this.lastTimestamp = 0L;
+		this.lastKnownVersion = -1L;
 		setReceiver(enricher);
 	}
 
@@ -60,19 +59,16 @@ public class RangerTagFileStoreRetriever extends RangerTagRefresher {
 	@Override
 	public void retrieveTags() {
 		if (tagStore != null) {
-			List<RangerTaggedResource> resources = null;
-
+			ServiceTags serviceTags = null;
 			try {
-				long before = new Date().getTime();
-				TagServiceResources tagServiceResources = tagStore.getResources(serviceName, lastTimestamp);
-				resources = tagServiceResources.getTaggedResources();
-				lastTimestamp = before;
+				serviceTags = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
+				lastKnownVersion = serviceTags.getTagVersion();
 			} catch (Exception exp) {
 				LOG.error("RangerTagFileStoreRetriever.retrieveTags() - Error retrieving resources");
 			}
 
-			if (receiver != null && CollectionUtils.isNotEmpty(resources)) {
-				receiver.setRangerTaggedResources(resources);
+			if (receiver != null && serviceTags != null) {
+				receiver.setServiceTags(serviceTags);
 			} else {
 				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to .. OR .. no updates to tagged resources!!");
 			}

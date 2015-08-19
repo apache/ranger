@@ -23,7 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
@@ -74,9 +74,9 @@ public final class RangerScriptExecutionContext {
 
 	public final String getSessionId() { return accessRequest.getSessionId(); }
 
-	public final RangerTaggedResource.RangerResourceTag getCurrentTag() {
+	public final RangerTag getCurrentTag() {
 		@SuppressWarnings("unchecked")
-		RangerTaggedResource.RangerResourceTag tagObject = (RangerTaggedResource.RangerResourceTag)getEvaluationContext()
+		RangerTag tagObject = (RangerTag)getEvaluationContext()
 				.get(RangerPolicyEngine.KEY_CONTEXT_TAG_OBJECT);
 		if (tagObject == null) {
 			if (LOG.isDebugEnabled()) {
@@ -87,7 +87,7 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final String getCurrentTagName() {
-		RangerTaggedResource.RangerResourceTag tagObject = getCurrentTag();
+		RangerTag tagObject = getCurrentTag();
 		return (tagObject != null) ? tagObject.getName() : null;
 	}
 
@@ -95,11 +95,11 @@ public final class RangerScriptExecutionContext {
 
 		Set<String> allTagNames = null;
 
-		List<RangerTaggedResource.RangerResourceTag> tagObjectList = getAllTags();
+		List<RangerTag> tagObjectList = getAllTags();
 
 		if (CollectionUtils.isNotEmpty(tagObjectList)) {
 
-			for (RangerTaggedResource.RangerResourceTag tag : tagObjectList) {
+			for (RangerTag tag : tagObjectList) {
 				String tagName = tag.getName();
 				if (allTagNames == null) {
 					allTagNames = new HashSet<String>();
@@ -117,13 +117,13 @@ public final class RangerScriptExecutionContext {
 
 		if (StringUtils.isNotBlank(tagName)) {
 
-			List<RangerTaggedResource.RangerResourceTag> tagObjectList = getAllTags();
+			List<RangerTag> tagObjectList = getAllTags();
 
 			// Assumption: There is exactly one tag with given tagName in the list of tags - may not be true ***TODO***
 			// This will get attributeValues of the first tagName that matches
 
 			if (CollectionUtils.isNotEmpty(tagObjectList)) {
-				for (RangerTaggedResource.RangerResourceTag tag : tagObjectList) {
+				for (RangerTag tag : tagObjectList) {
 					if (tag.getName().equals(tagName)) {
 						ret = tag.getAttributeValues();
 						break;
@@ -139,13 +139,12 @@ public final class RangerScriptExecutionContext {
 
 		Set<String> ret = null;
 
-		if (StringUtils.isNotBlank(tagName)) {
-			Map<String, String> attributeValues = getTagAttributeValues(tagName);
+		Map<String, String> attributeValues = getTagAttributeValues(tagName);
 
-			if (attributeValues != null) {
-				ret = attributeValues.keySet();
-			}
+		if (attributeValues != null) {
+			ret = attributeValues.keySet();
 		}
+
 		return ret;
 	}
 
@@ -169,7 +168,7 @@ public final class RangerScriptExecutionContext {
 		String ret = null;
 
 		if (StringUtils.isNotBlank(attributeName)) {
-			RangerTaggedResource.RangerResourceTag tag = getCurrentTag();
+			RangerTag tag = getCurrentTag();
 			Map<String, String> attributeValues = null;
 			if (tag != null) {
 				attributeValues = tag.getAttributeValues();
@@ -286,10 +285,10 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	private List<RangerTaggedResource.RangerResourceTag> getAllTags() {
+	private List<RangerTag> getAllTags() {
 
 		@SuppressWarnings("unchecked")
-		List<RangerTaggedResource.RangerResourceTag> ret = (List<RangerTaggedResource.RangerResourceTag>)getEvaluationContext().get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
+		List<RangerTag> ret = (List<RangerTag>)getEvaluationContext().get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
 
 		if (ret == null) {
 			if (LOG.isDebugEnabled()) {

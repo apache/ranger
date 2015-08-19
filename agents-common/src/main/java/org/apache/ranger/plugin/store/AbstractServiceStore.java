@@ -139,7 +139,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 	protected void preCreate(RangerBaseModelObject obj) throws Exception {
 		obj.setId(0L);
-		obj.setGuid(UUID.randomUUID().toString());
+		if(obj.getGuid() == null) {
+			obj.setGuid(UUID.randomUUID().toString());
+		}
 		obj.setCreateTime(new Date());
 		obj.setUpdateTime(obj.getCreateTime());
 		obj.setVersion(1L);
@@ -150,6 +152,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 		service.setPolicyVersion(0L);
 		service.setPolicyUpdateTime(service.getCreateTime());
+
+		service.setTagVersion(0L);
+		service.setTagUpdateTime(service.getCreateTime());
 	}
 
 	protected void postCreate(RangerBaseModelObject obj) throws Exception {

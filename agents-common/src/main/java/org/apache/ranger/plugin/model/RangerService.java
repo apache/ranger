@@ -48,10 +48,13 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	private Map<String, String> configs          = null;
 	private Long                policyVersion    = null;
 	private Date                policyUpdateTime = null;
+	private Long                tagVersion    = null;
+	private Date                tagUpdateTime = null;
+
 
 
 	/**
-	 * @param type
+	 * @param
 	 */
 	public RangerService() {
 		this(null, null, null, null, null);
@@ -62,7 +65,7 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 * @param name
 	 * @param description
 	 * @param configs
-	 * @param tagServiceName
+	 * @param tagService
 	 */
 	public RangerService(String type, String name, String description, String tagService, Map<String, String> configs) {
 		super();
@@ -137,7 +140,7 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	}
 
 	/**
-	 * @param tagServiceName the tagServiceName to set
+	 * @param tagService the tagServiceName to set
 	 */
 	public void setTagService(String tagService) {
 		this.tagService = tagService;
@@ -199,6 +202,35 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		this.policyUpdateTime = policyUpdateTime;
 	}
 
+	/**
+	 * @return the tagVersion
+	 */
+	public Long getTagVersion() {
+		return tagVersion;
+	}
+
+	/**
+	 * @param tagVersion the tagVersion to set
+	 */
+	public void setTagVersion(Long tagVersion) {
+		this.tagVersion = tagVersion;
+	}
+
+
+	/**
+	 * @return the tagUpdateTime
+	 */
+	public Date getTagUpdateTime() {
+		return tagUpdateTime;
+	}
+
+	/**
+	 * @param tagUpdateTime the policyUpdateTime to set
+	 */
+	public void setTagUpdateTime(Date tagUpdateTime) {
+		this.tagUpdateTime = tagUpdateTime;
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -227,6 +259,9 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 
 		sb.append("policyVersion={").append(policyVersion).append("} ");
 		sb.append("policyUpdateTime={").append(policyUpdateTime).append("} ");
+
+		sb.append("tagVersion={").append(tagVersion).append("} ");
+		sb.append("tagUpdateTime={").append(tagUpdateTime).append("} ");
 
 		sb.append("}");
 

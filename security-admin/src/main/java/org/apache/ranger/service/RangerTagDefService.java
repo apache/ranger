@@ -45,7 +45,7 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
 
 	}
 
-	public RangerTagDef getPopulatedViewObjject(XXTagDef xObj) {
+	public RangerTagDef getPopulatedViewObject(XXTagDef xObj) {
 		return populateViewBean(xObj);
 	}
 

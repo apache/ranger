@@ -61,12 +61,8 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<security:http pattern="/service/plugins/policies/download/*" security="none"/>
 	<security:http pattern="/service/plugins/services/grant/*" security="none"/>
 	<security:http pattern="/service/plugins/services/revoke/*" security="none"/>
-	<security:http pattern="/service/tag-def/v1/resources/lookup-tags" security="none"/>
-	<security:http pattern="/service/tag-def/v1/resources/all-resources" security="none"/>
-	<security:http pattern="/service/tag-def/v1/resources/updated-resources" security="none"/>
-	<security:http pattern="/service/tag-def/v1/resources/set-resources" security="none"/>
-	<security:http pattern="/service/tag-def/v1/resources/set-resource" security="none"/>
-	<security:http pattern="/service/tag-def/v1/resources/update-resource" security="none"/>
+	<security:http pattern="/service/tags/download/*" security="none"/>
+
 	<!--<security:http pattern="/service/users/default" security="none"/>
 	<security:http pattern="/service/xusers/groups/**" security="none"/>
 	<security:http pattern="/service/xusers/users/*" security="none"/>

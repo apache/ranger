@@ -48,22 +48,20 @@ import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.entity.XXTaggedResource;
 import org.apache.ranger.entity.XXTaggedResourceValue;
 import org.apache.ranger.entity.XXTaggedResourceValueMap;
-import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerTagDef;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
-import org.apache.ranger.plugin.model.RangerTaggedResource.RangerResourceTag;
-import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
+import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.plugin.util.TagServiceResources;
+import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerTagDefService;
+import org.apache.ranger.service.RangerTagService;
 import org.apache.ranger.service.RangerTaggedResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -74,6 +72,9 @@ public class TagDBStore implements TagStore {
 
 	@Autowired
 	RangerTagDefService rangerTagDefService;
+
+	@Autowired
+	RangerTagService rangerTagService;
 
 	@Autowired
 	RangerTaggedResourceService rangerTaggedResourceService;
@@ -269,115 +270,42 @@ public class TagDBStore implements TagStore {
 		return rangerTagDefService.searchRangerTagDefs(filter);
 	}
 
-	@Override
-	public RangerTaggedResource createTaggedResource(RangerTaggedResource resource, boolean createOrUpdate) throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.createTaggedResource(" + resource + ")");
+	/*
+	private XXTag createTagAttributes(RangerTag tag) {
+		XXTag xTag = new XXTag();
+
+		xTag.setExternalId(tag.getExternalId());
+		xTag.setName(tag.getName());
+		xTag.setGuid(guidUtil.genGUID());
+		xTag = (XXTag) rangerAuditFields.populateAuditFieldsForCreate(xTag);
+
+		xTag = daoManager.getXXTag().create(xTag);
+
+		for (Entry<String, String> attr : tag.getAttributeValues().entrySet()) {
+			XXTagAttribute xTagAttr = new XXTagAttribute();
+
+			xTagAttr.setTagId(xTag.getId());
+			xTagAttr.setName(attr.getKey());
+			xTagAttr.setValue(attr.getValue());
+			xTagAttr.setGuid(guidUtil.genGUID());
+			xTagAttr = (XXTagAttribute) rangerAuditFields.populateAuditFieldsForCreate(xTagAttr);
+
+			xTagAttr = daoManager.getXXTagAttribute().create(xTagAttr);
 		}
 
-		RangerTaggedResource ret = null;
-		RangerTaggedResource existing = null;
-		boolean updateResource = false;
-
-		existing = getResource(resource.getKey());
-
-		if (existing != null) {
-			if (!createOrUpdate) {
-				throw errorUtil.createRESTException("resource(s) with same specification already exists", MessageEnums.ERROR_DUPLICATE_OBJECT);
-			} else {
-				updateResource = true;
-			}
-		}
-
-		if (!updateResource) {
-			if (resource.getId() != null) {
-				existing = getResource(resource.getId());
-			}
-
-			if (existing != null) {
-				if (!createOrUpdate) {
-					throw errorUtil.createRESTException(resource.getId() + ": resource already exists (id=" + existing.getId() + ")", MessageEnums.ERROR_DUPLICATE_OBJECT);
-				} else {
-					updateResource = true;
-				}
-			}
-		}
-
-		try {
-			if (updateResource) {
-				ret = updateTaggedResource(resource);
-			} else {
-				ret = rangerTaggedResourceService.create(resource);
-
-				ret.setKey(resource.getKey());
-				ret.setTags(resource.getTags());
-				RangerTaggedResourceKey resKey = createResourceSpecForTaggedResource(ret);
-				List<RangerResourceTag> tags = createTagsForTaggedResource(ret);
-
-				if (resKey == null || tags == null) {
-					throw errorUtil.createRESTException("failed to save resource '" + resource.getId() + "'", MessageEnums.ERROR_CREATING_OBJECT);
-				}
-			}
-		} catch (Exception excp) {
-			LOG.warn("TagDBStore.createTaggedResource: failed to save resource '" + resource.getId() + "'", excp);
-			throw errorUtil.createRESTException("failed to save resource '" + resource.getId() + "'", MessageEnums.ERROR_CREATING_OBJECT);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.createTaggedResource(" + resource + ")");
-		}
-		return ret;
+		return xTag;
 	}
 
-	private List<RangerResourceTag> createTagsForTaggedResource(RangerTaggedResource resource) {
-
-		List<RangerResourceTag> tags = resource.getTags();
-
-		if (tags == null) {
-			return null;
+	private void deleteTagAttributes(Long tagId) {
+		List<XXTagAttribute> tagAttrList = daoManager.getXXTagAttribute().findByTagId(tagId);
+		for (XXTagAttribute tagAttr : tagAttrList) {
+			daoManager.getXXTagAttribute().remove(tagAttr);
 		}
-
-		for (RangerResourceTag tag : tags) {
-			XXTag xTag = new XXTag();
-
-			xTag.setExternalId(tag.getExternalId());
-			xTag.setName(tag.getName());
-			xTag.setGuid(guidUtil.genGUID());
-			xTag = (XXTag) rangerAuditFields.populateAuditFieldsForCreate(xTag);
-
-			xTag = daoManager.getXXTag().create(xTag);
-
-			for (Entry<String, String> attr : tag.getAttributeValues().entrySet()) {
-				XXTagAttribute xTagAttr = new XXTagAttribute();
-
-				xTagAttr.setTagId(xTag.getId());
-				xTagAttr.setName(attr.getKey());
-				xTagAttr.setValue(attr.getValue());
-				xTagAttr.setGuid(guidUtil.genGUID());
-				xTagAttr = (XXTagAttribute) rangerAuditFields.populateAuditFieldsForCreate(xTagAttr);
-
-				xTagAttr = daoManager.getXXTagAttribute().create(xTagAttr);
-			}
-
-			XXTagResourceMap tagResMap = new XXTagResourceMap();
-			tagResMap.setTaggedResId(resource.getId());
-			tagResMap.setTagId(xTag.getId());
-			tagResMap.setGuid(guidUtil.genGUID());
-			tagResMap = (XXTagResourceMap) rangerAuditFields.populateAuditFieldsForCreate(tagResMap);
-
-			tagResMap = daoManager.getXXTagResourceMap().create(tagResMap);
-		}
-
-		return tags;
 	}
 
-	private RangerTaggedResourceKey createResourceSpecForTaggedResource(RangerTaggedResource resource) {
+	private void createResourceSpecForResource(RangerServiceResource resource) {
 
-		if (resource.getKey() == null) {
-			return null;
-		}
-
-		String serviceName = resource.getKey().getServiceName();
+		String serviceName = resource.getServiceName();
 
 		XXService xService = daoManager.getXXService().findByName(serviceName);
 		if (xService == null) {
@@ -389,14 +317,13 @@ public class TagDBStore implements TagStore {
 			throw errorUtil.createRESTException("No Service-Def found with ID: " + xService.getType(), MessageEnums.ERROR_CREATING_OBJECT);
 		}
 
-		RangerTaggedResourceKey resKey = resource.getKey();
-		Map<String, RangerPolicy.RangerPolicyResource> resourceSpec = resKey.getResourceSpec();
+		Map<String, RangerPolicy.RangerPolicyResource> resourceSpec = resource.getResourceSpec();
 
 		for (Entry<String, RangerPolicyResource> resSpec : resourceSpec.entrySet()) {
 			XXResourceDef xResDef = daoManager.getXXResourceDef().findByNameAndServiceDefId(resSpec.getKey(), xServiceDef.getId());
 
 			if (xResDef == null) {
-				LOG.error("TagDBStore.createTaggedResource: ResourceType is not valid [" + resSpec.getKey() + "]");
+				LOG.error("TagDBStore.createResource: ResourceType is not valid [" + resSpec.getKey() + "]");
 				throw errorUtil.createRESTException("Resource Type is not valid [" + resSpec.getKey() + "]", MessageEnums.DATA_NOT_FOUND);
 			}
 
@@ -426,72 +353,9 @@ public class TagDBStore implements TagStore {
 				sortOrder++;
 			}
 		}
-		return resKey;
 	}
 
-	@Override
-	public RangerTaggedResource updateTaggedResource(RangerTaggedResource resource) throws Exception {
-
-		RangerTaggedResource existing = getResource(resource.getId());
-		if (existing == null) {
-			throw errorUtil.createRESTException(resource.getId() + ": resource does not exist (id=" + resource.getId() + ")", MessageEnums.DATA_NOT_FOUND);
-		}
-
-		RangerTaggedResource ret = null;
-
-		try {
-			if (StringUtils.isEmpty(resource.getCreatedBy())) {
-				resource.setCreatedBy(existing.getCreatedBy());
-			}
-			if (resource.getCreateTime() == null) {
-				resource.setCreateTime(existing.getCreateTime());
-			}
-			if (StringUtils.isEmpty(resource.getGuid())) {
-				resource.setGuid(existing.getGuid());
-			}
-
-			ret = rangerTaggedResourceService.update(resource);
-			ret.setTags(resource.getTags());
-			ret.setKey(resource.getKey());
-
-			RangerTaggedResourceKey updKey = updateResourceSpecForTaggedResource(ret);
-			List<RangerResourceTag> updTags = updateTagsForTaggedResource(ret);
-
-			ret.setKey(updKey);
-			ret.setTags(updTags);
-
-		} catch (Exception excp) {
-			LOG.warn("TagDBStore.updateTagDef(): failed to save resource '" + resource.getId() + "'", excp);
-
-			throw new Exception("failed to save resource '" + resource.getId() + "'", excp);
-		}
-
-		return ret;
-	}
-
-	private RangerTaggedResourceKey updateResourceSpecForTaggedResource(RangerTaggedResource updResource) {
-
-		if (updResource == null) {
-			return null;
-		}
-
-		deleteTaggedResourceValue(updResource.getId());
-
-		return createResourceSpecForTaggedResource(updResource);
-	}
-
-	private List<RangerResourceTag> updateTagsForTaggedResource(RangerTaggedResource updResource) {
-
-		if (updResource == null) {
-			return null;
-		}
-
-		deleteTagsForTaggedResource(updResource.getId());
-
-		return createTagsForTaggedResource(updResource);
-	}
-
-	private void deleteTaggedResourceValue(Long resourceId) {
+	private void deleteResourceValue(Long resourceId) {
 		List<XXTaggedResourceValue> taggedResValueList = daoManager.getXXTaggedResourceValue().findByTaggedResId(resourceId);
 		for (XXTaggedResourceValue taggedResValue : taggedResValueList) {
 			List<XXTaggedResourceValueMap> taggedResValueMapList = daoManager.getXXTaggedResourceValueMap().findByResValueId(taggedResValue.getId());
@@ -502,177 +366,394 @@ public class TagDBStore implements TagStore {
 		}
 	}
 
-	private void deleteTagsForTaggedResource(Long resourceId) {
-		List<XXTagResourceMap> oldTagResMapList = daoManager.getXXTagResourceMap().findByTaggedResourceId(resourceId);
-		for (XXTagResourceMap oldTagResMap : oldTagResMapList) {
-			daoManager.getXXTagResourceMap().remove(oldTagResMap);
+	private void updateResourceSpecForResource(RangerServiceResource updResource) {
 
-			List<XXTagAttribute> tagAttrList = daoManager.getXXTagAttribute().findByTagId(oldTagResMap.getTagId());
-			for (XXTagAttribute tagAttr : tagAttrList) {
-				daoManager.getXXTagAttribute().remove(tagAttr);
-			}
-			daoManager.getXXTag().remove(oldTagResMap.getTagId());
+		if (updResource != null) {
+			deleteResourceValue(updResource.getId());
 		}
+
+		createResourceSpecForResource(updResource);
 	}
+	*/
 
 	@Override
-	public void deleteResource(Long taggedResId) throws Exception {
+	public RangerTag createTag(RangerTag tag) throws Exception
+	{
+		throw new Exception("Not implemented");
 
-		XXTaggedResource taggedRes = daoManager.getXXTaggedResource().getById(taggedResId);
-		if (taggedRes == null) {
-			throw errorUtil.createRESTException("No Resource exists with Id: " + taggedResId, MessageEnums.DATA_NOT_FOUND);
+		/*
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.createTag(" + tag + ")");
 		}
 
-		// Remove tags associated with resource
-		deleteTagsForTaggedResource(taggedResId);
+		throw new Exception("Not implemented");
 
-		// Remove taggedResourceValue
-		deleteTaggedResourceValue(taggedResId);
 
-		// Remove taggedResource
-		daoManager.getXXTaggedResource().remove(taggedRes);
-	}
 
-	@Override
-	public RangerTaggedResource getResource(Long id) throws Exception {
-		return rangerTaggedResourceService.read(id);
-	}
+		RangerTag ret = null;
 
-	@Override
-	public TagServiceResources getResources(String serviceName, Long lastTimestamp) throws Exception {
 
-		List<RangerTaggedResource> taggedResources;
+		try {
 
-		SearchFilter filter = new SearchFilter();
+			ret = rangerTagService.getPopulatedViewObject(createTagAttributes(tag));
 
-		if (StringUtils.isNotBlank(serviceName)) {
-			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, serviceName);
+		} catch (Exception e) {
+			throw errorUtil.createRESTException("failed to save tag [" + tag.getName() + "]", MessageEnums.ERROR_CREATING_OBJECT);
 		}
 
-		if (lastTimestamp != null) {
-			filter.setParam(SearchFilter.TAG_RESOURCE_TIMESTAMP, Long.toString(lastTimestamp.longValue()));
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.createTag(" + tag + ")");
 		}
-
-		taggedResources = getResources(filter);
-
-		TagServiceResources ret = new TagServiceResources();
-		ret.setTaggedResources(taggedResources);
-		// TBD
-		ret.setLastUpdateTime(new Date());
-		ret.setVersion(1L);
 
 		return ret;
+		*/
 	}
 
 	@Override
-	public List<RangerTaggedResource> getResources(SearchFilter filter) throws Exception {
-		return getPaginatedResources(filter).getList();
+	public RangerTag updateTag(RangerTag tag) throws Exception
+	{
+
+		throw new Exception("Not implemented");
+
+		/*
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.updateTag(" + tag + ")");
+		}
+
+		throw new Exception("Not implemented");
+
+		RangerTag ret = null;
+
+
+		RangerTag existing = rangerTagService.read(tag.getId());
+
+		if (existing == null) {
+			throw errorUtil.createRESTException("failed to update tag [" + tag.getName() + "], Reason: No Tag found with id: [" + tag.getId() + "]",
+					MessageEnums.DATA_NOT_UPDATABLE);
+		}
+
+		if (StringUtils.isEmpty(tag.getCreatedBy())) {
+			tag.setCreatedBy(existing.getCreatedBy());
+		}
+		if (tag.getCreateTime() == null) {
+			tag.setCreateTime(existing.getCreateTime());
+		}
+		if (StringUtils.isEmpty(tag.getGuid())) {
+			tag.setGuid(existing.getGuid());
+		}
+
+		deleteTagAttributes(existing.getId());
+
+		createTagAttributes(tag);
+
+		ret = rangerTagService.update(tag);
+
+		ret = rangerTagService.read(ret.getId());
+
+
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.updateTag(" + tag + ") : " + ret);
+		}
+
+		return ret;
+		*/
 	}
 
 	@Override
-	public PList<RangerTaggedResource> getPaginatedResources(SearchFilter filter) throws Exception {
-		return rangerTaggedResourceService.searchRangerTaggedResources(filter);
+	public void deleteTagById(Long id) throws Exception {
+
+		throw new Exception("Not implemented");
+
+		/*
+		RangerTag tag = rangerTagService.read(id);
+		deleteTagAttributes(id);
+		rangerTagService.delete(tag);
+		*/
+	}
+
+	@Override
+	public RangerTag getTagById(Long id) throws Exception {
+		throw new Exception("Not implemented");
+
+		/*
+		RangerTag ret = null;
+
+		ret = rangerTagService.read(id);
+
+		return ret;
+		*/
+	}
+
+	@Override
+	public List<RangerTag> getTagsByName(String name) throws Exception {
+		throw new Exception("Not implemented");
+
+		/*
+		List<RangerTag> ret = null;
+
+		if (StringUtils.isNotBlank(name)) {
+			SearchFilter filter = new SearchFilter(SearchFilter.TAG_DEF_NAME, name);
+			ret = getTags(filter);
+		} else {
+			ret = null;
+		}
+
+		return ret;
+		*/
+	}
+
+	@Override
+	public List<RangerTag> getTagsByExternalId(String externalId) throws Exception {
+		throw new Exception("Not implemented");
+
+		/*
+		List<RangerTag> ret = null;
+
+		if (StringUtils.isNotBlank(externalId)) {
+			SearchFilter filter = new SearchFilter(SearchFilter.TAG_EXTERNAL_ID, externalId);
+			ret = getTags(filter);
+		} else {
+			ret = null;
+		}
+
+		return ret;
+		*/
+	}
+
+	@Override
+	public List<RangerTag> getTags(SearchFilter filter) throws Exception {
+		throw new Exception("Not implemented");
+
+		/*
+		List<RangerTag> ret = null;
+
+		ret = rangerTagService.searchRangerTags(filter).getList();
+
+		return ret;
+		*/
+	}
+
+
+	@Override
+	public RangerServiceResource createServiceResource(RangerServiceResource resource) throws Exception {
+		throw new Exception("Not implemented");
+
+		/*
+		if (LOG.isDebugEnabled()) {
+
+			LOG.debug("==> TagDBStore.createResource(" + resource + ")");
+		}
+		throw new Exception("Not implemented");
+
+		RangerServiceResource ret = null;
+
+		try {
+			ret = rangerTaggedResourceService.create(resource);
+
+			ret = rangerTaggedResourceService.read(ret.getId());
+
+			createResourceSpecForResource(ret);
+
+		} catch (Exception e) {
+			throw errorUtil.createRESTException("failed to save resource [" + resource.getId() + "]", MessageEnums.ERROR_CREATING_OBJECT);
+		}
+
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.createResource(" + resource + ")");
+		}
+
+		return ret;
+		*/
+	}
+
+	@Override
+	public RangerServiceResource updateServiceResource(RangerServiceResource resource) throws Exception {
+		throw new Exception("Not implemented");
+
+		/*
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.updateResource(" + resource + ")");
+		}
+
+		throw new Exception("Not implemented");
+
+		RangerServiceResource ret = null;
+
+		RangerServiceResource existing = rangerTaggedResourceService.read(resource.getId());
+
+
+		if (existing == null) {
+			throw errorUtil.createRESTException("failed to update tag [" + resource.getId() + "], Reason: No resource found with id: [" + resource.getId() + "]",
+					MessageEnums.DATA_NOT_UPDATABLE);
+		}
+
+		if (StringUtils.isEmpty(resource.getCreatedBy())) {
+			resource.setCreatedBy(existing.getCreatedBy());
+		}
+		if (resource.getCreateTime() == null) {
+			resource.setCreateTime(existing.getCreateTime());
+		}
+		if (StringUtils.isEmpty(resource.getGuid())) {
+			resource.setGuid(existing.getGuid());
+		}
+
+		ret = rangerTaggedResourceService.update(resource);
+
+		ret = rangerTaggedResourceService.read(ret.getId());
+
+		updateResourceSpecForResource(ret);
+
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.updateResource(" + resource + ") : " + ret);
+		}
+
+		return ret;
+		*/
+	}
+
+	@Override
+	public void deleteServiceResourceById(Long id) throws Exception {
+
+		throw new Exception("Not implemented");
+
+		/*
+		XXTaggedResource taggedRes = daoManager.getXXTaggedResource().getById(id);
+		if (taggedRes == null) {
+			throw errorUtil.createRESTException("No Resource exists with Id: " + id, MessageEnums.DATA_NOT_FOUND);
+		}
+
+		// Remove taggedResourceValue
+		deleteResourceValue(id);
+
+		// Remove taggedResource
+		daoManager.getXXTaggedResource().remove(id);
+		*/
+	}
+
+	@Override
+	public List<RangerServiceResource> getServiceResourcesByExternalId(String externalId) throws Exception {
+
+		throw new Exception("Not implemented");
+
+		/*
+		List<RangerServiceResource> ret = null;
+
+
+		if (StringUtils.isNotBlank(externalId)) {
+			SearchFilter filter = new SearchFilter(SearchFilter.TAG_EXTERNAL_ID, externalId);
+			ret = getServiceResources(filter);
+		} else {
+			ret = null;
+		}
+
+		return ret;
+		*/
+	}
+
+	@Override
+	public RangerServiceResource getServiceResourceById(Long id) throws Exception {
+
+		throw new Exception("Not implemented");
+
+		/*
+		RangerServiceResource ret = null;
+		ret = rangerTaggedResourceService.read(id);
+		return ret;
+		*/
+	}
+
+
+	@Override
+	public List<RangerServiceResource> getServiceResourcesByServiceAndResourceSpec(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public List<RangerServiceResource> getServiceResources(SearchFilter filter) throws Exception{
+
+		throw new Exception("Not implemented");
+
+		/*
+		List<RangerServiceResource> ret = null;
+
+		ret = rangerTaggedResourceService.searchRangerTaggedResources(filter).getList();
+		return ret;
+		*/
+	}
+
+	@Override
+	public RangerTagResourceMap createTagResourceMap(RangerTagResourceMap tagResourceMap) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public void deleteTagResourceMapById(Long id) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public List<RangerTagResourceMap> getTagResourceMap(String externalResourceId, String externalTagId) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public RangerTagResourceMap getTagResourceMapById(Long id) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+
+	@Override
+	public List<RangerTagResourceMap> getTagResourceMaps(SearchFilter filter) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public PList<RangerTagResourceMap> getPaginatedTagResourceMaps(SearchFilter filter) throws Exception {
+		throw new Exception("Not implemented");
 	}
 
 	@Override
 	public List<String> getTags(String serviceName) throws Exception {
-
-		XXService xService = daoManager.getXXService().findByName(serviceName);
-		if (xService == null) {
-			throw errorUtil.createRESTException("No Service found with name [" + serviceName + "]", MessageEnums.DATA_NOT_FOUND);
-		}
-
-		List<String> tagList = daoManager.getXXTag().findTagNamesByServiceId(xService.getId());
-
-		Collections.sort(tagList, new Comparator<String>() {
-			@Override
-			public int compare(String s1, String s2) {
-				return s1.compareToIgnoreCase(s2);
-			}
-		});
-
-		return tagList;
+		throw new Exception("Not implemented");
 	}
 
 	@Override
 	public List<String> lookupTags(String serviceName, String tagNamePattern) throws Exception {
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.lookupTags(" + serviceName + ", " + tagNamePattern + ")");
-		}
-
-		List<String> tagNameList = getTags(serviceName);
-		List<String> matchedTagList = new ArrayList<String>();
-
-		if (CollectionUtils.isNotEmpty(tagNameList)) {
-			Pattern p = Pattern.compile(tagNamePattern);
-			for (String tagName : tagNameList) {
-				Matcher m = p.matcher(tagName);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("TagDBStore.lookupTags) - Trying to match .... tagNamePattern=" + tagNamePattern + ", tagName=" + tagName);
-				}
-				if (m.matches()) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("TagDBStore.lookupTags) - Match found.... tagNamePattern=" + tagNamePattern + ", tagName=" + tagName);
-					}
-					matchedTagList.add(tagName);
-				}
-			}
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.lookupTags(" + serviceName + ", " + tagNamePattern + ")");
-		}
-
-		return matchedTagList;
+		throw new Exception("Not implemented");
 	}
 
 	@Override
-	public RangerTaggedResource getResource(RangerTaggedResourceKey key) throws Exception {
-		if (key == null) {
-			LOG.error("TagDBStore.getResources() - parameter 'key' is null.");
-			throw errorUtil.createRESTException("TagFileStore.getResources() - parameter 'key' is null.", MessageEnums.INVALID_INPUT_DATA);
-		}
-
-		XXService xService = daoManager.getXXService().findByName(key.getServiceName());
-		if (xService == null) {
-			LOG.error("TagDBStore.getResources() - No Service found with name [" + key.getServiceName() + "]");
-			throw errorUtil.createRESTException("TagDBStore.getResources() - No Service found with name [" + key.getServiceName() + "]", MessageEnums.INVALID_INPUT_DATA);
-		}
-
-		RangerServiceDef serviceDef = serviceDBStore.getServiceDef(xService.getType());
-
-		Long serviceId = xService.getId();
-
-		RangerTaggedResource ret = null;
-
-		List<XXTaggedResource> taggedResList = daoManager.getXXTaggedResource().findByServiceId(serviceId);
-
-		if (CollectionUtils.isEmpty(taggedResList)) {
-			return null;
-		}
-
-		if (taggedResList.size() == 1) {
-			ret = rangerTaggedResourceService.getPopulatedViewObjject(taggedResList.get(0));
-			return ret;
-		} else {
-			for (XXTaggedResource xTaggedRes : taggedResList) {
-				RangerTaggedResource taggedRes = rangerTaggedResourceService.getPopulatedViewObjject(xTaggedRes);
-
-				RangerDefaultPolicyResourceMatcher policyResourceMatcher = new RangerDefaultPolicyResourceMatcher();
-
-				policyResourceMatcher.setPolicyResources(taggedRes.getKey().getResourceSpec());
-
-				policyResourceMatcher.setServiceDef(serviceDef);
-				policyResourceMatcher.init();
-				boolean isMatch = policyResourceMatcher.isExactMatch(key.getResourceSpec());
-
-				if (isMatch) {
-					return taggedRes;
-				}
-			}
-		}
-		return ret;
+	public List<RangerTag> getTagsForServiceResource(Long resourceId) throws Exception {
+		throw new Exception("Not implemented");
 	}
 
+	@Override
+	public List<RangerTag> getTagsForServiceResourceByExtId(String resourceExtId) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public List<RangerTagDef> getTagDefsByExternalId(String extId) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public List<RangerTagResourceMap> getTagResourceMapsByTagId(Long tagId) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public List<RangerTagResourceMap> getTagResourceMapsByResourceId(Long resourceId) throws Exception {
+		throw new Exception("Not implemented");
+	}
 }

@@ -20,31 +20,27 @@
 package org.apache.ranger.rest;
 
 public class TagRESTConstants {
-	public static final String TAGDEF_NAME_AND_VERSION = "tag-def/v1";
+	public static final String TAGDEF_NAME_AND_VERSION = "tags";
 
-	static final String TAGS_RESOURCE = "tags";
-	static final String TAG_RESOURCE = "tag";
+	static final String TAGDEFS_RESOURCE = "/tagdefs/";
+	static final String TAGDEF_RESOURCE = "/tagdef/";
 
-	static final String RESOURCES_RESOURCE = "resources";
-	static final String RESOURCE_RESOURCE = "resource";
+	static final String TAGS_RESOURCE = "/tags/";
+	static final String TAG_RESOURCE = "/tag/";
 
-	static final String TAGNAMES_RESOURCE = "resources/tag-names";
-	static final String LOOKUP_TAGS_RESOURCE = "resources/lookup-tags";
+	static final String RESOURCES_RESOURCE = "/resources/";
+	static final String RESOURCE_RESOURCE = "/resource/";
 
-	static final String RESOURCES_UPDATED_RESOURCE = "resources/updated-resources";
-	static final String RESOURCES_ALL_RESOURCE = "resources/all-resources";
-	static final String RESOURCE_SET_RESOURCE = "resources/set-resource";
-	static final String RESOURCES_SET_RESOURCE = "resources/set-resources";
-	static final String RESOURCE_UPDATE_RESOURCE = "resources/update-resource";
+	static final String TAGRESOURCEMAPS_RESOURCE = "/tagresourcemaps/";
 
-	static final String ACTION_SUB_RESOURCE = "update";
-	static final String ACTION_OP = "op";
-	static final String ACTION_ADD = "add";
-	static final String ACTION_REPLACE = "replace";
-	static final String ACTION_DELETE = "delete";
 
-	public static final String SERVICE_NAME_PARAM = "servicename";
-	public static final String TAG_TIMESTAMP_PARAM = "tagtimestamp";
-	public static final String TAG_PATTERN_PARAM = "tagpattern";
+	static final String TAGNAMES_RESOURCE = "/tags/names/";
+	static final String LOOKUP_TAGS_RESOURCE = "/tags/lookup/";
+
+	static final String TAGS_DOWNLOAD = "/download/";
+
+	public static final String SERVICE_NAME_PARAM = "serviceName";
+	public static final String LAST_KNOWN_TAG_VERSION_PARAM = "tagVersion";
+	public static final String PATTERN_PARAM = "pattern";
 
 }

@@ -49,6 +49,12 @@ public class XXTag extends XXDBBase implements Serializable {
 	@Column(name = "guid", unique = true, nullable = false, length = 512)
 	protected String guid;
 
+	@Column(name = "version")
+	protected Long version;
+
+	@Column(name = "is_enabled")
+	protected Boolean isEnabled;
+
 	@Column(name = "tag_def_id")
 	protected Long tagDefId;
 
@@ -81,6 +87,36 @@ public class XXTag extends XXDBBase implements Serializable {
 	 */
 	public void setGuid(String guid) {
 		this.guid = guid;
+	}
+
+	/**
+	 * @return the version
+	 */
+	public Long getVersion() {
+		return version;
+	}
+
+	/**
+	 * @param version
+	 *            the version to set
+	 */
+	public void setVersion(Long version) {
+		this.version = version;
+	}
+
+	/**
+	 * @return the isEnabled
+	 */
+	public Boolean getIsEnabled() {
+		return isEnabled;
+	}
+
+	/**
+	 * @param isEnabled
+	 *            the isEnabled to set
+	 */
+	public void setIsEnabled(Boolean isEnabled) {
+		this.isEnabled = isEnabled;
 	}
 
 	/**

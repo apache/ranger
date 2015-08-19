@@ -1,0 +1,226 @@
+{
+	"id":3,
+	"name": "hive",
+	"implClass": "org.apache.ranger.services.hive.RangerServiceHive",
+	"label": "Hive Server2",
+	"description": "Hive Server2",
+	"guid": "3e1afb5a-184a-4e82-9d9c-87a5cacc243c",
+	"resources": 
+	[
+		{
+			"itemId": 1,
+			"name": "database",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Hive Database",
+			"description": "Hive Database"
+		},
+
+		{
+			"itemId": 2,
+			"name": "table",
+			"type": "string",
+			"level": 20,
+			"parent": "database",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Hive Table",
+			"description": "Hive Table"
+		},
+
+		{
+			"itemId": 3,
+			"name": "udf",
+			"type": "string",
+			"level": 20,
+			"parent": "database",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Hive UDF",
+			"description": "Hive UDF"
+		},
+
+		{
+			"itemId": 4,
+			"name": "column",
+			"type": "string",
+			"level": 30,
+			"parent": "table",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Hive Column",
+			"description": "Hive Column"
+		}
+	],
+
+	"accessTypes": 
+	[
+		{
+			"itemId": 1,
+			"name": "select",
+			"label": "select"
+		},
+
+		{
+			"itemId": 2,
+			"name": "update",
+			"label": "update"
+		},
+
+		{
+			"itemId": 3,
+			"name": "create",
+			"label": "Create"
+		},
+
+		{
+			"itemId": 4,
+			"name": "drop",
+			"label": "Drop"
+		},
+
+		{
+			"itemId": 5,
+			"name": "alter",
+			"label": "Alter"
+		},
+
+		{
+			"itemId": 6,
+			"name": "index",
+			"label": "Index"
+		},
+
+		{
+			"itemId": 7,
+			"name": "lock",
+			"label": "Lock"
+		},
+
+		{
+			"itemId": 8,
+			"name": "all",
+			"label": "All",
+			"impliedGrants":
+			[
+				"select",
+				"update",
+				"create",
+				"drop",
+				"alter",
+				"index",
+				"lock"
+			]
+		}
+	],
+
+	"configs": 
+	[
+		{
+			"itemId": 1,
+			"name": "username",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Username"
+		},
+
+		{
+			"itemId": 2,
+			"name": "password",
+			"type": "password",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Password"
+		},
+
+		{
+			"itemId": 3,
+			"name": "jdbc.driverClassName",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"defaultValue": "org.apache.hive.jdbc.HiveDriver"
+		},
+
+		{
+			"itemId": 4,
+			"name": "jdbc.url",
+			"type": "string",
+			"mandatory": true,
+			"defaultValue": "",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":""
+		},
+
+		{
+			"itemId": 5,
+			"name": "commonNameForCertificate",
+			"type": "string",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Common Name for Certificate"
+		}
+	],
+
+	"enums": 
+	[
+		
+	],
+
+	"contextEnrichers": 
+	[
+	],
+
+	"policyConditions": 
+	[
+	  {
+		"itemId":1,
+		"name":"not-accessed-together",
+		"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerHiveResourcesNotAccessedTogetherCondition",
+		"evaluatorOptions" : {},
+		"label":"Not Accessed Together?",
+		"description": "List of Hive resources"
+	  }
+	]
+}

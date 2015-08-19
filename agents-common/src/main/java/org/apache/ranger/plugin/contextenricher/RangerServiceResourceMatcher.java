@@ -19,20 +19,24 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
-public class RangerTaggedResourceMatcher {
-	private final RangerTaggedResource rangerResource;
+public class RangerServiceResourceMatcher {
+	private final RangerServiceResource serviceResource;
 	private final RangerPolicyResourceMatcher policyResourceMatcher;
 
-	public RangerTaggedResourceMatcher(final RangerTaggedResource rangerResource, RangerPolicyResourceMatcher policyResourceMatcher) {
-		this.rangerResource = rangerResource;
+	public RangerServiceResourceMatcher(final RangerServiceResource serviceResource, RangerPolicyResourceMatcher policyResourceMatcher) {
+		this.serviceResource = serviceResource;
 		this.policyResourceMatcher = policyResourceMatcher;
 	}
 
-	public RangerTaggedResource getRangerTaggedResource() { return rangerResource; }
+	public RangerServiceResource getServiceResource() { return serviceResource; }
 
 	public RangerPolicyResourceMatcher getPolicyResourceMatcher() { return policyResourceMatcher; }
 
+	public boolean isMatch(RangerAccessResource requestedResource) {
+		return this.policyResourceMatcher.isExactHeadMatch(requestedResource);
+	}
 }

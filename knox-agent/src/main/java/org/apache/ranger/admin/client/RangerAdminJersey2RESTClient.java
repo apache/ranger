@@ -34,8 +34,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.AccessControlException;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
-import org.apache.ranger.plugin.model.RangerTaggedResourceKey;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.util.*;
 
 import com.google.gson.Gson;
@@ -204,8 +203,8 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public TagServiceResources getTaggedResources(Long lastTimestamp) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.getTaggedResource() -- *** NOT IMPLEMENTED *** ");
+	public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.getServiceTagsIfUpdated() -- *** NOT IMPLEMENTED *** ");
 	}
 
 	@Override
@@ -221,22 +220,6 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 			return new Date(json.getAsJsonPrimitive().getAsLong());
 		}
 
-	}
-
-	@Override
-	public List<RangerTaggedResource> setTagsForResources(List<RangerTaggedResourceKey> keys, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.setTagsForResources() -- *** NOT IMPLEMENTED *** ");
-	}
-
-	@Override
-	public RangerTaggedResource setTagsForResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tags) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.setTagsForResource() -- *** NOT IMPLEMENTED *** ");
-	}
-
-	@Override
-	public RangerTaggedResource updateTagsForResource(RangerTaggedResourceKey key, List<RangerTaggedResource.RangerResourceTag> tagsToAdd,
-								   List<RangerTaggedResource.RangerResourceTag> tagsToDelete) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.updateTagsForResource() -- *** NOT IMPLEMENTED *** ");
 	}
 
 	// package level methods left so (and not private only for testability!)  Not intended for use outside this class!!

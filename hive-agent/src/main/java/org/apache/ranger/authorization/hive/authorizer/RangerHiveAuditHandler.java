@@ -19,12 +19,7 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -97,7 +92,10 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 						RangerHiveResource resource   = (RangerHiveResource)request.getResource();
 						String resourcePath = auditEvent.getResourcePath() + "," + resource.getColumn();
 						auditEvent.setResourcePath(resourcePath);
-						auditEvent.getTags().addAll(getTags(request));
+						Set<String> tags = getTags(request);
+						if (tags != null) {
+							auditEvent.getTags().addAll(tags);
+						}
 					} else { // new event as this approval was due to a different policy.
 						AuthzAuditEvent auditEvent = createAuditEvent(result);
 						auditEvents.put(policyId, auditEvent);

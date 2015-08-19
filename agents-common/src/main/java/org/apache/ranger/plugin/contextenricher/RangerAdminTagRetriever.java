@@ -25,9 +25,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
-import org.apache.ranger.plugin.util.TagServiceResources;
+import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.services.tag.RangerServiceTag;
 
 import java.util.Date;
@@ -44,26 +43,19 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 
 	private RangerTagReceiver receiver;
 	private RangerAdminClient adminClient;
-	private Long lastTimestamp;
+	private long lastKnownVersion;
 
 	public RangerAdminTagRetriever(final String serviceName, final RangerServiceDef serviceDef, final long pollingIntervalMs, final RangerTagReceiver enricher) {
 		super(pollingIntervalMs);
 		this.serviceName = serviceName;
 		setReceiver(enricher);
 		propertyPrefix = propertyPrefixPreamble + serviceDef.getName();
-		this.lastTimestamp = 0L;
+		this.lastKnownVersion = -1L;
 	}
 
 	@Override
 	public void init(Map<String, String> options) {
 
-		if (MapUtils.isNotEmpty(options)) {
-			String useTestTagProvider = options.get("useTestTagProvider");
-
-			if (useTestTagProvider != null && useTestTagProvider.equals("true")) {
-				adminClient = RangerServiceTag.createAdminClient(serviceName);
-			}
-		}
 		if (adminClient == null) {
 			adminClient = RangerBasePlugin.createAdminClient(serviceName, appId, propertyPrefix);
 		}
@@ -78,21 +70,25 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 	@Override
 	public void retrieveTags() {
 		if (adminClient != null) {
-			List<RangerTaggedResource> resources = null;
-
+			ServiceTags serviceTags = null;
+			long savedLastKnownVersion = lastKnownVersion;
 			try {
-				long before = new Date().getTime();
-				TagServiceResources taggedResources = adminClient.getTaggedResources(lastTimestamp);
-				resources = taggedResources.getTaggedResources();
-				lastTimestamp = before;
+				serviceTags = adminClient.getServiceTagsIfUpdated(lastKnownVersion);
+				lastKnownVersion = serviceTags.getTagVersion();
 			} catch (Exception exp) {
 				LOG.error("RangerAdminTagRetriever.retrieveTags() - Error retrieving resources");
 			}
 
-			if (receiver != null && CollectionUtils.isNotEmpty(resources)) {
-				receiver.setRangerTaggedResources(resources);
+			if (receiver != null && serviceTags != null) {
+				if (serviceTags.getTagVersion() != null && serviceTags.getTagVersion().longValue() > savedLastKnownVersion) {
+					receiver.setServiceTags(serviceTags);
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("RangerAdminTagRetriever.retrieveTags() - no updates to tags !!");
+					}
+				}
 			} else {
-				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to .. OR .. no updates to tagged resources!!");
+				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to ");
 			}
 		} else {
 			LOG.error("RangerAdminTagRetriever.retrieveTags() - No Tag Provider ...");

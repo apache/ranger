@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
@@ -368,11 +368,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if (context != null && (contextObj = context.get(KEY_CONTEXT_TAGS)) != null) {
 
 			@SuppressWarnings("unchecked")
-			List<RangerTaggedResource.RangerResourceTag> resourceTags = (List<RangerTaggedResource.RangerResourceTag>) contextObj;
+			List<RangerTag> resourceTags = (List<RangerTag>) contextObj;
 
-			List<RangerPolicyEvaluator> evaluators;
+			List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators();
 
-			if (!CollectionUtils.isEmpty(evaluators = tagPolicyRepository.getPolicyEvaluators())) {
+			if (CollectionUtils.isNotEmpty(evaluators)) {
 
 				boolean someTagAllowedAudit = false;
 
@@ -380,7 +380,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 				List<RangerTagAuditEvent> tagAuditEvents = new ArrayList<RangerTagAuditEvent>();
 
-				for (RangerTaggedResource.RangerResourceTag resourceTag : resourceTags) {
+				for (RangerTag resourceTag : resourceTags) {
 
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + resourceTag.getName() + ")");
@@ -459,7 +459,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				RangerMutableResource mutable = (RangerMutableResource) resource;
 				mutable.setServiceDef(getServiceDef());
 			} else {
-				LOG.debug("RangerPolicyEngineImpl.setResourceServiceDef(): Cannot set ServiceDef in RangerTaggedResource.");
+				LOG.debug("RangerPolicyEngineImpl.setResourceServiceDef(): Cannot set ServiceDef in RangerTagResourceMap.");
 			}
 		}
 	}
@@ -495,7 +495,7 @@ class RangerTagResource extends RangerAccessResourceImpl {
 }
 
 class RangerTagAccessRequest extends RangerAccessRequestImpl {
-	public RangerTagAccessRequest(RangerTaggedResource.RangerResourceTag resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
+	public RangerTagAccessRequest(RangerTag resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
 		super.setResource(new RangerTagResource(resourceTag.getName(), tagServiceDef));
 		super.setUser(request.getUser());
 		super.setUserGroups(request.getUserGroups());

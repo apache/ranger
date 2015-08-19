@@ -29,7 +29,7 @@ import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.*;
 
 
@@ -105,7 +105,10 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setClientType(request.getClientType());
 			ret.setSessionId(request.getSessionId());
 			ret.setAclEnforcer(RangerModuleName);
-			ret.setTags(getTags(request));
+			Set<String> tags = getTags(request);
+			if (tags != null) {
+				ret.setTags(tags);
+			}
 
 			populateDefaults(ret);
 		}
@@ -205,14 +208,18 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 	protected final Set<String> getTags(RangerAccessRequest request) {
 		Object contextObj = request.getContext().get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
-		Set<String> tags = new HashSet<String>();
+		Set<String> tags = null;
 
 		if (contextObj != null) {
+
 			try {
 				@SuppressWarnings("unchecked")
-				List<RangerTaggedResource.RangerResourceTag> resourceTags = (List<RangerTaggedResource.RangerResourceTag>) contextObj;
+				List<RangerTag> resourceTags = (List<RangerTag>) contextObj;
+
 				if (CollectionUtils.isNotEmpty(resourceTags)) {
-					for (RangerTaggedResource.RangerResourceTag resourceTag : resourceTags) {
+					tags = new HashSet<String>();
+
+					for (RangerTag resourceTag : resourceTags) {
 						tags.add(resourceTag.getName());
 					}
 				}

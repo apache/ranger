@@ -40,16 +40,12 @@ public class RangerRESTUtils {
 	public static final String REST_URL_SERVICE_GRANT_ACCESS              = "/service/plugins/services/grant/";
 	public static final String REST_URL_SERVICE_REVOKE_ACCESS             = "/service/plugins/services/revoke/";
 
-	public static final String REST_URL_GET_UPDATED_TAGGED_RESOURCES = "/service/tag-def/v1/resources/updated-resources";
-	public static final String REST_URL_SET_TAGGED_RESOURCE = "/service/tag-def/v1/resources/set-resource";
-	public static final String REST_URL_SET_TAGGED_RESOURCES = "/service/tag-def/v1/resources/set-resources";
-	public static final String REST_URL_UPDATE_TAGGED_RESOURCE = "/service/tag-def/v1/resources/update-resource";
-	public static final String TAG_SERVICE_NAME_PARAM = "tagservicename";
-	public static final String COMPONENT_TYPE_PARAM = "componenttype";
-	public static final String TAG_TIMESTAMP_PARAM = "tagtimestamp";
-	public static final String TAG_PATTERN_PARAM = "tagpattern";
+	public static final String REST_URL_GET_SERVICE_TAGS_IF_UPDATED = "/service/tags/download";
+	public static final String SERVICE_NAME_PARAM = "serviceName";
+	public static final String LAST_KNOWN_TAG_VERSION_PARAM = "tagVersion";
+	public static final String PATTERN_PARAM = "pattern";
 
-	public static final String REST_URL_LOOKUP_TAG_NAMES = "/service/tag-def/v1/resources/lookup-tags";
+	public static final String REST_URL_LOOKUP_TAG_NAMES = "/service/tags/lookup";
 
 	public static final String REST_EXPECTED_MIME_TYPE = "application/json" ;
 	public static final String REST_MIME_TYPE_JSON     = "application/json" ;

@@ -19,27 +19,55 @@
 
 package org.apache.ranger.plugin.model;
 
+import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RangerTaggedResourceKey implements java.io.Serializable {
+@JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonIgnoreProperties(ignoreUnknown=true)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+
+public class RangerServiceResource extends RangerBaseModelObject {
 	private static final long serialVersionUID = 1L;
 
 	private String                                         serviceName  = null;
 	private Map<String, RangerPolicy.RangerPolicyResource> resourceSpec = null;
+	private String resourceSignature = null;
 
-	public RangerTaggedResourceKey() { this(null, null); }
 
-	public RangerTaggedResourceKey(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
+	public RangerServiceResource(String externalId, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec, String resourceSignature) {
 		super();
-
+		setGuid(externalId);
 		setServiceName(serviceName);
 		setResourceSpec(resourceSpec);
+		setResourceSignature(resourceSignature);
+	}
+	public RangerServiceResource(String externalId, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
+		this(externalId, serviceName, resourceSpec, null);
+	}
+	public RangerServiceResource(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
+		this(null, serviceName, resourceSpec, null);
+	}
+
+	public RangerServiceResource() {
+		this(null, null, null, null);
 	}
 
 	public String getServiceName() { return serviceName; }
 
 	public Map<String, RangerPolicy.RangerPolicyResource> getResourceSpec() { return resourceSpec; }
+
+	public String getResourceSignature() {
+		return resourceSignature;
+	}
 
 	public void setServiceName(String serviceName) {
 		this.serviceName = serviceName;
@@ -49,8 +77,12 @@ public class RangerTaggedResourceKey implements java.io.Serializable {
 		this.resourceSpec = resourceSpec == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resourceSpec;
 	}
 
+	public void setResourceSignature(String resourceSignature) {
+		this.resourceSignature = resourceSignature;
+	}
+
 	@Override
-	public String toString( ) {
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
 		toString(sb);
@@ -62,7 +94,8 @@ public class RangerTaggedResourceKey implements java.io.Serializable {
 
 		sb.append("{ ");
 
-		sb.append("tagServiceName={").append(serviceName).append("} ");
+		sb.append("externalId={").append(getGuid()).append("} ");
+		sb.append("serviceName={").append(serviceName).append("} ");
 
 		sb.append("resourceSpec={");
 		if(resourceSpec != null) {
@@ -74,8 +107,11 @@ public class RangerTaggedResourceKey implements java.io.Serializable {
 		}
 		sb.append("} ");
 
+		sb.append("resourceSignature={").append(resourceSignature).append("} ");
+
 		sb.append(" }");
 
 		return sb;
 	}
 }
+

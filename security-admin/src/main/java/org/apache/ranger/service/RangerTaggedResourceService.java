@@ -23,28 +23,28 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXTaggedResource;
-import org.apache.ranger.plugin.model.RangerTaggedResource;
+import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RangerTaggedResourceService extends RangerTaggedResourceServiceBase<XXTaggedResource, RangerTaggedResource> {
+public class RangerTaggedResourceService extends RangerTaggedResourceServiceBase<XXTaggedResource, RangerServiceResource> {
 
 	public RangerTaggedResourceService() {
 		searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 	}
 
 	@Override
-	protected void validateForCreate(RangerTaggedResource vObj) {
+	protected void validateForCreate(RangerServiceResource vObj) {
 
 	}
 
 	@Override
-	protected void validateForUpdate(RangerTaggedResource vObj, XXTaggedResource entityObj) {
+	protected void validateForUpdate(RangerServiceResource vObj, XXTaggedResource entityObj) {
 
 	}
 	
-	public RangerTaggedResource getPopulatedViewObjject(XXTaggedResource xObj) {
+	public RangerServiceResource getPopulatedViewObject(XXTaggedResource xObj) {
 		return populateViewBean(xObj);
 	}
 

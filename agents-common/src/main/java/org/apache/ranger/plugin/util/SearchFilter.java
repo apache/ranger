@@ -49,17 +49,25 @@ public class SearchFilter {
 	public static final String PAGE_SIZE       = "pageSize";
 	public static final String SORT_BY         = "sortBy";
 	public static final String RESOURCE_SIGNATURE = "resourceSignature:";     // search
-
-	public static final String TAG_DEF_ID       = "tagDefId"; // search
-	public static final String TAG_DEF_NAME     = "tagDefName"; // search
-	public static final String TAG_RESOURCE_ID  = "tagResourceId"; // search
-	public static final String TAG_RESOURCE_SERVICE_NAME = "tagResourceServiceName";  // search
-	public static final String TAG_RESOURCE_TIMESTAMP = "tagResourceTimestamp"; // search
-
 	public static final String POLICY_TYPE = "policyType"; // search
 
+	public static final String TAG_DEF_ID       = "tagDefId"; // search
+	public static final String TAG_DEF_EXTERNAL_ID       = "tagDefExtId"; // search
+	public static final String TAG_DEF_NAME     = "tagDefName"; // search
+
+	public static final String TAG_ID     = "tagId"; // search
+	public static final String TAG_EXTERNAL_ID     = "tagExternalId"; // search
+	public static final String TAG_NAME     = "tagName"; // search
+
+	public static final String TAG_RESOURCE_ID  = "resourceId"; // search
+	public static final String TAG_RESOURCE_EXTERNAL_ID     = "externalResourceId"; // search
+	public static final String TAG_RESOURCE_SERVICE_NAME = "resourceServiceName";  // search
+	public static final String TAG_RESOURCE_SIGNATURE = "resourceSignature";  // search
 
 
+	public static final String TAG_MAP_ID     = "tagResourceMapId"; // search
+	public static final String TAG_MAP_RESOURCE_ID     = "tagResourceMapResourceId"; // search
+	public static final String TAG_MAP_TAG_ID     = "tagResourceMapTagId"; // search
 
 	private Map<String, String> params     = null;
 	private int                 startIndex = 0;
