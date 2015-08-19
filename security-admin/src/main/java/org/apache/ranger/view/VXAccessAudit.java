@@ -128,9 +128,12 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	protected long sequenceNumber;
 
 	protected long eventCount;
-
+	
 	//event duration in ms
 	protected long eventDuration;
+	
+	protected String tags;
+	
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -482,6 +485,21 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		this.eventDuration = eventDuration;
 	}
 
+	/**
+	 * @return the tags
+	 */
+	public String getTags() {
+		return tags;
+	}
+
+	/**
+	 * @param tags
+	 *            the tags to set
+	 */
+	public void setTags(String tags) {
+		this.tags = tags;
+	}
+
 	@Override
 	public int getMyClassType( ) {
 	    return AppConstants.CLASS_TYPE_XA_ACCESS_AUDIT;
@@ -516,6 +534,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "sequenceNumber={" + sequenceNumber + "}";
 		str += "eventCount={" + eventCount + "}";
 		str += "eventDuration={" + eventDuration + "}";
+		str += "tags={" + tags + "}";
 		str += "}";
 		return str;
 	}

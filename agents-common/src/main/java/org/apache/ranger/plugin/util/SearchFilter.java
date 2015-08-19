@@ -56,6 +56,8 @@ public class SearchFilter {
 	public static final String TAG_RESOURCE_SERVICE_NAME = "tagResourceServiceName";  // search
 	public static final String TAG_RESOURCE_TIMESTAMP = "tagResourceTimestamp"; // search
 
+	public static final String POLICY_TYPE = "policyType"; // search
+
 
 
 

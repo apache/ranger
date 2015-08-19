@@ -114,6 +114,8 @@ public class SolrAccessAuditsService {
 		searchFields.add(new SearchField("endDate", "evtTime", DATA_TYPE.DATE,
 				SEARCH_TYPE.LESS_EQUAL_THAN));
 
+		searchFields.add(new SearchField("tags", "obj.tags", DATA_TYPE.STR_LIST, SEARCH_TYPE.PARTIAL));
+
 		sortFields.add(new SortField("eventTime", "evtTime", true,
 				SORT_ORDER.DESC));
 	}
@@ -258,6 +260,10 @@ public class SolrAccessAuditsService {
 		value = doc.getFieldValue("event_dur_ms");
 		if (value != null) {
 			accessAudit.setEventDuration(solrUtil.toLong(value));
+		}
+		value = doc.getFieldValue("tags");
+		if (value != null) {
+			accessAudit.setTags(value.toString());
 		}
 		return accessAudit;
 	}

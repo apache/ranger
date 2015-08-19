@@ -632,6 +632,8 @@ public class AssetREST {
 				"startDate", "MM/dd/yyyy");
 		searchUtil.extractDate(request, searchCriteria, "endDate", "endDate",
 				"MM/dd/yyyy");
+
+		searchUtil.extractStringList(request, searchCriteria, "tags", "Tag List", "tags", null, null);
 		return assetMgr.getAccessLogs(searchCriteria);
 	}
 	

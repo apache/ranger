@@ -181,6 +181,7 @@ define(function(require) {
 					<th class="renderable cip"> </th>\
 					<th class="renderable aip" > </th>\
 					<th class="renderable aip" > </th>\
+					<th class="renderable ruser"></th>\
 				</tr>');
 		},
 		renderDateFields : function(){
@@ -273,8 +274,9 @@ define(function(require) {
 			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Audit Type',label :'auditType'},{text : 'Session ID',label :'sessionId'},
-			                      {text : 'Client IP',label :'clientIP'},{text : 'Client Type',label :'clientType'}];
-            var searchOpt = ['Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP'];//,'Policy ID'
+			                      {text : 'Client IP',label :'clientIP'},{text : 'Client Type',label :'clientType'},
+			                      {text : 'Tags',label :'tags'}];
+            var searchOpt = ['Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags'];//,'Policy ID'
             this.clearVisualSearch(this.accessAuditList, serverAttrName);
             
 			//'Resource Type','Audit Type','Session IP','Client Type','Today',
@@ -911,6 +913,14 @@ define(function(require) {
 					},
 					eventCount : {
 						label : 'Event Count',
+						cell: "string",
+						click : false,
+						drag : false,
+						sortable:false,
+						editable:false
+					},
+					tags : {
+						label : 'Tags',
 						cell: "string",
 						click : false,
 						drag : false,

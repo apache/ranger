@@ -250,6 +250,9 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 	@Column(name="EVENT_DUR_MS")
 	protected long eventDuration;
 
+	@Column(name="tags")
+	protected String tags;
+	
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -588,6 +591,19 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 	public void setEventDuration(long eventDuration) {
 		this.eventDuration = eventDuration;
 	}
+	
+	/**
+	 * @return the tags
+	 */
+	public String getTags() {
+		return tags;
+	}
+	/**
+	 * @param tags the tags to set
+	 */
+	public void setTags(String tags) {
+		this.tags = tags;
+	}
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -617,6 +633,7 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
 		str += "sequenceNumber={" + sequenceNumber + "}";
 		str += "eventCount={" + eventCount + "}";
 		str += "eventDuration={" + eventDuration + "}";
+		str += "tags={" + tags + "}";
 		str += "}";
 		return str;
 	}
@@ -677,6 +694,9 @@ public class XXAccessAudit extends XXDBBase implements java.io.Serializable {
         	if ((this.resourceType == null && other.resourceType != null) || (this.resourceType != null && !this.resourceType.equals(other.resourceType))) {
             		return false;
         	}
+			if ((this.tags == null && other.tags != null) || (this.tags != null && !this.tags.equals(other.tags))) {
+				return false;
+			}
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
