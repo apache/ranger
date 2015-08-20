@@ -80,7 +80,7 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerScriptConditionEvaluator.isMatched()");
 		}
-		boolean result = false;
+		boolean result = true;
 
 		if (scriptEngine != null) {
 

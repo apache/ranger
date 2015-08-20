@@ -51,10 +51,6 @@ public class RangerScriptTemplateConditionEvaluator extends RangerScriptConditio
 			scriptTemplate = evalOptions.get("scriptTemplate");
 		}
 
-		if (StringUtils.isNotBlank(scriptTemplate)) {
-			scriptTemplate = scriptTemplate.trim();
-		}
-
 		script = formatScript();
 
 		if (LOG.isDebugEnabled()) {
@@ -65,17 +61,6 @@ public class RangerScriptTemplateConditionEvaluator extends RangerScriptConditio
 	@Override
 	protected String getScript() {
 		return script;
-	}
-
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		boolean ret = true;
-
-		if (StringUtils.isNotBlank(script)) {
-			ret = super.isMatched(request);
-		}
-
-		return ret;
 	}
 
 	private String formatScript() {
@@ -98,7 +83,7 @@ public class RangerScriptTemplateConditionEvaluator extends RangerScriptConditio
 				if (s.equals("no") || s.equals("false")) {
 					ret = null;
 				} else {
-					ret = scriptTemplate;
+					ret = scriptTemplate == null ? null : scriptTemplate.trim();
 				}
 			}
 		}
