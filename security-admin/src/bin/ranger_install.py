@@ -310,6 +310,8 @@ def init_variables(switch):
     conf_dict['postgres_audit_file']=os.path.join(db_dir,'postgres','xa_audit_db_postgres.sql')
     conf_dict['sqlserver_core_file']=os.path.join(db_dir,'sqlserver','xa_core_db_sqlserver.sql')
     conf_dict['sqlserver_audit_file']=os.path.join(db_dir,'sqlserver','xa_audit_db_sqlserver.sql')
+    conf_dict['sqlanywhere_core_file']= os.path.join(db_dir,'sqlanywhere','xa_core_db_sqlanywhere.sql')
+    conf_dict['sqlanywhere_audit_file']= os.path.join(db_dir, 'sqlanywhere','xa_audit_db_sqlanywhere.sql')
     #conf_dict['db_core_file']           = os.path.join(db_dir, "xa_core_db.sql")
     #conf_dict['db_create_user_file']    = os.path.join(db_dir, "create_dev_user.sql")
     #conf_dict['db_audit_file']          = os.path.join(db_dir, "xa_audit_db.sql")
