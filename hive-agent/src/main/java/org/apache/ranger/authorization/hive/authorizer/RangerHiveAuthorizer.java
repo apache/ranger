@@ -241,6 +241,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				for(HivePrivilegeObject hiveObj : inputHObjs) {
 					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj);
 
+					if (resource == null) { // possible if input object/object is of a kind that we don't currently authorize
+						continue;
+					}
+
 					if(resource.getObjectType() == HiveObjectType.URI) {
 						String   path       = hiveObj.getObjectName();
 						FsAction permission = FsAction.READ;
@@ -269,6 +273,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			if(outputHObjs != null) {
 				for(HivePrivilegeObject hiveObj : outputHObjs) {
 					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj);
+
+					if (resource == null) { // possible if input object/object is of a kind that we don't currently authorize
+						continue;
+					}
 
 					if(resource.getObjectType() == HiveObjectType.URI) {
 						String   path       = hiveObj.getObjectName();
