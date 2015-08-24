@@ -44,20 +44,25 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 
 
     // For computation of priority
-    private static final String RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING                   = "*";
-    private static final String RANGER_POLICY_EVAL_MATCH_ONE_CHARACTER_STRING                 = "?";
-    private static final int RANGER_POLICY_EVAL_MATCH_ANY_WILDCARD_PREMIUM                    = 25;
-    private static final int RANGER_POLICY_EVAL_CONTAINS_MATCH_ANY_WILDCARD_PREMIUM           = 10;
-    private static final int RANGER_POLICY_EVAL_CONTAINS_MATCH_ONE_CHARACTER_WILDCARD_PREMIUM = 10;
-    private static final int RANGER_POLICY_EVAL_HAS_EXCLUDES_PREMIUM                          = 25;
-    private static final int RANGER_POLICY_EVAL_IS_RECURSIVE_PREMIUM                          = 25;
-    private static final int RANGER_POLICY_EVAL_PUBLIC_GROUP_ACCESS_PREMIUM                   = 25;
-    private static final int RANGER_POLICY_EVAL_ALL_ACCESS_TYPES_PREMIUM                      = 25;
-    private static final int RANGER_POLICY_EVAL_EXCLUSIVE_ALLOW_POLICY_PREMIUM                = 400;
-    private static final int RANGER_POLICY_EVAL_DENY_POLICY_PREMIUM                           = 600;
+    private static final String RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING   = "*";
+    private static final String RANGER_POLICY_EVAL_MATCH_ONE_CHARACTER_STRING = "?";
 
-    private static final int RANGER_POLICY_EVAL_RESERVED_SLOTS_NUMBER                         = 10000;
-    private static final int RANGER_POLICY_EVAL_RESERVED_SLOTS_PER_LEVEL_NUMBER               = 1000;
+    private static final int RANGER_POLICY_EVAL_SCORE_DEFAULT                         = 10000;
+    private static final int RANGER_POLICY_EVAL_SCORE_DISCOUNT_DENY_POLICY            =  4000;
+    private static final int RANGER_POLICY_EVAL_SCORE_DISCOUNT_EXCLUSIVE_ALLOW_POLICY =  2000;
+
+    private static final int RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_RESOURCE          = 100;
+    private static final int RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_USERSGROUPS       =  25;
+    private static final int RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_ACCESS_TYPES      =  25;
+    private static final int RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_CUSTOM_CONDITIONS =  25;
+
+    private static final int RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_MATCH_ANY_WILDCARD               = 25;
+    private static final int RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_HAS_MATCH_ANY_WILDCARD           = 10;
+    private static final int RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_HAS_MATCH_ONE_CHARACTER_WILDCARD =  5;
+    private static final int RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_IS_EXCLUDES                      =  5;
+    private static final int RANGER_POLICY_EVAL_SCORE_RESORUCE_DISCOUNT_IS_RECURSIVE                     =  5;
+    private static final int RANGER_POLICY_EVAL_SCORE_CUSTOM_CONDITION_PENALTY                           =  5;
+
 
     @Override
     public void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
@@ -102,112 +107,114 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         }
     }
 
+    class LevelResourceNames implements Comparable<LevelResourceNames> {
+        final int level;
+        final RangerPolicy.RangerPolicyResource policyResource;
+
+        public LevelResourceNames(int level, RangerPolicy.RangerPolicyResource policyResource) {
+            this.level = level;
+            this.policyResource = policyResource;
+        }
+
+        @Override
+        public int compareTo(LevelResourceNames other) {
+            // Sort in ascending order of level numbers
+            return Integer.compare(this.level, other.level);
+        }
+    }
+
     public int computeEvalOrder() {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerOptimizedPolicyEvaluator.computeEvalOrder()");
         }
-        RangerServiceDef serviceDef = getServiceDef();
-        RangerPolicy policy = getPolicy();
 
-        class LevelResourceNames implements Comparable<LevelResourceNames> {
-            int level;
-            RangerPolicy.RangerPolicyResource policyResource;
+        int evalOrder = RANGER_POLICY_EVAL_SCORE_DEFAULT;
 
-            @Override
-            public int compareTo(LevelResourceNames other) {
-                // Sort in ascending order of level numbers
-                return Integer.compare(this.level, other.level);
-            }
-        }
-        List<LevelResourceNames> tmpList = new ArrayList<LevelResourceNames>();
-
+        RangerServiceDef                         serviceDef   = getServiceDef();
         List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
+        RangerPolicy                             policy       = getPolicy();
+        List<LevelResourceNames>                 tmpList      = new ArrayList<LevelResourceNames>();
 
-        for (Map.Entry<String, RangerPolicy.RangerPolicyResource> keyValuePair : policy.getResources().entrySet()) {
-            String serviceDefResourceName = keyValuePair.getKey();
-            RangerPolicy.RangerPolicyResource policyResource = keyValuePair.getValue();
-            List<String> policyResourceNames = policyResource.getValues();
+        for (Map.Entry<String, RangerPolicy.RangerPolicyResource> kv : policy.getResources().entrySet()) {
+            String                            resourceName   = kv.getKey();
+            RangerPolicy.RangerPolicyResource policyResource = kv.getValue();
+            List<String>                      resourceValues = policyResource.getValues();
 
-            RangerServiceDef.RangerResourceDef found = null;
-            for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
-                if (serviceDefResourceName.equals(resourceDef.getName())) {
-                    found = resourceDef;
-                    break;
-                }
+            if(CollectionUtils.isNotEmpty(resourceValues)) {
+	            for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
+	                if (resourceName.equals(resourceDef.getName())) {
+		                tmpList.add(new LevelResourceNames(resourceDef.getLevel(), policyResource));
+	                    break;
+	                }
+	            }
             }
-            if (found != null) {
-                int level = found.getLevel();
-                if (policyResourceNames != null) {
-                    LevelResourceNames item = new LevelResourceNames();
-                    item.level = level;
-                    item.policyResource = policyResource;
-                    tmpList.add(item);
-                }
-
-            }
-
         }
         Collections.sort(tmpList); // Sort in ascending order of levels
 
-        CharSequence matchesAnySeq = RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING.subSequence(0, 1);
-        CharSequence matchesSingleCharacterSeq = RANGER_POLICY_EVAL_MATCH_ONE_CHARACTER_STRING.subSequence(0, 1);
-
-        int priorityLevel = RANGER_POLICY_EVAL_RESERVED_SLOTS_NUMBER;
-        boolean seenFirstMatchAny = false;
-
+        int resourceDiscount = 0;
         for (LevelResourceNames item : tmpList) {
             // Expect lowest level first
-            List<String> resourceNames = item.policyResource.getValues();
-            boolean foundStarWildcard = false;
+            boolean foundStarWildcard     = false;
             boolean foundQuestionWildcard = false;
-            boolean foundMatchAny = false;
+            boolean foundMatchAny         = false;
 
-            for (String resourceName : resourceNames) {
-                if (resourceName.isEmpty() ||resourceName.equals(RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING)) {
+            for (String resourceName : item.policyResource.getValues()) {
+                if (resourceName.isEmpty() || resourceName.equals(RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING)) {
                     foundMatchAny = true;
                     break;
-                }
-                if (resourceName.contains(matchesAnySeq))
+                } else if (resourceName.contains(RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING)) {
                     foundStarWildcard = true;
-                else if (resourceName.contains(matchesSingleCharacterSeq))
+                } else if (resourceName.contains(RANGER_POLICY_EVAL_MATCH_ONE_CHARACTER_STRING)) {
                     foundQuestionWildcard = true;
+                }
             }
             if (foundMatchAny) {
-                if (seenFirstMatchAny)
-                    priorityLevel -= RANGER_POLICY_EVAL_MATCH_ANY_WILDCARD_PREMIUM;
-                else {
-                    seenFirstMatchAny = true;
-                }
+                resourceDiscount += RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_MATCH_ANY_WILDCARD;
             } else {
-                priorityLevel +=  RANGER_POLICY_EVAL_RESERVED_SLOTS_PER_LEVEL_NUMBER;
-                if (foundStarWildcard) priorityLevel -= RANGER_POLICY_EVAL_CONTAINS_MATCH_ANY_WILDCARD_PREMIUM;
-                else if (foundQuestionWildcard) priorityLevel -= RANGER_POLICY_EVAL_CONTAINS_MATCH_ONE_CHARACTER_WILDCARD_PREMIUM;
+                if (foundStarWildcard) {
+                    resourceDiscount += RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_HAS_MATCH_ANY_WILDCARD;
+                } else if (foundQuestionWildcard) {
+                    resourceDiscount += RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_HAS_MATCH_ONE_CHARACTER_WILDCARD;
+                }
 
                 RangerPolicy.RangerPolicyResource resource = item.policyResource;
-                if (resource.getIsExcludes()) priorityLevel -= RANGER_POLICY_EVAL_HAS_EXCLUDES_PREMIUM;
-                if (resource.getIsRecursive()) priorityLevel -= RANGER_POLICY_EVAL_IS_RECURSIVE_PREMIUM;
+
+                if (resource.getIsExcludes()) {
+                    resourceDiscount += RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_IS_EXCLUDES;
+                }
+
+                if (resource.getIsRecursive()) {
+                    resourceDiscount += RANGER_POLICY_EVAL_SCORE_RESORUCE_DISCOUNT_IS_RECURSIVE;
+                }
             }
         }
 
-        if (hasPublicGroup) {
-            priorityLevel -= RANGER_POLICY_EVAL_PUBLIC_GROUP_ACCESS_PREMIUM;
-        } else {
-            priorityLevel -= groups.size();
-        }
-        priorityLevel -= users.size();
+        evalOrder -= Math.min(RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_RESOURCE, resourceDiscount);
 
-        priorityLevel -= Math.round(((float)RANGER_POLICY_EVAL_ALL_ACCESS_TYPES_PREMIUM * accessPerms.size()) / serviceDef.getAccessTypes().size());
+        if (hasPublicGroup) {
+            evalOrder -= RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_USERSGROUPS;
+        } else {
+            evalOrder -= Math.min(groups.size() + users.size(), RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_USERSGROUPS);
+        }
+
+        evalOrder -= Math.round(((float)RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_ACCESS_TYPES * accessPerms.size()) / serviceDef.getAccessTypes().size());
+
+        int customConditionsDiscount = RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_CUSTOM_CONDITIONS - (RANGER_POLICY_EVAL_SCORE_CUSTOM_CONDITION_PENALTY * this.getCustomConditionsCount());
+        if(customConditionsDiscount > 0) {
+            evalOrder -= customConditionsDiscount;
+        }
 
         if (policy.isPolicyTypeDeny()) {
-            priorityLevel -= RANGER_POLICY_EVAL_DENY_POLICY_PREMIUM;
+            evalOrder -= RANGER_POLICY_EVAL_SCORE_DISCOUNT_DENY_POLICY;
         } else if (policy.isPolicyTypeExclusiveAllow()) {
-            priorityLevel -= RANGER_POLICY_EVAL_EXCLUSIVE_ALLOW_POLICY_PREMIUM;
+            evalOrder -= RANGER_POLICY_EVAL_SCORE_DISCOUNT_EXCLUSIVE_ALLOW_POLICY;
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerOptimizedPolicyEvaluator.computeEvalOrder(), policyName:" + policy.getName() + ", priority:" + priorityLevel);
+            LOG.debug("<== RangerOptimizedPolicyEvaluator.computeEvalOrder(), policyName:" + policy.getName() + ", priority:" + evalOrder);
         }
-        return priorityLevel;
+
+        return evalOrder;
     }
 
 	@Override

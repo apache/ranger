@@ -78,10 +78,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 		int result = Integer.compare(this.getEvalOrder(), other.getEvalOrder());
 
-		if (result == 0) {
-			result = Integer.compare(getCustomConditionsCount(), other.getCustomConditionsCount());
-		}
-
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractPolicyEvaluator.compareTo(), result:" + result);
 		}

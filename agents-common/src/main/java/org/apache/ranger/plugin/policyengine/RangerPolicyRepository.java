@@ -266,6 +266,16 @@ public class RangerPolicyRepository {
         }
         this.contextEnrichers = Collections.unmodifiableList(contextEnrichers);
 
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("policy evaluation order: " + this.policyEvaluators.size() + " policies");
+
+            int order = 0;
+            for(RangerPolicyEvaluator policyEvaluator : this.policyEvaluators) {
+                RangerPolicy policy = policyEvaluator.getPolicy();
+
+                LOG.debug("policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
+            }
+        }
     }
 
     private RangerContextEnricher buildContextEnricher(RangerServiceDef.RangerContextEnricherDef enricherDef) {
