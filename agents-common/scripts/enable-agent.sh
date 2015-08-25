@@ -454,6 +454,10 @@ then
 			fi
 		fi
 	done
+	if [ "${HCOMPONENT_NAME}" = "hbase" ] || [ "${HCOMPONENT_NAME}" = "storm" ];
+	then
+		chmod 644 ${HCOMPONENT_CONF_DIR}/*
+	fi
 fi
 
 #
