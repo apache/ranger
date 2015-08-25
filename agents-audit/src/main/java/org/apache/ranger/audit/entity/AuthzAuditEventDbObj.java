@@ -21,7 +21,7 @@
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Set;
+import java.util.Properties;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -33,10 +33,12 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.SequenceGenerator;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.EnumRepositoryType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.apache.ranger.audit.provider.MiscUtil;
 
 /**
  * Entity implementation class for Entity: AuthzAuditEventDbObj
@@ -45,7 +47,24 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 @Entity
 @Table(name="xa_access_audit")
 public class AuthzAuditEventDbObj implements Serializable {
+
+	private static final Log LOG = LogFactory.getLog(AuthzAuditEventDbObj.class);
+
 	private static final long serialVersionUID = 1L;
+
+	static int MaxValueLengthAccessType = 255;
+	static int MaxValueLengthAclEnforcer = 255;
+	static int MaxValueLengthAgentId = 255;
+	static int MaxValueLengthClientIp = 255;
+	static int MaxValueLengthClientType = 255;
+	static int MaxValueLengthRepoName = 255;
+	static int MaxValueLengthResultReason = 255;
+	static int MaxValueLengthSessionId = 255;
+	static int MaxValueLengthRequestUser = 255;
+	static int MaxValueLengthAction = 2000;
+	static int MaxValueLengthRequestData = 4000;
+	static int MaxValueLengthResourcePath = 4000;
+	static int MaxValueLengthResourceType = 255;
 
 	private long   auditId;
 	private int    repositoryType;
@@ -66,6 +85,60 @@ public class AuthzAuditEventDbObj implements Serializable {
 	private String clientIP;
 	private String requestData;
 	private String tags;
+
+	public static void init(Properties props)
+	{
+		LOG.info("AuthzAuditEventDbObj.init()");
+
+		final String AUDIT_DB_MAX_COLUMN_VALUE = "xasecure.audit.destination.db.max.column.length";
+		MaxValueLengthAccessType = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "access_type", MaxValueLengthAccessType);
+		logMaxColumnValue("access_type", MaxValueLengthAccessType);
+
+		MaxValueLengthAclEnforcer = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "acl_enforcer", MaxValueLengthAclEnforcer);
+		logMaxColumnValue("acl_enforcer", MaxValueLengthAclEnforcer);
+
+		MaxValueLengthAction = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "action", MaxValueLengthAction);
+		logMaxColumnValue("action", MaxValueLengthAction);
+
+		MaxValueLengthAgentId = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "agent_id", MaxValueLengthAgentId);
+		logMaxColumnValue("agent_id", MaxValueLengthAgentId);
+
+		MaxValueLengthClientIp = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "client_id", MaxValueLengthClientIp);
+		logMaxColumnValue("client_id", MaxValueLengthClientIp);
+
+		MaxValueLengthClientType = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "client_type", MaxValueLengthClientType);
+		logMaxColumnValue("client_type", MaxValueLengthClientType);
+
+		MaxValueLengthRepoName = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "repo_name", MaxValueLengthRepoName);
+		logMaxColumnValue("repo_name", MaxValueLengthRepoName);
+
+		MaxValueLengthResultReason = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "result_reason", MaxValueLengthResultReason);
+		logMaxColumnValue("result_reason", MaxValueLengthResultReason);
+
+		MaxValueLengthSessionId = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "session_id", MaxValueLengthSessionId);
+		logMaxColumnValue("session_id", MaxValueLengthSessionId);
+
+		MaxValueLengthRequestUser = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "request_user", MaxValueLengthRequestUser);
+		logMaxColumnValue("request_user", MaxValueLengthRequestUser);
+
+		MaxValueLengthRequestData = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "request_data", MaxValueLengthRequestData);
+		logMaxColumnValue("request_data", MaxValueLengthRequestData);
+
+		MaxValueLengthResourcePath = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "resource_path", MaxValueLengthResourcePath);
+		logMaxColumnValue("resource_path", MaxValueLengthResourcePath);
+
+		MaxValueLengthResourceType = MiscUtil.getIntProperty(props, AUDIT_DB_MAX_COLUMN_VALUE + "." + "resource_type", MaxValueLengthResourceType);
+		logMaxColumnValue("resource_type", MaxValueLengthResourceType);
+	}
+
+	public static void logMaxColumnValue(String columnName, int configuredMaxValueLength) {
+		LOG.info("Setting max column value for column[" + columnName + "] to [" + configuredMaxValueLength + "].");
+		if (configuredMaxValueLength == 0) {
+			LOG.info("Max length of column[" + columnName + "] was 0! Column will NOT be emitted in the audit.");
+		} else if (configuredMaxValueLength < 0) {
+			LOG.info("Max length of column[" + columnName + "] was less than 0! Column value will never be truncated.");
+		}
+	}
 
 
 	public AuthzAuditEventDbObj() {
@@ -118,7 +191,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "repo_name")
 	public String getRepositoryName() {
-		return this.repositoryName;
+		return truncate(this.repositoryName, MaxValueLengthRepoName, "repo_name");
 	}
 
 	public void setRepositoryName(String repositoryName) {
@@ -127,7 +200,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "request_user")
 	public String getUser() {
-		return this.user;
+		return truncate(this.user, MaxValueLengthRequestUser, "request_user");
 	}
 
 	public void setUser(String user) {
@@ -146,7 +219,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "access_type")
 	public String getAccessType() {
-		return this.accessType;
+		return truncate(this.accessType, MaxValueLengthAccessType, "access_type");
 	}
 
 	public void setAccessType(String accessType) {
@@ -155,7 +228,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "resource_path")
 	public String getResourcePath() {
-		return this.resourcePath;
+		return truncate(this.resourcePath, MaxValueLengthResourcePath, "resource_path");
 	}
 
 	public void setResourcePath(String resourcePath) {
@@ -164,7 +237,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "resource_type")
 	public String getResourceType() {
-		return this.resourceType;
+		return truncate(this.resourceType, MaxValueLengthResourceType, "resource_type");
 	}
 
 	public void setResourceType(String resourceType) {
@@ -173,7 +246,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "action")
 	public String getAction() {
-		return this.action;
+		return truncate(this.action, MaxValueLengthAction, "action");
 	}
 
 	public void setAction(String action) {
@@ -191,7 +264,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "agent_id")
 	public String getAgentId() {
-		return agentId;
+		return truncate(this.agentId, MaxValueLengthAgentId, "agent_id");
 	}
 
 	public void setAgentId(String agentId) {
@@ -209,7 +282,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "result_reason")
 	public String getResultReason() {
-		return this.resultReason;
+		return truncate(this.resultReason, MaxValueLengthResultReason, "result_reason");
 	}
 
 	public void setResultReason(String resultReason) {
@@ -218,7 +291,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "acl_enforcer")
 	public String getAclEnforcer() {
-		return this.aclEnforcer;
+		return truncate(this.aclEnforcer, MaxValueLengthAclEnforcer, "acl_enforcer");
 	}
 
 	public void setAclEnforcer(String aclEnforcer) {
@@ -227,7 +300,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "session_id")
 	public String getSessionId() {
-		return this.sessionId;
+		return truncate(this.sessionId, MaxValueLengthSessionId, "session_id");
 	}
 
 	public void setSessionId(String sessionId) {
@@ -236,7 +309,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "client_type")
 	public String getClientType() {
-		return this.clientType;
+		return truncate(this.clientType, MaxValueLengthClientType, "client_type");
 	}
 
 	public void setClientType(String clientType) {
@@ -245,7 +318,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "client_ip")
 	public String getClientIP() {
-		return this.clientIP;
+		return truncate(this.clientIP, MaxValueLengthClientIp, "client_ip");
 	}
 
 	public void setClientIP(String clientIP) {
@@ -254,7 +327,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "request_data")
 	public String getRequestData() {
-		return this.requestData;
+		return truncate(this.requestData, MaxValueLengthRequestData, "request_data");
 	}
 
 	public void setRequestData(String requestData) {
@@ -270,4 +343,45 @@ public class AuthzAuditEventDbObj implements Serializable {
 		this.tags = tags;
 	}
 
+	static final String TruncationMarker = "...";
+	static final int TruncationMarkerLength = TruncationMarker.length();
+
+	protected String truncate(String value, int limit, String columnName) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> getTrunctedValue(%s, %d, %s)", value, limit, columnName));
+		}
+
+		String result = value;
+		if (value != null) {
+			if (limit < 0) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(String.format("Truncation is suppressed for column[%s]: old value [%s], new value[%s]", columnName, value, result));
+				}
+			} else if (limit == 0) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(String.format("Column[%s] is to be excluded from audit: old value [%s], new value[%s]", columnName, value, result));
+				}
+				result = null;
+			} else {
+				if (value.length() > limit) {
+					if (limit <= TruncationMarkerLength) {
+						// NOTE: If value is to be truncated to a size that is less than of equal to the Truncation Marker then we won't put the marker in!!
+						result = value.substring(0, limit);
+					} else {
+						StringBuilder sb = new StringBuilder(value.substring(0, limit - TruncationMarkerLength));
+						sb.append(TruncationMarker);
+						result = sb.toString();
+					}
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(String.format("Truncating value for column[%s] to [%d] characters: old value [%s], new value[%s]", columnName, limit, value, result));
+					}
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== getTrunctedValue(%s, %d, %s): %s", value, limit, columnName, result));
+		}
+		return result;
+	}
 }

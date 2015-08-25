@@ -21,6 +21,8 @@ package org.apache.ranger.audit.model;
 
 import java.util.Date;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.dao.DaoManager;
 
 public abstract class AuditEventBase {
@@ -34,16 +36,4 @@ public abstract class AuditEventBase {
 	public abstract Date getEventTime ();
 	public abstract void setEventCount(long eventCount);
 	public abstract void setEventDurationMS(long eventDurationMS);
-	
-	protected String trim(String str, int len) {
-		String ret = str;
-		if (str != null) {
-			if (str.length() > len) {
-				ret = str.substring(0, len);
-			}
-		}
-		return ret;
-	}
-
-
 }

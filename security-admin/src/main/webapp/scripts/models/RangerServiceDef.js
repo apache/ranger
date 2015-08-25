@@ -58,9 +58,7 @@ define(function(require){
 				name : {
 					type		: 'Text',
 					title		: 'Service Name *',
-					validators	: ['required'],
-					editorAttrs 	:{ maxlength: 255},
-
+					validators	: ['required',{type:'regexp',regexp:/^[a-zA-Z0-9\s_-]{1,512}$/,message :"Name should be less than 512 characters and special characters are not allowed."}],
 				},
 				description : {
 					type		: 'TextArea',

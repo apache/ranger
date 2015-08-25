@@ -382,7 +382,7 @@ then
 	then
 		export XAAUDIT_DB_JDBC_URL="jdbc:sqlserver://${audit_db_hostname};databaseName=${audit_db_name}"
 		export XAAUDIT_DB_JDBC_DRIVER="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-	elif [ "${db_flavor}" = "SQLANYWHERE" ]
+	elif [ "${db_flavor}" = "SQLA" ]
 	then
 		export XAAUDIT_DB_JDBC_URL="jdbc:sqlanywhere:database=${audit_db_name};host=${audit_db_hostname}"
 		export XAAUDIT_DB_JDBC_DRIVER="sap.jdbc4.sqlanywhere.IDriver"

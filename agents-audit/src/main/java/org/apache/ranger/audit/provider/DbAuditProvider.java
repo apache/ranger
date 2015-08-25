@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.dao.DaoManager;
 import org.apache.ranger.audit.destination.AuditDestination;
+import org.apache.ranger.audit.entity.AuthzAuditEventDbObj;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
@@ -91,6 +92,9 @@ public class DbAuditProvider extends AuditDestination {
 		if(jdbcPassword != null && !jdbcPassword.isEmpty()) {
 			mDbProperties.put(AUDIT_JPA_JDBC_PASSWORD, jdbcPassword);
 		}
+
+		// initialize the database related classes
+		AuthzAuditEventDbObj.init(props);
 	}
 
 	@Override

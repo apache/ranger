@@ -33,6 +33,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 
 import org.apache.ranger.audit.dao.DaoManager;
+import org.apache.ranger.audit.entity.AuthzAuditEventDbObj;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
 
@@ -63,9 +64,11 @@ public class DBAuditDestination extends AuditDestination {
 	public void init(Properties props, String propPrefix) {
 		logger.info("init() called");
 		super.init(props, propPrefix);
-
 		// Initial connect
 		connect();
+
+		// initialize the database related classes
+		AuthzAuditEventDbObj.init(props);
 	}
 
 	/*

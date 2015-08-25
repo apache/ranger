@@ -197,7 +197,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 
 	/**
 	 * @param eventTime
-	 *            the timeStamp to set
+	 *            the eventTime to set
 	 */
 	public void setEventTime(Date eventTime) {
 		this.eventTime = eventTime;
@@ -251,9 +251,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 	/**
 	 * @return the action
 	 */
-	public String getAction() {
-		return trim(action, MAX_ACTION_FIELD_SIZE);
-	}
+	public String getAction() { return action; }
 
 	/**
 	 * @param action
@@ -386,9 +384,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 	/**
 	 * @return the requestData
 	 */
-	public String getRequestData() {
-		return trim(requestData, MAX_REQUEST_DATA_FIELD_SIZE);
-	}
+	public String getRequestData() { return requestData; }
 
 	/**
 	 * @param requestData

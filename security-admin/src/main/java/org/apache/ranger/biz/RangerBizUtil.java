@@ -123,7 +123,7 @@ public class RangerBizUtil {
 
 		auditDBType = PropertiesUtil.getProperty("ranger.audit.source.type",
 				auditDBType).toLowerCase();
-
+		logger.info("java.library.path is " + System.getProperty("java.library.path"));
 		logger.info("Audit datasource is " + auditDBType);
 		random = new Random();
 	}
@@ -1370,7 +1370,9 @@ public class RangerBizUtil {
 				return AppConstants.DB_FLAVOR_SQLSERVER;
 			} else if (StringUtils.containsIgnoreCase(propertyValue, "sqlanywhere")) {
 				return AppConstants.DB_FLAVOR_SQLANYWHERE;
-			} else {
+			} else if (StringUtils.containsIgnoreCase(propertyValue, "sqla")) {
+				return AppConstants.DB_FLAVOR_SQLANYWHERE;
+			}else {
 				if(logger.isDebugEnabled()) {
 					logger.debug("DB Falvor could not be determined from property - " + propertyName + "=" + propertyValue);
 				}
