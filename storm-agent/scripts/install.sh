@@ -258,7 +258,7 @@ then
 	newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
 	updatePropertyToFile $propertyName $newPropertyValue $to_file
 fi
-if [ "${DB_FLAVOR}" == "SQLANYWHERE" ]
+if [ "${DB_FLAVOR}" == "SQLA" ]
 then
 	audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
 	audit_db_name=`grep '^XAAUDIT.DB.DATABASE_NAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`

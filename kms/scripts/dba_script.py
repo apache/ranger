@@ -1138,7 +1138,7 @@ def main(argv):
 	else:
 		XA_DB_FLAVOR=''
 		while XA_DB_FLAVOR == "":
-			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL|SQLANYWHERE} :","info")
+			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL|SQLA} :","info")
 			XA_DB_FLAVOR=raw_input()
 
 	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
@@ -1242,7 +1242,7 @@ def main(argv):
 		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,sqlserver_core_file)
 
-	elif XA_DB_FLAVOR == "SQLANYWHERE":
+	elif XA_DB_FLAVOR == "SQLA":
 		if not os_name == "WINDOWS" :
 			if os.environ['LD_LIBRARY_PATH'] == "":
 				log("[E] ---------- LD_LIBRARY_PATH environment property not defined, aborting installation. ----------", "error")
