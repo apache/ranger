@@ -755,6 +755,7 @@ public class Jisql {
                     + sqle.getErrorCode());
             sqle = sqle.getNextException();
         }
+        System.out.println("java.library.path:"+System.getProperty("java.library.path"));
     }
 
     /**

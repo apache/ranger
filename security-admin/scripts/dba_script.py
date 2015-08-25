@@ -1352,7 +1352,7 @@ def main(argv):
 	else:
 		XA_DB_FLAVOR=''
 		while XA_DB_FLAVOR == "":
-			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL|SQLANYWHERE} :","info")
+			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL|SQLA} :","info")
 			XA_DB_FLAVOR=raw_input()
 			AUDIT_DB_FLAVOR = XA_DB_FLAVOR
 
@@ -1530,7 +1530,7 @@ def main(argv):
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME,sqlserver_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME,sqlserver_patches)
 
-	elif XA_DB_FLAVOR == "SQLANYWHERE":
+	elif XA_DB_FLAVOR == "SQLA":
 		if not os_name == "WINDOWS" :
 			if os.environ['LD_LIBRARY_PATH'] == "":
 				log("[E] ---------- LD_LIBRARY_PATH environment property not defined, aborting installation. ----------", "error")
@@ -1576,7 +1576,7 @@ def main(argv):
 		audit_sqlObj = SqlServerConf(audit_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,sqlserver_audit_file)
 
-	elif AUDIT_DB_FLAVOR == "SQLANYWHERE":
+	elif AUDIT_DB_FLAVOR == "SQLA":
 		SQLANYWHERE_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = SqlAnywhereConf(audit_db_host, SQLANYWHERE_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,sqlanywhere_audit_file)
@@ -1600,7 +1600,7 @@ def main(argv):
 			logFile("===============================================\n")
 			xa_sqlObj.create_rangerdb_user(xa_db_root_user, db_user, db_password, xa_db_root_password,dryMode)
 			xa_sqlObj.create_db(xa_db_root_user, xa_db_root_password, db_name, db_user, db_password,dryMode)
-			if not XA_DB_FLAVOR == "SQLANYWHERE":
+			if not XA_DB_FLAVOR == "SQLA":
 				xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, is_revoke,dryMode)
 			audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode)
 			logFile("===============================================\n")
@@ -1610,7 +1610,7 @@ def main(argv):
 			log("[I] ---------- Creating Ranger Admin database ----------","info")
 			xa_sqlObj.create_db(xa_db_root_user, xa_db_root_password, db_name, db_user, db_password,dryMode)
 			log("[I] ---------- Granting permission to Ranger Admin db user ----------","info")
-			if not XA_DB_FLAVOR == "SQLANYWHERE":
+			if not XA_DB_FLAVOR == "SQLA":
 				xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, is_revoke,dryMode)
 			# Ranger Admin DB Host AND Ranger Audit DB Host are Different OR Same
 			if audit_store == "db":

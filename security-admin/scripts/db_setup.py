@@ -1211,6 +1211,7 @@ class SqlAnywhereConf(BaseDB):
 				sys.exit(1)
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
+		self.set_options(db_name, db_user, db_password, TABLE_NAME)
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
 		if os_name == "LINUX":
 			query = get_cmd + " -c \; -query \"SELECT name FROM sysobjects where name = '%s' and type='U';\"" %(TABLE_NAME)
@@ -1277,7 +1278,6 @@ class SqlAnywhereConf(BaseDB):
 
 	def import_auditdb_patches(self, xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, file_name, TABLE_NAME):
 		log("[I] --------- Checking XA_ACCESS_AUDIT table to apply audit db patches --------- ","info")
-		self.set_options(audit_db_name, db_user, db_password, TABLE_NAME)
 		output = self.check_table(audit_db_name, db_user, db_password, TABLE_NAME)
 		if output == True:
 			name = basename(file_name)
@@ -1326,7 +1326,6 @@ class SqlAnywhereConf(BaseDB):
 		log("[I] --------- Check audit user connection --------- ","info")
 		self.check_connection(audit_db_name, audit_db_user, audit_db_password)
 		log("[I] --------- Check audit table exists --------- ","info")
-		self.set_options(audit_db_name, db_user, db_password, TABLE_NAME)
 		output = self.check_table(audit_db_name, db_user, db_password, TABLE_NAME)
 		if output == False:
 			self.import_db_file(audit_db_name ,db_user, db_password, file_name)
@@ -1522,7 +1521,7 @@ def main(argv):
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME , sqlserver_patches)
 		audit_patch_file = os.path.join(RANGER_ADMIN_HOME ,sqlserver_auditdb_patches)
 
-	elif XA_DB_FLAVOR == "SQLANYWHERE":
+	elif XA_DB_FLAVOR == "SQLA":
 		if not os_name == "WINDOWS" :
 			if os.environ['LD_LIBRARY_PATH'] == "":
 				log("[E] ---------- LD_LIBRARY_PATH environment property not defined, aborting installation. ----------", "error")
@@ -1558,7 +1557,7 @@ def main(argv):
 		audit_sqlObj = SqlServerConf(audit_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME , sqlserver_audit_file)
 
-	elif AUDIT_DB_FLAVOR == "SQLANYWHERE":
+	elif AUDIT_DB_FLAVOR == "SQLA":
 		SQLANYWHERE_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		audit_sqlObj = SqlAnywhereConf(audit_db_host, SQLANYWHERE_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME , sqlanywhere_audit_file)

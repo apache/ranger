@@ -277,7 +277,7 @@ sanity_check_files() {
             log "[E] ${sqlserver_core_file} does not exists" ; exit 1;
         fi
     fi
-	if [ "${DB_FLAVOR}" == "SQLANYWHERE" ]
+	if [ "${DB_FLAVOR}" == "SQLA" ]
 	then
 		if [ "${LD_LIBRARY_PATH}" == "" ]
 		then
@@ -410,7 +410,7 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 	fi
-	if [ "${DB_FLAVOR}" == "SQLANYWHERE" ]
+	if [ "${DB_FLAVOR}" == "SQLA" ]
 	then
 		propertyName=ranger.ks.jpa.jdbc.url
 		newPropertyValue="jdbc:sqlanywhere:database=${db_name};host=${DB_HOST}"
