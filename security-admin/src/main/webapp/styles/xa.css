@@ -1868,3 +1868,7 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
   text-align: center;
   margin-left: 10px;
 }
+.white-space-normal{
+  white-space: normal;
+  word-break: break-all;
+}

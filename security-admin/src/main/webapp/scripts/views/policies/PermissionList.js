@@ -393,6 +393,9 @@ define(function(require) {
 					return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span></label><input type="text" name="'+obj.name+'" ></div>'
 						
 				});
+				//to show only mutiline line policy codition 
+				this.multiLinecond = _.filter(that.policyConditions, function(m){ return (!_.isUndefined(m.evaluatorOptions['ui.isMultiline']) && m.evaluatorOptions['ui.isMultiline']) });
+				this.multiLinecond = _.isArray(this.multiLinecond) ? this.multiLinecond : [this.multiLinecond];
 				//Create new bootstrap x-editable `policyConditions` dataType for policy conditions 
 				XAUtil.customXEditableForPolicyCond(tmpl.join(''));
 				//create x-editable for policy conditions
@@ -413,11 +416,18 @@ define(function(require) {
 								if(_.isEmpty(val)){
 									return ''; 
 								}
+								//Add label for policy condition
+								var pcond = _.findWhere(that.multiLinecond, { 'name': name})
+								if(!_.isUndefined(pcond) && !_.isUndefined(pcond['evaluatorOptions']) 
+										&& ! _.isUndefined(pcond['evaluatorOptions']["ui.isMultiline"]) 
+										&& ! _.isUndefined(pcond['evaluatorOptions']['engineName'])){
+									val = 	pcond['evaluatorOptions']['engineName'] + ' Condition'
+								}
 								i++;
-								return '<span class="'+label+'" >'+name+' : '+ val + '</span>';
+								return '<span class="'+label+' white-space-normal" >'+name+' : '+ val + '</span>';
 							});
 							var cond = _.map(value, function(val, name) {
-								return {'type' : name, 'values' : !_.isArray(val) ?  val.split(',') : val};
+								return {'type' : name, 'values' : !_.isArray(val) ?  val.split(', ') : val};
 							});
 							
 							that.model.set('conditions', cond);
@@ -460,9 +470,6 @@ define(function(require) {
 					e.stopPropagation();
 					that.$('#policyConditions').editable('toggle');
 				});
-				//to show only mutiline line policy codition 
-				this.multiLinecond = _.filter(that.policyConditions, function(m){ return (!_.isUndefined(m.evaluatorOptions['ui.isMultiline']) && m.evaluatorOptions['ui.isMultiline']) });
-				this.multiLinecond = _.isArray(this.multiLinecond) ? this.multiLinecond : [this.multiLinecond];
 				
 			}
 		},
