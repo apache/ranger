@@ -552,17 +552,17 @@ public class AppConstants extends RangerCommonEnums {
 	 */
 	public static final int CLASS_TYPE_XA_TAG_ATTR_DEF = 1042;
 	/**
-	 * Class type of XXTaggedResource
+	 * Class type of XXServiceResource
 	 */
-	public static final int CLASS_TYPE_XA_TAGGED_RESOURCE = 1043;
+	public static final int CLASS_TYPE_XA_SERVICE_RESOURCE = 1043;
 	/**
-	 * Class type of XXTaggedResourceValue
+	 * Class type of XXServiceResourceElement
 	 */
-	public static final int CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE = 1044;
+	public static final int CLASS_TYPE_XA_SERVICE_RESOURCE_ELEMENT = 1044;
 	/**
-	 * Class type of XXTaggedResourceValueMap
+	 * Class type of XXServiceResourceElementValue
 	 */
-	public static final int CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE_MAP = 1045;
+	public static final int CLASS_TYPE_XA_SERVICE_RESOURCE_ELEMENT_VALUE = 1045;
 	/**
 	 * Class type of XXTag
 	 */

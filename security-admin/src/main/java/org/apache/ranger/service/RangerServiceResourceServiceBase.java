@@ -29,8 +29,8 @@ import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXTaggedResource;
-import org.apache.ranger.entity.XXTaggedResourceValue;
+import org.apache.ranger.entity.XXServiceResource;
+import org.apache.ranger.entity.XXServiceResourceElement;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
@@ -38,14 +38,14 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class RangerTaggedResourceServiceBase<T extends XXTaggedResource, V extends RangerServiceResource> extends RangerBaseModelService<T, V> {
+public abstract class RangerServiceResourceServiceBase<T extends XXServiceResource, V extends RangerServiceResource> extends RangerBaseModelService<T, V> {
 
 	@Autowired
 	GUIDUtil guidUtil;
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected XXTaggedResource mapViewToEntityBean(RangerServiceResource vObj, XXTaggedResource xObj, int operationContext) {
+	protected XXServiceResource mapViewToEntityBean(RangerServiceResource vObj, XXServiceResource xObj, int operationContext) {
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
 		xObj.setGuid(guid);
@@ -54,7 +54,7 @@ public abstract class RangerTaggedResourceServiceBase<T extends XXTaggedResource
 
 		XXService xService = daoMgr.getXXService().findByName(vObj.getServiceName());
 		if (xService == null) {
-			throw restErrorUtil.createRESTException("Error Populating XXTaggedResource. No Service found with name: " + vObj.getServiceName(), MessageEnums.INVALID_INPUT_DATA);
+			throw restErrorUtil.createRESTException("Error Populating XXServiceResource. No Service found with name: " + vObj.getServiceName(), MessageEnums.INVALID_INPUT_DATA);
 		}
 
 		xObj.setServiceId(xService.getId());
@@ -64,7 +64,7 @@ public abstract class RangerTaggedResourceServiceBase<T extends XXTaggedResource
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected RangerServiceResource mapEntityToViewBean(RangerServiceResource vObj, XXTaggedResource xObj) {
+	protected RangerServiceResource mapEntityToViewBean(RangerServiceResource vObj, XXServiceResource xObj) {
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
 		vObj.setIsEnabled(xObj.getIsEnabled());
@@ -73,17 +73,17 @@ public abstract class RangerTaggedResourceServiceBase<T extends XXTaggedResource
 
 		vObj.setServiceName(xService.getName());
 
-		List<XXTaggedResourceValue> resValueList = daoMgr.getXXTaggedResourceValue().findByTaggedResId(xObj.getId());
+		List<XXServiceResourceElement> resElementList = daoMgr.getXXServiceResourceElement().findByResourceId(xObj.getId());
 		Map<String, RangerPolicy.RangerPolicyResource> resourceSpec = new HashMap<String, RangerPolicy.RangerPolicyResource>();
 
-		for (XXTaggedResourceValue resValue : resValueList) {
-			List<String> resValueMapList = daoMgr.getXXTaggedResourceValueMap().findValuesByResValueId(resValue.getId());
+		for (XXServiceResourceElement resElement : resElementList) {
+			List<String> resValueMapList = daoMgr.getXXServiceResourceElementValue().findValuesByResElementId(resElement.getId());
 
-			XXResourceDef xResDef = daoMgr.getXXResourceDef().getById(resValue.getResDefId());
+			XXResourceDef xResDef = daoMgr.getXXResourceDef().getById(resElement.getResDefId());
 
 			RangerPolicyResource policyRes = new RangerPolicyResource();
-			policyRes.setIsExcludes(resValue.getIsExcludes());
-			policyRes.setIsRecursive(resValue.getIsRecursive());
+			policyRes.setIsExcludes(resElement.getIsExcludes());
+			policyRes.setIsRecursive(resElement.getIsRecursive());
 			policyRes.setValues(resValueMapList);
 
 			resourceSpec.put(xResDef.getName(), policyRes);
@@ -95,17 +95,17 @@ public abstract class RangerTaggedResourceServiceBase<T extends XXTaggedResource
 	}
 
 	@SuppressWarnings("unchecked")
-	public PList<RangerServiceResource> searchRangerTaggedResources(SearchFilter searchFilter) {
+	public PList<RangerServiceResource> searchServiceResources(SearchFilter searchFilter) {
 		PList<RangerServiceResource> retList = new PList<RangerServiceResource>();
-		List<RangerServiceResource> taggedResList = new ArrayList<RangerServiceResource>();
+		List<RangerServiceResource> resourceList = new ArrayList<RangerServiceResource>();
 
-		List<XXTaggedResource> xTaggedResList = (List<XXTaggedResource>) searchRangerObjects(searchFilter, searchFields, sortFields, (PList<V>) retList);
+		List<XXServiceResource> xResourceList = (List<XXServiceResource>) searchRangerObjects(searchFilter, searchFields, sortFields, (PList<V>) retList);
 
-		for (XXTaggedResource xTaggedRes : xTaggedResList) {
-			RangerServiceResource taggedRes = populateViewBean((T) xTaggedRes);
-			taggedResList.add(taggedRes);
+		for (XXServiceResource xResource : xResourceList) {
+			RangerServiceResource taggedRes = populateViewBean((T) xResource);
+			resourceList.add(taggedRes);
 		}
-		retList.setList(taggedResList);
+		retList.setList(resourceList);
 		return retList;
 	}
 

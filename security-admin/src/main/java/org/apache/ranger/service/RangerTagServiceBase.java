@@ -20,16 +20,18 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.entity.XXDBBase;
-import org.apache.ranger.entity.XXTagAttributeDef;
+import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.plugin.model.RangerTag;
-import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +54,6 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
 		xObj.setGuid(guid);
-		xObj.setVersion(vObj.getVersion());
-		xObj.setIsEnabled(vObj.getIsEnabled());
 		xObj.setName(vObj.getName());
 		return xObj;
 	}
@@ -63,22 +63,25 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 	protected RangerTag mapEntityToViewBean(RangerTag vObj, XXTag xObj) {
 
 		vObj.setGuid(xObj.getGuid());
-		vObj.setVersion(xObj.getVersion());
-		vObj.setIsEnabled(xObj.getIsEnabled());
 		vObj.setName(xObj.getName());
+
+		Map<String, String> attributeValues = getAttributeValuesForTag(xObj);
+		vObj.setAttributeValues(attributeValues);
 
 		return vObj;
 	}
 
-	/**
-	 * @param xObj
-	 * @return
-	 */
-	public RangerTagDef.RangerTagAttributeDef populateRangerTagAttributeDef(XXTagAttributeDef xObj) {
-		RangerTagDef.RangerTagAttributeDef attrDef = new RangerTagDef.RangerTagAttributeDef();
-		attrDef.setName(xObj.getName());
-		attrDef.setType(xObj.getType());
-		return attrDef;
+	public Map<String, String> getAttributeValuesForTag(XXTag xtag) {
+		List<XXTagAttribute> tagAttrList = daoMgr.getXXTagAttribute().findByTagId(xtag.getId());
+		Map<String, String>  ret         = new HashMap<String, String>();
+
+		if(CollectionUtils.isNotEmpty(tagAttrList)) {
+			for (XXTagAttribute tagAttr : tagAttrList) {
+				ret.put(tagAttr.getName(), tagAttr.getValue());
+			}
+		}
+
+		return ret;
 	}
 
 	@SuppressWarnings("unchecked")

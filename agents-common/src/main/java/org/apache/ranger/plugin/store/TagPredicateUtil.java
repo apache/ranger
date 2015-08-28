@@ -38,21 +38,19 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		super.addPredicates(filter, predicates);
 
 		addPredicateForTagDefId(filter.getParam(SearchFilter.TAG_DEF_ID), predicates);
-		addPredicateForTagDefExternalId(filter.getParam(SearchFilter.TAG_DEF_EXTERNAL_ID), predicates);
+		addPredicateForTagDefGuid(filter.getParam(SearchFilter.TAG_DEF_GUID), predicates);
 		addPredicateForTagDefName(filter.getParam(SearchFilter.TAG_DEF_NAME), predicates);
 
 		addPredicateForTagId(filter.getParam(SearchFilter.TAG_ID), predicates);
-		addPredicateForTagExternalId(filter.getParam(SearchFilter.TAG_EXTERNAL_ID), predicates);
+		addPredicateForTagGuid(filter.getParam(SearchFilter.TAG_GUID), predicates);
 		addPredicateForTagName(filter.getParam(SearchFilter.TAG_NAME), predicates);
 
 		addPredicateForResourceId(filter.getParam(SearchFilter.TAG_RESOURCE_ID), predicates);
-		addPredicateForResourceExternalId(filter.getParam(SearchFilter.TAG_RESOURCE_EXTERNAL_ID), predicates);
+		addPredicateForResourceGuid(filter.getParam(SearchFilter.TAG_RESOURCE_GUID), predicates);
 		addPredicateForServiceResourceServiceName(filter.getParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME), predicates);
 		addPredicateForResourceSignature(filter.getParam(SearchFilter.TAG_RESOURCE_SIGNATURE), predicates);
 
 		addPredicateForTagResourceMapId(filter.getParam(SearchFilter.TAG_MAP_ID), predicates);
-		addPredicateForTagResourceMapResourceId(filter.getParam(SearchFilter.TAG_MAP_RESOURCE_ID), predicates);
-		addPredicateForTagResourceMapTagId(filter.getParam(SearchFilter.TAG_MAP_TAG_ID), predicates);
 	}
 
 	private Predicate addPredicateForTagDefId(final String id, List<Predicate> predicates) {
@@ -87,8 +85,8 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagDefExternalId(final String externalId, List<Predicate> predicates) {
-		if (externalId == null || StringUtils.isEmpty(externalId)) {
+	private Predicate addPredicateForTagDefGuid(final String guid, List<Predicate> predicates) {
+		if (StringUtils.isEmpty(guid)) {
 			return null;
 		}
 
@@ -105,7 +103,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 				if (object instanceof RangerTagDef) {
 					RangerTagDef tagDef = (RangerTagDef) object;
 
-					ret = StringUtils.equals(externalId, tagDef.getGuid());
+					ret = StringUtils.equals(guid, tagDef.getGuid());
 				}
 
 				return ret;
@@ -170,6 +168,9 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 					RangerTag tag = (RangerTag) object;
 
 					ret = StringUtils.equals(id, tag.getId().toString());
+				} else if (object instanceof RangerTagResourceMap) {
+					RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
+					ret = StringUtils.equals(id, tagResourceMap.getTagId().toString());
 				}
 
 				return ret;
@@ -183,8 +184,8 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagExternalId(final String externalId, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(externalId)) {
+	private Predicate addPredicateForTagGuid(final String guid, List<Predicate> predicates) {
+		if (StringUtils.isEmpty(guid)) {
 			return null;
 		}
 
@@ -201,7 +202,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 				if (object instanceof RangerTag) {
 					RangerTag tag = (RangerTag) object;
 
-					ret = StringUtils.equals(externalId, tag.getGuid());
+					ret = StringUtils.equals(guid, tag.getGuid());
 				}
 
 				return ret;
@@ -266,6 +267,10 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 					RangerServiceResource resource = (RangerServiceResource) object;
 
 					ret = StringUtils.equals(id, resource.getId().toString());
+				} else if(object instanceof RangerTagResourceMap) {
+					RangerTagResourceMap tagResourceMap = (RangerTagResourceMap)object;
+
+					ret = StringUtils.equals(id, tagResourceMap.getId().toString());
 				}
 
 				return ret;
@@ -279,7 +284,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForResourceExternalId(final String id, List<Predicate> predicates) {
+	private Predicate addPredicateForResourceGuid(final String id, List<Predicate> predicates) {
 		if (StringUtils.isEmpty(id)) {
 			return null;
 		}
@@ -392,68 +397,6 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 				if (object instanceof RangerTagResourceMap) {
 					RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
 					ret = StringUtils.equals(id, tagResourceMap.getId().toString());
-				}
-
-				return ret;
-			}
-		};
-
-		if (predicates != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
-	}
-
-	private Predicate addPredicateForTagResourceMapResourceId(final String resourceId, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(resourceId)) {
-			return null;
-		}
-
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-
-				boolean ret = false;
-
-				if (object == null) {
-					return ret;
-				}
-
-				if (object instanceof RangerTagResourceMap) {
-					RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
-					ret = StringUtils.equals(resourceId, tagResourceMap.getResourceId().toString());
-				}
-
-				return ret;
-			}
-		};
-
-		if (predicates != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
-	}
-
-	private Predicate addPredicateForTagResourceMapTagId(final String tagId, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(tagId)) {
-			return null;
-		}
-
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-
-				boolean ret = false;
-
-				if (object == null) {
-					return ret;
-				}
-
-				if (object instanceof RangerTagResourceMap) {
-					RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
-					ret = StringUtils.equals(tagId, tagResourceMap.getTagId().toString());
 				}
 
 				return ret;

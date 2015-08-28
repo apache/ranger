@@ -35,14 +35,10 @@ import org.apache.hadoop.fs.*;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.store.file.ServiceFileStore;
 import org.apache.ranger.plugin.store.file.TagFileStore;
-import org.apache.ranger.plugin.store.rest.ServiceRESTStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -201,8 +197,8 @@ public class TestTagStore {
 	@Test
 	public void testTagStore_serviceresource() throws Exception {
 
-		String externalId = "GUID_SERVICERESOURCE_TEST";
-		String newExternalId = "NEW_GUID_SERVICERESOURCE_TEST";
+		String guid = "GUID_SERVICERESOURCE_TEST";
+		String newGuid = "NEW_GUID_SERVICERESOURCE_TEST";
 
 		Map<String, RangerPolicyResource> resourceResources = new HashMap<String, RangerPolicyResource>();
 
@@ -217,7 +213,7 @@ public class TestTagStore {
 		RangerServiceResource serviceResource = new RangerServiceResource();
 		serviceResource.setServiceName(serviceName);
 		serviceResource.setResourceSpec(resourceResources);
-		serviceResource.setGuid(externalId);
+		serviceResource.setGuid(guid);
 
 		validator.preCreateServiceResource(serviceResource);
 		RangerServiceResource createdServiceResource = tagStore.createServiceResource(serviceResource);
@@ -229,7 +225,7 @@ public class TestTagStore {
 
 		assertEquals("createServiceResource() failed", initServiceResourceCount + 1, serviceResources == null ? 0 : serviceResources.size());
 
-		createdServiceResource.setGuid(newExternalId);
+		createdServiceResource.setGuid(newGuid);
 		validator.preUpdateServiceResourceById(createdServiceResource.getId(), createdServiceResource);
 		RangerServiceResource updatedServiceResource = tagStore.updateServiceResource(createdServiceResource);
 
@@ -259,15 +255,15 @@ public class TestTagStore {
 
 		String tagName = "ssn";
 
-		String externalResourceId = "GUID_SERVICERESOURCE_TEST";
-		String externalTagId = "GUID_TAG_TEST";
+		String resourceGuid = "GUID_SERVICERESOURCE_TEST";
+		String tagGuid = "GUID_TAG_TEST";
 
 		List<RangerTag> tags = tagStore.getTags(filter);
 
 		int initTagCount = tags == null ? 0 : tags.size();
 
 		RangerTag tag = new RangerTag(tagName, new HashMap<String, String>());
-		tag.setGuid(externalTagId);
+		tag.setGuid(tagGuid);
 
 		validator.preCreateTag(tag);
 		RangerTag createdTag = tagStore.createTag(tag);
@@ -291,7 +287,7 @@ public class TestTagStore {
 		serviceResource.setServiceName(serviceName);
 		serviceResource.setResourceSpec(resourceResources);
 
-		serviceResource.setGuid(externalResourceId);
+		serviceResource.setGuid(resourceGuid);
 		validator.preCreateServiceResource(serviceResource);
 		RangerServiceResource createdServiceResource = tagStore.createServiceResource(serviceResource);
 
@@ -303,7 +299,7 @@ public class TestTagStore {
 
 		// Now create map
 
-		RangerTagResourceMap tagResourceMap = validator.preCreateTagResourceMap(externalResourceId, externalTagId);
+		RangerTagResourceMap tagResourceMap = validator.preCreateTagResourceMap(tagGuid, resourceGuid);
 
 		RangerTagResourceMap createdTagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
 
@@ -315,7 +311,7 @@ public class TestTagStore {
 		assertTrue("No tagged resources found!", CollectionUtils.isNotEmpty(resourceList) && CollectionUtils.size(resourceList) == 1);
 
 		// Delete all created entities
-		RangerTagResourceMap map = validator.preDeleteTagResourceMap(externalResourceId, externalTagId);
+		RangerTagResourceMap map = validator.preDeleteTagResourceMap(tagGuid, resourceGuid);
 		tagStore.deleteTagResourceMapById(map.getId());
 
 		validator.preDeleteServiceResourceById(createdServiceResource.getId());

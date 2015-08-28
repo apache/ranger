@@ -38,11 +38,12 @@ import java.util.Map;
 public  class RangerTag extends RangerBaseModelObject {
 	private static final long serialVersionUID = 1L;
 
-	private String name;
+	private String              name;
 	private Map<String, String> attributeValues;
 
 	public RangerTag(String guid, String name, Map<String, String> attributeValues) {
 		super();
+
 		setGuid(guid);
 		setName(name);
 		setAttributeValues(attributeValues);
@@ -82,10 +83,10 @@ public  class RangerTag extends RangerBaseModelObject {
 	}
 
 	public StringBuilder toString(StringBuilder sb) {
+		sb.append("RangerTag={");
 
-		sb.append("{ ");
+		super.toString(sb);
 
-		sb.append("guid={").append(getGuid()).append("} ");
 		sb.append("name={").append(name).append("} ");
 
 		sb.append("attributeValues={");

@@ -19,11 +19,17 @@
 
 package org.apache.ranger.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXTagDef;
+import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +38,7 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
 
 	public RangerTagDefService() {
 		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.TAG_DEF_GUID, "obj.guid", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_DEF_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
 	}
 	
@@ -45,8 +52,61 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
 
 	}
 
+	@Override
+	public RangerTagDef postUpdate(XXTagDef tagDef) {
+		RangerTagDef ret = super.postUpdate(tagDef);
+
+		daoMgr.getXXTagDef().updateServiceForTagDefUpdate(tagDef.getId(), tagDef.getUpdateTime());
+
+		return ret;
+	}
+
 	public RangerTagDef getPopulatedViewObject(XXTagDef xObj) {
 		return populateViewBean(xObj);
 	}
 
+	public RangerTagDef getTagDefByGuid(String guid) {
+		RangerTagDef ret = null;
+
+		XXTagDef xxTagDef = daoMgr.getXXTagDef().findByGuid(guid);
+		
+		if(xxTagDef != null) {
+			ret = populateViewBean(xxTagDef);
+		}
+
+		return ret;
+	}
+
+	public List<RangerTagDef> getTagDefsByName(String name) {
+		List<RangerTagDef> ret = new ArrayList<RangerTagDef>();
+
+		List<XXTagDef> xxTagDefs = daoMgr.getXXTagDef().findByName(name);
+		
+		if(CollectionUtils.isNotEmpty(xxTagDefs)) {
+			for(XXTagDef xxTagDef : xxTagDefs) {
+				RangerTagDef tagDef = populateViewBean(xxTagDef);
+				
+				ret.add(tagDef);
+			}
+		}
+
+		return ret;
+	}
+
+	public List<RangerTagDef> getTagDefsByServiceId(Long serviceId) {
+		List<RangerTagDef> ret = new ArrayList<RangerTagDef>();
+
+		List<XXTagDef> xxTagDefs = daoMgr.getXXTagDef().findByServiceId(serviceId);
+		
+		if(CollectionUtils.isNotEmpty(xxTagDefs)) {
+			for(XXTagDef xxTagDef : xxTagDefs) {
+				RangerTagDef tagDef = populateViewBean(xxTagDef);
+				
+				ret.add(tagDef);
+			}
+		}
+
+		return ret;
+	}
+	
 }

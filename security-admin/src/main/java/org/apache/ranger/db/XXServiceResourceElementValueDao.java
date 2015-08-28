@@ -25,35 +25,34 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXTaggedResourceValue;
-import org.apache.ranger.entity.XXTaggedResourceValueMap;
+import org.apache.ranger.entity.XXServiceResourceElementValue;
 
-public class XXTaggedResourceValueMapDao extends BaseDao<XXTaggedResourceValueMap> {
+public class XXServiceResourceElementValueDao extends BaseDao<XXServiceResourceElementValue> {
 
-	public XXTaggedResourceValueMapDao(RangerDaoManagerBase daoManager) {
+	public XXServiceResourceElementValueDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
 
-	public List<XXTaggedResourceValueMap> findByResValueId(Long resValueId) {
-		if (resValueId == null) {
-			return new ArrayList<XXTaggedResourceValueMap>();
+	public List<XXServiceResourceElementValue> findByResValueId(Long resElementId) {
+		if (resElementId == null) {
+			return new ArrayList<XXServiceResourceElementValue>();
 		}
 		try {
-			return getEntityManager().createNamedQuery("XXTaggedResourceValueMap.findByResValueId", tClass)
-					.setParameter("resValueId", resValueId).getResultList();
+			return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findByResElementId", tClass)
+					.setParameter("resElementId", resElementId).getResultList();
 		} catch (NoResultException e) {
-			return new ArrayList<XXTaggedResourceValueMap>();
+			return new ArrayList<XXServiceResourceElementValue>();
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	public List<String> findValuesByResValueId(Long resValueId) {
-		if (resValueId == null) {
+	public List<String> findValuesByResElementId(Long resElementId) {
+		if (resElementId == null) {
 			return new ArrayList<String>();
 		}
 		try {
-			return getEntityManager().createNamedQuery("XXTaggedResourceValueMap.findValuesByResValueId")
-					.setParameter("resValueId", resValueId).getResultList();
+			return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findValuesByResElementId")
+					.setParameter("resElementId", resElementId).getResultList();
 		} catch (NoResultException e) {
 			return new ArrayList<String>();
 		}

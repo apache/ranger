@@ -20,15 +20,6 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.SearchField.DATA_TYPE;
-import org.apache.ranger.common.SearchField.SEARCH_TYPE;
-import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.entity.XXContextEnricherDef;
-import org.apache.ranger.entity.XXAccessTypeDef;
-import org.apache.ranger.entity.XXEnumDef;
-import org.apache.ranger.entity.XXPolicyConditionDef;
-import org.apache.ranger.entity.XXResourceDef;
-import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceDefBase;
 import org.apache.ranger.plugin.model.RangerServiceDef;

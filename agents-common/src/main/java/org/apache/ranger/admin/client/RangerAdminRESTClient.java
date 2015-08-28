@@ -222,7 +222,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<==> RangerAdminRESTClient.getTaggedResources(" + lastKnownVersion + "): ");
+			LOG.debug("<== RangerAdminRESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + "): ");
 		}
 
 		return ret;

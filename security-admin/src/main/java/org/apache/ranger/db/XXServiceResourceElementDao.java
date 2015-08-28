@@ -25,24 +25,24 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXTaggedResourceValue;
+import org.apache.ranger.entity.XXServiceResourceElement;
 
-public class XXTaggedResourceValueDao extends BaseDao<XXTaggedResourceValue> {
+public class XXServiceResourceElementDao extends BaseDao<XXServiceResourceElement> {
 
-	public XXTaggedResourceValueDao(RangerDaoManagerBase daoManager) {
+	public XXServiceResourceElementDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
 
-	public List<XXTaggedResourceValue> findByTaggedResId(Long taggedResId) {
-		if (taggedResId == null) {
-			return new ArrayList<XXTaggedResourceValue>();
+	public List<XXServiceResourceElement> findByResourceId(Long resourceId) {
+		if (resourceId == null) {
+			return new ArrayList<XXServiceResourceElement>();
 		}
 		try {
-			return getEntityManager().createNamedQuery("XXTaggedResourceValue.findByTaggedResId", tClass)
-					.setParameter("taggedResId", taggedResId)
+			return getEntityManager().createNamedQuery("XXServiceResourceElement.findByResourceId", tClass)
+					.setParameter("resourceId", resourceId)
 					.getResultList();
 		} catch (NoResultException e) {
-			return new ArrayList<XXTaggedResourceValue>();
+			return new ArrayList<XXServiceResourceElement>();
 		}
 	}
 

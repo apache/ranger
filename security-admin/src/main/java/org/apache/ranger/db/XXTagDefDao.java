@@ -20,6 +20,7 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
@@ -32,6 +33,19 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 
 	public XXTagDefDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
+	}
+
+	public XXTagDef findByGuid(String guid) {
+		if (StringUtils.isEmpty(guid)) {
+			return null;
+		}
+
+		try {
+			return getEntityManager().createNamedQuery("XXTagDef.findByGuid", tClass)
+					.setParameter("guid", guid).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
 	}
 
 	public List<XXTagDef> findByName(String name) {
@@ -47,4 +61,35 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 		}
 	}
 
+	public List<XXTagDef> findByServiceId(Long serviceId) {
+		if (serviceId == null) {
+			return new ArrayList<XXTagDef>();
+		}
+
+		try {
+			return getEntityManager().createNamedQuery("XXTagDef.findByServiceId", tClass)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagDef>();
+		}
+	}
+
+	public void updateServiceForTagDefUpdate(Long tagDefId, Date updateTime) {
+		if (tagDefId == null) {
+			return;
+		}
+
+		if(updateTime == null) {
+			updateTime = new Date();
+		}
+
+		try {
+			getEntityManager().createNamedQuery("XXTagDef.updateTagVersionInService", tClass)
+					.setParameter("tagDefId", tagDefId)
+					.setParameter("tagUpdateTime", updateTime)
+					.executeUpdate();
+		} catch (NoResultException e) {
+			return;
+		}
+	}
 }

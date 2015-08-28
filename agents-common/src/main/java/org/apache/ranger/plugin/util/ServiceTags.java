@@ -44,13 +44,13 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class ServiceTags implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String serviceName;
-	private Long               tagVersion;
-	private Date               tagUpdateTime;
-	Map<Long, RangerTagDef> tagDefinitions;
-	Map<Long, RangerTag> tags;
-	List<RangerServiceResource> serviceResources;
-	Map<Long, List<Long>> resourceToTagIds;
+	private String                      serviceName;
+	private Long                        tagVersion;
+	private Date                        tagUpdateTime;
+	private Map<Long, RangerTagDef>     tagDefinitions;
+	private Map<Long, RangerTag>        tags;
+	private List<RangerServiceResource> serviceResources;
+	private Map<Long, List<Long>>       resourceToTagIds;
 
 	/**
 	 * @return the serviceName

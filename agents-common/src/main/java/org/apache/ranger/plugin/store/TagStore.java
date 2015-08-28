@@ -35,6 +35,7 @@ public interface TagStore {
 
     void setServiceStore(ServiceStore svcStore);
 
+
     RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception;
 
     RangerTagDef updateTagDef(RangerTagDef TagDef) throws Exception;
@@ -43,13 +44,16 @@ public interface TagStore {
 
 	void deleteTagDefById(Long id) throws Exception;
 
-	List<RangerTagDef> getTagDef(String name) throws Exception;
-
     RangerTagDef getTagDefById(Long id) throws Exception;
+
+    RangerTagDef getTagDefByGuid(String guid) throws Exception;
+
+	List<RangerTagDef> getTagDefsByName(String name) throws Exception;
 
     List<RangerTagDef> getTagDefs(SearchFilter filter) throws Exception;
 
     PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception;
+
 
     RangerTag createTag(RangerTag tag) throws Exception;
 
@@ -59,11 +63,18 @@ public interface TagStore {
 
     RangerTag getTagById(Long id) throws Exception;
 
+    RangerTag getTagByGuid(String guid) throws Exception;
+
     List<RangerTag> getTagsByName(String name) throws Exception;
 
-    List<RangerTag> getTagsByExternalId(String externalId) throws Exception;
+    List<RangerTag> getTagsForResourceId(Long resourceId) throws Exception;
+
+    List<RangerTag> getTagsForResourceGuid(String resourceGuid) throws Exception;
 
     List<RangerTag> getTags(SearchFilter filter) throws Exception;
+
+    PList<RangerTag> getPaginatedTags(SearchFilter filter) throws Exception;
+
 
     RangerServiceResource createServiceResource(RangerServiceResource resource) throws Exception;
 
@@ -71,40 +82,43 @@ public interface TagStore {
 
     void deleteServiceResourceById(Long id) throws Exception;
 
-    List<RangerServiceResource> getServiceResourcesByExternalId(String externalId) throws Exception;
-
     RangerServiceResource getServiceResourceById(Long id) throws Exception;
+
+    RangerServiceResource getServiceResourceByGuid(String guid) throws Exception;
 
     List<RangerServiceResource> getServiceResourcesByServiceAndResourceSpec(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception;
 
     List<RangerServiceResource> getServiceResources(SearchFilter filter) throws Exception;
 
+    PList<RangerServiceResource> getPaginatedServiceResources(SearchFilter filter) throws Exception;
+
+
     RangerTagResourceMap createTagResourceMap(RangerTagResourceMap tagResourceMap) throws Exception;
 
     void deleteTagResourceMapById(Long id) throws Exception;
 
-    List<RangerTagResourceMap> getTagResourceMap(String externalResourceId, String externalTagId) throws Exception;
-
     RangerTagResourceMap getTagResourceMapById(Long id) throws Exception;
 
-    List<RangerTagResourceMap> getTagResourceMapsByTagId(Long tagId) throws Exception;
+    List<RangerTagResourceMap> getTagResourceMapsForTagId(Long tagId) throws Exception;
 
-    List<RangerTagResourceMap> getTagResourceMapsByResourceId(Long resourceId) throws Exception;
+    List<RangerTagResourceMap> getTagResourceMapsForTagGuid(String tagGuid) throws Exception;
+
+    List<RangerTagResourceMap> getTagResourceMapsForResourceId(Long resourceId) throws Exception;
+
+    List<RangerTagResourceMap> getTagResourceMapsForResourceGuid(String resourceGuid) throws Exception;
+
+    RangerTagResourceMap getTagResourceMapForTagAndResourceId(Long tagId, Long resourceId) throws Exception;
+
+    RangerTagResourceMap getTagResourceMapForTagAndResourceGuid(String tagGuid, String resourceGuid) throws Exception;
 
     List<RangerTagResourceMap> getTagResourceMaps(SearchFilter filter) throws Exception;
 
-    ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
-
     PList<RangerTagResourceMap> getPaginatedTagResourceMaps(SearchFilter filter) throws Exception;
+
+
+    ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
 
     List<String> getTags(String serviceName) throws Exception;
 
     List<String> lookupTags(String serviceName, String tagNamePattern) throws Exception;
-
-    List<RangerTag> getTagsForServiceResource(Long resourceId) throws Exception;
-
-    List<RangerTag> getTagsForServiceResourceByExtId(String resourceExtId) throws Exception;
-
-    List<RangerTagDef> getTagDefsByExternalId(String extId) throws Exception;
-
 }

@@ -35,14 +35,14 @@ import org.apache.ranger.common.AppConstants;
 
 @Entity
 @Cacheable
-@Table(name="x_tagged_resource_value")
+@Table(name="x_service_resource_element")
 @XmlRootElement
-public class XXTaggedResourceValue extends XXDBBase implements Serializable {
+public class XXServiceResourceElement extends XXDBBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name = "XXTaggedResourceValueSEQ", sequenceName = "XXTaggedResourceValueSEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "XXTaggedResourceValueSEQ")
+	@SequenceGenerator(name = "XXServiceResourceElementSEQ", sequenceName = "XXServiceResourceElementSEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "XXServiceResourceElementSEQ")
 	@Column(name = "id")
 	protected Long id;
 
@@ -52,8 +52,8 @@ public class XXTaggedResourceValue extends XXDBBase implements Serializable {
 	@Column(name = "res_def_id")
 	protected Long resDefId;
 
-	@Column(name = "tagged_res_id")
-	protected Long taggedResourceId;
+	@Column(name = "res_id")
+	protected Long resourceId;
 
 	@Column(name = "is_excludes")
 	protected Boolean isExcludes;
@@ -132,23 +132,23 @@ public class XXTaggedResourceValue extends XXDBBase implements Serializable {
 	}
 
 	/**
-	 * @return the taggedResourceId
+	 * @return the resourceId
 	 */
-	public Long getTaggedResourceId() {
-		return taggedResourceId;
+	public Long getResourceId() {
+		return resourceId;
 	}
 
 	/**
-	 * @param taggedResourceId
-	 *            the taggedResourceId to set
+	 * @param resourceId
+	 *            the resourceId to set
 	 */
-	public void setTaggedResourceId(Long taggedResourceId) {
-		this.taggedResourceId = taggedResourceId;
+	public void setResourceId(Long resourceId) {
+		this.resourceId = resourceId;
 	}
 
 	@Override
 	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE;
+		return AppConstants.CLASS_TYPE_XA_SERVICE_RESOURCE_ELEMENT;
 	}
 
 	/*
@@ -165,7 +165,7 @@ public class XXTaggedResourceValue extends XXDBBase implements Serializable {
 		result = prime * result + ((isExcludes == null) ? 0 : isExcludes.hashCode());
 		result = prime * result + ((isRecursive == null) ? 0 : isRecursive.hashCode());
 		result = prime * result + ((resDefId == null) ? 0 : resDefId.hashCode());
-		result = prime * result + ((taggedResourceId == null) ? 0 : taggedResourceId.hashCode());
+		result = prime * result + ((resourceId == null) ? 0 : resourceId.hashCode());
 		return result;
 	}
 
@@ -182,7 +182,7 @@ public class XXTaggedResourceValue extends XXDBBase implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		XXTaggedResourceValue other = (XXTaggedResourceValue) obj;
+		XXServiceResourceElement other = (XXServiceResourceElement) obj;
 		if (guid == null) {
 			if (other.guid != null)
 				return false;
@@ -208,10 +208,10 @@ public class XXTaggedResourceValue extends XXDBBase implements Serializable {
 				return false;
 		} else if (!resDefId.equals(other.resDefId))
 			return false;
-		if (taggedResourceId == null) {
-			if (other.taggedResourceId != null)
+		if (resourceId == null) {
+			if (other.resourceId != null)
 				return false;
-		} else if (!taggedResourceId.equals(other.taggedResourceId))
+		} else if (!resourceId.equals(other.resourceId))
 			return false;
 		return true;
 	}
@@ -234,7 +234,7 @@ public class XXTaggedResourceValue extends XXDBBase implements Serializable {
 		sb.append("id={").append(id).append("} ");
 		sb.append("guid={").append(guid).append("} ");
 		sb.append("resDefId={").append(resDefId).append("} ");
-		sb.append("taggedResourceId={").append(taggedResourceId).append("} ");
+		sb.append("resourceId={").append(resourceId).append("} ");
 		sb.append("isExcludes={").append(isExcludes).append("} ");
 		sb.append("isRecursive={").append(isRecursive).append("} ");
 		sb.append(" }");

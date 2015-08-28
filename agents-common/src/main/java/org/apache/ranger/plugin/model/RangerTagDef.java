@@ -102,6 +102,7 @@ public class RangerTagDef extends RangerBaseModelObject {
     @XmlAccessorType(XmlAccessType.FIELD)
 
     public static class RangerTagAttributeDef implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
 
         private String name = null;
         private String type = null;

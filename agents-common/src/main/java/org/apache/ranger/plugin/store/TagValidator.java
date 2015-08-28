@@ -57,21 +57,18 @@ public class TagValidator {
 		tag.setId(exist.getId());
 	}
 
-	public void preUpdateTagByExternalId(String externalId, final RangerTag tag) throws Exception {
+	public void preUpdateTagByGuid(String guid, final RangerTag tag) throws Exception {
 		if (StringUtils.isBlank(tag.getName())) {
 			throw new Exception("Tag has no name");
 		}
 
-		List<RangerTag> exist = tagStore.getTagsByExternalId(externalId);
-		if (CollectionUtils.isEmpty(exist) || CollectionUtils.size(exist) != 1) {
-			throw new Exception("Attempt to update nonexistent or multiple tags, externalId=" + externalId);
+		RangerTag existing = tagStore.getTagByGuid(guid);
+		if (existing == null) {
+			throw new Exception("Attempt to update nonexistent tag, guid=" + guid);
 		}
 
-		RangerTag onlyTag = exist.get(0);
-
-		tag.setId(onlyTag.getId());
-		tag.setGuid(externalId);
-
+		tag.setId(existing.getId());
+		tag.setGuid(existing.getGuid());
 	}
 
 	public void preUpdateTagByName(String name, final RangerTag tag) throws Exception {
@@ -98,26 +95,24 @@ public class TagValidator {
 			throw new Exception("Attempt to delete nonexistent tag, id=" + id);
 		}
 
-		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsByTagId(exist.getId());
+		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsForTagId(exist.getId());
 		if (CollectionUtils.isNotEmpty(associations)) {
 			throw new Exception("Attempt to delete tag which is associated with a service-resource, id=" + id);
 		}
 		return exist;
 	}
 
-	public RangerTag preDeleteTagByExternalId(String externalId) throws Exception {
-		List<RangerTag> exist;
-		exist = tagStore.getTagsByExternalId(externalId);
-		if (CollectionUtils.isEmpty(exist) || CollectionUtils.size(exist) != 1) {
-			throw new Exception("Attempt to delete nonexistent or multiple tags, externalId=" + externalId);
+	public RangerTag preDeleteTagByGuid(String guid) throws Exception {
+		RangerTag exiting = tagStore.getTagByGuid(guid);
+		if (exiting == null) {
+			throw new Exception("Attempt to delete nonexistent tag, guid=" + guid);
 		}
 
-		RangerTag ret = exist.get(0);
-		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsByTagId(ret.getId());
+		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsForTagId(exiting.getId());
 		if (CollectionUtils.isNotEmpty(associations)) {
-			throw new Exception("Attempt to delete tag which is associated with a service-resource, externalId=" + externalId);
+			throw new Exception("Attempt to delete tag which is associated with a service-resource, guid=" + guid);
 		}
-		return ret;
+		return exiting;
 	}
 
 	public RangerTag preDeleteTagByName(String name) throws Exception {
@@ -127,7 +122,7 @@ public class TagValidator {
 			throw new Exception("Attempt to delete nonexistent or multiple tags, name=" + name);
 		}
 		RangerTag ret = exist.get(0);
-		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsByTagId(ret.getId());
+		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsForTagId(ret.getId());
 		if (CollectionUtils.isNotEmpty(associations)) {
 			throw new Exception("Attempt to delete tag which is associated with a service-resource, name=" + name);
 		}
@@ -173,23 +168,20 @@ public class TagValidator {
 
 	}
 
-	public void preUpdateServiceResourceByExternalId(String externalId, RangerServiceResource resource) throws Exception {
+	public void preUpdateServiceResourceByGuid(String guid, RangerServiceResource resource) throws Exception {
 		if (StringUtils.isBlank(resource.getServiceName())
 				|| resource.getResourceSpec() == null
 				|| CollectionUtils.size(resource.getResourceSpec()) == 0) {
 			throw new Exception("No serviceName or resourceSpec in RangerServiceResource");
 		}
 
-		List<RangerServiceResource> exist;
-		exist = tagStore.getServiceResourcesByExternalId(externalId);
-		if (CollectionUtils.isEmpty(exist) || CollectionUtils.size(exist) != 1) {
-			throw new Exception("Attempt to update nonexistent or multiple resources, externalId=" + externalId);
+		RangerServiceResource existing = tagStore.getServiceResourceByGuid(guid);
+		if (existing == null) {
+			throw new Exception("Attempt to update nonexistent resource, guid=" + guid);
 		}
 
-		RangerServiceResource onlyResource = exist.get(0);
-
-		resource.setId(onlyResource.getId());
-		resource.setGuid(externalId);
+		resource.setId(existing.getId());
+		resource.setGuid(guid);
 
 		RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
 		resource.setResourceSignature(serializer.getSignature());
@@ -201,60 +193,60 @@ public class TagValidator {
 		if (exist == null) {
 			throw new Exception("Attempt to delete nonexistent resource, id=" + id);
 		}
-		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsByResourceId(exist.getId());
+		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsForResourceId(exist.getId());
 		if (CollectionUtils.isNotEmpty(associations)) {
 			throw new Exception("Attempt to delete serviceResource which is associated with a tag, id=" + id);
 		}
 		return exist;
 	}
 
-	public RangerServiceResource preDeleteServiceResourceByExternalId(String externalId) throws Exception {
-		List<RangerServiceResource> exist;
-		exist = tagStore.getServiceResourcesByExternalId(externalId);
-		if (CollectionUtils.isEmpty(exist) || CollectionUtils.size(exist) != 1) {
-			throw new Exception("Attempt to delete nonexistent or multiple resources, externalId=" + externalId);
+	public RangerServiceResource preDeleteServiceResourceByGuid(String guid) throws Exception {
+		RangerServiceResource existing = tagStore.getServiceResourceByGuid(guid);
+		if (existing == null) {
+			throw new Exception("Attempt to delete nonexistent resource, guid=" + guid);
 		}
-		RangerServiceResource ret = exist.get(0);
-		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsByResourceId(ret.getId());
+		List<RangerTagResourceMap> associations = tagStore.getTagResourceMapsForResourceId(existing.getId());
 		if (CollectionUtils.isNotEmpty(associations)) {
-			throw new Exception("Attempt to delete serviceResource which is associated with a tag, externalId=" + externalId);
+			throw new Exception("Attempt to delete serviceResource which is associated with a tag, guid=" + guid);
 		}
-		return ret;
+		return existing;
 	}
 
-	public RangerTagResourceMap preCreateTagResourceMap(String externalResourceId, String externalTagId) throws Exception {
-		if (StringUtils.isBlank(externalResourceId) || StringUtils.isBlank(externalTagId)) {
-			throw new Exception("Both externalResourceId and internalResourceId need to be non-empty");
+	public RangerTagResourceMap preCreateTagResourceMap(String tagGuid, String resourceGuid) throws Exception {
+		if (StringUtils.isBlank(resourceGuid) || StringUtils.isBlank(tagGuid)) {
+			throw new Exception("Both resourceGuid and resourceId need to be non-empty");
 		}
 
-		List<RangerTagResourceMap> exist;
-		exist = tagStore.getTagResourceMap(externalResourceId, externalTagId);
-		if (CollectionUtils.isNotEmpty(exist)) {
-			throw new Exception("Attempt to create existing association between resourceId=" + externalResourceId + " and tagId=" + externalTagId);
+		RangerTagResourceMap exist = tagStore.getTagResourceMapForTagAndResourceGuid(tagGuid, resourceGuid);
+		if (exist != null) {
+			throw new Exception("Attempt to create existing association between resourceId=" + resourceGuid + " and tagId=" + tagGuid);
 		}
-		List<RangerServiceResource> existingServiceResources = tagStore.getServiceResourcesByExternalId(externalResourceId);
-		List<RangerTag> existingTags = tagStore.getTagsByExternalId(externalTagId);
 
-		if (CollectionUtils.isNotEmpty(existingServiceResources) && CollectionUtils.size(existingServiceResources) == 1) {
-			if (CollectionUtils.isNotEmpty(existingTags) && CollectionUtils.size(existingTags) == 1) {
-				RangerTagResourceMap newTagResourceMap = new RangerTagResourceMap();
-				newTagResourceMap.setResourceId(existingServiceResources.get(0).getId());
-				newTagResourceMap.setTagId(existingTags.get(0).getId());
-				return newTagResourceMap;
-			} else {
-				throw new Exception("No unique tag found for externalId=" + externalTagId);
-			}
-		} else {
-			throw new Exception("No unique resource found for externalId=" + externalResourceId);
+		RangerServiceResource existingServiceResource = tagStore.getServiceResourceByGuid(resourceGuid);
+
+		if(existingServiceResource == null) {
+			throw new Exception("No resource found for guid=" + resourceGuid);
 		}
+
+		RangerTag existingTag = tagStore.getTagByGuid(tagGuid);
+
+		if(existingTag == null) {
+			throw new Exception("No tag found for guid=" + tagGuid);
+		}
+
+		RangerTagResourceMap newTagResourceMap = new RangerTagResourceMap();
+		newTagResourceMap.setResourceId(existingServiceResource.getId());
+		newTagResourceMap.setTagId(existingTag.getId());
+
+		return newTagResourceMap;
 	}
 
-	public RangerTagResourceMap preDeleteTagResourceMap(String externalResourceId, String externalTagId) throws Exception {
-		List<RangerTagResourceMap> exist;
-		exist = tagStore.getTagResourceMap(externalResourceId, externalTagId);
-		if (CollectionUtils.isEmpty(exist) || CollectionUtils.size(exist) != 1) {
-			throw new Exception("Attempt to create nonexistent association between resourceId=" + externalResourceId + " and tagId=" + externalTagId);
+	public RangerTagResourceMap preDeleteTagResourceMap(String tagGuid, String resourceGuid) throws Exception {
+		RangerTagResourceMap existing = tagStore.getTagResourceMapForTagAndResourceGuid(tagGuid, resourceGuid);
+		if (existing == null) {
+			throw new Exception("Attempt to delete nonexistent association between resourceId=" + resourceGuid + " and tagId=" + tagGuid);
 		}
-		return exist.get(0);
+
+		return existing;
 	}
 }

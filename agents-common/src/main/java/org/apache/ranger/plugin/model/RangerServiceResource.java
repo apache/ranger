@@ -43,15 +43,15 @@ public class RangerServiceResource extends RangerBaseModelObject {
 	private String resourceSignature = null;
 
 
-	public RangerServiceResource(String externalId, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec, String resourceSignature) {
+	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec, String resourceSignature) {
 		super();
-		setGuid(externalId);
+		setGuid(guid);
 		setServiceName(serviceName);
 		setResourceSpec(resourceSpec);
 		setResourceSignature(resourceSignature);
 	}
-	public RangerServiceResource(String externalId, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
-		this(externalId, serviceName, resourceSpec, null);
+	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
+		this(guid, serviceName, resourceSpec, null);
 	}
 	public RangerServiceResource(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
 		this(null, serviceName, resourceSpec, null);
@@ -94,7 +94,7 @@ public class RangerServiceResource extends RangerBaseModelObject {
 
 		sb.append("{ ");
 
-		sb.append("externalId={").append(getGuid()).append("} ");
+		sb.append("guid={").append(getGuid()).append("} ");
 		sb.append("serviceName={").append(serviceName).append("} ");
 
 		sb.append("resourceSpec={");

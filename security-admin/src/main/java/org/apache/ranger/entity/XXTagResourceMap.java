@@ -52,8 +52,8 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
 	@Column(name = "tag_id")
 	protected Long tagId;
 
-	@Column(name = "tagged_res_id")
-	protected Long taggedResId;
+	@Column(name = "res_id")
+	protected Long resourceId;
 
 	@Override
 	public void setId(Long id) {
@@ -96,18 +96,18 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
 	}
 
 	/**
-	 * @return the taggedResId
+	 * @return the resourceId
 	 */
-	public Long getTaggedResId() {
-		return taggedResId;
+	public Long getResourceId() {
+		return resourceId;
 	}
 
 	/**
-	 * @param taggedResId
-	 *            the taggedResId to set
+	 * @param resourceId
+	 *            the resourceId to set
 	 */
-	public void setTaggedResId(Long taggedResId) {
-		this.taggedResId = taggedResId;
+	public void setResourceId(Long resourceId) {
+		this.resourceId = resourceId;
 	}
 
 	@Override
@@ -127,7 +127,7 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
 		result = prime * result + ((guid == null) ? 0 : guid.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((tagId == null) ? 0 : tagId.hashCode());
-		result = prime * result + ((taggedResId == null) ? 0 : taggedResId.hashCode());
+		result = prime * result + ((resourceId == null) ? 0 : resourceId.hashCode());
 		return result;
 	}
 
@@ -160,10 +160,10 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
 				return false;
 		} else if (!tagId.equals(other.tagId))
 			return false;
-		if (taggedResId == null) {
-			if (other.taggedResId != null)
+		if (resourceId == null) {
+			if (other.resourceId != null)
 				return false;
-		} else if (!taggedResId.equals(other.taggedResId))
+		} else if (!resourceId.equals(other.resourceId))
 			return false;
 		return true;
 	}
@@ -186,7 +186,7 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
 		sb.append("id={").append(id).append("} ");
 		sb.append("guid={").append(guid).append("} ");
 		sb.append("tagId={").append(tagId).append("} ");
-		sb.append("taggedResId={").append(taggedResId).append("} ");
+		sb.append("resourceId={").append(resourceId).append("} ");
 		sb.append(" }");
 
 		return sb;

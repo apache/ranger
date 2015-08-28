@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `x_tag_def` (
   `is_enabled` TINYINT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `guid_UNIQUE` (`guid` ASC),
+  INDEX `fk_X_TAG_DEF_NAME` (`name` ASC),
   INDEX `fk_X_TAG_DEF_ADDED_BY_ID` (`added_by_id` ASC),
   INDEX `fk_X_TAG_DEF_UPD_BY_ID` (`upd_by_id` ASC),
   CONSTRAINT `fk_X_TAG_DEF_ADDED_BY_ID`
@@ -61,17 +62,14 @@ CREATE TABLE IF NOT EXISTS `x_tag` (
   `update_time` DATETIME NULL,
   `added_by_id` BIGINT(20) NULL,
   `upd_by_id` BIGINT(20) NULL,
-  `tag_def_id` BIGINT(20) NULL,
-  `external_id` VARCHAR(512) NULL,
   `name` VARCHAR(512) NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_X_TAG_DEF_ID` (`tag_def_id` ASC),
+  INDEX `fk_X_TAG_NAME` (`name` ASC),
   INDEX `fk_X_TAG_ADDED_BY_ID` (`added_by_id` ASC),
   INDEX `fk_X_TAG_UPD_BY_ID` (`upd_by_id` ASC),
-  KEY `external_id` (`external_id`),
-  CONSTRAINT `fk_X_TAG_DEF_ID`
-    FOREIGN KEY (`tag_def_id`)
-    REFERENCES `x_tag_def` (`id`)
+  CONSTRAINT `fk_X_TAG_NAME`
+    FOREIGN KEY (`name`)
+    REFERENCES `x_tag_def` (`name`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_X_TAG_ADDED_BY_ID`
@@ -89,11 +87,11 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `x_tagged_resource`
+-- Table `x_service_resource`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_tagged_resource` ;
+DROP TABLE IF EXISTS `x_service_resource` ;
 
-CREATE TABLE IF NOT EXISTS `x_tagged_resource` (
+CREATE TABLE IF NOT EXISTS `x_service_resource` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
   `guid` VARCHAR(512) NOT NULL,
   `create_time` DATETIME NULL,
@@ -101,24 +99,23 @@ CREATE TABLE IF NOT EXISTS `x_tagged_resource` (
   `added_by_id` BIGINT(20) NULL,
   `upd_by_id` BIGINT(20) NULL,
   `version` BIGINT(20) NULL,
-  `external_id` VARCHAR(512) NULL,
   `service_id` BIGINT(20) NOT NULL,
+  `resource_signature` varchar(128) DEFAULT NULL,
   `is_enabled` TINYINT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
-  INDEX `fk_X_TAGGED_RESOURCE_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_TAGGED_RESOURCE_UPD_BY_ID` (`upd_by_id` ASC),
-  KEY `external_id` (`external_id`),
-  CONSTRAINT `fk_X_TAGGED_RESOURCE_SERVICE_ID`
+  INDEX `fk_X_SERVICE_RESOURCE_ADDED_BY_ID` (`added_by_id` ASC),
+  INDEX `fk_X_SERVICE_RESOURCE_UPD_BY_ID` (`upd_by_id` ASC),
+  CONSTRAINT `fk_X_SERVICE_RESOURCE_SERVICE_ID`
     FOREIGN KEY (`service_id`)
     REFERENCES `x_service` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAGGED_RESOURCE_ADDED_BY_ID`
+  CONSTRAINT `fk_X_SERVICE_RESOURCE_ADDED_BY_ID`
     FOREIGN KEY (`added_by_id`)
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAGGED_RESOURCE_UPD_BY_ID`
+  CONSTRAINT `fk_X_SERVICE_RESOURCE_UPD_BY_ID`
     FOREIGN KEY (`upd_by_id`)
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
@@ -127,40 +124,40 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `x_tagged_resource_value`
+-- Table `x_service_resource_element`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_tagged_resource_value` ;
+DROP TABLE IF EXISTS `x_service_resource_element` ;
 
-CREATE TABLE IF NOT EXISTS `x_tagged_resource_value` (
+CREATE TABLE IF NOT EXISTS `x_service_resource_element` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
   `guid` VARCHAR(512) NOT NULL,
   `create_time` DATETIME NULL,
   `update_time` DATETIME NULL,
   `added_by_id` BIGINT(20) NULL,
   `upd_by_id` BIGINT(20) NULL,
-  `tagged_res_id` BIGINT(20) NOT NULL,
+  `res_id` BIGINT(20) NOT NULL,
   `res_def_id` BIGINT(20) NOT NULL,
   `is_excludes` TINYINT(1) NULL DEFAULT false,
   `is_recursive` TINYINT(1) NULL DEFAULT false,
   PRIMARY KEY (`id`),
-  INDEX `fk_X_TAGGED_RESOURCE_VALUE_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_TAGGED_RESOURCE_VALUE_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_TAGGED_RESOURCE_VALUE_res_def_id` 
+  INDEX `fk_X_SERVICE_RESOURCE_ELEMENT_ADDED_BY_ID` (`added_by_id` ASC),
+  INDEX `fk_X_SERVICE_RESOURCE_ELEMENT_UPD_BY_ID` (`upd_by_id` ASC),
+  CONSTRAINT `fk_X_SERVICE_RESOURCE_ELEMENT_res_def_id` 
     FOREIGN KEY (`res_def_id`) 
     REFERENCES `x_resource_def` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAGGED_RESOURCE_VALUE_tagged_res_id` 
-    FOREIGN KEY (`tagged_res_id`) 
-    REFERENCES `x_tagged_resource` (`id`)
+  CONSTRAINT `fk_X_SERVICE_RESOURCE_ELEMENT_res_id` 
+    FOREIGN KEY (`res_id`) 
+    REFERENCES `x_service_resource` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAGGED_RESOURCE_VALUE_ADDED_BY_ID`
+  CONSTRAINT `fk_X_SERVICE_RESOURCE_ELEMENT_ADDED_BY_ID`
     FOREIGN KEY (`added_by_id`)
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAGGED_RESOURCE_VALUE_UPD_BY_ID`
+  CONSTRAINT `fk_X_SERVICE_RESOURCE_ELEMENT_UPD_BY_ID`
     FOREIGN KEY (`upd_by_id`)
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
@@ -254,10 +251,10 @@ CREATE TABLE IF NOT EXISTS `x_tag_resource_map` (
   `added_by_id` BIGINT(20) NULL,
   `upd_by_id` BIGINT(20) NULL,
   `tag_id` BIGINT(20) NOT NULL,
-  `tagged_res_id` BIGINT(20) NOT NULL,
+  `res_id` BIGINT(20) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_X_TAG_ID` (`tag_id` ASC),
-  INDEX `fk_X_TAGGED_RES_ID` (`tagged_res_id` ASC),
+  INDEX `fk_X_SERVICE_RES_ID` (`res_id` ASC),
   INDEX `fk_X_TAG_RES_MAP_ADDED_BY_ID` (`added_by_id` ASC),
   INDEX `fk_X_TAG_RES_MAP_UPD_BY_ID` (`upd_by_id` ASC),
   CONSTRAINT `fk_X_TAG_RES_MAP_TAG_ID`
@@ -265,9 +262,9 @@ CREATE TABLE IF NOT EXISTS `x_tag_resource_map` (
     REFERENCES `x_tag` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_RES_MAP_TAGGED_RES_ID`
-    FOREIGN KEY (`tagged_res_id`)
-    REFERENCES `x_tagged_resource` (`id`)
+  CONSTRAINT `fk_X_TAG_RES_MAP_SERVICE_RES_ID`
+    FOREIGN KEY (`res_id`)
+    REFERENCES `x_service_resource` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
   CONSTRAINT `fk_X_TAG_RES_MAP_ADDED_BY_ID`
@@ -284,35 +281,35 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `x_tagged_resource_value_map`
+-- Table `x_service_resource_element_value`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_tagged_resource_value_map` ;
+DROP TABLE IF EXISTS `x_service_resource_element_value` ;
 
-CREATE TABLE IF NOT EXISTS `x_tagged_resource_value_map` (
+CREATE TABLE IF NOT EXISTS `x_service_resource_element_value` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
   `guid` VARCHAR(512) NOT NULL,
   `create_time` DATETIME NULL,
   `update_time` DATETIME NULL,
   `added_by_id` BIGINT(20) NULL,
   `upd_by_id` BIGINT(20) NULL,
-  `res_value_id` BIGINT(20) NOT NULL,
+  `res_element_id` BIGINT(20) NOT NULL,
   `value` VARCHAR(512) NOT NULL,
   `sort_order` INT NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_X_RESOURCE_VALUE_ID` (`res_value_id` ASC),
-  INDEX `fk_X_TAGGED_RES_VAL_MAP_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_TAGGED_RES_VAL_MAP_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_RESOURCE_VALUE_ID`
-    FOREIGN KEY (`res_value_id`)
-    REFERENCES `x_tagged_resource_value` (`id`)
+  INDEX `fk_X_RESOURCE_ELEMENT_ID` (`res_element_id` ASC),
+  INDEX `fk_X_SERVICE_RES_VAL_MAP_ADDED_BY_ID` (`added_by_id` ASC),
+  INDEX `fk_X_SERVICE_RES_VAL_MAP_UPD_BY_ID` (`upd_by_id` ASC),
+  CONSTRAINT `fk_X_RESOURCE_ELEMENT_ID`
+    FOREIGN KEY (`res_element_id`)
+    REFERENCES `x_service_resource_element` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAGGED_RES_VAL_MAP_ADDED_BY_ID`
+  CONSTRAINT `fk_X_SERVICE_RES_VAL_MAP_ADDED_BY_ID`
     FOREIGN KEY (`added_by_id`)
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAGGED_RES_VAL_MAP_UPD_BY_ID`
+  CONSTRAINT `fk_X_SERVICE_RES_VAL_MAP_UPD_BY_ID`
     FOREIGN KEY (`upd_by_id`)
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
@@ -324,4 +321,6 @@ ENGINE = InnoDB;
 -- ranger database add column in x_service_def and x_service table
 -- ----------------------------------------------------------------
 alter table x_service_def add column `options` VARCHAR(1024) DEFAULT NULL NULL;
-alter table x_service add column `tag_service` BIGINT DEFAULT NULL NULL;
+alter table x_service add column `tag_service` BIGINT DEFAULT NULL NULL,
+                      add column `tag_version` BIGINT DEFAULT 0 NOT NULL,
+                      add column `tag_update_time` DATETIME DEFAULT NULL NULL;

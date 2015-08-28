@@ -29,8 +29,6 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXTagDef;
-import org.apache.ranger.entity.XXTaggedResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
@@ -170,14 +168,14 @@ public abstract class RangerDaoManagerBase {
 		if (classType == AppConstants.CLASS_TYPE_XA_TAG_ATTR_DEF) {
 			return getXXTagAttributeDef();
 		}
-		if (classType == AppConstants.CLASS_TYPE_XA_TAGGED_RESOURCE) {
-			return getXXTaggedResource();
+		if (classType == AppConstants.CLASS_TYPE_XA_SERVICE_RESOURCE) {
+			return getXXServiceResource();
 		}
-		if (classType == AppConstants.CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE) {
-			return getXXTaggedResourceValue();
+		if (classType == AppConstants.CLASS_TYPE_XA_SERVICE_RESOURCE_ELEMENT) {
+			return getXXServiceResourceElement();
 		}
-		if (classType == AppConstants.CLASS_TYPE_XA_TAGGED_RESOURCE_VALUE_MAP) {
-			return getXXTaggedResourceValueMap();
+		if (classType == AppConstants.CLASS_TYPE_XA_SERVICE_RESOURCE_ELEMENT_VALUE) {
+			return getXXServiceResourceElementValue();
 		}
 		if (classType == AppConstants.CLASS_TYPE_XA_TAG) {
 			return getXXTag();
@@ -324,14 +322,14 @@ public abstract class RangerDaoManagerBase {
 		if (className.equals("XXTagAttributeDef")) {
 			return getXXTagAttributeDef();
 		}
-		if (className.equals("XXTaggedResource")) {
-			return getXXTaggedResource();
+		if (className.equals("XXServiceResource")) {
+			return getXXServiceResource();
 		}
-		if (className.equals("XXTaggedResourceValue")) {
-			return getXXTaggedResourceValue();
+		if (className.equals("XXServiceResourceElement")) {
+			return getXXServiceResourceElement();
 		}
-		if (className.equals("XXTaggedResourceValueMap")) {
-			return getXXTaggedResourceValueMap();
+		if (className.equals("XXServiceResourceElementValue")) {
+			return getXXServiceResourceElementValue();
 		}
 		if (className.equals("XXTag")) {
 			return getXXTag();
@@ -526,16 +524,16 @@ public abstract class RangerDaoManagerBase {
 		return new XXTagAttributeDefDao(this);
 	}
 
-	public XXTaggedResourceDao getXXTaggedResource() {
-		return new XXTaggedResourceDao(this);
+	public XXServiceResourceDao getXXServiceResource() {
+		return new XXServiceResourceDao(this);
 	}
 
-	public XXTaggedResourceValueDao getXXTaggedResourceValue() {
-		return new XXTaggedResourceValueDao(this);
+	public XXServiceResourceElementDao getXXServiceResourceElement() {
+		return new XXServiceResourceElementDao(this);
 	}
 
-	public XXTaggedResourceValueMapDao getXXTaggedResourceValueMap() {
-		return new XXTaggedResourceValueMapDao(this);
+	public XXServiceResourceElementValueDao getXXServiceResourceElementValue() {
+		return new XXServiceResourceElementValueDao(this);
 	}
 
 	public XXTagDao getXXTag() {

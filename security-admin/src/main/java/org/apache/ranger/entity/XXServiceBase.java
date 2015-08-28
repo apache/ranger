@@ -96,6 +96,25 @@ public abstract class XXServiceBase extends XXDBBase {
 	protected Date policyUpdateTime;
 
 	/**
+	 * tagVersion of the XXService
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "tag_version")
+	protected Long tagVersion;
+
+	/**
+	 * tagUpdateTime of the XXService
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "tag_update_time")
+	protected Date tagUpdateTime;
+
+	/**
 	 * description of the XXService
 	 * <ul>
 	 * </ul>
@@ -248,6 +267,46 @@ public abstract class XXServiceBase extends XXDBBase {
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b> tagVersion</b>
+	 * . You cannot set null to the attribute.
+	 * 
+	 * @param tagVersion
+	 *            Value to set member attribute <b> tagVersion</b>
+	 */
+	public void setTagVersion(Long tagVersion) {
+		this.tagVersion = tagVersion;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>tagVersion</b>
+	 * 
+	 * @return Long - value of member attribute <b>tagVersion</b> .
+	 */
+	public Long getTagVersion() {
+		return this.tagVersion;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b>
+	 * tagUpdateTime</b> . You cannot set null to the attribute.
+	 * 
+	 * @param tagUpdateTime
+	 *            Value to set member attribute <b> tagUpdateTime</b>
+	 */
+	public void setTagUpdateTime(Date tagUpdateTime) {
+		this.tagUpdateTime = tagUpdateTime;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>tagUpdateTime</b>
+	 * 
+	 * @return Date - value of member attribute <b>tagUpdateTime</b> .
+	 */
+	public Date getTagUpdateTime() {
+		return this.tagUpdateTime;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> description</b> .
 	 * You cannot set null to the attribute.
 	 * 
@@ -346,6 +405,20 @@ public abstract class XXServiceBase extends XXDBBase {
 		} else if (!policyVersion.equals(other.policyVersion)) {
 			return false;
 		}
+		if (tagUpdateTime == null) {
+			if (other.tagUpdateTime != null) {
+				return false;
+			}
+		} else if (!tagUpdateTime.equals(other.tagUpdateTime)) {
+			return false;
+		}
+		if (tagVersion == null) {
+			if (other.tagVersion != null) {
+				return false;
+			}
+		} else if (!tagVersion.equals(other.tagVersion)) {
+			return false;
+		}
 		if (type == null) {
 			if (other.type != null) {
 				return false;
@@ -379,6 +452,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	public String toString() {
 		return "XXServiceBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", type=" + type
 				+ ", name=" + name + ", tagService=" + tagService + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
+				+ ", tagVersion=" + tagVersion + ", tagUpdateTime=" + tagUpdateTime
 				+ ", description=" + description + ", isEnabled=" + isEnabled + "]";
 	}
 

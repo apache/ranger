@@ -35,14 +35,14 @@ import org.apache.ranger.common.AppConstants;
 
 @Entity
 @Cacheable
-@Table(name="x_tagged_resource")
+@Table(name="x_service_resource")
 @XmlRootElement
-public class XXTaggedResource extends XXDBBase implements Serializable {
+public class XXServiceResource extends XXDBBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name = "XXTaggedResourceSEQ", sequenceName = "XXTaggedResourceSEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "XXTaggedResourceSEQ")
+	@SequenceGenerator(name = "XXServiceResourceSEQ", sequenceName = "XXServiceResourceSEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "XXServiceResourceSEQ")
 	@Column(name = "id")
 	protected Long id;
 
@@ -55,8 +55,8 @@ public class XXTaggedResource extends XXDBBase implements Serializable {
 	@Column(name = "is_enabled")
 	protected Boolean isEnabled;
 
-	@Column(name = "external_id")
-	protected String externalId;
+	@Column(name = "resource_signature")
+	protected String resourceSignature;
 
 	@Column(name = "service_id")
 	protected Long serviceId;
@@ -102,18 +102,18 @@ public class XXTaggedResource extends XXDBBase implements Serializable {
 	}
 
 	/**
-	 * @return the externalId
+	 * @return the resourceSignature
 	 */
-	public String getExternalId() {
-		return externalId;
+	public String getResourceSignature() {
+		return resourceSignature;
 	}
 
 	/**
-	 * @param externalId
-	 *            the externalId to set
+	 * @param resourceSignature
+	 *            the resourceSignature to set
 	 */
-	public void setExternalId(String externalId) {
-		this.externalId = externalId;
+	public void setResourceSignature(String resourceSignature) {
+		this.resourceSignature = resourceSignature;
 	}
 
 	/**
@@ -148,7 +148,7 @@ public class XXTaggedResource extends XXDBBase implements Serializable {
 
 	@Override
 	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_XA_TAGGED_RESOURCE;
+		return AppConstants.CLASS_TYPE_XA_SERVICE_RESOURCE;
 	}
 
 	/*
@@ -160,12 +160,12 @@ public class XXTaggedResource extends XXDBBase implements Serializable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((externalId == null) ? 0 : externalId.hashCode());
-		result = prime * result + ((guid == null) ? 0 : guid.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((isEnabled == null) ? 0 : isEnabled.hashCode());
-		result = prime * result + ((serviceId == null) ? 0 : serviceId.hashCode());
+		result = prime * result + ((guid == null) ? 0 : guid.hashCode());
 		result = prime * result + ((version == null) ? 0 : version.hashCode());
+		result = prime * result + ((isEnabled == null) ? 0 : isEnabled.hashCode());
+		result = prime * result + ((resourceSignature == null) ? 0 : resourceSignature.hashCode());
+		result = prime * result + ((serviceId == null) ? 0 : serviceId.hashCode());
 		return result;
 	}
 
@@ -182,11 +182,11 @@ public class XXTaggedResource extends XXDBBase implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		XXTaggedResource other = (XXTaggedResource) obj;
-		if (externalId == null) {
-			if (other.externalId != null)
+		XXServiceResource other = (XXServiceResource) obj;
+		if (resourceSignature == null) {
+			if (other.resourceSignature != null)
 				return false;
-		} else if (!externalId.equals(other.externalId))
+		} else if (!resourceSignature.equals(other.resourceSignature))
 			return false;
 		if (guid == null) {
 			if (other.guid != null)
@@ -235,7 +235,7 @@ public class XXTaggedResource extends XXDBBase implements Serializable {
 		sb.append("guid={").append(guid).append("} ");
 		sb.append("version={").append(version).append("} ");
 		sb.append("isEnabled={").append(isEnabled).append("} ");
-		sb.append("externalId={").append(externalId).append("} ");
+		sb.append("resourceSignature={").append(resourceSignature).append("} ");
 		sb.append("serviceId={").append(serviceId).append("} ");
 		sb.append(" }");
 
