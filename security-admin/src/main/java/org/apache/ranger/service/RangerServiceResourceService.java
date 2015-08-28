@@ -49,6 +49,15 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
 	protected void validateForUpdate(RangerServiceResource vObj, XXServiceResource entityObj) {
 
 	}
+
+	@Override
+	public RangerServiceResource postUpdate(XXServiceResource resource) {
+		RangerServiceResource ret = super.postUpdate(resource);
+
+		daoMgr.getXXServiceResource().updateServiceForServiceResourceUpdate(resource.getId(), resource.getUpdateTime());
+
+		return ret;
+	}
 	
 	public RangerServiceResource getPopulatedViewObject(XXServiceResource xObj) {
 		return populateViewBean(xObj);

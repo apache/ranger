@@ -6,7 +6,9 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.entity.XXTag;
+import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,15 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 	@Override
 	protected void validateForUpdate(RangerTag vObj, XXTag entityObj) {
 
+	}
+
+	@Override
+	public RangerTag postUpdate(XXTag tag) {
+		RangerTag ret = super.postUpdate(tag);
+
+		daoMgr.getXXTag().updateServiceForTagUpdate(tag.getId(), tag.getUpdateTime());
+
+		return ret;
 	}
 
 	public RangerTag getPopulatedViewObject(XXTag xObj) {

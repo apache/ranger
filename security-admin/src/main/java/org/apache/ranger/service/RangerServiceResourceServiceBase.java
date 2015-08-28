@@ -51,6 +51,7 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 		xObj.setGuid(guid);
 		xObj.setVersion(vObj.getVersion());
 		xObj.setIsEnabled(vObj.getIsEnabled());
+		xObj.setResourceSignature(vObj.getResourceSignature());
 
 		XXService xService = daoMgr.getXXService().findByName(vObj.getServiceName());
 		if (xService == null) {
@@ -68,6 +69,7 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
 		vObj.setIsEnabled(xObj.getIsEnabled());
+		vObj.setResourceSignature(xObj.getResourceSignature());
 
 		XXService xService = daoMgr.getXXService().getById(xObj.getServiceId());
 

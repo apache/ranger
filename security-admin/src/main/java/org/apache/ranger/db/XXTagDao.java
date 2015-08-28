@@ -124,4 +124,23 @@ public class XXTagDao extends BaseDao<XXTag> {
 			return new ArrayList<XXTag>();
 		}
 	}
+
+	public void updateServiceForTagUpdate(Long tagId, Date updateTime) {
+		if (tagId == null) {
+			return;
+		}
+
+		if(updateTime == null) {
+			updateTime = new Date();
+		}
+
+		try {
+			getEntityManager().createNamedQuery("XXTag.updateTagVersionInService", tClass)
+					.setParameter("tagId", tagId)
+					.setParameter("tagUpdateTime", updateTime)
+					.executeUpdate();
+		} catch (NoResultException e) {
+			return;
+		}
+	}
 }

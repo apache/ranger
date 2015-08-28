@@ -87,8 +87,6 @@ public class TagREST {
         RangerTagDef ret;
 
         try {
-            //RangerTagDefValidator validator = validatorFactory.getTagDefValidator(tagStore);
-            //validator.validate(tagDef, Action.CREATE);
             ret = tagStore.createTagDef(tagDef);
         } catch(Exception excp) {
             LOG.error("createTagDef(" + tagDef + ") failed", excp);
@@ -143,8 +141,6 @@ public class TagREST {
         }
 
         try {
-            //RangerTagDefValidator validator = validatorFactory.getTagDefValidator(tagStore);
-            //validator.validate(guid, Action.DELETE);
             tagStore.deleteTagDefById(id);
         } catch(Exception excp) {
             LOG.error("deleteTagDef(" + id + ") failed", excp);

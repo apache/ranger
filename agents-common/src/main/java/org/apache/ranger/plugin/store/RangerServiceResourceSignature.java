@@ -28,12 +28,10 @@ import java.util.*;
 public class RangerServiceResourceSignature {
 	private final String _string;
 	private final String _hash;
-	private final RangerServiceResource serviceResource;
 
 	public RangerServiceResourceSignature(RangerServiceResource serviceResource) {
-		this.serviceResource = serviceResource;
 		_string = ServiceResourceSpecSerializer.toString(serviceResource);
-		_hash = DigestUtils.md5Hex(_string);
+		_hash   = DigestUtils.md5Hex(_string);
 	}
 
 	String asString() {

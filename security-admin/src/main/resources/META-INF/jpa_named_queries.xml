@@ -576,12 +576,6 @@
 				where obj.resourceId = res.id and res.serviceId = :serviceId
 				order by obj.resourceId</query>
 	</named-query>
-
-	<named-query name="XXTagResourceMap.updateTagVersionInService">
-		<query>update XXService obj set obj.tagVersion = obj.tagVersion + 1, obj.tagUpdateTime = :tagUpdateTime
-				where obj.id in (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag
-								  where res.id = tagRes.resourceId and tagRes.tagId = tag.id and tag.id = :tagId)</query>
-	</named-query>	
 	
 	<named-query name="XXTagDef.findByGuid">
 		<query>select obj from XXTagDef obj where obj.guid = :guid</query>
@@ -632,6 +626,12 @@
 		<query>select obj from XXTag obj where obj.id in
 			(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)</query>
 	</named-query>
+
+	<named-query name="XXTag.updateTagVersionInService">
+		<query>update XXService obj set obj.tagVersion = obj.tagVersion + 1, obj.tagUpdateTime = :tagUpdateTime
+				where obj.id in (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag
+								  where res.id = tagRes.resourceId and tagRes.tagId = tag.id and tag.id = :tagId)</query>
+	</named-query>	
 	
 	<named-query name="XXTagAttribute.findByTagId">
 		<query>select obj from XXTagAttribute obj where obj.tagId = :tagId</query>
@@ -654,6 +654,12 @@
 	<named-query name="XXServiceResource.findByServiceIdAndResourceSignature">
 		<query>select obj from XXServiceResource obj where obj.serviceId = :serviceId and obj.resourceSignature = :resourceSignature</query>
 	</named-query>
+
+	<named-query name="XXServiceResource.updateTagVersionInService">
+		<query>update XXService obj set obj.tagVersion = obj.tagVersion + 1, obj.tagUpdateTime = :tagUpdateTime
+				where obj.id in (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes
+								  where res.id = :resourceId and res.id = tagRes.resourceId)</query>
+	</named-query>	
 
 	<!-- End <== JPA Queries for Tag Based Policies  -->
 	
