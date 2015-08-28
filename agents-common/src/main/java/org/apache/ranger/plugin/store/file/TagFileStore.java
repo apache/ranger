@@ -1026,6 +1026,7 @@ public class TagFileStore extends AbstractTagStore {
 			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, serviceName);
 
 			List<RangerServiceResource> serviceResources = getServiceResources(filter);
+			List<RangerServiceResource> filteredServiceResources = new ArrayList<RangerServiceResource>();
 
 			Map<Long, RangerTag> tagsMap = new HashMap<Long, RangerTag>();
 			Map<Long, List<Long>> resourceToTagIdsMap = new HashMap<Long, List<Long>>();
@@ -1040,14 +1041,11 @@ public class TagFileStore extends AbstractTagStore {
 						tagIdList.add(tag.getId());
 					}
 					resourceToTagIdsMap.put(serviceResource.getId(), tagIdList);
+					filteredServiceResources.add(serviceResource);
 				}
 			}
 
-			if (MapUtils.isEmpty(resourceToTagIdsMap)) {
-				serviceResources.clear();
-			}
-
-			ret.setServiceResources(serviceResources);
+			ret.setServiceResources(filteredServiceResources);
 			ret.setResourceToTagIds(resourceToTagIdsMap);
 			ret.setTags(tagsMap);
 

@@ -1027,6 +1027,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		// While creating, value of version should be 1.
 		service.setVersion(new Long(1));
+		service.setTagVersion(new Long(1));
 
 		if (populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);

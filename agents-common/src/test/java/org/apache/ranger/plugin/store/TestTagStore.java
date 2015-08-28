@@ -40,68 +40,66 @@ import org.apache.ranger.plugin.store.file.TagFileStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.junit.BeforeClass;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 
 public class TestTagStore {
 	static TagStore tagStore = null;
 	static TagValidator validator = null;
-
+	static RangerServiceDef serviceDef = null;
+	static RangerService service = null;
 	static SearchFilter filter = null;
-	static Path filePath = new Path("file:///etc/ranger/data/ranger-admin-test-site.xml");
+
+	static String tmpDir = null;
+	static Path filePath = null;
+
 	static Configuration config = new Configuration();
 
 	static final String serviceDefJsonFile = "/admin/service-defs/test-hive-servicedef.json";
 	static final String serviceName = "tag-unit-test-TestTagStore";
 
-	static final String crcSuffix = ".crc";
-	static final String jsonSuffix = ".json";
-
 	static Gson gsonBuilder = null;
-	static RangerServiceDef serviceDef = null;
-	static RangerService service = null;
 
 	@BeforeClass
 	public static void setupTest() throws Exception {
 
-		tearDownAfterClass(crcSuffix);
-		tearDownAfterClass(jsonSuffix);
+		tmpDir = "file://" + System.getProperty("java.io.tmpdir");
 
-		FileSystem fs = filePath.getFileSystem(config);
-
-		FSDataOutputStream outStream = fs.create(filePath, true);
-		OutputStreamWriter writer = null;
-
-		writer = new OutputStreamWriter(outStream);
-
-		writer.write("<configuration>\n" +
+		String textTemplate = "<configuration>\n" +
 				"        <property>\n" +
 				"                <name>ranger.tag.store.file.dir</name>\n" +
-				"                <value>file:///etc/ranger/data</value>\n" +
+				"                <value>%s</value>\n" +
 				"        </property>\n" +
 				"        <property>\n" +
 				"                <name>ranger.service.store.file.dir</name>\n" +
-				"                <value>file:///etc/ranger/data</value>\n" +
+				"                <value>%s</value>\n" +
 				"        </property>\n" +
-				"</configuration>\n");
+				"</configuration>\n";
 
+		String text = String.format(textTemplate, tmpDir, tmpDir);
+
+		String fileName =  tmpDir + "/ranger-admin-test-site.xml";
+		filePath = new Path(fileName);
+		FileSystem fs = filePath.getFileSystem(config);
+
+		FSDataOutputStream outStream = fs.create(filePath, true);
+
+		OutputStreamWriter writer = new OutputStreamWriter(outStream);
+		writer.write(text);
 		writer.close();
 
 		RangerConfiguration config = RangerConfiguration.getInstance();
 		config.addResource(filePath);
 
-		tagStore = TagFileStore.getInstance();
-		tagStore.init();
-
-		ServiceStore svcStore;
-
-		svcStore = new ServiceFileStore();
+		ServiceStore svcStore = new ServiceFileStore();
 		svcStore.init();
 
+		tagStore = TagFileStore.getInstance();
+		tagStore.init();
 		tagStore.setServiceStore(svcStore);
 
 		validator = new TagValidator();
-
 		validator.setTagStore(tagStore);
 
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
@@ -110,17 +108,20 @@ public class TestTagStore {
 
 		InputStream inStream = TestTagStore.class.getResourceAsStream(serviceDefJsonFile);
 		InputStreamReader reader = new InputStreamReader(inStream);
+
 		serviceDef = gsonBuilder.fromJson(reader, RangerServiceDef.class);
+
 		service = svcStore.createService(new RangerService(serviceDef.getName(), serviceName, serviceName, null, null));
+
 		reader.close();
 		inStream.close();
 
 	}
 
-	//@AfterClass
-	public static void tearDownAfterClass(String suffix) throws Exception {
+	@AfterClass
+	public static void tearDownAfterClass() throws Exception {
 
-		Path dirPath = new Path("file:///etc/ranger/data");
+		Path dirPath = new Path(tmpDir);
 		FileSystem fs = dirPath.getFileSystem(config);
 
 		try {
@@ -132,7 +133,7 @@ public class TestTagStore {
 					while (files.hasNext()) {
 						LocatedFileStatus fileStatus = files.next();
 						Path path = fileStatus.getPath();
-						if (fs.isFile(path) && path.getName().endsWith(suffix)) {
+						if (fs.isFile(path)) {
 							fs.delete(path, true);
 						}
 					}
@@ -142,6 +143,7 @@ public class TestTagStore {
 		}
 
 		fs.delete(filePath, true);
+
 	}
 
 	@Test

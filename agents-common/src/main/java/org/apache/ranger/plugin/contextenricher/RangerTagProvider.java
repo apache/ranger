@@ -161,17 +161,14 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 
 			for (RangerServiceResourceMatcher resourceMatcher : resourceMatchers) {
 
-				RangerServiceResource serviceResource = resourceMatcher.getServiceResource();
-				RangerPolicyResourceMatcher matcher = resourceMatcher.getPolicyResourceMatcher();
-
-				boolean matchResult = matcher.isMatch(resource);
+				boolean matchResult = resourceMatcher.isMatch(resource);
 
 				if (matchResult) {
 					if (ret == null) {
 						ret = new ArrayList<RangerTag>();
 					}
 					// Find tags from serviceResource
-					ret.addAll(getTagsForServiceResource(serviceTags, serviceResource));
+					ret.addAll(getTagsForServiceResource(serviceTags, resourceMatcher.getServiceResource()));
 				}
 			}
 		}

@@ -69,29 +69,25 @@ public class RangerAdminTagRetriever extends RangerTagRefresher {
 
 	@Override
 	public void retrieveTags() {
-		if (adminClient != null) {
+		if (adminClient != null && receiver != null) {
 			ServiceTags serviceTags = null;
-			long savedLastKnownVersion = lastKnownVersion;
 			try {
 				serviceTags = adminClient.getServiceTagsIfUpdated(lastKnownVersion);
-				lastKnownVersion = serviceTags.getTagVersion();
 			} catch (Exception exp) {
-				LOG.error("RangerAdminTagRetriever.retrieveTags() - Error retrieving resources");
+				LOG.error("RangerAdminTagRetriever.retrieveTags() - Error retrieving resources, exception=", exp);
 			}
 
-			if (receiver != null && serviceTags != null) {
-				if (serviceTags.getTagVersion() != null && serviceTags.getTagVersion().longValue() > savedLastKnownVersion) {
-					receiver.setServiceTags(serviceTags);
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerAdminTagRetriever.retrieveTags() - no updates to tags !!");
-					}
-				}
+			if (serviceTags != null) {
+				LOG.info("RangerAdminTagRetriever.retrieveTags() - Updating tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
+				lastKnownVersion = serviceTags.getTagVersion();
+				receiver.setServiceTags(serviceTags);
 			} else {
-				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to ");
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("RangerAdminTagRetriever.retrieveTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
+				}
 			}
 		} else {
-			LOG.error("RangerAdminTagRetriever.retrieveTags() - No Tag Provider ...");
+			LOG.error("RangerAdminTagRetriever.retrieveTags() - No admin client to get tags from or no tag receiver to update tag-cache");
 		}
 	}
 

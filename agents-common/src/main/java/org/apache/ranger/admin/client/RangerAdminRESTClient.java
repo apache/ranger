@@ -204,8 +204,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		ServiceTags ret;
 
-		WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_GET_SERVICE_TAGS_IF_UPDATED)
-				.queryParam(RangerRESTUtils.SERVICE_NAME_PARAM, serviceName)
+		WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceName)
 				.queryParam(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion))
 				.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 

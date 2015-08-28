@@ -95,7 +95,9 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		xObj.setName(vObj.getName());
 		xObj.setTagService(tagServiceId);
 		xObj.setPolicyVersion(vObj.getPolicyVersion());
+		xObj.setTagVersion(vObj.getTagVersion());
 		xObj.setPolicyUpdateTime(vObj.getPolicyUpdateTime());
+		xObj.setTagUpdateTime(vObj.getTagUpdateTime());
 		xObj.setDescription(vObj.getDescription());
 		xObj.setIsEnabled(vObj.getIsEnabled());
 		return xObj;
@@ -113,7 +115,9 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		vObj.setDescription(xObj.getDescription());
 		vObj.setTagService(xTagService != null ? xTagService.getName() : null);
 		vObj.setPolicyVersion(xObj.getPolicyVersion());
+		vObj.setTagVersion(xObj.getTagVersion());
 		vObj.setPolicyUpdateTime(xObj.getPolicyUpdateTime());
+		vObj.setTagUpdateTime(xObj.getTagUpdateTime());
 		vObj.setIsEnabled(xObj.getIsenabled());
 		return vObj;
 	}
