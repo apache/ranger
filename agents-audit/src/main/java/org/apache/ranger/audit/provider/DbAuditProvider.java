@@ -106,7 +106,7 @@ public class DbAuditProvider extends AuditDestination {
 		try {
 			if(preCreate(event)) {
 				DaoManager daoMgr = daoManager;
-	
+
 				if(daoMgr != null) {
 					event.persist(daoMgr);
 	
@@ -120,6 +120,7 @@ public class DbAuditProvider extends AuditDestination {
 				logFailedEvent(event);
 			}
 		}
+		LOG.debug("<== DbAuditProvider.log()");
 		return isSuccess;
 	}
 
@@ -166,18 +167,6 @@ public class DbAuditProvider extends AuditDestination {
 		LOG.info("DbAuditProvider.stop()");
 
 		cleanUp();
-	}
-	
-	@Override
-    public void waitToComplete() {
-		LOG.info("DbAuditProvider.waitToComplete()");
-		waitToComplete(-1);
-	}
-
-	@Override
-	public void waitToComplete(long timeout) {
-		LOG.info("DbAuditProvider.waitToComplete():timeout=" + timeout);
-
 	}
 
 	@Override
