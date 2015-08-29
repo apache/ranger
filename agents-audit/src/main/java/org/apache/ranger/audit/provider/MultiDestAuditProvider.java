@@ -161,7 +161,7 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 			try {
 				provider.start();
 			} catch (Throwable excp) {
-				LOG.error("AsyncAuditProvider.start(): failed for provider { "
+				LOG.error("MultiDestAuditProvider.start(): failed for provider { "
 						+ provider.getClass().getName() + " }", excp);
 			}
 		}
@@ -173,7 +173,7 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 			try {
 				provider.stop();
 			} catch (Throwable excp) {
-				LOG.error("AsyncAuditProvider.stop(): failed for provider { "
+				LOG.error("MultiDestAuditProvider.stop(): failed for provider { "
 						+ provider.getClass().getName() + " }", excp);
 			}
 		}
@@ -186,7 +186,7 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 				provider.waitToComplete();
 			} catch (Throwable excp) {
 				LOG.error(
-						"AsyncAuditProvider.waitToComplete(): failed for provider { "
+						"MultiDestAuditProvider.waitToComplete(): failed for provider { "
 								+ provider.getClass().getName() + " }", excp);
 			}
 		}
@@ -199,7 +199,7 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 				provider.waitToComplete(timeout);
 			} catch (Throwable excp) {
 				LOG.error(
-						"AsyncAuditProvider.waitToComplete(): failed for provider { "
+						"MultiDestAuditProvider.waitToComplete(): failed for provider { "
 								+ provider.getClass().getName() + " }", excp);
 			}
 		}
@@ -211,7 +211,7 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 			try {
 				provider.flush();
 			} catch (Throwable excp) {
-				LOG.error("AsyncAuditProvider.flush(): failed for provider { "
+				LOG.error("MultiDestAuditProvider.flush(): failed for provider { "
 						+ provider.getClass().getName() + " }", excp);
 			}
 		}
