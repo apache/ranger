@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SearchField.DATA_TYPE;
+import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXTag;
-import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTag;
-import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,8 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 
 	public RangerTagService() {
 		searchFields.add(new SearchField(SearchFilter.TAG_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.TAG_NAME, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.type", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.TAG_TYPE, "tagDef.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXTagDef tagDef", "obj.type = tagDef.id"));
 	}
 
 	@Override
@@ -56,7 +57,7 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 		return ret;
 	}
 
-	public List<RangerTag> getTagsByName(String name) {
+	public List<RangerTag> getTagsByType(String name) {
 		List<RangerTag> ret = new ArrayList<RangerTag>();
 
 		List<XXTag> xxTags = daoMgr.getXXTag().findByName(name);

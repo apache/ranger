@@ -38,39 +38,39 @@ import java.util.Map;
 public  class RangerTag extends RangerBaseModelObject {
 	private static final long serialVersionUID = 1L;
 
-	private String              name;
-	private Map<String, String> attributeValues;
+	private String              type;
+	private Map<String, String> attributes;
 
-	public RangerTag(String guid, String name, Map<String, String> attributeValues) {
+	public RangerTag(String guid, String type, Map<String, String> attributes) {
 		super();
 
 		setGuid(guid);
-		setName(name);
-		setAttributeValues(attributeValues);
+		setType(type);
+		setAttributes(attributes);
 	}
 
-	public RangerTag(String name, Map<String, String> attributeValues) {
-		this(null, name, attributeValues);
+	public RangerTag(String type, Map<String, String> attributes) {
+		this(null, type, attributes);
 	}
 
 	public RangerTag() {
 		this(null, null, null);
 	}
 
-	public String getName() {
-		return name;
+	public String getType() {
+		return type;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setType(String type) {
+		this.type = type;
 	}
 
-	public Map<String, String> getAttributeValues() {
-		return attributeValues;
+	public Map<String, String> getAttributes() {
+		return attributes;
 	}
 
-	public void setAttributeValues(Map<String, String> attributeValues) {
-		this.attributeValues = attributeValues == null ? new HashMap<String, String>() : attributeValues;
+	public void setAttributes(Map<String, String> attributes) {
+		this.attributes = attributes == null ? new HashMap<String, String>() : attributes;
 	}
 
 	@Override
@@ -87,11 +87,11 @@ public  class RangerTag extends RangerBaseModelObject {
 
 		super.toString(sb);
 
-		sb.append("name={").append(name).append("} ");
+		sb.append("type={").append(type).append("} ");
 
-		sb.append("attributeValues={");
-		if (attributeValues != null) {
-			for (Map.Entry<String, String> e : attributeValues.entrySet()) {
+		sb.append("attributes={");
+		if (attributes != null) {
+			for (Map.Entry<String, String> e : attributes.entrySet()) {
 				sb.append(e.getKey()).append("={");
 				sb.append(e.getValue());
 				sb.append("} ");

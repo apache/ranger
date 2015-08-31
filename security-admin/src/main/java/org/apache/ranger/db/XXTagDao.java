@@ -49,12 +49,12 @@ public class XXTagDao extends BaseDao<XXTag> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<String> findTagNamesByServiceId(Long serviceId) {
+	public List<String> findTagTypesByServiceId(Long serviceId) {
 		if (serviceId == null) {
 			return new ArrayList<String>();
 		}
 		try {
-			return getEntityManager().createNamedQuery("XXTag.findTagNamesByServiceId")
+			return getEntityManager().createNamedQuery("XXTag.findTagTypesByServiceId")
 					.setParameter("serviceId", serviceId).getResultList();
 		} catch (NoResultException e) {
 			return new ArrayList<String>();

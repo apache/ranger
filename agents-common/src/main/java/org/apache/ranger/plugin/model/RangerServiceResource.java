@@ -38,23 +38,23 @@ import java.util.Map;
 public class RangerServiceResource extends RangerBaseModelObject {
 	private static final long serialVersionUID = 1L;
 
-	private String                                         serviceName  = null;
-	private Map<String, RangerPolicy.RangerPolicyResource> resourceSpec = null;
-	private String resourceSignature = null;
+	private String                                         serviceName       = null;
+	private Map<String, RangerPolicy.RangerPolicyResource> resourceElements  = null;
+	private String                                         resourceSignature = null;
 
 
-	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec, String resourceSignature) {
+	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature) {
 		super();
 		setGuid(guid);
 		setServiceName(serviceName);
-		setResourceSpec(resourceSpec);
+		setResourceElements(resourceElements);
 		setResourceSignature(resourceSignature);
 	}
-	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
-		this(guid, serviceName, resourceSpec, null);
+	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements) {
+		this(guid, serviceName, resourceElements, null);
 	}
-	public RangerServiceResource(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
-		this(null, serviceName, resourceSpec, null);
+	public RangerServiceResource(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements) {
+		this(null, serviceName, resourceElements, null);
 	}
 
 	public RangerServiceResource() {
@@ -63,7 +63,7 @@ public class RangerServiceResource extends RangerBaseModelObject {
 
 	public String getServiceName() { return serviceName; }
 
-	public Map<String, RangerPolicy.RangerPolicyResource> getResourceSpec() { return resourceSpec; }
+	public Map<String, RangerPolicy.RangerPolicyResource> getResourceElements() { return resourceElements; }
 
 	public String getResourceSignature() {
 		return resourceSignature;
@@ -73,8 +73,8 @@ public class RangerServiceResource extends RangerBaseModelObject {
 		this.serviceName = serviceName;
 	}
 
-	public void setResourceSpec(Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) {
-		this.resourceSpec = resourceSpec == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resourceSpec;
+	public void setResourceElements(Map<String, RangerPolicy.RangerPolicyResource> resource) {
+		this.resourceElements = resource == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resource;
 	}
 
 	public void setResourceSignature(String resourceSignature) {
@@ -97,9 +97,9 @@ public class RangerServiceResource extends RangerBaseModelObject {
 		sb.append("guid={").append(getGuid()).append("} ");
 		sb.append("serviceName={").append(serviceName).append("} ");
 
-		sb.append("resourceSpec={");
-		if(resourceSpec != null) {
-			for(Map.Entry<String, RangerPolicy.RangerPolicyResource> e : resourceSpec.entrySet()) {
+		sb.append("resourceElements={");
+		if(resourceElements != null) {
+			for(Map.Entry<String, RangerPolicy.RangerPolicyResource> e : resourceElements.entrySet()) {
 				sb.append(e.getKey()).append("={");
 				e.getValue().toString(sb);
 				sb.append("} ");

@@ -149,38 +149,38 @@ public class TestTagStore {
 	@Test
 	public void testTagStore_tag() throws Exception {
 
-		String tagName = "ssn";
-		String newTagName = "new-ssn";
+		String tagType = "ssn";
+		String newTagType = "new-ssn";
 
 		List<RangerTag> tags = tagStore.getTags(filter);
 
 		int initTagCount = tags == null ? 0 : tags.size();
 
-		RangerTag tag = new RangerTag(tagName, new HashMap<String, String>());
+		RangerTag tag = new RangerTag(tagType, new HashMap<String, String>());
 		tag.setGuid("GUID_TAG_TEST");
 
 		validator.preCreateTag(tag);
 		RangerTag createdTag = tagStore.createTag(tag);
 
 		assertNotNull("createTag() failed", createdTag);
-		assertTrue("createTag() name mismatch", createdTag.getName().equals(tag.getName()));
+		assertTrue("createTag() type mismatch", createdTag.getType().equals(tag.getType()));
 		assertTrue("createTag() GUID mismatch", createdTag.getGuid().equals(tag.getGuid()));
 
 		tags = tagStore.getTags(filter);
 
 		assertEquals("createTag() failed", initTagCount + 1, tags == null ? 0 : tags.size());
 
-		createdTag.setName(newTagName);
-		validator.preUpdateTagById(createdTag.getId(), createdTag);
+		createdTag.setType(newTagType);
+		validator.preUpdateTag(createdTag.getId(), createdTag);
 		RangerTag updatedTag = tagStore.updateTag(createdTag);
 
-		tag = tagStore.getTagById(updatedTag.getId());
+		tag = tagStore.getTag(updatedTag.getId());
 
-		assertTrue("updateTag() name mismatch", tag.getName().equals(updatedTag.getName()));
+		assertTrue("updateTag() type mismatch", tag.getType().equals(updatedTag.getType()));
 		assertTrue("updatedTag() GUID mismatch", tag.getGuid().equals(updatedTag.getGuid()));
 
-		validator.preDeleteTagById(createdTag.getId());
-		tagStore.deleteTagById(createdTag.getId());
+		validator.preDeleteTag(createdTag.getId());
+		tagStore.deleteTag(createdTag.getId());
 
 		tags = tagStore.getTags(filter);
 
@@ -188,8 +188,8 @@ public class TestTagStore {
 
 		// Try deleting it again
 		try {
-			validator.preDeleteTagById(createdTag.getId());
-			tagStore.deleteTagById(createdTag.getId());
+			validator.preDeleteTag(createdTag.getId());
+			tagStore.deleteTag(createdTag.getId());
 			assertTrue("deleteTag() failed. Deleted tag again successfully? ", false);
 		} catch (Exception exception) {
 			assertTrue(true);
@@ -202,11 +202,11 @@ public class TestTagStore {
 		String guid = "GUID_SERVICERESOURCE_TEST";
 		String newGuid = "NEW_GUID_SERVICERESOURCE_TEST";
 
-		Map<String, RangerPolicyResource> resourceResources = new HashMap<String, RangerPolicyResource>();
+		Map<String, RangerPolicyResource> resourceElements = new HashMap<String, RangerPolicyResource>();
 
-		RangerPolicyResource resource = new RangerPolicyResource();
-		resource.setValue("*");
-		resourceResources.put("database", resource);
+		RangerPolicyResource resourceElement = new RangerPolicyResource();
+		resourceElement.setValue("*");
+		resourceElements.put("database", resourceElement);
 
 		List<RangerServiceResource> serviceResources = tagStore.getServiceResources(filter);
 
@@ -214,7 +214,7 @@ public class TestTagStore {
 
 		RangerServiceResource serviceResource = new RangerServiceResource();
 		serviceResource.setServiceName(serviceName);
-		serviceResource.setResourceSpec(resourceResources);
+		serviceResource.setResourceElements(resourceElements);
 		serviceResource.setGuid(guid);
 
 		validator.preCreateServiceResource(serviceResource);
@@ -228,15 +228,15 @@ public class TestTagStore {
 		assertEquals("createServiceResource() failed", initServiceResourceCount + 1, serviceResources == null ? 0 : serviceResources.size());
 
 		createdServiceResource.setGuid(newGuid);
-		validator.preUpdateServiceResourceById(createdServiceResource.getId(), createdServiceResource);
+		validator.preUpdateServiceResource(createdServiceResource.getId(), createdServiceResource);
 		RangerServiceResource updatedServiceResource = tagStore.updateServiceResource(createdServiceResource);
 
-		serviceResource = tagStore.getServiceResourceById(updatedServiceResource.getId());
+		serviceResource = tagStore.getServiceResource(updatedServiceResource.getId());
 
 		assertTrue("updatedServiceResource() GUID mismatch", serviceResource.getGuid().equals(updatedServiceResource.getGuid()));
 
-		validator.preDeleteServiceResourceById(updatedServiceResource.getId());
-		tagStore.deleteServiceResourceById(updatedServiceResource.getId());
+		validator.preDeleteServiceResource(updatedServiceResource.getId());
+		tagStore.deleteServiceResource(updatedServiceResource.getId());
 
 		serviceResources = tagStore.getServiceResources(filter);
 
@@ -244,8 +244,8 @@ public class TestTagStore {
 
 		// Try deleting it again
 		try {
-			validator.preDeleteServiceResourceById(createdServiceResource.getId());
-			tagStore.deleteServiceResourceById(createdServiceResource.getId());
+			validator.preDeleteServiceResource(createdServiceResource.getId());
+			tagStore.deleteServiceResource(createdServiceResource.getId());
 			assertTrue("deleteServiceResource() failed. Deleted serviceResource again successfully? ", false);
 		} catch (Exception exception) {
 			assertTrue(true);
@@ -255,7 +255,7 @@ public class TestTagStore {
 	@Test
 	public void testTagStore_tagResourceMap() throws Exception {
 
-		String tagName = "ssn";
+		String tagType = "ssn";
 
 		String resourceGuid = "GUID_SERVICERESOURCE_TEST";
 		String tagGuid = "GUID_TAG_TEST";
@@ -264,7 +264,7 @@ public class TestTagStore {
 
 		int initTagCount = tags == null ? 0 : tags.size();
 
-		RangerTag tag = new RangerTag(tagName, new HashMap<String, String>());
+		RangerTag tag = new RangerTag(tagType, new HashMap<String, String>());
 		tag.setGuid(tagGuid);
 
 		validator.preCreateTag(tag);
@@ -275,11 +275,11 @@ public class TestTagStore {
 
 		assertEquals("createTag() failed", initTagCount + 1, tags == null ? 0 : tags.size());
 
-		Map<String, RangerPolicyResource> resourceResources = new HashMap<String, RangerPolicyResource>();
+		Map<String, RangerPolicyResource> resourceElements = new HashMap<String, RangerPolicyResource>();
 
 		RangerPolicyResource resource = new RangerPolicyResource();
 		resource.setValue("*");
-		resourceResources.put("database", resource);
+		resourceElements.put("database", resource);
 
 		List<RangerServiceResource> serviceResources = tagStore.getServiceResources(filter);
 
@@ -287,7 +287,7 @@ public class TestTagStore {
 
 		RangerServiceResource serviceResource = new RangerServiceResource();
 		serviceResource.setServiceName(serviceName);
-		serviceResource.setResourceSpec(resourceResources);
+		serviceResource.setResourceElements(resourceElements);
 
 		serviceResource.setGuid(resourceGuid);
 		validator.preCreateServiceResource(serviceResource);
@@ -314,13 +314,13 @@ public class TestTagStore {
 
 		// Delete all created entities
 		RangerTagResourceMap map = validator.preDeleteTagResourceMap(tagGuid, resourceGuid);
-		tagStore.deleteTagResourceMapById(map.getId());
+		tagStore.deleteTagResourceMap(map.getId());
 
-		validator.preDeleteServiceResourceById(createdServiceResource.getId());
-		tagStore.deleteServiceResourceById(createdServiceResource.getId());
+		validator.preDeleteServiceResource(createdServiceResource.getId());
+		tagStore.deleteServiceResource(createdServiceResource.getId());
 
-		validator.preDeleteTagById(createdTag.getId());
-		tagStore.deleteTagById(createdTag.getId());
+		validator.preDeleteTag(createdTag.getId());
+		tagStore.deleteTag(createdTag.getId());
 
 	}
 }

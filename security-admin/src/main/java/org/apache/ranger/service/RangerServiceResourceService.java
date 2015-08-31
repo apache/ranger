@@ -75,10 +75,26 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
 		return ret;
 	}
 
-	public RangerServiceResource getServiceResourceByServiceIdAndResourceSignature(Long serviceId, String resourceSignature) {
+	public List<RangerServiceResource> getByServiceId(Long serviceId) {
+		List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
+
+		List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
+
+		if(CollectionUtils.isNotEmpty(xxServiceResources)) {
+			for(XXServiceResource xxServiceResource : xxServiceResources) {
+				RangerServiceResource serviceResource = populateViewBean(xxServiceResource);
+
+				ret.add(serviceResource);
+			}
+		}
+
+		return ret;
+	}
+
+	public RangerServiceResource getByResourceSignature(String resourceSignature) {
 		RangerServiceResource ret = null;
 
-		XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByServiceIdAndResourceSignature(serviceId, resourceSignature);
+		XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByResourceSignature(resourceSignature);
 		
 		if(xxServiceResource != null) {
 			ret = populateViewBean(xxServiceResource);

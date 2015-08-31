@@ -29,8 +29,9 @@ public class TagRESTConstants {
 	static final String RESOURCES_RESOURCE       = "/resources/";
 	static final String RESOURCE_RESOURCE        = "/resource/";
 	static final String TAGRESOURCEMAPS_RESOURCE = "/tagresourcemaps/";
-	static final String TAGNAMES_RESOURCE        = "/names/";
-	static final String LOOKUP_TAGS_RESOURCE     = "/lookup/";
+	static final String TAGRESOURCEMAP_RESOURCE  = "/tagresourcemap/";
+	static final String TAGTYPES_RESOURCE        = "/types/";
+	static final String TAGTYPES_LOOKUP_RESOURCE = "/types/lookup/";
 	static final String TAGS_DOWNLOAD            = "/download/";
 
 	public static final String SERVICE_NAME_PARAM           = "serviceName";

@@ -63,7 +63,7 @@ public class RangerServiceTag extends RangerBaseService {
 		RangerAdminClient adminClient = createAdminClient(serviceName);
 
 		try {
-			adminClient.getTagNames(".*");
+			adminClient.getTagTypes(".*");
 			connectivityStatus = true;
 		} catch (Exception e) {
 			LOG.error("RangerServiceTag.validateConfig() Error:" + e);
@@ -90,7 +90,7 @@ public class RangerServiceTag extends RangerBaseService {
 			LOG.debug("==> RangerServiceTag.lookupResource -  Context: (" + context + ")");
 		}
 
-		List<String> tagNameList = new ArrayList<>();
+		List<String> tagTypeList = new ArrayList<>();
 
 		if (context != null) {
 
@@ -106,25 +106,25 @@ public class RangerServiceTag extends RangerBaseService {
 				}
 
 				String suffix = ".*";
-				String tagNamePattern;
+				String pattern;
 
 				if (userInput == null) {
-					tagNamePattern = suffix;
+					pattern = suffix;
 				} else {
-					tagNamePattern = userInput + suffix;
+					pattern = userInput + suffix;
 				}
 
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerServiceTag.lookupResource -  tagNamePattern : (" + tagNamePattern + ")");
+					LOG.debug("RangerServiceTag.lookupResource -  pattern : (" + pattern + ")");
 				}
 
 				try {
 
 					RangerAdminClient adminClient = createAdminClient(serviceName);
 
-					tagNameList = adminClient.getTagNames(tagNamePattern);
+					tagTypeList = adminClient.getTagTypes(pattern);
 
-					tagNameList.removeAll(userProvidedTagList);
+					tagTypeList.removeAll(userProvidedTagList);
 
 				} catch (Exception e) {
 					LOG.error("RangerServiceTag.lookupResource -  Exception={" + e + "}. " + "Please check " +
@@ -137,7 +137,7 @@ public class RangerServiceTag extends RangerBaseService {
 			LOG.debug("<== RangerServiceTag.lookupResource()");
 		}
 
-		return tagNameList;
+		return tagTypeList;
 	}
 
 	public static RangerAdminClient createAdminClient( String tagServiceName ) {

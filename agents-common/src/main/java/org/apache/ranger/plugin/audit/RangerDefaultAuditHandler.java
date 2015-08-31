@@ -220,7 +220,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 					tags = new HashSet<String>();
 
 					for (RangerTag resourceTag : resourceTags) {
-						tags.add(resourceTag.getName());
+						tags.add(resourceTag.getType());
 					}
 				}
 			} catch (Throwable t) {

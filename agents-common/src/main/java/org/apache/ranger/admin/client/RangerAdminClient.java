@@ -38,6 +38,6 @@ public interface RangerAdminClient {
 
 	ServiceTags getServiceTagsIfUpdated(long lastKnownVersion) throws Exception;
 
-	List<String> getTagNames(String tagNamePattern) throws Exception;
+	List<String> getTagTypes(String tagTypePattern) throws Exception;
 
 }

@@ -34,6 +34,18 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
 		super(daoManager);
 	}
 
+	public XXTagResourceMap findByGuid(String resourceGuid) {
+		if (StringUtil.isEmpty(resourceGuid)) {
+			return null;
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXTagResourceMap.findByGuid", tClass)
+					.setParameter("guid", resourceGuid).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
 	public List<XXTagResourceMap> findByResourceId(Long resourceId) {
 		if (resourceId == null) {
 			return new ArrayList<XXTagResourceMap>();

@@ -139,7 +139,7 @@
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
       "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
-       "context": {"TAGS":"[{\"name\":\"PII\"}]"}
+       "context": {"TAGS":"[{\"type\":\"PII\"}]"}
      },
      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     }

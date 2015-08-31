@@ -208,8 +208,8 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public List<String> getTagNames(String tagNamePattern) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.getTagNames() -- *** NOT IMPLEMENTED *** ");
+	public List<String> getTagTypes(String pattern) throws Exception {
+		throw new Exception("RangerAdminjersey2RESTClient.getTagTypes() -- *** NOT IMPLEMENTED *** ");
 	}
 
 	// We get date from the policy manager as unix long!  This deserializer exists to deal with it.  Remove this class once we start send date/time per RFC 3339

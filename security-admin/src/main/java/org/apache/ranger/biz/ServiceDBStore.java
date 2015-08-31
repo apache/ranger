@@ -1819,9 +1819,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		if (tagResourceDefName != null && isConditionDefFound) {
 
-			String tagName = "EXPIRES_ON";
+			String tagType = "EXPIRES_ON";
 
-			String policyName = createdService.getName() + "-" + tagName;
+			String policyName = createdService.getName() + "-" + tagType;
 
 			RangerPolicy policy = new RangerPolicy();
 
@@ -1829,7 +1829,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policy.setVersion(1L);
 			policy.setName(policyName);
 			policy.setService(createdService.getName());
-			policy.setDescription(tagName + " Policy for TAG Service: " + createdService.getName());
+			policy.setDescription(tagType + " Policy for TAG Service: " + createdService.getName());
 			policy.setIsAuditEnabled(true);
 			policy.setPolicyType(RangerPolicy.POLICY_TYPE_EXCLUSIVE_ALLOW);
 
@@ -1838,7 +1838,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			RangerPolicyResource polRes = new RangerPolicyResource();
 			polRes.setIsExcludes(false);
 			polRes.setIsRecursive(false);
-			polRes.setValue(tagName);
+			polRes.setValue(tagType);
 			resourceMap.put(tagResourceDefName, polRes);
 
 			policy.setResources(resourceMap);

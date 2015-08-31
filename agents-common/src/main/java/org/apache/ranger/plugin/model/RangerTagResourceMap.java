@@ -36,18 +36,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class RangerTagResourceMap extends RangerBaseModelObject {
 	private static final long serialVersionUID = 1L;
 
-	private Long resourceId;
 	private Long tagId;
+	private Long resourceId;
 
 	public RangerTagResourceMap() {
 	}
 
-	public Long getResourceId() {
-		return resourceId;
-	}
-
 	public Long getTagId() {
 		return tagId;
+	}
+
+	public Long getResourceId() {
+		return resourceId;
 	}
 
 	public void setTagId(Long tagId) {
@@ -71,9 +71,9 @@ public class RangerTagResourceMap extends RangerBaseModelObject {
 
 		sb.append("{ ");
 
-		sb.append("resourceId={").append(resourceId).append("} ");
-
 		sb.append("tagId=").append(tagId).append("} ");
+
+		sb.append("resourceId={").append(resourceId).append("} ");
 
 		sb.append(" }");
 

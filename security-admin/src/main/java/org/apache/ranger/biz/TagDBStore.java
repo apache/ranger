@@ -148,22 +148,21 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteTagDef(String name) throws Exception {
+	public void deleteTagDefByName(String name) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.deleteTagDef(" + name + ")");
 		}
 
 		if (StringUtils.isNotBlank(name)) {
-			List<RangerTagDef> tagDefs = getTagDefsByName(name);
+			RangerTagDef tagDef = getTagDefByName(name);
 
-			if(CollectionUtils.isNotEmpty(tagDefs)) {
-				for (RangerTagDef tagDef : tagDefs) {
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("Deleting tag-def [name=" + name + "; id=" + tagDef.getId() + "]");
-					}
-
-					rangerTagDefService.delete(tagDef);
+			if(tagDef != null) {
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Deleting tag-def [name=" + name + "; id=" + tagDef.getId() + "]");
 				}
+
+				deleteTagAttributeDefs(tagDef.getId());
+				rangerTagDefService.delete(tagDef);
 			}
 		}
 
@@ -173,34 +172,35 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteTagDefById(Long id) throws Exception {
+	public void deleteTagDef(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.deleteTagDefById(" + id + ")");
+			LOG.debug("==> TagDBStore.deleteTagDef(" + id + ")");
 		}
 
 		if(id != null) {
 			RangerTagDef tagDef = rangerTagDefService.read(id);
 
 			if(tagDef != null) {
+				deleteTagAttributeDefs(tagDef.getId());
 				rangerTagDefService.delete(tagDef);
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.deleteTagDefById(" + id + ")");
+			LOG.debug("<== TagDBStore.deleteTagDef(" + id + ")");
 		}
 	}
 
 	@Override
-	public RangerTagDef getTagDefById(Long id) throws Exception {
+	public RangerTagDef getTagDef(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.getTagDefById(" + id + ")");
+			LOG.debug("==> TagDBStore.getTagDef(" + id + ")");
 		}
 
 		RangerTagDef ret = rangerTagDefService.read(id);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.getTagDefById(" + id + "): " + ret);
+			LOG.debug("<== TagDBStore.getTagDef(" + id + "): " + ret);
 		}
 
 		return ret;
@@ -222,19 +222,19 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerTagDef> getTagDefsByName(String name) throws Exception {
+	public RangerTagDef getTagDefByName(String name) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.getTagDefsByName(" + name + ")");
+			LOG.debug("==> TagDBStore.getTagDefByName(" + name + ")");
 		}
 
-		List<RangerTagDef> ret = null;
+		RangerTagDef ret = null;
 
 		if (StringUtils.isNotBlank(name)) {
-			ret = rangerTagDefService.getTagDefsByName(name);
+			ret = rangerTagDefService.getTagDefByName(name);
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.getTagDefsByName(" + name + "): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== TagDBStore.getTagDefByName(" + name + "): " + ret);
 		}
 
 		return ret;
@@ -279,7 +279,7 @@ public class TagDBStore extends AbstractTagStore {
 
 		RangerTag ret = rangerTagService.create(tag);
 
-		createTagAttributes(ret.getId(), tag.getAttributeValues());
+		createTagAttributes(ret.getId(), tag.getAttributes());
 
 		ret = rangerTagService.read(ret.getId());
 
@@ -299,7 +299,7 @@ public class TagDBStore extends AbstractTagStore {
 		RangerTag existing = rangerTagService.read(tag.getId());
 
 		if (existing == null) {
-			throw errorUtil.createRESTException("failed to update tag [" + tag.getName() + "], Reason: No Tag found with id: [" + tag.getId() + "]", MessageEnums.DATA_NOT_UPDATABLE);
+			throw errorUtil.createRESTException("failed to update tag [" + tag.getType() + "], Reason: No Tag found with id: [" + tag.getId() + "]", MessageEnums.DATA_NOT_UPDATABLE);
 		}
 
 		if (StringUtils.isEmpty(tag.getCreatedBy())) {
@@ -317,7 +317,7 @@ public class TagDBStore extends AbstractTagStore {
 		RangerTag ret = rangerTagService.update(tag);
 
 		deleteTagAttributes(existing.getId());
-		createTagAttributes(existing.getId(), tag.getAttributeValues());
+		createTagAttributes(existing.getId(), tag.getAttributes());
 
 		ret = rangerTagService.read(ret.getId());
 
@@ -329,9 +329,9 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteTagById(Long id) throws Exception {
+	public void deleteTag(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.deleteTagById(" + id + ")");
+			LOG.debug("==> TagDBStore.deleteTag(" + id + ")");
 		}
 
 		RangerTag tag = rangerTagService.read(id);
@@ -341,20 +341,20 @@ public class TagDBStore extends AbstractTagStore {
 		rangerTagService.delete(tag);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.deleteTagById(" + id + ")");
+			LOG.debug("<== TagDBStore.deleteTag(" + id + ")");
 		}
 	}
 
 	@Override
-	public RangerTag getTagById(Long id) throws Exception {
+	public RangerTag getTag(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.getTagById(" + id + ")");
+			LOG.debug("==> TagDBStore.getTag(" + id + ")");
 		}
 
 		RangerTag ret = rangerTagService.read(id);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.getTagById(" + id + "): " + ret);
+			LOG.debug("<== TagDBStore.getTag(" + id + "): " + ret);
 		}
 
 		return ret;
@@ -376,19 +376,19 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerTag> getTagsByName(String name) throws Exception {
+	public List<RangerTag> getTagsByType(String type) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.getTagsByName(" + name + ")");
+			LOG.debug("==> TagDBStore.getTagsByType(" + type + ")");
 		}
 
 		List<RangerTag> ret = null;
 
-		if (StringUtils.isNotBlank(name)) {
-			ret = rangerTagService.getTagsByName(name);
+		if (StringUtils.isNotBlank(type)) {
+			ret = rangerTagService.getTagsByType(type);
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.getTagsByName(" + name + "): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== TagDBStore.getTagsByType(" + type + "): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;
@@ -469,10 +469,9 @@ public class TagDBStore extends AbstractTagStore {
 			LOG.debug("==> TagDBStore.createServiceResource(" + resource + ")");
 		}
 
-		// TODO: update resource signature
 		RangerServiceResource ret = rangerServiceResourceService.create(resource);
 
-		createResourceSpecForResource(ret.getId(), resource);
+		createResourceForServiceResource(ret.getId(), resource);
 
 		ret = rangerServiceResourceService.read(ret.getId());
 
@@ -507,10 +506,9 @@ public class TagDBStore extends AbstractTagStore {
 			resource.setGuid(existing.getGuid());
 		}
 
-		// TODO: update resource signature
 		rangerServiceResourceService.update(resource);
-		deleteResourceSpecForResource(existing.getId());
-		createResourceSpecForResource(existing.getId(), resource);
+		deleteResourceForServiceResource(existing.getId());
+		createResourceForServiceResource(existing.getId(), resource);
 
 		RangerServiceResource ret = rangerServiceResourceService.read(existing.getId());
 
@@ -522,33 +520,33 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteServiceResourceById(Long id) throws Exception {
+	public void deleteServiceResource(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.deleteServiceResourceById(" + id + ")");
+			LOG.debug("==> TagDBStore.deleteServiceResource(" + id + ")");
 		}
 
-		RangerServiceResource resource = getServiceResourceById(id);
+		RangerServiceResource resource = getServiceResource(id);
 
 		if(resource != null) {
-			deleteResourceSpecForResource(resource.getId());
+			deleteResourceForServiceResource(resource.getId());
 			rangerServiceResourceService.delete(resource);
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.deleteServiceResourceById(" + id + ")");
+			LOG.debug("<== TagDBStore.deleteServiceResource(" + id + ")");
 		}
 	}
 
 	@Override
-	public RangerServiceResource getServiceResourceById(Long id) throws Exception {
+	public RangerServiceResource getServiceResource(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.getServiceResourceById(" + id + ")");
+			LOG.debug("==> TagDBStore.getServiceResource(" + id + ")");
 		}
 
 		RangerServiceResource ret = rangerServiceResourceService.read(id);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.getServiceResourceById(" + id + "): " + ret);
+			LOG.debug("<== TagDBStore.getServiceResource(" + id + "): " + ret);
 		}
 
 		return ret;
@@ -570,9 +568,39 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerServiceResource> getServiceResourcesByServiceAndResourceSpec(String serviceName, Map<String, RangerPolicyResource> resourceSpec) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+	public List<RangerServiceResource> getServiceResourcesByService(String serviceName) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.getServiceResourcesByService(" + serviceName + ")");
+		}
+
+		List<RangerServiceResource> ret = null;
+
+		XXService service = daoManager.getXXService().findByName(serviceName);
+
+		if (service != null) {
+			ret = rangerServiceResourceService.getByServiceId(service.getId());
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.getServiceResourcesByService(" + serviceName + "): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@Override
+	public RangerServiceResource getServiceResourceByResourceSignature(String resourceSignature) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.getServiceResourceByResourceSignature(" + resourceSignature + ")");
+		}
+
+		RangerServiceResource ret = rangerServiceResourceService.getByResourceSignature(resourceSignature);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.getServiceResourceByResourceSignature(" + resourceSignature + "): " + ret);
+		}
+
+		return ret;
 	}
 
 	@Override
@@ -622,9 +650,9 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteTagResourceMapById(Long id) throws Exception {
+	public void deleteTagResourceMap(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.deleteTagResourceMapById(" + id + ")");
+			LOG.debug("==> TagDBStore.deleteTagResourceMap(" + id + ")");
 		}
 
 		RangerTagResourceMap tagResourceMap = rangerTagResourceMapService.read(id);
@@ -632,20 +660,35 @@ public class TagDBStore extends AbstractTagStore {
 		rangerTagResourceMapService.delete(tagResourceMap);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.deleteTagResourceMapById(" + id + ")");
+			LOG.debug("<== TagDBStore.deleteTagResourceMap(" + id + ")");
 		}
 	}
 
 	@Override
-	public RangerTagResourceMap getTagResourceMapById(Long id) throws Exception {
+	public RangerTagResourceMap getTagResourceMap(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.getTagResourceMapById(" + id + ")");
+			LOG.debug("==> TagDBStore.getTagResourceMap(" + id + ")");
 		}
 
 		RangerTagResourceMap ret = rangerTagResourceMapService.read(id);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.getTagResourceMapById(" + id + ")");
+			LOG.debug("<== TagDBStore.getTagResourceMap(" + id + ")");
+		}
+
+		return ret;
+	}
+
+	@Override
+	public RangerTagResourceMap getTagResourceMapByGuid(String guid) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.getTagResourceMapByGuid(" + guid + ")");
+		}
+
+		RangerTagResourceMap ret = rangerTagResourceMapService.getByGuid(guid);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.getTagResourceMapByGuid(" + guid + ")");
 		}
 
 		return ret;
@@ -855,12 +898,12 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<String> getTags(String serviceName) throws Exception {
+	public List<String> getTagTypes(String serviceName) throws Exception {
 		throw new Exception("Not implemented");
 	}
 
 	@Override
-	public List<String> lookupTags(String serviceName, String tagNamePattern) throws Exception {
+	public List<String> lookupTagTypes(String serviceName, String pattern) throws Exception {
 		throw new Exception("Not implemented");
 	}
 
@@ -921,11 +964,11 @@ public class TagDBStore extends AbstractTagStore {
 		}
 	}
 
-	private List<XXTagAttribute> createTagAttributes(Long tagId, Map<String, String> attributeValues) {
+	private List<XXTagAttribute> createTagAttributes(Long tagId, Map<String, String> attributes) {
 		List<XXTagAttribute> ret = new ArrayList<XXTagAttribute>();
 
-		if(MapUtils.isNotEmpty(attributeValues)) {
-			for (Map.Entry<String, String> attr : attributeValues.entrySet()) {
+		if(MapUtils.isNotEmpty(attributes)) {
+			for (Map.Entry<String, String> attr : attributes.entrySet()) {
 				XXTagAttribute xTagAttr = new XXTagAttribute();
 
 				xTagAttr.setTagId(tagId);
@@ -950,7 +993,7 @@ public class TagDBStore extends AbstractTagStore {
 		}
 	}
 
-	private void deleteResourceSpecForResource(Long resourceId) {
+	private void deleteResourceForServiceResource(Long resourceId) {
 		List<XXServiceResourceElement> resElements = daoManager.getXXServiceResourceElement().findByResourceId(resourceId);
 		
 		if(CollectionUtils.isNotEmpty(resElements)) {
@@ -968,8 +1011,8 @@ public class TagDBStore extends AbstractTagStore {
 		}
 	}
 
-	private void createResourceSpecForResource(Long resourceId, RangerServiceResource resource) {
-		String serviceName = resource.getServiceName();
+	private void createResourceForServiceResource(Long resourceId, RangerServiceResource serviceResource) {
+		String serviceName = serviceResource.getServiceName();
 
 		XXService xService = daoManager.getXXService().findByName(serviceName);
 
@@ -983,17 +1026,17 @@ public class TagDBStore extends AbstractTagStore {
 			throw errorUtil.createRESTException("No Service-Def found with ID: " + xService.getType(), MessageEnums.ERROR_CREATING_OBJECT);
 		}
 
-		Map<String, RangerPolicy.RangerPolicyResource> resourceSpec = resource.getResourceSpec();
+		Map<String, RangerPolicy.RangerPolicyResource> resElements = serviceResource.getResourceElements();
 
-		for (Map.Entry<String, RangerPolicyResource> resSpec : resourceSpec.entrySet()) {
-			XXResourceDef xResDef = daoManager.getXXResourceDef().findByNameAndServiceDefId(resSpec.getKey(), xServiceDef.getId());
+		for (Map.Entry<String, RangerPolicyResource> resElement : resElements.entrySet()) {
+			XXResourceDef xResDef = daoManager.getXXResourceDef().findByNameAndServiceDefId(resElement.getKey(), xServiceDef.getId());
 
 			if (xResDef == null) {
-				LOG.error("TagDBStore.createResource: ResourceType is not valid [" + resSpec.getKey() + "]");
-				throw errorUtil.createRESTException("Resource Type is not valid [" + resSpec.getKey() + "]", MessageEnums.DATA_NOT_FOUND);
+				LOG.error("TagDBStore.createResource: ResourceType is not valid [" + resElement.getKey() + "]");
+				throw errorUtil.createRESTException("Resource Type is not valid [" + resElement.getKey() + "]", MessageEnums.DATA_NOT_FOUND);
 			}
 
-			RangerPolicyResource policyRes = resSpec.getValue();
+			RangerPolicyResource policyRes = resElement.getValue();
 
 			XXServiceResourceElement resourceElement = new XXServiceResourceElement();
 			resourceElement.setIsExcludes(policyRes.getIsExcludes());

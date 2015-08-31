@@ -30,7 +30,7 @@ public class RangerServiceResourceSignature {
 	private final String _hash;
 
 	public RangerServiceResourceSignature(RangerServiceResource serviceResource) {
-		_string = ServiceResourceSpecSerializer.toString(serviceResource);
+		_string = ServiceResourceSerializer.toString(serviceResource);
 		_hash   = DigestUtils.md5Hex(_string);
 	}
 
@@ -42,16 +42,16 @@ public class RangerServiceResourceSignature {
 		return _hash;
 	}
 
-	static class ServiceResourceSpecSerializer {
+	static class ServiceResourceSerializer {
 
 		static final int _SignatureVersion = 1;
 
 		static public String toString(final RangerServiceResource serviceResource) {
 			// invalid/empty serviceResource gets a deterministic signature as if it had an
 			// empty resource string
-			Map<String, RangerPolicy.RangerPolicyResource> serviceResourceSpec = serviceResource.getResourceSpec();
+			Map<String, RangerPolicy.RangerPolicyResource> resource = serviceResource.getResourceElements();
 			Map<String, ResourceSerializer> resources = new TreeMap<String, ResourceSerializer>();
-			for (Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : serviceResourceSpec.entrySet()) {
+			for (Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : resource.entrySet()) {
 				String resourceName = entry.getKey();
 				ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
 				resources.put(resourceName, resourceView);

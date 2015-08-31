@@ -383,7 +383,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				for (RangerTag resourceTag : resourceTags) {
 
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + resourceTag.getName() + ")");
+						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + resourceTag.getType() + ")");
 					}
 
 					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(resourceTag, tagPolicyRepository.getServiceDef(), request);
@@ -396,7 +396,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 						if (tagEvalResult.getIsAccessDetermined() && tagEvalResult.getIsAuditedDetermined()) {
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + resourceTag.getName() + ") with authorization=" + tagEvalResult.getIsAllowed());
+								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + resourceTag.getType() + ") with authorization=" + tagEvalResult.getIsAllowed());
 							}
 							break;			// Break out of policy-evaluation loop for this tag
 						}
@@ -406,7 +406,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						someTagAllowedAudit = true;
 						// And generate an audit event
 						if (tagEvalResult.getIsAccessDetermined()) {
-							RangerTagAuditEvent event = new RangerTagAuditEvent(resourceTag.getName(), tagEvalResult);
+							RangerTagAuditEvent event = new RangerTagAuditEvent(resourceTag.getType(), tagEvalResult);
 							tagAuditEvents.add(event);
 						}
 					}
@@ -417,7 +417,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 						if (!tagEvalResult.getIsAllowed()) {
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag-policies as tag (" + resourceTag.getName() + "), tag-policy-id=" + tagEvalResult.getPolicyId() + " denied access.");
+								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag-policies as tag (" + resourceTag.getType() + "), tag-policy-id=" + tagEvalResult.getPolicyId() + " denied access.");
 							}
 							break;		// Break out of tags evaluation loop altogether
 						}
@@ -488,15 +488,15 @@ class RangerTagResource extends RangerAccessResourceImpl {
 	private static final String KEY_TAG = "tag";
 
 
-	public RangerTagResource(String tagName, RangerServiceDef tagServiceDef) {
-		super.setValue(KEY_TAG, tagName);
+	public RangerTagResource(String tagType, RangerServiceDef tagServiceDef) {
+		super.setValue(KEY_TAG, tagType);
 		super.setServiceDef(tagServiceDef);
 	}
 }
 
 class RangerTagAccessRequest extends RangerAccessRequestImpl {
 	public RangerTagAccessRequest(RangerTag resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
-		super.setResource(new RangerTagResource(resourceTag.getName(), tagServiceDef));
+		super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef));
 		super.setUser(request.getUser());
 		super.setUserGroups(request.getUserGroups());
 		super.setAction(request.getAction());
@@ -519,11 +519,11 @@ class RangerTagAccessRequest extends RangerAccessRequestImpl {
 
 
 class RangerTagAuditEvent {
-	private final String tagName;
+	private final String tagType;
 	private final RangerAccessResult result;
 
-	RangerTagAuditEvent(String tagName, RangerAccessResult result) {
-		this.tagName = tagName;
+	RangerTagAuditEvent(String tagType, RangerAccessResult result) {
+		this.tagType = tagType;
 		this.result = result;
 	}
 	@Override
@@ -538,7 +538,7 @@ class RangerTagAuditEvent {
 	public void toString(StringBuilder sb) {
 		sb.append("RangerTagAuditEvent={");
 
-		sb.append("tagName={").append(this.tagName).append("} ");
+		sb.append("tagType={").append(this.tagType).append("} ");
 		sb.append("isAccessDetermined={").append(this.result.getIsAccessDetermined()).append("}");
 		sb.append("isAllowed={").append(this.result.getIsAllowed()).append("}");
 		sb.append("policyId={").append(this.result.getPolicyId()).append("}");

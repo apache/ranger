@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.store.file;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -119,10 +118,10 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.createTagDef(" + tagDef + ")");
 		}
 
-		List<RangerTagDef> existing = getTagDefsByName(tagDef.getName());
+		RangerTagDef existing = getTagDefByName(tagDef.getName());
 
-		if (CollectionUtils.isNotEmpty(existing)) {
-			throw new Exception(tagDef.getName() + ": tag-def already exists (id=" + existing.get(0).getId() + ")");
+		if (existing != null) {
+			throw new Exception(tagDef.getName() + ": tag-def already exists (id=" + existing.getId() + ")");
 		}
 
 		RangerTagDef ret = null;
@@ -157,15 +156,13 @@ public class TagFileStore extends AbstractTagStore {
 		RangerTagDef existing = null;
 
 		if(tagDef.getId() == null) {
-			List<RangerTagDef> existingDefs = getTagDefsByName(tagDef.getName());
+			existing = getTagDefByName(tagDef.getName());
 
-			if (CollectionUtils.isEmpty(existingDefs)) {
+			if (existing == null) {
 				throw new Exception("tag-def does not exist: name=" + tagDef.getName());
 			}
-			
-			existing = existingDefs.get(0);
 		} else {
-			existing = this.getTagDefById(tagDef.getId());
+			existing = this.getTagDef(tagDef.getId());
 
 			if (existing == null) {
 				throw new Exception("tag-def does not exist: id=" + tagDef.getId());
@@ -197,18 +194,16 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteTagDef(String name) throws Exception {
+	public void deleteTagDefByName(String name) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.deleteTagDef(" + name + ")");
 		}
 
-		List<RangerTagDef> existingDefs = getTagDefsByName(name);
+		RangerTagDef existing = getTagDefByName(name);
 
-		if (CollectionUtils.isNotEmpty(existingDefs)) {
+		if (existing == null) {
 			try {
-				for(RangerTagDef existing : existingDefs) {
-					deleteTagDef(existing);
-				}
+				deleteTagDef(existing);
 			} catch (Exception excp) {
 				throw new Exception("failed to delete tag-def with ID=" + name, excp);
 			}
@@ -220,26 +215,26 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteTagDefById(Long id) throws Exception {
+	public void deleteTagDef(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.deleteTagDefById(" + id + ")");
+			LOG.debug("==> TagFileStore.deleteTagDef(" + id + ")");
 		}
 
-		RangerTagDef existing = getTagDefById(id);
+		RangerTagDef existing = getTagDef(id);
 
 		if(existing != null) {
 			deleteTagDef(existing);
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.deleteTagDefById(" + id + ")");
+			LOG.debug("<== TagFileStore.deleteTagDef(" + id + ")");
 		}
 	}
 	
 	@Override
-	public RangerTagDef getTagDefById(Long id) throws Exception {
+	public RangerTagDef getTagDef(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getTagDefById(" + id + ")");
+			LOG.debug("==> TagFileStore.getTagDef(" + id + ")");
 		}
 
 		RangerTagDef ret = null;
@@ -253,7 +248,7 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getTagDefById(" + id + "): " + ret);
+			LOG.debug("<== TagFileStore.getTagDef(" + id + "): " + ret);
 		}
 
 		return ret;
@@ -285,23 +280,23 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerTagDef> getTagDefsByName(String name) throws Exception {
+	public RangerTagDef getTagDefByName(String name) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getTagDef(" + name + ")");
+			LOG.debug("==> TagFileStore.getTagDefByName(" + name + ")");
 		}
 
-		List<RangerTagDef> ret = null;
+		RangerTagDef ret = null;
 
 		if (StringUtils.isNotBlank(name)) {
-			SearchFilter filter = new SearchFilter(SearchFilter.TAG_DEF_NAME, name);
+			SearchFilter filter = new SearchFilter(SearchFilter.TAG_TYPE, name);
 
 			List<RangerTagDef> tagDefs = getTagDefs(filter);
 
-			ret = CollectionUtils.isEmpty(tagDefs) ? null : tagDefs;
+			ret = CollectionUtils.isEmpty(tagDefs) ? null : tagDefs.get(0);
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getTagDef(" + name + "): " + ret);
+			LOG.debug("<== TagFileStore.getTagDefByName(" + name + "): " + ret);
 		}
 
 		return ret;
@@ -364,9 +359,9 @@ public class TagFileStore extends AbstractTagStore {
 
 			postCreate(ret);
 		} catch (Exception excp) {
-			LOG.warn("TagFileStore.createTag(): failed to save tag '" + tag.getName() + "'", excp);
+			LOG.warn("TagFileStore.createTag(): failed to save tag '" + tag.getType() + "'", excp);
 
-			throw new Exception("failed to save tag '" + tag.getName() + "'", excp);
+			throw new Exception("failed to save tag '" + tag.getType() + "'", excp);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -391,9 +386,9 @@ public class TagFileStore extends AbstractTagStore {
 
 			postUpdate(tag);
 		} catch (Exception excp) {
-			LOG.warn("TagFileStore.updateTag(): failed to save tag '" + tag.getName() + "'", excp);
+			LOG.warn("TagFileStore.updateTag(): failed to save tag '" + tag.getType() + "'", excp);
 
-			throw new Exception("failed to save tag '" + tag.getName() + "'", excp);
+			throw new Exception("failed to save tag '" + tag.getType() + "'", excp);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -404,13 +399,13 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteTagById(Long id) throws Exception {
+	public void deleteTag(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.deleteTagById(" + id + ")");
+			LOG.debug("==> TagFileStore.deleteTag(" + id + ")");
 		}
 
 		try {
-			RangerTag tag = getTagById(id);
+			RangerTag tag = getTag(id);
 
 			deleteTag(tag);
 		} catch (Exception excp) {
@@ -418,14 +413,14 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.deleteTagById(" + id + ")");
+			LOG.debug("<== TagFileStore.deleteTag(" + id + ")");
 		}
 	}
 
 	@Override
-	public RangerTag getTagById(Long id) throws Exception {
+	public RangerTag getTag(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getTagById(" + id + ")");
+			LOG.debug("==> TagFileStore.getTag(" + id + ")");
 		}
 
 		RangerTag ret = null;
@@ -441,7 +436,7 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getTagDefById(" + id + "): " + ret);
+			LOG.debug("<== TagFileStore.getTagDef(" + id + "): " + ret);
 		}
 
 		return ret;
@@ -473,17 +468,17 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerTag> getTagsByName(String name) throws Exception {
+	public List<RangerTag> getTagsByType(String type) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getTagsByName(" + name + ")");
+			LOG.debug("==> TagFileStore.getTagsByType(" + type + ")");
 		}
 
-		SearchFilter filter = new SearchFilter(SearchFilter.TAG_NAME, name);
+		SearchFilter filter = new SearchFilter(SearchFilter.TAG_TYPE, type);
 
 		List<RangerTag> ret = getTags(filter);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getTagsByName(" + name + "): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== TagFileStore.getTagsByType(" + type + "): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;
@@ -622,13 +617,13 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteServiceResourceById(Long id) throws Exception {
+	public void deleteServiceResource(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.deleteServiceResourceById(" + id + ")");
+			LOG.debug("==> TagFileStore.deleteServiceResource(" + id + ")");
 		}
 
 		try {
-			RangerServiceResource resource = getServiceResourceById(id);
+			RangerServiceResource resource = getServiceResource(id);
 
 			deleteServiceResource(resource);
 		} catch (Exception excp) {
@@ -636,14 +631,14 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.deleteServiceResourceById(" + id + ")");
+			LOG.debug("<== TagFileStore.deleteServiceResource(" + id + ")");
 		}
 	}
 
 	@Override
-	public RangerServiceResource getServiceResourceById(Long id) throws Exception {
+	public RangerServiceResource getServiceResource(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getServiceResourceById(" + id + ")");
+			LOG.debug("==> TagFileStore.getServiceResource(" + id + ")");
 		}
 
 		RangerServiceResource ret = null;
@@ -657,7 +652,7 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getServiceResourceById(" + id + "): " + ret);
+			LOG.debug("<== TagFileStore.getServiceResource(" + id + "): " + ret);
 		}
 
 		return ret;
@@ -687,21 +682,44 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<RangerServiceResource> getServiceResourcesByServiceAndResourceSpec(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception {
+	public List<RangerServiceResource> getServiceResourcesByService(String serviceName) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getServiceResourcesByServiceAndResourceSpec(" + serviceName + ", " + resourceSpec + ")");
+			LOG.debug("==> TagFileStore.getServiceResourcesByService(" + serviceName + ")");
 		}
 
 		List<RangerServiceResource> ret = null;
 
-		if (MapUtils.isNotEmpty(resourceSpec)) {
-			RangerServiceResource resource = new RangerServiceResource(serviceName, resourceSpec);
+		if (StringUtils.isNotBlank(serviceName)) {
+			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, serviceName);
 
-			ret = getServiceResources(resource);
+			ret = getServiceResources(filter);
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getServiceResourcesByServiceAndResourceSpec(" + serviceName + ", " + resourceSpec + "): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== TagFileStore.getServiceResourcesByService(" + serviceName + "): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@Override
+	public RangerServiceResource getServiceResourceByResourceSignature(String resourceSignature) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagFileStore.getServiceResourceByResourceSignature(" + resourceSignature + ")");
+		}
+
+		RangerServiceResource ret = null;
+
+		if (StringUtils.isNotBlank(resourceSignature)) {
+			SearchFilter filter = new SearchFilter(SearchFilter.TAG_RESOURCE_SIGNATURE, resourceSignature);
+
+			List<RangerServiceResource> resources = getServiceResources(filter);
+
+			ret = CollectionUtils.isNotEmpty(resources) ? resources.get(0) : null;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagFileStore.getServiceResourceByResourceSignature(" + resourceSignature + "): " + ret);
 		}
 
 		return ret;
@@ -770,13 +788,13 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteTagResourceMapById(Long id) throws Exception {
+	public void deleteTagResourceMap(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.deleteTagResourceMapById(" + id + ")");
+			LOG.debug("==> TagFileStore.deleteTagResourceMap(" + id + ")");
 		}
 
 		try {
-			RangerTagResourceMap tagResourceMap = getTagResourceMapById(id);
+			RangerTagResourceMap tagResourceMap = getTagResourceMap(id);
 
 			deleteTagResourceMap(tagResourceMap);
 		} catch (Exception excp) {
@@ -784,14 +802,14 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.deleteTagResourceMapById(" + id + ")");
+			LOG.debug("<== TagFileStore.deleteTagResourceMap(" + id + ")");
 		}
 	}
 
 	@Override
-	public RangerTagResourceMap getTagResourceMapById(Long id) throws Exception {
+	public RangerTagResourceMap getTagResourceMap(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getTagResourceMapById(" + id + ")");
+			LOG.debug("==> TagFileStore.getTagResourceMap(" + id + ")");
 		}
 
 		RangerTagResourceMap ret = null;
@@ -807,7 +825,32 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getTagResourceMapById(" + id + "): " + ret);
+			LOG.debug("<== TagFileStore.getTagResourceMap(" + id + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public RangerTagResourceMap getTagResourceMapByGuid(String guid) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagFileStore.getTagResourceMapByGuid(" + guid + ")");
+		}
+
+		RangerTagResourceMap ret = null;
+
+		SearchFilter filter = new SearchFilter();
+
+		filter.setParam(SearchFilter.TAG_MAP_GUID, guid.toString());
+
+		List<RangerTagResourceMap> list = getTagResourceMaps(filter);
+
+		if (CollectionUtils.isNotEmpty(list))  {
+			ret = list.get(0);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagFileStore.getTagResourceMapByGuid(" + guid + "): " + ret);
 		}
 
 		return ret;
@@ -859,7 +902,7 @@ public class TagFileStore extends AbstractTagStore {
 	@Override
 	public List<RangerTagResourceMap> getTagResourceMapsForResourceId(Long resourceId) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getTagResourceMapById(" + resourceId + ")");
+			LOG.debug("==> TagFileStore.getTagResourceMap(" + resourceId + ")");
 		}
 
 		SearchFilter filter = new SearchFilter();
@@ -869,7 +912,7 @@ public class TagFileStore extends AbstractTagStore {
 		List<RangerTagResourceMap> ret = getTagResourceMaps(filter);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getTagResourceMapById(" + resourceId + "): " + ret);
+			LOG.debug("<== TagFileStore.getTagResourceMap(" + resourceId + "): " + ret);
 		}
 
 		return ret;
@@ -1076,7 +1119,7 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<String> getTags(String serviceName) throws Exception {
+	public List<String> getTagTypes(String serviceName) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getTags(" + serviceName + ")");
 		}
@@ -1087,7 +1130,7 @@ public class TagFileStore extends AbstractTagStore {
 		List<RangerTag> allTags = getAllTags();
 
 		for (RangerTag tag : allTags) {
-			ret.add(tag.getName());
+			ret.add(tag.getType());
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1098,35 +1141,35 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public List<String> lookupTags(String serviceName, String tagNamePattern) throws Exception {
+	public List<String> lookupTagTypes(String serviceName, String pattern) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.lookupTags(" + serviceName + ", " + tagNamePattern + ")");
+			LOG.debug("==> TagFileStore.lookupTags(" + serviceName + ", " + pattern + ")");
 		}
 
 		List<String> ret  = new ArrayList<String>();
-		List<String> tags = getTags(serviceName);
+		List<String> tags = getTagTypes(serviceName);
 
 		if (CollectionUtils.isNotEmpty(tags)) {
-			Pattern p = Pattern.compile(tagNamePattern);
-			for (String tagName : tags) {
-				Matcher m = p.matcher(tagName);
+			Pattern p = Pattern.compile(pattern);
+			for (String tagType : tags) {
+				Matcher m = p.matcher(tagType);
 
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("TagFileStore.lookupTags) - Trying to match .... tagNamePattern=" + tagNamePattern + ", tagName=" + tagName);
+					LOG.debug("TagFileStore.lookupTags) - Trying to match .... pattern=" + pattern + ", tagType=" + tagType);
 				}
 
 				if (m.matches()) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("TagFileStore.lookupTags) - Match found.... tagNamePattern=" + tagNamePattern + ", tagName=" + tagName);
+						LOG.debug("TagFileStore.lookupTags) - Match found.... pattern=" + pattern + ", tagType=" + tagType);
 					}
 
-					ret.add(tagName);
+					ret.add(tagType);
 				}
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.lookupTags(" + serviceName + ", " + tagNamePattern + "): count=" + ret.size());
+			LOG.debug("<== TagFileStore.lookupTags(" + serviceName + ", " + pattern + "): count=" + ret.size());
 		}
 
 		return ret;
@@ -1144,7 +1187,7 @@ public class TagFileStore extends AbstractTagStore {
 			if (CollectionUtils.isNotEmpty(associations)) {
 
 				for (RangerTagResourceMap association : associations) {
-					RangerTag tag = getTagById(association.getTagId());
+					RangerTag tag = getTag(association.getTagId());
 					if (tag != null) {
 						tagList.add(tag);
 					}
@@ -1211,7 +1254,7 @@ public class TagFileStore extends AbstractTagStore {
 						for (int i = 0; i < ret.size(); i++) {
 							RangerTag currSd = ret.get(i);
 
-							if (StringUtils.equals(currSd.getName(), sd.getName()) ||
+							if (StringUtils.equals(currSd.getType(), sd.getType()) ||
 									ObjectUtils.equals(currSd.getId(), sd.getId())) {
 								ret.remove(i);
 							}

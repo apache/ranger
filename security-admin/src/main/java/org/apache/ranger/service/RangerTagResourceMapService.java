@@ -148,6 +148,18 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
 		return ret;
 	}
 	
+	public RangerTagResourceMap getByGuid(String guid) {
+		RangerTagResourceMap ret = null;
+
+		XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByGuid(guid);
+
+		if(xxTagResourceMap != null) {
+			ret = populateViewBean(xxTagResourceMap);
+		}
+
+		return ret;
+	}
+	
 	public RangerTagResourceMap getByTagAndResourceId(Long tagId, Long resourceId) {
 		RangerTagResourceMap ret = null;
 

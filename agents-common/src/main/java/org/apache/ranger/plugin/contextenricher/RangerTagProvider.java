@@ -128,7 +128,7 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 				RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
 
 				matcher.setServiceDef(this.serviceDef);
-				matcher.setPolicyResources(serviceResource.getResourceSpec());
+				matcher.setPolicyResources(serviceResource.getResourceElements());
 
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerTagProvider.setServiceTags() - Initializing matcher with (resource=" + serviceResource

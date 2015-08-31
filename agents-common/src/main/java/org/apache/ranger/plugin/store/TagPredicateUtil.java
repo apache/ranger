@@ -39,11 +39,10 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 
 		addPredicateForTagDefId(filter.getParam(SearchFilter.TAG_DEF_ID), predicates);
 		addPredicateForTagDefGuid(filter.getParam(SearchFilter.TAG_DEF_GUID), predicates);
-		addPredicateForTagDefName(filter.getParam(SearchFilter.TAG_DEF_NAME), predicates);
 
 		addPredicateForTagId(filter.getParam(SearchFilter.TAG_ID), predicates);
 		addPredicateForTagGuid(filter.getParam(SearchFilter.TAG_GUID), predicates);
-		addPredicateForTagName(filter.getParam(SearchFilter.TAG_NAME), predicates);
+		addPredicateForTagType(filter.getParam(SearchFilter.TAG_TYPE), predicates);
 
 		addPredicateForResourceId(filter.getParam(SearchFilter.TAG_RESOURCE_ID), predicates);
 		addPredicateForResourceGuid(filter.getParam(SearchFilter.TAG_RESOURCE_GUID), predicates);
@@ -104,38 +103,6 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 					RangerTagDef tagDef = (RangerTagDef) object;
 
 					ret = StringUtils.equals(guid, tagDef.getGuid());
-				}
-
-				return ret;
-			}
-		};
-
-		if (predicates != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
-	}
-
-	private Predicate addPredicateForTagDefName(final String name, List<Predicate> predicates) {
-		if (name == null || StringUtils.isEmpty(name)) {
-			return null;
-		}
-
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-
-				boolean ret = false;
-
-				if (object == null) {
-					return ret;
-				}
-
-				if (object instanceof RangerTagDef) {
-					RangerTagDef tagDef = (RangerTagDef) object;
-
-					ret = StringUtils.equals(name, tagDef.getName());
 				}
 
 				return ret;
@@ -216,8 +183,8 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagName(final String name, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(name)) {
+	private Predicate addPredicateForTagType(final String type, List<Predicate> predicates) {
+		if (StringUtils.isEmpty(type)) {
 			return null;
 		}
 
@@ -231,10 +198,14 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 					return ret;
 				}
 
-				if (object instanceof RangerTag) {
+				if (object instanceof RangerTagDef) {
+					RangerTagDef tagDef = (RangerTagDef) object;
+
+					ret = StringUtils.equals(type, tagDef.getName());
+				} else if (object instanceof RangerTag) {
 					RangerTag tag = (RangerTag) object;
 
-					ret = StringUtils.equals(name, tag.getName());
+					ret = StringUtils.equals(type, tag.getType());
 				}
 
 				return ret;

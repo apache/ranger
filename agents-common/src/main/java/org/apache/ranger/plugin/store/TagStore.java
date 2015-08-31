@@ -24,7 +24,6 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Interface to backing store for the top-level TAG model objects
@@ -40,15 +39,15 @@ public interface TagStore {
 
     RangerTagDef updateTagDef(RangerTagDef TagDef) throws Exception;
 
-    void deleteTagDef(String name) throws Exception;
+    void deleteTagDefByName(String name) throws Exception;
 
-	void deleteTagDefById(Long id) throws Exception;
+	void deleteTagDef(Long id) throws Exception;
 
-    RangerTagDef getTagDefById(Long id) throws Exception;
+    RangerTagDef getTagDef(Long id) throws Exception;
 
     RangerTagDef getTagDefByGuid(String guid) throws Exception;
 
-	List<RangerTagDef> getTagDefsByName(String name) throws Exception;
+	RangerTagDef getTagDefByName(String name) throws Exception;
 
     List<RangerTagDef> getTagDefs(SearchFilter filter) throws Exception;
 
@@ -59,13 +58,13 @@ public interface TagStore {
 
     RangerTag updateTag(RangerTag tag) throws Exception;
 
-    void deleteTagById(Long id) throws Exception;
+    void deleteTag(Long id) throws Exception;
 
-    RangerTag getTagById(Long id) throws Exception;
+    RangerTag getTag(Long id) throws Exception;
 
     RangerTag getTagByGuid(String guid) throws Exception;
 
-    List<RangerTag> getTagsByName(String name) throws Exception;
+    List<RangerTag> getTagsByType(String name) throws Exception;
 
     List<RangerTag> getTagsForResourceId(Long resourceId) throws Exception;
 
@@ -80,13 +79,15 @@ public interface TagStore {
 
     RangerServiceResource updateServiceResource(RangerServiceResource resource) throws Exception;
 
-    void deleteServiceResourceById(Long id) throws Exception;
+    void deleteServiceResource(Long id) throws Exception;
 
-    RangerServiceResource getServiceResourceById(Long id) throws Exception;
+    RangerServiceResource getServiceResource(Long id) throws Exception;
 
     RangerServiceResource getServiceResourceByGuid(String guid) throws Exception;
 
-    List<RangerServiceResource> getServiceResourcesByServiceAndResourceSpec(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceSpec) throws Exception;
+    List<RangerServiceResource> getServiceResourcesByService(String serviceName) throws Exception;
+
+    RangerServiceResource getServiceResourceByResourceSignature(String resourceSignature) throws Exception;
 
     List<RangerServiceResource> getServiceResources(SearchFilter filter) throws Exception;
 
@@ -95,9 +96,11 @@ public interface TagStore {
 
     RangerTagResourceMap createTagResourceMap(RangerTagResourceMap tagResourceMap) throws Exception;
 
-    void deleteTagResourceMapById(Long id) throws Exception;
+    void deleteTagResourceMap(Long id) throws Exception;
 
-    RangerTagResourceMap getTagResourceMapById(Long id) throws Exception;
+    RangerTagResourceMap getTagResourceMap(Long id) throws Exception;
+
+    RangerTagResourceMap getTagResourceMapByGuid(String guid) throws Exception;
 
     List<RangerTagResourceMap> getTagResourceMapsForTagId(Long tagId) throws Exception;
 
@@ -118,7 +121,7 @@ public interface TagStore {
 
     ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
 
-    List<String> getTags(String serviceName) throws Exception;
+    List<String> getTagTypes(String serviceName) throws Exception;
 
-    List<String> lookupTags(String serviceName, String tagNamePattern) throws Exception;
+    List<String> lookupTagTypes(String serviceName, String pattern) throws Exception;
 }

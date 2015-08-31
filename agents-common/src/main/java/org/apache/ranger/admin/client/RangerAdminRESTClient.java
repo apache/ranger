@@ -228,9 +228,9 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public List<String> getTagNames(String tagNamePattern) throws Exception {
+	public List<String> getTagTypes(String pattern) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.getTagNames(" + tagNamePattern + "): ");
+			LOG.debug("==> RangerAdminRESTClient.getTagTypes(" + pattern + "): ");
 		}
 
 		List<String> ret = null;
@@ -238,7 +238,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_LOOKUP_TAG_NAMES)
 				.queryParam(RangerRESTUtils.SERVICE_NAME_PARAM, serviceName)
-				.queryParam(RangerRESTUtils.PATTERN_PARAM, tagNamePattern);
+				.queryParam(RangerRESTUtils.PATTERN_PARAM, pattern);
 
 		ClientResponse response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 
@@ -248,12 +248,12 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("Error getting taggedResources. request=" + webResource.toString()
 					+ ", response=" + resp.toString() + ", serviceName=" + serviceName
-					+ ", " + "tagNamePattern=" + tagNamePattern);
+					+ ", " + "pattern=" + pattern);
 			throw new Exception(resp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.getTagNames(" + tagNamePattern + "): " + ret);
+			LOG.debug("<== RangerAdminRESTClient.getTagTypes(" + pattern + "): " + ret);
 		}
 
 		return ret;

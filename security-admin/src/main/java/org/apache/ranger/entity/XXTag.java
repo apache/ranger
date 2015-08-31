@@ -49,8 +49,8 @@ public class XXTag extends XXDBBase implements Serializable {
 	@Column(name = "guid", unique = true, nullable = false, length = 512)
 	protected String guid;
 
-	@Column(name = "name")
-	protected String name;
+	@Column(name = "type")
+	protected Long type;
 
 	@Override
 	public void setId(Long id) {
@@ -78,18 +78,18 @@ public class XXTag extends XXDBBase implements Serializable {
 	}
 
 	/**
-	 * @return the name
+	 * @return the type
 	 */
-	public String getName() {
-		return name;
+	public Long getType() {
+		return type;
 	}
 
 	/**
-	 * @param name
-	 *            the name to set
+	 * @param type
+	 *            the type to set
 	 */
-	public void setName(String name) {
-		this.name = name;
+	public void setType(Long type) {
+		this.type = type;
 	}
 
 	@Override
@@ -108,7 +108,7 @@ public class XXTag extends XXDBBase implements Serializable {
 		int result = 1;
 		result = prime * result + ((guid == null) ? 0 : guid.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
 	}
 
@@ -136,10 +136,10 @@ public class XXTag extends XXDBBase implements Serializable {
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
-		if (name == null) {
-			if (other.name != null)
+		if (type == null) {
+			if (other.type != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!type.equals(other.type))
 			return false;
 		return true;
 	}
@@ -161,7 +161,7 @@ public class XXTag extends XXDBBase implements Serializable {
 		sb.append(super.toString() + "} ");
 		sb.append("id={").append(id).append("} ");
 		sb.append("guid={").append(guid).append("} ");
-		sb.append("name={").append(name).append("} ");
+		sb.append("type={").append(type).append("} ");
 		sb.append(" }");
 
 		return sb;

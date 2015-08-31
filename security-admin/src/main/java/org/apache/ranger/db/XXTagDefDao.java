@@ -48,16 +48,16 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 		}
 	}
 
-	public List<XXTagDef> findByName(String name) {
+	public XXTagDef findByName(String name) {
 		if (StringUtils.isEmpty(name)) {
-			return new ArrayList<XXTagDef>();
+			return null;
 		}
 
 		try {
 			return getEntityManager().createNamedQuery("XXTagDef.findByName", tClass)
-					.setParameter("name", name).getResultList();
+					.setParameter("name", name).getSingleResult();
 		} catch (NoResultException e) {
-			return new ArrayList<XXTagDef>();
+			return null;
 		}
 	}
 

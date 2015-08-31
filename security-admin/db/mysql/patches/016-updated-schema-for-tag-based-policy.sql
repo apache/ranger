@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `x_tag_def` (
   `is_enabled` TINYINT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `guid_UNIQUE` (`guid` ASC),
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
   INDEX `fk_X_TAG_DEF_NAME` (`name` ASC),
   INDEX `fk_X_TAG_DEF_ADDED_BY_ID` (`added_by_id` ASC),
   INDEX `fk_X_TAG_DEF_UPD_BY_ID` (`upd_by_id` ASC),
@@ -62,14 +63,14 @@ CREATE TABLE IF NOT EXISTS `x_tag` (
   `update_time` DATETIME NULL,
   `added_by_id` BIGINT(20) NULL,
   `upd_by_id` BIGINT(20) NULL,
-  `name` VARCHAR(512) NOT NULL,
+  `type` BIGINT(20) NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_X_TAG_NAME` (`name` ASC),
+  INDEX `fk_X_TAG_TYPE` (`type` ASC),
   INDEX `fk_X_TAG_ADDED_BY_ID` (`added_by_id` ASC),
   INDEX `fk_X_TAG_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_TAG_NAME`
-    FOREIGN KEY (`name`)
-    REFERENCES `x_tag_def` (`name`)
+  CONSTRAINT `fk_X_TAG_TYPE`
+    FOREIGN KEY (`type`)
+    REFERENCES `x_tag_def` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_X_TAG_ADDED_BY_ID`

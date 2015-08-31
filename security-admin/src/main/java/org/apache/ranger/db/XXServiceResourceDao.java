@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceResource;
@@ -59,13 +60,12 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 		}
 	}
 
-	public XXServiceResource findByServiceIdAndResourceSignature(Long serviceId, String resourceSignature) {
-		if (serviceId == null || StringUtil.isEmpty(resourceSignature)) {
+	public XXServiceResource findByResourceSignature(String resourceSignature) {
+		if (StringUtils.isBlank(resourceSignature)) {
 			return null;
 		}
 		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.findByServiceIdAndResourceSignature", tClass)
-					.setParameter("serviceId", serviceId)
+			return getEntityManager().createNamedQuery("XXServiceResource.findByResourceSignature", tClass)
 					.setParameter("resourceSignature", resourceSignature).getSingleResult();
 		} catch (NoResultException e) {
 			return null;

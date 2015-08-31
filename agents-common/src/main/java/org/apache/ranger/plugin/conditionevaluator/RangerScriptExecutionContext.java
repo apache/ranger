@@ -86,46 +86,46 @@ public final class RangerScriptExecutionContext {
 		return tagObject;
 	}
 
-	public final String getCurrentTagName() {
+	public final String getCurrentTagType() {
 		RangerTag tagObject = getCurrentTag();
-		return (tagObject != null) ? tagObject.getName() : null;
+		return (tagObject != null) ? tagObject.getType() : null;
 	}
 
-	public final Set<String> getAllTagNames() {
+	public final Set<String> getAllTagTypes() {
 
-		Set<String> allTagNames = null;
+		Set<String> allTagTypes = null;
 
 		List<RangerTag> tagObjectList = getAllTags();
 
 		if (CollectionUtils.isNotEmpty(tagObjectList)) {
 
 			for (RangerTag tag : tagObjectList) {
-				String tagName = tag.getName();
-				if (allTagNames == null) {
-					allTagNames = new HashSet<String>();
+				String tagType = tag.getType();
+				if (allTagTypes == null) {
+					allTagTypes = new HashSet<String>();
 				}
-				allTagNames.add(tagName);
+				allTagTypes.add(tagType);
 			}
 		}
 
-		return allTagNames;
+		return allTagTypes;
 	}
 
-	public final Map<String, String> getTagAttributeValues(final String tagName) {
+	public final Map<String, String> getTagAttributes(final String tagType) {
 
 		Map<String, String> ret = null;
 
-		if (StringUtils.isNotBlank(tagName)) {
+		if (StringUtils.isNotBlank(tagType)) {
 
 			List<RangerTag> tagObjectList = getAllTags();
 
-			// Assumption: There is exactly one tag with given tagName in the list of tags - may not be true ***TODO***
-			// This will get attributeValues of the first tagName that matches
+			// Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
+			// This will get attributes of the first tagType that matches
 
 			if (CollectionUtils.isNotEmpty(tagObjectList)) {
 				for (RangerTag tag : tagObjectList) {
-					if (tag.getName().equals(tagName)) {
-						ret = tag.getAttributeValues();
+					if (tag.getType().equals(tagType)) {
+						ret = tag.getAttributes();
 						break;
 					}
 				}
@@ -135,29 +135,29 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final Set<String> getAttributeNames(final String tagName) {
+	public final Set<String> getAttributeNames(final String tagType) {
 
 		Set<String> ret = null;
 
-		Map<String, String> attributeValues = getTagAttributeValues(tagName);
+		Map<String, String> attributes = getTagAttributes(tagType);
 
-		if (attributeValues != null) {
-			ret = attributeValues.keySet();
+		if (attributes != null) {
+			ret = attributes.keySet();
 		}
 
 		return ret;
 	}
 
-	public final String getAttributeValue(final String tagName, final String attributeName) {
+	public final String getAttributeValue(final String tagType, final String attributeName) {
 
 		String ret = null;
-		Map<String, String> attributeValues;
+		Map<String, String> attributes;
 
-		if (StringUtils.isNotBlank(tagName) || StringUtils.isNotBlank(attributeName)) {
-			attributeValues = getTagAttributeValues(tagName);
+		if (StringUtils.isNotBlank(tagType) || StringUtils.isNotBlank(attributeName)) {
+			attributes = getTagAttributes(tagType);
 
-			if (attributeValues != null) {
-				ret = attributeValues.get(attributeName);
+			if (attributes != null) {
+				ret = attributes.get(attributeName);
 			}
 		}
 		return ret;
@@ -169,12 +169,12 @@ public final class RangerScriptExecutionContext {
 
 		if (StringUtils.isNotBlank(attributeName)) {
 			RangerTag tag = getCurrentTag();
-			Map<String, String> attributeValues = null;
+			Map<String, String> attributes = null;
 			if (tag != null) {
-				attributeValues = tag.getAttributeValues();
+				attributes = tag.getAttributes();
 			}
-			if (attributeValues != null) {
-				ret = attributeValues.get(attributeName);
+			if (attributes != null) {
+				ret = attributes.get(attributeName);
 			}
 		}
 		return ret;
@@ -207,7 +207,7 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final Date getTagAttributeAsDate(String tagName, String attributeName) {
+	public final Date getTagAttributeAsDate(String tagType, String attributeName) {
 		// sample JavaScript to demonstrate use of this helper method
 
 		/*
@@ -219,19 +219,19 @@ public final class RangerScriptExecutionContext {
 
 		*/
 
-		String attrValue = getAttributeValue(tagName, attributeName);
+		String attrValue = getAttributeValue(tagType, attributeName);
 
 		return getAsDate(attrValue);
 
 	}
 
-	public final boolean isAccessedAfter(String tagName, String attributeName) {
+	public final boolean isAccessedAfter(String tagType, String attributeName) {
 
 		boolean ret = false;
 
 		Date accessDate = getAccessTime();
 
-		Date expiryDate = getTagAttributeAsDate(tagName, attributeName);
+		Date expiryDate = getTagAttributeAsDate(tagType, attributeName);
 
 		if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
 			ret = true;
@@ -255,13 +255,13 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final boolean isAccessedBefore(String tagName, String attributeName) {
+	public final boolean isAccessedBefore(String tagType, String attributeName) {
 
 		boolean ret = true;
 
 		Date accessDate = getAccessTime();
 
-		Date expiryDate = getTagAttributeAsDate(tagName, attributeName);
+		Date expiryDate = getTagAttributeAsDate(tagType, attributeName);
 
 		if (expiryDate == null || accessDate.after(expiryDate)) {
 			ret = false;

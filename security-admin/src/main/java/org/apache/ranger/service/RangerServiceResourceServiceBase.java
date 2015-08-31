@@ -76,7 +76,7 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 		vObj.setServiceName(xService.getName());
 
 		List<XXServiceResourceElement> resElementList = daoMgr.getXXServiceResourceElement().findByResourceId(xObj.getId());
-		Map<String, RangerPolicy.RangerPolicyResource> resourceSpec = new HashMap<String, RangerPolicy.RangerPolicyResource>();
+		Map<String, RangerPolicy.RangerPolicyResource> resourceElements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
 
 		for (XXServiceResourceElement resElement : resElementList) {
 			List<String> resValueMapList = daoMgr.getXXServiceResourceElementValue().findValuesByResElementId(resElement.getId());
@@ -88,10 +88,10 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 			policyRes.setIsRecursive(resElement.getIsRecursive());
 			policyRes.setValues(resValueMapList);
 
-			resourceSpec.put(xResDef.getName(), policyRes);
+			resourceElements.put(xResDef.getName(), policyRes);
 		}
 
-		vObj.setResourceSpec(resourceSpec);
+		vObj.setResourceElements(resourceElements);
 
 		return vObj;
 	}

@@ -27,10 +27,12 @@ import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTag;
+import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -53,25 +55,38 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 	protected XXTag mapViewToEntityBean(RangerTag vObj, XXTag xObj, int OPERATION_CONTEXT) {
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
+		XXTagDef xTagDef = daoMgr.getXXTagDef().findByName(vObj.getType());
+		if(xTagDef == null) {
+			throw restErrorUtil.createRESTException(
+					"No TagDefinition found with name :" + vObj.getType(),
+					MessageEnums.INVALID_INPUT_DATA);
+		}
+
 		xObj.setGuid(guid);
-		xObj.setName(vObj.getName());
+		xObj.setType(xTagDef.getId());
 		return xObj;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	protected RangerTag mapEntityToViewBean(RangerTag vObj, XXTag xObj) {
+		XXTagDef xTagDef = daoMgr.getXXTagDef().getById(xObj.getType());
+		if(xTagDef == null) {
+			throw restErrorUtil.createRESTException(
+					"No TagDefinition found with name :" + xObj.getType(),
+					MessageEnums.INVALID_INPUT_DATA);
+		}
 
 		vObj.setGuid(xObj.getGuid());
-		vObj.setName(xObj.getName());
+		vObj.setType(xTagDef.getName());
 
-		Map<String, String> attributeValues = getAttributeValuesForTag(xObj);
-		vObj.setAttributeValues(attributeValues);
+		Map<String, String> attributes = getAttributesForTag(xObj);
+		vObj.setAttributes(attributes);
 
 		return vObj;
 	}
 
-	public Map<String, String> getAttributeValuesForTag(XXTag xtag) {
+	public Map<String, String> getAttributesForTag(XXTag xtag) {
 		List<XXTagAttribute> tagAttrList = daoMgr.getXXTagAttribute().findByTagId(xtag.getId());
 		Map<String, String>  ret         = new HashMap<String, String>();
 
