@@ -1330,6 +1330,10 @@ do_authentication_setup(){
 				newPropertyValue="${xa_ldap_referral}"
 				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
+				propertyName=ranger.ldap.user.searchfilter
+				newPropertyValue="${xa_ldap_userSearchFilter}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
 				keystore="${cred_keystore_filename}"
 
 				if [ "${keystore}" != "" ]
@@ -1409,6 +1413,10 @@ do_authentication_setup(){
 
 				propertyName=ranger.ldap.ad.referral
 				newPropertyValue="${xa_ldap_ad_referral}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+
+				propertyName=ranger.ldap.ad.user.searchfilter
+				newPropertyValue="${xa_ldap_ad_userSearchFilter}"
 				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
 
 				keystore="${cred_keystore_filename}"
