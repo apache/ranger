@@ -23,17 +23,19 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public final class RangerScriptExecutionContext {
 	private static final Log LOG = LogFactory.getLog(RangerScriptExecutionContext.class);
-	public static final String DATETIME_FORMAT_PATTERN = "EEE MMM dd HH:mm:ss z yyyy";
+	public static final String DATETIME_FORMAT_PATTERN = "yyyy/MM/dd";
 
 	private final RangerAccessRequest accessRequest;
 	private Boolean result = false;
@@ -198,7 +200,12 @@ public final class RangerScriptExecutionContext {
 		if (StringUtils.isNotBlank(value)) {
 			SimpleDateFormat df = new SimpleDateFormat(DATETIME_FORMAT_PATTERN);
 			try {
-				ret = df.parse(value);
+				Date expiryDate = df.parse(value);
+				if (expiryDate == null) {
+					LOG.error("Could not parse provided expiry_date into a valid date, expiry_date=" + value + ", Format-String=" + DATETIME_FORMAT_PATTERN);
+				} else {
+					ret = StringUtil.getUTCDateForLocalDate(expiryDate);
+				}
 			} catch (Exception ex) {
 				LOG.error("RangerScriptExecutionContext.getAsDate() - Could not convert " + value + " to Date, exception=" + ex);
 			}

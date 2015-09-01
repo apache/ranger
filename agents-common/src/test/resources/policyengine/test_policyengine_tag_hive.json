@@ -216,7 +216,8 @@
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1",
-        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+
+        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":5}
     },
@@ -224,7 +225,8 @@
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1",
-        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"Mon Aug 10 13:00:00 PDT 2015\"}}]"}
+
+        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2015/08/10\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":5}
     },
@@ -232,7 +234,7 @@
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1",
-        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"Mon Aug 10 13:00:00 PDT 2015\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2015/08/10\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":5}
     },
@@ -240,7 +242,7 @@
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"dataloader","userGroups":[],"requestData":"select ssn from employee.personal;' for dataloader",
-        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"Mon Aug 10 13:00:00 PDT 2015\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2015/08/10\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":5}
     },
@@ -248,7 +250,7 @@
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1",
-        "context": {"TAGS":"[{\"type\":\"RESTRICTED\", \"attributes\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"RESTRICTED\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":1}
     },
@@ -256,7 +258,7 @@
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user2","userGroups":[],"requestData":"select ssn from employee.personal;' for user2",
-        "context": {"TAGS":"[{\"type\":\"RESTRICTED-FINAL\", \"attributes\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"RESTRICTED-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":4}
     },
@@ -281,7 +283,7 @@
       "request":{
         "resource":{"elements":{"database":"default", "table":"table1", "column":"name"}},
         "accessType":"select","user":"hive","userGroups":[],"requestData":"select name from default.table1;' for hive",
-        "context": {"TAGS":"[{\"type\":\"PII\", \"attributes\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"PII\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     },
@@ -289,7 +291,7 @@
       "request":{
         "resource":{"elements":{"database":"default", "table":"table1"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"desc default.table1;' for hive",
-        "context": {"TAGS":"[{\"type\":\"PII\", \"attributes\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"PII\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     },
@@ -297,7 +299,7 @@
       "request":{
         "resource":{"elements":{"database":"default", "table":"table1"}},
         "accessType":"","user":"user1","userGroups":[],"requestData":"desc default.table1;' for user1",
-        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":3}
     },
@@ -305,7 +307,7 @@
       "request":{
         "resource":{"elements":{"database":"default"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"use default",
-        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     },
@@ -313,7 +315,7 @@
       "request":{
         "resource":{"elements":{"database":"default"}},
         "accessType":"","user":"user1","userGroups":[],"requestData":"use default for user1",
-        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":3}
     },
@@ -321,7 +323,7 @@
       "request":{
         "resource":{"elements":{"database":"default", "table":"table1", "column":"name"}},
         "accessType":"select","user":"hive","userGroups":[],"requestData":"select * from default.table1",
-        "context": {"TAGS":"[{\"type\":\"PII\", \"attributes\":{\"expiry\":\"Mon Jun 15 13:00:00 PDT 2026\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"PII\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     }

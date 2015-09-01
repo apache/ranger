@@ -273,4 +273,16 @@ public class StringUtil {
 
 	    return utc.getTime();
 	}
+
+	public static Date getUTCDateForLocalDate(Date date) {
+		Calendar local  = Calendar.getInstance();
+		int      offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+
+		GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
+
+		utc.setTimeInMillis(date.getTime());
+		utc.add(Calendar.MILLISECOND, -offset);
+
+		return utc.getTime();
+	}
 }
