@@ -85,7 +85,7 @@ public class TestPolicyDb {
 		policyEngineOptions.disableContextEnrichers = true;
 		policyEngineOptions.disableCustomConditions = true;
 
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testCase.servicePolicies, policyEngineOptions);
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl("test-policydb", testCase.servicePolicies, policyEngineOptions);
 
 		for(TestData test : testCase.tests) {
 			boolean expected = test.result;

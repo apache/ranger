@@ -107,7 +107,7 @@ public class RangerBasePlugin {
 	}
 
 	public void setPolicies(ServicePolicies policies) {
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(policies, policyEngineOptions);
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
 
 		this.policyEngine = policyEngine;
 	}

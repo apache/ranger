@@ -19,13 +19,60 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import org.apache.ranger.plugin.model.RangerServiceDef;
+
 import java.util.Map;
 
-public interface RangerTagRetriever {
+public abstract class RangerTagRetriever {
 
-	void init (Map<String, String> options);
+	protected String serviceName;
+	protected RangerServiceDef serviceDef;
+	protected String appId;
+	protected long lastKnownVersion;
+	protected RangerTagReceiver tagReceiver;
 
-	void setReceiver(RangerTagReceiver receiver);
+	public abstract void init(Map<String, String> options);
 
-	void retrieveTags();
+	public abstract void retrieveTags() throws InterruptedException;
+
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	public RangerServiceDef getServiceDef() {
+		return serviceDef;
+	}
+
+	public void setServiceDef(RangerServiceDef serviceDef) {
+		this.serviceDef = serviceDef;
+	}
+
+	public String getAppId() {
+		return appId;
+	}
+
+	public void setAppId(String appId) {
+		this.appId = appId;
+	}
+
+	public long getLastKnownVersion() {
+		return lastKnownVersion;
+	}
+
+	public void setLastKnownVersion(long lastKnownVersion) {
+		this.lastKnownVersion = lastKnownVersion;
+	}
+
+	public RangerTagReceiver getTagReceiver() {
+		return tagReceiver;
+	}
+
+	public void setTagReceiver(RangerTagReceiver tagReceiver) {
+		this.tagReceiver = tagReceiver;
+	}
+
 }

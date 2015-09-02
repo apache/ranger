@@ -23,8 +23,13 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -111,11 +116,11 @@ public class TestPolicyEngine {
 		writer.write("<configuration>\n" +
 				"        <property>\n" +
 				"                <name>ranger.plugin.tag.policy.rest.url</name>\n" +
-				"                <value>http://node-1.example.com:6080</value>\n" +
+				"                <value>http://os-def:6080</value>\n" +
 				"        </property>\n" +
 				"        <property>\n" +
 				"                <name>ranger.externalurl</name>\n" +
-				"                <value>http://node-1.example.com:6080</value>\n" +
+				"                <value>http://os-def:6080</value>\n" +
 				"        </property>\n" +
 				"</configuration>\n");
 
@@ -124,6 +129,7 @@ public class TestPolicyEngine {
 		RangerConfiguration rangerConfig = RangerConfiguration.getInstance();
 		rangerConfig.addResource(filePath);
 */
+
 	}
 
 	@AfterClass
@@ -218,7 +224,7 @@ public class TestPolicyEngine {
 
 		policyEngineOptions.disableTagPolicyEvaluation = false;
 
-		policyEngine = new RangerPolicyEngineImpl(servicePolicies, policyEngineOptions);
+		policyEngine = new RangerPolicyEngineImpl("test-policyengine", servicePolicies, policyEngineOptions);
 
 		RangerAccessRequest request = null;
 

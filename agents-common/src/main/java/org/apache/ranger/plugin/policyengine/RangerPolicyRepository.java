@@ -39,6 +39,7 @@ public class RangerPolicyRepository {
     private static final Log LOG = LogFactory.getLog(RangerPolicyRepository.class);
 
     private final String                      serviceName;
+    private final String                      appId;
     private final RangerServiceDef            serviceDef;
     private final List<RangerPolicy>          policies;
     private final long                        policyVersion;
@@ -49,11 +50,14 @@ public class RangerPolicyRepository {
     private final String                      componentServiceName;
     private final RangerServiceDef            componentServiceDef;
 
-    RangerPolicyRepository(ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
+    RangerPolicyRepository(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
         super();
 
         this.componentServiceName = this.serviceName = servicePolicies.getServiceName();
         this.componentServiceDef = this.serviceDef = servicePolicies.getServiceDef();
+
+        this.appId = appId;
+
         this.policies = Collections.unmodifiableList(servicePolicies.getPolicies());
         this.policyVersion = servicePolicies.getPolicyVersion() != null ? servicePolicies.getPolicyVersion() : -1;
 
@@ -76,7 +80,7 @@ public class RangerPolicyRepository {
 
     }
 
-    RangerPolicyRepository(ServicePolicies.TagPolicies tagPolicies, RangerPolicyEngineOptions options,
+    RangerPolicyRepository(String appId, ServicePolicies.TagPolicies tagPolicies, RangerPolicyEngineOptions options,
                            RangerServiceDef componentServiceDef, String componentServiceName) {
         super();
 
@@ -85,6 +89,8 @@ public class RangerPolicyRepository {
 
         this.serviceDef = normalizeAccessTypeDefs(tagPolicies.getServiceDef(), componentServiceDef.getName());
         this.componentServiceDef = componentServiceDef;
+
+        this.appId = appId;
 
         this.policies = Collections.unmodifiableList(normalizePolicyItemAccesses(tagPolicies.getPolicies(), componentServiceDef.getName()));
         this.policyVersion = tagPolicies.getPolicyVersion() != null ? tagPolicies.getPolicyVersion() : -1;
@@ -303,6 +309,7 @@ public class RangerPolicyRepository {
         	ret.setContextEnricherDef(enricherDef);
             ret.setContextServiceName(componentServiceName);
             ret.setContextServiceDef(componentServiceDef);
+            ret.setAppId(appId);
             ret.init();
         }
 
@@ -393,6 +400,7 @@ public class RangerPolicyRepository {
 
         sb.append("serviceName={").append(serviceName).append("} ");
         sb.append("serviceDef={").append(serviceDef).append("} ");
+        sb.append("appId={").append(appId).append("} ");
 
         sb.append("policyEvaluators={");
         if (policyEvaluators != null) {

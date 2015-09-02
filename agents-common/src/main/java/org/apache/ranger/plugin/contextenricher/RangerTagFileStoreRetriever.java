@@ -19,63 +19,67 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.file.TagFileStore;
 import org.apache.ranger.plugin.util.ServiceTags;
 
-import java.util.Date;
-import java.util.List;
+import java.nio.channels.ClosedByInterruptException;
 import java.util.Map;
 
-public class RangerTagFileStoreRetriever extends RangerTagRefresher {
+public class RangerTagFileStoreRetriever extends RangerTagRetriever {
 	private static final Log LOG = LogFactory.getLog(RangerTagFileStoreRetriever.class);
 
-	private final String serviceName;
-	private RangerTagReceiver receiver;
-
 	private TagStore tagStore;
-	private long lastKnownVersion;
 
-	public RangerTagFileStoreRetriever(final String serviceName, final long pollingIntervalMs, final RangerTagReceiver enricher) {
-		super(pollingIntervalMs);
-		this.serviceName = serviceName;
-		this.lastKnownVersion = -1L;
-		setReceiver(enricher);
+	public RangerTagFileStoreRetriever() {
 	}
 
 	@Override
 	public void init(Map<String, String> options) {
-		tagStore = TagFileStore.getInstance();
-	}
+		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId) && tagReceiver != null) {
 
-	@Override
-	public void setReceiver(RangerTagReceiver receiver) {
-		this.receiver = receiver;
-	}
+			tagStore = TagFileStore.getInstance();
 
-	@Override
-	public void retrieveTags() {
-		if (tagStore != null) {
-			ServiceTags serviceTags = null;
-			try {
-				serviceTags = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
-				lastKnownVersion = serviceTags.getTagVersion();
-			} catch (Exception exp) {
-				LOG.error("RangerTagFileStoreRetriever.retrieveTags() - Error retrieving resources");
-			}
-
-			if (receiver != null && serviceTags != null) {
-				receiver.setServiceTags(serviceTags);
-			} else {
-				LOG.error("RangerAdminTagRetriever.retrieveTags() - No receiver to send resources to .. OR .. no updates to tagged resources!!");
-			}
 		} else {
-			LOG.error("RangerTagFileStoreRetriever.retrieveTags() - No TagFileStore ...");
+			LOG.error("FATAL: Cannot find service-name to use for retrieving tags. Will NOT be able to retrieve tags.");
 		}
 	}
 
+	@Override
+	public void retrieveTags() throws InterruptedException {
+
+		if (tagStore != null && tagReceiver != null) {
+			ServiceTags serviceTags = null;
+			try {
+				serviceTags = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
+			}
+			catch (InterruptedException interruptedException) {
+				LOG.error("Tag-retriever thread was interrupted");
+				throw interruptedException;
+			}
+			catch (ClosedByInterruptException closedByInterruptException) {
+				LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
+				throw new InterruptedException();
+			}
+			catch (Exception exception) {
+				LOG.error("RangerTagFileStoreRetriever.retrieveTags() - Error retrieving resources, exception=", exception);
+			}
+
+			if (serviceTags != null) {
+				tagReceiver.setServiceTags(serviceTags);
+				LOG.info("RangerTagFileStoreRetriever.retrieveTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
+				setLastKnownVersion(serviceTags.getTagVersion());
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("RangerTagFileStoreRetriever.retrieveTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
+				}
+			}
+		} else {
+			LOG.error("RangerTagFileStoreRetriever.retrieveTags() - No tag-store to get tags from or no tag receiver to update tag-cache...");
+		}
+	}
 }
 

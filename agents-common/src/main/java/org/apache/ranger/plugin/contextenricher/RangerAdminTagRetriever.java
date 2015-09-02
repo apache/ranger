@@ -19,68 +19,57 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.services.tag.RangerServiceTag;
 
-import java.util.Date;
-import java.util.List;
+import java.nio.channels.ClosedByInterruptException;
 import java.util.Map;
 
-public class RangerAdminTagRetriever extends RangerTagRefresher {
+public class RangerAdminTagRetriever extends RangerTagRetriever {
 	private static final Log LOG = LogFactory.getLog(RangerAdminTagRetriever.class);
-	private static String propertyPrefixPreamble = "ranger.plugin.";
-	private static String appId = "tag-retriever";
 
-	private final String serviceName;
-	private final String propertyPrefix;
-
-	private RangerTagReceiver receiver;
 	private RangerAdminClient adminClient;
-	private long lastKnownVersion;
-
-	public RangerAdminTagRetriever(final String serviceName, final RangerServiceDef serviceDef, final long pollingIntervalMs, final RangerTagReceiver enricher) {
-		super(pollingIntervalMs);
-		this.serviceName = serviceName;
-		setReceiver(enricher);
-		propertyPrefix = propertyPrefixPreamble + serviceDef.getName();
-		this.lastKnownVersion = -1L;
-	}
 
 	@Override
 	public void init(Map<String, String> options) {
+		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId) && tagReceiver != null) {
+			String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
 
-		if (adminClient == null) {
 			adminClient = RangerBasePlugin.createAdminClient(serviceName, appId, propertyPrefix);
+
+		} else {
+			LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve tags.");
 		}
-
 	}
 
 	@Override
-	public void setReceiver(RangerTagReceiver receiver) {
-		this.receiver = receiver;
-	}
+	public void retrieveTags() throws InterruptedException {
 
-	@Override
-	public void retrieveTags() {
-		if (adminClient != null && receiver != null) {
+		if (adminClient != null && tagReceiver != null) {
 			ServiceTags serviceTags = null;
 			try {
 				serviceTags = adminClient.getServiceTagsIfUpdated(lastKnownVersion);
-			} catch (Exception exp) {
-				LOG.error("RangerAdminTagRetriever.retrieveTags() - Error retrieving resources, exception=", exp);
+			}
+			catch (InterruptedException interruptedException) {
+				LOG.error("Tag-retriever thread was interrupted");
+				throw interruptedException;
+			}
+			catch (ClosedByInterruptException closedByInterruptException) {
+				LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
+				throw new InterruptedException();
+			}
+			catch (Exception exception) {
+				LOG.error("RangerAdminTagRetriever.retrieveTags() - Error retrieving resources, exception=", exception);
 			}
 
 			if (serviceTags != null) {
-				LOG.info("RangerAdminTagRetriever.retrieveTags() - Updating tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
-				lastKnownVersion = serviceTags.getTagVersion();
-				receiver.setServiceTags(serviceTags);
+				tagReceiver.setServiceTags(serviceTags);
+				LOG.info("RangerAdminTagRetriever.retrieveTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
+				setLastKnownVersion(serviceTags.getTagVersion());
 			} else {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerAdminTagRetriever.retrieveTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);

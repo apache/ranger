@@ -104,8 +104,8 @@
         {
           "itemId": 1,
           "name" : "TagEnricher",
-          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
-          "enricherOptions" : {"tagProviderType":"FILESTORE_BASED_TAG_PROVIDER", "pollingInterval":-1, "dataFile":"/etc/ranger/data/resourceTags.txt"}
+          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
+          "enricherOptions" : {"tagRetrieverClassName":"org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever", "tagRefresherPollingInterval":60000, "dataFile":"/etc/ranger/data/resourceTags.txt"}
         }
       ],
       "policyConditions": [

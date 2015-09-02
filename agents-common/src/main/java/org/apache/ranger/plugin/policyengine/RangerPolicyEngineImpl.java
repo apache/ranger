@@ -42,16 +42,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	
 	private final List<RangerContextEnricher> allContextEnrichers;
 
-	public RangerPolicyEngineImpl(ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
+	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl(" + servicePolicies + ", " + options + ")");
+			LOG.debug("==> RangerPolicyEngineImpl(" + appId + ", " + servicePolicies + ", " + options + ")");
 		}
 
 		if (options == null) {
 			options = new RangerPolicyEngineOptions();
 		}
 
-		policyRepository = new RangerPolicyRepository(servicePolicies, options);
+		policyRepository = new RangerPolicyRepository(appId, servicePolicies, options);
 
 		ServicePolicies.TagPolicies tagPolicies = servicePolicies.getTagPolicies();
 
@@ -65,7 +65,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				LOG.debug("RangerPolicyEngineImpl : Building tag-policy-repository for tag-service " + tagPolicies.getServiceName());
 			}
 
-			tagPolicyRepository = new RangerPolicyRepository(tagPolicies, options, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
+			tagPolicyRepository = new RangerPolicyRepository(appId, tagPolicies, options, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
 
 		} else {
 			if (LOG.isDebugEnabled()) {

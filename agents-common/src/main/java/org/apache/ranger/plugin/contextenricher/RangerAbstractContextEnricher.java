@@ -36,6 +36,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 	protected RangerContextEnricherDef enricherDef;
 	protected String serviceName;
+	protected String appId;
 	protected RangerServiceDef serviceDef;
 
 	@Override
@@ -62,6 +63,11 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	@Override
 	public void setContextServiceDef(RangerServiceDef serviceDef) {
 		this.serviceDef = serviceDef;
+	}
+
+	@Override
+	public void setAppId(String appId) {
+		this.appId = appId;
 	}
 
 	public String getOption(String name) {
