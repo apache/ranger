@@ -1012,6 +1012,9 @@ define(function(require) {
 			var XAGlobals = require('utils/XAGlobals');
 			var that = this;
 			var vXPortalUser = SessionMgr.getUserProfile();
+			if(_.isEmpty(vXPortalUser.attributes)){
+				return controller;
+			}
 			var denyControllerActions = [];
 			var denyModulesObj = [];
 			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
