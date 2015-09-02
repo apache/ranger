@@ -172,6 +172,8 @@ public class UserGroupSyncConfig  {
 
 	private static final String DEFAULT_POLICYMGR_PASSWORD = "rangerusersync";
 	private static final String SYNC_SOURCE = "ranger.usersync.sync.source";
+	private static final String LGSYNC_REFERRAL = "ranger.usersync.ldap.referral";
+	private static final String DEFAULT_LGSYNC_REFERRAL = "ignore";
 	private Properties prop = new Properties() ;
 	
 	private static volatile UserGroupSyncConfig me = null ;
@@ -714,5 +716,17 @@ public class UserGroupSyncConfig  {
 			}
 		}
 		return syncSource;
+	}
+	public String getContextReferral() {
+		String referral="ignore";
+		if(prop!=null && prop.containsKey(LGSYNC_REFERRAL)){
+			referral=prop.getProperty(LGSYNC_REFERRAL);
+			if(referral==null||referral.trim().isEmpty()){
+				referral=DEFAULT_LGSYNC_REFERRAL;
+			}else{
+				referral=referral.trim().toLowerCase();
+			}
+		}
+		return referral;
 	}
 }
