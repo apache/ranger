@@ -57,7 +57,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
   private String ldapBindDn;
   private String ldapBindPassword;
   private String ldapAuthenticationMechanism;
-
+  private String ldapReferral;
   private String searchBase;
 
   private String userSearchBase;
@@ -135,7 +135,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
     ldapBindPassword = config.getLdapBindPassword();
     //ldapBindPassword = "admin-password";
     ldapAuthenticationMechanism = config.getLdapAuthenticationMechanism();
-
+    ldapReferral = config.getContextReferral();
 		Properties env = new Properties();
 		env.put(Context.INITIAL_CONTEXT_FACTORY, 
 		    "com.sun.jndi.ldap.LdapCtxFactory");
@@ -144,7 +144,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		env.put(Context.SECURITY_PRINCIPAL, ldapBindDn);
 		env.put(Context.SECURITY_CREDENTIALS, ldapBindPassword);
 		env.put(Context.SECURITY_AUTHENTICATION, ldapAuthenticationMechanism);
-		env.put(Context.REFERRAL, "follow") ;
+		env.put(Context.REFERRAL, ldapReferral) ;
 
 		ldapContext = new InitialLdapContext(env, null);
 
@@ -235,6 +235,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
           + ",  groupMemberAttributeName: " + groupMemberAttributeName
           + ",  groupNameAttribute: " + groupNameAttribute
           + ",  groupUserMapSyncEnabled: " + groupUserMapSyncEnabled
+          + ",  ldapReferral: " + ldapReferral
       );
 		}
 
