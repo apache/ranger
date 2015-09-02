@@ -39,7 +39,6 @@ public abstract class RangerAbstractGeolocationProvider extends RangerAbstractCo
 
 	private static final Log LOG = LogFactory.getLog(RangerAbstractGeolocationProvider.class);
 
-	public static final String ENRICHER_OPTION_GEOLOCATION_SOURCE_LOADER_OPTIONS = "geolocation.source.loader.options";
 	public static final String ENRICHER_OPTION_GEOLOCATION_META_PREFIX = "geolocation.meta.prefix";
 
 	public static final String KEY_CONTEXT_GEOLOCATION_PREFIX = "LOCATION_";
@@ -63,30 +62,8 @@ public abstract class RangerAbstractGeolocationProvider extends RangerAbstractCo
 
 		String geoSourceLoader = getGeoSourceLoader();
 
-		String geoSourceLoaderOptions = getOption(ENRICHER_OPTION_GEOLOCATION_SOURCE_LOADER_OPTIONS);
-		if (StringUtils.isBlank(geoSourceLoaderOptions)) {
-			geoSourceLoaderOptions = "{}";
-		}
-
-		Map<String, String> context = null;
 		GeolocationStore geoStore = null;
-
-
-		try {
-			Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-					.setPrettyPrinting()
-					.create();
-
-			Type mapType = new TypeToken<Map<String, String>>() {}.getType();
-			context = gsonBuilder.fromJson(geoSourceLoaderOptions, mapType);
-
-		} catch (JsonSyntaxException exception) {
-			LOG.error("RangerAbstractGeolocationProvider.init() - Cannot initialize geolocation.source.loader.options map, valueString=" +
-					geoSourceLoaderOptions + ", exception=" + exception);
-		} catch (JsonParseException exception) {
-			LOG.error("RangerAbstractGeolocationProvider.init() - Cannot initilize geolocation.source.loader.options map, valueString=" +
-					geoSourceLoaderOptions + ", exception=" + exception);
-		}
+		Map<String, String> context = enricherDef.getEnricherOptions();
 
 		if (context != null) {
 			try {

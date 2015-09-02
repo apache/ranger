@@ -46,13 +46,12 @@ public class RangerGeolocationData implements Comparable<RangerGeolocationData>,
 			if (RangerGeolocationData.validateAsIP(startAddress, useDotFormat) && RangerGeolocationData.validateAsIP(endAddress, useDotFormat)) {
 
 				long startIP, endIP;
-				if (useDotFormat) {
-					startIP = RangerGeolocationData.ipAddressToLong(startAddress);
-					endIP = RangerGeolocationData.ipAddressToLong(endAddress);
-				} else {
-					startIP = Long.valueOf(startAddress);
-					endIP = Long.valueOf(endAddress);
+				if (!useDotFormat) {
+					startAddress = RangerGeolocationData.unsignedIntToIPAddress(Long.valueOf(startAddress));
+					endAddress = RangerGeolocationData.unsignedIntToIPAddress(Long.valueOf(endAddress));
 				}
+				startIP = RangerGeolocationData.ipAddressToLong(startAddress);
+				endIP = RangerGeolocationData.ipAddressToLong(endAddress);
 
 				if ((endIP - startIP) >= 0) {
 

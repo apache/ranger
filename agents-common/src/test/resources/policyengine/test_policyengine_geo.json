@@ -16,11 +16,20 @@
     [
       {
         "itemId":1,
-        "name" : "GeolocationEnricher",
+        "name" : "GeolocationEnricher_format_long",
+        "enricher" : "org.apache.ranger.plugin.contextenricher.RangerFileBasedGeolocationProvider",
+        "enricherOptions" : {
+          "FilePath":"/etc/ranger/geo/geo_long.txt", "ForceRead":"false", "IPInDotFormat":"false"
+          ,"geolocation.meta.prefix": "FORMAT_LONG_"
+        }
+      },
+      {
+        "itemId":2,
+        "name" : "GeolocationEnricher_format_dot",
         "enricher" : "org.apache.ranger.plugin.contextenricher.RangerFileBasedGeolocationProvider",
         "enricherOptions" : {
           "FilePath":"/etc/ranger/geo/geo.txt", "ForceRead":"false", "IPInDotFormat":"true"
-          ,"geolocation.meta.prefix": "TEST_"
+        ,"geolocation.meta.prefix": "FORMAT_DOT_"
         }
       }
     ],
@@ -57,7 +66,7 @@
        {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["finance"],"delegateAdmin":false,
          "conditions":[{
            "type":"ScriptConditionEvaluator",
-           "values":["var country_code = ctx.getRequestContextAttribute('LOCATION_TEST_COUNTRY_CODE'); ctx.result = !!country_code;"]
+           "values":["var country_code_format_long = ctx.getRequestContextAttribute('LOCATION_FORMAT_LONG_COUNTRY_CODE'); var country_code_format_dot = ctx.getRequestContextAttribute('LOCATION_FORMAT_DOT_COUNTRY_CODE');ctx.result = (!!country_code_format_long && !!country_code_format_dot && (country_code_format_long == country_code_format_dot));"]
          }]}
      ]
     }
