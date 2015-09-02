@@ -33,11 +33,6 @@ public interface RangerPolicyEngine {
 	String ANY_ACCESS     = "_any";
 	String ADMIN_ACCESS   = "_admin";
 
-	String KEY_CONTEXT_TAGS    = "TAGS";
-	String KEY_CONTEXT_TAG_OBJECT    = "TAG_OBJECT";
-
-	String KEY_CONTEXT_RESOURCE = "RESOURCE";
-
 	String getServiceName();
 
 	RangerServiceDef getServiceDef();

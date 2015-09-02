@@ -27,9 +27,8 @@ import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
-import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -45,15 +44,36 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final String getResource() {
+		String ret = null;
+		Object val = getRequestContext().get(RangerAccessRequestUtil.KEY_CONTEXT_RESOURCE);
 
-		@SuppressWarnings("unchecked")
-		RangerAccessResource resource  = (RangerAccessResource)getEvaluationContext().get(RangerPolicyEngine.KEY_CONTEXT_RESOURCE);
+		if(val != null) {
+			if(val instanceof RangerAccessResource) {
+				ret = ((RangerAccessResource)val).getAsString();
+			} else {
+				ret = val.toString();
+			}
+		}
 
-		return resource != null ? resource.getAsString() : null;
+		return ret;
 	}
 
-	public final Map<String, Object> getEvaluationContext() {
+	public final Map<String, Object> getRequestContext() {
 		return accessRequest.getContext();
+	}
+
+	public final String getRequestContextAttribute(String attributeName) {
+		String ret = null;
+
+		if (StringUtils.isNotBlank(attributeName)) {
+			Object val = getRequestContext().get(attributeName);
+
+			if(val != null) {
+				ret = val.toString();
+			}
+		}
+
+		return ret;
 	}
 
 	public final boolean isAccessTypeAny() { return accessRequest.isAccessTypeAny(); }
@@ -77,15 +97,17 @@ public final class RangerScriptExecutionContext {
 	public final String getSessionId() { return accessRequest.getSessionId(); }
 
 	public final RangerTag getCurrentTag() {
-		@SuppressWarnings("unchecked")
-		RangerTag tagObject = (RangerTag)getEvaluationContext()
-				.get(RangerPolicyEngine.KEY_CONTEXT_TAG_OBJECT);
-		if (tagObject == null) {
+		RangerTag ret = null;
+		Object    val = getRequestContext().get(RangerAccessRequestUtil.KEY_CONTEXT_TAG_OBJECT);
+
+		if(val != null && val instanceof RangerTag) {
+			ret = (RangerTag)val;
+		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("getCurrentTag() - No current TAG object. Script execution must be for resource-based policy.");
 			}
 		}
-		return tagObject;
+		return ret;
 	}
 
 	public final String getCurrentTagType() {
@@ -94,13 +116,10 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final Set<String> getAllTagTypes() {
-
-		Set<String> allTagTypes = null;
-
+		Set<String>     allTagTypes   = null;
 		List<RangerTag> tagObjectList = getAllTags();
 
 		if (CollectionUtils.isNotEmpty(tagObjectList)) {
-
 			for (RangerTag tag : tagObjectList) {
 				String tagType = tag.getType();
 				if (allTagTypes == null) {
@@ -114,16 +133,13 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final Map<String, String> getTagAttributes(final String tagType) {
-
 		Map<String, String> ret = null;
 
 		if (StringUtils.isNotBlank(tagType)) {
-
 			List<RangerTag> tagObjectList = getAllTags();
 
 			// Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
 			// This will get attributes of the first tagType that matches
-
 			if (CollectionUtils.isNotEmpty(tagObjectList)) {
 				for (RangerTag tag : tagObjectList) {
 					if (tag.getType().equals(tagType)) {
@@ -138,9 +154,7 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final Set<String> getAttributeNames(final String tagType) {
-
-		Set<String> ret = null;
-
+		Set<String>         ret        = null;
 		Map<String, String> attributes = getTagAttributes(tagType);
 
 		if (attributes != null) {
@@ -151,12 +165,10 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final String getAttributeValue(final String tagType, final String attributeName) {
-
 		String ret = null;
-		Map<String, String> attributes;
 
 		if (StringUtils.isNotBlank(tagType) || StringUtils.isNotBlank(attributeName)) {
-			attributes = getTagAttributes(tagType);
+			Map<String, String> attributes = getTagAttributes(tagType);
 
 			if (attributes != null) {
 				ret = attributes.get(attributeName);
@@ -166,7 +178,6 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final String getAttributeValue(final String attributeName) {
-
 		String ret = null;
 
 		if (StringUtils.isNotBlank(attributeName)) {
@@ -179,6 +190,7 @@ public final class RangerScriptExecutionContext {
 				ret = attributes.get(attributeName);
 			}
 		}
+
 		return ret;
 	}
 
@@ -194,7 +206,6 @@ public final class RangerScriptExecutionContext {
 	// Utilities - TODO
 
 	public final Date getAsDate(String value) {
-
 		Date ret = null;
 
 		if (StringUtils.isNotBlank(value)) {
@@ -215,30 +226,15 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final Date getTagAttributeAsDate(String tagType, String attributeName) {
-		// sample JavaScript to demonstrate use of this helper method
-
-		/*
-
-		importPackage(java.util);
-		var expiryDate = ctx.getTagAttributeAsDate('PII', 'expiryDate')
-		var now = new Date();
-		now.getTime() < expiryDate.getTime());"
-
-		*/
-
 		String attrValue = getAttributeValue(tagType, attributeName);
 
 		return getAsDate(attrValue);
-
 	}
 
 	public final boolean isAccessedAfter(String tagType, String attributeName) {
-
-		boolean ret = false;
-
-		Date accessDate = getAccessTime();
-
-		Date expiryDate = getTagAttributeAsDate(tagType, attributeName);
+		boolean ret        = false;
+		Date    accessDate = getAccessTime();
+		Date    expiryDate = getTagAttributeAsDate(tagType, attributeName);
 
 		if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
 			ret = true;
@@ -248,12 +244,9 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final boolean isAccessedAfter(String attributeName) {
-
-		boolean ret = false;
-
-		Date accessDate = getAccessTime();
-
-		Date expiryDate = getAsDate(getAttributeValue(attributeName));
+		boolean ret        = false;
+		Date    accessDate = getAccessTime();
+		Date    expiryDate = getAsDate(getAttributeValue(attributeName));
 
 		if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
 			ret = true;
@@ -263,12 +256,9 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final boolean isAccessedBefore(String tagType, String attributeName) {
-
-		boolean ret = true;
-
-		Date accessDate = getAccessTime();
-
-		Date expiryDate = getTagAttributeAsDate(tagType, attributeName);
+		boolean ret        = true;
+		Date    accessDate = getAccessTime();
+		Date    expiryDate = getTagAttributeAsDate(tagType, attributeName);
 
 		if (expiryDate == null || accessDate.after(expiryDate)) {
 			ret = false;
@@ -278,12 +268,9 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public final boolean isAccessedBefore(String attributeName) {
-
-		boolean ret = true;
-
-		Date accessDate = getAccessTime();
-
-		Date expiryDate = getAsDate(getAttributeValue(attributeName));
+		boolean ret        = true;
+		Date    accessDate = getAccessTime();
+		Date    expiryDate = getAsDate(getAttributeValue(attributeName));
 
 		if (expiryDate == null || accessDate.after(expiryDate)) {
 			ret = false;
@@ -293,26 +280,36 @@ public final class RangerScriptExecutionContext {
 	}
 
 	private List<RangerTag> getAllTags() {
-
-		@SuppressWarnings("unchecked")
-		List<RangerTag> ret = (List<RangerTag>)getEvaluationContext().get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
-
-		if (ret == null) {
+		List<RangerTag> ret = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
+		
+		if(ret == null) {
 			if (LOG.isDebugEnabled()) {
 				String resource = accessRequest.getResource().getAsString();
 
-				LOG.debug("getAllTags() - No current TAGS. No TAGS for the RangerAccessResource=" + resource);
+				LOG.debug("getAllTags() - No TAGS. No TAGS for the RangerAccessResource=" + resource);
 			}
 		}
+
 		return ret;
 	}
 
-	public final String getGeolocation(String attributeName) {
-		String ret = null;
+	public void logDebug(String msg) {
+		LOG.debug(msg);
+	}
 
-		if (StringUtils.isNotBlank(attributeName)) {
-			ret = (String) getEvaluationContext().get(attributeName);
-		}
-		return ret;
+	public void logInfo(String msg) {
+		LOG.info(msg);
+	}
+
+	public void logWarn(String msg) {
+		LOG.warn(msg);
+	}
+
+	public void logError(String msg) {
+		LOG.error(msg);
+	}
+
+	public void logFatal(String msg) {
+		LOG.fatal(msg);
 	}
 }

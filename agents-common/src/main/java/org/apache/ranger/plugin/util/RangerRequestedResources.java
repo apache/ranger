@@ -40,7 +40,6 @@ import java.util.List;
 
 public class RangerRequestedResources {
 	private List<RangerAccessResource> requestedResources = new ArrayList<RangerAccessResource>();
-	public static final String KEY_CONTEXT_REQUESTED_RESOURCES = "REQUESTED_RESOURCES";
 
 	public RangerRequestedResources() {
 	}

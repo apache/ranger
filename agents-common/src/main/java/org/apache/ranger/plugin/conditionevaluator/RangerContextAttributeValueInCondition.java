@@ -21,24 +21,21 @@ package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-import java.util.List;
 import java.util.Map;
 
-public class RangerScriptTemplateConditionEvaluator extends RangerScriptConditionEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerScriptTemplateConditionEvaluator.class);
+public class RangerContextAttributeValueInCondition extends RangerAbstractConditionEvaluator {
+	private static final Log LOG = LogFactory.getLog(RangerContextAttributeValueInCondition.class);
 
-	protected String scriptTemplate;
-	protected String script;
+	protected String attributeName;
 
 	@Override
 	public void init() {
-
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerScriptTemplateConditionEvaluator.init(" + condition + ")");
+			LOG.debug("==> RangerContextAttributeValueInCondition.init(" + condition + ")");
 		}
 
 		super.init();
@@ -46,48 +43,32 @@ public class RangerScriptTemplateConditionEvaluator extends RangerScriptConditio
 		Map<String, String> evalOptions = conditionDef. getEvaluatorOptions();
 
 		if (MapUtils.isNotEmpty(evalOptions)) {
-			scriptTemplate = evalOptions.get("scriptTemplate");
+			attributeName = evalOptions.get("attributeName");
 		}
 
-		script = formatScript();
-
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerScriptTemplateConditionEvaluator.init(" + condition + ")");
+			LOG.debug("<== RangerContextAttributeValueInCondition.init(" + condition + ")");
 		}
 	}
 
 	@Override
-	protected String getScript() {
-		return script;
-	}
-
-	private String formatScript() {
-
-		String ret = null;
-
+	public boolean isMatched(RangerAccessRequest request) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerScriptTemplateConditionEvaluator.formatScript()");
+			LOG.debug("==> RangerContextAttributeValueInCondition.isMatched(" + condition + ")");
 		}
-		List<String> values = condition.getValues();
 
-		if (CollectionUtils.isNotEmpty(values)) {
+		boolean ret = true;
 
-			String value = values.get(0);
+		if(attributeName != null && condition != null && CollectionUtils.isNotEmpty(condition.getValues())) {
+			Object val = request.getContext().get(attributeName);
 
-			if (StringUtils.isNotBlank(value)) {
-
-				String s = value.trim().toLowerCase();
-
-				if (s.equals("no") || s.equals("false")) {
-					ret = null;
-				} else {
-					ret = scriptTemplate == null ? null : scriptTemplate.trim();
-				}
+			if(val != null) {
+				ret = condition.getValues().contains(val);
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerScriptTemplateConditionEvaluator.formatScript(), ret=" + ret);
+			LOG.debug("<== RangerContextAttributeValueInCondition.isMatched(" + condition + "): " + ret);
 		}
 
 		return ret;

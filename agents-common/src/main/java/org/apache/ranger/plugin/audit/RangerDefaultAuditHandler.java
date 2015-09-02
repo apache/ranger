@@ -31,6 +31,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
@@ -207,26 +208,17 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 	}
 
 	protected final Set<String> getTags(RangerAccessRequest request) {
-		Object contextObj = request.getContext().get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
-		Set<String> tags = null;
+		Set<String>     ret  = null;
+		List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
-		if (contextObj != null) {
+		if (CollectionUtils.isNotEmpty(tags)) {
+			ret = new HashSet<String>();
 
-			try {
-				@SuppressWarnings("unchecked")
-				List<RangerTag> resourceTags = (List<RangerTag>) contextObj;
-
-				if (CollectionUtils.isNotEmpty(resourceTags)) {
-					tags = new HashSet<String>();
-
-					for (RangerTag resourceTag : resourceTags) {
-						tags.add(resourceTag.getType());
-					}
-				}
-			} catch (Throwable t) {
-				LOG.error("RangerDefaultAuditHandler.getTags(), exception when getting tags from context, exception=" + t);
+			for (RangerTag tag : tags) {
+				ret.add(tag.getType());
 			}
 		}
-		return tags;
+
+		return ret;
 	}
 }

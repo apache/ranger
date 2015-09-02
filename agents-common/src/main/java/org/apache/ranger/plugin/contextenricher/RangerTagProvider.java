@@ -27,9 +27,8 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.util.ArrayList;
@@ -99,7 +98,8 @@ public class RangerTagProvider extends RangerAbstractContextEnricher implements 
 		List<RangerTag> matchedTags = findMatchingTags(request.getResource(), serviceResourceMatchersCopy);
 
 		if (CollectionUtils.isNotEmpty(matchedTags)) {
-			request.getContext().put(RangerPolicyEngine.KEY_CONTEXT_TAGS, matchedTags);
+			RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), matchedTags);
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerTagProvider.enrich(" + request + ") - " + matchedTags.size() + " tags found by enricher.");
 			}

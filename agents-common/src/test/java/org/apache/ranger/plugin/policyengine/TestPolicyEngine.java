@@ -21,19 +21,16 @@ package org.apache.ranger.plugin.policyengine;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
@@ -42,9 +39,6 @@ import org.junit.Test;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -213,11 +207,8 @@ public class TestPolicyEngine {
 			servicePolicies.setTagPolicies(tagPolicies);
 		}
 
-		String componentName = testCase.serviceDef.getName();
-
 		RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 
-		// Uncomment next line for testing tag-policy evaluation
 		policyEngineOptions.disableTagPolicyEvaluation = false;
 
 		policyEngine = new RangerPolicyEngineImpl(servicePolicies, policyEngineOptions);
@@ -226,8 +217,8 @@ public class TestPolicyEngine {
 
 		for(TestData test : testCase.tests) {
 
-			if (test.request.getContext().containsKey(RangerPolicyEngine.KEY_CONTEXT_TAGS) ||
-					test.request.getContext().containsKey(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES)) {
+			if (test.request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||
+					test.request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 				// Create a new AccessRequest
 				RangerAccessRequestImpl newRequest =
 						new RangerAccessRequestImpl(test.request.getResource(), test.request.getAccessType(),
@@ -241,8 +232,8 @@ public class TestPolicyEngine {
 				newRequest.setSessionId(test.request.getSessionId());
 
 				Map<String, Object> context = test.request.getContext();
-				String tagsJsonString = (String) context.get(RangerPolicyEngine.KEY_CONTEXT_TAGS);
-				context.remove(RangerPolicyEngine.KEY_CONTEXT_TAGS);
+				String tagsJsonString = (String) context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
+				context.remove(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 
 				if(!StringUtils.isEmpty(tagsJsonString)) {
 					try {
@@ -250,14 +241,14 @@ public class TestPolicyEngine {
 						}.getType();
 						List<RangerTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
 
-						context.put(RangerPolicyEngine.KEY_CONTEXT_TAGS, tagList);
+						context.put(RangerAccessRequestUtil.KEY_CONTEXT_TAGS, tagList);
 					} catch (Exception e) {
 						System.err.println("TestPolicyEngine.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
 								tagsJsonString + ", exception=" + e);
 					}
-				} else if (test.request.getContext().containsKey(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES)) {
-					String resourcesJsonString = (String) context.get(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES);
-					context.remove(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES);
+				} else if (test.request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
+					String resourcesJsonString = (String) context.get(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES);
+					context.remove(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES);
 					if (!StringUtils.isEmpty(resourcesJsonString)) {
 						try {
 							/*
@@ -269,7 +260,7 @@ public class TestPolicyEngine {
 							}.getType();
 							RangerRequestedResources resources = gsonBuilder.fromJson(resourcesJsonString, myType);
 
-							context.put(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES, resources);
+							context.put(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES, resources);
 						} catch (Exception e) {
 							System.err.println("TestPolicyEngine.runTests(): error parsing REQUESTED_RESOURCES string in file " + testName + ", resourcesJsonString=" +
 									resourcesJsonString + ", exception=" + e);
@@ -290,7 +281,7 @@ public class TestPolicyEngine {
 				request = newRequest;
 
 			} else
-			if (test.request.getContext().containsKey(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES)) {
+			if (test.request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 			}
 			else {
 				request = test.request;

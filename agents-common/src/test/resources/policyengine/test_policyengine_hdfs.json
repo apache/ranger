@@ -57,7 +57,7 @@
        {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["finance"],"delegateAdmin":false,
          "conditions":[{
            "type":"ScriptConditionEvaluator",
-           "values":["var country_code = ctx.getGeolocation('LOCATION_TEST_COUNTRY_CODE'); ctx.result = !!country_code;"]
+           "values":["var country_code = ctx.getRequestContextAttribute('LOCATION_TEST_COUNTRY_CODE'); ctx.result = !!country_code;"]
          }]}
      ]
     }

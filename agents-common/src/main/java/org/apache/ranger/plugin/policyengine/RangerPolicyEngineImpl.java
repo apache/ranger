@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.*;
@@ -355,48 +356,35 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	protected RangerAccessResult isAccessAllowedForTagPolicies(final RangerAccessRequest request) {
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ")");
 		}
 
-		RangerAccessResult result = createAccessResult(request);
+		RangerAccessResult          result     = createAccessResult(request);
+		List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators();
 
-		Map<String, Object> context = request.getContext();
-		Object contextObj;
+		if (CollectionUtils.isNotEmpty(evaluators)) {
+			List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
-		if (context != null && (contextObj = context.get(KEY_CONTEXT_TAGS)) != null) {
+			if(CollectionUtils.isNotEmpty(tags)) {
+				boolean                   someTagAllowedAudit = false;
+				RangerAccessResult        savedAccessResult   = createAccessResult(request);
+				List<RangerTagAuditEvent> tagAuditEvents      = new ArrayList<RangerTagAuditEvent>();
 
-			@SuppressWarnings("unchecked")
-			List<RangerTag> resourceTags = (List<RangerTag>) contextObj;
-
-			List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators();
-
-			if (CollectionUtils.isNotEmpty(evaluators)) {
-
-				boolean someTagAllowedAudit = false;
-
-				RangerAccessResult savedAccessResult = createAccessResult(request);
-
-				List<RangerTagAuditEvent> tagAuditEvents = new ArrayList<RangerTagAuditEvent>();
-
-				for (RangerTag resourceTag : resourceTags) {
-
+				for (RangerTag tag : tags) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + resourceTag.getType() + ")");
+						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + tag.getType() + ")");
 					}
 
-					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(resourceTag, tagPolicyRepository.getServiceDef(), request);
-
-					RangerAccessResult tagEvalResult = createAccessResult(tagEvalRequest);
+					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
+					RangerAccessResult  tagEvalResult  = createAccessResult(tagEvalRequest);
 
 					for (RangerPolicyEvaluator evaluator : evaluators) {
-
 						evaluator.evaluate(tagEvalRequest, tagEvalResult);
 
 						if (tagEvalResult.getIsAccessDetermined() && tagEvalResult.getIsAuditedDetermined()) {
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + resourceTag.getType() + ") with authorization=" + tagEvalResult.getIsAllowed());
+								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + tag.getType() + ") with authorization=" + tagEvalResult.getIsAllowed());
 							}
 							break;			// Break out of policy-evaluation loop for this tag
 						}
@@ -406,18 +394,17 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						someTagAllowedAudit = true;
 						// And generate an audit event
 						if (tagEvalResult.getIsAccessDetermined()) {
-							RangerTagAuditEvent event = new RangerTagAuditEvent(resourceTag.getType(), tagEvalResult);
+							RangerTagAuditEvent event = new RangerTagAuditEvent(tag.getType(), tagEvalResult);
 							tagAuditEvents.add(event);
 						}
 					}
 
 					if (tagEvalResult.getIsAccessDetermined()) {
-
 						savedAccessResult.setAccessResultFrom(tagEvalResult);
 
 						if (!tagEvalResult.getIsAllowed()) {
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag-policies as tag (" + resourceTag.getType() + "), tag-policy-id=" + tagEvalResult.getPolicyId() + " denied access.");
+								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag-policies as tag (" + tag.getType() + "), tag-policy-id=" + tagEvalResult.getPolicyId() + " denied access.");
 							}
 							break;		// Break out of tags evaluation loop altogether
 						}
@@ -438,12 +425,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					// Set processed list into result
 					// result.setAuxilaryAuditInfo(tagAuditEvents);
 				}
+
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies() : result=" + result);
 					LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies() : auditEventList=" + tagAuditEvents);
 				}
 			}
 		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + result + ")" );
 		}
@@ -506,8 +495,8 @@ class RangerTagAccessRequest extends RangerAccessRequestImpl {
 
 		Map<String, Object> requestContext = request.getContext();
 
-		requestContext.put(RangerPolicyEngine.KEY_CONTEXT_TAG_OBJECT, resourceTag);
-		requestContext.put(RangerPolicyEngine.KEY_CONTEXT_RESOURCE, request.getResource());
+		RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), resourceTag);
+		RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
 
 		super.setContext(requestContext);
 

@@ -24,14 +24,12 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.util.*;
 
 import java.lang.reflect.ParameterizedType;
@@ -202,7 +200,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			LOG.debug("==> RangerAdminRESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + "): ");
 		}
 
-		ServiceTags ret;
+		ServiceTags ret = null;
 
 		WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceName)
 				.queryParam(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion))
@@ -212,6 +210,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		if(response != null && response.getStatus() == 200) {
 			ret = response.getEntity(ServiceTags.class);
+		} else if(response != null && response.getStatus() == 304) {
+			// no change
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("Error getting taggedResources. request=" + webResource.toString()

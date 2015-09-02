@@ -982,15 +982,31 @@ public class TagREST {
             LOG.debug("==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");
         }
 
-        ServiceTags ret = null;
+		ServiceTags ret      = null;
+		int         httpCode = HttpServletResponse.SC_OK;
+		String      logMsg   = null;
 
         try {
             ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
+
+			if(ret == null) {
+				httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+				logMsg   = "No change since last update";
+			} else {
+				httpCode = HttpServletResponse.SC_OK;
+				logMsg   = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
+			}
         } catch(Exception excp) {
             LOG.error("getServiceTagsIfUpdated(" + serviceName + ") failed", excp);
 
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+			httpCode = HttpServletResponse.SC_BAD_REQUEST;
+			logMsg   = excp.getMessage();
         }
+
+		if(httpCode != HttpServletResponse.SC_OK) {
+			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+		}
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");

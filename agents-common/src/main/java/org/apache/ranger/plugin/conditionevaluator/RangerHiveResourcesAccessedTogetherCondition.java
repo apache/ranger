@@ -36,8 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstractConditionEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerHiveResourcesNotAccessedTogetherCondition.class);
+public class RangerHiveResourcesAccessedTogetherCondition extends RangerAbstractConditionEvaluator {
+	private static final Log LOG = LogFactory.getLog(RangerHiveResourcesAccessedTogetherCondition.class);
 
 	private List<RangerPolicyResourceMatcher> matchers = new ArrayList<>();
 	private boolean isInitialized = false;
@@ -45,7 +45,7 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 	@Override
 	public void init() {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHiveResourcesNotAccessedTogetherCondition.init(" + condition + ")");
+			LOG.debug("==> RangerHiveResourcesAccessedTogetherCondition.init(" + condition + ")");
 		}
 
 		super.init();
@@ -53,11 +53,11 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 		if (serviceDef != null) {
 			doInitialize();
 		} else {
-			LOG.error("RangerHiveResourcesNotAccessedTogetherCondition.init() - ServiceDef not set ... ERROR ..");
+			LOG.error("RangerHiveResourcesAccessedTogetherCondition.init() - ServiceDef not set ... ERROR ..");
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHiveResourcesNotAccessedTogetherCondition.init(" + condition + ")");
+			LOG.debug("<== RangerHiveResourcesAccessedTogetherCondition.init(" + condition + ")");
 		}
 	}
 
@@ -66,19 +66,19 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 		boolean ret = true;
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHiveResourcesNotAccessedTogetherCondition.isMatched(" + request + ")");
+			LOG.debug("==> RangerHiveResourcesAccessedTogetherCondition.isMatched(" + request + ")");
 		}
 
 		if (isInitialized && CollectionUtils.isNotEmpty(matchers)) {
 			RangerRequestedResources resources = RangerAccessRequestUtil.getRequestedResourcesFromContext(request.getContext());
 
-			ret = resources == null ? true : resources.isMutuallyExcluded(matchers);
+			ret = resources == null ? false : !resources.isMutuallyExcluded(matchers);
 		} else {
-			LOG.error("RangerHiveResourcesNotAccessedTogetherCondition.isMatched() - Enforcer is not initialized correctly, Mutual Exclusion will NOT be enforced");
+			LOG.error("RangerHiveResourcesAccessedTogetherCondition.isMatched() - condition is not initialized correctly and will NOT be enforced");
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHiveResourcesNotAccessedTogetherCondition.isMatched(" + request + ")" + ", result=" + ret);
+			LOG.debug("<== RangerHiveResourcesAccessedTogetherCondition.isMatched(" + request + ")" + ", result=" + ret);
 		}
 
 		return ret;
@@ -92,16 +92,16 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 
 			if (CollectionUtils.isEmpty(matchers)) {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerHiveResourcesNotAccessedTogetherCondition.doInitialize() - Cannot create matchers from values in MutualExclustionEnforcer");
+					LOG.debug("RangerHiveResourcesAccessedTogetherCondition.doInitialize() - Cannot create matchers from values in MutualExclustionEnforcer");
 				}
 			} else {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerHiveResourcesNotAccessedTogetherCondition.doInitialize() - Created " + matchers.size() + " matchers from values in MutualExclustionEnforcer");
+					LOG.debug("RangerHiveResourcesAccessedTogetherCondition.doInitialize() - Created " + matchers.size() + " matchers from values in MutualExclustionEnforcer");
 				}
 			}
 		} else {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("RangerHiveResourcesNotAccessedTogetherCondition.doInitialize() - No values in MutualExclustionEnforcer");
+				LOG.debug("RangerHiveResourcesAccessedTogetherCondition.doInitialize() - No values in MutualExclustionEnforcer");
 			}
 		}
 
@@ -127,7 +127,7 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 		RangerPolicyResourceMatcher matcher = null;
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHiveResourcesNotAccessedTogetherCondition.buildMatcher(" + policyResourceSpec + ")");
+			LOG.debug("==> RangerHiveResourcesAccessedTogetherCondition.buildMatcher(" + policyResourceSpec + ")");
 		}
 
 		// Works only for Hive serviceDef for now
@@ -167,15 +167,15 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 				matcher.init();
 
 			} else {
-				LOG.error("RangerHiveResourcesNotAccessedTogetherCondition.buildMatcher() - Incorrect elements in the hierarchy specified ("
+				LOG.error("RangerHiveResourcesAccessedTogetherCondition.buildMatcher() - Incorrect elements in the hierarchy specified ("
 						+ elements.length + ")");
 			}
 		} else {
-			LOG.error("RangerHiveResourcesNotAccessedTogetherCondition.buildMatcher() - ServiceDef not set or ServiceDef is not for Hive");
+			LOG.error("RangerHiveResourcesAccessedTogetherCondition.buildMatcher() - ServiceDef not set or ServiceDef is not for Hive");
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHiveResourcesNotAccessedTogetherCondition.buildMatcher(" + policyResourceSpec + ")" + ", matcher=" + matcher);
+			LOG.debug("<== RangerHiveResourcesAccessedTogetherCondition.buildMatcher(" + policyResourceSpec + ")" + ", matcher=" + matcher);
 		}
 
 		return matcher;

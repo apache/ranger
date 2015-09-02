@@ -57,7 +57,10 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+
 import com.google.common.collect.Sets;
+
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 
 public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
@@ -909,7 +912,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		for (RangerHiveAccessRequest request : requests) {
 			// Build list of all things requested and put it in the context of each request
-			request.getContext().put(RangerRequestedResources.KEY_CONTEXT_REQUESTED_RESOURCES, requestedResources);
+			RangerAccessRequestUtil.setRequestedResourcesInContext(request.getContext(), requestedResources);
 
 			RangerHiveResource resource = (RangerHiveResource) request.getResource();
 
