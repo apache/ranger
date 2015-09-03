@@ -23,22 +23,34 @@
     "policyConditions":[
       {
         "itemId":1,
-        "name":"not-accessed-together",
-        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerHiveResourcesNotAccessedTogetherCondition",
+        "name":"accessed-together",
+        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerHiveResourcesAccessedTogetherCondition",
         "evaluatorOptions" : {"ui.isMultiline":"false" },
-        "label":"Not Accessed Together?",
+        "label":"Accessed Together?",
         "description": "List of Hive resources"
       }
     ]
   },
 
   "policies":[
-    {"id":1,"name":"db=default; allow_exclusive select with mutual exclusion of col* for user1","isEnabled":true,"isAuditEnabled":true,"policyType":2,
-      "resources":{"database":{"values":["d*"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+    {"id":1,"name":"db=default; deny select with mutual exclusion of col* for everyone except user2, admin","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+      "resources":{"database":{"values":["default"]},"table":{"values":["testTable"]},"column":{"values":["col*"]}},
       "policyItems":[
-        {"accesses":[{"type":"select"}],"users":["user1"],"groups":[],"delegateAdmin":false, "conditions":[{"type":"not-accessed-together","values":["default.testTable.col*"]}]},
-        {"accesses":[{"type":"select"}],"users":["user2"],"groups":[],"delegateAdmin":false, "conditions":[{"type":"not-accessed-together","values":["default.testTable.col1", "default.testTable.name"]}]},
-        {"accesses":[{"type":"select"}],"users":["admin"],"groups":["admin"],"delegateAdmin":false}
+        {"accesses":[{"type":"select"}],"users":[],"groups":["public"],"delegateAdmin":false,"conditions":[{"type":"accessed-together","values":["default.testTable.col*"]}]},
+        {"accesses":[{"type":"select"}],"users":["user2","admin"],"groups":["admin"],"delegateAdmin":false,"itemType":1}
+      ]
+    },
+    {"id":2,"name":"db=default; deny select with mutual exclusion of col1, name for everone except admin","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+      "resources":{"database":{"values":["default"]},"table":{"values":["testTable"]},"column":{"values":["col1"]}},
+      "policyItems":[
+        {"accesses":[{"type":"select"}],"users":[],"groups":["public"],"delegateAdmin":false,"conditions":[{"type":"accessed-together","values":["default.testTable.col1", "default.testTable.name"]}]},
+        {"accesses":[{"type":"select"}],"users":["admin"],"groups":["admin"],"delegateAdmin":false,"itemType":1}
+      ]
+    },
+    {"id":3,"name":"db=default; allow default.testTable.* for user1, user2, admin","isEnabled":true,"isAuditEnabled":true,"policyType":0,
+      "resources":{"database":{"values":["default"]},"table":{"values":["testTable"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"select"}],"users":["user1", "user2", "admin"],"groups":[],"delegateAdmin":false}
       ]
     }
   ],
@@ -92,7 +104,7 @@
       "result": {
         "isAudited": true,
         "isAllowed": false,
-        "policyId": 1
+        "policyId": 2
       }
     }
     ,
@@ -118,7 +130,7 @@
       "result": {
         "isAudited": true,
         "isAllowed": true,
-        "policyId": 1
+        "policyId": 3
       }
     }
     ,{
@@ -144,7 +156,7 @@
       "result": {
         "isAudited": true,
         "isAllowed": true,
-        "policyId": 1
+        "policyId": 3
       }
     }
     ,{
@@ -170,7 +182,7 @@
       "result": {
         "isAudited": true,
         "isAllowed": true,
-        "policyId": 1
+        "policyId": 3
       }
     }
   ]

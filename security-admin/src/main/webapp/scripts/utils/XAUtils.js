@@ -598,6 +598,7 @@ define(function(require) {
 						accesses : obj.accesses,
 						conditions : obj.conditions,
 						delegateAdmin : obj.delegateAdmin,
+						itemType : obj.itemType,
 						editMode : true,
 					});
 					formInputColl.add(m);

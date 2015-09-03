@@ -283,6 +283,9 @@ define(function(require){
 					if(!_.isUndefined(m.get('delegateAdmin'))){
 						policyItem.set("delegateAdmin",m.get("delegateAdmin"));
 					}
+					if(!_.isUndefined(m.get('itemType'))){
+						policyItem.set("itemType",m.get("itemType"));
+					}
 					
 					var RangerPolicyItemAccessList = Backbone.Collection.extend();
 					var rangerPlcItemAccessList = new RangerPolicyItemAccessList(m.get('accesses'));

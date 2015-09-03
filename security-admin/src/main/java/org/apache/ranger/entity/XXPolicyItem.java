@@ -68,6 +68,15 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	protected Boolean delegateAdmin;
 
 	/**
+	 * item_type of the XXPolicyItem
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "item_type")
+	protected Integer itemType;
+
+	/**
 	 * order of the XXPolicyItem
 	 * <ul>
 	 * </ul>
@@ -152,6 +161,26 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b> itemType</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param itemType
+	 *            Value to set member attribute <b> itemType</b>
+	 */
+	public void setItemType(Integer itemType) {
+		this.itemType = itemType;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>itemType</b>
+	 * 
+	 * @return Integer - value of member attribute <b>itemType</b> .
+	 */
+	public Integer getItemType() {
+		return this.itemType;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
 	 * 
@@ -222,6 +251,13 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 		} else if (!policyId.equals(other.policyId)) {
 			return false;
 		}
+		if (itemType == null) {
+			if (other.itemType != null) {
+				return false;
+			}
+		} else if (!itemType.equals(other.itemType)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -234,7 +270,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	public String toString() {
 		return "XXPolicyItem [" + super.toString() + " id=" + id + ", guid="
 				+ GUID + ", policyId=" + policyId
-				+ ", delegateAdmin=" + delegateAdmin + ", order=" + order + "]";
+				+ ", delegateAdmin=" + delegateAdmin + ", itemType=" + itemType + ", order=" + order + "]";
 	}
 
 }

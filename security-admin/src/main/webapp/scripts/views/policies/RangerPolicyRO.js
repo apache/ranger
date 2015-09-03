@@ -125,6 +125,7 @@ define(function(require) {
 		getPermHeaders : function(){
 			var permList = [], 
 				policyCondition = false;
+			permList.unshift(localization.tt('lbl.itemType'));
 			permList.unshift(localization.tt('lbl.delegatedAdmin'));
 			permList.unshift(localization.tt('lbl.permissions'));
 			if(!_.isEmpty(this.serviceDef.get('policyConditions'))){

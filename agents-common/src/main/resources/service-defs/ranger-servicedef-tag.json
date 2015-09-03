@@ -111,7 +111,7 @@
       "itemId":2,
       "name":"enforce-expiry",
       "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
-      "evaluatorOptions" : { "scriptTemplate":"ctx.isAccessedBefore('expiry_date');" },
+      "evaluatorOptions" : { "scriptTemplate":"ctx.isAccessedAfter('expiry_date');" },
       "label":"Deny access after expiry_date?",
       "description": "Deny access after expiry_date? (yes/no)"
     }

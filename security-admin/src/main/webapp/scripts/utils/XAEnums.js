@@ -102,8 +102,7 @@ define(function(require) {
 
 	XAEnums.PolicyType = mergeParams(XAEnums.PolicyType, {
 		POLICY_TYPE_ALLOW:{value:0, label:'Allow', rbkey:'xa.enum.PolicyType.POLICY_TYPE_ALLOW', tt: 'lbl.PolicyType_ALLOW'},
-		POLICY_TYPE_DENY:{value:1, label:'Deny', rbkey:'xa.enum.PolicyType.POLICY_TYPE_DENY', tt: 'lbl.PolicyType_DENY'},
-		POLICY_TYPE_EXCLUSIVE_ALLOW:{value:2, label:'Exclusive Allow', rbkey:'xa.enum.PolicyType.POLICY_TYPE_EXCLUSIVE_ALLOW', tt: 'lbl.PolicyType_EXCLUSIVE_ALLOW'}
+		POLICY_TYPE_DENY:{value:1, label:'Deny', rbkey:'xa.enum.PolicyType.POLICY_TYPE_DENY', tt: 'lbl.PolicyType_DENY'}
 	});
 
 	XAEnums.AssetType = mergeParams(XAEnums.AssetType, {

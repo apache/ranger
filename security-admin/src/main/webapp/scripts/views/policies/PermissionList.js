@@ -55,12 +55,14 @@ define(function(require) {
 			addPerms		: 'a[data-js="permissions"]',
 			conditionsTags	: '[class=tags1]',
 			delegatedAdmin	: 'input[data-js="delegatedAdmin"]',
+			itemType		: 'input[data-js="itemType"]',
 			addPermissionsSpan : '.add-permissions',
 			addConditionsSpan : '.add-conditions',
 		},
 		events : {
 			'click [data-action="delete"]'	: 'evDelete',
-			'click td'						: 'evClickTD',
+			'click [data-js="delegatedAdmin"]'	: 'evClickTD',
+			'click [data-js="itemType"]'	: 'evItemTypeClick',
 			'change [data-js="selectGroups"]': 'evSelectGroup',
 			'change [data-js="selectUsers"]': 'evSelectUser',
 			'change input[class="policy-conditions"]'	: 'policyCondtionChange'
@@ -117,6 +119,10 @@ define(function(require) {
 				
 				if(!_.isUndefined(this.model.get('delegateAdmin')) && this.model.get('delegateAdmin')){
 					this.ui.delegatedAdmin.attr('checked', 'checked');
+				}
+
+				if(!_.isUndefined(this.model.get('itemType')) && this.model.get('itemType') == 1){
+					this.ui.itemType.attr('checked', 'checked');
 				}
 			}
 		},
@@ -497,10 +503,20 @@ define(function(require) {
 			XAUtil.checkDirtyFieldForToggle($el);
 			//Set Delegated Admin value 
 			if(!_.isUndefined($el.find('input').data('js'))){
-				this.model.set('delegateAdmin',$el.find('input').is(':checked'))
+				this.model.set('delegateAdmin',$el.is(':checked'));
 				return;
 			}
 		},
+		evItemTypeClick : function(e){
+			var $el = $(e.currentTarget);
+			XAUtil.checkDirtyFieldForToggle($el);
+			//Set ItemType value
+			if(!_.isUndefined($el.find('input').data('js'))){
+				this.model.set('itemType',($el.is(':checked') == false) ? 0 : 1);
+				return;
+			}
+		},
+
 		checkDirtyFieldForCheckBox : function(perms){
 			var permList = [];
 			if(!_.isUndefined(this.model.get('_vPermList')))
@@ -623,6 +639,7 @@ define(function(require) {
 		},
 		getPermHeaders : function(){
 			var permList = [];
+			permList.unshift(localization.tt('lbl.itemType'));
 			if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
 				permList.unshift(localization.tt('lbl.delegatedAdmin'));
 				permList.unshift(localization.tt('lbl.permissions'));

@@ -322,6 +322,7 @@ ENGINE = InnoDB;
 -- ranger database add column in x_service_def and x_service table
 -- ----------------------------------------------------------------
 alter table x_service_def add column `options` VARCHAR(1024) DEFAULT NULL NULL;
+alter table x_policy_item add column `item_type` INT DEFAULT 0 NOT NULL;
 alter table x_service add column `tag_service` BIGINT DEFAULT NULL NULL,
                       add column `tag_version` BIGINT DEFAULT 0 NOT NULL,
                       add column `tag_update_time` DATETIME DEFAULT NULL NULL;

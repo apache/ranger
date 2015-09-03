@@ -49,7 +49,6 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 
     private static final int RANGER_POLICY_EVAL_SCORE_DEFAULT                         = 10000;
     private static final int RANGER_POLICY_EVAL_SCORE_DISCOUNT_DENY_POLICY            =  4000;
-    private static final int RANGER_POLICY_EVAL_SCORE_DISCOUNT_EXCLUSIVE_ALLOW_POLICY =  2000;
 
     private static final int RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_RESOURCE          = 100;
     private static final int RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_USERSGROUPS       =  25;
@@ -206,8 +205,6 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 
         if (policy.isPolicyTypeDeny()) {
             evalOrder -= RANGER_POLICY_EVAL_SCORE_DISCOUNT_DENY_POLICY;
-        } else if (policy.isPolicyTypeExclusiveAllow()) {
-            evalOrder -= RANGER_POLICY_EVAL_SCORE_DISCOUNT_EXCLUSIVE_ALLOW_POLICY;
         }
 
         if(LOG.isDebugEnabled()) {

@@ -92,6 +92,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			policyItemEvaluators = Collections.<RangerPolicyItemEvaluator>emptyList();
 		}
 
+		Collections.sort(policyItemEvaluators);
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.init()");
 		}
@@ -164,13 +166,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	                        result.setIsAllowed(true);
 	                        result.setPolicyId(policy.getId());
 	                    }
-                    } else {
-                        if(policy.isPolicyTypeExclusiveAllow()) {
-                            if(isResourceMatch) {
-                                result.setIsAllowed(false);
-                                result.setPolicyId(policy.getId());
-                            }
-                        }
                     }
                 }
             }
@@ -193,6 +188,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                 ret = policyItemEvaluator.isMatch(request);
 
                 if(ret) {
+                    if(policyItemEvaluator.getPolicyItem().getItemType() == RangerPolicy.POLICY_ITEM_TYPE_ABSTAIN) {
+                        ret = false;
+                    }
                     break;
                 }
             }

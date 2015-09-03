@@ -146,7 +146,7 @@
           "itemId":2,
           "name":"enforce-expiry",
           "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
-          "evaluatorOptions" : { "scriptTemplate":"ctx.isAccessedBefore('expiry_date');" },
+          "evaluatorOptions" : { "scriptTemplate":"ctx.isAccessedAfter('expiry_date');" },
           "label":"Deny access after expiry_date?",
           "description": "Deny access after expiry_date? (yes/no)"
         }
@@ -171,17 +171,18 @@
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false}
         ]
       },
-      {"id":3,"name":"PII_TAG_POLICY-FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":2,
+      {"id":3,"name":"PII_TAG_POLICY-FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":1,
         "resources":{"tag":{"values":["PII-FINAL"],"isRecursive":false}},
         "policyItems":[
-          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false}
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":[""],"groups":["public"],"delegateAdmin":false},
+		  {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false,"itemType":1}
         ]
       },
-      {"id":4,"name":"RESTRICTED_TAG_POLICY_FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":2,
+      {"id":4,"name":"RESTRICTED_TAG_POLICY_FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":1,
         "resources":{"tag":{"values":["RESTRICTED-FINAL"],"isRecursive":false}},
         "policyItems":[
-          {
-            "accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false},
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,"itemType":1,
             "conditions":[{
               "type":"ScriptConditionEvaluator",
               "values":["if ( ctx.isAccessedBefore('expiry') ) ctx.result = true;"]
@@ -189,23 +190,13 @@
           }
         ]
       },
-      {"id":5,"name":"EXPIRES_ON","isEnabled":true,"isAuditEnabled":true,"policyType":2,
+      {"id":5,"name":"EXPIRES_ON","isEnabled":true,"isAuditEnabled":true,"policyType":1,
         "resources":{"tag":{"values":["EXPIRES_ON"],"isRecursive":false}},
         "policyItems":[
-          {
-            "accesses":[{"type":"hive:select","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false,
-            "conditions":[{
-              "type":"enforce-expiry",
-              "values":["yes"]
-            }]
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false,
+            "conditions":[{"type":"enforce-expiry","values":["yes"]}]
           },
-          {
-            "accesses":[{"type":"hive:select","isAllowed":true}],"users":["dataloader"],"groups":[],"delegateAdmin":false,
-            "conditions":[{
-              "type":"enforce-expiry",
-              "values":["no"]
-            }]
-          }
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["dataloader"],"groups":[],"delegateAdmin":false,"itemType":1}
         ]
       }
     ]
@@ -219,7 +210,7 @@
 
         "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2026/06/15\"}}]"}
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"DENY 'select ssn from employee.personal;' for user1 using EXPIRES_ON tag",
       "request":{
@@ -244,7 +235,7 @@
         "accessType":"select","user":"dataloader","userGroups":[],"requestData":"select ssn from employee.personal;' for dataloader",
         "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2015/08/10\"}}]"}
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"ALLOW 'select ssn from employee.personal;' for user1",
       "request":{
@@ -309,7 +300,7 @@
         "accessType":"","user":"hive","userGroups":[],"requestData":"use default",
         "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"DENY 'use default;' for user1",
       "request":{

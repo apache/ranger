@@ -120,15 +120,38 @@
       ]
     },
     "tagPolicies":[
-      {"id":101,"name":"test_policy","isEnabled":true,"isAuditEnabled":true,"policyType":2,
+      {"id":101,"name":"test_policy","isEnabled":true,"isAuditEnabled":true,"policyType":1,
         "resources":{"tag":{"values":["PII"],"isRecursive":false}},
         "policyItems":[
-          {"accesses":[{"type":"hdfs:read", "isAllowed":true}, {"type":"hive:grant", "isAllowed":true}, {"type":"delete", "isAllowed":true}, {"type":":write", "isAllowed":true}],"users":["user1"],"groups":["finance"],"delegateAdmin":false,
-          "conditions" : [{"type":"ScriptConditionEvaluator", "values": [
-            "ctx.result = true;",
-            "importPackage(java.util); var accessDate = ctx.getAsDate(ctx.accessTime); var expiryDate =ctx.getTagAttributeAsDate('pii','expiry'); expiryDate.getTime() < accessDate.getTime();"
-          ]
-                          }]
+          {
+            "accesses":[
+				{"type":"hdfs:read", "isAllowed":true},
+				{"type":"hive:grant", "isAllowed":true},
+				{"type":"delete", "isAllowed":true},
+				{"type":":write", "isAllowed":true}
+			 ],
+			 "users":[""],
+			 "groups":["public"],
+			 "delegateAdmin":false,
+			 "itemType":0,
+			 "conditions" : [
+				{"type":"ScriptConditionEvaluator", "values": [
+					"ctx.result = true; importPackage(java.util); var accessDate = ctx.getAsDate(ctx.accessTime); var expiryDate =ctx.getTagAttributeAsDate('pii','expiry'); expiryDate.getTime() < accessDate.getTime();"
+				]}
+             ]
+          },
+          {
+            "accesses":[
+				{"type":"hdfs:read", "isAllowed":true},
+				{"type":"hive:grant", "isAllowed":true},
+				{"type":"delete", "isAllowed":true},
+				{"type":":write", "isAllowed":true}
+			 ],
+			 "users":["user1"],
+			 "groups":["finance"],
+			 "delegateAdmin":false,
+			 "itemType":1,
+			 "conditions" : []
           }
         ]
       }
@@ -141,7 +164,7 @@
       "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
        "context": {"TAGS":"[{\"type\":\"PII\"}]"}
      },
-     "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+     "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
   ]
 }

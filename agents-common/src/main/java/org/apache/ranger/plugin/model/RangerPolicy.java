@@ -47,8 +47,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 	public static final int POLICY_TYPE_ALLOW           = 0;
 	public static final int POLICY_TYPE_DENY            = 1;
-	public static final int POLICY_TYPE_EXCLUSIVE_ALLOW = 2;
-
+	public static final int POLICY_ITEM_TYPE_DEFAULT    = 0;
+	public static final int POLICY_ITEM_TYPE_ABSTAIN    = 1;
 
 	private String                            service        	= null;
 	private String                            name           	= null;
@@ -253,12 +253,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 	final public boolean isPolicyTypeDeny() {
 		boolean ret = this.policyType != null && this.policyType == POLICY_TYPE_DENY;
-
-		return ret;
-	}
-
-	final public boolean isPolicyTypeExclusiveAllow() {
-		boolean ret = this.policyType != null && this.policyType == POLICY_TYPE_EXCLUSIVE_ALLOW;
 
 		return ret;
 	}
@@ -484,6 +478,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		private List<String>                    groups        = null;
 		private List<RangerPolicyItemCondition> conditions    = null;
 		private Boolean                         delegateAdmin = null;
+		private Integer                         itemType      = POLICY_ITEM_TYPE_DEFAULT;
 
 		public RangerPolicyItem() {
 			this(null, null, null, null, null);
@@ -495,6 +490,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			setGroups(groups);
 			setConditions(conditions);
 			setDelegateAdmin(delegateAdmin);
+			setItemType(null);
 		}
 
 		/**
@@ -608,6 +604,20 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.delegateAdmin = delegateAdmin == null ? Boolean.FALSE : delegateAdmin;
 		}
 
+		/**
+		 * @return the itemType
+		 */
+		public Integer getItemType() {
+			return itemType;
+		}
+
+		/**
+		 * @param itemType the itemType to set
+		 */
+		public void setItemType(Integer itemType) {
+			this.itemType = itemType == null ? POLICY_ITEM_TYPE_DEFAULT : itemType;
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -661,6 +671,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			sb.append("} ");
 
 			sb.append("delegateAdmin={").append(delegateAdmin).append("} ");
+			sb.append("itemType={").append(itemType).append("} ");
 			sb.append("}");
 
 			return sb;
@@ -679,6 +690,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			result = prime * result
 					+ ((groups == null) ? 0 : groups.hashCode());
 			result = prime * result + ((users == null) ? 0 : users.hashCode());
+			result = prime * result + ((itemType == null) ? 0 : itemType.hashCode());
 			return result;
 		}
 
@@ -705,6 +717,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 				if (other.delegateAdmin != null)
 					return false;
 			} else if (!delegateAdmin.equals(other.delegateAdmin))
+				return false;
+			if (itemType == null) {
+				if (other.itemType != null)
+					return false;
+			} else if (!itemType.equals(other.itemType))
 				return false;
 			if (groups == null) {
 				if (other.groups != null)

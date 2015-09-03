@@ -1831,7 +1831,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policy.setService(createdService.getName());
 			policy.setDescription(tagType + " Policy for TAG Service: " + createdService.getName());
 			policy.setIsAuditEnabled(true);
-			policy.setPolicyType(RangerPolicy.POLICY_TYPE_EXCLUSIVE_ALLOW);
+			policy.setPolicyType(RangerPolicy.POLICY_TYPE_DENY);
 
 			Map<String, RangerPolicyResource> resourceMap = new HashMap<String, RangerPolicyResource>();
 
@@ -2034,6 +2034,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xPolicyItem = (XXPolicyItem) rangerAuditFields.populateAuditFields(
 					xPolicyItem, xPolicy);
 			xPolicyItem.setDelegateAdmin(policyItem.getDelegateAdmin());
+			xPolicyItem.setItemType(policyItem.getItemType());
 			xPolicyItem.setPolicyId(policy.getId());
 			xPolicyItem.setOrder(itemOrder);
 			xPolicyItem = daoMgr.getXXPolicyItem().create(xPolicyItem);

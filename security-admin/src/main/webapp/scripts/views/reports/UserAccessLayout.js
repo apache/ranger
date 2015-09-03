@@ -214,7 +214,7 @@ define(function(require) {'use strict';
 					label	: localization.tt("lbl.policyType"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue) {
-							return rawValue === 0 ? '<label label-success">Allow</label>' : rawValue === 1 ? '<label label-important">Deny</label>' : '<label label-success">Exclusive Allow</label>'; 
+							return rawValue === 0 ? '<label label-success">Allow</label>' : rawValue === 1 ? '<label label-important">Deny</label>' : '<label label-success">Unknown</label>'; 
 						}
 					}),
 					editable: false,

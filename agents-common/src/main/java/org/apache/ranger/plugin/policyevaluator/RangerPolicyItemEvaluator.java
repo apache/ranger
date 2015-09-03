@@ -22,13 +22,18 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-public interface RangerPolicyItemEvaluator {
+public interface RangerPolicyItemEvaluator extends Comparable<RangerPolicyItemEvaluator> {
 
 	void init();
 
+	RangerPolicyItem getPolicyItem();
+
 	List<RangerConditionEvaluator> getConditionEvaluators();
+
+	int getEvalOrder();
 
 
 	boolean isMatch(RangerAccessRequest request);

@@ -22,18 +22,33 @@ package org.apache.ranger.plugin.policyevaluator;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 
 public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyItemEvaluator {
+	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyItemEvaluator.class);
+
+	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_DEFAULT          = 1000;
+	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_DISCOUNT_ABSTAIN =  500;
+
+	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_USERSGROUPS       =  25;
+	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_ACCESS_TYPES      =  25;
+	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_CUSTOM_CONDITIONS =  25;
+	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_CUSTOM_CONDITION_PENALTY       =   5;
+
 	final RangerPolicyEngineOptions options;
 	final RangerServiceDef          serviceDef;
 	final RangerPolicyItem          policyItem;
 	final long                      policyId;
+	final int                       evalOrder;
 
 	List<RangerConditionEvaluator> conditionEvaluators = Collections.<RangerConditionEvaluator>emptyList();
 
@@ -42,11 +57,37 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 		this.policyItem = policyItem;
 		this.options    = options;
 		this.policyId   = policy != null && policy.getId() != null ? policy.getId() : -1;
+		this.evalOrder  = computeEvalOrder();
 	}
 
 	@Override
 	public List<RangerConditionEvaluator> getConditionEvaluators() {
 		return conditionEvaluators;
+	}
+
+	@Override
+	public int getEvalOrder() {
+		return evalOrder;
+	}
+
+	@Override
+	public RangerPolicyItem getPolicyItem() {
+		return policyItem;
+	}
+
+	@Override
+	public int compareTo(RangerPolicyItemEvaluator other) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractPolicyItemEvaluator.compareTo()");
+		}
+
+		int result = Integer.compare(getEvalOrder(), other.getEvalOrder());
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractPolicyItemEvaluator.compareTo(), result:" + result);
+		}
+
+		return result;
 	}
 
 	protected String getServiceType() {
@@ -55,5 +96,46 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 
 	protected boolean getConditionsDisabledOption() {
 		return options != null ? options.disableCustomConditions : false;
+	}
+
+	private int computeEvalOrder() {
+		int evalOrder = RANGER_POLICY_ITEM_EVAL_ORDER_DEFAULT;
+
+		if(policyItem != null) {
+			if(policyItem.getItemType() == RangerPolicy.POLICY_ITEM_TYPE_ABSTAIN) {
+				evalOrder -= RANGER_POLICY_ITEM_EVAL_ORDER_DISCOUNT_ABSTAIN;
+			}
+
+			if(CollectionUtils.isNotEmpty(policyItem.getGroups()) && policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC)) {
+				evalOrder -= RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_USERSGROUPS;
+			} else {
+				int userGroupCount = 0;
+
+				if(! CollectionUtils.isEmpty(policyItem.getUsers())) {
+					userGroupCount += policyItem.getUsers().size();
+				}
+
+				if(! CollectionUtils.isEmpty(policyItem.getGroups())) {
+					userGroupCount += policyItem.getGroups().size();
+				}
+
+				evalOrder -= Math.min(RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_USERSGROUPS, userGroupCount);
+			}
+
+			if(CollectionUtils.isNotEmpty(policyItem.getAccesses())) {
+				evalOrder -= Math.round(((float)RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_ACCESS_TYPES * policyItem.getAccesses().size()) / serviceDef.getAccessTypes().size());
+			}
+
+			int customConditionsPenalty = 0;
+			if(CollectionUtils.isNotEmpty(policyItem.getConditions())) {
+				customConditionsPenalty = RANGER_POLICY_ITEM_EVAL_ORDER_CUSTOM_CONDITION_PENALTY * policyItem.getConditions().size();
+			}
+			int customConditionsDiscount = RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_CUSTOM_CONDITIONS - customConditionsPenalty;
+	        if(customConditionsDiscount > 0) {
+				evalOrder -= customConditionsDiscount;
+	        }
+		}
+
+        return evalOrder;
 	}
 }

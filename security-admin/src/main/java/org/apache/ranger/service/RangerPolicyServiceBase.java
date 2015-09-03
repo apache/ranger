@@ -203,6 +203,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		rangerPolItem.setGroups(grpList);
 
 		rangerPolItem.setDelegateAdmin(xPolItem.getDelegateAdmin());
+		rangerPolItem.setItemType(xPolItem.getItemType());
 		return rangerPolItem;
 	}
 
