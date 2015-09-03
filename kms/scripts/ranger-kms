@@ -32,6 +32,10 @@ RANGER_KMS_EWS_LIB_DIR="${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/lib"
 
 JAVA_OPTS=" ${JAVA_OPTS} -XX:MaxPermSize=256m -Xmx1024m -Xms1024m "
 
+if [ -f ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh ]; then
+        . ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh
+fi
+
 for custom_env_script in `find ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf/ -name "ranger-kms-env*"`; do
         if [ -f $custom_env_script ]; then
                 . $custom_env_script
