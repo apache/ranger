@@ -209,17 +209,6 @@ define(function(require) {'use strict';
 					editable: false,
 					sortable : false
 				},
-				policyType : {
-					cell : 'html',
-					label	: localization.tt("lbl.policyType"),
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							return rawValue === 0 ? '<label label-success">Allow</label>' : rawValue === 1 ? '<label label-important">Deny</label>' : '<label label-success">Unknown</label>'; 
-						}
-					}),
-					editable: false,
-					sortable : false
-				},	
 				isEnabled:{
 					label:localization.tt('lbl.status'),
 					cell :"html",

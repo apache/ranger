@@ -42,8 +42,8 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyItemEvaluator.class);
 
 
-	public RangerDefaultPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, RangerPolicyEngineOptions options) {
-		super(serviceDef, policy, policyItem, options);
+	public RangerDefaultPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, RangerPolicyEngineOptions options) {
+		super(serviceDef, policy, policyItem, policyItemType, options);
 	}
 
 	public void init() {

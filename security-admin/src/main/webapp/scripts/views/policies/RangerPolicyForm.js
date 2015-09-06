@@ -66,7 +66,10 @@ define(function(require){
 			this.defaultValidator={}
 		},
 		initializeCollection: function(){
-			this.formInputList 		= XAUtil.makeCollForGroupPermission(this.model);
+			this.formInputList 		= XAUtil.makeCollForGroupPermission(this.model, 'policyItems');
+			this.formInputAllowExceptionList= XAUtil.makeCollForGroupPermission(this.model, 'allowExceptions');
+			this.formInputDenyList 		= XAUtil.makeCollForGroupPermission(this.model, 'denyPolicyItems');
+			this.formInputDenyExceptionList = XAUtil.makeCollForGroupPermission(this.model, 'denyExceptions');
 		},
 		/** all events binding here */
 		bindEvents : function(){
@@ -76,21 +79,18 @@ define(function(require){
 			this.on('isEnabled:change', function(form, fieldEditor){
 				this.evIsEnabledChange(form, fieldEditor);
 			});
-			this.on('policyType:change', function(form, fieldEditor){
-				this.evPolicyTypeChange(form, fieldEditor);
-			});
 			this.on('policyForm:parentChildHideShow',this.renderParentChildHideShow);
 		},
 
 		/** fields for the form
 		*/
-		fields: ['name', 'policyType', 'description', 'isEnabled', 'isAuditEnabled'],
+		fields: ['name', 'description', 'isEnabled', 'isAuditEnabled'],
 		schema :function(){
 			return this.getSchema();
 		},
 		getSchema : function(){
 			var attrs = {};
-			var basicSchema = ['name','isEnabled','policyType']
+			var basicSchema = ['name','isEnabled']
 			var schemaNames = this.getPolicyBaseFieldNames();
 			
 			var formDataType = new BackboneFormDataType();
@@ -119,14 +119,40 @@ define(function(require){
 			//to show error msg on below the field(only for policy name)
 			this.fields.isEnabled.$el.find('.control-label').removeClass();
 			this.fields.name.$el.find('.help-inline').removeClass('help-inline').addClass('help-block margin-left-5')
+			this.initializePlugins();
 		},
+		initializePlugins : function() {
+			var that = this;
+			this.$(".wrap-header").each(function() {
+				var wrap = $(this).next();
+				// If next element is a wrap and hasn't .non-collapsible class
+				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible'))
+					$(this).append('<a href="#" class="wrap-expand pull-right">show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>').append('<a href="#" class="wrap-collapse pull-right" style="display: none">hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>');
+			});
+			// Collapse wrap
+			$(document).on("click", "a.wrap-collapse", function() {
+				var self = $(this).hide(100, 'linear');
+				self.parent('.wrap-header').next('.wrap').slideUp(500, function() {
+					$('.wrap-expand', self.parent('.wrap-header')).show(100, 'linear');
+				});
+				return false;
+
+				// Expand wrap
+			}).on("click", "a.wrap-expand", function() {
+				var self = $(this).hide(100, 'linear');
+				self.parent('.wrap-header').next('.wrap').slideDown(500, function() {
+					$('.wrap-collapse', self.parent('.wrap-header')).show(100, 'linear');
+				});
+				return false;
+			});
+			
+		},
+
+
 		evAuditChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
 		},
 		evIsEnabledChange : function(form, fieldEditor){
-			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
-		},
-		evPolicyTypeChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
 		},
 		setupForm : function() {
@@ -150,8 +176,6 @@ define(function(require){
 			var that = this;
 			this.fields.isAuditEnabled.editor.setValue(this.model.get('isAuditEnabled'));
 			this.fields.isEnabled.editor.setValue(this.model.get('isEnabled'));
-			this.fields.policyType.editor.setValue(this.model.get('policyType'));
-			
 		},
 		/** all custom field rendering */
 		renderCustomFields: function(){
@@ -177,6 +201,34 @@ define(function(require){
 						userList   : that.userList,
 						model 	   : that.model,
 						accessTypes: accessType,
+						headerTitle: "",
+						rangerServiceDefModel : that.rangerServiceDefModel
+					}).render().el);
+					that.$('[data-customfields="groupPermsDeny"]').html(new PermissionList({
+						collection : that.formInputDenyList,
+						groupList  : that.groupList,
+						userList   : that.userList,
+						model 	   : that.model,
+						accessTypes: accessType,
+						headerTitle: "",
+						rangerServiceDefModel : that.rangerServiceDefModel
+					}).render().el);
+					that.$('[data-customfields="groupPermsAllowException"]').html(new PermissionList({
+						collection : that.formInputAllowExceptionList,
+						groupList  : that.groupList,
+						userList   : that.userList,
+						model 	   : that.model,
+						accessTypes: accessType,
+						headerTitle: "Deny",
+						rangerServiceDefModel : that.rangerServiceDefModel
+					}).render().el);
+					that.$('[data-customfields="groupPermsDenyException"]').html(new PermissionList({
+						collection : that.formInputDenyExceptionList,
+						groupList  : that.groupList,
+						userList   : that.userList,
+						model 	   : that.model,
+						accessTypes: accessType,
+						headerTitle: "Deny",
 						rangerServiceDefModel : that.rangerServiceDefModel
 					}).render().el);
 			});
@@ -259,10 +311,11 @@ define(function(require){
 			//Set UserGroups Permission
 			
 			var RangerPolicyItem = Backbone.Collection.extend();
-			var policyItemList = new RangerPolicyItem();
-			policyItemList = this.setPermissionsToColl(this.formInputList, policyItemList);
 			
-			this.model.set('policyItems', policyItemList)
+			this.model.set('policyItems', this.setPermissionsToColl(this.formInputList, new RangerPolicyItem()));
+			this.model.set('denyPolicyItems', this.setPermissionsToColl(this.formInputDenyList, new RangerPolicyItem()));
+			this.model.set('allowExceptions', this.setPermissionsToColl(this.formInputAllowExceptionList, new RangerPolicyItem()));
+			this.model.set('denyExceptions', this.setPermissionsToColl(this.formInputDenyExceptionList, new RangerPolicyItem()));
 			this.model.set('service',this.rangerService.get('name'));			
 			/*//Unset attrs which are not needed 
 			_.each(this.model.attributes.resources,function(obj,key){
@@ -282,9 +335,6 @@ define(function(require){
 					}
 					if(!_.isUndefined(m.get('delegateAdmin'))){
 						policyItem.set("delegateAdmin",m.get("delegateAdmin"));
-					}
-					if(!_.isUndefined(m.get('itemType'))){
-						policyItem.set("itemType",m.get("itemType"));
 					}
 					
 					var RangerPolicyItemAccessList = Backbone.Collection.extend();

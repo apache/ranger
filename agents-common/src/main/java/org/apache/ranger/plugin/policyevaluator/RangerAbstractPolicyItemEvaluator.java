@@ -36,8 +36,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyItemEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyItemEvaluator.class);
 
-	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_DEFAULT          = 1000;
-	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_DISCOUNT_ABSTAIN =  500;
+	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_DEFAULT = 1000;
 
 	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_USERSGROUPS       =  25;
 	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_ACCESS_TYPES      =  25;
@@ -47,17 +46,19 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 	final RangerPolicyEngineOptions options;
 	final RangerServiceDef          serviceDef;
 	final RangerPolicyItem          policyItem;
+	final int                       policyItemType;
 	final long                      policyId;
 	final int                       evalOrder;
 
 	List<RangerConditionEvaluator> conditionEvaluators = Collections.<RangerConditionEvaluator>emptyList();
 
-	RangerAbstractPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, RangerPolicyEngineOptions options) {
-		this.serviceDef = serviceDef;
-		this.policyItem = policyItem;
-		this.options    = options;
-		this.policyId   = policy != null && policy.getId() != null ? policy.getId() : -1;
-		this.evalOrder  = computeEvalOrder();
+	RangerAbstractPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, RangerPolicyEngineOptions options) {
+		this.serviceDef     = serviceDef;
+		this.policyItem     = policyItem;
+		this.policyItemType = policyItemType;
+		this.options        = options;
+		this.policyId       = policy != null && policy.getId() != null ? policy.getId() : -1;
+		this.evalOrder      = computeEvalOrder();
 	}
 
 	@Override
@@ -73,6 +74,11 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 	@Override
 	public RangerPolicyItem getPolicyItem() {
 		return policyItem;
+	}
+
+	@Override
+	public int getPolicyItemType() {
+		return policyItemType;
 	}
 
 	@Override
@@ -102,10 +108,6 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 		int evalOrder = RANGER_POLICY_ITEM_EVAL_ORDER_DEFAULT;
 
 		if(policyItem != null) {
-			if(policyItem.getItemType() == RangerPolicy.POLICY_ITEM_TYPE_ABSTAIN) {
-				evalOrder -= RANGER_POLICY_ITEM_EVAL_ORDER_DISCOUNT_ABSTAIN;
-			}
-
 			if(CollectionUtils.isNotEmpty(policyItem.getGroups()) && policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC)) {
 				evalOrder -= RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_USERSGROUPS;
 			} else {

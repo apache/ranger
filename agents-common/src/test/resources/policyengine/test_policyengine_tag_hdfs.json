@@ -15,26 +15,6 @@
   },
 
   "policies":[
-    {"id":1,"name":"audit-all-access under /finance/restricted/","isEnabled":true,"isAuditEnabled":true,
-     "resources":{"path":{"values":["/finance/restricted/"],"isRecursive":true}},
-     "policyItems":[
-       {"accesses":[],"users":[],"groups":["public"],"delegateAdmin":false}
-     ]
-    }
-    ,
-    {"id":2,"name":"allow-read-to-all under /public/","isEnabled":true,"isAuditEnabled":false,
-     "resources":{"path":{"values":["/public/*"],"isRecursive":true}},
-     "policyItems":[
-       {"accesses":[{"type":"read","isAllowed":true},{"type":"execute","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
-     ]
-    }
-    ,
-    {"id":3,"name":"allow-read-to-finance under /finance/restricted","isEnabled":true,"isAuditEnabled":true,
-     "resources":{"path":{"values":["/finance/restricted"],"isRecursive":true}},
-     "policyItems":[
-       {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["finance"],"delegateAdmin":false}
-     ]
-    }
   ],
   "tagPolicyInfo": {
 
@@ -120,7 +100,7 @@
       ]
     },
     "tagPolicies":[
-      {"id":101,"name":"test_policy","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+      {"id":101,"name":"PII with expiry","isEnabled":true,"isAuditEnabled":true,
         "resources":{"tag":{"values":["PII"],"isRecursive":false}},
         "policyItems":[
           {
@@ -128,29 +108,43 @@
 				{"type":"hdfs:read", "isAllowed":true},
 				{"type":"hive:grant", "isAllowed":true},
 				{"type":"delete", "isAllowed":true},
-				{"type":":write", "isAllowed":true}
+				{"type":"hdfs:write", "isAllowed":true}
 			 ],
-			 "users":[""],
-			 "groups":["public"],
+			 "users":["user1"],
+			 "groups":["finance"],
 			 "delegateAdmin":false,
-			 "itemType":0,
-			 "conditions" : [
-				{"type":"ScriptConditionEvaluator", "values": [
-					"ctx.result = true; importPackage(java.util); var accessDate = ctx.getAsDate(ctx.accessTime); var expiryDate =ctx.getTagAttributeAsDate('pii','expiry'); expiryDate.getTime() < accessDate.getTime();"
-				]}
-             ]
-          },
+			 "conditions" : []
+          }
+        ],
+        "denyPolicyItems":[
           {
             "accesses":[
 				{"type":"hdfs:read", "isAllowed":true},
 				{"type":"hive:grant", "isAllowed":true},
 				{"type":"delete", "isAllowed":true},
-				{"type":":write", "isAllowed":true}
+				{"type":"hdfs:write", "isAllowed":true}
+			 ],
+			 "users":[""],
+			 "groups":["public"],
+			 "delegateAdmin":false,
+			 "conditions" : [
+				{"type":"ScriptConditionEvaluator", "values": [
+					"ctx.result = true; importPackage(java.util); var accessDate = ctx.accessTime; var expiryDate = ctx.getTagAttributeAsDate('PII','expiry_date'); expiryDate.getTime() < accessDate.getTime();"
+				]}
+             ]
+          }
+        ],
+        "denyExceptions":[
+          {
+            "accesses":[
+				{"type":"hdfs:read", "isAllowed":true},
+				{"type":"hive:grant", "isAllowed":true},
+				{"type":"delete", "isAllowed":true},
+				{"type":"hdfs:write", "isAllowed":true}
 			 ],
 			 "users":["user1"],
 			 "groups":["finance"],
 			 "delegateAdmin":false,
-			 "itemType":1,
 			 "conditions" : []
           }
         ]
@@ -161,10 +155,28 @@
     {"name":"ALLOW 'read /finance/restricted/sales.db' for g=finance",
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
-      "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
-       "context": {"TAGS":"[{\"type\":\"PII\"}]"}
+      "accessType":"read","user":"userx","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
+       "context": {"TAGS":"[{\"type\":\"PII\",\"attributes\":{\"expiry_date\":\"2015/09/01\"}}]"}
      },
-     "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+     "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+    }
+    ,
+    {"name":"ALLOW 'read /finance/restricted/sales.db' for u=user1",
+     "request":{
+      "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
+      "accessType":"read","user":"user1","userGroups":["employee"],"requestData":"read /finance/restricted/sales.db",
+       "context": {"TAGS":"[{\"type\":\"PII\",\"attributes\":{\"expiry_date\":\"2015/09/01\"}}]"}
+     },
+     "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+    }
+    ,
+    {"name":"DENY 'read /finance/restricted/sales.db' for u=user2",
+     "request":{
+      "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
+      "accessType":"read","user":"user2","userGroups":["employee"],"requestData":"read /finance/restricted/sales.db",
+       "context": {"TAGS":"[{\"type\":\"PII\",\"attributes\":{\"expiry_date\":\"2015/09/01\"}}]"}
+     },
+     "result":{"isAudited":true,"isAllowed":false,"policyId":101}
     }
   ]
 }

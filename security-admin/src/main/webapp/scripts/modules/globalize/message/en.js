@@ -213,7 +213,6 @@ define(function(require) {
 				ipAddress						: 'IP Address',
 				isVisible                       : 'Visible',
 				delegatedAdmin					: 'Delegate Admin',
-				itemType					    : 'Abstain?',
 				policyId						: 'Policy ID',
 				moduleName						: 'Module Name',
 				keyManagement					: 'Key Management',

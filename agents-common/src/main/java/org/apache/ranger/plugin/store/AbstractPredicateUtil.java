@@ -374,11 +374,22 @@ public class AbstractPredicateUtil {
 				if(object instanceof RangerPolicy) {
 					RangerPolicy policy = (RangerPolicy)object;
 
-					for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-						if(policyItem.getUsers().contains(userName)) {
-							ret = true;
+					List<?>[] policyItemsList = new List<?>[] { policy.getPolicyItems(),
+																policy.getDenyPolicyItems(),
+																policy.getAllowExceptions(),
+																policy.getDenyExceptions()
+															  };
 
-							break;
+					for(List<?> policyItemsObj : policyItemsList) {
+						@SuppressWarnings("unchecked")
+						List<RangerPolicyItem> policyItems = (List<RangerPolicyItem>)policyItemsObj;
+
+						for(RangerPolicyItem policyItem : policyItems) {
+							if(policyItem.getUsers().contains(userName)) {
+								ret = true;
+
+								break;
+							}
 						}
 					}
 				} else {
@@ -413,11 +424,22 @@ public class AbstractPredicateUtil {
 				if(object instanceof RangerPolicy) {
 					RangerPolicy policy = (RangerPolicy)object;
 
-					for(RangerPolicyItem policyItem : policy.getPolicyItems()) {
-						if(policyItem.getGroups().contains(groupName)) {
-							ret = true;
+					List<?>[] policyItemsList = new List<?>[] { policy.getPolicyItems(),
+							policy.getDenyPolicyItems(),
+							policy.getAllowExceptions(),
+							policy.getDenyExceptions()
+						  };
 
-							break;
+					for(List<?> policyItemsObj : policyItemsList) {
+						@SuppressWarnings("unchecked")
+						List<RangerPolicyItem> policyItems = (List<RangerPolicyItem>)policyItemsObj;
+
+						for(RangerPolicyItem policyItem : policyItems) {
+							if(policyItem.getGroups().contains(groupName)) {
+								ret = true;
+
+								break;
+							}
 						}
 					}
 				} else {

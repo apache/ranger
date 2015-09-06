@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.policyevaluator;
 
 
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -58,6 +59,14 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	@Override
 	public RangerServiceDef getServiceDef() {
 		return serviceDef;
+	}
+
+	public boolean hasAllow() {
+		return policy != null && CollectionUtils.isNotEmpty(policy.getPolicyItems());
+	}
+
+	public boolean hasDeny() {
+		return policy != null && CollectionUtils.isNotEmpty(policy.getDenyPolicyItems());
 	}
 
 	@Override

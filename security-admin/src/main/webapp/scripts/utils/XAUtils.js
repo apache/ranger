@@ -572,7 +572,7 @@ define(function(require) {
 			$(this).select2('open');
 		}
 	};
-	XAUtils.makeCollForGroupPermission = function(model) {
+	XAUtils.makeCollForGroupPermission = function(model, listName) {
 		var XAEnums = require('utils/XAEnums');
 		var formInputColl = new Backbone.Collection();
 		// permMapList = [ {id: 18, groupId : 1, permType :5}, {id: 18, groupId
@@ -581,8 +581,8 @@ define(function(require) {
 		// permType :4} ]
 		// [2] => [ {id: 18, groupId : 2, permType :5} ]
 		if (!model.isNew()) {
-			if (!_.isUndefined(model.get('policyItems'))) {
-				var policyItems = model.get('policyItems');
+			if (!_.isUndefined(model.get(listName))) {
+				var policyItems = model.get(listName);
 				// var groupPolicyItems =
 				// _.filter(policyItems,function(m){if(!_.isEmpty(m.groups))
 				// return m;});
@@ -598,7 +598,6 @@ define(function(require) {
 						accesses : obj.accesses,
 						conditions : obj.conditions,
 						delegateAdmin : obj.delegateAdmin,
-						itemType : obj.itemType,
 						editMode : true,
 					});
 					formInputColl.add(m);
@@ -609,7 +608,7 @@ define(function(require) {
 		return formInputColl;
 	};
 
-	XAUtils.makeCollForUserPermission = function(model) {
+	XAUtils.makeCollForUserPermission = function(model, listName) {
 		var XAEnums = require('utils/XAEnums');
 		var coll = new Backbone.Collection();
 		// permMapList = [ {id: 18, groupId : 1, permType :5}, {id: 18, groupId
@@ -618,8 +617,8 @@ define(function(require) {
 		// permType :4} ]
 		// [2] => [ {id: 18, groupId : 2, permType :5} ]
 		if (!model.isNew()) {
-			if (!_.isUndefined(model.get('policyItems'))) {
-				var policyItems = model.get('policyItems');
+			if (!_.isUndefined(model.get(listName))) {
+				var policyItems = model.get(listName);
 				var userPolicyItems = _.filter(policyItems, function(m) {
 					if (!_.isEmpty(m.users))
 						return m;

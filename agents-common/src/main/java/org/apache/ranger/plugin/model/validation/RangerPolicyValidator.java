@@ -212,11 +212,21 @@ public class RangerPolicyValidator extends RangerValidator {
 					serviceNameValid = true;
 				}
 			}
-			List<RangerPolicyItem> policyItems = policy.getPolicyItems();
-			boolean isAuditEnabled = getIsAuditEnabled(policy);
-			RangerServiceDef serviceDef = null;
-			String serviceDefName = null;
-			if (CollectionUtils.isEmpty(policyItems) && !isAuditEnabled) {
+
+			boolean          isAuditEnabled   = getIsAuditEnabled(policy);
+			String           serviceDefName   = null;
+			RangerServiceDef serviceDef       = null;
+			int              policyItemsCount = 0;
+
+			if(CollectionUtils.isNotEmpty(policy.getPolicyItems())) {
+				policyItemsCount += policy.getPolicyItems().size();
+			}
+
+			if(CollectionUtils.isNotEmpty(policy.getDenyPolicyItems())) {
+				policyItemsCount += policy.getDenyPolicyItems().size();
+			}
+
+			if (policyItemsCount == 0 && !isAuditEnabled) {
 				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_POLICY_ITEMS;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("policy items")
@@ -227,7 +237,7 @@ public class RangerPolicyValidator extends RangerValidator {
 				valid = false;
 			} else if (service != null) {
 				serviceDefName = service.getType();
-				serviceDef = getServiceDef(serviceDefName);
+				serviceDef     = getServiceDef(serviceDefName);
 				if (serviceDef == null) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_SERVICE_DEF;
 					failures.add(new ValidationFailureDetailsBuilder()
@@ -238,9 +248,13 @@ public class RangerPolicyValidator extends RangerValidator {
 						.build());
 					valid = false;
 				} else {
-					valid = isValidPolicyItems(policyItems, failures, serviceDef) && valid;
+					valid = isValidPolicyItems(policy.getPolicyItems(), failures, serviceDef) && valid;
+					valid = isValidPolicyItems(policy.getDenyPolicyItems(), failures, serviceDef) && valid;
+					valid = isValidPolicyItems(policy.getAllowExceptions(), failures, serviceDef) && valid;
+					valid = isValidPolicyItems(policy.getDenyExceptions(), failures, serviceDef) && valid;
 				}
 			}
+
 			if (serviceNameValid) { // resource checks can't be done meaningfully otherwise
 				valid = isValidResources(policy, failures, action, isAdmin, serviceDef) && valid;
 			}

@@ -92,7 +92,7 @@ public class RangerPolicyRepository {
 
         this.appId = appId;
 
-        this.policies = Collections.unmodifiableList(normalizePolicyItemAccesses(tagPolicies.getPolicies(), componentServiceDef.getName()));
+        this.policies = Collections.unmodifiableList(normalizeAndPrunePolicies(tagPolicies.getPolicies(), componentServiceDef.getName()));
         this.policyVersion = tagPolicies.getPolicyVersion() != null ? tagPolicies.getPolicyVersion() : -1;
         this.accessAuditCache = null;
 
@@ -134,7 +134,7 @@ public class RangerPolicyRepository {
 
                 String prefix = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
 
-                List<RangerServiceDef.RangerAccessTypeDef> unneededAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+                List<RangerServiceDef.RangerAccessTypeDef> unneededAccessTypeDefs = null;
 
                 for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
 
@@ -169,72 +169,102 @@ public class RangerPolicyRepository {
 
                         }
                     } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                        if(unneededAccessTypeDefs == null) {
+                            unneededAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+                        }
+
                         unneededAccessTypeDefs.add(accessTypeDef);
                     }
                 }
-                accessTypeDefs.removeAll(unneededAccessTypeDefs);
+
+                if(unneededAccessTypeDefs != null) {
+                    accessTypeDefs.removeAll(unneededAccessTypeDefs);
+                }
             }
         }
 
         return serviceDef;
     }
 
-    private List<RangerPolicy> normalizePolicyItemAccesses(List<RangerPolicy> rangerPolicies, final String componentType) {
-
+    private List<RangerPolicy> normalizeAndPrunePolicies(List<RangerPolicy> rangerPolicies, final String componentType) {
         if (CollectionUtils.isNotEmpty(rangerPolicies) && StringUtils.isNotBlank(componentType)) {
-
-            String prefix = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
-
-            List<RangerPolicy> unneededPolicies = new ArrayList<>();
+            List<RangerPolicy> policiesToPrune = null;
 
             for (RangerPolicy policy : rangerPolicies) {
+                normalizeAndPrunePolicyItems(policy.getPolicyItems(), componentType);
+                normalizeAndPrunePolicyItems(policy.getDenyPolicyItems(), componentType);
+                normalizeAndPrunePolicyItems(policy.getAllowExceptions(), componentType);
+                normalizeAndPrunePolicyItems(policy.getDenyExceptions(), componentType);
 
-                List<RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
+                if (!policy.getIsAuditEnabled() &&
+                    CollectionUtils.isEmpty(policy.getPolicyItems()) &&
+                    CollectionUtils.isEmpty(policy.getDenyPolicyItems()) &&
+                    CollectionUtils.isEmpty(policy.getAllowExceptions()) &&
+                    CollectionUtils.isEmpty(policy.getDenyExceptions())) {
 
-                if (CollectionUtils.isNotEmpty(policyItems)) {
-
-                    List<RangerPolicy.RangerPolicyItem> unneededPolicyItems = new ArrayList< RangerPolicy.RangerPolicyItem>();
-
-                    for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
-
-                        List<RangerPolicy.RangerPolicyItemAccess> policyItemAccesses = policyItem.getAccesses();
-
-                        if (CollectionUtils.isNotEmpty(policyItemAccesses)) {
-
-                            List<RangerPolicy.RangerPolicyItemAccess> unneededItemAccesses = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
-
-                            for (RangerPolicy.RangerPolicyItemAccess access : policyItemAccesses) {
-
-                                String accessType = access.getType();
-
-                                if (StringUtils.startsWith(accessType, prefix)) {
-
-                                    String newAccessType = StringUtils.removeStart(accessType, prefix);
-
-                                    access.setType(newAccessType);
-
-                                } else if (accessType.contains(AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
-                                    unneededItemAccesses.add(access);
-                                }
-                            }
-                            policyItemAccesses.removeAll(unneededItemAccesses);
-
-                            if (policyItemAccesses.isEmpty() && !policyItem.getDelegateAdmin()) {
-                                unneededPolicyItems.add(policyItem);
-                            }
-                        }
+                    if(policiesToPrune == null) {
+                        policiesToPrune = new ArrayList<RangerPolicy>();
                     }
 
-                    policyItems.removeAll(unneededPolicyItems);
-                }
-                if (CollectionUtils.isEmpty(policyItems) && !policy.getIsAuditEnabled()) {
-                    unneededPolicies.add(policy);
+                    policiesToPrune.add(policy);
                 }
             }
-            rangerPolicies.removeAll(unneededPolicies);
+
+            if(policiesToPrune != null) {
+	            rangerPolicies.removeAll(policiesToPrune);
+            }
         }
 
         return rangerPolicies;
+    }
+
+    private List<RangerPolicy.RangerPolicyItem> normalizeAndPrunePolicyItems(List<RangerPolicy.RangerPolicyItem> policyItems, final String componentType) {
+        if(CollectionUtils.isNotEmpty(policyItems)) {
+            final String                        prefix       = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
+            List<RangerPolicy.RangerPolicyItem> itemsToPrune = null;
+
+            for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
+                List<RangerPolicy.RangerPolicyItemAccess> policyItemAccesses = policyItem.getAccesses();
+
+                if (CollectionUtils.isNotEmpty(policyItemAccesses)) {
+                    List<RangerPolicy.RangerPolicyItemAccess> accessesToPrune = null;
+
+                    for (RangerPolicy.RangerPolicyItemAccess access : policyItemAccesses) {
+                        String accessType = access.getType();
+
+                        if (StringUtils.startsWith(accessType, prefix)) {
+                            String newAccessType = StringUtils.removeStart(accessType, prefix);
+
+                            access.setType(newAccessType);
+                        } else if (accessType.contains(AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                            if(accessesToPrune == null) {
+                                accessesToPrune = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+                            }
+
+                            accessesToPrune.add(access);
+                        }
+                    }
+
+                    if(accessesToPrune != null) {
+	                    policyItemAccesses.removeAll(accessesToPrune);
+                    }
+
+                    if (policyItemAccesses.isEmpty() && !policyItem.getDelegateAdmin()) {
+                        if(itemsToPrune != null) {
+                            itemsToPrune = new ArrayList< RangerPolicy.RangerPolicyItem>();
+                        }
+
+                        itemsToPrune.add(policyItem);
+                    }
+                }
+            }
+
+            if(itemsToPrune != null) {
+	            policyItems.removeAll(itemsToPrune);
+            }
+        }
+
+        return policyItems;
     }
 
     private void init(RangerPolicyEngineOptions options) {

@@ -81,7 +81,7 @@ public class RangerAccessResult {
 
 	public boolean getIsAccessDetermined() { return isAccessDetermined; }
 
-	private void setIsAccessDetermined(boolean value) { isAccessDetermined = value; }
+	public void setIsAccessDetermined(boolean value) { isAccessDetermined = value; }
 
 	/**
 	 * @return the isAllowed
@@ -94,7 +94,10 @@ public class RangerAccessResult {
 	 * @param isAllowed the isAllowed to set
 	 */
 	public void setIsAllowed(boolean isAllowed) {
-		setIsAccessDetermined(true);
+		if(! isAllowed) {
+			setIsAccessDetermined(true);
+		}
+
 		this.isAllowed = isAllowed;
 	}
 

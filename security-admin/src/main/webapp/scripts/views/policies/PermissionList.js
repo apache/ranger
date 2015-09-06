@@ -55,21 +55,19 @@ define(function(require) {
 			addPerms		: 'a[data-js="permissions"]',
 			conditionsTags	: '[class=tags1]',
 			delegatedAdmin	: 'input[data-js="delegatedAdmin"]',
-			itemType		: 'input[data-js="itemType"]',
 			addPermissionsSpan : '.add-permissions',
 			addConditionsSpan : '.add-conditions',
 		},
 		events : {
 			'click [data-action="delete"]'	: 'evDelete',
 			'click [data-js="delegatedAdmin"]'	: 'evClickTD',
-			'click [data-js="itemType"]'	: 'evItemTypeClick',
 			'change [data-js="selectGroups"]': 'evSelectGroup',
 			'change [data-js="selectUsers"]': 'evSelectUser',
 			'change input[class="policy-conditions"]'	: 'policyCondtionChange'
 		},
 
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes','policyConditions','userList','rangerServiceDefModel'));
+			_.extend(this, _.pick(options, 'groupList','accessTypes','policyConditions','userList','rangerServiceDefModel'));
 			this.setupPermissionsAndConditions();
 			
 		},
@@ -91,6 +89,7 @@ define(function(require) {
 				this.renderPerms();
 			}
 			this.renderPolicyCondtion();
+			//this.initializePlugins();
 		},
 		setupFormForEditMode : function() {
 			this.accessItems = _.map(this.accessTypes, function(perm){ 
@@ -119,10 +118,6 @@ define(function(require) {
 				
 				if(!_.isUndefined(this.model.get('delegateAdmin')) && this.model.get('delegateAdmin')){
 					this.ui.delegatedAdmin.attr('checked', 'checked');
-				}
-
-				if(!_.isUndefined(this.model.get('itemType')) && this.model.get('itemType') == 1){
-					this.ui.itemType.attr('checked', 'checked');
 				}
 			}
 		},
@@ -507,15 +502,6 @@ define(function(require) {
 				return;
 			}
 		},
-		evItemTypeClick : function(e){
-			var $el = $(e.currentTarget);
-			XAUtil.checkDirtyFieldForToggle($el);
-			//Set ItemType value
-			if(!_.isUndefined($el.find('input').data('js'))){
-				this.model.set('itemType',($el.is(':checked') == false) ? 0 : 1);
-				return;
-			}
-		},
 
 		checkDirtyFieldForCheckBox : function(perms){
 			var permList = [];
@@ -571,6 +557,7 @@ define(function(require) {
 				groupIdList = this.model.get('groupId').split(',');
 			XAUtil.checkDirtyField(groupIdList, e.val, $(e.currentTarget));
 		},
+
 	});
 
 
@@ -580,7 +567,8 @@ define(function(require) {
 		template : require('hbs!tmpl/policies/PermissionList'),
 		templateHelpers :function(){
 			return {
-				permHeaders : this.getPermHeaders()
+				permHeaders : this.getPermHeaders(),
+				headerTitle : this.headerTitle
 			};
 		},
 		getItemView : function(item){
@@ -595,7 +583,6 @@ define(function(require) {
 				'collection' 	: this.collection,
 				'groupList' 	: this.groupList,
 				'userList' 	: this.userList,
-				'policyType'	: this.policyType,
 				'accessTypes'	: this.accessTypes,
 				'policyConditions' : this.rangerServiceDefModel.get('policyConditions'),
 				'rangerServiceDefModel' : this.rangerServiceDefModel
@@ -605,14 +592,16 @@ define(function(require) {
 			'click [data-action="addGroup"]' : 'addNew'
 		},
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','policyType','accessTypes','rangerServiceDefModel','userList'));
+			_.extend(this, _.pick(options, 'groupList','accessTypes','rangerServiceDefModel','userList', 'headerTitle'));
 			this.listenTo(this.groupList, 'sync', this.render, this);
 			if(this.collection.length == 0)
 				this.collection.add(new Backbone.Model());
 		},
 		onRender : function(){
 //			this.toggleAddButton();
+			//this.initializePlugins();
 		},
+
 		addNew : function(){
 			var that =this;
 //			if(this.groupList.length > this.collection.length && (this.userList.length > this.collection.length)){
@@ -639,7 +628,6 @@ define(function(require) {
 		},
 		getPermHeaders : function(){
 			var permList = [];
-			permList.unshift(localization.tt('lbl.itemType'));
 			if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
 				permList.unshift(localization.tt('lbl.delegatedAdmin'));
 				permList.unshift(localization.tt('lbl.permissions'));

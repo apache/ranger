@@ -80,13 +80,6 @@ define(function(require){
 					offText		: 'NO',
 					switchOn	: true
 				},
-				policyType : {
-					type		: 'Radio',
-					options : function(callback, editor){
-						var nvPairs = XAUtils.enumToSelectPairs(XAEnums.PolicyType);
-						callback(nvPairs);
-					}
-				},
 			});
 		},
 

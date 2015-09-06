@@ -1396,21 +1396,30 @@ public class ServiceREST {
 	private boolean compactPolicy(RangerPolicy policy) {
 		boolean ret = false;
 
-		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+		List<?>[] policyItemsList = new List<?>[] { policy.getPolicyItems(),
+													policy.getDenyPolicyItems(),
+													policy.getAllowExceptions(),
+													policy.getDenyExceptions()
+												  };
 
-		int numOfItems = policyItems.size();
+		for(List<?> policyItemsObj : policyItemsList) {
+			@SuppressWarnings("unchecked")
+			List<RangerPolicyItem> policyItems = (List<RangerPolicyItem>)policyItemsObj;
+
+			int numOfItems = policyItems.size();
 		
-		for(int i = 0; i < numOfItems; i++) {
-			RangerPolicyItem policyItem = policyItems.get(i);
+			for(int i = 0; i < numOfItems; i++) {
+				RangerPolicyItem policyItem = policyItems.get(i);
 			
-			// remove the policy item if 1) there are no users and groups OR 2) if there are no accessTypes and not a delegate-admin
-			if((CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) ||
-			   (CollectionUtils.isEmpty(policyItem.getAccesses()) && !policyItem.getDelegateAdmin())) {
-				policyItems.remove(i);
-				numOfItems--;
-				i--;
+				// remove the policy item if 1) there are no users and groups OR 2) if there are no accessTypes and not a delegate-admin
+				if((CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) ||
+				   (CollectionUtils.isEmpty(policyItem.getAccesses()) && !policyItem.getDelegateAdmin())) {
+					policyItems.remove(i);
+					numOfItems--;
+					i--;
 
-				ret = true;
+					ret = true;
+				}
 			}
 		}
 

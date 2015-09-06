@@ -29,8 +29,11 @@
 	</fieldset>
 	 <fieldset>
 		<p class="formHeader">
-			User and Group Permissions :
+			Allow Conditions :	
+			<span class="label label-yellow pull-right" ></span>
 		</p>
+		<div class="position-relative">
+
 		<div class="" data-customfields="groupPerms">
 			<div class="control-group">
 				<label class="control-label">{{tt 'lbl.permissions'}}</label>
@@ -39,5 +42,52 @@
 				</div>
 			</div>		
 		</div>
+		<div class="form-indent-right">
+			<p class="wrap-header reportSearchHeader">
+				Exceptions :
+			</p> &nbsp;
+			<div class="wrap position-relative" style="display:none;">
+		
+				<div class="" data-customfields="groupPermsAllowException">
+					<div class="control-group" style="margin-left: -100px;">
+						<label class="control-label">Exclude :</label>
+						<div class="controls">
+							<img src="images/loading.gif" style=" margin-left: 4%; margin-top: 1%;" />
+						</div>
+					</div>		
+				</div>
+			</div>
+		</div>
+		</div>
+
+		<p class="wrap-header bold formHeader">
+			Deny Conditions :	
+		</p> &nbsp;
+		<div class="wrap position-relative" style="display:none;">
+			<div class="" data-customfields="groupPermsDeny">
+				<div class="control-group">
+					<label class="control-label">{{tt 'lbl.permissions'}}</label>
+					<div class="controls">
+						<img src="images/loading.gif" style=" margin-left: 4%; margin-top: 1%;" />
+					</div>
+				</div>		
+			</div>
+		<div class="form-indent-right">
+			<p class="wrap-header reportSearchHeader">
+				Exceptions :
+			</p> &nbsp;
+			<div class="wrap position-relative" style="display:none;">
+				<div class="" data-customfields="groupPermsDenyException">
+					<div class="control-group">
+						<label class="control-label">Exclude :</label>
+						<div class="controls">
+							<img src="images/loading.gif" style=" margin-left: 4%; margin-top: 1%;" />
+						</div>
+					</div>		
+				</div>
+			</div>
+			</div>
+		</div>
 	</fieldset>
 </form>
+

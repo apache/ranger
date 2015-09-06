@@ -42,6 +42,10 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 
 	RangerServiceDef getServiceDef();
 
+	boolean hasAllow();
+
+	boolean hasDeny();
+
 	int getEvalOrder();
 
 	int getCustomConditionsCount();

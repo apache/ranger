@@ -103,6 +103,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.store.*;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -1417,7 +1418,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		Map<String, RangerPolicyResource> resources = policy.getResources();
-		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+		List<RangerPolicyItem> policyItems     = policy.getPolicyItems();
+		List<RangerPolicyItem> denyPolicyItems = policy.getDenyPolicyItems();
+		List<RangerPolicyItem> allowExceptions = policy.getAllowExceptions();
+		List<RangerPolicyItem> denyExceptions  = policy.getDenyExceptions();
 
 		policy.setVersion(new Long(1));
 		updatePolicySignature(policy);
@@ -1438,7 +1442,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
 		createNewResourcesForPolicy(policy, xCreatedPolicy, resources);
-		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, policyItems, xServiceDef);
+		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, policyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW);
+		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, denyPolicyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
+		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, allowExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
+		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, denyExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);
 		handlePolicyUpdate(service);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
@@ -1487,7 +1494,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 		Map<String, RangerPolicyResource> newResources = policy.getResources();
-		List<RangerPolicyItem> newPolicyItems = policy.getPolicyItems();
+		List<RangerPolicyItem> policyItems     = policy.getPolicyItems();
+		List<RangerPolicyItem> denyPolicyItems = policy.getDenyPolicyItems();
+		List<RangerPolicyItem> allowExceptions = policy.getAllowExceptions();
+		List<RangerPolicyItem> denyExceptions  = policy.getDenyExceptions();
 		
 		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
 		
@@ -1509,7 +1519,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		deleteExistingPolicyItems(policy);
 		
 		createNewResourcesForPolicy(policy, newUpdPolicy, newResources);
-		createNewPolicyItemsForPolicy(policy, newUpdPolicy, newPolicyItems, xServiceDef);
+		createNewPolicyItemsForPolicy(policy, newUpdPolicy, policyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW);
+		createNewPolicyItemsForPolicy(policy, newUpdPolicy, denyPolicyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
+		createNewPolicyItemsForPolicy(policy, newUpdPolicy, allowExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
+		createNewPolicyItemsForPolicy(policy, newUpdPolicy, denyExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);
 		
 		handlePolicyUpdate(service);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
@@ -1831,7 +1844,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policy.setService(createdService.getName());
 			policy.setDescription(tagType + " Policy for TAG Service: " + createdService.getName());
 			policy.setIsAuditEnabled(true);
-			policy.setPolicyType(RangerPolicy.POLICY_TYPE_DENY);
 
 			Map<String, RangerPolicyResource> resourceMap = new HashMap<String, RangerPolicyResource>();
 
@@ -1872,7 +1884,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			policyItems.add(policyItem);
 
-			policy.setPolicyItems(policyItems);
+			policy.setDenyPolicyItems(policyItems);
 
 			policy = createPolicy(policy);
 		} else {
@@ -2026,7 +2038,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems, XXServiceDef xServiceDef) throws Exception {
+	private void createNewPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerPolicyItem> policyItems, XXServiceDef xServiceDef, int policyItemType) throws Exception {
 		
 		for (int itemOrder = 0; itemOrder < policyItems.size(); itemOrder++) {
 			RangerPolicyItem policyItem = policyItems.get(itemOrder);
@@ -2034,7 +2046,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xPolicyItem = (XXPolicyItem) rangerAuditFields.populateAuditFields(
 					xPolicyItem, xPolicy);
 			xPolicyItem.setDelegateAdmin(policyItem.getDelegateAdmin());
-			xPolicyItem.setItemType(policyItem.getItemType());
+			xPolicyItem.setItemType(policyItemType);
 			xPolicyItem.setPolicyId(policy.getId());
 			xPolicyItem.setOrder(itemOrder);
 			xPolicyItem = daoMgr.getXXPolicyItem().create(xPolicyItem);

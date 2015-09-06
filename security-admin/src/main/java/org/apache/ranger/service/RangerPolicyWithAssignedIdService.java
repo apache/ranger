@@ -65,8 +65,7 @@ public class RangerPolicyWithAssignedIdService extends RangerPolicyServiceBase<X
 		Map<String, RangerPolicyResource> resources = getResourcesForXXPolicy(xPolicy);
 		vPolicy.setResources(resources);
 
-		List<RangerPolicyItem> policyItems = getPolicyItemListForXXPolicy(xPolicy);
-		vPolicy.setPolicyItems(policyItems);
+		getPolicyItemListForXXPolicy(xPolicy, vPolicy);
 
 		return vPolicy;
 	}

@@ -288,6 +288,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 
+		// TODO: run through evaluator in tagPolicyRepository as well
 		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
 			RangerPolicy policy = evaluator.getPolicy();
 
@@ -313,32 +314,41 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerAccessResult ret = createAccessResult(request);
 
 		if (ret != null && request != null) {
-			if (tagPolicyRepository != null && CollectionUtils.isNotEmpty(tagPolicyRepository.getPolicies())) {
-				RangerAccessResult tagAccessResult = isAccessAllowedForTagPolicies(request);
+			if (hasTagPolicies()) {
+				isAccessAllowedForTagPolicies(request, ret);
 
 				if (LOG.isDebugEnabled()) {
-					if (tagAccessResult.getIsAccessDetermined() && tagAccessResult.getIsAuditedDetermined()) {
-						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedNoAudit() - access and audit determined by tag policy. No resource policies will be evaluated, request=" + request + ", result=" + tagAccessResult);
+					if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
+						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedNoAudit() - access and audit determined by tag policy. No resource policies will be evaluated, request=" + request + ", result=" + ret);
 					}
 				}
-
-				ret.setAccessResultFrom(tagAccessResult);
-				ret.setAuditResultFrom(tagAccessResult);
 			}
 
 			if (!ret.getIsAccessDetermined() || !ret.getIsAuditedDetermined()) {
-				List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();
-
-				if (CollectionUtils.isNotEmpty(evaluators)) {
+				if (hasResourcePolicies()) {
 					boolean foundInCache = policyRepository.setAuditEnabledFromCache(request, ret);
+					RangerPolicyEvaluator allowedEvaluator = null;
 
+					List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();
 					for (RangerPolicyEvaluator evaluator : evaluators) {
 						evaluator.evaluate(request, ret);
 
-						// stop once isAccessDetermined==true && isAuditedDetermined==true
-						if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
-							break;
+						if(allowedEvaluator == null && ret.getIsAllowed()) {
+							allowedEvaluator = evaluator;
 						}
+
+						// stop once isAccessDetermined==true && isAuditedDetermined==true
+						if(ret.getIsAuditedDetermined()) {
+							if(ret.getIsAccessDetermined() || (allowedEvaluator != null && !evaluator.hasDeny())) {
+								break;			// Break out of policy-evaluation loop for this tag
+							}
+						}
+					}
+
+					if(!ret.getIsAccessDetermined() && allowedEvaluator != null) {
+						ret.setIsAllowed(true);
+						ret.setPolicyId(allowedEvaluator.getPolicy().getId());
+						ret.setIsAccessDetermined(true);
 					}
 
 					if (!foundInCache) {
@@ -355,12 +365,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	protected RangerAccessResult isAccessAllowedForTagPolicies(final RangerAccessRequest request) {
+	protected RangerAccessResult isAccessAllowedForTagPolicies(final RangerAccessRequest request, RangerAccessResult result) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ")");
 		}
 
-		RangerAccessResult          result     = createAccessResult(request);
 		List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators();
 
 		if (CollectionUtils.isNotEmpty(evaluators)) {
@@ -376,18 +385,31 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + tag.getType() + ")");
 					}
 
-					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
-					RangerAccessResult  tagEvalResult  = createAccessResult(tagEvalRequest);
+					RangerAccessRequest   tagEvalRequest   = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
+					RangerAccessResult    tagEvalResult    = createAccessResult(tagEvalRequest);
+					RangerPolicyEvaluator allowedEvaluator = null;
 
 					for (RangerPolicyEvaluator evaluator : evaluators) {
 						evaluator.evaluate(tagEvalRequest, tagEvalResult);
 
-						if (tagEvalResult.getIsAccessDetermined() && tagEvalResult.getIsAuditedDetermined()) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + tag.getType() + ") with authorization=" + tagEvalResult.getIsAllowed());
-							}
-							break;			// Break out of policy-evaluation loop for this tag
+						if(allowedEvaluator == null && tagEvalResult.getIsAllowed()) {
+							allowedEvaluator = evaluator;
 						}
+
+						if(tagEvalResult.getIsAuditedDetermined()) {
+							if(tagEvalResult.getIsAccessDetermined() || (allowedEvaluator != null && !evaluator.hasDeny())) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + tag.getType() + ") with authorization=" + tagEvalResult.getIsAllowed());
+								}
+								break;			// Break out of policy-evaluation loop for this tag
+							}
+						}
+					}
+
+					if(!tagEvalResult.getIsAccessDetermined() && allowedEvaluator != null) {
+						tagEvalResult.setIsAllowed(true);
+						tagEvalResult.setPolicyId(allowedEvaluator.getPolicy().getId());
+						tagEvalResult.setIsAccessDetermined(true);
 					}
 
 					if (tagEvalResult.getIsAuditedDetermined()) {
@@ -451,6 +473,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				LOG.debug("RangerPolicyEngineImpl.setResourceServiceDef(): Cannot set ServiceDef in RangerTagResourceMap.");
 			}
 		}
+	}
+
+	private boolean hasTagPolicies() {
+		return tagPolicyRepository != null && CollectionUtils.isNotEmpty(tagPolicyRepository.getPolicies());
+	}
+
+	private boolean hasResourcePolicies() {
+		return policyRepository != null && CollectionUtils.isNotEmpty(policyRepository.getPolicies());
 	}
 
 	@Override
