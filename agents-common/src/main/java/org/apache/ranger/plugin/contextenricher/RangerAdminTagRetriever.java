@@ -36,7 +36,8 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 
 	@Override
 	public void init(Map<String, String> options) {
-		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId) && tagReceiver != null) {
+
+		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
 			String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
 
 			adminClient = RangerBasePlugin.createAdminClient(serviceName, appId, propertyPrefix);
@@ -47,37 +48,24 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 	}
 
 	@Override
-	public void retrieveTags() throws InterruptedException {
+	public ServiceTags retrieveTags(long lastKnownVersion) throws InterruptedException {
 
-		if (adminClient != null && tagReceiver != null) {
-			ServiceTags serviceTags = null;
+		ServiceTags serviceTags = null;
+
+		if (adminClient != null) {
 			try {
 				serviceTags = adminClient.getServiceTagsIfUpdated(lastKnownVersion);
-			}
-			catch (InterruptedException interruptedException) {
+			} catch (InterruptedException interruptedException) {
 				LOG.error("Tag-retriever thread was interrupted");
 				throw interruptedException;
-			}
-			catch (ClosedByInterruptException closedByInterruptException) {
+			} catch (ClosedByInterruptException closedByInterruptException) {
 				LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
 				throw new InterruptedException();
-			}
-			catch (Exception exception) {
+			} catch (Exception exception) {
 				LOG.error("RangerAdminTagRetriever.retrieveTags() - Error retrieving resources, exception=", exception);
 			}
-
-			if (serviceTags != null) {
-				tagReceiver.setServiceTags(serviceTags);
-				LOG.info("RangerAdminTagRetriever.retrieveTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
-				setLastKnownVersion(serviceTags.getTagVersion());
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerAdminTagRetriever.retrieveTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
-				}
-			}
-		} else {
-			LOG.error("RangerAdminTagRetriever.retrieveTags() - No admin client to get tags from or no tag receiver to update tag-cache");
 		}
+		return serviceTags;
 	}
 
 }

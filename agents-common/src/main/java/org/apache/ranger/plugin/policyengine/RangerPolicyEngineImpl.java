@@ -40,7 +40,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private final RangerPolicyRepository policyRepository;
 	private final RangerPolicyRepository tagPolicyRepository;
 	
-	private final List<RangerContextEnricher> allContextEnrichers;
+	private List<RangerContextEnricher> allContextEnrichers;
 
 	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
 		if (LOG.isDebugEnabled()) {
@@ -481,6 +481,65 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	private boolean hasResourcePolicies() {
 		return policyRepository != null && CollectionUtils.isNotEmpty(policyRepository.getPolicies());
+	}
+
+	@Override
+	public boolean preCleanup() {
+
+		boolean ret = true;
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.preCleanup()");
+		}
+
+		if (CollectionUtils.isNotEmpty(allContextEnrichers)) {
+			for (RangerContextEnricher contextEnricher : allContextEnrichers) {
+				boolean notReadyForCleanup = contextEnricher.preCleanup();
+				if (!notReadyForCleanup) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("contextEnricher.preCleanup() failed for contextEnricher=" + contextEnricher.getName());
+					}
+					ret = false;
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.preCleanup() : result=" + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public void cleanup() {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.cleanup()");
+		}
+
+		preCleanup();
+
+		if (CollectionUtils.isNotEmpty(allContextEnrichers)) {
+			for (RangerContextEnricher contextEnricher : allContextEnrichers) {
+				contextEnricher.cleanup();
+			}
+		}
+
+		this.allContextEnrichers = null;
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.cleanup()");
+		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		try {
+			cleanup();
+		}
+		finally {
+			super.finalize();
+		}
 	}
 
 	@Override

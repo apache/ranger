@@ -57,4 +57,9 @@ public interface RangerPolicyEngine {
 	RangerPolicy getExactMatchPolicy(RangerAccessResource resource);
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
+
+	boolean preCleanup();
+
+	void cleanup();
+
 }

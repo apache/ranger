@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
@@ -107,20 +108,33 @@ public class RangerBasePlugin {
 	}
 
 	public void setPolicies(ServicePolicies policies) {
+		RangerPolicyEngine oldPolicyEngine = this.policyEngine;
+
 		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
 
 		this.policyEngine = policyEngine;
+
+		if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
+			LOG.error("preCleanup() failed on the previous policy engine instance !!");
+		}
 	}
 
 	public void cleanup() {
+
 		PolicyRefresher refresher = this.refresher;
+
+		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		this.serviceName  = null;
 		this.policyEngine = null;
 		this.refresher    = null;
 
-		if(refresher != null) {
+		if (refresher != null) {
 			refresher.stopRefresher();
+		}
+
+		if (policyEngine != null) {
+			policyEngine.cleanup();
 		}
 	}
 

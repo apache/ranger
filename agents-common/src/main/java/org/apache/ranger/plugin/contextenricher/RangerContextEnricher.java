@@ -25,13 +25,23 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 public interface RangerContextEnricher {
-	void setContextEnricherDef(RangerContextEnricherDef enricherDef);
+	void setEnricherDef(RangerContextEnricherDef enricherDef);
 
-	void setContextServiceName(String serviceName);
+	void setServiceName(String serviceName);
 
-	void setContextServiceDef(RangerServiceDef serviceDef);
+	void setServiceDef(RangerServiceDef serviceDef);
 
 	void setAppId(String appId);
+
+	RangerContextEnricherDef getEnricherDef();
+
+	String getServiceName();
+
+	RangerServiceDef getServiceDef();
+
+	String getAppId();
+
+	String getName();
 
 	//void setContextComponentServiceName(String componentServiceName);
 
@@ -40,4 +50,9 @@ public interface RangerContextEnricher {
 	void init();
 
 	void enrich(RangerAccessRequest request);
+
+	boolean preCleanup();
+
+	void cleanup();
+
 }

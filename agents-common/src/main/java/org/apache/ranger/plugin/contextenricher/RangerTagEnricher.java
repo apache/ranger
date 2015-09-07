@@ -19,11 +19,14 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -32,11 +35,12 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourc
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class RangerTagEnricher extends RangerAbstractContextEnricher implements RangerTagReceiver {
+public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerTagEnricher.class);
 
 	public static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
@@ -67,8 +71,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 
 		if (StringUtils.isNotBlank(tagRetrieverClassName)) {
 
-			cleanup();
-
 			try {
 				@SuppressWarnings("unchecked")
 				Class<RangerTagRetriever> tagRetriverClass = (Class<RangerTagRetriever>) Class.forName(tagRetrieverClassName);
@@ -86,20 +88,25 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 			}
 
 			if (tagRetriever != null) {
+				String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
+				String cacheDir          = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.cache.dir");
+				String cacheFilename = String.format("%s_%s_tag.json", appId, serviceName);
+				cacheFilename = cacheFilename.replace(File.separatorChar,  '_');
+				cacheFilename = cacheFilename.replace(File.pathSeparatorChar,  '_');
+
+				String cacheFile = cacheDir == null ? null : (cacheDir + File.separator + cacheFilename);
 				tagRetriever.setServiceName(serviceName);
 				tagRetriever.setServiceDef(serviceDef);
 				tagRetriever.setAppId(appId);
-				tagRetriever.setLastKnownVersion(lastKnownVersion);
-				tagRetriever.setTagReceiver(this);
 				tagRetriever.init(enricherDef.getEnricherOptions());
 
-				try {
-					tagRetriever.retrieveTags();
-				} catch (Exception exception) {
-					// Ignore
-				}
+				tagRefresher = new RangerTagRefresher(tagRetriever, this, lastKnownVersion, cacheFile, pollingIntervalMs);
 
-				tagRefresher = new RangerTagRefresher(tagRetriever, pollingIntervalMs);
+				try {
+					tagRefresher.populateTags();
+				} catch (Throwable exception) {
+					LOG.error("Exception when retrieving tag for the first time for this enricher", exception);
+				}
 
 				tagRefresher.startRefresher();
 			}
@@ -109,14 +116,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerTagEnricher.init()");
-		}
-	}
-
-	public void cleanup() {
-
-		if (tagRefresher != null) {
-			tagRefresher.cleanup();
-			tagRefresher = null;
 		}
 	}
 
@@ -147,7 +146,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 		}
 	}
 
-	@Override
 	public void setServiceTags(final ServiceTags serviceTags) {
 		this.serviceTags = serviceTags;
 		this.lastKnownVersion = serviceTags.getTagVersion();
@@ -179,6 +177,25 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 
 		serviceResourceMatchers = resourceMatchers;
 
+	}
+
+	@Override
+	public boolean preCleanup() {
+		boolean ret = true;
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerTagEnricher.preCleanup()");
+		}
+
+		if (tagRefresher != null) {
+			tagRefresher.cleanup();
+			tagRefresher = null;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerTagEnricher.preCleanup() : result=" + ret);
+		}
+		return ret;
 	}
 
 	private List<RangerTag> findMatchingTags(final RangerAccessResource resource, final List<RangerServiceResourceMatcher> resourceMatchers) {
@@ -252,16 +269,30 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 		private static final Log LOG = LogFactory.getLog(RangerTagRefresher.class);
 
 		private final RangerTagRetriever tagRetriever;
+		private final RangerTagEnricher tagEnricher;
+		private long lastKnownVersion = -1L;
 
 		private final long pollingIntervalMs;
+		private final String cacheFile;
+		private boolean hasProvidedTagsToReceiver = false;
+		private Gson gson;
+
 
 		final long getPollingIntervalMs() {
 			return pollingIntervalMs;
 		}
 
-		RangerTagRefresher(RangerTagRetriever tagRetriever, long pollingIntervalMs) {
+		RangerTagRefresher(RangerTagRetriever tagRetriever, RangerTagEnricher tagEnricher, long lastKnownVersion, String cacheFile, long pollingIntervalMs) {
 			this.tagRetriever = tagRetriever;
+			this.tagEnricher = tagEnricher;
+			this.lastKnownVersion = lastKnownVersion;
+			this.cacheFile = cacheFile;
 			this.pollingIntervalMs = pollingIntervalMs;
+			try {
+				gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+			} catch(Throwable excp) {
+				LOG.fatal("failed to create GsonBuilder object", excp);
+			}
 		}
 
 		@Override
@@ -275,7 +306,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 
 				try {
 
-					tagRetriever.retrieveTags();
+					populateTags();
 
 					if (pollingIntervalMs > 0) {
 						Thread.sleep(pollingIntervalMs);
@@ -293,8 +324,46 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 			}
 		}
 
+		private void populateTags() throws InterruptedException {
+
+			if (tagEnricher != null) {
+				ServiceTags serviceTags = null;
+
+				serviceTags = tagRetriever.retrieveTags(lastKnownVersion);
+
+				if (serviceTags == null) {
+					if (!hasProvidedTagsToReceiver) {
+						serviceTags = loadFromCache();
+					}
+				} else {
+					saveToCache(serviceTags);
+				}
+
+				if (serviceTags != null) {
+					tagEnricher.setServiceTags(serviceTags);
+					LOG.info("RangerTagRefresher.populateTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
+					lastKnownVersion = serviceTags.getTagVersion();
+					hasProvidedTagsToReceiver = true;
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("RangerTagRefresher.populateTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
+					}
+				}
+			} else {
+				LOG.error("RangerTagRefresher.populateTags() - no tag receiver to update tag-cache");
+			}
+		}
+
 		void cleanup() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> RangerTagRefresher.cleanup()");
+			}
+
 			stopRefresher();
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerTagRefresher.cleanup()");
+			}
 		}
 
 		final void startRefresher() {
@@ -317,6 +386,88 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher implements 
 				}
 			}
 		}
-	}
 
+
+		final ServiceTags loadFromCache() {
+			ServiceTags serviceTags = null;
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> RangerTagRetriever(serviceName=" + tagEnricher.getServiceName() + ").loadFromCache()");
+			}
+
+			File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
+
+			if (cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
+				Reader reader = null;
+
+				try {
+					reader = new FileReader(cacheFile);
+
+					serviceTags = gson.fromJson(reader, ServiceTags.class);
+
+					if (serviceTags != null) {
+						if (!StringUtils.equals(tagEnricher.getServiceName(), serviceTags.getServiceName())) {
+							LOG.warn("ignoring unexpected serviceName '" + serviceTags.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
+
+							serviceTags.setServiceName(tagEnricher.getServiceName());
+						}
+					}
+				} catch (Exception excp) {
+					LOG.error("failed to load service-tags from cache file " + cacheFile.getAbsolutePath(), excp);
+				} finally {
+					if (reader != null) {
+						try {
+							reader.close();
+						} catch (Exception excp) {
+							LOG.error("error while closing opened cache file " + cacheFile.getAbsolutePath(), excp);
+						}
+					}
+				}
+			} else {
+				LOG.warn("cache file does not exist or not readble '" + (cacheFile == null ? null : cacheFile.getAbsolutePath()) + "'");
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerTagRetriever(serviceName=" + tagEnricher.getServiceName() + ").loadFromCache()");
+			}
+
+			return serviceTags;
+		}
+
+		final void saveToCache(ServiceTags serviceTags) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> RangerTagRetriever(serviceName=" + tagEnricher.getServiceName() + ").saveToCache()");
+			}
+
+			if (serviceTags != null) {
+				File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
+
+				if (cacheFile != null) {
+					Writer writer = null;
+
+					try {
+						writer = new FileWriter(cacheFile);
+
+						gson.toJson(serviceTags, writer);
+					} catch (Exception excp) {
+						LOG.error("failed to save service-tags to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+					} finally {
+						if (writer != null) {
+							try {
+								writer.close();
+							} catch (Exception excp) {
+								LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+							}
+						}
+					}
+				}
+			} else {
+				LOG.info("service-tags is null. Nothing to save in cache");
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerTagRetriever(serviceName=" + tagEnricher.getServiceName() + ").saveToCache()");
+			}
+		}
+	}
 }

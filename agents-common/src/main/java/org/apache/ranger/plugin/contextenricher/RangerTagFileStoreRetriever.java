@@ -34,12 +34,10 @@ public class RangerTagFileStoreRetriever extends RangerTagRetriever {
 
 	private TagStore tagStore;
 
-	public RangerTagFileStoreRetriever() {
-	}
-
 	@Override
 	public void init(Map<String, String> options) {
-		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId) && tagReceiver != null) {
+
+		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
 
 			tagStore = TagFileStore.getInstance();
 
@@ -49,37 +47,24 @@ public class RangerTagFileStoreRetriever extends RangerTagRetriever {
 	}
 
 	@Override
-	public void retrieveTags() throws InterruptedException {
+	public ServiceTags retrieveTags(long lastKnownVersion) throws InterruptedException {
 
-		if (tagStore != null && tagReceiver != null) {
-			ServiceTags serviceTags = null;
+		ServiceTags serviceTags = null;
+
+		if (tagStore != null) {
 			try {
 				serviceTags = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
-			}
-			catch (InterruptedException interruptedException) {
+			} catch (InterruptedException interruptedException) {
 				LOG.error("Tag-retriever thread was interrupted");
 				throw interruptedException;
-			}
-			catch (ClosedByInterruptException closedByInterruptException) {
+			} catch (ClosedByInterruptException closedByInterruptException) {
 				LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
 				throw new InterruptedException();
-			}
-			catch (Exception exception) {
+			} catch (Exception exception) {
 				LOG.error("RangerTagFileStoreRetriever.retrieveTags() - Error retrieving resources, exception=", exception);
 			}
-
-			if (serviceTags != null) {
-				tagReceiver.setServiceTags(serviceTags);
-				LOG.info("RangerTagFileStoreRetriever.retrieveTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
-				setLastKnownVersion(serviceTags.getTagVersion());
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerTagFileStoreRetriever.retrieveTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
-				}
-			}
-		} else {
-			LOG.error("RangerTagFileStoreRetriever.retrieveTags() - No tag-store to get tags from or no tag receiver to update tag-cache...");
 		}
+		return serviceTags;
 	}
 }
 

@@ -19,21 +19,27 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.util.ServiceTags;
 
+import java.io.*;
 import java.util.Map;
 
 public abstract class RangerTagRetriever {
+	private static final Log LOG = LogFactory.getLog(RangerTagRetriever.class);
 
 	protected String serviceName;
 	protected RangerServiceDef serviceDef;
 	protected String appId;
-	protected long lastKnownVersion;
-	protected RangerTagReceiver tagReceiver;
 
 	public abstract void init(Map<String, String> options);
 
-	public abstract void retrieveTags() throws InterruptedException;
+	public abstract ServiceTags retrieveTags(long lastKnownVersion) throws InterruptedException;
 
 	public String getServiceName() {
 		return serviceName;
@@ -58,21 +64,4 @@ public abstract class RangerTagRetriever {
 	public void setAppId(String appId) {
 		this.appId = appId;
 	}
-
-	public long getLastKnownVersion() {
-		return lastKnownVersion;
-	}
-
-	public void setLastKnownVersion(long lastKnownVersion) {
-		this.lastKnownVersion = lastKnownVersion;
-	}
-
-	public RangerTagReceiver getTagReceiver() {
-		return tagReceiver;
-	}
-
-	public void setTagReceiver(RangerTagReceiver tagReceiver) {
-		this.tagReceiver = tagReceiver;
-	}
-
 }

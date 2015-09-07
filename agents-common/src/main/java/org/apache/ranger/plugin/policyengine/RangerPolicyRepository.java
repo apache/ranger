@@ -336,9 +336,9 @@ public class RangerPolicyRepository {
         }
 
         if(ret != null) {
-        	ret.setContextEnricherDef(enricherDef);
-            ret.setContextServiceName(componentServiceName);
-            ret.setContextServiceDef(componentServiceDef);
+            ret.setEnricherDef(enricherDef);
+            ret.setServiceName(componentServiceName);
+            ret.setServiceDef(componentServiceDef);
             ret.setAppId(appId);
             ret.init();
         }
