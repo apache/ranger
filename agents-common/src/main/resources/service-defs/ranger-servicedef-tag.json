@@ -87,12 +87,12 @@
   "contextEnrichers":
   [
     {
-      "itemId":1,
+      "itemId": 1,
       "name" : "TagEnricher",
-      "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagProvider",
+      "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
       "enricherOptions" : {
-        "tagProviderType":"RANGER_ADMIN_TAG_PROVIDER",
-        "pollingInterval":60000
+        "tagRetrieverClassName": "org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever",
+        "tagRefresherPollingInterval": 60000
       }
     }
   ],
