@@ -341,7 +341,7 @@ public class TestRangerPolicyValidator {
 		filter.setParam(SearchFilter.SERVICE_NAME, "service-name");
 		filter.setParam(SearchFilter.POLICY_NAME, "policy-name");
 		when(_store.getPolicies(filter)).thenReturn(existingPolicies);
-		checkFailure_isValid(Action.CREATE, "semantic", "name");
+		checkFailure_isValid(Action.CREATE, "semantic", "policy name");
 		
 		// update : does not exist for id
 		when(_policy.getId()).thenReturn(7L);
@@ -374,11 +374,11 @@ public class TestRangerPolicyValidator {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				when(_policy.getService()).thenReturn(null);
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
-				_utils.checkFailureForMissingValue(_failures, "service");
+				_utils.checkFailureForMissingValue(_failures, "service name");
 	
 				when(_policy.getService()).thenReturn("");
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
-				_utils.checkFailureForMissingValue(_failures, "service");
+				_utils.checkFailureForMissingValue(_failures, "service name");
 			}
 		}
 		
@@ -389,19 +389,19 @@ public class TestRangerPolicyValidator {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				when(_policy.getService()).thenReturn(null);
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
-				_utils.checkFailureForMissingValue(_failures, "service");
+				_utils.checkFailureForMissingValue(_failures, "service name");
 	
 				when(_policy.getService()).thenReturn(null);
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
-				_utils.checkFailureForMissingValue(_failures, "service");
+				_utils.checkFailureForMissingValue(_failures, "service name");
 	
 				when(_policy.getService()).thenReturn("service-name");
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
-				_utils.checkFailureForSemanticError(_failures, "service");
+				_utils.checkFailureForSemanticError(_failures, "service name");
 	
 				when(_policy.getService()).thenReturn("another-service-name");
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
-				_utils.checkFailureForSemanticError(_failures, "service");
+				_utils.checkFailureForSemanticError(_failures, "service name");
 			}
 		}
 		
@@ -475,7 +475,7 @@ public class TestRangerPolicyValidator {
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				_failures.clear(); assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
-				_utils.checkFailureForSemanticError(_failures, "resources");
+				_utils.checkFailureForSemanticError(_failures, "policy resources");
 			}
 		}
 	}
@@ -766,19 +766,19 @@ public class TestRangerPolicyValidator {
 		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);				
 		when(_policy.getResources()).thenReturn(policyResources);
 		assertFalse("Missing required resource and unknown resource", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
-		_utils.checkFailureForSemanticError(_failures, "resources");
+		_utils.checkFailureForSemanticError(_failures, "policy resources");
 		
 		// another bad resource map that straddles multiple hierarchies
 		policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad_multiple_hierarchies);
 		when(_policy.getResources()).thenReturn(policyResources);
 		_failures.clear(); assertFalse("Policy with resources for multiple hierarchies", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
-		_utils.checkFailureForSemanticError(_failures, "resources", "incompatible");
+		_utils.checkFailureForSemanticError(_failures, "policy resources", "incompatible");
 		
 		// another bad policy resource map that could match multiple hierarchies but is short on mandatory resources for all of those matches
 		policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad_multiple_hierarchies_missing_mandatory);
 		when(_policy.getResources()).thenReturn(policyResources);
 		_failures.clear(); assertFalse("Policy with resources for multiple hierarchies missing mandatory resources for all pontential matches", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
-		_utils.checkFailureForSemanticError(_failures, "resources", "missing mandatory");
+		_utils.checkFailureForSemanticError(_failures, "policy resources", "missing mandatory");
 	}
 	
 	

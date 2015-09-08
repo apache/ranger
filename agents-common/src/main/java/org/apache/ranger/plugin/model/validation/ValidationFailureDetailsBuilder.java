@@ -20,13 +20,14 @@
 package org.apache.ranger.plugin.model.validation;
 
 public class ValidationFailureDetailsBuilder {
-	private String _fieldName;
-	private boolean _missing;
-	private boolean _semanticError;
-	private String _reason;
-	private String _subFieldName;
-	private boolean _internalError;
-	
+	protected String _fieldName;
+	protected boolean _missing;
+	protected boolean _semanticError;
+	protected String _reason;
+	protected String _subFieldName;
+	protected boolean _internalError;
+	protected int _errorCode;
+
 	ValidationFailureDetailsBuilder becauseOf(String aReason) {
 		_reason = aReason;
 		return this;
@@ -48,7 +49,7 @@ public class ValidationFailureDetailsBuilder {
 	}
 	
 	ValidationFailureDetails build() {
-		return new ValidationFailureDetails(_fieldName, _subFieldName, _missing, _semanticError, _internalError, _reason);
+		return new ValidationFailureDetails(_errorCode, _fieldName, _subFieldName, _missing, _semanticError, _internalError, _reason);
 	}
 
 	ValidationFailureDetailsBuilder subField(String missingParameter) {
@@ -61,4 +62,8 @@ public class ValidationFailureDetailsBuilder {
 		return this;
 	}
 
+	ValidationFailureDetailsBuilder errorCode(int errorCode) {
+		_errorCode = errorCode;
+		return this;
+	}
 }

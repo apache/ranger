@@ -19,16 +19,13 @@
 
 package org.apache.ranger.plugin.model.validation;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -75,16 +72,22 @@ public class RangerPolicyValidator extends RangerValidator {
 
 		boolean valid = true;
 		if (action != Action.DELETE) {
+			ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_UNSUPPORTED_ACTION;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.isAnInternalError()
-				.becauseOf("isValid(Long) is only supported for DELETE")
+				.becauseOf(error.getMessage())
+				.errorCode(error.getErrorCode())
 				.build());
 			valid = false;
 		} else if (id == null) {
+			ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
 			failures.add(new ValidationFailureDetailsBuilder()
-				.field("id")
-				.isMissing()
-				.build());
+					.becauseOf("policy id was null/missing")
+					.field("id")
+					.isMissing()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage("id"))
+					.build());
 			valid = false;
 		} else if (getPolicy(id) == null) {
 			if (LOG.isDebugEnabled()) {
@@ -108,31 +111,33 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 		boolean valid = true;
 		if (policy == null) {
-			String message = "policy object passed in was null";
-			LOG.debug(message);
+			ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_OBJECT;
 			failures.add(new ValidationFailureDetailsBuilder()
 				.field("policy")
 				.isMissing()
-				.becauseOf(message)
+				.becauseOf(error.getMessage())
+				.errorCode(error.getErrorCode())
 				.build());
 			valid = false;
 		} else {
 			Long id = policy.getId();
 			if (action == Action.UPDATE) { // id is ignored for CREATE
 				if (id == null) {
-					String message = "policy id was null/empty/blank"; 
-					LOG.debug(message);
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("id")
 						.isMissing()
-						.becauseOf(message)
+						.becauseOf(error.getMessage("id"))
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				} else if (getPolicy(id) == null) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_POLICY_ID;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("id")
 						.isSemanticallyIncorrect()
-						.becauseOf("no policy exists with id[" + id +"]")
+						.becauseOf(error.getMessage(id))
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				}
@@ -140,35 +145,42 @@ public class RangerPolicyValidator extends RangerValidator {
 			String policyName = policy.getName();
 			String serviceName = policy.getService();
 			if (StringUtils.isBlank(policyName)) {
-				String message = "policy name was null/empty/blank[" + policyName + "]"; 
-				LOG.debug(message);
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("name")
 					.isMissing()
-					.becauseOf(message)
+					.becauseOf(error.getMessage("name"))
+					.errorCode(error.getErrorCode())
 					.build());
 				valid = false;
 			} else {
 				List<RangerPolicy> policies = getPolicies(serviceName, policyName);
 				if (CollectionUtils.isNotEmpty(policies)) {
 					if (policies.size() > 1) {
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_NAME_MULTIPLE_POLICIES_WITH_SAME_NAME;
 						failures.add(new ValidationFailureDetailsBuilder()
+							.field("name")
 							.isAnInternalError()
-							.becauseOf("multiple policies found with the name[" + policyName + "]")
+							.becauseOf(error.getMessage(policyName))
+							.errorCode(error.getErrorCode())
 							.build());
 						valid = false;
 					} else if (action == Action.CREATE) { // size == 1
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_NAME_CONFLICT;
 						failures.add(new ValidationFailureDetailsBuilder()
-							.field("name")
+							.field("policy name")
 							.isSemanticallyIncorrect()
-							.becauseOf("policy already exists with name[" + policyName + "]; its id is[" + policies.iterator().next().getId() + "]")
+							.becauseOf(error.getMessage(policyName, serviceName, policies.iterator().next().getId()))
+							.errorCode(error.getErrorCode())
 							.build());
 						valid = false;
 					} else if (!policies.iterator().next().getId().equals(id)) { // size == 1 && action == UPDATE
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_NAME_CONFLICT;
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("id/name")
 							.isSemanticallyIncorrect()
-							.becauseOf("id/name conflict: another policy already exists with name[" + policyName + "], its id is[" + policies.iterator().next().getId() + "]")
+							.becauseOf(error.getMessage(policyName, serviceName, policies.iterator().next().getId()))
+							.errorCode(error.getErrorCode())
 							.build());
 						valid = false;
 					}
@@ -177,19 +189,23 @@ public class RangerPolicyValidator extends RangerValidator {
 			RangerService service = null;
 			boolean serviceNameValid = false;
 			if (StringUtils.isBlank(serviceName)) {
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
 				failures.add(new ValidationFailureDetailsBuilder()
-				.field("service")
-				.isMissing()
-				.becauseOf("service name was null/empty/blank")
-				.build());
+					.field("service name")
+					.isMissing()
+					.becauseOf(error.getMessage("service name"))
+					.errorCode(error.getErrorCode())
+					.build());
 				valid = false;
 			} else {
 				service = getService(serviceName);
 				if (service == null) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_SERVICE_NAME;
 					failures.add(new ValidationFailureDetailsBuilder()
-						.field("service")
+						.field("service name")
 						.isSemanticallyIncorrect()
-						.becauseOf("service does not exist")
+						.becauseOf(error.getMessage(serviceName))
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				} else {
@@ -201,20 +217,24 @@ public class RangerPolicyValidator extends RangerValidator {
 			RangerServiceDef serviceDef = null;
 			String serviceDefName = null;
 			if (CollectionUtils.isEmpty(policyItems) && !isAuditEnabled) {
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_POLICY_ITEMS;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("policy items")
 					.isMissing()
-					.becauseOf("at least one policy item must be specified if audit isn't enabled")
+					.becauseOf(error.getMessage())
+					.errorCode(error.getErrorCode())
 					.build());
 				valid = false;
 			} else if (service != null) {
 				serviceDefName = service.getType();
 				serviceDef = getServiceDef(serviceDefName);
 				if (serviceDef == null) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_SERVICE_DEF;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("policy service def")
 						.isAnInternalError()
-						.becauseOf("Service def of policies service does not exist")
+						.becauseOf(error.getMessage(serviceDefName, serviceName))
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				} else {
@@ -270,14 +290,16 @@ public class RangerPolicyValidator extends RangerValidator {
 			String signature = policySignature.getSignature();
 			List<RangerPolicy> policies = getPoliciesForResourceSignature(policy.getService(), signature);
 			if (CollectionUtils.isNotEmpty(policies)) {
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_POLICY_RESOURCE;
 				RangerPolicy matchedPolicy = policies.iterator().next();
 				// there shouldn't be a matching policy for create.  During update only match should be to itself
 				if (action == Action.CREATE || (action == Action.UPDATE && (policies.size() > 1 || !matchedPolicy.getId().equals(policy.getId())))) {
 					failures.add(new ValidationFailureDetailsBuilder()
-						.field("resources")
-						.isSemanticallyIncorrect()
-						.becauseOf("found another policy[" + matchedPolicy.getName() + "] with matching resources[" + matchedPolicy.getResources() + "]!")
-						.build());
+							.field("resources")
+							.isSemanticallyIncorrect()
+							.becauseOf(error.getMessage(matchedPolicy.getName(), matchedPolicy.getResources(), policy.getService()))
+							.errorCode(error.getErrorCode())
+							.build());
 					valid = false;
 				}
 			}
@@ -311,37 +333,39 @@ public class RangerPolicyValidator extends RangerValidator {
 			 */
 			Set<List<RangerResourceDef>> candidateHierarchies = filterHierarchies_hierarchyHasAllPolicyResources(policyResources, hierarchies, defHelper);
 			if (candidateHierarchies.isEmpty()) {
-				// let's build a helpful message for user
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_NO_COMPATIBLE_HIERARCHY;
 				failures.add(new ValidationFailureDetailsBuilder()
-					.field("resources")
+					.field("policy resources")
 					.subField("incompatible")
 					.isSemanticallyIncorrect()
-					.becauseOf(String.format("policy resources [%s] were incompatible with all the hierarchies for this service defs! Valid hierarchies are: %s", 
-							policyResources.toString(), toStringHierarchies_all(hierarchies, defHelper)))
+					.becauseOf(error.getMessage(policyResources.toString(), serviceDef.getName(), toStringHierarchies_all(hierarchies, defHelper)))
+					.errorCode(error.getErrorCode())
 					.build());
 				valid = false;
 			} else {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("isValidResourceNames: Found compatible hierarchies: " + toStringHierarchies_all(candidateHierarchies, defHelper));
+					LOG.debug("isValidResourceNames: Found [" + candidateHierarchies.size() + "] compatible hierarchies: " + toStringHierarchies_all(candidateHierarchies, defHelper));
 				}
-			}
-			/*
-			 * Among the candidate hierarchies there should be at least one for which policy specifies all of the mandatory resources.  Note that there could be multiple 
-			 * hierarchies that meet that criteria, e.g. a hive policy that specified only DB.  It is not clear if it belongs to DB->UDF or DB->TBL->COL hierarchy.
-			 * However, if both UDF and TBL were required then we can detect that policy does not specify mandatory levels for any of the candidate hierarchies.
-			 */
-			Set<List<RangerResourceDef>> validHierarchies = filterHierarchies_mandatoryResourcesSpecifiedInPolicy(policyResources, candidateHierarchies, defHelper);
-			if (validHierarchies.isEmpty()) {
-				failures.add(new ValidationFailureDetailsBuilder()
-					.field("resources")
-					.subField("missing mandatory")
-					.isSemanticallyIncorrect()
-					.becauseOf("policy is missing required resources. Mandatory fields of potential hierarchies are: " + toStringHierarchies_mandatory(candidateHierarchies, defHelper))
-					.build());
-				valid = false;
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("isValidResourceNames: Found hierarchies with all mandatory fields specified: " + toStringHierarchies_mandatory(validHierarchies, defHelper));
+				/*
+				 * Among the candidate hierarchies there should be at least one for which policy specifies all of the mandatory resources.  Note that there could be multiple
+				 * hierarchies that meet that criteria, e.g. a hive policy that specified only DB.  It is not clear if it belongs to DB->UDF or DB->TBL->COL hierarchy.
+				 * However, if both UDF and TBL were required then we can detect that policy does not specify mandatory levels for any of the candidate hierarchies.
+				 */
+				Set<List<RangerResourceDef>> validHierarchies = filterHierarchies_mandatoryResourcesSpecifiedInPolicy(policyResources, candidateHierarchies, defHelper);
+				if (validHierarchies.isEmpty()) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_MISSING_MANDATORY;
+					failures.add(new ValidationFailureDetailsBuilder()
+						.field("policy resources")
+						.subField("missing mandatory")
+						.isSemanticallyIncorrect()
+						.becauseOf(error.getMessage(toStringHierarchies_mandatory(candidateHierarchies, defHelper)))
+						.errorCode(error.getErrorCode())
+						.build());
+					valid = false;
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("isValidResourceNames: Found hierarchies with all mandatory fields specified: " + toStringHierarchies_mandatory(validHierarchies, defHelper));
+					}
 				}
 			}
 		}
@@ -438,17 +462,21 @@ public class RangerPolicyValidator extends RangerValidator {
 			Map<String, RangerPolicyResource> policyResources = getPolicyResourceWithLowerCaseKeys(inputPolicyResources);
 			for (RangerResourceDef resourceDef : resourceDefs) {
 				if (resourceDef == null) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_RESOURCE_DEF;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("resource-def")
 						.isAnInternalError()
-						.becauseOf("a resource-def on resource def collection of service-def[" + serviceDefName + "] was null")
+						.becauseOf(error.getMessage(serviceDefName))
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				} else if (StringUtils.isBlank(resourceDef.getName())) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_RESOURCE_DEF_NAME;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("resource-def-name")
 						.isAnInternalError()
-						.becauseOf("name of a resource-def on resource def collection of service-def[" + serviceDefName + "] was null")
+						.becauseOf(error.getMessage(serviceDefName))
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				} else {
@@ -462,31 +490,37 @@ public class RangerPolicyValidator extends RangerValidator {
 						boolean excludesSupported = Boolean.TRUE.equals(resourceDef.getExcludesSupported()); // could be null
 						boolean policyResourceIsExcludes = Boolean.TRUE.equals(policyResource.getIsExcludes()); // could be null
 						if (policyResourceIsExcludes && !excludesSupported) {
+							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_EXCLUDES_NOT_SUPPORTED;
 							failures.add(new ValidationFailureDetailsBuilder()
 								.field("isExcludes")
 								.subField(resourceName)
 								.isSemanticallyIncorrect()
-								.becauseOf("isExcludes specified as [" + policyResourceIsExcludes + "] for resource [" + resourceName + "] which doesn't support isExcludes")
+								.becauseOf(error.getMessage(policyResourceIsExcludes, resourceName))
+								.errorCode(error.getErrorCode())
 								.build());
 							valid = false;
 						}
 						if (policyResourceIsExcludes && !isAdmin) {
+							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_EXCLUDES_REQUIRES_ADMIN;
 							failures.add(new ValidationFailureDetailsBuilder()
 								.field("isExcludes")
 								.subField("isAdmin")
 								.isSemanticallyIncorrect()
-								.becauseOf("isExcludes specified as [" + policyResourceIsExcludes + "] for resource [" + resourceName + "].  Insufficient permissions to create excludes policy.")
+								.becauseOf(error.getMessage(policyResourceIsExcludes, resourceName))
+								.errorCode(error.getErrorCode())
 								.build());
 							valid = false;
 						}
 						boolean recursiveSupported = Boolean.TRUE.equals(resourceDef.getRecursiveSupported());
 						boolean policyIsRecursive = Boolean.TRUE.equals(policyResource.getIsRecursive());
 						if (policyIsRecursive && !recursiveSupported) {
+							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_RECURSIVE_NOT_SUPPORTED;
 							failures.add(new ValidationFailureDetailsBuilder()
 								.field("isRecursive")
 								.subField(resourceName)
 								.isSemanticallyIncorrect()
-								.becauseOf("isRecursive specified as [" + policyIsRecursive + "] for resource [" + resourceName + "] which doesn't support isRecursive")
+								.becauseOf(error.getMessage(policyIsRecursive, resourceName))
+								.errorCode(error.getErrorCode())
 								.build());
 							valid = false;
 						}
@@ -517,11 +551,13 @@ public class RangerPolicyValidator extends RangerValidator {
 					if (StringUtils.isBlank(aValue)) {
 						LOG.debug("resource value was blank");
 					} else if (!aValue.matches(regEx)) {
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_VALUE_REGEX;
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("resource-values")
 							.subField(name)
 							.isSemanticallyIncorrect()
-							.becauseOf("resources value[" + aValue + "] does not match validation regex[" + regEx + "] defined on service-def[" + serviceDef.getName() + "]")
+							.becauseOf(error.getMessage(aValue, name, regEx, serviceDef.getName()))
+							.errorCode(error.getErrorCode())
 							.build());
 						valid = false;
 					}
@@ -546,10 +582,12 @@ public class RangerPolicyValidator extends RangerValidator {
 		} else {
 			for (RangerPolicyItem policyItem : policyItems) {
 				if (policyItem == null) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("policy item")
 						.isMissing()
-						.becauseOf("policy items object was null")
+						.becauseOf(error.getMessage())
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				} else {
@@ -577,10 +615,12 @@ public class RangerPolicyValidator extends RangerValidator {
 			// access items collection can't be empty (unless delegated admin is true) and should be otherwise valid
 			if (CollectionUtils.isEmpty(policyItem.getAccesses())) {
 				if (!Boolean.TRUE.equals(policyItem.getDelegateAdmin())) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("policy item accesses")
 						.isMissing()
-						.becauseOf("policy items accesses collection was null")
+						.becauseOf(error.getMessage("policy item accesses"))
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				} else {
@@ -591,10 +631,12 @@ public class RangerPolicyValidator extends RangerValidator {
 			}
 			// both users and user-groups collections can't be empty
 			if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_USER_AND_GROUPS;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("policy item users/user-groups")
 					.isMissing()
-					.becauseOf("both users and user-groups collections on the policy item were null/empty")
+					.becauseOf(error.getMessage())
+					.errorCode(error.getErrorCode())
 					.build());
 				valid = false;
 			}
@@ -618,10 +660,12 @@ public class RangerPolicyValidator extends RangerValidator {
 			Set<String> accessTypes = getAccessTypes(serviceDef);
 			for (RangerPolicyItemAccess access : accesses) {
 				if (access == null) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("policy item access")
 						.isMissing()
-						.becauseOf("policy items access object was null")
+						.becauseOf(error.getMessage())
+						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
 				} else {
@@ -650,31 +694,33 @@ public class RangerPolicyValidator extends RangerValidator {
 		} else {
 			String accessType = access.getType();
 			if (StringUtils.isBlank(accessType)) {
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("policy item access type")
 					.isMissing()
-					.becauseOf("policy items access type's name was null/empty/blank")
+					.becauseOf(error.getMessage("policy item access type"))
+					.errorCode(error.getErrorCode())
 					.build());
 				valid = false;
 			} else if (!accessTypes.contains(accessType.toLowerCase())) {
-				String message = String.format("access type[%s] not among valid types for service[%s]", accessType, accessTypes);
-				LOG.debug(message);
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_ITEM_ACCESS_TYPE_INVALID;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("policy item access type")
 					.isSemanticallyIncorrect()
-					.becauseOf(message)
+					.becauseOf(error.getMessage(accessType, accessTypes))
+					.errorCode(error.getErrorCode())
 					.build());
 				valid = false;
 			}
 			Boolean isAllowed = access.getIsAllowed();
 			// it can be null (which is treated as allowed) but not false
 			if (isAllowed != null && isAllowed == false) {
-				String message = "access type is set to deny.  Currently deny access types are not supported.";
-				LOG.debug(message);
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_ITEM_ACCESS_TYPE_DENY;
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("policy item access type allowed")
 					.isSemanticallyIncorrect()
-					.becauseOf(message)
+					.becauseOf(error.getMessage())
+					.errorCode(error.getErrorCode())
 					.build());
 				valid = false;
 			}

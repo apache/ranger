@@ -83,6 +83,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     }
 
     private Hashtable<String, Object> keyEntries = new Hashtable<String, Object>();
+    private Hashtable<String, Object> deltaEntries = new Hashtable<String, Object>();
     
     RangerKeyStore() {
     }
@@ -136,7 +137,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     public void addKeyEntry(String alias, Key key, char[] password, String cipher, int bitLength, String description, int version, String attributes)
         throws KeyStoreException
     {
-        synchronized(keyEntries) {
+        synchronized(deltaEntries) {
             try {
             	
             	Class<?> c = null;
@@ -163,7 +164,8 @@ public class RangerKeyStore extends KeyStoreSpi {
                 entry.description = description;
                 entry.version = version;
                 entry.attributes = attributes;
-                keyEntries.put(alias.toLowerCase(), entry);                
+                deltaEntries.put(alias.toLowerCase(), entry);   
+                keyEntries.put(alias.toLowerCase(), entry);    
             } catch (Exception e) {
             	logger.error(e.getMessage());
             	throw new KeyStoreException(e.getMessage());
@@ -177,7 +179,8 @@ public class RangerKeyStore extends KeyStoreSpi {
     {
         synchronized(keyEntries) {
         		dbOperationDelete(convertAlias(alias));
-        		keyEntries.remove(convertAlias(alias));	
+        		keyEntries.remove(convertAlias(alias));
+        		deltaEntries.remove(convertAlias(alias));
         }
     }
 
@@ -214,7 +217,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     public void engineStore(OutputStream stream, char[] password)
         throws IOException, NoSuchAlgorithmException, CertificateException
     {
-        synchronized(keyEntries) {
+        synchronized(deltaEntries) {
             // password is mandatory when storing
             if (password == null) {
                 throw new IllegalArgumentException("Ranger Master Key can't be null");
@@ -223,7 +226,7 @@ public class RangerKeyStore extends KeyStoreSpi {
             MessageDigest md = getKeyedMessageDigest(password);            
             
            	byte digest[] = md.digest();    
-           	for (Enumeration<String> e = keyEntries.keys(); e.hasMoreElements();) {
+           	for (Enumeration<String> e = deltaEntries.keys(); e.hasMoreElements();) {
             	ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(new DigestOutputStream(baos, md));
                 
@@ -231,7 +234,7 @@ public class RangerKeyStore extends KeyStoreSpi {
             	try{
             	
             		String alias = e.nextElement();
-            		Object entry = keyEntries.get(alias);
+            		Object entry = deltaEntries.get(alias);
 
                     oos = new ObjectOutputStream(dos);
                     oos.writeObject(((SecretKeyEntry)entry).sealedKey);
@@ -250,6 +253,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                     }
                 }                
             }
+           	clearDeltaEntires();
         }
     }
 
@@ -535,6 +539,10 @@ public class RangerKeyStore extends KeyStoreSpi {
 					throw new IOException(t) ;
 				}
 			}
+	}
+	
+	public void clearDeltaEntires(){
+		deltaEntries.clear();
 	}
 	
 }
