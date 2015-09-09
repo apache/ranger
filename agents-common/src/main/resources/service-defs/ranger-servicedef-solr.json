@@ -49,11 +49,9 @@
 			"name":"solr_admin",
 			"label":"Solr Admin",
 			"impliedGrants":[
-				"query,update,others"
+				"query","update","others"
 			]
-			
 		}
-		
 	],
 	"configs":[
 		{
