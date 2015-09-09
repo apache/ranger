@@ -363,6 +363,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String rangerADBindPassword = PropertiesUtil.getProperty("ranger.ldap.ad.bind.password", "");
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
 			String rangerLdapReferral = PropertiesUtil.getProperty("ranger.ldap.ad.referral", "follow");
+			String rangerLdapUserSearchFilter = PropertiesUtil.getProperty("ranger.ldap.ad.user.searchfilter", "(sAMAccountName={0})");
 			String userName = authentication.getName();
 			String userPassword = "";
 			if (authentication.getCredentials() != null) {
@@ -378,8 +379,11 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			ldapContextSource.setPooled(true);
 			ldapContextSource.afterPropertiesSet();
 
-			String searchFilter="(sAMAccountName={0})";
-			FilterBasedLdapUserSearch userSearch=new FilterBasedLdapUserSearch(rangerLdapADBase, searchFilter,ldapContextSource);
+			//String searchFilter="(sAMAccountName={0})";
+			if(rangerLdapUserSearchFilter==null||rangerLdapUserSearchFilter.trim().isEmpty()){
+				rangerLdapUserSearchFilter="(sAMAccountName={0})";
+			}
+			FilterBasedLdapUserSearch userSearch=new FilterBasedLdapUserSearch(rangerLdapADBase, rangerLdapUserSearchFilter,ldapContextSource);
 			userSearch.setSearchSubtree(true);
 
 			BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
@@ -417,6 +421,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String rangerLdapBindDN = PropertiesUtil.getProperty("ranger.ldap.bind.dn", "");
 			String rangerLdapBindPassword = PropertiesUtil.getProperty("ranger.ldap.bind.password", "");
 			String rangerLdapReferral = PropertiesUtil.getProperty("ranger.ldap.referral", "follow");
+			String rangerLdapUserSearchFilter = PropertiesUtil.getProperty("ranger.ldap.user.searchfilter", "(uid={0})");
 			String userName = authentication.getName();
 			String userPassword = "";
 			if (authentication.getCredentials() != null) {
@@ -428,7 +433,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			ldapContextSource.setPassword(rangerLdapBindPassword);
 			ldapContextSource.setReferral(rangerLdapReferral);
 			ldapContextSource.setCacheEnvironmentProperties(false);
-			ldapContextSource.setAnonymousReadOnly(true);
+			ldapContextSource.setAnonymousReadOnly(false);
 			ldapContextSource.setPooled(true);
 			ldapContextSource.afterPropertiesSet();
 
@@ -437,8 +442,11 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			defaultLdapAuthoritiesPopulator.setGroupSearchFilter(rangerLdapGroupSearchFilter);
 			defaultLdapAuthoritiesPopulator.setIgnorePartialResultException(true);
 
-			String searchFilter="(uid={0})";
-			FilterBasedLdapUserSearch userSearch=new FilterBasedLdapUserSearch(rangerLdapBase, searchFilter,ldapContextSource);
+			//String searchFilter="(uid={0})";
+			if(rangerLdapUserSearchFilter==null||rangerLdapUserSearchFilter.trim().isEmpty()){
+				rangerLdapUserSearchFilter="(uid={0})";
+			}
+			FilterBasedLdapUserSearch userSearch=new FilterBasedLdapUserSearch(rangerLdapBase, rangerLdapUserSearchFilter,ldapContextSource);
 			userSearch.setSearchSubtree(true);
 
 			BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);

@@ -218,4 +218,14 @@
 		<value></value>
 		<description></description>
 	</property>
+	<property>
+		<name>ranger.ldap.user.searchfilter</name>
+		<value>(uid={0})</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.ldap.ad.user.searchfilter</name>
+		<value>(sAMAccountName={0})</value>
+		<description></description>
+	</property>
 </configuration>
