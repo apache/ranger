@@ -944,6 +944,10 @@ def update_properties():
         propertyName="ranger.ldap.referral"
         newPropertyValue=os.getenv("RANGER_LDAP_REFERRAL")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+	propertyName="ranger.ldap.user.searchfilter"
+	newPropertyValue=os.getenv("RANGER_LDAP_USERSEARCHFILTER")
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
          
     elif os.getenv("RANGER_AUTHENTICATION_METHOD") == "ACTIVE_DIRECTORY":
         propertyName="ranger.authentication.method"
@@ -973,6 +977,10 @@ def update_properties():
         propertyName="ranger.ad.referral"
         newPropertyValue=os.getenv("RANGER_LDAP_AD_REFERRAL")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+	propertyName="ranger.ldap.ad.user.searchfilter"
+	newPropertyValue=os.getenv("RANGER_LDAP_AD_USERSEARCHFILTER")
+	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
 def setup_authentication(authentication_method, xmlPath):
    if authentication_method == "UNIX":
