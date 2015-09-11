@@ -47,14 +47,24 @@
 					<include>org.slf4j:slf4j-api</include>
 					<include>org.apache.hadoop:hadoop-common</include>
 					<include>org.apache.commons:commons-csv</include>
-					<include>org.apache.ranger:credentialbuilder</include>
-					<include>org.apache.ranger:ranger-util</include>
 					<include>commons-io:commons-io:jar:${commons.io.version}</include>
 					<include>org.apache.htrace:htrace-core</include>
 					<include>org.codehaus.jackson:jackson-core-asl</include>
 					<include>org.codehaus.jackson:jackson-jaxrs</include>
 					<include>org.codehaus.jackson:jackson-mapper-asl</include>
 					<include>org.codehaus.jackson:jackson-xc</include>
+					<include>org.apache.atlas:atlas-notification</include>
+					<include>org.apache.atlas:atlas-typesystem</include>
+					<include>org.apache.atlas:atlas-client</include>
+					<include>com.google.inject:guice</include>
+					<include>aopalliance:aopalliance</include>
+					<include>javax.inject:javax.inject</include>
+					<include>org.apache.kafka:kafka_2.10</include>
+					<include>org.apache.kafka:kafka-clients</include>
+					<include>com.yammer.metrics:metrics-core</include>
+					<include>org.scala-lang:scala-library</include>
+					<include>com.101tec:zkclient</include>
+					<include>org.apache.zookeeper:zookeeper</include>
 					<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
 				</includes>
 				<unpack>false</unpack>
@@ -66,6 +76,29 @@
 	<include>org.apache.ranger:ranger-tagsync</include>
      </includes>
     </moduleSet>
+    <moduleSet>
+     <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+	    <directoryMode>755</directoryMode>
+	    <fileMode>644</fileMode>
+  		<dependencySets>
+   			<dependencySet>
+     			<outputDirectory>/lib</outputDirectory>
+				<includes>
+					<include>org.apache.ranger:credentialbuilder</include>
+					<include>org.apache.ranger:ranger-util</include>
+				</includes>
+				<unpack>false</unpack>
+  			</dependencySet>
+  		</dependencySets>
+        <outputDirectory>/lib</outputDirectory>
+     </binaries>
+     <includes>
+	<include>org.apache.ranger:credentialbuilder</include>
+	<include>org.apache.ranger:ranger-util</include>
+     </includes>
+    </moduleSet>
   </moduleSets> 	
   <fileSets>
 	<fileSet>
@@ -73,6 +106,15 @@
 	    	<fileMode>644</fileMode>
 		<outputDirectory>/conf.dist</outputDirectory>
 		<directory>tagsync/conf.dist</directory>
+		<excludes>
+			<exclude>etc</exclude>
+		</excludes>
+	</fileSet>
+	<fileSet>
+	    	<directoryMode>755</directoryMode>
+	    	<fileMode>644</fileMode>
+		<outputDirectory>/conf.dist/etc/ranger/data</outputDirectory>
+		<directory>tagsync/src/main/resources/etc/ranger/data</directory>
 	</fileSet>
 	<fileSet>
 	    	<directoryMode>755</directoryMode>
@@ -98,7 +140,7 @@
       <file>
 		<source>tagsync/scripts/initd</source>
 		<outputDirectory>/</outputDirectory>
-		<destName>ranger-usersync.sh</destName>
+		<destName>ranger-tagsync.sh</destName>
 		<fileMode>755</fileMode>
       </file>
    </files>

@@ -599,6 +599,12 @@
 				where obj.resourceId = res.id and res.serviceId = :serviceId
 				order by obj.resourceId</query>
 	</named-query>
+
+	<named-query name="XXTagResourceMap.getTagIdsForResourceId">
+		<query>select obj.tagId from XXTagResourceMap obj
+				where obj.resourceId = :resourceId
+		</query>
+	</named-query>
 	
 	<named-query name="XXTagDef.findByGuid">
 		<query>select obj from XXTagDef obj where obj.guid = :guid</query>

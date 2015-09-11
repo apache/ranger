@@ -21,7 +21,7 @@ package org.apache.ranger.process;
 
 
 import org.apache.ranger.model.TagSource;
-//import org.apache.ranger.source.atlas.TagAtlasSource;
+import org.apache.ranger.source.atlas.TagAtlasSource;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,14 +42,9 @@ public class TestTagSynchronizer {
 
 		TagSyncConfig config = TagSyncConfig.getInstance();
 
+		TagSyncConfig.dumpConfiguration(config, new BufferedWriter(new OutputStreamWriter(System.out)));
+
 		Properties props = config.getProperties();
-
-		System.out.println("Tester is configured with following properties--");
-		System.out.println("--------------------");
-
-		config.toString();
-
-		System.out.println("--------------------");
 
 		tagSynchronizer = new TagSynchronizer(props);
 
@@ -78,18 +73,20 @@ public class TestTagSynchronizer {
 	@Test
 	public void testTagDownload() {
 
-		boolean initDone = tagSynchronizer.init();
+		boolean initDone = tagSynchronizer.initLoop();
 
 		System.out.println("TagSynchronizer initialization result=" + initDone);
 
+		/*
 		TagSource tagSource = tagSynchronizer.getTagSource();
 
 		try {
-			//TagAtlasSource tagAtlasSource = (TagAtlasSource) tagSource;
+			TagAtlasSource tagAtlasSource = (TagAtlasSource) tagSource;
 			//tagAtlasSource.printAllEntities();
 		} catch (ClassCastException exception) {
 			System.err.println("TagSource is not of TagAtlasSource");
 		}
+		*/
 
 		System.out.println("Exiting testTagDownload()");
 	}

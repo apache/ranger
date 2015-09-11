@@ -20,12 +20,12 @@
 		<description></description>
 	</property>
 	<property>
-		<name>ranger.tagsync.policymanager.baseURL</name>
-		<value>http://ranger-tag-policy-akulkarni-1:6080</value>
+		<name>ranger.tagsync.tagadmin.rest.url</name>
+		<value>http://localhost:6080</value>
 		<description></description>
 	</property>
 	<property>
-		<name>ranger.tagsync.policymanager.ssl.config.file</name>
+		<name>ranger.tagsync.tagadmin.rest.ssl.config.file</name>
 		<value></value>
 		<description></description>
 	</property>
@@ -46,7 +46,7 @@
 	</property>
 	<property>
 		<name>ranger.tagsync.source.file</name>
-		<value>/etc/ranger/data/tags.txt</value>
+		<value>/etc/ranger/data/tags.json</value>
 		<description></description>
 	</property>
 	<property>
@@ -61,7 +61,7 @@
 	</property>
 	<property>
 		<name>atlas.endpoint</name>
-		<value>http://ranger-tag-policy-akulkarni-1:21000/</value>
+		<value>http://localhost:21000/</value>
 		<description></description>
 	</property>
 </configuration>

@@ -23,14 +23,14 @@
         <param name="file" value="${logdir}/tagsync.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd" />
         <layout class="org.apache.log4j.PatternLayout">
-		<param name="ConversionPattern" value="%d{dd MMM yyyy HH:mm:ss} %5p %c{1} [%t] - %m%n"/>
+		<param name="ConversionPattern" value="%d{dd MMM yyyy HH:mm:ss} %5p %c{1} [%t] - %L %m%n"/>
         </layout>
    </appender>
 
   <appender name="console" class="org.apache.log4j.ConsoleAppender">
     <param name="Target" value="System.out"/>
     <layout class="org.apache.log4j.PatternLayout">
-	<param name="ConversionPattern" value="%d{dd MMM yyyy HH:mm:ss} %5p %c{1} [%t] - %m%n"/>
+	<param name="ConversionPattern" value="%d{dd MMM yyyy HH:mm:ss} %5p %c{1} [%t] - %L %m%n"/>
     </layout>
   </appender>
 

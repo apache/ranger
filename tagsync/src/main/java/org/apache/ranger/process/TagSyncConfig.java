@@ -20,27 +20,20 @@
 package org.apache.ranger.process;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
-/**
- * Created by akulkarni on 9/11/15.
- */
-public class TagSyncConfig {
+public class TagSyncConfig extends Configuration {
 	private static final Logger LOG = Logger.getLogger(TagSyncConfig.class) ;
 
 	public static final String CONFIG_FILE = "ranger-tagsync-site.xml";
 
-	public static final String DEFAULT_CONFIG_FILE = "ranger-tagsync-default-site.xml";
+	public static final String DEFAULT_CONFIG_FILE = "ranger-tagsync-default.xml";
 
 	public static final String TAGSYNC_ENABLED_PROP = "ranger.tagsync.enabled" ;
 
@@ -50,9 +43,9 @@ public class TagSyncConfig {
 
 	public static final String TAGSYNC_LOGDIR_PROP = "ranger.tagsync.logdir" ;
 
-	private static final String TAGSYNC_PM_URL_PROP = 	"ranger.tagsync.policymanager.baseURL";
+	private static final String TAGSYNC_TAGADMIN_REST_URL_PROP = "ranger.tagsync.tagadmin.rest.url";
 
-	private static final String TAGSYNC_PM_SSL_CONFIG_FILE_PROP = "ranger.tagsync.policymanager.ssl.config.file";
+	private static final String TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.tagadmin.rest.ssl.config.file";
 
 	private static final String TAGSYNC_PM_SSL_BASICAUTH_USERNAME_PROP = "ranger.tagsync.policymanager.basicauth.username";
 
@@ -68,9 +61,13 @@ public class TagSyncConfig {
 
 	private static final String TAGSYNC_SOURCE_ATLAS_PROP = "atlas.endpoint";
 
-	private static volatile TagSyncConfig instance = null;
+	private static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX = "ranger.tagsync.atlas.";
 
-	private Properties prop = new Properties() ;
+	private static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX = ".ranger.service";
+
+	private static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
+
+	private static volatile TagSyncConfig instance = null;
 
 	public static TagSyncConfig getInstance() {
 	/*
@@ -85,12 +82,11 @@ public class TagSyncConfig {
 		}
 	*/
 		TagSyncConfig newConfig = new TagSyncConfig();
-		newConfig.init();
 		return newConfig;
 	}
 
 	public Properties getProperties() {
-		return prop;
+		return getProps();
 	}
 
 	public static InputStream getFileInputStream(String path) throws FileNotFoundException {
@@ -158,7 +154,7 @@ public class TagSyncConfig {
 						LOG.error(path + " is not a file", exception);
 					}
 				} else {
-					LOG.error("URL not found for " + path + " or no privilege for reading file " + path);
+					LOG.warn("URL not found for " + path + " or no privilege for reading file " + path);
 				}
 			}
 		}
@@ -170,16 +166,10 @@ public class TagSyncConfig {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 
-		sb.append("CONFIG_FILE=").append(CONFIG_FILE).append(", ")
-				.append("DEFAULT_CONFIG_FILE=").append(DEFAULT_CONFIG_FILE).append("\n");
+		sb.append("DEFAULT_CONFIG_FILE=").append(DEFAULT_CONFIG_FILE).append(", ")
+				.append("CONFIG_FILE=").append(CONFIG_FILE).append("\n\n");
 
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		PrintStream printStream = new PrintStream(outputStream);
-		prop.list(printStream);
-		printStream.close();
-		sb.append(outputStream.toString());
-
-		return sb.toString();
+		return sb.toString() + super.toString();
 	}
 
 	static public boolean isTagSyncEnabled(Properties prop) {
@@ -217,13 +207,13 @@ public class TagSyncConfig {
 		return val;
 	}
 
-	static public String getPolicyMgrUrl(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_PM_URL_PROP);
+	static public String getTagAdminRESTUrl(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_TAGADMIN_REST_URL_PROP);
 		return val;
 	}
 
-	static public String getPolicyMgrSslConfigFile(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_PM_SSL_CONFIG_FILE_PROP);
+	static public String getTagAdminRESTSslConfigFile(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP);
 		return val;
 	}
 
@@ -251,75 +241,39 @@ public class TagSyncConfig {
 		return "";
 	}
 
+	static public String getServiceName(String componentName, String instanceName, Properties prop) {
+		String propName = TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX + componentName
+				+ ".instance." + instanceName
+				+ TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX;
+		String val = prop.getProperty(propName);
+		if (StringUtils.isBlank(val)) {
+			val = instanceName + TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR + componentName;
+		}
+		return val;
+	}
+
 	private TagSyncConfig() {
+		super(false);
 		init() ;
 	}
 
 	private void init() {
-		readConfigFile(CONFIG_FILE);
 		readConfigFile(DEFAULT_CONFIG_FILE);
+		readConfigFile(CONFIG_FILE);
 	}
 
 	private void readConfigFile(String fileName) {
-		try {
-			InputStream in = getFileInputStream(fileName);
-			if (in != null) {
-				try {
-					DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
-							.newInstance();
-					xmlDocumentBuilderFactory.setIgnoringComments(true);
-					xmlDocumentBuilderFactory.setNamespaceAware(true);
-					DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory
-							.newDocumentBuilder();
-					Document xmlDocument = xmlDocumentBuilder.parse(in);
-					xmlDocument.getDocumentElement().normalize();
 
-					NodeList nList = xmlDocument
-							.getElementsByTagName("property");
-
-					for (int temp = 0; temp < nList.getLength(); temp++) {
-
-						Node nNode = nList.item(temp);
-
-						if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
-							Element eElement = (Element) nNode;
-
-							String propertyName = "";
-							String propertyValue = "";
-							if (eElement.getElementsByTagName("name").item(
-									0) != null) {
-								propertyName = eElement
-										.getElementsByTagName("name")
-										.item(0).getTextContent().trim();
-							}
-							if (eElement.getElementsByTagName("value")
-									.item(0) != null) {
-								propertyValue = eElement
-										.getElementsByTagName("value")
-										.item(0).getTextContent().trim();
-							}
-
-							if (prop.get(propertyName) != null) {
-								prop.remove(propertyName) ;
-							}
-
-							prop.put(propertyName, propertyValue);
-
-						}
-					}
-				}
-				finally {
-					try {
-						in.close() ;
-					}
-					catch(IOException ioe) {
-						// Ignore IOE when closing stream
-					}
-				}
+		if (StringUtils.isNotBlank(fileName)) {
+			String fName = getResourceFileName(fileName);
+			if (StringUtils.isBlank(fName)) {
+				LOG.warn("Cannot find configuration file " + fileName + " in the classpath");
+			} else {
+				LOG.info("Loading configuration from " + fName);
+				addResource(fileName);
 			}
-		} catch (Throwable e) {
-			throw new RuntimeException("Unable to load configuration file [" + CONFIG_FILE + "]", e) ;
+		} else {
+			LOG.error("Configuration fileName is null");
 		}
 	}
 

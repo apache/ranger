@@ -26,9 +26,6 @@ import java.util.Map;
 import java.util.Properties;
 
 
-/**
- * Created by akulkarni on 9/10/15.
- */
 public interface TagSink extends TagStore {
 	boolean initialize(Properties properties);
 	void uploadServiceTags(ServiceTags serviceTags) throws Exception;

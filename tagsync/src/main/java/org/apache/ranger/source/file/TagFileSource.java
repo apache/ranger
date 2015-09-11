@@ -21,34 +21,20 @@ package org.apache.ranger.source.file;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.model.TagSink;
 import org.apache.ranger.model.TagSource;
-import org.apache.ranger.plugin.model.RangerServiceResource;
-import org.apache.ranger.plugin.model.RangerTag;
-import org.apache.ranger.plugin.model.RangerTagDef;
-import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.process.TagSyncConfig;
 
 import java.io.*;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
-/**
- * Created by akulkarni on 9/11/15.
- */
 public class TagFileSource implements TagSource, Runnable {
 	private static final Log LOG = LogFactory.getLog(TagFileSource.class);
-
-	public static final String CREATE_OR_UPDATE_SERVICETAGS_OP = "CREATE_OR_UPDATE";
-	public static final String DELETE_SERVICETAGS_OP = "DELETE";
 
 	private String sourceFileName;
 	private long lastModifiedTimeInMillis = 0L;
@@ -118,8 +104,15 @@ public class TagFileSource implements TagSource, Runnable {
 	}
 
 	@Override
-	public void start() {
-		(new Thread(this)).start();
+	public Thread start() {
+
+		Thread fileMonitoringThread = null;
+
+		fileMonitoringThread = new Thread(this);
+		fileMonitoringThread.setDaemon(true);
+		fileMonitoringThread.start();
+
+		return fileMonitoringThread;
 	}
 
 	@Override
@@ -155,12 +148,10 @@ public class TagFileSource implements TagSource, Runnable {
 			}
 			catch (Throwable t) {
 				LOG.error("tag-sync thread got an error", t);
-				shutdownFlag = true;
 			}
-
 		}
 
-		LOG.error("Shutting down the Tag-file-source thread");
+		LOG.info("Shutting down the Tag-file-source thread");
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagFileSource.run()");
@@ -176,9 +167,7 @@ public class TagFileSource implements TagSource, Runnable {
 		ServiceTags serviceTags = readFromFile();
 
 		if (serviceTags != null) {
-
 			tagSink.uploadServiceTags(serviceTags);
-
 		} else {
 			LOG.error("Could not read ServiceTags from file");
 		}
@@ -186,138 +175,6 @@ public class TagFileSource implements TagSource, Runnable {
 			LOG.debug("<== TagFileSource.updateSink()");
 		}
 	}
-
-	/*
-	private void createTagObjects(ServiceTags serviceTags) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileSource.createTagObjects()");
-		}
-
-		Map<Long, RangerTagDef> tagDefsMap = serviceTags.getTagDefinitions();
-		if (MapUtils.isNotEmpty(tagDefsMap)) {
-			for (Map.Entry<Long, RangerTagDef> entry : tagDefsMap.entrySet()) {
-				RangerTagDef tagDef = entry.getValue();
-				try {
-					tagSink.createTagDef(tagDef);
-				} catch (Exception exception) {
-					// Ignore and continue
-					LOG.error("createTagDef failed, tagDef=" + tagDef, exception);
-				}
-			}
-		}
-
-		List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
-		if (CollectionUtils.isNotEmpty(serviceResources)) {
-			for (RangerServiceResource serviceResource : serviceResources) {
-				try {
-					tagSink.createServiceResource(serviceResource);
-				} catch (Exception exception) {
-					// Ignore and continue
-					LOG.error("createServiceResource failed, serviceResource=" + serviceResource, exception);
-				}
-			}
-		}
-
-		Map<Long, RangerTag> tagsMap = serviceTags.getTags();
-		if (MapUtils.isNotEmpty(tagsMap)) {
-			for (Map.Entry<Long, RangerTag> entry : tagsMap.entrySet()) {
-				RangerTag tag = entry.getValue();
-				try {
-					tagSink.createTag(tag);
-				} catch (Exception exception) {
-					// Ignore and continue
-					LOG.error("createTag failed, tag=" + tag, exception);
-				}
-			}
-		}
-
-		Map<Long, List<Long>> resourceTagIdsMap = serviceTags.getResourceToTagIds();
-		if (MapUtils.isNotEmpty(resourceTagIdsMap)) {
-			for (Map.Entry<Long, List<Long>> entry : resourceTagIdsMap.entrySet()) {
-				Long resourceId = entry.getKey();
-				List<Long> tagIds = entry.getValue();
-				for (Long tagId : tagIds) {
-					RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
-					tagResourceMap.setResourceId(resourceId);
-					tagResourceMap.setTagId(tagId);
-					try {
-						tagSink.createTagResourceMap(tagResourceMap);
-					} catch (Exception exception) {
-						LOG.error("createTagResourceMap failed, resourceId=" + resourceId + ", tagId=" + tagId, exception);
-					}
-				}
-			}
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileSource.createTagObjects()");
-		}
-	}
-	*/
-	/*
-	private void deleteTagObjects(ServiceTags serviceTags) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileSource.deleteTagObjects()");
-		}
-
-		Map<Long, List<Long>> resourceTagIdsMap = serviceTags.getResourceToTagIds();
-		if (MapUtils.isNotEmpty(resourceTagIdsMap)) {
-			for (Map.Entry<Long, List<Long>> entry : resourceTagIdsMap.entrySet()) {
-				Long resourceId = entry.getKey();
-				List<Long> tagIds = entry.getValue();
-				for (Long tagId : tagIds) {
-					try {
-						tagSink.deleteTagResourceMap(tagId, resourceId);
-					} catch (Exception exception) {
-						LOG.error("deleteTagResourceMap failed, resourceId=" + resourceId + ", tagId=" + tagId +")", exception);
-					}
-				}
-			}
-		}
-
-		List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
-		if (CollectionUtils.isNotEmpty(serviceResources)) {
-			for (RangerServiceResource serviceResource : serviceResources) {
-				try {
-					tagSink.deleteServiceResource(serviceResource.getId());
-				} catch (Exception exception) {
-					// Ignore and continue
-					LOG.error("deleteServiceResource failed, serviceResource=" + serviceResource, exception);
-				}
-			}
-		}
-
-		Map<Long, RangerTag> tagsMap = serviceTags.getTags();
-		if (MapUtils.isNotEmpty(tagsMap)) {
-			for (Map.Entry<Long, RangerTag> entry : tagsMap.entrySet()) {
-				Long tagId = entry.getKey();
-				try {
-					tagSink.deleteTag(tagId);
-				} catch (Exception exception) {
-					// Ignore and continue
-					LOG.error("deleteTag failed, tagId=" + tagId, exception);
-				}
-			}
-		}
-
-		Map<Long, RangerTagDef> tagDefsMap = serviceTags.getTagDefinitions();
-		if (MapUtils.isNotEmpty(tagDefsMap)) {
-			for (Map.Entry<Long, RangerTagDef> entry : tagDefsMap.entrySet()) {
-				Long tagDefId = entry.getKey();
-				try {
-					tagSink.deleteTagDef(tagDefId);
-				} catch (Exception exception) {
-					// Ignore and continue
-					LOG.error("deleteTagDef failed, tagDefId=" + tagDefId, exception);
-				}
-			}
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileSource.deleteTagObjects()");
-		}
-	}
-	*/
 
 	@Override
 	public 	boolean isChanged() {
@@ -343,26 +200,6 @@ public class TagFileSource implements TagSource, Runnable {
 			LOG.debug("<== TagFileSource.isChanged(): result=" + ret);
 		}
 		return ret;
-	}
-
-	@Override
-	public List<RangerTagDef> fetchAllTagDefs(String syncSentinel) throws Exception {
-		throw new Exception("Not implemented");
-	}
-
-	@Override
-	public List<RangerTagDef> receiveUpdatesToTagDefs() throws Exception {
-		throw new Exception("Not implemented");
-	}
-
-	@Override
-	public List<RangerTagResourceMap> fetchAllTaggedEntities() throws Exception {
-		throw new Exception("Not implemented");
-	}
-
-	@Override
-	public List<RangerTagResourceMap> receiveUpdatesToTaggedEntities() throws Exception {
-		throw new Exception("Not implemented");
 	}
 
 	private ServiceTags readFromFile() {

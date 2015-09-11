@@ -132,6 +132,12 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
 		return ret;
 	}
 
+	public List<Long> getTagIdsForResourceId(Long resourceId) {
+		List<Long> ret = daoMgr.getXXTagResourceMap().findTagIdsForResourceId(resourceId);
+
+		return ret;
+	}
+
 	public List<RangerTagResourceMap> getByResourceGuid(String resourceGuid) {
 		List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
 

@@ -70,6 +70,15 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
 		}
 	}
 
+	public List<Long> findTagIdsForResourceId(Long resourceId) {
+		try {
+			return getEntityManager().createNamedQuery("XXTagResourceMap.getTagIdsForResourceId", Long.class)
+					.setParameter("resourceId", resourceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<Long>();
+		}
+	}
+
 	public List<XXTagResourceMap> findByTagId(Long tagId) {
 		if (tagId == null) {
 			return new ArrayList<XXTagResourceMap>();

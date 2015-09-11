@@ -86,7 +86,6 @@
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!--
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
@@ -96,17 +95,22 @@
             <groupId>org.apache.atlas</groupId>
             <artifactId>atlas-notification</artifactId>
             <version>0.6-incubating-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${local.lib.dir}/apache-atlas-0.6-incubating-SNAPSHOT/atlas-notification-0.6-incubating-SNAPSHOT.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.atlas</groupId>
             <artifactId>atlas-typesystem</artifactId>
             <version>0.6-incubating-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${local.lib.dir}/apache-atlas-0.6-incubating-SNAPSHOT/atlas-typesystem-0.6-incubating-SNAPSHOT.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.atlas</groupId>
             <artifactId>atlas-client</artifactId>
             <version>0.6-incubating-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${local.lib.dir}/apache-atlas-0.6-incubating-SNAPSHOT/atlas-client-0.6-incubating-SNAPSHOT.jar</systemPath>
         </dependency>
-        -->
     </dependencies>
 </project>

@@ -39,9 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-/**
- * Created by akulkarni on 9/11/15.
- */
 public class TagRESTSink implements TagSink {
 	private static final Log LOG = LogFactory.getLog(TagRESTSink.class);
 
@@ -57,8 +54,6 @@ public class TagRESTSink implements TagSink {
 	private static final String REST_URL_TAG_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/tag/" ;
 	private static final String REST_URL_TAGRESOURCEMAP_IDS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/tagresourcemapids/";
 	private static final String REST_URL_IMPORT_SERVICETAGS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/importservicetags/";
-	public static final String REST_URL_IMPORT_SERVICETAGS_PARAM = "op";
-
 
 	private RangerRESTClient tagRESTClient = null;
 
@@ -73,8 +68,8 @@ public class TagRESTSink implements TagSink {
 
 		boolean ret = false;
 
-		String restUrl       = TagSyncConfig.getPolicyMgrUrl(properties);
-		String sslConfigFile = TagSyncConfig.getPolicyMgrSslConfigFile(properties);
+		String restUrl       = TagSyncConfig.getTagAdminRESTUrl(properties);
+		String sslConfigFile = TagSyncConfig.getTagAdminRESTSslConfigFile(properties);
 		String userName = TagSyncConfig.getPolicyMgrUserName(properties);
 		String password = TagSyncConfig.getPolicyMgrPassword(properties);
 
@@ -263,6 +258,11 @@ public class TagRESTSink implements TagSink {
 
 	@Override
 	public List<RangerTag> getTagsByType(String name) throws Exception {
+		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public List<Long> getTagIdsForResourceId(Long resourceId) throws Exception {
 		throw new Exception("Not implemented");
 	}
 

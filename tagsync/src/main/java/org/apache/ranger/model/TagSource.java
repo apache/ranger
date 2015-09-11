@@ -26,9 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-/**
- * Created by akulkarni on 9/10/15.
- */
 public interface TagSource {
 
 	boolean initialize(Properties properties);
@@ -37,16 +34,8 @@ public interface TagSource {
 
 	void updateSink() throws Exception;
 
-	void start();
+	Thread start();
 
 	boolean isChanged();
-
-	List<RangerTagDef> fetchAllTagDefs(String syncSentinel) throws Exception;
-
-	List<RangerTagDef> receiveUpdatesToTagDefs() throws Exception;
-
-	List<RangerTagResourceMap> fetchAllTaggedEntities() throws Exception;
-
-	List<RangerTagResourceMap> receiveUpdatesToTaggedEntities() throws Exception;
 
 }

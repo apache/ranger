@@ -719,6 +719,21 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
+	public List<Long> getTagIdsForResourceId(Long resourceId) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.getTagIdsForResourceId(" + resourceId + ")");
+		}
+
+		List<Long> ret = rangerTagResourceMapService.getTagIdsForResourceId(resourceId);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.getTagIdsForResourceId(" + resourceId + "): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@Override
 	public List<RangerTagResourceMap> getTagResourceMapsForResourceId(Long resourceId) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.getTagResourceMapsForResourceId(" + resourceId + ")");
@@ -875,6 +890,7 @@ public class TagDBStore extends AbstractTagStore {
 			}
 
 			ret = new ServiceTags();
+			ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
 			ret.setServiceName(xxService.getName());
 			ret.setTagVersion(xxService.getTagVersion());
 			ret.setTagUpdateTime(xxService.getTagUpdateTime());

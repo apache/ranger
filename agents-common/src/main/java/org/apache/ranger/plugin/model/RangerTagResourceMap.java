@@ -71,9 +71,9 @@ public class RangerTagResourceMap extends RangerBaseModelObject {
 
 		sb.append("{ ");
 
-		sb.append("tagId=").append(tagId).append("} ");
+		sb.append("resourceId=").append(resourceId).append(", ");
 
-		sb.append("resourceId={").append(resourceId).append("} ");
+		sb.append("tagId=").append(tagId);
 
 		sb.append(" }");
 

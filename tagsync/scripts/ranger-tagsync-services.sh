@@ -27,8 +27,13 @@ realScriptDir=`dirname $realScriptPath`
 cd $realScriptDir
 cdir=`pwd`
 
-pidf=/var/run/ranger/tagsync.pid
+pidd=/var/run/ranger
 
+if [ -d $pidd ]; then
+	mkdir -p $pidd
+fi
+
+pidf=${pidd}/tagsync.pid
 
 if [ "${action}" == "START" ]; then
 
@@ -47,9 +52,13 @@ if [ "${action}" == "START" ]; then
         	export PATH=$JAVA_HOME/bin:$PATH
 	fi
 
-        logdir=/var/log/ranger/tagsync
+    logdir=/var/log/ranger/tagsync
 
-	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf"
+	if [ ! -d $logdir ]; then
+		mkdir -p $logdir
+	fi
+
+	cp="${cdir}/conf.dist:${cdir}/dist/*:${cdir}/lib/*"
 
     if [ -f $pidf ]; then
             PID=`cat $pidf`
@@ -81,7 +90,6 @@ if [ "${action}" == "START" ]; then
 elif [ "${action}" == "STOP" ]; then
 
     if [ -f $pidf ]; then
-            pidf=/var/run/ranger/tagsync.pid
 	        PID=`cat $pidf` > /dev/null 2>&1
             kill -9 $PID > /dev/null 2>&1
             rm -f $pidf
@@ -103,8 +111,8 @@ elif [ "${action}" == "VERSION" ]; then
 	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo
 	exit
 else 
-	        echo "Invalid argument [$1];"
-        echo "Usage: Only start | stop | restart | version, are supported."
-        exit;
+	echo "Invalid argument [$1];"
+    echo "Usage: Only start | stop | restart | version, are supported."
+    exit;
 fi
 

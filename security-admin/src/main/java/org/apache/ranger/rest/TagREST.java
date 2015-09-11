@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.TagValidator;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -75,19 +76,30 @@ public class TagREST {
         validator.setTagStore(tagStore);
 	}
 
+    TagStore getTagStore() {
+        return tagStore;
+    }
+
     @POST
     @Path(TagRESTConstants.TAGDEFS_RESOURCE)
     @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public RangerTagDef createTagDef(RangerTagDef tagDef) {
+    public RangerTagDef createTagDef(RangerTagDef tagDef, @DefaultValue("true") @QueryParam("updateIfExists") boolean updateIfExists) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.createTagDef(" + tagDef + ")");
+            LOG.debug("==> TagREST.createTagDef(" + tagDef + ", " + updateIfExists + ")");
         }
 
         RangerTagDef ret;
 
         try {
-            ret = tagStore.createTagDef(tagDef);
+            RangerTagDef exist = validator.preCreateTagDef(tagDef, updateIfExists);
+            if (exist == null) {
+                ret = tagStore.createTagDef(tagDef);
+            } else if (updateIfExists) {
+                ret = updateTagDef(exist.getId(), exist);
+            } else {
+                throw new Exception("tag-definition with Id " + exist.getId() + " already exists");
+            }
         } catch(Exception excp) {
             LOG.error("createTagDef(" + tagDef + ") failed", excp);
 
@@ -95,11 +107,12 @@ public class TagREST {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.createTagDef(" + tagDef + "): " + ret);
+            LOG.debug("<== TagREST.createTagDef(" + tagDef + ", " + updateIfExists + "): " + ret);
         }
 
         return ret;
     }
+
 
     @PUT
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "{id}")
@@ -327,16 +340,22 @@ public class TagREST {
     @Path(TagRESTConstants.TAGS_RESOURCE)
     @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public RangerTag createTag(RangerTag tag) {
+    public RangerTag createTag(RangerTag tag, @DefaultValue("true") @QueryParam("updateIfExists") boolean updateIfExists) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.createTag(" + tag + ")");
+            LOG.debug("==> TagREST.createTag(" + tag + ", " + updateIfExists + ")");
         }
 
         RangerTag ret;
 
         try {
-            validator.preCreateTag(tag);
-            ret = tagStore.createTag(tag);
+            RangerTag exist = validator.preCreateTag(tag);
+            if (exist == null) {
+                ret = tagStore.createTag(tag);
+            } else if (updateIfExists) {
+                ret = updateTag(exist.getId(), exist);
+            } else {
+                throw new Exception("tag with Id " + exist.getId() + " already exists");
+            }
         } catch(Exception excp) {
             LOG.error("createTag(" + tag + ") failed", excp);
 
@@ -344,7 +363,7 @@ public class TagREST {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.createTag(" + tag + "): " + ret);
+            LOG.debug("<== TagREST.createTag(" + tag + ", " + updateIfExists + "): " + ret);
         }
 
         return ret;
@@ -553,16 +572,22 @@ public class TagREST {
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public RangerServiceResource createServiceResource(RangerServiceResource resource) {
+    public RangerServiceResource createServiceResource(RangerServiceResource resource, @DefaultValue("true") @QueryParam("updateIfExists") boolean updateIfExists) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.createServiceResource(" + resource + ")");
+            LOG.debug("==> TagREST.createServiceResource(" + resource + ", " + updateIfExists + ")");
         }
 
         RangerServiceResource ret;
 
         try {
-            validator.preCreateServiceResource(resource);
-            ret = tagStore.createServiceResource(resource);
+            RangerServiceResource exist = validator.preCreateServiceResource(resource);
+            if (exist == null) {
+                ret = tagStore.createServiceResource(resource);
+            } else if (updateIfExists) {
+                ret = updateServiceResource(exist.getId(), exist);
+            } else {
+                throw new Exception("resource with Id " + exist.getId() + " already exists");
+            }
         } catch(Exception excp) {
             LOG.error("createServiceResource(" + resource + ") failed", excp);
 
@@ -570,7 +595,7 @@ public class TagREST {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.createServiceResource(" + resource + "): " + ret);
+            LOG.debug("<== TagREST.createServiceResource(" + resource + ", " + updateIfExists + "): " + ret);
         }
 
         return ret;
@@ -650,22 +675,30 @@ public class TagREST {
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "guid/{guid}")
     @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public void deleteServiceResourceByGuid(@PathParam("guid") String guid) {
+    public void deleteServiceResourceByGuid(@PathParam("guid") String guid, @DefaultValue("false") @QueryParam("deleteReferences") boolean deleteReferences) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.deleteServiceResourceByGuid(" + guid + ")");
+            LOG.debug("==> TagREST.deleteServiceResourceByGuid(" + guid + ", " + deleteReferences + ")");
         }
 
         try {
-            RangerServiceResource exist = validator.preDeleteServiceResourceByGuid(guid);
+            RangerServiceResource exist = validator.preDeleteServiceResourceByGuid(guid, deleteReferences);
+            if (deleteReferences) {
+                List<RangerTagResourceMap> tagResourceMaps = tagStore.getTagResourceMapsForResourceGuid(exist.getGuid());
+                if (CollectionUtils.isNotEmpty(tagResourceMaps)) {
+                    for (RangerTagResourceMap tagResourceMap : tagResourceMaps) {
+                        deleteTagResourceMap(tagResourceMap.getId());
+                    }
+                }
+            }
             tagStore.deleteServiceResource(exist.getId());
         } catch(Exception excp) {
-            LOG.error("deleteServiceResourceByGuid(" + guid + ") failed", excp);
+            LOG.error("deleteServiceResourceByGuid(" + guid + ", " + deleteReferences + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.deleteServiceResourceByGuid(" + guid + ")");
+            LOG.debug("<== TagREST.deleteServiceResourceByGuid(" + guid + ", " + deleteReferences + ")");
         }
     }
 
@@ -800,24 +833,31 @@ public class TagREST {
     @Path(TagRESTConstants.TAGRESOURCEMAPS_RESOURCE)
     @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public RangerTagResourceMap createTagResourceMap(@QueryParam("tag-guid") String tagGuid, @QueryParam("resource-guid") String resourceGuid) {
+    public RangerTagResourceMap createTagResourceMap(@QueryParam("tag-guid") String tagGuid, @QueryParam("resource-guid") String resourceGuid,
+                                                     @DefaultValue("false") @QueryParam("lenient") boolean lenient) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.createTagResourceMap(" + tagGuid + ", " +  resourceGuid + ")");
+            LOG.debug("==> TagREST.createTagResourceMap(" + tagGuid + ", " +  resourceGuid + ", " + lenient + ")");
         }
 
         RangerTagResourceMap tagResourceMap;
 
         try {
-            tagResourceMap = validator.preCreateTagResourceMap(tagGuid, resourceGuid);
-            tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+            tagResourceMap = tagStore.getTagResourceMapForTagAndResourceGuid(tagGuid, resourceGuid);
+            if (tagResourceMap == null) {
+                tagResourceMap = validator.preCreateTagResourceMap(tagGuid, resourceGuid);
+
+                tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+            } else if (!lenient) {
+                throw new Exception("tagResourceMap with tag-guid=" + tagGuid + " and resource-guid=" + resourceGuid + " already exists");
+            }
         } catch(Exception excp) {
-            LOG.error("createTagResourceMap(" + tagGuid + ", " +  resourceGuid + ") failed", excp);
+            LOG.error("createTagResourceMap(" + tagGuid + ", " +  resourceGuid + ", " + lenient + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.createTagResourceMap(" + tagGuid + ", " + resourceGuid + ")");
+            LOG.debug("==> TagREST.createTagResourceMap(" + tagGuid + ", " + resourceGuid + ", " + lenient + ")");
         }
 
         return tagResourceMap;
@@ -998,8 +1038,35 @@ public class TagREST {
         return ret;
     }
 
+    // This API is used by tag-sync to upload tag-objects
+
+    @PUT
+    @Path(TagRESTConstants.IMPORT_SERVICETAGS_RESOURCE)
+    @Produces({ "application/json", "application/xml" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public void importServiceTags(ServiceTags serviceTags) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.importServiceTags()");
+        }
+
+        try {
+
+            ServiceTagsProcessor serviceTagsProcessor = new ServiceTagsProcessor(tagStore);
+            serviceTagsProcessor.process(serviceTags);
+
+        } catch (Exception excp) {
+            LOG.error("importServiceTags() failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+
+        }
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.importServiceTags()");
+        }
+    }
 
     // This API is typically used by plug-in to get selected tagged resources from RangerAdmin
+
     @GET
     @Path(TagRESTConstants.TAGS_DOWNLOAD + "{serviceName}")
     @Produces({ "application/json", "application/xml" })

@@ -24,16 +24,14 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.model.TagSink;
 import org.apache.ranger.model.TagSource;
 
+import java.util.Map;
 import java.util.Properties;
 
-/**
- * Created by akulkarni on 9/11/15.
- */
 public class TagSynchronizer implements Runnable {
 
 	private static final Logger LOG = Logger.getLogger(TagSynchronizer.class);
 
-	private final static int MAX_INIT_RETRIES = 1;
+	private final static int MAX_INIT_RETRIES = 5;
 
 	private boolean shutdownFlag = false;
 	private TagSink tagSink = null;
@@ -45,12 +43,6 @@ public class TagSynchronizer implements Runnable {
 
 		TagSyncConfig config = TagSyncConfig.getInstance();
 		Properties props = config.getProperties();
-
-		LOG.info("--------------------------------");
-		LOG.info("");
-		LOG.info("Ranger-TagSync Configuration: {\n" + config + "\n}");
-		LOG.info("");
-		LOG.info("--------------------------------");
 
 		TagSynchronizer tagSynchronizer = new TagSynchronizer(props);
 
@@ -86,15 +78,28 @@ public class TagSynchronizer implements Runnable {
 
 			if (initDone) {
 
-				tagSource.start();
+				Thread tagSourceThread = tagSource.start();
 
-				while (!shutdownFlag) {
-					try {
-						LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
-						Thread.sleep(sleepTimeBetweenCycleInMillis);
-					} catch (InterruptedException e) {
-						LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize tag information", e);
+				if (tagSourceThread != null) {
+					while (!shutdownFlag) {
+						try {
+							LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
+							Thread.sleep(sleepTimeBetweenCycleInMillis);
+						} catch (InterruptedException e) {
+							LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize tag information", e);
+						}
 					}
+					if (shutdownFlag) {
+						LOG.info("Interrupting tagSourceThread...");
+						tagSourceThread.interrupt();
+						try {
+							tagSourceThread.join();
+						} catch (InterruptedException interruptedException) {
+							LOG.error("tagSourceThread.join() was interrupted");
+						}
+					}
+				} else {
+					LOG.error("Could not start tagSource monitoring thread");
 				}
 			} else {
 				LOG.error("Failed to initialize TagSynchonizer after " + MAX_INIT_RETRIES + " retries. Exiting thread");
@@ -121,6 +126,8 @@ public class TagSynchronizer implements Runnable {
 
 		for (int initRetries = 0; initRetries < MAX_INIT_RETRIES && !ret; initRetries++) {
 
+			printConfigurationProperties();
+
 			ret = init();
 
 			if (!ret) {
@@ -128,6 +135,7 @@ public class TagSynchronizer implements Runnable {
 				try {
 					LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
 					Thread.sleep(sleepTimeBetweenCycleInMillis);
+					properties = TagSyncConfig.getInstance().getProperties();
 				} catch (Exception e) {
 					LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to initialize tag source/sink", e);
 				}
@@ -181,7 +189,23 @@ public class TagSynchronizer implements Runnable {
 	}
 
 	public void shutdown(String reason) {
-		LOG.error("Received shutdown(), reason=" + reason);
+		LOG.info("Received shutdown(), reason=" + reason);
 		this.shutdownFlag = true;
+	}
+
+	public void printConfigurationProperties() {
+		LOG.info("--------------------------------");
+		LOG.info("");
+		LOG.info("Ranger-TagSync Configuration: {\n");
+		if (MapUtils.isNotEmpty(properties)) {
+			for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+				LOG.info("\tProperty-Name:" + entry.getKey());
+				LOG.info("\tProperty-Value:" + entry.getValue());
+				LOG.info("\n");
+			}
+		}
+		LOG.info("\n}");
+		LOG.info("");
+		LOG.info("--------------------------------");
 	}
 }

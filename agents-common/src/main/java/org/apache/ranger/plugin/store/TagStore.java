@@ -66,6 +66,8 @@ public interface TagStore {
 
     RangerTag getTagByGuid(String guid) throws Exception;
 
+    List<Long> getTagIdsForResourceId(Long resourceId) throws Exception;
+
     List<RangerTag> getTagsByType(String name) throws Exception;
 
     List<RangerTag> getTagsForResourceId(Long resourceId) throws Exception;

@@ -31,6 +31,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagPredicateUtil;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -41,6 +42,7 @@ public class TagFileStore extends AbstractTagStore {
 	private static final Log LOG = LogFactory.getLog(TagFileStore.class);
 
 	public static final String PROPERTY_TAG_FILE_STORE_DIR = "ranger.tag.store.file.dir";
+
 
 	protected static final String FILE_PREFIX_TAG_DEF          = "ranger-tagdef-";
 	protected static final String FILE_PREFIX_TAG              = "ranger-tag-";
@@ -116,12 +118,6 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.createTagDef(" + tagDef + ")");
 		}
 
-		RangerTagDef existing = getTagDefByName(tagDef.getName());
-
-		if (existing != null) {
-			throw new Exception(tagDef.getName() + ": tag-def already exists (id=" + existing.getId() + ")");
-		}
-
 		RangerTagDef ret = null;
 
 		try {
@@ -160,7 +156,7 @@ public class TagFileStore extends AbstractTagStore {
 				throw new Exception("tag-def does not exist: name=" + tagDef.getName());
 			}
 		} else {
-			existing = this.getTagDef(tagDef.getId());
+			existing = getTagDef(tagDef.getId());
 
 			if (existing == null) {
 				throw new Exception("tag-def does not exist: id=" + tagDef.getId());
@@ -498,6 +494,21 @@ public class TagFileStore extends AbstractTagStore {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagFileStore.getTagsByType(" + type + "): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@Override
+	public List<Long> getTagIdsForResourceId(Long resourceId) throws Exception {
+		List<Long> ret = new ArrayList<Long>();
+
+		List<RangerTag> tags = getTagsForResourceId(resourceId);
+
+		if(CollectionUtils.isNotEmpty(tags)) {
+			for(RangerTag tag : tags) {
+				ret.add(tag.getId());
+			}
 		}
 
 		return ret;
@@ -1063,6 +1074,7 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		ServiceTags ret = new ServiceTags();
+		ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
 
 		boolean tagsChanged = true;
 

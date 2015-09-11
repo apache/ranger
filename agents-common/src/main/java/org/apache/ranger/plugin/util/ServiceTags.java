@@ -44,6 +44,10 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class ServiceTags implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
+	public static final String OP_ADD_OR_UPDATE = "add_or_update";
+	public static final String OP_DELETE        = "delete";
+
+	private String                      op;
 	private String                      serviceName;
 	private Long                        tagVersion;
 	private Date                        tagUpdateTime;
@@ -53,10 +57,24 @@ public class ServiceTags implements java.io.Serializable {
 	private Map<Long, List<Long>>       resourceToTagIds;
 
 	/**
+	 * @return the op
+	 */
+	public String getOp() {
+		return op;
+	}
+
+	/**
 	 * @return the serviceName
 	 */
 	public String getServiceName() {
 		return serviceName;
+	}
+
+	/**
+	 * @param op the op to set
+	 */
+	public void setOp(String op) {
+		this.op = op;
 	}
 
 	/**

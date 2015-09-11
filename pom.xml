@@ -255,6 +255,13 @@
                 <enabled>false</enabled>
             </snapshots>
           </repository>
+    <repository>
+      <id>repo</id>
+      <url>file://${user.home}/local-repo</url>
+      <snapshots>
+         <enabled>true</enabled>
+      </snapshots>
+  </repository>
   </repositories>
 	<dependencyManagement>
 		<dependencies>
