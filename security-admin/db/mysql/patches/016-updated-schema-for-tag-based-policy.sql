@@ -19,6 +19,13 @@
 -- -----------------------------------------------------
 -- Table `x_tag_def`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `x_tag_resource_map` ;
+DROP TABLE IF EXISTS `x_service_resource_element_value` ;
+DROP TABLE IF EXISTS `x_service_resource_element` ;
+DROP TABLE IF EXISTS `x_service_resource` ;
+DROP TABLE IF EXISTS `x_tag_attr` ;
+DROP TABLE IF EXISTS `x_tag` ;
+DROP TABLE IF EXISTS `x_tag_attr_def` ;
 DROP TABLE IF EXISTS `x_tag_def` ;
 
 CREATE TABLE IF NOT EXISTS `x_tag_def` (
@@ -48,13 +55,12 @@ CREATE TABLE IF NOT EXISTS `x_tag_def` (
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
+;
 
 
 -- -----------------------------------------------------
 -- Table `x_tag`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_tag` ;
 
 CREATE TABLE IF NOT EXISTS `x_tag` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -83,14 +89,13 @@ CREATE TABLE IF NOT EXISTS `x_tag` (
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
+;
 
 
 
 -- -----------------------------------------------------
 -- Table `x_service_resource`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_service_resource` ;
 
 CREATE TABLE IF NOT EXISTS `x_service_resource` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -121,13 +126,12 @@ CREATE TABLE IF NOT EXISTS `x_service_resource` (
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
+;
 
 
 -- -----------------------------------------------------
 -- Table `x_service_resource_element`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_service_resource_element` ;
 
 CREATE TABLE IF NOT EXISTS `x_service_resource_element` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -163,12 +167,11 @@ CREATE TABLE IF NOT EXISTS `x_service_resource_element` (
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
+;
 
 -- -----------------------------------------------------
 -- Table `x_tag_attr_def`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_tag_attr_def` ;
 
 CREATE TABLE IF NOT EXISTS `x_tag_attr_def` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -199,13 +202,12 @@ CREATE TABLE IF NOT EXISTS `x_tag_attr_def` (
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
+;
 
 
 -- -----------------------------------------------------
 -- Table `x_tag_attr`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_tag_attr` ;
 
 CREATE TABLE IF NOT EXISTS `x_tag_attr` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -236,13 +238,12 @@ CREATE TABLE IF NOT EXISTS `x_tag_attr` (
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
+;
 
 
 -- -----------------------------------------------------
 -- Table `x_tag_resource_map`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_tag_resource_map` ;
 
 CREATE TABLE IF NOT EXISTS `x_tag_resource_map` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -278,13 +279,12 @@ CREATE TABLE IF NOT EXISTS `x_tag_resource_map` (
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
+;
 
 
 -- -----------------------------------------------------
 -- Table `x_service_resource_element_value`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_service_resource_element_value` ;
 
 CREATE TABLE IF NOT EXISTS `x_service_resource_element_value` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -315,14 +315,61 @@ CREATE TABLE IF NOT EXISTS `x_service_resource_element_value` (
     REFERENCES `x_portal_user` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
+;
 
 
--- ----------------------------------------------------------------
--- ranger database add column in x_service_def and x_service table
--- ----------------------------------------------------------------
-alter table x_service_def add column `options` VARCHAR(1024) DEFAULT NULL NULL;
-alter table x_policy_item add column `item_type` INT DEFAULT 0 NOT NULL;
-alter table x_service add column `tag_service` BIGINT DEFAULT NULL NULL,
-                      add column `tag_version` BIGINT DEFAULT 0 NOT NULL,
-                      add column `tag_update_time` DATETIME DEFAULT NULL NULL;
+-- -------------------------------------
+-- add column in x_service_def.options
+-- -------------------------------------
+DROP PROCEDURE IF EXISTS add_column_x_service_def_options;
+
+DELIMITER ;;
+CREATE PROCEDURE add_column_x_service_def_options() BEGIN
+  IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_service_def') THEN
+    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_service_def' AND column_name = 'options') THEN
+      ALTER TABLE `x_service_def` ADD COLUMN `options` VARCHAR(1024) DEFAULT NULL NULL;
+    END IF;
+  END IF;
+END;;
+
+DELIMITER ;
+CALL add_column_x_service_def_options();
+DROP PROCEDURE IF EXISTS add_column_x_service_def_options;
+
+-- ---------------------------------------
+-- add column in x_policy_item.item_type
+-- ---------------------------------------
+DROP PROCEDURE IF EXISTS add_column_x_policy_item_item_type;
+
+DELIMITER ;;
+CREATE PROCEDURE add_column_x_policy_item_item_type() BEGIN
+  IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_policy_item') THEN
+    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_policy_item' AND column_name = 'item_type') THEN
+      ALTER TABLE `x_policy_item` ADD COLUMN `item_type` INT DEFAULT 0 NOT NULL;
+    END IF;
+  END IF;
+END;;
+
+DELIMITER ;
+CALL add_column_x_policy_item_item_type();
+DROP PROCEDURE IF EXISTS add_column_x_policy_item_item_type;
+
+-- ---------------------------------------------------------------------------------------
+-- add columns in x_service.tag_service, x_service.tag_version, x_service.tag_update_time
+-- ---------------------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS add_tag_columns_x_service;
+
+DELIMITER ;;
+CREATE PROCEDURE add_tag_columns_x_service() BEGIN
+  IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_service') THEN
+    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_service' AND column_name = 'tag_service') THEN
+      ALTER TABLE `x_service` ADD COLUMN `tag_service` BIGINT DEFAULT NULL NULL,
+	                          ADD COLUMN `tag_version` BIGINT DEFAULT 0 NOT NULL,
+	                          ADD COLUMN `tag_update_time` DATETIME DEFAULT NULL NULL;
+    END IF;
+  END IF;
+END;;
+
+DELIMITER ;
+CALL add_tag_columns_x_service();
+DROP PROCEDURE IF EXISTS add_tag_columns_x_service;

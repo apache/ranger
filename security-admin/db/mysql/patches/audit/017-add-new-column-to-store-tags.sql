@@ -13,19 +13,19 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-drop procedure if exists add_column_in_xa_access_audit_table;
+/* Add new column `tags` in table */
+DROP PROCEDURE IF EXISTS add_column_xa_access_audit_tags;
 
-delimiter ;;
-create procedure add_column_in_xa_access_audit_table() begin
+DELIMITER ;;
+CREATE PROCEDURE add_column_xa_access_audit_tags() BEGIN
+  IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'xa_access_audit') THEN
+    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_access_audit' AND column_name = 'tags') THEN
+      ALTER TABLE xa_access_audit ADD COLUMN `tags` VARCHAR(4000) DEFAULT NULL NULL;
+    END IF;
+  END IF;
+END;;
 
- /* Add new column `tags` in table */
- if exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and column_name = 'tags' and data_type='varchar') then
- 	alter table xa_access_audit add column `tags` VARCHAR(4000) DEFAULT NULL NULL;
- end if;
+DELIMITER ;
+CALL add_column_xa_access_audit_tags();
 
-end;;
-
-delimiter ;
-call add_column_in_xa_access_audit_table();
-
-drop procedure if exists add_column_in_xa_access_audit_table;
+DROP PROCEDURE IF EXISTS add_column_xa_access_audit_tags;
