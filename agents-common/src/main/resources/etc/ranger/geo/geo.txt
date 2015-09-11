@@ -1,8 +1,26 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 # This is a sample geolocation data format used by Ranger
 # If a line contains '#' as a first-nonblank character then it is considered a comment line
-# First non-comment line in the file must be metadata line; metadata line contains '!' as first character
+# First non-comment line in the file must be metadata line
 # Format of metadata and data lines is strictly Comma-Separated-Values. Spaces are not allowed to surround commas.
-# Only IP-4 address values in dot-notation are supported.
+# Only IP-4 address values in dot-notation or as long integers are supported.
 #
 FROM_IP,TO_IP,COUNTRY_CODE,COUNTRY_NAME,STATE,CITY,ZIP,LAT,LONG
 10.0.0.255,10.0.3.0,US,United States,CA
