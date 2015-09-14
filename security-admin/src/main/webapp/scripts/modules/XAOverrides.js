@@ -594,6 +594,7 @@
 	              var $label='', $div='', that = this;
 	              this.$tpl.empty();
 	              
+	              this.editModPopup = true;
 	              if(!$.isArray(this.sourceData)) {
 	                  return;
 	              }
@@ -602,79 +603,48 @@
 	              	var val = obj.value; 
 	              	return val.substr(0,val.indexOf(":"));
 	              });
-	              var $table = $('<table>', {'class':'table table-policy-condition' });
-	              var $tbody = $('<tbody>');
-	              var $selectAllTr = $('<tr><th></th><td><i class="pull-right">Select / Deselect All</i></td><td><label><input type="checkbox" value="selectall" data-js="selectall"></label></td></tr>')
+	              var $selectComp = $('<select>').attr('data-id','selectComp')
+	              								 .attr('multiple','multiple')
+	              								 .attr('placeholder','Select component');
+	              var optionList = _.keys(this.servicePerms);
+	              _.each(optionList, function (val, el) {
+	            	  $selectComp.append("<option>" + val + "</option>");
+	              }); 
+	              var $table = $('<table>', {'class':'table table-policy-condition table-perms margin-top-6' });
+	              var $tbody = $('<tbody><tr><th><input type="checkbox" data-id="selectAllComponent" /> Component</th><td><strong>Permissions</strong></td></tr></tbody>');
 	              
-	              $tbody.append($selectAllTr);
-	              $table.append($tbody);
-	              _.each(this.servicePerms, function(permissions,service) {
-	  				var $tr = $('<tr>');
-	  				var $th = $('<th>').text(service);
-	  				var $td = $('<td>');
-	  				var $selectAllPerComponent = $('<td><label><input type="checkbox" value="selectall" data-js="'+service+'selectall"></label></td>')
-	  				_.each(permissions, function(perm){ 
-	  					$label = $('<label>').append($('<input>', {
-	  											type: 'checkbox',
-	  											value: perm.value,
-	  											'data-js' : perm.value
-	  										}))
-	  										.append($('<span>').text(' '+perm.text));
-	  					$td.append($label)
-	  				})
-	  				$tr.append($th)
-	  				$tr.append($td)
-	  				$tr.append($selectAllPerComponent)
-	  				$tbody.append($tr)
-	  				
-	  			}, this);
-	              $('<div>').append($table).appendTo(this.$tpl);
+	              $selectComp.append($table)
+	              $('<div>').append($selectComp).appendTo(this.$tpl);
+	              $table.append($tbody).appendTo(this.$tpl);
 	              
-	              this.$input = this.$tpl.find('input[type="checkbox"]');
-	              this.setClass();
-	              
-	              this.$tpl.find('[data-js$="selectall"]').on('click',function(elem){
-	            	  console.log(elem)
-	            	  var $elem = $(elem.currentTarget);
-	            	  if($elem.attr('data-js') == "selectall"){
-	            		  that.$input.prop('checked',$elem.is(':checked'))
-	            	  }else if($elem.attr('data-js').indexOf("selectall") >= 0){
-	            		  var idx = $elem.attr('data-js').indexOf("selectall")
-	            		  var service = $elem.attr('data-js').substr(0,idx)
-	            		  that.$tpl.find('[type="checkbox"][data-js^="'+service+'"]').prop('checked',$elem.is(':checked'))
-	            		  var selectall = false;
-            			  selectall = true;
-            			  _.each(that.$tpl.find('[data-js$="selectall"]'), function(ele,i ){
-            				  if($(ele).attr('data-js') != "selectall"){
-            					  selectall = selectall && $(ele).is(':checked')
-            					  if(!selectall) return;
-            				  }
-            			  })
-            			  that.$tpl.find('[data-js="selectall"]').prop('checked',selectall)
+	              this.$tpl.find('[data-id="selectComp"]').select2({width :'600px'}).on('change',function(e){
+	            	  
+	            	  if(!_.isUndefined(e.added)){
+	            		  that.addTr(e.added.text)
+	            		  //Table header selectAll perm event
+	            		  that.addEventToThCheckbox();
+	            		  //Table data permission event
+	            		  that.addEventToTdCheckbox();
+	            		  
+	            	  }else{
+	            		  that.$tpl.find('tr[data-id="'+e.removed.text+'"]').remove()
+	            		  //uncheck selectAllCompChxbox if there is no component is selected
+	            		  if(_.isEmpty(e.val))	that.$tpl.find('[data-id="selectAllComponent"]').prop('checked',false)
 	            	  }
-	              })
-	              
-	              this.$tpl.find('input[type="checkbox"][data-js*=":"]').on('click',function(elem){
-	            	  	  //to handle selectall option for component level 
-	            		  var selectall = true;
-            			  _.each($(this).parent().parent().find('input'), function(ele){ 
-            				  selectall  = $(ele).is(':checked') && selectall
-            				  if(!selectall) return;
-	            		  })
-            			  var val = $(this).attr('data-js')
-	            		  var service = val.substr(0,val.indexOf(":"))
-	                	  that.$tpl.find('[data-js="'+service+'selectall"]').prop('checked',selectall)
-	                	  //to handle selectall option
-	                	  selectall = true;
-            			  _.each(that.$tpl.find('[data-js$="selectall"]'), function(ele,i ){
-            				  if($(ele).attr('data-js') != "selectall"){
-            					  selectall = selectall && $(ele).is(':checked')
-            					  if(!selectall) return;
-            				  }
-            			  })
-            			  that.$tpl.find('[data-js="selectall"]').prop('checked',selectall)
-	                	  
-	              })
+	            	  
+	              });
+	              //selectall component event
+	              this.$tpl.find('[data-id="selectAllComponent"]').on('click',function(chx){
+	            	  var table = $(chx.currentTarget).parents('.table-perms')
+	            	  var selectAllInputChx = table.parents('.table-perms').find('th input')
+	            	  selectAllInputChx.splice(0,1)
+	            	  if($(chx.currentTarget).is(':checked')){
+	            		  table.find('input').prop('checked',true)
+	            		  
+        			  }else{
+        				  table.find('input').prop('checked',false)
+        			  }
+	              });
 	          },
 	         
 	         value2str: function(value) {
@@ -698,48 +668,35 @@
 	         //set checked on required checkboxes
 	         value2input: function(value) {
 	        	 var that = this;
-	              this.$input.prop('checked', false);
-	              if($.isArray(value) && value.length) {
-	                 this.$input.each(function(i, el) {
-	                     var $el = $(el);
-	                     // cannot use $.inArray as it performs strict comparison
-	                     $.each(value, function(j, val){
-	                         /*jslint eqeq: true*/
-	                         if($el.val() == val) {
-	                         /*jslint eqeq: false*/                           
-	                             $el.prop('checked', true);
-	                         }
-	                     });
-	                 }); 
-	                 //set checkall option for perticular service if all perms are checked
-	                 _.each(this.$tpl.find('[data-js$="selectall"]'), function(elem){
-	                	 var val = $(elem).attr('data-js')
-	                	 if(val != "selectall"){
-	                		 var service = val.substr(0,val.indexOf("selectall"))
-	                		 $(elem).find('[data-js^="'+service+'"]')
-	                		 var serviceCheckbox = $(elem).parent().parent().siblings('td').find('input[type="checkbox"]')
-	                		 var checkall = true;
-	                		 _.each(serviceCheckbox, function(ele){ 
-	                			 checkall  = $(ele).is(':checked') && checkall
-	                			 if(!checkall) return;
-	                		 })
-	                		 $(elem).prop('checked', checkall)
-	                		 
-	                		 checkall = true;
-	                		 var selectAllChbx = that.$tpl.find('[data-js$="selectall"]')
-	                		 _.each(selectAllChbx, function(ele){
-	                			 if($(ele).attr('data-js') == "selectall") return;
-	                			 checkall  = $(ele).is(':checked') && checkall
-	                			 if(!checkall) return;
-	                		 })
-	                		 that.$tpl.find('[data-js="selectall"]').prop('checked', checkall)
-	                		 
-	                	 }
-	                 })
-	              }  
+	        	 if(_.contains(value,"on")){
+						value = _.without(value,"on")
+				 }
+	        	 if(this.editModPopup){
+	        		 var selectedComp = _.map(value,function(val){
+	        			 return val.split(':')[0];
+	        		 });
+	        		 
+	        		 this.value = _.unique(selectedComp);
+	        		 this.$tpl.find('[data-id="selectComp"]').select2('val',_.unique(selectedComp))
+	        		 _.each(_.unique(selectedComp), function(compName){
+	        			 this.addTr(compName);
+	        		 },this)
+	        		 this.addEventToThCheckbox();
+	        		 this.addEventToTdCheckbox();
+	        		 _.each(value,function(val){
+	        			 this.$tpl.find('input[data-js="'+val+'"]').prop('checked',true)
+	        		 },this);
+	        		 
+	        		 //checked selectall for perticular component
+	        		 this.setSelectAllPerCompChxbox();
+	        		 //check parentSelectAllComponent
+	        		 this.setSelectAllCompChxbox();
+	        		 this.editModPopup = false;
+	        	 }
 	          },  
 	          
-	         input2value: function() { 
+	         input2value: function() {
+	        	 this.$input = this.$tpl.find('input[type="checkbox"]')
 	             var checked = [];
 	             this.$input.filter(':checked').each(function(i, el) {
 	                 checked.push($(el).val());
@@ -763,6 +720,115 @@
 	                 $(element).empty(); 
 	             }
 	          },
+	          addTr : function(compName){
+        		  var $tr = $('<tr data-id="'+compName+'">'), $th = $('<th>'), $label = '<label><input type="checkbox" data-id="selectall" data-type="'+compName+'"></label>'+compName;
+        		  var $tmp = $th.append($label);
+        		  var $td = $('<td>');
+        		  var permissions = this.servicePerms[compName]
+        		  _.each(permissions, function(perm){ 
+        			  $label = $('<label>').append($('<input>', {
+        				  type: 'checkbox',
+        				  value: perm.value,
+        				  'data-js' : perm.value
+        			  }))
+        			  .append($('<span>').text(' '+perm.text));
+        			  $td.append($label)
+        		  });
+        		  $tr.append($th)
+        		  $tr.append($td)
+        		  this.$tpl.find('tbody').append($tr)
+	          },
+	          addEventToThCheckbox : function(){
+	        	  var that = this;
+	        	  this.$tpl.find('th input').on('click',function(chx){
+        			  var type = $(chx.currentTarget).attr('data-type')
+        			  var tr = $(chx.currentTarget).parents('tr[data-id="'+type+'"]')
+        			  if($(chx.currentTarget).is(':checked')){
+        				  tr.find('td input').prop('checked',true)
+        				  //to check for selectAll component level
+        				  var selectAllInputChx = tr.parents('.table-perms').find('th input'),selectAll = true;
+        				  selectAllInputChx.splice(0,1);
+        				  _.each(selectAllInputChx, function(ele){
+        					  if(!$(ele).is(':checked')){
+        						  selectAll = false;
+        						  return;
+        					  }
+        				  })
+        				  if(selectAll){
+        					  that.$tpl.find('[data-id="selectAllComponent"]').prop('checked',true)  
+        				  }
+        			  }else{
+        				  tr.find('td input').prop('checked',false)
+        				  that.$tpl.find('[data-id="selectAllComponent"]').prop('checked',false)
+        			  }
+        		  })
+	          },
+	          addEventToTdCheckbox : function(){
+	        	  var that = this;
+	        	  this.$tpl.find('td input').on('click',function(chx){
+        			  var dataJs = $(chx.currentTarget).attr('data-js').split(':')
+        			  var type = dataJs[0]
+        			  var tr = $(chx.currentTarget).parents('tr[data-id="'+type+'"]')
+        			  if($(chx.currentTarget).is(':checked')){
+        				  //to check for selectAll component level
+        				  var permInputChx = tr.find('td input'),selectAll = true;
+        				  _.each(permInputChx, function(ele){
+        					  if(!$(ele).is(':checked')){
+        						  selectAll = false;
+        						  return;
+        					  }
+        				  })
+        				  if(selectAll){
+        					  tr.find('th input').prop('checked',true)
+        					  that.setSelectAllCompChxbox();
+        				  }
+        			  }else{
+        				  tr.find('th input').prop('checked',false)
+        				  that.$tpl.find('[data-id="selectAllComponent"]').prop('checked',false)
+        			  }
+        		  })
+	          },
+	          setSelectAllCompChxbox : function(){
+	        	  var that = this;
+	        	  var selectAllComp = true,tr = this.$tpl.find('table tr');
+	        	  	 if(tr.length > 1){
+	        	  		 _.each(this.$tpl.find('table tr'), function(el, i){
+	        	  			 if(i != 0){
+	        	  				 var componentChxbox = $(el).find('th input');
+	        	  				 _.each(componentChxbox, function(ele){
+	        	  					 if(!$(ele).is(':checked')){
+	        	  						 selectAllComp  = false;
+	        	  						 return;
+	        	  					 }
+	        	  				 })
+	        	  			 }
+	        	  		 })
+	        	  	 }else{
+	        	  		selectAllComp  = false;
+	        	  	 }
+	        		 if(selectAllComp){
+	        			 that.$tpl.find('[data-id="selectAllComponent"]').prop('checked',true);
+				  	}else{
+				  	 that.$tpl.find('[data-id="selectAllComponent"]').prop('checked',false);
+				  	}
+	          },
+	          setSelectAllPerCompChxbox : function(){
+	        	  var that = this;
+	        	  _.each(this.$tpl.find('table tr'), function(el){
+        			  var componentChxbox = $(el).find('td input'), selectAll = true;
+        			  _.each(componentChxbox, function(ele){
+    					  if(!$(ele).is(':checked')){
+    						  selectAll = false;
+    						  return;
+    					  }
+    				  })
+    				  if(selectAll){
+    					  $(el).find('th input').prop('checked',true);
+    				  }else{
+    					  $(el).find('th input').prop('checked',false);
+    				  }
+        		 })
+	          }
 	      });      
 
 	      TagChecklist.defaults = $.extend({}, $.fn.editabletypes.list.defaults, {

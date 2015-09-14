@@ -138,7 +138,7 @@
    white-space: pre-wrap;
 }
 .editable-container.editable-popup {
-    max-width: none !important; /* without this rule poshytip/tooltip does not stretch */
+    max-width: none; /* without this rule poshytip/tooltip does not stretch */
 }  
 
 .editable-container.popover {

@@ -1402,7 +1402,9 @@ the specific language governing permissions and limitations under the Apache Lic
 
         // abstract
         findHighlightableChoices: function() {
-            return this.results.find(".select2-result-selectable:not(.select2-disabled)");
+//        	Pressing enter generates duplicated options fixed by adding class .select2-selected
+//        	return this.results.find(".select2-result-selectable:not(.select2-disabled)");
+            return this.results.find(".select2-result-selectable:not(.select2-disabled, .select2-selected)");
         },
 
         // abstract

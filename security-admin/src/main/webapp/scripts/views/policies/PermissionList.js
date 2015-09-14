@@ -309,6 +309,8 @@ define(function(require) {
 			    emptytext : 'Add Permissions',
 				source: this.perms,
 				value : this.permsIds,
+				placement : 'top',
+				showbuttons : 'bottom',
 				display: function(values,srcData) {
 					if(_.isNull(values) || _.isEmpty(values)){
 						$(this).empty();
@@ -317,8 +319,8 @@ define(function(require) {
 						that.ui.addPermissionsSpan.attr('title','add');
 						return;
 					}
-					if(_.contains(values,"-1")){
-						values = _.without(values,"-1")
+					if(_.contains(values,"on")){
+						values = _.without(values,"on")
 					}
 					//To remove selectall options
 					values = _.uniq(values);
@@ -354,15 +356,27 @@ define(function(require) {
 					that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
 					that.ui.addPermissionsSpan.attr('title','edit');
 				},
+			}).on('hide',function(e){
+					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
 			}).on('click', function(e) {
 				e.stopPropagation();
 				e.preventDefault();
 				that.clickOnPermissions(that);
+				 //Sticky popup
+				var pop = $(this).parent('td').find('.popover')
+				pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
+				pop.addClass('tag-fixed-popover');
+				pop.find('.arrow').removeClass('arrow')
 			});
 			that.ui.addPermissionsSpan.click(function(e) {
 				e.stopPropagation();
 				that.$('a[data-js="permissions"]').editable('toggle');
-				that.clickOnPermissions(that);
+//				that.clickOnPermissions(that);
+				
+				var pop = $(this).parent('td').find('.popover')
+				pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
+				pop.addClass('tag-fixed-popover');
+				pop.find('.arrow').removeClass('arrow')
 			});
 			
 		},
