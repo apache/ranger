@@ -734,6 +734,9 @@ define(function(require) {
 				onClick: function (e) {
 					var self = this;
 					var policyId = this.model.get('policyId');
+					if(policyId == -1){
+						return;
+					}
 					var	serviceDef = that.serviceDefList.findWhere({'id':this.model.get('repoType')});
 					if(_.isUndefined(serviceDef)){
 						return ;

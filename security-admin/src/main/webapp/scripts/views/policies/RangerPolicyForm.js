@@ -123,20 +123,20 @@ define(function(require){
 		},
 		initializePlugins : function() {
 			var that = this;
-			this.$(".wrap-header").each(function() {
+			this.$(".wrap-header").each(function(i, ele) {
 				var wrap = $(this).next();
 				// If next element is a wrap and hasn't .non-collapsible class
-				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible'))
+				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible')){
 					$(this).append('<a href="#" class="wrap-expand pull-right">show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>').append('<a href="#" class="wrap-collapse pull-right" style="display: none">hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>');
+				}
 			});
 			// Collapse wrap
-			$(document).on("click", "a.wrap-collapse", function() {
+			this.$el.on("click", "a.wrap-collapse", function() {
 				var self = $(this).hide(100, 'linear');
 				self.parent('.wrap-header').next('.wrap').slideUp(500, function() {
 					$('.wrap-expand', self.parent('.wrap-header')).show(100, 'linear');
 				});
 				return false;
-
 				// Expand wrap
 			}).on("click", "a.wrap-expand", function() {
 				var self = $(this).hide(100, 'linear');
@@ -146,9 +146,24 @@ define(function(require){
 				return false;
 			});
 			
+			//Hide show wrap-header based on policyItems 
+			var parentPermsObj = { groupPermsDeny : this.formInputDenyList,  };
+			var childPermsObj = { groupPermsAllowExclude : this.formInputAllowExceptionList, groupPermsDenyExclude : this.formInputDenyExceptionList}
+			_.each(childPermsObj, function(val, name){
+				if(val.length <= 0)
+					this.$el.find('[data-customfields="'+name+'"]').parent().hide();
+			},this)
+			
+			_.each(parentPermsObj, function(val, name, i){
+				if(val.length <= 0){
+					var tmp = this.$el.find('[data-customfields="'+name+'"]').next()
+					var childPerm = tmp.find('[data-customfields^="groupPerms"]');
+					if(childPerm.parent().css('display') == 'none'){
+						this.$el.find('[data-customfields="'+name+'"]').parent().hide();
+					}
+				}
+			},this)
 		},
-
-
 		evAuditChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
 		},
@@ -203,26 +218,26 @@ define(function(require){
 						accessTypes: accessType,
 						headerTitle: "",
 						rangerServiceDefModel : that.rangerServiceDefModel
-					}).render().el);
-					that.$('[data-customfields="groupPermsDeny"]').html(new PermissionList({
-						collection : that.formInputDenyList,
+						}).render().el);
+						that.$('[data-customfields="groupPermsAllowExclude"]').html(new PermissionList({
+						collection : that.formInputAllowExceptionList,
 						groupList  : that.groupList,
 						userList   : that.userList,
 						model 	   : that.model,
 						accessTypes: accessType,
 						headerTitle: "",
 						rangerServiceDefModel : that.rangerServiceDefModel
-					}).render().el);
-					that.$('[data-customfields="groupPermsAllowException"]').html(new PermissionList({
-						collection : that.formInputAllowExceptionList,
+						}).render().el);
+						that.$('[data-customfields="groupPermsDeny"]').html(new PermissionList({
+						collection : that.formInputDenyList,
 						groupList  : that.groupList,
 						userList   : that.userList,
 						model 	   : that.model,
 						accessTypes: accessType,
 						headerTitle: "Deny",
 						rangerServiceDefModel : that.rangerServiceDefModel
-					}).render().el);
-					that.$('[data-customfields="groupPermsDenyException"]').html(new PermissionList({
+						}).render().el);
+						that.$('[data-customfields="groupPermsDenyExclude"]').html(new PermissionList({
 						collection : that.formInputDenyExceptionList,
 						groupList  : that.groupList,
 						userList   : that.userList,
@@ -316,7 +331,7 @@ define(function(require){
 			this.model.set('denyPolicyItems', this.setPermissionsToColl(this.formInputDenyList, new RangerPolicyItem()));
 			this.model.set('allowExceptions', this.setPermissionsToColl(this.formInputAllowExceptionList, new RangerPolicyItem()));
 			this.model.set('denyExceptions', this.setPermissionsToColl(this.formInputDenyExceptionList, new RangerPolicyItem()));
-			this.model.set('service',this.rangerService.get('name'));			
+			
 			/*//Unset attrs which are not needed 
 			_.each(this.model.attributes.resources,function(obj,key){
 				this.model.unset(key, obj.values.toString())

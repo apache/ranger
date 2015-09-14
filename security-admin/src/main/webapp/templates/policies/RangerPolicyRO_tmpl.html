@@ -81,48 +81,57 @@
     </tbody>
   </table>
 </div>
-<div id="permissionsDetails" class="row-fluid">
-  <p class="formHeader">
-    {{tt 'h.userGroupPermissions'}} :
-  </p>
-  <table class="table-permission table-condensed table-read-only" style="width:100%">
-    <thead>
-      <tr>
-        {{#each PolicyDetails.permissions.header}}
-        <th>{{this}}</th>
-        {{/each}}
-      </tr>
-    </thead>
-    <tbody>
-      {{#each PolicyDetails.permissions.policyItems}}
-      <tr>
-        <td>{{#each this.groups}}
-          <span class="label label-info">{{this}}</span>
-          {{/each}}</td>
-        <td>{{#each this.users}}
-          <span class="label label-info">{{this}}</span>
-          {{/each}}</td>
-        {{#if ../PolicyDetails.permissions.policyCondition}}
-        <td>{{#each this.conditions}}
-          <span class="label label-info">
-            {{this.type}} :
-            {{#each this.values}}
-              {{this}}
-            {{/each}}
-          </span>
-          {{/each}}</td>
-        {{/if}}
-        <td>{{#each this.accesses}}
-          <span class="label label-info">{{#if this.isAllowed}}{{this.type}}{{/if}}</span>
-          {{/each}}</td>
-        <td>
-          <input type="checkbox" {{#if this.delegateAdmin}}checked{{/if}} disabled="disabled">
-        </td>
-      </tr>
-      {{/each}}
-    </tbody>
-  </table>
-</div>
+
+{{#each PolicyDetails.policyItemsCond}}
+	<div id="policyItems" class="row-fluid">
+	  <p class="formHeader">
+	    {{this.title}}  :
+	  </p>
+	  <table class="table-permission table-condensed table-read-only" style="width:100%">
+	    <thead>
+	      <tr>
+	        {{#each this.headers}}
+	        	<th>{{this}}</th>
+	        {{/each}}
+	      </tr>
+	    </thead>
+	    <tbody>
+	      {{#each this.policyItems}}
+	      <tr>
+	        <td>{{#each this.groups}}
+	          <span class="label label-info">{{this}}</span>
+	          {{/each}}</td>
+	        <td>{{#each this.users}}
+	          <span class="label label-info">{{this}}</span>
+	          {{/each}}</td>
+	        {{#if ../../PolicyDetails.policyCondition}}
+	 			<td>
+	 	  		{{#if this.conditions}}	
+	    	  		{{#each this.conditions}}
+	       				<span class="label label-info">
+		         			{{this.type}} :
+		         			{{#each this.values}}
+		           				{{this}}
+		         			{{/each}}
+	       				</span>
+	       			{{/each}}
+	    		{{else}}
+	     			--  
+	     		{{/if}}
+	       	</td>
+	       {{/if}}
+	        <td>{{#each this.accesses}}
+	          <span class="label label-info">{{#if this.isAllowed}}{{this.type}}{{/if}}</span>
+	          {{/each}}</td>
+	        <td>
+	          <input type="checkbox" {{#if this.delegateAdmin}}checked{{/if}} disabled="disabled">
+	        </td>
+	      </tr>
+	      {{/each}}
+	    </tbody>
+	  </table>
+	</div>
+{{/each}}
 <div class="updateInfo row-fluid">
   <div class="pull-left">
     <p>

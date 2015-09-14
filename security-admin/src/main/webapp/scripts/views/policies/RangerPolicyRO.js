@@ -104,11 +104,31 @@ define(function(require) {
 				}
 			}, this);
 			var perm = details.permissions = this.getPermHeaders();
-			perm.policyItems = this.policy.get('policyItems');
-			details.createdBy = this.policy.get('createdBy');
+			perm.policyItems	 = this.policy.get('policyItems');
+			perm.allowException  = this.policy.get('allowExceptions');
+			perm.denyPolicyItems = this.policy.get('denyPolicyItems');
+			perm.denyExceptions  = this.policy.get('denyExceptions');
+			details.createdBy  = this.policy.get('createdBy');
 			details.createTime = Globalize.format(new Date(this.policy.get('createTime')),  "MM/dd/yyyy hh:mm tt");
 			details.updatedBy = this.policy.get('updatedBy');
 			details.updateTime = Globalize.format(new Date(this.policy.get('updateTime')),  "MM/dd/yyyy hh:mm tt");
+			//get policyItems
+			this.createPolicyItems();
+			
+		},
+		createPolicyItems : function(){
+			this.policyDetails['policyItemsCond'] = [];
+			var headers = this.getPermHeaders();
+			this.policyDetails['policyCondition'] = headers.policyCondition;
+			var items = [{'itemName': 'policyItems',title : 'Allow Condition'},
+			             {'itemName': 'allowExceptions',title : 'Allow Exception'},
+			             {'itemName': 'denyPolicyItems',title : 'Deny Condition'},
+			             {'itemName': 'denyExceptions',title : 'Deny Exception'},]
+			_.each(items, function(item){
+				if(!_.isUndefined(this.policy.get(item.itemName)) && !_.isEmpty(this.policy.get(item.itemName))){
+					this.policyDetails['policyItemsCond'].push({ title : item.title, headers : headers.header, policyItems : this.policy.get(item.itemName)})
+				}
+			}, this)
 		},
 
 		/** all events binding here */

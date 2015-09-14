@@ -28,11 +28,11 @@
 		<b data-fieldsets class="policy-form"></b>
 	</fieldset>
 	 <fieldset>
-		<p class="formHeader">
-			Allow Conditions :	
-			<span class="label label-yellow pull-right" ></span>
-		</p>
-		<div class="position-relative">
+		<p class="wrap-header bold formHeader">
+ 			Allow Conditions :	
+ 			<span class="label label-yellow pull-right" ></span>
+ 		</p> &nbsp;
+ 		<div class=" wrap position-relative">
 
 		<div class="" data-customfields="groupPerms">
 			<div class="control-group">
@@ -44,11 +44,11 @@
 		</div>
 		<div class="form-indent-right">
 			<p class="wrap-header reportSearchHeader">
-				Exceptions :
+				Exceptions :	
 			</p> &nbsp;
-			<div class="wrap position-relative" style="display:none;">
+			<div class="wrap position-relative" >
 		
-				<div class="" data-customfields="groupPermsAllowException">
+				<div class="" data-customfields="groupPermsAllowExclude">
 					<div class="control-group" style="margin-left: -100px;">
 						<label class="control-label">Exclude :</label>
 						<div class="controls">
@@ -63,7 +63,7 @@
 		<p class="wrap-header bold formHeader">
 			Deny Conditions :	
 		</p> &nbsp;
-		<div class="wrap position-relative" style="display:none;">
+		<div class="wrap position-relative" >
 			<div class="" data-customfields="groupPermsDeny">
 				<div class="control-group">
 					<label class="control-label">{{tt 'lbl.permissions'}}</label>
@@ -74,10 +74,10 @@
 			</div>
 		<div class="form-indent-right">
 			<p class="wrap-header reportSearchHeader">
-				Exceptions :
+				Exceptions :	
 			</p> &nbsp;
-			<div class="wrap position-relative" style="display:none;">
-				<div class="" data-customfields="groupPermsDenyException">
+			<div class="wrap position-relative" >
+				<div class="" data-customfields="groupPermsDenyExclude">
 					<div class="control-group">
 						<label class="control-label">Exclude :</label>
 						<div class="controls">
@@ -87,7 +87,6 @@
 				</div>
 			</div>
 			</div>
-		</div>
 	</fieldset>
 </form>
 
