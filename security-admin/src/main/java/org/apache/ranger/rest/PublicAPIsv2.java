@@ -312,7 +312,7 @@ public class PublicAPIsv2 {
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerPolicy> searchPolicies(@PathParam("servicename") String serviceName,
 	                                         @Context HttpServletRequest request) {
-		return serviceREST.getServicePolicies(serviceName, request).getPolicies();
+		return serviceREST.getServicePoliciesByName(serviceName, request).getPolicies();
 	}
 
 	@POST

@@ -49,6 +49,7 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.XUserMgr;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -81,6 +82,8 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.security.context.RangerAPIList;
+import org.apache.ranger.security.context.RangerPreAuthSecurityHandler;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
@@ -151,11 +154,10 @@ public class ServiceREST {
 	public ServiceREST() {
 	}
 
-
 	@POST
 	@Path("/definitions")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_SERVICE_DEF + "\")")
 	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.createServiceDef(" + serviceDef + ")");
@@ -189,7 +191,7 @@ public class ServiceREST {
 	@PUT
 	@Path("/definitions/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE_DEF + "\")")
 	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updateServiceDef(" + serviceDef + ")");
@@ -223,7 +225,7 @@ public class ServiceREST {
 	@DELETE
 	@Path("/definitions/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_SERVICE_DEF + "\")")
 	public void deleteServiceDef(@PathParam("id") Long id, @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deleteServiceDef(" + id + ")");
@@ -260,6 +262,7 @@ public class ServiceREST {
 	@GET
 	@Path("/definitions/{id}")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_DEF + "\")")
 	public RangerServiceDef getServiceDef(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServiceDef(" + id + ")");
@@ -298,6 +301,7 @@ public class ServiceREST {
 	@GET
 	@Path("/definitions/name/{name}")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_DEF_BY_NAME + "\")")
 	public RangerServiceDef getServiceDefByName(@PathParam("name") String name) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServiceDefByName(" + name + ")");
@@ -338,6 +342,7 @@ public class ServiceREST {
 	@GET
 	@Path("/definitions")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_DEFS + "\")")
 	public RangerServiceDefList getServiceDefs(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServiceDefs()");
@@ -366,7 +371,7 @@ public class ServiceREST {
 	@POST
 	@Path("/services")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_SERVICE + "\")")
 	public RangerService createService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.createService(" + service + ")");
@@ -405,7 +410,7 @@ public class ServiceREST {
 	@PUT
 	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE + "\")")
 	public RangerService updateService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updateService(): " + service);
@@ -444,7 +449,7 @@ public class ServiceREST {
 	@DELETE
 	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_SERVICE + "\")")
 	public void deleteService(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deleteService(" + id + ")");
@@ -480,6 +485,7 @@ public class ServiceREST {
 	@GET
 	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE + "\")")
 	public RangerService getService(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getService(" + id + ")");
@@ -511,6 +517,7 @@ public class ServiceREST {
 	@GET
 	@Path("/services/name/{name}")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_BY_NAME + "\")")
 	public RangerService getServiceByName(@PathParam("name") String name) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServiceByName(" + name + ")");
@@ -542,6 +549,7 @@ public class ServiceREST {
 	@GET
 	@Path("/services")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICES + "\")")
 	public RangerServiceList getServices(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServices()");
@@ -595,6 +603,7 @@ public class ServiceREST {
 	@GET
 	@Path("/services/count")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_SERVICES + "\")")
 	public Long countServices(@Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.countServices():");
@@ -624,6 +633,7 @@ public class ServiceREST {
 	@POST
 	@Path("/services/validateConfig")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.VALIDATE_CONFIG + "\")")
 	public VXResponse validateConfig(RangerService service) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.validateConfig(" + service + ")");
@@ -651,6 +661,7 @@ public class ServiceREST {
 	@POST
 	@Path("/services/lookupResource/{serviceName}")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.LOOKUP_RESOURCE + "\")")
 	public List<String> lookupResource(@PathParam("serviceName") String serviceName, ResourceLookupContext context) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.lookupResource(" + serviceName + ")");
@@ -1196,7 +1207,7 @@ public class ServiceREST {
 	@GET
 	@Path("/policies/service/name/{name}")
 	@Produces({ "application/json", "application/xml" })
-	public RangerPolicyList getServicePolicies(@PathParam("name") String serviceName,
+	public RangerPolicyList getServicePoliciesByName(@PathParam("name") String serviceName,
 			@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceName + ")");
@@ -1464,6 +1475,7 @@ public class ServiceREST {
 	@GET
 	@Path("/policies/eventTime")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_POLICY_FROM_EVENT_TIME + "\")")
 	public RangerPolicy getPolicyFromEventTime(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPolicyFromEventTime()");
@@ -1490,6 +1502,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policy/{policyId}/versionList")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_POLICY_VERSION_LIST + "\")")
 	public VXString getPolicyVersionList(@PathParam("policyId") Long policyId) {
 		return svcStore.getPolicyVersionList(policyId);
 	}
@@ -1497,6 +1510,7 @@ public class ServiceREST {
 	@GET
 	@Path("/policy/{policyId}/version/{versionNo}")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_POLICY_FOR_VERSION_NO + "\")")
 	public RangerPolicy getPolicyForVersionNumber(@PathParam("policyId") Long policyId,
 			@PathParam("versionNo") int versionNo) {
 		return svcStore.getPolicyForVersionNumber(policyId, versionNo);

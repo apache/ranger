@@ -35,12 +35,15 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.security.context.RangerAPIList;
+import org.apache.ranger.security.context.RangerPreAuthSecurityHandler;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,7 +69,7 @@ public class XKeyREST {
 	
 	@Autowired
 	RESTErrorUtil restErrorUtil;
-		
+	
 	/**
 	 * Implements the traditional search functionalities for Keys
 	 * 
@@ -76,6 +79,7 @@ public class XKeyREST {
 	@GET
 	@Path("/keys")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_KEYS + "\")")
 	public VXKmsKeyList searchKeys(@Context HttpServletRequest request, @QueryParam("provider") String provider) {
 		VXKmsKeyList vxKmsKeyList = new VXKmsKeyList();
 		try{
@@ -94,6 +98,7 @@ public class XKeyREST {
 	@PUT
 	@Path("/key")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ROLLOVER_KEYS + "\")")
 	public VXKmsKey rolloverKey(@QueryParam("provider") String provider, VXKmsKey vXKey) {
 		VXKmsKey vxKmsKey = new VXKmsKey();
 		try{
@@ -120,6 +125,7 @@ public class XKeyREST {
 	@DELETE
 	@Path("/key/{alias}")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_KEY + "\")")
 	public void deleteKey(@PathParam("alias") String name, @QueryParam("provider") String provider, @Context HttpServletRequest request) {
 		try{
 			if (name == null || name.isEmpty()) {
@@ -140,6 +146,7 @@ public class XKeyREST {
 	@POST
 	@Path("/key")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_KEY + "\")")
 	public VXKmsKey createKey(@QueryParam("provider") String provider, VXKmsKey vXKey) {
 		VXKmsKey vxKmsKey = new VXKmsKey();
 		try{
@@ -167,6 +174,7 @@ public class XKeyREST {
 	@GET
 	@Path("/key/{alias}")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_KEY + "\")")
 	public VXKmsKey getKey(@PathParam("alias") String name,@QueryParam("provider") String provider){
 		VXKmsKey vxKmsKey = new VXKmsKey();
 		try{
