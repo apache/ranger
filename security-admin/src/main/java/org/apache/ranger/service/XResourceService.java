@@ -43,6 +43,7 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
+import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPortalUser;
@@ -345,25 +346,25 @@ public class XResourceService extends
 	}
 
 	private void populateAuditList(VXResource vXResource) {
-		SearchCriteria searchCriteria = new SearchCriteria();
-		searchCriteria.addParam("resourceId", vXResource.getId());
-		VXAuditMapList vXAuditMapList = xAuditMapService
-				.searchXAuditMaps(searchCriteria);
-		if (vXAuditMapList != null && vXAuditMapList.getResultSize() != 0) {
-			List<VXAuditMap> auditMapList = vXAuditMapList.getList();
-			vXResource.setAuditList(auditMapList);
+
+		List<XXAuditMap> xAuditMapList = daoManager.getXXAuditMap().findByResourceId(vXResource.getId());
+		List<VXAuditMap> vXAuditMapList = new ArrayList<VXAuditMap>();
+
+		for (XXAuditMap xAuditMap : xAuditMapList) {
+			vXAuditMapList.add(xAuditMapService.populateViewBean(xAuditMap));
 		}
+		vXResource.setAuditList(vXAuditMapList);
 	}
 
 	private void populatePermList(VXResource vXResource) {
-		SearchCriteria searchCriteria = new SearchCriteria();
-		searchCriteria.addParam("resourceId", vXResource.getId());
-		VXPermMapList vXPermMapList = xPermMapService
-				.searchXPermMaps(searchCriteria);
-		if (vXPermMapList != null && vXPermMapList.getResultSize() != 0) {
-			List<VXPermMap> permMapList = vXPermMapList.getList();
-			vXResource.setPermMapList(permMapList);
-		}		
+
+		List<XXPermMap> xPermMapList = daoManager.getXXPermMap().findByResourceId(vXResource.getId());
+		List<VXPermMap> vXPermMapList = new ArrayList<VXPermMap>();
+
+		for (XXPermMap xPermMap : xPermMapList) {
+			vXPermMapList.add(xPermMapService.populateViewBean(xPermMap));
+		}
+		vXResource.setPermMapList(vXPermMapList);
 	}
 
 	@Override

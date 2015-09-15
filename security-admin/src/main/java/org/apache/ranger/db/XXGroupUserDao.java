@@ -60,4 +60,25 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 		}
 		return null;
 	}
+
+	/**
+	 * @param xUserId
+	 *            -- Id of X_USER table
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<Long> findGroupIdListByUserId(Long xUserId) {
+		if (xUserId != null) {
+			try {
+				return getEntityManager().createNamedQuery("XXGroupUser.findGroupIdListByUserId").setParameter("xUserId", xUserId).getResultList();
+			} catch (NoResultException e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			logger.debug("UserId not provided.");
+			return new ArrayList<Long>();
+		}
+		return null;
+	}
+
 }
