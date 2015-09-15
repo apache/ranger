@@ -331,7 +331,7 @@ define(function(require){
 			this.model.set('denyPolicyItems', this.setPermissionsToColl(this.formInputDenyList, new RangerPolicyItem()));
 			this.model.set('allowExceptions', this.setPermissionsToColl(this.formInputAllowExceptionList, new RangerPolicyItem()));
 			this.model.set('denyExceptions', this.setPermissionsToColl(this.formInputDenyExceptionList, new RangerPolicyItem()));
-			
+			this.model.set('service',this.rangerService.get('name'));
 			/*//Unset attrs which are not needed 
 			_.each(this.model.attributes.resources,function(obj,key){
 				this.model.unset(key, obj.values.toString())
