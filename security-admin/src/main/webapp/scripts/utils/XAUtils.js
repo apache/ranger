@@ -194,7 +194,8 @@ define(function(require) {
 					html : html,
 					text : text
 				},
-				type : 'info'
+				type : 'info',
+				pausable: true
 			};
 		}
 		$('.top-right').notify(options).show();
@@ -220,7 +221,8 @@ define(function(require) {
 					html : html,
 					text : text
 				},
-				type : 'error'
+				type : 'error',
+				pausable: true
 			};
 		}
 		$('.top-right').notify(options).show();
@@ -246,6 +248,7 @@ define(function(require) {
 					html : html
 				},
 				type : 'success',
+				pausable: true
 			};
 		}
 		$('.top-right').notify(options).show();
@@ -1096,5 +1099,24 @@ define(function(require) {
 		})
 		return {'userRoleList' : userRoleList };
 	};
+	XAUtils.showErrorMsg = function(respMsg){
+		var respArr = respMsg.split(/\([0-9]*\)/);
+		respArr.shift();
+		_.each(respArr, function(str){
+			var validationMsg = str.split(','), erroCodeMsg = '';
+			//get code from string 
+			if(!_.isUndefined(validationMsg[0]) && validationMsg[0].indexOf("error code") != -1){
+				var tmp = validationMsg[0].split('error code');
+				var code = tmp[ tmp.length - 1 ];
+				
+				erroCodeMsg = 'Error Code : '+ code.match(/\d/g).join('');
+				}
+			var reason = str.lastIndexOf("reason") != -1 ? (str.substring(str.lastIndexOf("reason")+7, str.indexOf("field[")-2 ))
+					: str;
+			var erroMsg = erroCodeMsg +"<br/>"+XAUtils.capitaliseFirstLetter(reason);
+			return XAUtils.notifyError('Error', erroMsg);
+		});
+	};
+	
 	return XAUtils;
 });

@@ -1839,3 +1839,8 @@ td.select-row-cell {
 #r_topNav .dropdown-menu {
 	margin:0;
 }
+.pause-play-close{
+	margin-left: -5px;
+    margin-top: -2px;
+    font-size: 11px;
+}
