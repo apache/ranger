@@ -47,21 +47,13 @@
           this.$note.text(this.options.message.text);
       } else
         this.$note.html(this.options.message);
-    
-    var style = this.options.type == 'error' ? 'color:#a94442' : 'color:#3c763d';  
-    
+
     if(this.options.closable) {
-      var link = $('<a class="close pull-right" style="'+style+';" href="#">&times;</a>');
+      var link = $('<a class="close pull-right" href="#">&times;</a>');
       $(link).on('click', $.proxy(onClose, this));
       this.$note.prepend(link);
     }
 
-    if(this.options.pausable) {
-    	var pauseLink = $('<a class="pause pull-right pause-play-close" style="'+style+';" href="#"><i class="icon-pause"></i></a><a class="play pull-right pause-play-close" href="#" style="'+style+';display:none;"><i class="icon-play"></i></a>');
-    	$(pauseLink).on('click', $.proxy(onPause, this));
-    	this.$note.prepend(pauseLink);
-    	
-    }
     return this;
   };
 
@@ -72,31 +64,10 @@
     return false;
   };
 
-  var onPause = function() {
-	  if(this.$note.find('.pause').is(':visible')){
-		  clearInterval(this.clearNotifyInterval)
-		  this.$note.find('.pause').hide()
-		  this.$note.find('.play').show()
-	  }else{
-		  setFadeOut(this)
-		  this.$note.find('.pause').show()
-		  this.$note.find('.play').hide()
-	  }
-	  return false;
-  };
-  var setFadeOut = function(self){
-	  var that = self;
-	  self.clearNotifyInterval = setTimeout(function() {
-		  that.$note.fadeOut('slow', $.proxy(that.onClose, that));    
-	  }, self.options.fadeOut.delay || 7000);
-  };
-	  
   Notification.prototype.show = function () {
-	var that = this;  
-    if(this.options.fadeOut.enabled){
-    	setFadeOut(this)
-    }
-//  this.$note.delay(this.options.fadeOut.delay || 3000).fadeOut('slow', $.proxy(onClose, this));
+    if(this.options.fadeOut.enabled)
+      this.$note.delay(this.options.fadeOut.delay || 3000).fadeOut('slow', $.proxy(onClose, this));
+
     this.$element.append(this.$note);
     this.$note.alert();
   };
@@ -117,11 +88,10 @@
     transition: 'fade',
     fadeOut: {
       enabled: true,
-      delay: 7000
+      delay: 3000
     },
     message: null,
     onClose: function () {},
-    onClosed: function () {},
-    pausable: false
+    onClosed: function () {}
   }
 })(window.jQuery);
