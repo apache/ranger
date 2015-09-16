@@ -164,12 +164,23 @@ define(function(require){
 				},
 				error: function (model, response, options) {
 					XAUtil.blockUI('unblock');
-					var msg = that.editService ? 'Error updating Service.': 'Error creating Service.';
-					if (response && response.responseJSON && response.responseJSON.msgDesc) {
-						XAUtil.showErrorMsg(response.responseJSON.msgDesc);
-					} else {
-						XAUtil.notifyError('Error', msg);
-					}
+					if ( response && response.responseJSON && response.responseJSON.msgDesc){
+						if(response.responseJSON.msgDesc == "serverMsg.fsDefaultNameValidationError"){
+							that.form.fields.fsDefaultName.setError(localization.tt(response.responseJSON.msgDesc));
+							XAUtil.scrollToField(that.form.fields.fsDefaultName.$el);
+						}else if(response.responseJSON.msgDesc == "Repository Name already exists"){
+							response.responseJSON.msgDesc = "serverMsg.repositoryNameAlreadyExistsError";
+							that.form.fields.name.setError(localization.tt(response.responseJSON.msgDesc));
+							XAUtil.scrollToField(that.form.fields.name.$el);
+						}else if(response.responseJSON.msgDesc == "XUser already exists"){
+							response.responseJSON.msgDesc = "serverMsg.userAlreadyExistsError";
+							that.form.fields.userName.setError(localization.tt(response.responseJSON.msgDesc));
+							XAUtil.scrollToField(that.form.fields.userName.$el);
+						}else
+							XAUtil.notifyError('Error', response.responseJSON.msgDesc);
+					}else
+						XAUtil.notifyError('Error', 'Error creating Service!');
+					console.log("error");
 				}
 			});
 		},

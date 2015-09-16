@@ -207,14 +207,10 @@ define(function(require){
 					App.appRouter.navigate("#!/service/"+that.rangerService.id+"/policies",{trigger: true});
 					console.log("success");
 				},
-				error : function(model, response, options) {
-					XAUtil.blockUI('unblock');
-					var msg = that.editPolicy ? 'Error updating policy.': 'Error creating policy.';
-					if (response && response.responseJSON && response.responseJSON.msgDesc) {
-						XAUtil.showErrorMsg(response.responseJSON.msgDesc);
-					} else {
-						XAUtil.notifyError('Error', msg);
-					}
+				error: function (model, response, options) {
+					    XAUtil.blockUI('unblock');
+						XAUtil.notifyError('Error', 'Error creating Policy!');
+					    console.log("error");
 				}
 			});
 		},
