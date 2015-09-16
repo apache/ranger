@@ -35,6 +35,7 @@
                 <outputDirectory>/lib</outputDirectory>
                 <includes>
                     <include>commons-configuration:commons-configuration</include>
+		    <include>com.google.code.gson:gson*</include>
            		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
 		    		<include>org.noggit:noggit:jar:${noggit.version}</include>
 		    		<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>

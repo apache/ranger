@@ -22,7 +22,9 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXModuleDef;
 
@@ -115,4 +117,40 @@ public class XXModuleDefDao extends BaseDao<XXModuleDef>{
 			return null;
 		}
 	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> findAccessibleModulesByGroupIdList(List<Long> grpIdList) {
+		if (CollectionUtils.isEmpty(grpIdList)) {
+			return new ArrayList<String>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXModuleDef.findAccessibleModulesByGroupId").setParameter("grpIdList", grpIdList)
+					.setParameter("isAllowed", RangerCommonEnums.ACCESS_RESULT_ALLOWED).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<String>();
+		}
+	}
+
+	/**
+	 * @param portalUserId
+	 * @param xUserId
+	 * @return This function will return all the modules accessible for particular user, considering all the groups as well in which that user belongs
+	 */
+	@SuppressWarnings("unchecked")
+	public List<String> findAccessibleModulesByUserId(Long portalUserId, Long xUserId) {
+		if (portalUserId == null || xUserId == null) {
+			return new ArrayList<String>();
+		}
+		try {
+
+			List<String> userPermList = getEntityManager().createNamedQuery("XXModuleDef.findAllAccessibleModulesByUserId").setParameter("portalUserId", portalUserId)
+					.setParameter("xUserId", xUserId).setParameter("isAllowed", RangerCommonEnums.ACCESS_RESULT_ALLOWED).getResultList();
+
+			return userPermList;
+
+		} catch (NoResultException e) {
+			return new ArrayList<String>();
+		}
+	}
+
 }

@@ -56,6 +56,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAgentService;
 import org.apache.ranger.service.XAssetService;
@@ -137,6 +138,7 @@ public class AssetREST {
 	@GET
 	@Path("/assets/{id}")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_ASSET + "\")")
 	public VXAsset getXAsset(@PathParam("id") Long id) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.getXAsset(" + id + ")");
@@ -156,6 +158,7 @@ public class AssetREST {
 	@POST
 	@Path("/assets")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_ASSET + "\")")
 	public VXAsset createXAsset(VXAsset vXAsset) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.createXAsset(" + vXAsset + ")");
@@ -177,6 +180,7 @@ public class AssetREST {
 	@PUT
 	@Path("/assets/{id}")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_ASSET + "\")")
 	public VXAsset updateXAsset(VXAsset vXAsset) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.updateXAsset(" + vXAsset + ")");
@@ -197,8 +201,8 @@ public class AssetREST {
 
 	@DELETE
 	@Path("/assets/{id}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@RangerAnnotationClassName(class_name = VXAsset.class)
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_X_ASSET + "\")")
 	public void deleteXAsset(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
@@ -215,6 +219,7 @@ public class AssetREST {
 	@POST
 	@Path("/assets/testConfig")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.TEST_CONFIG + "\")")
 	public VXResponse testConfig(VXAsset vXAsset) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.testConfig(" + vXAsset + ")");
@@ -234,6 +239,7 @@ public class AssetREST {
 	@GET
 	@Path("/assets")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ASSETS + "\")")
 	public VXAssetList searchXAssets(@Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.searchXAssets()");
@@ -269,6 +275,7 @@ public class AssetREST {
 	@GET
 	@Path("/assets/count")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_ASSETS + "\")")
 	public VXLong countXAssets(@Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.countXAssets()");
@@ -547,8 +554,10 @@ public class AssetREST {
 	@GET
 	@Path("/exportAudit")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_POLICY_EXPORT_AUDITS + "\")")
 	public VXPolicyExportAuditList searchXPolicyExportAudits(
 			@Context HttpServletRequest request) {
+
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xPolicyExportAudits.sortFields);
 		searchUtil.extractString(request, searchCriteria, "agentId", 
@@ -572,7 +581,9 @@ public class AssetREST {
 	@GET
 	@Path("/report")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_REPORT_LOGS + "\")")
 	public VXTrxLogList getReportLogs(@Context HttpServletRequest request){
+
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xTrxLogService.sortFields);
 		searchUtil.extractInt(request, searchCriteria, "objectClassType", "Class type for report.");
@@ -592,6 +603,7 @@ public class AssetREST {
 	@GET
 	@Path("/report/{transactionId}")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_TRANSACTION_REPORT + "\")")
 	public VXTrxLogList getTransactionReport(@Context HttpServletRequest request, 
 			@PathParam("transactionId") String transactionId){
 		return assetMgr.getTransactionReport(transactionId);
@@ -600,6 +612,7 @@ public class AssetREST {
 	@GET
 	@Path("/accessAudit")
 	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_ACCESS_LOGS + "\")")
 	public VXAccessAuditList getAccessLogs(@Context HttpServletRequest request){
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xAccessAuditService.sortFields);

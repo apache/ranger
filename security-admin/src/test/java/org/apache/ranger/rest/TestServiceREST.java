@@ -930,7 +930,7 @@ public class TestServiceREST {
 				svcStore.getPaginatedServicePolicies(rangerPolicy.getName(),
 						filter)).thenReturn(ret);
 
-		RangerPolicyList dbRangerPolicy = serviceREST.getServicePolicies(
+		RangerPolicyList dbRangerPolicy = serviceREST.getServicePoliciesByName(
 				rangerPolicy.getName(), request);
 		Assert.assertNotNull(dbRangerPolicy);
 	}

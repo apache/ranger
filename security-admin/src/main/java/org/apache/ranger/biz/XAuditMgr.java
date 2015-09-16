@@ -19,13 +19,22 @@
 
 package org.apache.ranger.biz;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXResponse;
+import org.apache.ranger.view.VXTrxLog;
+import org.apache.ranger.view.VXTrxLogList;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class XAuditMgr extends XAuditMgrBase {
 
 	@Autowired
@@ -34,9 +43,68 @@ public class XAuditMgr extends XAuditMgrBase {
 	@Autowired
 	RangerBizUtil rangerBizUtil;
 
+	public VXTrxLog getXTrxLog(Long id) {
+		checkAdminAccess();
+		return super.getXTrxLog(id);
+	}
+
+	public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
+		checkAdminAccess();
+		return super.createXTrxLog(vXTrxLog);
+	}
+
+	public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
+		checkAdminAccess();
+		return super.updateXTrxLog(vXTrxLog);
+	}
+
+	public void deleteXTrxLog(Long id, boolean force) {
+		checkAdminAccess();
+		super.deleteXTrxLog(id, force);
+	}
+
+	public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
+		checkAdminAccess();
+		return super.searchXTrxLogs(searchCriteria);
+	}
+
+	public VXLong getXTrxLogSearchCount(SearchCriteria searchCriteria) {
+		checkAdminAccess();
+		return super.getXTrxLogSearchCount(searchCriteria);
+	}
+
+	public VXAccessAudit createXAccessAudit(VXAccessAudit vXAccessAudit) {
+		checkAdminAccess();
+		return super.createXAccessAudit(vXAccessAudit);
+	}
+
+	public VXAccessAudit updateXAccessAudit(VXAccessAudit vXAccessAudit) {
+		checkAdminAccess();
+		return super.updateXAccessAudit(vXAccessAudit);
+	}
+
+	public void deleteXAccessAudit(Long id, boolean force) {
+		checkAdminAccess();
+		super.deleteXAccessAudit(id, force);
+	}
+
+	public void checkAdminAccess() {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session != null) {
+			if (!session.isUserAdmin()) {
+				throw restErrorUtil.create403RESTException("Operation" + " denied. LoggedInUser=" + (session != null ? session.getXXPortalUser().getId() : "Not Logged In")
+						+ " ,isn't permitted to perform the action.");
+			}
+		} else {
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setMsgDesc("Bad Credentials");
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
+	}
+
 	@Override
 	public VXAccessAudit getXAccessAudit(Long id) {
-		// TODO Auto-generated method stub
 		return super.getXAccessAudit(id);
 	}
 
@@ -52,8 +120,7 @@ public class XAuditMgr extends XAuditMgrBase {
 	@Override
 	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
 		if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
-			return solrAccessAuditsService
-					.getXAccessAuditSearchCount(searchCriteria);
+			return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
 		} else {
 			return super.getXAccessAuditSearchCount(searchCriteria);
 		}

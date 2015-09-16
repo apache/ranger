@@ -157,6 +157,8 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 		<!--   security:authentication-provider ref="rememberMeAuthenticationProvider"/ -->
 	</security:authentication-manager>
 
+	<security:global-method-security pre-post-annotations="enabled" />
+
 	<!-- UNIX_BEAN_SETTINGS_START -->
 	<!-- UNIX_BEAN_SETTINGS_END -->
 	<!-- AD_BEAN_SETTINGS_START -->

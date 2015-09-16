@@ -24,20 +24,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
+import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -58,6 +63,12 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 
 	@Autowired
 	RangerDaoManager rangerDaoManager;
+
+	@Autowired
+	RangerBizUtil rangerBizUtil;
+
+	@Autowired
+	XResourceService xResourceService;
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	static {
@@ -112,19 +123,48 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 	
 	@Override
 	public VXPermMapList searchXPermMaps(SearchCriteria searchCriteria) {
-		VXPermMapList vXPermMapList = super.searchXPermMaps(searchCriteria);
-		if(vXPermMapList != null && vXPermMapList.getResultSize() != 0){
-			for(VXPermMap vXPermMap : vXPermMapList.getVXPermMaps()){
-				if(vXPermMap.getPermFor() == AppConstants.XA_PERM_FOR_GROUP) {
-					String groupName = getGroupName(vXPermMap.getGroupId());
-					vXPermMap.setGroupName(groupName);
-				} else if(vXPermMap.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
-					String username = getUserName(vXPermMap.getUserId());
-					vXPermMap.setUserName(username);
+
+
+		VXPermMapList returnList;
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		// If user is system admin
+		if (currentUserSession.isUserAdmin()) {
+			returnList = super.searchXPermMaps(searchCriteria);
+		} else {
+			returnList = new VXPermMapList();
+			int startIndex = searchCriteria.getStartIndex();
+			int pageSize = searchCriteria.getMaxRows();
+			searchCriteria.setStartIndex(0);
+			searchCriteria.setMaxRows(Integer.MAX_VALUE);
+			List<XXPermMap> resultList = (List<XXPermMap>) searchResources(searchCriteria, searchFields, sortFields, returnList);
+
+			List<XXPermMap> adminPermResourceList = new ArrayList<XXPermMap>();
+			for (XXPermMap xXPermMap : resultList) {
+				XXResource xRes = daoManager.getXXResource().getById(xXPermMap.getResourceId());
+				VXResponse vXResponse = rangerBizUtil.hasPermission(xResourceService.populateViewBean(xRes), AppConstants.XA_PERM_TYPE_ADMIN);
+				if (vXResponse.getStatusCode() == VXResponse.STATUS_SUCCESS) {
+					adminPermResourceList.add(xXPermMap);
 				}
 			}
+
+			if (adminPermResourceList.size() > 0) {
+				populatePageList(adminPermResourceList, startIndex, pageSize, returnList);
+			}
 		}
-		return vXPermMapList;
+		return returnList;
+	}
+	
+	private void populatePageList(List<XXPermMap> permMapList, int startIndex, int pageSize, VXPermMapList vxPermMapList) {
+		List<VXPermMap> onePageList = new ArrayList<VXPermMap>();
+		for (int i = startIndex; i < pageSize + startIndex && i < permMapList.size(); i++) {
+			VXPermMap vXPermMap = populateViewBean(permMapList.get(i));
+			onePageList.add(vXPermMap);
+		}
+		vxPermMapList.setVXPermMaps(onePageList);
+		vxPermMapList.setStartIndex(startIndex);
+		vxPermMapList.setPageSize(pageSize);
+		vxPermMapList.setResultSize(onePageList.size());
+		vxPermMapList.setTotalCount(permMapList.size());
 	}
 	
 	public String getGroupName(Long groupId){

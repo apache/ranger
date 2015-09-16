@@ -172,6 +172,11 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroupUser.findGroupIdListByUserId">
+		<query>SELECT obj.parentGroupId FROM XXGroupUser obj WHERE obj.userId=:xUserId		   
+		</query>
+	</named-query>
+
 	<named-query name="XXTrxLog.findByTrxId">
 		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
 		</query>
@@ -523,6 +528,20 @@
 	<named-query name="XXModuleDef.findByModuleName">
 		<query>SELECT Obj FROM XXModuleDef obj
 			   WHERE obj.module=:moduleName
+		</query>
+	</named-query>
+
+	<named-query name="XXModuleDef.findAllAccessibleModulesByUserId">
+		<query>SELECT obj.module FROM XXModuleDef obj 
+		WHERE obj.id in (SELECT userPerm.moduleId FROM XXUserPermission userPerm WHERE userPerm.userId=:portalUserId and userPerm.isAllowed=:isAllowed)
+		OR obj.id in (SELECT grpPerm.moduleId FROM XXGroupPermission grpPerm WHERE 
+			grpPerm.groupId IN (SELECT grpUser.parentGroupId FROM XXGroupUser grpUser WHERE grpUser.userId=:xUserId) and grpPerm.isAllowed=:isAllowed)
+		</query>
+	</named-query>
+
+	<named-query name="XXModuleDef.findAccessibleModulesByGroupId">
+		<query>select obj.module from XXModuleDef obj, XXGroupPermission grpPerm where 
+		grpPerm.groupId IN :grpIdList and grpPerm.moduleId = obj.id and grpPerm.isAllowed = :isAllowed
 		</query>
 	</named-query>
 

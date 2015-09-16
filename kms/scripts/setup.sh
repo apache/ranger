@@ -326,7 +326,7 @@ setup_kms(){
         log "[I] Adding ranger kms provider as services in hadoop-common jar"
 	for f in lib/hadoop-common*.jar
 	do
-        	jar -uf ${f}  META-INF/services/org.apache.hadoop.crypto.key.KeyProviderFactory
+        	 ${JAVA_HOME}/bin/jar -uf ${f}  META-INF/services/org.apache.hadoop.crypto.key.KeyProviderFactory
 		chown ${unix_user}:${unix_group} ${f}
 	done
         cd ${oldP}
@@ -334,8 +334,8 @@ setup_kms(){
 
 update_properties() {
 	newPropertyValue=''
-	#echo "export JAVA_HOME=${JAVA_HOME}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
-	#chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
+	echo "export JAVA_HOME=${JAVA_HOME}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
+	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
 
 
 	to_file=$PWD/ews/webapp/WEB-INF/classes/conf/dbks-site.xml

@@ -170,7 +170,7 @@ public class RangerPolicyValidator extends RangerValidator {
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("policy name")
 							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(policyName, serviceName, policies.iterator().next().getId()))
+							.becauseOf(error.getMessage(policies.iterator().next().getId(), serviceName))
 							.errorCode(error.getErrorCode())
 							.build());
 						valid = false;
@@ -179,7 +179,7 @@ public class RangerPolicyValidator extends RangerValidator {
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("id/name")
 							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(policyName, serviceName, policies.iterator().next().getId()))
+							.becauseOf(error.getMessage(policies.iterator().next().getId(), serviceName))
 							.errorCode(error.getErrorCode())
 							.build());
 						valid = false;
@@ -311,7 +311,7 @@ public class RangerPolicyValidator extends RangerValidator {
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("resources")
 							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(matchedPolicy.getName(), matchedPolicy.getResources(), policy.getService()))
+							.becauseOf(error.getMessage(matchedPolicy.getName(), policy.getService()))
 							.errorCode(error.getErrorCode())
 							.build());
 					valid = false;
@@ -347,12 +347,21 @@ public class RangerPolicyValidator extends RangerValidator {
 			 */
 			Set<List<RangerResourceDef>> candidateHierarchies = filterHierarchies_hierarchyHasAllPolicyResources(policyResources, hierarchies, defHelper);
 			if (candidateHierarchies.isEmpty()) {
-				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_NO_COMPATIBLE_HIERARCHY;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(String.format("No compatible resource hierarchies found: resource[%s], service-def[%s], valid-resource-hierarchies[%s]",
+							policyResources.toString(), serviceDef.getName(), toStringHierarchies_all(hierarchies, defHelper)));
+				}
+				ValidationErrorCode error;
+				if (hierarchies.size() == 1) { // we can give a simpler message for single hierarchy service-defs which is the majority of cases
+					error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_NO_COMPATIBLE_HIERARCHY_SINGLE;
+				} else {
+					error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_NO_COMPATIBLE_HIERARCHY;
+				}
 				failures.add(new ValidationFailureDetailsBuilder()
 					.field("policy resources")
 					.subField("incompatible")
 					.isSemanticallyIncorrect()
-					.becauseOf(error.getMessage(policyResources.toString(), serviceDef.getName(), toStringHierarchies_all(hierarchies, defHelper)))
+					.becauseOf(error.getMessage(serviceDef.getName(), toStringHierarchies_all(hierarchies, defHelper)))
 					.errorCode(error.getErrorCode())
 					.build());
 				valid = false;
@@ -367,12 +376,17 @@ public class RangerPolicyValidator extends RangerValidator {
 				 */
 				Set<List<RangerResourceDef>> validHierarchies = filterHierarchies_mandatoryResourcesSpecifiedInPolicy(policyResources, candidateHierarchies, defHelper);
 				if (validHierarchies.isEmpty()) {
-					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_MISSING_MANDATORY;
+					ValidationErrorCode error;
+					if (candidateHierarchies.size() == 1) { // we can provide better message if there is a single candidate hierarchy
+						error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_MISSING_MANDATORY_SINGLE;
+					} else {
+						error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_MISSING_MANDATORY;
+					}
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("policy resources")
 						.subField("missing mandatory")
 						.isSemanticallyIncorrect()
-						.becauseOf(error.getMessage(toStringHierarchies_mandatory(candidateHierarchies, defHelper)))
+						.becauseOf(error.getMessage(serviceDef.getName(), toStringHierarchies_mandatory(candidateHierarchies, defHelper)))
 						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
@@ -509,7 +523,7 @@ public class RangerPolicyValidator extends RangerValidator {
 								.field("isExcludes")
 								.subField(resourceName)
 								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(policyResourceIsExcludes, resourceName))
+								.becauseOf(error.getMessage(resourceName))
 								.errorCode(error.getErrorCode())
 								.build());
 							valid = false;
@@ -520,7 +534,7 @@ public class RangerPolicyValidator extends RangerValidator {
 								.field("isExcludes")
 								.subField("isAdmin")
 								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(policyResourceIsExcludes, resourceName))
+								.becauseOf(error.getMessage())
 								.errorCode(error.getErrorCode())
 								.build());
 							valid = false;
@@ -533,7 +547,7 @@ public class RangerPolicyValidator extends RangerValidator {
 								.field("isRecursive")
 								.subField(resourceName)
 								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(policyIsRecursive, resourceName))
+								.becauseOf(error.getMessage(resourceName))
 								.errorCode(error.getErrorCode())
 								.build());
 							valid = false;
@@ -565,12 +579,15 @@ public class RangerPolicyValidator extends RangerValidator {
 					if (StringUtils.isBlank(aValue)) {
 						LOG.debug("resource value was blank");
 					} else if (!aValue.matches(regEx)) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(String.format("Resource failed regex check: value[%s], resource-name[%s], regEx[%s], service-def-name[%s]", aValue, name, regEx, serviceDef.getName()));
+						}
 						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_VALUE_REGEX;
 						failures.add(new ValidationFailureDetailsBuilder()
 							.field("resource-values")
 							.subField(name)
 							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(aValue, name, regEx, serviceDef.getName()))
+							.becauseOf(error.getMessage(aValue, name))
 							.errorCode(error.getErrorCode())
 							.build());
 						valid = false;

@@ -72,9 +72,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		_sslConfigFileName = _utils.getSsslConfigFileName(configPropertyPrefix);
 		_isSSL = _utils.isSsl(_baseUrl);
 		
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("Base URL[%s], SSL Congig filename[%s]", _baseUrl, _sslConfigFileName));
-		}
+		LOG.info("Init params: " + String.format("Base URL[%s], SSL Congig filename[%s], ServiceName=[%s]", _baseUrl, _sslConfigFileName, _serviceName));
 		
 		_client = getClient();
 
@@ -88,48 +86,52 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ")");
 		}
-
 		ServicePolicies servicePolicies = null;
 		String url = _utils.getUrlForPolicyUpdate(_baseUrl, _serviceName);
-		Response response = _client.target(url)
+		try {
+			Response response = _client.target(url)
 				.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
 				.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
 				.request(MediaType.APPLICATION_JSON_TYPE)
 				.get();
-		int httpResponseCode = response == null ? -1 : response.getStatus();
-		String body = null;
+			int httpResponseCode = response == null ? -1 : response.getStatus();
+			String body = null;
 
-		switch (httpResponseCode) {
-		case 200:
-			body = response.readEntity(String.class);
+			switch (httpResponseCode) {
+			case 200:
+				body = response.readEntity(String.class);
 			
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Response from 200 server: " + body);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Response from 200 server: " + body);
+				}
+			
+				Gson gson = getGson();
+				servicePolicies = gson.fromJson(body, ServicePolicies.class);
+			
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Deserialized response to: " + servicePolicies);
+				}
+				break;
+			case 304:
+				LOG.debug("Got response: 304. Ok. Returning null");
+				break;
+			case -1:
+				LOG.warn("Unexpected: Null response from policy server while trying to get policies! Returning null!");
+				break;
+			default:
+				body = response.readEntity(String.class);
+				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, url));
+				break;
 			}
-			
-			Gson gson = getGson();
-			servicePolicies = gson.fromJson(body, ServicePolicies.class);
-			
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Deserialized response to: " + servicePolicies);
-			}
-			break;
-		case 304:
-			LOG.debug("Got response: 304. Ok. Returning null");
-			break;
-		case -1:
-			LOG.warn("Unexpected: Null response from policy server while trying to get policies! Returning null!");
-			break;
-		default:
-			body = response.readEntity(String.class);
-			LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, url));
-			break;
-		}
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + "): " + servicePolicies);
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + "): " + servicePolicies);
+			}
+			return servicePolicies;
+		} catch (Exception ex) {
+			LOG.error("Failed getting policies from server. url=" + url + ", pluginId=" + _pluginId + ", lastKnownVersion=" + lastKnownVersion );
+			throw ex;
 		}
-		return servicePolicies;
 	}
 
 	@Override
