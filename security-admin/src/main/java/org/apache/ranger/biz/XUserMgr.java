@@ -42,6 +42,7 @@ import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXUserPermission;
 import org.apache.log4j.Logger;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConstants;
@@ -53,10 +54,12 @@ import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupGroup;
@@ -64,6 +67,7 @@ import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXUser;
@@ -1034,6 +1038,108 @@ public class XUserMgr extends XUserMgrBase {
 			vXResponse.setMsgDesc("Bad Credentials");
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}
+	}
+
+	public VXPermMapList searchXPermMaps(SearchCriteria searchCriteria) {
+		VXPermMapList vXPermMapList = super.searchXPermMaps(searchCriteria);
+		return applyDelegatedAdminAccess(vXPermMapList, searchCriteria);
+	}
+
+	private VXPermMapList applyDelegatedAdminAccess(VXPermMapList vXPermMapList, SearchCriteria searchCriteria) {
+
+		VXPermMapList returnList;
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		// If user is system admin
+		if (currentUserSession != null && currentUserSession.isUserAdmin()) {
+			returnList = super.searchXPermMaps(searchCriteria);
+		} else {
+			returnList = new VXPermMapList();
+			int startIndex = searchCriteria.getStartIndex();
+			int pageSize = searchCriteria.getMaxRows();
+			searchCriteria.setStartIndex(0);
+			searchCriteria.setMaxRows(Integer.MAX_VALUE);
+			List<VXPermMap> resultList = xPermMapService.searchXPermMaps(searchCriteria).getVXPermMaps();
+
+			List<VXPermMap> adminPermResourceList = new ArrayList<VXPermMap>();
+			for (VXPermMap xXPermMap : resultList) {
+				XXResource xRes = daoManager.getXXResource().getById(xXPermMap.getResourceId());
+				VXResponse vXResponse = msBizUtil.hasPermission(xResourceService.populateViewBean(xRes),
+						AppConstants.XA_PERM_TYPE_ADMIN);
+				if (vXResponse.getStatusCode() == VXResponse.STATUS_SUCCESS) {
+					adminPermResourceList.add(xXPermMap);
+				}
+			}
+
+			if (adminPermResourceList.size() > 0) {
+				populatePageList(adminPermResourceList, startIndex, pageSize, returnList);
+			}
+		}
+		return returnList;
+	}
+
+	private void populatePageList(List<VXPermMap> permMapList, int startIndex, int pageSize, VXPermMapList vxPermMapList) {
+		List<VXPermMap> onePageList = new ArrayList<VXPermMap>();
+		for (int i = startIndex; i < pageSize + startIndex && i < permMapList.size(); i++) {
+			VXPermMap vXPermMap = permMapList.get(i);
+			onePageList.add(vXPermMap);
+		}
+		vxPermMapList.setVXPermMaps(onePageList);
+		vxPermMapList.setStartIndex(startIndex);
+		vxPermMapList.setPageSize(pageSize);
+		vxPermMapList.setResultSize(onePageList.size());
+		vxPermMapList.setTotalCount(permMapList.size());
+	}
+
+	public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
+		VXAuditMapList vXAuditMapList = xAuditMapService.searchXAuditMaps(searchCriteria);
+		return applyDelegatedAdminAccess(vXAuditMapList, searchCriteria);
+	}
+
+	private VXAuditMapList applyDelegatedAdminAccess(VXAuditMapList vXAuditMapList, SearchCriteria searchCriteria) {
+
+		VXAuditMapList returnList;
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		// If user is system admin
+		if (currentUserSession != null && currentUserSession.isUserAdmin()) {
+			returnList = super.searchXAuditMaps(searchCriteria);
+		} else {
+			returnList = new VXAuditMapList();
+			int startIndex = searchCriteria.getStartIndex();
+			int pageSize = searchCriteria.getMaxRows();
+			searchCriteria.setStartIndex(0);
+			searchCriteria.setMaxRows(Integer.MAX_VALUE);
+			List<VXAuditMap> resultList = xAuditMapService.searchXAuditMaps(searchCriteria).getVXAuditMaps();
+
+			List<VXAuditMap> adminAuditResourceList = new ArrayList<VXAuditMap>();
+			for (VXAuditMap xXAuditMap : resultList) {
+				XXResource xRes = daoManager.getXXResource().getById(xXAuditMap.getResourceId());
+				VXResponse vXResponse = msBizUtil.hasPermission(xResourceService.populateViewBean(xRes),
+						AppConstants.XA_PERM_TYPE_ADMIN);
+				if (vXResponse.getStatusCode() == VXResponse.STATUS_SUCCESS) {
+					adminAuditResourceList.add(xXAuditMap);
+				}
+			}
+
+			if (adminAuditResourceList.size() > 0) {
+				populatePageList(adminAuditResourceList, startIndex, pageSize, returnList);
+			}
+		}
+
+		return returnList;
+	}
+
+	private void populatePageList(List<VXAuditMap> auditMapList, int startIndex, int pageSize,
+			VXAuditMapList vxAuditMapList) {
+		List<VXAuditMap> onePageList = new ArrayList<VXAuditMap>();
+		for (int i = startIndex; i < pageSize + startIndex && i < auditMapList.size(); i++) {
+			VXAuditMap vXAuditMap = auditMapList.get(i);
+			onePageList.add(vXAuditMap);
+		}
+		vxAuditMapList.setVXAuditMaps(onePageList);
+		vxAuditMapList.setStartIndex(startIndex);
+		vxAuditMapList.setPageSize(pageSize);
+		vxAuditMapList.setResultSize(onePageList.size());
+		vxAuditMapList.setTotalCount(auditMapList.size());
 	}
 
 }
