@@ -202,48 +202,7 @@ public class XAuditMapService extends
 
 	@Override
 	public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
-
-		VXAuditMapList returnList;
-		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-		// If user is system admin
-		if (currentUserSession.isUserAdmin()) {
-			returnList = super.searchXAuditMaps(searchCriteria);
-		} else {
-			returnList = new VXAuditMapList();
-			int startIndex = searchCriteria.getStartIndex();
-			int pageSize = searchCriteria.getMaxRows();
-			searchCriteria.setStartIndex(0);
-			searchCriteria.setMaxRows(Integer.MAX_VALUE);
-			List<XXAuditMap> resultList = (List<XXAuditMap>) searchResources(searchCriteria, searchFields, sortFields, returnList);
-
-			List<XXAuditMap> adminAuditResourceList = new ArrayList<XXAuditMap>();
-			for (XXAuditMap xXAuditMap : resultList) {
-				XXResource xRes = daoManager.getXXResource().getById(xXAuditMap.getResourceId());
-				VXResponse vXResponse = rangerBizUtil.hasPermission(xResourceService.populateViewBean(xRes), AppConstants.XA_PERM_TYPE_ADMIN);
-				if (vXResponse.getStatusCode() == VXResponse.STATUS_SUCCESS) {
-					adminAuditResourceList.add(xXAuditMap);
-				}
-			}
-
-			if (adminAuditResourceList.size() > 0) {
-				populatePageList(adminAuditResourceList, startIndex, pageSize, returnList);
-			}
-		}
-
-		return returnList;
-	}
-
-	private void populatePageList(List<XXAuditMap> auditMapList, int startIndex, int pageSize, VXAuditMapList vxAuditMapList) {
-		List<VXAuditMap> onePageList = new ArrayList<VXAuditMap>();
-		for (int i = startIndex; i < pageSize + startIndex && i < auditMapList.size(); i++) {
-			VXAuditMap vXAuditMap = populateViewBean(auditMapList.get(i));
-			onePageList.add(vXAuditMap);
-		}
-		vxAuditMapList.setVXAuditMaps(onePageList);
-		vxAuditMapList.setStartIndex(startIndex);
-		vxAuditMapList.setPageSize(pageSize);
-		vxAuditMapList.setResultSize(onePageList.size());
-		vxAuditMapList.setTotalCount(auditMapList.size());
+		return super.searchXAuditMaps(searchCriteria);
 	}
 
 }
