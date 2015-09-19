@@ -241,7 +241,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 			boolean fileSpoolDrain = false;
 			try {
 				if (fileSpoolerEnabled && fileSpooler.isPending()) {
-					int percentUsed = (getMaxQueueSize() - queue.size()) * 100
+					int percentUsed = queue.size() * 100
 							/ getMaxQueueSize();
 					long lastAttemptDelta = fileSpooler
 							.getLastAttemptTimeDelta();
