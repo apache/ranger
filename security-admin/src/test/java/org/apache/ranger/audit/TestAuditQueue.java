@@ -409,7 +409,7 @@ public class TestAuditQueue {
 				+ MiscUtil.generateUniqueId();
 		int batchSize = messageToSend / 3;
 		int queueSize = messageToSend * 2;
-		int intervalMS = 3000; // Deliberately big interval
+		int intervalMS = 5000; // Deliberately big interval
 		Properties props = new Properties();
 		props.put(
 				basePropName + "." + BaseAuditHandler.PROP_NAME,
