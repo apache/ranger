@@ -361,6 +361,13 @@
 		<directory>security-admin/db</directory>
 		<fileMode>544</fileMode>
 	</fileSet>
+
+	<fileSet>
+		<outputDirectory>/contrib</outputDirectory>
+		<directory>security-admin/contrib</directory>
+		<fileMode>544</fileMode>
+	</fileSet>
+
 	<fileSet>
 		<outputDirectory>/</outputDirectory>
 		<directory>security-admin/scripts</directory>
