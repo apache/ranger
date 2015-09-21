@@ -23,12 +23,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -99,7 +96,7 @@ public class HDFSAuditDestination extends AuditDestination {
 		logger.info("logFolder=" + logFolder + ", destName=" + getName());
 		logger.info("logFileNameFormat=" + logFileNameFormat + ", destName="
 				+ getName());
-
+		logger.info("config=" + configProps.toString());
 		initDone = true;
 	}
 
@@ -127,7 +124,15 @@ public class HDFSAuditDestination extends AuditDestination {
 			for (String event : events) {
 				out.println(event);
 			}
-			out.flush();
+			// flush and check the stream for errors
+			if (out.checkError()) {
+				// In theory, this count may NOT be accurate as part of the messages may have been successfully written.
+				// However, in practice, since client does buffering, either all of none would succeed.
+				addDeferredCount(events.size());
+				out.close();
+				logWriter = null;
+				return false;
+			}
 		} catch (Throwable t) {
 			addDeferredCount(events.size());
 			logError("Error writing to log file.", t);
@@ -207,7 +212,7 @@ public class HDFSAuditDestination extends AuditDestination {
 					currentTime.getTime());
 			String parentFolder = MiscUtil.replaceTokens(logFolder,
 					currentTime.getTime());
-			Configuration conf = new Configuration();
+			Configuration conf = createConfiguration();
 
 			String fullPath = parentFolder
 					+ org.apache.hadoop.fs.Path.SEPARATOR + fileName;
@@ -241,6 +246,22 @@ public class HDFSAuditDestination extends AuditDestination {
 			currentFileName = fullPath;
 		}
 		return logWriter;
+	}
+
+	Configuration createConfiguration() {
+		Configuration conf = new Configuration();
+		for (Map.Entry<String, String> entry : configProps.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+			// for ease of install config file may contain properties with empty value, skip those
+			if (StringUtils.isNotEmpty(value)) {
+				conf.set(key, value);
+			}
+			logger.info("Adding property to HDFS config: " + key + " => " + value);
+		}
+
+		logger.info("Returning HDFS Filesystem Config: " + conf.toString());
+		return conf;
 	}
 
 	private void createParents(Path pathLogfile, FileSystem fileSystem)

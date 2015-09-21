@@ -25,17 +25,15 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 
 import com.google.gson.GsonBuilder;
 
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
 
 public abstract class BaseAuditHandler implements AuditHandler {
 	private static final Log LOG = LogFactory.getLog(BaseAuditHandler.class);
 
 	static final String AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP = "xasecure.audit.log.failure.report.min.interval.ms";
 	protected static final String AUDIT_DB_CREDENTIAL_PROVIDER_FILE = "xasecure.audit.credential.provider.file";
+	public static final String PROP_CONFIG = "config";
 
 	private int mLogFailureReportMinIntervalInMs = 60 * 1000;
 
@@ -75,6 +73,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	long statusLogIntervalMS = 1 * 60 * 1000;
 
 	protected Properties props = null;
+	protected Map<String, String> configProps = new HashMap<String, String>();
 
 	@Override
 	public void init(Properties props) {
@@ -116,6 +115,18 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		mLogFailureReportMinIntervalInMs = MiscUtil.getIntProperty(props,
 				AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP, 60 * 1000);
 
+		String configPropsNamePrefix = propPrefix + "." + PROP_CONFIG + ".";
+		for (Object propNameObj : props.keySet()) {
+			String propName = propNameObj.toString();
+
+			if (!propName.startsWith(configPropsNamePrefix)) {
+				continue;
+			}
+			String configName = propName.substring(configPropsNamePrefix.length());
+			String configValue = props.getProperty(propName);
+			configProps.put(configName, configValue);
+			LOG.info("Found Config property: " + configName + " => " + configValue);
+		}
 	}
 
 	/*
