@@ -32,7 +32,7 @@ public abstract class AuditQueue extends BaseAuditHandler {
 	private static final Log LOG = LogFactory.getLog(AuditQueue.class);
 
 	public static final int AUDIT_MAX_QUEUE_SIZE_DEFAULT = 1024 * 1024;
-	public static final int AUDIT_BATCH_INTERVAL_DEFAULT_MS = 1000;
+	public static final int AUDIT_BATCH_INTERVAL_DEFAULT_MS = 3000;
 	public static final int AUDIT_BATCH_SIZE_DEFAULT = 1000;
 
 	// This is the max time the consumer thread will wait before exiting the

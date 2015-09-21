@@ -306,8 +306,8 @@ public class AuditFileSpool implements Runnable {
 				+ consumerProvider.getName());
 
 		// Let's start the thread to read
-		destinationThread = new Thread(this, queueProvider.getName()
-				+ "_destWriter");
+		destinationThread = new Thread(this, queueProvider.getName() + "_"
+				+ consumerProvider.getName() + "_destWriter");
 		destinationThread.setDaemon(true);
 		destinationThread.start();
 	}
@@ -776,6 +776,14 @@ public class AuditFileSpool implements Runnable {
 		// boolean isResumed = false;
 		while (true) {
 			try {
+				if (isDestDown) {
+					logger.info("Destination is down. sleeping for "
+							+ retryDestinationMS
+							+ " milli seconds. indexQueue=" + indexQueue.size()
+							+ ", queueName=" + queueProvider.getName()
+							+ ", consumer=" + consumerProvider.getName());
+					Thread.sleep(retryDestinationMS);
+				}
 
 				// Let's pause between each iteration
 				if (currentConsumerIndexRecord == null) {
