@@ -24,7 +24,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -55,6 +57,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private long               mNextFlushTime      = 0;
 	private long               mLastOpenFailedTime = 0;
 	private boolean            mIsStopInProgress   = false;
+	private Map<String, String> configProps = null;
 
 	public HdfsLogDestination(DebugTracer tracer) {
 		mLogger = tracer;
@@ -272,7 +275,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 			// TODO: mechanism to XA-HDFS plugin to disable auditing of access checks to the current HDFS file
 
-			conf        = new Configuration();
+			conf        = createConfiguration();
 			pathLogfile = new Path(mHdfsFilename);
 			fileSystem  = FileSystem.get(uri, conf);
 
@@ -490,4 +493,25 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		return sb.toString();
 	}
 
+	public void setConfigProps(Map<String,String> configProps) {
+		this.configProps = configProps;
+	}
+
+	Configuration createConfiguration() {
+		Configuration conf = new Configuration();
+		if (configProps != null) {
+			for (Map.Entry<String, String> entry : configProps.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				// for ease of install config file may contain properties with empty value, skip those
+				if (StringUtils.isNotEmpty(value)) {
+					conf.set(key, value);
+				}
+				mLogger.info("Adding property to HDFS config: " + key + " => " + value);
+			}
+		}
+
+		mLogger.info("Returning HDFS Filesystem Config: " + conf.toString());
+		return conf;
+	}
 }

@@ -60,6 +60,8 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		int    localFileBufferRolloverIntervalSeconds = MiscUtil.parseInteger(hdfsProps.get("local.buffer.rollover.interval.seconds"), 10 * 60);
 		String localFileBufferArchiveDirectory        = hdfsProps.get("local.archive.directory");
 		int    localFileBufferArchiveFileCount        = MiscUtil.parseInteger(hdfsProps.get("local.archive.max.file.count"), 10);
+		// Added for Azure.  Note that exact name of these properties is not known as it contains the variable account name in it.
+		Map<String, String> configProps = MiscUtil.getPropertiesWithPrefix(props, "xasecure.audit.destination.hdfs.config.");
 
 		DebugTracer tracer = new Log4jTracer(LOG);
 
@@ -71,6 +73,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		mHdfsDestination.setEncoding(encoding);
 		mHdfsDestination.setRolloverIntervalSeconds(hdfsDestinationRolloverIntervalSeconds);
 		mHdfsDestination.setOpenRetryIntervalSeconds(hdfsDestinationOpenRetryIntervalSeconds);
+		mHdfsDestination.setConfigProps(configProps);
 
 		LocalFileLogBuffer<AuditEventBase> mLocalFileBuffer = new LocalFileLogBuffer<AuditEventBase>(tracer);
 
