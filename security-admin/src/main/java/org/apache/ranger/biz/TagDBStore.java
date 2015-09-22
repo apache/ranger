@@ -922,7 +922,6 @@ public class TagDBStore extends AbstractTagStore {
 			for (RangerTagDef.RangerTagAttributeDef attrDef : tagAttrDefList) {
 				XXTagAttributeDef xAttrDef = new XXTagAttributeDef();
 
-				xAttrDef.setGuid(guidUtil.genGUID());
 				xAttrDef.setTagDefId(tagDefId);
 				xAttrDef.setName(attrDef.getName());
 				xAttrDef.setType(attrDef.getType());
@@ -974,7 +973,6 @@ public class TagDBStore extends AbstractTagStore {
 				xTagAttr.setTagId(tagId);
 				xTagAttr.setName(attr.getKey());
 				xTagAttr.setValue(attr.getValue());
-				xTagAttr.setGuid(guidUtil.genGUID());
 				xTagAttr = (XXTagAttribute) rangerAuditFields.populateAuditFieldsForCreate(xTagAttr);
 
 				xTagAttr = daoManager.getXXTagAttribute().create(xTagAttr);
@@ -1043,7 +1041,6 @@ public class TagDBStore extends AbstractTagStore {
 			resourceElement.setIsRecursive(policyRes.getIsRecursive());
 			resourceElement.setResDefId(xResDef.getId());
 			resourceElement.setResourceId(resourceId);
-			resourceElement.setGuid(guidUtil.genGUID());
 
 			resourceElement = (XXServiceResourceElement) rangerAuditFields.populateAuditFieldsForCreate(resourceElement);
 
@@ -1055,7 +1052,6 @@ public class TagDBStore extends AbstractTagStore {
 				resourceElementValue.setResElementId(resourceElement.getId());
 				resourceElementValue.setValue(resVal);
 				resourceElementValue.setSortOrder(sortOrder);
-				resourceElementValue.setGuid(guidUtil.genGUID());
 				resourceElementValue = (XXServiceResourceElementValue) rangerAuditFields.populateAuditFieldsForCreate(resourceElementValue);
 
 				resourceElementValue = daoManager.getXXServiceResourceElementValue().create(resourceElementValue);

@@ -17,11 +17,10 @@
  * under the License.
  */
 
- package org.apache.ranger.common;
+package org.apache.ranger.common;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.security.SecureRandom;
+import java.util.UUID;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -32,15 +31,11 @@ public class GUIDUtil implements Serializable {
 	
 	private static final long serialVersionUID = -7284237762948427019L;
 
-	static SecureRandom secureRandom = new SecureRandom(ByteBuffer.allocate(8).putLong(System.nanoTime()).array());
-	static int counter = 0;
-
 	public String genGUID() {
-		return System.currentTimeMillis() + "_" + secureRandom.nextInt(1000)
-				+ "_" + counter++;
+		return UUID.randomUUID().toString();
 	}
 
 	public long genLong() {
-		return secureRandom.nextLong();
+		return UUID.randomUUID().getMostSignificantBits();
 	}
 }

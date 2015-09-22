@@ -13,311 +13,182 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- Temporary table structure for view `vx_trx_log`
---
-
+DROP TABLE IF EXISTS `x_service_resource_element_val` ;
+DROP TABLE IF EXISTS `x_tag_resource_map` ;
+DROP TABLE IF EXISTS `x_tag_attr` ;
+DROP TABLE IF EXISTS `x_tag_attr_def` ;
+DROP TABLE IF EXISTS `x_service_resource_element` ;
+DROP TABLE IF EXISTS `x_service_resource` ;
+DROP TABLE IF EXISTS `x_tag` ;
+DROP TABLE IF EXISTS `x_tag_def` ;
 -- -----------------------------------------------------
 -- Table `x_tag_def`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `x_tag_resource_map` ;
-DROP TABLE IF EXISTS `x_service_resource_element_value` ;
-DROP TABLE IF EXISTS `x_service_resource_element` ;
-DROP TABLE IF EXISTS `x_service_resource` ;
-DROP TABLE IF EXISTS `x_tag_attr` ;
-DROP TABLE IF EXISTS `x_tag` ;
-DROP TABLE IF EXISTS `x_tag_attr_def` ;
-DROP TABLE IF EXISTS `x_tag_def` ;
-
 CREATE TABLE IF NOT EXISTS `x_tag_def` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `guid` VARCHAR(512) NOT NULL,
-  `create_time` DATETIME NULL,
-  `update_time` DATETIME NULL,
-  `added_by_id` BIGINT(20) NULL,
-  `upd_by_id` BIGINT(20) NULL,
-  `version` BIGINT(20) NULL,
-  `name` VARCHAR(512) NOT NULL,
-  `source` VARCHAR(128) NULL,
-  `is_enabled` TINYINT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `guid_UNIQUE` (`guid` ASC),
-  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
-  INDEX `fk_X_TAG_DEF_NAME` (`name` ASC),
-  INDEX `fk_X_TAG_DEF_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_TAG_DEF_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_TAG_DEF_ADDED_BY_ID`
-    FOREIGN KEY (`added_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_DEF_UPD_BY_ID`
-    FOREIGN KEY (`upd_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-;
-
-
+`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`guid` VARCHAR(64) NOT NULL,
+`create_time` DATETIME DEFAULT NULL,
+`update_time` DATETIME DEFAULT NULL,
+`added_by_id` BIGINT(20) DEFAULT NULL,
+`upd_by_id` BIGINT(20) DEFAULT NULL,
+`version` BIGINT(20) DEFAULT NULL,
+`name` VARCHAR(255) NOT NULL,
+`source` VARCHAR(128) DEFAULT NULL,
+`is_enabled` TINYINT(1) NOT NULL DEFAULT '0',
+PRIMARY KEY (`id`),
+UNIQUE KEY `x_tag_def_UK_guid` (`guid`),
+UNIQUE KEY `x_tag_def_UK_name` (`name`),
+KEY `x_tag_def_IDX_added_by_id` (`added_by_id`),
+KEY `x_tag_def_IDX_upd_by_id` (`upd_by_id`),
+CONSTRAINT `x_tag_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_tag_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
 -- -----------------------------------------------------
 -- Table `x_tag`
 -- -----------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `x_tag` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `guid` VARCHAR(512) NOT NULL,
-  `create_time` DATETIME NULL,
-  `update_time` DATETIME NULL,
-  `added_by_id` BIGINT(20) NULL,
-  `upd_by_id` BIGINT(20) NULL,
-  `type` BIGINT(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_X_TAG_TYPE` (`type` ASC),
-  INDEX `fk_X_TAG_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_TAG_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_TAG_TYPE`
-    FOREIGN KEY (`type`)
-    REFERENCES `x_tag_def` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_X_TAG_ADDED_BY_ID`
-    FOREIGN KEY (`added_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_UPD_BY_ID`
-    FOREIGN KEY (`upd_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-;
-
-
-
+`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`guid` VARCHAR(64) NOT NULL,
+`create_time` DATETIME DEFAULT NULL,
+`update_time` DATETIME DEFAULT NULL,
+`added_by_id` BIGINT(20) DEFAULT NULL,
+`upd_by_id` BIGINT(20) DEFAULT NULL,
+`type` BIGINT(20) NOT NULL,
+PRIMARY KEY (`id`),
+UNIQUE KEY `x_tag_UK_guid` (`guid`),
+KEY `x_tag_IDX_type` (`type`),
+KEY `x_tag_IDX_added_by_id` (`added_by_id`),
+KEY `x_tag_IDX_upd_by_id` (`upd_by_id`),
+CONSTRAINT `x_tag_FK_type` FOREIGN KEY (`type`) REFERENCES `x_tag_def` (`id`),
+CONSTRAINT `x_tag_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_tag_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
 -- -----------------------------------------------------
 -- Table `x_service_resource`
 -- -----------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `x_service_resource` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `guid` VARCHAR(512) NOT NULL,
-  `create_time` DATETIME NULL,
-  `update_time` DATETIME NULL,
-  `added_by_id` BIGINT(20) NULL,
-  `upd_by_id` BIGINT(20) NULL,
-  `version` BIGINT(20) NULL,
-  `service_id` BIGINT(20) NOT NULL,
-  `resource_signature` varchar(128) DEFAULT NULL,
-  `is_enabled` TINYINT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  INDEX `fk_X_SERVICE_RESOURCE_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_SERVICE_RESOURCE_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_SERVICE_RESOURCE_SERVICE_ID`
-    FOREIGN KEY (`service_id`)
-    REFERENCES `x_service` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_SERVICE_RESOURCE_ADDED_BY_ID`
-    FOREIGN KEY (`added_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_SERVICE_RESOURCE_UPD_BY_ID`
-    FOREIGN KEY (`upd_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-;
-
-
+`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`guid` VARCHAR(64) NOT NULL,
+`create_time` DATETIME DEFAULT NULL,
+`update_time` DATETIME DEFAULT NULL,
+`added_by_id` BIGINT(20) DEFAULT NULL,
+`upd_by_id` BIGINT(20) DEFAULT NULL,
+`version` BIGINT(20) DEFAULT NULL,
+`service_id` BIGINT(20) NOT NULL,
+`resource_signature` varchar(128) DEFAULT NULL,
+`is_enabled` TINYINT NOT NULL DEFAULT '1',
+PRIMARY KEY (`id`),
+UNIQUE KEY `x_service_resource_UK_guid` (`guid`),
+KEY `x_service_res_IDX_added_by_id` (`added_by_id`),
+KEY `x_service_res_IDX_upd_by_id` (`upd_by_id`),
+CONSTRAINT `x_service_res_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`),
+CONSTRAINT `x_service_res_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_service_res_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
 -- -----------------------------------------------------
 -- Table `x_service_resource_element`
 -- -----------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `x_service_resource_element` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `guid` VARCHAR(512) NOT NULL,
-  `create_time` DATETIME NULL,
-  `update_time` DATETIME NULL,
-  `added_by_id` BIGINT(20) NULL,
-  `upd_by_id` BIGINT(20) NULL,
-  `res_id` BIGINT(20) NOT NULL,
-  `res_def_id` BIGINT(20) NOT NULL,
-  `is_excludes` TINYINT(1) NULL DEFAULT false,
-  `is_recursive` TINYINT(1) NULL DEFAULT false,
-  PRIMARY KEY (`id`),
-  INDEX `fk_X_SERVICE_RESOURCE_ELEMENT_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_SERVICE_RESOURCE_ELEMENT_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_SERVICE_RESOURCE_ELEMENT_res_def_id` 
-    FOREIGN KEY (`res_def_id`) 
-    REFERENCES `x_resource_def` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_SERVICE_RESOURCE_ELEMENT_res_id` 
-    FOREIGN KEY (`res_id`) 
-    REFERENCES `x_service_resource` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_SERVICE_RESOURCE_ELEMENT_ADDED_BY_ID`
-    FOREIGN KEY (`added_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_SERVICE_RESOURCE_ELEMENT_UPD_BY_ID`
-    FOREIGN KEY (`upd_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-;
-
+`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`create_time` DATETIME DEFAULT NULL,
+`update_time` DATETIME DEFAULT NULL,
+`added_by_id` BIGINT(20) DEFAULT NULL,
+`upd_by_id` BIGINT(20) DEFAULT NULL,
+`res_id` BIGINT(20) NOT NULL,
+`res_def_id` BIGINT(20) NOT NULL,
+`is_excludes` TINYINT(1) NOT NULL DEFAULT '0',
+`is_recursive` TINYINT(1) NOT NULL DEFAULT '0',
+PRIMARY KEY (`id`),
+KEY `x_srvc_res_el_IDX_added_by_id` (`added_by_id`),
+KEY `x_srvc_res_el_IDX_upd_by_id` (`upd_by_id`),
+CONSTRAINT `x_srvc_res_el_FK_res_def_id` FOREIGN KEY (`res_def_id`) REFERENCES `x_resource_def` (`id`),
+CONSTRAINT `x_srvc_res_el_FK_res_id` FOREIGN KEY (`res_id`) REFERENCES `x_service_resource` (`id`),
+CONSTRAINT `x_srvc_res_el_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_srvc_res_el_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
 -- -----------------------------------------------------
 -- Table `x_tag_attr_def`
 -- -----------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `x_tag_attr_def` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `guid` VARCHAR(512) NOT NULL,
-  `create_time` DATETIME NULL,
-  `update_time` DATETIME NULL,
-  `added_by_id` BIGINT(20) NULL,
-  `upd_by_id` BIGINT(20) NULL,
-  `tag_def_id` BIGINT(20) NOT NULL,
-  `name` VARCHAR(512) NOT NULL,
-  `type` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_X_TAG_ATTR_DEF_TAG_DEF_ID` (`tag_def_id` ASC),
-  INDEX `fk_X_TAG_ATTR_DEF_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_TAG_ATTR_DEF_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_TAG_ATTR_DEF_TAG_DEF_ID`
-    FOREIGN KEY (`tag_def_id`)
-    REFERENCES `x_tag_def` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_ATTR_DEF_ADDED_BY_ID`
-    FOREIGN KEY (`added_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_ATTR_DEF_UPD_BY_ID`
-    FOREIGN KEY (`upd_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-;
-
-
+`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`create_time` DATETIME DEFAULT NULL,
+`update_time` DATETIME DEFAULT NULL,
+`added_by_id` BIGINT(20) DEFAULT NULL,
+`upd_by_id` BIGINT(20) DEFAULT NULL,
+`tag_def_id` BIGINT(20) NOT NULL,
+`name` VARCHAR(255) NOT NULL,
+`type` VARCHAR(45) NOT NULL,
+PRIMARY KEY (`id`),
+KEY `x_tag_attr_def_IDX_tag_def_id` (`tag_def_id`),
+KEY `x_tag_attr_def_IDX_added_by_id` (`added_by_id`),
+KEY `x_tag_attr_def_IDX_upd_by_id` (`upd_by_id`),
+CONSTRAINT `x_tag_attr_def_FK_tag_def_id` FOREIGN KEY (`tag_def_id`) REFERENCES `x_tag_def` (`id`),
+CONSTRAINT `x_tag_attr_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_tag_attr_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
 -- -----------------------------------------------------
 -- Table `x_tag_attr`
 -- -----------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `x_tag_attr` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `guid` VARCHAR(512) NOT NULL,
-  `create_time` DATETIME NULL,
-  `update_time` DATETIME NULL,
-  `added_by_id` BIGINT(20) NULL,
-  `upd_by_id` BIGINT(20) NULL,
-  `tag_id` BIGINT(20) NOT NULL,
-  `attr_name` VARCHAR(128) NOT NULL,
-  `attr_value` VARCHAR(512) NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_X_TAG_ID` (`tag_id` ASC),
-  INDEX `fk_X_TAG_ATTR_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_TAG_ATTR_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_TAG_ATTR_TAG_ID`
-    FOREIGN KEY (`tag_id`)
-    REFERENCES `x_tag` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_ATTR_ADDED_BY_ID`
-    FOREIGN KEY (`added_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_ATTR_UPD_BY_ID`
-    FOREIGN KEY (`upd_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-;
-
-
+`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`create_time` DATETIME DEFAULT NULL,
+`update_time` DATETIME DEFAULT NULL,
+`added_by_id` BIGINT(20) DEFAULT NULL,
+`upd_by_id` BIGINT(20) DEFAULT NULL,
+`tag_id` BIGINT(20) NOT NULL,
+`name` VARCHAR(255) NOT NULL,
+`value` VARCHAR(512) NULL,
+PRIMARY KEY (`id`),
+KEY `x_tag_attr_IDX_tag_id` (`tag_id`),
+KEY `x_tag_attr_IDX_added_by_id` (`added_by_id`),
+KEY `x_tag_attr_IDX_upd_by_id` (`upd_by_id`),
+CONSTRAINT `x_tag_attr_FK_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `x_tag` (`id`),
+CONSTRAINT `x_tag_attr_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_tag_attr_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
 -- -----------------------------------------------------
 -- Table `x_tag_resource_map`
 -- -----------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `x_tag_resource_map` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `guid` VARCHAR(512) NOT NULL,
-  `create_time` DATETIME NULL,
-  `update_time` DATETIME NULL,
-  `added_by_id` BIGINT(20) NULL,
-  `upd_by_id` BIGINT(20) NULL,
-  `tag_id` BIGINT(20) NOT NULL,
-  `res_id` BIGINT(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_X_TAG_ID` (`tag_id` ASC),
-  INDEX `fk_X_SERVICE_RES_ID` (`res_id` ASC),
-  INDEX `fk_X_TAG_RES_MAP_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_TAG_RES_MAP_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_TAG_RES_MAP_TAG_ID`
-    FOREIGN KEY (`tag_id`)
-    REFERENCES `x_tag` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_RES_MAP_SERVICE_RES_ID`
-    FOREIGN KEY (`res_id`)
-    REFERENCES `x_service_resource` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_RES_MAP_ADDED_BY_ID`
-    FOREIGN KEY (`added_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_TAG_RES_MAP_UPD_BY_ID`
-    FOREIGN KEY (`upd_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-;
-
-
+`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`guid` VARCHAR(64) NOT NULL,
+`create_time` DATETIME DEFAULT NULL,
+`update_time` DATETIME DEFAULT NULL,
+`added_by_id` BIGINT(20) DEFAULT NULL,
+`upd_by_id` BIGINT(20) DEFAULT NULL,
+`tag_id` BIGINT(20) NOT NULL,
+`res_id` BIGINT(20) NOT NULL,
+PRIMARY KEY (`id`),
+UNIQUE KEY `x_tag_resource_map_UK_guid` (`guid`),
+KEY `x_tag_res_map_IDX_tag_id` (`tag_id`),
+KEY `x_tag_res_map_IDX_res_id` (`res_id`),
+KEY `x_tag_res_map_IDX_added_by_id` (`added_by_id`),
+KEY `x_tag_res_map_IDX_upd_by_id` (`upd_by_id`),
+CONSTRAINT `x_tag_res_map_FK_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `x_tag` (`id`),
+CONSTRAINT `x_tag_res_map_FK_res_id` FOREIGN KEY (`res_id`) REFERENCES `x_service_resource` (`id`),
+CONSTRAINT `x_tag_res_map_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_tag_res_map_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
 -- -----------------------------------------------------
--- Table `x_service_resource_element_value`
+-- Table `x_service_resource_element_val`
 -- -----------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `x_service_resource_element_value` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `guid` VARCHAR(512) NOT NULL,
-  `create_time` DATETIME NULL,
-  `update_time` DATETIME NULL,
-  `added_by_id` BIGINT(20) NULL,
-  `upd_by_id` BIGINT(20) NULL,
-  `res_element_id` BIGINT(20) NOT NULL,
-  `value` VARCHAR(512) NOT NULL,
-  `sort_order` INT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_X_RESOURCE_ELEMENT_ID` (`res_element_id` ASC),
-  INDEX `fk_X_SERVICE_RES_VAL_MAP_ADDED_BY_ID` (`added_by_id` ASC),
-  INDEX `fk_X_SERVICE_RES_VAL_MAP_UPD_BY_ID` (`upd_by_id` ASC),
-  CONSTRAINT `fk_X_RESOURCE_ELEMENT_ID`
-    FOREIGN KEY (`res_element_id`)
-    REFERENCES `x_service_resource_element` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_SERVICE_RES_VAL_MAP_ADDED_BY_ID`
-    FOREIGN KEY (`added_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_X_SERVICE_RES_VAL_MAP_UPD_BY_ID`
-    FOREIGN KEY (`upd_by_id`)
-    REFERENCES `x_portal_user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-;
-
-
+CREATE TABLE IF NOT EXISTS `x_service_resource_element_val` (
+`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`create_time` DATETIME DEFAULT NULL,
+`update_time` DATETIME DEFAULT NULL,
+`added_by_id` BIGINT(20) DEFAULT NULL,
+`upd_by_id` BIGINT(20) DEFAULT NULL,
+`res_element_id` BIGINT(20) NOT NULL,
+`value` VARCHAR(1024) NOT NULL,
+`sort_order` tinyint(3) DEFAULT '0',
+PRIMARY KEY (`id`),
+KEY `x_srvc_res_el_val_IDX_resel_id` (`res_element_id`),
+KEY `x_srvc_res_el_val_IDX_addby_id` (`added_by_id`),
+KEY `x_srvc_res_el_val_IDX_updby_id` (`upd_by_id`),
+CONSTRAINT `x_srvc_res_el_val_FK_res_el_id` FOREIGN KEY (`res_element_id`) REFERENCES `x_service_resource_element` (`id`),
+CONSTRAINT `x_srvc_res_el_val_FK_add_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_srvc_res_el_val_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
 -- -------------------------------------
 -- add column in x_service_def.options
 -- -------------------------------------

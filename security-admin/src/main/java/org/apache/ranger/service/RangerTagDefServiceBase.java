@@ -108,7 +108,6 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 
 		if (xTagAttrDef == null) {
 			xTagAttrDef = new XXTagAttributeDef();
-			xTagAttrDef.setGuid(guidUtil.genGUID());
 		}
 
 		xTagAttrDef = (XXTagAttributeDef) rangerAuditFields.populateAuditFields(xTagAttrDef, parentObj);
