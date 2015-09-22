@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<assembly>
+  <id>tagsync</id>
+  <formats>
+     <format>tar.gz</format>
+	 <format>zip</format>
+  </formats>
+  <baseDirectory>${project.name}-${project.version}-tagsync</baseDirectory>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <moduleSets>
+    <moduleSet>
+     <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+	    <directoryMode>755</directoryMode>
+	    <fileMode>644</fileMode>
+  		<dependencySets>
+   			<dependencySet>
+     			<outputDirectory>/lib</outputDirectory>
+				<includes>
+					<include>com.google.code.gson:gson</include>
+					<include>com.sun.jersey:jersey-bundle</include>
+					<include>log4j:log4j</include>
+					<include>commons-cli:commons-cli</include>
+					<include>commons-collections:commons-collections</include>
+					<include>commons-configuration:commons-configuration</include>
+					<include>commons-lang:commons-lang</include>
+					<include>commons-logging:commons-logging</include>
+					<include>com.google.guava:guava</include>
+					<include>org.apache.hadoop:hadoop-auth</include>
+					<include>org.slf4j:slf4j-api</include>
+					<include>org.apache.hadoop:hadoop-common</include>
+					<include>org.apache.commons:commons-csv</include>
+					<include>org.apache.ranger:credentialbuilder</include>
+					<include>org.apache.ranger:ranger-util</include>
+					<include>commons-io:commons-io:jar:${commons.io.version}</include>
+					<include>org.apache.htrace:htrace-core</include>
+					<include>org.codehaus.jackson:jackson-core-asl</include>
+					<include>org.codehaus.jackson:jackson-jaxrs</include>
+					<include>org.codehaus.jackson:jackson-mapper-asl</include>
+					<include>org.codehaus.jackson:jackson-xc</include>
+					<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
+				</includes>
+				<unpack>false</unpack>
+  			</dependencySet>
+  		</dependencySets>
+        <outputDirectory>/dist</outputDirectory>
+     </binaries>
+     <includes>
+	<include>org.apache.ranger:ranger-tagsync</include>
+     </includes>
+    </moduleSet>
+  </moduleSets> 	
+  <fileSets>
+	<fileSet>
+	    	<directoryMode>755</directoryMode>
+	    	<fileMode>644</fileMode>
+		<outputDirectory>/conf.dist</outputDirectory>
+		<directory>tagsync/conf.dist</directory>
+	</fileSet>
+	<fileSet>
+	    	<directoryMode>755</directoryMode>
+		<fileMode>544</fileMode>
+		<outputDirectory>/</outputDirectory>
+		<directory>tagsync/scripts</directory>
+		<excludes>
+			<exclude>*.properties</exclude>
+			<exclude>initd</exclude>
+		</excludes>
+	</fileSet>
+        <fileSet>
+	    	<directoryMode>755</directoryMode>
+                <outputDirectory>/</outputDirectory>
+                <directory>${project.build.directory}</directory>
+                <includes>
+                        <include>version</include>
+                </includes>
+		<fileMode>444</fileMode>
+        </fileSet>
+  </fileSets>
+  <files>
+      <file>
+		<source>tagsync/scripts/initd</source>
+		<outputDirectory>/</outputDirectory>
+		<destName>ranger-usersync.sh</destName>
+		<fileMode>755</fileMode>
+      </file>
+   </files>
+</assembly>

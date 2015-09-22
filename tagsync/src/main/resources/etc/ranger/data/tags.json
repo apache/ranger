@@ -1,0 +1,75 @@
+{
+    "op":"create_or_update",
+    "serviceName": "cl1_hive",
+    "tagVersion": 24,
+    "tagUpdateTime": "20150901-20:03:17.000-+0000",
+    "tagDefinitions": {
+      "1": {
+        "name": "EXPIRES_ON",
+        "source": "Internal",
+        "attributeDefs": [
+          {
+            "name": "expiry_date",
+            "type": "datetime"
+          }
+        ],
+        "id": 1,
+        "guid": "1441137512654_323_77",
+        "isEnabled": true,
+        "createdBy": "Admin",
+        "updatedBy": "Admin",
+        "createTime": "20150901-19:58:33.000-+0000",
+        "updateTime": "20150901-19:58:33.000-+0000"
+      }
+    },
+    "tags": {
+      "1": {
+        "type": "EXPIRES_ON",
+        "attributes": {
+          "expiry_date": "2014/12/31"
+        },
+        "id": 1,
+        "guid": "1441137512698_844_80",
+        "isEnabled": true,
+        "createdBy": "Admin",
+        "updatedBy": "Admin",
+        "createTime": "20150901-19:58:33.000-+0000",
+        "updateTime": "20150901-20:03:17.000-+0000"
+      }
+    },
+    "serviceResources": [
+      {
+        "serviceName": "cl1_hive",
+        "resourceElements": {
+          "table": {
+            "values": [
+              "tax_2010"
+            ],
+            "isExcludes": false,
+            "isRecursive": false
+          },
+          "database": {
+            "values": [
+              "finance"
+            ],
+            "isExcludes": false,
+            "isRecursive": false
+          }
+        },
+        "resourceSignature": "c1114679b35a65d28e0dca4fdffc27d6",
+        "id": 1,
+        "guid": "1441137512756_887_83",
+        "isEnabled": true,
+        "createdBy": "Admin",
+        "updatedBy": "Admin",
+        "createTime": "20150901-19:58:33.000-+0000",
+        "updateTime": "20150901-19:58:33.000-+0000"
+      }
+    ],
+    "resourceToTagIds": {
+      "1": [
+        1
+      ]
+    }
+}
+
