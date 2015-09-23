@@ -126,6 +126,14 @@
                 </includes>
 		<fileMode>444</fileMode>
         </fileSet>
+        <fileSet>
+            <outputDirectory>/</outputDirectory>
+            <directory>security-admin/scripts</directory>
+            <includes>
+                <include>ranger_credential_helper.py</include>
+            </includes>
+            <fileMode>544</fileMode>
+        </fileSet>
   </fileSets>
   <files>
       <file>
