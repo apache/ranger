@@ -1582,19 +1582,13 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceName + ")");
 		}
 
-		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
-
-		try {
-			if(filter == null) {
-				filter = new SearchFilter();
-			}
-
-			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-
-			ret = getPolicies(filter);
-		} catch(Exception excp) {
-			LOG.error("ServiceDBStore.getServicePolicies(" + serviceName + "): failed to read policies", excp);
+		if(filter == null) {
+			filter = new SearchFilter();
 		}
+
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+		List<RangerPolicy> ret = getPolicies(filter);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
@@ -1608,19 +1602,13 @@ public class ServiceDBStore implements ServiceStore {
 			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceName + ")");
 		}
 
-		RangerPolicyList ret = null;
-
-		try {
-			if (filter == null) {
-				filter = new SearchFilter();
-			}
-
-			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-
-			ret = getPaginatedPolicies(filter);
-		} catch (Exception excp) {
-			LOG.error("ServiceDBStore.getPaginatedServicePolicies(" + serviceName + "): failed to read policies", excp);
+		if (filter == null) {
+			filter = new SearchFilter();
 		}
+
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+		RangerPolicyList ret = getPaginatedPolicies(filter);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getPaginatedServicePolicies(" + serviceName + "): count="
