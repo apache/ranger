@@ -158,7 +158,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 		
 		xObj.setGuid(guid);
-		xObj.setVersion(vObj.getVersion());
 		xObj.setName(vObj.getName());
 		xObj.setImplclassname(vObj.getImplClass());
 		xObj.setLabel(vObj.getLabel());

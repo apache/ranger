@@ -292,7 +292,6 @@ public class TestServiceDBStore {
 		xServiceDef.setDescription("HDFS Repository");
 		xServiceDef.setGuid("1427365526516_835_0");
 		xServiceDef.setId(Id);
-		xServiceDef.setVersion(Id);
 		xServiceDef.setUpdateTime(new Date());
 		xServiceDef.setUpdatedByUserId(Id);
 		xServiceDef.setImplclassname("RangerServiceHdfs");
@@ -318,7 +317,6 @@ public class TestServiceDBStore {
 		xService.setType(1L);
 		xService.setUpdatedByUserId(Id);
 		xService.setUpdateTime(new Date());
-		xService.setVersion(1L);
 
 		return xService;
 	}
@@ -677,7 +675,6 @@ public class TestServiceDBStore {
 		xService.setType(1L);
 		xService.setUpdatedByUserId(Id);
 		xService.setUpdateTime(new Date());
-		xService.setVersion(1L);
 		xServiceList.add(xService);
 
 		List<XXAccessTypeDef> accessTypeDefList = new ArrayList<XXAccessTypeDef>();
@@ -2465,7 +2462,6 @@ public class TestServiceDBStore {
 		xService.setType(1L);
 		xService.setUpdatedByUserId(Id);
 		xService.setUpdateTime(new Date());
-		xService.setVersion(1L);
 
 		String serviceName = "HDFS_1";
 		Long lastKnownVersion = 1l;

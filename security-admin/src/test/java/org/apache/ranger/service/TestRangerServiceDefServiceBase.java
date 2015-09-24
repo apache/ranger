@@ -152,7 +152,6 @@ public class TestRangerServiceDefServiceBase {
 		xServiceDef.setRbkeylabel(null);
 		xServiceDef.setUpdatedByUserId(Id);
 		xServiceDef.setUpdateTime(new Date());
-		xServiceDef.setVersion(Id);
 
 		return xServiceDef;
 	}

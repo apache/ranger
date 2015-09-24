@@ -23,6 +23,7 @@ import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @MappedSuperclass
@@ -46,6 +47,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	 * </ul>
 	 *
 	 */
+	@Version
 	@Column(name = "version")
 	protected Long version;
 
