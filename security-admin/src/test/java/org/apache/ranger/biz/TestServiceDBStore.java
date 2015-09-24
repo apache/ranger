@@ -2433,9 +2433,9 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
+		thrown.expect(Exception.class);
 		List<RangerPolicy> dbRangerPolicy = serviceDBStore.getServicePolicies(
 				Id, filter);
-		Assert.assertNotNull(dbRangerPolicy);
 		Mockito.verify(daoManager).getXXService();
 	}
 
@@ -2536,9 +2536,9 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
+		thrown.expect(Exception.class);
 		RangerPolicyList dbRangerPolicyList = serviceDBStore
 				.getPaginatedServicePolicies(rangerService.getId(), filter);
-		Assert.assertNull(dbRangerPolicyList);
 		Mockito.verify(daoManager).getXXService();
 	}
 
