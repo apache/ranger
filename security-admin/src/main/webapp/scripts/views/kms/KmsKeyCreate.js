@@ -166,13 +166,14 @@ define(function(require){
 			});
 		},
 		getKmsInfoFromServiceName : function() {
-			var KmsServiceDef	= require('models/RangerServiceDef');
-			var KmsService			= require('models/RangerService');
+			var KmsServiceDef = require('models/RangerServiceDef');
+			var KmsService = require('models/RangerService');
 			this.kmsService = new KmsService();
 			this.kmsService.url = XAUtil.getRangerServiceByName(this.kmsServiceName);
 			this.kmsService.fetch({ cache : false, async : false });
-			this.kmsServiceDefModel	= new KmsServiceDef({id : this.kmsService.id});
-			this.kmsServiceDefModel.fetch({ cache : false, async : false })
+ 			this.kmsServiceDefModel	= new KmsServiceDef();
+			this.kmsServiceDefModel.url = XAUtil.getRangerServiceDef(this.kmsService.get('type'));
+			this.kmsServiceDefModel.fetch({ cache : false, async : false });
 		},
 		/** on close */
 		onClose: function(){

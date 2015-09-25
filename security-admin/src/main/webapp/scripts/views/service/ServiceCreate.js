@@ -51,7 +51,7 @@ define(function(require){
 			if(this.model.isNew())
 				return [XALinks.get('ServiceManager'), XALinks.get('ServiceCreate', {model:this.model})];
 			else
-				return [XALinks.get('ServiceManager'), XALinks.get('ServiceEdit',{model:this.model})];
+				return [XALinks.get('ServiceManager'), XALinks.get('ServiceEdit')];
 		},        
 
 		/** Layout sub regions */
