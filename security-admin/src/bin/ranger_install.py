@@ -974,7 +974,7 @@ def update_properties():
 	newPropertyValue="_"
 	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 	
-        propertyName="ranger.ad.referral"
+        propertyName="ranger.ldap.ad.referral"
         newPropertyValue=os.getenv("RANGER_LDAP_AD_REFERRAL")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
