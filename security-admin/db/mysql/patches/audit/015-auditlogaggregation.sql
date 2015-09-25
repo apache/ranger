@@ -20,19 +20,11 @@ create procedure add_columns_to_support_audit_log_aggregation() begin
 
  if exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit') then
 	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and column_name = 'seq_num') then
-		ALTER TABLE  `xa_access_audit` ADD  `seq_num` bigint NULL DEFAULT 0;
- 	end if;
- end if;
-
- if exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit') then
-	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and column_name = 'event_count') then
-		ALTER TABLE  `xa_access_audit` ADD  `event_count` bigint NULL DEFAULT 1;
- 	end if;
- end if;
-
- if exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit') then
-	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and column_name = 'event_dur_ms') then
-		ALTER TABLE  `xa_access_audit` ADD  `event_dur_ms` bigint NULL DEFAULT 1;
+		if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and column_name = 'event_count') then
+			if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and column_name = 'event_dur_ms') then
+				ALTER TABLE  `xa_access_audit` ADD  `seq_num` bigint NULL DEFAULT 0,ADD  `event_count` bigint NULL DEFAULT 1,ADD  `event_dur_ms` bigint NULL DEFAULT 1;
+			end if;
+		end if;
  	end if;
  end if;
 

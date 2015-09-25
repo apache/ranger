@@ -162,7 +162,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		xObj.setImplclassname(vObj.getImplClass());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setDescription(vObj.getDescription());
-		xObj.setOptions(mapToJsonString(vObj.getOptions()));
+		xObj.setDefOptions(mapToJsonString(vObj.getOptions()));
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
 		xObj.setRbkeydescription(vObj.getRbKeyDescription());
 		xObj.setIsEnabled(vObj.getIsEnabled());
@@ -178,7 +178,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		vObj.setImplClass(xObj.getImplclassname());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setDescription(xObj.getDescription());
-		vObj.setOptions(jsonStringToMap(xObj.getOptions()));
+		vObj.setOptions(jsonStringToMap(xObj.getDefOptions()));
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setRbKeyDescription(xObj.getRbkeydescription());
 		vObj.setIsEnabled(xObj.getIsEnabled());

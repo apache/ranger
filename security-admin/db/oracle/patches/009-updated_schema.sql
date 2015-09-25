@@ -46,7 +46,6 @@ name VARCHAR(1024) DEFAULT NULL NULL,
 impl_class_name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
-options VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 is_enabled NUMBER(1) DEFAULT '1' NULL,
@@ -69,13 +68,11 @@ policy_version NUMBER(20) DEFAULT NULL NULL,
 policy_update_time DATE DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
 is_enabled NUMBER(1) DEFAULT '0' NOT NULL,
-tag_service NUMBER(20) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_service_name UNIQUE (name),
 CONSTRAINT x_service_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_service_FK_type FOREIGN KEY (type) REFERENCES x_service_def (id),
-CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service (id)
+CONSTRAINT x_service_FK_type FOREIGN KEY (type) REFERENCES x_service_def (id)
 );
 commit;
 CREATE TABLE x_policy (

@@ -27,13 +27,13 @@ DROP TABLE IF EXISTS `x_tag_def` ;
 CREATE TABLE IF NOT EXISTS `x_tag_def` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
 `guid` VARCHAR(64) NOT NULL,
-`create_time` DATETIME DEFAULT NULL,
-`update_time` DATETIME DEFAULT NULL,
-`added_by_id` BIGINT(20) DEFAULT NULL,
-`upd_by_id` BIGINT(20) DEFAULT NULL,
-`version` BIGINT(20) DEFAULT NULL,
+`create_time` DATETIME NULL DEFAULT NULL,
+`update_time` DATETIME NULL DEFAULT NULL,
+`added_by_id` BIGINT(20) NULL DEFAULT NULL,
+`upd_by_id` BIGINT(20) NULL DEFAULT NULL,
+`version` BIGINT(20) NULL DEFAULT NULL,
 `name` VARCHAR(255) NOT NULL,
-`source` VARCHAR(128) DEFAULT NULL,
+`source` VARCHAR(128) NULL DEFAULT NULL,
 `is_enabled` TINYINT(1) NOT NULL DEFAULT '0',
 PRIMARY KEY (`id`),
 UNIQUE KEY `x_tag_def_UK_guid` (`guid`),
@@ -49,11 +49,11 @@ CONSTRAINT `x_tag_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_port
 CREATE TABLE IF NOT EXISTS `x_tag` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
 `guid` VARCHAR(64) NOT NULL,
-`create_time` DATETIME DEFAULT NULL,
-`update_time` DATETIME DEFAULT NULL,
-`added_by_id` BIGINT(20) DEFAULT NULL,
-`upd_by_id` BIGINT(20) DEFAULT NULL,
-`version` BIGINT(20) DEFAULT NULL,
+`create_time` DATETIME NULL DEFAULT NULL,
+`update_time` DATETIME NULL DEFAULT NULL,
+`added_by_id` BIGINT(20) NULL DEFAULT NULL,
+`upd_by_id` BIGINT(20) NULL DEFAULT NULL,
+`version` BIGINT(20) NULL DEFAULT NULL,
 `type` BIGINT(20) NOT NULL,
 PRIMARY KEY (`id`),
 UNIQUE KEY `x_tag_UK_guid` (`guid`),
@@ -70,16 +70,16 @@ CONSTRAINT `x_tag_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_u
 CREATE TABLE IF NOT EXISTS `x_service_resource` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
 `guid` VARCHAR(64) NOT NULL,
-`create_time` DATETIME DEFAULT NULL,
-`update_time` DATETIME DEFAULT NULL,
-`added_by_id` BIGINT(20) DEFAULT NULL,
-`upd_by_id` BIGINT(20) DEFAULT NULL,
-`version` BIGINT(20) DEFAULT NULL,
+`create_time` DATETIME NULL DEFAULT NULL,
+`update_time` DATETIME NULL DEFAULT NULL,
+`added_by_id` BIGINT(20) NULL DEFAULT NULL,
+`upd_by_id` BIGINT(20) NULL DEFAULT NULL,
+`version` BIGINT(20) NULL DEFAULT NULL,
 `service_id` BIGINT(20) NOT NULL,
-`resource_signature` varchar(128) DEFAULT NULL,
+`resource_signature` varchar(128) NULL DEFAULT NULL,
 `is_enabled` TINYINT NOT NULL DEFAULT '1',
 PRIMARY KEY (`id`),
-UNIQUE KEY `x_service_resource_UK_guid` (`guid`),
+UNIQUE KEY `x_service_res_UK_guid` (`guid`),
 KEY `x_service_res_IDX_added_by_id` (`added_by_id`),
 KEY `x_service_res_IDX_upd_by_id` (`upd_by_id`),
 CONSTRAINT `x_service_res_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`),
@@ -91,10 +91,10 @@ CONSTRAINT `x_service_res_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `x_service_resource_element` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-`create_time` DATETIME DEFAULT NULL,
-`update_time` DATETIME DEFAULT NULL,
-`added_by_id` BIGINT(20) DEFAULT NULL,
-`upd_by_id` BIGINT(20) DEFAULT NULL,
+`create_time` DATETIME NULL DEFAULT NULL,
+`update_time` DATETIME NULL DEFAULT NULL,
+`added_by_id` BIGINT(20) NULL DEFAULT NULL,
+`upd_by_id` BIGINT(20) NULL DEFAULT NULL,
 `res_id` BIGINT(20) NOT NULL,
 `res_def_id` BIGINT(20) NOT NULL,
 `is_excludes` TINYINT(1) NOT NULL DEFAULT '0',
@@ -112,13 +112,13 @@ CONSTRAINT `x_srvc_res_el_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `x_tag_attr_def` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-`create_time` DATETIME DEFAULT NULL,
-`update_time` DATETIME DEFAULT NULL,
-`added_by_id` BIGINT(20) DEFAULT NULL,
-`upd_by_id` BIGINT(20) DEFAULT NULL,
+`create_time` DATETIME NULL DEFAULT NULL,
+`update_time` DATETIME NULL DEFAULT NULL,
+`added_by_id` BIGINT(20) NULL DEFAULT NULL,
+`upd_by_id` BIGINT(20) NULL DEFAULT NULL,
 `tag_def_id` BIGINT(20) NOT NULL,
 `name` VARCHAR(255) NOT NULL,
-`type` VARCHAR(45) NOT NULL,
+`type` VARCHAR(50) NOT NULL,
 PRIMARY KEY (`id`),
 KEY `x_tag_attr_def_IDX_tag_def_id` (`tag_def_id`),
 KEY `x_tag_attr_def_IDX_added_by_id` (`added_by_id`),
@@ -132,10 +132,10 @@ CONSTRAINT `x_tag_attr_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `x_tag_attr` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-`create_time` DATETIME DEFAULT NULL,
-`update_time` DATETIME DEFAULT NULL,
-`added_by_id` BIGINT(20) DEFAULT NULL,
-`upd_by_id` BIGINT(20) DEFAULT NULL,
+`create_time` DATETIME NULL DEFAULT NULL,
+`update_time` DATETIME NULL DEFAULT NULL,
+`added_by_id` BIGINT(20) NULL DEFAULT NULL,
+`upd_by_id` BIGINT(20) NULL DEFAULT NULL,
 `tag_id` BIGINT(20) NOT NULL,
 `name` VARCHAR(255) NOT NULL,
 `value` VARCHAR(512) NULL,
@@ -153,14 +153,14 @@ CONSTRAINT `x_tag_attr_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_por
 CREATE TABLE IF NOT EXISTS `x_tag_resource_map` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
 `guid` VARCHAR(64) NOT NULL,
-`create_time` DATETIME DEFAULT NULL,
-`update_time` DATETIME DEFAULT NULL,
-`added_by_id` BIGINT(20) DEFAULT NULL,
-`upd_by_id` BIGINT(20) DEFAULT NULL,
+`create_time` DATETIME NULL DEFAULT NULL,
+`update_time` DATETIME NULL DEFAULT NULL,
+`added_by_id` BIGINT(20) NULL DEFAULT NULL,
+`upd_by_id` BIGINT(20) NULL DEFAULT NULL,
 `tag_id` BIGINT(20) NOT NULL,
 `res_id` BIGINT(20) NOT NULL,
 PRIMARY KEY (`id`),
-UNIQUE KEY `x_tag_resource_map_UK_guid` (`guid`),
+UNIQUE KEY `x_tag_res_map_UK_guid` (`guid`),
 KEY `x_tag_res_map_IDX_tag_id` (`tag_id`),
 KEY `x_tag_res_map_IDX_res_id` (`res_id`),
 KEY `x_tag_res_map_IDX_added_by_id` (`added_by_id`),
@@ -175,13 +175,13 @@ CONSTRAINT `x_tag_res_map_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `x_service_resource_element_val` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-`create_time` DATETIME DEFAULT NULL,
-`update_time` DATETIME DEFAULT NULL,
-`added_by_id` BIGINT(20) DEFAULT NULL,
-`upd_by_id` BIGINT(20) DEFAULT NULL,
+`create_time` DATETIME NULL DEFAULT NULL,
+`update_time` DATETIME NULL DEFAULT NULL,
+`added_by_id` BIGINT(20) NULL DEFAULT NULL,
+`upd_by_id` BIGINT(20) NULL DEFAULT NULL,
 `res_element_id` BIGINT(20) NOT NULL,
 `value` VARCHAR(1024) NOT NULL,
-`sort_order` tinyint(3) DEFAULT '0',
+`sort_order` tinyint(3) NULL DEFAULT '0',
 PRIMARY KEY (`id`),
 KEY `x_srvc_res_el_val_IDX_resel_id` (`res_element_id`),
 KEY `x_srvc_res_el_val_IDX_addby_id` (`added_by_id`),
@@ -190,23 +190,23 @@ CONSTRAINT `x_srvc_res_el_val_FK_res_el_id` FOREIGN KEY (`res_element_id`) REFER
 CONSTRAINT `x_srvc_res_el_val_FK_add_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_srvc_res_el_val_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 );
--- -------------------------------------
--- add column in x_service_def.options
--- -------------------------------------
-DROP PROCEDURE IF EXISTS add_column_x_service_def_options;
+-- ---------------------------------------
+-- add column in x_service_def.def_options
+-- ---------------------------------------
+DROP PROCEDURE IF EXISTS add_columns_x_service_def;
 
 DELIMITER ;;
-CREATE PROCEDURE add_column_x_service_def_options() BEGIN
+CREATE PROCEDURE add_columns_x_service_def() BEGIN
   IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_service_def') THEN
-    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_service_def' AND column_name = 'options') THEN
-      ALTER TABLE `x_service_def` ADD COLUMN `options` VARCHAR(1024) DEFAULT NULL NULL;
+    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_service_def' AND column_name = 'def_options') THEN
+      ALTER TABLE `x_service_def` ADD COLUMN `def_options` VARCHAR(1024) DEFAULT NULL NULL;
     END IF;
   END IF;
 END;;
 
 DELIMITER ;
-CALL add_column_x_service_def_options();
-DROP PROCEDURE IF EXISTS add_column_x_service_def_options;
+CALL add_columns_x_service_def();
+DROP PROCEDURE IF EXISTS add_columns_x_service_def;
 
 -- ---------------------------------------------------------------------------------------
 -- add column in x_policy_item.item_type, x_policy_item.is_enabled, x_policy_item.comments

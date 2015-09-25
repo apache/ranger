@@ -775,10 +775,10 @@ class PostgresConf(BaseDB):
 				if ret == 0:
 					log("[I] "+name + " patch applied","info")
 					if os_name == "LINUX":
-						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), '%s@%s', now(), '%s@%s') ;\"" %(version,db_user,xa_db_host,db_user,xa_db_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', current_timestamp, '%s', current_timestamp, '%s') ;\"" %(version,db_user,db_user)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), '%s@%s', now(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', current_timestamp, '%s', current_timestamp, '%s') ;\" -c ;" %(version,db_user,db_user)
 						ret = subprocess.call(query)
 					if ret == 0:
 						log("[I] Patch version updated", "info")
@@ -816,10 +816,10 @@ class PostgresConf(BaseDB):
 					if ret == 0:
 						log("[I] "+name + " patch applied","info")
 						if os_name == "LINUX":
-							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), '%s@%s', now(), '%s@%s') ;\"" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', current_timestamp, '%s', current_timestamp, '%s') ;\"" %(version,db_user,db_user)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', now(), '%s@%s', now(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', current_timestamp, '%s', current_timestamp, '%s') ;\" -c ;" %(version,db_user,db_user)
 							ret = subprocess.call(query)
 						if ret == 0:
 							log("[I] Patch version updated", "info")
@@ -912,10 +912,10 @@ class PostgresConf(BaseDB):
 						if ret == 0:
 							get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
 							if os_name == "LINUX":
-								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', now(), '%s@%s', now(), '%s@%s') ;\"" %(version,db_user,xa_db_host,db_user,xa_db_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', current_timestamp, '%s', current_timestamp, '%s') ;\"" %(version,db_user,db_user)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', now(), '%s@%s', now(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', current_timestamp, '%s', current_timestamp, '%s') ;\" -c ;" %(version,db_user,db_user)
 								ret = subprocess.call(query)
 							if ret == 0:
 								log("[I] java patch "+ className +" applied", "info")
@@ -1011,7 +1011,7 @@ class SqlServerConf(BaseDB):
 			log("[I] Executing patch on " + db_name + " from file: " + name,"info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
 			if os_name == "LINUX":
-				query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
 			output = check_output(query)
@@ -1027,10 +1027,10 @@ class SqlServerConf(BaseDB):
 				if ret == 0:
 					log("[I] "+name + " patch applied","info")
 					if os_name == "LINUX":
-						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', CURRENT_TIMESTAMP, '%s', CURRENT_TIMESTAMP, '%s') ;\" -c \;" %(version,db_user,db_user)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', CURRENT_TIMESTAMP, '%s', CURRENT_TIMESTAMP, '%s') ;\" -c ;" %(version,db_user,db_user)
 						ret = subprocess.call(query)
 					if ret == 0:
 						log("[I] Patch version updated", "info")
@@ -1051,7 +1051,7 @@ class SqlServerConf(BaseDB):
 				log("[I] Executing patch on " + audit_db_name + " from file: " + name,"info")
 				get_cmd1 = xa_sqlObj.get_jisql_cmd(db_user, db_password, db_name)
 				if os_name == "LINUX":
-					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+					query = get_cmd1 + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
 				elif os_name == "WINDOWS":
 					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
 				output = check_output(query)
@@ -1068,10 +1068,10 @@ class SqlServerConf(BaseDB):
 					if ret == 0:
 						log("[I] "+name + " patch applied","info")
 						if os_name == "LINUX":
-							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							query = get_cmd1 + " -c \; -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', CURRENT_TIMESTAMP, '%s', CURRENT_TIMESTAMP, '%s') ;\"" %(version,db_user,db_user)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', CURRENT_TIMESTAMP, '%s', CURRENT_TIMESTAMP, '%s') ;\" -c ;" %(version,db_user,db_user)
 							ret = subprocess.call(query)
 						if ret == 0:
 							log("[I] Patch version updated", "info")
@@ -1148,10 +1148,10 @@ class SqlServerConf(BaseDB):
 						if ret == 0:
 							get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
 							if os_name == "LINUX":
-								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', CURRENT_TIMESTAMP, '%s', CURRENT_TIMESTAMP, '%s') ;\" -c \;" %(version,db_user,db_user)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', CURRENT_TIMESTAMP, '%s', CURRENT_TIMESTAMP, '%s') ;\" -c ;" %(version,db_user,db_user)
 								ret = subprocess.call(query)
 							if ret == 0:
 								log("[I] java patch "+ className  +" applied", "info")
@@ -1246,7 +1246,7 @@ class SqlAnywhereConf(BaseDB):
 			log("[I] Executing patch on " + db_name + " from file: " + name,"info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
 			if os_name == "LINUX":
-				query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
 			output = check_output(query)
@@ -1262,10 +1262,10 @@ class SqlAnywhereConf(BaseDB):
 				if ret == 0:
 					log("[I] "+name + " patch applied","info")
 					if os_name == "LINUX":
-						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s', GETDATE(), '%s') ;\" -c \;" %(version,db_user,db_user)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s', GETDATE(), '%s') ;\" -c ;" %(version,db_user,db_user)
 						ret = subprocess.call(query)
 					if ret == 0:
 						log("[I] Patch version updated", "info")
@@ -1286,7 +1286,7 @@ class SqlAnywhereConf(BaseDB):
 				log("[I] Executing patch on " + audit_db_name + " from file: " + name,"info")
 				get_cmd1 = xa_sqlObj.get_jisql_cmd(db_user, db_password, db_name)
 				if os_name == "LINUX":
-					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+					query = get_cmd1 + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
 				elif os_name == "WINDOWS":
 					query = get_cmd1 + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
 				output = check_output(query)
@@ -1303,10 +1303,10 @@ class SqlAnywhereConf(BaseDB):
 					if ret == 0:
 						log("[I] "+name + " patch applied","info")
 						if os_name == "LINUX":
-							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s', GETDATE(), '%s') ;\" -c \;" %(version,db_user,db_user)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('%s', GETDATE(), '%s', GETDATE(), '%s') ;\" -c ;" %(version,db_user,db_user)
 							ret = subprocess.call(query)
 						if ret == 0:
 							log("[I] Patch version updated", "info")
@@ -1384,10 +1384,10 @@ class SqlAnywhereConf(BaseDB):
 						if ret == 0:
 							get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
 							if os_name == "LINUX":
-								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c \;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s', GETDATE(), '%s') ;\" -c \;" %(version,db_user,db_user)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s@%s', GETDATE(), '%s@%s') ;\" -c ;" %(version,db_user,xa_db_host,db_user,xa_db_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by) values ('J%s', GETDATE(), '%s', GETDATE(), '%s') ;\" -c ;" %(version,db_user,db_user)
 								ret = subprocess.call(query)
 							if ret == 0:
 								log("[I] java patch "+ className  +" applied", "info")

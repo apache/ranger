@@ -430,6 +430,12 @@ public class Jisql {
 	                        continue;
 	                    }
                     }
+                    if(connectString.toLowerCase().startsWith("jdbc:postgresql") && inputFileName!=null){
+	                    if (trimmedLine.toLowerCase().startsWith("select 'delimiter start';")) {
+	                        commandTerminator="select 'delimiter end';";
+	                        continue;
+	                    }
+                    }
 
                     if (line.trim().equalsIgnoreCase(commandTerminator) || line.trim().endsWith(commandTerminator)) {
                         if (line.trim().endsWith(commandTerminator)) {

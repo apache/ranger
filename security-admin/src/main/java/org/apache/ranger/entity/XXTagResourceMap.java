@@ -41,8 +41,8 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name = "XXTagResourceMapSEQ", sequenceName = "XXTagResourceMapSEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "XXTagResourceMapSEQ")
+	@SequenceGenerator(name = "X_TAG_RESOURCE_MAP_SEQ", sequenceName = "X_TAG_RESOURCE_MAP_SEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_TAG_RESOURCE_MAP_SEQ")
 	@Column(name = "id")
 	protected Long id;
 

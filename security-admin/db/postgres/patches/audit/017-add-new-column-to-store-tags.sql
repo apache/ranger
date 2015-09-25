@@ -13,17 +13,18 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-
+-- function add_column_x_service_def_options
+select 'delimiter start';
+CREATE OR REPLACE FUNCTION add_column_xa_access_audit_tags() 
+RETURNS void AS $$
 DECLARE
-	v_column_exists number:=0;
+ v_column_exists integer := 0;
 BEGIN
-  Select count(*) into v_column_exists
-    from user_tab_cols
-    where (column_name = upper('REQUEST_DATA') or column_name = upper('RESOURCE_PATH'))
-      and table_name = upper('XA_ACCESS_AUDIT') and DATA_TYPE='VARCHAR2' and DATA_LENGTH=2000;
-
-  if (v_column_exists = 1) then
-      execute immediate 'ALTER TABLE XA_ACCESS_AUDIT modify(REQUEST_DATA VARCHAR(4000) DEFAULT NULL,RESOURCE_PATH VARCHAR(4000) DEFAULT NULL)';
-      commit;
-  end if;
-end;/
+ select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='xa_access_audit') and attname='tags';
+ IF v_column_exists = 0 THEN
+ 	ALTER TABLE xa_access_audit ADD COLUMN tags VARCHAR(4000) DEFAULT NULL NULL;
+ END IF;
+END;
+$$ LANGUAGE plpgsql;
+select add_column_xa_access_audit_tags();
+select 'delimiter end';

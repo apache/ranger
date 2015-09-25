@@ -372,7 +372,6 @@ action VARCHAR(2000) DEFAULT NULL NULL,
 request_data VARCHAR(4000) DEFAULT NULL NULL,
 resource_path VARCHAR(4000) DEFAULT NULL NULL,
 resource_type VARCHAR(255) DEFAULT NULL NULL,
-tags VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id)
 );
 
@@ -474,7 +473,6 @@ name VARCHAR(1024) DEFAULT NULL NULL,
 impl_class_name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
-options VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 is_enabled BOOLEAN DEFAULT '1' NULL,
@@ -499,13 +497,11 @@ policy_version BIGINT DEFAULT NULL NULL,
 policy_update_time TIMESTAMP DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
 is_enabled BOOLEAN DEFAULT '0' NOT NULL,
-tag_service BIGINT DEFAULT NULL NULL,
 primary key(id),
 CONSTRAINT x_service_name UNIQUE(name),
 CONSTRAINT x_service_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_service_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_service_FK_type FOREIGN KEY(type) REFERENCES x_service_def(id),
-CONSTRAINT x_service_FK_tag_service FOREIGN KEY(tag_service) REFERENCES x_service(id)
+CONSTRAINT x_service_FK_type FOREIGN KEY(type) REFERENCES x_service_def(id)
 );
 DROP TABLE IF EXISTS x_policy CASCADE;
 DROP SEQUENCE IF EXISTS x_policy_seq;

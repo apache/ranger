@@ -289,7 +289,6 @@ create table xa_access_audit (
 	request_data VARCHAR  (2000) ,
 	resource_path VARCHAR  (2000) ,
 	resource_type VARCHAR  (255) ,
-	tags VARCHAR  (2000) ,
 	PRIMARY KEY(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

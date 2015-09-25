@@ -41,8 +41,8 @@ public class XXTagAttribute extends XXDBBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name = "XXTagAttributeSEQ", sequenceName = "XXTagAttributeSEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "XXTagAttributeSEQ")
+	@SequenceGenerator(name = "X_TAG_ATTR_SEQ", sequenceName = "X_TAG_ATTR_SEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_TAG_ATTR_SEQ")
 	@Column(name = "id")
 	protected Long id;
 

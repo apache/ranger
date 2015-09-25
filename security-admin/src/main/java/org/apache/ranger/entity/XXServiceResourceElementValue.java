@@ -41,8 +41,8 @@ public class XXServiceResourceElementValue extends XXDBBase implements Serializa
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name = "XXServiceResourceElementValueSEQ", sequenceName = "XXServiceResourceElementValueSEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "XXServiceResourceElementValueSEQ")
+	@SequenceGenerator(name = "X_SERVICE_RES_EL_VAL_SEQ", sequenceName = "X_SERVICE_RES_EL_VAL_SEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_SERVICE_RES_EL_VAL_SEQ")
 	@Column(name = "id")
 	protected Long id;
 

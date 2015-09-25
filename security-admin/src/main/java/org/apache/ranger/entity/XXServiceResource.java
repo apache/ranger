@@ -42,8 +42,8 @@ public class XXServiceResource extends XXDBBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name = "XXServiceResourceSEQ", sequenceName = "XXServiceResourceSEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "XXServiceResourceSEQ")
+	@SequenceGenerator(name = "X_SERVICE_RESOURCE_SEQ", sequenceName = "X_SERVICE_RESOURCE_SEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_SERVICE_RESOURCE_SEQ")
 	@Column(name = "id")
 	protected Long id;
 
