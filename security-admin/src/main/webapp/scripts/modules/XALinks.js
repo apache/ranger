@@ -70,7 +70,7 @@ define(function(require) {
 				title: 'h.kms'
 			},
 			KmsKeyCreate : { 
-				href : '#!/kms/keys/create',
+				href : 'javascript:void(0);',
 				text : 'h.keyCreate',
 				title: 'h.keyCreate'
 			},
@@ -177,42 +177,10 @@ define(function(require) {
 				href : '#!/reports/audit/loginSession',
 				text : 'lbl.sessionDetail'
 			},
-			AssetCreate : function(options){
-				var href = '#!/asset/create';
-				if(_.has(options,'model')){
-					href =  '#!/asset/create/'+options.model.get('assetType');
-				}
-				return {
-					href : href,
-					text : 'lbl.createAsset',
-					title: 'lbl.createAsset'
-				};
-			},
-			AssetEdit : function(options){
-				var href = "javascript:void(0);";
-				if(_.has(options,'model')){
-					href =  '#!/asset/'+options.model.get('id');
-				}
-				if(_.has(options,'id')){
-					href =  '#!/asset/'+options.id;
-				}
-				return {
-					href : href,
-					text : 'lbl.editService',
-					title: 'lbl.editService'
-				};
-			},
-
-			ServiceCreate : function(options){
-				var href = '#!/service/create';
-				if(_.has(options,'model')){
-					href =  '#!/service/create/'+options.model.get('assetType');
-				}
-				return {
-					href : href,
-					text : 'lbl.createService',
-					title: 'lbl.createService'
-				};
+			ServiceCreate : {
+				href : "javascript:void(0);",
+				text : 'lbl.createService',
+				title: 'lbl.createService'
 			},
 			ServiceEdit : function(options){
 				var href = "javascript:void(0);";
