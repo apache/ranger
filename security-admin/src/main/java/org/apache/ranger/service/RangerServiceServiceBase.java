@@ -68,7 +68,6 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 		
 		xObj.setGuid(guid);
-		xObj.setVersion(vObj.getVersion());
 		
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(vObj.getType());
 		if(xServiceDef == null) {

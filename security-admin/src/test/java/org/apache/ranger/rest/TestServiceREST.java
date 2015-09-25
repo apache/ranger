@@ -285,7 +285,6 @@ public class TestServiceREST {
 		xServiceDef.setDescription("HDFS Repository");
 		xServiceDef.setGuid("1427365526516_835_0");
 		xServiceDef.setId(Id);
-		xServiceDef.setVersion(Id);
 		xServiceDef.setUpdateTime(new Date());
 		xServiceDef.setUpdatedByUserId(Id);
 		xServiceDef.setImplclassname("RangerServiceHdfs");
@@ -311,7 +310,6 @@ public class TestServiceREST {
 		xService.setType(1L);
 		xService.setUpdatedByUserId(Id);
 		xService.setUpdateTime(new Date());
-		xService.setVersion(1L);
 
 		return xService;
 	}

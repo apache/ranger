@@ -141,7 +141,6 @@ public class TestRangerServiceService {
 		xService.setType(1L);
 		xService.setUpdatedByUserId(userId);
 		xService.setUpdateTime(new Date());
-		xService.setVersion(1L);
 
 		return xService;
 	}

@@ -138,7 +138,6 @@ public class TestRangerServiceDefService {
 		xServiceDef.setDescription("HDFS Repository");
 		xServiceDef.setGuid("1427365526516_835_0");
 		xServiceDef.setId(Id);
-		xServiceDef.setVersion(Id);
 		xServiceDef.setUpdateTime(new Date());
 		xServiceDef.setUpdatedByUserId(Id);
 		xServiceDef.setImplclassname("RangerServiceHdfs");
@@ -408,7 +407,6 @@ public class TestRangerServiceDefService {
 		serviceDef.setDescription("HDFS Repository");
 		serviceDef.setGuid("1427365526516_835_0");
 		serviceDef.setId(Id);
-		serviceDef.setVersion(Id);
 		serviceDef.setUpdateTime(new Date());
 		serviceDef.setUpdatedByUserId(Id);
 		serviceDef.setImplclassname("RangerServiceHdfs");

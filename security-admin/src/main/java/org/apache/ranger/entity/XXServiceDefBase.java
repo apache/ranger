@@ -21,6 +21,7 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @MappedSuperclass
@@ -43,6 +44,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 	 * </ul>
 	 *
 	 */
+	@Version
 	@Column(name = "version")
 	protected Long version;
 

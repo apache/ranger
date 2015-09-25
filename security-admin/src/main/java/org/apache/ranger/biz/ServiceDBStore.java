@@ -420,14 +420,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers() != null 	? serviceDef.getContextEnrichers() 	  : new ArrayList<RangerContextEnricherDef>();
 		List<RangerEnumDef> enums 						= serviceDef.getEnums() != null 			? serviceDef.getEnums() 			  : new ArrayList<RangerEnumDef>();
 
-		Long version = serviceDef.getVersion();
-		if (version == null) {
-			version = new Long(1);
-			LOG.info("Found Version Value: `null`, so setting value of version to 1. While updating object version should not be null.");
-		} else {
-			version = new Long(version.longValue() + 1);
-		}
-		serviceDef.setVersion(version);
+		serviceDef.setCreateTime(existing.getCreateTime());
+		serviceDef.setGuid(existing.getGuid());
+		serviceDef.setVersion(existing.getVersion());
+
 		serviceDef = serviceDefService.update(serviceDef);
 		XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 
@@ -1144,16 +1140,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
-		Long version = service.getVersion();
-		if(version == null) {
-			version = new Long(1);
-			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
-		} else {
-			version = new Long(version.longValue() + 1);
-		}
-
-		service.setVersion(version);
-
 		boolean hasTagServiceValueChanged = false;
 		Long existingTagServiceValue = existing.getTagService();
 		String newTagServiceName = service.getTagService();
@@ -1499,17 +1485,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicyItem> allowExceptions = policy.getAllowExceptions();
 		List<RangerPolicyItem> denyExceptions  = policy.getDenyExceptions();
 		
+		policy.setCreateTime(xxExisting.getCreateTime());
+		policy.setGuid(xxExisting.getGuid());
+		policy.setVersion(xxExisting.getVersion());
+
 		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
 		
-		Long version = policy.getVersion();
-		if(version == null) {
-			version = new Long(1);
-			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
-		} else {
-			version = new Long(version.longValue() + 1);
-		}
-		
-		policy.setVersion(version);
 		updatePolicySignature(policy);
 		
 		policy = policyService.update(policy);
@@ -1668,19 +1649,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceName + ")");
 		}
 
-		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
-
-		try {
-			if(filter == null) {
-				filter = new SearchFilter();
-			}
-
-			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-
-			ret = getPolicies(filter);
-		} catch(Exception excp) {
-			LOG.error("ServiceDBStore.getServicePolicies(" + serviceName + "): failed to read policies", excp);
+		if(filter == null) {
+			filter = new SearchFilter();
 		}
+
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+		List<RangerPolicy> ret = getPolicies(filter);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
@@ -1695,20 +1670,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceName + ")");
 		}
 
-
-		PList<RangerPolicy> ret = null;
-
-		try {
-			if (filter == null) {
-				filter = new SearchFilter();
-			}
-
-			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-
-			ret = getPaginatedPolicies(filter);
-		} catch (Exception excp) {
-			LOG.error("ServiceDBStore.getPaginatedServicePolicies(" + serviceName + "): failed to read policies", excp);
+		if (filter == null) {
+			filter = new SearchFilter();
 		}
+
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+		PList<RangerPolicy> ret = getPaginatedPolicies(filter);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getPaginatedServicePolicies(" + serviceName + "): count="
