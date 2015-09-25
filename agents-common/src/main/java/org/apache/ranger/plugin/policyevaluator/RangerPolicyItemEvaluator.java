@@ -37,6 +37,8 @@ public interface RangerPolicyItemEvaluator extends Comparable<RangerPolicyItemEv
 
 	int getPolicyItemType();
 
+	String getComments();
+
 	List<RangerConditionEvaluator> getConditionEvaluators();
 
 	int getEvalOrder();

@@ -29,6 +29,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
@@ -48,6 +49,10 @@ public class XXTag extends XXDBBase implements Serializable {
 
 	@Column(name = "guid", unique = true, nullable = false, length = 512)
 	protected String guid;
+
+	@Version
+	@Column(name = "version")
+	protected Long version;
 
 	@Column(name = "type")
 	protected Long type;
@@ -75,6 +80,21 @@ public class XXTag extends XXDBBase implements Serializable {
 	 */
 	public void setGuid(String guid) {
 		this.guid = guid;
+	}
+
+	/**
+	 * @return the version
+	 */
+	public Long getVersion() {
+		return version;
+	}
+
+	/**
+	 * @param version
+	 *            the version to set
+	 */
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 
 	/**
@@ -106,6 +126,7 @@ public class XXTag extends XXDBBase implements Serializable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + ((version == null) ? 0 : version.hashCode());
 		result = prime * result + ((guid == null) ? 0 : guid.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
@@ -126,6 +147,11 @@ public class XXTag extends XXDBBase implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		XXTag other = (XXTag) obj;
+		if (version == null) {
+			if (other.version != null)
+				return false;
+		} else if (!version.equals(other.version))
+			return false;
 		if (guid == null) {
 			if (other.guid != null)
 				return false;

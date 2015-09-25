@@ -120,17 +120,10 @@ public class TagDBStore extends AbstractTagStore {
 			throw errorUtil.createRESTException("failed to update tag-def [" + tagDef.getName() + "], Reason: No TagDef found with id: [" + tagDef.getId() + "]", MessageEnums.DATA_NOT_UPDATABLE);
 		}
 
-		if (StringUtils.isEmpty(tagDef.getCreatedBy())) {
-			tagDef.setCreatedBy(existing.getCreatedBy());
-		}
-
-		if (tagDef.getCreateTime() == null) {
-			tagDef.setCreateTime(existing.getCreateTime());
-		}
-
-		if (StringUtils.isEmpty(tagDef.getGuid())) {
-			tagDef.setGuid(existing.getGuid());
-		}
+		tagDef.setCreatedBy(existing.getCreatedBy());
+		tagDef.setCreateTime(existing.getCreateTime());
+		tagDef.setGuid(existing.getGuid());
+		tagDef.setVersion(existing.getVersion());
 
 		RangerTagDef ret = rangerTagDefService.update(tagDef);
 
@@ -302,17 +295,10 @@ public class TagDBStore extends AbstractTagStore {
 			throw errorUtil.createRESTException("failed to update tag [" + tag.getType() + "], Reason: No Tag found with id: [" + tag.getId() + "]", MessageEnums.DATA_NOT_UPDATABLE);
 		}
 
-		if (StringUtils.isEmpty(tag.getCreatedBy())) {
-			tag.setCreatedBy(existing.getCreatedBy());
-		}
-
-		if (tag.getCreateTime() == null) {
-			tag.setCreateTime(existing.getCreateTime());
-		}
-
-		if (StringUtils.isEmpty(tag.getGuid())) {
-			tag.setGuid(existing.getGuid());
-		}
+		tag.setCreatedBy(existing.getCreatedBy());
+		tag.setCreateTime(existing.getCreateTime());
+		tag.setGuid(existing.getGuid());
+		tag.setVersion(existing.getVersion());
 
 		RangerTag ret = rangerTagService.update(tag);
 
@@ -494,17 +480,10 @@ public class TagDBStore extends AbstractTagStore {
 			throw errorUtil.createRESTException("failed to update tag [" + resource.getId() + "], Reason: No resource found with id: [" + resource.getId() + "]", MessageEnums.DATA_NOT_UPDATABLE);
 		}
 
-		if (StringUtils.isEmpty(resource.getCreatedBy())) {
-			resource.setCreatedBy(existing.getCreatedBy());
-		}
-
-		if (resource.getCreateTime() == null) {
-			resource.setCreateTime(existing.getCreateTime());
-		}
-
-		if (StringUtils.isEmpty(resource.getGuid())) {
-			resource.setGuid(existing.getGuid());
-		}
+		resource.setCreatedBy(existing.getCreatedBy());
+		resource.setCreateTime(existing.getCreateTime());
+		resource.setGuid(existing.getGuid());
+		resource.setVersion(existing.getVersion());
 
 		rangerServiceResourceService.update(resource);
 		deleteResourceForServiceResource(existing.getId());

@@ -161,10 +161,12 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                             if(isResourceMatch) {
 	                            result.setIsAllowed(false);
 	                            result.setPolicyId(policy.getId());
+	                            result.setReason(matchedPolicyItem.getComments());
                             }
 	                    } else {
 	                        result.setIsAllowed(true);
 	                        result.setPolicyId(policy.getId());
+	                        result.setReason(matchedPolicyItem.getComments());
 	                    }
                     }
                 }

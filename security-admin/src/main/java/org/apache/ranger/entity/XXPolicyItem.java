@@ -77,6 +77,24 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	protected Integer itemType;
 
 	/**
+	 * isEnabled of the XXPolicyItem
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "is_enabled")
+	protected Boolean isEnabled;
+
+	/**
+	 * comments of the XXPolicyItem
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "comments")
+	protected String comments;
+
+	/**
 	 * order of the XXPolicyItem
 	 * <ul>
 	 * </ul>
@@ -181,6 +199,46 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b> isEnabled</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param isEnabled
+	 *            Value to set member attribute <b> isEnabled</b>
+	 */
+	public void setIsEnabled(Boolean isEnabled) {
+		this.isEnabled = isEnabled;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>isEnabled</b>
+	 * 
+	 * @return Boolean - value of member attribute <b>isEnabled</b> .
+	 */
+	public Boolean getIsEnabled() {
+		return this.isEnabled;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> comments</b> . You
+	 * cannot set null to the attribute.
+	 * 
+	 * @param comments
+	 *            Value to set member attribute <b> comments</b>
+	 */
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>comments</b>
+	 * 
+	 * @return Boolean - value of member attribute <b>comments</b> .
+	 */
+	public String getComments() {
+		return this.comments;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
 	 * 
@@ -256,6 +314,20 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 				return false;
 			}
 		} else if (!itemType.equals(other.itemType)) {
+			return false;
+		}
+		if (isEnabled == null) {
+			if (other.isEnabled != null) {
+				return false;
+			}
+		} else if (!isEnabled.equals(other.isEnabled)) {
+			return false;
+		}
+		if (comments == null) {
+			if (other.comments != null) {
+				return false;
+			}
+		} else if (!comments.equals(other.comments)) {
 			return false;
 		}
 		return true;

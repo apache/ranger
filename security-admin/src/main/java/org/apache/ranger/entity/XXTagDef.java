@@ -29,6 +29,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
@@ -49,6 +50,7 @@ public class XXTagDef extends XXDBBase implements Serializable {
 	@Column(name = "guid", unique = true, nullable = false, length = 512)
 	protected String guid;
 
+	@Version
 	@Column(name = "version")
 	protected Long version;
 

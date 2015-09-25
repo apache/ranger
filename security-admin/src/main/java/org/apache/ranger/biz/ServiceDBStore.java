@@ -2015,6 +2015,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 					xPolicyItem, xPolicy);
 			xPolicyItem.setDelegateAdmin(policyItem.getDelegateAdmin());
 			xPolicyItem.setItemType(policyItemType);
+			xPolicyItem.setIsEnabled(policyItem.getIsEnabled());
+			xPolicyItem.setComments(policyItem.getComments());
 			xPolicyItem.setPolicyId(policy.getId());
 			xPolicyItem.setOrder(itemOrder);
 			xPolicyItem = daoMgr.getXXPolicyItem().create(xPolicyItem);

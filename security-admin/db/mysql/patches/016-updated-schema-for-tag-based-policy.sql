@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS `x_tag` (
 `update_time` DATETIME DEFAULT NULL,
 `added_by_id` BIGINT(20) DEFAULT NULL,
 `upd_by_id` BIGINT(20) DEFAULT NULL,
+`version` BIGINT(20) DEFAULT NULL,
 `type` BIGINT(20) NOT NULL,
 PRIMARY KEY (`id`),
 UNIQUE KEY `x_tag_UK_guid` (`guid`),
@@ -207,23 +208,25 @@ DELIMITER ;
 CALL add_column_x_service_def_options();
 DROP PROCEDURE IF EXISTS add_column_x_service_def_options;
 
--- ---------------------------------------
--- add column in x_policy_item.item_type
--- ---------------------------------------
-DROP PROCEDURE IF EXISTS add_column_x_policy_item_item_type;
+-- ---------------------------------------------------------------------------------------
+-- add column in x_policy_item.item_type, x_policy_item.is_enabled, x_policy_item.comments
+-- ---------------------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS add_columns_x_policy_item;
 
 DELIMITER ;;
-CREATE PROCEDURE add_column_x_policy_item_item_type() BEGIN
+CREATE PROCEDURE add_columns_x_policy_item() BEGIN
   IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_policy_item') THEN
     IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_policy_item' AND column_name = 'item_type') THEN
-      ALTER TABLE `x_policy_item` ADD COLUMN `item_type` INT DEFAULT 0 NOT NULL;
+      ALTER TABLE `x_policy_item` ADD COLUMN `item_type` INT DEFAULT 0 NOT NULL,
+                                  ADD COLUMN `is_enabled` TINYINT(1) NOT NULL DEFAULT '1',
+                                  ADD COLUMN `comments` VARCHAR(255) DEFAULT NULL NULL;
     END IF;
   END IF;
 END;;
 
 DELIMITER ;
-CALL add_column_x_policy_item_item_type();
-DROP PROCEDURE IF EXISTS add_column_x_policy_item_item_type;
+CALL add_columns_x_policy_item();
+DROP PROCEDURE IF EXISTS add_columns_x_policy_item;
 
 -- ---------------------------------------------------------------------------------------
 -- add columns in x_service.tag_service, x_service.tag_version, x_service.tag_update_time
