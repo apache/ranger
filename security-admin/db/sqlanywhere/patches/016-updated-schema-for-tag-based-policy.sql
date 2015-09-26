@@ -36,6 +36,7 @@ CREATE TABLE dbo.x_tag(
 	update_time datetime DEFAULT NULL NULL,
 	added_by_id bigint DEFAULT NULL NULL,
 	upd_by_id bigint DEFAULT NULL NULL,
+	version bigint DEFAULT NULL NULL,
 	type bigint NOT NULL,
 	CONSTRAINT x_tag_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_tag_UK_guid UNIQUE NONCLUSTERED (guid)
@@ -220,13 +221,21 @@ IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_service_def' and cna
 END IF;
 GO
 
-IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy_item' and cname in('item_type','is_enabled','comments')) THEN
-	ALTER TABLE dbo.x_policy_item ADD (item_type int DEFAULT 0 NOT NULL,is_enabled tinyint DEFAULT 1 NOT NULL,comments varchar(255) DEFAULT NULL NULL);
+IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy_item' and cname='item_type') THEN
+	IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy_item' and cname='is_enabled') THEN
+		IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy_item' and cname='comments') THEN
+			ALTER TABLE dbo.x_policy_item ADD (item_type int DEFAULT 0 NOT NULL,is_enabled tinyint DEFAULT 1 NOT NULL,comments varchar(255) DEFAULT NULL NULL);
+		END IF;
+	END IF;
 END IF;
 GO
 
-IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_service' and cname in('tag_service','tag_version','tag_update_time')) THEN
-	ALTER TABLE dbo.x_service ADD (tag_service bigint DEFAULT NULL NULL,tag_version bigint DEFAULT 0 NOT NULL,tag_update_time datetime DEFAULT NULL NULL);
+IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_service' and cname='tag_service') THEN
+	IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_service' and cname='tag_version') THEN
+		IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_service' and cname='tag_update_time') THEN
+			ALTER TABLE dbo.x_service ADD (tag_service bigint DEFAULT NULL NULL,tag_version bigint DEFAULT 0 NOT NULL,tag_update_time datetime DEFAULT NULL NULL), ADD CONSTRAINT x_service_FK_tag_service FOREIGN KEY(tag_service) REFERENCES dbo.x_service (id);
+		END IF;
+	END IF;
 END IF;
 GO
 

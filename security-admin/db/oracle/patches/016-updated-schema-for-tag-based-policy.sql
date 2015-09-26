@@ -190,49 +190,54 @@ BEGIN
 end;/
 
 DECLARE
-	v_column_exists number := 0;
+	v_column1_exists number := 0;
+	v_column2_exists number := 0;
+	v_column3_exists number := 0;
 BEGIN
-  Select count(*) into v_column_exists
+  Select count(*) into v_column1_exists
     from user_tab_cols
     where column_name = upper('item_type')
       and table_name = upper('x_policy_item');
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE x_policy_item ADD item_type NUMBER(10) DEFAULT 0 NOT NULL';
-      commit;
-  end if;
-
-  Select count(*) into v_column_exists
+  Select count(*) into v_column2_exists
     from user_tab_cols
     where column_name = upper('is_enabled')
       and table_name = upper('x_policy_item');
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE x_policy_item ADD is_enabled NUMBER(1) DEFAULT 1 NOT NULL';
-      commit;
-  end if;
-
-  Select count(*) into v_column_exists
+  Select count(*) into v_column3_exists
     from user_tab_cols
     where column_name = upper('comments')
       and table_name = upper('x_policy_item');
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE x_policy_item ADD comments VARCHAR(255) DEFAULT NULL NULL';
+  if (v_column1_exists = 0) AND (v_column2_exists = 0) AND (v_column3_exists = 0) then
+      execute immediate 'ALTER TABLE x_policy_item ADD (item_type NUMBER(10) DEFAULT 0 NOT NULL,is_enabled NUMBER(1) DEFAULT 1 NOT NULL,comments VARCHAR(255) DEFAULT NULL NULL)';
       commit;
   end if;
+
 end;/
 
 DECLARE
-	v_column_exists number := 0;
+	v_column1_exists number := 0;
+	v_column2_exists number := 0;
+	v_column3_exists number := 0;
 BEGIN
-  Select count(*) into v_column_exists
+  Select count(*) into v_column1_exists
     from user_tab_cols
     where column_name = upper('tag_service')
       and table_name = upper('x_service');
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE x_service ADD (tag_service NUMBER(20) DEFAULT NULL NULL,tag_version NUMBER(20) DEFAULT 0 NOT NULL,tag_update_time DATE DEFAULT NULL NULL)';
+  Select count(*) into v_column2_exists
+    from user_tab_cols
+    where column_name = upper('tag_version')
+      and table_name = upper('x_service');
+
+  Select count(*) into v_column3_exists
+    from user_tab_cols
+    where column_name = upper('tag_update_time')
+      and table_name = upper('x_service');
+
+  if (v_column1_exists = 0) AND (v_column2_exists = 0) AND (v_column3_exists = 0) then
+      execute immediate 'ALTER TABLE x_service ADD (tag_service NUMBER(20) DEFAULT NULL NULL,tag_version NUMBER(20) DEFAULT 0 NOT NULL,tag_update_time DATE DEFAULT NULL NULL) ADD CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id)';
       commit;
   end if;
 end;/

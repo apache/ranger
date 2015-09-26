@@ -215,13 +215,17 @@ DROP PROCEDURE IF EXISTS add_columns_x_policy_item;
 
 DELIMITER ;;
 CREATE PROCEDURE add_columns_x_policy_item() BEGIN
-  IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_policy_item') THEN
-    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_policy_item' AND column_name = 'item_type') THEN
-      ALTER TABLE `x_policy_item` ADD COLUMN `item_type` INT DEFAULT 0 NOT NULL,
-                                  ADD COLUMN `is_enabled` TINYINT(1) NOT NULL DEFAULT '1',
-                                  ADD COLUMN `comments` VARCHAR(255) DEFAULT NULL NULL;
-    END IF;
-  END IF;
+	IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_policy_item') THEN
+		IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_policy_item' AND column_name = 'item_type') THEN
+			IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_policy_item' AND column_name = 'is_enabled') THEN
+				IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_policy_item' AND column_name = 'comments') THEN
+					ALTER TABLE `x_policy_item` ADD COLUMN `item_type` INT DEFAULT 0 NOT NULL,
+					ADD COLUMN `is_enabled` TINYINT(1) NOT NULL DEFAULT '1',
+					ADD COLUMN `comments` VARCHAR(255) DEFAULT NULL NULL;
+				END IF;
+			END IF;
+		END IF;
+	END IF;
 END;;
 
 DELIMITER ;
@@ -235,13 +239,18 @@ DROP PROCEDURE IF EXISTS add_tag_columns_x_service;
 
 DELIMITER ;;
 CREATE PROCEDURE add_tag_columns_x_service() BEGIN
-  IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_service') THEN
-    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_service' AND column_name = 'tag_service') THEN
-      ALTER TABLE `x_service` ADD COLUMN `tag_service` BIGINT DEFAULT NULL NULL,
-	                          ADD COLUMN `tag_version` BIGINT DEFAULT 0 NOT NULL,
-	                          ADD COLUMN `tag_update_time` DATETIME DEFAULT NULL NULL;
-    END IF;
-  END IF;
+	IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema=database() AND table_name = 'x_service') THEN
+		IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_service' AND column_name = 'tag_service') THEN
+			IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_service' AND column_name = 'tag_version') THEN
+				IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_schema=database() AND table_name = 'x_service' AND column_name = 'tag_update_time') THEN
+					ALTER TABLE `x_service` ADD COLUMN `tag_service` BIGINT DEFAULT NULL NULL,
+					ADD COLUMN `tag_version` BIGINT DEFAULT 0 NOT NULL,
+					ADD COLUMN `tag_update_time` DATETIME DEFAULT NULL NULL,
+					ADD CONSTRAINT `x_service_FK_tag_service` FOREIGN KEY (`tag_service`) REFERENCES `x_service` (`id`);
+		END IF;
+	END IF;
+END IF;
+END IF;
 END;;
 
 DELIMITER ;

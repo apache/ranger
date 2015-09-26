@@ -59,6 +59,7 @@ create_time TIMESTAMP DEFAULT NULL NULL,
 update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
+version BIGINT DEFAULT NULL NULL,
 type BIGINT NOT NULL,
 primary key (id),
 CONSTRAINT x_tag_UK_guid UNIQUE (guid),
@@ -218,10 +219,14 @@ CREATE OR REPLACE FUNCTION add_column_x_policy_item_item_type()
 RETURNS void AS
 $$
 DECLARE
- v_column_exists integer := 0;
+ v_column1_exists integer := 0;
+ v_column2_exists integer := 0;
+ v_column3_exists integer := 0;
 BEGIN
- select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy_item') and attname in('item_type','is_enabled','comments');
- IF v_column_exists = 0 THEN
+ select count(*) into v_column1_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy_item') and attname='item_type';
+ select count(*) into v_column2_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy_item') and attname='is_enabled';
+ select count(*) into v_column3_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy_item') and attname='comments';
+ IF v_column1_exists = 0 AND v_column3_exists = 0 AND v_column3_exists = 0 THEN
  	ALTER TABLE x_policy_item ADD COLUMN item_type INT DEFAULT 0 NOT NULL,ADD COLUMN is_enabled BOOLEAN DEFAULT '1' NOT NULL,ADD COLUMN comments VARCHAR(255) DEFAULT NULL NULL;
  END IF;
 END;
@@ -233,11 +238,15 @@ CREATE OR REPLACE FUNCTION add_tag_columns_x_service()
 RETURNS void AS
 $$ 
 DECLARE
- v_column_exists integer := 0;
+ v_column1_exists integer := 0;
+ v_column2_exists integer := 0;
+ v_column3_exists integer := 0;
 BEGIN
- select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_service') and attname in('tag_service','tag_version','tag_update_time') ;
- IF v_column_exists = 0 THEN
- 	ALTER TABLE x_service ADD COLUMN tag_service BIGINT DEFAULT NULL NULL,ADD COLUMN tag_version BIGINT DEFAULT 0 NOT NULL,ADD COLUMN tag_update_time TIMESTAMP DEFAULT NULL NULL;
+ select count(*) into v_column1_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_service') and attname='tag_service';
+ select count(*) into v_column2_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_service') and attname='tag_version';
+ select count(*) into v_column3_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_service') and attname='tag_update_time';
+ IF v_column1_exists = 0 AND v_column3_exists = 0 AND v_column3_exists = 0 THEN
+	ALTER TABLE x_service ADD COLUMN tag_service BIGINT DEFAULT NULL NULL,ADD COLUMN tag_version BIGINT DEFAULT 0 NOT NULL,ADD COLUMN tag_update_time TIMESTAMP DEFAULT NULL NULL,ADD CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id);
  END IF;
 END;
 $$ LANGUAGE plpgsql;

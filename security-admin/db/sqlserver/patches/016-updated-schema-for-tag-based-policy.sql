@@ -222,6 +222,7 @@ CREATE TABLE [dbo].[x_tag](
 	[update_time] [datetime2] DEFAULT NULL NULL,
 	[added_by_id] [bigint] DEFAULT NULL NULL,
 	[upd_by_id] [bigint] DEFAULT NULL NULL,
+	[version] [bigint] DEFAULT NULL NULL,
 	[type] [bigint] NOT NULL,
 	PRIMARY KEY CLUSTERED 
 (
@@ -569,7 +570,7 @@ GO
 
 IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service' and column_name in('tag_service','tag_version','tag_update_time'))
 BEGIN
-	ALTER TABLE [dbo].[x_service] ADD [tag_service] [bigint] DEFAULT NULL NULL,[tag_version] [bigint] DEFAULT 0 NOT NULL,[tag_update_time] [datetime2] DEFAULT NULL NULL;
+	ALTER TABLE [dbo].[x_service] ADD [tag_service] [bigint] DEFAULT NULL NULL,[tag_version] [bigint] DEFAULT 0 NOT NULL,[tag_update_time] [datetime2] DEFAULT NULL NULL,CONSTRAINT [x_service_FK_tag_service] FOREIGN KEY([tag_service]) REFERENCES [dbo].[x_service] ([id]);
 END
 GO
 exit
