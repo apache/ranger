@@ -43,6 +43,7 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.service.RangerServiceService;
+import org.apache.ranger.services.tag.RangerServiceTag;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,9 @@ public class ServiceMgr {
 	@Autowired
 	ServiceDBStore svcDBStore;
 	
+	@Autowired
+	TagDBStore tagStore;
+
 	@Autowired
 	TimedExecutor timedExecutor;
 
@@ -171,7 +175,11 @@ public class ServiceMgr {
 				if(cls != null) {
 					ret = cls.newInstance();
 
-					ret.init(serviceDef, service);	
+					ret.init(serviceDef, service);
+
+					if(ret instanceof RangerServiceTag) {
+						((RangerServiceTag)ret).setTagStore(tagStore);
+					}
 				} else {
 					LOG.warn("ServiceMgr.getRangerServiceByService(" + service + "): could not find service class '" + serviceDef.getImplClass() + "'");
 				}

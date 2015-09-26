@@ -74,6 +74,14 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 		}
 	}
 
+	public List<String> getAllNames() {
+		try {
+			return getEntityManager().createNamedQuery("XXTagDef.getAllNames", String.class).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<String>();
+		}
+	}
+
 	public void updateServiceForTagDefUpdate(Long tagDefId, Date updateTime) {
 		if (tagDefId == null) {
 			return;

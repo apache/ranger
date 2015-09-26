@@ -296,6 +296,33 @@ public class TagREST {
         return ret;
     }
 
+    @GET
+    @Path(TagRESTConstants.TAGTYPES_RESOURCE)
+    @Produces({ "application/json", "application/xml" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public List<String> getTagTypes() {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getTagTypes()");
+        }
+
+        List<String> ret = null;
+
+        try {
+            ret = tagStore.getTagTypes();
+        } catch(Exception excp) {
+            LOG.error("getTagTypes() failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getTagTypes(): count=" + (ret != null ? ret.size() : 0));
+        }
+
+        return ret;
+    }
+
+
     @POST
     @Path(TagRESTConstants.TAGS_RESOURCE)
     @Produces({ "application/json", "application/xml" })
@@ -1014,59 +1041,4 @@ public class TagREST {
 
         return ret;
     }
-
-    // This API is typically used by GUI to get all available tags from RangerAdmin
-
-    @GET
-    @Path(TagRESTConstants.TAGTYPES_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
-    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public List<String> getTagTypes(@QueryParam(TagRESTConstants.SERVICE_NAME_PARAM) String serviceName) {
-
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getTagTypes(" + serviceName + ")");
-        }
-        List<String> tagTypes = null;
-
-        try {
-            tagTypes = tagStore.getTagTypes(serviceName);
-        } catch(Exception excp) {
-            LOG.error("getTags(" + serviceName + ") failed", excp);
-
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-        }
-
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.getTagTypes(" + serviceName + ")");
-        }
-        return tagTypes;
-    }
-
-    // This API is typically used by GUI to help lookup available tags from RangerAdmin to help tag-policy writer. It
-    // may also be used to validate configuration parameters of a tag-service
-
-    @GET
-    @Path(TagRESTConstants.TAGTYPES_LOOKUP_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
-    public List<String> lookupTagTypes(@QueryParam(TagRESTConstants.SERVICE_NAME_PARAM) String serviceName,
-                                       @DefaultValue(".*") @QueryParam(TagRESTConstants.PATTERN_PARAM) String pattern) {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.lookupTagTypes(" + serviceName  + ", " + pattern + ")");
-        }
-        List<String> matchingTagTypes = null;
-
-        try {
-            matchingTagTypes = tagStore.lookupTagTypes(serviceName, pattern);
-        } catch(Exception excp) {
-            LOG.error("lookupTags(" + serviceName + ") failed", excp);
-
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-        }
-
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.lookupTagTypes(" + serviceName + ")");
-        }
-        return matchingTagTypes;
-    }
-
 }

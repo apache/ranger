@@ -613,6 +613,10 @@
 				(select tag.type from XXTag tag, XXTagResourceMap tagRes, XXServiceResource resource where tag.id = tagRes.tagId and tagRes.resourceId = resource.id and resource.serviceId = :serviceId)</query>
 	</named-query>
 
+	<named-query name="XXTagDef.getAllNames">
+		<query>select obj.name from XXTagDef obj</query>
+	</named-query>
+
 	<named-query name="XXTagDef.updateTagVersionInService">
 		<query>update XXService obj set obj.tagVersion = obj.tagVersion + 1, obj.tagUpdateTime = :tagUpdateTime
 				where obj.id in (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag

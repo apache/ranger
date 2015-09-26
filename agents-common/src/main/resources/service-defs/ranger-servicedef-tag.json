@@ -22,7 +22,7 @@
       "recursiveSupported": false,
       "excludesSupported": false,
       "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": { "wildCard":true, "ignoreCase":false },
+      "matcherOptions": { "wildCard":false, "ignoreCase":false },
       "validationRegEx":"",
       "validationMessage": "",
       "uiHint":"",
@@ -38,45 +38,7 @@
 
   "configs":
   [
-    {
-      "itemId": 1,
-      "name": "username",
-      "type": "string",
-      "subType": "",
-      "mandatory": true,
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Username"
-    },
 
-    {
-      "itemId": 2,
-      "name": "password",
-      "type": "password",
-      "subType": "",
-      "mandatory": true,
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Password"
-    },
-
-    {
-      "itemId": 3,
-      "name": "URL",
-      "type": "string",
-      "mandatory": true,
-      "label": "URL for tag provider"
-    },
-
-    {
-      "itemId": 4,
-      "name": "SSL_CONFIG_FILE_NAME",
-      "type": "string",
-      "mandatory": true,
-      "label": "SSL Config file"
-    }
   ],
 
   "enums":
@@ -101,14 +63,6 @@
   [
     {
       "itemId":1,
-      "name":"ScriptConditionEvaluator",
-      "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
-      "evaluatorOptions" : {"engineName":"JavaScript", "ui.isMultiline":"true" },
-      "label":"Script",
-      "description": "Script to execute"
-    },
-    {
-      "itemId":2,
       "name":"enforce-expiry",
       "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
       "evaluatorOptions" : { "scriptTemplate":"ctx.isAccessedAfter('expiry_date');" },

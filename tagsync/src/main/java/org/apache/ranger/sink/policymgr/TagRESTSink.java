@@ -21,6 +21,7 @@ package org.apache.ranger.sink.policymgr;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -186,6 +187,12 @@ public class TagRESTSink implements TagSink {
 	@Override
 	public PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception {
 		throw new Exception("Not implemented");
+	}
+
+	@Override
+	public List<String> getTagTypes() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
@@ -483,16 +490,6 @@ public class TagRESTSink implements TagSink {
 		throw new Exception("Not implemented");
 	}
 
-	@Override
-	public List<String> getTagTypes(String serviceName) throws Exception {
-		throw new Exception("Not implemented");
-	}
-
-	@Override
-	public List<String> lookupTagTypes(String serviceName, String pattern) throws Exception {
-		throw new Exception("Not implemented");
-	}
-
 	private WebResource createWebResource(String url) {
 		return createWebResource(url, null);
 	}
@@ -511,5 +508,4 @@ public class TagRESTSink implements TagSink {
 
 		return ret;
 	}
-
 }

@@ -19,6 +19,8 @@
 
 package org.apache.ranger.plugin.store.file;
 
+import java.util.*;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
@@ -29,15 +31,11 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
-import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagPredicateUtil;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TagFileStore extends AbstractTagStore {
 	private static final Log LOG = LogFactory.getLog(TagFileStore.class);
@@ -337,6 +335,27 @@ public class TagFileStore extends AbstractTagStore {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagFileStore.getPaginatedTagDefs(): count=" + (ret == null ? 0 : ret.getPageSize()));
+		}
+
+		return ret;
+	}
+
+	@Override
+	public List<String> getTagTypes() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagFileStore.getTagTypes()");
+		}
+
+		List<String> ret = new ArrayList<String>();
+
+		List<RangerTag> allTags = getAllTags();
+
+		for (RangerTag tag : allTags) {
+			ret.add(tag.getType());
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagFileStore.getTagTypes(): count=" + ret.size());
 		}
 
 		return ret;
@@ -1118,63 +1137,6 @@ public class TagFileStore extends AbstractTagStore {
 
 	}
 
-	@Override
-	public List<String> getTagTypes(String serviceName) throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getTags(" + serviceName + ")");
-		}
-
-		List<String> ret = new ArrayList<String>();
-
-		// Ignore serviceName
-		List<RangerTag> allTags = getAllTags();
-
-		for (RangerTag tag : allTags) {
-			ret.add(tag.getType());
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getTags(" + serviceName + "): count=" + ret.size());
-		}
-
-		return ret;
-	}
-
-	@Override
-	public List<String> lookupTagTypes(String serviceName, String pattern) throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.lookupTags(" + serviceName + ", " + pattern + ")");
-		}
-
-		List<String> ret  = new ArrayList<String>();
-		List<String> tags = getTagTypes(serviceName);
-
-		if (CollectionUtils.isNotEmpty(tags)) {
-			Pattern p = Pattern.compile(pattern);
-			for (String tagType : tags) {
-				Matcher m = p.matcher(tagType);
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("TagFileStore.lookupTags) - Trying to match .... pattern=" + pattern + ", tagType=" + tagType);
-				}
-
-				if (m.matches()) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("TagFileStore.lookupTags) - Match found.... pattern=" + pattern + ", tagType=" + tagType);
-					}
-
-					ret.add(tagType);
-				}
-			}
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.lookupTags(" + serviceName + ", " + pattern + "): count=" + ret.size());
-		}
-
-		return ret;
-	}
-
 	private List<RangerTag> getTagsForServiceResourceObject(RangerServiceResource serviceResource) throws Exception {
 
 		List<RangerTag> tagList = new ArrayList<RangerTag>();
@@ -1391,20 +1353,6 @@ public class TagFileStore extends AbstractTagStore {
 		fileStoreUtil.deleteFile(filePath);
 
 		postDelete(tagResourceMap);
-	}
-
-	private List<RangerServiceResource> getServiceResources(RangerServiceResource resource) throws Exception {
-
-		List<RangerServiceResource> ret = null;
-
-		RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
-		String signature = serializer.getSignature();
-
-		SearchFilter filter = new SearchFilter(SearchFilter.TAG_RESOURCE_SIGNATURE, signature);
-
-		ret = getServiceResources(filter);
-
-		return ret;
 	}
 }
 

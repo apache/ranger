@@ -53,6 +53,8 @@ public interface TagStore {
 
     PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception;
 
+    List<String> getTagTypes() throws Exception;
+
 
     RangerTag createTag(RangerTag tag) throws Exception;
 
@@ -120,8 +122,4 @@ public interface TagStore {
 
 
     ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
-
-    List<String> getTagTypes(String serviceName) throws Exception;
-
-    List<String> lookupTagTypes(String serviceName, String pattern) throws Exception;
 }

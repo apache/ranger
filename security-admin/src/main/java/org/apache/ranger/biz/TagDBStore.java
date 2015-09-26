@@ -263,6 +263,21 @@ public class TagDBStore extends AbstractTagStore {
 		return ret;
 	}
 
+	@Override
+	public List<String> getTagTypes() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.getTagTypes()");
+		}
+
+		List<String> ret = daoManager.getXXTagDef().getAllNames();
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.getTagTypes(): count=" + (ret != null ? ret.size() : 0));
+		}
+
+		return ret;
+	}
+
 
 	@Override
 	public RangerTag createTag(RangerTag tag) throws Exception {
@@ -876,16 +891,6 @@ public class TagDBStore extends AbstractTagStore {
 		return ret;
 	}
 
-	@Override
-	public List<String> getTagTypes(String serviceName) throws Exception {
-		throw new Exception("Not implemented");
-	}
-
-	@Override
-	public List<String> lookupTagTypes(String serviceName, String pattern) throws Exception {
-		throw new Exception("Not implemented");
-	}
-
 	private List<XXTagAttributeDef> createTagAttributeDefs(Long tagDefId, List<RangerTagAttributeDef> tagAttrDefList) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.createTagAttributeDefs(" + tagDefId + ", attributeDefCount=" + (tagAttrDefList == null ? 0 : tagAttrDefList.size()) + ")");
@@ -1036,17 +1041,6 @@ public class TagDBStore extends AbstractTagStore {
 				resourceElementValue = daoManager.getXXServiceResourceElementValue().create(resourceElementValue);
 				sortOrder++;
 			}
-		}
-	}
-
-	private void deleteResourceValue(Long resourceId) {
-		List<XXServiceResourceElement> taggedResValueList = daoManager.getXXServiceResourceElement().findByResourceId(resourceId);
-		for (XXServiceResourceElement taggedResValue : taggedResValueList) {
-			List<XXServiceResourceElementValue> taggedResValueMapList = daoManager.getXXServiceResourceElementValue().findByResValueId(taggedResValue.getId());
-			for (XXServiceResourceElementValue taggedResValueMap : taggedResValueMapList) {
-				daoManager.getXXServiceResourceElementValue().remove(taggedResValueMap);
-			}
-			daoManager.getXXServiceResourceElement().remove(taggedResValue);
 		}
 	}
 }
