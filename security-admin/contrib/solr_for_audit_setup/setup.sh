@@ -298,6 +298,10 @@ if [ $is_root -eq 1 ]; then
     chown -R $SOLR_USER:$SOLR_USER $SOLR_RANGER_HOME
     mkdir -p $SOLR_LOG_FOLDER
     chown -R $SOLR_USER:$SOLR_USER $SOLR_LOG_FOLDER
+    if [ "$SOLR_DEPLOYMENT" = "standalone" ]; then
+	mkdir -p $SOLR_RANGER_DATA_FOLDER
+	chown -R $SOLR_USER:$SOLR_USER $SOLR_RANGER_DATA_FOLDER
+    fi
 else
     chown -R $SOLR_USER:$SOLR_USER $SOLR_RANGER_HOME
 fi
