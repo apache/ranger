@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.source.atlas;
+package org.apache.ranger.tagsync.source.atlas;
 
 import org.apache.atlas.notification.entity.EntityNotification;
 import org.apache.atlas.typesystem.api.Entity;
@@ -31,7 +31,7 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.process.TagSyncConfig;
+import org.apache.ranger.tagsync.process.TagSyncConfig;
 
 import java.util.*;
 
@@ -47,7 +47,7 @@ class AtlasNotificationMapper {
 	public static final String RANGER_TYPE_HIVE_COLUMN = "column";
 
 	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
-	public static final String QUALIFIED_NAME_FORMAT_DELIMITER_STRING = ".";
+	public static final String QUALIFIED_NAME_FORMAT_DELIMITER_STRING = "\\.";
 
 
 	private static Properties properties = null;
@@ -60,6 +60,8 @@ class AtlasNotificationMapper {
 		try {
 			if (isEntityMappable(entityNotification.getEntity())) {
 				ret = createServiceTags(entityNotification);
+			} else {
+				LOG.info("Ranger not interested in Entity Notification for entity-type " + entityNotification.getEntity().getTypeName());
 			}
 		} catch (Exception exception) {
 			LOG.error("createServiceTags() failed!! ", exception);
@@ -200,21 +202,23 @@ class AtlasNotificationMapper {
 			} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_COLUMN)) {
 				LOG.error("HIVE_COLUMN creation is not handled.");
 				throw new Exception("HIVE_COLUMN entity-creation not implemented");
-			/*
-			if (components.length > 4) {
-				dbName = components[2];
-				tableName = components[3];
-				columnName = components[4];
-				RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
-				elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
-				RangerPolicy.RangerPolicyResource tablePolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
-				elements.put(RANGER_TYPE_HIVE_TABLE, tablePolicyResource);
-				RangerPolicy.RangerPolicyResource columnPolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
-				elements.put(RANGER_TYPE_HIVE_COLUMN, columnPolicyResource);
-			} else {
-				LOG.error("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + components[0]);
-			}
-			*/
+
+				/*
+				if (components.length > 4) {
+					dbName = components[2];
+					tableName = components[3];
+					columnName = components[4];
+					RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
+					elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
+					RangerPolicy.RangerPolicyResource tablePolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
+					elements.put(RANGER_TYPE_HIVE_TABLE, tablePolicyResource);
+					RangerPolicy.RangerPolicyResource columnPolicyResource = new RangerPolicy.RangerPolicyResource(columnName);
+					elements.put(RANGER_TYPE_HIVE_COLUMN, columnPolicyResource);
+				} else {
+					LOG.error("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + components[0]);
+				}
+								 */
+
 			}
 		}
 
@@ -290,30 +294,37 @@ class AtlasNotificationMapper {
 	static private String[] getQualifiedNameComponents(Entity entity) {
 		String ret[] = new String[5];
 
-		String qualifiedName = getAttribute(entity.getValues(), ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+		if (StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_DB)) {
+			ret[1] = getAttribute(entity.getValues(), "clusterName", String.class);
+			ret[2] = getAttribute(entity.getValues(), "name", String.class);
+			ret[3] = null;
+			ret[0] = ret[1] + "." + ret[2];
+		} else {
+			String qualifiedName = getAttribute(entity.getValues(), ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
 
-		String nameHierarchy[] = qualifiedName.split(QUALIFIED_NAME_FORMAT_DELIMITER_STRING);
+			String nameHierarchy[] = qualifiedName.split(QUALIFIED_NAME_FORMAT_DELIMITER_STRING);
 
-		int hierarchyLevels = nameHierarchy.length;
+			int hierarchyLevels = nameHierarchy.length;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("----- Entity-Id:" + entity.getId().getGuid());
-			LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
-			LOG.debug("----- Entity-Qualified-Name:" + qualifiedName);
-			LOG.debug("-----	Entity-Qualified-Name-Components -----");
-			for (int i = 0; i < hierarchyLevels; i++) {
-				LOG.debug("-----		Index:" + i + "	Value:" + nameHierarchy[i]);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("----- Entity-Id:" + entity.getId().getGuid());
+				LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
+				LOG.debug("----- Entity-Qualified-Name:" + qualifiedName);
+				LOG.debug("-----	Entity-Qualified-Name-Components -----");
+				for (int i = 0; i < hierarchyLevels; i++) {
+					LOG.debug("-----		Index:" + i + "	Value:" + nameHierarchy[i]);
+				}
 			}
-		}
 
-		int i;
-		for (i = 0; i < ret.length; i++) {
-			ret[i] = null;
-		}
-		ret[0] = qualifiedName;
+			int i;
+			for (i = 0; i < ret.length; i++) {
+				ret[i] = null;
+			}
+			ret[0] = qualifiedName;
 
-		for (i = 0; i < hierarchyLevels; i++) {
-			ret[i+1] = nameHierarchy[i];
+			for (i = 0; i < hierarchyLevels; i++) {
+				ret[i + 1] = nameHierarchy[i];
+			}
 		}
 		return ret;
 	}
@@ -340,10 +351,10 @@ class AtlasNotificationMapper {
 			ret[1] = getAttribute(entity.getValues(), "clusterName", String.class);
 			ret[2] = getAttribute(entity.getValues(), "name", String.class);
 			ret[3] = null;
-			ret[0] = ret[1] + "@" + ret[2];
+			ret[0] = ret[1] + "." + ret[2];
 		} else if (StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_TABLE)) {
 			String qualifiedName = getAttribute(entity.getValues(), "name", String.class);
-			String nameHierarchy[] = qualifiedName.split(".@");
+			String nameHierarchy[] = qualifiedName.split("\\.@");
 
 			int hierarchyLevels = nameHierarchy.length;
 

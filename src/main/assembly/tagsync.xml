@@ -122,9 +122,14 @@
 		<outputDirectory>/</outputDirectory>
 		<directory>tagsync/scripts</directory>
 		<excludes>
-			<exclude>*.properties</exclude>
-			<exclude>initd</exclude>
+			<exclude>ranger-tagsync.sh</exclude>
 		</excludes>
+	</fileSet>
+	<fileSet>
+		<directoryMode>755</directoryMode>
+		<fileMode>444</fileMode>
+		<outputDirectory>/templates</outputDirectory>
+		<directory>tagsync/conf/templates</directory>
 	</fileSet>
         <fileSet>
 	    	<directoryMode>755</directoryMode>
@@ -138,9 +143,9 @@
   </fileSets>
   <files>
       <file>
-		<source>tagsync/scripts/initd</source>
+		<source>tagsync/scripts/ranger-tagsync.sh</source>
 		<outputDirectory>/</outputDirectory>
-		<destName>ranger-tagsync.sh</destName>
+		<destName>ranger-tagsync</destName>
 		<fileMode>755</fileMode>
       </file>
    </files>

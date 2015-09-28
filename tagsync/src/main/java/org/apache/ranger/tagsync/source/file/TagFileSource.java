@@ -17,17 +17,17 @@
  * under the License.
  */
 
-package org.apache.ranger.source.file;
+package org.apache.ranger.tagsync.source.file;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.model.TagSink;
-import org.apache.ranger.model.TagSource;
+import org.apache.ranger.tagsync.model.TagSink;
+import org.apache.ranger.tagsync.model.TagSource;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.process.TagSyncConfig;
+import org.apache.ranger.tagsync.process.TagSyncConfig;
 
 import java.io.*;
 import java.util.Date;

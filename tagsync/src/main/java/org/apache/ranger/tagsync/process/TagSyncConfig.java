@@ -17,14 +17,13 @@
  * under the License.
  */
 
-package org.apache.ranger.process;
+package org.apache.ranger.tagsync.process;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
@@ -37,21 +36,17 @@ public class TagSyncConfig extends Configuration {
 
 	public static final String TAGSYNC_ENABLED_PROP = "ranger.tagsync.enabled" ;
 
-	public static final String TAGSYNC_PORT_PROP = "ranger.tagsync.port" ;
-
-	public static final String TAGSYNC_SSL_PROP = "ranger.tagsync.ssl" ;
-
 	public static final String TAGSYNC_LOGDIR_PROP = "ranger.tagsync.logdir" ;
 
 	private static final String TAGSYNC_TAGADMIN_REST_URL_PROP = "ranger.tagsync.tagadmin.rest.url";
 
 	private static final String TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.tagadmin.rest.ssl.config.file";
 
-	private static final String TAGSYNC_PM_SSL_BASICAUTH_USERNAME_PROP = "ranger.tagsync.policymanager.basicauth.username";
+	private static final String TAGSYNC_TAGADMIN_SSL_BASICAUTH_USERNAME_PROP = "ranger.tagsync.tagadmin.basicauth.username";
 
-	private static final String TAGSYNC_PM_SSL_BASICAUTH_PASSWORD_PROP = "ranger.tagsync.policymanager.basicauth.password";
+	private static final String TAGSYNC_TAGADMIN_SSL_BASICAUTH_PASSWORD_PROP = "ranger.tagsync.tagadmin.basicauth.password";
 
-	private static final String TAGSYNC_SOURCE_FILE_PROP = "ranger.tagsync.source.file";
+	private static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.filesource.filename";
 
 	private static final String TAGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PROP = "ranger.tagsync.sleeptimeinmillisbetweensynccycle";
 
@@ -59,7 +54,7 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_SINK_CLASS_PROP = "ranger.tagsync.sink.impl.class";
 
-	private static final String TAGSYNC_SOURCE_ATLAS_PROP = "atlas.endpoint";
+	private static final String TAGSYNC_ATLASSOURCE_ENDPOINT_PROP = "ranger.tagsync.atlassource.endpoint";
 
 	private static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX = "ranger.tagsync.atlas.";
 
@@ -177,16 +172,6 @@ public class TagSyncConfig extends Configuration {
 		return !(val != null && val.trim().equalsIgnoreCase("falae"));
 	}
 
-	static public String getTagSyncPort(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_PORT_PROP);
-		return val;
-	}
-
-	static public boolean isTagSyncSsl(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_SSL_PROP);
-		return (val != null && val.trim().equalsIgnoreCase("true"));
-	}
-
 	static public String getTagSyncLogdir(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_LOGDIR_PROP);
 		return val;
@@ -199,12 +184,20 @@ public class TagSyncConfig extends Configuration {
 
 	static public String getTagSourceClassName(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_SOURCE_CLASS_PROP);
-		return val;
+		if (StringUtils.equalsIgnoreCase(val, "atlas")) {
+			return "org.apache.ranger.tagsync.source.atlas.TagAtlasSource";
+		} else if (StringUtils.equalsIgnoreCase(val, "file")) {
+			return "org.apache.ranger.tagsync.source.file.TagFileSource";
+		} else
+			return val;
 	}
 
 	static public String getTagSinkClassName(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_SINK_CLASS_PROP);
-		return val;
+		if (StringUtils.equalsIgnoreCase(val, "tagadmin")) {
+			return "org.apache.ranger.tagsync.sink.tagadmin.TagRESTSink";
+		} else
+			return val;
 	}
 
 	static public String getTagAdminRESTUrl(Properties prop) {
@@ -217,23 +210,23 @@ public class TagSyncConfig extends Configuration {
 		return val;
 	}
 
-	static public String getPolicyMgrUserName(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_PM_SSL_BASICAUTH_USERNAME_PROP);
+	static public String getTagAdminUserName(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_TAGADMIN_SSL_BASICAUTH_USERNAME_PROP);
 		return val;
 	}
 
-	static public String getPolicyMgrPassword(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_PM_SSL_BASICAUTH_PASSWORD_PROP);
+	static public String getTagAdminPassword(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_TAGADMIN_SSL_BASICAUTH_PASSWORD_PROP);
 		return val;
 	}
 
 	static public String getTagSourceFileName(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_SOURCE_FILE_PROP);
+		String val = prop.getProperty(TAGSYNC_FILESOURCE_FILENAME_PROP);
 		return val;
 	}
 
 	static public String getAtlasEndpoint(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_SOURCE_ATLAS_PROP);
+		String val = prop.getProperty(TAGSYNC_ATLASSOURCE_ENDPOINT_PROP);
 		return val;
 	}
 

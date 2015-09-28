@@ -56,9 +56,10 @@ if [ "${action}" == "START" ]; then
 
 	if [ ! -d $logdir ]; then
 		mkdir -p $logdir
+		chmod 777 $logdir
 	fi
 
-	cp="${cdir}/conf.dist:${cdir}/dist/*:${cdir}/lib/*"
+	cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*"
 
     if [ -f $pidf ]; then
             PID=`cat $pidf`
@@ -73,7 +74,7 @@ if [ "${action}" == "START" ]; then
 
 	cd ${cdir}
 	umask 0077
-	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.process.TagSynchronizer  > ${logdir}/tagsync.log 2>&1 &
+	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  > ${logdir}/tagsync.out 2>&1 &
 	echo $! >  ${pidf}
 	chown ranger ${pidf}
 	sleep 5

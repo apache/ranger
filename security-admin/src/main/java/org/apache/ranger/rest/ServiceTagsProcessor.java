@@ -207,6 +207,8 @@ public class ServiceTagsProcessor {
 						resource.setResourceSignature(resourceSignature);
 
 						resourceInStore = tagStore.createServiceResource(resource);
+					} else if (StringUtils.isEmpty(resource.getServiceName()) || MapUtils.isEmpty(resource.getResourceElements())) {
+						resourceInStore = existing;
 					} else {
 						resource.setId(existing.getId());
 						resource.setGuid(existing.getGuid());

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.source.atlas;
+package org.apache.ranger.tagsync.source.atlas;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -41,12 +41,12 @@ import org.apache.atlas.notification.entity.EntityNotificationConsumerProvider;
 import org.apache.atlas.typesystem.api.Entity;
 import org.apache.atlas.typesystem.api.Trait;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
-import org.apache.ranger.model.TagSink;
-import org.apache.ranger.model.TagSource;
+import org.apache.ranger.tagsync.model.TagSink;
+import org.apache.ranger.tagsync.model.TagSource;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.process.TagSyncConfig;
+import org.apache.ranger.tagsync.process.TagSyncConfig;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -147,21 +147,22 @@ public class TagAtlasSource implements TagSource {
 			while (consumer.hasNext()) {
 				try {
 					EntityNotification notification = consumer.next();
-					Entity entity = notification.getEntity();
-					printNotification(notification);
-					ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification, properties);
-					if (serviceTags == null) {
-						LOG.error("Failed to map Atlas notification to ServiceTags structure");
-					} else {
-						if (LOG.isDebugEnabled()) {
-							String serviceTagsJSON = new Gson().toJson(serviceTags);
-							LOG.debug("Atlas notification mapped to serviceTags=" + serviceTagsJSON);
-						}
+					if (notification != null) {
+						printNotification(notification);
+						ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification, properties);
+						if (serviceTags == null) {
+							LOG.error("Failed to map Atlas notification to ServiceTags structure");
+						} else {
+							if (LOG.isDebugEnabled()) {
+								String serviceTagsJSON = new Gson().toJson(serviceTags);
+								LOG.debug("Atlas notification mapped to serviceTags=" + serviceTagsJSON);
+							}
 
-						try {
-							tagSink.uploadServiceTags(serviceTags);
-						} catch (Exception exception) {
-							LOG.error("uploadServiceTags() failed..", exception);
+							try {
+								tagSink.uploadServiceTags(serviceTags);
+							} catch (Exception exception) {
+								LOG.error("uploadServiceTags() failed..", exception);
+							}
 						}
 					}
 				} catch(Exception e){

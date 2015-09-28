@@ -17,13 +17,8 @@
  * under the License.
  */
 
-package org.apache.ranger.model;
+package org.apache.ranger.tagsync.model;
 
-import org.apache.ranger.plugin.model.RangerTagDef;
-import org.apache.ranger.plugin.model.RangerTagResourceMap;
-
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 public interface TagSource {

@@ -17,12 +17,11 @@
  * under the License.
  */
 
-package org.apache.ranger.model;
+package org.apache.ranger.tagsync.model;
 
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.ServiceTags;
 
-import java.util.Map;
 import java.util.Properties;
 
 

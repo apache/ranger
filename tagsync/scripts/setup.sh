@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,17 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ "${JAVA_HOME}" == "" ]
+then
+	echo "JAVA_HOME environment property not defined, aborting installation."
+	exit 1
+else
+	export JAVA_HOME
+	PATH="${JAVA_HOME}/bin:${PATH}"
+	export PATH
+fi
 
-# This file is used currently to satisfy needs of Injection of EntityChangeConsumer and its
-# initialization.
-#
-# Basic configuration required to create EntityChangeConsumer
-#
-atlas.notification.kafka.bootstrap.servers=ranger-tag-policy-akulkarni-1:6667
-atlas.notification.kafka.zookeeper.connect=ranger-tag-policy-akulkarni-1:2181
-
-#
-# These properties seem to be internal to Atlas. They probably are used for generating notifications.
-atlas.notification.embedded=false
-atlas.notification.kafka.acks=1
-atlas.notification.kafka.data=${sys:atlas.home}/data/kafka
+./setup.py

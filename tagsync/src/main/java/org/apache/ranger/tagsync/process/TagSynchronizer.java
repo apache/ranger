@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.apache.ranger.process;
+package org.apache.ranger.tagsync.process;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
-import org.apache.ranger.model.TagSink;
-import org.apache.ranger.model.TagSource;
+import org.apache.ranger.tagsync.model.TagSink;
+import org.apache.ranger.tagsync.model.TagSource;
 
 import java.util.Map;
 import java.util.Properties;

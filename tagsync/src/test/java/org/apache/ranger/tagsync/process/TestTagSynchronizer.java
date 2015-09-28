@@ -17,11 +17,13 @@
  * under the License.
  */
 
-package org.apache.ranger.process;
+package org.apache.ranger.tagsync.process;
 
 
-import org.apache.ranger.model.TagSource;
-import org.apache.ranger.source.atlas.TagAtlasSource;
+import org.apache.ranger.tagsync.model.TagSource;
+import org.apache.ranger.tagsync.process.TagSyncConfig;
+import org.apache.ranger.tagsync.process.TagSynchronizer;
+import org.apache.ranger.tagsync.source.atlas.TagAtlasSource;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

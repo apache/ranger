@@ -14,65 +14,41 @@
   limitations under the License. See accompanying LICENSE file.
 -->
 
-<!-- Put site-specific property overrides in this file. -->
-
 <configuration>
 	<property>
 		<name>ranger.tagsync.enabled</name>
-		<value>true</value>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.tagsync.logdir</name>
-		<value>./log</value>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.tagsync.tagadmin.rest.url</name>
-		<value>http://localhost:6080</value>
-		<description></description>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.sleeptimeinmillisbetweensynccycle</name>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.tagsync.tagadmin.rest.ssl.config.file</name>
 		<value></value>
-		<description></description>
 	</property>
 	<property>
 		<name>ranger.tagsync.tagadmin.basicauth.username</name>
-		<value>admin</value>
-		<description></description>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.tagsync.tagadmin.basicauth.password</name>
-		<value>admin</value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.sleeptimeinmillisbetweensynccycle</name>
-		<value>60000</value>
-		<description></description>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.tagsync.filesource.filename</name>
-		<value>/etc/ranger/data/tags.json</value>
-		<description></description>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.tagsync.source.impl.class</name>
-		<value>file</value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.sink.impl.class</name>
-		<value>tagadmin</value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.atlassource.endpoint</name>
-		<value>http://localhost:21000/</value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.atlas.hive.instance.c1.ranger.service</name>
-		<value>cl1_hive</value>
-		<description></description>
+		<value></value>
 	</property>
 </configuration>

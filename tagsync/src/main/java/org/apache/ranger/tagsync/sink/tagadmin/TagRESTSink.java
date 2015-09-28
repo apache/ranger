@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.sink.policymgr;
+package org.apache.ranger.tagsync.sink.tagadmin;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -26,14 +26,14 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
-import org.apache.ranger.model.TagSink;
+import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.process.TagSyncConfig;
+import org.apache.ranger.tagsync.process.TagSyncConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -70,8 +70,8 @@ public class TagRESTSink implements TagSink {
 
 		String restUrl       = TagSyncConfig.getTagAdminRESTUrl(properties);
 		String sslConfigFile = TagSyncConfig.getTagAdminRESTSslConfigFile(properties);
-		String userName = TagSyncConfig.getPolicyMgrUserName(properties);
-		String password = TagSyncConfig.getPolicyMgrPassword(properties);
+		String userName = TagSyncConfig.getTagAdminUserName(properties);
+		String password = TagSyncConfig.getTagAdminPassword(properties);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("restUrl=" + restUrl);
