@@ -165,8 +165,7 @@ class AtlasNotificationMapper {
 
 			elements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
 
-			//String[] components = getQualifiedNameComponents(entity);
-			String[] components = getTempNameComponents(entity);
+			String[] components = getQualifiedNameComponents(entity);
 			// components should contain qualifiedName, instanceName, dbName, tableName, columnName in that order
 
 
@@ -200,10 +199,6 @@ class AtlasNotificationMapper {
 					LOG.error("invalid qualifiedName for HIVE_TABLE, qualifiedName=" + components[0]);
 				}
 			} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_COLUMN)) {
-				LOG.error("HIVE_COLUMN creation is not handled.");
-				throw new Exception("HIVE_COLUMN entity-creation not implemented");
-
-				/*
 				if (components.length > 4) {
 					dbName = components[2];
 					tableName = components[3];
@@ -217,7 +212,6 @@ class AtlasNotificationMapper {
 				} else {
 					LOG.error("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + components[0]);
 				}
-								 */
 
 			}
 		}
