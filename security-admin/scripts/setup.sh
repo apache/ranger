@@ -874,7 +874,7 @@ update_properties() {
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=ranger.jpa.jdbc.dialect
+		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
@@ -901,7 +901,7 @@ update_properties() {
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=ranger.jpa.jdbc.dialect
+		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
