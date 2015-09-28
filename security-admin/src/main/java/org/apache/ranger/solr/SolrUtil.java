@@ -22,7 +22,6 @@ package org.apache.ranger.solr;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -38,7 +37,6 @@ import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,6 +125,11 @@ public class SolrUtil {
 					// TODO: Need to handle range here
 				} else {
 					String fq = setField(fieldName, paramValue);
+
+					if (searchField.getSearchType() == SEARCH_TYPE.PARTIAL) {
+						fq = setFieldForPartialSearch(fieldName, paramValue);
+					}
+
 					if (fq != null) {
 						query.addFilterQuery(fq);
 					}
@@ -158,6 +161,13 @@ public class SolrUtil {
 					MessageEnums.ERROR_SYSTEM);
 		}
 		return response;
+	}
+
+	private String setFieldForPartialSearch(String fieldName, Object value) {
+		if (value == null || value.toString().trim().length() == 0) {
+			return null;
+		}
+		return fieldName + ":*" + ClientUtils.escapeQueryChars(value.toString().trim().toLowerCase()) + "*";
 	}
 
 	public String setField(String fieldName, Object value) {

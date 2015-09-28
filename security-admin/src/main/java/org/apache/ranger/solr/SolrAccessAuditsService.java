@@ -114,7 +114,7 @@ public class SolrAccessAuditsService {
 		searchFields.add(new SearchField("endDate", "evtTime", DATA_TYPE.DATE,
 				SEARCH_TYPE.LESS_EQUAL_THAN));
 
-		searchFields.add(new SearchField("tags", "obj.tags", DATA_TYPE.STR_LIST, SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("tags", "tags", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
 
 		sortFields.add(new SortField("eventTime", "evtTime", true,
 				SORT_ORDER.DESC));
