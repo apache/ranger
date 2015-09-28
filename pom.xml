@@ -501,6 +501,7 @@
           <exclude>**/patchprocess/**</exclude>
           <exclude>**/test/resources/**</exclude>
           <exclude>**/main/resources/**/*.json</exclude>
+          <exclude>**/samples/**/*.json</exclude>
           <exclude>**/.externalToolBuilders/*</exclude>
           <exclude>*.patch</exclude>
           <exclude>atlassian-ide-plugin.xml</exclude>
