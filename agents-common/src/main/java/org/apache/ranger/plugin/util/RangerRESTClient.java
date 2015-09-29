@@ -83,14 +83,11 @@ public class RangerRESTClient {
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE				 = "SunX509" ;
 	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE					     = "SSL" ;
 
-	public static final int	   RANGER_POLICYMGR_CLIENT_CONNECTION_TIMEOUT		 = 120000;
-	public static final int    RANGER_POLICYMGR_CLIENT_READ_TIMEOUT			     = 30000;
-
-	private String  mUrl               = null;
-	private String  mSslConfigFileName = null;
-	private String  mUsername          = null;
-	private String  mPassword          = null;
-	private boolean mIsSSL             = false;
+	private String  mUrl                 = null;
+	private String  mSslConfigFileName   = null;
+	private String  mUsername            = null;
+	private String  mPassword            = null;
+	private boolean mIsSSL               = false;
 
 	private String mKeyStoreURL     = null;
 	private String mKeyStoreAlias   = null;
@@ -101,8 +98,11 @@ public class RangerRESTClient {
 	private String mTrustStoreFile  = null;
 	private String mTrustStoreType  = null;
 
-	private Gson   gsonBuilder = null;
-	private volatile Client client      = null;
+	private Gson   gsonBuilder 		= null;
+	private volatile Client client  = null;
+
+	private int  mRestClientConnTimeOutMs;
+	private int  mRestClientReadTimeOutMs;
 
 	public RangerRESTClient() {
 		this(RangerConfiguration.getInstance().get(RANGER_PROP_POLICYMGR_URL),
@@ -130,6 +130,22 @@ public class RangerRESTClient {
 
 	public String getPassword() {
 		return mPassword;
+	}
+
+	public int getRestClientConnTimeOutMs() {
+		return mRestClientConnTimeOutMs;
+	}
+
+	public void setRestClientConnTimeOutMs(int mRestClientConnTimeOutMs) {
+		this.mRestClientConnTimeOutMs = mRestClientConnTimeOutMs;
+	}
+
+	public int getRestClientReadTimeOutMs() {
+		return mRestClientReadTimeOutMs;
+	}
+
+	public void setRestClientReadTimeOutMs(int mRestClientReadTimeOutMs) {
+		this.mRestClientReadTimeOutMs = mRestClientReadTimeOutMs;
 	}
 
 	public void setBasicAuthInfo(String username, String password) {
@@ -202,8 +218,8 @@ public class RangerRESTClient {
 		}
 
 		// Set Connection Timeout and ReadTime for the PolicyRefresh
-		client.setConnectTimeout(RANGER_POLICYMGR_CLIENT_CONNECTION_TIMEOUT);
-		client.setReadTimeout(RANGER_POLICYMGR_CLIENT_READ_TIMEOUT);
+		client.setConnectTimeout(mRestClientConnTimeOutMs);
+		client.setReadTimeout(mRestClientReadTimeOutMs);
 
 		return client;
 	}
