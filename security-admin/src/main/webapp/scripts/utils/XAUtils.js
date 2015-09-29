@@ -466,14 +466,19 @@ define(function(require) {
 			return '--';
 	};
 	XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showGroups) {
-		var showMoreLess = false, groupArr = [];
+		var showMoreLess = false, groupArr = [], items = [];
+		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions']
 		var type = _.isUndefined(showGroups) ? 'groups' : 'users';
-		if (!_.isArray(rawValue) && !_.isUndefined(rawValue[type]))
-			return '--';
-		_.each(rawValue, function(perm) {
+		_.each(itemList, function(item){
+		    if(!_.isUndefined(model.get(item)) && !_.isEmpty(model.get(item))) {
+		    	items =_.union(items,  model.get(item))
+		    }
+		});
+		_.each(items, function(perm) {
 			groupArr = _.union(groupArr, perm[type])
 		});
-
+		if (_.isEmpty(items))
+			return '--';
 		var newGroupArr = _.map(groupArr, function(name, i) {
 			if (i >= 4) {
 				return '<span class="label label-info float-left-margin-2" policy-' + type
@@ -1030,11 +1035,14 @@ define(function(require) {
 			if(_.isEmpty(vXPortalUser.attributes)){
 				return controller;
 			}
-			var denyControllerActions = [];
-			var denyModulesObj = [];
+			var denyControllerActions = [], denyModulesObj = [];
 			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
 			//TODO Temporary fix for tag based policies : need to come from server
 			userModuleNames.push('Tag Based Policies')
+			//add by default permission module to admin user
+			if (SessionMgr.isSystemAdmin()){
+				userModuleNames.push('Permissions')
+			}
 			var groupModuleNames = _.pluck(vXPortalUser.get('groupPermissions'), 'moduleName');
 			var moduleNames = _.union(userModuleNames, groupModuleNames);
 			

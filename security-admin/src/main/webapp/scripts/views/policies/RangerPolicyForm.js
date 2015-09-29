@@ -348,20 +348,20 @@ define(function(require){
 					if(!_.isUndefined(m.get('userName')) && !_.isNull(m.get('userName'))){
 						policyItem.set("users",m.get("userName").split(','));
 					}
-					if(!_.isUndefined(m.get('delegateAdmin'))){
-						policyItem.set("delegateAdmin",m.get("delegateAdmin"));
-					}
-					
-					var RangerPolicyItemAccessList = Backbone.Collection.extend();
-					var rangerPlcItemAccessList = new RangerPolicyItemAccessList(m.get('accesses'));
-					policyItem.set('accesses', rangerPlcItemAccessList)
-					
-					if(!_.isUndefined(m.get('conditions'))){
+					if(!(_.isUndefined(m.get('conditions')) && _.isEmpty(m.get('conditions')))){
 						var RangerPolicyItemConditionList = Backbone.Collection.extend();
 						var rPolicyItemCondList = new RangerPolicyItemConditionList(m.get('conditions'))
 						policyItem.set('conditions', rPolicyItemCondList)
 					}
-					policyItemList.add(policyItem)
+					if(!_.isUndefined(m.get('accesses')) && !_.isUndefined(m.get('delegateAdmin'))){
+						policyItem.set("delegateAdmin",m.get("delegateAdmin"));
+					}
+					if(!_.isUndefined(m.get('accesses'))){
+						var RangerPolicyItemAccessList = Backbone.Collection.extend();
+						var rangerPlcItemAccessList = new RangerPolicyItemAccessList(m.get('accesses'));
+						policyItem.set('accesses', rangerPlcItemAccessList)
+						policyItemList.add(policyItem)
+					}
 					
 				}
 			}, this);
@@ -587,11 +587,11 @@ define(function(require){
 				};
 			return JSON.stringify(context);
 		},
-		formValidation : function(){
+		formValidation : function(coll){
 			var groupSet = false,permSet = false,groupPermSet = false,
 			userSet=false, userPerm = false, userPermSet =false,breakFlag =false, condSet = false;
 			console.log('validation called..');
-			this.formInputList.each(function(m){
+			coll.each(function(m){
 				if(_.isEmpty(m.attributes)) return;
 				if(m.has('groupName') || m.has('userName') || m.has('accesses') ){
 					if(! breakFlag){
@@ -609,7 +609,7 @@ define(function(require){
 						}
 					}
 				}
-				if(m.has('conditions')){
+				if(m.has('conditions') && !_.isEmpty(m.get('conditions'))){
 					condSet = m.has('conditions') ? true : false;
 				}
 			});

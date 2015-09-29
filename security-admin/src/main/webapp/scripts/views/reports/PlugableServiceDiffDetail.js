@@ -88,18 +88,7 @@ define(function(require){
 			
 		},
 		initializeServiceDef : function(){
-			var url;
-			/*if(this.action == 'update'){
-				var rangerPolicy = new RangerPolicy({'id':this.objectId})
-				rangerPolicy.fetch({
-					cache : false,
-					async : false
-				})
-				this.policyName = rangerPolicy.get('name');
-				url = XAUtils.getRangerServiceByName(rangerPolicy.get('service'))
-			}else{
-			}*/
-			var policyName = this.collection.findWhere({'attributeName':'Policy Name'});
+			var url, policyName = this.collection.findWhere({'attributeName':'Policy Name'});
 			if(this.action == 'create'){
 				this.policyName = policyName.get('newValue');
 			}else if(this.action == 'delete'){
@@ -108,9 +97,9 @@ define(function(require){
 			if(!_.isUndefined(this.collection.models[0]) ){
 				this.policyName = _.isUndefined(this.policyName) ? this.collection.models[0].get('objectName') : this.policyName;
 				if(this.action != 'delete'){
-					url = XAUtils.getRangerServiceByName(this.collection.models[0].get('parentObjectName'))
-					var rangerService = new RangerService()
-					rangerService.url = url;
+//					url = XAUtils.getRangerServiceByName(this.collection.models[0].get('parentObjectName'))
+					var rangerService = new RangerService({ 'id' : this.collection.models[0].get('parentObjectId') })
+//					rangerService.url = url;
 					rangerService.fetch({
 						cache : false,
 						async : false

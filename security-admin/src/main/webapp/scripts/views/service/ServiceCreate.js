@@ -154,12 +154,7 @@ define(function(require){
 					XAUtil.allowNavigation();
 					var msg = that.editService ? 'Service updated successfully' :'Service created successfully';
 					XAUtil.notifySuccess('Success', msg);
-					
-					if(XAEnums.ServiceType.SERVICE_TAG.label == that.model.get('type')){
-						App.appRouter.navigate("#!/policymanager/tag",{trigger: true});
-						return;
-					}
-					App.appRouter.navigate("#!/policymanager/resource",{trigger: true});
+					that.gotoResourceOrTagTab()
 				},
 				error: function (model, response, options) {
 					XAUtil.blockUI('unblock');
@@ -185,7 +180,7 @@ define(function(require){
 							XAUtil.blockUI('unblock');
 							XAUtil.allowNavigation();
 							XAUtil.notifySuccess('Success', 'Service delete successfully');
-							App.appRouter.navigate("#!/policymanager",{trigger: true});
+							that.gotoResourceOrTagTab()
 						},
 						error: function (model, response, options) {
 							XAUtil.blockUI('unblock');
@@ -255,14 +250,16 @@ define(function(require){
 					}	
 				});
 		},
-		onCancel : function(){
-			XAUtil.allowNavigation();
-			if(XAEnums.ServiceType.SERVICE_TAG.label == this.rangerServiceDefModel.get('name')){
+		gotoResourceOrTagTab : function(){
+			if(XAEnums.ServiceType.SERVICE_TAG.label == this.model.get('type')){
 				App.appRouter.navigate("#!/policymanager/tag",{trigger: true});
 				return;
 			}
 			App.appRouter.navigate("#!/policymanager/resource",{trigger: true});
-//			App.appRouter.navigate("#!/policymanager",{trigger: true});
+		},
+		onCancel : function(){
+			XAUtil.allowNavigation();
+			this.gotoResourceOrTagTab();
 		},
 		/** on close */
 		onClose: function(){

@@ -501,7 +501,9 @@ define(function(require){
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 									case 'Role':
-										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.UserRoles));
+										var roles = XAUtil.hackForVSLabelValuePairs(XAEnums.UserRoles);
+										var label  = SessionMgr.isSystemAdmin() ? XAEnums.UserRoles.ROLE_KEY_ADMIN.label : XAEnums.UserRoles.ROLE_SYS_ADMIN.label;
+										callback(_.filter(roles, function(o) { return o.label !== label; }));
 										break;
 									case 'User Source':
 										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.UserTypes));
