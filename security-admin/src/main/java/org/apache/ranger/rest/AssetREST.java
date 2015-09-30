@@ -533,7 +533,7 @@ public class AssetREST {
 			logger.error("failed to retrieve policies for repository " + repository, excp);
 		}
 
-		RangerService      service       = serviceREST.getServiceByName(repository);
+		RangerService      service       = serviceUtil.getServiceByName(repository);
 		List<RangerPolicy> policies      = servicePolicies != null ? servicePolicies.getPolicies() : null;
 		long               policyUpdTime = (servicePolicies != null && servicePolicies.getPolicyUpdateTime() != null) ? servicePolicies.getPolicyUpdateTime().getTime() : 0l;
 		VXAsset            vAsset        = serviceUtil.toVXAsset(service);

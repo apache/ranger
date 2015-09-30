@@ -32,6 +32,8 @@ import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -121,6 +123,34 @@ public class ServiceUtil {
 		mapAccessTypeToPermType.put("uploadNewCredentials", 31);
 
 		version = "0";
+	}
+
+	public RangerService getServiceByName(@PathParam("name") String name) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceUtil.getServiceByName(" + name + ")");
+		}
+
+		RangerService ret = null;
+
+		try {
+			ret = svcStore.getServiceByName(name);
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
+			LOG.error("getServiceByName(" + name + ") failed", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+
+		if(ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceUtil.getServiceByName(" + name + "): " + ret);
+		}
+
+		return ret;
 	}
 
 	public RangerService toRangerService(VXAsset asset) {
