@@ -183,7 +183,7 @@
 <!-- # ServletMapping Url Pattern -->
 	<property>
 		<name>ranger.servlet.mapping.url.pattern</name>
-		<value>false</value>
+		<value>service</value>
 	</property>
 
 
