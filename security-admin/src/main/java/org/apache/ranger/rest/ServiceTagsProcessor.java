@@ -111,10 +111,10 @@ public class ServiceTagsProcessor {
 					if(existing == null) {
 						tagDefInStore = tagStore.createTagDef(tagDef);
 					} else {
-						tagDef.setId(existing.getId());
-						tagDef.setGuid(existing.getGuid());
-
-						tagDefInStore = tagStore.updateTagDef(tagDef);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("tagDef for name:" + tagDef.getName() + " exists, will not update it");
+						}
+						tagDefInStore = existing;
 					}
 
 					if(tagDefsInStore != null) {

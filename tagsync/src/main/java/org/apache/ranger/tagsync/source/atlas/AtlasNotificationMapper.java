@@ -94,19 +94,20 @@ class AtlasNotificationMapper {
 		String opName = entityNotification.getOperationType().name();
 		switch (opType) {
 			case ENTITY_CREATED: {
-				ret = getServiceTags(entity, opType);
+				LOG.info("ENTITY_CREATED notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
 				break;
 			}
 			case ENTITY_UPDATED: {
-				ret = handleEntityUpdate(entity);
+				ret = getServiceTags(entity);
+				if (MapUtils.isEmpty(ret.getTags())) {
+					LOG.info("No traits associated with this entity update notification. Ignoring it altogether");
+					ret = null;
+				}
 				break;
 			}
-			case TRAIT_ADDED: {
-				ret = getServiceTags(entity, opType);
-				break;
-			}
+			case TRAIT_ADDED:
 			case TRAIT_DELETED: {
-				ret = handleTraitDelete(entity);
+				ret = getServiceTags(entity);
 				break;
 			}
 			default:
@@ -116,30 +117,35 @@ class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private ServiceTags getServiceTags(Entity entity, EntityNotification.OperationType opType) throws Exception {
+	static private ServiceTags getServiceTags(Entity entity) throws Exception {
 		ServiceTags ret = null;
 
 
 		List<RangerServiceResource> serviceResources = new ArrayList<RangerServiceResource>();
 
-		RangerServiceResource serviceResource = getServiceResource(entity, opType);
+		RangerServiceResource serviceResource = getServiceResource(entity);
 		serviceResources.add(serviceResource);
 
 		Map<Long, RangerTag> tags = getTags(entity);
 
-		Map<Long, RangerTagDef> tagDefs = getTagDefs(tags, EntityNotification.OperationType.ENTITY_CREATED);
+		Map<Long, RangerTagDef> tagDefs = getTagDefs(tags);
 
 		Map<Long, List<Long>> resourceIdToTagIds = null;
+
+		resourceIdToTagIds = new HashMap<Long, List<Long>>();
+		List<Long> tagList = new ArrayList<Long>();
+
 
 		if (MapUtils.isNotEmpty(tags)) {
 			resourceIdToTagIds = new HashMap<Long, List<Long>>();
 
-			List<Long> tagList = new ArrayList<Long>();
 			for (Map.Entry<Long, RangerTag> entry : tags.entrySet()) {
 				tagList.add(entry.getKey());
 			}
-			resourceIdToTagIds.put(1L, tagList);
 		}
+
+		resourceIdToTagIds.put(1L, tagList);
+
 
 		ret = new ServiceTags();
 
@@ -154,67 +160,66 @@ class AtlasNotificationMapper {
 	}
 
 
-	static private RangerServiceResource getServiceResource(Entity entity, EntityNotification.OperationType opType) throws Exception {
+	static private RangerServiceResource getServiceResource(Entity entity) throws Exception {
 
 		RangerServiceResource ret = null;
 
 		Map<String, RangerPolicy.RangerPolicyResource> elements = null;
 		String serviceName = null;
 
-		if (opType == EntityNotification.OperationType.ENTITY_CREATED) {
 
-			elements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
+		elements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
 
-			String[] components = getQualifiedNameComponents(entity);
-			// components should contain qualifiedName, instanceName, dbName, tableName, columnName in that order
+		String[] components = getQualifiedNameComponents(entity);
+		// components should contain qualifiedName, instanceName, dbName, tableName, columnName in that order
 
 
-			String entityTypeName = entity.getTypeName();
+		String entityTypeName = entity.getTypeName();
 
-			String instanceName, dbName, tableName, columnName;
+		String instanceName, dbName, tableName, columnName;
 
-			if (components.length > 1) {
-				instanceName = components[1];
-				serviceName = getServiceName(instanceName, entityTypeName);
-			}
-
-			if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_DB)) {
-				if (components.length > 2) {
-					dbName = components[2];
-					RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
-					elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
-
-				} else {
-					LOG.error("invalid qualifiedName for HIVE_DB, qualifiedName=" + components[0]);
-				}
-			} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_TABLE)) {
-				if (components.length > 3) {
-					dbName = components[2];
-					tableName = components[3];
-					RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
-					elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
-					RangerPolicy.RangerPolicyResource tablePolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
-					elements.put(RANGER_TYPE_HIVE_TABLE, tablePolicyResource);
-				} else {
-					LOG.error("invalid qualifiedName for HIVE_TABLE, qualifiedName=" + components[0]);
-				}
-			} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_COLUMN)) {
-				if (components.length > 4) {
-					dbName = components[2];
-					tableName = components[3];
-					columnName = components[4];
-					RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
-					elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
-					RangerPolicy.RangerPolicyResource tablePolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
-					elements.put(RANGER_TYPE_HIVE_TABLE, tablePolicyResource);
-					RangerPolicy.RangerPolicyResource columnPolicyResource = new RangerPolicy.RangerPolicyResource(columnName);
-					elements.put(RANGER_TYPE_HIVE_COLUMN, columnPolicyResource);
-				} else {
-					LOG.error("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + components[0]);
-				}
-
-			}
+		if (components.length > 1) {
+			instanceName = components[1];
+			serviceName = getServiceName(instanceName, entityTypeName);
 		}
+
+		if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_DB)) {
+			if (components.length > 2) {
+				dbName = components[2];
+				RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
+				elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
+
+			} else {
+				LOG.error("invalid qualifiedName for HIVE_DB, qualifiedName=" + components[0]);
+			}
+		} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_TABLE)) {
+			if (components.length > 3) {
+				dbName = components[2];
+				tableName = components[3];
+				RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
+				elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
+				RangerPolicy.RangerPolicyResource tablePolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
+				elements.put(RANGER_TYPE_HIVE_TABLE, tablePolicyResource);
+			} else {
+				LOG.error("invalid qualifiedName for HIVE_TABLE, qualifiedName=" + components[0]);
+			}
+		} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_COLUMN)) {
+			if (components.length > 4) {
+				dbName = components[2];
+				tableName = components[3];
+				columnName = components[4];
+				RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
+				elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
+				RangerPolicy.RangerPolicyResource tablePolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
+				elements.put(RANGER_TYPE_HIVE_TABLE, tablePolicyResource);
+				RangerPolicy.RangerPolicyResource columnPolicyResource = new RangerPolicy.RangerPolicyResource(columnName);
+				elements.put(RANGER_TYPE_HIVE_COLUMN, columnPolicyResource);
+			} else {
+				LOG.error("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + components[0]);
+			}
+
+		}
+
 
 		ret = new RangerServiceResource();
 		ret.setGuid(entity.getId().getGuid());
@@ -255,7 +260,6 @@ class AtlasNotificationMapper {
 
 				RangerTag tag = new RangerTag();
 
-				tag.setGuid(entity.getId().getGuid() + "-" + traitName);
 				tag.setType(traitName);
 				tag.setAttributes(tagAttrValues);
 
@@ -266,19 +270,17 @@ class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private Map<Long, RangerTagDef> getTagDefs(Map<Long, RangerTag> tags, EntityNotification.OperationType opType) {
+	static private Map<Long, RangerTagDef> getTagDefs(Map<Long, RangerTag> tags) {
 
 		Map<Long, RangerTagDef> ret = null;
 
-		if (opType == EntityNotification.OperationType.ENTITY_CREATED || opType == EntityNotification.OperationType.TRAIT_ADDED) {
-			if (MapUtils.isNotEmpty(tags)) {
-				ret = new HashMap<Long, RangerTagDef>();
-				for (Map.Entry<Long, RangerTag> entry : tags.entrySet()) {
-					RangerTagDef tagDef = new RangerTagDef();
-					tagDef.setName(entry.getValue().getType());
-					tagDef.setId(entry.getKey());
-					ret.put(entry.getKey(), tagDef);
-				}
+		if (MapUtils.isNotEmpty(tags)) {
+			ret = new HashMap<Long, RangerTagDef>();
+			for (Map.Entry<Long, RangerTag> entry : tags.entrySet()) {
+				RangerTagDef tagDef = new RangerTagDef();
+				tagDef.setName(entry.getValue().getType());
+				tagDef.setId(entry.getKey());
+				ret.put(entry.getKey(), tagDef);
 			}
 		}
 
@@ -289,10 +291,21 @@ class AtlasNotificationMapper {
 		String ret[] = new String[5];
 
 		if (StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_DB)) {
-			ret[1] = getAttribute(entity.getValues(), "clusterName", String.class);
-			ret[2] = getAttribute(entity.getValues(), "name", String.class);
+
+			String clusterName = getAttribute(entity.getValues(), "clusterName", String.class);
+			String name = getAttribute(entity.getValues(), "name", String.class);
+
+			ret[1] = clusterName;
+			ret[2] = name;
 			ret[3] = null;
 			ret[0] = ret[1] + "." + ret[2];
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("----- Entity-Id:" + entity.getId().getGuid());
+				LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
+				LOG.debug("----- Entity-Cluster-Name:" + clusterName);
+				LOG.debug("----- Entity-Name:" + name);
+			}
 		} else {
 			String qualifiedName = getAttribute(entity.getValues(), ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
 
