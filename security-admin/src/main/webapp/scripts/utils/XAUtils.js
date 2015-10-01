@@ -1128,6 +1128,16 @@ define(function(require) {
 			return XAUtils.notifyError('Error', erroMsg);
 		});
 	};
+	XAUtils.isSinglevValueInput = function(obj){
+		//single value support
+		var singleValue = false;
+		if(!_.isUndefined(obj.uiHint) && !_.isEmpty(obj.uiHint)){
+			var UIHint = JSON.parse(obj.uiHint);
+			if(!_.isUndefined(UIHint.singleValue))
+				singleValue = UIHint.singleValue;
+		}
+		return singleValue;
+	};
 	
 	return XAUtils;
 });

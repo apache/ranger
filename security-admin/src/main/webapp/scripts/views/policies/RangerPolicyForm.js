@@ -182,7 +182,13 @@ define(function(require){
 						//parentShowHide
 						this.selectedResourceTypes['sameLevel'+resourceDef.level]=key;
 					}else{
-						this.model.set(resourceDef.name, obj)
+						//single value support
+						if(! XAUtil.isSinglevValueInput(resourceDef) ){
+							this.model.set(resourceDef.name, obj)
+						}else{
+							//single value resource
+							this.model.set(resourceDef.name, obj.values)
+						}
 					}
 				},this)
 			}
@@ -305,15 +311,23 @@ define(function(require){
 			_.each(this.rangerServiceDefModel.get('resources'),function(obj){
 				if(!_.isNull(obj)){
 					var tmpObj =  that.model.get(obj.name);
-					if(!_.isUndefined(tmpObj) && _.isObject(tmpObj)){
-						var rPolicyResource = new RangerPolicyResource();
-						rPolicyResource.set('values',tmpObj.resource.split(','));
-						if(!_.isUndefined(tmpObj.isRecursive)){
-							rPolicyResource.set('isRecursive', tmpObj.isRecursive)
+					var rPolicyResource = new RangerPolicyResource();
+					//single value support
+					if(! XAUtil.isSinglevValueInput(obj) ){
+						if(!_.isUndefined(tmpObj) && _.isObject(tmpObj)){
+							rPolicyResource.set('values',tmpObj.resource.split(','));
+							if(!_.isUndefined(tmpObj.isRecursive)){
+								rPolicyResource.set('isRecursive', tmpObj.isRecursive)
+							}
+							if(!_.isUndefined(tmpObj.isExcludes)){
+								rPolicyResource.set('isExcludes', tmpObj.isExcludes)
+							}
+							resources[obj.name] = rPolicyResource;
+							that.model.unset(obj.name);
 						}
-						if(!_.isUndefined(tmpObj.isExcludes)){
-							rPolicyResource.set('isExcludes', tmpObj.isExcludes)
-						}
+					}else{
+						//For single value resource
+						rPolicyResource.set('values',tmpObj.split(','));
 						resources[obj.name] = rPolicyResource;
 						that.model.unset(obj.name);
 					}

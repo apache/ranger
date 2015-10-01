@@ -25,7 +25,7 @@
       "matcherOptions": { "wildCard":false, "ignoreCase":false },
       "validationRegEx":"",
       "validationMessage": "",
-      "uiHint":"",
+      "uiHint":"{ \"singleValue\":true }",
       "label": "TAG",
       "description": "TAG"
     }

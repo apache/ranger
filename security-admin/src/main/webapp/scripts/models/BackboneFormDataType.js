@@ -21,6 +21,7 @@ define(function(require) {
 	'use strict';
 
 	var Backbone = require('backbone');
+	var XAUtils = require('utils/XAUtils');
 
 	var FormDataType = Backbone.Model.extend({
 		type : [ 'string', 'boolean', 'int' ],
@@ -54,40 +55,42 @@ define(function(require) {
 							if($.inArray(v.level, samelevelFieldCreated) >= 0){
 								return;
 							}
-							if(v.excludesSupported || v.recursiveSupported || v.lookupSupported){
-								var resourceOpts = {};
-								formObj.type = 'Resource';
-								formObj['excludeSupport']= v.excludesSupported;
-								formObj['recursiveSupport'] = v.recursiveSupported;
-								formObj.name = v.name;
+							if(! XAUtils.isSinglevValueInput(v) ){
+								if(v.excludesSupported || v.recursiveSupported || v.lookupSupported ){
+									var resourceOpts = {};
+									formObj.type = 'Resource';
+									formObj['excludeSupport']= v.excludesSupported;
+									formObj['recursiveSupport'] = v.recursiveSupported;
+									formObj.name = v.name;
 //								formObj.level = v.level;
-								//checkParentHideShow field
-								formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
-								formObj['resourceOpts'] = {'data-placeholder': v.label };
-								
-								if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
-									var opts = { 
-													'type' : v.name,
-													'lookupURL' 		: "service/plugins/services/lookupResource/"+form.rangerService.get('name')
-												};
-									if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
-										opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};
+									//checkParentHideShow field
+									formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
+									formObj['resourceOpts'] = {'data-placeholder': v.label };
+									
+									if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
+										var opts = { 
+												'type' : v.name,
+												'lookupURL' 		: "service/plugins/services/lookupResource/"+form.rangerService.get('name')
+										};
+										if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
+											opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};
+										}
+										resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
+										formObj['resourceOpts'] = resourceOpts; 
 									}
-									resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
-									formObj['resourceOpts'] = resourceOpts; 
-								}
-								//same level resources check 
-								var optionsAttrs = _.filter(config,function(field){ if(field.level == v.level) return field;})
-								if(optionsAttrs.length > 1){
-									var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
-									formObj['sameLevelOpts'] = optionsTitle;
-									samelevelFieldCreated.push(v.level);
-									fieldName = 'sameLevel'+v.level;
-									formObj['title'] = '';
-									formObj['resourcesAtSameLevel'] = true;
-
-									// formView is used to listen form events
-									formObj['formView'] = form;
+									//same level resources check 
+									var optionsAttrs = _.filter(config,function(field){ if(field.level == v.level) return field;})
+									if(optionsAttrs.length > 1){
+										var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
+										formObj['sameLevelOpts'] = optionsTitle;
+										samelevelFieldCreated.push(v.level);
+										fieldName = 'sameLevel'+v.level;
+										formObj['title'] = '';
+										formObj['resourcesAtSameLevel'] = true;
+										
+										// formView is used to listen form events
+										formObj['formView'] = form;
+									}
 								}
 							}else{
 								formObj.type = 'Text';
