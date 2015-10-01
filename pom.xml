@@ -205,6 +205,7 @@
 		<jaxb-api.version>2.2.2</jaxb-api.version>
 		<jackson.version>1.9.13</jackson.version>
 		<sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
+		<atlas.version>0.5.0.2.3.1.1-19</atlas.version>
 		<distMgmtStagingId>apache.staging.https</distMgmtStagingId>
     	<distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
     	<distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>
