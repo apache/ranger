@@ -129,20 +129,10 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		List<RangerTag> matchedTags = findMatchingTags(request.getResource(), serviceResourceMatchersCopy);
 
-		if (CollectionUtils.isNotEmpty(matchedTags)) {
-			RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), matchedTags);
-
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("RangerTagEnricher.enrich(" + request + ") - " + matchedTags.size() + " tags found by enricher.");
-			}
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("RangerTagEnricher.enrich(" + request + ") - no tags found by enricher.");
-			}
-		}
+		RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), matchedTags);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTagEnricher.enrich(" + request + ")");
+			LOG.debug("<== RangerTagEnricher.enrich(" + request + "): tags count=" + (matchedTags == null ? 0 : matchedTags.size()));
 		}
 	}
 

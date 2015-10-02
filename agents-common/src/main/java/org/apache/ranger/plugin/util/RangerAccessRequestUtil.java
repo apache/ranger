@@ -19,9 +19,12 @@
 
 package org.apache.ranger.plugin.util;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -36,7 +39,11 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_REQUESTED_RESOURCES = "REQUESTED_RESOURCES";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, List<RangerTag> tags) {
-		context.put(KEY_CONTEXT_TAGS, tags);
+		if(CollectionUtils.isEmpty(tags)) {
+			context.remove(KEY_CONTEXT_TAGS);
+		} else {
+			context.put(KEY_CONTEXT_TAGS, tags);
+		}
 	}
 
 	public static List<RangerTag> getRequestTagsFromContext(Map<String, Object> context) {
@@ -97,6 +104,23 @@ public class RangerAccessRequestUtil {
 
 		if(val != null && val instanceof RangerAccessResource) {
 			ret = (RangerAccessResource)val;
+		}
+
+		return ret;
+	}
+
+	public static Map<String, Object> copyContext(Map<String, Object> context) {
+		final Map<String, Object> ret;
+
+		if(MapUtils.isEmpty(context)) {
+			ret = new HashMap<String, Object>();
+		} else {
+			ret = new HashMap<String, Object>(context);
+
+			ret.remove(KEY_CONTEXT_TAGS);
+			ret.remove(KEY_CONTEXT_TAG_OBJECT);
+			ret.remove(KEY_CONTEXT_RESOURCE);
+			// don't remove REQUESTED_RESOURCES
 		}
 
 		return ret;

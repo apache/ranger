@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 
 public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
@@ -101,7 +102,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		ret.setRequestData(getRequestData());
 		ret.setClientType(getClientType());
 		ret.setSessionId(getSessionId());
-		ret.setContext(getContext());
+		ret.setContext(RangerAccessRequestUtil.copyContext(getContext()));
 		ret.accessType = accessType;
 
 		return ret;
