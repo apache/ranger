@@ -61,7 +61,9 @@ class AtlasNotificationMapper {
 			if (isEntityMappable(entityNotification.getEntity())) {
 				ret = createServiceTags(entityNotification);
 			} else {
-				LOG.info("Ranger not interested in Entity Notification for entity-type " + entityNotification.getEntity().getTypeName());
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Ranger not interested in Entity Notification for entity-type " + entityNotification.getEntity().getTypeName());
+				}
 			}
 		} catch (Exception exception) {
 			LOG.error("createServiceTags() failed!! ", exception);
@@ -94,13 +96,13 @@ class AtlasNotificationMapper {
 		String opName = entityNotification.getOperationType().name();
 		switch (opType) {
 			case ENTITY_CREATED: {
-				LOG.info("ENTITY_CREATED notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
+				LOG.debug("ENTITY_CREATED notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
 				break;
 			}
 			case ENTITY_UPDATED: {
 				ret = getServiceTags(entity);
 				if (MapUtils.isEmpty(ret.getTags())) {
-					LOG.info("No traits associated with this entity update notification. Ignoring it altogether");
+					LOG.debug("No traits associated with this entity update notification. Ignoring it altogether");
 					ret = null;
 				}
 				break;
@@ -111,7 +113,7 @@ class AtlasNotificationMapper {
 				break;
 			}
 			default:
-				LOG.error("Unknown notification received. Will not be handled, notificationType=" + opName);
+				LOG.error(opName + ": unknown notification received - not handled");
 		}
 
 		return ret;

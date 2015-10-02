@@ -151,7 +151,9 @@ public class TagAtlasSource implements TagSource {
 						printNotification(notification);
 						ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification, properties);
 						if (serviceTags == null) {
-							LOG.info("Did not create ServiceTags structure for notification type:" + notification.getOperationType().name());
+							if(LOG.isDebugEnabled()) {
+								LOG.debug("Did not create ServiceTags structure for notification type:" + notification.getOperationType().name());
+							}
 						} else {
 							if (LOG.isDebugEnabled()) {
 								String serviceTagsJSON = new Gson().toJson(serviceTags);
