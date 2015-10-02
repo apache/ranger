@@ -1075,6 +1075,7 @@ public class TagFileStore extends AbstractTagStore {
 
 		ServiceTags ret = new ServiceTags();
 		ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
+		ret.setTagModel(ServiceTags.TAGMODEL_SHARED);
 
 		boolean tagsChanged = true;
 

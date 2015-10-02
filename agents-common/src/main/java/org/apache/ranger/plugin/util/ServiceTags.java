@@ -47,7 +47,12 @@ public class ServiceTags implements java.io.Serializable {
 	public static final String OP_ADD_OR_UPDATE = "add_or_update";
 	public static final String OP_DELETE        = "delete";
 
-	private String                      op;
+	public static final String TAGMODEL_SHARED        = "shared";
+	public static final String TAGMODEL_RESOURCE_PRIVATE        = "resource_private";
+
+
+	private String                      op = OP_ADD_OR_UPDATE;
+	private String                      tagModel = TAGMODEL_SHARED;
 	private String                      serviceName;
 	private Long                        tagVersion;
 	private Date                        tagUpdateTime;
@@ -64,6 +69,13 @@ public class ServiceTags implements java.io.Serializable {
 	}
 
 	/**
+	 * @return the tagModel
+	 */
+	public String getTagModel() {
+		return tagModel;
+	}
+
+	/**
 	 * @return the serviceName
 	 */
 	public String getServiceName() {
@@ -75,6 +87,14 @@ public class ServiceTags implements java.io.Serializable {
 	 */
 	public void setOp(String op) {
 		this.op = op;
+	}
+
+
+	/**
+	 * @param tagModel the tagModel to set
+	 */
+	public void setTagModel(String tagModel) {
+		this.tagModel = tagModel;
 	}
 
 	/**
@@ -154,8 +174,12 @@ public class ServiceTags implements java.io.Serializable {
 	}
 
 	public StringBuilder toString(StringBuilder sb) {
-		sb.append("ServiceTags={").append("tagVersion=").append(tagVersion).append(", ")
-				.append("tagUpdateTime={").append(tagUpdateTime).append("} ")
+		sb.append("ServiceTags={")
+				.append("op=").append(op).append(", ")
+				.append("tagModel=").append(tagModel).append(", ")
+				.append("serviceName=").append(serviceName).append(", ")
+				.append("tagVersion=").append(tagVersion).append(", ")
+				.append("tagUpdateTime={").append(tagUpdateTime).append("}")
 				.append("}");
 
 		return sb;

@@ -1,5 +1,6 @@
 {
-    "op":"create_or_update",
+    "op":"add_or_update",
+    "tagModel":"shared",
     "serviceName": "cl1_hive",
     "tagVersion": 24,
     "tagUpdateTime": "20150901-20:03:17.000-+0000",

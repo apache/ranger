@@ -891,6 +891,7 @@ public class TagDBStore extends AbstractTagStore {
 
 			ret = new ServiceTags();
 			ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
+			ret.setTagModel(ServiceTags.TAGMODEL_SHARED);
 			ret.setServiceName(xxService.getName());
 			ret.setTagVersion(xxService.getTagVersion());
 			ret.setTagUpdateTime(xxService.getTagUpdateTime());

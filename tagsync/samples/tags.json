@@ -1,5 +1,6 @@
 {
   "op": "add_or_update",
+  "tagModel": "resource_private",
   "serviceName": "cl1_hive",
   "tagVersion": 1,
   "tagUpdateTime": "20150924-22:26:33.000-+0000",

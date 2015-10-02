@@ -152,6 +152,7 @@ class AtlasNotificationMapper {
 		ret = new ServiceTags();
 
 		ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
+		ret.setTagModel(ServiceTags.TAGMODEL_RESOURCE_PRIVATE);
 		ret.setServiceName(serviceResource.getServiceName());
 		ret.setServiceResources(serviceResources);
 		ret.setTagDefinitions(tagDefs);

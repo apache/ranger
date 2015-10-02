@@ -51,6 +51,10 @@ public class ServiceTagsProcessor {
 		}
 
 		if (tagStore != null && serviceTags != null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("serviceTags:	op=" + serviceTags.getOp());
+				LOG.debug("serviceTags:	tagModel=" + serviceTags.getTagModel());
+			}
 			String op = serviceTags.getOp();
 
 			if (StringUtils.equalsIgnoreCase(op, ServiceTags.OP_ADD_OR_UPDATE)) {
@@ -237,9 +241,9 @@ public class ServiceTagsProcessor {
 				}
 
 				// Get all tags associated with this resourceId
-				List<Long> tagMapsToDelete = null;
+				List<Long> tagsToDelete = null;
 				try {
-					tagMapsToDelete = tagStore.getTagIdsForResourceId(resourceInStore.getId());
+					tagsToDelete = tagStore.getTagIdsForResourceId(resourceInStore.getId());
 				} catch (Exception exception) {
 					LOG.error("RangerTags cannot be retrieved for resource with guid=" + resourceInStore.getGuid());
 					throw exception;
@@ -270,8 +274,8 @@ public class ServiceTagsProcessor {
 							tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
 						}
 
-						if(tagMapsToDelete != null) {
-							tagMapsToDelete.remove((Long)tagInStore.getId());
+						if(tagsToDelete != null) {
+							tagsToDelete.remove((Long)tagInStore.getId());
 						}
 					}
 				} catch (Exception exception) {
@@ -279,12 +283,12 @@ public class ServiceTagsProcessor {
 					throw exception;
 				}
 
-				if (CollectionUtils.isNotEmpty(tagMapsToDelete)) {
+				if (CollectionUtils.isNotEmpty(tagsToDelete)) {
 					Long tagId = null;
 
 					try {
-						for(int i = 0; i < tagMapsToDelete.size(); i++) {
-							tagId = tagMapsToDelete.get(i);
+						for(int i = 0; i < tagsToDelete.size(); i++) {
+							tagId = tagsToDelete.get(i);
 
 							RangerTagResourceMap tagResourceMap = tagStore.getTagResourceMapForTagAndResourceId(tagId, resourceInStore.getId());
 
@@ -293,11 +297,19 @@ public class ServiceTagsProcessor {
 							}
 
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("Deleted tagResourceMap(tagId=" + tagId + ", resourceId=" + resourceId);
+								LOG.debug("Deleted tagResourceMap(tagId=" + tagId + ", resourceId=" + resourceInStore.getId());
+							}
+
+							if (StringUtils.equals(serviceTags.getTagModel(), ServiceTags.TAGMODEL_RESOURCE_PRIVATE)) {
+								tagStore.deleteTag(tagId);
+
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Deleted tag(tagId=" + tagId + ") as tagModel=" + ServiceTags.TAGMODEL_RESOURCE_PRIVATE);
+								}
 							}
 						}
 					} catch(Exception exception) {
-						LOG.error("deleteTagResourceMap failed, tagId=" + tagId + ", resourceId=" + resourceId);
+						LOG.error("deleteTagResourceMap failed, tagId=" + tagId + ", resourceId=" + resourceInStore.getId());
 						throw exception;
 					}
 				}
