@@ -538,7 +538,9 @@ setup_install_files(){
 	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
 	    cp ${INSTALL_DIR}/${RANGER_KMS}-initd /etc/init.d/${RANGER_KMS}
-
+	    if [ "${unix_user}" != "kms" ]; then
+           sed  's/LINUX_USER=kms/LINUX_USER='${unix_user}'/g' -i  /etc/init.d/${RANGER_KMS}
+	    fi
 	    chmod ug+rx /etc/init.d/${RANGER_KMS}
 
 	    if [ -d /etc/rc2.d ]
@@ -584,6 +586,9 @@ setup_install_files(){
 	    chown -R ${unix_user} ${KMS_DIR}/ews/logs
 	fi
 
+	if [ -d ${KMS_DIR}/ews/logs ]; then
+	    chown -R ${unix_user} ${KMS_DIR}/ews/logs
+	fi
 	log "[I] Setting up installation files and directory DONE";
 
 	if [ ! -f ${INSTALL_DIR}/rpm ]; then

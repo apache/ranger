@@ -23,7 +23,7 @@ function getInstallProperty() {
     do
         if [ -f "${file}" ]
         then
-            propertyValue=`grep "^${propertyName}" ${file} | awk -F= '{  sub("^[ \t]*", "", $2); sub("[ \t]*$", "", $2); print $2 }'`
+            propertyValue=`grep "^${propertyName}[ \t]*=" ${file} | awk -F= '{  sub("^[ \t]*", "", $2); sub("[ \t]*$", "", $2); print $2 }'`
             if [ "${propertyValue}" != "" ]
             then
                 break
@@ -122,6 +122,32 @@ COMPONENT_INSTALL_ARGS="${PROJ_INSTALL_DIR}/${COMPONENT_NAME}-install.properties
 JAVA=$JAVA_HOME/bin/java
 
 HCOMPONENT_INSTALL_DIR_NAME=$(getInstallProperty 'COMPONENT_INSTALL_DIR_NAME')
+
+
+CUSTOM_USER=$(getInstallProperty 'CUSTOM_USER')
+CUSTOM_USER=${CUSTOM_USER// }
+
+CUSTOM_GROUP=$(getInstallProperty 'CUSTOM_GROUP')
+CUSTOM_GROUP=${CUSTOM_GROUP// }
+
+
+
+if [ ! -z "${CUSTOM_USER}" ] && [ ! -z "${CUSTOM_GROUP}" ]
+then
+  echo "Custom user and group is available, using custom user and group."
+  CFG_OWNER_INF="${CUSTOM_USER}:${CUSTOM_GROUP}"
+elif [ ! -z "${CUSTOM_USER}" ] && [ -z "${CUSTOM_GROUP}" ]
+then
+  echo "Custom user is available, using custom user and default group."
+  CFG_OWNER_INF="${CUSTOM_USER}:${HCOMPONENT_NAME}"
+elif [ -z  "${CUSTOM_USER}" ] && [ ! -z  "${CUSTOM_GROUP}" ]
+then
+  echo "Custom group is available, using default user and custom group."
+  CFG_OWNER_INF="${HCOMPONENT_NAME}:${CUSTOM_GROUP}"
+else
+  echo "Custom user and group are not available, using default user and group."
+  CFG_OWNER_INF="${HCOMPONENT_NAME}:${HCOMPONENT_NAME}"
+fi
 
 if [ "${HCOMPONENT_INSTALL_DIR_NAME}" = "" ]
 then

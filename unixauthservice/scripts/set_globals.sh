@@ -89,5 +89,10 @@ if [ ! -d /var/log/ranger/usersync ]; then
 	chmod 755 /var/log/ranger/usersync
 	chown -R $unix_user:$unix_group /var/log/ranger
 fi
+
+if [ -d /var/log/ranger/usersync ]; then
+	chown -R $unix_user:$unix_group /var/log/ranger/usersync
+fi
+
 mv -f logs logs.$curDt 2> /dev/null
 ln -sf /var/log/ranger/usersync logs
