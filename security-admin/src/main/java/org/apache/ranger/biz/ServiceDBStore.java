@@ -1928,14 +1928,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			users.add(vXUser.getName());
 			policyItem.setUsers(users);
 
-			// Default policy for KMS should grant all access to 'public'
-			long serviceType = createdService.getType() == null ? -1 : createdService.getType();
-			if(serviceType == EmbeddedServiceDefsUtil.instance().getKmsServiceDefId()) {
-				List<String> groups = new ArrayList<String>();
-				groups.add(RangerConstants.GROUP_PUBLIC);
-				policyItem.setGroups(groups);
-			}
-			
 			List<XXAccessTypeDef> accessTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(createdService.getType());
 			List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
 			for(XXAccessTypeDef accessTypeDef : accessTypeDefs) {
