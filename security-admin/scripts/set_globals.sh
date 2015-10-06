@@ -91,5 +91,11 @@ if [ ! -d /var/log/ranger/admin ]; then
 	chmod 755 /var/log/ranger/admin
 	chown -R $unix_user:$unix_group /var/log/ranger
 fi
+
+if [ -d /var/log/ranger/admin ]; then
+        chown -R $unix_user:$unix_group /var/log/ranger/admin
+fi
+
+
 mv -f ews/logs ews/webapp/logs.$curDt 2> /dev/null
 ln -sf /var/log/ranger/admin ews/logs

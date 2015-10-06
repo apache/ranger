@@ -232,13 +232,25 @@ def createGroup(groupname):
 		print "ERROR: Unable to create a new group: %s" % (groupname,e)
 		sys.exit(1)
 
-def initializeInitD():
+def initializeInitD(ownerName):
 	if (os.path.isdir(initdDirName)):
 		fn = join(installPropDirName,initdProgramName)
 		initdFn = join(initdDirName,initdProgramName)
 		shutil.copy(fn, initdFn)
-		os.chmod(initdFn,0550)
-		rcDirList = [ "/etc/rc2.d", "/etc/rc3.d", "/etc/rc.d/rc2.d", "/etc/rc.d/rc3.d" ]
+        if (ownerName != 'ranger'):
+            f = open(initdFn,'r')
+            filedata = f.read()
+            f.close()
+            find_str = "LINUX_USER=ranger"
+            replace_str = "LINUX_USER="+ ownerName
+            newdata = filedata.replace(find_str,replace_str)
+
+            f = open(initdFn,'w')
+            f.write(newdata)
+            f.close()
+
+        os.chmod(initdFn,0550)
+        rcDirList = [ "/etc/rc2.d", "/etc/rc3.d", "/etc/rc.d/rc2.d", "/etc/rc.d/rc3.d" ]
 		for rcDir in rcDirList:
 			if (os.path.isdir(rcDir)):
 				for  prefix in initPrefixList:
@@ -365,7 +377,7 @@ def main():
 	os.chown(pidFolderName,ownerId,groupId)
 	os.chown(rangerBaseDirName,ownerId,groupId)
 
-	initializeInitD()
+	initializeInitD(ownerName)
 
 	#
 	# Add password to crypt path

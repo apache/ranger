@@ -1516,6 +1516,10 @@ setup_install_files(){
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	fi
 
+        if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
+               chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
+        fi
+
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/lib"
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/lib
@@ -1525,6 +1529,9 @@ setup_install_files(){
 	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
 	    cp ${INSTALL_DIR}/ews/${RANGER_ADMIN_INITD} /etc/init.d/${RANGER_ADMIN}
+	    if [ "${unix_user}" != "ranger" ]; then
+           sed  's/LINUX_USER=ranger/LINUX_USER='${unix_user}'/g' -i  /etc/init.d/${RANGER_ADMIN}
+	    fi
 
 	    chmod ug+rx /etc/init.d/${RANGER_ADMIN}
 
@@ -1569,6 +1576,10 @@ setup_install_files(){
 	    log "[I] ${XAPOLICYMGR_DIR}/ews/logs folder"
 	    mkdir -p ${XAPOLICYMGR_DIR}/ews/logs
 	    chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs
+	fi
+
+	if [ -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
+          chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs
 	fi
 
 	log "[I] Setting up installation files and directory DONE";

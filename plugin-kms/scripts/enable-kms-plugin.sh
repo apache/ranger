@@ -23,7 +23,7 @@ function getInstallProperty() {
     do
         if [ -f "${file}" ]
         then
-            propertyValue=`grep "^${propertyName}" ${file} | awk -F= '{  sub("^[ \t]*", "", $2); sub("[ \t]*$", "", $2); print $2 }'`
+            propertyValue=`grep "^${propertyName}[ \t]*=" ${file} | awk -F= '{  sub("^[ \t]*", "", $2); sub("[ \t]*$", "", $2); print $2 }'`
             if [ "${propertyValue}" != "" ]
             then
                 break
@@ -117,6 +117,32 @@ COMPONENT_INSTALL_ARGS="${PROJ_INSTALL_DIR}/ews/webapp/config/${COMPONENT_NAME}-
 JAVA=$JAVA_HOME/bin/java
 
 HCOMPONENT_INSTALL_DIR_NAME=$(getInstallProperty 'COMPONENT_INSTALL_DIR_NAME')
+
+unix_user=$(getInstallProperty 'unix_user')
+unix_user=${unix_user// }
+
+unix_group=$(getInstallProperty 'unix_group')
+unix_group=${unix_group// }
+
+
+
+if [ ! -z "${unix_user}" ] && [ ! -z "${unix_group}" ]
+then
+  echo "Custom user and group is available, using custom user and group."
+  CFG_OWNER_INF="${unix_user}:${unix_group}"
+elif [ ! -z "${unix_user}" ] && [ -z "${unix_group}" ]
+then
+  echo "Custom user is available, using custom user and default group."
+  CFG_OWNER_INF="${unix_user}:${HCOMPONENT_NAME}"
+elif [ -z  "${unix_user}" ] && [ ! -z  "${unix_group}" ]
+then
+  echo "Custom group is available, using default user and custom group."
+  CFG_OWNER_INF="${HCOMPONENT_NAME}:${unix_group}"
+else
+  echo "Custom user and group are not available, using default user and group."
+  CFG_OWNER_INF="${HCOMPONENT_NAME}:${HCOMPONENT_NAME}"
+fi
+
 
 if [ "${HCOMPONENT_INSTALL_DIR_NAME}" = "" ]
 then
