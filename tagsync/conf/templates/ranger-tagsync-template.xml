@@ -51,4 +51,8 @@
 		<name>ranger.tagsync.source.impl.class</name>
 		<value></value>
 	</property>
+	<property>
+	<name>ranger.tagsync.atlas.to.service.mapping</name>
+		<value></value>
+	</property>
 </configuration>

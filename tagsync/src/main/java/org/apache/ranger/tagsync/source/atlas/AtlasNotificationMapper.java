@@ -340,6 +340,8 @@ class AtlasNotificationMapper {
 
 	static private String getServiceName(String instanceName, String entityTypeName) {
 		// Parse entityTypeName to get the Apache-component Name
+		// Assumption: entityTypeName is <componentName>_<component_specific_type_name>
+		// such as hive_table, hadoop_path, hbase_queue, etc.
 		String apacheComponents[] = entityTypeName.split("_");
 		String apacheComponent = null;
 		if (apacheComponents.length > 0) {

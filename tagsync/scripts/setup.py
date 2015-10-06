@@ -70,7 +70,10 @@ SYNC_INTERVAL_NEW_KEY = 'ranger.tagsync.sleeptimeinmillisbetweensynccycle'
 TAGSYNC_ATLAS_KAFKA_ENDPOINTS_KEY = 'TAGSYNC_ATLAS_KAFKA_ENDPOINTS'
 TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT_KEY = 'TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT'
 TAGSYNC_ATLAS_CONSUMER_GROUP_KEY = 'TAGSYNC_ATLAS_CONSUMER_GROUP'
-
+TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING = 'ranger.tagsync.atlas.to.service.mapping'
+TAGSYNC_INSTALL_PROP_PREFIX_FOR_ATLAS_RANGER_MAPPING = 'ranger.tagsync.atlas.'
+TAGSYNC_ATLAS_CLUSTER_IDENTIFIER = '.instance.'
+TAGSYNC_INSTALL_PROP_SUFFIX_FOR_ATLAS_RANGER_MAPPING = '.ranger.service'
 TAG_SOURCE_ATLAS = 'atlas'
 TAG_SOURCE_FILE = 'file'
 TAG_SOURCE_LIST = [ TAG_SOURCE_ATLAS, TAG_SOURCE_FILE ]
@@ -138,7 +141,27 @@ def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
             config.find('value').text = "_"
             continue
         if (name in prop.keys()):
-            config.find('value').text = str(prop[name])
+			if (name == TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING):
+				# Expected value is 'clusterName,componentName,serviceName;clusterName,componentName,serviceName' ...
+				# Blanks are not supported anywhere in the value.
+				valueString = str(prop[name])
+				multiValues = valueString.split(';')
+				listLen = len(multiValues)
+				index = 0
+				while index < listLen:
+					parts = multiValues[index].split(',')
+					if len(parts) == 3:
+						newConfig = ET.SubElement(root, 'property')
+						newName = ET.SubElement(newConfig, 'name')
+						newValue = ET.SubElement(newConfig, 'value')
+						newName.text = TAGSYNC_INSTALL_PROP_PREFIX_FOR_ATLAS_RANGER_MAPPING + str(parts[1]) + TAGSYNC_ATLAS_CLUSTER_IDENTIFIER + str(parts[0]) + TAGSYNC_INSTALL_PROP_SUFFIX_FOR_ATLAS_RANGER_MAPPING
+						newValue.text = str(parts[2])
+					else:
+						print "ERROR: incorrect syntax for %s, value=%s" % (TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING, multiValues[index])
+					index += 1
+				root.remove(config)
+			else:
+				config.find('value').text = str(prop[name])
         #else:
         #    print "ERROR: key not found: %s" % (name)
     if isfile(xmlOutputFileName):
