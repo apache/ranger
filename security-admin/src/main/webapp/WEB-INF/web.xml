@@ -79,6 +79,9 @@
   <session-config>
     <session-timeout>60</session-timeout>
     <tracking-mode>COOKIE</tracking-mode>
+    <cookie-config>
+        <http-only>true</http-only>
+    </cookie-config>	
   </session-config>
   <error-page>
     <error-code>500</error-code>

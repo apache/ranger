@@ -225,11 +225,9 @@ public class XUserREST {
 	public VXGroupList searchXGroups(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xGroupService.sortFields);
-		searchUtil.extractString(request, searchCriteria, "name", "group name", 
-				StringUtil.VALIDATION_NAME);
+		searchUtil.extractString(request, searchCriteria, "name", "group name", null);
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "Group Visibility");
-		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", 
-				StringUtil.VALIDATION_NAME);
+		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", null);
 		return xUserMgr.searchXGroups(searchCriteria);
 	}
 
