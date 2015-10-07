@@ -36,19 +36,23 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.basicauth.username</name>
-		<value></value>
-	</property>
-	<property>
-		<name>ranger.tagsync.tagadmin.basicauth.password</name>
-		<value></value>
-	</property>
-	<property>
 		<name>ranger.tagsync.filesource.filename</name>
 		<value></value>
 	</property>
 	<property>
 		<name>ranger.tagsync.source.impl.class</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.tagadmin.keystore</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.tagadmin.alias</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.tagadmin.password</name>
 		<value></value>
 	</property>
 	<property>

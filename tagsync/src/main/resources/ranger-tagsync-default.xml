@@ -23,7 +23,7 @@
 	</property>
 	<property>
 		<name>ranger.tagsync.logdir</name>
-		<value>./log</value>
+		<value>log</value>
 	</property>
 	<property>
 		<name>ranger.tagsync.tagadmin.rest.url</name>
@@ -33,16 +33,6 @@
 	<property>
 		<name>ranger.tagsync.tagadmin.rest.ssl.config.file</name>
 		<value></value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.tagadmin.basicauth.username</name>
-		<value>admin</value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.tagadmin.basicauth.password</name>
-		<value>admin</value>
 		<description></description>
 	</property>
 	<property>
@@ -66,13 +56,13 @@
 		<description></description>
 	</property>
 	<property>
-		<name>ranger.tagsync.atlassource.endpoint</name>
-		<value>http://localhost:21000/</value>
+		<name>ranger.tagsync.atlas.hive.instance.c1.ranger.service</name>
+		<value>cl1_hive</value>
 		<description></description>
 	</property>
 	<property>
-		<name>ranger.tagsync.atlas.hive.instance.c1.ranger.service</name>
-		<value>cl1_hive</value>
+		<name>ranger.tagsync.atlassource.endpoint</name>
+		<value>http://localhost:21000/</value>
 		<description></description>
 	</property>
 </configuration>

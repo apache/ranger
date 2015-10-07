@@ -42,7 +42,7 @@ if [ "${action}" == "START" ]; then
 		. ${cdir}/conf/java_home.sh
 	fi
 
-	for custom_env_script in `find ${cdir}/conf/ -name "ranger-tagsync-env*"`; do
+	for custom_env_script in `find ${cdir}/conf.dist/ -name "ranger-tagsync-env*"`; do
         	if [ -f $custom_env_script ]; then
                 	. $custom_env_script
 	        fi

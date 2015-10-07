@@ -58,6 +58,9 @@ tagsyncBaseDirFullName = join(rangerBaseDirName, tagsyncBaseDirName)
 confFolderName = join(tagsyncBaseDirFullName, confBaseDirName)
 localConfFolderName = join(installPropDirName, confBaseDirName)
 
+credUpdateClassName =  'org.apache.ranger.credentialapi.buildks'
+defaultKeyStoreFileName = '/etc/ranger/tagsync/conf/rangertagsync.jceks'
+
 unixUserProp = 'unix_user'
 unixGroupProp = 'unix_group'
 
@@ -134,12 +137,8 @@ def getPropertiesKeyList(configFileName):
 def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
     tree = ET.parse(xmlTemplateFileName)
     root = tree.getroot()
-    prop_arr =[ "ranger.tagsync.keystore.password","ranger.tagsync.truststore.password","ranger.tagsync.policymgr"]
     for config in root.findall('property'):
         name = config.find('name').text
-        if name in prop_arr:
-            config.find('value').text = "_"
-            continue
         if (name in prop.keys()):
 			if (name == TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING):
 				# Expected value is 'clusterName,componentName,serviceName;clusterName,componentName,serviceName' ...
@@ -167,6 +166,17 @@ def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
     if isfile(xmlOutputFileName):
         archiveFile(xmlOutputFileName)
     tree.write(xmlOutputFileName)
+
+def updatePropertyInJCKSFile(jcksFileName,propName,value):
+	fn = jcksFileName
+	if (value == ''):
+		value = ' '
+	cmd = "java -cp './lib/*' %s create '%s' -value '%s' -provider jceks://file%s 2>&1" % (credUpdateClassName,propName,value,fn)
+	ret = os.system(cmd)
+	if (ret != 0):
+		print "ERROR: Unable update the JCKSFile(%s) for aliasName (%s)" % (fn,propName)
+		sys.exit(1)
+	return ret
 
 def convertInstallPropsToXML(props):
 	directKeyMap = getPropertiesConfigMap(join(installTemplateDirName,install2xmlMapFileName))
@@ -358,11 +368,17 @@ def main():
 
 	initializeInitD()
 
-	if ('ranger.tagsync.tagadmin.basicauth.username' not in mergeProps):
-		mergeProps['ranger.tagsync.tagadmin.username'] = 'admin'
-	
-	if ('ranger.tagsync.tagadmin.basicauth.password' not in mergeProps):
-		mergeProps['ranger.tagsync.policymgr.password'] = 'admin'
+	tagsyncKSPath = mergeProps['ranger.tagsync.tagadmin.keystore']
+
+	if (tagsyncKSPath == ''):
+		mergeProps['ranger.tagsync.tagadmin.password'] = 'rangertagsync'
+
+	else:
+		tagadminPasswd = 'rangertagsync'
+		tagadminAlias = 'tagadmin.user.password'
+		mergeProps['ranger.tagsync.tagadmin.alias'] = tagadminAlias
+		updatePropertyInJCKSFile(tagsyncKSPath,tagadminAlias,tagadminPasswd)
+		os.chown(tagsyncKSPath,ownerId,groupId)
 
 	writeXMLUsingProperties(fn, mergeProps, outfn)
 

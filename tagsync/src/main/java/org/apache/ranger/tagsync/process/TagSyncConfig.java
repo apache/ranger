@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.net.URL;
 import java.util.Properties;
+import org.apache.ranger.credentialapi.CredentialReader;
 
 public class TagSyncConfig extends Configuration {
 	private static final Logger LOG = Logger.getLogger(TagSyncConfig.class) ;
@@ -42,10 +43,6 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.tagadmin.rest.ssl.config.file";
 
-	private static final String TAGSYNC_TAGADMIN_SSL_BASICAUTH_USERNAME_PROP = "ranger.tagsync.tagadmin.basicauth.username";
-
-	private static final String TAGSYNC_TAGADMIN_SSL_BASICAUTH_PASSWORD_PROP = "ranger.tagsync.tagadmin.basicauth.password";
-
 	private static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.filesource.filename";
 
 	private static final String TAGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PROP = "ranger.tagsync.sleeptimeinmillisbetweensynccycle";
@@ -61,6 +58,11 @@ public class TagSyncConfig extends Configuration {
 	private static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX = ".ranger.service";
 
 	private static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
+
+	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.tagadmin.keystore";
+	private static final String TAGSYNC_TAGADMIN_ALIAS_PROP = "ranger.tagsync.tagadmin.alias";
+	private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP = "ranger.tagsync.tagadmin.password";
+	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
 
 	private static volatile TagSyncConfig instance = null;
 
@@ -210,16 +212,6 @@ public class TagSyncConfig extends Configuration {
 		return val;
 	}
 
-	static public String getTagAdminUserName(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_TAGADMIN_SSL_BASICAUTH_USERNAME_PROP);
-		return val;
-	}
-
-	static public String getTagAdminPassword(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_TAGADMIN_SSL_BASICAUTH_PASSWORD_PROP);
-		return val;
-	}
-
 	static public String getTagSourceFileName(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_FILESOURCE_FILENAME_PROP);
 		return val;
@@ -228,6 +220,39 @@ public class TagSyncConfig extends Configuration {
 	static public String getAtlasEndpoint(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_ATLASSOURCE_ENDPOINT_PROP);
 		return val;
+	}
+
+	static public String getTagAdminPassword(Properties prop) {
+		//update credential from keystore
+		String password = null;
+		if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_PASSWORD_PROP)) {
+			password = prop.getProperty(TAGSYNC_TAGADMIN_PASSWORD_PROP);
+			if (password != null && !password.isEmpty()) {
+				return password;
+			}
+		}
+		if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_KEYSTORE_PROP) && prop.containsKey(TAGSYNC_TAGADMIN_ALIAS_PROP)) {
+			String path = prop.getProperty(TAGSYNC_TAGADMIN_KEYSTORE_PROP);
+			String alias = prop.getProperty(TAGSYNC_TAGADMIN_ALIAS_PROP, "tagadmin.user.password");
+			if (path != null && alias != null) {
+				if (!path.trim().isEmpty() && !alias.trim().isEmpty()) {
+					try {
+						password = CredentialReader.getDecryptedString(path.trim(), alias.trim());
+					} catch (Exception ex) {
+						password = null;
+					}
+					if (password != null && !password.trim().isEmpty() && !password.trim().equalsIgnoreCase("none")) {
+						prop.setProperty(TAGSYNC_TAGADMIN_PASSWORD_PROP, password);
+						return password;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	static public String getTagAdminUserName(Properties prop) {
+		return DEFAULT_TAGADMIN_USERNAME;
 	}
 
 	static public String getAtlasSslConfigFileName(Properties prop) {
