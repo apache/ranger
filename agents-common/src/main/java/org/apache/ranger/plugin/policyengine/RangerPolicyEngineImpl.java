@@ -324,36 +324,37 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				}
 			}
 
-			if (!ret.getIsAccessDetermined() || !ret.getIsAuditedDetermined()) {
-				if (hasResourcePolicies()) {
-					boolean foundInCache = policyRepository.setAuditEnabledFromCache(request, ret);
-					RangerPolicyEvaluator allowedEvaluator = null;
+			boolean isAllowedByTags          = ret.getIsAccessDetermined() && ret.getIsAllowed();
+			boolean isDeniedByTags           = ret.getIsAccessDetermined() && !ret.getIsAllowed();
+			boolean evaluateResourcePolicies = hasResourcePolicies() && (!isDeniedByTags || !ret.getIsAuditedDetermined());
 
-					List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();
-					for (RangerPolicyEvaluator evaluator : evaluators) {
-						evaluator.evaluate(request, ret);
+			if (evaluateResourcePolicies) {
+				boolean findAuditByResource = !ret.getIsAuditedDetermined();
+				boolean foundInCache        = findAuditByResource ? policyRepository.setAuditEnabledFromCache(request, ret) : false;
 
-						if(allowedEvaluator == null && ret.getIsAllowed()) {
-							allowedEvaluator = evaluator;
-						}
+				if(isAllowedByTags) {
+					ret.setIsAccessDetermined(false); // discard allowed result by tag-policies, to evaluate resource policies for possible deny
+				}
 
-						// stop once isAccessDetermined==true && isAuditedDetermined==true
-						if(ret.getIsAuditedDetermined()) {
-							if(ret.getIsAccessDetermined() || (allowedEvaluator != null && !evaluator.hasDeny())) {
-								break;			// Break out of policy-evaluation loop for this tag
-							}
-						}
-					}
+				List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();
+				for (RangerPolicyEvaluator evaluator : evaluators) {
+					evaluator.evaluate(request, ret);
 
-					if(!ret.getIsAccessDetermined() && allowedEvaluator != null) {
-						ret.setIsAllowed(true);
-						ret.setPolicyId(allowedEvaluator.getPolicy().getId());
+					if(ret.getIsAllowed() && !evaluator.hasDeny()) { // all policies having deny have been evaluated
 						ret.setIsAccessDetermined(true);
 					}
 
-					if (!foundInCache) {
-						policyRepository.storeAuditEnabledInCache(request, ret);
+					if(ret.getIsAuditedDetermined() && ret.getIsAccessDetermined()) {
+						break;			// Break out of policy-evaluation loop
 					}
+				}
+
+				if(ret.getIsAllowed()) {
+					ret.setIsAccessDetermined(true);
+				}
+
+				if (findAuditByResource && !foundInCache) {
+					policyRepository.storeAuditEnabledInCache(request, ret);
 				}
 			}
 		}
@@ -365,9 +366,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	protected RangerAccessResult isAccessAllowedForTagPolicies(final RangerAccessRequest request, RangerAccessResult result) {
+	protected void isAccessAllowedForTagPolicies(final RangerAccessRequest request, RangerAccessResult result) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ")");
+			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ", " + result + ")");
 		}
 
 		List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators();
@@ -376,90 +377,75 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 			if(CollectionUtils.isNotEmpty(tags)) {
-				boolean                   someTagAllowedAudit = false;
-				RangerAccessResult        savedAccessResult   = createAccessResult(request);
-				List<RangerTagAuditEvent> tagAuditEvents      = new ArrayList<RangerTagAuditEvent>();
-
 				for (RangerTag tag : tags) {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: Evaluating policies for tag (" + tag.getType() + ")");
 					}
 
-					RangerAccessRequest   tagEvalRequest   = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
-					RangerAccessResult    tagEvalResult    = createAccessResult(tagEvalRequest);
-					RangerPolicyEvaluator allowedEvaluator = null;
+					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
+					RangerAccessResult  tagEvalResult  = createAccessResult(tagEvalRequest);
+
+					// carry fwd results from earlier tags, to optimize the current evaluation
+					//  - if access was already allowed by a tag, only deny needs to be looked into
+					//  - if audit was already determined, evaluation can bail out as soon as access is determined
+					if(result.getIsAllowed()) {
+						tagEvalResult.setIsAllowed(result.getIsAllowed());
+					}
+					tagEvalResult.setAuditResultFrom(result);
 
 					for (RangerPolicyEvaluator evaluator : evaluators) {
+						if(! evaluator.isMatch(tagEvalRequest.getResource())) 
+							continue;
+
 						evaluator.evaluate(tagEvalRequest, tagEvalResult);
 
-						if(allowedEvaluator == null && tagEvalResult.getIsAllowed()) {
-							allowedEvaluator = evaluator;
+						if(tagEvalResult.getIsAllowed() && !evaluator.hasDeny()) { // all policies having deny have been evaluated
+							tagEvalResult.setIsAccessDetermined(true);
 						}
 
-						if(tagEvalResult.getIsAuditedDetermined()) {
-							if(tagEvalResult.getIsAccessDetermined() || (allowedEvaluator != null && !evaluator.hasDeny())) {
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + tag.getType() + ") with authorization=" + tagEvalResult.getIsAllowed());
-								}
-								break;			// Break out of policy-evaluation loop for this tag
+						if(tagEvalResult.getIsAuditedDetermined() && tagEvalResult.getIsAccessDetermined()) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag (" + tag.getType() + ") with authorization=" + tagEvalResult.getIsAllowed());
 							}
+
+							break;			// Break out of policy-evaluation loop for this tag
 						}
 					}
 
-					if(!tagEvalResult.getIsAccessDetermined() && allowedEvaluator != null) {
-						tagEvalResult.setIsAllowed(true);
-						tagEvalResult.setPolicyId(allowedEvaluator.getPolicy().getId());
+					if(tagEvalResult.getIsAllowed()) {
 						tagEvalResult.setIsAccessDetermined(true);
 					}
 
-					if (tagEvalResult.getIsAuditedDetermined()) {
-						someTagAllowedAudit = true;
-						// And generate an audit event
-						if (tagEvalResult.getIsAccessDetermined()) {
-							RangerTagAuditEvent event = new RangerTagAuditEvent(tag.getType(), tagEvalResult);
-							tagAuditEvents.add(event);
-						}
+					if (tagEvalResult.getIsAudited()) {
+						result.setIsAudited(true);
 					}
 
-					if (tagEvalResult.getIsAccessDetermined()) {
-						savedAccessResult.setAccessResultFrom(tagEvalResult);
-
-						if (!tagEvalResult.getIsAllowed()) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: concluding eval of tag-policies as tag (" + tag.getType() + "), tag-policy-id=" + tagEvalResult.getPolicyId() + " denied access.");
+					if(!result.getIsAccessDetermined() && tagEvalResult.getIsAccessDetermined()) {
+						if(! tagEvalResult.getIsAllowed()) { // access is denied for this tag
+							result.setAccessResultFrom(tagEvalResult);
+						} else { // access is allowed for this tag
+							// if a policy evaluated earlier allowed the access, don't update with current tag result
+							if(! result.getIsAllowed()) {
+								result.setAccessResultFrom(tagEvalResult);
+								result.setIsAccessDetermined(false); // so that evaluation will continue for deny
 							}
-							break;		// Break out of tags evaluation loop altogether
 						}
 					}
-				}
 
-				result.setAccessResultFrom(savedAccessResult);
-
-				if (someTagAllowedAudit) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies: at least one tag-policy requires generation of audit event");
+					if(result.getIsAuditedDetermined() && result.getIsAccessDetermined()) {
+						break;			// Break out of policy-evaluation loop
 					}
-					result.setIsAudited(true);
-
-					boolean isAccessDenied = result.getIsAccessDetermined() && !result.getIsAllowed();
-
-					RangerTagAuditEvent.processTagEvents(tagAuditEvents, isAccessDenied);
-					// Set processed list into result
-					// result.setAuxilaryAuditInfo(tagAuditEvents);
 				}
 
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies() : result=" + result);
-					LOG.debug("RangerPolicyEngineImpl.isAccessAllowedForTagPolicies() : auditEventList=" + tagAuditEvents);
 				}
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + result + ")" );
+			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ", " + result + ")" );
 		}
-
-		return result;
 	}
 
 	private void setResourceServiceDef(RangerAccessRequest request) {

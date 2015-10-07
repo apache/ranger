@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
@@ -228,27 +229,23 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 	}
 
 	@Override
-    protected RangerPolicyItemEvaluator getDeterminingPolicyItem(RangerAccessRequest request) {
+    protected void evaluatePolicyItems(RangerAccessRequest request, RangerAccessResult result, boolean isResourceMatch) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerOptimizedPolicyEvaluator.isPolicyItemsMatch()");
+            LOG.debug("==> RangerOptimizedPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + isResourceMatch + ")");
         }
-
-        RangerPolicyItemEvaluator ret = null;
 
         if (hasPublicGroup || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups())) {
             // No need to reject based on users and groups
 
             if (request.isAccessTypeAny() || (request.isAccessTypeDelegatedAdmin() && delegateAdmin) || hasAllPerms || accessPerms.contains(request.getAccessType())) {
                 // No need to reject based on aggregated access permissions
-                ret = super.getDeterminingPolicyItem(request);
+                super.evaluatePolicyItems(request, result, isResourceMatch);
             }
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerOptimizedPolicyEvaluator.isPolicyItemsMatch(): " + ret);
+            LOG.debug("<== RangerOptimizedPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + isResourceMatch + ")");
         }
-
-        return ret;
     }
 
     private void preprocessPolicyItems(List<RangerPolicy.RangerPolicyItem> policyItems) {
