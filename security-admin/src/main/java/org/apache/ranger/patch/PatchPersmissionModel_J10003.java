@@ -70,27 +70,27 @@ public class PatchPersmissionModel_J10003 extends BaseLoader {
 	@Override
 	public void execLoad() {
 		logger.info("==> PermissionPatch.execLoad()");
-		printStats();
+		assignPermissionToExistingUsers();
 		logger.info("<== PermissionPatch.execLoad()");
+	}
+
+	public void assignPermissionToExistingUsers() {
+		int countUserPermissionUpdated = 1;
+		List<XXPortalUser> allPortalUser = daoManager.getXXPortalUser().findAllXPortalUser();
+		List<VXPortalUser> vPortalUsers = new ArrayList<VXPortalUser>();
+		for (XXPortalUser xPortalUser : allPortalUser) {
+			VXPortalUser vPortalUser = xPortalUserService.populateViewBean(xPortalUser);
+			vPortalUsers.add(vPortalUser);
+			vPortalUser.setUserRoleList(daoManager.getXXPortalUser().findXPortalUserRolebyXPortalUserId(vPortalUser.getId()));
+			xUserMgr.assignPermissionToUser(vPortalUser, false);
+			countUserPermissionUpdated += 1;
+			logger.info(" Permission was assigned to UserId - " + xPortalUser.getId());
+		}
+		logger.info(countUserPermissionUpdated + " permissions where assigned");
 	}
 
 	@Override
 	public void printStats() {
-		int countUserPermissionUpdated = 1;
-		List<XXPortalUser> allPortalUser = daoManager.getXXPortalUser()
-				.findAllXPortalUser();
-		List<VXPortalUser> vPortalUsers = new ArrayList<VXPortalUser>();
-		for (XXPortalUser xPortalUser : allPortalUser) {
-			VXPortalUser vPortalUser = xPortalUserService
-					.populateViewBean(xPortalUser);
-			vPortalUsers.add(vPortalUser);
-			vPortalUser.setUserRoleList(daoManager.getXXPortalUser()
-					.findXPortalUserRolebyXPortalUserId(vPortalUser.getId()));
-			xUserMgr.assignPermissionToUser(vPortalUser, false);
-			countUserPermissionUpdated += 1;
-			logger.info(" Permission was assigned to UserId - "
-					+ xPortalUser.getId());
-		}
-		logger.info(countUserPermissionUpdated + " permissions where assigned");
 	}
+
 }

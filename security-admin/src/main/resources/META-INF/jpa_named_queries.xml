@@ -177,6 +177,11 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroupUser.findByGroupId">
+		<query>SELECT obj FROM XXGroupUser obj WHERE obj.parentGroupId=:groupId
+		</query>
+	</named-query>
+
 	<named-query name="XXTrxLog.findByTrxId">
 		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
 		</query>
@@ -490,10 +495,9 @@
 				WHERE XXUserPermObj.moduleId = :moduleId AND XXUserPermObj.userId =:userId
 		</query>
 	</named-query>
-	
-	<named-query name="XXModuleDef.findModuleNamesWithIds">
-		<query>SELECT XXMObj
-				FROM XXModuleDef XXMObj
+
+	<named-query name="XXGroupPermission.findByModuleIdAndGroupId">
+		<query>SELECT obj FROM XXGroupPermission obj WHERE obj.moduleId = :moduleId AND obj.groupId =:groupId
 		</query>
 	</named-query>
 	

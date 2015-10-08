@@ -99,20 +99,19 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
 		return null;
 	}
 
-	public List<XXUserPermission> findByModuleIdAndUserId(Long userId,Long moduleId) {
+	public XXUserPermission findByModuleIdAndUserId(Long userId, Long moduleId) {
 		if (userId != null) {
 			try {
-				return getEntityManager()
-						.createNamedQuery("XXUserPermission.findByModuleIdAndUserId", XXUserPermission.class)
+				return getEntityManager().createNamedQuery("XXUserPermission.findByModuleIdAndUserId", XXUserPermission.class)
 						.setParameter("userId", userId)
 						.setParameter("moduleId", moduleId)
-						.getResultList();
+						.getSingleResult();
 			} catch (NoResultException e) {
 				logger.debug(e.getMessage());
 			}
 		} else {
 			logger.debug("ResourceUserId not provided.");
-			return new ArrayList<XXUserPermission>();
+			return null;
 		}
 		return null;
 	}

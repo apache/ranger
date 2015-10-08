@@ -759,6 +759,7 @@ public class XUserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef createXModuleDefPermission(VXModuleDef vXModuleDef) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.createXModuleDefPermission(vXModuleDef);
 	}
 
@@ -775,6 +776,7 @@ public class XUserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef updateXModuleDefPermission(VXModuleDef vXModuleDef) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.updateXModuleDefPermission(vXModuleDef);
 	}
 
@@ -784,6 +786,7 @@ public class XUserREST {
 	public void deleteXModuleDefPermission(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
+		xUserMgr.checkAdminAccess();
 		xUserMgr.deleteXModuleDefPermission(id, force);
 	}
 
@@ -825,6 +828,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_USER_PERMISSION + "\")")
 	public VXUserPermission createXUserPermission(
 			VXUserPermission vXUserPermission) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.createXUserPermission(vXUserPermission);
 	}
 
@@ -842,6 +846,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_USER_PERMISSION + "\")")
 	public VXUserPermission updateXUserPermission(
 			VXUserPermission vXUserPermission) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.updateXUserPermission(vXUserPermission);
 	}
 
@@ -851,6 +856,7 @@ public class XUserREST {
 	public void deleteXUserPermission(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
+		xUserMgr.checkAdminAccess();
 		xUserMgr.deleteXUserPermission(id, force);
 	}
 
@@ -887,6 +893,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_GROUP_PERMISSION + "\")")
 	public VXGroupPermission createXGroupPermission(
 			VXGroupPermission vXGroupPermission) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.createXGroupPermission(vXGroupPermission);
 	}
 
@@ -904,6 +911,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_GROUP_PERMISSION + "\")")
 	public VXGroupPermission updateXGroupPermission(
 			VXGroupPermission vXGroupPermission) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.updateXGroupPermission(vXGroupPermission);
 	}
 
@@ -913,6 +921,7 @@ public class XUserREST {
 	public void deleteXGroupPermission(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
+		xUserMgr.checkAdminAccess();
 		xUserMgr.deleteXGroupPermission(id, force);
 	}
 

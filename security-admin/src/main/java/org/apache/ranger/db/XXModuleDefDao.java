@@ -66,16 +66,6 @@ public class XXModuleDefDao extends BaseDao<XXModuleDef>{
 			return new XXModuleDef();
 		}
 	}
-	@SuppressWarnings("unchecked")
-	public List<XXModuleDef>  findModuleNamesWithIds() {
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXModuleDef.findModuleNamesWithIds")
-					.getResultList();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
 
 	@SuppressWarnings("unchecked")
 	public List<String>  findModuleURLOfPemittedModules(Long userId) {
