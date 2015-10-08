@@ -22,6 +22,7 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
+import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.view.VXGroupPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -47,12 +48,20 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
 
 	@Override
 	protected void validateForCreate(VXGroupPermission vObj) {
-
+		XXGroupPermission xGroupPerm = daoManager.getXXGroupPermission().findByModuleIdAndGroupId(vObj.getGroupId(), vObj.getModuleId());
+		if (xGroupPerm != null) {
+			throw restErrorUtil.createRESTException("Group with ID [" + vObj.getGroupId() + "] " + "is already " + "assigned to the module with ID [" + vObj.getModuleId() + "]",
+					MessageEnums.ERROR_DUPLICATE_OBJECT);
+		}
 	}
 
 	@Override
 	protected void validateForUpdate(VXGroupPermission vObj, XXGroupPermission mObj) {
-
+		XXGroupPermission xGroupPerm = daoManager.getXXGroupPermission().findByModuleIdAndGroupId(vObj.getGroupId(), vObj.getModuleId());
+		if (xGroupPerm != null && !xGroupPerm.getId().equals(vObj.getId())) {
+			throw restErrorUtil.createRESTException("Group with ID [" + vObj.getGroupId() + "] " + "is already " + "assigned to the module with ID [" + vObj.getModuleId() + "]",
+					MessageEnums.ERROR_DUPLICATE_OBJECT);
+		}
 	}
 
 	@Override

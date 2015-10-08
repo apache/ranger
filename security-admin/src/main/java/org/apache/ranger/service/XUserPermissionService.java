@@ -20,8 +20,8 @@ package org.apache.ranger.service;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.view.VXUserPermission;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,12 +47,20 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
 
 	@Override
 	protected void validateForCreate(VXUserPermission vObj) {
-
+		XXUserPermission xUserPerm = daoManager.getXXUserPermission().findByModuleIdAndUserId(vObj.getUserId(), vObj.getModuleId());
+		if (xUserPerm != null) {
+			throw restErrorUtil.createRESTException("User with ID [" + vObj.getUserId() + "] " + "is already " + "assigned to the module with ID [" + vObj.getModuleId() + "]",
+					MessageEnums.ERROR_DUPLICATE_OBJECT);
+		}
 	}
 
 	@Override
 	protected void validateForUpdate(VXUserPermission vObj, XXUserPermission mObj) {
-
+		XXUserPermission xUserPerm = daoManager.getXXUserPermission().findByModuleIdAndUserId(vObj.getUserId(), vObj.getModuleId());
+		if (xUserPerm != null && !xUserPerm.getId().equals(vObj.getId())) {
+			throw restErrorUtil.createRESTException("User with ID [" + vObj.getUserId() + "] " + "is already " + "assigned to the module with ID [" + vObj.getModuleId() + "]",
+					MessageEnums.ERROR_DUPLICATE_OBJECT);
+		}
 	}
 
 	@Override
@@ -68,6 +76,12 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
 		}
 
 		vObj.setUserName(xUser.getLoginId());
+
+		XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(xObj.getModuleId());
+		if (xModuleDef != null) {
+			vObj.setModuleName(xModuleDef.getModule());
+		}
+
 		return vObj;
 	}
 

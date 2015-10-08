@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupPermission;
-import org.apache.ranger.entity.XXUserPermission;
 
 public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 
@@ -100,4 +99,19 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 		}
 		return null;
 	}
+
+	public XXGroupPermission findByModuleIdAndGroupId(Long groupId, Long moduleId) {
+		if (groupId != null && moduleId != null) {
+			try {
+				return getEntityManager().createNamedQuery("XXGroupPermission.findByModuleIdAndGroupId", tClass).setParameter("groupId", groupId).setParameter("moduleId", moduleId)
+						.getSingleResult();
+			} catch (NoResultException e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			return null;
+		}
+		return null;
+	}
+
 }

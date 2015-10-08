@@ -19,19 +19,18 @@
 
 package org.apache.ranger.security.context;
 
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -47,6 +46,9 @@ public class RangerPreAuthSecurityHandler {
 
 	@Autowired
 	RangerAPIMapping rangerAPIMapping;
+	
+	@Autowired
+	SessionMgr sessionMgr;
 
 	public boolean isAPIAccessible(String methodName) throws Exception {
 
@@ -77,14 +79,15 @@ public class RangerPreAuthSecurityHandler {
 
 	public boolean isAPIAccessible(Set<String> associatedTabs) throws Exception {
 
-		XXUser xUser = daoManager.getXXUser().findByUserName(ContextUtil.getCurrentUserLoginId());
-		if (xUser == null) {
-			restErrorUtil.createRESTException("x_user cannot be null.", MessageEnums.ERROR_SYSTEM);
-		}
-
-		List<String> accessibleModules = daoManager.getXXModuleDef().findAccessibleModulesByUserId(ContextUtil.getCurrentUserId(), xUser.getId());
-		if (CollectionUtils.containsAny(accessibleModules, associatedTabs)) {
-			return true;
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if (userSession != null) {
+			sessionMgr.refreshPermissionsIfNeeded(userSession);
+			if (userSession.getRangerUserPermission() != null) {
+				CopyOnWriteArraySet<String> accessibleModules = userSession.getRangerUserPermission().getUserPermissions();
+				if (CollectionUtils.containsAny(accessibleModules, associatedTabs)) {
+					return true;
+				}
+			}
 		}
 
 		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not allowed to access the API", true);

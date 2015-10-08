@@ -52,6 +52,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
@@ -114,6 +115,9 @@ public class XUserMgr extends XUserMgrBase {
 	
 	@Autowired
 	XResourceService xResourceService;
+
+	@Autowired
+	SessionMgr sessionMgr;
 
 	static final Logger logger = Logger.getLogger(XUserMgr.class);
 
@@ -227,101 +231,64 @@ public class XUserMgr extends XUserMgrBase {
 		return createdXUser;
 	}
 
-	// Assigning Permission
-	public void assignPermissionToUser(VXPortalUser vXPortalUser,
-			boolean isCreate) {
-		HashMap<String, Long> moduleNameId = getModelNames();
+	public void assignPermissionToUser(VXPortalUser vXPortalUser, boolean isCreate) {
+		HashMap<String, Long> moduleNameId = getAllModuleNameAndIdMap();
 
 		for (String role : vXPortalUser.getUserRoleList()) {
 
 			if (role.equals(RangerConstants.ROLE_USER)) {
 
-				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),
-						isCreate);
-				insertMappingUserPermisson(
-						vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_REPORTS),
-						isCreate);
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
 			} else if (role.equals(RangerConstants.ROLE_SYS_ADMIN)) {
 
-				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_REPORTS),
-						isCreate);
-				insertMappingUserPermisson(
-						vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),
-						isCreate);
-				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_AUDIT),
-						isCreate);
-				/*insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_KMS),
-						isCreate);*/
-				/*insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_PERMISSION),
-						isCreate);*/
-				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),
-						isCreate);
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
 			} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
-				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
-				insertMappingUserPermisson(vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_REPORTS),
-						isCreate);
-				insertMappingUserPermisson(
-						vXPortalUser.getId(),
-						moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),
-						isCreate);
+
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
 			}
 
 		}
 	}
 
-	// Insert or Updating Mapping permissons depending upon roles
-	private void insertMappingUserPermisson(Long userId, Long moduleId,
-			boolean isCreate) {
-		VXUserPermission vXuserPermission;
-		List<XXUserPermission> xuserPermissionList = daoManager
-				.getXXUserPermission()
-				.findByModuleIdAndUserId(userId, moduleId);
-		if (xuserPermissionList == null || xuserPermissionList.isEmpty()) {
-			vXuserPermission = new VXUserPermission();
-			vXuserPermission.setUserId(userId);
-			vXuserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
-			vXuserPermission.setModuleId(moduleId);
+	// Insert or Updating Mapping permissions depending upon roles
+	private void createOrUpdateUserPermisson(Long portalUserId, Long moduleId, boolean isCreate) {
+		VXUserPermission vXUserPermission;
+		XXUserPermission xUserPermission = daoManager.getXXUserPermission().findByModuleIdAndUserId(portalUserId, moduleId);
+		if (xUserPermission == null) {
+			vXUserPermission = new VXUserPermission();
+			vXUserPermission.setUserId(portalUserId);
+			vXUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
+			vXUserPermission.setModuleId(moduleId);
 			try {
-				xUserPermissionService.createResource(vXuserPermission);
+				vXUserPermission = this.createXUserPermission(vXUserPermission);
+				logger.info("Permission assigned to user: [" + vXUserPermission.getUserName() + "] For Module: [" + vXUserPermission.getModuleName() + "]");
 			} catch (Exception e) {
-				logger.error(e);
+				logger.error("Error while assigning permission to user: [" + portalUserId + "] for module: [" + moduleId + "]", e);
 			}
 		} else if (isCreate) {
-			for (XXUserPermission xUserPermission : xuserPermissionList) {
-				vXuserPermission = xUserPermissionService
-						.populateViewBean(xUserPermission);
-				vXuserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
-				xUserPermissionService.updateResource(vXuserPermission);
-			}
+			vXUserPermission = xUserPermissionService.populateViewBean(xUserPermission);
+			vXUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
+			vXUserPermission = this.updateXUserPermission(vXUserPermission);
+			logger.info("Permission Updated for user: [" + vXUserPermission.getUserName() + "] For Module: [" + vXUserPermission.getModuleName() + "]");
 		}
-
 	}
 
-	public HashMap<String, Long> getModelNames() {
-		List<XXModuleDef> xxModuleDefs = daoManager.getXXModuleDef()
-				.findModuleNamesWithIds();
-		if (xxModuleDefs.isEmpty() || xxModuleDefs != null) {
-			HashMap<String, Long> moduleNameId = new HashMap<String, Long>();
-			try {
+	public HashMap<String, Long> getAllModuleNameAndIdMap() {
 
-				for (XXModuleDef xxModuleDef : xxModuleDefs) {
-					moduleNameId.put(xxModuleDef.getModule(),
-							xxModuleDef.getId());
-				}
-				return moduleNameId;
-			} catch (Exception e) {
-				logger.error(e);
+		List<XXModuleDef> xXModuleDefs = daoManager.getXXModuleDef().getAll();
+
+		if (!CollectionUtils.isEmpty(xXModuleDefs)) {
+			HashMap<String, Long> moduleNameAndIdMap = new HashMap<String, Long>();
+			for (XXModuleDef xXModuleDef : xXModuleDefs) {
+				moduleNameAndIdMap.put(xXModuleDef.getModule(), xXModuleDef.getId());
 			}
+			return moduleNameAndIdMap;
 		}
 
 		return null;
@@ -795,50 +762,15 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	/*public void checkPermissionRoleByGivenUrls(String enteredURL, String method) {
-		Long currentUserId = ContextUtil.getCurrentUserId();
-		List<String> notPermittedUrls = daoManager.getXXModuleDef()
-				.findModuleURLOfPemittedModules(currentUserId);
-		if (notPermittedUrls != null) {
-			List<XXPortalUserRole> xPortalUserRoles = daoManager
-					.getXXPortalUserRole().findByUserId(currentUserId);
-			for (XXPortalUserRole xPortalUserRole : xPortalUserRoles) {
-				if (xPortalUserRole.getUserRole().equalsIgnoreCase(
-						RangerConstants.ROLE_USER)) {
-					notPermittedUrls.add("/permission");
-					notPermittedUrls.add("/kms");
-				}
-			}
-			boolean flag = false;
-			for (String notPermittedUrl : notPermittedUrls) {
-				if (enteredURL.toLowerCase().contains(
-						notPermittedUrl.toLowerCase()))
-					flag = true;
-			}
-			if (flag) {
-				throw restErrorUtil.create403RESTException("Access Denied");
-			}
-		}
-		boolean flag = false;
-		List<XXPortalUserRole> xPortalUserRoles = daoManager
-				.getXXPortalUserRole().findByUserId(currentUserId);
-		for (XXPortalUserRole xPortalUserRole : xPortalUserRoles) {
-			if (xPortalUserRole.getUserRole().equalsIgnoreCase(
-					RangerConstants.ROLE_USER)
-					&& enteredURL.contains("/permission")
-					&& !enteredURL.contains("/templates")) {
-				flag = true;
-			}
-		}
-		if (flag) {
-			throw restErrorUtil.create403RESTException("Access Denied");
-		}
-		
-	}*/
-
 	// Module permissions
 	public VXModuleDef createXModuleDefPermission(VXModuleDef vXModuleDef) {
-		checkAdminAccess();
+
+		XXModuleDef xModDef = daoManager.getXXModuleDef().findByModuleName(vXModuleDef.getModule());
+
+		if (xModDef != null) {
+			throw restErrorUtil.createRESTException("Module Def with same name already exists.", MessageEnums.ERROR_DUPLICATE_OBJECT);
+		}
+
 		return xModuleDefService.createResource(vXModuleDef);
 	}
 
@@ -847,36 +779,28 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXModuleDef updateXModuleDefPermission(VXModuleDef vXModuleDef) {
-		checkAdminAccess();
-		List<VXGroupPermission> groupPermListNew = vXModuleDef
-				.getGroupPermList();
+
+		List<VXGroupPermission> groupPermListNew = vXModuleDef.getGroupPermList();
 		List<VXUserPermission> userPermListNew = vXModuleDef.getUserPermList();
 
 		List<VXGroupPermission> groupPermListOld = new ArrayList<VXGroupPermission>();
 		List<VXUserPermission> userPermListOld = new ArrayList<VXUserPermission>();
-		XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(
-				vXModuleDef.getId());
-		VXModuleDef vModuleDefPopulateOld = xModuleDefService
-				.populateViewBean(xModuleDef);
 
-		List<XXGroupPermission> xgroupPermissionList = daoManager
-				.getXXGroupPermission().findByModuleId(vXModuleDef.getId(),
-						true);
+		XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(vXModuleDef.getId());
+		VXModuleDef vModuleDefPopulateOld = xModuleDefService.populateViewBean(xModuleDef);
+
+		List<XXGroupPermission> xgroupPermissionList = daoManager.getXXGroupPermission().findByModuleId(vXModuleDef.getId(), true);
 
 		for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
-			VXGroupPermission vXGrpPerm = xGroupPermissionService
-					.populateViewBean(xGrpPerm);
+			VXGroupPermission vXGrpPerm = xGroupPermissionService.populateViewBean(xGrpPerm);
 			groupPermListOld.add(vXGrpPerm);
 		}
 		vModuleDefPopulateOld.setGroupPermList(groupPermListOld);
 
-		List<XXUserPermission> xuserPermissionList = daoManager
-				.getXXUserPermission()
-				.findByModuleId(vXModuleDef.getId(), true);
+		List<XXUserPermission> xuserPermissionList = daoManager.getXXUserPermission().findByModuleId(vXModuleDef.getId(), true);
 
 		for (XXUserPermission xUserPerm : xuserPermissionList) {
-			VXUserPermission vUserPerm = xUserPermissionService
-					.populateViewBean(xUserPerm);
+			VXUserPermission vUserPerm = xUserPermissionService.populateViewBean(xUserPerm);
 			userPermListOld.add(vUserPerm);
 		}
 		vModuleDefPopulateOld.setUserPermList(userPermListOld);
@@ -887,20 +811,16 @@ public class XUserMgr extends XUserMgrBase {
 				boolean isExist = false;
 
 				for (VXGroupPermission oldVXGroupPerm : groupPermListOld) {
-					if (newVXGroupPerm.getModuleId().equals(
-							oldVXGroupPerm.getModuleId())
-							&& newVXGroupPerm.getGroupId().equals(
-									oldVXGroupPerm.getGroupId())) {
-						oldVXGroupPerm.setIsAllowed(newVXGroupPerm
-								.getIsAllowed());
-						oldVXGroupPerm = xGroupPermissionService
-								.updateResource(oldVXGroupPerm);
+					if (newVXGroupPerm.getModuleId().equals(oldVXGroupPerm.getModuleId()) && newVXGroupPerm.getGroupId().equals(oldVXGroupPerm.getGroupId())) {
+						if (newVXGroupPerm.getIsAllowed() != oldVXGroupPerm.getIsAllowed()) {
+							oldVXGroupPerm.setIsAllowed(newVXGroupPerm.getIsAllowed());
+							oldVXGroupPerm = this.updateXGroupPermission(oldVXGroupPerm);
+						}
 						isExist = true;
 					}
 				}
 				if (!isExist) {
-					newVXGroupPerm = xGroupPermissionService
-							.createResource(newVXGroupPerm);
+					newVXGroupPerm = this.createXGroupPermission(newVXGroupPerm);
 				}
 			}
 		}
@@ -910,74 +830,143 @@ public class XUserMgr extends XUserMgrBase {
 
 				boolean isExist = false;
 				for (VXUserPermission oldVXUserPerm : userPermListOld) {
-					if (newVXUserPerm.getModuleId().equals(
-							oldVXUserPerm.getModuleId())
-							&& newVXUserPerm.getUserId().equals(
-									oldVXUserPerm.getUserId())) {
-						oldVXUserPerm
-								.setIsAllowed(newVXUserPerm.getIsAllowed());
-						oldVXUserPerm = xUserPermissionService
-								.updateResource(oldVXUserPerm);
+					if (newVXUserPerm.getModuleId().equals(oldVXUserPerm.getModuleId()) && newVXUserPerm.getUserId().equals(oldVXUserPerm.getUserId())) {
+						if (newVXUserPerm.getIsAllowed() != oldVXUserPerm.getIsAllowed()) {
+							oldVXUserPerm.setIsAllowed(newVXUserPerm.getIsAllowed());
+							oldVXUserPerm = this.updateXUserPermission(oldVXUserPerm);
+						}
 						isExist = true;
 					}
 				}
 				if (!isExist) {
-					newVXUserPerm = xUserPermissionService
-							.createResource(newVXUserPerm);
-
+					newVXUserPerm = this.createXUserPermission(newVXUserPerm);
 				}
 			}
 		}
-		return xModuleDefService.updateResource(vXModuleDef);
+		vXModuleDef = xModuleDefService.updateResource(vXModuleDef);
+
+		return vXModuleDef;
 	}
 
 	public void deleteXModuleDefPermission(Long id, boolean force) {
-		checkAdminAccess();
 		xModuleDefService.deleteResource(id);
 	}
 
 	// User permission
-	public VXUserPermission createXUserPermission(
-			VXUserPermission vXUserPermission) {
-		checkAdminAccess();
-		return xUserPermissionService.createResource(vXUserPermission);
+	public VXUserPermission createXUserPermission(VXUserPermission vXUserPermission) {
+
+		vXUserPermission = xUserPermissionService.createResource(vXUserPermission);
+
+		Set<UserSessionBase> userSessions = sessionMgr.getActiveUserSessionsForPortalUserId(vXUserPermission.getUserId());
+		if (!CollectionUtils.isEmpty(userSessions)) {
+			for (UserSessionBase userSession : userSessions) {
+				logger.info("Assigning permission to user who's found logged in into system, so updating permission in session of that user: [" + vXUserPermission.getUserName()
+						+ "]");
+				sessionMgr.resetUserModulePermission(userSession);
+			}
+		}
+
+		return vXUserPermission;
 	}
 
 	public VXUserPermission getXUserPermission(Long id) {
 		return xUserPermissionService.readResource(id);
 	}
 
-	public VXUserPermission updateXUserPermission(
-			VXUserPermission vXUserPermission) {
-		checkAdminAccess();
-		return xUserPermissionService.updateResource(vXUserPermission);
+	public VXUserPermission updateXUserPermission(VXUserPermission vXUserPermission) {
+
+		vXUserPermission = xUserPermissionService.updateResource(vXUserPermission);
+
+		Set<UserSessionBase> userSessions = sessionMgr.getActiveUserSessionsForPortalUserId(vXUserPermission.getUserId());
+		if (!CollectionUtils.isEmpty(userSessions)) {
+			for (UserSessionBase userSession : userSessions) {
+				logger.info("Updating permission of user who's found logged in into system, so updating permission in session of user: [" + vXUserPermission.getUserName() + "]");
+				sessionMgr.resetUserModulePermission(userSession);
+			}
+		}
+
+		return vXUserPermission;
 	}
 
 	public void deleteXUserPermission(Long id, boolean force) {
-		checkAdminAccess();
+
+		XXUserPermission xUserPermission = daoManager.getXXUserPermission().getById(id);
+		if (xUserPermission == null) {
+			throw restErrorUtil.createRESTException("No UserPermission found to delete, ID: " + id, MessageEnums.DATA_NOT_FOUND);
+		}
+
 		xUserPermissionService.deleteResource(id);
+
+		Set<UserSessionBase> userSessions = sessionMgr.getActiveUserSessionsForPortalUserId(xUserPermission.getUserId());
+		if (!CollectionUtils.isEmpty(userSessions)) {
+			for (UserSessionBase userSession : userSessions) {
+				logger.info("deleting permission of user who's found logged in into system, so updating permission in session of that user");
+				sessionMgr.resetUserModulePermission(userSession);
+			}
+		}
 	}
 
 	// Group permission
-	public VXGroupPermission createXGroupPermission(
-			VXGroupPermission vXGroupPermission) {
-		checkAdminAccess();
-		return xGroupPermissionService.createResource(vXGroupPermission);
+	public VXGroupPermission createXGroupPermission(VXGroupPermission vXGroupPermission) {
+
+		vXGroupPermission = xGroupPermissionService.createResource(vXGroupPermission);
+
+		List<XXGroupUser> grpUsers = daoManager.getXXGroupUser().findByGroupId(vXGroupPermission.getGroupId());
+		for (XXGroupUser xGrpUser : grpUsers) {
+			Set<UserSessionBase> userSessions = sessionMgr.getActiveUserSessionsForXUserId(xGrpUser.getUserId());
+			if (!CollectionUtils.isEmpty(userSessions)) {
+				for (UserSessionBase userSession : userSessions) {
+					logger.info("Assigning permission to group, one of the user belongs to that group found logged in into system, so updating permission in session of that user");
+					sessionMgr.resetUserModulePermission(userSession);
+				}
+			}
+		}
+
+		return vXGroupPermission;
 	}
 
 	public VXGroupPermission getXGroupPermission(Long id) {
 		return xGroupPermissionService.readResource(id);
 	}
 
-	public VXGroupPermission updateXGroupPermission(
-			VXGroupPermission vXGroupPermission) {
-		checkAdminAccess();
-		return xGroupPermissionService.updateResource(vXGroupPermission);
+	public VXGroupPermission updateXGroupPermission(VXGroupPermission vXGroupPermission) {
+
+		vXGroupPermission = xGroupPermissionService.updateResource(vXGroupPermission);
+
+		List<XXGroupUser> grpUsers = daoManager.getXXGroupUser().findByGroupId(vXGroupPermission.getGroupId());
+		for (XXGroupUser xGrpUser : grpUsers) {
+			Set<UserSessionBase> userSessions = sessionMgr.getActiveUserSessionsForXUserId(xGrpUser.getUserId());
+			if (!CollectionUtils.isEmpty(userSessions)) {
+				for (UserSessionBase userSession : userSessions) {
+					logger.info("Assigning permission to group whose one of the user found logged in into system, so updating permission in session of that user");
+					sessionMgr.resetUserModulePermission(userSession);
+				}
+			}
+		}
+
+		return vXGroupPermission;
 	}
 
 	public void deleteXGroupPermission(Long id, boolean force) {
-		checkAdminAccess();
+
+		XXGroupPermission xGrpPerm = daoManager.getXXGroupPermission().getById(id);
+
+		if (xGrpPerm == null) {
+			throw restErrorUtil.createRESTException("No GroupPermission object with ID: [" + id + "found.", MessageEnums.DATA_NOT_FOUND);
+		}
+
 		xGroupPermissionService.deleteResource(id);
+
+		List<XXGroupUser> grpUsers = daoManager.getXXGroupUser().findByGroupId(xGrpPerm.getGroupId());
+		for (XXGroupUser xGrpUser : grpUsers) {
+			Set<UserSessionBase> userSessions = sessionMgr.getActiveUserSessionsForXUserId(xGrpUser.getUserId());
+			if (!CollectionUtils.isEmpty(userSessions)) {
+				for (UserSessionBase userSession : userSessions) {
+					logger.info("deleting permission of the group whose one of the user found logged in into system, so updating permission in session of that user");
+					sessionMgr.resetUserModulePermission(userSession);
+				}
+			}
+		}
 	}
 
 	public void modifyUserActiveStatus(HashMap<Long, Integer> statusMap) {

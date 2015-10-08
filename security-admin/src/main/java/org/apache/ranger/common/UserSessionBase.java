@@ -22,6 +22,7 @@
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPortalUser;
@@ -36,7 +37,9 @@ public class UserSessionBase implements Serializable {
 	private boolean keyAdmin = false;
 	private int authProvider = RangerConstants.USER_APP;
 	private List<String> userRoleList = new ArrayList<String>();
+	private RangerUserPermission rangerUserPermission;
 	int clientTimeOffsetInMinute = 0;
+
 	public Long getUserId() {
 		if (xXPortalUser != null) {
 			return xXPortalUser.getId();
@@ -58,14 +61,9 @@ public class UserSessionBase implements Serializable {
 		return null;
 	}
 
-	
-
 	public boolean isUserAdmin() {
 		return userAdmin;
 	}
-
-	
-
 	
 	public void setUserAdmin(boolean userAdmin) {
 		this.userAdmin = userAdmin;
@@ -73,13 +71,6 @@ public class UserSessionBase implements Serializable {
 
 	public XXPortalUser getXXPortalUser() {
 		return xXPortalUser;
-	}
-
-	public String getUserName() {
-		if (xXPortalUser != null) {
-			return xXPortalUser.getFirstName() + " " + xXPortalUser.getLastName();
-		}
-		return null;
 	}
 
 	public void setXXAuthSession(XXAuthSession gjAuthSession) {
@@ -119,6 +110,54 @@ public class UserSessionBase implements Serializable {
 
 	public void setKeyAdmin(boolean keyAdmin) {
 		this.keyAdmin = keyAdmin;
+	}
+
+	/**
+	 * @return the rangerUserPermission
+	 */
+	public RangerUserPermission getRangerUserPermission() {
+		return rangerUserPermission;
+	}
+
+	/**
+	 * @param rangerUserPermission the rangerUserPermission to set
+	 */
+	public void setRangerUserPermission(RangerUserPermission rangerUserPermission) {
+		this.rangerUserPermission = rangerUserPermission;
+	}
+
+
+
+	public static class RangerUserPermission {
+
+		protected CopyOnWriteArraySet<String> userPermissions;
+		protected Long lastUpdatedTime;
+
+		/**
+		 * @return the userPermissions
+		 */
+		public CopyOnWriteArraySet<String> getUserPermissions() {
+			return userPermissions;
+		}
+		/**
+		 * @param userPermissions the userPermissions to set
+		 */
+		public void setUserPermissions(CopyOnWriteArraySet<String> userPermissions) {
+			this.userPermissions = userPermissions;
+		}
+		/**
+		 * @return the lastUpdatedTime
+		 */
+		public Long getLastUpdatedTime() {
+			return lastUpdatedTime;
+		}
+		/**
+		 * @param lastUpdatedTime the lastUpdatedTime to set
+		 */
+		public void setLastUpdatedTime(Long lastUpdatedTime) {
+			this.lastUpdatedTime = lastUpdatedTime;
+		}
+
 	}
 
 }
