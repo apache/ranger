@@ -107,7 +107,7 @@ public class AuditFileSpool implements Runnable {
 
 	boolean isWriting = true;
 	boolean isDrain = false;
-	boolean isDestDown = true;
+	boolean isDestDown = false;
 
 	private Gson gson = null;
 
