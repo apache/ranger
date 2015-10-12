@@ -176,7 +176,6 @@ class AtlasNotificationMapper {
 		String[] components = getQualifiedNameComponents(entity);
 		// components should contain qualifiedName, instanceName, dbName, tableName, columnName in that order
 
-
 		String entityTypeName = entity.getTypeName();
 
 		String instanceName, dbName, tableName, columnName;
@@ -354,59 +353,4 @@ class AtlasNotificationMapper {
 		return type.cast(map.get(name));
 	}
 
-	// Temporary stuff, until qualifiedName is implemented by Atlas
-	static private String[] getTempNameComponents(Entity entity) {
-		String ret[] = new String[4];
-		if (StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_DB)) {
-			ret[1] = getAttribute(entity.getValues(), "clusterName", String.class);
-			ret[2] = getAttribute(entity.getValues(), "name", String.class);
-			ret[3] = null;
-			ret[0] = ret[1] + "." + ret[2];
-		} else if (StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_TABLE)) {
-			String qualifiedName = getAttribute(entity.getValues(), "name", String.class);
-			String nameHierarchy[] = qualifiedName.split("\\.@");
-
-			int hierarchyLevels = nameHierarchy.length;
-
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("----- Entity-Id:" + entity.getId().getGuid());
-				LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
-				LOG.debug("----- Entity-Qualified-Name:" + qualifiedName);
-				LOG.debug("-----	Entity-Qualified-Name-Components -----");
-				for (int i = 0; i < hierarchyLevels; i++) {
-					LOG.debug("-----		Index:" + i + "	Value:" + nameHierarchy[i]);
-				}
-			}
-
-			int i;
-			for (i = 0; i < ret.length; i++) {
-				ret[i] = null;
-			}
-			ret[0] = qualifiedName;
-			if (hierarchyLevels > 2) {
-				ret[1] = nameHierarchy[2];
-			}
-			if (hierarchyLevels > 1) {
-				ret[2] = nameHierarchy[1];
-			}
-			if (hierarchyLevels > 0) {
-				ret[3] = nameHierarchy[0];
-			}
-
-
-		}
-		return ret;
-	}
-
-
-	static private ServiceTags handleEntityUpdate(Entity entity) throws Exception {
-
-		throw new Exception("Not implemented");
-
-	}
-
-	static private ServiceTags handleTraitDelete(Entity entity) throws Exception {
-
-		throw new Exception("Not implemented");
-	}
 }

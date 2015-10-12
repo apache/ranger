@@ -46,6 +46,7 @@ public class ServiceTags implements java.io.Serializable {
 
 	public static final String OP_ADD_OR_UPDATE = "add_or_update";
 	public static final String OP_DELETE        = "delete";
+	public static final String OP_REPLACE       = "replace";
 
 	public static final String TAGMODEL_SHARED        = "shared";
 	public static final String TAGMODEL_RESOURCE_PRIVATE        = "resource_private";

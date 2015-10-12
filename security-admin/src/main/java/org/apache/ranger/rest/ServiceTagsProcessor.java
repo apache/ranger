@@ -30,8 +30,10 @@ import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagStore;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +63,8 @@ public class ServiceTagsProcessor {
 				addOrUpdate(serviceTags);
 			} else if (StringUtils.equalsIgnoreCase(op, ServiceTags.OP_DELETE)) {
 				delete(serviceTags);
+			} else if (StringUtils.equalsIgnoreCase(op, ServiceTags.OP_REPLACE)) {
+				replace(serviceTags);
 			} else {
 				LOG.error("Unknown op, op=" + op);
 			}
@@ -326,13 +330,32 @@ public class ServiceTagsProcessor {
 			LOG.debug("==> ServiceTagsProcessor.delete()");
 		}
 
+		// We dont expect any resourceId->tagId mappings in delete operation, so ignoring them if specified
+
 		List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
 		if (CollectionUtils.isNotEmpty(serviceResources)) {
+			boolean isResourePrivateTag = StringUtils.equals(serviceTags.getTagModel(), ServiceTags.TAGMODEL_RESOURCE_PRIVATE) ? true : false;
+
 			for (RangerServiceResource serviceResource : serviceResources) {
 				try {
 					RangerServiceResource objToDelete = tagStore.getServiceResourceByGuid(serviceResource.getGuid());
 
-					if(objToDelete != null) {
+					if (objToDelete != null) {
+
+						List<RangerTagResourceMap> tagResourceMaps = tagStore.getTagResourceMapsForResourceGuid(objToDelete.getGuid());
+
+						if (CollectionUtils.isNotEmpty(tagResourceMaps)) {
+							for (RangerTagResourceMap tagResourceMap : tagResourceMaps) {
+								long tagId = tagResourceMap.getTagId();
+
+								tagStore.deleteTagResourceMap(tagResourceMap.getId());
+
+								if(isResourePrivateTag) {
+									tagStore.deleteTag(tagId);
+								}
+							}
+						}
+
 						tagStore.deleteServiceResource(objToDelete.getId());
 					}
 				} catch (Exception exception) {
@@ -349,7 +372,7 @@ public class ServiceTagsProcessor {
 				try {
 					RangerTag objToDelete = tagStore.getTagByGuid(tag.getGuid());
 
-					if(objToDelete != null) {
+					if (objToDelete != null) {
 						tagStore.deleteTag(objToDelete.getId());
 					}
 				} catch (Exception exception) {
@@ -381,4 +404,45 @@ public class ServiceTagsProcessor {
 		}
 	}
 
+	// Delete all tagdef, tag, serviceResource and tagResourceMaps and then add all objects in provided ServiceTagsids
+	private void replace(ServiceTags serviceTags) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceTagsProcessor.replace()");
+		}
+
+		// TODO:
+		// This is an inefficient implementation. Replace by direct database deletes
+
+		SearchFilter searchAll = new SearchFilter();
+
+		List<RangerTagResourceMap> allTagResourceMaps = tagStore.getTagResourceMaps(searchAll);
+		for (RangerTagResourceMap tagResourceMap : allTagResourceMaps) {
+			tagStore.deleteTagResourceMap(tagResourceMap.getId());
+		}
+
+		List<RangerServiceResource> allServiceResources = tagStore.getServiceResources(searchAll);
+		for (RangerServiceResource serviceResource : allServiceResources) {
+			tagStore.deleteServiceResource(serviceResource.getId());
+		}
+
+		List<RangerTag> allTags = tagStore.getTags(searchAll);
+		for (RangerTag tag : allTags) {
+			tagStore.deleteTag(tag.getId());
+		}
+
+		List<RangerTagDef> allTagDefs = tagStore.getTagDefs(searchAll);
+		for (RangerTagDef tagDef : allTagDefs) {
+			tagStore.deleteTagDef(tagDef.getId());
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("ServiceTagsProcessor.replace() : All tag-related objects are removed now. Adding objects specified in ServiceTags..");
+		}
+
+		addOrUpdate(serviceTags);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceTagsProcessor.replace()");
+		}
+	}
 }
