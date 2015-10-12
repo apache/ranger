@@ -37,6 +37,8 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -481,6 +483,33 @@ public class MiscUtil {
 		return subjectLoginUser;
 	}
 
+	public static String getKerberosNamesRules() {
+		return KerberosName.getRules();
+	}
+	/**
+	 * 
+	 * @param principal
+	 *            This could be in the format abc/host@domain.com
+	 * @return
+	 */
+	static public String getShortNameFromPrincipalName(String principal) {
+		if (principal == null) {
+			return null;
+		}
+		try {
+			// Assuming it is kerberos name for now
+			KerberosName kerbrosName = new KerberosName(principal);
+			String userName = kerbrosName.getShortName();
+			userName = StringUtils.substringBefore(userName, "/");
+			userName = StringUtils.substringBefore(userName, "@");
+			return userName;
+		} catch (Throwable t) {
+			logger.error("Error converting kerberos name. principal="
+					+ principal + ", KerberosName.rules=" + KerberosName.getRules());
+		}
+		return principal;
+	}
+
 	/**
 	 * @param userName
 	 * @return
@@ -492,7 +521,6 @@ public class MiscUtil {
 		try {
 			UserGroupInformation ugi = UserGroupInformation
 					.createRemoteUser(userName);
-			// UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
 			String groups[] = ugi.getGroupNames();
 			if (groups != null && groups.length > 0) {
 				java.util.Set<String> groupsSet = new java.util.HashSet<String>();
@@ -543,6 +571,55 @@ public class MiscUtil {
 		}
 		return false;
 
+	}
+
+	public static void authWithConfig(String appName, Configuration config) {
+		try {
+			if (config != null) {
+				logger.info("Getting AppConfigrationEntry[] for appName="
+						+ appName + ", config=" + config.toString());
+				AppConfigurationEntry[] entries = config
+						.getAppConfigurationEntry(appName);
+				if (entries != null) {
+					logger.info("Got " + entries.length
+							+ "  AppConfigrationEntry elements for appName="
+							+ appName);
+					for (AppConfigurationEntry appEntry : entries) {
+						logger.info("APP_ENTRY:getLoginModuleName()="
+								+ appEntry.getLoginModuleName());
+						logger.info("APP_ENTRY:getControlFlag()="
+								+ appEntry.getControlFlag());
+						logger.info("APP_ENTRY.getOptions()="
+								+ appEntry.getOptions());
+					}
+				}
+
+				LoginContext loginContext = new LoginContext(appName,
+						new Subject(), null, config);
+				logger.info("Login in for appName=" + appName);
+				loginContext.login();
+				logger.info("Principals after login="
+						+ loginContext.getSubject().getPrincipals());
+				logger.info("UserGroupInformation.loginUserFromSubject(): appName="
+						+ appName
+						+ ", principals="
+						+ loginContext.getSubject().getPrincipals());
+
+				UserGroupInformation ugi = MiscUtil
+						.createUGIFromSubject(loginContext.getSubject());
+				if (ugi != null) {
+					MiscUtil.setUGILoginUser(ugi, loginContext.getSubject());
+				}
+
+				// UserGroupInformation.loginUserFromSubject(loginContext
+				// .getSubject());
+				logger.info("POST UserGroupInformation.loginUserFromSubject UGI="
+						+ UserGroupInformation.getLoginUser());
+			}
+		} catch (Throwable t) {
+			logger.fatal("Error logging as appName=" + appName + ", config="
+					+ config.toString());
+		}
 	}
 
 	public static void authWithKerberos(String keytab, String principal,
