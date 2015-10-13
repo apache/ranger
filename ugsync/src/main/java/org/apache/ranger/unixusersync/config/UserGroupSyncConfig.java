@@ -75,11 +75,11 @@ public class UserGroupSyncConfig  {
 	
 	private static final String UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM = "ranger.usersync.sleeptimeinmillisbetweensynccycle" ;
 	
-	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE = 30000L ;
+	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE = 60000L;
 
-	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE = 300000L ;
+	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE = 60000L;
 	
-	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE = 21600000L ;
+	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE = 3600000L;
 
 	private static final String UGSYNC_SOURCE_CLASS_PARAM = "ranger.usersync.source.impl.class";
 
@@ -365,9 +365,18 @@ public class UserGroupSyncConfig  {
 		}
 		else {
 			long ret = Long.parseLong(val) ;
-			if (ret < UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE) { 
-				LOG.info("Sleep Time Between Cycle can not be lower than [" + UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE  + "] millisec. resetting to min value.") ;
-				ret = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE ;
+			long min_interval;
+			if (LGSYNC_SOURCE_CLASS.equals(getUserGroupSource().getClass().getName())) {
+				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE ;
+			}else if(UGSYNC_SOURCE_CLASS.equals(getUserGroupSource().getClass().getName())){
+				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
+			} else {
+				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE ;
+			}
+			if(ret < min_interval)
+			{
+				LOG.info("Sleep Time Between Cycle can not be lower than [" + min_interval  + "] millisec. resetting to min value.") ;
+				ret = min_interval;
 			}
 			return ret;
 		}
