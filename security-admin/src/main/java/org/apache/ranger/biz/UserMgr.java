@@ -304,7 +304,7 @@ public class UserMgr {
 		return gjUser;
 	}
 
-	private boolean updateRoles(Long userId, Collection<String> rolesList) {
+	public boolean updateRoles(Long userId, Collection<String> rolesList) {
 		boolean rolesUpdated = false;
 		if (rolesList == null || rolesList.size() == 0) {
 			return false;
@@ -352,12 +352,13 @@ public class UserMgr {
 	 * @param vStrings
 	 */
 	public void setUserRoles(Long userId, List<VXString> vStringRolesList) {
-		checkAccess(userId);
 		List<String> stringRolesList = new ArrayList<String>();
 		for (VXString vXString : vStringRolesList) {
 			stringRolesList.add(vXString.getValue());
 		}
-		updateRoles(userId, stringRolesList);
+		xUserMgr.checkAccessRoles(stringRolesList);
+		VXPortalUser oldUserProfile=getUserProfile(userId);
+		xUserMgr.updateUserRolesPermissions(oldUserProfile, stringRolesList);
 	}
 
 	/**
@@ -634,7 +635,7 @@ public class UserMgr {
 					.getXXUserPermission().findByUserPermissionIdAndIsAllowed(
 							userProfile.getId());
 			List<XXGroupPermission> xxGroupPermissions = daoManager
-					.getXXGroupPermission().findbyVXPoratUserId(
+					.getXXGroupPermission().findbyVXPortalUserId(
 							userProfile.getId());
 
 			List<VXGroupPermission> groupPermissions = new ArrayList<VXGroupPermission>();

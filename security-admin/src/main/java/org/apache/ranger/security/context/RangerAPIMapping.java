@@ -345,6 +345,10 @@ public class RangerAPIMapping {
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.UPDATE);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SET_USER_ROLES);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.DEACTIVATE_USER);
+		apiAssociatedWithUserAndGroups.add(RangerAPIList.SET_USER_ROLES_BY_ID);
+		apiAssociatedWithUserAndGroups.add(RangerAPIList.SET_USER_ROLES_BY_NAME);
+		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_USER_ROLES_BY_ID);
+		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_USER_ROLES_BY_NAME);
 
 		rangerAPIMappingWithUI.put(TAB_USERS_GROUPS, apiAssociatedWithUserAndGroups);
 

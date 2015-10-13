@@ -55,7 +55,9 @@
 
 	</head>
 	<body class="login" style="">
-
+		<%
+			response.setHeader("X-Frame-Options", "DENY");
+		%>
 		<!-- Page content
 		================================================== -->
 		<section id="signin-container" style="margin-top: 4.5px;">

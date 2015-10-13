@@ -52,7 +52,7 @@ CREATE TABLE `x_service` (
 `upd_by_id` bigint(20) DEFAULT NULL,
 `version` bigint(20) DEFAULT NULL,
 `type` bigint(20) DEFAULT NULL,
-`name` varchar(512) DEFAULT NULL,   
+`name` varchar(255) DEFAULT NULL,   
 `policy_version` bigint(20) DEFAULT NULL,
 `policy_update_time`datetime DEFAULT NULL,
 `description` varchar(1024) DEFAULT NULL,

@@ -80,6 +80,10 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.ranger.view.VXResponse;
+import org.apache.ranger.entity.XXPortalUserRole;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXStringList;
 @Component
 public class XUserMgr extends XUserMgrBase {
 
@@ -1129,6 +1133,167 @@ public class XUserMgr extends XUserMgrBase {
 		vxAuditMapList.setPageSize(pageSize);
 		vxAuditMapList.setResultSize(onePageList.size());
 		vxAuditMapList.setTotalCount(auditMapList.size());
+	}
+
+	public void checkAccessRoles(List<String> stringRolesList) {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session != null && stringRolesList!=null) {
+			if (!session.isUserAdmin() && !session.isKeyAdmin()) {
+				throw restErrorUtil.create403RESTException("Permission"
+						+ " denied. LoggedInUser="
+						+ (session != null ? session.getXXPortalUser().getId()
+								: "Not Logged In")
+						+ " ,isn't permitted to perform the action.");
+			}else{
+				if (session.isUserAdmin() && stringRolesList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
+					throw restErrorUtil.create403RESTException("Permission"
+							+ " denied. LoggedInUser="
+							+ (session != null ? session.getXXPortalUser().getId()
+									: "")
+							+ " isn't permitted to perform the action.");
+				}
+				if (session.isKeyAdmin() && stringRolesList.contains(RangerConstants.ROLE_SYS_ADMIN)) {
+					throw restErrorUtil.create403RESTException("Permission"
+							+ " denied. LoggedInUser="
+							+ (session != null ? session.getXXPortalUser().getId()
+									: "")
+							+ " isn't permitted to perform the action.");
+				}
+			}
+		}else{
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setMsgDesc("Bad Credentials");
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
+	}
+
+	public VXStringList setUserRolesByExternalID(Long userId, List<VXString> vStringRolesList) {
+		List<String> roleListNewProfile = new ArrayList<String>();
+		if(vStringRolesList!=null){
+			for (VXString vXString : vStringRolesList) {
+				roleListNewProfile.add(vXString.getValue());
+			}
+		}
+		checkAccessRoles(roleListNewProfile);
+		VXUser vXUser=getXUser(userId);
+		List<XXPortalUserRole> portalUserRoleList =null;
+		if(vXUser!=null && roleListNewProfile.size()>0){
+			VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser.getName());
+			if(oldUserProfile!=null){
+				updateUserRolesPermissions(oldUserProfile,roleListNewProfile);
+				portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(oldUserProfile.getId());
+				return getStringListFromUserRoleList(portalUserRoleList);
+			}else{
+				throw restErrorUtil.createRESTException("User ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
+			}
+		}else{
+			throw restErrorUtil.createRESTException("User ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
+		}
+	}
+
+	public VXStringList setUserRolesByName(String userName, List<VXString> vStringRolesList) {
+		List<String> roleListNewProfile = new ArrayList<String>();
+		if(vStringRolesList!=null){
+			for (VXString vXString : vStringRolesList) {
+				roleListNewProfile.add(vXString.getValue());
+			}
+		}
+		checkAccessRoles(roleListNewProfile);
+		if(userName!=null && roleListNewProfile.size()>0){
+			VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(userName);
+			if(oldUserProfile!=null){
+				updateUserRolesPermissions(oldUserProfile,roleListNewProfile);
+				List<XXPortalUserRole> portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(oldUserProfile.getId());
+				return getStringListFromUserRoleList(portalUserRoleList);
+			}else{
+				throw restErrorUtil.createRESTException("Login ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
+			}
+		}else{
+			throw restErrorUtil.createRESTException("Login ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
+		}
+
+	}
+
+	public VXStringList getUserRolesByExternalID(Long userId) {
+		VXUser vXUser=getXUser(userId);
+		if(vXUser==null){
+			throw restErrorUtil.createRESTException("Please provide a valid ID", MessageEnums.INVALID_INPUT_DATA);
+		}
+		List<XXPortalUserRole> portalUserRoleList =null;
+		VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser.getName());
+		if(oldUserProfile!=null){
+			portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(oldUserProfile.getId());
+			return getStringListFromUserRoleList(portalUserRoleList);
+		}else{
+				throw restErrorUtil.createRESTException("User ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
+		}
+	}
+
+	public VXStringList getUserRolesByName(String userName) {
+		VXPortalUser vXPortalUser=null;
+		if(userName!=null && !userName.trim().isEmpty()){
+			vXPortalUser = userMgr.getUserProfileByLoginId(userName);
+			if(vXPortalUser!=null && vXPortalUser.getUserRoleList()!=null){
+				List<XXPortalUserRole> portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(vXPortalUser.getId());
+				return getStringListFromUserRoleList(portalUserRoleList);
+			}else{
+				throw restErrorUtil.createRESTException("Please provide a valid userName", MessageEnums.INVALID_INPUT_DATA);
+			}
+		}else{
+			throw restErrorUtil.createRESTException("Please provide a valid userName", MessageEnums.INVALID_INPUT_DATA);
+		}
+	}
+
+	public void updateUserRolesPermissions(VXPortalUser oldUserProfile,List<String> roleListNewProfile){
+		//update permissions start
+		Collection<String> roleListUpdatedProfile =new ArrayList<String>();
+		if (oldUserProfile != null && oldUserProfile.getId() != null) {
+				Collection<String> roleListOldProfile = oldUserProfile.getUserRoleList();
+				if(roleListNewProfile!=null && roleListOldProfile!=null){
+					for (String role : roleListNewProfile) {
+						if(role!=null && !roleListOldProfile.contains(role)){
+							roleListUpdatedProfile.add(role);
+						}
+					}
+				}
+		}
+		if(roleListUpdatedProfile!=null && roleListUpdatedProfile.size()>0){
+			oldUserProfile.setUserRoleList(roleListUpdatedProfile);
+			List<XXUserPermission> xuserPermissionList = daoManager
+					.getXXUserPermission()
+					.findByUserPermissionId(oldUserProfile.getId());
+			if (xuserPermissionList!=null && xuserPermissionList.size()>0){
+				for (XXUserPermission xXUserPermission : xuserPermissionList) {
+					if (xXUserPermission != null) {
+						xUserPermissionService.deleteResource(xXUserPermission.getId());
+					}
+				}
+			}
+			assignPermissionToUser(oldUserProfile,true);
+			if(roleListUpdatedProfile!=null && roleListUpdatedProfile.size()>0){
+				userMgr.updateRoles(oldUserProfile.getId(), oldUserProfile.getUserRoleList());
+			}
+		}
+		//update permissions end
+		}
+
+	public VXStringList getStringListFromUserRoleList(
+			List<XXPortalUserRole> listXXPortalUserRole) {
+		if(listXXPortalUserRole==null){
+			return null;
+		}
+		List<VXString> xStrList = new ArrayList<VXString>();
+		VXString vXStr=null;
+		for (XXPortalUserRole userRole : listXXPortalUserRole) {
+			if(userRole!=null){
+				vXStr = new VXString();
+				vXStr.setValue(userRole.getUserRole());
+				xStrList.add(vXStr);
+			}
+		}
+		VXStringList vXStringList = new VXStringList(xStrList);
+		return vXStringList;
 	}
 
 }
