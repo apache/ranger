@@ -312,7 +312,7 @@ create table dbo.x_service (
 	upd_by_id bigint DEFAULT NULL NULL,
 	version bigint DEFAULT NULL NULL,
 	type bigint DEFAULT NULL NULL,
-	name varchar(512) DEFAULT NULL NULL,
+	name varchar(255) DEFAULT NULL NULL,
 	policy_version bigint DEFAULT NULL NULL,
 	policy_update_time datetime DEFAULT NULL NULL,
 	description varchar(1024) DEFAULT NULL NULL,

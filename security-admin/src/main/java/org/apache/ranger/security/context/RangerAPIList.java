@@ -198,4 +198,8 @@ public class RangerAPIList {
 	public static final String SEARCH_X_GROUP_PERMISSION = "XUserREST.searchXGroupPermission";
 	public static final String COUNT_X_GROUP_PERMISSION = "XUserREST.countXGroupPermission";
 	public static final String MODIFY_USER_ACTIVE_STATUS = "XUserREST.modifyUserActiveStatus";
+	public static final String SET_USER_ROLES_BY_ID="XUserREST.setUserRolesByID";
+	public static final String SET_USER_ROLES_BY_NAME="XUserREST.setUserRolesByName";
+	public static final String GET_USER_ROLES_BY_ID="XUserREST.getUserRolesByID";
+	public static final String GET_USER_ROLES_BY_NAME="XUserREST.getUserRolesByName";
 }

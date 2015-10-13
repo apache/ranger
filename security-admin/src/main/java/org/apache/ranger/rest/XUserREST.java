@@ -75,6 +75,9 @@ import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
+import org.apache.ranger.view.VXPortalUser;
+import org.apache.ranger.view.VXResponse;
+import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserGroupInfo;
 import org.apache.ranger.view.VXUserList;
@@ -956,5 +959,43 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.MODIFY_USER_ACTIVE_STATUS + "\")")
 	public void modifyUserActiveStatus(HashMap<Long, Integer> statusMap){
 		 xUserMgr.modifyUserActiveStatus(statusMap);
+	}
+
+	@PUT
+	@Path("/secure/users/roles/{userId}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_ID + "\")")
+	public VXStringList setUserRolesByExternalID(@PathParam("userId") Long userId,
+			VXStringList roleList) {
+		return xUserMgr.setUserRolesByExternalID(userId, roleList.getVXStrings());
+	}
+
+	@PUT
+	@Path("/secure/users/roles/userName/{userName}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_NAME + "\")")
+	public VXStringList setUserRolesByName(@PathParam("userName") String userName,
+			VXStringList roleList) {
+		return xUserMgr.setUserRolesByName(userName, roleList.getVXStrings());
+	}
+
+	@GET
+	@Path("/secure/users/external/{userId}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_ROLES_BY_ID + "\")")
+	public VXStringList getUserRolesByExternalID(@PathParam("userId") Long userId) {
+		VXStringList vXStringList=new VXStringList();
+		vXStringList=xUserMgr.getUserRolesByExternalID(userId);
+		return vXStringList;
+	}
+
+	@GET
+	@Path("/secure/users/roles/userName/{userName}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_ROLES_BY_NAME + "\")")
+	public VXStringList getUserRolesByName(@PathParam("userName") String userName) {
+		VXStringList vXStringList=new VXStringList();
+		vXStringList=xUserMgr.getUserRolesByName(userName);
+		return vXStringList;
 	}
 }

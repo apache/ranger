@@ -78,6 +78,7 @@ public class RangerAuthenticationEntryPoint extends
 			HttpServletResponse response, AuthenticationException authException)
 			throws IOException, ServletException {
 		String ajaxRequestHeader = request.getHeader("X-Requested-With");
+		response.setHeader("X-Frame-Options", "DENY");
 		if (logger.isDebugEnabled()) {
 			logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 		}

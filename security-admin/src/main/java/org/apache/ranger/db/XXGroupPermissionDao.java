@@ -80,7 +80,7 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 		}
 		return null;
 	}
-	public List<XXGroupPermission> findbyVXPoratUserId(Long userId) {
+	public List<XXGroupPermission> findbyVXPortalUserId(Long userId) {
 		if (userId != null) {
 			try {
 				return getEntityManager()

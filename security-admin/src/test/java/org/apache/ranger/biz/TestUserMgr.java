@@ -105,7 +105,10 @@ public class TestUserMgr {
 
 	@Mock
 	SessionMgr sessionMgr;
-	
+
+	@Mock
+	XUserMgr xUserMgr;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -131,10 +134,9 @@ public class TestUserMgr {
 		return userProfile;
 	}
 
-	@Ignore("Junit breakage: RANGER-425") // TODO
 	@Test
 	public void test11CreateUser() {
-                setup();
+		setup();
 		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 		XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
 
@@ -188,10 +190,9 @@ public class TestUserMgr {
 		Mockito.verify(daoManager).getXXPortalUserRole();
 	}
 
-	@Ignore("Junit breakage: RANGER-425") // TODO
 	@Test
 	public void test12CreateUser() {
-                setup();
+		setup();
 		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 		XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
 
@@ -426,7 +427,7 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(
 				xGroupPermissionDao);
 		Mockito.when(
-				xGroupPermissionDao.findbyVXPoratUserId(userProfile.getId()))
+				xGroupPermissionDao.findbyVXPortalUserId(userProfile.getId()))
 				.thenReturn(xGroupPermissionList);
 
 		VXPortalUser dbVXPortalUser = userMgr.createUser(userProfile);
@@ -710,7 +711,7 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(
 				xGroupPermissionDao);
 		Mockito.when(
-				xGroupPermissionDao.findbyVXPoratUserId(userProfile.getId()))
+				xGroupPermissionDao.findbyVXPortalUserId(userProfile.getId()))
 				.thenReturn(xGroupPermissionList);
 
 		Mockito.when(
@@ -744,6 +745,7 @@ public class TestUserMgr {
 
 	@Test
 	public void test30checkAccess() {
+		setup();
 		XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
 		XXPortalUser xPortalUser = Mockito.mock(XXPortalUser.class);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
@@ -755,6 +757,7 @@ public class TestUserMgr {
 
 	@Test
 	public void test31getUserProfile() {
+		setup();
 		XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
 		XXPortalUser xPortalUser = Mockito.mock(XXPortalUser.class);
 		XXUserPermissionDao xUserPermissionDao = Mockito
@@ -812,7 +815,7 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(
 				xGroupPermissionDao);
 		Mockito.when(
-				xGroupPermissionDao.findbyVXPoratUserId(userProfile.getId()))
+				xGroupPermissionDao.findbyVXPortalUserId(userProfile.getId()))
 				.thenReturn(xGroupPermissionList);
 		VXPortalUser dbVXPortalUser = userMgr.getUserProfile(userId);
 		Assert.assertNotNull(dbVXPortalUser);
@@ -825,6 +828,7 @@ public class TestUserMgr {
 
 	@Test
 	public void test32getUserProfileByLoginId() {
+		setup();
 		XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
 		XXPortalUser xPortalUser = Mockito.mock(XXPortalUser.class);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
@@ -836,24 +840,175 @@ public class TestUserMgr {
 
 		Mockito.verify(daoManager).getXXPortalUser();
 	}
-	@Ignore("Junit breakage: RANGER-526") // TODO
+
 	@Test
 	public void test33setUserRoles() {
-		XXPortalUserRoleDao xPortalUserRoleDao = Mockito.mock(XXPortalUserRoleDao.class);
+		setup();
+		XXPortalUserRoleDao xPortalUserRoleDao = Mockito
+				.mock(XXPortalUserRoleDao.class);
+		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+		XXUserPermissionDao xUserPermissionDao = Mockito
+				.mock(XXUserPermissionDao.class);
+		XXGroupPermissionDao xGroupPermissionDao = Mockito
+				.mock(XXGroupPermissionDao.class);
+		XXModuleDefDao xModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+
+		VXPortalUser userProfile = userProfile();
+		XXPortalUser user = new XXPortalUser();
+		user.setEmailAddress(userProfile.getEmailAddress());
+		user.setFirstName(userProfile.getFirstName());
+		user.setLastName(userProfile.getLastName());
+		user.setLoginId(userProfile.getLoginId());
+		user.setPassword(userProfile.getPassword());
+		user.setUserSource(userProfile.getUserSource());
+		user.setPublicScreenName(userProfile.getPublicScreenName());
+		user.setId(userProfile.getId());
+
 		List<VXString> vStringRolesList = new ArrayList<VXString>();
 		VXString vXStringObj = new VXString();
-		vXStringObj.setValue("1L");
+		vXStringObj.setValue("ROLE_USER");
 		vStringRolesList.add(vXStringObj);
-				
+
 		List<XXPortalUserRole> xPortalUserRoleList = new ArrayList<XXPortalUserRole>();
 		XXPortalUserRole XXPortalUserRole = new XXPortalUserRole();
 		XXPortalUserRole.setId(userId);
+		XXPortalUserRole.setUserId(userId);
 		XXPortalUserRole.setUserRole("ROLE_USER");
 		xPortalUserRoleList.add(XXPortalUserRole);
-		
-		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(xPortalUserRoleDao);
-		Mockito.when(xPortalUserRoleDao.findByUserId(userId))
-				.thenReturn(xPortalUserRoleList);
+
+		List<XXUserPermission> xUserPermissionsList = new ArrayList<XXUserPermission>();
+		XXUserPermission xUserPermissionObj = new XXUserPermission();
+		xUserPermissionObj.setAddedByUserId(userId);
+		xUserPermissionObj.setCreateTime(new Date());
+		xUserPermissionObj.setId(userId);
+		xUserPermissionObj.setIsAllowed(1);
+		xUserPermissionObj.setModuleId(1L);
+		xUserPermissionObj.setUpdatedByUserId(userId);
+		xUserPermissionObj.setUpdateTime(new Date());
+		xUserPermissionObj.setUserId(userId);
+		xUserPermissionsList.add(xUserPermissionObj);
+
+		List<XXGroupPermission> xGroupPermissionList = new ArrayList<XXGroupPermission>();
+		XXGroupPermission xGroupPermissionObj = new XXGroupPermission();
+		xGroupPermissionObj.setAddedByUserId(userId);
+		xGroupPermissionObj.setCreateTime(new Date());
+		xGroupPermissionObj.setId(userId);
+		xGroupPermissionObj.setIsAllowed(1);
+		xGroupPermissionObj.setModuleId(1L);
+		xGroupPermissionObj.setUpdatedByUserId(userId);
+		xGroupPermissionObj.setUpdateTime(new Date());
+		xGroupPermissionObj.setGroupId(userId);
+		xGroupPermissionList.add(xGroupPermissionObj);
+
+		List<VXGroupPermission> groupPermList = new ArrayList<VXGroupPermission>();
+		VXGroupPermission groupPermission = new VXGroupPermission();
+		groupPermission.setId(1L);
+		groupPermission.setIsAllowed(1);
+		groupPermission.setModuleId(1L);
+		groupPermission.setGroupId(userId);
+		groupPermission.setGroupName("xyz");
+		groupPermission.setOwner("admin");
+		groupPermList.add(groupPermission);
+
+		XXModuleDef xModuleDef = new XXModuleDef();
+		xModuleDef.setUpdatedByUserId(userId);
+		xModuleDef.setAddedByUserId(userId);
+		xModuleDef.setCreateTime(new Date());
+		xModuleDef.setId(userId);
+		xModuleDef.setModule("Policy manager");
+		xModuleDef.setUpdateTime(new Date());
+		xModuleDef.setUrl("/policy manager");
+
+		VXUserPermission userPermission = new VXUserPermission();
+		userPermission.setId(1L);
+		userPermission.setIsAllowed(1);
+		userPermission.setModuleId(1L);
+		userPermission.setUserId(userId);
+		userPermission.setUserName("xyz");
+		userPermission.setOwner("admin");
+
+		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(
+				xPortalUserRoleDao);
+		Mockito.when(xPortalUserRoleDao.findByUserId(userId)).thenReturn(
+				xPortalUserRoleList);
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+		Mockito.when(userDao.getById(userId)).thenReturn(user);
+		Mockito.when(daoManager.getXXUserPermission()).thenReturn(
+				xUserPermissionDao);
+		Mockito.when(
+				xUserPermissionDao
+						.findByUserPermissionIdAndIsAllowed(userProfile.getId()))
+				.thenReturn(xUserPermissionsList);
+		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(
+				xGroupPermissionDao);
+		Mockito.when(
+				xGroupPermissionDao.findbyVXPortalUserId(userProfile.getId()))
+				.thenReturn(xGroupPermissionList);
+		Mockito.when(
+				xGroupPermissionService.populateViewBean(xGroupPermissionObj))
+				.thenReturn(groupPermission);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xModuleDefDao);
+		Mockito.when(xModuleDefDao.findByModuleId(Mockito.anyLong()))
+				.thenReturn(xModuleDef);
+		Mockito.when(
+				xUserPermissionService.populateViewBean(xUserPermissionObj))
+				.thenReturn(userPermission);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xModuleDefDao);
+		Mockito.when(xModuleDefDao.findByModuleId(Mockito.anyLong()))
+				.thenReturn(xModuleDef);
+
+		userMgr.checkAccess(userId);
 		userMgr.setUserRoles(userId, vStringRolesList);
+
+		Mockito.verify(daoManager).getXXUserPermission();
+		Mockito.verify(daoManager).getXXGroupPermission();
+		Mockito.verify(xGroupPermissionService).populateViewBean(
+				xGroupPermissionObj);
+		Mockito.verify(xUserPermissionService).populateViewBean(
+				xUserPermissionObj);
 	}
+
+	@Test
+	public void test19updateRoles() {
+		//setup();
+		Collection<String> rolesList = new ArrayList<String>();
+		rolesList.add("ROLE_USER");
+		rolesList.add("ROLE_ADMIN");
+		XXPortalUserRole XXPortalUserRole = new XXPortalUserRole();
+		XXPortalUserRole.setId(userId);
+		XXPortalUserRole.setUserRole("ROLE_USER");
+		List<XXPortalUserRole> list = new ArrayList<XXPortalUserRole>();
+		list.add(XXPortalUserRole);
+		XXPortalUserRoleDao userDao = Mockito.mock(XXPortalUserRoleDao.class);
+		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(userDao);
+		Mockito.when(userDao.findByUserId(userId)).thenReturn(list);
+		boolean isFound = userMgr.updateRoles(userId, rolesList);
+		Assert.assertFalse(isFound);
+	}
+
+	@Test
+	public void test20UpdateUserWithPass() {
+		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+		VXPortalUser userProfile = userProfile();
+		String userName = userProfile.getFirstName();
+		String userPassword = userProfile.getPassword();
+		XXPortalUser user = new XXPortalUser();
+		user.setEmailAddress(userProfile.getEmailAddress());
+		user.setFirstName(userProfile.getFirstName());
+		user.setLastName(userProfile.getLastName());
+		user.setLoginId(userProfile.getLoginId());
+		user.setPassword(userProfile.getPassword());
+		user.setUserSource(userProfile.getUserSource());
+		user.setPublicScreenName(userProfile.getPublicScreenName());
+		user.setId(userProfile.getId());
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(
+				user);
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+		Mockito.when(userDao.update(user)).thenReturn(user);
+		XXPortalUser dbXXPortalUser = userMgr.updatePasswordInSHA256(userName,
+				userPassword);
+		Assert.assertNotNull(dbXXPortalUser);
+	 }
+
 }

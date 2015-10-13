@@ -71,8 +71,9 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
     @Override
     public void doFilter(ServletRequest arg0, ServletResponse arg1,
 	    FilterChain arg2) throws IOException, ServletException {
-	// TODO Auto-generated method stub
-	super.doFilter(arg0, arg1, arg2);
+    	HttpServletResponse res = (HttpServletResponse)arg1;
+    	res.setHeader("X-Frame-Options", "DENY" );
+    	super.doFilter(arg0, res, arg2);
     }
 
     /*
@@ -99,6 +100,7 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
     @Override
     protected void onSuccessfulAuthentication(HttpServletRequest request,
 	    HttpServletResponse response, Authentication authResult) {
+    	response.setHeader("X-Frame-Options", "DENY" );
 	super.onSuccessfulAuthentication(request, response, authResult);
 	// if (logger.isDebugEnabled()) {
 	logger.info("onSuccessfulAuthentication() authResult=" + authResult);
@@ -119,6 +121,7 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
 	    HttpServletResponse response, AuthenticationException failed) {
 	logger.error("Authentication failure. failed=" + failed,
 		new Throwable());
+	response.setHeader("X-Frame-Options", "DENY" );
 	super.onUnsuccessfulAuthentication(request, response, failed);
     }
 
