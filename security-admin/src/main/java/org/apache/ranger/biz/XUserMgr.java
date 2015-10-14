@@ -242,38 +242,47 @@ public class XUserMgr extends XUserMgrBase {
 
 			if (role.equals(RangerConstants.ROLE_USER)) {
 
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
 			} else if (role.equals(RangerConstants.ROLE_SYS_ADMIN)) {
 
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
 			} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
 
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser.getId(), moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
 			}
 
 		}
 	}
 
 	// Insert or Updating Mapping permissions depending upon roles
-	private void createOrUpdateUserPermisson(Long portalUserId, Long moduleId, boolean isCreate) {
+	private void createOrUpdateUserPermisson(VXPortalUser portalUser, Long moduleId, boolean isCreate) {
 		VXUserPermission vXUserPermission;
-		XXUserPermission xUserPermission = daoManager.getXXUserPermission().findByModuleIdAndUserId(portalUserId, moduleId);
+		XXUserPermission xUserPermission = daoManager.getXXUserPermission().findByModuleIdAndPortalUserId(portalUser.getId(), moduleId);
 		if (xUserPermission == null) {
 			vXUserPermission = new VXUserPermission();
-			vXUserPermission.setUserId(portalUserId);
+
+			// When Creating XXUserPermission UI sends xUserId, to keep it consistent here xUserId should be used
+			XXUser xUser = daoManager.getXXUser().findByPortalUserId(portalUser.getId());
+			if (xUser == null) {
+				logger.warn("Could not found corresponding xUser for username: [" + portalUser.getLoginId() + "], So not assigning permission to this user");
+				return;
+			} else {
+				vXUserPermission.setUserId(xUser.getId());
+			}
+
 			vXUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
 			vXUserPermission.setModuleId(moduleId);
 			try {
 				vXUserPermission = this.createXUserPermission(vXUserPermission);
 				logger.info("Permission assigned to user: [" + vXUserPermission.getUserName() + "] For Module: [" + vXUserPermission.getModuleName() + "]");
 			} catch (Exception e) {
-				logger.error("Error while assigning permission to user: [" + portalUserId + "] for module: [" + moduleId + "]", e);
+				logger.error("Error while assigning permission to user: [" + portalUser.getLoginId() + "] for module: [" + moduleId + "]", e);
 			}
 		} else if (isCreate) {
 			vXUserPermission = xUserPermissionService.populateViewBean(xUserPermission);

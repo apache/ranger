@@ -1513,26 +1513,22 @@ setup_install_files(){
 	    log "[I] Copying ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist ${WEBAPP_ROOT}/WEB-INF/classes/conf"
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	    cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
+	fi
+	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	fi
-
-        if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
-               chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
-        fi
 
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/lib"
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/lib
+	fi
+	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
 	fi
 
 	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
 	    cp ${INSTALL_DIR}/ews/${RANGER_ADMIN_INITD} /etc/init.d/${RANGER_ADMIN}
-	    if [ "${unix_user}" != "ranger" ]; then
-           sed  's/LINUX_USER=ranger/LINUX_USER='${unix_user}'/g' -i  /etc/init.d/${RANGER_ADMIN}
-	    fi
-
 	    chmod ug+rx /etc/init.d/${RANGER_ADMIN}
 
 	    if [ -d /etc/rc2.d ]
@@ -1571,15 +1567,19 @@ setup_install_files(){
 		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
 	    fi
 	fi
+	if [  -f /etc/init.d/${RANGER_ADMIN} ]; then
+		if [ "${unix_user}" != "ranger" ]; then
+			sed  's/^LINUX_USER=.*$/LINUX_USER='${unix_user}'/g' -i  /etc/init.d/${RANGER_ADMIN}
+		fi
+	fi
 
 	if [ ! -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
 	    log "[I] ${XAPOLICYMGR_DIR}/ews/logs folder"
 	    mkdir -p ${XAPOLICYMGR_DIR}/ews/logs
-	    chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs
 	fi
-
 	if [ -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
           chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs
+          chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs/*
 	fi
 
 	log "[I] Setting up installation files and directory DONE";
