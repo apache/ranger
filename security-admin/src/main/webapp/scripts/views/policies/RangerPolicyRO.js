@@ -121,9 +121,9 @@ define(function(require) {
 			var headers = this.getPermHeaders();
 			this.policyDetails['policyCondition'] = headers.policyCondition;
 			var items = [{'itemName': 'policyItems',title : 'Allow Condition'},
-			             {'itemName': 'allowExceptions',title : 'Allow Exception'},
+			             {'itemName': 'allowExceptions',title : 'Exclude from Allow Conditions'},
 			             {'itemName': 'denyPolicyItems',title : 'Deny Condition'},
-			             {'itemName': 'denyExceptions',title : 'Deny Exception'},]
+			             {'itemName': 'denyExceptions',title : 'Exclude from Deny Conditions'},]
 			_.each(items, function(item){
 				if(!_.isUndefined(this.policy.get(item.itemName)) && !_.isEmpty(this.policy.get(item.itemName))){
 					this.policyDetails['policyItemsCond'].push({ title : item.title, headers : headers.header, policyItems : this.policy.get(item.itemName)})
