@@ -128,7 +128,8 @@ public class UserSessionBase implements Serializable {
 
 
 
-	public static class RangerUserPermission {
+	public static class RangerUserPermission implements Serializable {
+		private static final long serialVersionUID = 1L;
 
 		protected CopyOnWriteArraySet<String> userPermissions;
 		protected Long lastUpdatedTime;

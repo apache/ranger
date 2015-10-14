@@ -192,6 +192,11 @@
 		where polItemUser.policyItemId = :polItemId and polItemUser.userId = obj.id </query>
 	</named-query>
 
+	<named-query name="XXUser.findByPortalUserId">
+		<query>select obj from XXUser obj, XXPortalUser portalUser where portalUser.id = :portalUserId and 
+		obj.name = portalUser.loginId</query>
+	</named-query>
+
 	<named-query name="XXGroup.findByPolicyItemId">
 		<query>select obj.name from XXGroup obj, XXPolicyItemGroupPerm polItemGrp 
 		where polItemGrp.policyItemId = :polItemId and polItemGrp.groupId = obj.id </query>
@@ -489,7 +494,7 @@
 		 </query>
 	</named-query>
 
-	<named-query name="XXUserPermission.findByModuleIdAndUserId">
+	<named-query name="XXUserPermission.findByModuleIdAndPortalUserId">
 		<query>SELECT XXUserPermObj
 				FROM XXUserPermission XXUserPermObj
 				WHERE XXUserPermObj.moduleId = :moduleId AND XXUserPermObj.userId =:userId

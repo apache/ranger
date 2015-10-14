@@ -84,9 +84,9 @@ public class PatchPersmissionModel_J10003 extends BaseLoader {
 			vPortalUser.setUserRoleList(daoManager.getXXPortalUser().findXPortalUserRolebyXPortalUserId(vPortalUser.getId()));
 			xUserMgr.assignPermissionToUser(vPortalUser, false);
 			countUserPermissionUpdated += 1;
-			logger.info(" Permission was assigned to UserId - " + xPortalUser.getId());
+			logger.info("Permissions assigned/updated on base of User's Role, UserId [" + xPortalUser.getId() + "]");
 		}
-		logger.info(countUserPermissionUpdated + " permissions where assigned");
+		logger.info(countUserPermissionUpdated + " permissions were assigned");
 	}
 
 	@Override
