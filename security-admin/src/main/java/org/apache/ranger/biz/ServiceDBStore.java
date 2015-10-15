@@ -1141,9 +1141,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
 		boolean hasTagServiceValueChanged = false;
-		Long existingTagServiceValue = existing.getTagService();
-		String newTagServiceName = service.getTagService();
-		Long newTagServiceValue = null;
+		Long    existingTagServiceId      = existing.getTagService();
+		String  newTagServiceName         = service.getTagService(); // null for old clients; empty string to remove existing association
+		Long    newTagServiceId           = null;
+
+		if(newTagServiceName == null) { // old client; don't update existing tagService
+			if(existingTagServiceId != null) {
+				newTagServiceName = getServiceName(existingTagServiceId);
+
+				service.setTagService(newTagServiceName);
+
+				LOG.info("ServiceDBStore.updateService(id=" + service.getId() + "; name=" + service.getName() + "): tagService is null; using existing tagService '" + newTagServiceName + "'");
+			}
+		}
 
 		if (StringUtils.isNotBlank(newTagServiceName)) {
 			RangerService tmp = getServiceByName(newTagServiceName);
@@ -1155,20 +1165,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 				throw restErrorUtil.createRESTException("Invalid tag service name " + newTagServiceName, MessageEnums.ERROR_CREATING_OBJECT);
 
 			} else {
-				newTagServiceValue = tmp.getId();
+				newTagServiceId = tmp.getId();
 			}
 		}
 
-		if (existingTagServiceValue == null) {
-			if (newTagServiceValue != null) {
+		if (existingTagServiceId == null) {
+			if (newTagServiceId != null) {
 				hasTagServiceValueChanged = true;
 			}
-		} else if (!existingTagServiceValue.equals(newTagServiceValue)) {
+		} else if (!existingTagServiceId.equals(newTagServiceId)) {
 			hasTagServiceValueChanged = true;
-		}
-
-		if (hasTagServiceValueChanged) {
-			service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
 		}
 
 		if(populateExistingBaseFields) {
@@ -1176,6 +1182,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service = svcServiceWithAssignedId.update(service);
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
 		} else {
+			service.setCreateTime(existing.getCreateTime());
+			service.setGuid(existing.getGuid());
+			service.setVersion(existing.getVersion());
+			service.setPolicyUpdateTime(existing.getPolicyUpdateTime());
+			service.setPolicyVersion(existing.getPolicyVersion());
+			service.setTagVersion(existing.getTagVersion());
+			service.setTagUpdateTime(existing.getTagUpdateTime());
+
+			if (hasTagServiceValueChanged) {
+				service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
+			}
+
+
 			service = svcService.update(service);
 		}
 
@@ -2285,5 +2304,20 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 		}
+	}
+
+
+	private String getServiceName(Long serviceId) {
+		String ret = null;
+
+		if(serviceId != null) {
+			XXService service = daoMgr.getXXService().getById(serviceId);
+
+			if(service != null) {
+				ret = service.getName();
+			}
+		}
+
+		return ret;
 	}
 }
