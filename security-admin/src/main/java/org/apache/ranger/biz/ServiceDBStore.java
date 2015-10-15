@@ -1126,6 +1126,12 @@ public class ServiceDBStore implements ServiceStore {
 			service = svcServiceWithAssignedId.update(service);
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
 		} else {
+			service.setCreateTime(existing.getCreateTime());
+			service.setGuid(existing.getGuid());
+			service.setVersion(existing.getVersion());
+			service.setPolicyUpdateTime(existing.getPolicyUpdateTime());
+			service.setPolicyVersion(existing.getPolicyVersion());
+
 			service = svcService.update(service);
 		}
 
