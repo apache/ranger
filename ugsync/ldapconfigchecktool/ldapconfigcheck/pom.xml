@@ -24,7 +24,7 @@
       <groupId>org.apache.ranger</groupId>
       <artifactId>ranger</artifactId>
       <version>0.5.0</version>
-	  <relativePath>..</relativePath>
+	  <relativePath>../../../pom.xml</relativePath>
     </parent>
 
     <artifactId>ldapconfigcheck</artifactId>

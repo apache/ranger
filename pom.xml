@@ -92,6 +92,7 @@
   <module>security-admin</module>
   <module>plugin-solr</module>
   <module>ugsync</module>
+  <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
   <module>unixauthclient</module>
   <module>unixauthservice</module>
   <module>ranger-util</module>
