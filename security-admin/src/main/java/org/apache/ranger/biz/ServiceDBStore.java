@@ -1177,6 +1177,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			hasTagServiceValueChanged = true;
 		}
 
+		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
+
 		if(populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
 			service = svcServiceWithAssignedId.update(service);
@@ -1190,12 +1192,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setTagVersion(existing.getTagVersion());
 			service.setTagUpdateTime(existing.getTagUpdateTime());
 
-			if (hasTagServiceValueChanged) {
-				service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
-			}
-
-
 			service = svcService.update(service);
+
+			if (hasTagServiceValueChanged || hasIsEnabledChanged) {
+				updatePolicyVersion(service);
+			}
 		}
 
 		XXService xUpdService = daoMgr.getXXService().getById(service.getId());
@@ -1726,30 +1727,35 @@ public class ServiceDBStore extends AbstractServiceStore {
 				throw new Exception("service-def does not exist. id=" + serviceDbObj.getType());
 			}
 
+			List<RangerPolicy> policies = null;
 			ServicePolicies.TagPolicies tagPolicies = null;
 
-			if(serviceDbObj.getTagService() != null) {
-				XXService tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
+			if (serviceDbObj.getIsenabled()) {
+				if (serviceDbObj.getTagService() != null) {
+					XXService tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
 
-				if(tagServiceDbObj != null) {
-					RangerServiceDef tagServiceDef = getServiceDef(tagServiceDbObj.getType());
+					if (tagServiceDbObj != null && tagServiceDbObj.getIsenabled()) {
+						RangerServiceDef tagServiceDef = getServiceDef(tagServiceDbObj.getType());
 
-					if(tagServiceDef == null) {
-						throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
+						if (tagServiceDef == null) {
+							throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
+						}
+
+						tagPolicies = new ServicePolicies.TagPolicies();
+
+						tagPolicies.setServiceId(tagServiceDbObj.getId());
+						tagPolicies.setServiceName(tagServiceDbObj.getName());
+						tagPolicies.setPolicyVersion(tagServiceDbObj.getPolicyVersion());
+						tagPolicies.setPolicyUpdateTime(tagServiceDbObj.getPolicyUpdateTime());
+						tagPolicies.setPolicies(getServicePolicies(tagServiceDbObj.getName(), null));
+						tagPolicies.setServiceDef(tagServiceDef);
 					}
-
-					tagPolicies = new ServicePolicies.TagPolicies();
-
-					tagPolicies.setServiceId(tagServiceDbObj.getId());
-					tagPolicies.setServiceName(tagServiceDbObj.getName());
-					tagPolicies.setPolicyVersion(tagServiceDbObj.getPolicyVersion());
-					tagPolicies.setPolicyUpdateTime(tagServiceDbObj.getPolicyUpdateTime());
-					tagPolicies.setPolicies(getServicePolicies(tagServiceDbObj.getName(), null));
-					tagPolicies.setServiceDef(tagServiceDef);
 				}
-			}
 
-			List<RangerPolicy> policies = getServicePolicies(serviceName, null);
+				policies = getServicePolicies(serviceName, null);
+			} else {
+				policies = new ArrayList<RangerPolicy>();
+			}
 
 			ret = new ServicePolicies();
 

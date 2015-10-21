@@ -346,6 +346,11 @@ public class ServiceFileStore extends AbstractServiceStore {
 			}
 		}
 
+		boolean hasIsEnabledChanged = !existing.getIsEnabled().equals(service.getIsEnabled());
+
+		if (hasIsEnabledChanged) {
+			handlePolicyUpdate(service);
+		}
 		RangerService ret = null;
 
 		try {
@@ -741,10 +746,16 @@ public class ServiceFileStore extends AbstractServiceStore {
 		}
 
 		if(lastKnownVersion == null || service.getPolicyVersion() == null || lastKnownVersion.longValue() != service.getPolicyVersion().longValue()) {
-			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, serviceName);
 
-			List<RangerPolicy> policies = getPolicies(filter);
+			List<RangerPolicy> policies = null;
 
+			if (service.getIsEnabled()) {
+				SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, serviceName);
+
+				policies = getPolicies(filter);
+			} else {
+				policies = new ArrayList<RangerPolicy>();
+			}
 			ret = new ServicePolicies();
 
 			ret.setServiceId(service.getId());
@@ -760,7 +771,7 @@ public class ServiceFileStore extends AbstractServiceStore {
 		}
 
 		if(ret != null && ret.getPolicies() != null) {
-			Collections.sort(ret.getPolicies(), predicateUtil.idComparator);
+			Collections.sort(ret.getPolicies(), ServicePredicateUtil.idComparator);
 		}
 
 		return ret;
@@ -901,10 +912,10 @@ public class ServiceFileStore extends AbstractServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, predicateUtil.idComparator);
+			Collections.sort(ret, ServicePredicateUtil.idComparator);
 
 			for(RangerServiceDef sd : ret) {
-				Collections.sort(sd.getResources(), predicateUtil.resourceLevelComparator);
+				Collections.sort(sd.getResources(), ServicePredicateUtil.resourceLevelComparator);
 			}
 		}
 
@@ -931,7 +942,7 @@ public class ServiceFileStore extends AbstractServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, predicateUtil.idComparator);
+			Collections.sort(ret, ServicePredicateUtil.idComparator);
 		}
 
 		return ret;
@@ -953,7 +964,7 @@ public class ServiceFileStore extends AbstractServiceStore {
 		}
 
 		if(ret != null) {
-			Collections.sort(ret, predicateUtil.idComparator);
+			Collections.sort(ret, ServicePredicateUtil.idComparator);
 		}
 
 		if(LOG.isDebugEnabled()) {
