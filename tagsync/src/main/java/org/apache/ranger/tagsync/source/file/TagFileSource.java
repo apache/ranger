@@ -22,6 +22,7 @@ package org.apache.ranger.tagsync.source.file;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.tagsync.model.TagSink;
@@ -59,8 +60,24 @@ public class TagFileSource implements TagSource, Runnable {
 
 		boolean ret = true;
 
+		if (StringUtils.isBlank(TagSyncConfig.getTagSourceFileName(properties))) {
+			ret = false;
+			LOG.error("value of property 'ranger.tagsync.source.impl.class' is file and no value specified for property 'ranger.tagsync.filesource.filename'!");
+		}
+
 		if (ret) {
 
+			long fileModTimeCheckIntervalInMs = TagSyncConfig.getTagSourceFileModTimeCheckIntervalInMillis(properties);
+
+			if (fileModTimeCheckIntervalInMs <= 0L) {
+				LOG.info("'ranger.tagsync.filesource.modtime.check.interval' is zero or negative! 'ranger.tagsync.filesource.modtime.check.interval'=" + fileModTimeCheckIntervalInMs + "ms");
+				LOG.info("Setting 'ranger.tagsync.filesource.modtime.check.interval' to 60 seconds");
+				fileModTimeCheckIntervalInMs = 60*1000;
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("'ranger.tagsync.filesource.modtime.check.interval':" + fileModTimeCheckIntervalInMs + "ms");
+				}
+			}
 			sourceFileName = TagSyncConfig.getTagSourceFileName(properties);
 
 			if (LOG.isDebugEnabled()) {
@@ -120,7 +137,7 @@ public class TagFileSource implements TagSource, Runnable {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileSource.run()");
 		}
-		long sleepTimeBetweenCycleInMillis = TagSyncConfig.getSleepTimeInMillisBetweenCycle(properties);
+		long sleepTimeBetweenCycleInMillis = TagSyncConfig.getTagSourceFileModTimeCheckIntervalInMillis(properties);
 		boolean shutdownFlag = false;
 
 		while (!shutdownFlag) {
@@ -143,7 +160,7 @@ public class TagFileSource implements TagSource, Runnable {
 				Thread.sleep(sleepTimeBetweenCycleInMillis);
 			}
 			catch (InterruptedException e) {
-				LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize tag information", e);
+				LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before checking for update to tagFileSource", e);
 				shutdownFlag = true;
 			}
 			catch (Throwable t) {

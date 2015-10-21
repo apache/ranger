@@ -28,7 +28,7 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.sleeptimeinmillisbetweensynccycle</name>
+		<name>ranger.tagsync.filesource.modtime.check.interval</name>
 		<value></value>
 	</property>
 	<property>

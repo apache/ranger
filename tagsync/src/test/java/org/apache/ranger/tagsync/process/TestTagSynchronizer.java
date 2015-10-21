@@ -75,20 +75,27 @@ public class TestTagSynchronizer {
 	@Test
 	public void testTagDownload() {
 
-		boolean initDone = tagSynchronizer.initLoop();
+		boolean initDone = false;
+
+		/* For tagSynchronizer.initialize() to succeed, edit ranger-tagsync-site.xml file to contain correct
+		values of the following properties:
+			ranger.tagsync.tagadmin.rest.url, ranger.tagsync.tagadmin.password
+
+		For example:
+			<property>
+				<name>ranger.tagsync.tagadmin.rest.url</name>
+				<value>http://tagsync-test:6080</value>
+			</property>
+			<property>
+				<name>ranger.tagsync.tagadmin.password</name>
+				<value>rangertagsync</value>
+			</property>
+		*/
+
+
+		//initDone = tagSynchronizer.initialize();
 
 		System.out.println("TagSynchronizer initialization result=" + initDone);
-
-		/*
-		TagSource tagSource = tagSynchronizer.getTagSource();
-
-		try {
-			TagAtlasSource tagAtlasSource = (TagAtlasSource) tagSource;
-			//tagAtlasSource.printAllEntities();
-		} catch (ClassCastException exception) {
-			System.err.println("TagSource is not of TagAtlasSource");
-		}
-		*/
 
 		System.out.println("Exiting testTagDownload()");
 	}

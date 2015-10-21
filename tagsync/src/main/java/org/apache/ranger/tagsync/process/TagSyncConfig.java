@@ -45,7 +45,7 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.filesource.filename";
 
-	private static final String TAGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PROP = "ranger.tagsync.sleeptimeinmillisbetweensynccycle";
+	private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.filesource.modtime.check.interval";
 
 	private static final String TAGSYNC_SOURCE_CLASS_PROP = "ranger.tagsync.source.impl.class";
 
@@ -64,20 +64,7 @@ public class TagSyncConfig extends Configuration {
 	private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP = "ranger.tagsync.tagadmin.password";
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
 
-	private static volatile TagSyncConfig instance = null;
-
 	public static TagSyncConfig getInstance() {
-	/*
-		TagSyncConfig ret = instance;
-		if (ret == null) {
-			synchronized(TagSyncConfig.class) {
-				if (ret == null) {
-					ret = instance = new TagSyncConfig();
-					LOG.debug("TagSyncConfig = {" + ret + "}");
-				}
-			}
-		}
-	*/
 		TagSyncConfig newConfig = new TagSyncConfig();
 		return newConfig;
 	}
@@ -179,8 +166,8 @@ public class TagSyncConfig extends Configuration {
 		return val;
 	}
 
-	static public long getSleepTimeInMillisBetweenCycle(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PROP);
+	static public long getTagSourceFileModTimeCheckIntervalInMillis(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP);
 		return Long.valueOf(val);
 	}
 
@@ -192,6 +179,10 @@ public class TagSyncConfig extends Configuration {
 			return "org.apache.ranger.tagsync.source.file.TagFileSource";
 		} else
 			return val;
+	}
+
+	static public String getTagSource(Properties prop) {
+		return prop.getProperty(TAGSYNC_SOURCE_CLASS_PROP);
 	}
 
 	static public String getTagSinkClassName(Properties prop) {

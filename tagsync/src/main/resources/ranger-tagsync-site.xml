@@ -27,7 +27,7 @@
 	</property>
 	<property>
 		<name>ranger.tagsync.tagadmin.rest.url</name>
-		<value></value>
+		<value>localhost:6080</value>
 		<description></description>
 	</property>
 	<property>
@@ -42,17 +42,12 @@
 	</property>
 	<property>
 		<name>ranger.tagsync.filesource.filename</name>
-		<value></value>
+		<value>/etc/ranger/data/tags.json</value>
 		<description></description>
 	</property>
 	<property>
 		<name>ranger.tagsync.source.impl.class</name>
-		<value></value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.sink.impl.class</name>
-		<value>tagadmin</value>
+		<value>File</value>
 		<description></description>
 	</property>
 	<property>

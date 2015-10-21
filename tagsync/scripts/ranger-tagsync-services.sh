@@ -82,10 +82,16 @@ if [ "${action}" == "START" ]; then
 
 	if [ "${pid}" != "" ]
 	then
+		if [ -z "`ps axf | grep ${pid} | grep -v grep`" ]; then
+			rm -f ${pidf}
+			echo "Ranger Tagsync Service failed to start. Please refer to log files under ${logdir} for further details."
+		else
         	echo "Ranger Tagsync Service has started successfully."
+        fi
 	else
         	echo "Ranger Tagsync Service failed to start. Please refer to log files under ${logdir} for further details."
 	fi
+
 	exit;
 
 elif [ "${action}" == "STOP" ]; then

@@ -19,13 +19,12 @@
 
 package org.apache.ranger.tagsync.model;
 
-import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.util.Properties;
 
 
-public interface TagSink extends TagStore {
+public interface TagSink {
 	boolean initialize(Properties properties);
 	void uploadServiceTags(ServiceTags serviceTags) throws Exception;
 }

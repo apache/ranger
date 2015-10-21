@@ -20,6 +20,7 @@
 package org.apache.ranger.tagsync.process;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.model.TagSource;
@@ -27,165 +28,163 @@ import org.apache.ranger.tagsync.model.TagSource;
 import java.util.Map;
 import java.util.Properties;
 
-public class TagSynchronizer implements Runnable {
+public class TagSynchronizer {
 
 	private static final Logger LOG = Logger.getLogger(TagSynchronizer.class);
 
-	private final static int MAX_INIT_RETRIES = 5;
-
 	private boolean shutdownFlag = false;
-	private TagSink tagSink = null;
 	private TagSource tagSource = null;
 	private Properties properties = null;
 
-
 	public static void main(String[] args) {
 
-		TagSyncConfig config = TagSyncConfig.getInstance();
-		Properties props = config.getProperties();
+		boolean tagSynchronizerInitialized = false;
+		TagSynchronizer tagSynchronizer = new TagSynchronizer();
 
-		TagSynchronizer tagSynchronizer = new TagSynchronizer(props);
+		while (!tagSynchronizerInitialized) {
+
+			TagSyncConfig config = TagSyncConfig.getInstance();
+			Properties props = config.getProperties();
+
+			tagSynchronizer.setProperties(props);
+			tagSynchronizerInitialized = tagSynchronizer.initialize();
+
+			if (!tagSynchronizerInitialized) {
+				LOG.error("TagSynchronizer failed to initialize correctly");
+
+				try {
+					LOG.error("Sleeping for [60] seconds before attempting to re-read configuration XML files");
+					Thread.sleep(60 * 1000);
+				} catch (InterruptedException e) {
+					LOG.error("Failed to wait for [60] seconds", e);
+				}
+			}
+		}
 
 		tagSynchronizer.run();
 	}
 
+	public TagSynchronizer() {
+		setProperties(null);
+	}
+
 	public TagSynchronizer(Properties properties) {
+		setProperties(properties);
+	}
+
+	public void setProperties(Properties properties) {
 		if (properties == null || MapUtils.isEmpty(properties)) {
-			LOG.error("TagSynchronizer initialized with null properties!");
 			this.properties = new Properties();
 		} else {
 			this.properties = properties;
 		}
 	}
 
-	public TagSink getTagSink() {
-		return tagSink;
+	public boolean initialize() {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagSynchronizer.initialize()");
+		}
+
+		printConfigurationProperties();
+
+		boolean ret = true;
+
+		String tagSourceName = TagSyncConfig.getTagSource(properties);
+
+		if (StringUtils.isBlank(tagSourceName) ||
+				(!StringUtils.equalsIgnoreCase(tagSourceName, "file") && !StringUtils.equalsIgnoreCase(tagSourceName, "atlas"))) {
+			ret = false;
+			LOG.error("'ranger.tagsync.source.impl.class' value is invalid!, 'ranger.tagsync.source.impl.class'=" + tagSourceName + ". Supported 'ranger.tagsync.source.impl.class' values are : file, atlas");
+		}
+
+		if (ret) {
+
+			try {
+				LOG.info("Initializing TAG source and sink");
+				// Initialize tagSink and tagSource
+				String tagSourceClassName = TagSyncConfig.getTagSourceClassName(properties);
+				String tagSinkClassName = TagSyncConfig.getTagSinkClassName(properties);
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("tagSourceClassName=" + tagSourceClassName + ", tagSinkClassName=" + tagSinkClassName);
+				}
+
+				@SuppressWarnings("unchecked")
+				Class<TagSource> tagSourceClass = (Class<TagSource>) Class.forName(tagSourceClassName);
+
+				@SuppressWarnings("unchecked")
+				Class<TagSink> tagSinkClass = (Class<TagSink>) Class.forName(tagSinkClassName);
+
+				TagSink tagSink = tagSinkClass.newInstance();
+				tagSource = tagSourceClass.newInstance();
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Created instance of " + tagSourceClassName + ", " + tagSinkClassName);
+				}
+
+				ret = tagSink.initialize(properties) && tagSource.initialize(properties);
+
+				if (ret) {
+					tagSource.setTagSink(tagSink);
+				}
+
+				LOG.info("Done initializing TAG source and sink");
+			} catch (Throwable t) {
+				LOG.error("Failed to initialize TAG source/sink. Error details: ", t);
+				ret = false;
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagSynchronizer.initialize(), result=" + ret);
+		}
+
+		return ret;
 	}
 
-	public TagSource getTagSource() {
-		return tagSource;
-	}
-
-	@Override
 	public void run() {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagSynchronizer.run()");
 		}
+
+		long shutdownCheckIntervalInMs = 60*1000;
+
+		Thread tagSourceThread = null;
+
 		try {
-			long sleepTimeBetweenCycleInMillis = TagSyncConfig.getSleepTimeInMillisBetweenCycle(properties);
+			tagSourceThread = tagSource.start();
 
-			boolean initDone = initLoop();
-
-			if (initDone) {
-
-				Thread tagSourceThread = tagSource.start();
-
-				if (tagSourceThread != null) {
-					while (!shutdownFlag) {
-						try {
-							LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
-							Thread.sleep(sleepTimeBetweenCycleInMillis);
-						} catch (InterruptedException e) {
-							LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize tag information", e);
-						}
+			if (tagSourceThread != null) {
+				while (!shutdownFlag) {
+					try {
+						LOG.debug("Sleeping for [" + shutdownCheckIntervalInMs + "] milliSeconds");
+						Thread.sleep(shutdownCheckIntervalInMs);
+					} catch (InterruptedException e) {
+						LOG.error("Failed to wait for [" + shutdownCheckIntervalInMs + "] milliseconds before attempting to synchronize tag information", e);
 					}
-					if (shutdownFlag) {
-						LOG.info("Interrupting tagSourceThread...");
-						tagSourceThread.interrupt();
-						try {
-							tagSourceThread.join();
-						} catch (InterruptedException interruptedException) {
-							LOG.error("tagSourceThread.join() was interrupted");
-						}
-					}
-				} else {
-					LOG.error("Could not start tagSource monitoring thread");
 				}
-			} else {
-				LOG.error("Failed to initialize TagSynchonizer after " + MAX_INIT_RETRIES + " retries. Exiting thread");
 			}
-
 		} catch (Throwable t) {
 			LOG.error("tag-sync thread got an error", t);
 		} finally {
-			LOG.error("Shutting down the tag-sync thread");
+			if (tagSourceThread != null) {
+				LOG.error("Shutting down the tag-sync thread");
+				LOG.info("Interrupting tagSourceThread...");
+				tagSourceThread.interrupt();
+				try {
+					tagSourceThread.join();
+				} catch (InterruptedException interruptedException) {
+					LOG.error("tagSourceThread.join() was interrupted");
+				}
+			} else {
+				LOG.error("Could not start tagSource monitoring thread");
+			}
 		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagSynchronizer.run()");
 		}
-	}
-
-	public boolean initLoop() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagSynchronizer.initLoop()");
-		}
-		boolean ret = false;
-
-		long sleepTimeBetweenCycleInMillis = TagSyncConfig.getSleepTimeInMillisBetweenCycle(properties);
-
-		for (int initRetries = 0; initRetries < MAX_INIT_RETRIES && !ret; initRetries++) {
-
-			printConfigurationProperties();
-
-			ret = init();
-
-			if (!ret) {
-				LOG.error("Failed to initialize TAG source/sink. Will retry after " + sleepTimeBetweenCycleInMillis + " milliseconds.");
-				try {
-					LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
-					Thread.sleep(sleepTimeBetweenCycleInMillis);
-					properties = TagSyncConfig.getInstance().getProperties();
-				} catch (Exception e) {
-					LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to initialize tag source/sink", e);
-				}
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagSynchronizer.initLoop()");
-		}
-		return ret;
-	}
-
-	public boolean init() {
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagSynchronizer.init()");
-		}
-		boolean ret = false;
-		try {
-			LOG.info("Initializing TAG source and sink");
-			// Initialize tagSink and tagSource
-			String tagSourceClassName = TagSyncConfig.getTagSourceClassName(properties);
-			String tagSinkClassName = TagSyncConfig.getTagSinkClassName(properties);
-
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("tagSourceClassName=" + tagSourceClassName + ", tagSinkClassName=" + tagSinkClassName);
-			}
-
-			Class<TagSource> tagSourceClass = (Class<TagSource>) Class.forName(tagSourceClassName);
-			Class<TagSink> tagSinkClass = (Class<TagSink>) Class.forName(tagSinkClassName);
-
-			tagSink = tagSinkClass.newInstance();
-			tagSource = tagSourceClass.newInstance();
-
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Created instance of " + tagSourceClassName + ", " + tagSinkClassName);
-			}
-
-			ret = tagSink.initialize(properties) && tagSource.initialize(properties);
-
-			tagSource.setTagSink(tagSink);
-
-			LOG.info("Done initializing TAG source and sink");
-		} catch (Throwable t) {
-			LOG.error("Failed to initialize TAG source/sink. Error details: ", t);
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagSynchronizer.init(), result=" + ret);
-		}
-
-		return ret;
 	}
 
 	public void shutdown(String reason) {
