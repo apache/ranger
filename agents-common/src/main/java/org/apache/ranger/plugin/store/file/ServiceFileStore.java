@@ -338,6 +338,11 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			}
 		}
 
+		boolean hasIsEnabledChanged = !existing.getIsEnabled().equals(service.getIsEnabled());
+		if (hasIsEnabledChanged) {
+			handlePolicyUpdate(service);
+		}
+
 		RangerService ret = null;
 
 		try {
@@ -733,9 +738,15 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		}
 
 		if(lastKnownVersion == null || service.getPolicyVersion() == null || lastKnownVersion.longValue() != service.getPolicyVersion().longValue()) {
-			SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, serviceName);
 
-			List<RangerPolicy> policies = getPolicies(filter);
+			List<RangerPolicy> policies = null;
+
+			if (service.getIsEnabled()) {
+				SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_NAME, serviceName);
+				policies = getPolicies(filter);
+			} else {
+				policies = new ArrayList<RangerPolicy>();
+			}
 
 			ret = new ServicePolicies();
 

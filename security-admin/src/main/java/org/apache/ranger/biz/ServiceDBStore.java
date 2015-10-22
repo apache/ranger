@@ -1121,6 +1121,8 @@ public class ServiceDBStore implements ServiceStore {
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
+		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
+
 		if(populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
 			service = svcServiceWithAssignedId.update(service);
@@ -1130,7 +1132,17 @@ public class ServiceDBStore implements ServiceStore {
 			service.setGuid(existing.getGuid());
 			service.setVersion(existing.getVersion());
 			service.setPolicyUpdateTime(existing.getPolicyUpdateTime());
-			service.setPolicyVersion(existing.getPolicyVersion());
+
+			Long policyVersion = existing.getPolicyVersion();
+
+			if(policyVersion == null) {
+				policyVersion = new Long(1);
+				service.setPolicyUpdateTime(new Date());
+			} else if (hasIsEnabledChanged) {
+				policyVersion = new Long(policyVersion.longValue() + 1);
+				service.setPolicyUpdateTime(new Date());
+			}
+			service.setPolicyVersion(policyVersion);
 
 			service = svcService.update(service);
 		}
@@ -1645,7 +1657,8 @@ public class ServiceDBStore implements ServiceStore {
 				throw new Exception("service-def does not exist. id=" + serviceDbObj.getType());
 			}
 
-			List<RangerPolicy> policies = getServicePolicies(serviceName, null);
+			List<RangerPolicy> policies = serviceDbObj.getIsenabled() ? getServicePolicies(serviceName, null)
+					: new ArrayList<RangerPolicy>();
 
 			ret = new ServicePolicies();
 
