@@ -145,7 +145,6 @@ define(function(require){
 				}   ,
 				error : function(model,resp){
 					XAUtil.blockUI('unblock');
-					console.log('error');
 					if(!_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
 						XAUtil.notifyError('Error',resp.responseJSON.msgDesc);
 					}else

@@ -21,6 +21,20 @@
 #This will also create the ranger linux user and groups if required.
 
 #This script needs to be run as root
+PROPFILE=$PWD/install.properties
+propertyValue=''
+
+if [ ! $? = "0" ];then
+	log "$PROPFILE file not found....!!";
+	exit 1;
+fi
+get_prop(){
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
+	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
+	value=$(echo $validateProperty | cut -d "=" -f2-)
+	echo $value
+}
+
 if [ ! -w /etc/passwd ]; then
 	echo "ERROR: Please run this script as root"
 	exit 1
@@ -43,8 +57,8 @@ log() {
 }
 
 #Create the ranger users and groups (if needed)
-unix_user=ranger
-unix_group=ranger
+unix_user=$(get_prop 'unix_user' $PROPFILE)
+unix_group=$(get_prop 'unix_group' $PROPFILE)
 
 groupadd ${unix_group}
 ret=$?
@@ -88,14 +102,14 @@ if [ ! -d /var/log/ranger/admin ]; then
 	if [ -d ews/logs ]; then
 		cp -r ews/logs/* /var/log/ranger/admin
 	fi
-	chmod 755 /var/log/ranger/admin
-	chown -R $unix_user:$unix_group /var/log/ranger
 fi
 
 if [ -d /var/log/ranger/admin ]; then
-        chown -R $unix_user:$unix_group /var/log/ranger/admin
+	chown -R $unix_user:$unix_group /var/log/ranger
+    chown -R $unix_user:$unix_group /var/log/ranger/admin
+    chmod 755 /var/log/ranger
+    chmod 755 /var/log/ranger/admin
 fi
-
 
 mv -f ews/logs ews/webapp/logs.$curDt 2> /dev/null
 ln -sf /var/log/ranger/admin ews/logs
