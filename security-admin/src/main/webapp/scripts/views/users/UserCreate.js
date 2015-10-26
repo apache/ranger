@@ -194,7 +194,6 @@ define(function(require){
 				}   ,
 				error : function(model,resp){
 					XAUtil.blockUI('unblock');
-					console.log('error');
 					if(!_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
 						if(resp.responseJSON.msgDesc == "XUser already exists")
 							XAUtil.notifyError('Error',"User already exists.");
@@ -226,7 +225,6 @@ define(function(require){
 							XAUtil.notifyError('Error',resp.responseJSON.msgDesc);
 					}else
 						XAUtil.notifyError('Error', "Error occurred while creating/updating user.");
-					console.log('error');
 				}
 			});
 		},

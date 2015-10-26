@@ -160,8 +160,7 @@ define(function(require){
 						else
 							XAUtil.notifyError('Error', response.responseJSON.msgDesc);
 					}else
-						XAUtil.notifyError('Error', 'Error creating Policy!');
-					console.log('error');
+						XAUtil.notifyError('Error', 'Error occurred while creating/updating group!');
 				}
 			});
 		},

@@ -96,6 +96,17 @@ def logFile(msg):
 			print("Invalid input! Provide file path to write DBA scripts:")
 			sys.exit()
 
+def password_validation(password, userType):
+	if password:
+		if re.search("[\\\`'\"]",password):
+			log("[E] "+userType+" user password contains one of the unsupported special characters like \" ' \ `","error")
+			sys.exit(1)
+		else:
+			log("[I] "+userType+" user password validated","info")
+	else:
+		log("[E] Blank password is not allowed,please enter valid password.","error")
+		sys.exit(1)
+
 class BaseDB(object):
 
 	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
@@ -1085,9 +1096,9 @@ class SqlAnywhereConf(BaseDB):
 		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
+			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
 		return jisql_cmd
 
 	def verify_user(self, root_user, db_root_password, db_user,dryMode):
@@ -1269,6 +1280,10 @@ def main(argv):
 	quiteMode = False
 	dryMode=False
 	is_revoke=False
+
+	if len(argv) == 3:
+        	password_validation(argv[1],argv[2]);
+        	return;
 
 	if len(argv) > 1:
 		for i in range(len(argv)):
@@ -1503,6 +1518,8 @@ def main(argv):
 	elif XA_DB_FLAVOR == "POSTGRES":
 		#POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		#POSTGRES_CONNECTOR_JAR='/usr/share/java/postgresql.jar'
+		db_user=db_user.lower()
+        	db_name=db_name.lower()
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME,postgres_dbversion_catalog)
@@ -1553,6 +1570,8 @@ def main(argv):
 	elif AUDIT_DB_FLAVOR == "POSTGRES":
 		#POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		#POSTGRES_CONNECTOR_JAR='/usr/share/java/postgresql.jar'
+		audit_db_user=audit_db_user.lower()
+	        audit_db_name=audit_db_name.lower()
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = PostgresConf(audit_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,postgres_audit_file)
@@ -1580,6 +1599,11 @@ def main(argv):
 	if audit_store is None or audit_store == "":
 		audit_store = "db"
 	audit_store=audit_store.lower()
+
+        log("[I] ---------- Verifing Ranger Admin db user password ---------- ","info")
+        password_validation(db_password,"admin");
+        log("[I] ---------- Verifing Ranger Audit db user password ---------- ","info")
+        password_validation(audit_db_password,"audit");
 	# Methods Begin
 	if DBA_MODE == "TRUE" :
 		if (dryMode==True):
