@@ -351,6 +351,7 @@ public class ServiceFileStore extends AbstractServiceStore {
 		if (hasIsEnabledChanged) {
 			handlePolicyUpdate(service);
 		}
+
 		RangerService ret = null;
 
 		try {
@@ -756,6 +757,7 @@ public class ServiceFileStore extends AbstractServiceStore {
 			} else {
 				policies = new ArrayList<RangerPolicy>();
 			}
+
 			ret = new ServicePolicies();
 
 			ret.setServiceId(service.getId());

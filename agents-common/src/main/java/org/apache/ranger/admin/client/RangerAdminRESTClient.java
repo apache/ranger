@@ -72,23 +72,12 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		this.serviceName = serviceName;
 		this.pluginId    = restUtils.getPluginId(serviceName, appId);
 
-		String url               = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
-		String sslConfigFileName = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
+		String url               		= RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
+		String sslConfigFileName 		= RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
+		int	 restClientConnTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
+		int	 restClientReadTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
 
-		if (url == null) {
-
-			if(LOG.isInfoEnabled()) {
-				LOG.info("RangerAdminRESTClient.init() : no such property " + propertyPrefix + ".policy.rest.url, using value of ranger.externalurl property instead.");
-			}
-
-			url = RangerConfiguration.getInstance().get("ranger.externalurl");
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("RangerAdminRESTClient.init() : url=" + url + ", sslConfigFileName=" + sslConfigFileName + ")");
-		}
-
-		init(url, sslConfigFileName);
+		init(url, sslConfigFileName, restClientConnTimeOutMs , restClientReadTimeOutMs);
 	}
 
 	@Override
@@ -176,12 +165,14 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 	}
 
-	private void init(String url, String sslConfigFileName) {
+	private void init(String url, String sslConfigFileName, int restClientConnTimeOutMs , int restClientReadTimeOutMs ) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.init(" + url + ", " + sslConfigFileName + ")");
 		}
 
 		restClient = new RangerRESTClient(url, sslConfigFileName);
+		restClient.setRestClientConnTimeOutMs(restClientConnTimeOutMs);
+		restClient.setRestClientReadTimeOutMs(restClientReadTimeOutMs);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAdminRESTClient.init(" + url + ", " + sslConfigFileName + ")");

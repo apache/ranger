@@ -177,6 +177,11 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroupUser.findByGroupId">
+		<query>SELECT obj FROM XXGroupUser obj WHERE obj.parentGroupId=:groupId
+		</query>
+	</named-query>
+
 	<named-query name="XXTrxLog.findByTrxId">
 		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
 		</query>
@@ -185,6 +190,11 @@
 	<named-query name="XXUser.findByPolicyItemId">
 		<query>select obj.name from XXUser obj, XXPolicyItemUserPerm polItemUser 
 		where polItemUser.policyItemId = :polItemId and polItemUser.userId = obj.id </query>
+	</named-query>
+
+	<named-query name="XXUser.findByPortalUserId">
+		<query>select obj from XXUser obj, XXPortalUser portalUser where portalUser.id = :portalUserId and 
+		obj.name = portalUser.loginId</query>
 	</named-query>
 
 	<named-query name="XXGroup.findByPolicyItemId">
@@ -488,16 +498,15 @@
 		 </query>
 	</named-query>
 
-	<named-query name="XXUserPermission.findByModuleIdAndUserId">
+	<named-query name="XXUserPermission.findByModuleIdAndPortalUserId">
 		<query>SELECT XXUserPermObj
 				FROM XXUserPermission XXUserPermObj
 				WHERE XXUserPermObj.moduleId = :moduleId AND XXUserPermObj.userId =:userId
 		</query>
 	</named-query>
-	
-	<named-query name="XXModuleDef.findModuleNamesWithIds">
-		<query>SELECT XXMObj
-				FROM XXModuleDef XXMObj
+
+	<named-query name="XXGroupPermission.findByModuleIdAndGroupId">
+		<query>SELECT obj FROM XXGroupPermission obj WHERE obj.moduleId = :moduleId AND obj.groupId =:groupId
 		</query>
 	</named-query>
 	

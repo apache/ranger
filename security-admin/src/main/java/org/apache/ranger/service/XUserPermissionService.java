@@ -17,11 +17,10 @@
 
 package org.apache.ranger.service;
 
-import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.view.VXUserPermission;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,15 +58,16 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
 	public VXUserPermission populateViewBean(XXUserPermission xObj) {
 		VXUserPermission vObj = super.populateViewBean(xObj);
 
-		XXPortalUser xUser = rangerDaoManager.getXXPortalUser().getById(xObj.getUserId());
-		if (xUser == null) {
-			xUser=rangerDaoManager.getXXPortalUser().findByXUserId(xObj.getUserId());
-			if(xUser==null)
-			throw restErrorUtil.createRESTException(xUser + " is Not Found",
-					MessageEnums.DATA_NOT_FOUND);
+		XXPortalUser xPortalUser = rangerDaoManager.getXXPortalUser().getById(xObj.getUserId());
+		if (xPortalUser != null) {
+			vObj.setUserName(xPortalUser.getLoginId());
 		}
 
-		vObj.setUserName(xUser.getLoginId());
+		XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(xObj.getModuleId());
+		if (xModuleDef != null) {
+			vObj.setModuleName(xModuleDef.getModule());
+		}
+
 		return vObj;
 	}
 

@@ -126,6 +126,50 @@
                 </includes>
 		<fileMode>444</fileMode>
         </fileSet>
+        <fileSet>
+            <outputDirectory>/</outputDirectory>
+            <directory>security-admin/scripts</directory>
+            <includes>
+                <include>ranger_credential_helper.py</include>
+            </includes>
+            <fileMode>544</fileMode>
+        </fileSet>
+	<fileSet>
+                <directoryMode>755</directoryMode>
+                <fileMode>755</fileMode>
+                <outputDirectory>/ldaptool</outputDirectory>
+                <directory>ugsync/ldapconfigchecktool/ldapconfigcheck/scripts</directory>
+            <includes>
+                <include>run.sh</include>
+            </includes>
+        </fileSet>
+	<fileSet>
+                <directoryMode>755</directoryMode>
+                <fileMode>644</fileMode>
+                <outputDirectory>/ldaptool/lib</outputDirectory>
+                <directory>ugsync/ldapconfigchecktool/ldapconfigcheck/target</directory>
+            <includes>
+                <include>ldapconfigcheck.jar</include>
+            </includes>
+	</fileSet>
+	<fileSet>
+                <directoryMode>755</directoryMode>
+                <fileMode>644</fileMode>
+                <outputDirectory>/ldaptool/conf</outputDirectory>
+                <directory>ugsync/ldapconfigchecktool/ldapconfigcheck/conf</directory>
+            <includes>
+                <include>input.properties</include>
+            </includes>
+        </fileSet>
+	<fileSet>
+                <directoryMode>755</directoryMode>
+                <fileMode>644</fileMode>
+                <outputDirectory>/ldaptool/output</outputDirectory>
+                <directory>ugsync/ldapconfigchecktool/ldapconfigcheck/conf</directory>
+		<excludes>
+                <exclude>input.properties</exclude>
+            </excludes>
+        </fileSet>
   </fileSets>
   <files>
       <file>

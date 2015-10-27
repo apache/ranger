@@ -94,6 +94,17 @@ def logFile(msg):
 			print("Invalid input! Provide file path to write DBA scripts:")
 			sys.exit()
 
+def password_validation(password, userType):
+	if password:
+		if re.search("[\\\`'\"]",password):
+			log("[E] "+userType+" user password contains one of the unsupported special characters like \" ' \ `","error")
+			sys.exit(1)
+		else:
+			log("[I] "+userType+" user password validated","info")
+	else:
+		log("[E] Blank password is not allowed,please enter valid password.","error")
+		sys.exit(1)
+
 class BaseDB(object):
 
 	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
@@ -708,11 +719,11 @@ class SqlServerConf(BaseDB):
 	def verify_user(self, root_user, db_root_password, db_user,dryMode):
 		if dryMode == False:
 			log("[I] Verifying user " + db_user , "info")
-		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'master')
 		if os_name == "LINUX":
-			query = get_cmd + " -c \; -query \"select loginname from master.dbo.syslogins where loginname = '%s';\"" %(db_user)
+			query = get_cmd + " -c \; -query \"select name from sys.sql_logins where name = '%s';\"" %(db_user)
 		elif os_name == "WINDOWS":
-			query = get_cmd + " -query \"select loginname from master.dbo.syslogins where loginname = '%s';\" -c ;" %(db_user)
+			query = get_cmd + " -query \"select name from sys.sql_logins where name = '%s';\" -c ;" %(db_user)
 		output = check_output(query)
 		if output.strip(db_user + " |"):
 			return True
@@ -735,13 +746,13 @@ class SqlServerConf(BaseDB):
 			sys.exit(1)
 
 	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
-		if self.check_connection('msdb', root_user, db_root_password):
+		if self.check_connection('master', root_user, db_root_password):
 			if self.verify_user(root_user, db_root_password, db_user,dryMode):
 				if dryMode == False:
 					log("[I] SQL Server user " + db_user + " already exists.", "info")
 			else:
 				if dryMode == False:
-					get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+					get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'master')
 					log("[I] User does not exists, Creating Login user " + db_user, "info")
 					if os_name == "LINUX":
 						query = get_cmd + " -c \; -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\"" %(db_user,db_password)
@@ -764,7 +775,7 @@ class SqlServerConf(BaseDB):
 	def verify_db(self, root_user, db_root_password, db_name,dryMode):
 		if dryMode == False:
 			log("[I] Verifying database " + db_name, "info")
-		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'master')
 		if os_name == "LINUX":
 			query = get_cmd + " -c \; -query \"SELECT name from sys.databases where name='%s';\"" %(db_name)
 		elif os_name == "WINDOWS":
@@ -782,7 +793,7 @@ class SqlServerConf(BaseDB):
 		else:
 			if dryMode == False:
 				log("[I] Database does not exist. Creating database : " + db_name,"info")
-				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'master')
 				if os_name == "LINUX":
 					query = get_cmd + " -c \; -query \"create database %s;\"" %(db_name)
 					ret = subprocess.call(shlex.split(query))
@@ -805,7 +816,7 @@ class SqlServerConf(BaseDB):
 				logFile("create database %s;" %(db_name))
 
 	def create_user(self, root_user, db_name ,db_user, db_password, db_root_password,dryMode):
-		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
 		if os_name == "LINUX":
 			query = get_cmd + " -c \; -query \"USE %s SELECT name FROM sys.database_principals WHERE name = N'%s';\"" %(db_name, db_user)
 		elif os_name == "WINDOWS":
@@ -842,28 +853,17 @@ class SqlServerConf(BaseDB):
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, is_revoke,dryMode):
 		if dryMode == False:
 			log("[I] Granting permission to admin user '" + db_user + "' on db '" + db_name + "'" , "info")
-			get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'msdb')
+			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
 			if os_name == "LINUX":
-				query = get_cmd + " -c \; -query \"ALTER LOGIN [%s] WITH DEFAULT_DATABASE=[%s];\"" %(db_user, db_name)
+				query = get_cmd + " -c \; -query \" EXEC sp_addrolemember N'db_owner', N'%s';\"" %(db_user)
 				ret = subprocess.call(shlex.split(query))
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"ALTER LOGIN [%s] WITH DEFAULT_DATABASE=[%s];\" -c ;" %(db_user, db_name)
-				ret = subprocess.call(query)
-			if ret != 0:
-				sys.exit(1)
-			if os_name == "LINUX":
-				query = get_cmd + " -c \; -query \" USE %s EXEC sp_addrolemember N'db_owner', N'%s';\"" %(db_name, db_user)
-#           	     query = get_cmd + " -c \; -query \" USE %s GRANT ALL PRIVILEGES to %s;\"" %(db_name , db_user)
-				ret = subprocess.call(shlex.split(query))
-			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \" USE %s EXEC sp_addrolemember N'db_owner', N'%s';\" -c ;" %(db_name, db_user)
-#           	     query = get_cmd + " -c \; -query \" USE %s GRANT ALL PRIVILEGES to %s;\"" %(db_name , db_user)
+				query = get_cmd + " -query \" EXEC sp_addrolemember N'db_owner', N'%s';\" -c ;" %(db_user)
 				ret = subprocess.call(query)
 			if ret != 0:
 				sys.exit(1)
 		else:
-			logFile("ALTER LOGIN [%s] WITH DEFAULT_DATABASE=[%s];" %(db_user, db_name))
-			logFile("USE %s EXEC sp_addrolemember N'db_owner', N'%s';" %(db_name, db_user))
+			logFile("EXEC sp_addrolemember N'db_owner', N'%s';" %(db_user))
 
 class SqlAnywhereConf(BaseDB):
 	# Constructor
@@ -877,9 +877,9 @@ class SqlAnywhereConf(BaseDB):
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
+			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
 		return jisql_cmd
 	def verify_user(self, root_user, db_root_password, db_user,dryMode):
 		if dryMode == False:
@@ -1047,6 +1047,10 @@ def main(argv):
 	dryMode=False
 	is_revoke=False
 
+	if len(argv) == 3:
+        	password_validation(argv[1],argv[2]);
+        	return;
+
 	if len(argv) > 1:
 		for i in range(len(argv)):
 			if str(argv[i]) == "-q":
@@ -1211,6 +1215,8 @@ def main(argv):
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,oracle_core_file)
 
 	elif XA_DB_FLAVOR == "POSTGRES":
+		db_user=db_user.lower()
+		db_name=db_name.lower()
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,postgres_core_file)
@@ -1233,6 +1239,8 @@ def main(argv):
 		log("[E] ---------- NO SUCH SUPPORTED DB FLAVOUR.. ----------", "error")
 		sys.exit(1)
 
+	log("[I] ---------- Verifing Ranger KMS db user password ---------- ","info")
+	password_validation(db_password,"KMS");
 
 	# Methods Begin
 	if DBA_MODE == "TRUE" :

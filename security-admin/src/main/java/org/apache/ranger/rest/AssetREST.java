@@ -51,8 +51,11 @@ import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -134,7 +137,9 @@ public class AssetREST {
 	@Autowired
 	ServiceREST serviceREST;
 
-
+	@Autowired
+	RangerDaoManager daoManager;
+	
 	@GET
 	@Path("/assets/{id}")
 	@Produces({ "application/xml", "application/json" })
@@ -533,7 +538,7 @@ public class AssetREST {
 			logger.error("failed to retrieve policies for repository " + repository, excp);
 		}
 
-		RangerService      service       = serviceREST.getServiceByName(repository);
+		RangerService      service       = serviceUtil.getServiceByName(repository);
 		List<RangerPolicy> policies      = servicePolicies != null ? servicePolicies.getPolicies() : null;
 		long               policyUpdTime = (servicePolicies != null && servicePolicies.getPolicyUpdateTime() != null) ? servicePolicies.getPolicyUpdateTime().getTime() : 0l;
 		VXAsset            vAsset        = serviceUtil.toVXAsset(service);
@@ -647,6 +652,13 @@ public class AssetREST {
 				"MM/dd/yyyy");
 
 		searchUtil.extractString(request, searchCriteria, "tags", "tags", null);
+		
+		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
+		XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME); 
+		if(isKeyAdmin && xxServiceDef != null){
+			searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
+		}
+		
 		return assetMgr.getAccessLogs(searchCriteria);
 	}
 	

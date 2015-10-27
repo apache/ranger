@@ -21,9 +21,10 @@ package org.apache.ranger.db;
 
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXPortalUserRole;
 
 public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 
@@ -76,16 +77,16 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
     			.getResultList();
     }
 
-
-	public XXPortalUser findByXUserId(Long id) {
-
-		List resultList = getEntityManager()
-				.createNamedQuery("XXPortalUser.findByXUserId")
-				.setParameter("id", id).getResultList();
-		if (resultList.size() != 0) {
-			return (XXPortalUser) resultList.get(0);
+	public XXPortalUser findByXUserId(Long xUserId) {
+		if (xUserId == null) {
+			return null;
 		}
-		return null;
+		try {
+			return getEntityManager().createNamedQuery("XXPortalUser.findByXUserId", tClass)
+					.setParameter("id", xUserId).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
 	}
 
 	@SuppressWarnings("unchecked")

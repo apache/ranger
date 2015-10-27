@@ -75,6 +75,9 @@ import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
+import org.apache.ranger.view.VXPortalUser;
+import org.apache.ranger.view.VXResponse;
+import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserGroupInfo;
 import org.apache.ranger.view.VXUserList;
@@ -225,11 +228,9 @@ public class XUserREST {
 	public VXGroupList searchXGroups(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xGroupService.sortFields);
-		searchUtil.extractString(request, searchCriteria, "name", "group name", 
-				StringUtil.VALIDATION_NAME);
+		searchUtil.extractString(request, searchCriteria, "name", "group name", null);
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "Group Visibility");
-		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", 
-				StringUtil.VALIDATION_NAME);
+		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", null);
 		return xUserMgr.searchXGroups(searchCriteria);
 	}
 
@@ -761,6 +762,7 @@ public class XUserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef createXModuleDefPermission(VXModuleDef vXModuleDef) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.createXModuleDefPermission(vXModuleDef);
 	}
 
@@ -777,6 +779,7 @@ public class XUserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef updateXModuleDefPermission(VXModuleDef vXModuleDef) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.updateXModuleDefPermission(vXModuleDef);
 	}
 
@@ -786,6 +789,7 @@ public class XUserREST {
 	public void deleteXModuleDefPermission(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
+		xUserMgr.checkAdminAccess();
 		xUserMgr.deleteXModuleDefPermission(id, force);
 	}
 
@@ -827,6 +831,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_USER_PERMISSION + "\")")
 	public VXUserPermission createXUserPermission(
 			VXUserPermission vXUserPermission) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.createXUserPermission(vXUserPermission);
 	}
 
@@ -844,6 +849,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_USER_PERMISSION + "\")")
 	public VXUserPermission updateXUserPermission(
 			VXUserPermission vXUserPermission) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.updateXUserPermission(vXUserPermission);
 	}
 
@@ -853,6 +859,7 @@ public class XUserREST {
 	public void deleteXUserPermission(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
+		xUserMgr.checkAdminAccess();
 		xUserMgr.deleteXUserPermission(id, force);
 	}
 
@@ -889,6 +896,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_GROUP_PERMISSION + "\")")
 	public VXGroupPermission createXGroupPermission(
 			VXGroupPermission vXGroupPermission) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.createXGroupPermission(vXGroupPermission);
 	}
 
@@ -906,6 +914,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_GROUP_PERMISSION + "\")")
 	public VXGroupPermission updateXGroupPermission(
 			VXGroupPermission vXGroupPermission) {
+		xUserMgr.checkAdminAccess();
 		return xUserMgr.updateXGroupPermission(vXGroupPermission);
 	}
 
@@ -915,6 +924,7 @@ public class XUserREST {
 	public void deleteXGroupPermission(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
 		boolean force = true;
+		xUserMgr.checkAdminAccess();
 		xUserMgr.deleteXGroupPermission(id, force);
 	}
 
@@ -949,5 +959,43 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.MODIFY_USER_ACTIVE_STATUS + "\")")
 	public void modifyUserActiveStatus(HashMap<Long, Integer> statusMap){
 		 xUserMgr.modifyUserActiveStatus(statusMap);
+	}
+
+	@PUT
+	@Path("/secure/users/roles/{userId}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_ID + "\")")
+	public VXStringList setUserRolesByExternalID(@PathParam("userId") Long userId,
+			VXStringList roleList) {
+		return xUserMgr.setUserRolesByExternalID(userId, roleList.getVXStrings());
+	}
+
+	@PUT
+	@Path("/secure/users/roles/userName/{userName}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_NAME + "\")")
+	public VXStringList setUserRolesByName(@PathParam("userName") String userName,
+			VXStringList roleList) {
+		return xUserMgr.setUserRolesByName(userName, roleList.getVXStrings());
+	}
+
+	@GET
+	@Path("/secure/users/external/{userId}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_ROLES_BY_ID + "\")")
+	public VXStringList getUserRolesByExternalID(@PathParam("userId") Long userId) {
+		VXStringList vXStringList=new VXStringList();
+		vXStringList=xUserMgr.getUserRolesByExternalID(userId);
+		return vXStringList;
+	}
+
+	@GET
+	@Path("/secure/users/roles/userName/{userName}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_ROLES_BY_NAME + "\")")
+	public VXStringList getUserRolesByName(@PathParam("userName") String userName) {
+		VXStringList vXStringList=new VXStringList();
+		vXStringList=xUserMgr.getUserRolesByName(userName);
+		return vXStringList;
 	}
 }

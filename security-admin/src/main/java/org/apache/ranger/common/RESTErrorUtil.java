@@ -375,4 +375,30 @@ public class RESTErrorUtil {
 					fieldName, value);
 		}
 	}
+
+	public WebApplicationException createRESTException(String errorMessage,
+				MessageEnums messageEnum, Long objectId, String fieldName,
+				String logMessage,int statusCode)
+	{
+		List<VXMessage> messageList = new ArrayList<VXMessage>();
+		messageList.add(messageEnum.getMessage(objectId, fieldName));
+		VXResponse vResponse = new VXResponse();
+		vResponse.setStatusCode(vResponse.STATUS_ERROR);
+		vResponse.setMsgDesc(errorMessage);
+		vResponse.setMessageList(messageList);
+		Response errorResponse = Response.status(statusCode).entity(vResponse).build();
+		WebApplicationException restException = new WebApplicationException(errorResponse);
+		restException.fillInStackTrace();
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		Long sessionId = null;
+		String loginId = null;
+		if (userSession != null) {
+			loginId = userSession.getLoginId();
+			sessionId = userSession.getSessionId();
+		}
+		logger.info("Request failed. SessionId=" + sessionId + ", loginId="
+				+ loginId + ", logMessage=" + vResponse.getMsgDesc(),
+				restException);
+		return restException;
+	}
 }

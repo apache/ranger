@@ -22,14 +22,11 @@
 PROPFILE=$PWD/install.properties
 propertyValue=''
 
-. $PROPFILE
+#. $PROPFILE
 if [ ! $? = "0" ];then
 	log "$PROPFILE file not found....!!";
 	exit 1;
 fi
-
-DB_HOST="${db_host}"
-
 usage() {
   [ "$*" ] && echo "$0: $*"
   sed -n '/^##/,/^$/s/^## \{0,1\}//p' "$0"
@@ -41,6 +38,77 @@ log() {
    echo "${prefix} $@" >> $LOGFILE
    echo "${prefix} $@"
 }
+get_prop(){
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
+	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
+	value=$(echo $validateProperty | cut -d "=" -f2-)
+	echo $value
+}
+
+PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
+DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
+SQL_COMMAND_INVOKER=$(get_prop 'SQL_COMMAND_INVOKER' $PROPFILE)
+SQL_CONNECTOR_JAR=$(get_prop 'SQL_CONNECTOR_JAR' $PROPFILE)
+db_root_user=$(get_prop 'db_root_user' $PROPFILE)
+db_root_password=$(get_prop 'db_root_password' $PROPFILE)
+db_host=$(get_prop 'db_host' $PROPFILE)
+db_name=$(get_prop 'db_name' $PROPFILE)
+db_user=$(get_prop 'db_user' $PROPFILE)
+db_password=$(get_prop 'db_password' $PROPFILE)
+audit_store=$(get_prop 'audit_store' $PROPFILE)
+audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
+audit_solr_user=$(get_prop 'audit_solr_user' $PROPFILE)
+audit_solr_password=$(get_prop 'audit_solr_password' $PROPFILE)
+audit_solr_zookeepers=$(get_prop 'audit_solr_zookeepers' $PROPFILE)
+audit_db_name=$(get_prop 'audit_db_name' $PROPFILE)
+audit_db_user=$(get_prop 'audit_db_user' $PROPFILE)
+audit_db_password=$(get_prop 'audit_db_password' $PROPFILE)
+policymgr_external_url=$(get_prop 'policymgr_external_url' $PROPFILE)
+policymgr_http_enabled=$(get_prop 'policymgr_http_enabled' $PROPFILE)
+unix_user=$(get_prop 'unix_user' $PROPFILE)
+unix_group=$(get_prop 'unix_group' $PROPFILE)
+authentication_method=$(get_prop 'authentication_method' $PROPFILE)
+remoteLoginEnabled=$(get_prop 'remoteLoginEnabled' $PROPFILE)
+authServiceHostName=$(get_prop 'authServiceHostName' $PROPFILE)
+authServicePort=$(get_prop 'authServicePort' $PROPFILE)
+xa_ldap_url=$(get_prop 'xa_ldap_url' $PROPFILE)
+xa_ldap_userDNpattern=$(get_prop 'xa_ldap_userDNpattern' $PROPFILE)
+xa_ldap_groupSearchBase=$(get_prop 'xa_ldap_groupSearchBase' $PROPFILE)
+xa_ldap_groupSearchFilter=$(get_prop 'xa_ldap_groupSearchFilter' $PROPFILE)
+xa_ldap_groupRoleAttribute=$(get_prop 'xa_ldap_groupRoleAttribute' $PROPFILE)
+xa_ldap_base_dn=$(get_prop 'xa_ldap_base_dn' $PROPFILE)
+xa_ldap_bind_dn=$(get_prop 'xa_ldap_bind_dn' $PROPFILE)
+xa_ldap_bind_password=$(get_prop 'xa_ldap_bind_password' $PROPFILE)
+xa_ldap_referral=$(get_prop 'xa_ldap_referral' $PROPFILE)
+xa_ldap_userSearchFilter=$(get_prop 'xa_ldap_userSearchFilter' $PROPFILE)
+xa_ldap_ad_domain=$(get_prop 'xa_ldap_ad_domain' $PROPFILE)
+xa_ldap_ad_url=$(get_prop 'xa_ldap_ad_url' $PROPFILE)
+xa_ldap_ad_base_dn=$(get_prop 'xa_ldap_ad_base_dn' $PROPFILE)
+xa_ldap_ad_bind_dn=$(get_prop 'xa_ldap_ad_bind_dn' $PROPFILE)
+xa_ldap_ad_bind_password=$(get_prop 'xa_ldap_ad_bind_password' $PROPFILE)
+xa_ldap_ad_referral=$(get_prop 'xa_ldap_ad_referral' $PROPFILE)
+xa_ldap_ad_userSearchFilter=$(get_prop 'xa_ldap_ad_userSearchFilter' $PROPFILE)
+XAPOLICYMGR_DIR=$(eval echo "$(get_prop 'XAPOLICYMGR_DIR' $PROPFILE)")
+app_home=$(eval echo "$(get_prop 'app_home' $PROPFILE)")
+TMPFILE=$(eval echo "$(get_prop 'TMPFILE' $PROPFILE)")
+LOGFILE=$(eval echo " $(get_prop 'LOGFILE' $PROPFILE)")
+LOGFILES=$(eval echo "$(get_prop 'LOGFILES' $PROPFILE)")
+JAVA_BIN=$(get_prop 'JAVA_BIN' $PROPFILE)
+JAVA_VERSION_REQUIRED=$(get_prop 'JAVA_VERSION_REQUIRED' $PROPFILE)
+JAVA_ORACLE=$(get_prop 'JAVA_ORACLE' $PROPFILE)
+mysql_core_file=$(get_prop 'mysql_core_file' $PROPFILE)
+mysql_audit_file=$(get_prop 'mysql_audit_file' $PROPFILE)
+oracle_core_file=$(get_prop 'oracle_core_file' $PROPFILE)
+oracle_audit_file=$(get_prop 'oracle_audit_file' $PROPFILE)
+postgres_core_file=$(get_prop 'postgres_core_file' $PROPFILE)
+postgres_audit_file=$(get_prop 'postgres_audit_file' $PROPFILE)
+sqlserver_core_file=$(get_prop 'sqlserver_core_file' $PROPFILE)
+sqlserver_audit_file=$(get_prop 'sqlserver_audit_file' $PROPFILE)
+sqlanywhere_core_file=$(get_prop 'sqlanywhere_core_file' $PROPFILE)
+sqlanywhere_audit_file=$(get_prop 'sqlanywhere_audit_file' $PROPFILE)
+cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFILE)")
+
+DB_HOST="${db_host}"
 
 check_ret_status(){
 	if [ $1 -ne 0 ]; then
@@ -77,29 +145,25 @@ get_distro(){
 #Get Properties from File without erroring out if property is not there
 #$1 -> propertyName $2 -> fileName $3 -> variableName $4 -> failIfNotFound
 getPropertyFromFileNoExit(){
-	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
 	if  test -z "$validateProperty" ; then 
-            log "[E] '$1' not found in $2 file while getting....!!"; 
-            if [ $4 == "true" ] ; then
-                exit 1; 
-            else 
-                value=""
-            fi
-        else
-	    value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`
-        fi
-	#echo 'value:'$value
+		log "[E] '$1' not found in $2 file while getting....!!";
+		if [ $4 == "true" ] ; then
+		    exit 1;
+		else
+		    value=""
+		fi
+	else
+		value=$(echo $validateProperty | cut -d "=" -f2-)
+	fi
 	eval $3="'$value'"
 }
 #Get Properties from File
 #$1 -> propertyName $2 -> fileName $3 -> variableName
 getPropertyFromFile(){
-	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
 	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
-	value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`
-	#echo 'value:'$value
-	#validate=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-) # for validation
-	#if  test -z "$validate" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
+	value=$(echo $validateProperty | cut -d "=" -f2-)
 	eval $3="'$value'"
 }
 
@@ -151,20 +215,20 @@ init_variables(){
 	fi
 	log "[I] DB_FLAVOR=${DB_FLAVOR}"
 
-	getPropertyFromFile 'db_root_user' $PROPFILE db_root_user
-	getPropertyFromFile 'db_root_password' $PROPFILE db_user
-	getPropertyFromFile 'db_user' $PROPFILE db_user
-	getPropertyFromFile 'db_password' $PROPFILE db_password
-	if [ "${audit_store}" == "solr" ]
-	then
-		getPropertyFromFile 'audit_solr_urls' $PROPFILE audit_solr_urls
-		getPropertyFromFile 'audit_solr_user' $PROPFILE audit_solr_user
-		getPropertyFromFile 'audit_solr_password' $PROPFILE audit_solr_password
-		getPropertyFromFile 'audit_solr_zookeepers' $PROPFILE audit_solr_zookeepers
-	else
-		getPropertyFromFile 'audit_db_user' $PROPFILE audit_db_user
-		getPropertyFromFile 'audit_db_password' $PROPFILE audit_db_password
-	fi
+	#getPropertyFromFile 'db_root_user' $PROPFILE db_root_user
+	#getPropertyFromFile 'db_root_password' $PROPFILE db_user
+	#getPropertyFromFile 'db_user' $PROPFILE db_user
+	#getPropertyFromFile 'db_password' $PROPFILE db_password
+	#if [ "${audit_store}" == "solr" ]
+	#then
+	#	getPropertyFromFile 'audit_solr_urls' $PROPFILE audit_solr_urls
+	#	getPropertyFromFile 'audit_solr_user' $PROPFILE audit_solr_user
+	#	getPropertyFromFile 'audit_solr_password' $PROPFILE audit_solr_password
+	#	getPropertyFromFile 'audit_solr_zookeepers' $PROPFILE audit_solr_zookeepers
+	#else
+	#	getPropertyFromFile 'audit_db_user' $PROPFILE audit_db_user
+	#	getPropertyFromFile 'audit_db_password' $PROPFILE audit_db_password
+	#fi
 }
 
 wait_for_tomcat_shutdown() {
@@ -835,6 +899,11 @@ update_properties() {
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
+		db_name=`echo ${db_name} | tr '[:upper:]' '[:lower:]'`
+		audit_db_name=`echo ${audit_db_name} | tr '[:upper:]' '[:lower:]'`
+		db_user=`echo ${db_user} | tr '[:upper:]' '[:lower:]'`
+		audit_db_user=`echo ${audit_db_user} | tr '[:upper:]' '[:lower:]'`
+
 		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
@@ -874,7 +943,7 @@ update_properties() {
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=ranger.jpa.jdbc.dialect
+		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
@@ -901,7 +970,7 @@ update_properties() {
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=ranger.jpa.jdbc.dialect
+		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
@@ -952,8 +1021,8 @@ update_properties() {
 	if [ "${keystore}" != "" ]
 	then
 		mkdir -p `dirname "${keystore}"`
-
-		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
+		$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$db_password_alias" -v "$db_password" -c 1
+		#$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$db_password_alias" -value "$db_password" -provider jceks://file$keystore
 
 		propertyName=ranger.credential.provider.path
 		newPropertyValue="${keystore}"
@@ -995,7 +1064,8 @@ update_properties() {
 
 	    if [ "${keystore}" != "" ]
 	    then
-		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
+		$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$audit_db_password_alias" -v "$audit_db_password" -c 1
+		#$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$audit_db_password_alias" -value "$audit_db_password" -provider jceks://file$keystore
 
 			propertyName=ranger.jpa.audit.jdbc.credential.alias
 		newPropertyValue="${audit_db_password_alias}"
@@ -1046,7 +1116,8 @@ update_properties() {
 				mkdir -p `dirname "${keystore}"`
 				audit_solr_password_alias=ranger.solr.password
 
-				$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$audit_solr_password_alias" -value "$audit_solr_password" -provider jceks://file$keystore
+				$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$audit_solr_password_alias" -v "$audit_solr_password" -c 1
+#				$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$audit_solr_password_alias" -value "$audit_solr_password" -provider jceks://file$keystore
 
 				propertyName=ranger.solr.audit.credential.alias
 				newPropertyValue="${audit_solr_password_alias}"
@@ -1318,6 +1389,12 @@ do_authentication_setup(){
 
 			if [ "${xa_ldap_base_dn}" != "" ] && [ "${xa_ldap_bind_dn}" != "" ]  && [ "${xa_ldap_bind_password}" != "" ]
 			then
+				$PYTHON_COMMAND_INVOKER dba_script.py ${xa_ldap_bind_password} 'LDAP'
+				if [ "$?" != "0" ]
+				then
+					exit 1
+				fi
+
 				propertyName=ranger.ldap.base.dn
 				newPropertyValue="${xa_ldap_base_dn}"
 				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
@@ -1341,7 +1418,8 @@ do_authentication_setup(){
 					mkdir -p `dirname "${keystore}"`
 
 					ldap_password_alias=ranger.ldap.binddn.password
-					$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$ldap_password_alias" -value "$xa_ldap_bind_password" -provider jceks://file$keystore
+					$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ldap_password_alias" -v "$xa_ldap_bind_password" -c 1
+#					$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$ldap_password_alias" -value "$xa_ldap_bind_password" -provider jceks://file$keystore
 
 					to_file_default=$app_home/WEB-INF/classes/conf/ranger-admin-default-site.xml
 
@@ -1403,6 +1481,11 @@ do_authentication_setup(){
 
 			if [ "${xa_ldap_ad_base_dn}" != "" ] && [ "${xa_ldap_ad_bind_dn}" != "" ]  && [ "${xa_ldap_ad_bind_password}" != "" ]
 			then
+				$PYTHON_COMMAND_INVOKER dba_script.py ${xa_ldap_ad_bind_password} 'AD'
+				if [ "$?" != "0" ]
+				then
+					exit 1
+				fi
 				propertyName=ranger.ldap.ad.base.dn
 				newPropertyValue="${xa_ldap_ad_base_dn}"
 				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
@@ -1426,7 +1509,8 @@ do_authentication_setup(){
 					mkdir -p `dirname "${keystore}"`
 
 					ad_password_alias=ranger.ad.binddn.password
-					$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$ad_password_alias" -value "$xa_ldap_ad_bind_password" -provider jceks://file$keystore
+					$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ad_password_alias" -v "$xa_ldap_ad_bind_password" -c 1
+#					$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "$ad_password_alias" -value "$xa_ldap_ad_bind_password" -provider jceks://file$keystore
 
 					to_file_default=$app_home/WEB-INF/classes/conf/ranger-admin-default-site.xml
 
@@ -1513,19 +1597,22 @@ setup_install_files(){
 	    log "[I] Copying ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist ${WEBAPP_ROOT}/WEB-INF/classes/conf"
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	    cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
+	fi
+	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	fi
 
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/lib"
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/lib
+	fi
+	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
 	fi
 
 	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
 	    cp ${INSTALL_DIR}/ews/${RANGER_ADMIN_INITD} /etc/init.d/${RANGER_ADMIN}
-
 	    chmod ug+rx /etc/init.d/${RANGER_ADMIN}
 
 	    if [ -d /etc/rc2.d ]
@@ -1564,11 +1651,19 @@ setup_install_files(){
 		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
 	    fi
 	fi
+	if [  -f /etc/init.d/${RANGER_ADMIN} ]; then
+		if [ "${unix_user}" != "" ]; then
+			sed  's/^LINUX_USER=.*$/LINUX_USER='${unix_user}'/g' -i  /etc/init.d/${RANGER_ADMIN}
+		fi
+	fi
 
 	if [ ! -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
 	    log "[I] ${XAPOLICYMGR_DIR}/ews/logs folder"
 	    mkdir -p ${XAPOLICYMGR_DIR}/ews/logs
-	    chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs
+	fi
+	if [ -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
+          chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs
+          chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs/*
 	fi
 
 	log "[I] Setting up installation files and directory DONE";
@@ -1691,17 +1786,27 @@ copy_db_connector
 #create_audit_db_user
 check_python_command
 run_dba_steps
+if [ "$?" == "0" ]
+then
 $PYTHON_COMMAND_INVOKER db_setup.py
+else
+	exit 1
+fi
 if [ "$?" == "0" ]
 then
 update_properties
 do_authentication_setup
-$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
-#execute_java_patches
 else
 	log "[E] DB schema setup failed! Please contact Administrator."
 	exit 1
 fi
+#execute_java_patches
+$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
+if [ "$?" == "0" ]
+then
 echo "ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf"
 ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf
 echo "Installation of Ranger PolicyManager Web Application is completed."
+else
+	exit 1
+fi

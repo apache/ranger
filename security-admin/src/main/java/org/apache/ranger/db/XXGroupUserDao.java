@@ -81,4 +81,15 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 		return null;
 	}
 
+	public List<XXGroupUser> findByGroupId(Long groupId) {
+		if (groupId == null) {
+			return new ArrayList<XXGroupUser>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXGroupUser.findByGroupId", tClass).setParameter("groupId", groupId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXGroupUser>();
+		}
+	}
+
 }

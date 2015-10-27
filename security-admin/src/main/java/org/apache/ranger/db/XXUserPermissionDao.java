@@ -25,7 +25,6 @@ import javax.persistence.NoResultException;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXUserPermission;
 
 public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
@@ -99,20 +98,19 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
 		return null;
 	}
 
-	public List<XXUserPermission> findByModuleIdAndUserId(Long userId,Long moduleId) {
+	public XXUserPermission findByModuleIdAndPortalUserId(Long userId, Long moduleId) {
 		if (userId != null) {
 			try {
-				return getEntityManager()
-						.createNamedQuery("XXUserPermission.findByModuleIdAndUserId", XXUserPermission.class)
+				return getEntityManager().createNamedQuery("XXUserPermission.findByModuleIdAndPortalUserId", XXUserPermission.class)
 						.setParameter("userId", userId)
 						.setParameter("moduleId", moduleId)
-						.getResultList();
+						.getSingleResult();
 			} catch (NoResultException e) {
 				logger.debug(e.getMessage());
 			}
 		} else {
 			logger.debug("ResourceUserId not provided.");
-			return new ArrayList<XXUserPermission>();
+			return null;
 		}
 		return null;
 	}

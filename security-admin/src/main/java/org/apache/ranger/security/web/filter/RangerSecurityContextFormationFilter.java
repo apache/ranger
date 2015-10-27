@@ -29,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
@@ -135,7 +136,9 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 //				xUserMgr.checkPermissionRoleByGivenUrls(httpRequest.getRequestURL().toString(),httpMethod);
 			}
-			chain.doFilter(request, response);
+			HttpServletResponse res = (HttpServletResponse)response;
+			res.setHeader("X-Frame-Options", "DENY" );
+			chain.doFilter(request, res);
 
 		} finally {
 			// [4]remove context from thread-local

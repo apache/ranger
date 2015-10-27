@@ -31,10 +31,6 @@ then
 	exit 1;
 fi
 
-eval `grep -v '^XAAUDIT.' ${PROPFILE} | grep -v '^$' | grep -v '^#'`
-
-DB_HOST="${db_host}"
-
 usage() {
   [ "$*" ] && echo "$0: $*"
   sed -n '/^##/,/^$/s/^## \{0,1\}//p' "$0"
@@ -46,6 +42,50 @@ log() {
    echo "${prefix} $@" >> $LOGFILE
    echo "${prefix} $@"
 }
+#eval `grep -v '^XAAUDIT.' ${PROPFILE} | grep -v '^$' | grep -v '^#'`
+get_prop(){
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
+	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
+	value=$(echo $validateProperty | cut -d "=" -f2-)
+	echo $value
+}
+
+PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
+DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
+SQL_COMMAND_INVOKER=$(get_prop 'SQL_COMMAND_INVOKER' $PROPFILE)
+SQL_CONNECTOR_JAR=$(get_prop 'SQL_CONNECTOR_JAR' $PROPFILE)
+db_root_user=$(get_prop 'db_root_user' $PROPFILE)
+db_root_password=$(get_prop 'db_root_password' $PROPFILE)
+db_host=$(get_prop 'db_host' $PROPFILE)
+db_name=$(get_prop 'db_name' $PROPFILE)
+db_user=$(get_prop 'db_user' $PROPFILE)
+db_password=$(get_prop 'db_password' $PROPFILE)
+KMS_MASTER_KEY_PASSWD=$(get_prop 'KMS_MASTER_KEY_PASSWD' $PROPFILE)
+unix_user=$(get_prop 'unix_user' $PROPFILE)
+unix_group=$(get_prop 'unix_group' $PROPFILE)
+POLICY_MGR_URL=$(get_prop 'POLICY_MGR_URL' $PROPFILE)
+REPOSITORY_NAME=$(get_prop 'REPOSITORY_NAME' $PROPFILE)
+SSL_KEYSTORE_FILE_PATH=$(get_prop 'SSL_KEYSTORE_FILE_PATH' $PROPFILE)
+SSL_KEYSTORE_PASSWORD=$(get_prop 'SSL_KEYSTORE_PASSWORD' $PROPFILE)
+SSL_TRUSTSTORE_FILE_PATH=$(get_prop 'SSL_TRUSTSTORE_FILE_PATH' $PROPFILE)
+SSL_TRUSTSTORE_PASSWORD=$(get_prop 'SSL_TRUSTSTORE_PASSWORD' $PROPFILE)
+KMS_DIR=$(eval echo "$(get_prop 'KMS_DIR' $PROPFILE)")
+app_home=$(eval echo "$(get_prop 'app_home' $PROPFILE)")
+TMPFILE=$(eval echo "$(get_prop 'TMPFILE' $PROPFILE)")
+LOGFILE=$(eval echo "$(get_prop 'LOGFILE' $PROPFILE)")
+LOGFILES=$(eval echo "$(get_prop 'LOGFILES' $PROPFILE)")
+JAVA_BIN=$(get_prop 'JAVA_BIN' $PROPFILE)
+JAVA_VERSION_REQUIRED=$(get_prop 'JAVA_VERSION_REQUIRED' $PROPFILE)
+JAVA_ORACLE=$(get_prop 'JAVA_ORACLE' $PROPFILE)
+mysql_core_file=$(get_prop 'mysql_core_file' $PROPFILE)
+oracle_core_file=$(get_prop 'oracle_core_file' $PROPFILE)
+postgres_core_file=$(get_prop 'postgres_core_file' $PROPFILE)
+sqlserver_core_file=$(get_prop 'sqlserver_core_file' $PROPFILE)
+sqlanywhere_core_file=$(get_prop 'sqlanywhere_core_file' $PROPFILE)
+cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFILE)")
+KMS_BLACKLIST_DECRYPT_EEK=$(get_prop 'KMS_BLACKLIST_DECRYPT_EEK' $PROPFILE)
+
+DB_HOST="${db_host}"
 
 check_ret_status(){
 	if [ $1 -ne 0 ]; then
@@ -82,29 +122,25 @@ get_distro(){
 #Get Properties from File without erroring out if property is not there
 #$1 -> propertyName $2 -> fileName $3 -> variableName $4 -> failIfNotFound
 getPropertyFromFileNoExit(){
-	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
 	if  test -z "$validateProperty" ; then 
-            log "[E] '$1' not found in $2 file while getting....!!"; 
-            if [ $4 == "true" ] ; then
-                exit 1; 
-            else 
-                value=""
-            fi
-        else
-	    value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`
-        fi
-	#echo 'value:'$value
+		log "[E] '$1' not found in $2 file while getting....!!";
+		if [ $4 == "true" ] ; then
+		    exit 1;
+		else
+		    value=""
+		fi
+	else
+	    value=$(echo $validateProperty | cut -d "=" -f2-)
+	fi
 	eval $3="'$value'"
 }
 #Get Properties from File
 #$1 -> propertyName $2 -> fileName $3 -> variableName
 getPropertyFromFile(){
-	validateProperty=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1) # for validation
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
 	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
-	value=`sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-`
-	#echo 'value:'$value
-	#validate=$(sed '/^\#/d' $2 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-) # for validation
-	#if  test -z "$validate" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
+	value=$(echo $validateProperty | cut -d "=" -f2-)
 	eval $3="'$value'"
 }
 
@@ -132,7 +168,21 @@ init_logfiles () {
         touch $f
     done
 }
-
+password_validation() {
+        if [ -z "$1" ]
+        then
+                log "[I] Blank password is not allowed for" $2". Please enter valid password."
+                exit 1
+        else
+                if [[ $1 =~ [\"\'\`\\\] ]]
+                then
+                        log "[E]" $2 "password contains one of the unsupported special characters:\" ' \` \\"
+                        exit 1
+                else
+                        log "[I]" $2 "password validated."
+                fi
+        fi
+}
 init_variables(){
 	curDt=`date '+%Y%m%d%H%M%S'`
 
@@ -157,11 +207,11 @@ init_variables(){
 		DB_FLAVOR="MYSQL"
 	fi
 	log "[I] DB_FLAVOR=${DB_FLAVOR}"
-
-	getPropertyFromFile 'db_root_user' $PROPFILE db_root_user
-	getPropertyFromFile 'db_root_password' $PROPFILE db_user
-	getPropertyFromFile 'db_user' $PROPFILE db_user
-	getPropertyFromFile 'db_password' $PROPFILE db_password
+	password_validation "$KMS_MASTER_KEY_PASSWD" "KMS Master key"
+	#getPropertyFromFile 'db_root_user' $PROPFILE db_root_user
+	#getPropertyFromFile 'db_root_password' $PROPFILE db_user
+	#getPropertyFromFile 'db_user' $PROPFILE db_user
+	#getPropertyFromFile 'db_password' $PROPFILE db_password
 	
 	#if [ -L ${CONF_FILE} ]
    #     then
@@ -345,11 +395,6 @@ update_properties() {
 		log "[E] $to_file does not exists" ; exit 1;
     fi
 
-
-	propertyName=ranger.ks.jpa.jdbc.user
-	newPropertyValue="${db_user}"
-	updatePropertyToFilePy $propertyName $newPropertyValue $to_file
-
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
 		propertyName=ranger.ks.jpa.jdbc.url
@@ -382,6 +427,9 @@ update_properties() {
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
+		db_name=`echo ${db_name} | tr '[:upper:]' '[:lower:]'`
+		db_user=`echo ${db_user} | tr '[:upper:]' '[:lower:]'`
+
 		propertyName=ranger.ks.jpa.jdbc.url
 		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
@@ -424,6 +472,10 @@ update_properties() {
 		newPropertyValue="sap.jdbc4.sqlanywhere.IDriver"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
+	propertyName=ranger.ks.jpa.jdbc.user
+	newPropertyValue="${db_user}"
+	updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
 	keystore="${cred_keystore_filename}"
 
 	echo "Starting configuration for XA DB credentials:"
@@ -438,8 +490,10 @@ update_properties() {
 	then
 		mkdir -p `dirname "${keystore}"`
 
-		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "${DB_CREDENTIAL_ALIAS}" -value "$db_password" -provider jceks://file$keystore
-		$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "${MK_CREDENTIAL_ALIAS}" -value "${KMS_MASTER_KEY_PASSWD}" -provider jceks://file$keystore
+		$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${DB_CREDENTIAL_ALIAS}" -v "${db_password}" -c 1
+		$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${MK_CREDENTIAL_ALIAS}" -v "${KMS_MASTER_KEY_PASSWD}" -c 1
+		#$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "${DB_CREDENTIAL_ALIAS}" -value "$db_password" -provider jceks://file$keystore
+		#$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "${MK_CREDENTIAL_ALIAS}" -value "${KMS_MASTER_KEY_PASSWD}" -provider jceks://file$keystore
 
 		propertyName=ranger.ks.jpa.jdbc.credential.alias
 		newPropertyValue="${DB_CREDENTIAL_ALIAS}"
@@ -524,21 +578,24 @@ setup_install_files(){
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
 	    log "[I] Copying ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist ${WEBAPP_ROOT}/WEB-INF/classes/conf"
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf
+	    cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	fi
-	cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
+	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
         chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
         chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf/
+	fi
 
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 	    log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/lib"
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/lib
+	fi
+	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
 	fi
 
 	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"
 	    cp ${INSTALL_DIR}/${RANGER_KMS}-initd /etc/init.d/${RANGER_KMS}
-
 	    chmod ug+rx /etc/init.d/${RANGER_KMS}
 
 	    if [ -d /etc/rc2.d ]
@@ -577,10 +634,17 @@ setup_install_files(){
 		ln -s /etc/init.d/${RANGER_KMS} $RC_DIR/K90${RANGER_KMS}
 	    fi
 	fi
+	if [  -f /etc/init.d/${RANGER_KMS} ]; then
+		if [ "${unix_user}" != "" ]; then
+			sed  's/^LINUX_USER=.*$/LINUX_USER='${unix_user}'/g' -i  /etc/init.d/${RANGER_KMS}
+		fi
+	fi
 
 	if [ ! -d ${KMS_DIR}/ews/logs ]; then
 	    log "[I] ${KMS_DIR}/ews/logs folder"
 	    mkdir -p ${KMS_DIR}/ews/logs
+	fi
+	if [ -d ${KMS_DIR}/ews/logs ]; then
 	    chown -R ${unix_user} ${KMS_DIR}/ews/logs
 	fi
 
@@ -612,13 +676,17 @@ setup_install_files(){
 	  ln -sf ${INSTALL_DIR}/ranger-kms-initd ${INSTALL_DIR}/ranger-kms-services.sh
 	  chmod ug+rx ${INSTALL_DIR}/ranger-kms-services.sh	
 	fi
-
-	if [ ! -d /var/log/ranger/kms ]
-	then
+	if [ ! -d /var/log/ranger/kms ]; then
 		mkdir -p /var/log/ranger/kms
+		if [ -d ews/logs ]; then
+			cp -r ews/logs/* /var/log/ranger/kms
+		fi
 	fi
-	chgrp ${unix_group} /var/log/ranger/kms
-	chmod g+rwx /var/log/ranger/kms
+	if [ -d /var/log/ranger/kms ]; then
+		chmod 755 /var/log/ranger/kms
+        chown -R $unix_user:$unix_group /var/log/ranger/kms
+	fi
+
 }
 
 init_logfiles
@@ -635,7 +703,12 @@ sanity_check_files
 copy_db_connector
 check_python_command
 run_dba_steps
-$PYTHON_COMMAND_INVOKER db_setup.py
+if [ "$?" == "0" ]
+then
+	$PYTHON_COMMAND_INVOKER db_setup.py
+else
+	exit 1
+fi
 if [ "$?" == "0" ]
 then
 	update_properties

@@ -34,8 +34,9 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.AccessControlException;
-import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.util.*;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.glassfish.jersey.client.ClientProperties;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -58,6 +59,8 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	String _sslConfigFileName = null;
 	String _serviceName = null;
 	String _pluginId = null;
+	int	   _restClientConnTimeOutMs;
+	int	   _restClientReadTimeOutMs;
 	
 	
 	@Override
@@ -71,10 +74,14 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		_baseUrl = _utils.getPolicyRestUrl(configPropertyPrefix);
 		_sslConfigFileName = _utils.getSsslConfigFileName(configPropertyPrefix);
 		_isSSL = _utils.isSsl(_baseUrl);
+		_restClientConnTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
+		_restClientReadTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
 		
 		LOG.info("Init params: " + String.format("Base URL[%s], SSL Congig filename[%s], ServiceName=[%s]", _baseUrl, _sslConfigFileName, _serviceName));
 		
 		_client = getClient();
+		_client.property(ClientProperties.CONNECT_TIMEOUT, _restClientConnTimeOutMs);
+		_client.property(ClientProperties.READ_TIMEOUT, _restClientReadTimeOutMs);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAdminJersey2RESTClient.init(" + configPropertyPrefix + "): " + _client.toString());

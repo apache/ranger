@@ -65,6 +65,22 @@
 		</description>
 	</property>
 
+	<property>
+		<name>ranger.plugin.hdfs.policy.rest.client.connection.timeoutMs</name>
+		<value>120000</value>
+		<description>
+			Hdfs Plugin RangerRestClient Connection Timeout in Milli Seconds
+		</description>
+	</property>
+
+	<property>
+		<name>ranger.plugin.hdfs.policy.rest.client.read.timeoutMs</name>
+		<value>30000</value>
+		<description>
+			Hdfs Plugin RangerRestClient read Timeout in Milli Seconds
+		</description>
+	</property>
+
 	<!--  The following fields are used to customize the audit logging feature -->
 	<!-- 
 	<property>

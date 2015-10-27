@@ -84,6 +84,18 @@
     </mailingLists>
     <developers>
         <developer>
+            <id>alok</id>
+            <name>Alok Lal</name>
+            <email>alok@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Hortonworks
+            </organization>
+        </developer>
+        <developer>
             <id>agates</id>
             <name>Alan Gates</name>
             <email>gates@apache.org</email>
@@ -101,6 +113,7 @@
             <email>bganesan@apache.org</email>
             <timezone>-8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -137,10 +150,11 @@
             <email>dillidorai@apache.org</email>
             <timezone>-8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
+                BlueTalon
             </organization>
         </developer>
         <developer>
@@ -149,10 +163,23 @@
             <email>bosco@apache.org</email>
             <timezone>-8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
                 Hortonworks
+            </organization>
+        </developer>
+        <developer>
+            <id>gautam</id>
+            <name>Gautam Borad</name>
+            <email>gautam@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
             </organization>
         </developer>
         <developer>
@@ -173,6 +200,7 @@
             <email>kminder@apache.org</email>
             <timezone>-5</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -185,6 +213,7 @@
             <email>lmccay@apache.org</email>
             <timezone>-5</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -197,6 +226,7 @@
             <email>madhan@apache.org</email>
             <timezone>-8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -221,6 +251,7 @@
             <email>mani@hortonworks.com</email>
             <timezone>-8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
                 <organization>
@@ -233,6 +264,7 @@
             <email>sanjay@hortonworks.com</email>
             <timezone>-8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -245,12 +277,25 @@
             <email>sneethir@apache.org</email>
             <timezone>-5</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
                 Hortonworks
             </organization>
-            </developer>
+        </developer>
+        <developer>
+            <id>vel</id>
+            <name>Velmurugan Periasamy</name>
+            <email>vel@apache.org</email>
+            <timezone>-5</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Hortonworks
+            </organization>
+        </developer>
         </developers>
     <contributors>
         <contributor>

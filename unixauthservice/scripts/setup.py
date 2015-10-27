@@ -81,7 +81,7 @@ SYNC_INTERVAL_NEW_KEY = 'ranger.usersync.sleeptimeinmillisbetweensynccycle'
 SYNC_SOURCE_UNIX = 'unix'
 SYNC_SOURCE_LDAP = 'ldap'
 SYNC_SOURCE_LIST = [ SYNC_SOURCE_UNIX, SYNC_SOURCE_LDAP ]
-
+SYNC_LDAP_BIND_PASSWORD_KEY  = 'ranger.usersync.ldap.ldapbindpassword'
 credUpdateClassName =  'org.apache.ranger.credentialapi.buildks'
 #credUpdateClassName =  'com.hortonworks.credentialapi.buildks'
 
@@ -166,6 +166,17 @@ def updateProppertyInJCKSFile(jcksFileName,propName,value):
         sys.exit(1)
     return ret
 
+def password_validation(password, userType):
+    if password:
+        if re.search("[\\\`'\"]",password):
+            print "[E] "+userType+" proprty contains one of the unsupported special characters like \" ' \ `"
+            sys.exit(1)
+        else:
+            print "[I] "+userType+" proprty is verified."
+    else:
+        print "[E] Blank password is not allowed for proprty " +userType+ ",please enter valid password."
+        sys.exit(1)
+
 
 def convertInstallPropsToXML(props):
 	directKeyMap = getPropertiesConfigMap(join(installTemplateDirName,install2xmlMapFileName))
@@ -190,6 +201,8 @@ def convertInstallPropsToXML(props):
 			#	if (key.startswith("ranger.usersync.ldap") or key.startswith("ranger.usersync.group") or key.startswith("ranger.usersync.paged")):
 			#		del ret[key]
 		elif (syncSource == SYNC_SOURCE_LDAP):
+			ldapPass=ret[SYNC_LDAP_BIND_PASSWORD_KEY]
+			password_validation(ldapPass, SYNC_LDAP_BIND_PASSWORD_KEY)
 			ret['ranger.usersync.source.impl.class'] = 'org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder'
 			if (SYNC_INTERVAL_NEW_KEY not in ret or len(str(ret[SYNC_INTERVAL_NEW_KEY])) == 0):
 				ret[SYNC_INTERVAL_NEW_KEY] = "3600000"
@@ -232,11 +245,21 @@ def createGroup(groupname):
 		print "ERROR: Unable to create a new group: %s" % (groupname,e)
 		sys.exit(1)
 
-def initializeInitD():
+def initializeInitD(ownerName):
 	if (os.path.isdir(initdDirName)):
 		fn = join(installPropDirName,initdProgramName)
 		initdFn = join(initdDirName,initdProgramName)
 		shutil.copy(fn, initdFn)
+		if (ownerName != 'ranger'):
+			f = open(initdFn,'r')
+			filedata = f.read()
+			f.close()
+			find_str = "LINUX_USER=ranger"
+			replace_str = "LINUX_USER="+ ownerName
+			newdata = filedata.replace(find_str,replace_str)
+			f = open(initdFn,'w')
+			f.write(newdata)
+			f.close()
 		os.chmod(initdFn,0550)
 		rcDirList = [ "/etc/rc2.d", "/etc/rc3.d", "/etc/rc.d/rc2.d", "/etc/rc.d/rc3.d" ]
 		for rcDir in rcDirList:
@@ -246,14 +269,13 @@ def initializeInitD():
 					scriptName = join(rcDir, scriptFn)
 					if isfile(scriptName):
 						os.remove(scriptName)
-					#print "+ ln -sf %s %s" % (initdFn, scriptName)
 					os.symlink(initdFn,scriptName)
-		userSyncScriptName = "ranger-usersync-services.sh"
-		localScriptName = os.path.abspath(join(installPropDirName,userSyncScriptName))
-		ubinScriptName = join("/usr/bin",initdProgramName)
-		if isfile(ubinScriptName):
-			os.remove(ubinScriptName)
-		os.symlink(localScriptName,ubinScriptName)
+			userSyncScriptName = "ranger-usersync-services.sh"
+			localScriptName = os.path.abspath(join(installPropDirName,userSyncScriptName))
+			ubinScriptName = join("/usr/bin",initdProgramName)
+			if isfile(ubinScriptName):
+				os.remove(ubinScriptName)
+			os.symlink(localScriptName,ubinScriptName)
 
 
 def createJavaKeystoreForSSL(fn,passwd):
@@ -365,7 +387,7 @@ def main():
 	os.chown(pidFolderName,ownerId,groupId)
 	os.chown(rangerBaseDirName,ownerId,groupId)
 
-	initializeInitD()
+	initializeInitD(ownerName)
 
 	#
 	# Add password to crypt path
