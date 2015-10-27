@@ -121,6 +121,9 @@ INSTALL_ARGS="${PROJ_INSTALL_DIR}/install.properties"
 COMPONENT_INSTALL_ARGS="${PROJ_INSTALL_DIR}/${COMPONENT_NAME}-install.properties"
 JAVA=$JAVA_HOME/bin/java
 
+PLUGIN_DEPENDENT_LIB_DIR=lib/"${PROJ_NAME}-${COMPONENT_NAME}-impl"
+PROJ_LIB_PLUGIN_DIR=${PROJ_INSTALL_DIR}/${PLUGIN_DEPENDENT_LIB_DIR}
+
 HCOMPONENT_INSTALL_DIR_NAME=$(getInstallProperty 'COMPONENT_INSTALL_DIR_NAME')
 
 
@@ -179,6 +182,8 @@ elif [ "${HCOMPONENT_NAME}" = "solr" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/solr-webapp/webapp/WEB-INF/lib
 elif [ "${HCOMPONENT_NAME}" = "kafka" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/libs
+elif [ "${HCOMPONENT_NAME}" = "storm" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/extlib-daemon
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
@@ -496,8 +501,7 @@ then
 	#if [ -d "${PROJ_LIB_DIR}" ]
 	#then
 		dt=`date '+%Y%m%d%H%M%S'`
-		dbJar=$(getInstallProperty 'SQL_CONNECTOR_JAR')
-		for f in ${PROJ_LIB_DIR}/*.jar ${dbJar}
+		for f in ${PROJ_LIB_DIR}/*.jar
 		do
 			if [ -f "${f}" ]
 			then	
@@ -513,6 +517,22 @@ then
 				fi
 			fi
 		done
+		
+		# ADD SQL CONNECTOR JAR TO PLUGIN DEPENDENCY JAR FOLDER
+		dbJar=$(getInstallProperty 'SQL_CONNECTOR_JAR')
+		if [ -f "${dbJar}" ]
+		then	
+			bn=`basename ${dbJar}`
+			if [ -f ${PROJ_LIB_PLUGIN_DIR}/${bn} ]
+			then
+			 	rm ${PROJ_LIB_PLUGIN_DIR}/${bn} 
+			fi
+			if [ ! -f ${PROJ_LIB_PLUGIN_DIR}/${bn} ]
+			then
+			    ln -s ${dbJar} ${PROJ_LIB_PLUGIN_DIR}/${bn}
+			fi
+		fi
+
 	#fi
 
 	#

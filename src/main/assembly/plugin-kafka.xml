@@ -20,14 +20,28 @@
 	<includeBaseDirectory>true</includeBaseDirectory>
 	<moduleSets>
 		<moduleSet>
+	     <binaries>
+	        <includeDependencies>false</includeDependencies>
+	        <unpack>false</unpack>
+		    <directoryMode>755</directoryMode>
+		    <fileMode>644</fileMode>
+	  	    <outputDirectory>/lib</outputDirectory>
+	     </binaries>
+	     <includes>
+		  <include>security_plugins.ranger-kafka-plugin-shim:ranger-kafka-plugin-shim</include>
+		  <include>security_plugins.ranger-plugin-classloader:ranger-plugin-classloader</include>
+	      </includes>
+	    </moduleSet>
+   	 
+		<moduleSet>
 			<binaries>
-				<includeDependencies>false</includeDependencies>
+				<includeDependencies>true</includeDependencies>
 				<unpack>false</unpack>
 				<directoryMode>755</directoryMode>
 				<fileMode>644</fileMode>
 				<dependencySets>
 					<dependencySet>
-						<outputDirectory>/lib</outputDirectory>
+						<outputDirectory>lib/ranger-kafka-plugin-impl</outputDirectory>
 						<unpack>false</unpack>
 						<includes>
 							<include>commons-configuration:commons-configuration:jar:${commons.configuration.version}
@@ -38,6 +52,7 @@
 							</include>
 							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}
 							</include>
+							<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 							<include>com.google.code.gson:gson</include>
 							<include>org.eclipse.persistence:eclipselink</include>
 							<include>org.eclipse.persistence:javax.persistence</include>
@@ -47,7 +62,7 @@
 							</include>
 							<include>commons-lang:commons-lang</include>
 							<include>commons-io:commons-io</include>
-							<include>com.google.guava:guava:jar:${guava.version}</include>
+							<include>com.google.guava:guava:jar:${google.guava.version}</include>
 							<include>org.apache.httpcomponents:httpclient:jar:${httpcomponent.httpclient.version}
 							</include>
 							<include>org.apache.httpcomponents:httpcore:jar:${httpcomponent.httpcore.version}
@@ -59,7 +74,6 @@
 							<include>org.codehaus.jackson:jackson-jaxrs</include>
 							<include>org.codehaus.jackson:jackson-mapper-asl</include>
 							<include>org.codehaus.jackson:jackson-xc</include>
-
 						</includes>
 					</dependencySet>
 					<dependencySet>
@@ -77,7 +91,7 @@
 							<include>commons-lang:commons-lang:jar:${commons.lang.version}
 							</include>
 							<include>commons-logging:commons-logging</include>
-							<include>com.google.guava:guava:jar:${guava.version}</include>
+							<include>com.google.guava:guava:jar:${google.guava.version}</include>
 							<include>org.hamcrest:hamcrest-all</include>
 							<include>junit:junit</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
@@ -91,20 +105,14 @@
 						</includes>
 					</dependencySet>
 				</dependencySets>
-				<outputDirectory>/lib</outputDirectory>
+				<outputDirectory>lib/ranger-kafka-plugin-impl</outputDirectory>
 			</binaries>
 			<includes>
+				<include>security_plugins.ranger-kafka-plugin:ranger-kafka-plugin</include>
 				<include>org.apache.ranger:ranger_solrj</include>
-				<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit
-				</include>
-				<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred
-				</include>
-				<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl
-				</include>
-				<include>security_plugins.ranger-plugins-common:ranger-plugins-common
-				</include>
-				<include>security_plugins.ranger-kafka-plugin:ranger-kafka-plugin
-				</include>
+				<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
+				<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
+				<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
 			</includes>
 		</moduleSet>
 		<moduleSet>
