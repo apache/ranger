@@ -63,10 +63,11 @@
   [
     {
       "itemId":1,
-      "name":"enforce-expiry",
+      "name":"accessed-after-expiry",
       "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
       "evaluatorOptions" : { "scriptTemplate":"ctx.isAccessedAfter('expiry_date');" },
-      "label":"Accessed after expiry_date?",
+      "uiHint": "{ \"singleValue\":true }",
+      "label":"Accessed after expiry_date (yes/no)?",
       "description": "Accessed after expiry_date? (yes/no)"
     }
   ]

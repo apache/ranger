@@ -24,72 +24,65 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-import java.util.List;
-import java.util.Map;
 
 public class RangerScriptTemplateConditionEvaluator extends RangerScriptConditionEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerScriptTemplateConditionEvaluator.class);
 
-	protected String scriptTemplate;
-	protected String script;
+	protected String  script        = null;
+	private   boolean reverseResult = false;
 
 	@Override
 	public void init() {
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerScriptTemplateConditionEvaluator.init(" + condition + ")");
 		}
 
 		super.init();
 
-		Map<String, String> evalOptions = conditionDef. getEvaluatorOptions();
+		if(CollectionUtils.isNotEmpty(condition.getValues())) {
+			String expectedScriptReturn = condition.getValues().get(0);
 
-		if (MapUtils.isNotEmpty(evalOptions)) {
-			scriptTemplate = evalOptions.get("scriptTemplate");
-		}
+			if(StringUtils.isNotBlank(expectedScriptReturn)) {
+				if(StringUtils.equalsIgnoreCase(expectedScriptReturn, "false") || StringUtils.equalsIgnoreCase(expectedScriptReturn, "no")) {
+					reverseResult = true;
+				}
 
-		script = formatScript();
+				script = MapUtils.getString(conditionDef.getEvaluatorOptions(), "scriptTemplate");
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerScriptTemplateConditionEvaluator.init(" + condition + ")");
-		}
-	}
-
-	@Override
-	protected String getScript() {
-		return script;
-	}
-
-	private String formatScript() {
-
-		String ret = null;
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerScriptTemplateConditionEvaluator.formatScript()");
-		}
-		List<String> values = condition.getValues();
-
-		if (CollectionUtils.isNotEmpty(values)) {
-
-			String value = values.get(0);
-
-			if (StringUtils.isNotBlank(value)) {
-
-				String s = value.trim().toLowerCase();
-
-				if (s.equals("no") || s.equals("false")) {
-					ret = null;
-				} else {
-					ret = scriptTemplate == null ? null : scriptTemplate.trim();
+				if(script != null) {
+					script = script.trim();
 				}
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerScriptTemplateConditionEvaluator.formatScript(), ret=" + ret);
+			LOG.debug("<== RangerScriptTemplateConditionEvaluator.init(" + condition + "): script=" + script + "; reverseResult=" + reverseResult);
+		}
+	}
+
+	@Override
+	public boolean isMatched(RangerAccessRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerScriptTemplateConditionEvaluator.isMatched()");
+		}
+
+		boolean ret = super.isMatched(request);
+
+		if(reverseResult) {
+			ret = !ret;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerScriptTemplateConditionEvaluator.isMatched(): ret=" + ret);
 		}
 
 		return ret;
+	}
+
+	@Override
+	protected String getScript() {
+		return script;
 	}
 }

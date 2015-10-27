@@ -216,10 +216,10 @@
 	[
 	  {
 		"itemId":1,
-		"name":"not-accessed-together",
-		"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerHiveResourcesNotAccessedTogetherCondition",
+		"name":"resources-accessed-together",
+		"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerHiveResourcesAccessedTogetherCondition",
 		"evaluatorOptions" : {},
-		"label":"Not Accessed Together?",
+		"label":"Hive Resources Accessed Together?",
 		"description": "List of Hive resources"
 	  }
 	]
