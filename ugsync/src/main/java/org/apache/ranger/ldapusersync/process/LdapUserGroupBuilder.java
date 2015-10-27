@@ -378,11 +378,18 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 								+ ", userName: " + userName + ", groupList: "
 								+ groupList);
 						}
+						if ( counter == 2000 ) {
+							LOG.info("===> 2000 user records have been synchronized so far. From now on, only a summary progress log will be written for every 100 users. To continue to see detailed log for every user, please enable Trace level logging. <===");
+						}
 					} else {
 						if (LOG.isTraceEnabled()) {
 							LOG.trace("Updating user count: " + counter
-								+ ", userName: " + userName + ", groupList: "
-								+ groupList);
+									+ ", userName: " + userName + ", groupList: "
+									+ groupList);
+						} else  {
+							if ( counter % 100 == 0) {
+								LOG.info("Synced " + counter + " users till now");
+							}
 						}
 					}
 					try {
