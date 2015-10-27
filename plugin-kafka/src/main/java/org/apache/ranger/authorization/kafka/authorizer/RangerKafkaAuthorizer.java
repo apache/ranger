@@ -19,10 +19,7 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
-import java.io.IOException;
-import java.security.Principal;
 import java.util.Date;
-
 import javax.security.auth.Subject;
 
 import kafka.security.auth.Acl;
@@ -104,8 +101,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	}
 
 	@Override
-	public boolean authorize(Session session, Operation operation,
-			Resource resource) {
+	public boolean authorize(Session session, Operation operation, Resource resource) {
 
 		if (rangerPlugin == null) {
 			MiscUtil.logErrorMessageByInterval(logger,

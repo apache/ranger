@@ -30,9 +30,22 @@
         <unpack>false</unpack>
 	    <directoryMode>755</directoryMode>
 	    <fileMode>644</fileMode>
+  	    <outputDirectory>/lib</outputDirectory>
+     </binaries>
+     <includes>
+	  <include>security_plugins.ranger-storm-plugin-shim:ranger-storm-plugin-shim</include>
+	  <include>security_plugins.ranger-plugin-classloader:ranger-plugin-classloader</include>
+      </includes>
+    </moduleSet>
+    <moduleSet>
+     <binaries>
+        <includeDependencies>true</includeDependencies>
+        <unpack>false</unpack>
+	    <directoryMode>755</directoryMode>
+	    <fileMode>644</fileMode>
         <dependencySets>
             <dependencySet>
-                <outputDirectory>/lib</outputDirectory>
+                <outputDirectory>lib/ranger-storm-plugin-impl</outputDirectory>
                 <unpack>false</unpack>
                 <includes>
                     <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
@@ -44,7 +57,7 @@
                     <include>commons-collections:commons-collections</include>
                     <include>com.sun.jersey:jersey-bundle</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                    <include>com.google.guava:guava:jar:${guava.version}</include>
+                    <include>com.google.guava:guava:jar:${google.guava.version}</include>
                     <include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
                     <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.storm.version}</include>
                     <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.storm.version}</include>
@@ -55,7 +68,7 @@
                     <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
-                    <include>commons-cli:commons-cli:jar:${commons.cli.version}</include>
+                    <include>commons-cli:commons-cli:jar:${commons.cli.version}</include> 
                     <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                 </includes>
@@ -72,7 +85,7 @@
                         <include>commons-io:commons-io:jar:${commons.io.version}</include>
                         <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                         <include>commons-logging:commons-logging</include>
-                        <include>com.google.guava:guava:jar:${guava.version}</include>
+                        <include>com.google.guava:guava:jar:${google.guava.version}</include>
                         <include>org.hamcrest:hamcrest-all</include>
                         <include>junit:junit</include>
                         <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
@@ -83,7 +96,7 @@
                     </includes>
             </dependencySet>
         </dependencySets>
-        <outputDirectory>/lib</outputDirectory>
+        <outputDirectory>lib/ranger-storm-plugin-impl</outputDirectory>
      </binaries>
      <includes>
 		<include>org.apache.ranger:ranger_solrj</include>

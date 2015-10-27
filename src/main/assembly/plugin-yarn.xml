@@ -24,6 +24,20 @@
   <baseDirectory>${project.name}-${project.version}-yarn-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
+     <moduleSet>
+     <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+	    <directoryMode>755</directoryMode>
+	    <fileMode>644</fileMode>
+  	    <outputDirectory>/lib</outputDirectory>
+     </binaries>
+     <includes>
+	  <include>security_plugins.ranger-yarn-plugin-shim:ranger-yarn-plugin-shim</include>
+	  <include>security_plugins.ranger-plugin-classloader:ranger-plugin-classloader</include>
+      </includes>
+    </moduleSet>
+    
     <moduleSet>
      <binaries>
         <includeDependencies>false</includeDependencies>
@@ -32,7 +46,7 @@
 	    <fileMode>644</fileMode>
         <dependencySets>
             <dependencySet>
-                <outputDirectory>/lib</outputDirectory>
+                <outputDirectory>/lib/ranger-yarn-plugin-impl</outputDirectory>
                 <unpack>false</unpack>
                 <includes>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
@@ -54,8 +68,8 @@
                         <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
                         <include>commons-io:commons-io:jar:${commons.io.version}</include>
                         <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
-                        <include>commons-logging:commons-logging</include>
-                        <include>com.google.guava:guava:jar:${guava.version}</include>
+                        <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+                        <include>com.google.guava:guava:jar:${google.guava.version}</include>
                         <include>org.hamcrest:hamcrest-all</include>
                         <include>junit:junit</include>
                         <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
@@ -66,7 +80,7 @@
                     </includes>
             </dependencySet>
         </dependencySets>
-        <outputDirectory>/lib</outputDirectory>
+        <outputDirectory>/lib/ranger-yarn-plugin-impl</outputDirectory>
      </binaries>
      <includes>
 		<include>org.apache.ranger:ranger_solrj</include>
@@ -79,7 +93,7 @@
     </moduleSet>
     <moduleSet>
      <binaries>
-        <includeDependencies>false</includeDependencies>
+        <includeDependencies>true</includeDependencies>
         <outputDirectory>/install/lib</outputDirectory>
         <unpack>false</unpack>
      </binaries>
