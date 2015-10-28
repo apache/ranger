@@ -134,6 +134,15 @@
             </includes>
             <fileMode>544</fileMode>
         </fileSet>
+        <fileSet>
+                <directoryMode>755</directoryMode>
+                <fileMode>755</fileMode>
+                <outputDirectory>/usersync_tool</outputDirectory>
+                <directory>ugsync/filesourceusersynctool</directory>
+            <includes>
+                <include>run-filesource-usersync.sh</include>
+            </includes>
+        </fileSet>
 	<fileSet>
                 <directoryMode>755</directoryMode>
                 <fileMode>755</fileMode>
