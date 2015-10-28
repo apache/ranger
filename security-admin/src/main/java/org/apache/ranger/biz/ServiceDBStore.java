@@ -133,7 +133,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
-	public static final String RANGER_TAG_EXPIRY_CONDITION_NAME = "enforce-expiry";
+	public static final String RANGER_TAG_EXPIRY_CONDITION_NAME = "accessed-after-expiry";
 
 	@Autowired
 	RangerServiceDefService serviceDefService;
