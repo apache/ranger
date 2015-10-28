@@ -24,39 +24,24 @@
   <baseDirectory>${project.name}-${project.version}-hdfs-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
+    
     <moduleSet>
      <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
 	    <directoryMode>755</directoryMode>
 	    <fileMode>644</fileMode>
-  		<dependencySets>
-   			<dependencySet>
-     			<outputDirectory>/lib</outputDirectory>
-				<includes>
-					<include>com.google.code.gson:gson*</include>
-					<include>org.eclipse.persistence:javax.persistence</include>
-					<include>org.eclipse.persistence:eclipselink</include>
-					<include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
-					<include>org.noggit:noggit:jar:${noggit.version}</include>
-				</includes>
-				<unpack>false</unpack>
-  			</dependencySet>
-  		</dependencySets>
-        <outputDirectory>/lib</outputDirectory>
+  	    <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
-	<include>org.apache.ranger:ranger_solrj</include>
-	<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
-	<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
-	<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl</include>
-	<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
-	<include>security_plugins.ranger-hdfs-plugin:ranger-hdfs-plugin</include>
-     </includes>
+	  <include>security_plugins.ranger-hdfs-plugin-shim:ranger-hdfs-plugin-shim</include>
+	  <include>security_plugins.ranger-plugin-classloader:ranger-plugin-classloader</include>
+      </includes>
     </moduleSet>
+    
     <moduleSet>
      <binaries>
-        <includeDependencies>false</includeDependencies>
+        <includeDependencies>true</includeDependencies>
   		<dependencySets>
                 <dependencySet>
                     <outputDirectory>/install/lib</outputDirectory>
@@ -68,9 +53,9 @@
                         <include>commons-io:commons-io:jar:${commons.io.version}</include>
                         <include>commons-lang:commons-lang</include>
                         <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                        <include>com.google.guava:guava:jar:${guava.version}</include>
+                        <include>com.google.guava:guava:jar:${google.guava.version}</include>
                         <include>org.hamcrest:hamcrest-all</include>
-                        <include>junit:junit</include>
+                        <include>junit:junit:${junit.version}</include>
                         <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                         <include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
                         <include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
@@ -85,6 +70,38 @@
         <include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
+    
+    <moduleSet>
+     <binaries>
+        <includeDependencies>true</includeDependencies>
+        <unpack>false</unpack>
+	    <directoryMode>755</directoryMode>
+	    <fileMode>644</fileMode>
+  		<dependencySets>
+   			<dependencySet>
+     			<outputDirectory>/lib/ranger-hdfs-plugin-impl</outputDirectory>
+				<includes>
+					<include>com.google.code.gson:gson*</include>
+					<include>org.eclipse.persistence:javax.persistence</include>
+					<include>org.eclipse.persistence:eclipselink</include>
+					<include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
+					<include>org.noggit:noggit:jar:${noggit.version}</include>
+				</includes>
+				<unpack>false</unpack>
+  			</dependencySet>
+  		</dependencySets>
+        <outputDirectory>/lib/ranger-hdfs-plugin-impl</outputDirectory>
+     </binaries>
+    <includes>
+	<include>org.apache.ranger:ranger_solrj</include>
+	<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
+	<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
+	<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl</include>
+	<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
+	<include>security_plugins.ranger-hdfs-plugin:ranger-hdfs-plugin</include>
+    </includes>
+    </moduleSet>
+    
   </moduleSets> 	
   <fileSets>
     <!-- conf.templates for enable -->
