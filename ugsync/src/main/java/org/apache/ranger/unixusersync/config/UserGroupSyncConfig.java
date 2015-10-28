@@ -24,7 +24,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -174,6 +177,17 @@ public class UserGroupSyncConfig  {
 	private static final String SYNC_SOURCE = "ranger.usersync.sync.source";
 	private static final String LGSYNC_REFERRAL = "ranger.usersync.ldap.referral";
 	private static final String DEFAULT_LGSYNC_REFERRAL = "ignore";
+	
+	public static final String SYNC_MAPPING_USERNAME = "ranger.usersync.mapping.username.regex";
+
+    public static final String SYNC_MAPPING_GROUPNAME = "ranger.usersync.mapping.groupname.regex";
+
+    private static final String SYNC_MAPPING_USERNAME_HANDLER = "ranger.usersync.mapping.username.handler";
+    private static final String DEFAULT_SYNC_MAPPING_USERNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
+
+    private static final String SYNC_MAPPING_GROUPNAME_HANDLER = "ranger.usersync.mapping.groupname.handler";
+    private static final String DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
+    
 	private Properties prop = new Properties() ;
 	
 	private static volatile UserGroupSyncConfig me = null ;
@@ -737,5 +751,38 @@ public class UserGroupSyncConfig  {
 			}
 		}
 		return referral;
+	}
+	
+	public List<String> getAllRegexPatterns(String baseProperty) {
+		List<String> regexPatterns = new ArrayList<String>();
+		if (prop != null) {
+			Enumeration<?> propertyNames = prop.propertyNames();
+			while (propertyNames != null && propertyNames.hasMoreElements()) {
+				String propertyName = (String)propertyNames.nextElement();
+				if (propertyName != null && propertyName.contains(baseProperty)) {
+					regexPatterns.add(prop.getProperty(propertyName));
+				}
+			}
+
+		}
+		return regexPatterns;
+	}
+
+	public String getUserSyncMappingUserNameHandler() {
+		String val =  prop.getProperty(SYNC_MAPPING_USERNAME_HANDLER) ;
+
+		if(val == null) {
+			val = DEFAULT_SYNC_MAPPING_USERNAME_HANDLER;
+		}
+		return val;
+	}
+
+	public String getUserSyncMappingGroupNameHandler() {
+		String val =  prop.getProperty(SYNC_MAPPING_GROUPNAME_HANDLER) ;
+
+		if(val == null) {
+			val = DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER;
+		}
+		return val;
 	}
 }
