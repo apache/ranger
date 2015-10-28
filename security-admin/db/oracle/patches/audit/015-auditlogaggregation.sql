@@ -14,43 +14,27 @@
 -- limitations under the License.
 
 DECLARE
-	v_column_exists number := 0;
+	v_column1_exists number := 0;
+	v_column2_exists number := 0;
+	v_column3_exists number := 0;
 BEGIN
-  Select count(*) into v_column_exists
+  Select count(*) into v_column1_exists
     from user_tab_cols
     where column_name = upper('seq_num')
       and table_name = upper('XA_ACCESS_AUDIT');
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE XA_ACCESS_AUDIT ADD seq_num NUMBER(20) DEFAULT 0 NULL';
-      commit;
-  end if;
-end;/
-
-DECLARE
-	v_column_exists number := 0;
-BEGIN
-  Select count(*) into v_column_exists
+  Select count(*) into v_column2_exists
     from user_tab_cols
     where column_name = upper('event_count')
       and table_name = upper('XA_ACCESS_AUDIT');
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE XA_ACCESS_AUDIT ADD event_count NUMBER(20) DEFAULT 1 NULL';
-      commit;
-  end if;
-end;/
-
-DECLARE
-	v_column_exists number := 0;
-BEGIN
-  Select count(*) into v_column_exists
+  Select count(*) into v_column3_exists
     from user_tab_cols
     where column_name = upper('event_dur_ms')
       and table_name = upper('XA_ACCESS_AUDIT');
 
-  if (v_column_exists = 0) then
-      execute immediate 'ALTER TABLE XA_ACCESS_AUDIT ADD event_dur_ms NUMBER(20) DEFAULT 1 NULL';
+  if (v_column1_exists = 0) AND (v_column2_exists = 0) AND (v_column3_exists = 0) then
+      execute immediate 'ALTER TABLE XA_ACCESS_AUDIT ADD (seq_num NUMBER(20) DEFAULT 0 NULL,event_count NUMBER(20) DEFAULT 1 NULL,event_dur_ms NUMBER(20) DEFAULT 1 NULL)';
       commit;
   end if;
 end;/

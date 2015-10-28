@@ -18,14 +18,9 @@ drop procedure if exists increase_column_size_of_xa_access_audit_table;
 delimiter ;;
 create procedure increase_column_size_of_xa_access_audit_table() begin
 
- /* change request_data data size from 2000 to 4000 */
- if exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and column_name = 'request_data' and data_type='varchar' and CHARACTER_MAXIMUM_LENGTH=2000) then
-	ALTER TABLE  `xa_access_audit` CHANGE  `request_data`  `request_data` VARCHAR(4000) NULL DEFAULT NULL ;
- end if;
-
- /* change resource_path data size from 2000 to 4000 */
- if exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and column_name = 'resource_path' and data_type='varchar' and CHARACTER_MAXIMUM_LENGTH=2000) then
-	ALTER TABLE  `xa_access_audit` CHANGE  `resource_path`  `resource_path` VARCHAR(4000) NULL DEFAULT NULL ;
+ /* change request_data and resource_path column size from 2000 to 4000 */
+ if exists (select * from information_schema.columns where table_schema=database() and table_name = 'xa_access_audit' and (column_name = 'request_data' or column_name = 'resource_path') and data_type='varchar' and CHARACTER_MAXIMUM_LENGTH=2000) then
+	ALTER TABLE  `xa_access_audit` CHANGE  `request_data`  `request_data` VARCHAR(4000) NULL DEFAULT NULL,CHANGE  `resource_path`  `resource_path` VARCHAR(4000) NULL DEFAULT NULL;
  end if;
 
 end;;
