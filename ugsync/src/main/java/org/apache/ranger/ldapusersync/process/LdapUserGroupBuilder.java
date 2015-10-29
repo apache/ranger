@@ -42,6 +42,7 @@ import javax.naming.ldap.PagedResultsResponseControl;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.usergroupsync.Mapper;
 import org.apache.ranger.usergroupsync.AbstractMapper;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
@@ -93,8 +94,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
   private boolean  groupUserMapSyncEnabled = false;
   
-  AbstractMapper userNameRegExInst = null;
-  AbstractMapper groupNameRegExInst = null;
+  Mapper userNameRegExInst = null;
+  Mapper groupNameRegExInst = null;
 
 	public static void main(String[] args) throws Throwable {
 		LdapUserGroupBuilder  ugBuilder = new LdapUserGroupBuilder();

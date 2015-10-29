@@ -46,14 +46,14 @@ public class RegExTest {
 	}
 
 	@Test
-    public void testUserNameTransform() {
+    public void testUserNameTransform() throws Throwable {
             userRegexPatterns.add("s/\\s/_/");
             userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns);
             assertEquals("test_user", userNameRegEx.transform("test user"));
     }
 
     @Test
-    public void testGroupNameTransform() {
+    public void testGroupNameTransform() throws Throwable {
             groupRegexPatterns.add("s/\\s/_/g");
             groupRegexPatterns.add("s/_/\\$/g");
             groupNameRegEx.populateReplacementPatterns(userNameBaseProperty, groupRegexPatterns);
@@ -67,7 +67,7 @@ public class RegExTest {
     }
 
     @Test
-    public void testTransform() {
+    public void testTransform() throws Throwable {
             userRegexPatterns.add("s/\\s/_/g");
             userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns);
             assertEquals("test_user", userNameRegEx.transform("test user"));
@@ -75,7 +75,7 @@ public class RegExTest {
     }
 
     @Test
-    public void testTransform1() {
+    public void testTransform1() throws Throwable {
             userRegexPatterns.add("s/\\\\/ /g");
             userRegexPatterns.add("s//_/g");
             userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns);

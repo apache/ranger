@@ -752,7 +752,7 @@ public class UserGroupSyncConfig  {
 		return referral;
 	}
 	
-	public List<String> getAllRegexPatterns(String baseProperty) {
+	public List<String> getAllRegexPatterns(String baseProperty) throws Throwable {
 		List<String> regexPatterns = new ArrayList<String>();
 		if (prop != null) {
 			String baseRegex = prop.getProperty(baseProperty);
