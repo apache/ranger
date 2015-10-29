@@ -55,7 +55,7 @@ public class RegExTest {
     @Test
     public void testGroupNameTransform() {
             groupRegexPatterns.add("s/\\s/_/g");
-            groupRegexPatterns.add("s/_/$/g");
+            groupRegexPatterns.add("s/_/\\$/g");
             groupNameRegEx.populateReplacementPatterns(userNameBaseProperty, groupRegexPatterns);
             assertEquals("ldap$grp", groupNameRegEx.transform("ldap grp"));
     }
@@ -79,8 +79,9 @@ public class RegExTest {
             userRegexPatterns.add("s/\\\\/ /g");
             userRegexPatterns.add("s//_/g");
             userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns);
-            groupRegexPatterns.add("s/\\s//g");
+            groupRegexPatterns.add("s/\\s/\\$/g");
             groupRegexPatterns.add("s/\\s");
+            groupRegexPatterns.add("s/\\$//g");
             groupNameRegEx.populateReplacementPatterns(userNameBaseProperty, groupRegexPatterns);
             assertEquals("test user", userNameRegEx.transform("test\\user"));
             assertEquals("ldapgrp", groupNameRegEx.transform("ldap grp"));

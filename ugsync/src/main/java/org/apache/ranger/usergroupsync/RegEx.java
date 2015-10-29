@@ -54,7 +54,7 @@ public class RegEx extends AbstractMapper {
 				String matchPattern = m.group(1);
 				String replacement = m.group(2);
 				if (matchPattern != null && !matchPattern.isEmpty() && replacement != null) {
-					replacementPattern.put(matchPattern, Matcher.quoteReplacement(replacement));
+					replacementPattern.put(matchPattern, replacement);
 					if (logger.isDebugEnabled()) {
 						logger.debug(baseProperty + " match pattern = " + matchPattern + " and replacement string = " + replacement);
 					}
