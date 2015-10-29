@@ -37,11 +37,15 @@ public class RegEx extends AbstractMapper {
 	@Override
 	public void init (String baseProperty) {
 		logger.info("Initializing for " + baseProperty);
-		List<String> regexPatterns = config.getAllRegexPatterns(baseProperty);
-		populateReplacementPatterns(baseProperty, regexPatterns);
+		try {
+			List<String> regexPatterns = config.getAllRegexPatterns(baseProperty);
+			populateReplacementPatterns(baseProperty, regexPatterns);
+		} catch (Throwable t) {
+			logger.error("Failed to initialize " + baseProperty, t.fillInStackTrace());
+		}
 	}
 
-	protected void populateReplacementPatterns(String baseProperty, List<String> regexPatterns) {
+	protected void populateReplacementPatterns(String baseProperty, List<String> regexPatterns) throws Throwable{
 		replacementPattern = new LinkedHashMap<String, String>();
 		Pattern p = Pattern.compile("s/([^/]*)/([^/]*)/(g)?");
 		for (String regexPattern : regexPatterns) {
@@ -66,17 +70,21 @@ public class RegEx extends AbstractMapper {
 	@Override
 	public String transform (String attrValue) {
 		String result = attrValue;
-		if (replacementPattern != null && !replacementPattern.isEmpty()) {
-			for (String matchPattern : replacementPattern.keySet()) {
-				Pattern p = Pattern.compile(matchPattern);
-				Matcher m = p.matcher(result);
-				if (m.find()) {
-					String replacement = replacementPattern.get(matchPattern);
-					if (replacement != null) {
-						result = m.replaceAll(replacement);
+		try {
+			if (replacementPattern != null && !replacementPattern.isEmpty()) {
+				for (String matchPattern : replacementPattern.keySet()) {
+					Pattern p = Pattern.compile(matchPattern);
+					Matcher m = p.matcher(result);
+					if (m.find()) {
+						String replacement = replacementPattern.get(matchPattern);
+						if (replacement != null) {
+							result = m.replaceAll(replacement);
+						}
 					}
 				}
 			}
+		} catch (Throwable t) {
+			logger.error("Failed to transform " + attrValue, t.fillInStackTrace());
 		}
 		return result;
 	}
