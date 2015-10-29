@@ -144,12 +144,13 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
 		if(matchers == null) {
 			Set<String> policyResourceKeys = policyResources == null ? null : policyResources.keySet();
-			String keysString = "";
+			StringBuffer sb = new StringBuffer();
 			if (CollectionUtils.isNotEmpty(policyResourceKeys)) {
 				for (String policyResourceKeyName : policyResourceKeys) {
-					keysString += " " + policyResourceKeyName + " ";
+					sb.append(" ").append(policyResourceKeyName).append(" ");
 				}
 			}
+			String keysString = sb.toString();
 			String serviceDefName = serviceDef == null ? "" : serviceDef.getName();
 			String validHierarchy = "";
 			if (CollectionUtils.isNotEmpty(firstValidResourceDefHierarchy)) {

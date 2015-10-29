@@ -45,17 +45,17 @@ public class TagFileSource implements TagSource, Runnable {
 	private Properties properties;
 
 	@Override
-	public boolean initialize(Properties properties) {
+	public boolean initialize(Properties props) {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileSource.initialize()");
 		}
 
-		if (properties == null || MapUtils.isEmpty(properties)) {
+		if (props == null || MapUtils.isEmpty(props)) {
 			LOG.error("No properties specified for TagFileSource initialization");
 			this.properties = new Properties();
 		} else {
-			this.properties = properties;
+			this.properties = props;
 		}
 
 		boolean ret = true;

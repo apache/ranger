@@ -78,18 +78,20 @@ public class RangerServiceResourceSignature {
 						Collections.sort(values);
 						builder.append(values);
 					}
-				}
-				builder.append(",excludes=");
-				if (_policyResource.getIsExcludes() == null) { // null is same as false
-					builder.append(Boolean.FALSE);
-				} else {
-					builder.append(_policyResource.getIsExcludes());
-				}
-				builder.append(",recursive=");
-				if (_policyResource.getIsRecursive() == null) { // null is the same as false
-					builder.append(Boolean.FALSE);
-				} else {
-					builder.append(_policyResource.getIsRecursive());
+
+					builder.append(",excludes=");
+					if (_policyResource.getIsExcludes() == null) { // null is same as false
+						builder.append(Boolean.FALSE);
+					} else {
+						builder.append(_policyResource.getIsExcludes());
+					}
+
+					builder.append(",recursive=");
+					if (_policyResource.getIsRecursive() == null) { // null is the same as false
+						builder.append(Boolean.FALSE);
+					} else {
+						builder.append(_policyResource.getIsRecursive());
+					}
 				}
 				builder.append("}");
 				return builder.toString();

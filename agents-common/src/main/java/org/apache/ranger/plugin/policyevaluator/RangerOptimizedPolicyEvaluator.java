@@ -92,7 +92,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         }
     }
 
-    class LevelResourceNames implements Comparable<LevelResourceNames> {
+    static class LevelResourceNames implements Comparable<LevelResourceNames> {
         final int level;
         final RangerPolicy.RangerPolicyResource policyResource;
 
@@ -105,6 +105,20 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         public int compareTo(LevelResourceNames other) {
             // Sort in ascending order of level numbers
             return Integer.compare(this.level, other.level);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            boolean ret = false;
+            if (other != null && (other instanceof LevelResourceNames)) {
+                ret = this == other || compareTo((LevelResourceNames) other) == 0;
+            }
+            return ret;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(this.level);
         }
     }
 

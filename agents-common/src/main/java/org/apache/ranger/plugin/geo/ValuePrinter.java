@@ -30,11 +30,9 @@ class ValuePrinter<T> implements ValueProcessor<T> {
 
 	private Writer writer;
 	private String fileName;
-	private boolean pretty;
 
-	ValuePrinter(String fileName, boolean pretty) {
+	ValuePrinter(String fileName) {
 		this.fileName = fileName;
-		this.pretty = pretty;
 	}
 
 	public T process(T value) {

@@ -92,7 +92,9 @@ public class RangerServiceResource extends RangerBaseModelObject {
 
 	public StringBuilder toString(StringBuilder sb) {
 
-		sb.append("{ ");
+		sb.append("RangerServiceResource={ ");
+
+		super.toString(sb);
 
 		sb.append("guid={").append(getGuid()).append("} ");
 		sb.append("serviceName={").append(serviceName).append("} ");

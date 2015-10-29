@@ -25,15 +25,17 @@ import org.apache.commons.logging.LogFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 
 public class RangerGeolocationData implements Comparable<RangerGeolocationData>, RangeChecker<Long> {
 	private static final Log LOG = LogFactory.getLog(RangerGeolocationData.class);
 
 	private static final Character IPSegmentsSeparator = '.';
 
-	private long fromIPAddress;
-	private long toIPAddress;
-	private String[] locationData = new String[0];
+	private final long fromIPAddress;
+	private final long toIPAddress;
+	private final String[] locationData;
+	private int hash = 0;
 
 	public static RangerGeolocationData create(String fields[], int index, boolean useDotFormat) {
 
@@ -69,7 +71,7 @@ public class RangerGeolocationData implements Comparable<RangerGeolocationData>,
 		return data;
 	}
 
-	public RangerGeolocationData(final long fromIPAddress, final long toIPAddress, final String[] locationData) {
+	private RangerGeolocationData(final long fromIPAddress, final long toIPAddress, final String[] locationData) {
 		this.fromIPAddress = fromIPAddress;
 		this.toIPAddress = toIPAddress;
 		this.locationData = locationData;
@@ -81,11 +83,37 @@ public class RangerGeolocationData implements Comparable<RangerGeolocationData>,
 
 	@Override
 	public int compareTo(final RangerGeolocationData other) {
-		int ret = Long.compare(fromIPAddress, other.fromIPAddress);
+		int ret = (other == null) ? 1 : 0;
 		if (ret == 0) {
-			ret = Long.compare(toIPAddress, other.toIPAddress);
+			ret = Long.compare(fromIPAddress, other.fromIPAddress);
+			if (ret == 0) {
+				ret = Long.compare(toIPAddress, other.toIPAddress);
+				if (ret == 0) {
+					ret = Integer.compare(locationData.length, other.locationData.length);
+					for (int i = 0; ret == 0 && i < locationData.length; i++) {
+						ret = stringCompareTo(locationData[i], other.locationData[i]);
+					}
+				}
+			}
 		}
 		return ret;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		boolean ret = false;
+		if (other != null && (other instanceof RangerGeolocationData)) {
+			ret = this == other || compareTo((RangerGeolocationData) other) == 0;
+		}
+		return ret;
+	}
+
+	@Override
+	public int hashCode() {
+		if (hash == 0) {
+			hash = Objects.hash(fromIPAddress, toIPAddress, locationData);
+		}
+		return hash;
 	}
 
 	@Override
@@ -145,7 +173,8 @@ public class RangerGeolocationData implements Comparable<RangerGeolocationData>,
 		boolean ret = false;
 
 		try {
-			byte[] bytes = InetAddress.getByName(ipAddress).getAddress();
+			// Only to validate to see if ipAddress is in correct format
+			InetAddress.getByName(ipAddress).getAddress();
 			ret = true;
 		}
 		catch(UnknownHostException exception) {
@@ -155,11 +184,23 @@ public class RangerGeolocationData implements Comparable<RangerGeolocationData>,
 		return ret;
 	}
 
+	private static int stringCompareTo(String str1, String str2) {
+		if(str1 == str2) {
+			return 0;
+		} else if(str1 == null) {
+			return -1;
+		} else if(str2 == null) {
+			return 1;
+		} else {
+			return str1.compareTo(str2);
+		}
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
-		toStringDump(sb);
+		toString(sb);
 
 		return sb.toString();
 	}
@@ -178,16 +219,4 @@ public class RangerGeolocationData implements Comparable<RangerGeolocationData>,
 		sb.append("}");
 		return sb;
 	}
-
-	private StringBuilder toStringDump(StringBuilder sb) {
-		sb.append(RangerGeolocationData.unsignedIntToIPAddress(fromIPAddress))
-				.append(",")
-				.append(RangerGeolocationData.unsignedIntToIPAddress(toIPAddress))
-				.append(",");
-			for (int i = 0; i < locationData.length; i++) {
-				sb.append(locationData[i]).append(", ");
-			}
-		return sb;
-	}
-
 }

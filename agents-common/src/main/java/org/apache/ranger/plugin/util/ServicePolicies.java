@@ -155,7 +155,7 @@ public class ServicePolicies implements java.io.Serializable {
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class TagPolicies {
+	public static class TagPolicies implements java.io.Serializable {
 		private String             serviceName;
 		private Long               serviceId;
 		private Long               policyVersion;

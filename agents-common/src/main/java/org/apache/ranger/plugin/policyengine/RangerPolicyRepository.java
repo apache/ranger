@@ -250,7 +250,7 @@ public class RangerPolicyRepository {
                     }
 
                     if (policyItemAccesses.isEmpty() && !policyItem.getDelegateAdmin()) {
-                        if(itemsToPrune != null) {
+                        if(itemsToPrune == null) {
                             itemsToPrune = new ArrayList< RangerPolicy.RangerPolicyItem>();
                         }
 

@@ -69,7 +69,7 @@ public class RangerTagDef extends RangerBaseModelObject {
 
     public void setName(String name) {
 
-        this.name = name == null ? new String() : name;
+        this.name = name == null ? "" : name;
     }
 
     public String getSource() {
@@ -77,7 +77,7 @@ public class RangerTagDef extends RangerBaseModelObject {
     }
 
     public void setSource(String source) {
-        this.source =  source == null ? new String() : source;
+        this.source =  source == null ? "" : source;
     }
 
     public List<RangerTagAttributeDef> getAttributeDefs() {
@@ -125,10 +125,10 @@ public class RangerTagDef extends RangerBaseModelObject {
         }
 
         public void setName(String name) {
-            this.name = name == null ? new String() : name;
+            this.name = name == null ? "" : name;
         }
         public void setType(String type) {
-            this.type = type == null ? new String() : type;
+            this.type = type == null ? "" : type;
         }
     }
 }

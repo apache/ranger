@@ -77,9 +77,15 @@ public class TagAtlasSource implements TagSource {
 		if (inputStream != null) {
 			try {
 				atlasProperties.load(inputStream);
-			} catch (IOException ioException) {
+			} catch (Exception exception) {
 				ret = false;
-				LOG.error("Cannot load Atlas application properties file, file-name:" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME);
+				LOG.error("Cannot load Atlas application properties file, file-name:" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, exception);
+			} finally {
+				try {
+					inputStream.close();
+				} catch (IOException ioException) {
+					LOG.error("Cannot close Atlas application properties file, file-name:\" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME", ioException);
+				}
 			}
 		} else {
 			ret = false;

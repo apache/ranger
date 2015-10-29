@@ -954,12 +954,15 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.getTagResourceMapsForResourceGuid(" + resourceGuid + ")");
 		}
 
-		SearchFilter filter = new SearchFilter();
+		List<RangerTagResourceMap> ret = null;
 
 		RangerServiceResource resource = getServiceResourceByGuid(resourceGuid);
-		filter.setParam(SearchFilter.TAG_RESOURCE_ID, resource.getId().toString());
 
-		List<RangerTagResourceMap> ret = getTagResourceMaps(filter);
+		if (resource != null) {
+			SearchFilter filter = new SearchFilter();
+			filter.setParam(SearchFilter.TAG_RESOURCE_ID, resource.getId().toString());
+			ret = getTagResourceMaps(filter);
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagFileStore.getTagResourceMapsForResourceGuid(" + resourceGuid + "): " + ret);

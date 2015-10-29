@@ -69,7 +69,9 @@ public class RangerTagResourceMap extends RangerBaseModelObject {
 
 	public StringBuilder toString(StringBuilder sb) {
 
-		sb.append("{ ");
+		sb.append("RangerTagResourceMap={ ");
+
+		super.toString(sb);
 
 		sb.append("resourceId=").append(resourceId).append(", ");
 

@@ -384,7 +384,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		sb.append("} ");
 
 		sb.append("allowExceptions={");
-		if(denyExceptions != null) {
+		if(allowExceptions != null) {
 			for(RangerPolicyItem policyItem : allowExceptions) {
 				if(policyItem != null) {
 					policyItem.toString(sb);
