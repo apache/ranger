@@ -25,7 +25,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -756,12 +755,17 @@ public class UserGroupSyncConfig  {
 	public List<String> getAllRegexPatterns(String baseProperty) {
 		List<String> regexPatterns = new ArrayList<String>();
 		if (prop != null) {
-			Enumeration<?> propertyNames = prop.propertyNames();
-			while (propertyNames != null && propertyNames.hasMoreElements()) {
-				String propertyName = (String)propertyNames.nextElement();
-				if (propertyName != null && propertyName.contains(baseProperty)) {
-					regexPatterns.add(prop.getProperty(propertyName));
-				}
+			String baseRegex = prop.getProperty(baseProperty);
+			if (baseRegex == null) {
+				return regexPatterns;
+			}
+			regexPatterns.add(baseRegex);
+			int i = 1;
+			String nextRegex = prop.getProperty(baseProperty + "." + i);;
+			while (nextRegex != null) {
+				regexPatterns.add(nextRegex);
+				i++;
+				nextRegex = prop.getProperty(baseProperty + "." + i);
 			}
 
 		}
