@@ -104,6 +104,7 @@
   <module>ranger-knox-plugin-shim</module>
   <module>ranger-yarn-plugin-shim</module>
   <module>ranger-storm-plugin-shim</module>
+  <module>ranger-examples</module>
   </modules>
   <properties>
         <javac.source.version>1.7</javac.source.version>
