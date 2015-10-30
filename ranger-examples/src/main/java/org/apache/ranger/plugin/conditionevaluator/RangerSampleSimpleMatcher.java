@@ -19,9 +19,6 @@
 
 package org.apache.ranger.plugin.conditionevaluator;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -30,9 +27,49 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
+import java.util.ArrayList;
+import java.util.List;
 
-	private static final Log LOG = LogFactory.getLog(RangerSimpleMatcher.class);
+/**
+ * This is a sample implementation of a condition Evaluator.  It works in conjunction with the sample context enricher
+ * <code>RangerSampleProjectProvider</code>.  This is how it would be specified in the service definition:
+ 	{
+		...
+		... service definition
+		...
+		"policyConditions": [
+		{
+			"itemId": 1,
+			"name": "user-in-project",
+			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerSimpleMatcher",
+			"evaluatorOptions": { CONTEXT_NAME=’PROJECT’},
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Project Matcher",
+			"description": "Projects"
+		}
+ 	 }
+ *
+ * Name of this class is specified via the "evaluator" of the policy condition definition.  Significant evaluator option
+ * for this evaluator is the CONTEXT_NAME which indicates the name under which it would look for value for the condition.
+ * It is also use to lookup the condition values specified in the policy.  This example uses CONTEXT_NAME of PROJECT
+ * which matches the value under which context is enriched by its companion class <code>RangerSampleProjectProvider</code>.
+ *
+ * Note that the same Condition Evaluator can be used to process Context enrichment done by <code>RangerSampleCountryProvider</code>
+ * provided the CONTEXT_NAME evaluator option is set to COUNTRY which is same as the value used by its companion Context
+ * Enricher <code>RangerSampleCountryProvider</code>.  Which serves as an example of how a single Condition Evaluator
+ * implementation can be used to model multiple policy conditions.
+ *
+ * For matching context value against policy values it uses <code>FilenameUtils.wildcardMatch()</code> which allows policy authors
+ * flexibility to specify policy conditions using wildcards.  Take a look at
+ * {@link org.apache.ranger.plugin.conditionevaluator.RangerSampleSimpleMatcherTest#testIsMatched_happyPath() testIsMatched_happyPath}
+ * test for examples of what sorts of matching is afforded by this use.
+ *
+ */
+public class RangerSampleSimpleMatcher extends RangerAbstractConditionEvaluator {
+
+	private static final Log LOG = LogFactory.getLog(RangerSampleSimpleMatcher.class);
 
 	public static final String CONTEXT_NAME = "CONTEXT_NAME";
 
@@ -43,7 +80,7 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 	@Override
 	public void init() {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSimpleMatcher.init(" + condition + ")");
+			LOG.debug("==> RangerSampleSimpleMatcher.init(" + condition + ")");
 		}
 
 		super.init();
@@ -71,7 +108,7 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSimpleMatcher.init(" + condition + "): countries[" + _values + "]");
+			LOG.debug("<== RangerSampleSimpleMatcher.init(" + condition + "): values[" + _values + "]");
 		}
 	}
 
@@ -79,7 +116,7 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 	public boolean isMatched(RangerAccessRequest request) {
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSimpleMatcher.isMatched(" + request + ")");
+			LOG.debug("==> RangerSampleSimpleMatcher.isMatched(" + request + ")");
 		}
 
 		boolean matched = false;
@@ -99,7 +136,7 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSimpleMatcher.isMatched(" + request+ "): " + matched);
+			LOG.debug("<== RangerSampleSimpleMatcher.isMatched(" + request+ "): " + matched);
 		}
 
 		return matched;
@@ -107,7 +144,7 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 
 	String extractValue(final RangerAccessRequest request, String key) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSimpleMatcher.extractValue(" + request+ ")");
+			LOG.debug("==> RangerSampleSimpleMatcher.extractValue(" + request+ ")");
 		}
 
 		String value = null;
@@ -126,7 +163,7 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSimpleMatcher.extractValue(" + request+ "): " + value);
+			LOG.debug("<== RangerSampleSimpleMatcher.extractValue(" + request+ "): " + value);
 		}
 		return value;
 	}
