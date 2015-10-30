@@ -121,28 +121,15 @@ public class TestTagStore {
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 
-		Path dirPath = new Path(tmpDir);
-		FileSystem fs = dirPath.getFileSystem(config);
+		if (filePath != null) {
+			try {
+				FileSystem fs = filePath.getFileSystem(config);
 
-		try {
-			if (fs.exists(dirPath) && fs.isDirectory(dirPath)) {
-
-				RemoteIterator<LocatedFileStatus> files = fs.listFiles(dirPath, false);
-
-				if (files != null) {
-					while (files.hasNext()) {
-						LocatedFileStatus fileStatus = files.next();
-						Path path = fileStatus.getPath();
-						if (fs.isFile(path)) {
-							fs.delete(path, true);
-						}
-					}
-				}
+				fs.delete(filePath, true);
+			} catch (Throwable t) {
+				// Ignore
 			}
-		} catch (IOException excp) {
 		}
-
-		fs.delete(filePath, true);
 
 	}
 
