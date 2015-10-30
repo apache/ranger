@@ -19,11 +19,31 @@
 
 package org.apache.ranger.rest;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -33,12 +53,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import java.util.List;
 
 @Path("public/v2")
 @Component
@@ -404,4 +418,74 @@ public class PublicAPIsv2 {
 			logger.debug("<== PublicAPIsv2.deletePolicyByName(" + serviceName + "," + policyName + ")");
 		}
 	}
+	
+	/**
+	 * For https://issues.apache.org/jira/browse/RANGER-699, to provide high level API for external tool to simply grant/deny accesses to user/group
+	 * This API involves read-update-write, is not supposed to be thread-safe
+	 * Steps are:
+	 * Step 1: get resource for new policy (support one resource key)
+	 * Step 2: find existing policies which contain resource from the new policy (involve multiple database reads)
+	 * Step 3: simply create new policy if no any existing policies are associated with resource, otherwise go to step 4
+	 * Step 4: remove existing policy item if that is associated with the same user/group, and finally create the new policy
+	 *       FOR each existingPolicy in existingPolices
+	 *          FOR each newPolicyItem in new policy 
+	 *             FOR each existingPolicyItem in existing policy
+	 *               IF (existingPolicyItem contains the same user/group with newPolicyItem)
+	 *                 remove the same user/group
+	 *                   
+	 *          IF (existingPolicy has some changes)
+	 *             update existing policy
+	 *       
+	 *       create new policy
+	 * @param policy
+	 * @return
+	 */
+	@POST
+    @Path("/api/policy/try")
+    @Produces({ "application/json", "application/xml" })
+    public List<RangerPolicy> tryCreatePolicy(RangerPolicy policy) {
+		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
+        Collection<RangerPolicyResource> resources = policy.getResources().values();
+        if(resources == null || resources.size() != 1)
+        	throw new IllegalArgumentException("tryCreatePolicy supports one and only one resource key");
+        // resource from the new policy 
+        RangerPolicyResource resource = resources.iterator().next();
+        // find existing policies which are associated with resource from the new policy (involve multiple database reads)
+        Collection<RangerPolicy> existingPolices =
+        	serviceREST.getPoliciesByResourceNames(policy.getService(), resource.getValues());
+        
+        // simply create new policy if no any existing policies are associated with resource
+        if(existingPolices == null || existingPolices.size() == 0)
+        	ret.add(createPolicy(policy));
+        else{
+        	// iterate existing policies which are associated with the resource
+        	for(RangerPolicy existingPolicy : existingPolices){
+        		boolean policyChanged = false;
+        		for(RangerPolicyItem newitem : policy.getPolicyItems()){
+        			Iterator<RangerPolicyItem> iter = existingPolicy.getPolicyItems().iterator();
+        			while(iter.hasNext()){
+        				RangerPolicyItem existingItem = iter.next();
+        				if(CollectionUtils.intersection(existingItem.getUsers(), newitem.getUsers()).size() > 0 ||
+                            CollectionUtils.intersection(existingItem.getGroups(), newitem.getGroups()).size() > 0){
+        						policyChanged = true;
+        				}
+        				existingItem.getUsers().removeAll(newitem.getUsers());
+        				existingItem.getGroups().removeAll(newitem.getGroups());
+        				if(existingItem.getUsers().isEmpty() && existingItem.getGroups().isEmpty()){
+        					iter.remove();
+        				}
+        			}
+        		}
+        		if(policyChanged) {
+        			updatePolicy(existingPolicy, existingPolicy.getId());
+        			if(logger.isDebugEnabled()) {
+        				logger.debug("==> PublicAPIsv2.tryCreatePolicy(" + " update existing policy " + existingPolicy.getId() + ")");
+        			}
+        		}
+        	}
+        	ret.add(createPolicy(policy));
+        }
+        return ret;
+  }
+
 }

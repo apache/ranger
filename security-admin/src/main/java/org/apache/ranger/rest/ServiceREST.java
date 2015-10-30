@@ -20,6 +20,7 @@
 package org.apache.ranger.rest;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,8 +78,8 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -1729,4 +1730,49 @@ public class ServiceREST {
 
 		return ret;
 	}
+	
+	/**
+     * Given a list of resource names, compute a set of RangerPolicy
+     * 2 different resources may return the same policy, so we need de-duplicate policy through java Map
+     * We don't need de-duplication if underlying search engine support condition "OR"
+     * @param serviceName
+     * @param resNames
+     * @return
+     */
+    public Collection<RangerPolicy> getPoliciesByResourceNames(String serviceName,
+                    List<String> resNames) {
+            if (LOG.isDebugEnabled()) {
+                    LOG.debug("==> ServiceREST.getPoliciesByResourceNames(" + serviceName + ")");
+            }
+
+            Map<Long, RangerPolicy> retPolicies = new HashMap<Long, RangerPolicy>();
+            for(String resName : resNames){
+                    SearchFilter filter = new SearchFilter();
+                    filter.setParam(SearchFilter.POL_RESOURCE, resName);
+                    try {
+                    	PList<RangerPolicy> ret = svcStore.getPaginatedServicePolicies(serviceName, filter);
+                            for(RangerPolicy p : ret.getList()){
+                                    retPolicies.put(p.getId(), p);
+                            }
+                            applyAdminAccessFilter(ret.getList());
+                    } catch(WebApplicationException excp) {
+                            throw excp;
+                    } catch (Throwable excp) {
+                            LOG.error("getPoliciesByResourceNames(" + serviceName + ") failed", excp);
+
+                            throw restErrorUtil.createRESTException(excp.getMessage());
+                    }
+            }
+
+            if (retPolicies.size() == 0) {
+                    LOG.info("No Policies found for given service name: " + serviceName);
+            }
+
+            if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== ServiceREST.getPoliciesByResourceNames(" + serviceName + "): count="
+                                    + retPolicies.size());
+            }
+
+            return retPolicies.values();
+    }
 }
