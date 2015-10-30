@@ -20,40 +20,33 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-public class RangerSimpleMatcherTest {
+import java.util.*;
+
+public class RangerSampleSimpleMatcherTest {
 
 	final Map<String, String> _conditionOptions = new HashMap<String, String>();
 
 	{
-		_conditionOptions.put(RangerSimpleMatcher.CONTEXT_NAME, RangerSimpleMatcher.CONTEXT_NAME);
+		_conditionOptions.put(RangerSampleSimpleMatcher.CONTEXT_NAME, RangerSampleSimpleMatcher.CONTEXT_NAME);
 	}
 
 	@Test
 	public void testIsMatched_happyPath() {
 		// this documents some unexpected behavior of the ip matcher
-		RangerSimpleMatcher ipMatcher = createMatcher(new String[]{"US", "C*"} );
-		assertTrue(ipMatcher.isMatched(createRequest("US")));
-		assertTrue(ipMatcher.isMatched(createRequest("CA")));
-		assertTrue(ipMatcher.isMatched(createRequest("C---")));
-		assertFalse(ipMatcher.isMatched(createRequest(" US ")));
-		assertFalse(ipMatcher.isMatched(createRequest("Us")));
-		assertFalse(ipMatcher.isMatched(createRequest("ca")));
+		RangerSampleSimpleMatcher ipMatcher = createMatcher(new String[]{"US", "C*"} );
+		Assert.assertTrue(ipMatcher.isMatched(createRequest("US")));
+		Assert.assertTrue(ipMatcher.isMatched(createRequest("CA")));
+		Assert.assertTrue(ipMatcher.isMatched(createRequest("C---")));
+		Assert.assertFalse(ipMatcher.isMatched(createRequest(" US ")));
+		Assert.assertFalse(ipMatcher.isMatched(createRequest("Us")));
+		Assert.assertFalse(ipMatcher.isMatched(createRequest("ca")));
 	}
 	
 	@Test
@@ -62,72 +55,72 @@ public class RangerSimpleMatcherTest {
 		// create a request for some policyValue, say, country and use it to match against matcher initialized with all sorts of bad data
 		RangerAccessRequest request = createRequest("AB");
 
-		RangerSimpleMatcher matcher = new RangerSimpleMatcher();
+		RangerSampleSimpleMatcher matcher = new RangerSampleSimpleMatcher();
 		// Matcher initialized with null policy should behave sensibly!  It matches everything!
 		matcher.setConditionDef(null);
 		matcher.setPolicyItemCondition(null);
 		matcher.init();
-		assertTrue(matcher.isMatched(request));
+		Assert.assertTrue(matcher.isMatched(request));
 		
-		RangerPolicyItemCondition policyItemCondition = mock(RangerPolicyItemCondition.class);
+		RangerPolicyItemCondition policyItemCondition = Mockito.mock(RangerPolicyItemCondition.class);
 		matcher.setConditionDef(null);
 		matcher.setPolicyItemCondition(policyItemCondition);
 		matcher.init();
-		assertTrue(matcher.isMatched(request));
+		Assert.assertTrue(matcher.isMatched(request));
 		
-		RangerPolicyConditionDef conditionDef = mock(RangerPolicyConditionDef.class);
+		RangerPolicyConditionDef conditionDef = Mockito.mock(RangerPolicyConditionDef.class);
 		matcher.setConditionDef(conditionDef);
 		matcher.setPolicyItemCondition(null);
 		matcher.init();
-		assertTrue(matcher.isMatched(request));
+		Assert.assertTrue(matcher.isMatched(request));
 		
 		// so should a policy item condition with initialized with null list of values 
-		when(policyItemCondition.getValues()).thenReturn(null);
+		Mockito.when(policyItemCondition.getValues()).thenReturn(null);
 		matcher.setConditionDef(conditionDef);
 		matcher.setPolicyItemCondition(policyItemCondition);
 		matcher.init();
-		assertTrue(matcher.isMatched(request));
+		Assert.assertTrue(matcher.isMatched(request));
 
 		// not null item condition with empty condition list
 		List<String> values = new ArrayList<String>();
-		when(policyItemCondition.getValues()).thenReturn(values);
+		Mockito.when(policyItemCondition.getValues()).thenReturn(values);
 		matcher.setConditionDef(conditionDef);
 		matcher.setPolicyItemCondition(policyItemCondition);
 		matcher.init();
-		assertTrue(matcher.isMatched(request));
+		Assert.assertTrue(matcher.isMatched(request));
 
 		// values as sensible items in it, however, the conditionDef has null evaluator option, so that too suppresses any check
 		values.add("AB");
-		when(policyItemCondition.getValues()).thenReturn(values);
-		when(conditionDef.getEvaluatorOptions()).thenReturn(null);
+		Mockito.when(policyItemCondition.getValues()).thenReturn(values);
+		Mockito.when(conditionDef.getEvaluatorOptions()).thenReturn(null);
 		matcher.setConditionDef(conditionDef);
 		matcher.setPolicyItemCondition(policyItemCondition);
 		matcher.init();
-		assertTrue(matcher.isMatched(request));
+		Assert.assertTrue(matcher.isMatched(request));
 
 		// If evaluator option on the condition def is non-null then it starts to evaluate for real
-		when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOptions);
+		Mockito.when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOptions);
 		matcher.setConditionDef(conditionDef);
 		matcher.setPolicyItemCondition(policyItemCondition);
 		matcher.init();
-		assertTrue(matcher.isMatched(request));
+		Assert.assertTrue(matcher.isMatched(request));
 	}
 	
-	RangerSimpleMatcher createMatcher(String[] ipArray) {
-		RangerSimpleMatcher matcher = new RangerSimpleMatcher();
+	RangerSampleSimpleMatcher createMatcher(String[] ipArray) {
+		RangerSampleSimpleMatcher matcher = new RangerSampleSimpleMatcher();
 
 		if (ipArray == null) {
 			matcher.setConditionDef(null);
 			matcher.setPolicyItemCondition(null);
 			matcher.init();
 		} else {
-			RangerPolicyItemCondition condition = mock(RangerPolicyItemCondition.class);
+			RangerPolicyItemCondition condition = Mockito.mock(RangerPolicyItemCondition.class);
 			List<String> addresses = Arrays.asList(ipArray);
-			when(condition.getValues()).thenReturn(addresses);
+			Mockito.when(condition.getValues()).thenReturn(addresses);
 			
-			RangerPolicyConditionDef conditionDef = mock(RangerPolicyConditionDef.class);
+			RangerPolicyConditionDef conditionDef = Mockito.mock(RangerPolicyConditionDef.class);
 
-			when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOptions);
+			Mockito.when(conditionDef.getEvaluatorOptions()).thenReturn(_conditionOptions);
 			matcher.setConditionDef(conditionDef);
 			matcher.setPolicyItemCondition(condition);
 			matcher.init();
@@ -138,9 +131,9 @@ public class RangerSimpleMatcherTest {
 	
 	RangerAccessRequest createRequest(String value) {
 		Map<String, Object> context = new HashMap<String, Object>();
-		context.put(RangerSimpleMatcher.CONTEXT_NAME, value);
-		RangerAccessRequest request = mock(RangerAccessRequest.class);
-		when(request.getContext()).thenReturn(context);
+		context.put(RangerSampleSimpleMatcher.CONTEXT_NAME, value);
+		RangerAccessRequest request = Mockito.mock(RangerAccessRequest.class);
+		Mockito.when(request.getContext()).thenReturn(context);
 		return request;
 	}
 }
