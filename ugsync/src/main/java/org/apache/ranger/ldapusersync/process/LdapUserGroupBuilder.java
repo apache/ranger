@@ -43,7 +43,6 @@ import javax.naming.ldap.PagedResultsResponseControl;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.Mapper;
-import org.apache.ranger.usergroupsync.AbstractMapper;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
@@ -128,7 +127,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		String mappingUserNameHandler = config.getUserSyncMappingUserNameHandler();
 		try {
 			if (mappingUserNameHandler != null) {
-				Class<AbstractMapper> regExClass = (Class<AbstractMapper>)Class.forName(mappingUserNameHandler);
+				Class<Mapper> regExClass = (Class<Mapper>)Class.forName(mappingUserNameHandler);
 				userNameRegExInst = regExClass.newInstance();
 				if (userNameRegExInst != null) {
 					userNameRegExInst.init(UserGroupSyncConfig.SYNC_MAPPING_USERNAME);
@@ -145,7 +144,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		String mappingGroupNameHandler = config.getUserSyncMappingGroupNameHandler();
 		try {
 			if (mappingGroupNameHandler != null) {
-				Class<AbstractMapper> regExClass = (Class<AbstractMapper>)Class.forName(mappingGroupNameHandler);
+				Class<Mapper> regExClass = (Class<Mapper>)Class.forName(mappingGroupNameHandler);
 				groupNameRegExInst = regExClass.newInstance();
 				if (groupNameRegExInst != null) {
 					groupNameRegExInst.init(UserGroupSyncConfig.SYNC_MAPPING_GROUPNAME);
