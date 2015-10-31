@@ -21,17 +21,13 @@ package org.apache.ranger.plugin.store;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.*;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -51,20 +47,14 @@ public class TestTagStore {
 	static RangerService service = null;
 	static SearchFilter filter = null;
 
-	static String tmpDir = null;
-	static Path filePath = null;
-
-	static Configuration config = new Configuration();
-
 	static final String serviceDefJsonFile = "/admin/service-defs/test-hive-servicedef.json";
 	static final String serviceName = "tag-unit-test-TestTagStore";
+	static File tagStoreDir = null;
 
 	static Gson gsonBuilder = null;
 
 	@BeforeClass
 	public static void setupTest() throws Exception {
-
-		tmpDir = "file://" + System.getProperty("java.io.tmpdir");
 
 		String textTemplate = "<configuration>\n" +
 				"        <property>\n" +
@@ -77,20 +67,28 @@ public class TestTagStore {
 				"        </property>\n" +
 				"</configuration>\n";
 
-		String text = String.format(textTemplate, tmpDir, tmpDir);
+		File file = File.createTempFile("ranger-admin-test-site", ".xml") ;
+		file.deleteOnExit();
 
-		String fileName =  tmpDir + "/ranger-admin-test-site.xml";
-		filePath = new Path(fileName);
-		FileSystem fs = filePath.getFileSystem(config);
+		tagStoreDir = File.createTempFile("tagStore", "dir") ;
 
-		FSDataOutputStream outStream = fs.create(filePath, true);
+		if (tagStoreDir.exists()) {
+			tagStoreDir.delete() ;
+		}
 
+		tagStoreDir.mkdirs() ;
+
+		String tagStoreDirName =  tagStoreDir.getAbsolutePath() ;
+
+		String text = String.format(textTemplate, tagStoreDirName, tagStoreDirName);
+
+		FileOutputStream outStream = new FileOutputStream(file);
 		OutputStreamWriter writer = new OutputStreamWriter(outStream);
 		writer.write(text);
 		writer.close();
 
 		RangerConfiguration config = RangerConfiguration.getInstance();
-		config.addResource(filePath);
+		config.addResource(new org.apache.hadoop.fs.Path(file.toURI()));
 
 		ServiceStore svcStore = new ServiceFileStore();
 		svcStore.init();
@@ -120,17 +118,22 @@ public class TestTagStore {
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-
-		if (filePath != null) {
+		if (tagStoreDir != null) {
 			try {
-				FileSystem fs = filePath.getFileSystem(config);
-
-				fs.delete(filePath, true);
+				File[] filesInTagStoreDir = tagStoreDir.listFiles();
+				if (filesInTagStoreDir != null) {
+					for (File file : filesInTagStoreDir) {
+						if (file.isFile()) {
+							file.delete();
+						}
+					}
+				}
+				tagStoreDir.delete();
+				tagStoreDir = null;
 			} catch (Throwable t) {
 				// Ignore
 			}
 		}
-
 	}
 
 	@Test
