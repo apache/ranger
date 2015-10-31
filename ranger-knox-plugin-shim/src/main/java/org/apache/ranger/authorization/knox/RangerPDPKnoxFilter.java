@@ -36,10 +36,9 @@ public class RangerPDPKnoxFilter implements Filter {
 	private static final Log LOG  = LogFactory.getLog(RangerPDPKnoxFilter.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "knox";
-	private static final String[] RANGER_PLUGIN_LIB_DIR                   = new String[] {"lib/ranger-hdfs-plugin"};
 	private static final String   RANGER_PDP_KNOX_FILTER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.knox.RangerPDPKnoxFilter";
-
-	private RangerPDPKnoxFilter 		    rangerPDPKnoxFilteImpl	 = null;
+	
+	private Filter 		    				rangerPDPKnoxFilteImpl	 = null;
 	private static RangerPluginClassLoader  rangerPluginClassLoader  = null;
 	
 	public RangerPDPKnoxFilter() {
@@ -67,7 +66,7 @@ public class RangerPDPKnoxFilter implements Filter {
 
 			activatePluginClassLoader();
 
-			rangerPDPKnoxFilteImpl = (RangerPDPKnoxFilter) cls.newInstance();
+			rangerPDPKnoxFilteImpl = cls.newInstance();
 		} catch (Exception e) {
 			// check what need to be done
 			LOG.error("Error Enabling RangerKnoxPlugin", e);
