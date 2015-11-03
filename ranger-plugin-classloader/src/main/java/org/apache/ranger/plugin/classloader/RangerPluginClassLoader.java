@@ -22,10 +22,10 @@ package org.apache.ranger.plugin.classloader;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.Enumeration;
-
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,24 +35,34 @@ public class RangerPluginClassLoader extends URLClassLoader {
 	
 	private static volatile RangerPluginClassLoader me 	             = null;
 	private static  MyClassLoader				componentClassLoader = null;
-	//private static ThreadLocal<MyClassLoader> componentClassLoader = new ThreadLocal<MyClassLoader>();
 		
 	public RangerPluginClassLoader(String pluginType, Class<?> pluginClass ) throws Exception {
 		super(RangerPluginClassLoaderUtil.getInstance().getPluginFilesForServiceTypeAndPluginclass(pluginType, pluginClass), null);
-		//componentClassLoader.set(new MyClassLoader(Thread.currentThread().getContextClassLoader()));
-		componentClassLoader = new MyClassLoader(Thread.currentThread().getContextClassLoader());
+		componentClassLoader = AccessController.doPrivileged(
+									new PrivilegedAction<MyClassLoader>() {
+										public MyClassLoader run() {
+												return  new MyClassLoader(Thread.currentThread().getContextClassLoader());
+										}
+									}
+								);
     }
 
-	public static RangerPluginClassLoader getInstance(String pluginType, Class<?> pluginClass ) throws Exception {
+	public static RangerPluginClassLoader getInstance(final String pluginType, final Class<?> pluginClass ) throws Exception {
 		RangerPluginClassLoader ret = me;
 	    if ( ret == null) {
 		  synchronized(RangerPluginClassLoader.class) {
 		  ret = me;
 		  if ( ret == null){
-			  me = ret = new RangerPluginClassLoader(pluginType,pluginClass);
-			  }
-		  }
-		}
+			  me = ret = AccessController.doPrivileged(
+							new PrivilegedExceptionAction<RangerPluginClassLoader>(){
+								public RangerPluginClassLoader run() throws Exception {
+									return  new RangerPluginClassLoader(pluginType,pluginClass);
+							}
+						}
+				   );
+		      }
+		   }
+	   }
 	    return ret;
     }
 	
@@ -263,7 +273,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         }
     }
 
-    class MergeEnumeration implements Enumeration<URL> {
+   static class MergeEnumeration implements Enumeration<URL> {
 
         Enumeration<URL>  e1 = null;
         Enumeration<URL>  e2 = null;
