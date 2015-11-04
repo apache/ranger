@@ -17,6 +17,8 @@
 package org.apache.ranger.rest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1046,5 +1048,97 @@ public class TestServiceREST {
 		VXResponse dbVXResponse = serviceREST.validateConfig(rangerService);
 		Assert.assertNotNull(dbVXResponse);
 		Mockito.verify(serviceMgr).validateConfig(rangerService, svcStore);
+	}
+	
+	private List<RangerPolicy> preparePolicyFlip() throws Exception{
+		List<RangerPolicy> existingPolicyList = new ArrayList<RangerPolicy>();
+		PList<RangerPolicy> existingPolicies = new PList(existingPolicyList, 0, 1, 1, 0, null, null);
+		Mockito.when(svcStore.getPaginatedServicePolicies((String)Mockito.anyObject(), (SearchFilter)Mockito.anyObject())).thenReturn(existingPolicies);
+		Mockito.when(svcStore.updatePolicy((RangerPolicy)Mockito.anyObject())).thenReturn(null);
+		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+		
+		Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(
+				policyValidator);
+		XXServiceDef xServiceDef = serviceDef();
+		XXService xService = xService();
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+		Mockito.when(validatorFactory.getServiceValidator(svcStore))
+				.thenReturn(serviceValidator);
+		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+		Mockito.when(xServiceDao.findByName((String)Mockito.anyObject())).thenReturn(xService);
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(
+				xServiceDef);
+		return existingPolicyList;
+	}
+	
+	private RangerPolicy createPolicy(boolean allowOrDeny, String user, String access, final String resource){
+		RangerPolicy newPolicy = new RangerPolicy();
+		RangerPolicyItem newItem = new RangerPolicyItem();
+		newItem.setAccesses(Arrays.asList(new RangerPolicyItemAccess(access, true)));
+		newItem.setUsers(Arrays.asList(user));
+		if(allowOrDeny){
+			newPolicy.setPolicyItems(Arrays.asList(newItem));
+		}else{
+			newPolicy.setDenyPolicyItems(Arrays.asList(newItem));
+		}
+		newPolicy.setResources(new HashMap<String, RangerPolicyResource>(){{
+			put("hdfs", new RangerPolicyResource(resource));
+		}});
+		newPolicy.setService("sandbox_hdfs");
+		newPolicy.setName("a_new_policy");
+		return newPolicy;
+	}
+	
+	@Test
+	public void test36PolicyFlipForPolicyCreation() throws Exception{
+		List<RangerPolicy> existingPolicyList=  preparePolicyFlip();
+		RangerPolicy newPolicy = createPolicy(true, "user1", "read", "/tmp3");
+		List<RangerPolicy> returnedPolicies = new ArrayList<RangerPolicy>();
+		boolean ret = serviceREST.createOrUpdatePolicy(newPolicy, returnedPolicies);
+		Assert.assertTrue(ret);
+		Assert.assertEquals(newPolicy, returnedPolicies.get(0));
+	}
+	
+	@Test
+	public void test37PolicyFlipForPolicyUpdate1() throws Exception{
+		List<RangerPolicy> existingPolicyList=  preparePolicyFlip();
+		RangerPolicy newPolicy = createPolicy(true, "user1", "read", "/tmp3");
+		RangerPolicy existingPolicy = createPolicy(true, "user1", "read", "/tmp3");
+		existingPolicyList.add(existingPolicy);
+		List<RangerPolicy> returnedPolicies = new ArrayList<RangerPolicy>();
+		boolean ret = serviceREST.createOrUpdatePolicy(newPolicy, returnedPolicies);
+		Assert.assertTrue(!ret);
+		Assert.assertEquals(1, returnedPolicies.get(0).getPolicyItems().size());
+		Assert.assertEquals(0, returnedPolicies.get(0).getDenyPolicyItems().size());
+	}
+	
+	@Test
+	public void test37PolicyFlipForPolicyUpdate2() throws Exception{
+		List<RangerPolicy> existingPolicyList=  preparePolicyFlip();
+		RangerPolicy newPolicy = createPolicy(true, "user1", "read", "/tmp3");
+		RangerPolicy existingPolicy = createPolicy(false, "user1", "read", "/tmp3");
+		existingPolicyList.add(existingPolicy);
+		List<RangerPolicy> returnedPolicies = new ArrayList<RangerPolicy>();
+		boolean ret = serviceREST.createOrUpdatePolicy(newPolicy, returnedPolicies);
+		Assert.assertTrue(!ret);
+		Assert.assertEquals(1, returnedPolicies.get(0).getPolicyItems().size());
+		Assert.assertEquals("/tmp3", returnedPolicies.get(0).getResources().get("hdfs").getValues().get(0));
+		Assert.assertEquals(0, returnedPolicies.get(0).getDenyPolicyItems().size());
+	}
+	
+	@Test
+	public void test37PolicyFlipForPolicyUpdate3() throws Exception{
+		List<RangerPolicy> existingPolicyList=  preparePolicyFlip();
+		RangerPolicy newPolicy = createPolicy(false, "user1", "read", "/tmp3");
+		RangerPolicy existingPolicy = createPolicy(true, "user1", "read", "/tmp3");
+		existingPolicyList.add(existingPolicy);
+		List<RangerPolicy> returnedPolicies = new ArrayList<RangerPolicy>();
+		boolean ret = serviceREST.createOrUpdatePolicy(newPolicy, returnedPolicies);
+		Assert.assertTrue(!ret);
+		Assert.assertEquals(0, returnedPolicies.get(0).getPolicyItems().size());
+		Assert.assertEquals(1, returnedPolicies.get(0).getDenyPolicyItems().size());
+		Assert.assertEquals("read", returnedPolicies.get(0).getDenyPolicyItems().get(0).getAccesses().get(0).getType());
 	}
 }

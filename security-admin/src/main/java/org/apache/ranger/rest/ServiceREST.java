@@ -22,6 +22,7 @@ package org.apache.ranger.rest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1731,6 +1732,58 @@ public class ServiceREST {
 		return ret;
 	}
 	
+	protected RangerPolicy policyFlip(RangerPolicy policy) {
+		List<RangerPolicy> returnedPolicy = new ArrayList<RangerPolicy>();
+		RangerPolicy ret = null;
+		boolean createOrUpdate = createOrUpdatePolicy(policy, returnedPolicy);
+		if(createOrUpdate){
+			ret = createPolicy(returnedPolicy.get(0));
+        	if(LOG.isDebugEnabled()) {
+        		LOG.debug("==> PublicAPIsv2.policyFlip(" + " create new policy because existing policy for the same resource is empty)");
+			}
+		}else{
+			ret = updatePolicy(returnedPolicy.get(0));
+   			if(LOG.isDebugEnabled()) {
+   				LOG.debug("==> PublicAPIsv2.policyflip(" + " update existing policy " + returnedPolicy.get(0).getId() + ")");
+   			}
+		}
+        return ret;
+	}
+	
+	protected boolean createOrUpdatePolicy(RangerPolicy policy, List<RangerPolicy> ret){
+		boolean createOrUpdate = true; // true means create
+        Collection<RangerPolicyResource> resources = policy.getResources().values();
+        if(resources == null || resources.size() != 1)
+        	throw new IllegalArgumentException("policyFlip supports one and only one resource key");
+        // resource from the new policy 
+        RangerPolicyResource resource = resources.iterator().next();
+        // find existing policies which are associated with same resource from the new policy (involve multiple database reads)
+        Collection<RangerPolicy> existingPolicies =
+        	getPoliciesByResourceNames(policy.getService(), resource.getValues());
+        if(existingPolicies == null || existingPolicies.size() == 0){
+        	ret.add(policy);
+        }else{
+        	if(existingPolicies.size() > 1)
+            	throw new IllegalArgumentException("PublicAPIsv2.policyFlip error: for the same resource multiple existing policies exists: " + existingPolicies.size() + ":" + existingPolicies);
+        	RangerPolicy existingPolicy = existingPolicies.iterator().next();
+    		// delete deny policy item if we want to allow
+        	for(RangerPolicyItem newItem : policy.getPolicyItems()){
+        		removePolicyItemInPlace(newItem, existingPolicy.getDenyPolicyItems());
+        		removePolicyItemInPlace(newItem, existingPolicy.getAllowExceptions());
+        		addPolicyItemInPlace(newItem, existingPolicy.getPolicyItems());
+        	}
+    		// delete allow policy item if we want to deny
+        	for(RangerPolicyItem newItem : policy.getDenyPolicyItems()){
+        		removePolicyItemInPlace(newItem, existingPolicy.getPolicyItems());
+        		removePolicyItemInPlace(newItem, existingPolicy.getDenyExceptions());
+        		addPolicyItemInPlace(newItem, existingPolicy.getDenyPolicyItems());
+        	}
+   			ret.add(existingPolicy);
+   			createOrUpdate = false;
+        }
+        return createOrUpdate;
+	}
+	
 	/**
      * Given a list of resource names, compute a set of RangerPolicy
      * 2 different resources may return the same policy, so we need de-duplicate policy through java Map
@@ -1739,33 +1792,32 @@ public class ServiceREST {
      * @param resNames
      * @return
      */
-    public Collection<RangerPolicy> getPoliciesByResourceNames(String serviceName,
+    protected Collection<RangerPolicy> getPoliciesByResourceNames(String serviceName,
                     List<String> resNames) {
             if (LOG.isDebugEnabled()) {
-                    LOG.debug("==> ServiceREST.getPoliciesByResourceNames(" + serviceName + ")");
+            	LOG.debug("==> ServiceREST.getPoliciesByResourceNames(" + serviceName + ")");
             }
 
             Map<Long, RangerPolicy> retPolicies = new HashMap<Long, RangerPolicy>();
             for(String resName : resNames){
-                    SearchFilter filter = new SearchFilter();
-                    filter.setParam(SearchFilter.POL_RESOURCE, resName);
-                    try {
-                    	PList<RangerPolicy> ret = svcStore.getPaginatedServicePolicies(serviceName, filter);
-                            for(RangerPolicy p : ret.getList()){
-                                    retPolicies.put(p.getId(), p);
-                            }
-                            applyAdminAccessFilter(ret.getList());
-                    } catch(WebApplicationException excp) {
-                            throw excp;
-                    } catch (Throwable excp) {
-                            LOG.error("getPoliciesByResourceNames(" + serviceName + ") failed", excp);
-
-                            throw restErrorUtil.createRESTException(excp.getMessage());
+            	SearchFilter filter = new SearchFilter();
+                filter.setParam(SearchFilter.POL_RESOURCE, resName);
+                try {
+                	PList<RangerPolicy> ret = svcStore.getPaginatedServicePolicies(serviceName, filter);
+                    for(RangerPolicy p : ret.getList()){
+                    	retPolicies.put(p.getId(), p);
                     }
+                    applyAdminAccessFilter(ret.getList());
+                } catch(WebApplicationException excp) {
+                        throw excp;
+                } catch (Throwable excp) {
+                	LOG.error("getPoliciesByResourceNames(" + serviceName + ") failed", excp);
+                	throw restErrorUtil.createRESTException(excp.getMessage());
+                }
             }
 
             if (retPolicies.size() == 0) {
-                    LOG.info("No Policies found for given service name: " + serviceName);
+            	LOG.info("No Policies found for given service name: " + serviceName);
             }
 
             if (LOG.isDebugEnabled()) {
@@ -1775,4 +1827,27 @@ public class ServiceREST {
 
             return retPolicies.values();
     }
+    
+    private void removePolicyItemInPlace(RangerPolicyItem toBeRemoved, List<RangerPolicyItem> existingPolicyItems){
+		Iterator<RangerPolicyItem> iter = existingPolicyItems.iterator();
+		while(iter.hasNext()){
+			RangerPolicyItem existingItem = iter.next();
+			if(CollectionUtils.intersection(existingItem.getUsers(), toBeRemoved.getUsers()).size() > 0 ||
+                CollectionUtils.intersection(existingItem.getGroups(), toBeRemoved.getGroups()).size() > 0){
+				 if(!CollectionUtils.isEqualCollection(existingItem.getAccesses(), toBeRemoved.getAccesses()))
+					 throw new IllegalStateException("policy deny/allow flip should happen to exactly same access methods");
+				 existingItem.getUsers().removeAll(toBeRemoved.getUsers());
+				 existingItem.getGroups().removeAll(toBeRemoved.getGroups());
+				 if(existingItem.getUsers().isEmpty() && existingItem.getGroups().isEmpty()){
+					 iter.remove();
+				 }
+			}
+		}
+	}
+	
+	private void addPolicyItemInPlace(RangerPolicyItem toBeAdded, List<RangerPolicyItem> existingPolicyItems){
+		if(!existingPolicyItems.contains(toBeAdded)){
+			existingPolicyItems.add(toBeAdded);
+		}
+	}
 }

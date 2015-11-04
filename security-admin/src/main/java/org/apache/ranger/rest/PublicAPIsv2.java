@@ -420,18 +420,18 @@ public class PublicAPIsv2 {
 	}
 	
 	/**
-	 * For https://issues.apache.org/jira/browse/RANGER-699, to provide high level API for external tool to simply grant/deny accesses to user/group
+	 * For https://issues.apache.org/jira/browse/RANGER-699, to provide high level API for external tool to simply allow/deny accesses to user/group
 	 * This API involves read-update-write, is not supposed to be thread-safe
 	 * Steps are:
 	 * Step 1: get resource for new policy (support one resource key)
 	 * Step 2: find existing policies which contain resource from the new policy (involve multiple database reads)
 	 * Step 3: simply create new policy if no any existing policies are associated with resource, otherwise go to step 4
 	 * Step 4: remove existing policy item if that is associated with the same user/group, and finally create the new policy
-	 *       FOR each existingPolicy in existingPolices
+	 *       FOR each existingPolicy in existingPolicies
 	 *          FOR each newPolicyItem in new policy 
 	 *             FOR each existingPolicyItem in existing policy
 	 *               IF (existingPolicyItem contains the same user/group with newPolicyItem)
-	 *                 remove the same user/group
+	 *                 remove policy item with the same user/group
 	 *                   
 	 *          IF (existingPolicy has some changes)
 	 *             update existing policy
@@ -441,51 +441,9 @@ public class PublicAPIsv2 {
 	 * @return
 	 */
 	@POST
-    @Path("/api/policy/try")
+    @Path("/api/policyflip")
     @Produces({ "application/json", "application/xml" })
-    public List<RangerPolicy> tryCreatePolicy(RangerPolicy policy) {
-		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
-        Collection<RangerPolicyResource> resources = policy.getResources().values();
-        if(resources == null || resources.size() != 1)
-        	throw new IllegalArgumentException("tryCreatePolicy supports one and only one resource key");
-        // resource from the new policy 
-        RangerPolicyResource resource = resources.iterator().next();
-        // find existing policies which are associated with resource from the new policy (involve multiple database reads)
-        Collection<RangerPolicy> existingPolices =
-        	serviceREST.getPoliciesByResourceNames(policy.getService(), resource.getValues());
-        
-        // simply create new policy if no any existing policies are associated with resource
-        if(existingPolices == null || existingPolices.size() == 0)
-        	ret.add(createPolicy(policy));
-        else{
-        	// iterate existing policies which are associated with the resource
-        	for(RangerPolicy existingPolicy : existingPolices){
-        		boolean policyChanged = false;
-        		for(RangerPolicyItem newitem : policy.getPolicyItems()){
-        			Iterator<RangerPolicyItem> iter = existingPolicy.getPolicyItems().iterator();
-        			while(iter.hasNext()){
-        				RangerPolicyItem existingItem = iter.next();
-        				if(CollectionUtils.intersection(existingItem.getUsers(), newitem.getUsers()).size() > 0 ||
-                            CollectionUtils.intersection(existingItem.getGroups(), newitem.getGroups()).size() > 0){
-        						policyChanged = true;
-        				}
-        				existingItem.getUsers().removeAll(newitem.getUsers());
-        				existingItem.getGroups().removeAll(newitem.getGroups());
-        				if(existingItem.getUsers().isEmpty() && existingItem.getGroups().isEmpty()){
-        					iter.remove();
-        				}
-        			}
-        		}
-        		if(policyChanged) {
-        			updatePolicy(existingPolicy, existingPolicy.getId());
-        			if(logger.isDebugEnabled()) {
-        				logger.debug("==> PublicAPIsv2.tryCreatePolicy(" + " update existing policy " + existingPolicy.getId() + ")");
-        			}
-        		}
-        	}
-        	ret.add(createPolicy(policy));
-        }
-        return ret;
-  }
-
+    public RangerPolicy policyFlip(RangerPolicy policy) {
+		return serviceREST.policyFlip(policy);
+	}
 }
