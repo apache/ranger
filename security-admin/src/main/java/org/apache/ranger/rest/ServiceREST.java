@@ -1750,18 +1750,44 @@ public class ServiceREST {
         return ret;
 	}
 	
+	/**
+	 * For https://issues.apache.org/jira/browse/RANGER-699, to provide high level API for external tool to simply allow/deny accesses to user/group
+	 * This API involves read-update-write, is not supposed to be thread-safe
+	 * Steps are:
+	 * Step 1: get resource for new policy (support only one resource key)
+	 * Step 2: find existing policies which contain resource from the new policy (involve multiple database reads)
+	 * Step 3: simply create new policy if no any existing policies are associated with resource, otherwise go to step 4
+	 * Step 4: flip policy based on it is allowed or denied policy
+	 *          If number of existing polices is more than 1, then throw exception
+	 *          FOR each allowed policy item in new policy
+	 *             remove deny policy which has the same user/group
+	 *             remove allow exception policy which has the same user/group
+	 *             add allow policy
+	 *          FOR each denied policy item in new policy
+	 *             remove allow policy which has the same user/group
+	 *             remove deny exception policy which has the same user/group
+	 *             add deny policy 
+	 *                   
+	 *          update existing policy
+	 *       
+	 * @param policy
+	 * @return
+	 */
 	protected boolean createOrUpdatePolicy(RangerPolicy policy, List<RangerPolicy> ret){
 		boolean createOrUpdate = true; // true means create
+		// Step 1: get resource for new policy (support only one resource key)
         Collection<RangerPolicyResource> resources = policy.getResources().values();
         if(resources == null || resources.size() != 1)
         	throw new IllegalArgumentException("policyFlip supports one and only one resource key");
         // resource from the new policy 
         RangerPolicyResource resource = resources.iterator().next();
-        // find existing policies which are associated with same resource from the new policy (involve multiple database reads)
+        // Step 2: find existing policies which contain resource from the new policy (involve multiple database reads)
         Collection<RangerPolicy> existingPolicies =
         	getPoliciesByResourceNames(policy.getService(), resource.getValues());
+        // Step 3: simply create new policy if no any existing policies are associated with resource
         if(existingPolicies == null || existingPolicies.size() == 0){
         	ret.add(policy);
+        	createOrUpdate = true;
         }else{
         	if(existingPolicies.size() > 1)
             	throw new IllegalArgumentException("PublicAPIsv2.policyFlip error: for the same resource multiple existing policies exists: " + existingPolicies.size() + ":" + existingPolicies);

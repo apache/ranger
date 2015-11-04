@@ -419,27 +419,6 @@ public class PublicAPIsv2 {
 		}
 	}
 	
-	/**
-	 * For https://issues.apache.org/jira/browse/RANGER-699, to provide high level API for external tool to simply allow/deny accesses to user/group
-	 * This API involves read-update-write, is not supposed to be thread-safe
-	 * Steps are:
-	 * Step 1: get resource for new policy (support one resource key)
-	 * Step 2: find existing policies which contain resource from the new policy (involve multiple database reads)
-	 * Step 3: simply create new policy if no any existing policies are associated with resource, otherwise go to step 4
-	 * Step 4: remove existing policy item if that is associated with the same user/group, and finally create the new policy
-	 *       FOR each existingPolicy in existingPolicies
-	 *          FOR each newPolicyItem in new policy 
-	 *             FOR each existingPolicyItem in existing policy
-	 *               IF (existingPolicyItem contains the same user/group with newPolicyItem)
-	 *                 remove policy item with the same user/group
-	 *                   
-	 *          IF (existingPolicy has some changes)
-	 *             update existing policy
-	 *       
-	 *       create new policy
-	 * @param policy
-	 * @return
-	 */
 	@POST
     @Path("/api/policyflip")
     @Produces({ "application/json", "application/xml" })
