@@ -197,9 +197,12 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			try {
-				if(plugin != null && !ArrayUtils.isEmpty(inodes)) {
-					auditHandler = new RangerHdfsAuditHandler(path);
+				boolean isTraverseOnlyCheck = access == null && parentAccess == null && ancestorAccess == null && subAccess == null;
+				INode   ancestor            = null;
+				INode   parent              = null;
+				INode   inode               = null;
 
+				if(plugin != null && !ArrayUtils.isEmpty(inodes)) {
 					if(ancestorIndex >= inodes.length) {
 						ancestorIndex = inodes.length - 1;
 					}
@@ -208,26 +211,28 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 					accessGranted = true;
 
-					INode ancestor = inodes.length > ancestorIndex && ancestorIndex >= 0 ? inodes[ancestorIndex] : null;
-					INode parent   = inodes.length > 1 ? inodes[inodes.length - 2] : null;
-					INode inode    = inodes[inodes.length - 1];
+					ancestor = inodes.length > ancestorIndex && ancestorIndex >= 0 ? inodes[ancestorIndex] : null;
+					parent   = inodes.length > 1 ? inodes[inodes.length - 2] : null;
+					inode    = inodes[inodes.length - 1]; // could be null while creating a new file
 
-					boolean noAccessToCheck = access == null && parentAccess == null && ancestorAccess == null && subAccess == null;
+					auditHandler = new RangerHdfsAuditHandler(path, isTraverseOnlyCheck);
 
-					if(noAccessToCheck) { // check for traverse (EXECUTE) access on the path (if path is a directory) or its parent (if path is a file)
-						INode           node        = null;
-						INodeAttributes nodeAttribs = null;
+					if(isTraverseOnlyCheck) {
+						INode           nodeToCheck = inode;
+						INodeAttributes nodeAttribs = inodeAttrs.length > 0 ? inodeAttrs[inodeAttrs.length - 1] : null;
 
-						if(inode != null && inode.isDirectory()) {
-							node        = inode;
-							nodeAttribs = inodeAttrs.length > 0 ? inodeAttrs[inodeAttrs.length - 1] : null;
-						} else if(parent != null) {
-							node        = parent;
-							nodeAttribs = inodeAttrs.length > 1 ? inodeAttrs[inodeAttrs.length - 2] : null;
+						if(nodeToCheck == null || nodeToCheck.isFile()) {
+							if(parent != null) {
+								nodeToCheck = parent;
+								nodeAttribs = inodeAttrs.length > 1 ? inodeAttrs[inodeAttrs.length - 2] : null;
+							} else if(ancestor != null) {
+								nodeToCheck = ancestor;
+								nodeAttribs = inodeAttrs.length > ancestorIndex ? inodeAttrs[ancestorIndex] : null;
+							}
 						}
 
-						if(node != null) {
-							accessGranted = isAccessAllowed(node, nodeAttribs, FsAction.EXECUTE, user, groups, fsOwner, superGroup, plugin, null);
+						if(nodeToCheck != null) {
+							accessGranted = isAccessAllowed(nodeToCheck, nodeAttribs, FsAction.EXECUTE, user, groups, fsOwner, superGroup, plugin, auditHandler);
 						}
 					}
 
@@ -304,27 +309,52 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						accessGranted = true;
 					} finally {
 						if(auditHandler != null) {
-							FsAction action = access;
+							INode    nodeChecked = inode;
+							FsAction action      = access;
 
-							if(action == null) {
+							if(isTraverseOnlyCheck) {
+								if(nodeChecked == null || nodeChecked.isFile()) {
+									if(parent != null) {
+										nodeChecked = parent;
+									} else if(ancestor != null) {
+										nodeChecked = ancestor;
+									}
+								}
+
+								action = FsAction.EXECUTE;
+							} else if(action == null) {
 								if(parentAccess != null) {
-									action = parentAccess;
+									nodeChecked = parent;
+									action      = parentAccess;
 								} else if(ancestorAccess != null) {
-									action = ancestorAccess;
+									nodeChecked = ancestor;
+									action      = ancestorAccess;
 								} else if(subAccess != null) {
 									action = subAccess;
-								} else {
-									action = FsAction.NONE;
 								}
 							}
 
-							auditHandler.logHadoopEvent(path, action, accessGranted);
+							String pathChecked = nodeChecked != null ? nodeChecked.getFullPathName() : path;
+
+							auditHandler.logHadoopEvent(pathChecked, action, accessGranted);
 						}
 					}
 				}
 
 				if(! accessGranted) {
-					throw new RangerAccessControlException("Permission denied: principal{user=" + user + ",groups: " + groups + "}, access=" + access + ", " + path) ;
+					FsAction action = access;
+
+					if(action == null) {
+						if(parentAccess != null)  {
+							action = parentAccess;
+						} else if(ancestorAccess != null) {
+							action = ancestorAccess;
+						} else {
+							action = FsAction.EXECUTE;
+						}
+					}
+
+					throw new RangerAccessControlException("Permission denied: user=" + user + ", access=" + action + ", inode=\"" + path + "\"") ;
 				}
 			} finally {
 				if(auditHandler != null) {
@@ -442,6 +472,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 	private boolean         isAuditEnabled = false;
 	private AuthzAuditEvent auditEvent     = null;
+	private final boolean auditOnlyIfDenied;
 
 	private static final String    RangerModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME) ;
 	private static final String    HadoopModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_HADOOP_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_HADOOP_MODULE_ACL_NAME) ;
@@ -461,7 +492,9 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		}
 	}
 
-	public RangerHdfsAuditHandler(String pathToBeValidated) {
+	public RangerHdfsAuditHandler(String pathToBeValidated, boolean auditOnlyIfDenied) {
+		this.auditOnlyIfDenied = auditOnlyIfDenied;
+
 		auditEvent = new AuthzAuditEvent();
 		auditEvent.setResourcePath(pathToBeValidated);
 	}
@@ -523,7 +556,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		if(isAuditEnabled && !StringUtils.isEmpty(auditEvent.getAccessType())) {
 			String username = auditEvent.getUser();
 
-			boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username)) ;
+			boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username)) || (auditOnlyIfDenied && auditEvent.getAccessResult() != 0);
 
 			if (! skipLog) {
 				super.logAuthzAudit(auditEvent);
