@@ -33,20 +33,6 @@ public interface RangerContextEnricher {
 
 	void setAppId(String appId);
 
-	RangerContextEnricherDef getEnricherDef();
-
-	String getServiceName();
-
-	RangerServiceDef getServiceDef();
-
-	String getAppId();
-
-	String getName();
-
-	//void setContextComponentServiceName(String componentServiceName);
-
-	//void setContextComponentServiceDef(RangerServiceDef componentServiceDef);
-
 	void init();
 
 	void enrich(RangerAccessRequest request);
@@ -54,5 +40,7 @@ public interface RangerContextEnricher {
 	boolean preCleanup();
 
 	void cleanup();
+
+	String getName();
 
 }

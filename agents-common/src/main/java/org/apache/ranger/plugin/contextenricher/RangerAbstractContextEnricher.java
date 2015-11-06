@@ -43,17 +43,6 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	public void setEnricherDef(RangerContextEnricherDef enricherDef) {
 		this.enricherDef = enricherDef;
 	}
-	
-	@Override
-	public void init() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
-		}
-	}
 
 	@Override
 	public void setServiceName(String serviceName) {
@@ -70,31 +59,15 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		this.appId = appId;
 	}
 
-
 	@Override
-	public RangerContextEnricherDef getEnricherDef() {
-		return enricherDef;
-	}
+	public void init() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
+		}
 
-	@Override
-	public String getServiceName() {
-		return serviceName;
-	}
-
-	@Override
-	public RangerServiceDef getServiceDef() {
-		return serviceDef;
-	}
-
-	@Override
-	public String getAppId() {
-		return appId;
-	}
-
-
-	@Override
-	public String getName() {
-		return enricherDef == null ? null : enricherDef.getName();
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
+		}
 	}
 
 	@Override
@@ -104,6 +77,27 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 	@Override
 	public void cleanup() {
+	}
+
+	@Override
+	public String getName() {
+		return enricherDef == null ? null : enricherDef.getName();
+	}
+
+	public RangerContextEnricherDef getEnricherDef() {
+		return enricherDef;
+	}
+
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	public RangerServiceDef getServiceDef() {
+		return serviceDef;
+	}
+
+	public String getAppId() {
+		return appId;
 	}
 
 	public String getOption(String name) {
