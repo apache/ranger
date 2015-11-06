@@ -44,4 +44,29 @@ public class XXPolicyResourceMapDao extends BaseDao<XXPolicyResourceMap> {
 		}
 	}
 
+	public List<XXPolicyResourceMap> findByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return new ArrayList<XXPolicyResourceMap>();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicyResourceMap.findByPolicyId", tClass)
+					.setParameter("policyId", policyId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicyResourceMap>();
+		}
+	}
+
+	public List<XXPolicyResourceMap> findByServiceId(Long serviceId) {
+		if(serviceId == null) {
+			return new ArrayList<XXPolicyResourceMap>();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicyResourceMap.findByServiceId", tClass)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicyResourceMap>();
+		}
+	}
 }

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -97,12 +98,9 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	
 	@Override
 	protected RangerPolicy populateViewBean(XXPolicy xPolicy) {
-		RangerPolicy vPolicy = super.populateViewBean(xPolicy);
-		
-		Map<String, RangerPolicyResource> resources = getResourcesForXXPolicy(xPolicy);
-		vPolicy.setResources(resources);
-		
-		getPolicyItemListForXXPolicy(xPolicy, vPolicy);
+		RangerPolicyRetriever retriever = new RangerPolicyRetriever(daoMgr);
+
+		RangerPolicy vPolicy = retriever.getPolicy(xPolicy);
 		
 		return vPolicy;
 	}

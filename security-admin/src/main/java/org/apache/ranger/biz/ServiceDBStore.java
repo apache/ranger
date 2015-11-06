@@ -183,6 +183,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     @Autowired
     RangerFactory factory;
+
     
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -1685,6 +1686,22 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 
+	private List<RangerPolicy> getServicePolicies(XXService service) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServicePolicies(" + service.getName() + ")");
+		}
+
+		RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
+
+		List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePolicies(" + service.getName() + "): count=" + ((ret == null) ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
 	public PList<RangerPolicy> getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceName + ")");
@@ -1747,12 +1764,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 						tagPolicies.setServiceName(tagServiceDbObj.getName());
 						tagPolicies.setPolicyVersion(tagServiceDbObj.getPolicyVersion());
 						tagPolicies.setPolicyUpdateTime(tagServiceDbObj.getPolicyUpdateTime());
-						tagPolicies.setPolicies(getServicePolicies(tagServiceDbObj.getName(), null));
+						tagPolicies.setPolicies(getServicePolicies(tagServiceDbObj));
 						tagPolicies.setServiceDef(tagServiceDef);
 					}
 				}
 
-				policies = getServicePolicies(serviceName, null);
+				policies = getServicePolicies(serviceDbObj);
 			} else {
 				policies = new ArrayList<RangerPolicy>();
 			}

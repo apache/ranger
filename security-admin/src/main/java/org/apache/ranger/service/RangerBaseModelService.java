@@ -41,8 +41,12 @@ import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.common.view.VList;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXDBBase;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXPolicyConditionDef;
 import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -145,53 +149,14 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		}
 		return entityDao;
 	}
-
+	
 	protected V populateViewBean(T entityObj) {
 		V vObj = createViewObject();
 		vObj.setId(entityObj.getId());
 		vObj.setCreateTime(entityObj.getCreateTime());
 		vObj.setUpdateTime(entityObj.getUpdateTime());
-
-		if (entityObj.getAddedByUserId() != null) {
-			XXPortalUser tUser = daoMgr.getXXPortalUser().getById(
-					entityObj.getUpdatedByUserId());
-			if(tUser == null) {
-				// nothing to do
-			} else if (!stringUtil.isEmpty(tUser.getPublicScreenName())) {
-				vObj.setCreatedBy(tUser.getPublicScreenName());
-			} else {
-				if (!stringUtil.isEmpty(tUser.getFirstName())) {
-					if (!stringUtil.isEmpty(tUser.getLastName())) {
-						vObj.setCreatedBy(tUser.getFirstName() + " "
-								+ tUser.getLastName());
-					} else {
-						vObj.setCreatedBy(tUser.getFirstName());
-					}
-				} else {
-					vObj.setCreatedBy(tUser.getLoginId());
-				}
-			}
-		}
-		if (entityObj.getUpdatedByUserId() != null) {
-			XXPortalUser tUser = daoMgr.getXXPortalUser().getById(
-					entityObj.getUpdatedByUserId());
-			if(tUser == null) {
-				// nothing to do
-			} else if (!stringUtil.isEmpty(tUser.getPublicScreenName())) {
-				vObj.setUpdatedBy(tUser.getPublicScreenName());
-			} else {
-				if (!stringUtil.isEmpty(tUser.getFirstName())) {
-					if (!stringUtil.isEmpty(tUser.getLastName())) {
-						vObj.setUpdatedBy(tUser.getFirstName() + " "
-								+ tUser.getLastName());
-					} else {
-						vObj.setUpdatedBy(tUser.getFirstName());
-					}
-				} else {
-					vObj.setUpdatedBy(tUser.getLoginId());
-				}
-			}
-		}
+		vObj.setCreatedBy(getUserScreenName(entityObj.getAddedByUserId()));
+		vObj.setUpdatedBy(getUserScreenName(entityObj.getUpdatedByUserId()));
 		
 		return mapEntityToViewBean(vObj, entityObj);
 	}
@@ -456,4 +421,88 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		return bizUtil.getClassType(tEntityClass);
 	}
 	
+
+	protected String getUserScreenName(Long userId) {
+		String ret = null;
+
+		XXPortalUser xPortalUser = userId == null ? null : daoMgr.getXXPortalUser().getById(userId);
+
+		if(xPortalUser != null) {
+			ret = xPortalUser.getPublicScreenName();
+
+			if (stringUtil.isEmpty(ret)) {
+				ret = xPortalUser.getFirstName();
+
+				if(stringUtil.isEmpty(ret)) {
+					ret = xPortalUser.getLoginId();
+				} else {
+					if(!stringUtil.isEmpty(xPortalUser.getLastName())) {
+						ret += (" " + xPortalUser.getLastName());
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	protected String getUserName(Long userId) {
+		String ret = null;
+
+		XXPortalUser xPortalUser = userId == null ? null : daoMgr.getXXPortalUser().getById(userId);
+
+		if(xPortalUser != null) {
+			ret = xPortalUser.getLoginId();
+		}
+
+		return ret;
+	}
+
+	protected String getGroupName(Long groupId) {
+		String ret = null;
+
+		XXGroup xGroup = groupId == null ? null : daoMgr.getXXGroup().getById(groupId);
+
+		if(xGroup != null) {
+			ret = xGroup.getName();
+		}
+
+		return ret;
+	}
+
+	protected String getAccessTypeName(Long accessTypeDefId) {
+		String ret = null;
+
+		XXAccessTypeDef accessTypeDef = accessTypeDefId == null ? null : daoMgr.getXXAccessTypeDef().getById(accessTypeDefId);
+
+		if(accessTypeDef != null) {
+			ret = accessTypeDef.getName();
+		}
+
+		return ret;
+	}
+
+	protected String getConditionName(Long conditionDefId) {
+		String ret = null;
+
+		XXPolicyConditionDef conditionDef = conditionDefId == null ? null : daoMgr.getXXPolicyConditionDef().getById(conditionDefId);
+
+		if(conditionDef != null) {
+			ret = conditionDef.getName();
+		}
+
+		return ret;
+	}
+
+	protected String getResourceName(Long resourceDefId) {
+		String ret = null;
+
+		XXResourceDef resourceDef = resourceDefId == null ? null : daoMgr.getXXResourceDef().getById(resourceDefId);
+
+		if(resourceDef != null) {
+			ret = resourceDef.getName();
+		}
+
+		return ret;
+	}
 }

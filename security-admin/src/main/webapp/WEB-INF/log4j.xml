@@ -28,6 +28,15 @@
 		</layout>
 	</appender>
 
+	<appender name="perf_appender" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="file" value="${logdir}/ranger_admin_perf.log" />
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %m%n" />
+		</layout>
+	</appender>
+
 	<appender name="sql_appender" class="org.apache.log4j.DailyRollingFileAppender">
 		<param name="file" value="${logdir}/xa_portal_sql.log" />
 		<param name="datePattern" value="'.'yyyy-MM-dd" />
@@ -73,6 +82,13 @@
 		<priority value="info" />
 		<appender-ref ref="xa_log_appender" />
 	</category>
+
+	<!--
+	<category name="ranger.perf" additivity="false">
+		<priority value="info" />
+		<appender-ref ref="perf_appender" />
+	</category>
+	-->
 
 	<category name="xa" additivity="false">
 		<priority value="info" />
