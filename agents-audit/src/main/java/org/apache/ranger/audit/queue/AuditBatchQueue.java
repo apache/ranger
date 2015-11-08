@@ -168,9 +168,11 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				if (staticLoopCount > 5) {
 					logger.error("Aborting writing to consumer. Some logs will be discarded."
 							+ getName() + ".size=" + queue.size());
+					break;
 				}
 			} else {
 				staticLoopCount = 0;
+				prevQueueSize = queue.size();
 			}
 			if (consumerThread != null) {
 				consumerThread.interrupt();
