@@ -175,7 +175,12 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXUser getXUserByUserName(String userName) {
-		return xUserService.getXUserByUserName(userName);
+		VXUser vXUser=null;
+		vXUser=xUserService.getXUserByUserName(userName);
+		if(vXUser!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
+			vXUser=getMaskedVXUser(vXUser);
+		}
+		return vXUser;
 	}
 
 	public VXUser createXUser(VXUser vXUser) {
@@ -533,8 +538,12 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXUser getXUser(Long id) {
-		return xUserService.readResourceWithOutLogin(id);
-
+		VXUser vXUser=null;
+		vXUser=xUserService.readResourceWithOutLogin(id);
+		if(vXUser!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
+			vXUser=getMaskedVXUser(vXUser);
+		}
+		return vXUser;
 	}
 
 	public VXGroupUser getXGroupUser(Long id) {
@@ -543,8 +552,12 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXGroup getXGroup(Long id) {
-		return xGroupService.readResourceWithOutLogin(id);
-
+		VXGroup vXGroup=null;
+		vXGroup=xGroupService.readResourceWithOutLogin(id);
+		if(vXGroup!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
+			vXGroup=getMaskedVXGroup(vXGroup);
+		}
+		return vXGroup;
 	}
 
 	/**
@@ -1305,4 +1318,94 @@ public class XUserMgr extends XUserMgrBase {
 		return vXStringList;
 	}
 
+	public boolean hasAccess(String loginID) {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session != null) {
+			if(session.isUserAdmin() || session.getLoginId().equalsIgnoreCase(loginID)){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public VXUser getMaskedVXUser(VXUser vXUser) {
+		if(vXUser!=null){
+			if(vXUser.getGroupIdList()!=null && vXUser.getGroupIdList().size()>0){
+				vXUser.setGroupIdList(new ArrayList<Long>());
+			}
+			if(vXUser.getGroupNameList()!=null && vXUser.getGroupNameList().size()>0){
+				vXUser.setGroupNameList(getMaskedCollection(vXUser.getGroupNameList()));
+			}
+			if(vXUser.getUserRoleList()!=null && vXUser.getUserRoleList().size()>0){
+				vXUser.setUserRoleList(getMaskedCollection(vXUser.getUserRoleList()));
+			}
+			vXUser.setUpdatedBy(AppConstants.Masked_String);
+		}
+		return vXUser;
+	}
+
+	public VXGroup getMaskedVXGroup(VXGroup vXGroup) {
+        if(vXGroup!=null){
+            vXGroup.setUpdatedBy(AppConstants.Masked_String);
+        }
+        return vXGroup;
+	}
+
+	@Override
+	public VXUserList searchXUsers(SearchCriteria searchCriteria) {
+        VXUserList vXUserList = new VXUserList();
+        vXUserList=xUserService.searchXUsers(searchCriteria);
+        if(vXUserList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
+	        List<VXUser> vXUsers = new ArrayList<VXUser>();
+	        if(vXUserList!=null && vXUserList.getListSize()>0){
+	            for(VXUser vXUser:vXUserList.getList()){
+                    vXUser=getMaskedVXUser(vXUser);
+                    vXUsers.add(vXUser);
+	            }
+	            vXUserList.setVXUsers(vXUsers);
+	        }
+        }
+        return vXUserList;
+	}
+
+	@Override
+	public VXGroupList searchXGroups(SearchCriteria searchCriteria) {
+        VXGroupList vXGroupList=null;
+        vXGroupList=xGroupService.searchXGroups(searchCriteria);
+        if(vXGroupList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
+            if(vXGroupList!=null && vXGroupList.getListSize()>0){
+                List<VXGroup> listMasked=new ArrayList<VXGroup>();
+                for(VXGroup vXGroup:vXGroupList.getList()){
+                    vXGroup=getMaskedVXGroup(vXGroup);
+                    listMasked.add(vXGroup);
+                }
+                vXGroupList.setVXGroups(listMasked);
+            }
+        }
+        return vXGroupList;
+	}
+
+	public Collection<String> getMaskedCollection(Collection<String> listunMasked){
+        List<String> listMasked=new ArrayList<String>();
+        if(listunMasked!=null && listunMasked.size()>0){
+            for(String content:listunMasked){
+                listMasked.add(AppConstants.Masked_String);
+            }
+        }
+        return listMasked;
+	}
+
+	public boolean hasAccessToModule(String moduleName){
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if (userSession != null && userSession.getLoginId()!=null){
+			VXUser vxUser = xUserService.getXUserByUserName(userSession.getLoginId());
+			if(vxUser!=null){
+				List<String> permissionList = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), vxUser.getId());
+				if(permissionList!=null && permissionList.contains(moduleName)){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

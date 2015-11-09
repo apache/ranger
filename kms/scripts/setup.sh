@@ -52,7 +52,6 @@ get_prop(){
 
 PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
 DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
-SQL_COMMAND_INVOKER=$(get_prop 'SQL_COMMAND_INVOKER' $PROPFILE)
 SQL_CONNECTOR_JAR=$(get_prop 'SQL_CONNECTOR_JAR' $PROPFILE)
 db_root_user=$(get_prop 'db_root_user' $PROPFILE)
 db_root_password=$(get_prop 'db_root_password' $PROPFILE)
@@ -413,7 +412,15 @@ update_properties() {
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
 	then
 		propertyName=ranger.ks.jpa.jdbc.url
-		newPropertyValue="jdbc:oracle:thin:\@//${DB_HOST}"
+		count=$(grep -o ":" <<< "$DB_HOST" | wc -l)
+		#if [[ ${count} -eq 2 ]] ; then
+		if [ ${count} -eq 2 ] || [ ${count} -eq 0 ]; then
+			#jdbc:oracle:thin:@[HOST][:PORT]:SID or #jdbc:oracle:thin:@GL
+			newPropertyValue="jdbc:oracle:thin:@${DB_HOST}"
+		else
+			#jdbc:oracle:thin:@//[HOST][:PORT]/SERVICE
+			newPropertyValue="jdbc:oracle:thin:@//${DB_HOST}"
+		fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 		propertyName=ranger.ks.jpa.jdbc.dialect
@@ -720,5 +727,8 @@ else
 fi
 
 ./enable-kms-plugin.sh
-
+if [ "$?" != "0" ]
+then
+        exit 1
+fi
 echo "Installation of Ranger KMS is completed."
