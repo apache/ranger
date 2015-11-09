@@ -289,7 +289,15 @@ if [ "${DB_FLAVOR}" == "ORACLE" ]
 then
 	audit_db_hostname=`grep '^XAAUDIT.DB.HOSTNAME'  ${install_dir}/install.properties | awk -F= '{ print $2 }'`
 	propertyName=XAAUDIT.DB.JDBC_URL
-	newPropertyValue="jdbc:oracle:thin:\@//${audit_db_hostname}"
+	count=$(grep -o ":" <<< "$audit_db_hostname" | wc -l)
+	#if [[ ${count} -eq 2 ]] ; then
+	if [ ${count} -eq 2 ] || [ ${count} -eq 0 ]; then
+		#jdbc:oracle:thin:@[HOST][:PORT]:SID
+		newPropertyValue="jdbc:oracle:thin:@${audit_db_hostname}"
+	else
+		#jdbc:oracle:thin:@//[HOST][:PORT]/SERVICE
+		newPropertyValue="jdbc:oracle:thin:@//${audit_db_hostname}"
+	fi
 	updatePropertyToFile $propertyName $newPropertyValue $to_file
 
 	propertyName=XAAUDIT.DB.JDBC_DRIVER

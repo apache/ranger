@@ -595,6 +595,7 @@ public class AppConstants extends RangerCommonEnums {
 	public static final int HIST_OBJ_STATUS_DELETED = 3;
 	public static final int MAX_HIST_OBJ_STATUS = 3;
 
+	public static final String Masked_String = "*****";
 
 
 	static public String getLabelFor_AssetType( int elementValue ) {
