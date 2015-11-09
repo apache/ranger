@@ -97,8 +97,12 @@ public class RangerHiveAuthorizerFactory implements HiveAuthorizerFactory {
 			LOG.debug("==> RangerHiveAuthorizerFactory.createHiveAuthorizer()");
 		}
 		
-		ret = rangerHiveAuthorizerFactoryImpl.createHiveAuthorizer(metastoreClientFactory, conf, hiveAuthenticator, sessionContext);
-	
+		try {
+			activatePluginClassLoader(); 
+			ret = rangerHiveAuthorizerFactoryImpl.createHiveAuthorizer(metastoreClientFactory, conf, hiveAuthenticator, sessionContext);
+		} finally {
+			deactivatePluginClassLoader();
+		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerHiveAuthorizerFactory.createHiveAuthorizer()");
 		}
