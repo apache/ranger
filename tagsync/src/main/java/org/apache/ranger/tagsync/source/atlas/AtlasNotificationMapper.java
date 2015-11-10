@@ -19,9 +19,10 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
+import org.apache.atlas.AtlasException;
 import org.apache.atlas.notification.entity.EntityNotification;
-import org.apache.atlas.typesystem.api.Entity;
-import org.apache.atlas.typesystem.api.Trait;
+import org.apache.atlas.typesystem.IReferenceableInstance;
+import org.apache.atlas.typesystem.IStruct;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -58,7 +59,9 @@ class AtlasNotificationMapper {
 		properties = props;
 
 		try {
-			if (isEntityMappable(entityNotification.getEntity())) {
+			IReferenceableInstance entity = entityNotification.getEntity();
+
+			if (isEntityMappable(entity)) {
 				ret = createServiceTags(entityNotification);
 			} else {
 				if(LOG.isDebugEnabled()) {
@@ -71,7 +74,7 @@ class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private boolean isEntityMappable(Entity entity) {
+	static private boolean isEntityMappable(IReferenceableInstance entity) {
 		boolean ret = false;
 
 		String entityTypeName = entity.getTypeName();
@@ -91,44 +94,43 @@ class AtlasNotificationMapper {
 		ServiceTags ret = null;
 
 		EntityNotification.OperationType opType = entityNotification.getOperationType();
-		Entity entity = entityNotification.getEntity();
 
-		String opName = entityNotification.getOperationType().name();
 		switch (opType) {
-			case ENTITY_CREATED: {
-				LOG.debug("ENTITY_CREATED notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
+			case ENTITY_CREATE: {
+				LOG.debug("ENTITY_CREATE notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
 				break;
 			}
-			case ENTITY_UPDATED: {
-				ret = getServiceTags(entity);
+			case ENTITY_UPDATE: {
+				ret = getServiceTags(entityNotification);
 				if (MapUtils.isEmpty(ret.getTags())) {
 					LOG.debug("No traits associated with this entity update notification. Ignoring it altogether");
 					ret = null;
 				}
 				break;
 			}
-			case TRAIT_ADDED:
-			case TRAIT_DELETED: {
-				ret = getServiceTags(entity);
+			case TRAIT_ADD:
+			case TRAIT_DELETE: {
+				ret = getServiceTags(entityNotification);
 				break;
 			}
 			default:
-				LOG.error(opName + ": unknown notification received - not handled");
+				LOG.error(opType + ": unknown notification received - not handled");
 		}
 
 		return ret;
 	}
 
-	static private ServiceTags getServiceTags(Entity entity) throws Exception {
+	static private ServiceTags getServiceTags(EntityNotification entityNotification) throws Exception {
 		ServiceTags ret = null;
 
+		IReferenceableInstance entity = entityNotification.getEntity();
 
 		List<RangerServiceResource> serviceResources = new ArrayList<RangerServiceResource>();
 
 		RangerServiceResource serviceResource = getServiceResource(entity);
 		serviceResources.add(serviceResource);
 
-		Map<Long, RangerTag> tags = getTags(entity);
+		Map<Long, RangerTag> tags = getTags(entityNotification);
 
 		Map<Long, RangerTagDef> tagDefs = getTagDefs(tags);
 
@@ -163,7 +165,7 @@ class AtlasNotificationMapper {
 	}
 
 
-	static private RangerServiceResource getServiceResource(Entity entity) throws Exception {
+	static private RangerServiceResource getServiceResource(IReferenceableInstance entity) throws Exception {
 
 		RangerServiceResource ret = null;
 
@@ -224,7 +226,7 @@ class AtlasNotificationMapper {
 
 
 		ret = new RangerServiceResource();
-		ret.setGuid(entity.getId().getGuid());
+		ret.setGuid(entity.getId()._getId());
 		ret.setId(1L);
 		ret.setServiceName(serviceName);
 		ret.setResourceElements(elements);
@@ -232,22 +234,24 @@ class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private Map<Long, RangerTag> getTags(Entity entity) {
+	static private Map<Long, RangerTag> getTags(EntityNotification entityNotification) {
 		Map<Long, RangerTag> ret = null;
 
-		Map<String, ? extends Trait> traits = entity.getTraits();
+		ret = new HashMap<Long, RangerTag>();
 
-		if (MapUtils.isNotEmpty(traits)) {
-			ret = new HashMap<Long, RangerTag>();
-			long index = 1;
+		long index = 1;
 
-			for (Map.Entry<String, ? extends Trait> entry : traits.entrySet()) {
-				String traitName = entry.getKey();
-				Trait trait = entry.getValue();
+		List<IStruct> traits = entityNotification.getAllTraits();
 
-				Map<String, Object> attrValues = trait.getValues();
+		for (IStruct trait : traits) {
 
-				Map<String, String> tagAttrValues = new HashMap<String, String>();
+			String traitName = trait.getTypeName();
+
+			Map<String, String> tagAttrValues = new HashMap<String, String>();
+
+			try {
+
+				Map<String, Object> attrValues = trait.getValuesMap();
 
 				for (Map.Entry<String, Object> attrValueEntry : attrValues.entrySet()) {
 					String attrName = attrValueEntry.getKey();
@@ -259,14 +263,17 @@ class AtlasNotificationMapper {
 						LOG.error("Cannot cast attribute-value to String, skipping... attrName=" + attrName);
 					}
 				}
-
-				RangerTag tag = new RangerTag();
-
-				tag.setType(traitName);
-				tag.setAttributes(tagAttrValues);
-
-				ret.put(index++, tag);
+			} catch (AtlasException exception) {
+				LOG.error("Could not get values for trait:" + traitName, exception);
 			}
+
+			RangerTag tag = new RangerTag();
+
+			tag.setType(traitName);
+			tag.setAttributes(tagAttrValues);
+
+			ret.put(index++, tag);
+
 		}
 
 		return ret;
@@ -289,13 +296,13 @@ class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private String[] getQualifiedNameComponents(Entity entity) {
+	static private String[] getQualifiedNameComponents(IReferenceableInstance entity) {
 		String ret[] = new String[5];
 
 		if (StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_DB)) {
 
-			String clusterName = getAttribute(entity.getValues(), "clusterName", String.class);
-			String name = getAttribute(entity.getValues(), "name", String.class);
+			String clusterName = getEntityAttribute(entity, "clusterName", String.class);
+			String name = getEntityAttribute(entity, "name", String.class);
 
 			ret[1] = clusterName;
 			ret[2] = name;
@@ -303,20 +310,20 @@ class AtlasNotificationMapper {
 			ret[0] = ret[1] + "." + ret[2];
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("----- Entity-Id:" + entity.getId().getGuid());
+				LOG.debug("----- Entity-Id:" + entity.getId()._getId());
 				LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
 				LOG.debug("----- Entity-Cluster-Name:" + clusterName);
 				LOG.debug("----- Entity-Name:" + name);
 			}
 		} else {
-			String qualifiedName = getAttribute(entity.getValues(), ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+			String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
 
 			String nameHierarchy[] = qualifiedName.split(QUALIFIED_NAME_FORMAT_DELIMITER_STRING);
 
 			int hierarchyLevels = nameHierarchy.length;
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("----- Entity-Id:" + entity.getId().getGuid());
+				LOG.debug("----- Entity-Id:" + entity.getId()._getId());
 				LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
 				LOG.debug("----- Entity-Qualified-Name:" + qualifiedName);
 				LOG.debug("-----	Entity-Qualified-Name-Components -----");
@@ -351,6 +358,18 @@ class AtlasNotificationMapper {
 		return TagSyncConfig.getServiceName(apacheComponent, instanceName, properties);
 	}
 
+	static private <T> T getEntityAttribute(IReferenceableInstance entity, String name, Class<T> type) {
+		T ret = null;
+
+		try {
+			Map<String, Object> valueMap = entity.getValuesMap();
+			ret = getAttribute(valueMap, name, type);
+		} catch (AtlasException exception) {
+			LOG.error("Cannot get map of values for entity: " + entity.getId()._getId(), exception);
+		}
+
+		return ret;
+	}
 	static private <T> T getAttribute(Map<String, Object> map, String name, Class<T> type) {
 		return type.cast(map.get(name));
 	}

@@ -23,17 +23,21 @@ import com.google.gson.Gson;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 
+import org.apache.atlas.AtlasException;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.apache.atlas.notification.NotificationConsumer;
+import org.apache.atlas.notification.NotificationInterface;
 import org.apache.atlas.notification.NotificationModule;
 import org.apache.atlas.notification.entity.EntityNotification;
-import org.apache.atlas.notification.entity.EntityNotificationConsumer;
-import org.apache.atlas.notification.entity.EntityNotificationConsumerProvider;
-import org.apache.atlas.typesystem.api.Entity;
-import org.apache.atlas.typesystem.api.Trait;
+import org.apache.atlas.typesystem.IReferenceableInstance;
+import org.apache.atlas.typesystem.IStruct;
+
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.model.TagSource;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -47,9 +51,9 @@ public class TagAtlasSource implements TagSource {
 
 	public static final String TAGSYNC_ATLAS_PROPERTIES_FILE_NAME = "application.properties";
 
-	public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS = "atlas.notification.kafka.bootstrap.servers";
-	public static final String TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT = "atlas.notification.kafka.zookeeper.connect";
-	public static final String TAGSYNC_ATLAS_CONSUMER_GROUP = "atlas.notification.kafka.group.id";
+	public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS = "atlas.kafka.bootstrap.servers";
+	public static final String TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT = "atlas.kafka.zookeeper.connect";
+	public static final String TAGSYNC_ATLAS_CONSUMER_GROUP = "atlas.kafka.entities.group.id";
 
 	private TagSink tagSink;
 	private Properties properties;
@@ -112,9 +116,11 @@ public class TagAtlasSource implements TagSource {
 
 			Injector injector = Guice.createInjector(notificationModule);
 
-			EntityNotificationConsumerProvider consumerProvider = injector.getInstance(EntityNotificationConsumerProvider.class);
+			Provider<NotificationInterface> consumerProvider = injector.getProvider(NotificationInterface.class);
+			NotificationInterface notification = consumerProvider.get();
+			List<NotificationConsumer<EntityNotification>> iterators = notification.createConsumers(NotificationInterface.NotificationType.ENTITIES, 1);
 
-			consumerTask = new ConsumerRunnable(consumerProvider.get());
+			consumerTask = new ConsumerRunnable(iterators.get(0));
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -158,26 +164,25 @@ public class TagAtlasSource implements TagSource {
 
 	private class ConsumerRunnable implements Runnable {
 
-		private final EntityNotificationConsumer consumer;
+		private final Iterator<EntityNotification> consumerIterator;
 
-		private ConsumerRunnable(EntityNotificationConsumer consumer) {
-			this.consumer = consumer;
+		private ConsumerRunnable(Iterator<EntityNotification> consumerIterator) {
+			this.consumerIterator = consumerIterator;
 		}
-
 
 		// ----- Runnable --------------------------------------------------------
 
 		@Override
 		public void run() {
-			while (consumer.hasNext()) {
+			while (consumerIterator.hasNext()) {
 				try {
-					EntityNotification notification = consumer.next();
+					EntityNotification notification = consumerIterator.next();
 					if (notification != null) {
 						printNotification(notification);
 						ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification, properties);
 						if (serviceTags == null) {
 							if(LOG.isDebugEnabled()) {
-								LOG.debug("Did not create ServiceTags structure for notification type:" + notification.getOperationType().name());
+								LOG.debug("Did not create ServiceTags structure for notification type:" + notification.getOperationType());
 							}
 						} else {
 							if (LOG.isDebugEnabled()) {
@@ -199,33 +204,36 @@ public class TagAtlasSource implements TagSource {
 		}
 
 		public void printNotification(EntityNotification notification) {
-			Entity entity = notification.getEntity();
+			IReferenceableInstance entity = notification.getEntity();
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Notification-Type: " + notification.getOperationType().name());
-				LOG.debug("Entity-Id: " + entity.getId().getGuid());
-				LOG.debug("Entity-Type: " + entity.getTypeName());
+				try {
+					LOG.debug("Notification-Type: " + notification.getOperationType());
+					LOG.debug("Entity-Id: " + entity.getId()._getId());
+					LOG.debug("Entity-Type: " + entity.getTypeName());
 
-				LOG.debug("----------- Entity Values ----------");
-
-
-				for (Map.Entry<String, Object> entry : entity.getValues().entrySet()) {
-					LOG.debug("		Name:" + entry.getKey());
-					Object value = entry.getValue();
-					LOG.debug("		Value:" + value);
-				}
-
-				LOG.debug("----------- Entity Traits ----------");
+					LOG.debug("----------- Entity Values ----------");
 
 
-				for (Map.Entry<String, ? extends Trait> entry : entity.getTraits().entrySet()) {
-					LOG.debug("			Trait-Name:" + entry.getKey());
-					Trait trait = entry.getValue();
-					LOG.debug("			Trait-Type:" + trait.getTypeName());
-					Map<String, Object> traitValues = trait.getValues();
-					for (Map.Entry<String, Object> valueEntry : traitValues.entrySet()) {
-						LOG.debug("				Trait-Value-Name:" + valueEntry.getKey());
-						LOG.debug("				Trait-Value:" + valueEntry.getValue());
+					for (Map.Entry<String, Object> entry : entity.getValuesMap().entrySet()) {
+						LOG.debug("		Name:" + entry.getKey());
+						Object value = entry.getValue();
+						LOG.debug("		Value:" + value);
 					}
+
+					LOG.debug("----------- Entity Traits ----------");
+
+					List<IStruct> traits = notification.getAllTraits();
+
+					for (IStruct trait : traits) {
+						LOG.debug("			Trait-Type-Name:" + trait.getTypeName());
+						Map<String, Object> traitValues = trait.getValuesMap();
+						for (Map.Entry<String, Object> valueEntry : traitValues.entrySet()) {
+							LOG.debug("				Trait-Value-Name:" + valueEntry.getKey());
+							LOG.debug("				Trait-Value:" + valueEntry.getValue());
+						}
+					}
+				} catch (AtlasException exception) {
+					LOG.error("Cannot print notification - ", exception);
 				}
 			}
 		}

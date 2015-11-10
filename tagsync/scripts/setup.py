@@ -317,8 +317,9 @@ def main():
 	atlasOutFile = file(atlasOutFn, "a")
 
 	atlasOutFile.write("atlas.notification.embedded=false" + "\n")
-	atlasOutFile.write("atlas.notification.kafka.acks=1" + "\n")
-	atlasOutFile.write("atlas.notification.kafka.data=${sys:atlas.home}/data/kafka" + "\n")
+	atlasOutFile.write("atlas.kafka.acks=1" + "\n")
+	atlasOutFile.write("atlas.kafka.data=${sys:atlas.home}/data/kafka" + "\n")
+	atlasOutFile.write("atlas.kafka.hook.group.id=atlas" + "\n")
 
 	atlasOutFile.close()
 

@@ -56,7 +56,10 @@
 					<include>org.apache.atlas:atlas-notification</include>
 					<include>org.apache.atlas:atlas-typesystem</include>
 					<include>org.apache.atlas:atlas-client</include>
+					<include>org.apache.atlas:atlas-common</include>
 					<include>com.google.inject:guice</include>
+					<include>com.google.inject.extensions:guice-multibindings</include>
+					<include>org.codehaus.jettison:jettison</include>
 					<include>aopalliance:aopalliance</include>
 					<include>javax.inject:javax.inject</include>
 					<include>org.apache.kafka:kafka_2.10</include>
