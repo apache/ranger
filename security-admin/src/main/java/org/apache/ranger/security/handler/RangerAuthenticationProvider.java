@@ -505,6 +505,10 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
 				authentication= authenticator.authenticate(finalAuthentication);
 				return authentication;
+			}else{
+				if(authentication!=null&&!authentication.isAuthenticated()){
+					throw new BadCredentialsException("Bad credentials");
+				}
 			}
 		} catch (BadCredentialsException e) {
 			throw e;
