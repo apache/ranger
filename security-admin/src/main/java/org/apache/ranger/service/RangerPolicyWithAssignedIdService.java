@@ -17,15 +17,12 @@
 
 package org.apache.ranger.service;
 
-import java.util.List;
-import java.util.Map;
 
+import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXPolicyWithAssignedId;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -60,13 +57,9 @@ public class RangerPolicyWithAssignedIdService extends RangerPolicyServiceBase<X
 
 	@Override
 	protected RangerPolicy populateViewBean(XXPolicyWithAssignedId xPolicy) {
-		RangerPolicy vPolicy = super.populateViewBean(xPolicy);
+		RangerPolicyRetriever retriever = new RangerPolicyRetriever(daoMgr);
 
-		Map<String, RangerPolicyResource> resources = getResourcesForXXPolicy(xPolicy);
-		vPolicy.setResources(resources);
-
-		List<RangerPolicyItem> policyItems = getPolicyItemListForXXPolicy(xPolicy);
-		vPolicy.setPolicyItems(policyItems);
+		RangerPolicy vPolicy = retriever.getPolicy(xPolicy.getId());
 
 		return vPolicy;
 	}

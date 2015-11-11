@@ -58,6 +58,19 @@ public class XXPolicyResourceDao extends BaseDao<XXPolicyResource> {
 		}
 	}
 
+	public List<XXPolicyResource> findByServiceId(Long serviceId) {
+		if(serviceId == null) {
+			return new ArrayList<XXPolicyResource>();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicyResource.findByServiceId", tClass)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicyResource>();
+		}
+	}
+
 	public List<XXPolicyResource> findByResDefId(Long resDefId) {
 		if (resDefId == null) {
 			return new ArrayList<XXPolicyResource>();

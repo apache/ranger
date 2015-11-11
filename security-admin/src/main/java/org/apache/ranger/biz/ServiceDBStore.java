@@ -181,6 +181,7 @@ public class ServiceDBStore implements ServiceStore {
 
     @Autowired
     RangerFactory factory;
+
     
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -1558,6 +1559,23 @@ public class ServiceDBStore implements ServiceStore {
 		return ret;
 	}
 
+	private List<RangerPolicy> getServicePolicies(XXService service) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServicePolicies(" + service.getName() + ")");
+		}
+
+		RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
+
+		List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePolicies(" + service.getName() + "): count=" + ((ret == null) ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+
 	public RangerPolicyList getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies(" + serviceId + ")");
@@ -1640,7 +1658,7 @@ public class ServiceDBStore implements ServiceStore {
 				throw new Exception("service-def does not exist. id=" + serviceDbObj.getType());
 			}
 
-			List<RangerPolicy> policies = getServicePolicies(serviceName, null);
+			List<RangerPolicy> policies = getServicePolicies(serviceDbObj);
 
 			ret = new ServicePolicies();
 

@@ -205,7 +205,17 @@
 
 	<!-- XXPolicyItem -->
 	<named-query name="XXPolicyItem.findByPolicyId">
-		<query>select obj from XXPolicyItem obj where obj.policyId = :policyId order by obj.order</query>
+		<query>select obj from XXPolicyItem obj
+                where obj.policyId = :policyId
+                order by obj.id
+        </query>
+	</named-query>
+
+	<named-query name="XXPolicyItem.findByServiceId">
+		<query>select obj from XXPolicyItem obj
+                where obj.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+                order by obj.policyId, obj.id
+        </query>
 	</named-query>
 
 	<!-- XXPolicy -->
@@ -378,7 +388,17 @@
 	</named-query>
 
 	<named-query name="XXPolicyResource.findByPolicyId">
-		<query>select obj from XXPolicyResource obj where obj.policyId = :policyId</query>
+		<query>select obj from XXPolicyResource obj
+                where obj.policyId = :policyId
+                order by obj.id
+        </query>
+	</named-query>
+
+	<named-query name="XXPolicyResource.findByServiceId">
+		<query>select obj from XXPolicyResource obj
+                where obj.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+                order by obj.policyId, obj.id
+        </query>
 	</named-query>
 
 	<named-query name="XXPolicyResource.findByResDefId">
@@ -390,6 +410,22 @@
 		<query>select obj from XXPolicyResourceMap obj where obj.resourceId = :polResId order by obj.order</query>
 	</named-query>
 
+	<named-query name="XXPolicyResourceMap.findByPolicyId">
+		<query>select obj from XXPolicyResourceMap obj, XXPolicyResource res
+                where obj.resourceId = res.id
+                  and res.policyId = :policyId
+                order by obj.resourceId, obj.order
+        </query>
+	</named-query>
+
+	<named-query name="XXPolicyResourceMap.findByServiceId">
+		<query>select obj from XXPolicyResourceMap obj, XXPolicyResource res
+                where obj.resourceId = res.id
+                  and res.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+                order by res.policyId, obj.resourceId, obj.order
+        </query>
+	</named-query>
+
 	<!-- XXPolicyItemAccess -->
 	<named-query name="XXPolicyItemAccess.findByPolicyItemId">
 		<query>select obj from XXPolicyItemAccess obj where obj.policyItemId = :polItemId order by obj.order</query>
@@ -397,6 +433,22 @@
 	
 	<named-query name="XXPolicyItemAccess.findByType">
 		<query>select obj from XXPolicyItemAccess obj where obj.type = :type</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemAccess.findByPolicyId">
+		<query>select obj from XXPolicyItemAccess obj, XXPolicyItem item
+		        where obj.policyItemId = item.id
+		          and item.policyId = :policyId
+		        order by obj.policyItemId, obj.order
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemAccess.findByServiceId">
+		<query>select obj from XXPolicyItemAccess obj, XXPolicyItem item
+		        where obj.policyItemId = item.id
+		          and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+		        order by item.policyId, obj.policyItemId, obj.order
+		</query>
 	</named-query>
 	
 	<!-- XXPolicyItemCondition -->
@@ -412,15 +464,63 @@
 	<named-query name="XXPolicyItemCondition.findByPolicyConditionDefId">
 		<query>select obj from XXPolicyItemCondition obj where obj.type = :polCondDefId</query>
 	</named-query>
+
+	<named-query name="XXPolicyItemCondition.findByPolicyId">
+		<query>select obj from XXPolicyItemCondition obj, XXPolicyItem item
+		        where obj.policyItemId = item.id
+		          and item.policyId = :policyId
+		        order by obj.policyItemId, obj.type, obj.order
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemCondition.findByServiceId">
+		<query>select obj from XXPolicyItemCondition obj, XXPolicyItem item
+		        where obj.policyItemId = item.id
+		          and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+		        order by item.policyId, obj.policyItemId, obj.type, obj.order
+		</query>
+	</named-query>
 	
 	<!-- XXPolicyItemGroupPerm -->
 	<named-query name="XXPolicyItemGroupPerm.findByPolicyItemId">
 		<query>select obj from XXPolicyItemGroupPerm obj where obj.policyItemId = :polItemId order by obj.order</query>
 	</named-query>
 
+	<named-query name="XXPolicyItemGroupPerm.findByPolicyId">
+		<query>select obj from XXPolicyItemGroupPerm obj, XXPolicyItem item
+		        where obj.policyItemId = item.id
+		          and item.policyId = :policyId
+		        order by obj.policyItemId, obj.order
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemGroupPerm.findByServiceId">
+		<query>select obj from XXPolicyItemGroupPerm obj, XXPolicyItem item
+		        where obj.policyItemId = item.id
+		          and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+		        order by item.policyId, obj.policyItemId, obj.order
+		</query>
+	</named-query>
+
 	<!-- XXPolicyItemUserPerm -->
 	<named-query name="XXPolicyItemUserPerm.findByPolicyItemId">
 		<query>select obj from XXPolicyItemUserPerm obj where obj.policyItemId = :polItemId order by obj.order</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemUserPerm.findByPolicyId">
+		<query>select obj from XXPolicyItemUserPerm obj, XXPolicyItem item
+		        where obj.policyItemId = item.id
+		          and item.policyId = :policyId
+		        order by obj.policyItemId, obj.order
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemUserPerm.findByServiceId">
+		<query>select obj from XXPolicyItemUserPerm obj, XXPolicyItem item
+		        where obj.policyItemId = item.id
+		          and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+		        order by item.policyId, obj.policyItemId, obj.order
+		</query>
 	</named-query>
 
 	<!-- XXDataHist -->
