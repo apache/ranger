@@ -100,4 +100,17 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 			return;
 		}
 	}
+
+	public List<XXTagDef> findByResourceId(Long resourceId) {
+		if (resourceId == null) {
+			return new ArrayList<XXTagDef>();
+		}
+
+		try {
+			return getEntityManager().createNamedQuery("XXTagDef.findByResourceId", tClass)
+					.setParameter("resourceId", resourceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagDef>();
+		}
+	}
 }

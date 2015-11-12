@@ -124,4 +124,5 @@ public interface TagStore {
 
 
     ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
+    void deleteAllTagObjectsForService(String serviceName, boolean isResourePrivateTag) throws Exception;
 }

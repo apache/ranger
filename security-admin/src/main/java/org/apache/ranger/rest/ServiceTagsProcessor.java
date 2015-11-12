@@ -412,32 +412,9 @@ public class ServiceTagsProcessor {
 
 		// TODO:
 		// This is an inefficient implementation. Replace by direct database deletes
+		boolean isResourePrivateTag = StringUtils.equals(serviceTags.getTagModel(), ServiceTags.TAGMODEL_RESOURCE_PRIVATE) ? true : false;
 
-		SearchFilter searchAll = new SearchFilter();
-
-		List<RangerTagResourceMap> allTagResourceMaps = tagStore.getTagResourceMaps(searchAll);
-		for (RangerTagResourceMap tagResourceMap : allTagResourceMaps) {
-			tagStore.deleteTagResourceMap(tagResourceMap.getId());
-		}
-
-		List<RangerServiceResource> allServiceResources = tagStore.getServiceResources(searchAll);
-		for (RangerServiceResource serviceResource : allServiceResources) {
-			tagStore.deleteServiceResource(serviceResource.getId());
-		}
-
-		List<RangerTag> allTags = tagStore.getTags(searchAll);
-		for (RangerTag tag : allTags) {
-			tagStore.deleteTag(tag.getId());
-		}
-
-		List<RangerTagDef> allTagDefs = tagStore.getTagDefs(searchAll);
-		for (RangerTagDef tagDef : allTagDefs) {
-			tagStore.deleteTagDef(tagDef.getId());
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("ServiceTagsProcessor.replace() : All tag-related objects are removed now. Adding objects specified in ServiceTags..");
-		}
+		tagStore.deleteAllTagObjectsForService(serviceTags.getServiceName(), isResourePrivateTag);
 
 		addOrUpdate(serviceTags);
 

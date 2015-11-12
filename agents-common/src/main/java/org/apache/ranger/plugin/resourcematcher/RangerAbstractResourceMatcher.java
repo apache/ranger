@@ -35,6 +35,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	private static final Log LOG = LogFactory.getLog(RangerAbstractResourceMatcher.class);
 
 	public final static String WILDCARD_ASTERISK = "*";
+	public final static String WILDCARDS = "*?";
 
 	public final static String OPTIONS_SEP        = ";";
 	public final static String OPTION_NV_SEP      = "=";
@@ -74,6 +75,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		policyIsExcludes = policyResource == null ? false : policyResource.getIsExcludes();
 
 		if(policyResource != null && policyResource.getValues() != null) {
+			boolean isWildCardPresent = !optWildCard;
 			for(String policyValue : policyResource.getValues()) {
 				if(StringUtils.isEmpty(policyValue)) {
 					continue;
@@ -81,10 +83,12 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 				if(StringUtils.containsOnly(policyValue, WILDCARD_ASTERISK)) {
 					isMatchAny = true;
+				} else if (!isWildCardPresent && StringUtils.containsAny(policyValue, WILDCARDS)) {
+					isWildCardPresent = true;
 				}
-
 				policyValues.add(policyValue);
 			}
+			optWildCard = optWildCard && isWildCardPresent;
 		}
 
 		if(policyValues.isEmpty()) {

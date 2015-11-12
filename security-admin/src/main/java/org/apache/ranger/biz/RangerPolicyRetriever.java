@@ -114,7 +114,7 @@ public class RangerPolicyRetriever {
 		RangerPerfTracer   perf = null;
 
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerPolicyRetriever.getServicePolicies(serviceName=" + serviceName + ", serviceId=" + serviceId + ")");
+			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerPolicyRetriever.getServicePolicies(serviceName=" + serviceName + ",serviceId=" + serviceId + ")");
 		}
 
 		if(xService != null) {

@@ -47,15 +47,17 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 	final RangerServiceDef          serviceDef;
 	final RangerPolicyItem          policyItem;
 	final int                       policyItemType;
+	final int						policyItemIndex;
 	final long                      policyId;
 	final int                       evalOrder;
 
 	List<RangerConditionEvaluator> conditionEvaluators = Collections.<RangerConditionEvaluator>emptyList();
 
-	RangerAbstractPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, RangerPolicyEngineOptions options) {
+	RangerAbstractPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, int policyItemIndex, RangerPolicyEngineOptions options) {
 		this.serviceDef     = serviceDef;
 		this.policyItem     = policyItem;
 		this.policyItemType = policyItemType;
+		this.policyItemIndex = policyItemIndex;
 		this.options        = options;
 		this.policyId       = policy != null && policy.getId() != null ? policy.getId() : -1;
 		this.evalOrder      = computeEvalOrder();
@@ -79,6 +81,11 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 	@Override
 	public int getPolicyItemType() {
 		return policyItemType;
+	}
+
+	@Override
+	public int getPolicyItemIndex() {
+		return policyItemIndex;
 	}
 
 	@Override

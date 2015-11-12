@@ -45,4 +45,27 @@ public class XXTagAttributeDefDao extends BaseDao<XXTagAttributeDef> {
 		}
 	}
 
+	public List<XXTagAttributeDef> findByServiceId(Long serviceId) {
+		if (serviceId == null) {
+			return new ArrayList<XXTagAttributeDef>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXTagAttributeDef.findByServiceId", tClass)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagAttributeDef>();
+		}
+	}
+
+	public List<XXTagAttributeDef> findByResourceId(Long resourceId) {
+		if (resourceId == null) {
+			return new ArrayList<XXTagAttributeDef>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXTagAttributeDef.findByResourceId", tClass)
+					.setParameter("resourceId", resourceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagAttributeDef>();
+		}
+	}
 }
