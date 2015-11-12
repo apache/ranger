@@ -298,13 +298,17 @@ class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private String[] getQualifiedNameComponents(IReferenceableInstance entity) {
+	static private String[] getQualifiedNameComponents(IReferenceableInstance entity) throws Exception {
 		String ret[] = new String[MAX_HIERARCHY_LEVELS];
 
 		String qualifiedNameAttributeName = StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_TABLE) ?
 				ENTITY_ATTRIBUTE_QUALIFIED_NAME_FOR_HIVE_TABLE : ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 
 		String qualifiedName = getEntityAttribute(entity, qualifiedNameAttributeName, String.class);
+
+		if (StringUtils.isBlank(qualifiedName)) {
+			throw new Exception("Could not get a valid value for " + qualifiedNameAttributeName + " attribute from entity notification.");
+		}
 
 		String nameHierarchy[] = qualifiedName.split(QUALIFIED_NAME_FORMAT_DELIMITER_STRING);
 
