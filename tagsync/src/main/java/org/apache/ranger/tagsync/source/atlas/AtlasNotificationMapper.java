@@ -48,8 +48,10 @@ class AtlasNotificationMapper {
 	public static final String RANGER_TYPE_HIVE_COLUMN = "column";
 
 	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
+	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME_FOR_HIVE_TABLE = "name";
 	public static final String QUALIFIED_NAME_FORMAT_DELIMITER_STRING = "\\.";
 
+	private static final int MAX_HIERARCHY_LEVELS = 5;
 
 	private static Properties properties = null;
 
@@ -297,51 +299,37 @@ class AtlasNotificationMapper {
 	}
 
 	static private String[] getQualifiedNameComponents(IReferenceableInstance entity) {
-		String ret[] = new String[5];
+		String ret[] = new String[MAX_HIERARCHY_LEVELS];
 
-		if (StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_DB)) {
+		String qualifiedNameAttributeName = StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_TABLE) ?
+				ENTITY_ATTRIBUTE_QUALIFIED_NAME_FOR_HIVE_TABLE : ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 
-			String clusterName = getEntityAttribute(entity, "clusterName", String.class);
-			String name = getEntityAttribute(entity, "name", String.class);
+		String qualifiedName = getEntityAttribute(entity, qualifiedNameAttributeName, String.class);
 
-			ret[1] = clusterName;
-			ret[2] = name;
-			ret[3] = null;
-			ret[0] = ret[1] + "." + ret[2];
+		String nameHierarchy[] = qualifiedName.split(QUALIFIED_NAME_FORMAT_DELIMITER_STRING);
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("----- Entity-Id:" + entity.getId()._getId());
-				LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
-				LOG.debug("----- Entity-Cluster-Name:" + clusterName);
-				LOG.debug("----- Entity-Name:" + name);
-			}
-		} else {
-			String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+		int hierarchyLevels = nameHierarchy.length;
 
-			String nameHierarchy[] = qualifiedName.split(QUALIFIED_NAME_FORMAT_DELIMITER_STRING);
-
-			int hierarchyLevels = nameHierarchy.length;
-
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("----- Entity-Id:" + entity.getId()._getId());
-				LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
-				LOG.debug("----- Entity-Qualified-Name:" + qualifiedName);
-				LOG.debug("-----	Entity-Qualified-Name-Components -----");
-				for (int i = 0; i < hierarchyLevels; i++) {
-					LOG.debug("-----		Index:" + i + "	Value:" + nameHierarchy[i]);
-				}
-			}
-
-			int i;
-			for (i = 0; i < ret.length; i++) {
-				ret[i] = null;
-			}
-			ret[0] = qualifiedName;
-
-			for (i = 0; i < hierarchyLevels; i++) {
-				ret[i + 1] = nameHierarchy[i];
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("----- Entity-Id:" + entity.getId()._getId());
+			LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
+			LOG.debug("----- Entity-Qualified-Name:" + qualifiedName);
+			LOG.debug("-----	Entity-Qualified-Name-Components -----");
+			for (int i = 0; i < hierarchyLevels; i++) {
+				LOG.debug("-----		Index:" + i + "	Value:" + nameHierarchy[i]);
 			}
 		}
+
+		int i;
+		for (i = 0; i < ret.length; i++) {
+			ret[i] = null;
+		}
+		ret[0] = qualifiedName;
+
+		for (i = 0; i < hierarchyLevels; i++) {
+			ret[i + 1] = nameHierarchy[i];
+		}
+
 		return ret;
 	}
 
