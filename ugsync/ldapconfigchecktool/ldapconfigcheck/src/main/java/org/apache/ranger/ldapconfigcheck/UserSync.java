@@ -258,7 +258,7 @@ public class UserSync {
                         groupMemberAttr = attributes.get(userGroupMemAttrValues[i]);
                         if (groupMemberAttr != null) {
                             userGroupMemberName = userGroupMemAttrValues[i];
-                            groupName = groupMemberAttr.get(1).toString();
+                            groupName = groupMemberAttr.get(0).toString();
                             break;
                         }
                     }
@@ -421,7 +421,7 @@ public class UserSync {
     public void getAllUsers(LdapContext ldapContext) throws Throwable {
         int noOfUsers = 0;
         Attribute userNameAttr = null;
-        String groupName = null;
+        //String groupName = null;
         Attribute groupMemberAttr;
         NamingEnumeration<SearchResult> userSearchResultEnum = null;
         SearchControls userSearchControls = new SearchControls();
@@ -598,12 +598,15 @@ public class UserSync {
         groupSearchControls.setSearchScope(config.getGroupSearchScope());
 
         try {
-            int baseIndex = groupName.indexOf(",");
-            groupBase = groupName.substring(baseIndex + 1);
-            groupFilter = groupName.substring(0, baseIndex);
-            groupSearchResultEnum = ldapContext.search(groupBase, groupFilter,
+	    if (groupName == null || groupName.isEmpty()) {
+		groupSearchResultEnum = ldapContext.search(searchBase, null);
+	    } else {
+                int baseIndex = groupName.indexOf(",");
+            	groupBase = groupName.substring(baseIndex + 1);
+            	groupFilter = groupName.substring(0, baseIndex);
+            	groupSearchResultEnum = ldapContext.search(groupBase, groupFilter,
                     groupSearchControls);
-
+	    }
             noOfGroups = 0;
             while (groupSearchResultEnum.hasMore()) {
                 if (noOfGroups >= 1) {

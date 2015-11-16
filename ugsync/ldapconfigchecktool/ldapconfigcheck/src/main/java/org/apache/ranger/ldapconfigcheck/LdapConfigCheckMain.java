@@ -200,10 +200,6 @@ public class LdapConfigCheckMain {
             msg = "ranger.usersync.ldap.user.objectclass ";
             throw new NullArgumentException(msg);
         }
-        if (userSyncObj.getUserGroupMemberName() == null || userSyncObj.getUserGroupMemberName().isEmpty()) {
-            msg = "ranger.usersync.ldap.user.groupnameattribute ";
-            throw new NullArgumentException(msg);
-        }
         if ((userSyncObj.getUserSearchBase() == null || userSyncObj.getUserSearchBase().isEmpty()) &&
                 (userSyncObj.getSearchBase() == null || userSyncObj.getSearchBase().isEmpty())) {
             msg = "ranger.usersync.ldap.user.searchbase and " +
@@ -223,7 +219,7 @@ public class LdapConfigCheckMain {
             msg = "ranger.usersync.group.objectclass ";
             throw new NullArgumentException(msg);
         }
-        if (userSyncObj.getUserGroupMemberName() == null || userSyncObj.getUserGroupMemberName().isEmpty()) {
+        if (userSyncObj.getGroupMemberName() == null || userSyncObj.getGroupMemberName().isEmpty()) {
             msg = "ranger.usersync.group.memberattributename ";
             throw new NullArgumentException(msg);
         }
