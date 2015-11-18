@@ -159,5 +159,13 @@ public abstract class BaseClient {
 		}
 		return StringUtils.join(errList, "");
 	}
-	
+
+	public static Map<String, String> getMaskedConfigMap(Map<String, String> configMap){
+		Map<String, String> maskedMap=new HashMap<String, String>();
+		maskedMap.putAll(configMap);
+		if(maskedMap!=null && maskedMap.containsKey("password")){
+			maskedMap.put("password", "*****");
+		}
+		return maskedMap;
+	}
 }

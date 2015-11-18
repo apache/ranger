@@ -234,12 +234,12 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 		}
 
 		// Get total count of the rows which meet the search criteria
-		countQueryStr = "SELECT COUNT(obj) FROM " + tEntityClass.getName()
+		countQueryStr = "SELECT COUNT(obj) FROM " + className
 				+ " obj ";
 		queryStr = "SELECT obj FROM " + className + " obj ";
 
 		distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM "
-				+ tEntityClass.getName() + " obj ";
+				+ className + " obj ";
 		distinctQueryStr = "SELECT distinct obj FROM " + className + " obj ";
 		sortFields.add(new SortField("id", "obj.id",true,SORT_ORDER.ASC));
 		registerService(this);

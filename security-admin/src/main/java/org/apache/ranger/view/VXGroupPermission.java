@@ -34,7 +34,7 @@ public class VXGroupPermission extends VXDataObject implements java.io.Serializa
 
 	private static final long serialVersionUID = 1L;
 
-	protected Long id;
+
 	protected Long groupId;
 	protected Long moduleId;
 	protected Integer isAllowed;

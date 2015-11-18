@@ -294,7 +294,7 @@ public class UserMgr {
 					userProfile, gjUser, "update");
 
 			userProfile.setPassword(gjUser.getPassword());
-			userProfile = xPortalUserService.updateResource(userProfile);
+			xPortalUserService.updateResource(userProfile);
 			sessionMgr.resetUserSessionForProfiles(ContextUtil
 					.getCurrentUserSession());
 
@@ -1231,10 +1231,8 @@ public class UserMgr {
 	
 	public void checkAdminAccess() {
 		UserSessionBase sess = ContextUtil.getCurrentUserSession();
-		if (sess != null) {
-			if (sess != null && sess.isUserAdmin()) {
-				return;
-			}
+		if (sess != null && sess.isUserAdmin()) {
+			return;
 		}
 		throw restErrorUtil.create403RESTException("Operation not allowed." + " loggedInUser=" + (sess != null ? sess.getXXPortalUser().getId() : "Not Logged In"));
 	}
