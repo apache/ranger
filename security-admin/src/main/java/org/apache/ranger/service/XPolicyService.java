@@ -236,7 +236,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		
 		int assetType = AppConstants.getEnumFor_AssetType(vXPolicy
 				.getRepositoryType());
-		if (assetType == 0 || assetType == AppConstants.ASSET_UNKNOWN) {
+		if (assetType == AppConstants.ASSET_UNKNOWN) {
 			assetType = xAsset.getAssetType();
 			vXPolicy.setRepositoryType(AppConstants.getLabelFor_AssetType(assetType));
 		}

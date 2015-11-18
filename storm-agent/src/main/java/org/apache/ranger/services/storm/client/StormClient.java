@@ -329,8 +329,10 @@ public class StormClient {
 	public static StormClient getStormClient(String serviceName,
 			Map<String, String> configs) {
 		StormClient stormClient = null;
-		LOG.debug("Getting StormClient for datasource: " + serviceName
-				+ "configMap: " + configs);
+		if(LOG.isDebugEnabled()){
+			LOG.debug("Getting StormClient for datasource: " + serviceName);
+			LOG.debug("configMap: " + BaseClient.getMaskedConfigMap(configs));
+		}
 		String errMsg = errMessage;
 		if (configs == null || configs.isEmpty()) {
 			String msgDesc = "Could not connect as Connection ConfigMap is empty.";

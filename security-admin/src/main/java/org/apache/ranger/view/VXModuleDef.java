@@ -37,7 +37,7 @@ public class VXModuleDef extends VXDataObject implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	protected Long id;
+
 	protected Date createTime;
 	protected Date updateTime;
 	protected Long addedById;

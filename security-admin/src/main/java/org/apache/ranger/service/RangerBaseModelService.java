@@ -111,7 +111,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 
 		populateExistingBaseFields = false;
 		
-		countQueryStr = "SELECT COUNT(obj) FROM " + tEntityClass.getName() + " obj ";
+		countQueryStr = "SELECT COUNT(obj) FROM " + tClassName + " obj ";
 		queryStr = "SELECT obj FROM " + tClassName + " obj ";
 	}
 

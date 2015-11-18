@@ -292,8 +292,6 @@ public class TestRangerServiceDefServiceBase {
 				resourceDefObj.getDescription());
 		Assert.assertEquals(dbRangerResourceDef.getType(),
 				resourceDefObj.getType());
-		Assert.assertEquals(dbRangerResourceDef.getParent(),
-				resourceDefObj.getParent());
 		Assert.assertEquals(dbRangerResourceDef.getRbKeyDescription(),
 				resourceDefObj.getRbkeydescription());
 		Mockito.verify(daoManager).getXXResourceDef();
