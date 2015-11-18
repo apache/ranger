@@ -28,7 +28,6 @@ import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
-import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.db.RangerDaoManager;
@@ -45,20 +44,10 @@ import org.springframework.stereotype.Service;
 @Scope("singleton")
 public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, VXAccessAudit>{
 	public static final String NAME = "XAccessAudit";
-	public List<SortField> sortFields = new ArrayList<SortField>();
-	public List<SearchField> searchFields = new ArrayList<SearchField>();
-
-	@Autowired
-	protected SearchUtil searchUtil;
-	
 	@Autowired
 	RangerDaoManager appDaoMgr;
-
-	protected String queryStr;
 	protected final String distinctCountQueryStr;
 	protected final String distinctQueryStr;
-	protected String countQueryStr;
-
 
 	public XAccessAuditService() {
 		countQueryStr = "SELECT COUNT(obj) FROM XXAccessAudit  obj ";

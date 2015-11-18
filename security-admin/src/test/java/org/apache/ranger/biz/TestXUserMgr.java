@@ -242,7 +242,6 @@ public class TestXUserMgr {
 		Mockito.when(xUserService.createResource(vxUser)).thenReturn(vxUser);
 		XXModuleDefDao value = Mockito.mock(XXModuleDefDao.class);
 		Mockito.when(daoManager.getXXModuleDef()).thenReturn(value);
-		List<XXModuleDef> lsvalue = new ArrayList<XXModuleDef>();
 
 		Mockito.when(
 				userMgr.createDefaultAccountUser((VXPortalUser) Mockito

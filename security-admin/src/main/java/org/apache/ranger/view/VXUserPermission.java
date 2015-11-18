@@ -34,7 +34,7 @@ public class VXUserPermission extends VXDataObject implements
 
 	private static final long serialVersionUID = 1L;
 
-	protected Long id;
+
 	protected Long userId;
 	protected Long moduleId;
 	protected Integer isAllowed;

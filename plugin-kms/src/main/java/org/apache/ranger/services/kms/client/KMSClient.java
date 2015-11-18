@@ -309,8 +309,8 @@ public class KMSClient {
 			Map<String, String> configs) {
 		KMSClient kmsClient = null;
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Getting KmsClient for datasource: " + serviceName
-					+ "configMap: " + configs);
+			LOG.debug("Getting KmsClient for datasource: " + serviceName);
+			LOG.debug("configMap: " + BaseClient.getMaskedConfigMap(configs));
 		}
 		String errMsg = errMessage;
 		if (configs == null || configs.isEmpty()) {

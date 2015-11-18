@@ -314,8 +314,10 @@ public class KnoxClient {
 	public static KnoxClient getKnoxClient(String serviceName,
 										   Map<String, String> configs) {
 		KnoxClient knoxClient = null;
-		LOG.debug("Getting knoxClient for ServiceName: " + serviceName
-				+ "configMap: " + configs);
+		if(LOG.isDebugEnabled()){
+			LOG.debug("Getting knoxClient for ServiceName: " + serviceName);
+			LOG.debug("configMap: " + BaseClient.getMaskedConfigMap(configs));
+		}
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check xa_portal.log for more info.";

@@ -396,6 +396,7 @@ public class XUserMgr extends XUserMgrBase {
 			roleList = userMgr.getRolesForUser(xXPortalUser);
 		}
 		if (roleList == null || roleList.size() == 0) {
+			roleList = new ArrayList<String>();
 			roleList.add(RangerConstants.ROLE_USER);
 		}
 
@@ -501,7 +502,11 @@ public class XUserMgr extends XUserMgrBase {
 			vXGroupUser = xGroupUserService
 					.createXGroupUserWithOutLogin(vXGroupUser);
 		}
-
+		VXPortalUser vXPortalUser = userMgr.getUserProfileByLoginId(vXUser
+				.getName());
+		if(vXPortalUser!=null){
+			assignPermissionToUser(vXPortalUser, true);
+		}
 		vxUGInfo.setXgroupInfo(vxg);
 
 		return vxUGInfo;
@@ -838,7 +843,7 @@ public class XUserMgr extends XUserMgrBase {
 
 				for (VXGroupPermission oldVXGroupPerm : groupPermListOld) {
 					if (newVXGroupPerm.getModuleId().equals(oldVXGroupPerm.getModuleId()) && newVXGroupPerm.getGroupId().equals(oldVXGroupPerm.getGroupId())) {
-						if (newVXGroupPerm.getIsAllowed() != oldVXGroupPerm.getIsAllowed()) {
+						if (!newVXGroupPerm.getIsAllowed().equals(oldVXGroupPerm.getIsAllowed())) {
 							oldVXGroupPerm.setIsAllowed(newVXGroupPerm.getIsAllowed());
 							oldVXGroupPerm = this.updateXGroupPermission(oldVXGroupPerm);
 						}
@@ -857,7 +862,7 @@ public class XUserMgr extends XUserMgrBase {
 				boolean isExist = false;
 				for (VXUserPermission oldVXUserPerm : userPermListOld) {
 					if (newVXUserPerm.getModuleId().equals(oldVXUserPerm.getModuleId()) && newVXUserPerm.getUserId().equals(oldVXUserPerm.getUserId())) {
-						if (newVXUserPerm.getIsAllowed() != oldVXUserPerm.getIsAllowed()) {
+						if (!newVXUserPerm.getIsAllowed().equals(oldVXUserPerm.getIsAllowed())) {
 							oldVXUserPerm.setIsAllowed(newVXUserPerm.getIsAllowed());
 							oldVXUserPerm = this.updateXUserPermission(oldVXUserPerm);
 						}
