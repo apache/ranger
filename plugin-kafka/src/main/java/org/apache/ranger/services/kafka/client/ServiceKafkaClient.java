@@ -28,8 +28,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import kafka.utils.ZkUtils;
-
-import org.I0Itec.zkclient.ZkClient;
+import kafka.utils.ZkUtils$;
+import org.apache.kafka.common.security.JaasUtils;
+import org.I0Itec.zkclient.*;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
@@ -79,31 +80,48 @@ public class ServiceKafkaClient {
 		return responseData;
 	}
 
-	public List<String> getTopicList(List<String> ignoreTopicList)
-			throws Exception {
+	private List<String> getTopicList(List<String> ignoreTopicList) throws Exception {
+		List<String> ret = new ArrayList<String>();
 
-		List<String> list = new ArrayList<String>();
+		int          sessionTimeout    = 5000;
+        int          connectionTimeout = 10000;
+		ZkClient     zkClient          = null;
+		ZkConnection zkConnection      = null;
 
-		ZkClient zkClient = new ZkClient(zookeeperConnect);
 		try {
-			Seq<String> topicList = ZkUtils.getChildrenParentMayNotExist(
-					zkClient, ZkUtils.BrokerTopicsPath());
+	        zkClient     = ZkUtils$.MODULE$.createZkClient(zookeeperConnect, sessionTimeout, connectionTimeout);
+	        zkConnection = new ZkConnection(zookeeperConnect, sessionTimeout);
+
+	        boolean      zkSecurityEnabled = JaasUtils.isZkSecurityEnabled();
+	        ZkUtils      zkUtils           = new ZkUtils(zkClient, zkConnection, true);
+	        Seq<String>  topicList         = zkUtils.getChildrenParentMayNotExist(ZkUtils.BrokerTopicsPath());
 
 			Iterator<String> iter = topicList.iterator();
 			while (iter.hasNext()) {
 				String topic = iter.next();
 				if (ignoreTopicList == null || !ignoreTopicList.contains(topic)) {
-					list.add(topic);
+					ret.add(topic);
 				}
 			}
 		} finally {
 			try {
-				zkClient.close();
+				if(zkClient != null) {
+					zkClient.close();
+				}
 			} catch (Exception ex) {
-				LOG.error("Error closing zookeeper", ex);
+				LOG.error("Error closing zkClient", ex);
+			}
+			
+			try {
+				if(zkConnection != null) {
+					zkConnection.close();
+				}
+				
+			} catch(Exception ex) {
+				LOG.error("Error closing zkConnection", ex);
 			}
 		}
-		return list;
+		return ret;
 	}
 
 	/**
