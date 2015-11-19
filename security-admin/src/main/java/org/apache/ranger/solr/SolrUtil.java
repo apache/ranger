@@ -37,6 +37,7 @@ import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
+import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +72,7 @@ public class SolrUtil {
 		if (solrQuery != null) {
 			QueryResponse response;
 			try {
-				response = solrClient.query(solrQuery);
+				response = solrClient.query(solrQuery, METHOD.POST);
 				return response;
 			} catch (Throwable e) {
 				logger.error("Error from Solr server.", e);
