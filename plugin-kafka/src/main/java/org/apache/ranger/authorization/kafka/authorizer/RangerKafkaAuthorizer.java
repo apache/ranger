@@ -20,14 +20,14 @@
 package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.util.Date;
+import java.util.Map;
+
 import javax.security.auth.Subject;
 
 import kafka.security.auth.Acl;
 import kafka.security.auth.Authorizer;
-import kafka.security.auth.KafkaPrincipal;
-import kafka.security.auth.Operation;
-import kafka.security.auth.Resource;
-import kafka.security.auth.ResourceType;
+import org.apache.kafka.common.security.auth.KafkaPrincipal;
+import kafka.security.auth.*;
 import kafka.server.KafkaConfig;
 import kafka.common.security.LoginManager;
 import kafka.network.RequestChannel.Session;
@@ -73,11 +73,10 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see kafka.security.auth.Authorizer#initialize(kafka.server.KafkaConfig)
+	 * @see kafka.security.auth.Authorizer#configure(Map<String, Object>)
 	 */
 	@Override
-	public void initialize(KafkaConfig kafkaConfig) {
-
+	public void configure(Map<String, ?> configs) {
 		if (rangerPlugin == null) {
 			try {
 				Subject subject = LoginManager.subject();
@@ -110,7 +109,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		}
 
 		// TODO: If resource type if consumer group, then allow it by default
-		if (resource.resourceType().equals(ResourceType.CONSUMER_GROUP)) {
+		if (resource.resourceType().equals(Group$.MODULE$)) {
 			return true;
 		}
 
@@ -123,6 +122,11 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		java.util.Set<String> userGroups = MiscUtil
 				.getGroupsForRequestUser(userName);
 		String ip = session.host();
+
+		// skip leading slash
+		if(StringUtils.isNotEmpty(ip) && ip.charAt(0) == '/') {
+			ip = ip.substring(1);
+		}
 
 		Date eventTime = StringUtil.getUTCDate();
 		String accessType = mapToRangerAccessType(operation);
@@ -152,12 +156,12 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		rangerRequest.setAction(action);
 		rangerRequest.setRequestData(resource.name());
 
-		if (resource.resourceType().equals(ResourceType.TOPIC)) {
+		if (resource.resourceType().equals(Topic$.MODULE$)) {
 			rangerResource.setValue(KEY_TOPIC, resource.name());
-		} else if (resource.resourceType().equals(ResourceType.CLUSTER)) {
+		} else if (resource.resourceType().equals(Cluster$.MODULE$)) {
 			// CLUSTER should go as null
 			// rangerResource.setValue(KEY_CLUSTER, resource.name());
-		} else if (resource.resourceType().equals(ResourceType.CONSUMER_GROUP)) {
+		} else if (resource.resourceType().equals(Group$.MODULE$)) {
 			rangerResource.setValue(KEY_CONSUMER_GROUP, resource.name());
 		} else {
 			logger.fatal("Unsupported resourceType=" + resource.resourceType());
@@ -201,7 +205,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	 */
 	@Override
 	public void addAcls(Set<Acl> acls, Resource resource) {
-		logger.error("addAcls() is not supported by Ranger for Kafka");
+		logger.error("addAcls(Set<Acl>, Resource) is not supported by Ranger for Kafka");
 	}
 
 	/*
@@ -213,7 +217,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	 */
 	@Override
 	public boolean removeAcls(Set<Acl> acls, Resource resource) {
-		logger.error("removeAcls() is not supported by Ranger for Kafka");
+		logger.error("removeAcls(Set<Acl>, Resource) is not supported by Ranger for Kafka");
 		return false;
 	}
 
@@ -225,7 +229,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	 */
 	@Override
 	public boolean removeAcls(Resource resource) {
-		logger.error("removeAcls() is not supported by Ranger for Kafka");
+		logger.error("removeAcls(Resource) is not supported by Ranger for Kafka");
 		return false;
 	}
 
@@ -237,7 +241,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	@Override
 	public Set<Acl> getAcls(Resource resource) {
 		Set<Acl> aclList = new HashSet<Acl>();
-		logger.error("getAcls() is not supported by Ranger for Kafka");
+		logger.error("getAcls(Resource) is not supported by Ranger for Kafka");
 
 		return aclList;
 	}
@@ -246,12 +250,24 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * kafka.security.auth.Authorizer#getAcls(kafka.security.auth.KafkaPrincipal
-	 * )
+	 * kafka.security.auth.Authorizer#getAcls(kafka.security.auth.KafkaPrincipal)
 	 */
 	@Override
-	public Set<Acl> getAcls(KafkaPrincipal principal) {
-		Set<Acl> aclList = new HashSet<Acl>();
+	public scala.collection.immutable.Map<Resource, Set<Acl>> getAcls(KafkaPrincipal principal) {
+		scala.collection.immutable.Map<Resource, Set<Acl>> aclList = new scala.collection.immutable.HashMap<Resource, Set<Acl>>();
+		logger.error("getAcls(KafkaPrincipal) is not supported by Ranger for Kafka");
+		return aclList;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * kafka.security.auth.Authorizer#getAcls()
+	 */
+	@Override
+	public scala.collection.immutable.Map<Resource, Set<Acl>> getAcls() {
+		scala.collection.immutable.Map<Resource, Set<Acl>> aclList = new scala.collection.immutable.HashMap<Resource, Set<Acl>>();
 		logger.error("getAcls() is not supported by Ranger for Kafka");
 		return aclList;
 	}
@@ -261,16 +277,20 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	 * @return
 	 */
 	private String mapToRangerAccessType(Operation operation) {
-		if (operation.equals(Operation.READ)) {
+		if (operation.equals(Read$.MODULE$)) {
 			return ACCESS_TYPE_READ;
-		} else if (operation.equals(Operation.WRITE)) {
+		} else if (operation.equals(Write$.MODULE$)) {
 			return ACCESS_TYPE_WRITE;
-		} else if (operation.equals(Operation.ALTER)) {
+		} else if (operation.equals(Alter$.MODULE$)) {
 			return ACCESS_TYPE_CONFIGURE;
-		} else if (operation.equals(Operation.DESCRIBE)) {
+		} else if (operation.equals(Describe$.MODULE$)) {
 			return ACCESS_TYPE_DESCRIBE;
-		} else if (operation.equals(Operation.CLUSTER_ACTION)) {
+		} else if (operation.equals(ClusterAction$.MODULE$)) {
 			return ACCESS_TYPE_KAFKA_ADMIN;
+		} else if (operation.equals(Create$.MODULE$)) {
+			return ACCESS_TYPE_CREATE;
+		} else if (operation.equals(Delete$.MODULE$)) {
+			return ACCESS_TYPE_DELETE;
 		}
 		return null;
 	}
