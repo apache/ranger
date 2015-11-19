@@ -35,6 +35,7 @@ import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConfigUtil;
+import org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
@@ -129,9 +130,12 @@ public class RangerAuthenticationEntryPoint extends
 			}
 			response.sendError(ajaxReturnCode, "");
 		} else if (!(requestURL.startsWith(reqServletPath))) {
+			if(requestURL.contains(RangerSSOAuthenticationFilter.LOCAL_LOGIN_URL)){
+				if (request.getSession() != null)
+					request.getSession().setAttribute("locallogin","true");
+			}
 			super.commence(request, response, authException);
 		}
-
 	}
 
 }

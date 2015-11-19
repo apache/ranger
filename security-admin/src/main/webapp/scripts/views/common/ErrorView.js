@@ -37,7 +37,10 @@ define(function(require){
         	if(this.status == 401){
         		msg = 'Access Denied (401)'
             	moreInfo = "Sorry, you don't have enough privileges to view this page.";
-            }else{
+        	} else if(this.status == 204){
+        		msg = 'No Content (204)'
+                moreInfo = "Sorry, Please sync-up the users with your source directory.";
+            } else {
         		msg = 'Page not found (404).'
             	moreInfo = "Sorry, this page isn't here or has moved.";
             }
@@ -82,6 +85,10 @@ define(function(require){
 		onRender: function() {
 			this.initializePlugins();
 			$('#r_breadcrumbs').hide();
+			 if(this.status == 204){
+				 this.ui.goBackBtn.hide();
+				 this.ui.home.hide();
+			 }
 		},
 		goBackClick : function(){
 			history.back();

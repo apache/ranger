@@ -30,31 +30,12 @@ http://www.springframework.org/schema/util/spring-util-3.1.xsd
 http://www.springframework.org/schema/security/oauth2
 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 
-	<!-- TEMP ADD START-->
-	<security:http pattern="/test/social_login.jsp" security="none" />
-	<!-- TEMP ADD END -->
 	<security:http pattern="/login.jsp" security="none" />
-	<security:http pattern="/ms_version.jsp" security="none" />
-	<security:http pattern="/userRegistration.jsp" security="none" />
-	<security:http pattern="/forgotPassword.jsp" security="none" />
-	<security:http pattern="public/failedLogin.jsp" security="none" />
 	<security:http pattern="/styles/**" security="none" />
 	<security:http pattern="/fonts/**" security="none" />
 	<security:http pattern="/scripts/**" security="none" />
-	<security:http pattern="/bower_components/**" security="none" />
 	<security:http pattern="/libs/**" security="none" />
 	<security:http pattern="/images/**" security="none" />
-	<security:http pattern="/service/registration" security="none" />
-	<security:http pattern="/service/users/firstnames" security="none" />
-	<security:http pattern="/components/globalize/**" security="none" />
-	<security:http pattern="/resetPassword.jsp" security="none" />
-	<security:http pattern="/captcha/**" security="none" />
-	<security:http pattern="/service/registration/**" security="none" />
-	<security:http pattern="/public/**" security="none" />
-	<security:http pattern="/test/**" security="none" />
-	<security:http pattern="/test.html" security="none" />
-	<security:http pattern="/loadInit.html" security="none" />
-	<security:http pattern="/service/documents/result/**" security="none" />
 	<security:http pattern="/service/assets/policyList/*" security="none"/>
 	<security:http pattern="/service/assets/resources/grant" security="none"/>
 	<security:http pattern="/service/assets/resources/revoke" security="none"/>
@@ -63,34 +44,16 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<security:http pattern="/service/plugins/services/revoke/*" security="none"/>
 	<security:http pattern="/service/tags/download/*" security="none"/>
 
-	<!--<security:http pattern="/service/users/default" security="none"/>
-	<security:http pattern="/service/xusers/groups/**" security="none"/>
-	<security:http pattern="/service/xusers/users/*" security="none"/>
-	<security:http pattern="/service/xusers/groupusers/*" security="none"/>-->
-
-	<security:http auto-config="false" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
+	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
 		<security:session-management session-fixation-protection="newSession" />
-		<!--   security:remember-me user-service-ref="userService" key="REMEMBER_ME_PASSWORD"/ -->
-
-		<!-- Restricted URLs to admin-->
-		<security:intercept-url pattern="/service/crud/**" access="ROLE_SYS_ADMIN" />
-		<security:intercept-url pattern="/service/users/activations/**" access="ROLE_SYS_ADMIN" />
-
-		<!-- Allow annoymous access -->
-		<security:intercept-url pattern="/service/general/feedbacks" access="IS_AUTHENTICATED_ANONYMOUSLY" />
-
-		<!-- give read access to lesson api -->
-		<security:intercept-url pattern="/service/lesson/**" access="IS_AUTHENTICATED_ANONYMOUSLY" method="GET"/>
-
-		<!-- Restricted URLs to only authenticated users-->
-		<security:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY, IS_AUTHENTICATED_REMEMBERED" />
-
+		<intercept-url pattern="/**" access="isAuthenticated()"/>       
+		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" /> 
+		
 		<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
-		<!--  security:custom-filter before="ANONYMOUS_FILTER" ref="rememberMeFilter" / -->
 		<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
 
 		<security:access-denied-handler error-page="/public/failedLogin.jsp?access_denied=1"/>
-		<security:logout delete-cookies="JSESSIONID, xa_rmc" logout-url="/logout.html" success-handler-ref="customLogoutSuccessHandler" />
+		<security:logout delete-cookies="JSESSIONID,hadoop-jwt,xa_rmc" logout-url="/logout.html" success-handler-ref="customLogoutSuccessHandler" />
 		<http-basic entry-point-ref="authenticationProcessingFilterEntryPoint"/>
 	</security:http>
 
@@ -108,7 +71,6 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 		<beans:property name="authenticationManager" ref="authenticationManager"/>
 		<beans:property name="authenticationSuccessHandler" ref="ajaxAuthSuccessHandler"/>
 		<beans:property name="authenticationFailureHandler"	ref="ajaxAuthFailureHandler"/>
-		<!--  beans:property name="rememberMeServices" ref="rememberMeServices"/ -->
 	</beans:bean>
 
 	<beans:bean id="authenticationProcessingFilterEntryPoint" class="org.apache.ranger.security.web.authentication.RangerAuthenticationEntryPoint">
@@ -127,6 +89,10 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<beans:bean id="customLogoutSuccessHandler" class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
 	</beans:bean>
 
+	<beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
+            <beans:property name="ssoEnabled" value="${ranger.sso.enabled}"/>
+    </beans:bean>
+	
 	<beans:bean id="userContextFormationFilter" class="org.apache.ranger.security.web.filter.RangerSecurityContextFormationFilter"/>
 
 	<security:jdbc-user-service id="userService" data-source-ref="defaultDataSource"
@@ -136,50 +102,13 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 			WHERE usr.LOGIN_ID=?
 			AND usr_role.USER_ID = usr.ID"
 			/>
- <beans:bean id="customAuthenticationProvider" class="org.apache.ranger.security.handler.RangerAuthenticationProvider" >
-	<beans:property name="rangerAuthenticationMethod" value="${ranger.authentication.method}" />
- </beans:bean>
+ 	<beans:bean id="customAuthenticationProvider" class="org.apache.ranger.security.handler.RangerAuthenticationProvider" >
+    	<beans:property name="rangerAuthenticationMethod" value="${ranger.authentication.method}" />
+ 	</beans:bean>
 
 	<security:authentication-manager alias="authenticationManager">
          <security:authentication-provider ref="customAuthenticationProvider"/>
-	<!-- <security:authentication-manager alias="authenticationManager"> -->
-		<!-- AD_SEC_SETTINGS_START -->
-		<!-- AD_SEC_SETTINGS_END-->
-		<!-- LDAP_SEC_SETTINGS_START -->
-		<!-- LDAP_SEC_SETTINGS_END -->
-		<!-- UNIX_SEC_SETTINGS_START -->
-		<!-- UNIX_SEC_SETTINGS_END -->
-		<!-- <security:authentication-provider user-service-ref="userService">
-			<security:password-encoder hash="md5">
-				<security:salt-source user-property="username"/>
-			</security:password-encoder>
-		</security:authentication-provider> -->
-		<!--   security:authentication-provider ref="rememberMeAuthenticationProvider"/ -->
 	</security:authentication-manager>
-
 	<security:global-method-security pre-post-annotations="enabled" />
-
-	<!-- UNIX_BEAN_SETTINGS_START -->
-	<!-- UNIX_BEAN_SETTINGS_END -->
-	<!-- AD_BEAN_SETTINGS_START -->
-	<!-- AD_BEAN_SETTINGS_END -->
-	<!-- LDAP_BEAN_SETTINGS_START -->
-	<!-- LDAP_BEAN_SETTINGS_END -->
-	<!--  beans:bean id="rememberMeFilter" class="org.apache.ranger.security.web.filter.MyRememberMeFilter">
-		<beans:property name="rememberMeServices" ref="rememberMeServices"/>
-		<beans:property name="authenticationManager" ref="authenticationManager" />
-	</beans:bean>
-	<beans:bean id="rememberMeServices" class=
-        "org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices">
-	<beans:property name="userDetailsService" ref="userService"/>
-	<beans:property name="cookieName" value="xa_rmc" />
-	<beans:property name="key" value="REMEMBER_ME_PASSWORD"/>
-	<beans:property name="alwaysRemember" value="true"/>
-	</beans:bean>
-
-	<beans:bean id="rememberMeAuthenticationProvider" class=
-        "org.springframework.security.authentication.RememberMeAuthenticationProvider">
-	<beans:property name="key" value="REMEMBER_ME_PASSWORD"/>
-	</beans:bean -->
 	<beans:bean id="securityEventListener" class ="org.apache.ranger.security.listener.SpringEventListener"/>
 </beans:beans>
