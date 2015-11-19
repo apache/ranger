@@ -37,6 +37,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -1929,4 +1930,12 @@ public class ServiceREST {
 
 		return ret;
 	}
+
+	@GET
+	@Path("/checksso")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String checkSSO() {
+		return String.valueOf(bizUtil.isSSOEnabled());
+	}
+
 }

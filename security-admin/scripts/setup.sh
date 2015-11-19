@@ -110,6 +110,11 @@ sqlserver_audit_file=$(get_prop 'sqlserver_audit_file' $PROPFILE)
 sqlanywhere_core_file=$(get_prop 'sqlanywhere_core_file' $PROPFILE)
 sqlanywhere_audit_file=$(get_prop 'sqlanywhere_audit_file' $PROPFILE)
 cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFILE)")
+sso_enabled=$(get_prop 'sso_enabled' $PROPFILE)
+sso_providerurl=$(get_prop 'sso_providerurl' $PROPFILE)
+sso_publickey=$(get_prop 'sso_publickey' $PROPFILE)
+sso_cookiename=$(get_prop 'sso_cookiename' $PROPFILE)
+sso_query_param_originalurl=$(get_prop 'sso_query_param_originalurl' $PROPFILE)
 
 DB_HOST="${db_host}"
 
@@ -338,6 +343,27 @@ update_properties() {
 	else
 		log "[E] $to_file_default does not exists" ; exit 1;
     fi
+
+ 	propertyName=ranger.sso.enabled
+	newPropertyValue="${sso_enabled}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+ 
+        propertyName=ranger.sso.providerurl
+        newPropertyValue="${sso_providerurl}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+ 
+        propertyName=ranger.sso.publicKey
+        newPropertyValue="${sso_publickey}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+ 
+        propertyName=ranger.sso.cookiename
+        newPropertyValue="${sso_cookiename}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+ 
+        propertyName=ranger.sso.query.param.originalurl
+        newPropertyValue="${sso_query_param_originalurl}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
 
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then

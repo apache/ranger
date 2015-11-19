@@ -53,7 +53,8 @@ define(function(require){
 			return events;
 		},
 		onLogout : function(){
-			var url = 'security-admin-web/logout.html';
+			var url = 'security-admin-web/logout.html',
+			that = this;
 			$.ajax({
 				url : url,
 				type : 'GET',
@@ -61,9 +62,34 @@ define(function(require){
 					"cache-control" : "no-cache"
 				},
 				success : function() {
-					window.location.replace('login.jsp');
+					that.checkKnoxSSO()
+//					window.location.replace('login.jsp');
 				},
 				error : function(jqXHR, textStatus, err ) {
+				}
+				
+			});
+		},
+		checkKnoxSSO : function(){
+			var url = 'service/plugins/checksso';
+			$.ajax({
+				url : url,
+				type : 'GET',
+				headers : {
+					"cache-control" : "no-cache"
+				},
+				success : function(resp) {
+					console.log(resp)
+					if(!_.isUndefined(resp) && resp){
+						window.location.replace('');
+					} else {
+						window.location.replace('login.jsp');
+					}
+				},
+				error : function(jqXHR, textStatus, err ) {
+					if( jqXHR.status == 419 ){
+						window.location.replace('login.jsp');
+					}
 				}
 				
 			});

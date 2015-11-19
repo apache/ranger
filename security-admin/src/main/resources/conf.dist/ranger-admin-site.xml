@@ -228,4 +228,30 @@
 		<value>(sAMAccountName={0})</value>
 		<description></description>
 	</property>
+	<!-- SSO Properties Starts-->
+	<property>
+		<name>ranger.sso.providerurl</name>
+		<value>https://127.0.0.1:8443/gateway/knoxsso/api/v1/websso</value>
+	</property>
+	<property>
+		<name>ranger.sso.publicKey</name>
+		<value>MIICVjCCAb+gAwIBAgIJAPPvOtuTxFeiMA0GCSqGSIb3DQEBBQUAMG0xCzAJBgNVBAYTAlVTMQ0wCwYDVQQIEwRUZXN0MQ0wCwYDVQQHEwRUZXN0MQ8wDQYDVQQKEwZIYWRvb3AxDTALBgNVBAsTBFRlc3QxIDAeBgNVBAMTF2M2NDAxLmFtYmFyaS5hcGFjaGUub3JnMB4XDTE1MDcxNjE4NDcyM1oXDTE2MDcxNTE4NDcyM1owbTELMAkGA1UEBhMCVVMxDTALBgNVBAgTBFRlc3QxDTALBgNVBAcTBFRlc3QxDzANBgNVBAoTBkhhZG9vcDENMAsGA1UECxMEVGVzdDEgMB4GA1UEAxMXYzY0MDEuYW1iYXJpLmFwYWNoZS5vcmcwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMFs/rymbiNvg8lDhsdAqvh5uHP6iMtfv9IYpDleShjkS1C+IqId6bwGIEO8yhIS5BnfUR/fcnHi2ZNrXX7xQUtQe7M9tDIKu48w//InnZ6VpAqjGShWxcSzR6UB/YoGe5ytHS6MrXaormfBg3VWtDoy2MS83W8pweS6p5JnK7S5AgMBAAEwDQYJKoZIhvcNAQEFBQADgYEANyVg6EzE2q84gq7wQfLt9t047nYFkxcRfzhNVL3LB8p6IkM4RUrzWq4kLA+z+bpY2OdpkTOewUpEdVKzOQd4V7vRxpdANxtbG/XXrJAAcY/S+eMy1eDK73cmaVPnxPUGWmMnQXUiTLab+w8tBQhNbq6BOQ42aOrLxA8k/M4cV1A=</value>
+	</property>	
+	<property>
+		<name>ranger.sso.cookiename</name>
+		<value>hadoop-jwt</value>
+	</property>
+	<property>
+		<name>ranger.sso.enabled</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.sso.query.param.originalurl</name>
+		<value>originalUrl</value>
+	</property>
+	<property>
+		<name>ranger.sso.browser.useragent</name>
+		<value>Mozilla,chrome</value>
+	</property>
+	<!-- SSO Properties Ends-->
 </configuration>

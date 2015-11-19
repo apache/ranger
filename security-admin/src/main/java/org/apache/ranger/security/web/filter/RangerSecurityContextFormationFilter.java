@@ -128,13 +128,18 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				UserSessionBase userSession = sessionMgr.processSuccessLogin(
 						XXAuthSession.AUTH_TYPE_PASSWORD, userAgent);
 
-				if(userSession!=null && userSession.getClientTimeOffsetInMinute()==0){
-					userSession.setClientTimeOffsetInMinute(clientTimeOffset);
+				if (userSession != null) {
+
+					Object ssoEnabledObj = request.getAttribute("ssoEnabled");
+					Boolean ssoEnabled = ssoEnabledObj != null ? new Boolean(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+					userSession.setSSOEnabled(ssoEnabled);
+
+					if (userSession.getClientTimeOffsetInMinute() == 0) {
+						userSession.setClientTimeOffsetInMinute(clientTimeOffset);
+					}
 				}
 
 				context.setUserSession(userSession);
-
-//				xUserMgr.checkPermissionRoleByGivenUrls(httpRequest.getRequestURL().toString(),httpMethod);
 			}
 			HttpServletResponse res = (HttpServletResponse)response;
 			res.setHeader("X-Frame-Options", "DENY" );

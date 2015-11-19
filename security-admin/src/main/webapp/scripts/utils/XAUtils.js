@@ -1030,10 +1030,15 @@ define(function(require) {
 	XAUtils.filterAllowedActions = function(controller) {
 		var SessionMgr = require('mgrs/SessionMgr');
 			var XAGlobals = require('utils/XAGlobals');
+			var vError = require('views/common/ErrorView');
+			var App = require('App');
 			var that = this;
 			var vXPortalUser = SessionMgr.getUserProfile();
 			if(_.isEmpty(vXPortalUser.attributes)){
-				return controller;
+				App.rContent.show(new vError({
+					 status : 204
+				}));
+				return;
 			}
 			var denyControllerActions = [], denyModulesObj = [];
 			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
