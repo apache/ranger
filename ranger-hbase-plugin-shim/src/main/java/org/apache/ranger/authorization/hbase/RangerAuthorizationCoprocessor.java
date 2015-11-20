@@ -168,7 +168,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.getService()");
 		}
-		Service ret = null;
+		final Service ret;
 		try {
 			activatePluginClassLoader();
 			ret = implCoprocessorService.getService();
@@ -204,7 +204,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public RegionScanner postScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan, RegionScanner s) throws IOException {
-		RegionScanner ret = null;
+		final RegionScanner ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postScannerOpen()");
@@ -264,7 +264,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public Result preAppend(ObserverContext<RegionCoprocessorEnvironment> c, Append append) throws IOException {
-		Result ret = null;
+		final Result ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preAppend()");
@@ -322,7 +322,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public boolean preBalanceSwitch(ObserverContext<MasterCoprocessorEnvironment> c, boolean newValue) 	throws IOException {
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preBalanceSwitch()");
@@ -363,7 +363,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public boolean preCheckAndDelete(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOp compareOp, ByteArrayComparable comparator, Delete delete, boolean result) throws IOException {
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preCheckAndDelete()");
@@ -385,7 +385,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public boolean preCheckAndPut(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOp compareOp, ByteArrayComparable comparator, Put put, boolean result) throws IOException {
-		boolean ret = false;
+		final boolean ret;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preCheckAndPut()");
@@ -444,7 +444,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public InternalScanner preCompact(ObserverContext<RegionCoprocessorEnvironment> e, Store store, InternalScanner scanner, ScanType scanType) throws IOException {
-		InternalScanner ret = null;
+		final InternalScanner ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preCompact()");
@@ -452,7 +452,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	
 		try {
 			activatePluginClassLoader();
-			ret  = implRegionObserver.preCompact(e, store, scanner, scanType);
+			ret = implRegionObserver.preCompact(e, store, scanner, scanType);
 		} finally {
 			deactivatePluginClassLoader();
 		}
@@ -610,7 +610,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public boolean preExists(ObserverContext<RegionCoprocessorEnvironment> c, Get get, boolean exists) throws IOException {
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preExists()");
@@ -668,7 +668,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public Result preIncrement(ObserverContext<RegionCoprocessorEnvironment> c,	Increment increment) throws IOException {
-		Result ret = null;
+		final Result ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preIncrement()");
@@ -690,7 +690,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public long preIncrementColumnValue(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row,byte[] family, byte[] qualifier, long amount, boolean writeToWAL) throws IOException {
-		long ret;
+		final  long ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preIncrementColumnValue()");
@@ -820,7 +820,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public boolean preScannerNext(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s, List<Result> result, int limit, boolean hasNext) throws IOException {
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preScannerNext()");
@@ -842,7 +842,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public RegionScanner preScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan,	RegionScanner s) throws IOException {
-		RegionScanner ret = null;
+		final RegionScanner ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preScannerOpen()");
@@ -1479,7 +1479,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public ReplicationEndpoint postCreateReplicationEndPoint(ObserverContext<RegionServerCoprocessorEnvironment> ctx, ReplicationEndpoint endpoint) {
 		
-		ReplicationEndpoint ret = null;
+		final ReplicationEndpoint ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postCreateReplicationEndPoint()");
@@ -1574,7 +1574,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public InternalScanner preFlushScannerOpen( ObserverContext<RegionCoprocessorEnvironment> c, Store store, KeyValueScanner memstoreScanner, InternalScanner s) throws IOException {
 		
-		InternalScanner ret = null;
+		final InternalScanner ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preFlushScannerOpen()");
@@ -1597,7 +1597,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public InternalScanner preFlush(ObserverContext<RegionCoprocessorEnvironment> c, Store store, InternalScanner scanner) throws IOException {
 		
-		InternalScanner ret = null;
+		final InternalScanner ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preFlush()");
@@ -1710,7 +1710,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public InternalScanner preCompact(ObserverContext<RegionCoprocessorEnvironment> c, Store store,	InternalScanner scanner, ScanType scanType,	CompactionRequest request) throws IOException {
 		
-		InternalScanner ret = null;
+		final InternalScanner ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preCompact()");
@@ -1718,7 +1718,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	
 		try {
 			activatePluginClassLoader();
-			implRegionObserver.preCompact(c, store, scanner, scanType, request);
+			ret = implRegionObserver.preCompact(c, store, scanner, scanType, request);
 		} finally {
 			deactivatePluginClassLoader();
 		}
@@ -1733,7 +1733,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public InternalScanner preCompactScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Store store, List<? extends KeyValueScanner> scanners, ScanType scanType,
 													long earliestPutTs, InternalScanner s, CompactionRequest request) throws IOException {
-		InternalScanner ret = null;
+		final InternalScanner ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preCompactScannerOpen()");
@@ -1741,7 +1741,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	
 		try {
 			activatePluginClassLoader();
-			implRegionObserver.preCompactScannerOpen(c, store, scanners, scanType, earliestPutTs, s,request);
+			ret = implRegionObserver.preCompactScannerOpen(c, store, scanners, scanType, earliestPutTs, s,request);
 		} finally {
 			deactivatePluginClassLoader();
 		}
@@ -1756,7 +1756,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public InternalScanner preCompactScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Store store, List<? extends KeyValueScanner> scanners, ScanType scanType,
 													long earliestPutTs, InternalScanner s) throws IOException {
-		InternalScanner ret = null;
+		final InternalScanner ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preCompactScannerOpen()");
@@ -1764,7 +1764,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	
 		try {
 			activatePluginClassLoader();
-			implRegionObserver.preCompactScannerOpen(c, store, scanners, scanType, earliestPutTs, s);
+			ret = implRegionObserver.preCompactScannerOpen(c, store, scanners, scanType, earliestPutTs, s);
 		} finally {
 			deactivatePluginClassLoader();
 		}
@@ -1995,7 +1995,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public boolean postExists(ObserverContext<RegionCoprocessorEnvironment> c, Get get, boolean exists) throws IOException {
 		
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postExists()");
@@ -2162,7 +2162,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public boolean preCheckAndPutAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOp compareOp, 
 												ByteArrayComparable comparator, Put put, boolean result) throws IOException {
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preCheckAndPutAfterRowLock()");
@@ -2184,7 +2184,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public boolean postCheckAndPut(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOp compareOp,
 									ByteArrayComparable comparator, Put put, boolean result) throws IOException {
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postCheckAndPut()");
@@ -2206,7 +2206,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public boolean preCheckAndDeleteAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOp compareOp,
 													ByteArrayComparable comparator, Delete delete, boolean result) throws IOException {
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preCheckAndDeleteAfterRowLock()");
@@ -2228,7 +2228,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public boolean postCheckAndDelete(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row,byte[] family, byte[] qualifier, CompareOp compareOp,
 										ByteArrayComparable comparator, Delete delete, boolean result)	throws IOException {
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postCheckAndDelete()");
@@ -2249,7 +2249,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public long postIncrementColumnValue(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, long amount, boolean writeToWAL, long result) throws IOException {
-		long ret = 0;
+		final long ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postIncrementColumnValue()");
@@ -2270,7 +2270,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public Result preAppendAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, Append append)	throws IOException {
-		Result ret = null;
+		final Result ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preAppendAfterRowLock()");
@@ -2291,7 +2291,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public Result postAppend(ObserverContext<RegionCoprocessorEnvironment> c, Append append, Result result) throws IOException {
-		Result ret = null;
+		final Result ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postAppend()");
@@ -2313,7 +2313,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public Result preIncrementAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, Increment increment) throws IOException {
-		Result ret = null;
+		final Result ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preIncrementAfterRowLock()");
@@ -2335,7 +2335,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public Result postIncrement(ObserverContext<RegionCoprocessorEnvironment> c, Increment increment, Result result) throws IOException {
-		Result ret = null;
+		final Result ret;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postIncrement()");
@@ -2357,7 +2357,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public KeyValueScanner preStoreScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Store store, Scan scan, NavigableSet<byte[]> targetCols, KeyValueScanner s)	throws IOException {
-		KeyValueScanner ret = null;
+		final KeyValueScanner ret;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preStoreScannerOpen()");
@@ -2379,7 +2379,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public boolean postScannerNext(	ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s,	List<Result> result, int limit, boolean hasNext) throws IOException {
-		boolean ret = false;
+		final boolean ret;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postScannerNext()");
@@ -2402,7 +2402,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public boolean postScannerFilterRow( ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s, byte[] currentRow, int offset, short length, boolean hasMore) throws IOException {
 		
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postScannerFilterRow()");
@@ -2461,7 +2461,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public boolean postBulkLoadHFile(ObserverContext<RegionCoprocessorEnvironment> ctx,	List<Pair<byte[], String>> familyPaths, boolean hasLoaded) throws IOException {
 		
-		boolean ret = false;
+		final boolean ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postBulkLoadHFile()");
@@ -2484,7 +2484,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public Reader preStoreFileReaderOpen(ObserverContext<RegionCoprocessorEnvironment> ctx, FileSystem fs, Path p, FSDataInputStreamWrapper in, long size, 
 											CacheConfig cacheConf, Reference r, Reader reader) throws IOException {
-		Reader ret = null;
+		final Reader ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preStoreFileReaderOpen()");
@@ -2507,7 +2507,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	@Override
 	public Reader postStoreFileReaderOpen(ObserverContext<RegionCoprocessorEnvironment> ctx, FileSystem fs,	Path p, FSDataInputStreamWrapper in, long size,
 											CacheConfig cacheConf, Reference r, Reader reader) throws IOException {
-		Reader ret = null;
+		final Reader ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postStoreFileReaderOpen()");
@@ -2529,7 +2529,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public Cell postMutationBeforeWAL(ObserverContext<RegionCoprocessorEnvironment> ctx, MutationType opType, Mutation mutation, Cell oldCell, Cell newCell) throws IOException {
-		Cell ret = null;
+		final Cell ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postMutationBeforeWAL()");
@@ -2551,7 +2551,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public DeleteTracker postInstantiateDeleteTracker( ObserverContext<RegionCoprocessorEnvironment> ctx, DeleteTracker delTracker) throws IOException {
-		DeleteTracker ret = null;
+		final DeleteTracker ret; 
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postInstantiateDeleteTracker()");
