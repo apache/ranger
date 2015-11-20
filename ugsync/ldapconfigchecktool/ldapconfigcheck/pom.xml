@@ -90,21 +90,14 @@
 		    <version>${springframework.security.version}</version>
 		</dependency>
       <dependency>
-  	 <groupId>org.apache.ranger</groupId>
-	 <artifactId>credentialbuilder</artifactId>
-    	 <version>${project.version}</version>  	
-       	 <exclusions>
-	   <exclusion>
-  	     <groupId>com.microsoft.windowsazure</groupId>
-  	     <artifactId>*</artifactId>
-	   </exclusion>
-       	 </exclusions>
-      </dependency>
-      <dependency>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger-util</artifactId>
         <version>${project.version}</version>
           <exclusions>
+	    <exclusion>
+             <groupId>org.apache.hadoop</groupId>
+             <artifactId>*</artifactId>
+           </exclusion>
 	    <exclusion>
 	      <groupId>com.microsoft.windowsazure</groupId>
 	      <artifactId>*</artifactId>
