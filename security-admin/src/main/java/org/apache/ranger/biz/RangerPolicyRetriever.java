@@ -44,6 +44,7 @@ import org.apache.ranger.entity.XXPolicyResourceMap;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -250,10 +251,10 @@ public class RangerPolicyRetriever {
 				ret = userNames.get(userId);
 
 				if(ret == null) {
-					XXPortalUser user = daoMgr.getXXPortalUser().getById(userId);
+					XXUser user = daoMgr.getXXUser().getById(userId);
 
 					if(user != null) {
-						ret = user.getLoginId();
+						ret = user.getName(); // Name is `loginId`
 
 						userNames.put(userId,  ret);
 					}
