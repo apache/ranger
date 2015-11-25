@@ -20,6 +20,7 @@
 package org.apache.ranger.security.handler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -230,6 +231,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
 				authentication = ldapAuthenticationProvider
 						.authenticate(finalAuthentication);
+				authentication=getAuthenticationWithGrantedAuthority(authentication);
 				return authentication;
 			} else {
 				return authentication;
@@ -272,6 +274,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 						principal, userPassword, grantedAuths);
 				authentication = adAuthenticationProvider
 						.authenticate(finalAuthentication);
+				authentication=getAuthenticationWithGrantedAuthority(authentication);
 				return authentication;
 			} else {
 				return authentication;
@@ -323,6 +326,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 						principal, userPassword, grantedAuths);
 				authentication = jaasAuthenticationProvider
 						.authenticate(finalAuthentication);
+				authentication=getAuthenticationWithGrantedAuthority(authentication);
 				return authentication;
 			} else {
 				return authentication;
@@ -399,6 +403,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
 
 				authentication = ldapAuthenticationProvider.authenticate(finalAuthentication);
+				authentication=getAuthenticationWithGrantedAuthority(authentication);
 				return authentication;
 			} else {
 				return authentication;
@@ -464,6 +469,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
 
 				authentication = ldapAuthenticationProvider.authenticate(finalAuthentication);
+				authentication=getAuthenticationWithGrantedAuthority(authentication);
 				return authentication;
 			} else {
 				return authentication;
@@ -499,8 +505,6 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			if (userName != null && userPassword != null && !userName.trim().isEmpty()&& !userPassword.trim().isEmpty()) {
 				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 				grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
-				grantedAuths.add(new SimpleGrantedAuthority("ROLE_SYS_ADMIN"));
-				grantedAuths.add(new SimpleGrantedAuthority("ROLE_KEY_ADMIN"));
 				final UserDetails principal = new User(userName, userPassword,grantedAuths);
 				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
 				authentication= authenticator.authenticate(finalAuthentication);
@@ -518,6 +522,26 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			throw e;
 		}catch (Exception e) {
 			throw e;
+		}
+		return authentication;
+	}
+	private List<GrantedAuthority> getAuthorities(String username) {
+		Collection<String> roleList=userMgr.getRolesByLoginId(username);
+		final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+		for(String role:roleList){
+			grantedAuths.add(new SimpleGrantedAuthority(role));
+		}
+		return grantedAuths;
+	}
+
+	public Authentication getAuthenticationWithGrantedAuthority(Authentication authentication){
+		UsernamePasswordAuthenticationToken result=null;
+		if(authentication!=null && authentication.isAuthenticated()){
+			final List<GrantedAuthority> grantedAuths=getAuthorities(authentication.getName().toString());
+			final UserDetails userDetails = new User(authentication.getName().toString(), authentication.getCredentials().toString(),grantedAuths);
+			result = new UsernamePasswordAuthenticationToken(userDetails,authentication.getCredentials(),grantedAuths);
+			result.setDetails(authentication.getDetails());
+			return result;
 		}
 		return authentication;
 	}
