@@ -104,6 +104,26 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	}
 
 	@Override
+	public void close() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerKafkaAuthorizer.close()");
+		}
+
+		try {
+			activatePluginClassLoader();
+			
+			rangerKakfaAuthorizerImpl.close();
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerKafkaAuthorizer.close()");
+		}
+		
+	}
+
+	@Override
 	public boolean authorize(Session session, Operation operation,Resource resource) {	
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerKafkaAuthorizer.authorize(Session, Operation, Resource)");

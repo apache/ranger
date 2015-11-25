@@ -101,11 +101,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see kafka.security.auth.Authorizer#configure(Map<String, Object>)
-	 */
 	@Override
 	public void close() {
 		logger.info("close() called on authorizer.");
@@ -141,7 +136,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		}
 		java.util.Set<String> userGroups = MiscUtil
 				.getGroupsForRequestUser(userName);
-		String ip = session.host();
+		String ip = session.clientAddress().getHostAddress();
 
 		// skip leading slash
 		if (StringUtils.isNotEmpty(ip) && ip.charAt(0) == '/') {
