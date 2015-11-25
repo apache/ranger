@@ -345,9 +345,12 @@ update_properties() {
 		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${audit_db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${audit_db_name}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
@@ -379,8 +382,11 @@ update_properties() {
 		fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
@@ -409,9 +415,12 @@ update_properties() {
 		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:postgresql://${DB_HOST}/${audit_db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			newPropertyValue="jdbc:postgresql://${DB_HOST}/${audit_db_name}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
@@ -436,9 +445,12 @@ update_properties() {
 		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${audit_db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${audit_db_name}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
@@ -463,9 +475,12 @@ update_properties() {
 		newPropertyValue="jdbc:sqlanywhere:database=${db_name};host=${DB_HOST}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:sqlanywhere:database=${audit_db_name};host=${DB_HOST}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			newPropertyValue="jdbc:sqlanywhere:database=${audit_db_name};host=${DB_HOST}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
@@ -507,9 +522,12 @@ update_properties() {
 	newPropertyValue="${db_user}"
 	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-	propertyName=ranger.jpa.audit.jdbc.user
-	newPropertyValue="${audit_db_user}"
-	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	if [ "${audit_store}" == "db" ]
+	then
+		propertyName=ranger.jpa.audit.jdbc.user
+		newPropertyValue="${audit_db_user}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
 	##########
 
 	keystore="${cred_keystore_filename}"
@@ -555,7 +573,7 @@ update_properties() {
 	fi
 
 	###########
-	if [ "${audit_store}" != "solr" ]
+	if [ "${audit_store}" == "db" ]
 	then
 	    audit_db_password_alias=ranger.auditdb.password
 
