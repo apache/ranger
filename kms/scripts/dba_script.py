@@ -492,11 +492,11 @@ class OracleConf(BaseDB):
 			# Assign default tablespace db_name
 			get_cmd = self.get_jisql_cmd(root_user , db_root_password)
 			if os_name == "LINUX":
-				query = get_cmd +" -c \; -query 'alter user %s identified by \"%s\" DEFAULT Tablespace %s;'" %(db_user, db_password, db_name)
+				query = get_cmd +" -c \; -query 'alter user %s DEFAULT Tablespace %s;'" %(db_user, db_name)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
 			elif os_name == "WINDOWS":
-				query = get_cmd +" -query \"alter user %s identified by \"%s\" DEFAULT Tablespace %s;\" -c ;" %(db_user, db_password, db_name)
+				query = get_cmd +" -query \"alter user %s DEFAULT Tablespace %s;\" -c ;" %(db_user, db_name)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(query)
 			if ret == 0:
@@ -519,7 +519,7 @@ class OracleConf(BaseDB):
 				log("[E] Assigning default tablespace to user '" + db_user + "' failed..", "error")
 				sys.exit(1)
 		else:
-			logFile("alter user %s identified by \"%s\" DEFAULT Tablespace %s;" %(db_user, db_password, db_name))
+			logFile("alter user %s DEFAULT Tablespace %s;" %(db_user, db_name))
 			logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;" % (db_user))
 
 
@@ -548,7 +548,7 @@ class OracleConf(BaseDB):
 		logFile('create user %s identified by "%s";'%(db_user, db_password))
 		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'%(db_user))
 		logFile("create tablespace %s datafile '%s.dat' size 10M autoextend on;" %(db_name, db_name))
-		logFile('alter user %s identified by "%s" DEFAULT Tablespace %s;'%(db_user, db_password, db_name))
+		logFile('alter user %s DEFAULT Tablespace %s;'%(db_user, db_name))
 		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'%(db_user))
 
 class PostgresConf(BaseDB):

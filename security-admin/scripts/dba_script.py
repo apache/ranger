@@ -519,11 +519,11 @@ class OracleConf(BaseDB):
 			# Assign default tablespace db_name
 			get_cmd = self.get_jisql_cmd(root_user , db_root_password)
 			if os_name == "LINUX":
-				query = get_cmd +" -c \; -query 'alter user %s identified by \"%s\" DEFAULT Tablespace %s;'" %(db_user, db_password, db_name)
+				query = get_cmd +" -c \; -query 'alter user %s DEFAULT Tablespace %s;'" %(db_user, db_name)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
 			elif os_name == "WINDOWS":
-				query = get_cmd +" -query \"alter user %s identified by \"%s\" DEFAULT Tablespace %s;\" -c ;" %(db_user, db_password, db_name)
+				query = get_cmd +" -query \"alter user %s DEFAULT Tablespace %s;\" -c ;" %(db_user, db_name)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(query)
 			if ret == 0:
@@ -546,7 +546,7 @@ class OracleConf(BaseDB):
 				log("[E] Assigning default tablespace to user '" + db_user + "' failed..", "error")
 				sys.exit(1)
 		else:
-			logFile("alter user %s identified by \"%s\" DEFAULT Tablespace %s;" %(db_user, db_password, db_name))
+			logFile("alter user %s DEFAULT Tablespace %s;" %(db_user, db_name))
 			logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;" % (db_user))
 
 
@@ -609,11 +609,11 @@ class OracleConf(BaseDB):
 				# Assign default tablespace db_name
 				get_cmd = self.get_jisql_cmd(audit_db_root_user , audit_db_root_password)
 				if os_name == "LINUX":
-					query = get_cmd +" -c \; -query 'alter user %s identified by \"%s\" DEFAULT Tablespace %s;'" %(audit_db_user, audit_db_password, db_name)
+					query = get_cmd +" -c \; -query 'alter user %s DEFAULT Tablespace %s;'" %(audit_db_user, db_name)
 					jisql_log(query, audit_db_root_password)
 					ret1 = subprocess.call(shlex.split(query))
 				elif os_name == "WINDOWS":
-					query = get_cmd +" -query \"alter user %s identified by \"%s\" DEFAULT Tablespace %s;\" -c ;" %(audit_db_user, audit_db_password, db_name)
+					query = get_cmd +" -query \"alter user %s DEFAULT Tablespace %s;\" -c ;" %(audit_db_user, db_name)
 					jisql_log(query, audit_db_root_password)
 					ret1 = subprocess.call(query)
 
@@ -621,11 +621,11 @@ class OracleConf(BaseDB):
 				# Assign default tablespace audit_db_name
 				get_cmd = self.get_jisql_cmd(audit_db_root_user , audit_db_root_password)
 				if os_name == "LINUX":
-					query = get_cmd +" -c \; -query 'alter user %s identified by \"%s\" DEFAULT Tablespace %s;'" %(audit_db_user, audit_db_password, audit_db_name)
+					query = get_cmd +" -c \; -query 'alter user %s DEFAULT Tablespace %s;'" %(audit_db_user, audit_db_name)
 					jisql_log(query, audit_db_root_password)
 					ret2 = subprocess.call(shlex.split(query))
 				elif os_name == "WINDOWS":
-					query = get_cmd +" -query \"alter user %s identified by \"%s\" DEFAULT Tablespace %s;\" -c ;" %(audit_db_user, audit_db_password, audit_db_name)
+					query = get_cmd +" -query \"alter user %s DEFAULT Tablespace %s;\" -c ;" %(audit_db_user, audit_db_name)
 					jisql_log(query, audit_db_root_password)
 					ret2 = subprocess.call(query)
 
@@ -647,8 +647,8 @@ class OracleConf(BaseDB):
 				else:
 					return False
 			else:
-				logFile("alter user %s identified by \"%s\" DEFAULT Tablespace %s;" %(audit_db_user, audit_db_password, db_name))
-				logFile("alter user %s identified by \"%s\" DEFAULT Tablespace %s;" %(audit_db_user, audit_db_password, audit_db_name))
+				logFile("alter user %s DEFAULT Tablespace %s;" %(audit_db_user, db_name))
+				logFile("alter user %s DEFAULT Tablespace %s;" %(audit_db_user, audit_db_name))
 				logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;" % (db_user))
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, invoke,dryMode):
@@ -762,12 +762,12 @@ class OracleConf(BaseDB):
 		logFile('create user %s identified by "%s";'%(db_user, db_password))
 		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO %s WITH ADMIN OPTION;'%(db_user))
 		logFile("create tablespace %s datafile '%s.dat' size 10M autoextend on;" %(db_name, db_name))
-		logFile('alter user %s identified by "%s" DEFAULT tablespace %s;'%(db_user, db_password, db_name))
+		logFile('alter user %s DEFAULT tablespace %s;'%(db_user, db_name))
 		if not db_user == audit_db_user:
 			logFile('create user %s identified by "%s";'%(audit_db_user, audit_db_password))
 			logFile('GRANT CREATE SESSION TO %s;' %(audit_db_user))
 			logFile("create tablespace %s datafile '%s.dat' size 10M autoextend on;" %(audit_db_name, audit_db_name))
-			logFile('alter user %s identified by "%s" DEFAULT tablespace %s;' %(audit_db_user, audit_db_password, audit_db_name))
+			logFile('alter user %s DEFAULT tablespace %s;' %(audit_db_user, audit_db_name))
 		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO %s WITH ADMIN OPTION;'%(db_user))
 
 class PostgresConf(BaseDB):
@@ -1781,8 +1781,6 @@ def main(argv):
 		password_validation(xa_db_root_password,"DBA root");
 		log("[I] ---------- Verifing Ranger Admin db user password ---------- ","info")
 		password_validation(db_password,"admin");
-		log("[I] ---------- Verifing Ranger Audit db user password ---------- ","info")
-		password_validation(audit_db_password,"audit");
 	# Methods Begin
 	if DBA_MODE == "TRUE" :
 		if (dryMode==True):
@@ -1800,6 +1798,8 @@ def main(argv):
 				xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, is_revoke,dryMode)
 			# Ranger Admin DB Host AND Ranger Audit DB Host are Different OR Same
 			if audit_store == "db":
+				log("[I] ---------- Verifing Ranger Audit db user password ---------- ","info")
+				password_validation(audit_db_password,"audit");
 				log("[I] ---------- Verifying/Creating audit user --------- ","info")
 				audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode)
 			log("[I] ---------- Ranger Policy Manager DB and User Creation Process Completed..  ---------- ","info")
