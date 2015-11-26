@@ -89,7 +89,7 @@ public class SolrMgr {
 						}
 
 						if (zkHosts != null && !zkHosts.trim().equals("")
-								&& !zkHosts.trim().equals("none")) {
+								&& !zkHosts.trim().equalsIgnoreCase("none")) {
 							zkHosts = zkHosts.trim();
 							String collectionName = PropertiesUtil
 									.getProperty(SOLR_COLLECTION_NAME);
