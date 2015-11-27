@@ -87,9 +87,7 @@ define(function(require){
 
 			_.extend(this, _.pick(options, 'groupList','tab'));
 			this.showUsers = this.tab == 'usertab' ? true : false;
-
 			this.chgFlags = [];
-
 			if(_.isUndefined(this.groupList)){
 				this.groupList = new VXGroupList();
 			}
@@ -107,10 +105,11 @@ define(function(require){
 		/** on render callback */
 		onRender: function() {
 			this.initializePlugins();
-			if(this.tab == 'grouptab')
+			if(this.tab == 'grouptab'){
 				this.renderGroupTab();
-			else
+			} else {
 				this.renderUserTab();
+			}
 			this.addVisualSearch();
 		},
 		onTabChange : function(e){
@@ -120,8 +119,7 @@ define(function(require){
 			if(this.showUsers){				
 				this.renderUserTab();
 				this.addVisualSearch();
-			}
-			else{				
+			} else {				
 				this.renderGroupTab();
 				this.addVisualSearch();
 			}
@@ -411,7 +409,6 @@ define(function(require){
 				
                 select : {
 					label : localization.tt("lbl.isVisible"),
-					//cell : Backgrid.SelectCell.extend({className: 'cellWidth-1'}),
 					cell: "select-row",
 				    headerCell: "select-all",
 					click : false,
@@ -437,10 +434,12 @@ define(function(require){
 							if(!_.isUndefined(rawValue)){
 								if(rawValue == XAEnums.GroupSource.XA_PORTAL_GROUP.value)
 									return '<span class="label label-success">'+XAEnums.GroupTypes.GROUP_INTERNAL.label+'</span>';
-								else
+								else {
 									return '<span class="label label-green">'+XAEnums.GroupTypes.GROUP_EXTERNAL.label+'</span>';
-							}else
+								}
+							}else {
 								return '--';
+							}
 						}
 					}),
 					click : false,
@@ -454,12 +453,14 @@ define(function(require){
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue)){
-								if(rawValue)
+								if(rawValue){
 									return '<span class="label label-success">'+XAEnums.VisibilityStatus.STATUS_VISIBLE.label+'</span>';
-								else
+								} else {
 									return '<span class="label label-green">'+XAEnums.VisibilityStatus.STATUS_HIDDEN.label+'</span>';
-							}else
+								}
+							}else {
 								return '--';
+							}
 						}
 					}),
 					editable:false,
@@ -469,6 +470,7 @@ define(function(require){
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
 		},
 		addVisualSearch : function(){
+			var that = this;
 			var coll,placeholder;
 			var searchOpt = [], serverAttrName = [];
 			if(this.showUsers){
@@ -483,7 +485,7 @@ define(function(require){
 				                   {text : "User Source", label :"userSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.UserTypes)},
 				                   {text : "User Status", label :"status", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.ActiveStatus)},
 								];
-			}else{
+			} else {
 				placeholder = localization.tt('h.searchForYourGroup');
 				coll = this.groupList;
 				searchOpt = ['Group Name','Group Source', 'Visibility'];//,'Start Date','End Date','Today'];
@@ -515,7 +517,8 @@ define(function(require){
 										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.VisibilityStatus));
 										break;
 									case 'User Status':
-										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.ActiveStatus));
+//										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.ActiveStatus));
+										callback(that.getActiveStatusNVList());
 										break;
 									/*case 'Start Date' :
 										setTimeout(function () { XAUtil.displayDatepicker(that.ui.visualSearch, callback); }, 0);
@@ -533,6 +536,13 @@ define(function(require){
 				      }
 				};
 			XAUtil.addVisualSearch(searchOpt,serverAttrName, coll,pluginAttr);
+		},
+		getActiveStatusNVList : function() {
+			var activeStatusList = _.filter(XAEnums.ActiveStatus, function(obj){
+				if(obj.label != XAEnums.ActiveStatus.STATUS_DELETED.label)
+					return obj;
+			});
+			return _.map(activeStatusList, function(status) { return { 'label': status.label, 'value': status.label}; })
 		},
 		onShowMore : function(e){
 			var id = $(e.currentTarget).attr('policy-group-id');

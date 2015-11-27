@@ -40,10 +40,8 @@ define(function(require){
 		
     	template: GroupcreateTmpl,
     	breadCrumbs :function(){
-    		if(this.model.isNew())
-    			return [XALinks.get('Groups'),XALinks.get('GroupCreate')];
-    		else
-    			return [XALinks.get('Groups'),XALinks.get('GroupEdit')];
+    		return this.model.isNew() ? [XALinks.get('Groups'),XALinks.get('GroupCreate')]
+    							: [XALinks.get('Groups'),XALinks.get('GroupEdit')];
     	},
         
 		/** Layout sub regions */
@@ -103,7 +101,7 @@ define(function(require){
 		initializePlugins: function(){
 		},
 		onSave: function(){
-			var that =this ;
+			var that = this ;
 			var errors = this.form.commit({validate : false});
 			if(! _.isEmpty(errors)){
 				return;
@@ -134,7 +132,7 @@ define(function(require){
 					groupList.fetch({
 						   cache:false
 					   }).done(function(){
-							var newColl;// = groupList;
+							var newColl;
 							groupList.getLastPage({
 								cache : false,
 								success : function(collection, response, options){
@@ -155,12 +153,14 @@ define(function(require){
 				error : function (model, response, options) {
 					XAUtil.blockUI('unblock');
 					if ( response && response.responseJSON && response.responseJSON.msgDesc){
-						if(response.responseJSON.msgDesc == "XGroup already exists")
+						if(response.responseJSON.msgDesc == "XGroup already exists"){
 							XAUtil.notifyError('Error', "Group name already exists");
-						else
+						} else {
 							XAUtil.notifyError('Error', response.responseJSON.msgDesc);
-					}else
+						}
+					}else {
 						XAUtil.notifyError('Error', 'Error occurred while creating/updating group!');
+					}
 				}
 			});
 		},

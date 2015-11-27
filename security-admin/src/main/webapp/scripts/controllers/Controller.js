@@ -62,12 +62,7 @@ define(function(require) {
 		   var RangerPolicyList 	= require('collections/RangerPolicyList');
 		   var VXGroupList		= require('collections/VXGroupList');
 		   var VXUserList		= require('collections/VXUserList');
-		   var policyList 	= new RangerPolicyList([],{
-			   queryParams : {
-				   //'resourceType' : XAEnums.AssetType.ASSET_HDFS.value,
-				   //'assetId' : assetId 
-			   }
-		   });
+		   var policyList 	= new RangerPolicyList();
 		   var that 		= this;
 		   this.groupList 	= new VXGroupList();
 		   this.userList 	= new VXUserList();
@@ -416,22 +411,6 @@ define(function(require) {
 			   kmsServiceName : kmsServiceName
 		   }));
 	   },
-//	   kmsKeyEditAction : function(kmsServiceName, keyName){
-//		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.KMS.value });
-//		   var view 		= require('views/kms/KmsKeyCreate');
-//		   var VXKmsKey		= require('models/VXKmsKey');
-//		   var kmsKeyModel 	= new VXKmsKey({'name' : keyName});
-//		   var data = {'provider': kmsServiceName}
-//		   kmsKeyModel.fetch({
-//				   cache : true,
-//				   data : data
-//		   }).done(function(){
-//			   App.rContent.show(new view({
-//				   model : kmsKeyModel,
-//				   kmsServiceName : kmsServiceName
-//			   }));
-//		   });	   
-//	   },
 	   /**************** ERROR PAGE ******************************/
 	   pageNotFoundAction	: function() {
 		   var XAUtils			= require('utils/XAUtils');

@@ -22,7 +22,6 @@ define(function(require){
     'use strict';
 
 	var Backbone		= require('backbone');
-
 	var localization	= require('utils/XALangSupport');
 	var XAUtil			= require('utils/XAUtils');
 	var XAEnums			= require('utils/XAEnums');
@@ -62,8 +61,6 @@ define(function(require){
 		/** fields for the form
 		*/
 		schema :function(){
-			var that = this;
-			//var plugginAttr = this.getPlugginAttr(true);
 		},
 
 		/** on render callback */
@@ -76,12 +73,13 @@ define(function(require){
 				if(this.model.has('userRoleList')){
 					var roleList = this.model.get('userRoleList');
 					if(!_.isUndefined(roleList) && roleList.length > 0){
-						if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_USER.value)
+						if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_USER.value){
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_USER.value);
-						else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN.value)
+						} else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_KEY_ADMIN.value);
-						else
+						} else {
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_SYS_ADMIN.value);
+						}
 					}
 				}
 				if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
@@ -99,9 +97,7 @@ define(function(require){
 				this.fields.emailAddress.$el.hide();
 				this.fields.userRoleList.$el.hide();
 				this.fields.firstName.editor.validators.pop();
-//				this.fields.lastName.editor.validators.pop();
 				this.fields.lastName.editor.validators = [];
-			//	this.fields.emailAddress.editor.validators.pop();
 				
 				this.fields.oldPassword.$el.show();
 				this.fields.newPassword.$el.show();
@@ -115,14 +111,12 @@ define(function(require){
 		},
 		formValidation : function(){
 		},
-		
 		afterCommit : function(){
-//			this.model.unset('userRoleList');
 			if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_SYS_ADMIN.value){
 				this.model.set('userRoleList',["ROLE_SYS_ADMIN"]);
-			}else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_USER.value){
+			} else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_USER.value){
 				this.model.set('userRoleList',["ROLE_USER"]);
-			}else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
+			} else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
 				this.model.set('userRoleList',["ROLE_KEY_ADMIN"]);
 			}
 		},
@@ -136,16 +130,13 @@ define(function(require){
 				loginId : this.model.get('id'),
 				emailAddress :this.model.get('emailAddress'), 
 				oldPassword : that.fields.oldPassword.getValue()
-				//updPassword : this.model.get('newPassword'),
 			});
 			this.model.changePassword(this.model.get('id'),vPasswordChange,{
 				wait: true,
 				success: function () {
 					XAUtil.notifySuccess('Success', "User profile updated successfully !!");
-					console.log("success");
 				},
 				error: function (msResponse, options) {
-					console.log("error occured during updated user profile: "+localization.tt(msResponse.responseJSON.msgDesc));
 					if(!localization.tt(msResponse.responseJSON.msgDesc) == "Invalid new password"){
 						that.fields.oldPassword.setError(localization.tt('validationMessages.oldPasswordError'));
 						XAUtil.notifyInfo('',localization.tt('msg.myProfileError'));

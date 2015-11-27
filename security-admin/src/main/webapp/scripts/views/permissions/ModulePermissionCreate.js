@@ -38,25 +38,23 @@ define(function(require){
 	{
 		_viewName : 'ModulePermissionCreate',
 
-	template: ModulePermissionCreateTmpl,
-	breadCrumbs :function(){
-		if(this.model.isNew())
-			return [XALinks.get('ModulePermissions')];
-		else
-			return [XALinks.get('ModulePermissions'),XALinks.get('ModulePermissionEdit',this.model)];
-	},
-
-		/** Layout sub regions */
-	regions: {
-		'rForm' :'div[data-id="r_form"]'
-	},
-
-	/** ui selector cache */
-	ui: {
-		'tab' 		: '.nav-tabs',
-		'btnSave'	: '[data-id="save"]',
-		'btnCancel' : '[data-id="cancel"]'
-	},
+		template: ModulePermissionCreateTmpl,
+		breadCrumbs :function(){
+			return this.model.isNew() ? [XALinks.get('ModulePermissions')] 
+					: [XALinks.get('ModulePermissions'),XALinks.get('ModulePermissionEdit',this.model)];
+		},
+		
+			/** Layout sub regions */
+		regions: {
+			'rForm' :'div[data-id="r_form"]'
+		},
+		
+		/** ui selector cache */
+		ui: {
+			'tab' 		: '.nav-tabs',
+			'btnSave'	: '[data-id="save"]',
+			'btnCancel' : '[data-id="cancel"]'
+		},
 
 		/** ui events hash */
 		events: function() {
@@ -94,34 +92,33 @@ define(function(require){
 		initializePlugins: function(){
 		},
 		renderForm : function(){
-			   var VXGroupList		= require('collections/VXGroupList');
-			   var VXUserList		= require('collections/VXUserList');
-			   var params = {sortBy : 'name'};
-			   this.userList = new VXUserList();
-			   this.userList.setPageSize(100,{fetch:true});
-			   this.userList.fetch({
-					cache :false,
-					data: params,
-					async : false
-			   });
-			   this.groupList = new VXGroupList();
-			   this.groupList.setPageSize(100,{fetch:true});
-			   this.groupList.fetch({
-				   cache :false,
-				   data : params,
-				   async : false
-			   });
-			var that = this;
-			this.form = new ModulePermissionForm({
-				template  : require('hbs!tmpl/permissions/ModulePermissionForm_tmpl'),
-				model 	  : that.model,
-				groupList : that.groupList,
-				userList  : that.userList
-			});
-			this.rForm.show(this.form);
+			var VXGroupList		= require('collections/VXGroupList');
+			var VXUserList		= require('collections/VXUserList');
+		    var params = {sortBy : 'name'};
+		    this.userList = new VXUserList();
+		    this.userList.setPageSize(100,{fetch:true});
+		    this.userList.fetch({
+		    	cache :false,
+				data: params,
+				async : false
+		   });
+		   this.groupList = new VXGroupList();
+		   this.groupList.setPageSize(100,{fetch:true});
+		   this.groupList.fetch({
+			   cache :false,
+			   data : params,
+			   async : false
+		   });
+		   var that = this;
+		   this.form = new ModulePermissionForm({
+			   template  : require('hbs!tmpl/permissions/ModulePermissionForm_tmpl'),
+			   model 	  : that.model,
+			   groupList : that.groupList,
+			   userList  : that.userList
+		   });
+		   this.rForm.show(this.form);
 		},
 		onSave: function(){
-
 			var errors = this.form.commit({validate : false});
 			if(! _.isEmpty(errors)){
 				this.form.beforeSaveModulePermissions();
@@ -142,14 +139,14 @@ define(function(require){
 					var msg = that.editMode ? 'Module Permissions updated successfully' :'Module Permissions created successfully';
 					XAUtil.notifySuccess('Success', msg);
 					App.appRouter.navigate("#!/permissions",{trigger: true});
-				}   ,
+				},
 				error : function(model,resp){
 					XAUtil.blockUI('unblock');
 					if(!_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
 						XAUtil.notifyError('Error',resp.responseJSON.msgDesc);
-					}else
+					} else {
 						XAUtil.notifyError('Error', "Error occurred while creating/updating module permissions.");
-
+					}
 				}
 			});
 		},

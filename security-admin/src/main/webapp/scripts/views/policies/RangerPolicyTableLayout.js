@@ -31,7 +31,6 @@ define(function(require){
 	var XABackgrid		= require('views/common/XABackgrid');
 	var XATableLayout	= require('views/common/XATableLayout');
 	var localization	= require('utils/XALangSupport');
-	var vFolderInfo = require('views/folders/FolderInfo');
 	var RangerService		= require('models/RangerService');
 	var RangerServiceDef	= require('models/RangerServiceDef');
 	var RangerPolicy 		= require('models/RangerPolicy');

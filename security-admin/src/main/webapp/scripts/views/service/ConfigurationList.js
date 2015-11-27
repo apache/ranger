@@ -91,13 +91,11 @@ define(function(require) {
 		},
 		initialize : function(options) {
 			_.extend(this, _.pick(options, 'fieldLabel'));
-//					this.listenTo(this.groupList, 'sync', this.render, this);
-					if(this.collection.length == 0)
-						this.collection.add(new Backbone.Model());
+			if(this.collection.length == 0){
+				this.collection.add(new Backbone.Model());
+			}
 		},
 		onRender : function(){
-//			this.$('table').hide();
-			
 		},
 		addNew : function(){
 			var that =this;

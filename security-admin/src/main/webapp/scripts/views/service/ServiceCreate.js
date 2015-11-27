@@ -27,11 +27,11 @@ define(function(require){
 
 	var Backbone		= require('backbone');
 	var App				= require('App');
-
 	var XAUtil			= require('utils/XAUtils');
 	var XAEnums			= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
 	var localization	= require('utils/XALangSupport');
+	
 	var ServiceForm		= require('views/service/ServiceForm');
 	var RangerServiceDef	= require('models/RangerServiceDef');
 	var ServiceCreateTmpl = require('hbs!tmpl/service/ServiceCreate_tmpl');
@@ -49,10 +49,11 @@ define(function(require){
         
 		breadCrumbs :function(){
 			var name  = this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? 'ServiceManager' : 'TagBasedServiceManager'; 
-			if(this.model.isNew())
+			if(this.model.isNew()){
 				return [XALinks.get(name), XALinks.get('ServiceCreate', {model:this.model})];
-			else
+			} else {
 				return [XALinks.get(name), XALinks.get('ServiceEdit',{model:this.model})];
+			}
 		},        
 
 		/** Layout sub regions */
@@ -86,16 +87,12 @@ define(function(require){
 			console.log("initialized a ServiceCreate Layout");
 			_.extend(this, _.pick(options, 'serviceTypeId'));
 			this.initializeServiceDef();
-			/*if(! this.model.isNew()){
-				this.setupModel();
-			}*/
 			this.form = new ServiceForm({
 				model :	this.model,
 				rangerServiceDefModel : this.rangerServiceDefModel,
 				template : require('hbs!tmpl/service/ServiceForm_tmpl')
 			});
 			this.editService = this.model.has('id') ? true : false;
-
 			this.bindEvents();
 		},
 		initializeServiceDef : function(){
@@ -104,7 +101,6 @@ define(function(require){
 			   cache : false,
 			   async : false
 			});
-
 		},
 		setupModel : function(){
 		},
@@ -120,9 +116,6 @@ define(function(require){
 			if(!this.editService){
 				this.ui.btnDelete.hide();
 				this.ui.btnSave.html('Add');
-			} else {
-				
-			//	XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavRepositoryForm'));
 			}
 			this.rForm.show(this.form);
 			this.rForm.$el.dirtyFields();
@@ -141,7 +134,6 @@ define(function(require){
 			}
 			this.form.formValidation();
 			this.saveService();
-
 		},
 		saveService : function(){
 			var that = this;
@@ -170,7 +162,6 @@ define(function(require){
 		onDelete :function(){
 			var that = this;
 			XAUtil.confirmPopup({
-				//msg :localize.tt('msg.confirmDelete'),
 				msg :'Are you sure want to delete ?',
 				callback : function(){
 					XAUtil.blockUI();
@@ -186,7 +177,7 @@ define(function(require){
 							XAUtil.blockUI('unblock');
 							if ( response && response.responseJSON && response.responseJSON.msgDesc){
 									XAUtil.notifyError('Error', response.responseJSON.msgDesc);
-							}else{
+							} else {
 								XAUtil.notifyError('Error', 'Error occured while deleting service!');
 							}
 						}
@@ -218,7 +209,7 @@ define(function(require){
                         							   var div = '<div class="showMore connection-error-font"><br>'+msResponse.messageList[0].message.split('\n').join('<br>')+'</div>'
                         							   $(e.delegateTarget).find('.modal-body').append(div)
                         							   $(e.currentTarget).html('Show Less..')
-	                            				   }else{
+	                            				   } else {
 	                            					   $(e.delegateTarget).find('.showMore').remove();
 	                            					   $(e.currentTarget).html('Show More..')
 	                            				   }
@@ -228,22 +219,22 @@ define(function(require){
 	                            			   label: "OK",
 	                            			   callback:function(){}
 	                            		   }];
-                            	   }else{
+                            	   } else { 
                             		   		popupBtnOpts = [{label: "OK",
                             		   			callback:function(){}
                             		   		}];
                             	   }
                                    var msgHtml = '<b>Connection Failed.</b></br>'+msResponse.msgDesc;
                                    bootbox.dialog(msgHtml, popupBtnOpts);
-								}else{
+								} else {
 										bootbox.alert("Connection Failed.");
 								}
-							}else{
+							} else {
 								bootbox.alert("Connection Failed.");
 							}
-						}
-						else
+						} else {
 							bootbox.alert("Connected Successfully.");
+						}
 					},
 					error: function (msResponse, options) {
 						bootbox.alert("Connection Failed.");

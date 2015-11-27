@@ -40,7 +40,6 @@ define(function(require){
 		
     	template: KmsTablelayoutTmpl,
     	templateHelpers : function(){
-//    		return { kmsServiceName : this.kmsServiceName };
     	},
     	breadCrumbs :[XALinks.get('KmsManage')],
 		/** Layout sub regions */
@@ -78,10 +77,8 @@ define(function(require){
 			this.showKeyList = true;
 			this.isKnownKmsServicePage =  this.kmsManagePage == 'new' ? false : true;
 			this.initializeKMSServices();
-			if(this.isKnownKmsServicePage){
-				this.getKeysForKmsService();	
-			}
 			this.bindEvents();
+			this.defaultsCollstate = this.collection.state
 		},
 
 		/** all events binding here */
@@ -99,16 +96,19 @@ define(function(require){
 			});
 		},
 		getKeysForKmsService : function() {
+			var that = this;
 			this.collection.queryParams['provider'] = this.kmsServiceName;
 			this.collection.fetch({
 				cache : false,
 				reset :true,
-				error : function(model,resp){
+				error : function(collection,resp){
 					var errorMsg = 'Error getting key list!!';
 					if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
 						errorMsg = resp.responseJSON.msgDesc;
 					}
 					XAUtil.notifyError('Error', errorMsg);
+					collection.state = that.defaultsCollstate;
+					collection.reset();
 				}
 			});
 		},
@@ -128,13 +128,19 @@ define(function(require){
 			}
 			this.setupKmsServiceAutoComplete();
 			this.addVisualSearch();
+			//Showing pagination even if No Key found
+			if(!this.isKnownKmsServicePage){
+				this.collection.reset();
+			}
+			if(this.isKnownKmsServicePage){
+                                this.getKeysForKmsService();
+                        }
 		},
 		onTabChange : function(e){
 			var that = this;
 			this.showKeyList = $(e.currentTarget).attr('href') == '#keys' ? true : false;
 			if(this.showKeyList){				
 				this.renderKeyTab();
-//				this.addVisualSearch();
 			}
 		},
 		renderKeyTab : function(){
@@ -152,19 +158,16 @@ define(function(require){
 					emptyText : 'No Key found!'
 				}
 			}));	
-
 		},
 
 		getColumns : function(){
 			var that = this;
 			var cols = {
-				
 				name : {
 					label	: localization.tt("lbl.keyName"),
 					cell :'string',
 					editable:false,
 					sortable:false,
-											
 				},
 				cipher : {
 					label	: localization.tt("lbl.cipher"),
@@ -206,12 +209,10 @@ define(function(require){
 					drag : false,
 					editable:false,
 					sortable:false,
-//                    sortType: 'toggle',
-//                    direction: 'descending',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue))
-							return Globalize.format(new Date(rawValue),  "MM/dd/yyyy hh:mm:ss tt");
+								return Globalize.format(new Date(rawValue),  "MM/dd/yyyy hh:mm:ss tt");
 						}
 					})
 				},
@@ -227,7 +228,6 @@ define(function(require){
 						}),
 						editable: false,
 						sortable : false
-
 				}
 				
 			};
@@ -252,7 +252,6 @@ define(function(require){
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 								}     
-			            	
 							}
 				      }
 				};
@@ -263,6 +262,7 @@ define(function(require){
 		},
 		setupKmsServiceAutoComplete : function(serviceName){
 			var that = this, arr = [];
+			
 			this.ui.selectServiceName.select2({
 				maximumSelectionSize : 1,
 				closeOnSelect : true,
@@ -275,13 +275,13 @@ define(function(require){
 					url: "service/plugins/services",
 					dataType: 'json',
 					data: function (term, page) {
-						return {name : term, 'serviceType' : 'kms'};
+						return { name : term, 'serviceType' : 'kms' };
 					},
 					results: function (data, page) { 
 						var results = [],selectedVals = [];
 						if(data.resultSize != "0"){
 							results = data.services.map(function(m, i){	return {id : m.name, text: m.name};	});
-							return {results : results};
+							return { results : results };
 						}
 						return { results : results };
 					}
@@ -296,7 +296,7 @@ define(function(require){
 					return 'No service found.';
 				}
 			})
-			.on('select2-focus', XAUtil.select2Focus)
+			//.on('select2-focus', XAUtil.select2Focus)
 			.on('change',function(e) {
 				that.kmsServiceName = (e.currentTarget.value)
 				that.ui.addNewKey.attr('disabled',false);
@@ -311,12 +311,12 @@ define(function(require){
 			var obj = this.collection.get($(e.currentTarget).data('id'));
 			var model = new KmsKey(obj.attributes);
 			model.collection = this.collection;
-			var url = model.urlRoot+"/"+model.get('name')+"?provider="+ this.kmsServiceName;
+			var url = model.urlRoot +"/"+model.get('name') +"?provider="+ this.kmsServiceName;
+			
 			XAUtil.confirmPopup({
 				msg :'Are you sure want to delete ?',
 				callback : function(){
 					XAUtil.blockUI();
-					
 					model.destroy({
 						'url' : url,
 						'success': function(model, response) {
@@ -343,7 +343,7 @@ define(function(require){
 			var obj = this.collection.get($(e.currentTarget).data('id'));
 			var model = new KmsKey({ 'name' : obj.attributes.name });
 			model.collection = this.collection;
-			 var url = model.urlRoot+"?provider="+ this.kmsServiceName;
+			var url = model.urlRoot + "?provider=" + this.kmsServiceName;
 			XAUtil.confirmPopup({
 				msg :'Are you sure want to rollover ?',
 				callback : function(){
@@ -363,7 +363,7 @@ define(function(require){
                             var errorMsg = 'Error rollovering key!';
                             XAUtil.blockUI('unblock');
                             if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
-                                    errorMsg = resp.responseJSON.msgDesc;
+                            	errorMsg = resp.responseJSON.msgDesc;
                             }
                             XAUtil.notifyError('Error', errorMsg);
 						}

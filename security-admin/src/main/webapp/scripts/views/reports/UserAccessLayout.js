@@ -78,13 +78,8 @@ define(function(require) {'use strict';
 		/** ui events hash */
 		events : function() {
 			var events = {};
-			//events['change ' + this.ui.input]  = 'onInputChange';
 			events['click ' + this.ui.searchBtn]  = 'onSearch';
-			//events["'change ' "+ this.ui.userName +"','" + this.ui.userGroup+"'"]  = 'onSearch';
-			//events['change ' + this.ui.userName+ ','+this.ui.userGroup+ ',' +this.ui.resourceName] = 'onSearch';
 			events['click .autoText']  = 'autocompleteFilter';
-			
-			//events['keydown ' + this.ui.userGroup]  = 'groupKeyDown';
 			events['click .gotoLink']  = 'gotoTable';
 			events['click ' + this.ui.btnShowMore]  = 'onShowMore';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
@@ -101,7 +96,6 @@ define(function(require) {'use strict';
 			console.log("initialized a UserAccessLayout Layout");
 			_.extend(this, _.pick(options, 'groupList','userList'));
 			this.bindEvents();
-			
 		},
 		initializeRequiredData : function() {
 			this.policyCollList = [];
@@ -116,7 +110,6 @@ define(function(require) {'use strict';
 		},
 		initializeServiceDef : function() {
 			   this.serviceDefList = new RangerServiceDefList();
-//			   this.serviceDefList.queryParams.sortBy = 'id';
 			   this.serviceDefList.fetch({
 				   cache : false,
 				   async:false
@@ -138,34 +131,18 @@ define(function(require) {'use strict';
 				this.renderTable(obj.collName, obj.serviceDefName);
 				this.getResourceLists(obj.collName,obj.serviceDefName);
 			},this);
+			this.$el.find('[data-js="policyName"]').focus()
 		},
 		
 		getResourceLists: function(collName, serviceDefName){
 			var that = this, coll = this[collName];
 			coll.queryParams.serviceType = serviceDefName;
-		/*	if(!_.isUndefined(params)){
-				_.each(params,function(val, attr){ 
-					if(!_.isUndefined(val) && !_.isEmpty(val)) 
-						coll.queryParams[attr] = val;
-				});
-			}*/
 			coll.fetch({
 				cache : false,
 				reset: true,
 				async:false,
 			}).done(function(){
-//				console.log(coll);
 				coll.trigger('sync')
-//				if(coll.queryParams.assetType == XAEnums.AssetType.ASSET_STORM.value){
-//					var totalRecords=0; 
-//					_.each(that.resourceList, function( list ){ totalRecords += list.state.totalRecords; });
-					/*that.$('[data-js="searchResult"]').html('Total '+totalRecords+' records found.');
-					that.$('[data-js="hdfsSearchResult"]').html(that.hdfsResourceList.state.totalRecords +' records found.');
-					that.$('[data-js="hiveSearchResult"]').html(that.hiveResourceList.state.totalRecords  +' records found.');
-					that.$('[data-js="hbaseSearchResult"]').html(that.hbaseResourceList.state.totalRecords +' records found.');
-					that.$('[data-js="knoxSearchResult"]').html(that.knoxResourceList.state.totalRecords +' records found.');
-					that.$('[data-js="stormSearchResult"]').html(that.stormResourceList.state.totalRecords +' records found.');*/
-//				}
 				XAUtil.blockUI('unblock');
 				
 			});
@@ -271,14 +248,6 @@ define(function(require) {'use strict';
 		},
 		/** on render callback */
 		setupGroupAutoComplete : function(){
-			//tags : true,
-			/*width :'220px',
-			multiple: true,
-			minimumInputLength: 1,
-			data :this.groupList.map(function(m) {
-				//console.log(m);
-				return {id : m.id,text : m.get('name')};
-			}),*/
 			this.groupArr = this.groupList.map(function(m){
 				return { id : m.get('name') , text : m.get('name')};
 			});
@@ -293,8 +262,6 @@ define(function(require) {'use strict';
 				// tags : this.groupArr,
 				initSelection : function (element, callback) {
 					var data = [];
-					console.log(that.groupList);
-					
 					$(element.val().split(",")).each(function () {
 						var obj = _.findWhere(that.groupArr,{id:this});	
 						data.push({id: obj.text, text: obj.text});
@@ -329,7 +296,7 @@ define(function(require) {'use strict';
 				formatNoMatches: function(result){
 					return 'No group found.';
 				}
-			}).on('select2-focus', XAUtil.select2Focus);
+			})//.on('select2-focus', XAUtil.select2Focus);
 		},		
 		setupUserAutoComplete : function(){
 			var that = this;
@@ -384,7 +351,7 @@ define(function(require) {'use strict';
 					return 'No user found.';
 				}
 				
-			}).on('select2-focus', XAUtil.select2Focus);
+			})//.on('select2-focus', XAUtil.select2Focus);
 		},
 		/** all post render plugin initialization */
 		initializePlugins : function() {
@@ -395,6 +362,7 @@ define(function(require) {'use strict';
 				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible'))
 					$(this).append('<a href="#" class="wrap-collapse pull-right">hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>').append('<a href="#" class="wrap-expand pull-right" style="display: none">show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>');
 			});
+			
 			// Collapse wrap
 			$(document).on("click", "a.wrap-collapse", function() {
 				var self = $(this).hide(100, 'linear');
@@ -413,7 +381,6 @@ define(function(require) {'use strict';
 			});
 			
 			this.ui.resourceName.bind( "keydown", function( event ) {
-
 				if ( event.keyCode === $.ui.keyCode.ENTER ) {
 					that.onSearch();
 				}
@@ -422,7 +389,6 @@ define(function(require) {'use strict';
 		},
 		onSearch : function(e){
 			var that = this, type;
-			// XAUtil.blockUI();
 			//Get search values
 			var groups = (this.ui.userGroup.is(':visible')) ? this.ui.userGroup.select2('val'):undefined;
 			var users = (this.ui.userName.is(':visible')) ? this.ui.userName.select2('val'):undefined;
@@ -459,7 +425,6 @@ define(function(require) {'use strict';
 				this.setupUserAutoComplete();
 				$button.text('Username');
 			}
-			//this.onSearch();
 		},
 		gotoTable : function(e){
 			var that = this, elem = $(e.currentTarget),pos;

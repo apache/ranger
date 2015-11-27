@@ -100,10 +100,11 @@ define(function(require){
 					options : function(callback, editor){
 
 						var userTypes = _.filter(XAEnums.UserRoles,function(m){
-							if(!SessionMgr.isKeyAdmin())
+							if(!SessionMgr.isKeyAdmin()){
 								return m.label != 'Unknown'	&& m.label != 'KeyAdmin';
-							else
+							} else {
 								return m.label != 'Unknown' && m.label != 'Admin';
+							}
 						});
 						var nvPairs = XAUtils.enumToSelectPairs(userTypes);
 						callback(nvPairs);
@@ -124,12 +125,13 @@ define(function(require){
 				if(this.model.has('userRoleList')){
 					var roleList = this.model.get('userRoleList');
 					if(!_.isUndefined(roleList) && roleList.length > 0){
-						if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_USER.value)
+						if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_USER.value){
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_USER.value);
-						else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN.value)
+						} else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_KEY_ADMIN.value);
-						else
+						} else {
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_SYS_ADMIN.value);
+						}
 					}
 				}
 				if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
@@ -147,15 +149,15 @@ define(function(require){
 						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN') 
 								|| _.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_KEY_ADMIN')){
 							this.fields.userRoleList.editor.$el.attr('disabled',false);
-						}else{
+						} else {
 							if(!SessionMgr.isKeyAdmin()){
 								this.fields.userRoleList.editor.$el.attr('disabled',true);
 							}
 						}
-					}else{
+					} else {
 						this.fields.userRoleList.editor.$el.attr('disabled',true);
 					}
-				}else{
+				} else {
 					this.fields.userRoleList.editor.$el.attr('disabled',false);
 				}
 				//User does not allowed to change his role (it's own role)
@@ -169,8 +171,9 @@ define(function(require){
 			that.$('[data-customfields="groupIdList"]').html(new AddGroup({
 				model : that.model
 			}).render().el);
-			if(!that.showBasicFields)
+			if(!that.showBasicFields) {
 				that.$('[data-customfields="groupIdList"]').hide();
+			}
 		},
 		showCustomFields : function(){
 			if(!this.showBasicFields){
@@ -239,8 +242,6 @@ define(function(require){
 			}else{
 				this.model.set('userRoleList',["ROLE_SYS_ADMIN"]);
 			}
-//			this.model.unset('userRoleList');
-			
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){

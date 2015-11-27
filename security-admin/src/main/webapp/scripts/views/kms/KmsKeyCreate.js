@@ -34,7 +34,6 @@ define(function(require){
 	
 	var KmsKeyCreateTmpl= require('hbs!tmpl/kms/KmsKeyCreate_tmpl');
 	var RKmsKeyForm 	= require('views/kms/KmsKeyForm');
-//	var RangerServiceDef	= require('models/RangerServiceDef');
 
 	var KmsKeyCreate = Backbone.Marionette.Layout.extend(
 	/** @lends KmsKeyCreate */
@@ -49,8 +48,9 @@ define(function(require){
     	},
     	breadCrumbs :function(){
     		var opts = { 'kmsService' : this.kmsService, 'kmsServiceDefModel' : this.kmsServiceDefModel }
-    		if(this.model.isNew())
+    		if(this.model.isNew()){
     			return [XALinks.get('KmsManage',opts), XALinks.get('KmsServiceForKey', opts), XALinks.get('KmsKeyCreate')];
+    		}
     	} ,        
 
 		/** Layout sub regions */
@@ -110,9 +110,7 @@ define(function(require){
 		onSave: function(){
 			var that =this ;
 			var errors = this.form.commit({validate : false});
-			if(! _.isEmpty(errors)){
-				return;
-			}
+			if(! _.isEmpty(errors))	return;
 			var options = {
 				url : this.model.urlRoot+"?provider="+ this.kmsServiceName,
 				success: function () {
@@ -125,12 +123,14 @@ define(function(require){
 				error : function (model, resp, options) {
 					XAUtil.blockUI('unblock');
 					var errorMsg = 'Error creating Key!';
-					if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
+					if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) 
+							&& !_.isUndefined(resp.responseJSON.msgDesc)){
 						errorMsg = resp.responseJSON.msgDesc;
 					}
 					XAUtil.notifyError('Error', errorMsg);
 				}
 			}
+			
 			//to check model is new or not
 			options.type = (this.model.has('versions')) ? 'PUT'  : 'POST';
 			this.form.beforeSave();
@@ -145,7 +145,6 @@ define(function(require){
 			var that = this;
 			var url = this.model.urlRoot+"?provider="+ this.kmsServiceName;
 			XAUtil.confirmPopup({
-				//msg :localize.tt('msg.confirmDelete'),
 				msg :'Are you sure want to delete ?',
 				callback : function(){
 					XAUtil.blockUI();

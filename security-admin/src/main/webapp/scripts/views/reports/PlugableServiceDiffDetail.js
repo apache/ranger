@@ -25,6 +25,7 @@ define(function(require){
 	var XAEnums					 		= require('utils/XAEnums');
 	var XALinks							= require('modules/XALinks');
 	var XAUtils					 		= require('utils/XAUtils');
+	
 	var RangerPolicy					= require('models/RangerPolicy');
 	var RangerService					= require('models/RangerService');
 	var RangerServiceDef				= require('models/RangerServiceDef');
@@ -82,7 +83,6 @@ define(function(require){
 			
 			_.extend(this, _.pick(options, 'classType','objectName','objectId','objectCreatedDate','action','userName','policyId'));
 			this.bindEvents();
-			//this.initializeDiffOperation();
 			this.initializeServiceDef();
 			this.getTemplateForView();
 			
@@ -91,15 +91,13 @@ define(function(require){
 			var url, policyName = this.collection.findWhere({'attributeName':'Policy Name'});
 			if(this.action == 'create'){
 				this.policyName = policyName.get('newValue');
-			}else if(this.action == 'delete'){
+			} else if(this.action == 'delete'){
 				this.policyName = policyName.get('previousValue');
 			}
 			if(!_.isUndefined(this.collection.models[0]) ){
 				this.policyName = _.isUndefined(this.policyName) ? this.collection.models[0].get('objectName') : this.policyName;
 				if(this.action != 'delete'){
-//					url = XAUtils.getRangerServiceByName(this.collection.models[0].get('parentObjectName'))
 					var rangerService = new RangerService({ 'id' : this.collection.models[0].get('parentObjectId') })
-//					rangerService.url = url;
 					rangerService.fetch({
 						cache : false,
 						async : false
@@ -209,6 +207,7 @@ define(function(require){
 		getPolicyResources : function() {
 			var policyResources = this.collection.findWhere({'attributeName':'Policy Resources'});
 			this.collection.remove(policyResources);
+			
 			if(!_.isUndefined(policyResources.get('newValue')) && !_.isEmpty(policyResources.get('newValue'))){
 				var resources = {} ;
 				var resourceNewValues = JSON.parse(policyResources.get('newValue'));
@@ -249,13 +248,12 @@ define(function(require){
 			}
 			if(this.action == "update"){
 				_.each(resources,function(val, key){ 
-//					console.log(oldResources)
 					if(val != oldResources[key])
 						this.collection.add({'attributeName':key, 'newValue':val.toString(),'previousValue': oldResources[key],type : "Policy Resources"}); 
 				}, this)
-			}else if(this.action == "create"){
+			} else if(this.action == "create"){
 				_.each(resources,function(val, key){ this.collection.add({'attributeName':key, 'newValue':val.toString()}); }, this)
-			}else{
+			} else{
 				_.each(oldResources,function(val, key){ this.collection.add({'attributeName':key, 'previousValue':val.toString()}); }, this)
 			}
 		},
@@ -263,6 +261,7 @@ define(function(require){
 			var items = {};
 			var policyItems = this.collection.findWhere({'attributeName':'Policy Items'});
 			this.collection.remove(policyItems);
+			
 			if(!_.isUndefined(policyItems.get('newValue')) && !_.isEmpty(policyItems.get('newValue'))){
 				this.newPolicyItems = JSON.parse(policyItems.get('newValue'));
 				_.each(this.newPolicyItems, function(obj){
@@ -286,7 +285,7 @@ define(function(require){
 			this.oldPermList =[], this.newPermList =[]
 			if(this.action == "update"){
 				this.setOldeNewPermList();
-			}else{
+			} else {
 				this.oldPermList = this.oldPolicyItems;
 				this.newPermList = this.newPolicyItems;
 			}
@@ -330,8 +329,6 @@ define(function(require){
 					this.newPermList.push({})
 				}
 			}
-			console.log(this.oldPermList)
-			console.log(this.newPermList)
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){

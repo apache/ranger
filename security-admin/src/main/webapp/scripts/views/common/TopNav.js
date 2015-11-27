@@ -53,6 +53,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a TopNav ItemView");
 			_.extend(this, _.pick(options, ''));
+			
 			this.bindEvents();
 			this.appState = options.appState;
         	this.appState.on('change:currentTab', this.highlightNav,this);
@@ -110,7 +111,6 @@ define(function(require){
         	this.$('#nav' + this.appState.get('currentTab')).parent().addClass('active');
         },
         mainManuURLS : function() {
-			
 		},
 		/** on close */
 		onClose: function(){
