@@ -90,7 +90,6 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	</beans:bean>
 
 	<beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
-            <beans:property name="ssoEnabled" value="${ranger.sso.enabled}"/>
     </beans:bean>
 	
 	<beans:bean id="userContextFormationFilter" class="org.apache.ranger.security.web.filter.RangerSecurityContextFormationFilter"/>
