@@ -28,7 +28,7 @@ public class CommandLineOptions {
     private Options options = new Options();
     private String input = null;
     private String output = null;
-    private String discoverProperties;
+    private String discoverProperties = null;
     private String retrieveValues = null;
     private boolean isAuthEnabled = true;
     private String ldapUrl = "";
@@ -46,7 +46,7 @@ public class CommandLineOptions {
         options.addOption("o", "outputdir", true, "Output directory");
         options.addOption("d", "discoverProperties", true, "{all|users|groups}");
         options.addOption("r", "retrieve", true, "{all|users|groups}");
-        options.addOption("noauth", "noAuthentication", false, "Ignore authentication properties");
+        options.addOption("a", "noAuthentication", false, "Ignore authentication properties");
     }
 
     public void parse() {
@@ -72,9 +72,7 @@ public class CommandLineOptions {
                     System.out.println("Unsupported value for option d");
                     help();
                 }
-            }
-
-            if (cmd.hasOption("r")) {
+            } else if (cmd.hasOption("r")) {
                 retrieveValues = cmd.getOptionValue("r");
                 if (retrieveValues == null || (!retrieveValues.equalsIgnoreCase("all")
                         && !retrieveValues.equalsIgnoreCase("users") && !retrieveValues.equalsIgnoreCase("groups"))) {
@@ -82,15 +80,15 @@ public class CommandLineOptions {
                     help();
                 }
             } else {
-                if (discoverProperties == null || discoverProperties.isEmpty()) {
+                //if (discoverProperties == null || discoverProperties.isEmpty()) {
                     System.out.println("Default to discover all usersync properties");
                     //help();
                 	// If "d" or "r" option is not specified, then default to discover all usersync properties
                 	discoverProperties = "all";
-                }
+                //}
             }
 
-            if (cmd.hasOption("noauth")) {
+            if (cmd.hasOption("a") || discoverProperties == null || (discoverProperties != null && !discoverProperties.equalsIgnoreCase("all"))) {
                 isAuthEnabled = false;
             }
             
