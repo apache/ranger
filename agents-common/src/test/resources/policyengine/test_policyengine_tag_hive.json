@@ -126,12 +126,6 @@
         }
       ],
       "contextEnrichers": [
-        {
-          "itemId": 1,
-          "name" : "TagEnricher",
-          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
-          "enricherOptions" : {"tagRetrieverClassName":"org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever", "tagRefresherPollingInterval":60000, "dataFile":"/etc/ranger/data/resourceTags.txt"}
-        }
       ],
       "policyConditions": [
         {
