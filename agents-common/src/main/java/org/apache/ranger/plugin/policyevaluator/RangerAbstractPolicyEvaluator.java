@@ -26,8 +26,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
-
 
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyEvaluator.class);
@@ -63,6 +63,10 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 	public boolean hasAllow() {
 		return policy != null && CollectionUtils.isNotEmpty(policy.getPolicyItems());
+	}
+
+	protected boolean hasMatchablePolicyItem(RangerAccessRequest request) {
+		return hasAllow() || hasDeny();
 	}
 
 	public boolean hasDeny() {

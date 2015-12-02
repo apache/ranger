@@ -159,24 +159,29 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             }
 
             if (!result.getIsAccessDetermined()) {
-                // Try Match only if it was not attempted as part of evaluating Audit requirement
-                if (!isResourceMatchAttempted) {
-                    isResourceMatch = isMatch(request.getResource());
-                    isResourceMatchAttempted = true;
-                }
 
-                // Try Head Match only if no match was found so far AND a head match was not attempted as part of evaluating
-                // Audit requirement
-                if (!isResourceMatch) {
-                    if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
-                        isResourceHeadMatch = matchResourceHead(request.getResource());
-                        isResourceHeadMatchAttempted = true;
+                // Attempt resource matching only if there may be a matchable policyItem
+                if (hasMatchablePolicyItem(request)) {
+
+                    // Try Match only if it was not attempted as part of evaluating Audit requirement
+                    if (!isResourceMatchAttempted) {
+                        isResourceMatch = isMatch(request.getResource());
+                        isResourceMatchAttempted = true;
                     }
-                }
 
-                // Go further to evaluate access only if match or head match was found at this point
-                if (isResourceMatch || isResourceHeadMatch) {
-                    evaluatePolicyItems(request, result, isResourceMatch);
+                    // Try Head Match only if no match was found so far AND a head match was not attempted as part of evaluating
+                    // Audit requirement
+                    if (!isResourceMatch) {
+                        if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
+                            isResourceHeadMatch = matchResourceHead(request.getResource());
+                            isResourceHeadMatchAttempted = true;
+                        }
+                    }
+
+                    // Go further to evaluate access only if match or head match was found at this point
+                    if (isResourceMatch || isResourceHeadMatch) {
+                        evaluatePolicyItems(request, result, isResourceMatch);
+                    }
                 }
             }
         }
