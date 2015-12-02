@@ -168,11 +168,10 @@ public class ServiceREST {
 		RangerServiceDef ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createServiceDef(serviceDefName=" + serviceDef.getName() + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createServiceDef(serviceDefName=" + serviceDef.getName() + ")");
+			}
 			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 			validator.validate(serviceDef, Action.CREATE);
 
@@ -209,11 +208,10 @@ public class ServiceREST {
 		RangerServiceDef ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updateServiceDef(" + serviceDef.getName() + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updateServiceDef(" + serviceDef.getName() + ")");
+			}
 			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 			validator.validate(serviceDef, Action.UPDATE);
 
@@ -249,11 +247,10 @@ public class ServiceREST {
 
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deleteServiceDef(serviceDefId=" + id + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deleteServiceDef(serviceDefId=" + id + ")");
+			}
 			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 			validator.validate(id, Action.DELETE);
 
@@ -295,11 +292,10 @@ public class ServiceREST {
 		RangerServiceDef ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServiceDef(serviceDefId=" + id + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServiceDef(serviceDefId=" + id + ")");
+			}
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(id);
 			if (!bizUtil.hasAccess(xServiceDef, null)) {
 				throw restErrorUtil.createRESTException(
@@ -341,11 +337,10 @@ public class ServiceREST {
 		RangerServiceDef ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServiceDefByName(", name, ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServiceDefByName(" + name + ")");
+			}
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().findByName(name);
 			if (xServiceDef != null) {
 				if (!bizUtil.hasAccess(xServiceDef, null)) {
@@ -389,15 +384,14 @@ public class ServiceREST {
 		RangerServiceDefList ret  = null;
 		RangerPerfTracer     perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServiceDefs()");
-		}
-
 		PList<RangerServiceDef> paginatedSvcDefs = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, serviceDefService.sortFields);
 
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServiceDefs()");
+			}
 			paginatedSvcDefs = svcStore.getPaginatedServiceDefs(filter);
 
 			if(paginatedSvcDefs != null) {
@@ -439,11 +433,10 @@ public class ServiceREST {
 		RangerService    ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createService(serviceName=" + service.getName() + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createService(serviceName=" + service.getName() + ")");
+			}
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.CREATE);
 
@@ -485,11 +478,10 @@ public class ServiceREST {
 		RangerService    ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updateService(serviceName=" + service.getName() + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updateService(serviceName=" + service.getName() + ")");
+			}
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.UPDATE);
 
@@ -530,11 +522,10 @@ public class ServiceREST {
 
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deleteService(serviceId=" + id + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deleteService(serviceId=" + id + ")");
+			}
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(id, Action.DELETE);
 
@@ -575,11 +566,10 @@ public class ServiceREST {
 		RangerService    ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getService(serviceId=" + id + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getService(serviceId=" + id + ")");
+			}
 			ret = svcStore.getService(id);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -614,11 +604,10 @@ public class ServiceREST {
 		RangerService    ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getService(serviceName=" + name + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getService(serviceName=" + name + ")");
+			}
 			ret = svcStore.getServiceByName(name);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -653,15 +642,14 @@ public class ServiceREST {
 		RangerServiceList ret  = null;
 		RangerPerfTracer  perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServices()");
-		}
-
 		PList<RangerService> paginatedSvcs = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, svcService.sortFields);
 
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServices()");
+			}
 			paginatedSvcs = svcStore.getPaginatedServices(filter);
 
 			if(paginatedSvcs != null) {
@@ -699,11 +687,10 @@ public class ServiceREST {
 		List<RangerService> ret  = null;
 		RangerPerfTracer    perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServices()");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServices()");
+			}
 			ret = svcStore.getServices(filter);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -735,11 +722,10 @@ public class ServiceREST {
 		Long             ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.countService()");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.countService()");
+			}
 			List<RangerService> services = getServices(request).getServices();
 			
 			ret = new Long(services == null ? 0 : services.size());
@@ -772,11 +758,10 @@ public class ServiceREST {
 		VXResponse       ret  = new VXResponse();
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.validateConfig(serviceName=" + service.getName() + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.validateConfig(serviceName=" + service.getName() + ")");
+			}
 			ret = serviceMgr.validateConfig(service, svcStore);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -807,11 +792,10 @@ public class ServiceREST {
 		List<String>     ret  = new ArrayList<String>();
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.lookupResource(serviceName=" + serviceName + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.lookupResource(serviceName=" + serviceName + ")");
+			}
 			ret = serviceMgr.lookupResource(serviceName,context, svcStore);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -841,13 +825,13 @@ public class ServiceREST {
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.grantAccess(serviceName=" + serviceName + ")");
-		}
-			
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 
 			try {
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.grantAccess(serviceName=" + serviceName + ")");
+				}
+
 				String               userName   = grantRequest.getGrantor();
 				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
 				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
@@ -1000,13 +984,13 @@ public class ServiceREST {
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
-		}
-
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
 
 			try {
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
+				}
+
 				String               userName     = revokeRequest.getGrantor();
 				Set<String>          userGroups   =  userMgr.getGroupsForUser(userName);
 				RangerAccessResource resource     = new RangerAccessResourceImpl(revokeRequest.getResource());
@@ -1104,11 +1088,10 @@ public class ServiceREST {
 		RangerPolicy     ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createPolicy(policyName=" + policy.getName() + ")");
-		}
-		
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createPolicy(policyName=" + policy.getName() + ")");
+			}
 			// this needs to happen before validator is called
 			// set name of policy if unspecified
 			if (StringUtils.isBlank(policy.getName())) { // use of isBlank over isEmpty is deliberate as a blank string does not strike us as a particularly useful policy name!
@@ -1160,11 +1143,10 @@ public class ServiceREST {
 		RangerPolicy     ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updatePolicy(policyId=" + policy.getId() + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updatePolicy(policyId=" + policy.getId() + ")");
+			}
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin());
 
@@ -1198,11 +1180,10 @@ public class ServiceREST {
 
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deletePolicy(policyId=" + id + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deletePolicy(policyId=" + id + ")");
+			}
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			validator.validate(id, Action.DELETE);
 
@@ -1237,11 +1218,10 @@ public class ServiceREST {
 		RangerPolicy     ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicy(policyId=" + id + ")");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicy(policyId=" + id + ")");
+			}
 			ret = svcStore.getPolicy(id);
 
 			if(ret != null) {
@@ -1279,15 +1259,14 @@ public class ServiceREST {
 		RangerPolicyList ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicies()");
-		}
-
 		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicies()");
+			}
 			paginatedPolicies = svcStore.getPaginatedPolicies(filter);
 
 			if(paginatedPolicies != null) {
@@ -1327,11 +1306,10 @@ public class ServiceREST {
 		List<RangerPolicy> ret  = null;
 		RangerPerfTracer   perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicies()");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicies()");
+			}
 			ret = svcStore.getPolicies(filter);
 
 			applyAdminAccessFilter(ret);
@@ -1363,11 +1341,10 @@ public class ServiceREST {
 		Long             ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.countPolicies()");
-		}
-
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.countPolicies()");
+			}
 			List<RangerPolicy> policies = getPolicies(request).getPolicies();
 
 			applyAdminAccessFilter(policies);
@@ -1402,15 +1379,14 @@ public class ServiceREST {
 		RangerPolicyList ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceId=" + serviceId + ")");
-		}
-
 		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceId=" + serviceId + ")");
+			}
 			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceId, filter);
 
 			if(paginatedPolicies != null) {
@@ -1459,15 +1435,14 @@ public class ServiceREST {
 		RangerPolicyList ret  = null;
 		RangerPerfTracer perf = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceName=" + serviceName + ")");
-		}
-
 		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
 		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceName=" + serviceName + ")");
+			}
 			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceName, filter);
 
 			if(paginatedPolicies != null) {
@@ -1518,16 +1493,15 @@ public class ServiceREST {
 		String          logMsg   = null;
 		RangerPerfTracer perf    = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePoliciesIfUpdated(serviceName=" + serviceName + ", lastKnownVersion=" + lastKnownVersion + ")");
-		}
-
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 			if(lastKnownVersion == null) {
 				lastKnownVersion = new Long(-1);
 			}
 			
 			try {
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion + ")");
+				}
 				ret = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
 	
 				if(ret == null) {

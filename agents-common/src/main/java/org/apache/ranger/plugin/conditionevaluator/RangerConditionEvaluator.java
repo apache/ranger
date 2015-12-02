@@ -31,7 +31,6 @@ public interface RangerConditionEvaluator {
 
 	void setServiceDef(RangerServiceDef serviceDef);
 
-
 	void init();
 
 	boolean isMatched(RangerAccessRequest request);

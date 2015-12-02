@@ -42,6 +42,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -223,10 +224,10 @@ public class RangerKeyStore extends KeyStoreSpi {
                 throw new IllegalArgumentException("Ranger Master Key can't be null");
             }
 
-            MessageDigest md = getKeyedMessageDigest(password);            
+            MessageDigest md = getKeyedMessageDigest(password);
             
            	byte digest[] = md.digest();    
-           	for (Enumeration<String> e = deltaEntries.keys(); e.hasMoreElements();) {
+           	for (Enumeration<String> e = deltaEntries.keys(); e.hasMoreElements();) {           		
             	ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(new DigestOutputStream(baos, md));
                 
@@ -282,7 +283,6 @@ public class RangerKeyStore extends KeyStoreSpi {
 					  xxRangerKeyStore = new XXRangerKeyStore();
 					  keyStoreExists = false;
 				  }
-
 				  xxRangerKeyStore = mapToEntityBean(rangerKeyStore, xxRangerKeyStore, 0);		
 				  if (keyStoreExists) {
 					  xxRangerKeyStore = rangerKMSDao.update(xxRangerKeyStore);
@@ -483,13 +483,13 @@ public class RangerKeyStore extends KeyStoreSpi {
 	public void engineLoadKeyStoreFile(InputStream stream, char[] storePass, char[] keyPass, char[] masterKey, String fileFormat)
 	        throws IOException, NoSuchAlgorithmException, CertificateException
 	{
-			synchronized(keyEntries) {
+			synchronized(deltaEntries) {
 				KeyStore ks;
 				
 				try {
 					ks = KeyStore.getInstance(fileFormat);
 					ks.load(stream, storePass);
-					keyEntries.clear();     
+					deltaEntries.clear();     
 					for (Enumeration<String> name = ks.aliases(); name.hasMoreElements();){
 						  	  SecretKeyEntry entry = new SecretKeyEntry();
 							  String alias = (String) name.nextElement();
@@ -532,8 +532,34 @@ public class RangerKeyStore extends KeyStoreSpi {
  	                          entry.date = ks.getCreationDate(alias);
 		                      entry.version = (alias.split("@").length == 2)?(Integer.parseInt(alias.split("@")[1])):0;
 		    				  entry.description = k.getFormat()+" - "+ks.getType();
-		                      keyEntries.put(alias, entry);		
-		    	            }
+		    	              deltaEntries.put(alias, entry);		
+		                    }
+				} catch (Throwable t) {
+					logger.error("Unable to load keystore file ", t);
+					throw new IOException(t) ;
+				}
+			}
+	}
+	
+	public void engineLoadToKeyStoreFile(OutputStream stream, char[] storePass, char[] keyPass, char[] masterKey, String fileFormat)
+	        throws IOException, NoSuchAlgorithmException, CertificateException
+	{
+			synchronized(keyEntries) {
+				KeyStore ks;
+				try {
+					ks = KeyStore.getInstance(fileFormat);
+					ks.load(null, storePass);
+					String alias = null;
+					engineLoad(null, masterKey);
+				    Enumeration<String> e = engineAliases();
+					Key key;
+					while (e.hasMoreElements()) {
+					   alias = e.nextElement();					   
+					   key = engineGetKey(alias, masterKey);	
+					   ks.setKeyEntry(alias, key, keyPass, null);
+					}
+					
+					ks.store(stream, storePass);
 				} catch (Throwable t) {
 					logger.error("Unable to load keystore file ", t);
 					throw new IOException(t) ;

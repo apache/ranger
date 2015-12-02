@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.*;
+import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.*;
 
@@ -102,6 +103,50 @@ public abstract class AbstractTagStore implements TagStore {
 		}
 		return ret;
 	}
+
+	@Override
+	public void deleteAllTagObjectsForService(String serviceName, boolean isResourePrivateTag) throws Exception {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> AbstractTagStore.deleteAllTagObjectsForService(serviceName=" + serviceName + ", isResourcePrivateTag=" + isResourePrivateTag + ")");
+		}
+
+		List<RangerServiceResource> serviceResources = getServiceResourcesByService(serviceName);
+
+		Set<Long> tagsToDelete = new HashSet<Long>();
+
+
+		for (RangerServiceResource serviceResource : serviceResources) {
+			Long resourceId = serviceResource.getId();
+
+			List<RangerTagResourceMap> tagResourceMapsForService = getTagResourceMapsForResourceId(resourceId);
+
+			if (isResourePrivateTag) {
+				for (RangerTagResourceMap tagResourceMap : tagResourceMapsForService) {
+					Long tagId = tagResourceMap.getTagId();
+					RangerTag tag = getTag(tagId);
+					tagsToDelete.add(tag.getId());
+				}
+			}
+			for (RangerTagResourceMap tagResourceMap : tagResourceMapsForService) {
+				deleteTagResourceMap(tagResourceMap.getId());
+			}
+		}
+
+		for (RangerServiceResource serviceResource : serviceResources) {
+			deleteServiceResource(serviceResource.getId());
+		}
+
+		for (Long tagId : tagsToDelete) {
+			deleteTag(tagId);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== AbstractTagStore.deleteAllTagObjectsForService(serviceName=" + serviceName + ", isResourcePrivateTag=" + isResourePrivateTag + ")");
+		}
+
+	}
+
 }
 
 

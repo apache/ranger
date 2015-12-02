@@ -664,15 +664,39 @@
 	<!-- Start ==> JPA Queries for Tag Based Policies  -->
 	
 	<named-query name="XXServiceResourceElement.findByResourceId">
-		<query>select obj from XXServiceResourceElement obj where obj.resourceId = :resourceId</query>
+		<query>select obj from XXServiceResourceElement obj where obj.resourceId = :resourceId order by obj.resourceId, obj.id</query>
 	</named-query>
-	
+
+	<named-query name="XXServiceResourceElement.findByServiceId">
+		<query>select obj from XXServiceResourceElement obj where obj.resourceId in
+					(select serviceresource.id from XXServiceResource serviceresource where serviceresource.serviceId = :serviceId and serviceresource.id in
+						(select tagResMap.resourceId from XXTagResourceMap tagResMap)
+					)
+			order by obj.resourceId, obj.id
+		</query>
+	</named-query>
+
 	<named-query name="XXServiceResourceElementValue.findByResElementId">
 		<query>select obj from XXServiceResourceElementValue obj where obj.resElementId = :resElementId</query>
 	</named-query>
 
 	<named-query name="XXServiceResourceElementValue.findValuesByResElementId">
 		<query>select obj.value from XXServiceResourceElementValue obj where obj.resElementId = :resElementId</query>
+	</named-query>
+
+	<named-query name="XXServiceResourceElementValue.findByServiceId">
+		<query>select obj from XXServiceResourceElementValue obj, XXServiceResourceElement resElem where obj.resElementId = resElem.id and resElem.resourceId in
+					(select res.id from XXServiceResource res where res.serviceId = :serviceId and res.id in
+						(select tagResMap.resourceId from XXTagResourceMap tagResMap)
+					)
+			order by resElem.resourceId, resElem.id
+		</query>
+	</named-query>
+
+	<named-query name="XXServiceResourceElementValue.findByResourceId">
+		<query>select obj from XXServiceResourceElementValue obj, XXServiceResourceElement resElem where obj.resElementId = resElem.id and resElem.resourceId = :resourceId
+			order by resElem.resourceId, resElem.id
+		</query>
 	</named-query>
 
 	<named-query name="XXTagResourceMap.findByGuid">
@@ -711,7 +735,7 @@
 
 	<named-query name="XXTagResourceMap.getTagIdsForResourceId">
 		<query>select obj.tagId from XXTagResourceMap obj
-				where obj.resourceId = :resourceId
+				where obj.resourceId = :resourceId order by obj.id
 		</query>
 	</named-query>
 	
@@ -725,7 +749,16 @@
 	
 	<named-query name="XXTagDef.findByServiceId">
 		<query>select obj from XXTagDef obj where obj.id in
-				(select tag.type from XXTag tag, XXTagResourceMap tagRes, XXServiceResource resource where tag.id = tagRes.tagId and tagRes.resourceId = resource.id and resource.serviceId = :serviceId)</query>
+				(select tag.type from XXTag tag, XXTagResourceMap tagRes, XXServiceResource resource where tag.id = tagRes.tagId and tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
+				order by obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXTagDef.findByResourceId">
+		<query>select obj from XXTagDef obj where obj.id in
+			(select tag.type from XXTag tag, XXTagResourceMap tagRes where tag.id = tagRes.tagId and tagRes.resourceId = :resourceId)
+			order by obj.id
+		</query>
 	</named-query>
 
 	<named-query name="XXTagDef.getAllNames">
@@ -742,9 +775,22 @@
 		<query>select obj from XXTagAttributeDef obj where obj.tagDefId = :tagDefId</query>
 	</named-query>
 
-	
+	<named-query name="XXTagAttributeDef.findByServiceId">
+		<query>select obj from XXTagAttributeDef obj where obj.tagDefId in
+			(select tag.type from XXTag tag, XXTagResourceMap tagRes, XXServiceResource resource where tag.id = tagRes.tagId and tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
+			order by obj.tagDefId
+		</query>
+	</named-query>
+
+	<named-query name="XXTagAttributeDef.findByResourceId">
+		<query>select obj from XXTagAttributeDef obj where obj.tagDefId in
+			(select tag.type from XXTag tag, XXTagResourceMap tagRes where tag.id = tagRes.tagId and tagRes.resourceId = :resourceId)
+			order by obj.tagDefId
+		</query>
+	</named-query>
+
 	<named-query name="XXTag.findByGuid">
-		<query>select obj from XXTag obj where obj.guid = :guid</query>
+		<query>select obj from XXTag obj where obj.guid = :guid order by obj.id</query>
 	</named-query>
 	
 	<named-query name="XXTag.findByName">
@@ -752,7 +798,7 @@
 	</named-query>
 
 	<named-query name="XXTag.findByResourceId">
-		<query>select obj from XXTag obj, XXTagResourceMap tagResMap where tagResMap.resourceId = :resourceId and obj.id = tagResMap.tagId</query>
+		<query>select obj from XXTag obj, XXTagResourceMap tagResMap where tagResMap.resourceId = :resourceId and obj.id = tagResMap.tagId order by obj.id</query>
 	</named-query>
 
 	<named-query name="XXTag.findByResourceGuid">
@@ -766,7 +812,9 @@
 	
 	<named-query name="XXTag.findByServiceId">
 		<query>select obj from XXTag obj where obj.id in
-			(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)</query>
+			(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
+			order by obj.id
+		</query>
 	</named-query>
 
 	<named-query name="XXTag.updateTagVersionInService">
@@ -779,6 +827,19 @@
 		<query>select obj from XXTagAttribute obj where obj.tagId = :tagId</query>
 	</named-query>
 
+	<named-query name="XXTagAttribute.findByServiceId">
+		<query>select obj from XXTagAttribute obj where obj.tagId in
+			(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
+			order by obj.tagId
+		</query>
+	</named-query>
+
+	<named-query name="XXTagAttribute.findByResourceId">
+		<query>select obj from XXTagAttribute obj where obj.tagId in
+			(select tagRes.tagId from XXTagResourceMap tagRes where tagRes.resourceId = :resourceId)
+			order by obj.tagId
+		</query>
+	</named-query>
 
 	<named-query name="XXServiceResource.findByGuid">
 		<query>select obj from XXServiceResource obj where obj.guid = :guid</query>

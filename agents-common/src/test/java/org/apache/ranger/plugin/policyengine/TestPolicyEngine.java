@@ -219,7 +219,7 @@ public class TestPolicyEngine {
 
 		policyEngineOptions.disableTagPolicyEvaluation = false;
 
-		policyEngine = new RangerPolicyEngineImpl("test-policyengine", servicePolicies, policyEngineOptions);
+		policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
 
 		RangerAccessRequest request = null;
 

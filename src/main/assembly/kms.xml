@@ -304,6 +304,7 @@
 			<include>setup.sh</include>
             <include>install.properties</include>
 			<include>importJCEKSKeys.sh</include>
+			<include>exportKeysToJCEKS.sh</include>
 		</includes>
 		<fileMode>544</fileMode>
 	</fileSet>

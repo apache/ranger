@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.io.*;
@@ -43,6 +44,8 @@ import java.util.Map;
 public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerTagEnricher.class);
 
+	private static final Log PERF_ENRICHER_LOG = RangerPerfTracer.getPerfLogger("enricher");
+
 	public static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
 
 	public static final String TAG_RETRIEVER_CLASSNAME_OPTION = "tagRetrieverClassName";
@@ -50,8 +53,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private RangerTagRefresher tagRefresher = null;
 
 	private RangerTagRetriever tagRetriever = null;
-
-	private long lastKnownVersion = -1L;
 
 	ServiceTags serviceTags = null;
 
@@ -100,7 +101,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				tagRetriever.setAppId(appId);
 				tagRetriever.init(enricherDef.getEnricherOptions());
 
-				tagRefresher = new RangerTagRefresher(tagRetriever, this, lastKnownVersion, cacheFile, pollingIntervalMs);
+				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, cacheFile, pollingIntervalMs);
 
 				try {
 					tagRefresher.populateTags();
@@ -125,9 +126,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.debug("==> RangerTagEnricher.enrich(" + request + ")");
 		}
 
-		List<RangerServiceResourceMatcher> serviceResourceMatchersCopy = serviceResourceMatchers;
-
-		List<RangerTag> matchedTags = findMatchingTags(request.getResource(), serviceResourceMatchersCopy);
+		List<RangerTag> matchedTags = findMatchingTags(request.getResource());
 
 		RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), matchedTags);
 
@@ -137,14 +136,18 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	}
 
 	public void setServiceTags(final ServiceTags serviceTags) {
-		this.serviceTags = serviceTags;
-		this.lastKnownVersion = serviceTags.getTagVersion();
 
 		List<RangerServiceResourceMatcher> resourceMatchers = new ArrayList<RangerServiceResourceMatcher>();
 
-		List<RangerServiceResource> serviceResources = this.serviceTags.getServiceResources();
+		List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
 
 		if (CollectionUtils.isNotEmpty(serviceResources)) {
+
+			RangerPerfTracer perf = null;
+
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_ENRICHER_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_ENRICHER_LOG, "RangerTagEnricher.setServiceTags(serviceName=" + tagRetriever.getServiceName() + ",lastKnownVersion=" + serviceTags.getTagVersion() + ")");
+			}
 
 			for (RangerServiceResource serviceResource : serviceResources) {
 				RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
@@ -163,10 +166,12 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				resourceMatchers.add(serviceResourceMatcher);
 
 			}
+
+			RangerPerfTracer.log(perf);
 		}
 
-		serviceResourceMatchers = resourceMatchers;
-
+		this.serviceResourceMatchers = resourceMatchers;
+		this.serviceTags = serviceTags;
 	}
 
 	@Override
@@ -188,16 +193,19 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	private List<RangerTag> findMatchingTags(final RangerAccessResource resource, final List<RangerServiceResourceMatcher> resourceMatchers) {
+	private List<RangerTag> findMatchingTags(final RangerAccessResource resource) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerTagEnricher.findMatchingTags(" + resource + ")");
 		}
 
 		List<RangerTag> ret = null;
+		final List<RangerServiceResourceMatcher> serviceResourceMatchers = this.serviceResourceMatchers;
 
-		if (CollectionUtils.isNotEmpty(resourceMatchers)) {
+		if (CollectionUtils.isNotEmpty(serviceResourceMatchers)) {
 
-			for (RangerServiceResourceMatcher resourceMatcher : resourceMatchers) {
+			final ServiceTags serviceTags = this.serviceTags;
+
+			for (RangerServiceResourceMatcher resourceMatcher : serviceResourceMatchers) {
 
 				boolean matchResult = resourceMatcher.isMatch(resource);
 
@@ -226,14 +234,14 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	static private List<RangerTag> getTagsForServiceResource(ServiceTags serviceTags, RangerServiceResource serviceResource) {
+	static private List<RangerTag> getTagsForServiceResource(final ServiceTags serviceTags, final RangerServiceResource serviceResource) {
 
 		List<RangerTag> ret = new ArrayList<RangerTag>();
 
-		Long resourceId = serviceResource.getId();
+		final Long resourceId = serviceResource.getId();
 
-		Map<Long, List<Long>> resourceToTagIds = serviceTags.getResourceToTagIds();
-		Map<Long, RangerTag> tags = serviceTags.getTags();
+		final Map<Long, List<Long>> resourceToTagIds = serviceTags.getResourceToTagIds();
+		final Map<Long, RangerTag> tags = serviceTags.getTags();
 
 		if (resourceId != null && MapUtils.isNotEmpty(resourceToTagIds) && MapUtils.isNotEmpty(tags)) {
 
@@ -318,7 +326,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			if (tagEnricher != null) {
 				ServiceTags serviceTags = null;
+				RangerPerfTracer perf = null;
 
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_ENRICHER_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_ENRICHER_LOG, "RangerTagRefresher.populateTags(serviceName=" + tagRetriever.getServiceName() + ",lastKnownVersion" + lastKnownVersion + ")");
+				}
 				serviceTags = tagRetriever.retrieveTags(lastKnownVersion);
 
 				if (serviceTags == null) {
@@ -328,6 +340,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				} else {
 					saveToCache(serviceTags);
 				}
+
+				RangerPerfTracer.log(perf);
 
 				if (serviceTags != null) {
 					tagEnricher.setServiceTags(serviceTags);

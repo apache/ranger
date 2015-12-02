@@ -46,4 +46,16 @@ public class XXServiceResourceElementDao extends BaseDao<XXServiceResourceElemen
 		}
 	}
 
+	public List<XXServiceResourceElement> findByServiceId(Long serviceId) {
+		if (serviceId == null) {
+			return new ArrayList<XXServiceResourceElement>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXServiceResourceElement.findByServiceId", tClass)
+					.setParameter("serviceId", serviceId)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXServiceResourceElement>();
+		}
+	}
 }

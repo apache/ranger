@@ -31,7 +31,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class RangerServiceKafka extends RangerBaseService {
-
 	private static final Log LOG = LogFactory.getLog(RangerServiceKafka.class);
 
 	public RangerServiceKafka() {
@@ -46,33 +45,45 @@ public class RangerServiceKafka extends RangerBaseService {
 	@Override
 	public HashMap<String, Object> validateConfig() throws Exception {
 		HashMap<String, Object> ret = new HashMap<String, Object>();
-		String serviceName = getServiceName();
+
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKafka.validateConfig Service: ("
-					+ serviceName + " )");
+			LOG.debug("==> RangerServiceKafka.validateConfig(" + serviceName + ")");
 		}
+
 		if (configs != null) {
 			try {
-				ret = ServiceKafkaConnectionMgr.testConnection(serviceName,
-						configs);
+				ret = ServiceKafkaConnectionMgr.testConnection(serviceName, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceKafka.validateConfig Error:" + e);
 				throw e;
 			}
 		}
+
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKafka.validateConfig Response : (" + ret
-					+ " )");
+			LOG.debug("<== RangerServiceKafka.validateConfig(" + serviceName + "): ret=" + ret);
 		}
+
 		return ret;
 	}
 
 	@Override
-	public List<String> lookupResource(ResourceLookupContext context)
-			throws Exception {
+	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+		List<String> ret = null;
 
-		ServiceKafkaClient serviceKafkaClient = ServiceKafkaConnectionMgr
-				.getKafkaClient(serviceName, configs);
-		return serviceKafkaClient.getResources(context);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceKafka.lookupResource(" + serviceName + ")");
+		}
+
+		if(configs != null) {
+			ServiceKafkaClient serviceKafkaClient = ServiceKafkaConnectionMgr.getKafkaClient(serviceName, configs);
+
+			ret = serviceKafkaClient.getResources(context);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServiceKafka.lookupResource(" + serviceName + "): ret=" + ret);
+		}
+
+		return ret;
 	}
 }

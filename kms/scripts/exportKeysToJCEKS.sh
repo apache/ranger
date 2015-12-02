@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -12,24 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-##-- To prevent junits from cluttering the build run by default all test runs send output to null appender 
-log4j.appender.devnull=org.apache.log4j.varia.NullAppender
-ranger.root.logger=FATAL,devnull
-
-##-- uncomment the following line during during development/debugging so see debug messages during test run to be emitted to console
-# ranger.root.logger=DEBUG,console
-
-log4j.rootLogger=${ranger.root.logger}
-
-# Logging Threshold
-log4j.threshold=ALL
-
-#
-# console
-# Add "console" to rootlogger above if you want to use this
-#
-log4j.appender.console=org.apache.log4j.ConsoleAppender
-log4j.appender.console.target=System.err
-log4j.appender.console.layout=org.apache.log4j.PatternLayout
-log4j.appender.console.layout.ConversionPattern=%d{ISO8601} %-5p [%t] %c{2}: %m%n
+# -------------------------------------------------------------------------------------
+RANGER_KMS_HOME=`dirname $0`
+cp="${RANGER_KMS_HOME}/cred/lib/*:${RANGER_KMS_HOME}/./ews/webapp/WEB-INF/classes/conf/:${RANGER_KMS_HOME}/ews/webapp/config:${RANGER_KMS_HOME}/ews/lib/*:${RANGER_KMS_HOME}/ews/webapp/lib/*:${RANGER_KMS_HOME}/ews/webapp/META-INF"
+java -cp "${cp}" org.apache.hadoop.crypto.key.Ranger2JKSUtil ${1} ${2}
