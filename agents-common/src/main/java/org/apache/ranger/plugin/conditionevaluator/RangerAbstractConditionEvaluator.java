@@ -47,4 +47,7 @@ public abstract class RangerAbstractConditionEvaluator implements RangerConditio
 	@Override
 	public void init() {
 	}
+
+	public RangerPolicyItemCondition getPolicyItemCondition() { return condition; }
+
 }

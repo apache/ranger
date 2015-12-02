@@ -19,7 +19,7 @@ AUTH=1
 
 usage() {
   echo "usage: run.sh
- -noauth         ignore authentication properties
+ -a         ignore authentication properties
  -d <arg>   {all|users|groups}
  -h                       show help.
  -i <arg>            Input file name
@@ -33,7 +33,7 @@ cp="${cdir}/lib/*:${cdir}/conf"
 OUTDIR="${cdir}/output/"
 JAVA_CMD="java -cp ${cdir}/lib/ldapconfigcheck.jar:${cp} org.apache.ranger.ldapconfigcheck.LdapConfigCheckMain"
 
-while getopts "i:o:d:r:noauthh" opt; do
+while getopts "i:o:d:r:ah" opt; do
   case $opt in
     i) INFILE=$OPTARG
 	JAVA_CMD="$JAVA_CMD -i $OPTARG"
@@ -46,8 +46,8 @@ while getopts "i:o:d:r:noauthh" opt; do
     r) RETRIEVE=$OPTARG
 	JAVA_CMD="$JAVA_CMD -r $OPTARG"
 	;;
-    noauth) AUTH=0
-	JAVA_CMD="$JAVA_CMD -noauth"
+    a) AUTH=0
+	JAVA_CMD="$JAVA_CMD -a"
 	;;
     h) usage
 	;;

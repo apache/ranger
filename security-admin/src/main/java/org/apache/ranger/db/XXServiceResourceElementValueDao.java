@@ -58,4 +58,29 @@ public class XXServiceResourceElementValueDao extends BaseDao<XXServiceResourceE
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<XXServiceResourceElementValue> findByServiceId(Long serviceId) {
+		if (serviceId == null) {
+			return new ArrayList<XXServiceResourceElementValue>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findByServiceId")
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXServiceResourceElementValue>();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<XXServiceResourceElementValue> findByResourceId(Long resourceId) {
+		if (resourceId == null) {
+			return new ArrayList<XXServiceResourceElementValue>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findByResourceId")
+					.setParameter("resourceId", resourceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXServiceResourceElementValue>();
+		}
+	}
 }

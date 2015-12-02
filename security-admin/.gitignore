@@ -1,8 +1,6 @@
 /target/
 /bin/
-/bin/
 /target
 .settings/
 .pydevproject
-log4j.xml
 *.log

@@ -254,6 +254,9 @@ public class UserMgr {
 		// }
 
 		// firstName
+		if("null".equalsIgnoreCase(userProfile.getFirstName())){
+			userProfile.setFirstName("");
+		}
 		if (!stringUtil.isEmpty(userProfile.getFirstName())
 				&& !userProfile.getFirstName().equals(gjUser.getFirstName())) {
 			userProfile.setFirstName(stringUtil.toCamelCaseAllWords(userProfile
@@ -261,8 +264,10 @@ public class UserMgr {
 			updateUser = true;
 		}
 
-		// lastName allowed to be empty
-		if (userProfile.getLastName() != null
+		if("null".equalsIgnoreCase(userProfile.getLastName())){
+			userProfile.setLastName("");
+		}
+		if (!stringUtil.isEmpty(userProfile.getLastName())
 				&& !userProfile.getLastName().equals(gjUser.getLastName())) {
 			userProfile.setLastName(stringUtil.toCamelCaseAllWords(userProfile
 					.getLastName()));
@@ -270,11 +275,15 @@ public class UserMgr {
 		}
 
 		// publicScreenName
-		if (!stringUtil.isEmpty(userProfile.getPublicScreenName())
-				&& !userProfile.getPublicScreenName().equals(
-						gjUser.getPublicScreenName())) {
+		if (userProfile.getFirstName() != null
+				&& userProfile.getLastName() != null
+				&& !userProfile.getFirstName().trim().isEmpty()
+				&& !userProfile.getLastName().trim().isEmpty()) {
 			userProfile.setPublicScreenName(userProfile.getFirstName() + " "
 					+ userProfile.getLastName());
+			updateUser = true;
+		} else {
+			userProfile.setPublicScreenName(gjUser.getLoginId());
 			updateUser = true;
 		}
 
@@ -554,12 +563,34 @@ public class UserMgr {
 	public XXPortalUser mapVXPortalUserToXXPortalUser(VXPortalUser userProfile) {
 		XXPortalUser gjUser = new XXPortalUser();
 		gjUser.setEmailAddress(userProfile.getEmailAddress());
+		if("null".equalsIgnoreCase(userProfile.getFirstName())){
+			userProfile.setFirstName("");
+		}
 		gjUser.setFirstName(userProfile.getFirstName());
+		if("null".equalsIgnoreCase(userProfile.getLastName())){
+			userProfile.setLastName("");
+		}
 		gjUser.setLastName(userProfile.getLastName());
+		if (userProfile.getLoginId() == null
+				|| userProfile.getLoginId().trim().isEmpty()
+				|| "null".equalsIgnoreCase(userProfile.getLoginId())) {
+			throw restErrorUtil.createRESTException(
+					"LoginId should not be null or blank, It is",
+					MessageEnums.INVALID_INPUT_DATA);
+		}
 		gjUser.setLoginId(userProfile.getLoginId());
 		gjUser.setPassword(userProfile.getPassword());
 		gjUser.setUserSource(userProfile.getUserSource());
 		gjUser.setPublicScreenName(userProfile.getPublicScreenName());
+		if (userProfile.getFirstName() != null
+				&& userProfile.getLastName() != null
+				&& !userProfile.getFirstName().trim().isEmpty()
+				&& !userProfile.getLastName().trim().isEmpty()) {
+			gjUser.setPublicScreenName(userProfile.getFirstName() + " "
+					+ userProfile.getLastName());
+		} else {
+			gjUser.setPublicScreenName(userProfile.getLoginId());
+		}
 		return gjUser;
 	}
 
@@ -1237,4 +1268,30 @@ public class UserMgr {
 		throw restErrorUtil.create403RESTException("Operation not allowed." + " loggedInUser=" + (sess != null ? sess.getXXPortalUser().getId() : "Not Logged In"));
 	}
 
+	public Collection<String> getRolesByLoginId(String loginId) {
+		if (loginId == null || loginId.trim().isEmpty()){
+			return DEFAULT_ROLE_LIST;
+		}
+		XXPortalUser xXPortalUser=daoManager.getXXPortalUser().findByLoginId(loginId);
+		if(xXPortalUser==null){
+			return DEFAULT_ROLE_LIST;
+        }
+		Collection<XXPortalUserRole> xXPortalUserRoles = daoManager
+                        .getXXPortalUserRole().findByUserId(xXPortalUser.getId());
+		if(xXPortalUserRoles==null){
+			return DEFAULT_ROLE_LIST;
+		}
+		Collection<String> roleList = new ArrayList<String>();
+		for (XXPortalUserRole role : xXPortalUserRoles) {
+			if(role!=null && VALID_ROLE_LIST.contains(role.getUserRole())){
+				if(!roleList.contains(role.getUserRole())){
+					roleList.add(role.getUserRole());
+				}
+			}
+        }
+		if(roleList==null || roleList.size()==0){
+			return DEFAULT_ROLE_LIST;
+		}
+		return roleList;
+	}
 }

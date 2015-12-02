@@ -61,6 +61,7 @@ public class RangerTagDef extends RangerBaseModelObject {
         super();
         setName(name);
         setSource(source);
+        setAttributeDefs(null);
     }
 
     public String getName() {

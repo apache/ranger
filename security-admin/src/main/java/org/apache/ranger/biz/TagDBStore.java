@@ -846,26 +846,14 @@ public class TagDBStore extends AbstractTagStore {
 				throw new Exception("service-def does not exist. id=" + xxService.getType());
 			}
 
-			List<RangerTagDef>          tagDefs         = rangerTagDefService.getTagDefsByServiceId(xxService.getId());
-			List<RangerTag>             tags            = rangerTagService.getTagsByServiceId(xxService.getId());
-			List<RangerServiceResource> resources       = rangerServiceResourceService.getTaggedResourcesInServiceId(xxService.getId());
-			List<RangerTagResourceMap>  tagResourceMaps = rangerTagResourceMapService.getTagResourceMapsByServiceId(xxService.getId());
+			RangerTagDBRetriever tagDBRetriever = new RangerTagDBRetriever(daoManager, xxService);
 
-			Map<Long, RangerTagDef> tagDefMap        = new HashMap<Long, RangerTagDef>();
-			Map<Long, RangerTag>    tagMap           = new HashMap<Long, RangerTag>();
+			Map<Long, RangerTagDef> tagDefMap = tagDBRetriever.getTagDefs();
+			Map<Long, RangerTag> tagMap = tagDBRetriever.getTags();
+			List<RangerServiceResource> resources = tagDBRetriever.getServiceResources();
+			List<RangerTagResourceMap>  tagResourceMaps = tagDBRetriever.getTagResourceMaps();
+
 			Map<Long, List<Long>>   resourceToTagIds = new HashMap<Long, List<Long>>();
-			
-			if(CollectionUtils.isNotEmpty(tagDefs)) {
-				for(RangerTagDef tagDef : tagDefs) {
-					tagDefMap.put(tagDef.getId(), tagDef);
-				}
-			}
-
-			if(CollectionUtils.isNotEmpty(tags)) {
-				for(RangerTag tag : tags) {
-					tagMap.put(tag.getId(), tag);
-				}
-			}
 
 			if(CollectionUtils.isNotEmpty(tagResourceMaps)) {
 				Long       resourceId = null;

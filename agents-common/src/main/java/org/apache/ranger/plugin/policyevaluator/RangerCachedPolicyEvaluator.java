@@ -25,11 +25,14 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator {
     private static final Log LOG = LogFactory.getLog(RangerCachedPolicyEvaluator.class);
+    private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("policy");
 
     private RangerResourceAccessCache cache = null;
+    private String perfTag;
 
     @Override
     public void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
@@ -37,10 +40,23 @@ public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator 
             LOG.debug("==> RangerCachedPolicyEvaluator.init()");
         }
 
+        StringBuffer perfTagBuffer = new StringBuffer();
+        perfTagBuffer.append("policyId=").append(policy.getId()).append(",policyName=").append(policy.getName());
+
+        perfTag = perfTagBuffer.toString();
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerCachedPolicyEvaluator.init(" + perfTag + ")");
+        }
+
         super.init(policy, serviceDef, options);
 
         cache = RangerResourceAccessCacheImpl.getInstance(serviceDef, policy);
-        
+
+        RangerPerfTracer.log(perf);
+
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerCachedPolicyEvaluator.init()");
         }
@@ -53,6 +69,12 @@ public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator 
         }
 
         boolean result = false;
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerCachedPolicyEvaluator.isMatch(" + perfTag + ",accessResource=" + resource.getAsString() + ")");
+        }
 
         // Check in the evaluator-owned cache for the match, if found return. else call super.isMatch(), add result to cache
         RangerResourceAccessCache.LookupResult lookup = cache.lookup(resource);
@@ -72,6 +94,8 @@ public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator 
                 result = true;
             }
         }
+
+        RangerPerfTracer.log(perf);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerCachedPolicyEvaluator.isMatch(" + resource + "): " + result);

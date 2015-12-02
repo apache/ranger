@@ -344,36 +344,18 @@ update_properties() {
 		log "[E] $to_file_default does not exists" ; exit 1;
     fi
 
- 	propertyName=ranger.sso.enabled
-	newPropertyValue="${sso_enabled}"
-        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
- 
-        propertyName=ranger.sso.providerurl
-        newPropertyValue="${sso_providerurl}"
-        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
- 
-        propertyName=ranger.sso.publicKey
-        newPropertyValue="${sso_publickey}"
-        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
- 
-        propertyName=ranger.sso.cookiename
-        newPropertyValue="${sso_cookiename}"
-        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
- 
-        propertyName=ranger.sso.query.param.originalurl
-        newPropertyValue="${sso_query_param_originalurl}"
-        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-
-
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
 		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${audit_db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${audit_db_name}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
@@ -405,8 +387,11 @@ update_properties() {
 		fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
@@ -435,9 +420,12 @@ update_properties() {
 		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:postgresql://${DB_HOST}/${audit_db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			newPropertyValue="jdbc:postgresql://${DB_HOST}/${audit_db_name}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
@@ -462,9 +450,12 @@ update_properties() {
 		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${audit_db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${audit_db_name}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
@@ -489,9 +480,12 @@ update_properties() {
 		newPropertyValue="jdbc:sqlanywhere:database=${db_name};host=${DB_HOST}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		propertyName=ranger.jpa.audit.jdbc.url
-		newPropertyValue="jdbc:sqlanywhere:database=${audit_db_name};host=${DB_HOST}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${audit_store}" == "db" ]
+		then
+			propertyName=ranger.jpa.audit.jdbc.url
+			newPropertyValue="jdbc:sqlanywhere:database=${audit_db_name};host=${DB_HOST}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
@@ -533,9 +527,12 @@ update_properties() {
 	newPropertyValue="${db_user}"
 	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-	propertyName=ranger.jpa.audit.jdbc.user
-	newPropertyValue="${audit_db_user}"
-	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	if [ "${audit_store}" == "db" ]
+	then
+		propertyName=ranger.jpa.audit.jdbc.user
+		newPropertyValue="${audit_db_user}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
 	##########
 
 	keystore="${cred_keystore_filename}"
@@ -581,7 +578,7 @@ update_properties() {
 	fi
 
 	###########
-	if [ "${audit_store}" != "solr" ]
+	if [ "${audit_store}" == "db" ]
 	then
 	    audit_db_password_alias=ranger.auditdb.password
 
@@ -656,6 +653,41 @@ update_properties() {
 				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 			fi
 		fi
+	fi
+
+	if [ "${sso_enabled}" == "" ]
+	then
+		sso_enabled="false"
+	fi
+
+	sso_enabled=`echo $sso_enabled | tr '[:upper:]' '[:lower:]'`
+
+	if [ "${sso_enabled}" == "true" ]
+	then
+		if [ "${sso_providerurl}" == "" ] || [ "${sso_publickey}" == "" ] || [ "${sso_cookiename}" == "" ] || [ "${sso_query_param_originalurl}" == "" ]
+		then
+			log "[E] Please provide valid values in SSO config properties!";
+			exit 1
+		fi
+		propertyName=ranger.sso.enabled
+		newPropertyValue="${sso_enabled}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	 
+		propertyName=ranger.sso.providerurl
+		newPropertyValue="${sso_providerurl}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	 
+		propertyName=ranger.sso.publicKey
+		newPropertyValue="${sso_publickey}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	 
+		propertyName=ranger.sso.cookiename
+		newPropertyValue="${sso_cookiename}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	 
+		propertyName=ranger.sso.query.param.originalurl
+		newPropertyValue="${sso_query_param_originalurl}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 }
 

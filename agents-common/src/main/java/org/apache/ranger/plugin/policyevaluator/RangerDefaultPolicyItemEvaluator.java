@@ -26,6 +26,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.conditionevaluator.RangerAbstractConditionEvaluator;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -36,14 +37,18 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 
 public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyItemEvaluator.class);
+	private static final Log PERF_POLICY_LOG = RangerPerfTracer.getPerfLogger("policy");
+	private static final Log PERF_ITEM_LOG = RangerPerfTracer.getPerfLogger("item");
+	private static final Log PERF_CONDITION_LOG = RangerPerfTracer.getPerfLogger("condition");
 
 
-	public RangerDefaultPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, RangerPolicyEngineOptions options) {
-		super(serviceDef, policy, policyItem, policyItemType, options);
+	public RangerDefaultPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, int policyItemIndex, RangerPolicyEngineOptions options) {
+		super(serviceDef, policy, policyItem, policyItemType, policyItemIndex, options);
 	}
 
 	public void init() {
@@ -53,6 +58,12 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 
 		if (!getConditionsDisabledOption() && policyItem != null && CollectionUtils.isNotEmpty(policyItem.getConditions())) {
 			conditionEvaluators = new ArrayList<RangerConditionEvaluator>();
+
+			RangerPerfTracer perf = null;
+
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_LOG, "RangerDefaultPolicyItemEvaluator.init(policyId=" + policyId + ",policyItemIndex=" + getPolicyItemIndex() + ")");
+			}
 
 			for (RangerPolicyItemCondition condition : policyItem.getConditions()) {
 				RangerPolicyConditionDef conditionDef = getConditionDef(condition.getType());
@@ -76,6 +87,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 					LOG.error("RangerDefaultPolicyItemEvaluator(policyId=" + policyId + "): failed to instantiate condition evaluator '" + condition.getType() + "'; evaluatorClassName='" + conditionDef.getEvaluator() + "'");
 				}
 			}
+			RangerPerfTracer.log(perf);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -90,6 +102,12 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		}
 
 		boolean ret = false;
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_ITEM_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_ITEM_LOG, "RangerDefaultPolicyItemEvaluator.isMatch(policyId=" + policyId + ",policyItemIndex=" + getPolicyItemIndex() + ")");
+		}
+
 
 		if(policyItem != null) {
 			if(matchUserGroup(request.getUser(), request.getUserGroups())) {
@@ -124,6 +142,8 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 				}
 			}
 		}
+
+		RangerPerfTracer.log(perf);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyItemEvaluator.isMatch(" + request + "): " + ret);
@@ -217,8 +237,22 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("evaluating condition: " + conditionEvaluator);
 				}
+				RangerPerfTracer perf = null;
 
-				if(!conditionEvaluator.isMatched(request)) {
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONDITION_LOG)) {
+					String conditionType = null;
+					if (conditionEvaluator instanceof RangerAbstractConditionEvaluator) {
+						conditionType = ((RangerAbstractConditionEvaluator)conditionEvaluator).getPolicyItemCondition().getType();
+					}
+
+					perf = RangerPerfTracer.getPerfTracer(PERF_CONDITION_LOG, "RangerDefaultPolicyItemEvaluator.matchCustomConditions(policyId=" + policyId + ",policyItemIndex=" + getPolicyItemIndex() + ",policyConditionType=" + conditionType + ")");
+				}
+
+				boolean conditionEvalResult = conditionEvaluator.isMatched(request);
+
+				RangerPerfTracer.log(perf);
+
+				if (!conditionEvalResult) {
 					if(LOG.isDebugEnabled()) {
 						LOG.debug(conditionEvaluator + " returned false");
 					}

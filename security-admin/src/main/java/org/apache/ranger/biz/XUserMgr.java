@@ -186,9 +186,11 @@ public class XUserMgr extends XUserMgrBase {
 	public VXUser createXUser(VXUser vXUser) {
 		checkAdminAccess();
 		String userName = vXUser.getName();
-		if (userName == null || userName.isEmpty()) {
-			throw restErrorUtil.createRESTException("Please provide a valid "
-					+ "username.", MessageEnums.INVALID_INPUT_DATA);
+		if (userName == null || "null".equalsIgnoreCase(userName)
+				|| userName.trim().isEmpty()) {
+			throw restErrorUtil.createRESTException(
+					"Please provide a valid username.",
+					MessageEnums.INVALID_INPUT_DATA);
 		}
 
 		if (vXUser.getDescription() == null) {
@@ -200,10 +202,23 @@ public class XUserMgr extends XUserMgrBase {
 		VXPortalUser vXPortalUser = new VXPortalUser();
 		vXPortalUser.setLoginId(userName);
 		vXPortalUser.setFirstName(vXUser.getFirstName());
+		if("null".equalsIgnoreCase(vXPortalUser.getFirstName())){
+			vXPortalUser.setFirstName("");
+		}
 		vXPortalUser.setLastName(vXUser.getLastName());
+		if("null".equalsIgnoreCase(vXPortalUser.getLastName())){
+			vXPortalUser.setLastName("");
+		}
 		vXPortalUser.setEmailAddress(vXUser.getEmailAddress());
-		vXPortalUser.setPublicScreenName(vXUser.getFirstName() + " "
-				+ vXUser.getLastName());
+		if (vXPortalUser.getFirstName() != null
+				&& vXPortalUser.getLastName() != null
+				&& !vXPortalUser.getFirstName().trim().isEmpty()
+				&& !vXPortalUser.getLastName().trim().isEmpty()) {
+			vXPortalUser.setPublicScreenName(vXPortalUser.getFirstName() + " "
+					+ vXPortalUser.getLastName());
+		} else {
+			vXPortalUser.setPublicScreenName(vXUser.getName());
+		}
 		vXPortalUser.setPassword(actualPassword);
 		vXPortalUser.setUserRoleList(vXUser.getUserRoleList());
 		vXPortalUser = userMgr.createDefaultAccountUser(vXPortalUser);
@@ -324,8 +339,11 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXUser updateXUser(VXUser vXUser) {
-		if (vXUser == null || vXUser.getName() == null || vXUser.getName().trim().isEmpty()) {
-			throw restErrorUtil.createRESTException("Please provide a valid " + "username.", MessageEnums.INVALID_INPUT_DATA);
+		if (vXUser == null || vXUser.getName() == null
+				|| "null".equalsIgnoreCase(vXUser.getName())
+				|| vXUser.getName().trim().isEmpty()) {
+			throw restErrorUtil.createRESTException("Please provide a valid "
+					+ "username.", MessageEnums.INVALID_INPUT_DATA);
 		}
 		checkAccess(vXUser.getName());
 		VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser
@@ -337,13 +355,26 @@ public class XUserMgr extends XUserMgrBase {
 		// TODO : There is a possibility that old user may not exist.
 
 		vXPortalUser.setFirstName(vXUser.getFirstName());
+		if("null".equalsIgnoreCase(vXPortalUser.getFirstName())){
+			vXPortalUser.setFirstName("");
+		}
 		vXPortalUser.setLastName(vXUser.getLastName());
+		if("null".equalsIgnoreCase(vXPortalUser.getLastName())){
+			vXPortalUser.setLastName("");
+		}
 		vXPortalUser.setEmailAddress(vXUser.getEmailAddress());
 		vXPortalUser.setLoginId(vXUser.getName());
 		vXPortalUser.setStatus(vXUser.getStatus());
 		vXPortalUser.setUserRoleList(vXUser.getUserRoleList());
-		vXPortalUser.setPublicScreenName(vXUser.getFirstName() + " "
-				+ vXUser.getLastName());
+		if (vXPortalUser.getFirstName() != null
+				&& vXPortalUser.getLastName() != null
+				&& !vXPortalUser.getFirstName().trim().isEmpty()
+				&& !vXPortalUser.getLastName().trim().isEmpty()) {
+			vXPortalUser.setPublicScreenName(vXPortalUser.getFirstName() + " "
+					+ vXPortalUser.getLastName());
+		} else {
+			vXPortalUser.setPublicScreenName(vXUser.getName());
+		}
 		vXPortalUser.setUserSource(vXUser.getUserSource());
 		String hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		String password = vXUser.getPassword();
@@ -1247,6 +1278,7 @@ public class XUserMgr extends XUserMgrBase {
 		if(vXUser==null){
 			throw restErrorUtil.createRESTException("Please provide a valid ID", MessageEnums.INVALID_INPUT_DATA);
 		}
+		checkAccess(vXUser.getName());
 		List<XXPortalUserRole> portalUserRoleList =null;
 		VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser.getName());
 		if(oldUserProfile!=null){
@@ -1260,6 +1292,7 @@ public class XUserMgr extends XUserMgrBase {
 	public VXStringList getUserRolesByName(String userName) {
 		VXPortalUser vXPortalUser=null;
 		if(userName!=null && !userName.trim().isEmpty()){
+			checkAccess(userName);
 			vXPortalUser = userMgr.getUserProfileByLoginId(userName);
 			if(vXPortalUser!=null && vXPortalUser.getUserRoleList()!=null){
 				List<XXPortalUserRole> portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(vXPortalUser.getId());
