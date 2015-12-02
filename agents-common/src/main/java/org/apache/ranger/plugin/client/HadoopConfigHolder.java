@@ -22,6 +22,7 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -96,6 +97,7 @@ public class HadoopConfigHolder  {
 				dataSource2HadoopConfigHolder.put(aDatasourceName, ret) ;
 			}
 		}
+
 		return ret ;
 	}
 	
@@ -265,14 +267,15 @@ public class HadoopConfigHolder  {
 			userName = prop.getProperty(RANGER_LOGIN_USER_NAME_PROP) ;
 			keyTabFile = prop.getProperty(RANGER_LOGIN_KEYTAB_FILE_PROP) ;
 			password = prop.getProperty(RANGER_LOGIN_PASSWORD) ;
-		
-			if ( getHadoopSecurityAuthentication() != null) {
-				isKerberosAuth = ( getHadoopSecurityAuthentication().equalsIgnoreCase(HADOOP_SECURITY_AUTHENTICATION_METHOD));
+
+			String hadoopSecurityAuthenticationn =  getHadoopSecurityAuthentication();
+
+			if ( hadoopSecurityAuthenticationn != null) {
+				isKerberosAuth = ( hadoopSecurityAuthenticationn.equalsIgnoreCase(HADOOP_SECURITY_AUTHENTICATION_METHOD));
 			}
 			else {
 				isKerberosAuth = (userName != null) && (userName.indexOf("@") > -1) ;
 			}
-					
 		}
 	}
 
@@ -342,21 +345,26 @@ public class HadoopConfigHolder  {
  	}
 	
 	public String getHadoopSecurityAuthentication() {
-		Properties repoParam = null ;
 		String ret = null;
-		
-		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(this.getDatasourceName()) ;
-		
-		if ( resourceName2PropertiesMap != null) {
-			repoParam=resourceName2PropertiesMap.get(DEFAULT_RESOURCE_NAME);
+		String sectionName = RANGER_SECTION_NAME;
+
+		if ( defaultConfigFile != null) {
+			sectionName = defaultConfigFile;
 		}
-		
-		if ( repoParam != null ) {
-			ret = (String)repoParam.get(HADOOP_SECURITY_AUTHENTICATION);
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug("==> HadoopConfigHolder.getHadoopSecurityAuthentication( " + " DataSource : " + sectionName + " Property : " +  HADOOP_SECURITY_AUTHENTICATION + ")" );
 		}
+
+		ret = getProperties(sectionName,HADOOP_SECURITY_AUTHENTICATION);
+		
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug("<== HadoopConfigHolder.getHadoopSecurityAuthentication(" + " DataSource : " + sectionName + " Property : " +  HADOOP_SECURITY_AUTHENTICATION  + " Value : " + ret + ")" );
+		}
+
 		return ret;
- 	}
-	
+	}
+
 	public String getUserName() {
 		return userName;
 	}
@@ -377,6 +385,32 @@ public class HadoopConfigHolder  {
     return rangerInternalPropertyKeys;
 
   }
+
+	private String getProperties(String sectionName, String property) {
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug("==> HadoopConfigHolder.getProperties( " + " DataSource : " + sectionName + " Property : " +  property + ")" );
+		}
+
+		Properties repoParam = null ;
+		String ret = null;
+
+		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(this.getDatasourceName()) ;
+
+		if ( resourceName2PropertiesMap != null) {
+			repoParam=resourceName2PropertiesMap.get(sectionName);
+		}
+
+		if ( repoParam != null ) {
+			ret = (String)repoParam.get(property);
+		}
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug("<== HadoopConfigHolder.getProperties( " + " DataSource : " + sectionName + " Property : " +  property + " Value : " + ret);
+		}
+
+		return ret;
+	}
 	
 
 }

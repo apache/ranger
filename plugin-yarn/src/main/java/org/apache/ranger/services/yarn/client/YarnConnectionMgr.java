@@ -19,25 +19,17 @@
 
 package org.apache.ranger.services.yarn.client;
 
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 
 
 public class YarnConnectionMgr {
 
 	public static final Logger LOG = Logger.getLogger(YarnConnectionMgr.class);
-    
-	public static YarnClient getYarnClient(final String yarnURL, String userName, String password) {
-		YarnClient yarnClient = null;
-        if (yarnURL == null || yarnURL.isEmpty()) {
-        	LOG.error("Can not create YarnClient: yarnURL is empty");
-        } else if (userName == null || userName.isEmpty()) {
-        	LOG.error("Can not create YarnClient: YarnuserName is empty");
-        } else if (password == null || password.isEmpty()) {
-        	LOG.error("Can not create YarnClient: YarnPassWord is empty");
-        } else {
-            yarnClient =  new YarnClient(yarnURL, userName, password);
-        }
-        return yarnClient;
+	
+	public static YarnClient getYarnClient(String serviceName, Map<String, String> configs) {
+        return  new YarnClient(serviceName, configs);
     }
 
 }

@@ -65,23 +65,17 @@ public class YarnResourceMgr {
 		} else {
 			yarnQueueName = userInput;
 		}
-		
-		
+
         if (configs == null || configs.isEmpty()) {
                 LOG.error("Connection Config is empty");
-
         } else {
-                
-                String url 		= configs.get("yarn.url");
-                String username = configs.get("username");
-                String password = configs.get("password");
-                resultList = getYarnResource(url, username, password,yarnQueueName,yarnQueueList) ;
+               resultList = getYarnResource(serviceName, configs, yarnQueueName,yarnQueueList) ;
         }
         return resultList ;
     }
 
-    public static List<String> getYarnResource(String url, String username, String password,String yarnQueueName, List<String> yarnQueueList) {
-        final YarnClient yarnClient = YarnConnectionMgr.getYarnClient(url, username, password);
+    public static List<String> getYarnResource(String serviceName, Map<String, String> configs, String yarnQueueName, List<String> yarnQueueList) {
+        final YarnClient yarnClient = YarnConnectionMgr.getYarnClient(serviceName, configs);
         List<String> topologyList = null;
 	    if (yarnClient != null) {
 	    	synchronized(yarnClient) {
