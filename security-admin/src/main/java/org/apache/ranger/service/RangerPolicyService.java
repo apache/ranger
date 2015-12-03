@@ -53,6 +53,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	
 	public static final String POLICY_RESOURCE_CLASS_FIELD_NAME = "resources";
 	public static final String POLICY_ITEM_CLASS_FIELD_NAME = "policyItems";
+	public static final String POLICY_NAME_CLASS_FIELD_NAME = "name";
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	String actionCreate;
@@ -178,6 +179,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				value = processPolicyResourcesForTrxLog(field.get(vObj));
 			} else if (fieldName.equalsIgnoreCase(POLICY_ITEM_CLASS_FIELD_NAME)) {
 				value = processPolicyItemsForTrxLog(field.get(vObj));
+			} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)){
+				value = processPolicyNameForTrxLog(field.get(vObj));
 			} else {
 				value = "" + field.get(vObj);
 			}
@@ -216,6 +219,10 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if (oldPolicy != null) {
 						oldValue = processPolicyItemsForTrxLog(oldPolicy.getPolicyItems());
 					}
+				} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)){
+					if (oldPolicy != null) {
+						oldValue = processPolicyNameForTrxLog(oldPolicy.getName());
+					}
 				}
 				if (oldValue == null || value.equalsIgnoreCase(oldValue)) {
 					return null;
@@ -227,6 +234,11 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				} else if (fieldName.equalsIgnoreCase(POLICY_ITEM_CLASS_FIELD_NAME)) {
 					//Compare old and new policyItems
 					if(compareTwoPolicyItemList(value, oldValue)) {
+						return null;
+					}
+				} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)) {
+					//compare old and new policyName
+					if(compareTwoPolicyName(value, oldValue)) {
 						return null;
 					}
 				}
@@ -368,4 +380,27 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		return ret;
 	}
 
+	private boolean compareTwoPolicyName(String value, String oldValue) {
+		if (value==null && oldValue==null) {
+			return org.apache.commons.lang.StringUtils.equals(value, oldValue);
+		}
+		if (value!=null && oldValue!=null && value.trim().isEmpty() && oldValue.trim().isEmpty()) {
+			return true;
+		}
+		if (stringUtil.isEmpty(value) || stringUtil.isEmpty(oldValue)) {
+			return false;
+		}
+		if(!value.equals(oldValue)) {
+			return false;
+		}
+		return true;
+	}
+
+	private String processPolicyNameForTrxLog(Object value) {
+		if (value == null) {
+			return "";
+		}
+		String name = (String) value;
+		return name;
+	}
 }
