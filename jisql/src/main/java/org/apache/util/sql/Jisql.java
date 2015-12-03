@@ -597,6 +597,16 @@ public class Jisql {
         // walk through the list once to find the formatter. then, use the
         // command line parser to do it "for real"
         //
+    	String passwordValue=null;
+    	for (int argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
+    		 if ("-p".equalsIgnoreCase(argv[argumentIndex]) || "-password".equalsIgnoreCase(argv[argumentIndex]) ) {
+    			 if(argv.length>argumentIndex + 1){
+    				 passwordValue=argv[argumentIndex + 1];
+    				 argv[argumentIndex + 1]="";
+    				 break;
+    			 }
+    		 }
+    	}
         for (int argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
             if (argv[argumentIndex].equals("-formatter")) {
                 formatterClassName = argv[argumentIndex + 1];
@@ -686,10 +696,7 @@ public class Jisql {
         else if (options.has("u"))
             userName = (String) options.valueOf("u");
 
-        if (options.has("password"))
-            password = (String) options.valueOf("password");
-        else if (options.has("p"))
-            password = (String) options.valueOf("p");
+        password=passwordValue;
 
         if (options.has("driverinfo"))
             printDriverDetails = true;
