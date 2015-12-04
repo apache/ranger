@@ -85,7 +85,7 @@
 			"name": "hadoop.security.authentication",
 			"type": "enum",
 			"subType": "authnType",
-			"mandatory": true,
+			"mandatory": false,
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
