@@ -61,6 +61,16 @@
 			"label":"Describe"
 		},
 		{
+			"itemId":8,
+			"name":"create",
+			"label":"Create"
+		},
+		{
+			"itemId":9,
+			"name":"delete",
+			"label":"Delete"
+		},
+		{
 			"itemId":7,
 			"name":"kafka_admin",
 			"label":"Kafka Admin",
@@ -68,11 +78,12 @@
 				"publish",
 				"consume",
 				"configure",
-				"describe"
+				"describe",
+				"create",
+				"delete"
 			]
 			
 		}
-		
 	],
 	"configs":[
 		{
