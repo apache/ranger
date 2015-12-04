@@ -71,7 +71,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		StringBuffer perfTagBuffer = new StringBuffer();
-		perfTagBuffer.append("policyId=").append(policy.getId()).append(", policyName=").append(policy.getName());
+		if (policy != null) {
+			perfTagBuffer.append("policyId=").append(policy.getId()).append(", policyName=").append(policy.getName());
+		}
 
 		perfTag = perfTagBuffer.toString();
 

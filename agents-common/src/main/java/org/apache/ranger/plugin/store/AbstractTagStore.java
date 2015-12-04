@@ -113,32 +113,35 @@ public abstract class AbstractTagStore implements TagStore {
 
 		List<RangerServiceResource> serviceResources = getServiceResourcesByService(serviceName);
 
-		Set<Long> tagsToDelete = new HashSet<Long>();
+		if (serviceResources != null) {
+
+			Set<Long> tagsToDelete = new HashSet<Long>();
 
 
-		for (RangerServiceResource serviceResource : serviceResources) {
-			Long resourceId = serviceResource.getId();
+			for (RangerServiceResource serviceResource : serviceResources) {
+				Long resourceId = serviceResource.getId();
 
-			List<RangerTagResourceMap> tagResourceMapsForService = getTagResourceMapsForResourceId(resourceId);
+				List<RangerTagResourceMap> tagResourceMapsForService = getTagResourceMapsForResourceId(resourceId);
 
-			if (isResourePrivateTag) {
+				if (isResourePrivateTag) {
+					for (RangerTagResourceMap tagResourceMap : tagResourceMapsForService) {
+						Long tagId = tagResourceMap.getTagId();
+						RangerTag tag = getTag(tagId);
+						tagsToDelete.add(tag.getId());
+					}
+				}
 				for (RangerTagResourceMap tagResourceMap : tagResourceMapsForService) {
-					Long tagId = tagResourceMap.getTagId();
-					RangerTag tag = getTag(tagId);
-					tagsToDelete.add(tag.getId());
+					deleteTagResourceMap(tagResourceMap.getId());
 				}
 			}
-			for (RangerTagResourceMap tagResourceMap : tagResourceMapsForService) {
-				deleteTagResourceMap(tagResourceMap.getId());
+
+			for (RangerServiceResource serviceResource : serviceResources) {
+				deleteServiceResource(serviceResource.getId());
 			}
-		}
 
-		for (RangerServiceResource serviceResource : serviceResources) {
-			deleteServiceResource(serviceResource.getId());
-		}
-
-		for (Long tagId : tagsToDelete) {
-			deleteTag(tagId);
+			for (Long tagId : tagsToDelete) {
+				deleteTag(tagId);
+			}
 		}
 
 		if (LOG.isDebugEnabled()) {

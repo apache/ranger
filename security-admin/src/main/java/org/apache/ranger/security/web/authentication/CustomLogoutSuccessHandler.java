@@ -43,6 +43,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler
 			HttpServletResponse response, Authentication authentication)
 			throws IOException, ServletException {
 
+		request.getServletContext().removeAttribute(request.getRequestedSessionId());
+		
 		response.setContentType("application/json;charset=UTF-8");
 		response.setHeader("Cache-Control", "no-cache");
 		response.setHeader("X-Frame-Options", "DENY");

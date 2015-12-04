@@ -82,6 +82,19 @@
 
 		{
 			"itemId": 4,
+			"name": "hadoop.security.authentication",
+			"type": "enum",
+			"subType": "authnType",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Authentication Type",
+			"defaultValue": "simple"
+		},
+		
+		{
+			"itemId": 5,
 			"name": "commonNameForCertificate",
 			"type": "string",
 			"mandatory": false,
@@ -90,11 +103,31 @@
 			"uiHint":"",
 			"label": "Common Name for Certificate"
 		}
+	
 	],
 
 	"enums": 
 	[
-		
+		{
+			"itemId": 1,
+			"name": "authnType",
+			"elements":
+			[
+				{
+					"itemId": 1,
+					"name": "simple",
+					"label": "Simple"
+				},
+
+				{
+					"itemId": 2,
+					"name": "kerberos",
+					"label": "Kerberos"
+				}
+			],
+
+			"defaultIndex": 0
+		}
 	],
 
 	"contextEnrichers": 

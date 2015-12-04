@@ -108,26 +108,37 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)throws IOException, ServletException {
 		
+		HttpServletRequest httpRequest = (HttpServletRequest)servletRequest;
+        if (httpRequest.getRequestedSessionId() != null && !httpRequest.isRequestedSessionIdValid())
+        {   
+        	if(httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()) != null && httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()).toString().equals("locallogin")){
+        		ssoEnabled = false;
+        		httpRequest.getSession().setAttribute("locallogin","true");
+        		httpRequest.getServletContext().removeAttribute(httpRequest.getRequestedSessionId());
+        	}
+        }		
+		
 		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 		UserSessionBase session = context != null ? context.getUserSession() : null;
 		ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
 		
-		String userAgent = ((HttpServletRequest)servletRequest).getHeader("User-Agent");
-		if(((HttpServletRequest) servletRequest).getSession() != null){
-			if(((HttpServletRequest) servletRequest).getSession().getAttribute("locallogin") != null){
+		String userAgent = httpRequest.getHeader("User-Agent");
+		if(httpRequest.getSession() != null){
+			if(httpRequest.getSession().getAttribute("locallogin") != null){
 				ssoEnabled = false;
 				servletRequest.setAttribute("ssoEnabled", false);
 				filterChain.doFilter(servletRequest, servletResponse);
 				return;
 			}
-		}
+		}		
+		
 		//If sso is enable and request is not for local login and is from browser then it will go inside and try for knox sso authentication 
-		if (ssoEnabled && !((HttpServletRequest) servletRequest).getRequestURI().contains(LOCAL_LOGIN_URL) && isWebUserAgent(userAgent)) {
+		if (ssoEnabled && !httpRequest.getRequestURI().contains(LOCAL_LOGIN_URL) && isWebUserAgent(userAgent)) {
 			//if jwt properties are loaded and is current not authenticated then it will go for sso authentication
+			//Note : Need to remove !isAuthenticated() after knoxsso solve the bug from cross-origin script
 			if (jwtProperties != null && !isAuthenticated()) {
-				HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
 				HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
-				String serializedJWT = getJWTFromCookie(httpServletRequest);
+				String serializedJWT = getJWTFromCookie(httpRequest);
 				// if we get the hadoop-jwt token from the cookies then will process it further
 				if (serializedJWT != null) {
 					SignedJWT jwtToken = null;
@@ -144,9 +155,11 @@ public class RangerSSOAuthenticationFilter implements Filter {
 							if (userName != null && !userName.trim().isEmpty()) {
 								final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 								grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+								grantedAuths.add(new SimpleGrantedAuthority("ROLE_SYS_ADMIN"));
+								grantedAuths.add(new SimpleGrantedAuthority("ROLE_KEY_ADMIN"));
 								final UserDetails principal = new User(userName, "",grantedAuths);
 								final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
-								WebAuthenticationDetails webDetails = new WebAuthenticationDetails(httpServletRequest);
+								WebAuthenticationDetails webDetails = new WebAuthenticationDetails(httpRequest);
 								((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
 								RangerAuthenticationProvider authenticationProvider = new RangerAuthenticationProvider();
 								authenticationProvider.setSsoEnabled(ssoEnabled);
@@ -158,7 +171,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 						}
 						// if the token is not valid then redirect to knox sso  
 						else {
-							String ssourl = constructLoginURL(httpServletRequest);
+							String ssourl = constructLoginURL(httpRequest);
 							if(LOG.isDebugEnabled())
 								LOG.debug("SSO URL = " + ssourl);
 							httpServletResponse.sendRedirect(ssourl);
@@ -169,7 +182,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 				}
 				// if the jwt token is not available then redirect it to knox sso 
 				else {
-					String ssourl = constructLoginURL(httpServletRequest);
+					String ssourl = constructLoginURL(httpRequest);
 					if(LOG.isDebugEnabled())
 						LOG.debug("SSO URL = " + ssourl);
 					httpServletResponse.sendRedirect(ssourl);

@@ -19,6 +19,9 @@
 
 package org.apache.ranger.services.yarn.client;
 
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import javax.security.auth.Subject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
@@ -40,7 +44,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-public class YarnClient {
+public class YarnClient extends BaseClient {
 
 	public static final Logger LOG = Logger.getLogger(YarnClient.class) ;
 
@@ -57,16 +61,27 @@ public class YarnClient {
 	String userName;
 	String password;
 
-	public  YarnClient(String yarnQueueUrl, String yarnUserName, String yarnPassWord) {
+	public  YarnClient(String serviceName, Map<String, String> configs) {
+
+		super(serviceName,configs,"yarn-client") ;
+
+		this.yarnQUrl = configs.get("yarn.url");
+		this.userName = configs.get("username");
+		this.password = configs.get("password");
 		
-		this.yarnQUrl = yarnQueueUrl;
-		this.userName = yarnUserName ;
-		this.password = yarnPassWord;
-		
+		if (this.yarnQUrl == null || this.yarnQUrl.isEmpty()) {
+			LOG.error("No value found for configuration 'yarn.url'. YARN resource lookup will fail");
+        } 
+		if (this.userName == null || this.userName.isEmpty()) {
+            LOG.error("No value found for configuration 'usename'. YARN resource lookup will fail");
+        } 
+		if (this.password == null || this.password.isEmpty()) {
+            LOG.error("No value found for configuration 'password'. YARN resource lookup will fail");
+        }
+
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Yarn Client is build with url [" + yarnQueueUrl + "] user: [" + yarnPassWord + "], password: [" + "" + "]");
+			LOG.debug("Yarn Client is build with url [" + this.yarnQUrl + "] user: [" + this.userName + "], password: [" + "*********" + "]");
 		}
-		
 	}
 	
 	public List<String> getQueueList(final String queueNameMatching, final List<String> existingQueueList) {
@@ -74,107 +89,122 @@ public class YarnClient {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Getting Yarn queue list for queueNameMatching : " + queueNameMatching);
 		}
-		final String errMsg 			= errMessage;
+		final String errMsg 	= errMessage;
 		
 		List<String> ret = null;
-		
-		Callable<List<String>> yarnQueueListGetter = new Callable<List<String>>() {
+
+		Callable<List<String>> callableYarnQListGetter = new Callable<List<String>>() {
+
 			@Override
 			public List<String> call() {
-				
-				List<String> lret = new ArrayList<String>();
-				
-				String url = yarnQUrl + YARN_LIST_API_ENDPOINT ;
-				
-				Client client = null ;
-				ClientResponse response = null ;
-				
-				try {
-					client = Client.create() ;
-					
-					WebResource webResource = client.resource(url);
-					
-					response = webResource.accept(EXPECTED_MIME_TYPE)
-						    .get(ClientResponse.class);
-					
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("getQueueList():calling " + url);
-					}
-					
-					if (response != null) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("getQueueList():response.getStatus()= " + response.getStatus());	
-						}
-						if (response.getStatus() == 200) {
-							String jsonString = response.getEntity(String.class);
-							Gson gson = new GsonBuilder().setPrettyPrinting().create();
-							YarnSchedulerResponse yarnQResponse = gson.fromJson(jsonString, YarnSchedulerResponse.class);
-							if (yarnQResponse != null) {
-								List<String>  yarnQueueList = yarnQResponse.getQueueNames();
-								if (yarnQueueList != null) {
-									for ( String yarnQueueName : yarnQueueList) {
-										if ( existingQueueList != null && existingQueueList.contains(yarnQueueName)) {
-								        	continue;
-								        }
-										if (queueNameMatching == null || queueNameMatching.isEmpty()
-												|| yarnQueueName.startsWith(queueNameMatching)) {
-												if (LOG.isDebugEnabled()) {
-													LOG.debug("getQueueList():Adding yarnQueue " + yarnQueueName);
+				List<String> yarnQueueListGetter = null;
+
+				Subject subj = getLoginSubject();
+
+				if (subj != null) {
+					yarnQueueListGetter = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+
+					@Override
+					public List<String> run() {
+
+						List<String> lret = new ArrayList<String>();
+
+						String url = yarnQUrl + YARN_LIST_API_ENDPOINT ;
+
+						Client client = null ;
+
+						ClientResponse response = null ;
+
+						try {
+							client = Client.create() ;
+
+							WebResource webResource = client.resource(url);
+
+							response = webResource.accept(EXPECTED_MIME_TYPE)
+								    .get(ClientResponse.class);
+
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("getQueueList():calling " + url);
+							}
+
+							if (response != null) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("getQueueList():response.getStatus()= " + response.getStatus());	
+								}
+								if (response.getStatus() == 200) {
+									String jsonString = response.getEntity(String.class);
+									Gson gson = new GsonBuilder().setPrettyPrinting().create();
+									YarnSchedulerResponse yarnQResponse = gson.fromJson(jsonString, YarnSchedulerResponse.class);
+									if (yarnQResponse != null) {
+										List<String>  yarnQueueList = yarnQResponse.getQueueNames();
+										if (yarnQueueList != null) {
+											for ( String yarnQueueName : yarnQueueList) {
+												if ( existingQueueList != null && existingQueueList.contains(yarnQueueName)) {
+										        	continue;
+										        }
+												if (queueNameMatching == null || queueNameMatching.isEmpty()
+														|| yarnQueueName.startsWith(queueNameMatching)) {
+														if (LOG.isDebugEnabled()) {
+															LOG.debug("getQueueList():Adding yarnQueue " + yarnQueueName);
+														}
+														lret.add(yarnQueueName) ;
+													}
 												}
-												lret.add(yarnQueueName) ;
 											}
 										}
-									}
+								 } else{
+									LOG.info("getQueueList():response.getStatus()= " + response.getStatus() + " for URL " + url + ", so returning null list");
+									String jsonString = response.getEntity(String.class);
+									LOG.info(jsonString);
+									lret = null;
 								}
-						 } else{
-							LOG.info("getQueueList():response.getStatus()= " + response.getStatus() + " for URL " + url + ", so returning null list");	
-							String jsonString = response.getEntity(String.class);
-							LOG.info(jsonString);
+							} else {
+								lret = null;
+								String msgDesc = "Unable to get a valid response for "
+										+ "expected mime type : [" + EXPECTED_MIME_TYPE
+										+ "] URL : " + url + " - got null response.";
+								LOG.error(msgDesc);
+								HadoopException hdpException = new HadoopException(msgDesc);
+								hdpException.generateResponseDataMap(false, msgDesc,
+										msgDesc + errMsg, null, null);
+								throw hdpException;
+							}
+						} catch (HadoopException he) {
 							lret = null;
-						}
-					} else {
-						lret = null;
-						String msgDesc = "Unable to get a valid response for "
-								+ "expected mime type : [" + EXPECTED_MIME_TYPE
-								+ "] URL : " + url + " - got null response.";
-						LOG.error(msgDesc);
-						HadoopException hdpException = new HadoopException(msgDesc);
-						hdpException.generateResponseDataMap(false, msgDesc,
-								msgDesc + errMsg, null, null);
-						throw hdpException;
-					}
-				} catch (HadoopException he) {
-					lret = null;
-					throw he;
-				} catch (Throwable t) {
-					lret = null;
-					String msgDesc = "Exception while getting Yarn Queue List."
-							+ " URL : " + url;
-					HadoopException hdpException = new HadoopException(msgDesc,
-							t);
-					
-					LOG.error(msgDesc, t);
+							throw he;
+						} catch (Throwable t) {
+							lret = null;
+							String msgDesc = "Exception while getting Yarn Queue List."
+									+ " URL : " + url;
+							HadoopException hdpException = new HadoopException(msgDesc,
+										t);
 
-					hdpException.generateResponseDataMap(false,
-							BaseClient.getMessage(t), msgDesc + errMsg, null,
-							null);
-					throw hdpException;
-					
-				} finally {
-					if (response != null) {
-						response.close();
+							LOG.error(msgDesc, t);
+
+							hdpException.generateResponseDataMap(false,
+									BaseClient.getMessage(t), msgDesc + errMsg, null,
+									null);
+							throw hdpException;
+
+						} finally {
+							if (response != null) {
+								response.close();
+							}
+
+							if (client != null) {
+								client.destroy(); 
+							}
+						}
+						return lret ;
 					}
-					
-					if (client != null) {
-						client.destroy(); 
-					}
+				  } );
 				}
-				return lret ;
-			}
-		} ;
+				return yarnQueueListGetter;
+			  }
+			};
 		
 		try {
-			ret = timedTask(yarnQueueListGetter, 5, TimeUnit.SECONDS);
+			ret = timedTask(callableYarnQListGetter, 5, TimeUnit.SECONDS);
 		} catch ( Throwable t) {
 			LOG.error("Unable to get Yarn Queue list from [" + yarnQUrl + "]", t) ;
 			String msgDesc = "Unable to get a valid response for "
@@ -243,12 +273,7 @@ public class YarnClient {
 					+ errMsg, null, null);
 			throw hdpException;
 		} else {
-			String yarnUrl 		= configs.get("yarn.url");
-			String yarnUserName = configs.get("username");
-			String yarnPassWord = configs.get("password");
-			yarnClient 			= new YarnClient (yarnUrl, yarnUserName,
-										 		  yarnPassWord);
-	
+			yarnClient = new YarnClient (serviceName, configs);
 		}
 		return yarnClient;
 	}
@@ -299,5 +324,4 @@ public class YarnClient {
 			TimeUnit timeUnit) throws Exception {
 		return callableObj.call();
 	}
-
 }
