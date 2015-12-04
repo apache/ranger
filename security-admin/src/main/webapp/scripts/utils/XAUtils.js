@@ -1033,13 +1033,39 @@ define(function(require) {
 			var vError = require('views/common/ErrorView');
 			var App = require('App');
 			var that = this;
+			var checksso = 'false';
+			var url = 'service/plugins/checksso';
+			$.ajax({
+				url : url,
+				async : false,
+				type : 'GET',
+				headers : {
+					"cache-control" : "no-cache"
+				},
+				success : function(resp) {
+					checksso = resp;
+				},
+				error : function(jqXHR, textStatus, err ) {			
+					console.log("Error in service/plugins/checksso REST call" + jqXHR.status);
+					checksso = jqXHR.status;
+				}
+			});
 			var vXPortalUser = SessionMgr.getUserProfile();
 			if(_.isEmpty(vXPortalUser.attributes)){
-				App.rContent.show(new vError({
-					 status : 204
-				}));
-				return;
+				if(!_.isUndefined(checksso)){
+					if(checksso == '404' || checksso == 'true'){
+						App.rContent.show(new vError({
+							 status : 204
+						}));
+						return;
+					}else{
+						return controller;
+					}
+				} else {
+					return controller;
+				}				
 			}
+			
 			var denyControllerActions = [], denyModulesObj = [];
 			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
 			//TODO Temporary fix for tag based policies : need to come from server

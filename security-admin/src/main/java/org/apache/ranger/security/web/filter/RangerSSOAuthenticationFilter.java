@@ -28,6 +28,7 @@ import com.nimbusds.jwt.SignedJWT;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,9 +50,11 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -82,7 +85,10 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	private RSAPublicKey publicKey = null;
 	private String cookieName = "hadoop-jwt";
 	private boolean ssoEnabled = false;
-
+	
+	@Autowired
+	UserMgr userMgr;
+	
 	@Inject
 	public RangerSSOAuthenticationFilter(){
 		jwtProperties = getJwtProperties();
@@ -155,15 +161,14 @@ public class RangerSSOAuthenticationFilter implements Filter {
 							if (userName != null && !userName.trim().isEmpty()) {
 								final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 								grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
-								grantedAuths.add(new SimpleGrantedAuthority("ROLE_SYS_ADMIN"));
-								grantedAuths.add(new SimpleGrantedAuthority("ROLE_KEY_ADMIN"));
 								final UserDetails principal = new User(userName, "",grantedAuths);
 								final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
 								WebAuthenticationDetails webDetails = new WebAuthenticationDetails(httpRequest);
 								((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
 								RangerAuthenticationProvider authenticationProvider = new RangerAuthenticationProvider();
 								authenticationProvider.setSsoEnabled(ssoEnabled);
-								final Authentication authentication = authenticationProvider.authenticate(finalAuthentication);								
+								Authentication authentication = authenticationProvider.authenticate(finalAuthentication);
+								authentication = getGrantedAuthority(authentication);
 								SecurityContextHolder.getContext().setAuthentication(authentication);
 							}
 							
@@ -204,6 +209,27 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		else {			
 			filterChain.doFilter(servletRequest, servletResponse);	
 		}
+	}
+
+	private Authentication getGrantedAuthority(Authentication authentication) {
+		UsernamePasswordAuthenticationToken result=null;
+		if(authentication!=null && authentication.isAuthenticated()){
+			final List<GrantedAuthority> grantedAuths=getAuthorities(authentication.getName().toString());
+			final UserDetails userDetails = new User(authentication.getName().toString(), authentication.getCredentials().toString(),grantedAuths);
+			result = new UsernamePasswordAuthenticationToken(userDetails,authentication.getCredentials(),grantedAuths);
+			result.setDetails(authentication.getDetails());
+			return result;
+		}
+		return authentication;
+	}
+	
+	private List<GrantedAuthority> getAuthorities(String username) {
+		Collection<String> roleList=userMgr.getRolesByLoginId(username);
+		final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+		for(String role:roleList){
+			grantedAuths.add(new SimpleGrantedAuthority(role));
+		}
+		return grantedAuths;
 	}
 
 	private boolean isWebUserAgent(String userAgent) {

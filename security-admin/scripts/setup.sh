@@ -688,6 +688,11 @@ update_properties() {
 		propertyName=ranger.sso.query.param.originalurl
 		newPropertyValue="${sso_query_param_originalurl}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	 else
+                propertyName=ranger.sso.enabled
+                newPropertyValue="false"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
 	fi
 }
 
