@@ -126,7 +126,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	@Override
 	public boolean authorize(Session session, Operation operation,Resource resource) {	
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKafkaAuthorizer.authorize(Session, Operation, Resource)");
+			LOG.debug(String.format("==> RangerKafkaAuthorizer.authorize(Session=%s, Operation=%s, Resource=%s)", session, operation, resource));
 		}
 
 		boolean ret = false;
@@ -140,7 +140,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKafkaAuthorizer.authorize(Session, Operation, Resource)");
+			LOG.debug("<== RangerKafkaAuthorizer.authorize: " + ret);
 		}
 		
 		return ret;
