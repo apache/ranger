@@ -28,13 +28,4 @@ public class PolicyMgrUserGroupBuilder extends org.apache.ranger.unixusersync.pr
 		ugbuilder.init() ;
 		
 	}
-	
-	public synchronized void init() throws Throwable {
-		super.init();
-	}
-	
-	@Override
-	public void addOrUpdateUser(String userName, List<String> groups) {
-		super.addOrUpdateUser(userName, groups);
-	}
 }
