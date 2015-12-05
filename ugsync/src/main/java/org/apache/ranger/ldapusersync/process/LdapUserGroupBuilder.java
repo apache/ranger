@@ -473,8 +473,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	private void getUserGroups(UserGroupSink sink) throws Throwable {
 		NamingEnumeration<SearchResult> groupSearchResultEnum = null;
 		LOG.debug("Total No. of users saved = " + userGroupMap.size());
-		if (groupSearchEnabled && groupUserMapSyncEnabled) {
-			LOG.info("groupSearch and groupUserMapSync are enabled, would search for groups and compute memberships");
+		if (groupSearchEnabled) {
+			LOG.info("groupSearch is enabled, would search for groups and compute memberships");
 			createLdapContext();
 		}
 		
@@ -482,10 +482,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		while(userInfoIterator.hasNext()) {
 			UserInfo userInfo = userInfoIterator.next();
 			String userName = userInfo.getUserName();
-			if (groupSearchEnabled && groupUserMapSyncEnabled) {
-				//LOG.info("groupSearch and groupUserMapSync are enabled, would search for groups and compute memberships");
+			if (groupSearchEnabled) {
 				try {
-					
 						groupSearchResultEnum = ldapContext
 								.search(groupSearchBase, extendedGroupSearchFilter,
 										new Object[]{userInfo.getUserFullName()},
@@ -494,8 +492,15 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						while (groupSearchResultEnum.hasMore()) {
 							final SearchResult groupEntry = groupSearchResultEnum.next();
 							if (groupEntry != null) {
-								String gName = (String) groupEntry.getAttributes()
-										.get(groupNameAttribute).get();
+								Attribute groupNameAttr = groupEntry.getAttributes() != null? groupEntry.getAttributes().get(groupNameAttribute) : null;
+								if (groupNameAttr == null) {
+									if (LOG.isInfoEnabled())  {
+										LOG.info(groupNameAttribute + " empty for entry " + groupEntry.getNameInNamespace() +
+												", skipping sync");
+									}
+									continue;
+								}
+								String gName = (String) groupNameAttr.get();
 								if (groupNameCaseConversionFlag) {
 									if (groupNameLowerCaseFlag) {
 										gName = gName.toLowerCase();
@@ -529,7 +534,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 				+ ", groups: " + groupList);
 			}
 		}
-		if (groupSearchEnabled && groupUserMapSyncEnabled) {
+		if (groupSearchEnabled) {
 			closeLdapContext();
 		}
 	}
