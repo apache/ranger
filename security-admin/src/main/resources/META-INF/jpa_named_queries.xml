@@ -656,4 +656,15 @@
 			   xpu.id=:userId and gmp.isAllowed=:isAllowed
 		</query>
 	</named-query>
+	<named-query name="XXTrxLog.getMaxIdOfXXTrxLog">
+		<query>select max(obj.id) from XXTrxLog obj</query>
+	</named-query>
+	<named-query name="XXTrxLog.updateLogAttr">
+        <query>UPDATE XXTrxLog obj SET obj.newValue = :newValue
+                WHERE obj.id &gt; :idFrom
+                  AND obj.id &lt; :idTo
+                  AND obj.objectClassType = :objClassType
+                  AND obj.attributeName = :attrName
+        </query>
+    </named-query>
 </entity-mappings>

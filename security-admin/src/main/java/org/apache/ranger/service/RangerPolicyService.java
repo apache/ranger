@@ -381,19 +381,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	}
 
 	private boolean compareTwoPolicyName(String value, String oldValue) {
-		if (value==null && oldValue==null) {
-			return org.apache.commons.lang.StringUtils.equals(value, oldValue);
-		}
-		if (value!=null && oldValue!=null && value.trim().isEmpty() && oldValue.trim().isEmpty()) {
-			return true;
-		}
-		if (stringUtil.isEmpty(value) || stringUtil.isEmpty(oldValue)) {
-			return false;
-		}
-		if(!value.equals(oldValue)) {
-			return false;
-		}
-		return true;
+		return org.apache.commons.lang.StringUtils.equals(value, oldValue);
 	}
 
 	private String processPolicyNameForTrxLog(Object value) {
