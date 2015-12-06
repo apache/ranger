@@ -63,5 +63,41 @@ public class XXTrxLogDao extends BaseDao<XXTrxLog> {
 			return null;
 		}
 	}
+	public Long getMaxIdOfXXTrxLog(){
+		Long maxXTrxLogID=new Long(0);
+		try {
+			maxXTrxLogID = (Long) getEntityManager()
+					.createNamedQuery("XXTrxLog.getMaxIdOfXXTrxLog", Long.class)
+					.getSingleResult();
+		} catch (NoResultException e) {
+			logger.debug(e.getMessage());
+		}finally{
+			if(maxXTrxLogID==null){
+				maxXTrxLogID=new Long(0);
+			}
+		}
+		return maxXTrxLogID;
+	}
+
+	public int updateXTrxLog(long idFrom,long idTo,int objClassType,String attrName,String newValue){
+		int rowAffected=-1;
+		if(objClassType == 0 ||attrName==null || newValue==null){
+			return rowAffected;
+		}
+		try {
+		//idFrom and idTo both exclusive
+		rowAffected=getEntityManager().createNamedQuery("XXTrxLog.updateLogAttr", tClass)
+	        .setParameter("idFrom", idFrom)
+	        .setParameter("idTo", idTo)
+	        .setParameter("objClassType", objClassType)
+	        .setParameter("attrName", attrName)
+	        .setParameter("newValue", newValue)
+	        .executeUpdate();
+		}catch (NoResultException e) {
+			logger.debug(e.getMessage());
+		}
+		return rowAffected;
+	}
+
 }
 
