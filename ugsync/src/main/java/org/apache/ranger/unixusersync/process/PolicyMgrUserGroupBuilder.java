@@ -778,7 +778,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (f.exists()) {
 			ret = new FileInputStream(f);
 		} else {
-			ret = getClass().getResourceAsStream(path);
+			ret = PolicyMgrUserGroupBuilder.class.getResourceAsStream(path);
 			
 			if (ret == null) {
 				if (! path.startsWith("/")) {
