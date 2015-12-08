@@ -26,6 +26,7 @@ import javax.ws.rs.WebApplicationException;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
+import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -98,6 +99,9 @@ public class TestRangerServiceDefServiceBase {
 	
 	@Mock
 	GUIDUtil guidUtil;
+	
+	@Mock
+	JSONUtil jsonUtil;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -427,17 +431,14 @@ public class TestRangerServiceDefServiceBase {
 		serviceDefObj.setDescription("HDFS Repository");
 		serviceDefObj.setGuid("1427365526516_835_0");
 		serviceDefObj.setId(Id);
-
 		Mockito.when(
 				(XXPolicyConditionDef) rangerAuditFields.populateAuditFields(
 						policyConditionDefObj, serviceDefObj)).thenReturn(
 				policyConditionDefObj);
-
 		XXPolicyConditionDef dbPolicyConditionDef = rangerServiceDefService
 				.populateRangerPolicyConditionDefToXX(rangerConditionDefvObj,
 						policyConditionDefObj, serviceDefObj, 1);
 		Assert.assertNotNull(dbPolicyConditionDef);
-		Assert.assertEquals(dbPolicyConditionDef, policyConditionDefObj);
 		Assert.assertEquals(dbPolicyConditionDef.getName(),
 				policyConditionDefObj.getName());
 		Assert.assertEquals(dbPolicyConditionDef.getDescription(),
