@@ -304,6 +304,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			}
 
 			for(RangerHiveAccessRequest request : requests) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("request: " + request);
+				}
 				RangerHiveResource resource = (RangerHiveResource)request.getResource();
 				RangerAccessResult result   = null;
 
@@ -641,6 +644,18 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				break;
 
 				case IMPORT:
+					/*
+					This can happen during hive IMPORT command IFF a table is also being created as part of IMPORT.
+					If so then
+					- this would appear in the outputHObjs, i.e. accessType == false
+					- user then must have CREATE permission on the database
+
+					During IMPORT commnad it is not possible for a database to be in inputHObj list. Thus returning SELECT
+					when accessType==true is never expacted to be hit in practice.
+					 */
+					accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
+					break;
+
 				case EXPORT:
 				case LOAD:
 					accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.UPDATE;
