@@ -481,6 +481,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerEnumDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -647,6 +652,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerEnumElementDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 		
@@ -792,6 +802,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerServiceConfigDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1176,6 +1191,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerResourceDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1687,6 +1707,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerAccessTypeDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1885,6 +1910,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyConditionDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -2236,6 +2266,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 	}
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerContextEnricherDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 

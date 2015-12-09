@@ -409,6 +409,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyResource implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -575,6 +580,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		
 	}
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyItem implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -864,6 +874,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		
 	}
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyItemAccess implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -963,6 +978,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		
 	}
 
+	@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyItemCondition implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
