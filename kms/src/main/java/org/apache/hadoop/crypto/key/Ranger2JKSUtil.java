@@ -51,7 +51,10 @@ public class Ranger2JKSUtil {
 				String keyStoreFileName = args[0] ;
 				File f = new File(keyStoreFileName) ;
 				if (! f.exists()) {					
-					f.createNewFile();
+					boolean ret = f.createNewFile();
+					if (!ret) {
+						System.err.println("Error creating new keystore file. fileName="+ args[0]);
+					}
 				}
 				String keyStoreType = (args.length == 2 ? args[1] : DEFAULT_KEYSTORE_TYPE) ;
 				try {
