@@ -138,9 +138,9 @@ public class RangerKeyStore extends KeyStoreSpi {
     public void addKeyEntry(String alias, Key key, char[] password, String cipher, int bitLength, String description, int version, String attributes)
         throws KeyStoreException
     {
+    	SecretKeyEntry entry = new SecretKeyEntry();
         synchronized(deltaEntries) {
-            try {
-            	
+            try {            	
             	Class<?> c = null;
             	Object o = null;
         		try {
@@ -152,8 +152,6 @@ public class RangerKeyStore extends KeyStoreSpi {
         			logger.error(e.getMessage());
         			throw new KeyStoreException(e.getMessage());
         		}
-        		
-                SecretKeyEntry entry = new SecretKeyEntry();
                 entry.date = new Date();
                 // seal and store the key
                 Method m = c.getDeclaredMethod("seal", Key.class);
@@ -165,12 +163,19 @@ public class RangerKeyStore extends KeyStoreSpi {
                 entry.description = description;
                 entry.version = version;
                 entry.attributes = attributes;
-                deltaEntries.put(alias.toLowerCase(), entry);   
-                keyEntries.put(alias.toLowerCase(), entry);    
+                deltaEntries.put(alias.toLowerCase(), entry);                       
             } catch (Exception e) {
             	logger.error(e.getMessage());
             	throw new KeyStoreException(e.getMessage());
             }      
+        }
+        synchronized(keyEntries) {
+        	try {
+        		keyEntries.put(alias.toLowerCase(), entry);
+        	}catch (Exception e) {
+            	logger.error(e.getMessage());
+            	throw new KeyStoreException(e.getMessage());
+            }  
         }
     }
 
@@ -180,8 +185,10 @@ public class RangerKeyStore extends KeyStoreSpi {
     {
         synchronized(keyEntries) {
         		dbOperationDelete(convertAlias(alias));
-        		keyEntries.remove(convertAlias(alias));
-        		deltaEntries.remove(convertAlias(alias));
+        		keyEntries.remove(convertAlias(alias));        	
+        }
+        synchronized(deltaEntries) {
+        	deltaEntries.remove(convertAlias(alias));
         }
     }
 
