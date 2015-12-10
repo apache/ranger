@@ -14,12 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-JAVA_HOME=__JAVA_HOME__
-SOLR_USER=__SOLR_USER__
-SOLR_INSTALL_DIR=__SOLR_INSTALL_DIR__
-SOLR_PORT=__SOLR_PORT__
-
-export SOLR_LOGS_DIR=__SOLR_LOG_FOLDER__
+SOLR_USER={{SOLR_USER}}
+SOLR_INSTALL_DIR={{SOLR_INSTALL_DIR}}
+SOLR_RANGER_HOME={{SOLR_RANGER_HOME}}
 
 if [ "`whoami`" != "$SOLR_USER" ]; then
     if [ -w /etc/passwd ]; then
@@ -32,4 +29,5 @@ if [ "`whoami`" != "$SOLR_USER" ]; then
     exit 1
 fi
 
-$SOLR_INSTALL_DIR/bin/solr stop -p $SOLR_PORT
+SOLR_INCLUDE=${SOLR_RANGER_HOME}/scripts/solr.in.sh $SOLR_INSTALL_DIR/bin/solr start $*
+

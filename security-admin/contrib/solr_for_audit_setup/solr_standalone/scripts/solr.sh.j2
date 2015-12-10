@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name=ranger_audits
-config=solrconfig.xml
-schema=schema.xml
-dataDir=__RANGER_AUDITS_DATA_FOLDER__
+JAVA_HOME={{JAVA_HOME}}
+SOLR_INSTALL_DIR={{SOLR_INSTALL_DIR}}
+SOLR_RANGER_HOME={{SOLR_RANGER_HOME}}
+
+SOLR_INCLUDE=${SOLR_RANGER_HOME}/scripts/solr.in.sh $SOLR_INSTALL_DIR/bin/solr $*

@@ -14,22 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-JAVA_HOME=__JAVA_HOME__
-SOLR_USER=__SOLR_USER__
-SOLR_INSTALL_DIR=__SOLR_INSTALL_DIR__
-SOLR_PORT=__SOLR_PORT__
-
-export SOLR_LOGS_DIR=__SOLR_LOG_FOLDER__
-
-if [ "`whoami`" != "$SOLR_USER" ]; then
-    if [ -w /etc/passwd ]; then
-	echo "Running this script as $SOLR_USER..."
-	su $SOLR_USER $0
-    else
-	echo "ERROR: You need to run this script $0 as user $SOLR_USER. You are currently running it as `whoami`"
-    fi
-    
-    exit 1
-fi
-
-$SOLR_INSTALL_DIR/bin/solr stop -p $SOLR_PORT
+name=ranger_audits
+config=solrconfig.xml
+schema=schema.xml
+dataDir={{RANGER_AUDITS_DATA_FOLDER}}

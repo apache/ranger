@@ -14,21 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-JAVA_HOME=__JAVA_HOME__
-SOLR_USER=__SOLR_USER__
-SOLR_ZK=__SOLR_ZK__
-SOLR_MEMORY=__SOLR_MAX_MEM__
-SOLR_INSTALL_DIR=__SOLR_INSTALL_DIR__
-SOLR_RANGER_HOME=__SOLR_RANGER_HOME__
-SOLR_PORT=__SOLR_PORT__
-SOLR_LOG4J_FILEPATH=$SOLR_RANGER_HOME/resources/log4j.properties
-
-export SOLR_LOGS_DIR=__SOLR_LOG_FOLDER__
+JAVA_HOME={{JAVA_HOME}}
+SOLR_USER={{SOLR_USER}}
+SOLR_INSTALL_DIR={{SOLR_INSTALL_DIR}}
+SOLR_RANGER_HOME={{SOLR_RANGER_HOME}}
 
 if [ "`whoami`" != "$SOLR_USER" ]; then
     if [ -w /etc/passwd ]; then
 	echo "Running this script as $SOLR_USER..."
-	su $SOLR_USER $0
+	su $SOLR_USER $0 $*
     else
 	echo "ERROR: You need to run this script $0 as user $SOLR_USER. You are currently running it as `whoami`"
     fi
@@ -36,4 +30,4 @@ if [ "`whoami`" != "$SOLR_USER" ]; then
     exit 1
 fi
 
-$SOLR_INSTALL_DIR/bin/solr start -p $SOLR_PORT -d $SOLR_INSTALL_DIR/server -m $SOLR_MEMORY -s $SOLR_RANGER_HOME -Dlog4j.configuration=file://$SOLR_LOG4J_FILEPATH -c -z $SOLR_ZK
+SOLR_INCLUDE=${SOLR_RANGER_HOME}/scripts/solr.in.sh  $SOLR_INSTALL_DIR/bin/solr stop $*
