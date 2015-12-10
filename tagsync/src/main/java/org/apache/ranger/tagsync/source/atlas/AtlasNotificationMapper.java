@@ -36,7 +36,7 @@ import org.apache.ranger.tagsync.process.TagSyncConfig;
 
 import java.util.*;
 
-class AtlasNotificationMapper {
+public class AtlasNotificationMapper {
 	private static final Log LOG = LogFactory.getLog(AtlasNotificationMapper.class);
 
 	public static final String ENTITY_TYPE_HIVE_DB = "hive_db";
@@ -50,8 +50,7 @@ class AtlasNotificationMapper {
 	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
 	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME_FOR_HIVE_TABLE = "name";
 	public static final String QUALIFIED_NAME_FORMAT_DELIMITER_STRING = "\\.";
-
-	private static final int MAX_HIERARCHY_LEVELS = 5;
+	public static final String QUALIFIED_NAME_FORMAT_CLUSTER_DELIMITER_STRING = "@";
 
 	private static Properties properties = null;
 
@@ -177,43 +176,45 @@ class AtlasNotificationMapper {
 
 		elements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
 
-		String[] components = getQualifiedNameComponents(entity);
-		// components should contain qualifiedName, instanceName, dbName, tableName, columnName in that order
+		List<String> components = getQualifiedNameComponents(entity);
+		// components should contain qualifiedName, clusterName, dbName, tableName, columnName in that order
 
 		String entityTypeName = entity.getTypeName();
 
-		String instanceName, dbName, tableName, columnName;
+		String qualifiedName = components.get(0);
 
-		if (components.length > 1) {
-			instanceName = components[1];
-			serviceName = getServiceName(instanceName, entityTypeName);
+		String clusterName, dbName, tableName, columnName;
+
+		if (components.size() > 1) {
+			clusterName = components.get(1);
+			serviceName = getServiceName(clusterName, entityTypeName);
 		}
 
 		if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_DB)) {
-			if (components.length > 2) {
-				dbName = components[2];
+			if (components.size() > 2) {
+				dbName = components.get(2);
 				RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
 				elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
 
 			} else {
-				LOG.error("invalid qualifiedName for HIVE_DB, qualifiedName=" + components[0]);
+				LOG.error("invalid qualifiedName for HIVE_DB, qualifiedName=" + qualifiedName);
 			}
 		} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_TABLE)) {
-			if (components.length > 3) {
-				dbName = components[2];
-				tableName = components[3];
+			if (components.size() > 3) {
+				dbName = components.get(2);
+				tableName = components.get(3);
 				RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
 				elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
 				RangerPolicy.RangerPolicyResource tablePolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
 				elements.put(RANGER_TYPE_HIVE_TABLE, tablePolicyResource);
 			} else {
-				LOG.error("invalid qualifiedName for HIVE_TABLE, qualifiedName=" + components[0]);
+				LOG.error("invalid qualifiedName for HIVE_TABLE, qualifiedName=" + qualifiedName);
 			}
 		} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_COLUMN)) {
-			if (components.length > 4) {
-				dbName = components[2];
-				tableName = components[3];
-				columnName = components[4];
+			if (components.size() > 4) {
+				dbName = components.get(2);
+				tableName = components.get(3);
+				columnName = components.get(4);
 				RangerPolicy.RangerPolicyResource dbPolicyResource = new RangerPolicy.RangerPolicyResource(dbName);
 				elements.put(RANGER_TYPE_HIVE_DB, dbPolicyResource);
 				RangerPolicy.RangerPolicyResource tablePolicyResource = new RangerPolicy.RangerPolicyResource(tableName);
@@ -221,7 +222,7 @@ class AtlasNotificationMapper {
 				RangerPolicy.RangerPolicyResource columnPolicyResource = new RangerPolicy.RangerPolicyResource(columnName);
 				elements.put(RANGER_TYPE_HIVE_COLUMN, columnPolicyResource);
 			} else {
-				LOG.error("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + components[0]);
+				LOG.error("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + qualifiedName);
 			}
 
 		}
@@ -298,46 +299,76 @@ class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private String[] getQualifiedNameComponents(IReferenceableInstance entity) throws Exception {
-		String ret[] = new String[MAX_HIERARCHY_LEVELS];
-
-		String qualifiedNameAttributeName = StringUtils.equals(entity.getTypeName(), ENTITY_TYPE_HIVE_TABLE) ?
+	static private String getQualifiedNameAttributeName(String entityTypeName) {
+		String ret = StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_TABLE) ?
 				ENTITY_ATTRIBUTE_QUALIFIED_NAME_FOR_HIVE_TABLE : ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 
+		return ret;
+	}
+
+	static private List<String> getQualifiedNameComponents(IReferenceableInstance entity) throws Exception {
+
+		List<String> ret = null;
+
+		String qualifiedNameAttributeName = getQualifiedNameAttributeName(entity.getTypeName());
+
 		String qualifiedName = getEntityAttribute(entity, qualifiedNameAttributeName, String.class);
+
+		ret = getQualifiedNameComponents(entity.getTypeName(), qualifiedName);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("----- Entity-Id:" + entity.getId()._getId());
+			LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
+			LOG.debug("----- 	Entity-Components -----");
+			int i = 0;
+			for (String value : ret) {
+				LOG.debug("-----		Index:" + i++ + "	Value:" + value);
+			}
+		}
+		return ret;
+	}
+
+	static public List<String> getQualifiedNameComponents(String entityTypeName, String qualifiedName) throws Exception {
+
+		List<String> ret = null;
+
+		String qualifiedNameAttributeName = getQualifiedNameAttributeName(entityTypeName);
 
 		if (StringUtils.isBlank(qualifiedName)) {
 			throw new Exception("Could not get a valid value for " + qualifiedNameAttributeName + " attribute from entity notification.");
 		}
 
-		String nameHierarchy[] = qualifiedName.split(QUALIFIED_NAME_FORMAT_DELIMITER_STRING);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Received .... " + qualifiedNameAttributeName + "=" + qualifiedName + " for entity type " + entityTypeName);
+		}
+
+		String components[] = qualifiedName.split(QUALIFIED_NAME_FORMAT_CLUSTER_DELIMITER_STRING);
+
+		if (components == null || components.length != 2) {
+			throw new Exception("Qualified Name does not contain cluster-name, qualifiedName=" + qualifiedName);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("name-hierarchy=" + components[0] + ", cluster-name=" + components[1]);
+		}
+
+		String nameHierarchy[] = components[0].split(QUALIFIED_NAME_FORMAT_DELIMITER_STRING);
 
 		int hierarchyLevels = nameHierarchy.length;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("----- Entity-Id:" + entity.getId()._getId());
-			LOG.debug("----- Entity-Type-Name:" + entity.getTypeName());
-			LOG.debug("----- Entity-Qualified-Name:" + qualifiedName);
-			LOG.debug("-----	Entity-Qualified-Name-Components -----");
-			for (int i = 0; i < hierarchyLevels; i++) {
-				LOG.debug("-----		Index:" + i + "	Value:" + nameHierarchy[i]);
-			}
-		}
+		ret = new ArrayList<String>();
 
-		int i;
-		for (i = 0; i < ret.length; i++) {
-			ret[i] = null;
-		}
-		ret[0] = qualifiedName;
+		ret.add(qualifiedName);
+		ret.add(components[1]);
 
-		for (i = 0; i < hierarchyLevels; i++) {
-			ret[i + 1] = nameHierarchy[i];
+		for (int i = 0; i < hierarchyLevels; i++) {
+			ret.add(nameHierarchy[i]);
 		}
 
 		return ret;
 	}
 
-	static private String getServiceName(String instanceName, String entityTypeName) {
+	static private String getServiceName(String clusterName, String entityTypeName) {
 		// Parse entityTypeName to get the Apache-component Name
 		// Assumption: entityTypeName is <componentName>_<component_specific_type_name>
 		// such as hive_table, hadoop_path, hbase_queue, etc.
@@ -347,7 +378,7 @@ class AtlasNotificationMapper {
 			apacheComponent = apacheComponents[0].toLowerCase();
 		}
 
-		return TagSyncConfig.getServiceName(apacheComponent, instanceName, properties);
+		return TagSyncConfig.getServiceName(apacheComponent, clusterName, properties);
 	}
 
 	static private <T> T getEntityAttribute(IReferenceableInstance entity, String name, Class<T> type) {
