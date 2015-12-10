@@ -16,7 +16,6 @@
 
 #This script downloads Solr (optional) and sets up Solr for Ranger Audit Server
 curr_dir=`pwd`
-
 . ./install.properties
 
 #Current timestamp
@@ -259,30 +258,36 @@ if [ "$SOLR_DEPLOYMENT" = "standalone" ]; then
     cp -r solr_standalone/* $SOLR_RANGER_HOME
     mkdir -p $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf
     cp -r conf/* $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf
-    sed  "s#__RANGER_AUDITS_DATA_FOLDER__#$SOLR_RANGER_DATA_FOLDER#g" $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/core.properties.template > $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/core.properties
-    sed -e "s#__JAVA_HOME__#$JAVA_HOME#g" -e "s#__SOLR_USER__#$SOLR_USER#g" -e "s#__SOLR_MAX_MEM__#$SOLR_MAX_MEM#g" -e "s#__SOLR_INSTALL_DIR__#$SOLR_INSTALL_FOLDER#g" -e "s#__SOLR_RANGER_HOME__#$SOLR_RANGER_HOME#g" -e "s#__SOLR_PORT__#$SOLR_RANGER_PORT#g" -e "s#__SOLR_LOG_FOLDER__#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/scripts/start_solr.sh.template > $SOLR_RANGER_HOME/scripts/start_solr.sh
 
+    sed  -e "s#{{MAX_AUDIT_RETENTION_DAYS}}#$MAX_AUDIT_RETENTION_DAYS#g" $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf/solrconfig.xml.j2 > $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf/solrconfig.xml
+    sed  "s#{{RANGER_AUDITS_DATA_FOLDER}}#$SOLR_RANGER_DATA_FOLDER#g" $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/core.properties.j2 > $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/core.properties
+    sed  -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g"  -e "s#{{SOLR_MAX_MEM}}#$SOLR_MAX_MEM#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" -e "s#{{SOLR_LOG_FOLDER}}#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/scripts/solr.in.sh.j2 > $SOLR_RANGER_HOME/scripts/solr.in.sh
+    
 else
-
     echo "`date`|INFO|Configuring SolrCloud instance"
     cp -r solr_cloud/* $SOLR_RANGER_HOME
     mkdir -p $SOLR_RANGER_HOME/conf
     cp -r conf/* $SOLR_RANGER_HOME/conf
 
     #Get the first ZooKeeper host:port/path
-    FIRST_SOLR_ZK=$(IFS="," ; set -- $SOLR_ZK ; echo $1)
+    #FIRST_SOLR_ZK=$(IFS="," ; set -- $SOLR_ZK ; echo $1)
+    FIRST_SOLR_ZK=$SOLR_ZK
 
-    sed  -e "s#__JAVA_HOME__#$JAVA_HOME#g" -e "s#__SOLR_USER__#$SOLR_USER#g"  -e "s#__SOLR_MAX_MEM__#$SOLR_MAX_MEM#g" -e "s#__SOLR_INSTALL_DIR__#$SOLR_INSTALL_FOLDER#g" -e "s#__SOLR_RANGER_HOME__#$SOLR_RANGER_HOME#g" -e "s#__SOLR_PORT__#$SOLR_RANGER_PORT#g" -e "s#__SOLR_ZK__#$SOLR_ZK#g" -e "s#__SOLR_LOG_FOLDER__#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/scripts/start_solr.sh.template > $SOLR_RANGER_HOME/scripts/start_solr.sh
+    sed  -e "s#{{MAX_AUDIT_RETENTION_DAYS}}#$MAX_AUDIT_RETENTION_DAYS#g" $SOLR_RANGER_HOME/conf/solrconfig.xml.j2 > $SOLR_RANGER_HOME/conf/solrconfig.xml
 
-    sed -e "s#__JAVA_HOME__#$JAVA_HOME#g" -e "s#__SOLR_USER__#$SOLR_USER#g" -e "s#__SOLR_INSTALL_DIR__#$SOLR_INSTALL_FOLDER#g" -e "s#__SOLR_RANGER_HOME__#$SOLR_RANGER_HOME#g" -e "s#__SOLR_ZK__#$FIRST_SOLR_ZK#g" $SOLR_RANGER_HOME/scripts/add_ranger_audits_conf_to_zk.sh.template > $SOLR_RANGER_HOME/scripts/add_ranger_audits_conf_to_zk.sh
-    sed -e "s#__JAVA_HOME__#$JAVA_HOME#g" -e "s#__SOLR_INSTALL_DIR__#$SOLR_INSTALL_FOLDER#g" -e "s#__SOLR_ZK__#$SOLR_ZK#g" -e "s#__SOLR_HOST_URL__#$SOLR_HOST_URL#g"  -e "s#__SOLR_SHARDS__#$SOLR_SHARDS#g"  -e "s#__SOLR_REPLICATION__#$SOLR_REPLICATION#g"  $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh.template > $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh
-    sed -e "s#__SOLR_PORT__#$SOLR_RANGER_PORT#g" $SOLR_RANGER_HOME/solr.xml.template > $SOLR_RANGER_HOME/solr.xml
+    sed  -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g"  -e "s#{{SOLR_MAX_MEM}}#$SOLR_MAX_MEM#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" -e "s#{{SOLR_ZK}}#$SOLR_ZK#g" -e "s#{{SOLR_LOG_FOLDER}}#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/scripts/solr.in.sh.j2 > $SOLR_RANGER_HOME/scripts/solr.in.sh
+
+    sed -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" -e "s#{{SOLR_ZK}}#$FIRST_SOLR_ZK#g" $SOLR_RANGER_HOME/scripts/add_ranger_audits_conf_to_zk.sh.j2 > $SOLR_RANGER_HOME/scripts/add_ranger_audits_conf_to_zk.sh
+    sed -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_ZK}}#$SOLR_ZK#g" -e "s#{{SOLR_HOST_URL}}#$SOLR_HOST_URL#g"  -e "s#{{SOLR_SHARDS}}#$SOLR_SHARDS#g"  -e "s#{{SOLR_REPLICATION}}#$SOLR_REPLICATION#g"  $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh.j2 > $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh
+    sed -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" $SOLR_RANGER_HOME/solr.xml.j2 > $SOLR_RANGER_HOME/solr.xml
+
 fi
 
 #Common overrides
-sed -e "s#__JAVA_HOME__#$JAVA_HOME#g" -e "s#__SOLR_USER__#$SOLR_USER#g" -e "s#__SOLR_INSTALL_DIR__#$SOLR_INSTALL_FOLDER#g" -e "s#__SOLR_PORT__#$SOLR_RANGER_PORT#g" -e "s#__SOLR_LOG_FOLDER__#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/scripts/stop_solr.sh.template > $SOLR_RANGER_HOME/scripts/stop_solr.sh
-sed  -e "s#__SOLR_LOG_FOLDER__#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/resources/log4j.properties.template > $SOLR_RANGER_HOME/resources/log4j.properties
-
+sed -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g" -e "s#{{SOLR_LOG_FOLDER}}#$SOLR_LOG_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" $SOLR_RANGER_HOME/scripts/stop_solr.sh.j2 > $SOLR_RANGER_HOME/scripts/stop_solr.sh
+sed  -e "s#{{SOLR_LOG_FOLDER}}#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/resources/log4j.properties.j2 > $SOLR_RANGER_HOME/resources/log4j.properties
+sed -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g" -e "s#{{SOLR_ZK}}#$SOLR_ZK#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" $SOLR_RANGER_HOME/scripts/solr.sh.j2 > $SOLR_RANGER_HOME/scripts/solr.sh
+sed  -e "s#{{SOLR_USER}}#$SOLR_USER#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" $SOLR_RANGER_HOME/scripts/start_solr.sh.j2 > $SOLR_RANGER_HOME/scripts/start_solr.sh
 
 #Let's make all ownership is given to $SOLR_USER
 if [ $is_root -eq 1 ]; then
@@ -345,7 +350,7 @@ EOF
 
 if [ "$SOLR_REPLICATION" != "1" ]; then
     cat >> $SOLR_INSTALL_NOTES <<EOF
-1. Using $0 script install and configure Solr for Ranger Audits on all other nodes also (don't start it yet)
+1. Copy the same install.properties on all solr nodes and sing $0 script install and configure Solr for Ranger Audits on all other nodes also (don't start it yet)
 2. Execute $SOLR_RANGER_HOME/scripts/add_ranger_audits_conf_to_zk.sh (only once from any node)
 3. Start Solr on all nodes: $SOLR_RANGER_HOME/scripts/start_solr.sh
 4. Create Ranger Audit collection: $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh (only once from any node)

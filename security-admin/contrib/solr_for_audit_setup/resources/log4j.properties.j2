@@ -14,8 +14,9 @@
 # limitations under the License.
 
 #  Logging level                                                                                                                                   
-solr.log=__SOLR_LOG_FOLDER__
-log4j.rootLogger=INFO, file, CONSOLE
+solr.log={{SOLR_LOG_FOLDER}}
+#log4j.rootLogger=INFO, file, CONSOLE
+log4j.rootLogger=INFO, file
 
 log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
 

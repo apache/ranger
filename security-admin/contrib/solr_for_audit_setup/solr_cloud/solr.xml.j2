@@ -18,7 +18,7 @@
 <solr>
   <solrcloud>
     <str name="host">${host:}</str>
-    <int name="hostPort">${jetty.port:__SOLR_PORT__}</int>
+    <int name="hostPort">${jetty.port:{{SOLR_PORT}}}</int>
     <str name="hostContext">${hostContext:solr}</str>
     <int name="zkClientTimeout">${zkClientTimeout:15000}</int>
     <bool name="genericCoreNodeNames">${genericCoreNodeNames:true}</bool>

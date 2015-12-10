@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#Usage: Run this script as user hdfs or the HDFS admin user. 
+#Usage: Use this script in kerberos enabled hadoop only. Run this script after kinit'ing as hdfs user
 #This script creates the folders in HDFS required by Apache Ranger for writing Audit records
-#Note 1: Use this script only for non-kerberos environment. In non-kerberos environment, Ranger KMS writes the audit logs as user "HTTP"
+#Note 1: Use this script only for kerberos environment. In kerberos environment, Ranger KMS writes the audit logs as user "HTTP"
 #Note 2: Please update the below variables according to your environment
 
 HBASE_USER_GROUP=hbase:hbase

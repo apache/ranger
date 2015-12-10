@@ -1644,7 +1644,7 @@
   <updateRequestProcessorChain name="add-unknown-fields-to-the-schema">
     <processor class="solr.DefaultValueUpdateProcessorFactory">
         <str name="fieldName">_ttl_</str>
-        <str name="value">+1095DAYS</str>
+        <str name="value">+{{MAX_AUDIT_RETENTION_DAYS}}DAYS</str>
     </processor>
     <processor class="solr.processor.DocExpirationUpdateProcessorFactory">
         <int name="autoDeletePeriodSeconds">300</int>
