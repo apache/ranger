@@ -1335,8 +1335,7 @@ public class RangerBizUtil {
 
 		for (XXTrxLog xTrxLog : trxLogList) {
 			if (xTrxLog != null) {
-				if ("Password".equalsIgnoreCase(xTrxLog.getAttributeName()
-						.trim())) {
+				if ("Password".equalsIgnoreCase(StringUtil.trim(xTrxLog.getAttributeName()))) {
 					if (xTrxLog.getPreviousValue() != null
 							&& !xTrxLog.getPreviousValue().trim().isEmpty()
 							&& !"null".equalsIgnoreCase(xTrxLog
