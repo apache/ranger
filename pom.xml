@@ -89,6 +89,7 @@
   <module>plugin-yarn</module>
   <module>ranger_solrj</module>
   <module>security-admin</module>
+  <module>plugin-kafka</module>
   <module>plugin-solr</module>
   <module>ugsync</module>
   <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
@@ -103,6 +104,7 @@
   <module>ranger-knox-plugin-shim</module>
   <module>ranger-yarn-plugin-shim</module>
   <module>ranger-storm-plugin-shim</module>
+  <module>ranger-kafka-plugin-shim</module>
   <module>ranger-examples</module>
   </modules>
   <properties>
@@ -157,8 +159,7 @@
 		<jersey-bundle.version>1.17.1</jersey-bundle.version>
 		<jersey-client.version>2.6</jersey-client.version>
 		<junit.version>4.11</junit.version>
-		<kafka.version>0.8.2.0</kafka.version>
-		<!-- <kafka.version>0.8.2.2.3.4.0-3288</kafka.version> -->
+		<kafka.version>0.9.0.0</kafka.version>
 		<mockito.version>1.8.4</mockito.version>
 		<hamcrest-version>1.3</hamcrest-version>
 		<knox.gateway.version>0.6.0</knox.gateway.version>
@@ -229,11 +230,8 @@
           </modules>
       </profile>
       <profile>
+          <!-- This is now a no-op profile since kafka plugin now builds against default profile.  It is help here temporarily for backward compatability. -->
           <id>kafka-security</id>
-         <modules>
-             <module>plugin-kafka</module>
-             <module>ranger-kafka-plugin-shim</module>
-         </modules>
       </profile>
   </profiles>
   <distributionManagement>

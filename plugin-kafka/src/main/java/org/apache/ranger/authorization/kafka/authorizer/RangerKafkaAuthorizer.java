@@ -27,17 +27,18 @@ import javax.security.auth.Subject;
 import kafka.security.auth.Acl;
 import kafka.security.auth.Authorizer;
 
+import org.apache.kafka.common.network.LoginType;
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 
 import kafka.security.auth.*;
 import kafka.server.KafkaConfig;
-import kafka.common.security.LoginManager;
 import kafka.network.RequestChannel.Session;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.kafka.common.security.kerberos.LoginManager;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -81,7 +82,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public void configure(Map<String, ?> configs) {
 		if (rangerPlugin == null) {
 			try {
-				Subject subject = LoginManager.subject();
+				LoginManager loginManager = org.apache.kafka.common.security.kerberos.LoginManager.acquireLoginManager(LoginType.SERVER, configs);
+				Subject subject = loginManager.subject();
 				UserGroupInformation ugi = MiscUtil
 						.createUGIFromSubject(subject);
 				if (ugi != null) {
