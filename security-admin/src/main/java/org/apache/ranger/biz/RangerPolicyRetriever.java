@@ -580,8 +580,6 @@ public class RangerPolicyRetriever {
 					RangerPolicyItem policyItem = new RangerPolicyItem();
 
 					policyItem.setDelegateAdmin(xPolicyItem.getDelegateAdmin());
-					policyItem.setIsEnabled(xPolicyItem.getIsEnabled());
-					policyItem.setComments(xPolicyItem.getComments());
 
 					while(iterUserPerms.hasNext()) {
 						XXPolicyItemUserPerm xUserPerm = iterUserPerms.next();

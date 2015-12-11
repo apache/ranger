@@ -90,7 +90,7 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 
 	@Override
 	public String getComments() {
-		return policyItem == null ? null : policyItem.getComments();
+		return null;
 	}
 
 	@Override
