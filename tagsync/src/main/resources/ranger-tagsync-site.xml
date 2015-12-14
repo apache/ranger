@@ -50,8 +50,4 @@
 		<value>File</value>
 		<description></description>
 	</property>
-	<property>
-		<name>ranger.tagsync.atlas.to.service.mapping</name>
-		<value>c1,hive,cl1_hive</value>
-	</property>
 </configuration>
