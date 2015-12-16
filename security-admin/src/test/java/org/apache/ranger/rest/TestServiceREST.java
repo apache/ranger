@@ -880,7 +880,8 @@ public class TestServiceREST {
 				searchUtil.getSearchFilter(request, policyService.sortFields))
 				.thenReturn(filter);
 		RangerPolicyList dbRangerPolicy = serviceREST.getPolicies(request);
-		Assert.assertNull(dbRangerPolicy);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(dbRangerPolicy.getListSize(), 0);
 		Mockito.verify(searchUtil).getSearchFilter(request,
 				policyService.sortFields);
 	}
@@ -903,7 +904,6 @@ public class TestServiceREST {
 		Assert.assertNotNull(data);
 		Mockito.verify(searchUtil).getSearchFilter(request,
 				policyService.sortFields);
-		Mockito.verify(svcStore).getPaginatedPolicies(filter);
 	}
 
 	@Test
@@ -927,7 +927,7 @@ public class TestServiceREST {
 		Assert.assertNotNull(dbRangerPolicy);
 		Mockito.verify(searchUtil).getSearchFilter(request,
 				policyService.sortFields);
-		Mockito.verify(svcStore).getPaginatedServicePolicies(Id, filter);
+		Mockito.verify(svcStore).getServicePolicies(Id, filter);
 	}
 
 	@Test
@@ -935,7 +935,7 @@ public class TestServiceREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		RangerPolicy rangerPolicy = rangerPolicy();
 
-		PList<RangerPolicy> ret  = Mockito.mock(PList.class);
+		List<RangerPolicy> ret  = Mockito.mock(List.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
@@ -944,7 +944,7 @@ public class TestServiceREST {
 				.thenReturn(filter);
 
 		Mockito.when(
-				svcStore.getPaginatedServicePolicies(rangerPolicy.getName(),
+				svcStore.getServicePolicies(rangerPolicy.getName(),
 						filter)).thenReturn(ret);
 
 		RangerPolicyList dbRangerPolicy = serviceREST.getServicePoliciesByName(

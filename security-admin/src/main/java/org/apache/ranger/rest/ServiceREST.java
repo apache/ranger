@@ -40,6 +40,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1256,10 +1257,8 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.getPolicies()");
 		}
 
-		RangerPolicyList ret  = null;
+		RangerPolicyList ret  = new RangerPolicyList();
 		RangerPerfTracer perf = null;
-
-		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
@@ -1267,21 +1266,33 @@ public class ServiceREST {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicies()");
 			}
-			paginatedPolicies = svcStore.getPaginatedPolicies(filter);
 
-			if(paginatedPolicies != null) {
-				ret = new RangerPolicyList();
+			if(isAdminUserWithNoFilterParams(filter)) {
+				PList<RangerPolicy> policies = svcStore.getPaginatedPolicies(filter);
 
-				ret.setPolicies(paginatedPolicies.getList());
-				ret.setPageSize(paginatedPolicies.getPageSize());
-				ret.setResultSize(paginatedPolicies.getResultSize());
-				ret.setStartIndex(paginatedPolicies.getStartIndex());
-				ret.setTotalCount(paginatedPolicies.getTotalCount());
-				ret.setSortBy(paginatedPolicies.getSortBy());
-				ret.setSortType(paginatedPolicies.getSortType());
+				ret = toRangerPolicyList(policies);
+			} else {
+				// get all policies from the store; pick the page to return after applying filter
+				int savedStartIndex = filter == null ? 0 : filter.getStartIndex();
+				int savedMaxRows    = filter == null ? Integer.MAX_VALUE : filter.getMaxRows();
 
-				applyAdminAccessFilter(ret);
+				if(filter != null) {
+					filter.setStartIndex(0);
+					filter.setMaxRows(Integer.MAX_VALUE);
+				}
+
+				List<RangerPolicy> policies = svcStore.getPolicies(filter);
+
+				if(filter != null) {
+					filter.setStartIndex(savedStartIndex);
+					filter.setMaxRows(savedMaxRows);
+				}
+
+				applyAdminAccessFilter(policies);
+
+				ret = toRangerPolicyList(policies, filter);
 			}
+
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
@@ -1376,10 +1387,8 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceId + ")");
 		}
 
-		RangerPolicyList ret  = null;
+		RangerPolicyList ret  = new RangerPolicyList();
 		RangerPerfTracer perf = null;
-
-		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
@@ -1387,20 +1396,31 @@ public class ServiceREST {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceId=" + serviceId + ")");
 			}
-			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceId, filter);
 
-			if(paginatedPolicies != null) {
-				ret = new RangerPolicyList();
+			if(isAdminUserWithNoFilterParams(filter)) {
+				PList<RangerPolicy> policies = svcStore.getPaginatedServicePolicies(serviceId, filter);
 
-				ret.setPolicies(paginatedPolicies.getList());
-				ret.setPageSize(paginatedPolicies.getPageSize());
-				ret.setResultSize(paginatedPolicies.getResultSize());
-				ret.setStartIndex(paginatedPolicies.getStartIndex());
-				ret.setTotalCount(paginatedPolicies.getTotalCount());
-				ret.setSortBy(paginatedPolicies.getSortBy());
-				ret.setSortType(paginatedPolicies.getSortType());
+				ret = toRangerPolicyList(policies);
+			} else {
+				// get all policies from the store; pick the page to return after applying filter
+				int savedStartIndex = filter == null ? 0 : filter.getStartIndex();
+				int savedMaxRows    = filter == null ? Integer.MAX_VALUE : filter.getMaxRows();
 
-				applyAdminAccessFilter(ret);
+				if(filter != null) {
+					filter.setStartIndex(0);
+					filter.setMaxRows(Integer.MAX_VALUE);
+				}
+
+				List<RangerPolicy> servicePolicies = svcStore.getServicePolicies(serviceId, filter);
+
+				if(filter != null) {
+					filter.setStartIndex(savedStartIndex);
+					filter.setMaxRows(savedMaxRows);
+				}
+
+				applyAdminAccessFilter(servicePolicies);
+
+				ret = toRangerPolicyList(servicePolicies, filter);
 			}
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -1410,10 +1430,6 @@ public class ServiceREST {
 			throw restErrorUtil.createRESTException(excp.getMessage());
 		} finally {
 			RangerPerfTracer.log(perf);
-		}
-
-		if (ret == null) {
-			LOG.info("No Policies found for given service id: " + serviceId);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1432,10 +1448,8 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceName + ")");
 		}
 
-		RangerPolicyList ret  = null;
+		RangerPolicyList ret  = new RangerPolicyList();
 		RangerPerfTracer perf = null;
-
-		PList<RangerPolicy> paginatedPolicies = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
@@ -1443,20 +1457,31 @@ public class ServiceREST {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceName=" + serviceName + ")");
 			}
-			paginatedPolicies = svcStore.getPaginatedServicePolicies(serviceName, filter);
 
-			if(paginatedPolicies != null) {
-				ret = new RangerPolicyList();
+			if(isAdminUserWithNoFilterParams(filter)) {
+				PList<RangerPolicy> policies = svcStore.getPaginatedServicePolicies(serviceName, filter);
 
-				ret.setPolicies(paginatedPolicies.getList());
-				ret.setPageSize(paginatedPolicies.getPageSize());
-				ret.setResultSize(paginatedPolicies.getResultSize());
-				ret.setStartIndex(paginatedPolicies.getStartIndex());
-				ret.setTotalCount(paginatedPolicies.getTotalCount());
-				ret.setSortBy(paginatedPolicies.getSortBy());
-				ret.setSortType(paginatedPolicies.getSortType());
+				ret = toRangerPolicyList(policies);
+			} else {
+				// get all policies from the store; pick the page to return after applying filter
+				int savedStartIndex = filter == null ? 0 : filter.getStartIndex();
+				int savedMaxRows    = filter == null ? Integer.MAX_VALUE : filter.getMaxRows();
 
-				applyAdminAccessFilter(ret);
+				if(filter != null) {
+					filter.setStartIndex(0);
+					filter.setMaxRows(Integer.MAX_VALUE);
+				}
+
+				List<RangerPolicy> servicePolicies = svcStore.getServicePolicies(serviceName, filter);
+
+				if(filter != null) {
+					filter.setStartIndex(savedStartIndex);
+					filter.setMaxRows(savedMaxRows);
+				}
+
+				applyAdminAccessFilter(servicePolicies);
+
+				ret = toRangerPolicyList(servicePolicies, filter);
 			}
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -1466,10 +1491,6 @@ public class ServiceREST {
 			throw restErrorUtil.createRESTException(excp.getMessage());
 		} finally {
 			RangerPerfTracer.log(perf);
-		}
-
-		if (ret == null) {
-			LOG.info("No Policies found for given service name: " + serviceName);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1773,12 +1794,6 @@ public class ServiceREST {
 		return svcStore.getPolicyForVersionNumber(policyId, versionNo);
 	}
 
-	private void applyAdminAccessFilter(RangerPolicyList policies) {
-		if(policies != null && !CollectionUtils.isEmpty(policies.getList())) {
-			applyAdminAccessFilter(policies.getPolicies());
-		}
-	}
-
 	private void applyAdminAccessFilter(List<RangerPolicy> policies) {
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
@@ -1910,6 +1925,55 @@ public class ServiceREST {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String checkSSO() {
 		return String.valueOf(bizUtil.isSSOEnabled());
+	}
+
+	boolean isAdminUserWithNoFilterParams(SearchFilter filter) {
+		return (filter == null || MapUtils.isEmpty(filter.getParams())) &&
+			   (bizUtil.isAdmin() || bizUtil.isKeyAdmin());
+	}
+
+	private RangerPolicyList toRangerPolicyList(PList<RangerPolicy> policyList) {
+		RangerPolicyList ret = new RangerPolicyList();
+
+		if(policyList != null) {
+			ret.setPolicies(policyList.getList());
+			ret.setPageSize(policyList.getPageSize());
+			ret.setResultSize(policyList.getResultSize());
+			ret.setStartIndex(policyList.getStartIndex());
+			ret.setTotalCount(policyList.getTotalCount());
+			ret.setSortBy(policyList.getSortBy());
+			ret.setSortType(policyList.getSortType());
+		}
+
+		return ret;
+	}
+
+	private RangerPolicyList toRangerPolicyList(List<RangerPolicy> policyList, SearchFilter filter) {
+		RangerPolicyList ret = new RangerPolicyList();
+
+		if(CollectionUtils.isNotEmpty(policyList)) {
+			int    totalCount = policyList.size();
+			int    startIndex = filter == null ? 0 : filter.getStartIndex();
+			int    pageSize   = filter == null ? totalCount : filter.getMaxRows();
+			int    toIndex    = Math.min(startIndex + pageSize, totalCount);
+			String sortType   = filter == null ? null : filter.getSortType();
+			String sortBy     = filter == null ? null : filter.getSortBy();
+
+			List<RangerPolicy> retList = new ArrayList<RangerPolicy>();
+			for(int i = startIndex; i < toIndex; i++) {
+				retList.add(policyList.get(i));
+			}
+
+			ret.setPolicies(retList);
+			ret.setPageSize(pageSize);
+			ret.setResultSize(retList.size());
+			ret.setStartIndex(startIndex);
+			ret.setTotalCount(totalCount);
+			ret.setSortBy(sortBy);
+			ret.setSortType(sortType);
+		}
+
+		return ret;
 	}
 
 }
