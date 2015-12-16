@@ -212,8 +212,7 @@ public class RangerRESTClient {
 			client = Client.create(config);
 		}
 
-		// TODO: for testing only
-		if(!StringUtils.isEmpty(mUsername) || !StringUtils.isEmpty(mPassword)) {
+		if(!StringUtils.isEmpty(mUsername) && !StringUtils.isEmpty(mPassword)) {
 			client.addFilter(new HTTPBasicAuthFilter(mUsername, mPassword)); 
 		}
 

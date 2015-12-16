@@ -27,9 +27,11 @@ public interface TagSource {
 
 	void setTagSink(TagSink sink);
 
-	void updateSink() throws Exception;
+	void synchUp();
 
-	Thread start();
+	boolean start();
+
+	void stop();
 
 	boolean isChanged();
 

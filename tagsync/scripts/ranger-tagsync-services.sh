@@ -16,8 +16,8 @@
 # limitations under the License.
 
 if [[ -z $1 ]]; then
-        echo "Invalid argument [$1];"
-        echo "Usage: Only start | stop | restart | version, are supported."
+        echo "No argument provided.."
+        echo "Usage: $0 {start | stop | restart | version}"
         exit;
 fi
 action=$1
@@ -119,7 +119,7 @@ elif [ "${action}" == "VERSION" ]; then
 	exit
 else 
 	echo "Invalid argument [$1];"
-    echo "Usage: Only start | stop | restart | version, are supported."
+	echo "Usage: $0 {start | stop | restart | version}"
     exit;
 fi
 

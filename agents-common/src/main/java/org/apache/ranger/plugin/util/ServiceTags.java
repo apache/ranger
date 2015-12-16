@@ -23,6 +23,8 @@ package org.apache.ranger.plugin.util;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -51,7 +53,6 @@ public class ServiceTags implements java.io.Serializable {
 	public static final String TAGMODEL_SHARED        = "shared";
 	public static final String TAGMODEL_RESOURCE_PRIVATE        = "resource_private";
 
-
 	private String                      op = OP_ADD_OR_UPDATE;
 	private String                      tagModel = TAGMODEL_SHARED;
 	private String                      serviceName;
@@ -62,6 +63,22 @@ public class ServiceTags implements java.io.Serializable {
 	private List<RangerServiceResource> serviceResources;
 	private Map<Long, List<Long>>       resourceToTagIds;
 
+	public ServiceTags() {
+		this(OP_ADD_OR_UPDATE, TAGMODEL_SHARED, null, 0L, null, null, null, null, null);
+	}
+
+	public ServiceTags(String op, String tagModel, String serviceName, Long tagVersion, Date tagUpdateTime, Map<Long, RangerTagDef> tagDefinitions,
+					   Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources, Map<Long, List<Long>> resourceToTagIds) {
+		setOp(op);
+		setTagModel(tagModel);
+		setServiceName(serviceName);
+		setTagVersion(tagVersion);
+		setTagUpdateTime(tagUpdateTime);
+		setTagDefinitions(tagDefinitions);
+		setTags(tags);
+		setServiceResources(serviceResources);
+		setResourceToTagIds(resourceToTagIds);
+	}
 	/**
 	 * @return the op
 	 */
@@ -138,7 +155,7 @@ public class ServiceTags implements java.io.Serializable {
 	}
 
 	public void setTagDefinitions(Map<Long, RangerTagDef> tagDefinitions) {
-		this.tagDefinitions = tagDefinitions;
+		this.tagDefinitions = tagDefinitions == null ? new HashMap<Long, RangerTagDef>() : tagDefinitions;
 	}
 
 	public Map<Long, RangerTag> getTags() {
@@ -146,7 +163,7 @@ public class ServiceTags implements java.io.Serializable {
 	}
 
 	public void setTags(Map<Long, RangerTag> tags) {
-		this.tags = tags;
+		this.tags = tags == null ? new HashMap<Long, RangerTag>() : tags;
 	}
 
 	public List<RangerServiceResource> getServiceResources() {
@@ -154,7 +171,7 @@ public class ServiceTags implements java.io.Serializable {
 	}
 
 	public void setServiceResources(List<RangerServiceResource> serviceResources) {
-		this.serviceResources = serviceResources;
+		this.serviceResources = serviceResources == null ? new ArrayList<RangerServiceResource>() : serviceResources;
 	}
 
 	public Map<Long, List<Long>> getResourceToTagIds() {
@@ -162,7 +179,7 @@ public class ServiceTags implements java.io.Serializable {
 	}
 
 	public void setResourceToTagIds(Map<Long, List<Long>> resourceToTagIds) {
-		this.resourceToTagIds = resourceToTagIds;
+		this.resourceToTagIds = resourceToTagIds == null ? new HashMap<Long, List<Long>>() : resourceToTagIds;
 	}
 
 	@Override

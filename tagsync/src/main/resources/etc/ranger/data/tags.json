@@ -1,9 +1,7 @@
 {
     "op":"add_or_update",
-    "tagModel":"shared",
+    "tagModel": "resource_private",
     "serviceName": "cl1_hive",
-    "tagVersion": 24,
-    "tagUpdateTime": "20150901-20:03:17.000-+0000",
     "tagDefinitions": {
       "1": {
         "name": "EXPIRES_ON",
@@ -15,12 +13,7 @@
           }
         ],
         "id": 1,
-        "guid": "1441137512654_323_77",
-        "isEnabled": true,
-        "createdBy": "Admin",
-        "updatedBy": "Admin",
-        "createTime": "20150901-19:58:33.000-+0000",
-        "updateTime": "20150901-19:58:33.000-+0000"
+        "guid": "tagdefinition-1-guid"
       }
     },
     "tags": {
@@ -30,12 +23,7 @@
           "expiry_date": "2014/12/31"
         },
         "id": 1,
-        "guid": "1441137512698_844_80",
-        "isEnabled": true,
-        "createdBy": "Admin",
-        "updatedBy": "Admin",
-        "createTime": "20150901-19:58:33.000-+0000",
-        "updateTime": "20150901-20:03:17.000-+0000"
+        "guid": "tag-1-guid"
       }
     },
     "serviceResources": [
@@ -57,14 +45,8 @@
             "isRecursive": false
           }
         },
-        "resourceSignature": "c1114679b35a65d28e0dca4fdffc27d6",
         "id": 1,
-        "guid": "1441137512756_887_83",
-        "isEnabled": true,
-        "createdBy": "Admin",
-        "updatedBy": "Admin",
-        "createTime": "20150901-19:58:33.000-+0000",
-        "updateTime": "20150901-19:58:33.000-+0000"
+        "guid": "serviceresource-1-guid"
       }
     ],
     "resourceToTagIds": {

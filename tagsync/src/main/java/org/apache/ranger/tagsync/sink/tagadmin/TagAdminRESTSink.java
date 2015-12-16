@@ -36,8 +36,8 @@ import org.apache.ranger.tagsync.process.TagSyncConfig;
 import java.util.Map;
 import java.util.Properties;
 
-public class TagRESTSink implements TagSink {
-	private static final Log LOG = LogFactory.getLog(TagRESTSink.class);
+public class TagAdminRESTSink implements TagSink {
+	private static final Log LOG = LogFactory.getLog(TagAdminRESTSink.class);
 
 	private static final String REST_PREFIX = "/service";
 	private static final String MODULE_PREFIX = "/tags";
@@ -51,7 +51,7 @@ public class TagRESTSink implements TagSink {
 	@Override
 	public boolean initialize(Properties properties) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> TagRESTSink.initialize()");
+			LOG.debug("==> TagAdminRESTSink.initialize()");
 		}
 
 		boolean ret = true;
@@ -88,7 +88,7 @@ public class TagRESTSink implements TagSink {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== TagRESTSink.initialize(), result=" + ret);
+			LOG.debug("<== TagAdminRESTSink.initialize(), result=" + ret);
 		}
 
 		return ret;
@@ -96,7 +96,7 @@ public class TagRESTSink implements TagSink {
 
 	public boolean testConnection() {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagRESTSink.testConnection()");
+			LOG.debug("==> TagAdminRESTSink.testConnection()");
 		}
 
 		boolean ret = true;
@@ -112,13 +112,13 @@ public class TagRESTSink implements TagSink {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagRESTSink.testConnection(), result=" + ret);
+			LOG.debug("<== TagAdminRESTSink.testConnection(), result=" + ret);
 		}
 		return ret;
 	}
 
 	@Override
-	public void uploadServiceTags(ServiceTags serviceTags) throws Exception {
+	synchronized public void uploadServiceTags(ServiceTags serviceTags) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> uploadServiceTags()");
 		}
@@ -132,6 +132,8 @@ public class TagRESTSink implements TagSink {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 
 			LOG.error("Upload of service-tags failed with message " + resp.getMessage());
+
+			throw new Exception("Upload of service-tags failed with response: " + response);
 		}
 
 		if(LOG.isDebugEnabled()) {

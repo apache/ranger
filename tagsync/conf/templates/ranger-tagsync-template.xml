@@ -32,6 +32,10 @@
 		<value></value>
 	</property>
 	<property>
+		<name>ranger.tagsync.atlasrestsource.download.interval</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.tagsync.tagadmin.rest.ssl.config.file</name>
 		<value></value>
 	</property>
@@ -59,4 +63,11 @@
 	<name>ranger.tagsync.atlas.to.service.mapping</name>
 		<value></value>
 	</property>
-</configuration>
+	<property>
+		<name>ranger.tagsync.atlasrestsource.endpoint</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.atlas.custom.resource.mappers</name>
+		<value></value>
+	</property></configuration>

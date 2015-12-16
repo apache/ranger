@@ -1,0 +1,197 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.ranger.tagsync.source.atlas;
+
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.apache.atlas.notification.NotificationConsumer;
+import org.apache.atlas.notification.NotificationInterface;
+import org.apache.atlas.notification.NotificationModule;
+import org.apache.atlas.notification.entity.EntityNotification;
+
+import org.apache.ranger.tagsync.model.AbstractTagSource;
+import org.apache.ranger.plugin.util.ServiceTags;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+
+public class AtlasTagSource extends AbstractTagSource {
+	private static final Log LOG = LogFactory.getLog(AtlasTagSource.class);
+
+	public static final String TAGSYNC_ATLAS_PROPERTIES_FILE_NAME = "application.properties";
+
+	public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS = "atlas.kafka.bootstrap.servers";
+	public static final String TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT = "atlas.kafka.zookeeper.connect";
+	public static final String TAGSYNC_ATLAS_CONSUMER_GROUP = "atlas.kafka.entities.group.id";
+
+	private ConsumerRunnable consumerTask;
+
+	@Override
+	public boolean initialize(Properties properties) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> AtlasTagSource.initialize()");
+		}
+
+		Properties atlasProperties = new Properties();
+
+		boolean ret = AtlasResourceMapperUtil.initializeAtlasResourceMappers(properties);
+
+		if (ret) {
+
+			InputStream inputStream = getClass().getClassLoader().getResourceAsStream(TAGSYNC_ATLAS_PROPERTIES_FILE_NAME);
+
+			if (inputStream != null) {
+				try {
+					atlasProperties.load(inputStream);
+				} catch (Exception exception) {
+					ret = false;
+					LOG.error("Cannot load Atlas application properties file, file-name:" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, exception);
+				} finally {
+					try {
+						inputStream.close();
+					} catch (IOException ioException) {
+						LOG.error("Cannot close Atlas application properties file, file-name:\" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME", ioException);
+					}
+				}
+			} else {
+				ret = false;
+				LOG.error("Cannot find Atlas application properties file");
+			}
+		}
+
+		if (ret) {
+			if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_KAFKA_ENDPOINTS))) {
+				ret = false;
+				LOG.error("Value of property '" + TAGSYNC_ATLAS_KAFKA_ENDPOINTS + "' is not specified!");
+			}
+			if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT))) {
+				ret = false;
+				LOG.error("Value of property '" + TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT + "' is not specified!");
+			}
+			if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_CONSUMER_GROUP))) {
+				ret = false;
+				LOG.error("Value of property '" + TAGSYNC_ATLAS_CONSUMER_GROUP + "' is not specified!");
+			}
+		}
+
+		if (ret) {
+			NotificationModule notificationModule = new NotificationModule();
+
+			Injector injector = Guice.createInjector(notificationModule);
+
+			Provider<NotificationInterface> consumerProvider = injector.getProvider(NotificationInterface.class);
+			NotificationInterface notification = consumerProvider.get();
+			List<NotificationConsumer<EntityNotification>> iterators = notification.createConsumers(NotificationInterface.NotificationType.ENTITIES, 1);
+
+			consumerTask = new ConsumerRunnable(iterators.get(0));
+
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== AtlasTagSource.initialize(), result=" + ret);
+		}
+		return ret;
+	}
+
+	@Override
+	public boolean start() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> AtlasTagSource.start()");
+		}
+		Thread consumerThread = null;
+		if (consumerTask == null) {
+			LOG.error("No consumerTask!!!");
+		} else {
+			consumerThread = new Thread(consumerTask);
+			consumerThread.setDaemon(true);
+			consumerThread.start();
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== AtlasTagSource.start()");
+		}
+		return consumerThread != null;
+	}
+
+	@Override
+	public boolean isChanged() {
+		return true;
+	}
+
+	private static void printEntityNotification(EntityNotification notification) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Notification-Type: " + notification.getOperationType());
+			AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(notification.getEntity(), notification.getAllTraits());
+			LOG.debug(entityWithTraits);
+		}
+	}
+
+	private class ConsumerRunnable implements Runnable {
+
+		private final NotificationConsumer<EntityNotification> consumer;
+
+		private ConsumerRunnable(NotificationConsumer<EntityNotification> consumer) {
+			this.consumer = consumer;
+		}
+
+		private boolean hasNext() {
+			boolean ret = false;
+			try {
+				ret = consumer.hasNext();
+			} catch (Exception exception) {
+				LOG.error("EntityNotification consumer threw exception, IGNORING...:", exception);
+			}
+			return ret;
+		}
+
+		@Override
+		public void run() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> ConsumerRunnable.run()");
+			}
+			while (!shutdown) {
+				if (hasNext()) {
+					EntityNotification notification = consumer.next();
+					if (notification != null) {
+						printEntityNotification(notification);
+
+						ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
+						if (serviceTags == null) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Did not create ServiceTags structure for notification type:" + notification.getOperationType());
+							}
+						} else {
+							updateSink(serviceTags);
+						}
+					}
+				}
+			}
+			LOG.info("Shutting down the Tag-Atlas-source thread");
+		}
+	}
+}
+

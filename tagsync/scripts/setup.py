@@ -77,8 +77,8 @@ TAGSYNC_INSTALL_PROP_PREFIX_FOR_ATLAS_RANGER_MAPPING = 'ranger.tagsync.atlas.'
 TAGSYNC_ATLAS_CLUSTER_IDENTIFIER = '.instance.'
 TAGSYNC_INSTALL_PROP_SUFFIX_FOR_ATLAS_RANGER_MAPPING = '.ranger.service'
 TAG_SOURCE_ATLAS = 'atlas'
+TAG_SOURCE_ATLASREST = 'atlasrest'
 TAG_SOURCE_FILE = 'file'
-TAG_SOURCE_LIST = [ TAG_SOURCE_ATLAS, TAG_SOURCE_FILE ]
 
 def archiveFile(originalFileName):
     archiveDir = dirname(originalFileName)
@@ -199,20 +199,11 @@ def convertInstallPropsToXML(props):
 		else:
 			print "Direct Key not found:%s" % (k)
 
-	ret['ranger.tagsync.sink.impl.class'] = 'org.apache.ranger.sink.policymgr.TagRESTSink'
+	ret['ranger.tagsync.sink.impl.class'] = 'org.apache.ranger.sink.policymgr.TagAdminRESTSink'
+
 	if (TAG_SOURCE_KEY in ret):
-		tagSource = ret[TAG_SOURCE_KEY]
-		if (tagSource == TAG_SOURCE_ATLAS):
-			ret['ranger.tagsync.source.impl.class'] = 'atlas'
-		elif (tagSource == TAG_SOURCE_FILE):
-			ret['ranger.tagsync.source.impl.class'] = 'file'
-		else:
-			print "ERROR: Invalid value (%s) defined for %s in install.properties. Only valid values are %s" % (tagSource, TAG_SOURCE_ATLAS,TAG_SOURCE_FILE)
-			sys.exit(1)
-		del ret['TAG_SOURCE']
-	else:
-		print "ERROR: No value defined for TAG_SOURCE in install.properties. valid values are %s" % (TAG_SOURCE_ATLAS, TAG_SOURCE_FILE)
-		sys.exit(1)
+		ret['ranger.tagsync.source.impl.class'] = ret[TAG_SOURCE_KEY]
+		del ret[TAG_SOURCE_KEY]
 
 	atlasOutFile.close()
 

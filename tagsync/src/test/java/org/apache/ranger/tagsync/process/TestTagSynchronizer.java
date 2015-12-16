@@ -20,12 +20,7 @@
 package org.apache.ranger.tagsync.process;
 
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.tagsync.model.TagSource;
-import org.apache.ranger.tagsync.process.TagSyncConfig;
-import org.apache.ranger.tagsync.process.TagSynchronizer;
-import org.apache.ranger.tagsync.source.atlas.AtlasNotificationMapper;
-import org.apache.ranger.tagsync.source.atlas.TagAtlasSource;
+import org.apache.ranger.tagsync.source.atlas.AtlasHiveResourceMapper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,8 +28,6 @@ import org.junit.Test;
 import java.io.*;
 import java.util.List;
 import java.util.Properties;
-
-import static org.junit.Assert.*;
 
 
 public class TestTagSynchronizer {
@@ -79,7 +72,7 @@ public class TestTagSynchronizer {
 	@Test
 	public void testTagDownload() {
 
-		boolean initDone = false;
+		boolean initDone = true;
 
 		/* For tagSynchronizer.initialize() to succeed, edit ranger-tagsync-site.xml file to contain correct
 		values of the following properties:
@@ -97,9 +90,11 @@ public class TestTagSynchronizer {
 		*/
 
 
-		//initDone = tagSynchronizer.initialize();
+//		initDone = tagSynchronizer.initialize(null);
 
 		System.out.println("TagSynchronizer initialization result=" + initDone);
+
+		assert(initDone);
 
 		System.out.println("Exiting testTagDownload()");
 	}
@@ -108,14 +103,15 @@ public class TestTagSynchronizer {
 	public void testQualifiedNames() {
 
 		List<String> components;
+		AtlasHiveResourceMapper hiveResourceBuilder = new AtlasHiveResourceMapper();
 		try {
-			components = AtlasNotificationMapper.getQualifiedNameComponents("hive_db", "database@cluster");
+			components = hiveResourceBuilder.getQualifiedNameComponents("hive_db", "database@cluster");
 			printComponents(components);
 
-			components = AtlasNotificationMapper.getQualifiedNameComponents("hive_table", "database.table@cluster");
+			components = hiveResourceBuilder.getQualifiedNameComponents("hive_table", "database.table@cluster");
 			printComponents(components);
 
-			components = AtlasNotificationMapper.getQualifiedNameComponents("hive_column", "database.table.column@cluster");
+			components = hiveResourceBuilder.getQualifiedNameComponents("hive_column", "database.table.column@cluster");
 			printComponents(components);
 
 			assert(true);

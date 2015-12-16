@@ -47,22 +47,29 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.filesource.modtime.check.interval";
 
+	private static final String TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP = "ranger.tagsync.atlasrestsource.download.interval";
+
 	private static final String TAGSYNC_SOURCE_CLASS_PROP = "ranger.tagsync.source.impl.class";
 
 	private static final String TAGSYNC_SINK_CLASS_PROP = "ranger.tagsync.sink.impl.class";
 
-	private static final String TAGSYNC_ATLASSOURCE_ENDPOINT_PROP = "ranger.tagsync.atlassource.endpoint";
+	private static final String TAGSYNC_ATLASSOURCE_ENDPOINT_PROP = "ranger.tagsync.atlasrestsource.endpoint";
 
-	private static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX = "ranger.tagsync.atlas.";
+	public static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX = "ranger.tagsync.atlas.";
 
-	private static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX = ".ranger.service";
+	public static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX = ".ranger.service";
 
-	private static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
+	public static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
 
 	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.tagadmin.keystore";
 	private static final String TAGSYNC_TAGADMIN_ALIAS_PROP = "ranger.tagsync.tagadmin.alias";
 	private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP = "ranger.tagsync.tagadmin.password";
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
+	private static final String TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP = "ranger.tagsync.source.atlas.custom.resource.mappers";
+
+	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
+
+	private static final long DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL = 900000;
 
 	public static TagSyncConfig getInstance() {
 		TagSyncConfig newConfig = new TagSyncConfig();
@@ -158,7 +165,7 @@ public class TagSyncConfig extends Configuration {
 
 	static public boolean isTagSyncEnabled(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_ENABLED_PROP);
-		return !(val != null && val.trim().equalsIgnoreCase("falae"));
+		return !(val != null && val.trim().equalsIgnoreCase("false"));
 	}
 
 	static public String getTagSyncLogdir(Properties prop) {
@@ -168,17 +175,39 @@ public class TagSyncConfig extends Configuration {
 
 	static public long getTagSourceFileModTimeCheckIntervalInMillis(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP);
-		return Long.valueOf(val);
+		long ret = DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL;
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Long.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+		return ret;
 	}
 
-	static public String getTagSourceClassName(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_SOURCE_CLASS_PROP);
-		if (StringUtils.equalsIgnoreCase(val, "atlas")) {
-			return "org.apache.ranger.tagsync.source.atlas.TagAtlasSource";
-		} else if (StringUtils.equalsIgnoreCase(val, "file")) {
-			return "org.apache.ranger.tagsync.source.file.TagFileSource";
+	static public long getTagSourceAtlasDownloadIntervalInMillis(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP);
+		long ret = DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL;
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Long.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+		return ret;
+	}
+
+	static public String getTagSourceClassName(String sourceName) {
+		if (StringUtils.equalsIgnoreCase(sourceName, "atlas")) {
+			return "org.apache.ranger.tagsync.source.atlas.AtlasTagSource";
+		} else if (StringUtils.equalsIgnoreCase(sourceName, "file")) {
+			return "org.apache.ranger.tagsync.source.file.FileTagSource";
+		} else if (StringUtils.equalsIgnoreCase(sourceName, "atlasrest")) {
+			return "org.apache.ranger.tagsync.source.atlasrest.AtlasRESTTagSource";
 		} else
-			return val;
+			return sourceName;
 	}
 
 	static public String getTagSource(Properties prop) {
@@ -188,7 +217,7 @@ public class TagSyncConfig extends Configuration {
 	static public String getTagSinkClassName(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_SINK_CLASS_PROP);
 		if (StringUtils.equalsIgnoreCase(val, "tagadmin")) {
-			return "org.apache.ranger.tagsync.sink.tagadmin.TagRESTSink";
+			return "org.apache.ranger.tagsync.sink.tagadmin.TagAdminRESTSink";
 		} else
 			return val;
 	}
@@ -250,15 +279,8 @@ public class TagSyncConfig extends Configuration {
 		return "";
 	}
 
-	static public String getServiceName(String componentName, String instanceName, Properties prop) {
-		String propName = TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX + componentName
-				+ ".instance." + instanceName
-				+ TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX;
-		String val = prop.getProperty(propName);
-		if (StringUtils.isBlank(val)) {
-			val = instanceName + TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR + componentName;
-		}
-		return val;
+	static public String getCustomAtlasResourceMappers(Properties prop) {
+		return prop.getProperty(TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP);
 	}
 
 	private TagSyncConfig() {

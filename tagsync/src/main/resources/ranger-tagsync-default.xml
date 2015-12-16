@@ -55,4 +55,9 @@
 		<value>tagadmin</value>
 		<description></description>
 	</property>
+	<property>
+		<name>ranger.tagsync.atlasrestsource.download.interval</name>
+		<value>600000</value>
+		<description></description>
+	</property>
 </configuration>
