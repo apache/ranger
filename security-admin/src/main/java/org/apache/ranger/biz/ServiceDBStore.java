@@ -1890,7 +1890,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policyItemConditions.add(policyItemCondition);
 
 			policyItem.setConditions(policyItemConditions);
-			policyItem.setDelegateAdmin(true);
+			policyItem.setDelegateAdmin(Boolean.FALSE);
 
 			policyItems.add(policyItem);
 
