@@ -143,20 +143,21 @@ def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
 				# Expected value is 'clusterName,componentName,serviceName;clusterName,componentName,serviceName' ...
 				# Blanks are not supported anywhere in the value.
 				valueString = str(prop[name])
-				multiValues = valueString.split(';')
-				listLen = len(multiValues)
-				index = 0
-				while index < listLen:
-					parts = multiValues[index].split(',')
-					if len(parts) == 3:
-						newConfig = ET.SubElement(root, 'property')
-						newName = ET.SubElement(newConfig, 'name')
-						newValue = ET.SubElement(newConfig, 'value')
-						newName.text = TAGSYNC_INSTALL_PROP_PREFIX_FOR_ATLAS_RANGER_MAPPING + str(parts[1]) + TAGSYNC_ATLAS_CLUSTER_IDENTIFIER + str(parts[0]) + TAGSYNC_INSTALL_PROP_SUFFIX_FOR_ATLAS_RANGER_MAPPING
-						newValue.text = str(parts[2])
-					else:
-						print "ERROR: incorrect syntax for %s, value=%s" % (TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING, multiValues[index])
-					index += 1
+				if valueString and valueString.strip():
+					multiValues = valueString.split(';')
+					listLen = len(multiValues)
+					index = 0
+					while index < listLen:
+						parts = multiValues[index].split(',')
+						if len(parts) == 3:
+							newConfig = ET.SubElement(root, 'property')
+							newName = ET.SubElement(newConfig, 'name')
+							newValue = ET.SubElement(newConfig, 'value')
+							newName.text = TAGSYNC_INSTALL_PROP_PREFIX_FOR_ATLAS_RANGER_MAPPING + str(parts[1]) + TAGSYNC_ATLAS_CLUSTER_IDENTIFIER + str(parts[0]) + TAGSYNC_INSTALL_PROP_SUFFIX_FOR_ATLAS_RANGER_MAPPING
+							newValue.text = str(parts[2])
+						else:
+							print "ERROR: incorrect syntax for %s, value=%s" % (TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING, multiValues[index])
+						index += 1
 				root.remove(config)
 			else:
 				config.find('value').text = str(prop[name])
