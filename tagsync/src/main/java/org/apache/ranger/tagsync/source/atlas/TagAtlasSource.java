@@ -164,9 +164,9 @@ public class TagAtlasSource implements TagSource {
 
 	private class ConsumerRunnable implements Runnable {
 
-		private final Iterator<EntityNotification> consumerIterator;
+		private final NotificationConsumer<EntityNotification> consumerIterator;
 
-		private ConsumerRunnable(Iterator<EntityNotification> consumerIterator) {
+		private ConsumerRunnable(NotificationConsumer<EntityNotification> consumerIterator) {
 			this.consumerIterator = consumerIterator;
 		}
 
