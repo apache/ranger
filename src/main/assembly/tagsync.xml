@@ -65,7 +65,14 @@
 					<include>org.apache.kafka:kafka_2.10</include>
 					<include>org.apache.kafka:kafka-clients</include>
 					<include>com.yammer.metrics:metrics-core</include>
+					<include>org.json4s:json4s-native_2.10</include>
+					<include>org.json4s:json4s-core_2.10</include>
+					<include>org.json4s:json4s-ast_2.10</include>
+					<include>com.thoughtworks.paranamer:paranamer</include>
 					<include>org.scala-lang:scala-library</include>
+					<include>org.scala-lang:scalap</include>
+					<include>org.scala-lang:scala-compiler</include>
+					<include>org.scala-lang:scala-reflect</include>
 					<include>com.101tec:zkclient</include>
 					<include>org.apache.zookeeper:zookeeper</include>
 					<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
