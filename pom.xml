@@ -106,6 +106,7 @@
   <module>ranger-storm-plugin-shim</module>
   <module>ranger-kafka-plugin-shim</module>
   <module>ranger-examples</module>
+    <module>ranger-tools</module>
   </modules>
   <properties>
         <javac.source.version>1.7</javac.source.version>
@@ -387,6 +388,7 @@
              <descriptor>src/main/assembly/usersync.xml</descriptor>
              <descriptor>src/main/assembly/migration-util.xml</descriptor>
              <descriptor>src/main/assembly/kms.xml</descriptor>
+             <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
              <descriptor>src/main/assembly/ranger-src.xml</descriptor>
            </descriptors>
          </configuration>
@@ -491,6 +493,7 @@
           <exclude>**/main/resources/**/*.json</exclude>
           <exclude>**/.externalToolBuilders/*</exclude>
           <exclude>*.patch</exclude>
+          <exclude>**/testdata/*.json</exclude>
           <exclude>atlassian-ide-plugin.xml</exclude>
 	  <exclude>**/.pydevproject</exclude>
         </excludes>
