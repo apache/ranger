@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-This file describes how to build, unpackage and run the performance testing tool.
+This file describes how to build, setup, configure and run the performance testing tool.
 
 1. 	Build Apache Ranger using the following command.
 	% mvn clean compile package assembly:assembly
@@ -42,7 +42,7 @@ This file describes how to build, unpackage and run the performance testing tool
 
 4.	% cd ranger-0.5.0-ranger-tools
 
-5.	Setup configuration
+5.	Configure the policies and requests to use in the test run
 
 	Following sample data files are packaged with the perf-tool:
 		service-policies   - testdata/test_servicepolicies_hive.json
@@ -54,12 +54,12 @@ This file describes how to build, unpackage and run the performance testing tool
 
 	Update conf/log4j.properties to specify the filename where perf run results will be written to. Property to update is 'ranger.perf.logger'.
 
-5.	Run the tool with the command,
+6.	Run the tool with the following command
 
 	% ./ranger-perftester.sh -s <service-policies-file>  -r <requests-file> -p <profiled-modules-file> -c <number-of-concurrent-clients> -n <number-of-times-requests-file-to-be-run>
 
 	Example:
 	% ./ranger-perftester.sh -s testdata/test_servicepolicies_hive.json  -r testdata/test_requests_hive.json -p testdata/test_modules.txt -c 2 -n 1
 
-6. 	At the end of the run, the performance-statistics are printed in the log file in conf/log4j.properties file.
+7. 	At the end of the run, the performance-statistics are printed on the console and in the log specified file in conf/log4j.properties file.
 
