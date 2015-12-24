@@ -105,7 +105,7 @@ public class EmbeddedServer {
 			ssl.setAttribute("clientAuth", getConfig("ranger.service.https.attrib.clientAuth", "false"));
 			ssl.setAttribute("keyAlias", getConfig("ranger.service.https.attrib.keystore.keyalias"));
 			ssl.setAttribute("keystorePass", getConfig("ranger.service.https.attrib.keystore.pass"));
-			ssl.setAttribute("keystoreFile", getConfig("ranger.https.attrib.keystore.file"));
+			ssl.setAttribute("keystoreFile", getKeystoreFile());
 			
 			String enabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
@@ -203,7 +203,16 @@ public class EmbeddedServer {
 			e.printStackTrace(); 
 		} 
 	}
-	
+
+	private String getKeystoreFile() {
+		String keystoreFile=getConfig("ranger.service.https.attrib.keystore.file");
+		if (keystoreFile == null || keystoreFile.trim().isEmpty()) {
+			// new property not configured, lets use the old property
+			keystoreFile = getConfig("ranger.https.attrib.keystore.file") ;
+		}
+		return keystoreFile;
+	}
+
 	protected String getConfig(String key) {
 		String value = serverConfigProperties.getProperty(key);
 		if (value == null || value.trim().isEmpty()) {
