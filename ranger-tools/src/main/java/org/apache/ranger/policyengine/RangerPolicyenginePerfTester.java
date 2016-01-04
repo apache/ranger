@@ -24,11 +24,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.PerfDataRecorder;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class RangerPolicyenginePerfTester {
@@ -43,72 +45,77 @@ public class RangerPolicyenginePerfTester {
 
         PerfTestOptions perfTestOptions = commandLineParser.parse(args);
 
-        URL statCollectionFileURL = perfTestOptions.getStatCollectionFileURL();
+        if (perfTestOptions != null) {
+            URL statCollectionFileURL = perfTestOptions.getStatCollectionFileURL();
 
-        List<String> perfModuleNames = buildPerfModuleNames(statCollectionFileURL);
+            List<String> perfModuleNames = buildPerfModuleNames(statCollectionFileURL);
 
-        PerfDataRecorder.initialize(perfModuleNames);
+            PerfDataRecorder.initialize(perfModuleNames);
 
-        URL servicePoliciesFileURL = perfTestOptions.getServicePoliciesFileURL();
+            URL servicePoliciesFileURL = perfTestOptions.getServicePoliciesFileURL();
 
-        PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL);
-        if (!perfTestEngine.init()) {
-            LOG.error("Error initializing test data. Existing...");
-            System.exit(1);
-        }
-
-        URL[] requestFileURLs = perfTestOptions.getRequestFileURLs();
-        int requestFilesCount = requestFileURLs.length;
-
-        int clientsCount = perfTestOptions.getConcurrentClientCount();
-        List<PerfTestClient> perfTestClients = new ArrayList<PerfTestClient>(clientsCount);
-
-        for (int i = 0; i < clientsCount; i++) {
-
-            URL requestFileURL = requestFileURLs[i % requestFilesCount];
-
-            PerfTestClient perfTestClient = new PerfTestClient(perfTestEngine, i, requestFileURL, perfTestOptions.getIterationsCount());
-
-            if (!perfTestClient.init()) {
-                LOG.error("Error initializing PerfTestClient: (id=" + i + ")");
-            } else {
-                perfTestClients.add(perfTestClient);
+            PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL);
+            if (!perfTestEngine.init()) {
+                LOG.error("Error initializing test data. Existing...");
+                System.exit(1);
             }
-        }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Number of perfTestClients=" + perfTestClients.size());
-        }
+            URL[] requestFileURLs = perfTestOptions.getRequestFileURLs();
+            int requestFilesCount = requestFileURLs.length;
 
-        for (PerfTestClient client : perfTestClients) {
-            try {
-                client.start();
-            } catch (Throwable t) {
-                LOG.error("Error in starting client: " + client.getName(), t);
-            }
-        }
+            int clientsCount = perfTestOptions.getConcurrentClientCount();
+            List<PerfTestClient> perfTestClients = new ArrayList<PerfTestClient>(clientsCount);
 
-        LOG.info("Waiting for " + perfTestClients.size() + " clients to finish up");
+            for (int i = 0; i < clientsCount; i++) {
 
-        for (PerfTestClient client : perfTestClients) {
-            try {
-                if (client.isAlive()) {
-                    LOG.info("Waiting for " + client.getName() + " to finish up.");
-                    client.join();
+                URL requestFileURL = requestFileURLs[i % requestFilesCount];
+
+                PerfTestClient perfTestClient = new PerfTestClient(perfTestEngine, i, requestFileURL, perfTestOptions.getIterationsCount());
+
+                if (!perfTestClient.init()) {
+                    LOG.error("Error initializing PerfTestClient: (id=" + i + ")");
+                } else {
+                    perfTestClients.add(perfTestClient);
                 }
-            } catch (InterruptedException interruptedException) {
-                LOG.error("PerfTestClient.join() was interrupted");
             }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Number of perfTestClients=" + perfTestClients.size());
+            }
+
+            for (PerfTestClient client : perfTestClients) {
+                try {
+                    client.start();
+                } catch (Throwable t) {
+                    LOG.error("Error in starting client: " + client.getName(), t);
+                }
+            }
+
+            LOG.info("Waiting for " + perfTestClients.size() + " clients to finish up");
+
+            for (PerfTestClient client : perfTestClients) {
+                try {
+                    if (client.isAlive()) {
+                        LOG.info("Waiting for " + client.getName() + " to finish up.");
+                        client.join();
+                    }
+                } catch (InterruptedException interruptedException) {
+                    LOG.error("PerfTestClient.join() was interrupted");
+                }
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("<== RangerPolicyenginePerfTester.main()");
+            }
+
+            LOG.info("Completed performance-run");
+
+            perfTestEngine.cleanup();
+
+            PerfDataRecorder.getPerfDataRecorder().dumpStatistics();
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyenginePerfTester.main()");
-        }
 
-        LOG.info("Completed performance-run");
+        LOG.info("Exiting...");
 
-        perfTestEngine.cleanup();
-
-        PerfDataRecorder.getPerfDataRecorder().dumpStatistics();
     }
 
     private static List<String> buildPerfModuleNames(URL statCollectionFileURL) {
@@ -117,7 +124,7 @@ public class RangerPolicyenginePerfTester {
         try (
                 InputStream inStream = statCollectionFileURL.openStream();
                 InputStreamReader reader = new InputStreamReader(inStream, Charset.forName("UTF-8"));
-                BufferedReader br = new BufferedReader(reader);
+                BufferedReader br = new BufferedReader(reader)
         ) {
 
             String line;
@@ -126,12 +133,10 @@ public class RangerPolicyenginePerfTester {
                 line = line.trim();
                 if (!line.isEmpty() && !line.startsWith("#")) {
                     String[] moduleNames = line.split(" ");
-                    for (int i = 0; i < moduleNames.length; i++) {
-                        perfModuleNames.add(moduleNames[i]);
-                    }
+                    perfModuleNames.addAll(Arrays.asList(moduleNames));
                 }
             }
-        } catch (Exception exception) {
+        } catch (IOException exception) {
             System.out.println("Error reading arguments:" + exception);
         }
 

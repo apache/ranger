@@ -25,12 +25,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.*;
 
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.List;
 
 public class PerfTestClient extends Thread {
@@ -84,7 +84,7 @@ public class PerfTestClient extends Thread {
 
 			InputStream in = requestFileURL.openStream();
 
-			reader = new InputStreamReader(in);
+			reader = new InputStreamReader(in, Charset.forName("UTF-8"));
 
 			Type listType = new TypeToken<List<RequestData>>() {
 			}.getType();
@@ -121,7 +121,7 @@ public class PerfTestClient extends Thread {
 		try {
 			for (int i = 0; i < maxCycles; i++) {
 				for (RequestData data : requests) {
-					perfTestEngine.execute(data.request);
+					data.setResult(perfTestEngine.execute(data.getRequest()));
 				}
 			}
 		} catch (Exception excp) {
@@ -133,10 +133,28 @@ public class PerfTestClient extends Thread {
 		}
 	}
 
-	private class RequestData {
-		public String              name;
-		public RangerAccessRequest request;
-		public RangerAccessResult result;
+	private static class RequestData {
+		private String              name;
+		private RangerAccessRequest request;
+		private RangerAccessResult result;
+
+		public RequestData() {
+			this(null, null, null);
+		}
+
+		public RequestData(String name, RangerAccessRequest request, RangerAccessResult result) {
+			setName(name);
+			setRequest(request);
+			setResult(result);
+		}
+
+		public String getName() {return name;}
+		public RangerAccessRequest getRequest() { return request;}
+		public RangerAccessResult getResult() { return result;}
+
+		public void setName(String name) { this.name = name;}
+		public void setRequest(RangerAccessRequest request) { this.request = request;}
+		public void setResult(RangerAccessResult result) { this.result = result;}
 	}
 
 	static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {

@@ -650,23 +650,24 @@ public class AbstractPredicateUtil {
 					Map<String, RangerPolicyResource> policyResources = policy.getResources();
 
 					if(MapUtils.isNotEmpty(policyResources)) {
-						for(String resourceName : policyResources.keySet()) {
-							RangerPolicyResource policyResource = policyResources.get(resourceName);
 
-							if(policyResource != null && CollectionUtils.isNotEmpty(policyResource.getValues())) {
-								for(String policyResourceVal : policyResource.getValues()) {
-									if(StringUtils.containsIgnoreCase(policyResourceVal, resourceValue)) {
+						for (Map.Entry<String, RangerPolicyResource> entry : policyResources.entrySet()) {
+
+							RangerPolicyResource policyResource = entry.getValue();
+
+							if (policyResource != null && CollectionUtils.isNotEmpty(policyResource.getValues())) {
+
+								for (String policyResoureValue : policyResource.getValues()) {
+									if (StringUtils.containsIgnoreCase(policyResoureValue, resourceValue)) {
 										ret = true;
 
 										break;
 									}
 								}
-							}
+ 							}
 
-							if(ret) {
-								break;
-							}
 						}
+
 					}
 				} else {
 					ret = true;
@@ -806,11 +807,7 @@ public class AbstractPredicateUtil {
 
 		return ret;
 	}
-	
-	/**
-	 * @param policySignature
-	 * @return
-	 */
+
 	public Predicate createPredicateForResourceSignature(final String policySignature) {
 
 		if (StringUtils.isEmpty(policySignature)) {

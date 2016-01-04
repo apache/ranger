@@ -58,7 +58,7 @@ public class CommandLineParser
             // Instantiate a data-object and return
             ret = new PerfTestOptions(servicePoliciesFileURL, requestFileURLs, statCollectionFileURL, concurrentClientCount, iterationsCount);
         } else {
-            showUsage(-1);
+            showUsage();
         }
         return ret;
     }
@@ -97,7 +97,8 @@ public class CommandLineParser
             CommandLine commandLine = commandLineParser.parse(options, args);
 
             if (commandLine.hasOption("h")) {
-                showUsage(0);
+                showUsage();
+                return false;
             }
 
             servicePoliciesFileName = commandLine.getOptionValue("s");
@@ -264,12 +265,8 @@ public class CommandLineParser
         return ret;
     }
 
-    void showUsage(int exitCode) {
+    void showUsage() {
         HelpFormatter formater = new HelpFormatter();
         formater.printHelp("perfTester", options);
-
-        LOG.info("Exiting...");
-
-        System.exit(exitCode);
     }
 }

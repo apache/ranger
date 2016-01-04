@@ -89,7 +89,7 @@ public class PerfDataRecorder {
 		}
 	}
 
-	private class PerfStatistic {
+	private static class PerfStatistic {
 		private AtomicLong numberOfInvocations = new AtomicLong(0L);
 		private AtomicLong millisecondsSpent = new AtomicLong(0L);
 		private AtomicLong minTimeSpent = new AtomicLong(Long.MAX_VALUE);

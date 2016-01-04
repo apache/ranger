@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.util.ServiceTags;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 public class RangerFileBasedTagRetriever extends RangerTagRetriever {
@@ -37,6 +38,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 
 	private URL serviceTagsFileURL;
 	private String serviceTagsFileName;
+	private Gson gsonBuilder;
 
 	@Override
 	public void init(Map<String, String> options) {
@@ -44,6 +46,11 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> init()" );
 		}
+
+		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
+				.setPrettyPrinting()
+				.create();
+
 		String serviceTagsFileNameProperty = "serviceTagsFileName";
 		String serviceTagsDefaultFileName = "/testdata/test_servicetags_hive.json";
 
@@ -99,9 +106,18 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 				}
 			}
 
+			if (serviceTagsFileStream != null) {
+				try {
+					serviceTagsFileStream.close();
+				} catch (Exception e) {
+					// Ignore
+				}
+			}
+
 		} else {
 			LOG.error("FATAL: Cannot find service/serviceDef/serviceTagsFile to use for retrieving tags. Will NOT be able to retrieve tags.");
 		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== init() : serviceTagsFileName=" + serviceTagsFileName);
 		}
@@ -117,13 +133,10 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 		ServiceTags serviceTags = null;
 
 		if (serviceTagsFileURL != null) {
-			try {
+			try (
 				InputStream serviceTagsFileStream = serviceTagsFileURL.openStream();
-				Reader reader = new InputStreamReader(serviceTagsFileStream);
-
-				Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-						.setPrettyPrinting()
-						.create();
+				Reader reader = new InputStreamReader(serviceTagsFileStream, Charset.forName("UTF-8"))
+			) {
 
 				serviceTags = gsonBuilder.fromJson(reader, ServiceTags.class);
 
@@ -131,7 +144,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 					// No change in serviceTags
 					serviceTags = null;
 				}
-			} catch (Exception e) {
+			} catch (IOException e) {
 				LOG.warn("Error processing input file: or no privilege for reading file " + serviceTagsFileName);
 			}
 		} else {

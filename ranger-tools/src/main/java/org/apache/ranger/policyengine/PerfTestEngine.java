@@ -23,7 +23,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
@@ -31,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 public class PerfTestEngine {
 	static final Log LOG      = LogFactory.getLog(PerfTestEngine.class);
@@ -60,7 +60,7 @@ public class PerfTestEngine {
 		try {
 			InputStream in = servicePoliciesFileURL.openStream();
 
-			reader = new InputStreamReader(in);
+			reader = new InputStreamReader(in, Charset.forName("UTF-8"));
 
 			servicePolicies = gsonBuilder.fromJson(reader, ServicePolicies.class);
 
@@ -91,21 +91,23 @@ public class PerfTestEngine {
 		return ret;
 
 	}
-	public boolean execute(final RangerAccessRequest request) {
+	public RangerAccessResult execute(final RangerAccessRequest request) {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> execute(" + request + ")");
 		}
 
-		boolean ret = true;
+		RangerAccessResult ret = null;
 
 		if (policyEvaluationEngine != null) {
 
-			RangerAccessResultProcessor auditHandler = null;
-
 			policyEvaluationEngine.preProcess(request);
 
-			RangerAccessResult result = policyEvaluationEngine.isAccessAllowed(request, auditHandler);
+			ret = policyEvaluationEngine.isAccessAllowed(request, null);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Executed request = {" + request + "}, result={" + ret + "}");
+			}
 		} else {
 			LOG.error("Error executing request: PolicyEngine is null!");
 		}
