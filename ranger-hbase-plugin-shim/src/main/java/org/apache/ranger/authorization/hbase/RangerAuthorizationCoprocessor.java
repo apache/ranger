@@ -34,6 +34,7 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
+import org.apache.hadoop.hbase.ProcedureInfo;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Append;
@@ -60,6 +61,8 @@ import org.apache.hadoop.hbase.io.FSDataInputStreamWrapper;
 import org.apache.hadoop.hbase.io.Reference;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.master.RegionPlan;
+import org.apache.hadoop.hbase.master.procedure.MasterProcedureEnv;
+import org.apache.hadoop.hbase.procedure2.ProcedureExecutor;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.CheckPermissionsRequest;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.CheckPermissionsResponse;
@@ -3090,6 +3093,78 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAuthorizationCoprocessor.postMove()");
+		}
+	}
+
+	@Override
+	public void preAbortProcedure(ObserverContext<MasterCoprocessorEnvironment> observerContext, ProcedureExecutor<MasterProcedureEnv> procEnv, long procId) throws IOException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAuthorizationCoprocessor.preAbortProcedure()");
+		}
+
+		try {
+			activatePluginClassLoader();
+			implMasterObserver.preAbortProcedure(observerContext, procEnv, procId);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAuthorizationCoprocessor.preAbortProcedure()");
+		}
+	}
+
+	@Override
+	public void postAbortProcedure(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAuthorizationCoprocessor.postAbortProcedure()");
+		}
+
+		try {
+			activatePluginClassLoader();
+			implMasterObserver.postAbortProcedure(observerContext);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAuthorizationCoprocessor.postAbortProcedure()");
+		}
+	}
+
+	@Override
+	public void preListProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAuthorizationCoprocessor.preListProcedures()");
+		}
+
+		try {
+			activatePluginClassLoader();
+			implMasterObserver.preListProcedures(observerContext);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAuthorizationCoprocessor.preListProcedures()");
+		}
+	}
+
+	@Override
+	public void postListProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext, List<ProcedureInfo> procInfoList) throws IOException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAuthorizationCoprocessor.postListProcedures()");
+		}
+
+		try {
+			activatePluginClassLoader();
+			implMasterObserver.postListProcedures(observerContext, procInfoList);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAuthorizationCoprocessor.postListProcedures()");
 		}
 	}
 

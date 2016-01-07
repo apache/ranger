@@ -425,6 +425,16 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
 		// Not applicable.  Expected to be empty
 	}
 
+	@Override
+	public void postAbortProcedure(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
+
+	}
+
+	@Override
+	public void preListProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
+
+	}
+
 	public void preSetUserQuota(final ObserverContext<MasterCoprocessorEnvironment> ctx,
       final String userName, final Quotas quotas) throws IOException {
   }

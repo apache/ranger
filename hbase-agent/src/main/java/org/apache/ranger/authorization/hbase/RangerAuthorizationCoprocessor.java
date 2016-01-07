@@ -46,6 +46,7 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
+import org.apache.hadoop.hbase.ProcedureInfo;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Append;
@@ -67,6 +68,8 @@ import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.ipc.RpcServer;
+import org.apache.hadoop.hbase.master.procedure.MasterProcedureEnv;
+import org.apache.hadoop.hbase.procedure2.ProcedureExecutor;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
@@ -651,6 +654,10 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		authorizeAccess(request, objName, action, null, null, null);
 	}
 
+	protected void requirePermission(String request, Permission.Action action) throws AccessDeniedException {
+		requirePermission(request, null, action);
+	}
+
 	protected void requirePermission(String request, byte[] tableName, Permission.Action action) throws AccessDeniedException {
 		String table = Bytes.toString(tableName);
 
@@ -710,11 +717,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preBalance(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
-		requirePermission("balance", null, Permission.Action.ADMIN);
+		requirePermission("balance", Permission.Action.ADMIN);
 	}
 	@Override
 	public boolean preBalanceSwitch(ObserverContext<MasterCoprocessorEnvironment> c, boolean newValue) throws IOException {
-		requirePermission("balanceSwitch", null, Permission.Action.ADMIN);
+		requirePermission("balanceSwitch", Permission.Action.ADMIN);
 		return newValue;
 	}
 	@Override
@@ -741,7 +748,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preCloneSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
-		requirePermission("cloneSnapshot", null, Permission.Action.ADMIN);
+		requirePermission("cloneSnapshot", Permission.Action.ADMIN);
 	}
 	@Override
 	public void preClose(ObserverContext<RegionCoprocessorEnvironment> e, boolean abortRequested) throws IOException {
@@ -771,7 +778,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preDeleteSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
-		requirePermission("deleteSnapshot", null, Permission.Action.ADMIN);
+		requirePermission("deleteSnapshot", Permission.Action.ADMIN);
 	}
 	@Override
 	public void preDeleteTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
@@ -822,6 +829,35 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	public void preMove(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo region, ServerName srcServer, ServerName destServer) throws IOException {
 		requirePermission("move", region.getTable().getName() , null, null, Action.ADMIN);
 	}
+
+	@Override
+	public void preAbortProcedure(ObserverContext<MasterCoprocessorEnvironment> observerContext, ProcedureExecutor<MasterProcedureEnv> procEnv, long procId) throws IOException {
+		if(!procEnv.isProcedureOwner(procId, this.getActiveUser())) {
+			requirePermission("abortProcedure", Action.ADMIN);
+		}
+	}
+
+	@Override
+	public void postListProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext, List<ProcedureInfo> procInfoList) throws IOException {
+		if(!procInfoList.isEmpty()) {
+			Iterator itr = procInfoList.iterator();
+			User user = this.getActiveUser();
+
+			while(itr.hasNext()) {
+				ProcedureInfo procInfo = (ProcedureInfo)itr.next();
+
+				try {
+					if(!ProcedureInfo.isProcedureOwner(procInfo, user)) {
+						requirePermission("listProcedures", Action.ADMIN);
+					}
+				} catch (AccessDeniedException var7) {
+					itr.remove();
+				}
+			}
+
+		}
+	}
+
 	@Override
 	public void preOpen(ObserverContext<RegionCoprocessorEnvironment> e) throws IOException {
 		RegionCoprocessorEnvironment env = e.getEnvironment();
@@ -884,7 +920,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preShutdown(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
-		requirePermission("shutdown", null, Permission.Action.ADMIN);
+		requirePermission("shutdown", Permission.Action.ADMIN);
 	}
 	@Override
 	public void preSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
@@ -896,11 +932,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preStopMaster(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
-		requirePermission("stopMaster", null, Permission.Action.ADMIN);
+		requirePermission("stopMaster", Permission.Action.ADMIN);
 	}
 	@Override
 	public void preStopRegionServer(ObserverContext<RegionServerCoprocessorEnvironment> env) throws IOException {
-		requirePermission("stop", null, Permission.Action.ADMIN);
+		requirePermission("stop", Permission.Action.ADMIN);
 	}
 	@Override
 	public void preUnassign(ObserverContext<MasterCoprocessorEnvironment> c, HRegionInfo regionInfo, boolean force) throws IOException {
