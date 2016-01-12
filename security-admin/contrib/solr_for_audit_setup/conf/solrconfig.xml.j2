@@ -1681,23 +1681,23 @@
       </arr>
     </processor>
     <processor class="solr.AddSchemaFieldsUpdateProcessorFactory">
-      <str name="defaultFieldType">text_general</str>
+      <str name="defaultFieldType">key_lower_case</str>
       <lst name="typeMapping">
         <str name="valueClass">java.lang.Boolean</str>
-        <str name="fieldType">booleans</str>
+        <str name="fieldType">boolean</str>
       </lst>
       <lst name="typeMapping">
         <str name="valueClass">java.util.Date</str>
-        <str name="fieldType">tdates</str>
+        <str name="fieldType">tdate</str>
       </lst>
       <lst name="typeMapping">
         <str name="valueClass">java.lang.Long</str>
         <str name="valueClass">java.lang.Integer</str>
-        <str name="fieldType">tlongs</str>
+        <str name="fieldType">tlong</str>
       </lst>
       <lst name="typeMapping">
         <str name="valueClass">java.lang.Number</str>
-        <str name="fieldType">tdoubles</str>
+        <str name="fieldType">tdouble</str>
       </lst>
     </processor>
     <processor class="solr.LogUpdateProcessorFactory"/>
