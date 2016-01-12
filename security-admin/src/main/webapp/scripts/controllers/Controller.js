@@ -94,6 +94,7 @@ define(function(require) {
 		   var view					= require('views/reports/AuditLayout');
 		   var VXAccessAuditList 	= require('collections/VXAccessAuditList');
 		   var accessAuditList 		= new VXAccessAuditList();
+		   _.extend(accessAuditList.queryParams,{ 'sortBy'  :  'eventTime' });
 		   App.rContent.show(new view({
 			   accessAuditList : accessAuditList,
 			   tab :tab
