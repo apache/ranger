@@ -187,6 +187,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_hiveForTag_filebased() {
+		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_tag_hive_filebased.json" };
+
+		runTestsFromResourceFiles(conditionsTestResourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
