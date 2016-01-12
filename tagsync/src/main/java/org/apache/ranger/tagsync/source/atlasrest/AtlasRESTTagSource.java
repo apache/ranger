@@ -31,7 +31,9 @@ import org.apache.commons.logging.LogFactory;
 
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
+import org.apache.ranger.tagsync.process.TagSynchronizer;
 import org.apache.ranger.tagsync.source.atlas.AtlasEntityWithTraits;
 import org.apache.ranger.tagsync.source.atlas.AtlasNotificationMapper;
 import org.apache.ranger.tagsync.source.atlas.AtlasResourceMapperUtil;
@@ -44,6 +46,30 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 	private String atlasEndpoint;
 	private long sleepTimeBetweenCycleInMillis;
 
+	public static void main(String[] args) {
+
+		AtlasRESTTagSource atlasRESTTagSource = new AtlasRESTTagSource();
+
+		TagSyncConfig config = TagSyncConfig.getInstance();
+
+		Properties props = config.getProperties();
+
+		TagSynchronizer.printConfigurationProperties(props);
+
+		TagSink tagSink = TagSynchronizer.initializeTagSink(props);
+
+		if (tagSink != null) {
+
+			atlasRESTTagSource.initialize(props);
+			atlasRESTTagSource.setTagSink(tagSink);
+			atlasRESTTagSource.synchUp();
+
+		} else {
+			LOG.error("TagSink initialialization failed, exiting.");
+			System.exit(1);
+		}
+
+	}
 	@Override
 	public boolean initialize(Properties properties) {
 		if (LOG.isDebugEnabled()) {

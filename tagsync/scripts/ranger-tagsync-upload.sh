@@ -17,25 +17,28 @@
 
 if [[ -z $1 ]]; then
         echo "No argument provided.."
-        echo "Usage: $0 {FILE | ATLAS_DOWNLOAD}"
+        echo "Usage: $0 tag-source-class-name [<more-arguments>]"
         exit -1;
 fi
 action=$1
-action=`echo $action | tr '[:lower:]' '[:upper:]'`
+className=
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 cd $realScriptDir
 cdir=`pwd`
 
-if [ "${action}" == "FILE" ]; then
+if [ "${action}" == "file" ]; then
 	action=file
-elif [ "${action}" == "ATLAS_DOWNLOAD" ]; then
+	className=org.apache.ranger.tagsync.source.file.FileTagSource
+
+elif [ "${action}" == "atlasrest" ]; then
 	action=atlasrest
+	className=org.apache.ranger.tagsync.source.atlasrest.AtlasRESTTagSource
 else
-        echo "Invalid argument [$action];"
-        echo "Usage: $0 {FILE | ATLAS_DOWNLOAD}"
-        exit -1;
+	className=${action}
 fi
+
+shift
 
 if [ -f ${cdir}/conf/java_home.sh ]; then
 	. ${cdir}/conf/java_home.sh
@@ -62,5 +65,6 @@ cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*"
 
 cd ${cdir}
 umask 0077
-java -Dproc_rangertagsync-$action ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  $action > ${logdir}/tagsync.out 2>&1
+
+java -Dproc_rangertagsync-${action} ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" ${className} $* > ${logdir}/tagsync.out 2>&1
 

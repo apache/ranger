@@ -27,7 +27,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
+import org.apache.ranger.tagsync.process.TagSynchronizer;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -46,6 +48,37 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 	private Gson gsonBuilder;
 	private Properties properties;
 	private long fileModTimeCheckIntervalInMs;
+
+	public static void main(String[] args) {
+
+		FileTagSource fileTagSource = new FileTagSource();
+
+		TagSyncConfig config = TagSyncConfig.getInstance();
+
+		Properties props = config.getProperties();
+
+		if (args.length > 0) {
+			String tagSourceFileName = args[0];
+			LOG.info("TagSourceFileName is set to " + args[0]);
+			props.setProperty(TagSyncConfig.TAGSYNC_FILESOURCE_FILENAME_PROP, tagSourceFileName);
+		}
+
+		TagSynchronizer.printConfigurationProperties(props);
+
+		TagSink tagSink = TagSynchronizer.initializeTagSink(props);
+
+		if (tagSink != null) {
+
+			fileTagSource.initialize(props);
+			fileTagSource.setTagSink(tagSink);
+			fileTagSource.synchUp();
+
+		} else {
+			LOG.error("TagSink initialialization failed, exiting.");
+			System.exit(1);
+		}
+
+	}
 
 	@Override
 	public boolean initialize(Properties props) {

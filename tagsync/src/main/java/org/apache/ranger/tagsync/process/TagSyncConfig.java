@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.Properties;
 import org.apache.ranger.credentialapi.CredentialReader;
 
@@ -43,7 +44,7 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.tagadmin.rest.ssl.config.file";
 
-	private static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.filesource.filename";
+	public static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.filesource.filename";
 
 	private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.filesource.modtime.check.interval";
 
@@ -71,13 +72,15 @@ public class TagSyncConfig extends Configuration {
 
 	private static final long DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL = 900000;
 
+	private Properties props;
+
 	public static TagSyncConfig getInstance() {
 		TagSyncConfig newConfig = new TagSyncConfig();
 		return newConfig;
 	}
 
 	public Properties getProperties() {
-		return getProps();
+		return props;
 	}
 
 	public static InputStream getFileInputStream(String path) throws FileNotFoundException {
@@ -289,8 +292,23 @@ public class TagSyncConfig extends Configuration {
 	}
 
 	private void init() {
+
 		readConfigFile(DEFAULT_CONFIG_FILE);
 		readConfigFile(CONFIG_FILE);
+
+		props = getProps();
+
+		@SuppressWarnings("unchecked")
+		Enumeration<String> propertyNames = (Enumeration<String>)props.propertyNames();
+
+		while (propertyNames.hasMoreElements()) {
+			String propertyName = propertyNames.nextElement();
+			String systemPropertyValue = System.getProperty(propertyName);
+			if (systemPropertyValue != null) {
+				props.setProperty(propertyName, systemPropertyValue);
+			}
+		}
+
 	}
 
 	private void readConfigFile(String fileName) {
