@@ -73,6 +73,7 @@ public class MiscUtil {
 	private static String sApplicationType = null;
 	private static UserGroupInformation ugiLoginUser = null;
 	private static Subject subjectLoginUser = null;
+	private static String local_hostname = null ;
 
 	private static Map<String, LogHistory> logHistoryList = new Hashtable<String, LogHistory>();
 	private static int logInterval = 30000; // 30 seconds
@@ -86,6 +87,8 @@ public class MiscUtil {
 					"failed to create GsonBuilder object. stringigy() will return obj.toString(), instead of Json",
 					excp);
 		}
+
+		initLocalHost();
 	}
 
 	public static String replaceTokens(String str, long time) {
@@ -153,12 +156,16 @@ public class MiscUtil {
 	}
 
 	public static String getHostname() {
-		String ret = null;
+		String ret = local_hostname;
 
-		try {
-			ret = InetAddress.getLocalHost().getHostName();
-		} catch (Exception excp) {
-			LogLog.warn("getHostname()", excp);
+		if  (ret == null) {
+			initLocalHost();
+
+			ret = local_hostname;
+
+			if (ret == null) {
+				ret = "unknown";
+			}
 		}
 
 		return ret;
@@ -758,6 +765,21 @@ public class MiscUtil {
 					KerberosUtil.getKrb5LoginModuleName(),
 					AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
 					options), };
+		}
+	}
+
+	private static  void initLocalHost() {
+		if ( logger.isDebugEnabled() ) {
+			logger.debug("==> MiscUti.initLocalHost()");
+		}
+
+		try {
+			local_hostname = InetAddress.getLocalHost().getHostName();
+		} catch (Throwable excp) {
+			LogLog.warn("getHostname()", excp);
+		}
+		if ( logger.isDebugEnabled() ) {
+			logger.debug("<== MiscUti.initLocalHost()");
 		}
 	}
 
