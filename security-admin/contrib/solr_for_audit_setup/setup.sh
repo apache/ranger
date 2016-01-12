@@ -106,6 +106,7 @@ if [ "$SOLR_LOG_FOLDER" = "logs" ]; then
     SOLR_LOG_FOLDER=$NEW_SOLR_LOG_FOLDER
 fi
 
+
 function run_root_usage {
     echo "sudo chown -R $SOLR_USER:$SOLR_USER $SOLR_INSTALL_FOLDER"
     echo "sudo mkdir -p $SOLR_RANGER_HOME"
@@ -116,13 +117,27 @@ function run_root_usage {
     fi
 }
 
+function set_ownership {
+    user=$1
+    group=$2
+    folder=$3
+    chown -R $user:$group $folder 
+    parent_folder=`dirname $folder`
+    while [ "$parent_folder" != "/" ]; do
+	chmod a+rx $parent_folder
+	folder=$parent_folder
+	parent_folder=`dirname $folder`
+    done
+}
+
 if [ $is_root -ne 1 ]; then
     if [ "$SOLR_USER" != "$curr_user" ]; then
 	echo "`date`|ERROR|You need to run this script as root or as user $SOLR_USER"
 	echo "If you need to run as $SOLR_USER, then first execute the following commands as root or sudo"
 	id $SOLR_USER 2>&1 > /dev/null
 	if [ $? -ne 0 ]; then
-	    echo "sudo adduser $SOLR_USER"
+	    echo "sudo groupadd $SOLR_USER"
+	    echo "sudo useradd -g $SOLR_USER $SOLR_USER"
 	fi
 	run_root_usage
 	exit 1
@@ -295,20 +310,21 @@ if [ $is_root -eq 1 ]; then
     id $SOLR_USER 2>&1 > /dev/null
     if [ $? -ne 0 ]; then
 	echo "`date`|INFO|Creating user $SOLR_USER"
-	adduser $SOLR_USER
+	groupadd $SOLR_USER 2> /dev/null
+	useradd -g $SOLR_USER $SOLR_USER 2>/dev/null
     fi
 
-    chown -R $SOLR_USER:$SOLR_USER $SOLR_INSTALL_FOLDER
+    set_ownership $SOLR_USER $SOLR_USER $SOLR_INSTALL_FOLDER
     mkdir -p $SOLR_RANGER_HOME
-    chown -R $SOLR_USER:$SOLR_USER $SOLR_RANGER_HOME
+    set_ownership $SOLR_USER $SOLR_USER $SOLR_RANGER_HOME
     mkdir -p $SOLR_LOG_FOLDER
-    chown -R $SOLR_USER:$SOLR_USER $SOLR_LOG_FOLDER
+    set_ownership $SOLR_USER $SOLR_USER $SOLR_LOG_FOLDER
     if [ "$SOLR_DEPLOYMENT" = "standalone" ]; then
 	mkdir -p $SOLR_RANGER_DATA_FOLDER
-	chown -R $SOLR_USER:$SOLR_USER $SOLR_RANGER_DATA_FOLDER
+	set_ownership $SOLR_USER $SOLR_USER $SOLR_RANGER_DATA_FOLDER
     fi
 else
-    chown -R $SOLR_USER:$SOLR_USER $SOLR_RANGER_HOME
+    set_ownership $SOLR_USER $SOLR_USER $SOLR_RANGER_HOME
 fi
 chmod a+x $SOLR_RANGER_HOME/scripts/*.sh
 
