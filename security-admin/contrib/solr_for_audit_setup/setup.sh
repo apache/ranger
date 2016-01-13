@@ -124,7 +124,14 @@ function set_ownership {
     chown -R $user:$group $folder 
     parent_folder=`dirname $folder`
     while [ "$parent_folder" != "/" ]; do
-	chmod a+rx $parent_folder
+	#chmod a+rx $parent_folder
+	if [ $is_root -eq 1 ]; then
+	    su - $SOLR_USER -c "ls $parent_folder" &> /dev/null
+	    if [ $? -ne 0 ]; then
+		echo "ERROR: User $SOLR_USER doesn't have permission to read folder $parent_folder. Please make sure to give appropriate permissions, else $SOLR_USER won't be able to access $folder"
+		exit 1
+	    fi
+	fi
 	folder=$parent_folder
 	parent_folder=`dirname $folder`
     done
@@ -134,7 +141,7 @@ if [ $is_root -ne 1 ]; then
     if [ "$SOLR_USER" != "$curr_user" ]; then
 	echo "`date`|ERROR|You need to run this script as root or as user $SOLR_USER"
 	echo "If you need to run as $SOLR_USER, then first execute the following commands as root or sudo"
-	id $SOLR_USER 2>&1 > /dev/null
+	id $SOLR_USER &> /dev/null
 	if [ $? -ne 0 ]; then
 	    echo "sudo groupadd $SOLR_USER"
 	    echo "sudo useradd -g $SOLR_USER $SOLR_USER"
@@ -307,7 +314,7 @@ sed  -e "s#{{SOLR_USER}}#$SOLR_USER#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_
 #Let's make all ownership is given to $SOLR_USER
 if [ $is_root -eq 1 ]; then
     #Let's see if $SOLR_USER exists.
-    id $SOLR_USER 2>&1 > /dev/null
+    id $SOLR_USER &> /dev/null
     if [ $? -ne 0 ]; then
 	echo "`date`|INFO|Creating user $SOLR_USER"
 	groupadd $SOLR_USER 2> /dev/null
