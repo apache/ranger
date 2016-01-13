@@ -31,6 +31,7 @@ import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerDefaultPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.ArrayList;
@@ -41,6 +42,8 @@ import java.util.Map;
 
 public class RangerPolicyRepository {
     private static final Log LOG = LogFactory.getLog(RangerPolicyRepository.class);
+
+    private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
 
     private final String                      serviceName;
     private final RangerServiceDef            serviceDef;
@@ -83,6 +86,7 @@ public class RangerPolicyRepository {
             }
 
             RangerPolicyEvaluator evaluator = buildPolicyEvaluator(policy, serviceDef, options);
+
 
             if (evaluator != null) {
                 policyEvaluators.add(evaluator);
@@ -133,6 +137,12 @@ public class RangerPolicyRepository {
 
         RangerContextEnricher ret = null;
 
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_INIT_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_INIT_LOG, "RangerContextEnricher.init(name=" + enricherDef.getName() + ")");
+        }
+
         String name    = enricherDef != null ? enricherDef.getName()     : null;
         String clsName = enricherDef != null ? enricherDef.getEnricher() : null;
 
@@ -151,6 +161,8 @@ public class RangerPolicyRepository {
         	ret.setContextEnricherDef(enricherDef);
             ret.init();
         }
+
+        RangerPerfTracer.log(perf);
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.buildContextEnricher(" + enricherDef + "): " + ret);

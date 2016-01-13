@@ -40,7 +40,7 @@ public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator 
         super.init(policy, serviceDef, options);
 
         cache = RangerResourceAccessCacheImpl.getInstance(serviceDef, policy);
-        
+
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerCachedPolicyEvaluator.init()");
         }

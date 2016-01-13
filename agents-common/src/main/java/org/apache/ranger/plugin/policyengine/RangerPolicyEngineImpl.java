@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.ArrayList;
@@ -38,6 +39,11 @@ import java.util.Set;
 
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineImpl.class);
+
+	private static final Log PERF_POLICYENGINE_INIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.init");
+	private static final Log PERF_POLICYENGINE_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policyengine.request");
+	private static final Log PERF_POLICYENGINE_AUDIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.audit");
+	private static final Log PERF_CONTEXTENRICHER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("contextenricher.request");
 
 	private final RangerPolicyRepository policyRepository;
 
@@ -51,11 +57,19 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl(" + servicePolicies + ", " + options + ")");
 		}
 
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "RangerPolicyEngine.init(hashCode=" + Integer.toHexString(System.identityHashCode(this)) + ")");
+		}
+
 		if(options == null) {
 			options = new RangerPolicyEngineOptions();
 		}
 
 		policyRepository = new RangerPolicyRepository(servicePolicies, options);
+
+		RangerPerfTracer.log(perf);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl()");
@@ -93,9 +107,20 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		List<RangerContextEnricher> enrichers = policyRepository.getContextEnrichers();
 
 		if(!CollectionUtils.isEmpty(enrichers)) {
+
 			for(RangerContextEnricher enricher : enrichers) {
+
+				RangerPerfTracer perf = null;
+
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_REQUEST_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_REQUEST_LOG, "RangerContextEnricher.enrich(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + ")");
+				}
+
 				enricher.enrich(request);
+
+				RangerPerfTracer.log(perf);
 			}
+
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -136,11 +161,27 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + request + ")");
 		}
 
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + ")");
+		}
+
 		RangerAccessResult ret = isAccessAllowedNoAudit(request);
 
-		if(resultProcessor != null) {
+		if (resultProcessor != null) {
+
+			RangerPerfTracer perfAuditTracer = null;
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_AUDIT_LOG)) {
+				perfAuditTracer = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_AUDIT_LOG, "RangerPolicyEngine.processAudit(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + ")");
+			}
+
 			resultProcessor.processResult(ret);
+
+			RangerPerfTracer.log(perfAuditTracer);
 		}
+
+		RangerPerfTracer.log(perf);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + request + "): " + ret);
@@ -182,6 +223,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + resource + ", " + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(user=" + user + ",accessType=" + accessType + "resource=" + resource.getAsString() + ")");
+		}
 		boolean ret = false;
 
 		for(RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
@@ -191,6 +237,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				break;
 			}
 		}
+
+		RangerPerfTracer.log(perf);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + resource + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
@@ -206,6 +254,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(user=" + user + ",accessType=" + accessType + ")");
+		}
 		boolean ret = false;
 
 		for(RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
@@ -216,7 +269,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		if(LOG.isDebugEnabled()) {
+		RangerPerfTracer.log(perf);
+
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
 		}
 
@@ -300,7 +355,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		if(LOG.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + "): " + ret);
 		}
 

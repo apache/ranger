@@ -38,6 +38,8 @@ import com.google.gson.GsonBuilder;
 public class PolicyRefresher extends Thread {
 	private static final Log LOG = LogFactory.getLog(PolicyRefresher.class);
 
+	private static final Log PERF_POLICYENGINE_INIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.init");
+
 	private final RangerBasePlugin  plugIn;
 	private final String            serviceType;
 	private final String            serviceName;
@@ -171,7 +173,13 @@ public class PolicyRefresher extends Thread {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadPolicy()");
 		}
 
-		//load policy from PolicyAmdin
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.loadPolicy(serviceName=" + serviceName + ")");
+		}
+
+		//load policy from PolicyAdmin
 		ServicePolicies svcPolicies = loadPolicyfromPolicyAdmin();
 
 		if ( svcPolicies == null) {
@@ -182,6 +190,8 @@ public class PolicyRefresher extends Thread {
 		} else {
 			saveToCache(svcPolicies);
 		}
+
+		RangerPerfTracer.log(perf);
 
 		if (svcPolicies != null) {
 			plugIn.setPolicies(svcPolicies);

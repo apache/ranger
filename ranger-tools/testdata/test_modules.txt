@@ -17,6 +17,20 @@
 # under the License.
 #
 
+PolicyRefresher.loadPolicy
 RangerPolicyEngine.init
-RangerPolicyEngine.preProcess
-RangerPolicyEngine.isAccessAllowedNoAudit
+RangerContextEnricher.init
+RangerPolicyEvaluator.init
+RangerPolicyItemEvaluator.init
+RangerConditionEvaluator.init
+RangerContextEnricher.enrich
+RangerPolicyEngine.isAccessAllowed
+RangerPolicyEvaluator.evaluate
+RangerPolicyEvaluator.isMatch
+RangerPolicyItemEvaluator.isMatch
+RangerConditionEvaluator.matchCondition
+RangerPolicyEngine.processAudit
+RangerTagRefresher.populateTags
+RangerPolicyEvaluator.isAccessAllowed
+RangerPolicyRetriever.getServicePolicies
+RangerTagDBReceiver.getTags

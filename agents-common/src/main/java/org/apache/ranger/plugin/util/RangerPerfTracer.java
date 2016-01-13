@@ -29,10 +29,12 @@ public class RangerPerfTracer {
 	protected final String data;
 	private final long   startTimeMs;
 
+	private static long reportingThresholdMs = 0L;
+
 	private final static String tagEndMarker = "(";
 
 	public static Log getPerfLogger(String name) {
-		return LogFactory.getLog("ranger.perf." + name);
+		return LogFactory.getLog("org.apache.ranger.perf." + name);
 	}
 
 	public static Log getPerfLogger(Class<?> cls) {
@@ -89,8 +91,9 @@ public class RangerPerfTracer {
 	}
 
 	public void log() {
-		if(logger.isDebugEnabled()) {
-			logger.debug("[PERF] " + tag + data + ": " + getElapsedTime());
+		long elapsedTime = getElapsedTime();
+		if (elapsedTime > reportingThresholdMs) {
+			logger.debug("[PERF] " + tag + data + ": " + elapsedTime);
 		}
 	}
 }
