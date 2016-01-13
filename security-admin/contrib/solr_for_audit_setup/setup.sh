@@ -89,6 +89,7 @@ if [ -w /etc/passwd ]; then
     is_root=1
 fi
 
+errorList=
 
 if [ "$SOLR_INSTALL" = "true" -a $is_root -eq 0 ]; then
     echo "Error: Solr will be installed only if run as root. Please download and install before continuing"
@@ -122,19 +123,19 @@ function set_ownership {
     group=$2
     folder=$3
     chown -R $user:$group $folder 
-    parent_folder=`dirname $folder`
-    while [ "$parent_folder" != "/" ]; do
-	#chmod a+rx $parent_folder
-	if [ $is_root -eq 1 ]; then
+    if [ $is_root -eq 1 ]; then
+	parent_folder=`dirname $folder`
+	while [ "$parent_folder" != "/" ]; do
 	    su - $SOLR_USER -c "ls $parent_folder" &> /dev/null
 	    if [ $? -ne 0 ]; then
-		echo "ERROR: User $SOLR_USER doesn't have permission to read folder $parent_folder. Please make sure to give appropriate permissions, else $SOLR_USER won't be able to access $folder"
-		exit 1
+		err="ERROR: User $SOLR_USER doesn't have permission to read folder $parent_folder. Please make sure to give appropriate permissions, else $SOLR_USER won't be able to access $folder"
+		echo $err
+		errorList="$errorList\n$err"
 	    fi
-	fi
-	folder=$parent_folder
-	parent_folder=`dirname $folder`
-    done
+	    folder=$parent_folder
+	    parent_folder=`dirname $folder`
+	done
+    fi
 }
 
 if [ $is_root -ne 1 ]; then
@@ -436,6 +437,8 @@ Make sure you have enough disk space for index. In production, it is recommended
 EOF
 fi
 
+echo -e $errorList >> $SOLR_INSTALL_NOTES
+
 echo "`date`|INFO|Done configuring Solr for Apache Ranger Audit"
 echo "`date`|INFO|Solr HOME for Ranger Audit is $SOLR_RANGER_HOME"
 if [ "$SOLR_DEPLOYMENT" = "standalone" ]; then
@@ -451,3 +454,7 @@ fi
 echo "########## Done ###################"
 echo "Created file $SOLR_INSTALL_NOTES with instructions to start and stop"
 echo "###################################"
+
+if [ "$errorList" != "" ]; then
+    echo -e "$errorList"
+fi
