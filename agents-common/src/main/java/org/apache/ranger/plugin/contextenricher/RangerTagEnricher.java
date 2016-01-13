@@ -44,7 +44,7 @@ import java.util.Map;
 public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerTagEnricher.class);
 
-	private static final Log PERF_ENRICHER_LOG = RangerPerfTracer.getPerfLogger("enricher");
+	private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
 
 	public static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
 
@@ -143,12 +143,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		if (CollectionUtils.isNotEmpty(serviceResources)) {
 
-			RangerPerfTracer perf = null;
-
-			if(RangerPerfTracer.isPerfTraceEnabled(PERF_ENRICHER_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_ENRICHER_LOG, "RangerTagEnricher.setServiceTags(serviceName=" + tagRetriever.getServiceName() + ",lastKnownVersion=" + serviceTags.getTagVersion() + ")");
-			}
-
 			for (RangerServiceResource serviceResource : serviceResources) {
 				RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
 
@@ -164,10 +158,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 				RangerServiceResourceMatcher serviceResourceMatcher = new RangerServiceResourceMatcher(serviceResource, matcher);
 				resourceMatchers.add(serviceResourceMatcher);
-
 			}
 
-			RangerPerfTracer.log(perf);
 		}
 
 		this.serviceResourceMatchers = resourceMatchers;
@@ -310,7 +302,14 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					} else {
 						break;
 					}
+					RangerPerfTracer perf = null;
+
+					if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_INIT_LOG)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_INIT_LOG, "RangerTagRefresher.populateTags(serviceName=" + tagRetriever.getServiceName() + ",lastKnownVersion=" + lastKnownVersion + ")");
+					}
 					populateTags();
+
+					RangerPerfTracer.log(perf);
 
 				} catch (InterruptedException excp) {
 					LOG.debug("RangerTagRefresher(pollingIntervalMs=" + pollingIntervalMs + ").run() : interrupted! Exiting thread", excp);
@@ -327,11 +326,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			if (tagEnricher != null) {
 				ServiceTags serviceTags = null;
-				RangerPerfTracer perf = null;
 
-				if(RangerPerfTracer.isPerfTraceEnabled(PERF_ENRICHER_LOG)) {
-					perf = RangerPerfTracer.getPerfTracer(PERF_ENRICHER_LOG, "RangerTagRefresher.populateTags(serviceName=" + tagRetriever.getServiceName() + ",lastKnownVersion=" + lastKnownVersion + ")");
-				}
 				serviceTags = tagRetriever.retrieveTags(lastKnownVersion);
 
 				if (serviceTags == null) {
@@ -341,8 +336,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				} else {
 					saveToCache(serviceTags);
 				}
-
-				RangerPerfTracer.log(perf);
 
 				if (serviceTags != null) {
 					tagEnricher.setServiceTags(serviceTags);
@@ -354,6 +347,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						LOG.debug("RangerTagRefresher.populateTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
 					}
 				}
+
 			} else {
 				LOG.error("RangerTagRefresher.populateTags() - no tag receiver to update tag-cache");
 			}

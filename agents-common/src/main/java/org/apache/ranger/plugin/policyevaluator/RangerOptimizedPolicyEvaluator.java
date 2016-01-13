@@ -28,14 +28,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
-import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 import java.util.*;
 import java.lang.Math;
 
 public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator {
     private static final Log LOG = LogFactory.getLog(RangerOptimizedPolicyEvaluator.class);
-    private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("policy");
 
     private Set<String> groups         = new HashSet<String>();
     private Set<String> users          = new HashSet<String>();
@@ -71,12 +69,6 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
             LOG.debug("==> RangerOptimizedPolicyEvaluator.init()");
         }
 
-        RangerPerfTracer perf = null;
-
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerOptimizedPolicyEvaluator.init(policyId=" + policy.getId() + ",policyName=" + policy.getName() + ")");
-        }
-
         super.init(policy, serviceDef, options);
 
         preprocessPolicyItems(policy.getPolicyItems());
@@ -93,8 +85,6 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         }
 
         setEvalOrder(computeEvalOrder());
-
-        RangerPerfTracer.log(perf);
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerOptimizedPolicyEvaluator.init()");

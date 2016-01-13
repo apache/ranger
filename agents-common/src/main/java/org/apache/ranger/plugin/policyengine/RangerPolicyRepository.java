@@ -38,7 +38,8 @@ import java.util.*;
 
 public class RangerPolicyRepository {
     private static final Log LOG = LogFactory.getLog(RangerPolicyRepository.class);
-    private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("policy");
+
+    private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
 
     private final String                      serviceName;
     private final String                      appId;
@@ -54,12 +55,6 @@ public class RangerPolicyRepository {
 
     RangerPolicyRepository(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
         super();
-
-        RangerPerfTracer perf = null;
-
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerPolicyRepository.init(appId=" + appId + ",hashCode=" + Integer.toHexString(System.identityHashCode(this)) + ")");
-        }
 
         this.componentServiceName = this.serviceName = servicePolicies.getServiceName();
         this.componentServiceDef = this.serviceDef = servicePolicies.getServiceDef();
@@ -86,7 +81,6 @@ public class RangerPolicyRepository {
 
         init(options);
 
-        RangerPerfTracer.log(perf);
     }
 
     RangerPolicyRepository(String appId, ServicePolicies.TagPolicies tagPolicies, RangerPolicyEngineOptions options,
@@ -332,8 +326,8 @@ public class RangerPolicyRepository {
 
         RangerPerfTracer perf = null;
 
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerPolicyRepository.buildContextEnricher(name=" + enricherDef.getName() + ")");
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_INIT_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_INIT_LOG, "RangerContextEnricher.init(appId=", appId + ",name=" + enricherDef.getName() + ")");
         }
 
         String name    = enricherDef != null ? enricherDef.getName()     : null;
@@ -373,12 +367,6 @@ public class RangerPolicyRepository {
 
         RangerPolicyEvaluator ret;
 
-        RangerPerfTracer perf = null;
-
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerPolicyRepository.buildPolicyEvaluator(name=" + policy.getName() + ")");
-        }
-
         if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_DEFAULT)) {
             ret = new RangerOptimizedPolicyEvaluator();
         } else if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED)) {
@@ -388,8 +376,6 @@ public class RangerPolicyRepository {
         }
 
         ret.init(policy, serviceDef, options);
-
-        RangerPerfTracer.log(perf);
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.buildPolicyEvaluator(" + policy + "," + serviceDef + "): " + ret);

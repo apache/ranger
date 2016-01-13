@@ -61,7 +61,7 @@ public class RangerTagDBRetriever {
 			RangerPerfTracer perf = null;
 
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBReceiver-Optimized(serviceName=" + xService.getName());
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBReceiver.getTags(serviceName=" + xService.getName());
 			}
 
 			TagRetrieverServiceResourceContext serviceResourceContext = new TagRetrieverServiceResourceContext(xService);

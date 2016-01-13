@@ -10,8 +10,8 @@
     </appender>
 
     <!--
-    <appender name="perf_appender" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="file" value="./ranger_admin_perf_test.log" />
+    <appender name="ranger_perf_appender" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="file" value="./ranger_admin_perf.log" />
         <param name="datePattern" value="'.'yyyy-MM-dd" />
         <param name="append" value="true" />
         <layout class="org.apache.log4j.PatternLayout">
@@ -19,34 +19,39 @@
         </layout>
     </appender>
 
-    <category name="ranger.perf" additivity="false">
-        <priority value="info" />
-        <appender-ref ref="perf_appender" />
-    </category>
+    <logger name="org.apache.ranger.perf.policyengine" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
 
-    <category name="ranger.perf.policy" additivity="false">
-        <priority value="warn" />
-        <appender-ref ref="perf_appender" />
-    </category>
+    <logger name="org.apache.ranger.perf.policy" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
 
-    <category name="ranger.perf.item" additivity="false">
-        <priority value="warn" />
-        <appender-ref ref="perf_appender" />
-    </category>
+    <logger name="org.apache.ranger.perf.policyitem" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
 
-    <category name="ranger.perf.condition" additivity="false">
-        <priority value="warn" />
-        <appender-ref ref="perf_appender" />
-    </category>
+    <logger name="org.apache.ranger.perf.contextenricher" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
 
-    <category name="ranger.perf.enricher" additivity="false">
-        <priority value="warn" />
-        <appender-ref ref="perf_appender" />
-    </category>
+    <logger name="org.apache.ranger.perf.policycondition" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
+
+    <logger name="org.apache.ranger.perf.db" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
     -->
 
     <root>
-        <priority value="warn" />
+        <level value="warn" />
         <appender-ref ref="console" />
     </root>
 
