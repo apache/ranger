@@ -67,7 +67,7 @@
   <field name="cluster" type="key_lower_case" multiValued="false"/>
   <field name="reqContext" type="key_lower_case" multiValued="true"/>
   <field name="enforcer" type="key_lower_case" multiValued="false"/>
-  <field name="event_count" type="tlong" multiValued="false" docValues="true"/>
+  <field name="event_count" type="tlong" multiValued="false" docValues="true" default="1"/>
   <field name="event_dur_ms" type="tlong" multiValued="false" docValues="true"/>
   <field name="evtTime" type="tdate"/>
   <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
@@ -84,7 +84,7 @@
   <field name="resType" type="key_lower_case" multiValued="false"/>
   <field name="resource" type="key_lower_case" multiValued="false"/>
   <field name="result" type="tint" multiValued="false"/>
-  <field name="seq_num" type="tlong" multiValued="false" docValues="true"/>
+  <field name="seq_num" type="tlong" multiValued="false" docValues="true" default="0"/>
   <field name="sess" type="key_lower_case" multiValued="false"/>
   <field name="tags" type="key_lower_case" multiValued="true"/>
   <field name="tags_str" type="text_std_token_lower_case" multiValued="false"/>
