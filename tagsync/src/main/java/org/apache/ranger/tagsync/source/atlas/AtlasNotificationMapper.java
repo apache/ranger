@@ -27,9 +27,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.util.*;
@@ -47,7 +49,7 @@ public class AtlasNotificationMapper {
 
 				if (AtlasResourceMapperUtil.isEntityTypeHandled(entity.getTypeName())) {
 					AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entityNotification.getEntity(), entityNotification.getAllTraits());
-					ret = buildServiceTags(entityWithTraits, 1L, 1L, null);
+					ret = buildServiceTags(entityWithTraits, null);
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Ranger not interested in Entity Notification for entity-type " + entityNotification.getEntity().getTypeName());
@@ -99,83 +101,90 @@ public class AtlasNotificationMapper {
 
 		Map<String, ServiceTags> ret = new HashMap<String, ServiceTags>();
 
-		long serviceResourceIndex = 1L;
-		long tagIndex = 1L;
-
 		for (AtlasEntityWithTraits element : entitiesWithTraits) {
-
-			ServiceTags serviceTags = buildServiceTags(element, serviceResourceIndex, tagIndex, ret);
-
-			serviceResourceIndex++;
-
-			tagIndex += CollectionUtils.size(serviceTags.getTags());
-
+			buildServiceTags(element, ret);
 		}
 
 		// Remove duplicate tag definitions
-		for (Map.Entry<String, ServiceTags> serviceTagsMapEntry : ret.entrySet()){
+		if(CollectionUtils.isNotEmpty(ret.values())) {
+			for (ServiceTags serviceTag : ret.values()) {
+				if(MapUtils.isNotEmpty(serviceTag.getTagDefinitions())) {
+					Map<String, RangerTagDef> uniqueTagDefs = new HashMap<String, RangerTagDef>();
 
-			Map<Long, RangerTagDef> allTagDefs = serviceTagsMapEntry.getValue().getTagDefinitions();
+					for (RangerTagDef tagDef : serviceTag.getTagDefinitions().values()) {
+						RangerTagDef existingTagDef = uniqueTagDefs.get(tagDef.getName());
 
-			Map<String, String> tagTypeIndex = new HashMap<String, String>();
-			Map<Long, RangerTagDef> uniqueTagDefs = new HashMap<Long, RangerTagDef>();
+						if (existingTagDef == null) {
+							uniqueTagDefs.put(tagDef.getName(), tagDef);
+						} else {
+							if(CollectionUtils.isNotEmpty(tagDef.getAttributeDefs())) {
+								for(RangerTagAttributeDef tagAttrDef : tagDef.getAttributeDefs()) {
+									boolean attrDefExists = false;
 
-			for (Map.Entry<Long, RangerTagDef> entry : allTagDefs.entrySet()) {
-				String tagTypeName = entry.getValue().getName();
+									if(CollectionUtils.isNotEmpty(existingTagDef.getAttributeDefs())) {
+										for(RangerTagAttributeDef existingTagAttrDef : existingTagDef.getAttributeDefs()) {
+											if(StringUtils.equalsIgnoreCase(existingTagAttrDef.getName(), tagAttrDef.getName())) {
+												attrDefExists = true;
+												break;
+											}
+										}
+									}
 
-				if (tagTypeIndex.get(tagTypeName) == null) {
-					tagTypeIndex.put(tagTypeName, tagTypeName);
-					uniqueTagDefs.put(entry.getKey(), entry.getValue());
+									if(! attrDefExists) {
+										existingTagDef.getAttributeDefs().add(tagAttrDef);
+									}
+								}
+							}
+						}
+					}
+
+					serviceTag.getTagDefinitions().clear();
+					for(RangerTagDef tagDef : uniqueTagDefs.values()) {
+						serviceTag.getTagDefinitions().put(tagDef.getId(), tagDef);
+					}
 				}
 			}
-			serviceTagsMapEntry.getValue().setTagDefinitions(uniqueTagDefs);
 		}
 
 		return ret;
 	}
 
-	static private ServiceTags buildServiceTags(AtlasEntityWithTraits entityWithTraits, long index, long tagIndex, Map<String, ServiceTags> serviceTagsMap) throws Exception {
-
-		ServiceTags ret = null;
-
-		IReferenceableInstance entity = entityWithTraits.getEntity();
-
-		RangerServiceResource serviceResource = AtlasResourceMapperUtil.getRangerServiceResource(entity);
+	static private ServiceTags buildServiceTags(AtlasEntityWithTraits entityWithTraits, Map<String, ServiceTags> serviceTagsMap) throws Exception {
+		ServiceTags            ret             = null;
+		IReferenceableInstance entity          = entityWithTraits.getEntity();
+		RangerServiceResource  serviceResource = AtlasResourceMapperUtil.getRangerServiceResource(entity);
 
 		if (serviceResource != null) {
-
-			serviceResource.setId(index);
+			List<RangerTag>    tags    = getTags(entityWithTraits);
+			List<RangerTagDef> tagDefs = getTagDefs(entityWithTraits);
 
 			String serviceName = serviceResource.getServiceName();
 
-			Map<Long, RangerTag> tags = getTags(entityWithTraits, tagIndex);
-
-			Map<Long, RangerTagDef> tagDefs = getTagDefs(tags);
-
-			Map<Long, List<Long>> resourceIdToTagIds = null;
-
-			resourceIdToTagIds = new HashMap<Long, List<Long>>();
-			List<Long> tagList = new ArrayList<Long>();
-
-			if (MapUtils.isNotEmpty(tags)) {
-				resourceIdToTagIds = new HashMap<Long, List<Long>>();
-
-				for (Map.Entry<Long, RangerTag> entry : tags.entrySet()) {
-					tagList.add(entry.getKey());
-				}
-			}
-
-			resourceIdToTagIds.put(index, tagList);
-
 			ret = createOrGetServiceTags(serviceTagsMap, serviceName);
 
+			serviceResource.setId((long)ret.getServiceResources().size());
 			ret.getServiceResources().add(serviceResource);
-			ret.getTagDefinitions().putAll(tagDefs);
-			ret.getTags().putAll(tags);
-			ret.getResourceToTagIds().putAll(resourceIdToTagIds);
 
+			List<Long> tagIds = new ArrayList<Long>();
+
+			if(CollectionUtils.isNotEmpty(tags)) {
+				for(RangerTag tag : tags) {
+					tag.setId((long)ret.getTags().size());
+					ret.getTags().put(tag.getId(), tag);
+
+					tagIds.add(tag.getId());
+				}
+			}
+			ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);
+
+			if(CollectionUtils.isNotEmpty(tagDefs)) {
+				for(RangerTagDef tagDef : tagDefs) {
+					tagDef.setId((long)ret.getTagDefinitions().size());
+					ret.getTagDefinitions().put(tagDef.getId(), tagDef);
+				}
+			}
 		} else {
-			LOG.error("AtlasResourceMapper not found for entity-type:" + entity.getTypeName());
+			LOG.error("Failed to build serviceResource for entity:" + entity.getId()._getId());
 		}
 
 		return ret;
@@ -199,67 +208,62 @@ public class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private Map<Long, RangerTag> getTags(AtlasEntityWithTraits entityWithTraits, long index) {
-		Map<Long, RangerTag> ret = null;
+	static private List<RangerTag> getTags(AtlasEntityWithTraits entityWithTraits) {
+		List<RangerTag> ret = new ArrayList<RangerTag>();
 
-		ret = new HashMap<Long, RangerTag>();
+		if(entityWithTraits != null && CollectionUtils.isNotEmpty(entityWithTraits.getAllTraits())) {
+			List<IStruct> traits = entityWithTraits.getAllTraits();
 
-		List<IStruct> traits = entityWithTraits.getAllTraits();
+			for (IStruct trait : traits) {
+				Map<String, String> tagAttrs = new HashMap<String, String>();
 
-		for (IStruct trait : traits) {
+				try {
+					Map<String, Object> attrs = trait.getValuesMap();
 
-			String traitName = trait.getTypeName();
+					if(MapUtils.isNotEmpty(attrs)) {
+						for (Map.Entry<String, Object> attrEntry : attrs.entrySet()) {
+							String attrName  = attrEntry.getKey();
+							Object attrValue = attrEntry.getValue();
 
-			Map<String, String> tagAttrValues = new HashMap<String, String>();
-
-			try {
-
-				Map<String, Object> attrValues = trait.getValuesMap();
-
-				for (Map.Entry<String, Object> attrValueEntry : attrValues.entrySet()) {
-					String attrName = attrValueEntry.getKey();
-					Object attrValue = attrValueEntry.getValue();
-					try {
-						String strValue = String.class.cast(attrValue);
-						tagAttrValues.put(attrName, strValue);
-					} catch (ClassCastException exception) {
-						LOG.error("Cannot cast attribute-value to String, skipping... attrName=" + attrName);
+							tagAttrs.put(attrName, attrValue != null ? attrValue.toString() : null);
+						}
 					}
+				} catch (AtlasException exception) {
+					LOG.error("Could not get values for trait:" + trait.getTypeName(), exception);
 				}
-			} catch (AtlasException exception) {
-				LOG.error("Could not get values for trait:" + traitName, exception);
-			}
 
-			RangerTag tag = new RangerTag();
-
-			tag.setType(traitName);
-			tag.setAttributes(tagAttrValues);
-
-			ret.put(index++, tag);
-
-		}
-
-		return ret;
-	}
-
-	static private Map<Long, RangerTagDef> getTagDefs(Map<Long, RangerTag> tags) {
-
-		Map<Long, RangerTagDef> ret = null;
-
-		if (MapUtils.isNotEmpty(tags)) {
-			ret = new HashMap<Long, RangerTagDef>();
-
-			for (Map.Entry<Long, RangerTag> entry : tags.entrySet()) {
-
-				RangerTagDef tagDef = new RangerTagDef();
-				tagDef.setName(entry.getValue().getType());
-				tagDef.setId(entry.getKey());
-				ret.put(entry.getKey(), tagDef);
-
+				ret.add(new RangerTag(trait.getTypeName(), tagAttrs));
 			}
 		}
 
 		return ret;
 	}
 
+	static private List<RangerTagDef> getTagDefs(AtlasEntityWithTraits entityWithTraits) {
+		List<RangerTagDef> ret = new ArrayList<RangerTagDef>();
+
+		if(entityWithTraits != null && CollectionUtils.isNotEmpty(entityWithTraits.getAllTraits())) {
+			List<IStruct> traits = entityWithTraits.getAllTraits();
+
+			for (IStruct trait : traits) {
+				RangerTagDef tagDef = new RangerTagDef(trait.getTypeName(), "Atlas");
+
+				try {
+					Map<String, Object> attrs = trait.getValuesMap();
+
+					if(MapUtils.isNotEmpty(attrs)) {
+						for (String attrName : attrs.keySet()) {
+							tagDef.getAttributeDefs().add(new RangerTagAttributeDef(attrName, "string"));
+						}
+					}
+				} catch (AtlasException exception) {
+					LOG.error("Could not get values for trait:" + trait.getTypeName(), exception);
+				}
+
+				ret.add(tagDef);
+			}
+		}
+
+		return ret;
+	}
 }

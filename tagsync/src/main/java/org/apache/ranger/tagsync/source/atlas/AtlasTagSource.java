@@ -142,12 +142,14 @@ public class AtlasTagSource extends AbstractTagSource {
 		return true;
 	}
 
-	private static void printEntityNotification(EntityNotification notification) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Notification-Type: " + notification.getOperationType());
-			AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(notification.getEntity(), notification.getAllTraits());
-			LOG.debug(entityWithTraits);
-		}
+	private static String getPrintableEntityNotification(EntityNotification notification) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("{ Notification-Type: ").append(notification.getOperationType()).append(", ");
+		AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(notification.getEntity(), notification.getAllTraits());
+		sb.append(entityWithTraits.toString());
+		sb.append("}");
+		return sb.toString();
 	}
 
 	private class ConsumerRunnable implements Runnable {
@@ -177,13 +179,13 @@ public class AtlasTagSource extends AbstractTagSource {
 				if (hasNext()) {
 					EntityNotification notification = consumer.next();
 					if (notification != null) {
-						printEntityNotification(notification);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Notification=" + getPrintableEntityNotification(notification));
+						}
 
 						ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
 						if (serviceTags == null) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Did not create ServiceTags structure for notification type:" + notification.getOperationType());
-							}
+							LOG.error("Failed to create ServiceTags for notification :" + getPrintableEntityNotification(notification));
 						} else {
 							updateSink(serviceTags);
 						}

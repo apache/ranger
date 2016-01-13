@@ -94,6 +94,7 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 
 			} else {
 				LOG.error("invalid qualifiedName for HIVE_DB, qualifiedName=" + qualifiedName);
+				throw new Exception("invalid qualifiedName for HIVE_DB, qualifiedName=" + qualifiedName);
 			}
 		} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_TABLE)) {
 			if (components.size() > 3) {
@@ -105,6 +106,7 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 				elements.put(RANGER_TYPE_HIVE_TABLE, tablePolicyResource);
 			} else {
 				LOG.error("invalid qualifiedName for HIVE_TABLE, qualifiedName=" + qualifiedName);
+				throw new Exception("invalid qualifiedName for HIVE_TABLE, qualifiedName=" + qualifiedName);
 			}
 		} else if (StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_COLUMN)) {
 			if (components.size() > 4) {
@@ -119,6 +121,7 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 				elements.put(RANGER_TYPE_HIVE_COLUMN, columnPolicyResource);
 			} else {
 				LOG.error("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + qualifiedName);
+				throw new Exception("invalid qualifiedName for HIVE_COLUMN, qualifiedName=" + qualifiedName);
 			}
 
 		}
