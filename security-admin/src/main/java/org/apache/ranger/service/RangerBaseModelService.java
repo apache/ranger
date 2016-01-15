@@ -161,80 +161,49 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		return mapEntityToViewBean(vObj, entityObj);
 	}
 
-	protected T populateEntityBean(V vObj, int operationContext) {
-		T entityObj;
+	protected T populateEntityBeanForCreate(T entityObj, V vObj) {
+		if(!populateExistingBaseFields) {
+			entityObj.setCreateTime(DateUtil.getUTCDate());
+			entityObj.setUpdateTime(entityObj.getCreateTime());
+			entityObj.setAddedByUserId(ContextUtil.getCurrentUserId());
+			entityObj.setUpdatedByUserId(entityObj.getAddedByUserId());
+		} else if(populateExistingBaseFields) {
+			XXPortalUser createdByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getCreatedBy());
+			XXPortalUser updByUser     = daoMgr.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
 
-		Date createTime = null;
-		Date updTime = null;
-		Long createdById = null;
-		Long updById = null;
-
-		if (operationContext == OPERATION_CREATE_CONTEXT) {
-			entityObj = createEntityObject();
-
-			if(!populateExistingBaseFields) {
-				createTime = DateUtil.getUTCDate();
-				updTime = DateUtil.getUTCDate();
-				createdById = ContextUtil.getCurrentUserId();
-				updById = ContextUtil.getCurrentUserId();
-			} else if(populateExistingBaseFields) {
-				createTime = vObj.getCreateTime() != null ? vObj.getCreateTime() : DateUtil.getUTCDate();
-				updTime = vObj.getUpdateTime() != null ? vObj.getUpdateTime() : DateUtil.getUTCDate();
-
-				// If this is the case then vObj.createdBy and vObj.updatedBy must be loginId of user.
-				XXPortalUser createdByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getCreatedBy());
-				XXPortalUser updByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
-
-				if(createdByUser != null) {
-					createdById = createdByUser.getId();
-				} else {
-					createdById = ContextUtil.getCurrentUserId();
-				}
-
-				if(updByUser != null) {
-					updById = updByUser.getId();
-				} else {
-					updById = ContextUtil.getCurrentUserId();
-				}
-				entityObj.setId(vObj.getId());
-			}
-		} else if (operationContext == OPERATION_UPDATE_CONTEXT) {
-			entityObj = getDao().getById(vObj.getId());
-
-			if (entityObj == null) {
-				throw restErrorUtil.createRESTException(
-						"No Object found to update.",
-						MessageEnums.DATA_NOT_FOUND);
-			}
-
-			createTime = entityObj.getCreateTime();
-			if (createTime == null) {
-				createTime = DateUtil.getUTCDate();
-			}
-
-			createdById = entityObj.getAddedByUserId();
-			if (createdById == null) {
-				createdById = ContextUtil.getCurrentUserId();
-			}
-			
-			if(populateExistingBaseFields) {
-				updTime = entityObj.getUpdateTime();
-				updById = entityObj.getUpdatedByUserId();
-			} else {				
-				updTime = DateUtil.getUTCDate();
-				updById = ContextUtil.getCurrentUserId();
-			}
-		} else {
-			throw restErrorUtil.createRESTException(
-					"Error while populating EntityBean",
-					MessageEnums.INVALID_INPUT_DATA);
+			entityObj.setId(vObj.getId());
+			entityObj.setCreateTime(vObj.getCreateTime() != null ? vObj.getCreateTime() : DateUtil.getUTCDate());
+			entityObj.setUpdateTime(vObj.getUpdateTime() != null ? vObj.getUpdateTime() : DateUtil.getUTCDate());
+			entityObj.setAddedByUserId(createdByUser != null ? createdByUser.getId() : ContextUtil.getCurrentUserId());
+			entityObj.setUpdatedByUserId(updByUser != null ? updByUser.getId() : ContextUtil.getCurrentUserId());
 		}
-		entityObj.setAddedByUserId(createdById);
-		entityObj.setUpdatedByUserId(updById);
-		entityObj.setCreateTime(createTime);
-		entityObj.setUpdateTime(updTime);
 
-		return mapViewToEntityBean(vObj, entityObj, operationContext);
+		return mapViewToEntityBean(vObj, entityObj, OPERATION_CREATE_CONTEXT);
+	}
+
+	protected T populateEntityBeanForUpdate(T entityObj, V vObj) {
+		if (entityObj == null) {
+			throw restErrorUtil.createRESTException(
+					"No Object found to update.",
+					MessageEnums.DATA_NOT_FOUND);
+		}
+
+		T ret = mapViewToEntityBean(vObj, entityObj, OPERATION_UPDATE_CONTEXT);
+
+		if (ret.getCreateTime() == null) {
+			ret.setCreateTime(DateUtil.getUTCDate());
+		}
+
+		if (ret.getAddedByUserId() == null) {
+			ret.setAddedByUserId(ContextUtil.getCurrentUserId());
+		}
+
+		if(!populateExistingBaseFields) {
+			ret.setUpdateTime(DateUtil.getUTCDate());
+			ret.setUpdatedByUserId(ContextUtil.getCurrentUserId());
+		}
+
+		return ret;
 	}
 
 	protected abstract void validateForCreate(V vObj);
@@ -243,7 +212,10 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 
 	public T preCreate(V vObj) {
 		validateForCreate(vObj);
-		return populateEntityBean(vObj, OPERATION_CREATE_CONTEXT);
+
+		T entityObj = createEntityObject();
+
+		return populateEntityBeanForCreate(entityObj, vObj);
 	}
 
 	public V postCreate(T xObj) {
@@ -287,7 +259,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 					viewBaseBean.getId(), null, "preUpdate: id not found.");
 		}
 		validateForUpdate(viewBaseBean, resource);
-		return populateEntityBean(viewBaseBean, OPERATION_UPDATE_CONTEXT);
+		return populateEntityBeanForUpdate(resource, viewBaseBean);
 	}
 	
 	public boolean delete(V vObj) {
