@@ -22,15 +22,13 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.logging.Log;
 
 public class RangerPerfCollectorTracer extends RangerPerfTracer {
-	private final PerfDataRecorder recorder;
 
-	public RangerPerfCollectorTracer(Log logger, String tag, String data, PerfDataRecorder recorder) {
+	public RangerPerfCollectorTracer(Log logger, String tag, String data) {
 		super(logger, tag, data);
-		this.recorder = recorder;
 	}
 
 	@Override
 	public void log() {
-		recorder.record(tag, getElapsedTime());
+		PerfDataRecorder.recordStatistic(tag, getElapsedTime());
 	}
 }

@@ -45,7 +45,7 @@ public class RangerPolicyenginePerfTester {
 
         URL statCollectionFileURL = perfTestOptions.getStatCollectionFileURL();
 
-        List<String> perfModuleNames = buildPerfModuleNames(statCollectionFileURL);
+        List<String> perfModuleNames = statCollectionFileURL != null ? buildPerfModuleNames(statCollectionFileURL) : new ArrayList<String>();
 
         PerfDataRecorder.initialize(perfModuleNames);
 
@@ -108,17 +108,19 @@ public class RangerPolicyenginePerfTester {
 
         perfTestEngine.cleanup();
 
-        PerfDataRecorder.getPerfDataRecorder().dumpStatistics();
+        PerfDataRecorder.printStatistics();
     }
 
     private static List<String> buildPerfModuleNames(URL statCollectionFileURL) {
         List<String> perfModuleNames = new ArrayList<String>();
 
-        try (
-                InputStream inStream = statCollectionFileURL.openStream();
-                InputStreamReader reader = new InputStreamReader(inStream, Charset.forName("UTF-8"));
-                BufferedReader br = new BufferedReader(reader);
-        ) {
+        InputStream inStream = null;
+        InputStreamReader reader = null;
+        BufferedReader br = null;
+        try {
+            inStream = statCollectionFileURL.openStream();
+            reader = new InputStreamReader(inStream, Charset.forName("UTF-8"));
+            br = new BufferedReader(reader);
 
             String line;
 
@@ -132,6 +134,19 @@ public class RangerPolicyenginePerfTester {
                 }
             }
         } catch (Exception exception) {
+            try {
+                if (br != null) {
+                    br.close();
+                }
+                if (reader != null) {
+                    reader.close();
+                }
+                if (inStream != null) {
+                    inStream.close();
+                }
+            } catch (Exception e) {
+                // Ignore
+            }
             System.out.println("Error reading arguments:" + exception);
         }
 

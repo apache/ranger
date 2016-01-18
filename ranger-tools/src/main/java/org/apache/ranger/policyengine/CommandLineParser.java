@@ -147,8 +147,8 @@ public class CommandLineParser
                         if (statCollectionFileName != null) {
                             statCollectionFileURL = getInputFileURL(statCollectionFileName);
                             ret = statCollectionFileURL != null;
-                        } else {
-                            LOG.error("Error processing stat-collection-module file");
+                        }  else {
+                            ret = true;
                         }
                     }
                 } else {
