@@ -19,6 +19,7 @@
 
 PolicyRefresher.loadPolicy
 RangerPolicyEngine.init
+RangerPolicyEngine.cleanUp
 RangerContextEnricher.init
 RangerPolicyEvaluator.init
 RangerPolicyItemEvaluator.init
@@ -34,3 +35,27 @@ RangerTagRefresher.populateTags
 RangerPolicyEvaluator.isAccessAllowed
 RangerPolicyRetriever.getServicePolicies
 RangerTagDBReceiver.getTags
+ServiceREST.createServiceDef
+ServiceREST.updateServiceDef
+ServiceREST.deleteServiceDef
+ServiceREST.getServiceDef
+ServiceREST.getServiceDefByName
+ServiceREST.getServiceDefs
+ServiceREST.createService
+ServiceREST.updateService
+ServiceREST.deleteService
+ServiceREST.getService
+ServiceREST.getServices
+ServiceREST.countService
+ServiceREST.validateConfig
+ServiceREST.lookupResource
+ServiceREST.grantAccess
+ServiceREST.revokeAccess
+ServiceREST.createPolicy
+ServiceREST.updatePolicy
+ServiceREST.deletePolicy
+ServiceREST.getPolicy
+ServiceREST.getPolicies
+ServiceREST.countPolicies
+ServiceREST.getServicePolicies
+ServiceREST.getServicePoliciesIfUpdated

@@ -48,7 +48,7 @@ public class RangerPolicyenginePerfTester {
         if (perfTestOptions != null) {
             URL statCollectionFileURL = perfTestOptions.getStatCollectionFileURL();
 
-            List<String> perfModuleNames = buildPerfModuleNames(statCollectionFileURL);
+            List<String> perfModuleNames = statCollectionFileURL != null ? buildPerfModuleNames(statCollectionFileURL) : new ArrayList<String>();
 
             PerfDataRecorder.initialize(perfModuleNames);
 
@@ -111,7 +111,7 @@ public class RangerPolicyenginePerfTester {
 
             perfTestEngine.cleanup();
 
-            PerfDataRecorder.getPerfDataRecorder().dumpStatistics();
+            PerfDataRecorder.printStatistics();
         }
 
         LOG.info("Exiting...");

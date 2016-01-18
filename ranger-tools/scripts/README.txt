@@ -37,29 +37,33 @@ This file describes how to build, setup, configure and run the performance testi
 	ranger-0.5.0-ranger-tools/conf
 	ranger-0.5.0-ranger-tools/dist
 	ranger-0.5.0-ranger-tools/lib
-	ranger-0.5.0-ranger-tools/scripts
-	ranger-0.5.0-ranger-tools/testdata
 
 4.	% cd ranger-0.5.0-ranger-tools
 
 5.	Configure the policies and requests to use in the test run
 
 	Following sample data files are packaged with the perf-tool:
-		service-policies   - testdata/test_servicepolicies_hive.json
-		requests           - testdata/test_requests_hive.json
-		modules-to-profile - testdata/test_modules.txt
-		service-tags       - testdata/test_servicetags_hive.json (used only for tag-based policies; referenced from service-policies file.
 
-	Please review the contents of these files and modify (or copy/modify) to suite your policy and request needs.
+	testdata/test_servicepolicies_hive.json	- Contains service-policies used to initialize the policy-engine;
 
-	Update conf/log4j.properties to specify the filename where perf run results will be written to. Property to update is 'ranger.perf.logger'.
+	testdata/test_servicetags_hive.json 	- This is used only for tag-based policies. This is referenced 
+						  from service-policies file. It contains specification of 
+						  tag-definitions, and service-resources with their associated tags;
+
+	testdata/test_requests_hive.json	- Contains access requests to be made to the policy-engine;
+	
+	Please review the contents of these files and modify to suit your profiling needs.
+
+	Update conf/log4j.properties to specify the filename where perf run results will be written to. Property to update is 'log4j.appender.PERF.File'.
 
 6.	Run the tool with the following command
 
-	% ./ranger-perftester.sh -s <service-policies-file>  -r <requests-file> -p <profiled-modules-file> -c <number-of-concurrent-clients> -n <number-of-times-requests-file-to-be-run>
+	% ./ranger-perftester.sh -s <service-policies-file>  -r <requests-file> -c <number-of-concurrent-clients> -n <number-of-times-requests-file-to-be-run>
 
 	Example:
-	% ./ranger-perftester.sh -s testdata/test_servicepolicies_hive.json  -r testdata/test_requests_hive.json -p testdata/test_modules.txt -c 2 -n 1
+	% ./ranger-perftester.sh -s testdata/test_servicepolicies_hive.json  -r testdata/test_requests_hive.json -c 2 -n 1
 
-7. 	At the end of the run, the performance-statistics are printed on the console and in the log specified file in conf/log4j.properties file.
+7. 	At the end of the run, the performance-statistics are printed on the console and in the log specified file in conf/log4j.properties file as shown below. This is for time spent in evaluating access by Ranger Policy Engine during the course of a test run.  The time values shown are in milliseconds.
+
+[RangerPolicyEngine.isAccessAllowed] execCount:64, totalTimeTaken:1873, maxTimeTaken:276, minTimeTaken:4, avgTimeTaken:29
 

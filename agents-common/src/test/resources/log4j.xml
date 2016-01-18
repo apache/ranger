@@ -48,6 +48,11 @@
         <level value="debug" />
         <appender-ref ref="ranger_perf_appender" />
     </logger>
+
+    <logger name="org.apache.ranger.perf.rest.ServiceREST" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
     -->
 
     <root>

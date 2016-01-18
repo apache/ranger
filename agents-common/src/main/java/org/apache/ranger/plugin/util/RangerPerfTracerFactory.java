@@ -23,14 +23,12 @@ import org.apache.commons.logging.Log;
 
 public class RangerPerfTracerFactory {
 
-	private static PerfDataRecorder perfDataRecorder = PerfDataRecorder.getPerfDataRecorder();
-
 	static RangerPerfTracer getPerfTracer(Log logger, String tag, String data) {
 
 		RangerPerfTracer ret = null;
 
-		if (perfDataRecorder != null) {
-			ret = new RangerPerfCollectorTracer(logger, tag, data, perfDataRecorder);
+		if (PerfDataRecorder.collectStatistics()) {
+			ret = new RangerPerfCollectorTracer(logger, tag, data);
 		} else if (logger.isDebugEnabled()) {
 			ret = new RangerPerfTracer(logger, tag, data);
 		}
