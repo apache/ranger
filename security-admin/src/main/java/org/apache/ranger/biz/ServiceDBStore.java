@@ -1553,9 +1553,11 @@ public class ServiceDBStore implements ServiceStore {
 		if (service == null) {
 			throw new Exception("service does not exist - id='" + serviceId);
 		}
-
-		List<RangerPolicy> ret = getServicePolicies(service.getName(), filter);
-
+		RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
+		List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
+		if(filter != null) {
+			predicateUtil.applyFilter(ret, filter);
+		}
 		return ret;
 	}
 
@@ -1600,14 +1602,15 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceName + ")");
 		}
-
-		if(filter == null) {
-			filter = new SearchFilter();
+		XXService service = daoMgr.getXXService().findByName(serviceName);
+		if (service == null) {
+			throw new Exception("service does not exist - name='" + serviceName);
 		}
-
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-
-		List<RangerPolicy> ret = getPolicies(filter);
+		RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
+		List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
+		if(filter != null) {
+			predicateUtil.applyFilter(ret, filter);
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));

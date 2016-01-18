@@ -47,7 +47,7 @@ public class SearchFilter {
 	public static final String PAGE_SIZE       = "pageSize";
 	public static final String SORT_BY         = "sortBy";
 	public static final String RESOURCE_SIGNATURE = "resourceSignature:";     // search
-
+	public static final String POLICY_TYPE = "policyType";
 	private Map<String, String> params     = null;
 	private int                 startIndex = 0;
 	private int                 maxRows    = Integer.MAX_VALUE;

@@ -158,7 +158,7 @@ public class RangerSearchUtil extends SearchUtil {
 		int pageSize = restErrorUtil.parseInt(request.getParameter(SearchFilter.PAGE_SIZE),
 				configUtil.getDefaultMaxRows(), "Invalid value for parameter pageSize",
 				MessageEnums.INVALID_INPUT_DATA, null, SearchFilter.PAGE_SIZE);
-		ret.setMaxRows(pageSize);
+		ret.setMaxRows(validatePageSize(pageSize));
 
 		ret.setGetCount(restErrorUtil.parseBoolean(request.getParameter("getCount"), true));
 		String sortBy = restErrorUtil.validateString(request.getParameter(SearchFilter.SORT_BY),
