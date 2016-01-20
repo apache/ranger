@@ -322,6 +322,13 @@ public class PublicAPIsv2 {
 		return serviceREST.createPolicy(policy);
 	}
 
+	@POST
+	@Path("/api/policy/apply/")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicy applyPolicy(RangerPolicy policy) { // new API
+		return serviceREST.applyPolicy(policy);
+	}
+
 	@PUT
 	@Path("/api/policy/{id}")
 	@Produces({ "application/json", "application/xml" })
@@ -335,7 +342,6 @@ public class PublicAPIsv2 {
 
 		return serviceREST.updatePolicy(policy);
 	}
-
 
 	@PUT
 	@Path("/api/service/{servicename}/policy/{policyname}")

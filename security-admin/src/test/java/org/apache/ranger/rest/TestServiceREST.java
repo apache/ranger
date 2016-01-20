@@ -1088,4 +1088,337 @@ public class TestServiceREST {
 		Assert.assertNotNull(dbVXResponse);
 		Mockito.verify(serviceMgr).validateConfig(rangerService, svcStore);
 	}
+
+	@Test
+	public void test40applyPolicy() {
+		RangerPolicy existingPolicy = rangerPolicy();
+		RangerPolicy appliedPolicy = rangerPolicy();
+
+		existingPolicy.setPolicyItems(null);
+		appliedPolicy.setPolicyItems(null);
+
+		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource("/tmp");
+		rangerPolicyResource.setIsExcludes(true);
+		rangerPolicyResource.setIsRecursive(true);
+		policyResources.put("path", rangerPolicyResource);
+
+		existingPolicy.setResources(policyResources);
+		appliedPolicy.setResources(policyResources);
+
+		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("read", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("write", true));
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(true);
+
+		existingPolicy.getPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getGroups().add("public");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.getUsers().add("finance");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		appliedPolicy.getPolicyItems().add(rangerPolicyItem);
+
+		String existingPolicyStr = existingPolicy.toString();
+		System.out.println("existingPolicy=" + existingPolicyStr);
+
+		ServiceRESTUtil.processApplyPolicy(existingPolicy, appliedPolicy);
+
+		String resultPolicyStr = existingPolicy.toString();
+		System.out.println("resultPolicy=" + resultPolicyStr);
+
+		assert(true);
+	}
+
+	@Test
+	public void test41applyPolicy() {
+		RangerPolicy existingPolicy = rangerPolicy();
+		RangerPolicy appliedPolicy = rangerPolicy();
+
+		existingPolicy.setPolicyItems(null);
+		appliedPolicy.setPolicyItems(null);
+
+		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource("/tmp");
+		rangerPolicyResource.setIsExcludes(true);
+		rangerPolicyResource.setIsRecursive(true);
+		policyResources.put("path", rangerPolicyResource);
+
+		existingPolicy.setResources(policyResources);
+		appliedPolicy.setResources(policyResources);
+
+		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("read", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("write", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(true);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("read", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("write", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group3");
+		rangerPolicyItem.getUsers().add("user3");
+		rangerPolicyItem.setDelegateAdmin(true);
+
+		existingPolicy.getPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getAllowExceptions().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getDenyPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("index", true));
+		rangerPolicyItem.getGroups().add("public");
+		rangerPolicyItem.getUsers().add("user");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getDenyPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("index", true));
+
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		appliedPolicy.getPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+
+		rangerPolicyItem.getGroups().add("public");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		appliedPolicy.getDenyPolicyItems().add(rangerPolicyItem);
+
+		String existingPolicyStr = existingPolicy.toString();
+		System.out.println("existingPolicy=" + existingPolicyStr);
+
+		ServiceRESTUtil.processApplyPolicy(existingPolicy, appliedPolicy);
+
+		String resultPolicyStr = existingPolicy.toString();
+		System.out.println("resultPolicy=" + resultPolicyStr);
+
+		assert(true);
+	}
+
+	@Test
+	public void test42grant() {
+		RangerPolicy existingPolicy = rangerPolicy();
+
+		existingPolicy.setPolicyItems(null);
+
+		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource("/tmp");
+		rangerPolicyResource.setIsExcludes(true);
+		rangerPolicyResource.setIsRecursive(true);
+		policyResources.put("path", rangerPolicyResource);
+
+		existingPolicy.setResources(policyResources);
+
+		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("read", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("write", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(true);
+
+		existingPolicy.getPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("read", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("write", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group3");
+		rangerPolicyItem.getUsers().add("user3");
+		rangerPolicyItem.setDelegateAdmin(true);
+
+		existingPolicy.getPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getAllowExceptions().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getDenyPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("index", true));
+		rangerPolicyItem.getGroups().add("public");
+		rangerPolicyItem.getUsers().add("user");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getDenyPolicyItems().add(rangerPolicyItem);
+
+		GrantRevokeRequest grantRequestObj = new GrantRevokeRequest();
+		Map<String, String> resource = new HashMap<String, String>();
+		resource.put("path", "/tmp");
+		grantRequestObj.setResource(resource);
+
+		grantRequestObj.getUsers().add("user1");
+		grantRequestObj.getGroups().add("group1");
+
+		grantRequestObj.getAccessTypes().add("delete");
+		grantRequestObj.getAccessTypes().add("index");
+
+		grantRequestObj.setDelegateAdmin(true);
+
+		grantRequestObj.setEnableAudit(true);
+		grantRequestObj.setIsRecursive(true);
+
+		grantRequestObj.setGrantor("test42Grant");
+
+		String existingPolicyStr = existingPolicy.toString();
+		System.out.println("existingPolicy=" + existingPolicyStr);
+
+		ServiceRESTUtil.processGrantRequest(existingPolicy, grantRequestObj);
+
+		String resultPolicyStr = existingPolicy.toString();
+		System.out.println("resultPolicy=" + resultPolicyStr);
+
+		assert(true);
+	}
+
+	@Test
+	public void test43revoke() {
+		RangerPolicy existingPolicy = rangerPolicy();
+
+		existingPolicy.setPolicyItems(null);
+
+		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource("/tmp");
+		rangerPolicyResource.setIsExcludes(true);
+		rangerPolicyResource.setIsRecursive(true);
+		policyResources.put("path", rangerPolicyResource);
+
+		existingPolicy.setResources(policyResources);
+
+		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("read", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("write", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(true);
+
+		existingPolicy.getPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("read", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("write", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group3");
+		rangerPolicyItem.getUsers().add("user3");
+		rangerPolicyItem.setDelegateAdmin(true);
+
+		existingPolicy.getPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("lock", true));
+		rangerPolicyItem.getGroups().add("group1");
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user1");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getAllowExceptions().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("delete", true));
+		rangerPolicyItem.getGroups().add("group2");
+		rangerPolicyItem.getUsers().add("user2");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getDenyPolicyItems().add(rangerPolicyItem);
+
+		rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.getAccesses().add(new RangerPolicyItemAccess("index", true));
+		rangerPolicyItem.getGroups().add("public");
+		rangerPolicyItem.getUsers().add("user");
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		existingPolicy.getDenyPolicyItems().add(rangerPolicyItem);
+
+		GrantRevokeRequest revokeRequestObj = new GrantRevokeRequest();
+		Map<String, String> resource = new HashMap<String, String>();
+		resource.put("path", "/tmp");
+		revokeRequestObj.setResource(resource);
+
+		revokeRequestObj.getUsers().add("user1");
+		revokeRequestObj.getGroups().add("group1");
+
+		revokeRequestObj.getAccessTypes().add("delete");
+		revokeRequestObj.getAccessTypes().add("index");
+
+		revokeRequestObj.setDelegateAdmin(true);
+
+		revokeRequestObj.setEnableAudit(true);
+		revokeRequestObj.setIsRecursive(true);
+
+		revokeRequestObj.setGrantor("test43Revoke");
+
+		String existingPolicyStr = existingPolicy.toString();
+		System.out.println("existingPolicy=" + existingPolicyStr);
+
+		ServiceRESTUtil.processRevokeRequest(existingPolicy, revokeRequestObj);
+
+		String resultPolicyStr = existingPolicy.toString();
+		System.out.println("resultPolicy=" + resultPolicyStr);
+
+		assert(true);
+	}
 }
