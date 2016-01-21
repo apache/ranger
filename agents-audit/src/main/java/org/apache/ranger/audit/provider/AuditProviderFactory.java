@@ -21,6 +21,8 @@ package org.apache.ranger.audit.provider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,6 +58,8 @@ public class AuditProviderFactory {
 	public static final String AUDIT_SOLR_IS_ENABLED_PROP = "xasecure.audit.solr.is.enabled";
 
 	public static final String AUDIT_DEST_BASE = "xasecure.audit.destination";
+	public static final String AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC = "xasecure.audit.shutdown.hook.max.wait.seconds";
+	public static final int AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT = 30;
 
 	public static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT = 10 * 1024;
 	public static final int AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT = 5 * 1000;
@@ -381,9 +385,7 @@ public class AuditProviderFactory {
 			mProvider.start();
 		}
 
-		JVMShutdownHook jvmShutdownHook = new JVMShutdownHook(mProvider);
-
-		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
+		installJvmSutdownHook(props);
 	}
 
 	private AuditHandler getProviderFromConfig(Properties props,
@@ -443,21 +445,76 @@ public class AuditProviderFactory {
 		return new DummyAuditProvider();
 	}
 
-	private static class JVMShutdownHook extends Thread {
-		AuditHandler mProvider;
+	private void installJvmSutdownHook(Properties props) {
+		int shutdownHookMaxWaitSeconds = MiscUtil.getIntProperty(props, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT);
+		JVMShutdownHook jvmShutdownHook = new JVMShutdownHook(mProvider, shutdownHookMaxWaitSeconds);
+		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
+	}
 
-		public JVMShutdownHook(AuditHandler provider) {
-			mProvider = provider;
+	private static class RangerAsyncAuditCleanup implements Runnable {
+
+		final Semaphore startCleanup;
+		final Semaphore doneCleanup;
+		final AuditHandler mProvider;
+
+		RangerAsyncAuditCleanup(AuditHandler provider, Semaphore startCleanup, Semaphore doneCleanup) {
+			this.startCleanup = startCleanup;
+			this.doneCleanup = doneCleanup;
+			this.mProvider = provider;
+		}
+
+		@Override
+		public void run() {
+			while (true) {
+				LOG.info("RangerAsyncAuditCleanup: Waiting to audit cleanup start signal");
+				try {
+					startCleanup.acquire();
+				} catch (InterruptedException e) {
+					LOG.info("RangerAsyncAuditCleanup: Interrupted while waiting for audit startCleanup signal!  Exiting the thread...", e);
+					break;
+				}
+				LOG.info("RangerAsyncAuditCleanup: Starting cleanup");
+				mProvider.waitToComplete();
+				mProvider.stop();
+				doneCleanup.release();
+				LOG.info("RangerAsyncAuditCleanup: Done cleanup");
+			}
+		}
+	}
+
+	private static class JVMShutdownHook extends Thread {
+		final Semaphore startCleanup = new Semaphore(0);
+		final Semaphore doneCleanup = new Semaphore(0);
+		final Thread cleanupThread;
+		final int maxWait;
+
+		public JVMShutdownHook(AuditHandler provider, int maxWait) {
+			this.maxWait = maxWait;
+			Runnable runnable = new RangerAsyncAuditCleanup(provider, startCleanup, doneCleanup);
+			cleanupThread = new Thread(runnable, "Ranger async Audit cleanup");
+			cleanupThread.setDaemon(true);
+			cleanupThread.start();
 		}
 
 		public void run() {
 			LOG.info("==> JVMShutdownHook.run()");
+			LOG.info("JVMShutdownHook: Signalling async audit cleanup to start.");
+			startCleanup.release();
 			try {
-				mProvider.waitToComplete();
-				mProvider.stop();
-			} finally {
-				LOG.info("<== JVMShutdownHook.run()");
+				Long start = System.currentTimeMillis();
+				LOG.info("JVMShutdownHook: Waiting up to " + maxWait + " seconds for audit cleanup to finish.");
+				boolean cleanupFinishedInTime = doneCleanup.tryAcquire(maxWait, TimeUnit.SECONDS);
+				if (cleanupFinishedInTime) {
+					LOG.info("JVMShutdownHook: Audit cleanup finished after " + (System.currentTimeMillis() - start) + " milli seconds");
+				} else {
+					LOG.warn("JVMShutdownHook: could not detect finishing of audit cleanup even after waiting for " + maxWait + " seconds!");
+				}
+			} catch (InterruptedException e) {
+				LOG.info("JVMShutdownHook: Interrupted while waiting for completion of Async executor!", e);
 			}
+			LOG.info("JVMShutdownHook: Interrupting ranger async audit cleanup thread");
+			cleanupThread.interrupt();
+			LOG.info("<== JVMShutdownHook.run()");
 		}
 	}
 }
