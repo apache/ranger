@@ -21,6 +21,7 @@ package org.apache.ranger.authorization.kms.authorizer;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -377,7 +378,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 			super.setAccessType(accessType);
 			super.setUser(ugi.getShortUserName());
 			super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
-			super.setAccessTime(StringUtil.getUTCDate());
+			super.setAccessTime(new Date());
 			super.setClientIPAddress(clientIp);			
 			super.setAction(accessType);
 		}

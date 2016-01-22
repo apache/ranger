@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
@@ -47,7 +48,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		this.setResource(resource);
 		this.setUser(user);
 		this.setUserGroups(userGroups);
-		this.setAccessTime(StringUtil.getUTCDate());
+		this.setAccessTime(new Date());
 		this.setAction(hiveOpTypeName);
 		
 		if(context != null) {

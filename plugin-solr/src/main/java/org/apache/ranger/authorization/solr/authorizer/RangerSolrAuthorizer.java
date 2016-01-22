@@ -167,7 +167,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			String userName = getUserName(context);
 			Set<String> userGroups = getGroupsForUser(userName);
 			String ip = null;
-			Date eventTime = StringUtil.getUTCDate();
+			Date eventTime = new Date();
 
 			// // Set the IP
 			if (useProxyIP) {

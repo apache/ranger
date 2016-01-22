@@ -21,6 +21,7 @@
 package org.apache.ranger.authorization.yarn.authorizer;
 
 import java.net.InetAddress;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -279,7 +280,7 @@ class RangerYarnAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessType(accessType);
 		super.setUser(ugi.getShortUserName());
 		super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
-		super.setAccessTime(StringUtil.getUTCDate());
+		super.setAccessTime(new Date());
 		super.setClientIPAddress(getRemoteIp());
 		super.setAction(accessType);
 	}
