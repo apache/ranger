@@ -471,6 +471,32 @@
     </pluginManagement>
     <plugins>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.5</version>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <rulesets>
+            <ruleset>${project.parent.basedir}/dev-support/ranger-pmd-ruleset.xml</ruleset>
+          </rulesets>
+          <sourceEncoding>UTF-8</sourceEncoding>
+          <failOnViolation>true</failOnViolation>
+          <linkXRef>false</linkXRef>
+          <verbose>true</verbose>
+          <excludeRoots>
+            <excludeRoot>${basedir}/src/main/generated</excludeRoot>
+          </excludeRoots>
+        </configuration>
+      </plugin>
+
     <plugin>
       <groupId>org.apache.rat</groupId>
       <artifactId>apache-rat-plugin</artifactId>
