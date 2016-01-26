@@ -42,6 +42,9 @@ under the License.
          <li>Apache HBase</li>
          <li>Apache Storm</li>
          <li>Apache Knox</li>
+         <li>Apache Solr</li>
+         <li>Apache Kafka</li>
+         <li>YARN</li>
      </ul>
      </answer>
     </faq>
@@ -81,13 +84,13 @@ under the License.
           <question>Does Ranger emulated permissions at the unix level for Apache Hadoop?</question>
           <answer>
               <p>
-                 No, Ranger enforces authorization based on policies entered in the policy administration tool and does not emulate the permissions at the unix level.  Ranger does provide a defaut feature to validate access using native hadoop file-level permissions if the Ranger policies do not cover the requested access
+                 No, Ranger enforces authorization based on policies entered in the policy administration tool and does not emulate the permissions at the unix level.  Ranger does provide a default feature to validate access using native hadoop file-level permissions if the Ranger policies do not cover the requested access
               </p>
               </answer>
           </faq>
   
   <faq id="Do we need an Ranger plugin in each datanode?">
-      <question>Does Argun plugin need to be implemented in each datanode ?</question>
+      <question>Does Ranger plugin need to be implemented in each datanode ?</question>
       <answer>
           <p>
               No, Ranger plugin for Hadoop is only needed in the NameNode.
@@ -137,6 +140,39 @@ under the License.
         <answer>
             <p>
                 Apache Knox currently provides a service level authorization for users/groups. These acls are stored locally in a file. Ranger has built a plugin for Knox to enable administration of these policies through central UI/REST APIs as well as detailed auditing of Knox user access.
+            </p>
+        </answer>
+    </faq>
+</part>
+<part id="Apache Kafka">
+    <title>Apache Kafka</title>
+    <faq id="How does Ranger provide authorization in Apache Kafka">
+        <question>How does Ranger provide authorization in Apache Kafka?</question>
+        <answer>
+            <p>
+                Security was introduced in Kafka in Kafka 0.9 version. Ranger can manage the Kafka ACLs per topic. Users can use Ranger to control who can write to a topic or read from a topic. In addition to providing policies by users and groups, Ranger also supports IP address based permissions to publish or subscribe.
+            </p>
+        </answer>
+    </faq>
+</part>
+<part id="Apache Solr">
+    <title>Apache Solr</title>
+    <faq id="How does Ranger provide authorization in Apache Solr">
+        <question>How does Ranger provide authorization in Apache Solr?</question>
+        <answer>
+            <p>
+                Similar to Apache Kafka, security in Apache Solr was introduced recently by the community. Through Apache Ranger, users can build policies for users/groups to query a particular collections in Solr. Efforts are underway in Solr community to provide more granular index level permissions.
+            </p>
+        </answer>
+    </faq>
+</part>
+<part id="Yarn">
+    <title>YARN</title>
+    <faq id="How does Ranger provide authorization in YARN">
+        <question>How does Ranger provide authorization in YARN?</question>
+        <answer>
+            <p>
+               YARN is widely used in the Hadoop ecosystem as resource management layer for applications. Adminstrators can use YARN to setup queues with a certain capacity and applications can be given permissions to write to a certain queue. Using Ranger, administrators can manage the policies for who can write to a particular queue
             </p>
         </answer>
     </faq>
