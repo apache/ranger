@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
  Licensed to the Apache Software Foundation (ASF) under one or more
  contributor license agreements.  See the NOTICE file distributed with
@@ -16,9 +15,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  -->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <name>Apache Ranger</name>
     <description>
         Apache Ranger is a framework to enable, monitor and manage comprehensive data security across the Hadoop platform. Apache Ranger currently provides a centralized security adminstration, fine grain access control and detailed auditing for user access within Apache Hadoop, Apache Hive, Apache HBase and other Apache components
@@ -26,13 +23,10 @@
     </description>
     <url>http://ranger.incubator.apache.org/</url>
     <modelVersion>4.0.0</modelVersion>
-    
     <groupId>org.incubator.apache.ranger</groupId>
     <version>0.5.0</version>
     <artifactId>ranger</artifactId>
     <packaging>pom</packaging>
-
-    
     <licenses>
         <license>
             <name>Apache 2</name>
@@ -40,19 +34,16 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    
     <scm>
         <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/ranger/site/trunk</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/ranger/site/trunk</developerConnection>
         <tag>HEAD</tag>
         <url>http://svn.apache.org/repos/asf/incubator/ranger/site/trunk</url>
     </scm>
-
     <issueManagement>
         <system>Jira</system>
         <url>http://issues.apache.org/jira/browse/ranger</url>
     </issueManagement>
-    
     <mailingLists>
         <mailingList>
             <name>User list</name>
@@ -132,18 +123,18 @@
                 Quokka IvS
             </organization>
         </developer>
-    <developer>
-        <id>ddas</id>
-        <name>Devaraj Das</name>
-        <email>ddas@hortonworks.com</email>
-        <timezone>-8</timezone>
-        <roles>
-            <role>PMC</role>
-        </roles>
-        <organization>
+        <developer>
+            <id>ddas</id>
+            <name>Devaraj Das</name>
+            <email>ddas@hortonworks.com</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>PMC</role>
+            </roles>
+            <organization>
             Hortonworks
         </organization>
-    </developer>
+        </developer>
         <developer>
             <id>ddorai</id>
             <name>Dilli Arumugam</name>
@@ -254,11 +245,11 @@
                 <role>PMC</role>
                 <role>Committer</role>
             </roles>
-                <organization>
+            <organization>
                     Hortonworks
                 </organization>
         </developer>
-            <developer>
+        <developer>
             <id>sradia</id>
             <name>Sanjay Radia</name>
             <email>sanjay@hortonworks.com</email>
@@ -296,17 +287,15 @@
                 Hortonworks
             </organization>
         </developer>
-        </developers>
+    </developers>
     <contributors>
         <contributor>
         </contributor>
     </contributors>
-    
     <organization>
         <name>Apache Software Foundation</name>
         <url>http://www.apache.org/</url>
     </organization>
-    
     <build>
         <resources>
             <resource>
@@ -344,7 +333,6 @@
             </plugins>
         </pluginManagement>
     </build>
-    
     <reporting>
         <excludeDefaults>true</excludeDefaults>
         <plugins>
@@ -372,7 +360,6 @@
             </plugin>
         </plugins>
     </reporting>
-    
     <distributionManagement>
         <site>
             <id>apache-website</id>
@@ -380,5 +367,4 @@
             <url>scpexe://people.apache.org/www/incubator.apache.org/ranger</url>
         </site>
     </distributionManagement>
-    
 </project>

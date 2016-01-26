@@ -15,41 +15,40 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>security_plugins.ranger-plugin-classloader</groupId>
-  <artifactId>ranger-plugin-classloader</artifactId>
-  <version>0.5.0</version>
-  <name>ranger-plugin-classloader</name>
-  <description>Ranger Plugin ClassLoader</description>
-  <packaging>jar</packaging>
-  <url>http://maven.apache.org</url>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  <parent>
-    <groupId>org.apache.ranger</groupId>
-    <artifactId>ranger</artifactId>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>security_plugins.ranger-plugin-classloader</groupId>
+    <artifactId>ranger-plugin-classloader</artifactId>
     <version>0.5.0</version>
-  </parent>
-  <dependencies>
+    <name>ranger-plugin-classloader</name>
+    <description>Ranger Plugin ClassLoader</description>
+    <packaging>jar</packaging>
+    <url>http://maven.apache.org</url>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <parent>
+        <groupId>org.apache.ranger</groupId>
+        <artifactId>ranger</artifactId>
+        <version>0.5.0</version>
+    </parent>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--  
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <!--  
-    <dependency>
-	 <groupId>commons-logging</groupId>
-	 <artifactId>commons-logging</artifactId>
-	 <version>${commons.logging.version}</version>
+         <groupId>commons-logging</groupId>
+         <artifactId>commons-logging</artifactId>
+         <version>${commons.logging.version}</version>
     </dependency>
     -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${slf4j-api.version}</version>
-    </dependency> 
-  </dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+    </dependencies>
 </project>

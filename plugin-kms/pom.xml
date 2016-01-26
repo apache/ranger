@@ -16,36 +16,36 @@
   limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>security_plugins.ranger-kms-plugin</groupId>
-  <artifactId>ranger-kms-plugin</artifactId>
-  <name>KMS Security Plugin</name>
-  <description>KMS Security Plugin</description>
-  <packaging>jar</packaging>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  <parent>
-     <groupId>org.apache.ranger</groupId>
-     <artifactId>ranger</artifactId>
-     <version>0.5.0</version>
-     <relativePath>..</relativePath>
-  </parent>
-  <dependencies>
-    <dependency>
-      <groupId>security_plugins.ranger-plugins-common</groupId>
-      <artifactId>ranger-plugins-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>security_plugins.ranger-plugins-audit</groupId>
-      <artifactId>ranger-plugins-audit</artifactId>
-      <version>${project.version}</version>
-    </dependency>  
-    <dependency>
-	  <groupId>org.apache.ranger</groupId>
-	  <artifactId>ranger-kms</artifactId>
-	  <version>${project.version}</version>
-	</dependency>  	
-  </dependencies>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>security_plugins.ranger-kms-plugin</groupId>
+    <artifactId>ranger-kms-plugin</artifactId>
+    <name>KMS Security Plugin</name>
+    <description>KMS Security Plugin</description>
+    <packaging>jar</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <parent>
+        <groupId>org.apache.ranger</groupId>
+        <artifactId>ranger</artifactId>
+        <version>0.5.0</version>
+        <relativePath>..</relativePath>
+    </parent>
+    <dependencies>
+        <dependency>
+            <groupId>security_plugins.ranger-plugins-common</groupId>
+            <artifactId>ranger-plugins-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>security_plugins.ranger-plugins-audit</groupId>
+            <artifactId>ranger-plugins-audit</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-kms</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

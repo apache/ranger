@@ -16,98 +16,98 @@
   limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>security_plugins.ranger-knox-plugin</groupId>
-  <artifactId>ranger-knox-plugin</artifactId>
-  <name>Knox Security Plugin</name>
-  <description>Knox Security Plugins</description>
-  <packaging>jar</packaging>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  <parent>
-     <groupId>org.apache.ranger</groupId>
-     <artifactId>ranger</artifactId>
-     <version>0.5.0</version>
-     <relativePath>..</relativePath>
-  </parent>
-  <dependencies>
-    <dependency>
-	 <groupId>org.apache.knox</groupId>
-	 <artifactId>gateway-spi</artifactId>
-     <version>0.5.0</version>
-    </dependency>
-    <dependency>
-	 <groupId>javax.servlet</groupId>
-	 <artifactId>javax.servlet-api</artifactId>
-	 <version>${javax.servlet.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish.jersey.core</groupId>
-      <artifactId>jersey-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-integration</artifactId>
-    </dependency>
-	<!-- TO DEBUG JERSEY2 code: Comment the two jackson depedencies to debug jersey2 code.  Their presence prevents jersy2 connections to work. -->    
-	<dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>${codehaus.jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-      <version>${codehaus.jackson.version}</version>
-    </dependency>
- 	<dependency>
-      <groupId>security_plugins.ranger-plugins-common</groupId>
-      <artifactId>ranger-plugins-common</artifactId>
-      <version>${project.version}</version>
-<!-- TO DEBUG JERSEY2 code: uncomment this exclusion 
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>security_plugins.ranger-knox-plugin</groupId>
+    <artifactId>ranger-knox-plugin</artifactId>
+    <name>Knox Security Plugin</name>
+    <description>Knox Security Plugins</description>
+    <packaging>jar</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <parent>
+        <groupId>org.apache.ranger</groupId>
+        <artifactId>ranger</artifactId>
+        <version>0.5.0</version>
+        <relativePath>..</relativePath>
+    </parent>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.knox</groupId>
+            <artifactId>gateway-spi</artifactId>
+            <version>0.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-integration</artifactId>
+        </dependency>
+        <!-- TO DEBUG JERSEY2 code: Comment the two jackson depedencies to debug jersey2 code.  Their presence prevents jersy2 connections to work. -->
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>${codehaus.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>${codehaus.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>security_plugins.ranger-plugins-common</groupId>
+            <artifactId>ranger-plugins-common</artifactId>
+            <version>${project.version}</version>
+            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion 
        <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
- -->    
- 	</dependency>
-    <dependency>
-      <groupId>security_plugins.ranger-plugins-audit</groupId>
-      <artifactId>ranger-plugins-audit</artifactId>
-      <version>${project.version}</version>
-<!-- TO DEBUG JERSEY2 code: uncomment this exclusion 
+ -->
+        </dependency>
+        <dependency>
+            <groupId>security_plugins.ranger-plugins-audit</groupId>
+            <artifactId>ranger-plugins-audit</artifactId>
+            <version>${project.version}</version>
+            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion 
        <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
- -->    
-    </dependency>
-       <dependency>
-           <groupId>commons-lang</groupId>
-           <artifactId>commons-lang</artifactId>
-           <version>${commons.lang.version}</version>
-       </dependency>
-       <dependency>
-           <groupId>commons-collections</groupId>
-           <artifactId>commons-collections</artifactId>
-           <version>${commons.collections.version}</version>
-       </dependency>
-       <dependency>
-			<groupId>org.apache.hadoop</groupId>
+ -->
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${commons.lang.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons.collections.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
-			<version>${hadoop.version}</version>
-	   </dependency>
-	   <dependency>
-		<groupId>org.apache.htrace</groupId>
-		<artifactId>htrace-core</artifactId>
-		<version>${htrace-core.version}</version>
-	   </dependency>
+            <version>${hadoop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace-core</artifactId>
+            <version>${htrace-core.version}</version>
+        </dependency>
     </dependencies>
 </project>
