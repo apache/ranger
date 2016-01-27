@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>10</version>
+        <version>17</version>
     </parent>
     <groupId>org.apache.ranger</groupId>
     <artifactId>ranger</artifactId>
@@ -40,7 +40,7 @@
         <connection>scm:git:git@github.com:apache/incubator-ranger.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-ranger.git</developerConnection>
         <url>scm:git:git@github.com:apache/incubator-ranger.git</url>
-        <tag>ranger-0.4.0-rc3</tag>
+        <tag>HEAD</tag>
     </scm>
     <issueManagement>
         <system>JIRA</system>
