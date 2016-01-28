@@ -170,7 +170,7 @@ public class TestServiceREST {
 
 	@Mock
 	StringUtils stringUtils;
-
+	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -995,10 +995,27 @@ public class TestServiceREST {
 	public void test30getPolicyFromEventTime() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 
-		Mockito.when(request.getParameter("eventTime")).thenReturn(
-				new Date().toString());
+		String strdt = new Date().toString(); 
+		String userName="Admin";
+		Set<String> userGroupsList = new HashSet<String>();
+		userGroupsList.add("group1");
+		userGroupsList.add("group2");
+		Mockito.when(request.getParameter("eventTime")).thenReturn(strdt);
 		Mockito.when(request.getParameter("policyId")).thenReturn("1");
+		RangerPolicy policy=new RangerPolicy();
+		Map<String, RangerPolicyResource> resources=new HashMap<String, RangerPolicy.RangerPolicyResource>();
+		policy.setService("services");
+		policy.setResources(resources);
+		Mockito.when(svcStore.getPolicyFromEventTime(strdt, 1l)).thenReturn(policy);
+		Mockito.when(bizUtil.isAdmin()).thenReturn(false);
+		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
+		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
+				userGroupsList);
 
+		Mockito.when(restErrorUtil.createRESTException((String)null))
+				.thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+	
 		RangerPolicy dbRangerPolicy = serviceREST
 				.getPolicyFromEventTime(request);
 		Assert.assertNull(dbRangerPolicy);

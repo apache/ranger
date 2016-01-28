@@ -142,7 +142,17 @@ public class SessionMgr {
 				gjAuthSession.setRequestUserAgent(userAgent);
 			}
 			gjAuthSession.setDeviceType(httpUtil.getDeviceType(userAgent));
-			gjAuthSession = storeAuthSession(gjAuthSession);
+			HttpSession session = httpRequest.getSession();
+			if (session != null) {
+				if (session.getAttribute("auditLoginId") == null) {
+					synchronized (session) {
+						if (session.getAttribute("auditLoginId") == null) {
+							gjAuthSession = storeAuthSession(gjAuthSession);
+							session.setAttribute("auditLoginId", gjAuthSession.getId());
+						}
+					}
+				}
+			}
 
 			userSession = new UserSessionBase();
 			userSession.setXXPortalUser(gjUser);

@@ -126,7 +126,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				RangerContextHolder.setSecurityContext(context);
 
 				UserSessionBase userSession = sessionMgr.processSuccessLogin(
-						XXAuthSession.AUTH_TYPE_PASSWORD, userAgent);
+						XXAuthSession.AUTH_TYPE_PASSWORD, userAgent, httpRequest);
 
 				if (userSession != null) {
 
