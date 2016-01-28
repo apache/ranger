@@ -17,7 +17,6 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>security_plugins.ranger-hive-plugin</groupId>
   <artifactId>ranger-hive-plugin</artifactId>
   <name>Hive Security Plugin</name>
   <description>Hive Security Plugins</description>
@@ -113,12 +112,12 @@
 	  <version>${hadoop.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_plugins.ranger-plugins-common</groupId>
+      <groupId>org.apache.ranger</groupId>
       <artifactId>ranger-plugins-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>security_plugins.ranger-plugins-audit</groupId>
+      <groupId>org.apache.ranger</groupId>
       <artifactId>ranger-plugins-audit</artifactId>
       <version>${project.version}</version>
     </dependency>

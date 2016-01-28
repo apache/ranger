@@ -34,8 +34,8 @@
   	    <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
-	  <include>security_plugins.ranger-hdfs-plugin-shim:ranger-hdfs-plugin-shim</include>
-	  <include>security_plugins.ranger-plugin-classloader:ranger-plugin-classloader</include>
+	  <include>org.apache.ranger:ranger-hdfs-plugin-shim</include>
+	  <include>org.apache.ranger:ranger-plugin-classloader</include>
       </includes>
     </moduleSet>
     
@@ -66,7 +66,7 @@
         <unpack>false</unpack>
      </binaries>
      <includes>
-		<include>security_plugins.ranger-plugins-installer:ranger-plugins-installer</include>
+		<include>org.apache.ranger:ranger-plugins-installer</include>
         <include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
@@ -94,11 +94,10 @@
      </binaries>
     <includes>
 	<include>org.apache.ranger:ranger_solrj</include>
-	<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
-	<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
-	<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl</include>
-	<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
-	<include>security_plugins.ranger-hdfs-plugin:ranger-hdfs-plugin</include>
+	<include>org.apache.ranger:ranger-plugins-audit</include>
+	<include>org.apache.ranger:ranger-plugins-cred</include>
+	<include>org.apache.ranger:ranger-plugins-common</include>
+	<include>org.apache.ranger:ranger-hdfs-plugin</include>
     </includes>
     </moduleSet>
     

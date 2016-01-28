@@ -71,7 +71,7 @@
         <unpack>false</unpack>
      </binaries>
      <includes>
-	<include>security_plugins.ranger-plugins-installer:ranger-plugins-installer</include>
+	<include>org.apache.ranger:ranger-plugins-installer</include>
      </includes>
     </moduleSet>
   </moduleSets> 	
