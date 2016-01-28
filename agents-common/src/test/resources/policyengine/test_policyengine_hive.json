@@ -45,9 +45,32 @@
        {"accesses":[{"type":"select","isAllowed":true}],"users":["user1","user2"],"groups":["group1","group2"],"delegateAdmin":false}
      ]
     }
+    ,
+    {"id":4,"name":"db=db1; table=tmp; column=tmp*","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"database":{"values":["db1"]},"table":{"values":["tmp"]},"column":{"values":["tmp*"], "isExcludes":true}},
+      "policyItems":[
+        {"accesses":[{"type":"select","isAllowed":true}],"users":["user1","user2"],"groups":["group1","group2"],"delegateAdmin":false}
+      ]
+    }
   ],
 
   "tests":[
+    {"name":"DENY 'select tmp_1 from db1.tmp ;' for user1",
+      "request":{
+        "resource":{"elements":{"database":"db1", "table":"tmp", "column":"tmp_1"}},
+        "accessType":"select","user":"user1","userGroups":["users"],"requestData":"select tmp_1 from db1.tmp for user1"
+      },
+      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+    }
+    ,
+    {"name":"ALLOW 'select abc_1 from db1.tmp ;' for user1",
+      "request":{
+        "resource":{"elements":{"database":"db1", "table":"tmp", "column":"abc_1"}},
+        "accessType":"select","user":"user1","userGroups":["users"],"requestData":"select abc_1 from db1.tmp for user1"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":4}
+    }
+  ,
     {"name":"ALLOW 'use default;' for user1",
      "request":{
       "resource":{"elements":{"database":"default"}},
