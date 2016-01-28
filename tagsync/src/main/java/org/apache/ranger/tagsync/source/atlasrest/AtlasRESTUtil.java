@@ -27,6 +27,7 @@ import org.apache.atlas.typesystem.Struct;
 import org.apache.atlas.typesystem.json.InstanceSerialization;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.plugin.util.RangerRESTClient;
@@ -114,43 +115,46 @@ public class AtlasRESTUtil {
 
 					Map<String, Object> entityResponse = atlasAPI(API_ATLAS_ENTITY + guid);
 
-					if (MapUtils.isNotEmpty(entityResponse) && entityResponse.containsKey(DEFINITION_ATTRIBUTE)) {
+					Map<String, Object> definition = getAttribute(entityResponse, DEFINITION_ATTRIBUTE, Map.class);
 
-						Map<String, Object> definition = getAttribute(entityResponse, DEFINITION_ATTRIBUTE, Map.class);
-						Map<String, Object> traitsAttribute = getAttribute(definition, TRAITS_ATTRIBUTE, Map.class);
+					Map<String, Object> traitsAttribute = getAttribute(definition, TRAITS_ATTRIBUTE, Map.class);
 
-						if (MapUtils.isNotEmpty(traitsAttribute)) {
+					if (MapUtils.isNotEmpty(traitsAttribute)) {
 
-							List<IStruct> allTraits = new LinkedList<>();
+						List<IStruct> allTraits = new LinkedList<>();
 
-							for (Map.Entry<String, Object> entry : traitsAttribute.entrySet()) {
+						for (Map.Entry<String, Object> entry : traitsAttribute.entrySet()) {
 
-								Map<String, Object> trait = (Map<String, Object>) entry.getValue();
+							Map<String, Object> trait = (Map<String, Object>) entry.getValue();
 
-								Map<String, Object> traitValues = getAttribute(trait, VALUES_ATTRIBUTE, Map.class);
-								String traitTypeName = getAttribute(trait, TYPE_NAME_ATTRIBUTE, String.class);
+							Map<String, Object> traitValues = getAttribute(trait, VALUES_ATTRIBUTE, Map.class);
+							String traitTypeName = getAttribute(trait, TYPE_NAME_ATTRIBUTE, String.class);
 
-								List<IStruct> superTypes = getTraitSuperTypes(getTraitType(traitTypeName), traitValues);
-
-								Struct trait1 = new Struct(traitTypeName, traitValues);
-
-								allTraits.add(trait1);
-								allTraits.addAll(superTypes);
+							if (StringUtils.isEmpty(traitTypeName)) {
+								continue;
 							}
 
-							IReferenceableInstance entity = InstanceSerialization.fromJsonReferenceable(gson.toJson(definition), true);
+							List<IStruct> superTypes = getTraitSuperTypes(getTraitType(traitTypeName), traitValues);
 
-							if (entity != null) {
-								AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entity, allTraits);
-								ret.add(entityWithTraits);
-							} else {
-								if (LOG.isInfoEnabled()) {
-									LOG.info("Could not create Atlas entity from its definition, type=" + type + ", guid=" + guid);
-								}
-							}
+							Struct trait1 = new Struct(traitTypeName, traitValues);
 
+							allTraits.add(trait1);
+							allTraits.addAll(superTypes);
 						}
+
+						IReferenceableInstance entity = InstanceSerialization.fromJsonReferenceable(gson.toJson(definition), true);
+
+						if (entity != null) {
+							AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entity, allTraits);
+							ret.add(entityWithTraits);
+						} else {
+							if (LOG.isInfoEnabled()) {
+								LOG.info("Could not create Atlas entity from its definition, type=" + type + ", guid=" + guid);
+							}
+						}
+
 					}
+
 				}
 			}
 			if (LOG.isDebugEnabled()) {
@@ -169,15 +173,12 @@ public class AtlasRESTUtil {
 
 		Map<String, Object> typeResponse = atlasAPI(API_ATLAS_TYPE + traitName);
 
-		if (typeResponse.containsKey(DEFINITION_ATTRIBUTE)) {
+		Map<String, Object> definition = getAttribute(typeResponse, DEFINITION_ATTRIBUTE, Map.class);
 
-			Map<String, Object> definition = getAttribute(typeResponse, DEFINITION_ATTRIBUTE, Map.class);
+		List traitTypes = getAttribute(definition, TRAIT_TYPES_ATTRIBUTE, List.class);
 
-			List traitTypes = getAttribute(definition, TRAIT_TYPES_ATTRIBUTE, List.class);
-
-			if (traitTypes.size() > 0) {
-				ret = (Map<String, Object>) traitTypes.get(0);
-			}
+		if (CollectionUtils.isNotEmpty(traitTypes)) {
+			ret = (Map<String, Object>) traitTypes.get(0);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -197,28 +198,30 @@ public class AtlasRESTUtil {
 
 			List<String> superTypeNames = getAttribute(traitType, SUPER_TYPES_ATTRIBUTE, List.class);
 
-			for (String superTypeName : superTypeNames) {
+			if (CollectionUtils.isNotEmpty(superTypeNames)) {
+				for (String superTypeName : superTypeNames) {
 
-				Map<String, Object> superTraitType = getTraitType(superTypeName);
+					Map<String, Object> superTraitType = getTraitType(superTypeName);
 
-				if (superTraitType != null) {
-					List<Map<String, Object>> attributeDefinitions = (List) superTraitType.get(ATTRIBUTE_DEFINITIONS_ATTRIBUTE);
+					if (superTraitType != null) {
+						List<Map<String, Object>> attributeDefinitions = (List) superTraitType.get(ATTRIBUTE_DEFINITIONS_ATTRIBUTE);
 
-					Map<String, Object> superTypeValues = new HashMap<>();
-					for (Map<String, Object> attributeDefinition : attributeDefinitions) {
+						Map<String, Object> superTypeValues = new HashMap<>();
+						for (Map<String, Object> attributeDefinition : attributeDefinitions) {
 
-						String attributeName = attributeDefinition.get(NAME_ATTRIBUTE).toString();
-						if (values.containsKey(attributeName)) {
-							superTypeValues.put(attributeName, values.get(attributeName));
+							String attributeName = attributeDefinition.get(NAME_ATTRIBUTE).toString();
+							if (values.containsKey(attributeName)) {
+								superTypeValues.put(attributeName, values.get(attributeName));
+							}
 						}
+
+						List<IStruct> superTraits = getTraitSuperTypes(getTraitType(superTypeName), values);
+
+						Struct superTrait = new Struct(superTypeName, superTypeValues);
+
+						ret.add(superTrait);
+						ret.addAll(superTraits);
 					}
-
-					List<IStruct> superTraits = getTraitSuperTypes(getTraitType(superTypeName), values);
-
-					Struct superTrait = new Struct(superTypeName, superTypeValues);
-
-					ret.add(superTrait);
-					ret.addAll(superTraits);
 				}
 			}
 		}

@@ -50,6 +50,7 @@ public class AtlasTagSource extends AbstractTagSource {
 	public static final String TAGSYNC_ATLAS_CONSUMER_GROUP = "atlas.kafka.entities.group.id";
 
 	private ConsumerRunnable consumerTask;
+	private Thread myThread = null;
 
 	@Override
 	public boolean initialize(Properties properties) {
@@ -123,23 +124,24 @@ public class AtlasTagSource extends AbstractTagSource {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> AtlasTagSource.start()");
 		}
-		Thread consumerThread = null;
 		if (consumerTask == null) {
 			LOG.error("No consumerTask!!!");
 		} else {
-			consumerThread = new Thread(consumerTask);
-			consumerThread.setDaemon(true);
-			consumerThread.start();
+			myThread = new Thread(consumerTask);
+			myThread.setDaemon(true);
+			myThread.start();
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== AtlasTagSource.start()");
 		}
-		return consumerThread != null;
+		return myThread != null;
 	}
 
 	@Override
-	public boolean isChanged() {
-		return true;
+	public void stop() {
+		if (myThread != null && myThread.isAlive()) {
+			myThread.interrupt();
+		}
 	}
 
 	private static String getPrintableEntityNotification(EntityNotification notification) {
@@ -175,24 +177,32 @@ public class AtlasTagSource extends AbstractTagSource {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> ConsumerRunnable.run()");
 			}
-			while (!shutdown) {
-				if (hasNext()) {
-					EntityNotification notification = consumer.next();
-					if (notification != null) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Notification=" + getPrintableEntityNotification(notification));
-						}
+			while (true) {
+				try {
+					if (hasNext()) {
+						EntityNotification notification = consumer.peek();
+						if (notification != null) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Notification=" + getPrintableEntityNotification(notification));
+							}
 
-						ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
-						if (serviceTags == null) {
-							LOG.error("Failed to create ServiceTags for notification :" + getPrintableEntityNotification(notification));
+							ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
+							if (serviceTags == null) {
+								LOG.error("Failed to create ServiceTags for notification :" + getPrintableEntityNotification(notification));
+							} else {
+								updateSink(serviceTags);
+							}
 						} else {
-							updateSink(serviceTags);
+							LOG.error("Null entityNotification received from Kafka!! Ignoring..");
 						}
+						// Move iterator forward
+						consumer.next();
 					}
+				} catch (Exception exception) {
+					LOG.error("Caught exception..: ", exception);
+					return;
 				}
 			}
-			LOG.info("Shutting down the Tag-Atlas-source thread");
 		}
 	}
 }

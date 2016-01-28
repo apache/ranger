@@ -32,9 +32,11 @@ public class TagSynchronizer {
 
 	private static final Logger LOG = Logger.getLogger(TagSynchronizer.class);
 
-	private boolean shutdownFlag = false;
+	private TagSink tagSink = null;
 	private List<TagSource> tagSources;
 	private Properties properties = null;
+
+	private final Object shutdownNotifier = new Object();
 
 	public static void main(String[] args) {
 
@@ -49,23 +51,28 @@ public class TagSynchronizer {
 		boolean tagSynchronizerInitialized = tagSynchronizer.initialize();
 
 		if (tagSynchronizerInitialized) {
-			tagSynchronizer.run();
+			try {
+				tagSynchronizer.run();
+			} catch (Throwable t) {
+				LOG.error("main thread caught exception..:", t);
+				System.exit(1);
+			}
 		} else {
 			LOG.error("TagSynchronizer failed to initialize correctly, exiting..");
-			System.exit(-1);
+			System.exit(1);
 		}
 
 	}
 
-	public TagSynchronizer() {
-		setProperties(null);
+	TagSynchronizer() {
+		this(null);
 	}
 
-	public TagSynchronizer(Properties properties) {
+	TagSynchronizer(Properties properties) {
 		setProperties(properties);
 	}
 
-	public void setProperties(Properties properties) {
+	void setProperties(Properties properties) {
 		if (properties == null || MapUtils.isEmpty(properties)) {
 			this.properties = new Properties();
 		} else {
@@ -89,7 +96,7 @@ public class TagSynchronizer {
 
 			LOG.info("Initializing TAG source and sink");
 
-			TagSink tagSink = initializeTagSink(properties);
+			tagSink = initializeTagSink(properties);
 
 			if (tagSink != null) {
 
@@ -113,39 +120,32 @@ public class TagSynchronizer {
 		return ret;
 	}
 
-	public void run() {
+	public void run() throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagSynchronizer.run()");
 		}
 
-		long shutdownCheckIntervalInMs = 60*1000;
-
-		boolean tagSourcesStarted = true;
-
 		try {
+			boolean threadsStarted = tagSink.start();
+
 			for (TagSource tagSource : tagSources) {
-				tagSourcesStarted = tagSourcesStarted && tagSource.start();
+				threadsStarted = threadsStarted && tagSource.start();
 			}
 
-			if (tagSourcesStarted) {
-				while (!shutdownFlag) {
-					try {
-						LOG.debug("Sleeping for [" + shutdownCheckIntervalInMs + "] milliSeconds");
-						Thread.sleep(shutdownCheckIntervalInMs);
-					} catch (InterruptedException e) {
-						LOG.error("Failed to wait for [" + shutdownCheckIntervalInMs + "] milliseconds before attempting to synchronize tag information ", e);
-						break;
-					}
+			if (threadsStarted) {
+				synchronized(shutdownNotifier) {
+					shutdownNotifier.wait();
 				}
 			}
-		} catch (Throwable t) {
-			LOG.error("tag-sync main thread got an error", t);
 		} finally {
 			LOG.info("Stopping all tagSources");
 
 			for (TagSource tagSource : tagSources) {
 				tagSource.stop();
 			}
+
+			LOG.info("Stopping tagSink");
+			tagSink.stop();
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -155,7 +155,10 @@ public class TagSynchronizer {
 
 	public void shutdown(String reason) {
 		LOG.info("Received shutdown(), reason=" + reason);
-		this.shutdownFlag = true;
+
+		synchronized(shutdownNotifier) {
+			shutdownNotifier.notifyAll();
+		}
 	}
 
 	static public void printConfigurationProperties(Properties properties) {

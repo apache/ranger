@@ -26,5 +26,7 @@ import java.util.Properties;
 
 public interface TagSink {
 	boolean initialize(Properties properties);
-	void uploadServiceTags(ServiceTags serviceTags) throws Exception;
+	ServiceTags upload(ServiceTags toUpload) throws Exception;
+	boolean start();
+	void stop();
 }

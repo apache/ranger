@@ -72,6 +72,10 @@ public class TagSyncConfig extends Configuration {
 
 	private static final long DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL = 900000;
 
+	private static final String TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP = "ranger.tagsync.tagadmin.connection.check.interval";
+
+	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 2000;
+
 	private Properties props;
 
 	public static TagSyncConfig getInstance() {
@@ -284,6 +288,19 @@ public class TagSyncConfig extends Configuration {
 
 	static public String getCustomAtlasResourceMappers(Properties prop) {
 		return prop.getProperty(TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP);
+	}
+
+	static public long getTagAdminConnectionCheckInterval(Properties prop) {
+		long ret = DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL;
+		String val = prop.getProperty(TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP);
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Long.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+		return ret;
 	}
 
 	private TagSyncConfig() {

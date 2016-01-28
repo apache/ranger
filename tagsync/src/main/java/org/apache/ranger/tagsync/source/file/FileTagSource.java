@@ -49,6 +49,8 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 	private Properties properties;
 	private long fileModTimeCheckIntervalInMs;
 
+	private Thread myThread = null;
+
 	public static void main(String[] args) {
 
 		FileTagSource fileTagSource = new FileTagSource();
@@ -69,9 +71,19 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
 		if (tagSink != null) {
 
-			fileTagSource.initialize(props);
-			fileTagSource.setTagSink(tagSink);
-			fileTagSource.synchUp();
+			if (fileTagSource.initialize(props)) {
+				try {
+					tagSink.start();
+					fileTagSource.setTagSink(tagSink);
+					fileTagSource.synchUp();
+				} catch (Exception exception) {
+					LOG.error("ServiceTags upload failed : ", exception);
+					System.exit(1);
+				}
+			} else {
+				LOG.error("FileTagSource initialized failed, exiting.");
+				System.exit(1);
+			}
 
 		} else {
 			LOG.error("TagSink initialialization failed, exiting.");
@@ -177,11 +189,18 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 	@Override
 	public boolean start() {
 
-		Thread fileMonitoringThread = new Thread(this);
-		fileMonitoringThread.setDaemon(true);
-		fileMonitoringThread.start();
+		myThread = new Thread(this);
+		myThread.setDaemon(true);
+		myThread.start();
 
-		return fileMonitoringThread != null;
+		return true;
+	}
+
+	@Override
+	public void stop() {
+		if (myThread != null && myThread.isAlive()) {
+			myThread.interrupt();
+		}
 	}
 
 	@Override
@@ -190,7 +209,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 			LOG.debug("==> FileTagSource.run()");
 		}
 
-		while (!shutdown) {
+		while (true) {
 
 			try {
 				synchUp();
@@ -199,23 +218,14 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
 				Thread.sleep(fileModTimeCheckIntervalInMs);
 			}
-			catch (InterruptedException e) {
-				LOG.error("Failed to wait for [" + fileModTimeCheckIntervalInMs + "] milliseconds before checking for update to tagFileSource", e);
+			catch (InterruptedException exception) {
+				LOG.error("Interrupted..: ", exception);
+				return;
 			}
-			catch (Throwable t) {
-				LOG.error("tag-sync thread got an error", t);
-			}
-		}
-
-		LOG.info("Shutting down the Tag-file-source thread");
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== FileTagSource.run()");
 		}
 	}
 
-	@Override
-	public 	boolean isChanged() {
+	private boolean isChanged() {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> FileTagSource.isChanged()");
@@ -240,7 +250,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 		return ret;
 	}
 
-	@Override
 	public void synchUp() {
 		if (isChanged()) {
 			if (LOG.isDebugEnabled()) {

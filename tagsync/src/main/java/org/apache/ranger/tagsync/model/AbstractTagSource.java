@@ -27,7 +27,6 @@ import org.apache.ranger.plugin.util.ServiceTags;
 public abstract  class AbstractTagSource implements TagSource {
 	private static final Log LOG = LogFactory.getLog(AbstractTagSource.class);
 	private TagSink tagSink;
-	protected boolean shutdown = false;
 
 	@Override
 	public void setTagSink(TagSink sink) {
@@ -37,29 +36,31 @@ public abstract  class AbstractTagSource implements TagSource {
 			this.tagSink = sink;
 		}
 	}
-	@Override
-	public void synchUp() {}
 
-	public void updateSink(final ServiceTags serviceTags) {
-		if (serviceTags == null) {
+	protected void updateSink(final ServiceTags toUpload) {
+		if (toUpload == null) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No ServiceTags to upload");
 			}
 		} else {
 			if (LOG.isDebugEnabled()) {
-				String serviceTagsJSON = new Gson().toJson(serviceTags);
-				LOG.debug("Uploading serviceTags=" + serviceTagsJSON);
+				String toUploadJSON = new Gson().toJson(toUpload);
+				LOG.debug("Uploading serviceTags=" + toUploadJSON);
 			}
 
 			try {
-				tagSink.uploadServiceTags(serviceTags);
+				ServiceTags uploaded = tagSink.upload(toUpload);
+
+				if (LOG.isDebugEnabled()) {
+					String uploadedJSON = new Gson().toJson(uploaded);
+					LOG.debug("Uploaded serviceTags=" + uploadedJSON);
+				}
 			} catch (Exception exception) {
-				LOG.error("uploadServiceTags() failed..", exception);
+				String toUploadJSON = new Gson().toJson(toUpload);
+				LOG.error("Failed to upload serviceTags: " + toUploadJSON);
+				LOG.error("Exception : ", exception);
 			}
 		}
 	}
 
-	public void stop() {
-		shutdown = true;
-	}
 }

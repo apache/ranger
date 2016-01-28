@@ -33,10 +33,15 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.Properties;
 
-public class TagAdminRESTSink implements TagSink {
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+public class TagAdminRESTSink implements TagSink, Runnable {
 	private static final Log LOG = LogFactory.getLog(TagAdminRESTSink.class);
 
 	private static final String REST_PREFIX = "/service";
@@ -46,7 +51,13 @@ public class TagAdminRESTSink implements TagSink {
 
 	private static final String REST_URL_IMPORT_SERVICETAGS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/importservicetags/";
 
+	private long rangerAdminConnectionCheckInterval;
+
 	private RangerRESTClient tagRESTClient = null;
+
+	private BlockingQueue<UploadWorkItem> uploadWorkItems;
+
+	private Thread myThread = null;
 
 	@Override
 	public boolean initialize(Properties properties) {
@@ -54,37 +65,29 @@ public class TagAdminRESTSink implements TagSink {
 			LOG.debug("==> TagAdminRESTSink.initialize()");
 		}
 
-		boolean ret = true;
+		boolean ret = false;
 
 		String restUrl       = TagSyncConfig.getTagAdminRESTUrl(properties);
 		String sslConfigFile = TagSyncConfig.getTagAdminRESTSslConfigFile(properties);
 		String userName = TagSyncConfig.getTagAdminUserName(properties);
 		String password = TagSyncConfig.getTagAdminPassword(properties);
+		rangerAdminConnectionCheckInterval = TagSyncConfig.getTagAdminConnectionCheckInterval(properties);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("restUrl=" + restUrl);
 			LOG.debug("sslConfigFile=" + sslConfigFile);
 			LOG.debug("userName=" + userName);
+			LOG.debug("rangerAdminConnectionCheckInterval" + rangerAdminConnectionCheckInterval);
 		}
 
-		if (StringUtils.isBlank(restUrl)) {
-			ret = false;
-			LOG.error("No value specified for property 'ranger.tagsync.tagadmin.rest.url'!");
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("ranger.tagsync.tagadmin.rest.url:" + restUrl);
-			}
-		}
-
-		if (ret) {
+		if (StringUtils.isNotBlank(restUrl)) {
 			tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile);
 			tagRESTClient.setBasicAuthInfo(userName, password);
+			uploadWorkItems = new LinkedBlockingQueue<UploadWorkItem>();
 
-			ret = testConnection();
-		}
-
-		if (!ret) {
-			LOG.error("Cannot connect to Tag Admin. Please recheck configuration properties and/or check if Tag Admin is running and responsive");
+			ret = true;
+		} else {
+			LOG.error("No value specified for property 'ranger.tagsync.tagadmin.rest.url'!");
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -94,51 +97,53 @@ public class TagAdminRESTSink implements TagSink {
 		return ret;
 	}
 
-	public boolean testConnection() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagAdminRESTSink.testConnection()");
+	@Override
+	public ServiceTags upload(ServiceTags toUpload) throws Exception {
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> upload() ");
 		}
 
-		boolean ret = true;
+		UploadWorkItem uploadWorkItem = new UploadWorkItem(toUpload);
 
-		try {
-			// build a dummy serviceTags structure and upload it to test connectivity
-			ServiceTags serviceTags = new ServiceTags();
-			serviceTags.setOp(ServiceTags.OP_ADD_OR_UPDATE);
-			uploadServiceTags(serviceTags);
-		} catch (Exception exception) {
-			LOG.error("test-upload of serviceTags failed.", exception);
-			ret = false;
+		uploadWorkItems.put(uploadWorkItem);
+
+		// Wait until message is successfully delivered
+		ServiceTags ret = uploadWorkItem.waitForUpload();
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== upload()");
 		}
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagAdminRESTSink.testConnection(), result=" + ret);
-		}
 		return ret;
 	}
 
-	@Override
-	synchronized public void uploadServiceTags(ServiceTags serviceTags) throws Exception {
+	private ServiceTags doUpload(ServiceTags serviceTags) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> uploadServiceTags()");
+			LOG.debug("==> doUpload()");
 		}
 		WebResource webResource = createWebResource(REST_URL_IMPORT_SERVICETAGS_RESOURCE);
 
 		ClientResponse response    = webResource.accept(REST_MIME_TYPE_JSON).type(REST_MIME_TYPE_JSON).put(ClientResponse.class, tagRESTClient.toJson(serviceTags));
 
-		if(response == null || response.getStatus() != 204) {
-			LOG.error("RangerAdmin REST call returned with response={" + response + "}");
+		if(response == null || response.getStatus() != HttpServletResponse.SC_NO_CONTENT) {
 
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 
 			LOG.error("Upload of service-tags failed with message " + resp.getMessage());
 
-			throw new Exception("Upload of service-tags failed with response: " + response);
+			if (response == null || response.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+				// NOT an application error
+				throw new Exception("Upload of service-tags failed with response: " + response);
+			}
+
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== uploadServiceTags()");
+			LOG.debug("<== doUpload()");
 		}
+
+		return serviceTags;
 	}
 
 	private WebResource createWebResource(String url) {
@@ -159,4 +164,91 @@ public class TagAdminRESTSink implements TagSink {
 
 		return ret;
 	}
+
+	@Override
+	public boolean start() {
+
+		myThread = new Thread(this);
+		myThread.setDaemon(true);
+		myThread.start();
+
+		return true;
+	}
+
+	@Override
+	public void stop() {
+		if (myThread != null && myThread.isAlive()) {
+			myThread.interrupt();
+		}
+	}
+
+	@Override
+	public void run() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagAdminRESTSink.run()");
+		}
+
+		while (true) {
+			UploadWorkItem uploadWorkItem;
+
+			try {
+				uploadWorkItem = uploadWorkItems.take();
+
+				ServiceTags toUpload = uploadWorkItem.getServiceTags();
+
+				boolean doRetry;
+
+				do {
+					doRetry = false;
+
+					try {
+						ServiceTags uploaded = doUpload(toUpload);
+						// ServiceTags uploaded successfully
+						uploadWorkItem.uploadCompleted(uploaded);
+					} catch (InterruptedException interrupted) {
+						LOG.error("Caught exception..: ", interrupted);
+						return;
+					} catch (Exception exception) {
+						doRetry = true;
+						Thread.sleep(rangerAdminConnectionCheckInterval);
+					}
+				} while (doRetry);
+
+			}
+			catch (InterruptedException exception) {
+				LOG.error("Interrupted..: ", exception);
+				return;
+			}
+		}
+
+	}
+
+	class UploadWorkItem {
+		private ServiceTags serviceTags;
+		private BlockingQueue<ServiceTags> uploadedServiceTags;
+
+		ServiceTags getServiceTags() {
+			return serviceTags;
+		}
+
+		ServiceTags waitForUpload() throws InterruptedException {
+			return uploadedServiceTags.take();
+		}
+
+		void uploadCompleted(ServiceTags uploaded) throws InterruptedException {
+			// ServiceTags uploaded successfully
+			uploadedServiceTags.put(uploaded);
+		}
+
+		UploadWorkItem(ServiceTags serviceTags) {
+			setServiceTags(serviceTags);
+			uploadedServiceTags = new ArrayBlockingQueue<ServiceTags>(1);
+		}
+
+		void setServiceTags(ServiceTags serviceTags) {
+			this.serviceTags = serviceTags;
+		}
+
+	}
+
 }

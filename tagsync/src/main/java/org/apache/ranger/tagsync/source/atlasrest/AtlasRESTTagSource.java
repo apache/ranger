@@ -46,6 +46,8 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 	private String atlasEndpoint;
 	private long sleepTimeBetweenCycleInMillis;
 
+	private Thread myThread = null;
+
 	public static void main(String[] args) {
 
 		AtlasRESTTagSource atlasRESTTagSource = new AtlasRESTTagSource();
@@ -60,9 +62,19 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
 		if (tagSink != null) {
 
-			atlasRESTTagSource.initialize(props);
-			atlasRESTTagSource.setTagSink(tagSink);
-			atlasRESTTagSource.synchUp();
+			if (atlasRESTTagSource.initialize(props)) {
+				try {
+					tagSink.start();
+					atlasRESTTagSource.setTagSink(tagSink);
+					atlasRESTTagSource.synchUp();
+				} catch (Exception exception) {
+					LOG.error("ServiceTags upload failed : ", exception);
+					System.exit(1);
+				}
+			} else {
+				LOG.error("AtlasRESTTagSource initialized failed, exiting.");
+				System.exit(1);
+			}
 
 		} else {
 			LOG.error("TagSink initialialization failed, exiting.");
@@ -96,11 +108,18 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 	@Override
 	public boolean start() {
 
-		Thread atlasRESTInvokerThread = new Thread(this);
-		atlasRESTInvokerThread.setDaemon(true);
-		atlasRESTInvokerThread.start();
+		myThread = new Thread(this);
+		myThread.setDaemon(true);
+		myThread.start();
 
-		return atlasRESTInvokerThread != null;
+		return true;
+	}
+
+	@Override
+	public void stop() {
+		if (myThread != null && myThread.isAlive()) {
+			myThread.interrupt();
+		}
 	}
 
 	@Override
@@ -110,7 +129,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 			LOG.debug("==> AtlasRESTTagSource.run()");
 		}
 
-		while (!shutdown) {
+		while (true) {
 
 			synchUp();
 
@@ -121,18 +140,12 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 				Thread.sleep(sleepTimeBetweenCycleInMillis);
 
 			} catch (InterruptedException exception) {
-				LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before checking for update to tagFileSource", exception);
+				LOG.error("Interrupted..: ", exception);
+				return;
 			}
 		}
-		LOG.info("Shutting down the Tag-Atlasrest-source thread");
 	}
 
-	@Override
-	public boolean isChanged() {
-		return true;
-	}
-
-	@Override
 	public void synchUp() {
 
 		AtlasRESTUtil atlasRESTUtil = new AtlasRESTUtil(atlasEndpoint);
