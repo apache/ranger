@@ -47,7 +47,7 @@
         <url>https://issues.apache.org/jira/browse/ranger</url>
     </issueManagement>
     <prerequisites>
-        <maven>2.2.1</maven>
+        <maven>3.0.1</maven>
     </prerequisites>
     <mailingLists>
         <mailingList>
