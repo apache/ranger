@@ -1747,7 +1747,27 @@ public class ServiceREST {
 
 		Long policyId = Long.parseLong(policyIdStr);
 
-		RangerPolicy policy = svcStore.getPolicyFromEventTime(eventTimeStr, policyId);
+		RangerPolicy policy=null;
+		try {
+			policy = svcStore.getPolicyFromEventTime(eventTimeStr, policyId);
+			if(policy != null) {
+				ensureAdminAccess(policy.getService(), policy.getResources());
+			}
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
+			LOG.error("getPolicy(" + policyId + ") failed", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+
+		if(policy == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicy(" + policyId + "): " + policy);
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getPolicyFromEventTime()");
