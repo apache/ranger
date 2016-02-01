@@ -21,7 +21,9 @@
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -79,6 +81,26 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 			return new ArrayList<Long>();
 		}
 		return null;
+	}
+
+	public Set<String> findGroupNamesByUserName(String userName) {
+		List<String> groupList = null;
+
+		if (userName != null) {
+			try {
+				groupList = getEntityManager().createNamedQuery("XXGroupUser.findGroupNamesByUserName", String.class).setParameter("userName", userName).getResultList();
+			} catch (NoResultException e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			logger.debug("UserId not provided.");
+		}
+
+		if(groupList != null) {
+			return new HashSet<String>(groupList);
+		}
+
+		return new HashSet<String>();
 	}
 
 	public List<XXGroupUser> findByGroupId(Long groupId) {

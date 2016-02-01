@@ -37,6 +37,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class RangerServiceTagsCache {
 	private static final Log LOG = LogFactory.getLog(RangerServiceTagsCache.class);
 
+	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
+
 	private static volatile RangerServiceTagsCache sInstance = null;
 	private final boolean useServiceTagsCache;
 	private final int waitTimeInSeconds;
@@ -56,7 +58,7 @@ public class RangerServiceTagsCache {
 
 	private RangerServiceTagsCache() {
 		useServiceTagsCache = RangerConfiguration.getInstance().getBoolean("ranger.admin.tag.download.usecache", true);
-		waitTimeInSeconds = RangerConfiguration.getInstance().getInt("ranger.admin.tag.download.cache.max.waittime.for.update", 20);
+		waitTimeInSeconds = RangerConfiguration.getInstance().getInt("ranger.admin.tag.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 	}
 
 	public void dump() {
@@ -98,7 +100,7 @@ public class RangerServiceTagsCache {
 		return ret;
 	}
 
-	public ServiceTags getServiceTags(String serviceName, TagStore tagStore) {
+	public ServiceTags getServiceTags(String serviceName, TagStore tagStore) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceTagsCache.getServiceTags(" + serviceName + ")");
@@ -138,7 +140,10 @@ public class RangerServiceTagsCache {
 
 				if (tagStore != null) {
 					boolean refreshed = serviceTagsWrapper.getLatestOrCached(serviceName, tagStore);
-					LOG.info("tryRefreshFromStore returned " + refreshed);
+
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("getLatestOrCached returned " + refreshed);
+					}
 				} else {
 					LOG.error("getServiceTags(" + serviceName + "): failed to get latest tags as tag-store is null!");
 				}
@@ -182,7 +187,7 @@ public class RangerServiceTagsCache {
 			return longestDbLoadTimeInMs;
 		}
 
-		boolean getLatestOrCached(String serviceName, TagStore tagStore) {
+		boolean getLatestOrCached(String serviceName, TagStore tagStore) throws Exception {
 			boolean ret = false;
 
 			try {
@@ -191,7 +196,7 @@ public class RangerServiceTagsCache {
 					getLatest(serviceName, tagStore);
 				}
 			} catch (InterruptedException exception) {
-				LOG.error("tryRefreshFromStore:lock got interrupted..", exception);
+				LOG.error("getLatestOrCached:lock got interrupted..", exception);
 			} finally {
 				if (ret) {
 					lock.unlock();
@@ -201,7 +206,7 @@ public class RangerServiceTagsCache {
 			return ret;
 		}
 
-		void getLatest(String serviceName, TagStore tagStore) {
+		void getLatest(String serviceName, TagStore tagStore) throws Exception {
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> ServiceTagsWrapper.getLatest(" + serviceName + ")");
@@ -219,22 +224,16 @@ public class RangerServiceTagsCache {
 					LOG.debug("loading serviceTags from db ... cachedServiceTagsVersion=" + (serviceTags != null ? serviceTags.getTagVersion() : null) + ", tagVersionInDb=" + tagVersionInDb);
 				}
 
-				ServiceTags serviceTagsFromDb = null;
+				long startTimeMs = System.currentTimeMillis();
 
-				try {
-					long startTimeMs = System.currentTimeMillis();
+				ServiceTags serviceTagsFromDb = tagStore.getServiceTags(serviceName);
 
-					serviceTagsFromDb = tagStore.getServiceTags(serviceName);
+				long dbLoadTime = System.currentTimeMillis() - startTimeMs;
 
-					long dbLoadTime = System.currentTimeMillis() - startTimeMs;
-
-					if (dbLoadTime > longestDbLoadTimeInMs) {
-						longestDbLoadTimeInMs = dbLoadTime;
-					}
-					updateTime = new Date();
-				} catch (Exception exception) {
-					LOG.error("getServiceTags(" + serviceName + "): failed to get latest tags from tag-store", exception);
+				if (dbLoadTime > longestDbLoadTimeInMs) {
+					longestDbLoadTimeInMs = dbLoadTime;
 				}
+				updateTime = new Date();
 
 				if (serviceTagsFromDb != null) {
 					if (serviceTagsFromDb.getTagVersion() == null) {

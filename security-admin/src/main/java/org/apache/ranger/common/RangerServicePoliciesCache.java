@@ -36,6 +36,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class RangerServicePoliciesCache {
 	private static final Log LOG = LogFactory.getLog(RangerServicePoliciesCache.class);
 
+	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
+
 	private static volatile RangerServicePoliciesCache sInstance = null;
 	private final boolean useServicePoliciesCache;
 	private final int waitTimeInSeconds;
@@ -55,7 +57,7 @@ public class RangerServicePoliciesCache {
 
 	private RangerServicePoliciesCache() {
 		useServicePoliciesCache = RangerConfiguration.getInstance().getBoolean("ranger.admin.policy.download.usecache", true);
-		waitTimeInSeconds = RangerConfiguration.getInstance().getInt("ranger.admin.policy.download.cache.max.waittime.for.update", 20);
+		waitTimeInSeconds = RangerConfiguration.getInstance().getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 	}
 
 	public void dump() {
@@ -97,7 +99,7 @@ public class RangerServicePoliciesCache {
 		return ret;
 	}
 
-	public ServicePolicies getServicePolicies(String serviceName, ServiceStore serviceStore) {
+	public ServicePolicies getServicePolicies(String serviceName, ServiceStore serviceStore) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServicePoliciesCache.getServicePolicies(" + serviceName + ")");
@@ -137,7 +139,10 @@ public class RangerServicePoliciesCache {
 
 				if (serviceStore != null) {
 					boolean refreshed = servicePoliciesWrapper.getLatestOrCached(serviceName, serviceStore);
-					LOG.info("tryRefreshFromStore returned " + refreshed);
+
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("getLatestOrCached returned " + refreshed);
+					}
 				} else {
 					LOG.error("getServicePolicies(" + serviceName + "): failed to get latest policies as service-store is null!");
 				}
@@ -181,7 +186,7 @@ public class RangerServicePoliciesCache {
 			return longestDbLoadTimeInMs;
 		}
 
-		boolean getLatestOrCached(String serviceName, ServiceStore serviceStore) {
+		boolean getLatestOrCached(String serviceName, ServiceStore serviceStore) throws Exception {
 			boolean ret = false;
 
 			try {
@@ -190,7 +195,7 @@ public class RangerServicePoliciesCache {
 					getLatest(serviceName, serviceStore);
 				}
 			} catch (InterruptedException exception) {
-				LOG.error("tryRefreshFromStore:lock got interrupted..", exception);
+				LOG.error("getLatestOrCached:lock got interrupted..", exception);
 			} finally {
 				if (ret) {
 					lock.unlock();
@@ -200,7 +205,7 @@ public class RangerServicePoliciesCache {
 			return ret;
 		}
 
-		void getLatest(String serviceName, ServiceStore serviceStore) {
+		void getLatest(String serviceName, ServiceStore serviceStore) throws Exception {
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> ServicePoliciesWrapper.getLatest(" + serviceName + ")");
@@ -218,22 +223,16 @@ public class RangerServicePoliciesCache {
 					LOG.debug("loading servicePolicies from db ... cachedServicePoliciesVersion=" + (servicePolicies != null ? servicePolicies.getPolicyVersion() : null) + ", servicePolicyVersionInDb=" + servicePolicyVersionInDb);
 				}
 
-				ServicePolicies servicePoliciesFromDb = null;
+				long startTimeMs = System.currentTimeMillis();
 
-				try {
-					long startTimeMs = System.currentTimeMillis();
+				ServicePolicies servicePoliciesFromDb = serviceStore.getServicePolicies(serviceName);
 
-					servicePoliciesFromDb = serviceStore.getServicePolicies(serviceName);
+				long dbLoadTime = System.currentTimeMillis() - startTimeMs;
 
-					long dbLoadTime = System.currentTimeMillis() - startTimeMs;
-
-					if (dbLoadTime > longestDbLoadTimeInMs) {
-						longestDbLoadTimeInMs = dbLoadTime;
-					}
-					updateTime = new Date();
-				} catch (Exception exception) {
-					LOG.error("getServicePolicies(" + serviceName + "): failed to get latest policies from service-store", exception);
+				if (dbLoadTime > longestDbLoadTimeInMs) {
+					longestDbLoadTimeInMs = dbLoadTime;
 				}
+				updateTime = new Date();
 
 				if (servicePoliciesFromDb != null) {
 					if (servicePoliciesFromDb.getPolicyVersion() == null) {
@@ -268,7 +267,7 @@ public class RangerServicePoliciesCache {
 					policy.setUpdatedBy(null);
 					policy.setUpdateTime(null);
 					policy.setGuid(null);
-					policy.setName(null);
+					// policy.setName(null); /* this is used by GUI in policy list page */
 					policy.setDescription(null);
 					policy.setResourceSignature(null);
 				}

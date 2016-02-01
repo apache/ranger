@@ -44,7 +44,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Log PERF_POLICYENGINE_AUDIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.audit");
 	private static final Log PERF_CONTEXTENRICHER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("contextenricher.request");
 
-	private static final int MAX_POLICIES_FOR_CACHE_TYPE_EVALUATOR = 500;
+	private static final int MAX_POLICIES_FOR_CACHE_TYPE_EVALUATOR = 100;
 
 	private final RangerPolicyRepository policyRepository;
 	private final RangerPolicyRepository tagPolicyRepository;
@@ -312,12 +312,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
+		boolean ret = false;
+
 		RangerPerfTracer perf = null;
 
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REQUEST_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(user=" + user + ",accessType=" + accessType + ")");
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(user=" + user + "," + userGroups + ",accessType=" + accessType + ")");
 		}
-		boolean ret = false;
 
 		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
 			ret = evaluator.isAccessAllowed(resources, user, userGroups, accessType);
