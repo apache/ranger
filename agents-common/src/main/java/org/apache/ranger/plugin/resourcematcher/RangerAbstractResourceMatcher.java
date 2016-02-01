@@ -222,4 +222,32 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 		return sb;
 	}
+
+	/**
+	 * Is resource asking to authorize all possible values at this level?
+	 * @param resource
+	 * @return
+	 */
+	boolean isAllValuesRequested(String resource) {
+		boolean result = StringUtils.isEmpty(resource) || WILDCARD_ASTERISK.equals(resource);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("isAllValuesRequested(" + resource + "): " + result);
+		}
+		return result;
+	}
+
+	/**
+	 * The only case where excludes flag does NOT change the result is the following:
+	 * - Resource denotes all possible values (i.e. resource in (null, "", "*")
+	 * - where as policy does not allow all possible values (i.e. policy.values().contains("*")
+	 *
+	 * @param allValuesRequested
+	 * @param resultWithoutExcludes
+     * @return
+     */
+	public boolean applyExcludes(boolean allValuesRequested, boolean resultWithoutExcludes) {
+		if (!policyIsExcludes) return resultWithoutExcludes;                   // not an excludes policy!
+		if (allValuesRequested && !isMatchAny)  return resultWithoutExcludes;  // one case where excludes has no effect
+		return !resultWithoutExcludes;                                         // all other cases flip it
+	}
 }
