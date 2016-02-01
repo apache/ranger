@@ -148,7 +148,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			ip = ip.substring(1);
 		}
 
-		Date eventTime = StringUtil.getUTCDate();
+		Date eventTime =new Date();
 		String accessType = mapToRangerAccessType(operation);
 		boolean validationFailed = false;
 		String validationStr = "";

@@ -21,6 +21,7 @@ package org.apache.ranger.authorization.hive.authorizer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -159,7 +160,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		auditEvent.setAction("DFS");
 		auditEvent.setUser(userName);
 		auditEvent.setAccessResult((short)(accessGranted ? 1 : 0));
-		auditEvent.setEventTime(StringUtil.getUTCDate());
+		auditEvent.setEventTime(new Date());
 		auditEvent.setRepositoryType(repositoryType);
 		auditEvent.setRepositoryName(repositoryName) ;
 		auditEvent.setRequestData(dfsCommand);

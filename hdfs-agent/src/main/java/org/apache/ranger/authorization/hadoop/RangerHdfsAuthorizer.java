@@ -24,6 +24,7 @@ import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConst
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.WRITE_ACCCESS_TYPE;
 
 import java.net.InetAddress;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -452,7 +453,7 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessType(accessType);
 		super.setUser(user);
 		super.setUserGroups(groups);
-		super.setAccessTime(StringUtil.getUTCDate());
+		super.setAccessTime(new Date());
 		super.setClientIPAddress(getRemoteIp());
 		super.setAction(access.toString());
 	}

@@ -23,6 +23,9 @@ import java.rmi.dgc.VMID;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -30,6 +33,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -761,4 +765,22 @@ public class MiscUtil {
 		}
 	}
 
+	public static Date getUTCDateForLocalDate(Date date) {
+		 TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
+		 Calendar local  = Calendar.getInstance();
+		 int      offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+		 GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
+		 utc.setTimeInMillis(date.getTime());
+		 utc.add(Calendar.MILLISECOND, -offset);
+		 return utc.getTime();
+	}
+	public static Date getUTCDate() {
+		TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
+	    Calendar local  = Calendar.getInstance();
+	    int      offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+	    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
+	    utc.setTimeInMillis(local.getTimeInMillis());
+	    utc.add(Calendar.MILLISECOND, -offset);
+	    return utc.getTime();
+	}
 }
