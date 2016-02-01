@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
 	license agreements. See the NOTICE file distributed with this work for additional 
 	information regarding copyright ownership. The ASF licenses this file to 
 	You under the Apache License, Version 2.0 (the "License"); you may not use 
@@ -174,6 +174,13 @@
 
 	<named-query name="XXGroupUser.findGroupIdListByUserId">
 		<query>SELECT obj.parentGroupId FROM XXGroupUser obj WHERE obj.userId=:xUserId		   
+		</query>
+	</named-query>
+
+	<named-query name="XXGroupUser.findGroupNamesByUserName">
+		<query>SELECT obj.name FROM XXGroup obj
+		        WHERE obj.id IN (SELECT gu.parentGroupId FROM XXGroupUser gu, XXUser u
+								  WHERE gu.userId = u.id AND u.name=:userName)
 		</query>
 	</named-query>
 
@@ -656,6 +663,7 @@
 			   xpu.id=:userId and gmp.isAllowed=:isAllowed
 		</query>
 	</named-query>
+
 	<named-query name="XXTrxLog.getMaxIdOfXXTrxLog">
 		<query>select max(obj.id) from XXTrxLog obj</query>
 	</named-query>

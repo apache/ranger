@@ -1549,30 +1549,14 @@ public class ServiceDBStore implements ServiceStore {
 		if (service == null) {
 			throw new Exception("service does not exist - id='" + serviceId);
 		}
-		RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
-		List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
-		if(filter != null) {
-			predicateUtil.applyFilter(ret, filter);
+
+		List<RangerPolicy> ret = getServicePolicies(service, filter);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceId + ") : policy-count=" + (ret == null ? 0 : ret.size()));
 		}
 		return ret;
 	}
-
-	private List<RangerPolicy> getServicePolicies(XXService service) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.getServicePolicies(" + service.getName() + ")");
-		}
-
-		RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
-
-		List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDBStore.getServicePolicies(" + service.getName() + "): count=" + ((ret == null) ? 0 : ret.size()));
-		}
-
-		return ret;
-	}
-
 
 	public RangerPolicyList getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -1598,18 +1582,62 @@ public class ServiceDBStore implements ServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceName + ")");
 		}
+
+		List<RangerPolicy> ret = null;
+
 		XXService service = daoMgr.getXXService().findByName(serviceName);
 		if (service == null) {
 			throw new Exception("service does not exist - name='" + serviceName);
 		}
-		RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
-		List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
-		if(filter != null) {
-			predicateUtil.applyFilter(ret, filter);
-		}
+
+		ret = getServicePolicies(service, filter);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	private List<RangerPolicy> getServicePolicies(XXService service, SearchFilter filter) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServicePolicies()");
+		}
+
+		if (service == null) {
+			throw new Exception("service does not exist");
+		}
+
+		List<RangerPolicy> ret = null;
+
+		ServicePolicies servicePolicies = RangerServicePoliciesCache.getInstance().getServicePolicies(service.getName(), this);
+		List<RangerPolicy> policies = servicePolicies != null ? servicePolicies.getPolicies() : null;
+
+		if(policies != null && filter != null) {
+			ret = new ArrayList<RangerPolicy>(policies);
+			predicateUtil.applyFilter(ret, filter);
+		} else {
+			ret = policies;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePolicies(): count=" + ((ret == null) ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	private List<RangerPolicy> getServicePoliciesFromDb(XXService service) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServicePoliciesFromDb(" + service.getName() + ")");
+		}
+
+		RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
+
+		List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePoliciesFromDb(" + service.getName() + "): count=" + ((ret == null) ? 0 : ret.size()));
 		}
 
 		return ret;
@@ -1688,7 +1716,7 @@ public class ServiceDBStore implements ServiceStore {
 
 		XXService serviceDbObj = daoMgr.getXXService().findByName(serviceName);
 
-		if(serviceDbObj == null) {
+		if (serviceDbObj == null) {
 			throw new Exception("service does not exist. name=" + serviceName);
 		}
 
@@ -1701,7 +1729,7 @@ public class ServiceDBStore implements ServiceStore {
 
 		if (serviceDbObj.getIsenabled()) {
 
-			policies = getServicePolicies(serviceDbObj);
+			policies = getServicePoliciesFromDb(serviceDbObj);
 
 		} else {
 			policies = new ArrayList<RangerPolicy>();
@@ -1773,7 +1801,7 @@ public class ServiceDBStore implements ServiceStore {
 	}
 
 	Map<String, RangerPolicyResource> createDefaultPolicyResource(List<RangerResourceDef> resourceHierarchy) throws Exception {
-		Map<String, RangerPolicyResource> resourceMap = new HashMap<>();
+		Map<String, RangerPolicyResource> resourceMap = new HashMap<String, RangerPolicyResource>();
 
 		for (RangerResourceDef resourceDef : resourceHierarchy) {
 			RangerPolicyResource polRes = new RangerPolicyResource();

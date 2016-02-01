@@ -27,4 +27,5 @@ public class RangerPolicyEngineOptions {
 	public boolean cacheAuditResults       = true;
 	public boolean disableContextEnrichers = false;
 	public boolean disableCustomConditions = false;
+	public boolean evaluateDelegateAdminOnly = false;
 }
