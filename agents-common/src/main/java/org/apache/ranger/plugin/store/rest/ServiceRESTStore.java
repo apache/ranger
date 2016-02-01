@@ -600,6 +600,11 @@ public class ServiceRESTStore extends AbstractServiceStore {
 		return ret;
 	}
 
+	@Override
+	public ServicePolicies getServicePolicies(String serviceName) throws Exception {
+		return getServicePoliciesIfUpdated(serviceName, -1L);
+	}
+
 	private WebResource createWebResource(String url) {
 		return createWebResource(url, null);
 	}

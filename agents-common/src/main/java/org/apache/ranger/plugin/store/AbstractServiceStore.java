@@ -137,6 +137,17 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		return ret == null ? null : ret.getName();
 	}
 
+	@Override
+	public Long getServicePolicyVersion(String serviceName) {
+		RangerService service = null;
+		try {
+			service = getServiceByName(serviceName);
+		} catch (Exception exception) {
+			LOG.error("Failed to get service object for service:" + serviceName);
+		}
+		return service != null ? service.getPolicyVersion() : null;
+	}
+
 	protected void preCreate(RangerBaseModelObject obj) throws Exception {
 		obj.setId(0L);
 		if(obj.getGuid() == null) {

@@ -89,6 +89,10 @@ public interface ServiceStore {
 
 	ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
 
+	Long getServicePolicyVersion(String serviceName);
+
+	ServicePolicies getServicePolicies(String serviceName) throws Exception;
+
 	RangerPolicy getPolicyFromEventTime(String eventTimeStr, Long policyId);
 
 	RangerPolicy getPolicyForVersionNumber(Long policyId, Integer versionNo);

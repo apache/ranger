@@ -270,11 +270,48 @@ public class RangerPolicyRepository {
         return policyItems;
     }
 
+    public static boolean isDelegateAdminPolicy(RangerPolicy policy) {
+        boolean ret = false;
+
+        ret =      hasDelegateAdminItems(policy.getPolicyItems())
+                || hasDelegateAdminItems(policy.getDenyPolicyItems())
+                || hasDelegateAdminItems(policy.getAllowExceptions())
+                || hasDelegateAdminItems(policy.getDenyExceptions());
+
+        return ret;
+    }
+
+    private static boolean hasDelegateAdminItems(List<RangerPolicy.RangerPolicyItem> items) {
+        boolean ret = false;
+
+        if (CollectionUtils.isNotEmpty(items)) {
+            for (RangerPolicy.RangerPolicyItem item : items) {
+                if(item.getDelegateAdmin()) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
+
+    private static boolean skipBuildingPolicyEvaluator(RangerPolicy policy, RangerPolicyEngineOptions options) {
+        boolean ret = false;
+        if (!policy.getIsEnabled()) {
+            ret = true;
+        } else if (options.evaluateDelegateAdminOnly && !isDelegateAdminPolicy(policy)) {
+            ret = true;
+        }
+        return ret;
+    }
+
     private void init(RangerPolicyEngineOptions options) {
 
         List<RangerPolicyEvaluator> policyEvaluators = new ArrayList<RangerPolicyEvaluator>();
+
         for (RangerPolicy policy : policies) {
-            if (!policy.getIsEnabled()) {
+            if (skipBuildingPolicyEvaluator(policy, options)) {
                 continue;
             }
 
@@ -367,12 +404,10 @@ public class RangerPolicyRepository {
 
         RangerPolicyEvaluator ret;
 
-        if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_DEFAULT)) {
-            ret = new RangerOptimizedPolicyEvaluator();
-        } else if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED)) {
-            ret = new RangerOptimizedPolicyEvaluator();
-        } else {
+        if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED)) {
             ret = new RangerCachedPolicyEvaluator();
+        } else {
+            ret = new RangerOptimizedPolicyEvaluator();
         }
 
         ret.init(policy, serviceDef, options);

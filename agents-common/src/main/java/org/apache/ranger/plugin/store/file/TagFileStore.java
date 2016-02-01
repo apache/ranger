@@ -1076,9 +1076,7 @@ public class TagFileStore extends AbstractTagStore {
 			LOG.debug("==> TagFileStore.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
 		}
 
-		ServiceTags ret = new ServiceTags();
-		ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
-		ret.setTagModel(ServiceTags.TAGMODEL_SHARED);
+		ServiceTags ret = null;
 
 		boolean tagsChanged = true;
 
@@ -1086,7 +1084,6 @@ public class TagFileStore extends AbstractTagStore {
 
 		try {
 			service = svcStore.getServiceByName(serviceName);
-			ret.setServiceName(serviceName);
 		} catch (Exception exception) {
 			LOG.error("Cannot find service for serviceName=" + serviceName);
 			tagsChanged = false;
@@ -1094,55 +1091,21 @@ public class TagFileStore extends AbstractTagStore {
 
 		if (lastKnownVersion != null
 				&& service != null && service.getTagVersion() != null
-				&& lastKnownVersion.compareTo(service.getTagVersion()) >= 0 ) {
+				&& lastKnownVersion.equals(service.getTagVersion())) {
 			tagsChanged = false;
 		}
 
 		if (tagsChanged) {
-			SearchFilter filter = new SearchFilter();
-
-			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, serviceName);
-
-			List<RangerServiceResource> serviceResources = getServiceResources(filter);
-			List<RangerServiceResource> filteredServiceResources = new ArrayList<RangerServiceResource>();
-
-			Map<Long, RangerTag> tagsMap = new HashMap<Long, RangerTag>();
-			Map<Long, List<Long>> resourceToTagIdsMap = new HashMap<Long, List<Long>>();
-
-			for (RangerServiceResource serviceResource : serviceResources) {
-				List<RangerTag> tagList = getTagsForServiceResourceObject(serviceResource);
-
-				if (CollectionUtils.isNotEmpty(tagList)) {
-					List<Long> tagIdList = new ArrayList<Long>();
-					for (RangerTag tag : tagList) {
-						tagsMap.put(tag.getId(), tag);
-						tagIdList.add(tag.getId());
-					}
-					resourceToTagIdsMap.put(serviceResource.getId(), tagIdList);
-					filteredServiceResources.add(serviceResource);
-				}
-			}
-
-			ret.setServiceResources(filteredServiceResources);
-			ret.setResourceToTagIds(resourceToTagIdsMap);
-			ret.setTags(tagsMap);
-
-			if (service != null && service.getTagVersion() != null) {
-				ret.setTagVersion(service.getTagVersion());
-			}
-			if (service != null && service.getTagUpdateTime() != null) {
-				ret.setTagUpdateTime(service.getTagUpdateTime());
-			}
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Changes to tagVersion detected, tagVersion in service=" + (service == null ? null : service.getTagVersion())
 						+ ", Plugin-provided lastKnownVersion=" + lastKnownVersion);
 			}
+			ret = getServiceTags(serviceName);
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No changes to tagVersion detected, tagVersion in service=" + (service == null ? null : service.getTagVersion())
-				+ ", Plugin-provided lastKnownVersion=" + lastKnownVersion);
+						+ ", Plugin-provided lastKnownVersion=" + lastKnownVersion);
 			}
-			ret.setTagVersion(lastKnownVersion);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1150,7 +1113,81 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		return ret;
+	}
 
+	@Override
+	public ServiceTags getServiceTags(String serviceName) throws Exception {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagFileStore.getServiceTags(" + serviceName  + ")");
+		}
+
+		ServiceTags ret = new ServiceTags();
+
+		RangerService service = null;
+
+		try {
+			service = svcStore.getServiceByName(serviceName);
+		} catch (Exception exception) {
+			LOG.error("Cannot find service for serviceName=" + serviceName);
+		}
+
+		SearchFilter filter = new SearchFilter();
+
+		filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, serviceName);
+
+		List<RangerServiceResource> serviceResources = getServiceResources(filter);
+		List<RangerServiceResource> filteredServiceResources = new ArrayList<RangerServiceResource>();
+
+		Map<Long, RangerTag> tagsMap = new HashMap<Long, RangerTag>();
+		Map<Long, List<Long>> resourceToTagIdsMap = new HashMap<Long, List<Long>>();
+
+		for (RangerServiceResource serviceResource : serviceResources) {
+			List<RangerTag> tagList = getTagsForServiceResourceObject(serviceResource);
+
+			if (CollectionUtils.isNotEmpty(tagList)) {
+				List<Long> tagIdList = new ArrayList<Long>();
+				for (RangerTag tag : tagList) {
+					tagsMap.put(tag.getId(), tag);
+					tagIdList.add(tag.getId());
+				}
+				resourceToTagIdsMap.put(serviceResource.getId(), tagIdList);
+				filteredServiceResources.add(serviceResource);
+			}
+		}
+
+		ret.setServiceName(serviceName);
+		ret.setServiceResources(filteredServiceResources);
+		ret.setResourceToTagIds(resourceToTagIdsMap);
+		ret.setTags(tagsMap);
+
+		if (service != null && service.getTagVersion() != null) {
+			ret.setTagVersion(service.getTagVersion());
+		}
+		if (service != null && service.getTagUpdateTime() != null) {
+			ret.setTagUpdateTime(service.getTagUpdateTime());
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagFileStore.getServiceTags(" + serviceName  + "): " + ret);
+		}
+
+		return ret;
+
+	}
+
+	@Override
+	public Long getTagVersion(String serviceName) {
+
+		RangerService service = null;
+
+		try {
+			service = svcStore.getServiceByName(serviceName);
+		} catch (Exception exception) {
+			LOG.error("Cannot find service for serviceName=" + serviceName);
+		}
+
+		return service != null ? service.getTagVersion() : null;
 	}
 
 	private List<RangerTag> getTagsForServiceResourceObject(RangerServiceResource serviceResource) throws Exception {

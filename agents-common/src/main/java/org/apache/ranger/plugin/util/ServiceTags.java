@@ -202,5 +202,4 @@ public class ServiceTags implements java.io.Serializable {
 
 		return sb;
 	}
-
 }

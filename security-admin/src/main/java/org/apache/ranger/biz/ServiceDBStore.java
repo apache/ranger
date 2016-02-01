@@ -19,12 +19,7 @@
 
 package org.apache.ranger.biz;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
@@ -34,17 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.DateUtil;
-import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.PasswordUtils;
-import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerCommonEnums;
-import org.apache.ranger.common.RangerConstants;
-import org.apache.ranger.common.RangerFactory;
-import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.*;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
@@ -192,7 +177,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public static final String CONFIG_KEY_PASSWORD = "password";
 
 	private ServicePredicateUtil predicateUtil = null;
-	
+
+
 	@Override
 	public void init() throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -1576,7 +1562,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		
 		bizUtil.createTrxLog(trxLogList);
 		
-		LOG.info("Policy Deleted Successfully. PolicyName : " +policyName);
+		LOG.info("Policy Deleted Successfully. PolicyName : " + policyName);
 	}
 
 	@Override
@@ -1736,8 +1722,50 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Override
 	public ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {
-		if(LOG.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
+		}
+
+		ServicePolicies ret = null;
+
+		XXService serviceDbObj = daoMgr.getXXService().findByName(serviceName);
+
+		if (serviceDbObj == null) {
+			throw new Exception("service does not exist. name=" + serviceName);
+		}
+
+		if (lastKnownVersion == null || serviceDbObj.getPolicyVersion() == null || !lastKnownVersion.equals(serviceDbObj.getPolicyVersion())) {
+			ret = RangerServicePoliciesCache.getInstance().getServicePolicies(serviceName, this);
+		}
+
+		if (ret != null && lastKnownVersion != null && lastKnownVersion.equals(ret.getPolicyVersion())) {
+			// ServicePolicies are not changed
+			ret = null;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			RangerServicePoliciesCache.getInstance().dump();
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+		}
+
+		return ret;
+	}
+
+	@Override
+	public Long getServicePolicyVersion(String serviceName) {
+
+		XXService serviceDbObj = daoMgr.getXXService().findByName(serviceName);
+
+		return serviceDbObj != null ? serviceDbObj.getPolicyVersion() : null;
+	}
+
+	@Override
+	public ServicePolicies getServicePolicies(String serviceName) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceName  + ")");
 		}
 
 		ServicePolicies ret = null;
@@ -1748,56 +1776,54 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw new Exception("service does not exist. name=" + serviceName);
 		}
 
-		if(lastKnownVersion == null || serviceDbObj.getPolicyVersion() == null || !lastKnownVersion.equals(serviceDbObj.getPolicyVersion())) {
-			RangerServiceDef serviceDef = getServiceDef(serviceDbObj.getType());
+		RangerServiceDef serviceDef = getServiceDef(serviceDbObj.getType());
 
-			if(serviceDef == null) {
-				throw new Exception("service-def does not exist. id=" + serviceDbObj.getType());
-			}
+		if (serviceDef == null) {
+			throw new Exception("service-def does not exist. id=" + serviceDbObj.getType());
+		}
+		List<RangerPolicy> policies = null;
+		ServicePolicies.TagPolicies tagPolicies = null;
 
-			List<RangerPolicy> policies = null;
-			ServicePolicies.TagPolicies tagPolicies = null;
+		if (serviceDbObj.getIsenabled()) {
+			if (serviceDbObj.getTagService() != null) {
+				XXService tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
 
-			if (serviceDbObj.getIsenabled()) {
-				if (serviceDbObj.getTagService() != null) {
-					XXService tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
+				if (tagServiceDbObj != null && tagServiceDbObj.getIsenabled()) {
+					RangerServiceDef tagServiceDef = getServiceDef(tagServiceDbObj.getType());
 
-					if (tagServiceDbObj != null && tagServiceDbObj.getIsenabled()) {
-						RangerServiceDef tagServiceDef = getServiceDef(tagServiceDbObj.getType());
-
-						if (tagServiceDef == null) {
-							throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
-						}
-
-						tagPolicies = new ServicePolicies.TagPolicies();
-
-						tagPolicies.setServiceId(tagServiceDbObj.getId());
-						tagPolicies.setServiceName(tagServiceDbObj.getName());
-						tagPolicies.setPolicyVersion(tagServiceDbObj.getPolicyVersion());
-						tagPolicies.setPolicyUpdateTime(tagServiceDbObj.getPolicyUpdateTime());
-						tagPolicies.setPolicies(getServicePolicies(tagServiceDbObj));
-						tagPolicies.setServiceDef(tagServiceDef);
+					if (tagServiceDef == null) {
+						throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
 					}
-				}
 
-				policies = getServicePolicies(serviceDbObj);
-			} else {
-				policies = new ArrayList<RangerPolicy>();
+					tagPolicies = new ServicePolicies.TagPolicies();
+
+					tagPolicies.setServiceId(tagServiceDbObj.getId());
+					tagPolicies.setServiceName(tagServiceDbObj.getName());
+					tagPolicies.setPolicyVersion(tagServiceDbObj.getPolicyVersion());
+					tagPolicies.setPolicyUpdateTime(tagServiceDbObj.getPolicyUpdateTime());
+					tagPolicies.setPolicies(getServicePolicies(tagServiceDbObj));
+					tagPolicies.setServiceDef(tagServiceDef);
+				}
 			}
 
-			ret = new ServicePolicies();
+			policies = getServicePolicies(serviceDbObj);
 
-			ret.setServiceId(serviceDbObj.getId());
-			ret.setServiceName(serviceDbObj.getName());
-			ret.setPolicyVersion(serviceDbObj.getPolicyVersion());
-			ret.setPolicyUpdateTime(serviceDbObj.getPolicyUpdateTime());
-			ret.setPolicies(policies);
-			ret.setServiceDef(serviceDef);
-			ret.setTagPolicies(tagPolicies);
+		} else {
+			policies = new ArrayList<RangerPolicy>();
 		}
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+		ret = new ServicePolicies();
+
+		ret.setServiceId(serviceDbObj.getId());
+		ret.setServiceName(serviceDbObj.getName());
+		ret.setPolicyVersion(serviceDbObj.getPolicyVersion());
+		ret.setPolicyUpdateTime(serviceDbObj.getPolicyUpdateTime());
+		ret.setPolicies(policies);
+		ret.setServiceDef(serviceDef);
+		ret.setTagPolicies(tagPolicies);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName  + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
 
 		return ret;
@@ -2346,4 +2372,5 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		return ret;
 	}
+
 }

@@ -23,9 +23,10 @@ import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
 
 public class RangerPolicyEngineOptions {
-	public String  evaluatorType           = RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED;
+	public String  evaluatorType           = RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO;
 	public boolean cacheAuditResults       = true;
 	public boolean disableContextEnrichers = false;
 	public boolean disableCustomConditions = false;
 	public boolean disableTagPolicyEvaluation = true;
+	public boolean evaluateDelegateAdminOnly = false;
 }

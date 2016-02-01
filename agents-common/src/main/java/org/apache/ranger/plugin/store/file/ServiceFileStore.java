@@ -779,6 +779,10 @@ public class ServiceFileStore extends AbstractServiceStore {
 		return ret;
 	}
 
+	@Override
+	public ServicePolicies getServicePolicies(String serviceName) throws Exception {
+		return getServicePoliciesIfUpdated(serviceName, -1L);
+	}
 
 	private void handleServiceRename(RangerService service, String oldName) throws Exception {
 		List<RangerPolicy> policies = getAllPolicies();
@@ -787,7 +791,6 @@ public class ServiceFileStore extends AbstractServiceStore {
 			for(RangerPolicy policy : policies) {
 				if(StringUtils.equalsIgnoreCase(policy.getService(), oldName)) {
 					policy.setService(service.getName());
-	
 					preUpdate(policy);
 	
 					fileStoreUtil.saveToFile(policy, FILE_PREFIX_POLICY, service.getId(), true);
