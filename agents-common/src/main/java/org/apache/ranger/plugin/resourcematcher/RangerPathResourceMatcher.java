@@ -78,8 +78,9 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 		}
 
 		boolean ret = false;
+		boolean allValuesRequested = isAllValuesRequested(resource);
 
-		if(resource == null || isMatchAny) {
+		if(allValuesRequested || isMatchAny) {
 			ret = isMatchAny;
 		} else {
 			IOCase caseSensitivity = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
@@ -103,9 +104,7 @@ public class RangerPathResourceMatcher extends RangerAbstractResourceMatcher {
 			}
 		}
 
-		if(policyIsExcludes) {
-			ret = !ret;
-		}
+		ret = applyExcludes(allValuesRequested, ret);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPathResourceMatcher.isMatch(" + resource + "): " + ret);

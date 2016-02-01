@@ -37,8 +37,9 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 		}
 
 		boolean ret = false;
+		boolean allValuesRequested = isAllValuesRequested(resource);
 
-		if(resource == null || isMatchAny) {
+		if(allValuesRequested || isMatchAny) {
 			ret = isMatchAny;
 		} else {
 			for(String policyValue : policyValues) {
@@ -56,9 +57,7 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 			}
 		}
 
-		if(policyIsExcludes) {
-			ret = !ret;
-		}
+		ret = applyExcludes(allValuesRequested, ret);
 
 		if (ret == false) {
 			if(LOG.isDebugEnabled()) {
