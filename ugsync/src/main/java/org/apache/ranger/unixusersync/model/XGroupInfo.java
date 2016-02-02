@@ -25,7 +25,7 @@ public class XGroupInfo {
 	private String name ;
 	private String description ;
 	private String groupType ;
-	
+	private String groupSource;
 	public String getId() {
 		return id;
 	}
@@ -50,6 +50,12 @@ public class XGroupInfo {
 	}
 	public void setGroupType(String groupType) {
 		this.groupType = groupType;
+	}
+	public String getGroupSource() {
+		return groupSource;
+	}
+	public void setGroupSource(String groupSource) {
+		this.groupSource = groupSource;
 	}
 	
 	

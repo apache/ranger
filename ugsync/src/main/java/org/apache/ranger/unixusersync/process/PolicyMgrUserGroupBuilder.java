@@ -83,7 +83,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private static final String PM_DEL_USER_GROUP_LINK_URI = "/service/xusers/group/${groupName}/user/${userName}" ; // DELETE
 	
 	private static final String PM_ADD_LOGIN_USER_URI = "/service/users/default" ;			// POST
-	
+	private static final String GROUP_SOURCE_EXTERNAL ="1";
 	private static String LOCAL_HOSTNAME = "unknown" ;
 	private String recordsToPullPerCall = "1000" ;
 	private boolean isMockRun = false ;
@@ -293,10 +293,16 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			List<String> oldGroups = user.getGroups() ;
 			List<String> addGroups = new ArrayList<String>() ;
 			List<String> delGroups = new ArrayList<String>() ;
-			
+			List<String> updateGroups = new ArrayList<String>() ;
+			XGroupInfo tempXGroupInfo=null;
 			for(String group : groups) {
 				if (! oldGroups.contains(group)) {
 					addGroups.add(group) ;
+				}else{
+					tempXGroupInfo=groupName2XGroupInfoMap.get(group);
+					if(tempXGroupInfo!=null && ! GROUP_SOURCE_EXTERNAL.equals(tempXGroupInfo.getGroupSource())){
+						updateGroups.add(group);
+					}
 				}
 			}
 			
@@ -325,7 +331,13 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  			if (! isMockRun ) {
  				delXUserGroupInfo(user, delGroups) ;
  			}
-			
+			if (! isMockRun) {
+				if (!updateGroups.isEmpty()){
+					ugInfo.setXuserInfo(addXUserInfo(userName));
+					ugInfo.setXgroupInfo(getXGroupInfoList(updateGroups));
+					addUserGroupInfo(ugInfo);
+				}
+			}
 		}
 	}
 	
@@ -543,6 +555,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		
 		addGroup.setGroupType("1") ;
 
+		addGroup.setGroupSource(GROUP_SOURCE_EXTERNAL);
+
 		return addGroup ;
 	}
 
@@ -570,6 +584,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
 			if (group == null) {
 				group = addXGroupInfo(groupName) ;
+			}else if(!GROUP_SOURCE_EXTERNAL.equals(group.getGroupSource())){
+				group.setGroupSource(GROUP_SOURCE_EXTERNAL);
 			}
 			xGroupInfoList.add(group);
 		}
