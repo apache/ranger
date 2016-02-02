@@ -789,4 +789,24 @@ public class UserGroupSyncConfig  {
 		}
 		return val;
 	}
+	
+	/* Used only for unit testing */
+    public void setUserSearchFilter(String filter) {
+            prop.setProperty(LGSYNC_USER_SEARCH_FILTER, filter);
+    }
+
+    /* Used only for unit testing */
+    public void setGroupSearchFilter(String filter) {
+            prop.setProperty(LGSYNC_GROUP_SEARCH_FILTER, filter);
+    }
+
+    /* Used only for unit testing */
+    public void setGroupSearchEnabled(boolean groupSearchEnabled) {
+        prop.setProperty(LGSYNC_GROUP_SEARCH_ENABLED, String.valueOf(groupSearchEnabled));
+    }
+    
+    /* Used only for unit testing */
+    public void setPagedResultsEnabled(boolean pagedResultsEnabled) {
+        prop.setProperty(LGSYNC_PAGED_RESULTS_ENABLED, String.valueOf(pagedResultsEnabled));
+    }
 }
