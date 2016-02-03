@@ -189,7 +189,7 @@
         <zookeeper.version>3.4.6</zookeeper.version>
         <powermock.version>1.5.6</powermock.version>
         <aspectj.version>1.8.2</aspectj.version>
-        <findbugs.plugin.version>3.0.0</findbugs.plugin.version>
+        <findbugs.plugin.version>3.0.3</findbugs.plugin.version>
         <hadoop.minikdc.version>2.3.0</hadoop.minikdc.version>
         <jersey-server.version>1.9</jersey-server.version>
         <asm.all.version>3.2</asm.all.version>
@@ -323,7 +323,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>1.3.1</version>
+                    <version>1.4.1</version>
                     <executions>
                         <execution>
                             <id>enforce-versions</id>
@@ -346,11 +346,11 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>1.8</version>
+                    <version>1.9.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.2</version>
+                    <version>3.3</version>
                     <configuration>
                         <useIncrementalCompilation>false</useIncrementalCompilation>
                         <source>${javac.source.version}</source>
@@ -363,12 +363,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.4.3</version>
+                    <version>2.7</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.17</version>
+                    <version>2.18.1</version>
                     <configuration>
                         <argLine>-Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
                         <skipTests>${skipTests}</skipTests>
@@ -411,22 +411,22 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.4</version>
+                    <version>2.6</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
-                    <version>1.7</version>
+                    <version>1.8</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>2.4.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.2.1</version>
+                    <version>2.4</version>
                     <configuration>
                         <attach>true</attach>
                     </configuration>
@@ -442,7 +442,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>2.5</version>
+                    <version>2.6.1</version>
                     <configuration>
                         <filesets>
                             <fileset>
@@ -457,7 +457,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5</version>
+                    <version>2.5.2</version>
                 </plugin>
             </plugins>
         </pluginManagement>
