@@ -56,7 +56,7 @@
         <fileMode>644</fileMode>
      </binaries>
      <includes>
-       <include>security_plugins.ranger-hdfs-plugin:ranger-hdfs-plugin</include>
+       <include>org.apache.ranger:ranger-hdfs-plugin</include>
      </includes>
     </moduleSet>
 
@@ -81,7 +81,7 @@
         </dependencySets>
      </binaries>
      <includes>
-       <include>security_plugins.ranger-hive-plugin:ranger-hive-plugin</include>
+       <include>org.apache.ranger:ranger-hive-plugin</include>
      </includes>
     </moduleSet>
 
@@ -106,7 +106,7 @@
         </dependencySets>
      </binaries>
      <includes>
-       <include>security_plugins.ranger-hbase-plugin:ranger-hbase-plugin</include>
+       <include>org.apache.ranger:ranger-hbase-plugin</include>
      </includes>
     </moduleSet>
 
@@ -129,7 +129,7 @@
         </dependencySets>
      </binaries>
      <includes>
-       <include>security_plugins.ranger-knox-plugin:ranger-knox-plugin</include>
+       <include>org.apache.ranger:ranger-knox-plugin</include>
      </includes>
     </moduleSet>
 
@@ -149,7 +149,7 @@
         </dependencySets>
      </binaries>
      <includes>
-       <include>security_plugins.ranger-storm-plugin:ranger-storm-plugin</include>
+       <include>org.apache.ranger:ranger-storm-plugin</include>
      </includes>
     </moduleSet>
 
@@ -170,7 +170,7 @@
         </dependencySets>
      </binaries>
      <includes>
-       <include>security_plugins.ranger-yarn-plugin:ranger-yarn-plugin</include>
+       <include>org.apache.ranger:ranger-yarn-plugin</include>
      </includes>
     </moduleSet>
 
@@ -183,7 +183,7 @@
         <fileMode>644</fileMode>
      </binaries>
      <includes>
-       <include>security_plugins.ranger-kms-plugin:ranger-kms-plugin</include>
+       <include>org.apache.ranger:ranger-kms-plugin</include>
      </includes>
     </moduleSet>
 
@@ -276,7 +276,7 @@
         			<fileMode>644</fileMode>
      			</binaries>
      			<includes>
-       				<include>security_plugins.ranger-kafka-plugin:ranger-kafka-plugin</include>
+       				<include>org.apache.ranger:ranger-kafka-plugin</include>
      			</includes>
     		</moduleSet>
     		
@@ -289,50 +289,11 @@
         			<fileMode>644</fileMode>
      			</binaries>
      			<includes>
-       				<include>security_plugins.ranger-solr-plugin:ranger-solr-plugin</include>
+       				<include>org.apache.ranger:ranger-solr-plugin</include>
      			</includes>
     		</moduleSet>
   </moduleSets> 	
 
-<!-- 
-  <profiles>
-      <profile>
-          <id>kafka-security</id>
-          <moduleSets>
-     		<moduleSet>
-     			<binaries>
-        			<includeDependencies>true</includeDependencies>
-        			<outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/kafka</outputDirectory>
-        			<unpack>false</unpack>
-        			<directoryMode>755</directoryMode>
-        			<fileMode>644</fileMode>
-     			</binaries>
-     			<includes>
-       				<include>security_plugins.ranger-kafka-plugin:ranger-kafka-plugin</include>
-     			</includes>
-    		</moduleSet>
-    	</moduleSets>
-      </profile>
-      <profile>
-          <id>solr-security</id>
-          <moduleSets>
-     		<moduleSet>
-     			<binaries>
-        			<includeDependencies>true</includeDependencies>
-        			<outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/solr</outputDirectory>
-        			<unpack>false</unpack>
-        			<directoryMode>755</directoryMode>
-        			<fileMode>644</fileMode>
-     			</binaries>
-     			<includes>
-       				<include>security_plugins.ranger-solr-plugin:ranger-solr-plugin</include>
-     			</includes>
-    		</moduleSet>
-    	</moduleSets>
-      </profile>
-      
-  </profiles>
-   -->
   <fileSets>
 	<fileSet>
 		<outputDirectory>/ews</outputDirectory>
@@ -344,18 +305,6 @@
 		<directory>embeddedwebserver/conf</directory>
 		<fileMode>700</fileMode>
 	</fileSet>
-<!--
-	<fileSet>
-		<outputDirectory>/ews/lib</outputDirectory>
-		<directory>embeddedwebserver/lib</directory>
-	</fileSet>
-	<fileSet>
-		<outputDirectory>/unixauth-config</outputDirectory>
-		<directory>security-admin/unixauth-config</directory>
-		<fileMode>544</fileMode>
-	</fileSet>
--->
-
 	<fileSet>
 		<outputDirectory>/db</outputDirectory>
 		<directory>security-admin/db</directory>

@@ -56,7 +56,7 @@
             <artifactId>gson</artifactId>
         </dependency>
         <dependency>
-            <groupId>security_plugins.ranger-plugins-common</groupId>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>
         </dependency>

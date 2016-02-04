@@ -28,8 +28,8 @@
 	  	    <outputDirectory>/lib</outputDirectory>
 	     </binaries>
 	     <includes>
-		  <include>security_plugins.ranger-kafka-plugin-shim:ranger-kafka-plugin-shim</include>
-		  <include>security_plugins.ranger-plugin-classloader:ranger-plugin-classloader</include>
+		  <include>org.apache.ranger:ranger-kafka-plugin-shim</include>
+		  <include>org.apache.ranger:ranger-plugin-classloader</include>
 	      </includes>
 	    </moduleSet>
    	 
@@ -99,7 +99,7 @@
 							</include>
 							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}
 							</include>
-							<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred
+							<include>org.apache.ranger:ranger-plugins-cred
 							</include>
 							<include>org.apache.ranger:credentialbuilder</include>
 						</includes>
@@ -108,11 +108,11 @@
 				<outputDirectory>lib/ranger-kafka-plugin-impl</outputDirectory>
 			</binaries>
 			<includes>
-				<include>security_plugins.ranger-kafka-plugin:ranger-kafka-plugin</include>
+				<include>org.apache.ranger:ranger-kafka-plugin</include>
 				<include>org.apache.ranger:ranger_solrj</include>
-				<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
-				<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred</include>
-				<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
+				<include>org.apache.ranger:ranger-plugins-audit</include>
+				<include>org.apache.ranger:ranger-plugins-cred</include>
+				<include>org.apache.ranger:ranger-plugins-common</include>
 			</includes>
 		</moduleSet>
 		<moduleSet>
@@ -122,7 +122,7 @@
 				<unpack>false</unpack>
 			</binaries>
 			<includes>
-				<include>security_plugins.ranger-plugins-installer:ranger-plugins-installer
+				<include>org.apache.ranger:ranger-plugins-installer
 				</include>
 				<include>org.apache.ranger:credentialbuilder</include>
 			</includes>

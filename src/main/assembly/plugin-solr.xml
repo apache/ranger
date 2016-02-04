@@ -65,10 +65,10 @@
 							</include>
 							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}
 							</include>
-							<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred
+							<include>org.apache.ranger:ranger-plugins-cred
 							</include>
 							<include>org.apache.ranger:credentialbuilder</include>
-							<include>security_plugins.ranger-solr-plugin:ranger-solr-plugin
+							<include>org.apache.ranger:ranger-solr-plugin
 							</include>
 
 						</includes>
@@ -77,15 +77,13 @@
 				<outputDirectory>/lib</outputDirectory>
 			</binaries>
 			<includes>
-				<include>security_plugins.ranger-plugins-audit:ranger-plugins-audit
+				<include>org.apache.ranger:ranger-plugins-audit
 				</include>
-				<include>security_plugins.ranger-plugins-cred:ranger-plugins-cred
+				<include>org.apache.ranger:ranger-plugins-cred
 				</include>
-				<include>security_plugins.ranger-plugins-impl:ranger-plugins-impl
+				<include>org.apache.ranger:ranger-plugins-common
 				</include>
-				<include>security_plugins.ranger-plugins-common:ranger-plugins-common
-				</include>
-				<include>security_plugins.ranger-solr-plugin:ranger-solr-plugin
+				<include>org.apache.ranger:ranger-solr-plugin
 				</include>
 			</includes>
 		</moduleSet>
@@ -96,7 +94,7 @@
 				<unpack>false</unpack>
 			</binaries>
 			<includes>
-				<include>security_plugins.ranger-plugins-installer:ranger-plugins-installer
+				<include>org.apache.ranger:ranger-plugins-installer
 				</include>
 				<include>org.apache.ranger:credentialbuilder</include>
 			</includes>

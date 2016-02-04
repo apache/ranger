@@ -58,8 +58,8 @@
                 <include>org.codehaus.jackson:jackson-jaxrs</include>
                 <include>org.codehaus.jackson:jackson-mapper-asl</include>
                 <include>org.codehaus.jackson:jackson-xc</include>
-                <include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
-                <include>security_plugins.ranger-plugins-audit:ranger-plugins-audit</include>
+                <include>org.apache.ranger:ranger-plugins-common</include>
+                <include>org.apache.ranger:ranger-plugins-audit</include>
               </includes>
               <unpack>false</unpack>
             </dependencySet>

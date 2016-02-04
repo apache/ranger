@@ -75,7 +75,7 @@
 					<include>org.scala-lang:scala-reflect</include>
 					<include>com.101tec:zkclient</include>
 					<include>org.apache.zookeeper:zookeeper</include>
-					<include>security_plugins.ranger-plugins-common:ranger-plugins-common</include>
+					<include>org.apache.ranger:ranger-plugins-common</include>
 				</includes>
 				<unpack>false</unpack>
   			</dependencySet>
