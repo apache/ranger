@@ -58,6 +58,8 @@ public class UserGroupSyncConfig  {
 	public static final String  UGSYNC_PM_URL_PROP = 	"ranger.usersync.policymanager.baseURL" ;
 	
 	public static final String  UGSYNC_MIN_USERID_PROP  = 	"ranger.usersync.unix.minUserId" ;
+
+	public static final String  UGSYNC_MIN_GROUPID_PROP =   "ranger.usersync.unix.minGroupId" ;
 	
 	public static final String  UGSYNC_MAX_RECORDS_PER_API_CALL_PROP  = 	"ranger.usersync.policymanager.maxrecordsperapicall" ;
 
@@ -162,6 +164,16 @@ public class UserGroupSyncConfig  {
   private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ranger.usersync.group.memberattributename";
   private static final String DEFAULT_LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "member";
 
+	private static final String UGSYNC_UPDATE_MILLIS_MIN = "ranger.usersync.unix.updatemillismin";
+	private final static long DEFAULT_UGSYNC_UPDATE_MILLIS_MIN = 1 * 60 * 1000; // ms
+
+	private static final String UGSYNC_UNIX_BACKEND = "ranger.usersync.unix.backend";
+	private final static String DEFAULT_UGSYNC_UNIX_BACKEND = "passwd";
+
+	private static final String UGSYNC_GROUP_ENUMERATE_ENABLED = "ranger.usersync.group.enumerate";
+
+	private static final String UGSYNC_GROUP_ENUMERATE_GROUPS = "ranger.usersync.group.enumerategroup";
+
 	private static final String SYNC_POLICY_MGR_KEYSTORE = "ranger.usersync.policymgr.keystore";
 
 	private static final String SYNC_POLICY_MGR_ALIAS = "ranger.usersync.policymgr.alias";
@@ -192,7 +204,7 @@ public class UserGroupSyncConfig  {
 	private static volatile UserGroupSyncConfig me = null ;
 	
 	public static UserGroupSyncConfig getInstance() {
-        UserGroupSyncConfig result = me;
+		UserGroupSyncConfig result = me;
 		if (result == null) {
 			synchronized(UserGroupSyncConfig.class) {
 				result = me ;
@@ -204,11 +216,10 @@ public class UserGroupSyncConfig  {
 		return result ;
 	}
 	
-	
 	private UserGroupSyncConfig() {
-		init() ;
+		init();
 	}
-	
+
 	private void init() {
 		readConfigFile(CONFIG_FILE);
 		readConfigFile(DEFAULT_CONFIG_FILE);
@@ -321,19 +332,35 @@ public class UserGroupSyncConfig  {
 		}
 		return val;
 	}
-	
+
+	public String getUnixBackend() {
+		String val = prop.getProperty(UGSYNC_UNIX_BACKEND);
+		if ( val == null ) {
+			val = DEFAULT_UGSYNC_UNIX_BACKEND;
+		}
+
+		return val;
+	}
+
 	public boolean isUserSyncEnabled() {
 		String val = prop.getProperty(UGSYNC_ENABLED_PROP) ;
 		return (val != null && val.trim().equalsIgnoreCase("true")) ;
 	}
 
-	
+	public String getEnumerateGroups() {
+		return prop.getProperty(UGSYNC_GROUP_ENUMERATE_GROUPS);
+	}
+
+	public boolean isGroupEnumerateEnabled() {
+		String val = prop.getProperty(UGSYNC_GROUP_ENUMERATE_ENABLED) ;
+		return (val != null && val.trim().equalsIgnoreCase("true")) ;
+	}
+
 	public boolean isMockRunEnabled() {
 		String val = prop.getProperty(UGSYNC_MOCK_RUN_PROP) ;
 		return (val != null && val.trim().equalsIgnoreCase("true")) ;
 	}
-	
-	
+
 	public String getPolicyManagerBaseURL() {
 		return prop.getProperty(UGSYNC_PM_URL_PROP) ;
 	}
@@ -342,6 +369,8 @@ public class UserGroupSyncConfig  {
 	public String getMinUserId() {
 		return prop.getProperty(UGSYNC_MIN_USERID_PROP) ;
 	}
+
+	public String getMinGroupId() { return prop.getProperty(UGSYNC_MIN_GROUPID_PROP) ; }
 	
 	public String getMaxRecordsPerAPICall() {
 		return prop.getProperty(UGSYNC_MAX_RECORDS_PER_API_CALL_PROP) ;
@@ -366,7 +395,20 @@ public class UserGroupSyncConfig  {
 		return  prop.getProperty(SSL_TRUSTSTORE_PATH_PASSWORD_PARAM) ;
 	}
 	
-	
+	public long getUpdateMillisMin() {
+		String val = prop.getProperty(UGSYNC_UPDATE_MILLIS_MIN) ;
+		if (val == null) {
+			return DEFAULT_UGSYNC_UPDATE_MILLIS_MIN ;
+		}
+
+		long ret = Long.parseLong(val) ;
+		if (ret < DEFAULT_UGSYNC_UPDATE_MILLIS_MIN) {
+			return DEFAULT_UGSYNC_UPDATE_MILLIS_MIN;
+		}
+
+		return ret;
+	}
+
 	public long getSleepTimeInMillisBetweenCycle() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM) ;
 		if (val == null) {
@@ -789,7 +831,7 @@ public class UserGroupSyncConfig  {
 		}
 		return val;
 	}
-	
+
 	/* Used only for unit testing */
     public void setUserSearchFilter(String filter) {
             prop.setProperty(LGSYNC_USER_SEARCH_FILTER, filter);
@@ -809,4 +851,9 @@ public class UserGroupSyncConfig  {
     public void setPagedResultsEnabled(boolean pagedResultsEnabled) {
         prop.setProperty(LGSYNC_PAGED_RESULTS_ENABLED, String.valueOf(pagedResultsEnabled));
     }
+
+	/* Used only for unit testing */
+	public void setProperty(String name, String value) {
+		prop.setProperty(name, value);
+	}
 }

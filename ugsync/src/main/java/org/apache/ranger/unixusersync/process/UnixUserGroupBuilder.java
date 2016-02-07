@@ -17,16 +17,15 @@
  * under the License.
  */
 
- package org.apache.ranger.unixusersync.process;
+package org.apache.ranger.unixusersync.process;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStreamReader;
+import java.util.*;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.UserGroupSink;
@@ -35,51 +34,94 @@ import org.apache.ranger.usergroupsync.UserGroupSource;
 public class UnixUserGroupBuilder implements UserGroupSource {
 	
 	private static final Logger LOG = Logger.getLogger(UnixUserGroupBuilder.class) ;
+	private final static String OS = System.getProperty("os.name") ;
 
+	// kept for legacy support
 	public static final String UNIX_USER_PASSWORD_FILE = "/etc/passwd" ;
 	public static final String UNIX_GROUP_FILE = "/etc/group" ;
+
+	/** Shell commands to get users and groups */
+	static final String LINUX_GET_ALL_USERS_CMD = "getent passwd" ;
+	static final String LINUX_GET_ALL_GROUPS_CMD = "getent group" ;
+	static final String LINUX_GET_GROUP_CMD = "getent group %s" ;
+
+	// mainly for testing purposes
+	// there might be a better way
+	static final String MAC_GET_ALL_USERS_CMD = "dscl . -readall /Users UniqueID PrimaryGroupID | " +
+			"awk 'BEGIN { OFS = \":\"; ORS=\"\\n\"; i=0;}" +
+			"/RecordName: / {name = $2;i = 0;}/PrimaryGroupID: / {gid = $2;}" +
+			"/^ / {if (i == 0) { i++; name = $1;}}" +
+			"/UniqueID: / {uid = $2;print name, \"*\", gid, uid;}'" ;
+	static final String MAC_GET_ALL_GROUPS_CMD = "dscl . -list /Groups PrimaryGroupID | " +
+			"awk -v OFS=\":\" '{print $1, \"*\", $2, \"\"}'" ;
+	static final String MAC_GET_GROUP_CMD = "dscl . -read /Groups/%1$s | paste -d, -s - | sed -e 's/:/|/g' | " +
+			"awk -v OFS=\":\" -v ORS=\"\\n\" -F, '{print \"%1$s\",\"*\",$6,$4}' | " +
+			"sed -e 's/:[^:]*| /:/g' | sed -e 's/ /,/g'" ;
+
+	static final String BACKEND_PASSWD = "passwd";
+
+	private boolean enumerateGroupMembers = false;
+	private boolean useNss = false;
+
+	private long lastUpdateTime = 0; // Last time maps were updated
+	private long timeout = 0;
 
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance() ;
 	private Map<String,List<String>>  	user2GroupListMap = new HashMap<String,List<String>>();
 	private Map<String,List<String>>  	internalUser2GroupListMap = new HashMap<String,List<String>>();
 	private Map<String,String>			groupId2groupNameMap = new HashMap<String,String>() ;
 	private int 						minimumUserId  = 0 ;
-	
-	private long  passwordFileModiiedAt = 0 ;
-	private long  groupFileModifiedAt = 0 ;
-		
-	
+	private int							minimumGroupId = 0 ;
+
+	private long passwordFileModifiedAt = 0 ;
+	private long groupFileModifiedAt = 0 ;
+
 	public static void main(String[] args) throws Throwable {
-		UnixUserGroupBuilder  ugbuilder = new UnixUserGroupBuilder() ;
+		UnixUserGroupBuilder ugbuilder = new UnixUserGroupBuilder() ;
 		ugbuilder.init();
 		ugbuilder.print(); 
 	}
 	
 	public UnixUserGroupBuilder() {
 		minimumUserId = Integer.parseInt(config.getMinUserId()) ;
-		LOG.debug("Minimum UserId: " + minimumUserId) ;
+		minimumGroupId = Integer.parseInt(config.getMinGroupId()) ;
+
+		LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId) ;
+
+		timeout = config.getUpdateMillisMin() ;
+		enumerateGroupMembers = config.isGroupEnumerateEnabled();
+
+		if (!config.getUnixBackend().equalsIgnoreCase(BACKEND_PASSWD)) {
+			useNss = true;
+		} else {
+			LOG.warn("DEPRECATED: Unix backend is configured to use /etc/passwd and /etc/group files directly " +
+					"instead of standard system mechanisms.");
+		}
 	}
 
 	@Override
 	public void init() throws Throwable {
 		buildUserGroupInfo() ;
 	}
-	
+
 	@Override
 	public boolean isChanged() {
-		long TempPasswordFileModiiedAt = new File(UNIX_USER_PASSWORD_FILE).lastModified() ;
-		if (passwordFileModiiedAt != TempPasswordFileModiiedAt) {
+		if (useNss)
+			return System.currentTimeMillis() - lastUpdateTime > timeout ;
+
+		long TempPasswordFileModifiedAt = new File(UNIX_USER_PASSWORD_FILE).lastModified() ;
+		if (passwordFileModifiedAt != TempPasswordFileModifiedAt) {
 			return true ;
 		}
-		
+
 		long TempGroupFileModifiedAt = new File(UNIX_GROUP_FILE).lastModified() ;
 		if (groupFileModifiedAt != TempGroupFileModifiedAt) {
 			return true ;
 		}
-		
+
 		return false ;
 	}
-	
+
 
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
@@ -96,10 +138,21 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	
 	private void buildUserGroupInfo() throws Throwable {
 		user2GroupListMap = new HashMap<String,List<String>>();
-		groupId2groupNameMap = new HashMap<String,String>() ;
+		groupId2groupNameMap = new HashMap<String, String>();
 
-		buildUnixGroupList(); 
-		buildUnixUserList();
+		if (OS.startsWith("Mac")) {
+			buildUnixGroupList(MAC_GET_ALL_GROUPS_CMD, MAC_GET_GROUP_CMD, false);
+			buildUnixUserList(MAC_GET_ALL_USERS_CMD);
+		} else {
+			if (!OS.startsWith("Linux")) {
+				LOG.warn("Platform not recognized assuming Linux compatible");
+			}
+			buildUnixGroupList(LINUX_GET_ALL_GROUPS_CMD, LINUX_GET_GROUP_CMD, true);
+			buildUnixUserList(LINUX_GET_ALL_USERS_CMD);
+		}
+
+		lastUpdateTime = System.currentTimeMillis() ;
+
 		if (LOG.isDebugEnabled()) {
 			print() ;
 		}
@@ -117,139 +170,264 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		}
 	}
 	
-	private void buildUnixUserList() throws Throwable {
-		
-		File f = new File(UNIX_USER_PASSWORD_FILE) ;
+	private void buildUnixUserList(String command) throws Throwable {
+		BufferedReader reader = null;
 
-		if (f.exists()) {
-			
-			
-			BufferedReader reader = null ;
-			
-			reader = new BufferedReader(new FileReader(f)) ;
-			
-			String line = null ;
-			
-			while ( (line = reader.readLine()) != null) {
-				
-				if (line.trim().isEmpty()) 
-					continue ;
-				
-				String[] tokens = line.split(":") ;
-				
-				int len = tokens.length ;
-				
-				if (len < 2) {
-					continue ;
+		if (!useNss) {
+			File file = new File(UNIX_USER_PASSWORD_FILE);
+			passwordFileModifiedAt = file.lastModified();
+			reader = new BufferedReader(new FileReader(file)) ;
+		} else {
+			Process process = Runtime.getRuntime().exec(
+					new String[]{"bash", "-c", command});
+
+			reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		}
+
+		String line = null;
+		Map<String,String> userName2uid = new HashMap<String,String>();
+
+		while ((line = reader.readLine()) != null) {
+			if (line.trim().isEmpty())
+				continue;
+
+			String[] tokens = line.split(":");
+
+			int len = tokens.length;
+
+			if (len < 2) {
+				continue;
+			}
+
+			String userName = tokens[0];
+			String userId = tokens[2];
+			String groupId = tokens[3];
+
+			int numUserId = -1;
+
+			try {
+				numUserId = Integer.parseInt(userId);
+			} catch (NumberFormatException nfe) {
+				LOG.warn("Unix UserId: [" + userId + "]: can not be parsed as valid int. considering as  -1.", nfe);
+				numUserId = -1;
+			}
+
+			if (numUserId >= minimumUserId) {
+				userName2uid.put(userName, userId);
+				String groupName = groupId2groupNameMap.get(groupId);
+				if (groupName != null) {
+					List<String> groupList = new ArrayList<String>();
+					groupList.add(groupName);
+					// do we already know about this use's membership to other groups?  If so add those, too
+					if (internalUser2GroupListMap.containsKey(userName)) {
+						List<String> map = internalUser2GroupListMap.get(userName);
+
+						// there could be duplicates
+						map.remove(groupName);
+						groupList.addAll(map);
+					}
+					user2GroupListMap.put(userName, groupList);
+				} else {
+					// we are ignoring the possibility that this user was present in /etc/groups.
+					LOG.warn("Group Name could not be found for group id: [" + groupId + "]. Skipping adding user [" + userName + "] with id [" + userId + "].");
 				}
-				
-				String userName = tokens[0] ;
-				String userId = tokens[2] ;
-				String groupId = tokens[3] ;
-				
-				int numUserId = -1 ; 
-				
+			} else {
+				LOG.debug("Skipping user [" + userName + "] since its userid [" + userId + "] is less than minuserid limit [" + minimumUserId + "].");
+			}
+		}
+
+		reader.close();
+
+		if (!useNss)
+			return;
+
+		// this does a reverse check as not all users might be listed in getent passwd
+		if (enumerateGroupMembers) {
+			LOG.debug("Start drill down group members");
+			for (Map.Entry<String, List<String>> entry : internalUser2GroupListMap.entrySet()) {
+				// skip users we already now about
+				if (user2GroupListMap.containsKey(entry.getKey()))
+					continue;
+
+				LOG.debug("Enumerating user " + entry.getKey());
+
+				int numUserId = -1;
 				try {
-					numUserId = Integer.parseInt(userId) ;
+					numUserId = Integer.parseInt(userName2uid.get(entry.getKey()));
+				} catch (NumberFormatException nfe) {
+					numUserId = -1;
 				}
-				catch(NumberFormatException nfe) {
-					LOG.warn("Unix UserId: [" + userId + "]: can not be parsed as valid int. considering as  -1.", nfe);
-					numUserId = -1 ;
-				}
-									
-				if (numUserId >= minimumUserId ) {
-					String groupName = groupId2groupNameMap.get(groupId) ;
-					if (groupName != null) {
-						List<String> groupList = new ArrayList<String>();
-						groupList.add(groupName);
-						// do we already know about this use's membership to other groups?  If so add those, too
-						if (internalUser2GroupListMap.containsKey(userName)) {
-							groupList.addAll(internalUser2GroupListMap.get(userName));
-						}
-						user2GroupListMap.put(userName, groupList);
-					}
-					else {
-						// we are ignoring the possibility that this user was present in /etc/groups.
-						LOG.warn("Group Name could not be found for group id: [" + groupId + "]. Skipping adding user [" + userName + "] with id [" + userId + "].") ;
-					}
-				}
-				else {
-					LOG.debug("Skipping user [" + userName + "] since its userid [" + userId + "] is less than minuserid limit [" + minimumUserId + "].");
-				}
-			}
-			
-			reader.close() ;
-			
-			passwordFileModiiedAt = f.lastModified() ;
 
+				// if a user comes from an external group we might not have a uid
+				if (numUserId < minimumUserId && numUserId != -1)
+					continue;
+
+
+				// "id" is same across Linux / BSD / MacOSX
+				// gids are used as id might return groups with spaces, ie "domain users"
+				Process process = Runtime.getRuntime().exec(
+						new String[]{"bash", "-c", "id -G " + entry.getKey()});
+
+				reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				line = reader.readLine();
+				reader.close();
+
+				LOG.debug("id -G returned " + line);
+
+				if (line.trim().isEmpty()) {
+					LOG.warn("User " + entry.getKey() + " could not be resolved");
+					continue;
+				}
+
+				String[] gids = line.split(" ");
+
+				// check if all groups returned by id are visible to ranger
+				ArrayList<String> allowedGroups = new ArrayList<String>();
+				for (String gid : gids) {
+					int numGroupId = Integer.parseInt(gid);
+					if (numGroupId < minimumGroupId)
+						continue;
+
+					String groupName = groupId2groupNameMap.get(gid);
+					if (groupName != null)
+						allowedGroups.add(groupName);
+				}
+
+				user2GroupListMap.put(entry.getKey(), allowedGroups);
+			}
+			LOG.debug("End drill down group members");
 		}
 	}
 
-	
-	private void buildUnixGroupList() throws Throwable {
-		
-		File f = new File(UNIX_GROUP_FILE) ;
-		
-		if (f.exists()) {
-			
-			BufferedReader reader = null ;
-			
-			reader = new BufferedReader(new FileReader(f)) ;
-			
-			String line = null ;
-			
-			
-			
-			while ( (line = reader.readLine()) != null) {
+	private void parseMembers(String line) {
+		if (line == null || line.isEmpty())
+			return;
 
-				if (line.trim().isEmpty()) 
-					continue ;
-				
-				String[] tokens = line.split(":") ;
-				
-				int len = tokens.length ;
-				
-				if (len < 2) {
-					continue ;
-				}
-				
-				String groupName = tokens[0] ;
-				String groupId = tokens[2] ;
-				String groupMembers = null ;
-				
-				if (tokens.length > 3) {
-					groupMembers = tokens[3] ;
-				}
-				
-				if (groupId2groupNameMap.containsKey(groupId)) {
-					groupId2groupNameMap.remove(groupId) ;
-				}
-				
-				groupId2groupNameMap.put(groupId,groupName) ;
-				// also build an internal map of users to their group list which is consulted by user list creator
-				if (groupMembers != null && ! groupMembers.trim().isEmpty()) {
-					for(String user : groupMembers.split(",")) {
-						List<String> groupList = internalUser2GroupListMap.get(user) ;
-						if (groupList == null) {
-							groupList = new ArrayList<String>() ;
-							internalUser2GroupListMap.put(user, groupList) ;
-						}
-						if (! groupList.contains(groupName)) {
-							groupList.add(groupName) ;
-						}
-					}
-				}
+		String[] tokens = line.split(":");
 
-				
+		if (tokens.length < 2)
+			return;
+
+		String groupName = tokens[0];
+		String groupId = tokens[2];
+		String groupMembers = null;
+
+		if (tokens.length > 3)
+			groupMembers = tokens[3];
+
+		if (groupId2groupNameMap.containsKey(groupId)) {
+			groupId2groupNameMap.remove(groupId);
+		}
+
+		int numGroupId = Integer.parseInt(groupId);
+		if (numGroupId < minimumGroupId)
+			return;
+
+		groupId2groupNameMap.put(groupId, groupName);
+
+		if (groupMembers != null && !groupMembers.trim().isEmpty()) {
+			for (String user : groupMembers.split(",")) {
+				List<String> groupList = internalUser2GroupListMap.get(user);
+				if (groupList == null) {
+					groupList = new ArrayList<String>();
+					internalUser2GroupListMap.put(user, groupList);
+				}
+				if (!groupList.contains(groupName)) {
+					groupList.add(groupName);
+				}
 			}
-			
-			reader.close() ;
-			
-			groupFileModifiedAt = f.lastModified() ;
-
-		
 		}
 	}
-	
+
+	private void buildUnixGroupList(String allGroupsCmd, String groupCmd, boolean useGid) throws Throwable {
+		LOG.debug("Start enumerating groups");
+		BufferedReader reader;
+
+		if (!useNss) {
+			File file = new File(UNIX_GROUP_FILE);
+			groupFileModifiedAt = file.lastModified();
+			reader = new BufferedReader(new FileReader(file)) ;
+		} else {
+			Process process = Runtime.getRuntime().exec(
+					new String[]{"bash", "-c", allGroupsCmd});
+			reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		}
+
+		String line = null;
+
+		while ((line = reader.readLine()) != null) {
+			if (line.trim().isEmpty())
+				continue;
+
+			parseMembers(line);
+		}
+
+		reader.close();
+
+		LOG.debug("End enumerating group");
+
+		if (!useNss)
+			return;
+
+		if (enumerateGroupMembers) {
+			LOG.debug("Start enumerating group members");
+			Map<String,String> copy = new HashMap<String, String>(groupId2groupNameMap);
+
+			for (Map.Entry<String, String> group : copy.entrySet()) {
+				LOG.debug("Enumerating group: " + group.getValue() + " GID(" + group.getKey() + ")");
+
+				String command;
+				if (useGid) {
+					command = String.format(groupCmd, group.getKey());
+				} else {
+					command = String.format(groupCmd, group.getValue());
+				}
+
+				String[] cmd = new String[]{"bash", "-c", command + " " + group.getKey()};
+				LOG.debug("Executing: " + Arrays.toString(cmd));
+
+				Process process = Runtime.getRuntime().exec(cmd);
+				reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				line = reader.readLine();
+				reader.close();
+
+				LOG.debug("bash -c " + command + " for group " + group + " returned " + line);
+
+				parseMembers(line);
+			}
+			LOG.debug("End enumerating group members");
+		}
+
+		if (config.getEnumerateGroups() != null) {
+			String[] groups = config.getEnumerateGroups().split(",");
+
+			LOG.debug("Adding extra groups");
+
+			for (String group : groups) {
+				String command = groupCmd.format(group);
+				String[] cmd = new String[]{"bash", "-c", command + " '" + group + "'"};
+				LOG.debug("Executing: " + Arrays.toString(cmd));
+
+				Process process = Runtime.getRuntime().exec(cmd);
+				reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				line = reader.readLine();
+				reader.close();
+				LOG.debug("bash -c " + command + " for group " + group + " returned " + line);
+
+				parseMembers(line);
+			}
+			LOG.debug("Done adding extra groups");
+		}
+	}
+
+	@VisibleForTesting
+	Map<String,List<String>> getUser2GroupListMap() {
+		return user2GroupListMap;
+	}
+
+	@VisibleForTesting
+	Map<String,String> getGroupId2groupNameMap() {
+		return groupId2groupNameMap;
+	}
 
 }
