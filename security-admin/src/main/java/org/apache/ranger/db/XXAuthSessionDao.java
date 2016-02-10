@@ -49,5 +49,17 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 			return null;
 		}
 	}
+
+	@SuppressWarnings("unchecked")
+	public List<XXAuthSession> getAuthSessionByUserId(Long userId){
+		try{
+			return getEntityManager()
+					.createNamedQuery("XXAuthSession.getAuthSessionByUserId")
+					.setParameter("userId", userId)
+					.getResultList();
+		} catch(NoResultException ignoreNoResultFound) {
+			return null;
+		}
+	}
 }
 
