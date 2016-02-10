@@ -19,6 +19,11 @@
 
  package org.apache.ranger.db;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.NoResultException;
+
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupGroup;
 
@@ -27,5 +32,18 @@ public class XXGroupGroupDao extends BaseDao<XXGroupGroup> {
     public XXGroupGroupDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
     }
+    public List<XXGroupGroup> findByGroupId(Long groupId) {
+		if (groupId == null) {
+			return new ArrayList<XXGroupGroup>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXGroupGroup.findByGroupId", tClass)
+					.setParameter("groupId", groupId)
+					.setParameter("parentGroupId", groupId)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXGroupGroup>();
+		}
+	}
 }
 

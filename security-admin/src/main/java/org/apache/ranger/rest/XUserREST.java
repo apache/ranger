@@ -20,7 +20,6 @@
  package org.apache.ranger.rest;
 
 import java.util.HashMap;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -32,6 +31,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SessionMgr;
@@ -45,8 +45,6 @@ import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.security.context.RangerAPIList;
-import org.apache.ranger.security.context.RangerAPIMapping;
-import org.apache.ranger.security.context.RangerPreAuthSecurityHandler;
 import org.apache.ranger.service.AuthSessionService;
 import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XGroupGroupService;
@@ -75,8 +73,6 @@ import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
-import org.apache.ranger.view.VXPortalUser;
-import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserGroupInfo;
@@ -211,8 +207,12 @@ public class XUserREST {
 	@RangerAnnotationClassName(class_name = VXGroup.class)
 	public void deleteXGroup(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
-		boolean force = true;
-		xUserMgr.deleteXGroup(id, force);
+		String forceDeleteStr = request.getParameter("forceDelete");
+		boolean forceDelete = false;
+		if(!StringUtils.isEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr.trim())) {
+			forceDelete = true;
+		}
+		xUserMgr.deleteXGroup(id, forceDelete);
 	}
 
 	/**
@@ -318,8 +318,12 @@ public class XUserREST {
 	@RangerAnnotationClassName(class_name = VXUser.class)
 	public void deleteXUser(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
-		boolean force = true;
-		xUserMgr.deleteXUser(id, force);
+		String forceDeleteStr = request.getParameter("forceDelete");
+		boolean forceDelete = false;
+		if(!StringUtils.isEmpty(forceDeleteStr) && forceDeleteStr.equalsIgnoreCase("true")) {
+			forceDelete = true;
+		}
+		xUserMgr.deleteXUser(id, forceDelete);
 	}
 
 	/**
@@ -671,33 +675,33 @@ public class XUserREST {
 
 	@DELETE
 	@Path("/users/userName/{userName}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public void deleteXUserByUserName(@PathParam("userName") String userName,
 			@Context HttpServletRequest request) {
-		boolean force = true;
+		String forceDeleteStr = request.getParameter("forceDelete");
+		boolean forceDelete = false;
+		if(!StringUtils.isEmpty(forceDeleteStr) && forceDeleteStr.equalsIgnoreCase("true")) {
+			forceDelete = true;
+		}
 		VXUser vxUser = xUserService.getXUserByUserName(userName);
-		xUserMgr.deleteXUser(vxUser.getId(), force);
+		xUserMgr.deleteXUser(vxUser.getId(), forceDelete);
 	}
 
 	@DELETE
 	@Path("/groups/groupName/{groupName}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public void deleteXGroupByGroupName(
 			@PathParam("groupName") String groupName,
 			@Context HttpServletRequest request) {
-		boolean force = true;
+		String forceDeleteStr = request.getParameter("forceDelete");
+		boolean forceDelete = false;
+		if(!StringUtils.isEmpty(forceDeleteStr) && forceDeleteStr.equalsIgnoreCase("true")) {
+			forceDelete = true;
+		}
 		VXGroup vxGroup = xGroupService.getGroupByGroupName(groupName);
-		xUserMgr.deleteXGroup(vxGroup.getId(), force);
+		xUserMgr.deleteXGroup(vxGroup.getId(), forceDelete);
 	}
 
-	// @POST
-	// @Path("/group/{groupName}/user/{userName}")
-	// @Produces({ "application/xml", "application/json" })
-	// public void createXGroupAndXUser(@PathParam("groupName") String
-	// groupName,
-	// @PathParam("userName") String userName,
-	// @Context HttpServletRequest request) {
-	// xUserMgr.createXGroupAndXUser(groupName, userName);
-	// }
-	//
 	@DELETE
 	@Path("/group/{groupName}/user/{userName}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
@@ -731,7 +735,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_AUTH_SESSIONS + "\")")
 	public VXAuthSessionList getAuthSessions(@Context HttpServletRequest request){
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-				request, authSessionService.AUTH_SESSION_SORT_FLDS);
+				request, AuthSessionService.AUTH_SESSION_SORT_FLDS);
 		searchUtil.extractLong(request, searchCriteria, "id", "Auth Session Id");
 		searchUtil.extractLong(request, searchCriteria, "userId", "User Id");
 		searchUtil.extractInt(request, searchCriteria, "authStatus", "Auth Status");

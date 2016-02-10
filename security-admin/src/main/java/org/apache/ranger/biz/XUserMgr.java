@@ -33,6 +33,9 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXUserPermission;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XModuleDefService;
 import org.apache.ranger.service.XPortalUserService;
@@ -42,6 +45,7 @@ import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXUserPermission;
 import org.apache.log4j.Logger;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
@@ -49,11 +53,25 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXAuditMapDao;
+import org.apache.ranger.db.XXAuthSessionDao;
+import org.apache.ranger.db.XXGroupDao;
+import org.apache.ranger.db.XXGroupGroupDao;
 import org.apache.ranger.db.XXGroupUserDao;
+import org.apache.ranger.db.XXPermMapDao;
+import org.apache.ranger.db.XXPolicyDao;
+import org.apache.ranger.db.XXPortalUserDao;
+import org.apache.ranger.db.XXPortalUserRoleDao;
+import org.apache.ranger.db.XXResourceDao;
+import org.apache.ranger.db.XXUserDao;
+import org.apache.ranger.db.XXUserPermissionDao;
 import org.apache.ranger.entity.XXAuditMap;
+import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXGroupGroup;
 import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPermMap;
+import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXTrxLog;
@@ -81,7 +99,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.entity.XXPortalUserRole;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXStringList;
 @Component
@@ -123,56 +140,15 @@ public class XUserMgr extends XUserMgrBase {
 	@Autowired
 	SessionMgr sessionMgr;
 
+	@Autowired
+	RangerPolicyService policyService;
+
+	@Autowired
+	ServiceDBStore svcStore;
+
 	static final Logger logger = Logger.getLogger(XUserMgr.class);
 
-	public void deleteXGroup(Long id, boolean force) {
-		checkAdminAccess();
-		if (force) {
-			SearchCriteria searchCriteria = new SearchCriteria();
-			searchCriteria.addParam("xGroupId", id);
-			VXGroupUserList vxGroupUserList = searchXGroupUsers(searchCriteria);
-			for (VXGroupUser groupUser : vxGroupUserList.getList()) {
-				daoManager.getXXGroupUser().remove(groupUser.getId());
-			}
-			XXGroup xGroup = daoManager.getXXGroup().getById(id);
-			daoManager.getXXGroup().remove(id);
-			List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(
-					xGroupService.populateViewBean(xGroup), "delete");
-			xaBizUtil.createTrxLog(trxLogList);
-		} else {
-			throw restErrorUtil.createRESTException(
-					"serverMsg.modelMgrBaseDeleteModel",
-					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		}
-	}
 
-	public void deleteXUser(Long id, boolean force) {
-		checkAdminAccess();
-		if (force) {
-			SearchCriteria searchCriteria = new SearchCriteria();
-			searchCriteria.addParam("xUserId", id);
-			VXGroupUserList vxGroupUserList = searchXGroupUsers(searchCriteria);
-
-			XXGroupUserDao xGroupUserDao = daoManager.getXXGroupUser();
-			for (VXGroupUser groupUser : vxGroupUserList.getList()) {
-				xGroupUserDao.remove(groupUser.getId());
-			}
-			// TODO : Need to discuss, why we were not removing user from the
-			// system.
-
-			// XXUser xUser = daoManager.getXXUser().getById(id);
-			daoManager.getXXUser().remove(id);
-			// applicationCache.removeUserID(id);
-			// Not Supported So Far
-			// List<XXTrxLog> trxLogList = xUserService.getTransactionLog(
-			// xUserService.populateViewBean(xUser), "delete");
-			// xaBizUtil.createTrxLog(trxLogList);
-		} else {
-			throw restErrorUtil.createRESTException(
-					"serverMsg.modelMgrBaseDeleteModel",
-					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		}
-	}
 
 	public VXUser getXUserByUserName(String userName) {
 		VXUser vXUser=null;
@@ -1445,5 +1421,320 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 		return false;
+	}
+
+	public void deleteXGroup(Long id, boolean force) {
+		checkAdminAccess();
+		XXGroupDao xXGroupDao = daoManager.getXXGroup();
+		XXGroup xXGroup = xXGroupDao.getById(id);
+		VXGroup vXGroup = xGroupService.populateViewBean(xXGroup);
+		if (vXGroup == null || StringUtil.isEmpty(vXGroup.getName())) {
+			throw restErrorUtil.createRESTException("Group ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
+		}
+		if(logger.isDebugEnabled()){
+			logger.info("Force delete status="+force+" for group="+vXGroup.getName());
+		}
+
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchCriteria.addParam("xGroupId", id);
+		VXGroupUserList vxGroupUserList = searchXGroupUsers(searchCriteria);
+
+		searchCriteria = new SearchCriteria();
+		searchCriteria.addParam("groupId", id);
+		VXPermMapList vXPermMapList = searchXPermMaps(searchCriteria);
+
+		searchCriteria = new SearchCriteria();
+		searchCriteria.addParam("groupId", id);
+		VXAuditMapList vXAuditMapList = searchXAuditMaps(searchCriteria);
+
+		XXGroupGroupDao xXGroupGroupDao = daoManager.getXXGroupGroup();
+		List<XXGroupGroup> xXGroupGroups = xXGroupGroupDao.findByGroupId(id);
+
+		XXPolicyDao xXPolicyDao = daoManager.getXXPolicy();
+		List<XXPolicy> xXPolicyList = xXPolicyDao.findByGroupId(id);
+		logger.warn("Deleting GROUP : "+vXGroup.getName());
+		if (force) {
+			//delete XXGroupUser records of matching group
+			XXGroupUserDao xGroupUserDao = daoManager.getXXGroupUser();
+			XXUserDao xXUserDao = daoManager.getXXUser();
+			XXUser xXUser =null;
+			for (VXGroupUser groupUser : vxGroupUserList.getList()) {
+				if(groupUser!=null){
+					xXUser=xXUserDao.getById(groupUser.getUserId());
+					if(xXUser!=null){
+						logger.warn("Removing user '" + xXUser.getName() + "' from group '" + groupUser.getName() + "'");
+					}
+					xGroupUserDao.remove(groupUser.getId());
+				}
+			}
+			//delete XXPermMap records of matching group
+			XXPermMapDao xXPermMapDao = daoManager.getXXPermMap();
+			XXResourceDao xXResourceDao = daoManager.getXXResource();
+			XXResource xXResource =null;
+			for (VXPermMap vXPermMap : vXPermMapList.getList()) {
+				if(vXPermMap!=null){
+					xXResource=xXResourceDao.getById(vXPermMap.getResourceId());
+					if(xXResource!=null){
+						logger.warn("Deleting '" + AppConstants.getLabelFor_XAPermType(vXPermMap.getPermType()) + "' permission from policy ID='" + vXPermMap.getResourceId() + "' for group '" + vXPermMap.getGroupName() + "'");
+					}
+					xXPermMapDao.remove(vXPermMap.getId());
+				}
+			}
+			//delete XXAuditMap records of matching group
+			XXAuditMapDao xXAuditMapDao = daoManager.getXXAuditMap();
+			for (VXAuditMap vXAuditMap : vXAuditMapList.getList()) {
+				if(vXAuditMap!=null){
+					xXResource=xXResourceDao.getById(vXAuditMap.getResourceId());
+					xXAuditMapDao.remove(vXAuditMap.getId());
+				}
+			}
+			//delete XXGroupGroupDao records of group-group mapping
+			for (XXGroupGroup xXGroupGroup : xXGroupGroups) {
+				if(xXGroupGroup!=null){
+					XXGroup xXGroupParent=xXGroupDao.getById(xXGroupGroup.getParentGroupId());
+					XXGroup xXGroupChild=xXGroupDao.getById(xXGroupGroup.getGroupId());
+					if(xXGroupParent!=null && xXGroupChild!=null){
+						logger.warn("Removing group '" + xXGroupChild.getName() + "' from group '" + xXGroupParent.getName() + "'");
+					}
+					xXGroupGroupDao.remove(xXGroupGroup.getId());
+				}
+			}
+			//delete XXPolicyItemGroupPerm records of group
+			for (XXPolicy xXPolicy : xXPolicyList) {
+				RangerPolicy rangerPolicy = policyService.getPopulatedViewObject(xXPolicy);
+				List<RangerPolicyItem> policyItems = rangerPolicy.getPolicyItems();
+				removeUserGroupReferences(policyItems,null,vXGroup.getName());
+				rangerPolicy.setPolicyItems(policyItems);
+				try {
+					svcStore.updatePolicy(rangerPolicy);
+				} catch (Throwable excp) {
+					logger.error("updatePolicy(" + rangerPolicy + ") failed", excp);
+					restErrorUtil.createRESTException(excp.getMessage());
+				}
+			}
+			//delete XXGroup
+			xXGroupDao.remove(id);
+			//Create XXTrxLog
+			List<XXTrxLog> xXTrxLogsXXGroup = xGroupService.getTransactionLog(xGroupService.populateViewBean(xXGroup),
+					"delete");
+			xaBizUtil.createTrxLog(xXTrxLogsXXGroup);
+		} else {
+			boolean hasReferences=false;
+
+			if(vxGroupUserList!=null && vxGroupUserList.getListSize()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && xXPolicyList!=null && xXPolicyList.size()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && vXPermMapList!=null && vXPermMapList.getListSize()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && vXAuditMapList!=null && vXAuditMapList.getListSize()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && xXGroupGroups!=null && xXGroupGroups.size()>0){
+				hasReferences=true;
+			}
+
+			if(hasReferences){ //change visibility to Hidden
+				if(vXGroup.getIsVisible()==RangerCommonEnums.IS_VISIBLE){
+					vXGroup.setIsVisible(RangerCommonEnums.IS_HIDDEN);
+					xGroupService.updateResource(vXGroup);
+				}
+			}else{
+				//delete XXGroup
+				xXGroupDao.remove(id);
+				//Create XXTrxLog
+				List<XXTrxLog> xXTrxLogsXXGroup = xGroupService.getTransactionLog(xGroupService.populateViewBean(xXGroup),
+						"delete");
+				xaBizUtil.createTrxLog(xXTrxLogsXXGroup);
+			}
+		}
+	}
+
+	public void deleteXUser(Long id, boolean force) {
+		checkAdminAccess();
+		XXUserDao xXUserDao = daoManager.getXXUser();
+		XXUser xXUser =	xXUserDao.getById(id);
+		VXUser vXUser =	xUserService.populateViewBean(xXUser);
+		if(vXUser==null ||StringUtil.isEmpty(vXUser.getName())){
+			throw restErrorUtil.createRESTException("No user found with id=" + id);
+		}
+		XXPortalUserDao xXPortalUserDao=daoManager.getXXPortalUser();
+		XXPortalUser xXPortalUser=xXPortalUserDao.findByLoginId(vXUser.getName().trim());
+		VXPortalUser vXPortalUser=xPortalUserService.populateViewBean(xXPortalUser);
+		if(vXPortalUser==null ||StringUtil.isEmpty(vXPortalUser.getLoginId())){
+			throw restErrorUtil.createRESTException("No user found with id=" + id);
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("Force delete status="+force+" for user="+vXUser.getName());
+		}
+
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchCriteria.addParam("xUserId", id);
+		VXGroupUserList vxGroupUserList = searchXGroupUsers(searchCriteria);
+
+		searchCriteria = new SearchCriteria();
+		searchCriteria.addParam("userId", id);
+		VXPermMapList vXPermMapList = searchXPermMaps(searchCriteria);
+
+		searchCriteria = new SearchCriteria();
+		searchCriteria.addParam("userId", id);
+		VXAuditMapList vXAuditMapList = searchXAuditMaps(searchCriteria);
+
+		long xXPortalUserId=0;
+		xXPortalUserId=vXPortalUser.getId();
+		XXAuthSessionDao xXAuthSessionDao=daoManager.getXXAuthSession();
+		XXUserPermissionDao xXUserPermissionDao=daoManager.getXXUserPermission();
+		XXPortalUserRoleDao xXPortalUserRoleDao=daoManager.getXXPortalUserRole();
+		List<XXAuthSession> xXAuthSessions=xXAuthSessionDao.getAuthSessionByUserId(xXPortalUserId);
+		List<XXUserPermission> xXUserPermissions=xXUserPermissionDao.findByUserPermissionId(xXPortalUserId);
+		List<XXPortalUserRole> xXPortalUserRoles=xXPortalUserRoleDao.findByUserId(xXPortalUserId);
+
+		XXPolicyDao xXPolicyDao = daoManager.getXXPolicy();
+		List<XXPolicy> xXPolicyList=xXPolicyDao.findByUserId(id);
+		logger.warn("Deleting User : "+vXUser.getName());
+		if (force) {
+			//delete XXGroupUser mapping
+			XXGroupUserDao xGroupUserDao = daoManager.getXXGroupUser();
+			for (VXGroupUser groupUser : vxGroupUserList.getList()) {
+				if(groupUser!=null){
+					logger.warn("Removing user '" + vXUser.getName() + "' from group '" + groupUser.getName() + "'");
+					xGroupUserDao.remove(groupUser.getId());
+				}
+			}
+			//delete XXPermMap records of user
+			XXPermMapDao xXPermMapDao = daoManager.getXXPermMap();
+			for (VXPermMap vXPermMap : vXPermMapList.getList()) {
+				if(vXPermMap!=null){
+					logger.warn("Deleting '" + AppConstants.getLabelFor_XAPermType(vXPermMap.getPermType()) + "' permission from policy ID='" + vXPermMap.getResourceId() + "' for user '" + vXPermMap.getUserName() + "'");
+					xXPermMapDao.remove(vXPermMap.getId());
+				}
+			}
+			//delete XXAuditMap records of user
+			XXAuditMapDao xXAuditMapDao = daoManager.getXXAuditMap();
+			for (VXAuditMap vXAuditMap : vXAuditMapList.getList()) {
+				if(vXAuditMap!=null){
+					xXAuditMapDao.remove(vXAuditMap.getId());
+				}
+			}
+			//delete XXPortalUser references
+			if(vXPortalUser!=null){
+				xPortalUserService.updateXXPortalUserReferences(xXPortalUserId);
+				if(xXAuthSessions!=null && xXAuthSessions.size()>0){
+					logger.warn("Deleting " + xXAuthSessions.size() + " login session records for user '" +  vXPortalUser.getLoginId() + "'");
+				}
+				for (XXAuthSession xXAuthSession : xXAuthSessions) {
+					xXAuthSessionDao.remove(xXAuthSession.getId());
+				}
+				for (XXUserPermission xXUserPermission : xXUserPermissions) {
+					if(xXUserPermission!=null){
+						XXModuleDef xXModuleDef=daoManager.getXXModuleDef().findByModuleId(xXUserPermission.getModuleId());
+						if(xXModuleDef!=null){
+							logger.warn("Deleting '" + xXModuleDef.getModule() + "' module permission for user '" + vXPortalUser.getLoginId() + "'");
+						}
+						xXUserPermissionDao.remove(xXUserPermission.getId());
+					}
+				}
+				for (XXPortalUserRole xXPortalUserRole : xXPortalUserRoles) {
+					if(xXPortalUserRole!=null){
+						logger.warn("Deleting '" + xXPortalUserRole.getUserRole() + "' role for user '" + vXPortalUser.getLoginId() + "'");
+						xXPortalUserRoleDao.remove(xXPortalUserRole.getId());
+					}
+				}
+			}
+			//delete XXPolicyItemUserPerm records of user
+			for(XXPolicy xXPolicy:xXPolicyList){
+				RangerPolicy rangerPolicy = policyService.getPopulatedViewObject(xXPolicy);
+				List<RangerPolicyItem> policyItems = rangerPolicy.getPolicyItems();
+				removeUserGroupReferences(policyItems,vXUser.getName(),null);
+				rangerPolicy.setPolicyItems(policyItems);
+				try{
+					svcStore.updatePolicy(rangerPolicy);
+				}catch(Throwable excp) {
+					logger.error("updatePolicy(" + rangerPolicy + ") failed", excp);
+					throw restErrorUtil.createRESTException(excp.getMessage());
+				}
+			}
+			//delete XXUser entry of user
+			xXUserDao.remove(id);
+			//delete XXPortal entry of user
+			logger.warn("Deleting Portal User : "+vXPortalUser.getLoginId());
+			xXPortalUserDao.remove(xXPortalUserId);
+			List<XXTrxLog> trxLogList =xUserService.getTransactionLog(xUserService.populateViewBean(xXUser), "delete");
+			xaBizUtil.createTrxLog(trxLogList);
+			if (xXPortalUser != null) {
+				trxLogList=xPortalUserService
+						.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
+				xaBizUtil.createTrxLog(trxLogList);
+			}
+		} else {
+			boolean hasReferences=false;
+
+			if(vxGroupUserList!=null && vxGroupUserList.getListSize()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && xXPolicyList!=null && xXPolicyList.size()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && vXPermMapList!=null && vXPermMapList.getListSize()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && vXAuditMapList!=null && vXAuditMapList.getListSize()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && xXAuthSessions!=null && xXAuthSessions.size()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && xXUserPermissions!=null && xXUserPermissions.size()>0){
+				hasReferences=true;
+			}
+			if(hasReferences==false && xXPortalUserRoles!=null && xXPortalUserRoles.size()>0){
+				hasReferences=true;
+			}
+			if(hasReferences){
+				if(vXUser.getIsVisible()!=RangerCommonEnums.IS_HIDDEN){
+					logger.info("Updating visibility of user '"+vXUser.getName()+"' to Hidden!");
+					vXUser.setIsVisible(RangerCommonEnums.IS_HIDDEN);
+					xUserService.updateResource(vXUser);
+				}
+			}else{
+				xPortalUserService.updateXXPortalUserReferences(xXPortalUserId);
+				//delete XXUser entry of user
+				xXUserDao.remove(id);
+				//delete XXPortal entry of user
+				logger.warn("Deleting Portal User : "+vXPortalUser.getLoginId());
+				xXPortalUserDao.remove(xXPortalUserId);
+				List<XXTrxLog> trxLogList =xUserService.getTransactionLog(xUserService.populateViewBean(xXUser), "delete");
+				xaBizUtil.createTrxLog(trxLogList);
+				if (xXPortalUser != null) {
+					trxLogList=xPortalUserService
+							.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
+					xaBizUtil.createTrxLog(trxLogList);
+				}
+			}
+		}
+	}
+
+	private void removeUserGroupReferences(List<RangerPolicyItem> policyItems, String user, String group) {
+		List<RangerPolicyItem> itemsToRemove = null;
+		for(RangerPolicyItem policyItem : policyItems) {
+			if(!StringUtil.isEmpty(user)) {
+				policyItem.getUsers().remove(user);
+			}
+			if(!StringUtil.isEmpty(group)) {
+				policyItem.getGroups().remove(group);
+			}
+			if(policyItem.getUsers().isEmpty() && policyItem.getGroups().isEmpty()) {
+				if(itemsToRemove == null) {
+					itemsToRemove = new ArrayList<RangerPolicyItem>();
+				}
+				itemsToRemove.add(policyItem);
+			}
+		}
+		if(CollectionUtils.isNotEmpty(itemsToRemove)) {
+			policyItems.removeAll(itemsToRemove);
+		}
 	}
 }

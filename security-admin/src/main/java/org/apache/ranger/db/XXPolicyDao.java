@@ -122,5 +122,28 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 
 		updateSequence("X_POLICY_SEQ", maxId + 1);
 	}
-
+	public List<XXPolicy> findByUserId(Long userId) {
+		if(userId == null || userId.equals(0)) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicy.findByUserId", tClass)
+					.setParameter("userId", userId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
+	}
+	public List<XXPolicy> findByGroupId(Long groupId) {
+		if(groupId == null || groupId.equals(0)) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicy.findByGroupId", tClass)
+					.setParameter("groupId", groupId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
+	}
 }

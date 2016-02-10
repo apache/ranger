@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.ranger.common.ContextUtil;
@@ -30,36 +31,57 @@ import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXAuditMapDao;
+import org.apache.ranger.db.XXAuthSessionDao;
 import org.apache.ranger.db.XXGroupDao;
+import org.apache.ranger.db.XXGroupGroupDao;
 import org.apache.ranger.db.XXGroupPermissionDao;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.db.XXModuleDefDao;
+import org.apache.ranger.db.XXPermMapDao;
+import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXPortalUserRoleDao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.db.XXUserPermissionDao;
+import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXGroupGroup;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
+import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
+import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
+import org.apache.ranger.service.RangerPolicyService;
+import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XGroupUserService;
 import org.apache.ranger.service.XModuleDefService;
+import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XPortalUserService;
 import org.apache.ranger.service.XUserPermissionService;
 import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.VXAuditMap;
+import org.apache.ranger.view.VXAuditMapList;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXModuleDef;
+import org.apache.ranger.view.VXPermMap;
+import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXUser;
@@ -136,6 +158,17 @@ public class TestXUserMgr {
 	@Mock
 	SessionMgr sessionMgr;
 
+	@Mock
+	XPermMapService xPermMapService;
+
+	@Mock
+	XAuditMapService xAuditMapService;
+
+	@Mock
+	RangerPolicyService policyService;
+
+	@Mock
+	ServiceDBStore svcStore;
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -226,6 +259,43 @@ public class TestXUserMgr {
 		return userProfile;
 	}
 
+	private RangerPolicy rangerPolicy() {
+		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+		List<String> users = new ArrayList<String>();
+		List<String> groups = new ArrayList<String>();
+		List<RangerPolicyItemCondition> conditions = new ArrayList<RangerPolicyItemCondition>();
+		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
+		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.setAccesses(accesses);
+		rangerPolicyItem.setConditions(conditions);
+		rangerPolicyItem.setGroups(groups);
+		rangerPolicyItem.setUsers(users);
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		policyItems.add(rangerPolicyItem);
+
+		Map<String, RangerPolicyResource> policyResource = new HashMap<String, RangerPolicyResource>();
+		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource();
+		rangerPolicyResource.setIsExcludes(true);
+		rangerPolicyResource.setIsRecursive(true);
+		rangerPolicyResource.setValue("1");
+		rangerPolicyResource.setValues(users);
+		RangerPolicy policy = new RangerPolicy();
+		policy.setId(userId);
+		policy.setCreateTime(new Date());
+		policy.setDescription("policy");
+		policy.setGuid("policyguid");
+		policy.setIsEnabled(true);
+		policy.setName("HDFS_1-1-20150316062453");
+		policy.setUpdatedBy("Admin");
+		policy.setUpdateTime(new Date());
+		policy.setService("HDFS_1-1-20150316062453");
+		policy.setIsAuditEnabled(true);
+		policy.setPolicyItems(policyItems);
+		policy.setResources(policyResource);
+
+		return policy;
+	}
 	@Test
 	public void test11CreateXUser() {
 		setup();
@@ -615,43 +685,121 @@ public class TestXUserMgr {
 	@Test
 	public void test27DeleteXGroup() {
 		setup();
-		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
-
-		VXGroupUserList vxGroupUserList = new VXGroupUserList();
-		XXGroup xxGroup = new XXGroup();
 		boolean force = true;
-		Mockito.when(
-				xGroupUserService.searchXGroupUsers((SearchCriteria) Mockito
-						.anyObject())).thenReturn(vxGroupUserList);
-
-		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
-		Mockito.when(xxGroupDao.getById(userId)).thenReturn(xxGroup);
-
-		xUserMgr.deleteXGroup(userId, force);
-		Mockito.verify(xGroupUserService).searchXGroupUsers(
-				(SearchCriteria) Mockito.anyObject());
+		VXGroup vXGroup = new VXGroup();
+		vXGroup.setId(userId);
+		vXGroup.setDescription("group test");
+		vXGroup.setName("grouptest");
+		// XXGroup
+		XXGroupDao xXGroupDao = Mockito.mock(XXGroupDao.class);
+		XXGroup xXGroup = new XXGroup();
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
+		Mockito.when(xXGroupDao.getById(vXGroup.getId())).thenReturn(xXGroup);
+		Mockito.when(xGroupService.populateViewBean(xXGroup)).thenReturn(vXGroup);
+		// VXGroupUser
+		VXGroupUserList vxGroupUserList = new VXGroupUserList();
+		XXGroupUserDao xGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+		VXGroupUser vxGroupUser = new VXGroupUser();
+		vxGroupUser.setId(userId);
+		vxGroupUser.setName("group user test");
+		vxGroupUser.setOwner("Admin");
+		vxGroupUser.setUserId(userId);
+		vxGroupUser.setUpdatedBy("User");
+		Mockito.when(xGroupUserService.searchXGroupUsers((SearchCriteria) Mockito.anyObject()))
+				.thenReturn(vxGroupUserList);
+		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xGroupUserDao);
+		// VXPermMap
+		VXPermMapList vXPermMapList = new VXPermMapList();
+		XXPermMapDao xXPermMapDao = Mockito.mock(XXPermMapDao.class);
+		Mockito.when(xPermMapService.searchXPermMaps((SearchCriteria) Mockito.anyObject())).thenReturn(vXPermMapList);
+		Mockito.when(daoManager.getXXPermMap()).thenReturn(xXPermMapDao);
+		// VXAuditMap
+		VXAuditMapList vXAuditMapList = new VXAuditMapList();
+		XXAuditMapDao xXAuditMapDao = Mockito.mock(XXAuditMapDao.class);
+		Mockito.when(xAuditMapService.searchXAuditMaps((SearchCriteria) Mockito.anyObject()))
+				.thenReturn(vXAuditMapList);
+		Mockito.when(daoManager.getXXAuditMap()).thenReturn(xXAuditMapDao);
+		//XXGroupGroup
+		XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
+		List<XXGroupGroup> xXGroupGroups = new ArrayList<XXGroupGroup>();
+		Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+		Mockito.when(xXGroupGroupDao.findByGroupId(userId)).thenReturn(xXGroupGroups);
+		//update XXPolicyItemUserPerm
+		XXPolicyDao xXPolicyDao = Mockito.mock(XXPolicyDao.class);
+		List<XXPolicy> xXPolicyList = new ArrayList<XXPolicy>();
+		XXPolicy xXPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xXPolicyDao);
+		Mockito.when(xXPolicyDao.findByGroupId(userId)).thenReturn(xXPolicyList);
+		Mockito.when(policyService.getPopulatedViewObject(xXPolicy)).thenReturn(rangerPolicy);
+		xUserMgr.deleteXGroup(vXGroup.getId(), force);
+		Mockito.verify(xGroupUserService).searchXGroupUsers((SearchCriteria) Mockito.anyObject());
 	}
 
 	@Test
 	public void test28DeleteXUser() {
 		setup();
-		XXGroupUserDao xxGroupDao = Mockito.mock(XXGroupUserDao.class);
-		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-		VXGroupUserList vxGroupUserList = new VXGroupUserList();
 		boolean force = true;
+		VXUser vXUser = vxUser();
+		// XXUser
+		XXUser xXUser = new XXUser();
+		XXUserDao xXUserDao = Mockito.mock(XXUserDao.class);
+		Mockito.when(daoManager.getXXUser()).thenReturn(xXUserDao);
+		Mockito.when(xXUserDao.getById(vXUser.getId())).thenReturn(xXUser);
+		Mockito.when(xUserService.populateViewBean(xXUser)).thenReturn(vXUser);
+		// VXGroupUser
+		VXGroupUserList vxGroupUserList = new VXGroupUserList();
+		XXGroupUserDao xGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+		VXGroupUser vxGroupUser = new VXGroupUser();
+		vxGroupUser.setId(userId);
+		vxGroupUser.setName("group user test");
+		vxGroupUser.setOwner("Admin");
+		vxGroupUser.setUserId(vXUser.getId());
+		vxGroupUser.setUpdatedBy("User");
+		Mockito.when(xGroupUserService.searchXGroupUsers((SearchCriteria) Mockito.anyObject()))
+				.thenReturn(vxGroupUserList);
+		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xGroupUserDao);
+		// VXPermMap
+		VXPermMapList vXPermMapList = new VXPermMapList();
+		XXPermMapDao xXPermMapDao = Mockito.mock(XXPermMapDao.class);
+		Mockito.when(xPermMapService.searchXPermMaps((SearchCriteria) Mockito.anyObject())).thenReturn(vXPermMapList);
+		Mockito.when(daoManager.getXXPermMap()).thenReturn(xXPermMapDao);
+		// VXAuditMap
+		VXAuditMapList vXAuditMapList = new VXAuditMapList();
+		XXAuditMapDao xXAuditMapDao = Mockito.mock(XXAuditMapDao.class);
+		Mockito.when(xAuditMapService.searchXAuditMaps((SearchCriteria) Mockito.anyObject()))
+				.thenReturn(vXAuditMapList);
+		Mockito.when(daoManager.getXXAuditMap()).thenReturn(xXAuditMapDao);
+		//XXPortalUser
+		VXPortalUser vXPortalUser = userProfile();
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		XXPortalUserDao xXPortalUserDao = Mockito.mock(XXPortalUserDao.class);
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
+		Mockito.when(xXPortalUserDao.findByLoginId(vXUser.getName().trim())).thenReturn(xXPortalUser);
+		Mockito.when(xPortalUserService.populateViewBean(xXPortalUser)).thenReturn(vXPortalUser);
 
-		Mockito.when(
-				xGroupUserService.searchXGroupUsers((SearchCriteria) Mockito
-						.anyObject())).thenReturn(vxGroupUserList);
-		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupDao);
-		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
-		Mockito.when(xxUserDao.remove(userId)).thenReturn(true);
-
-		xUserMgr.deleteXUser(userId, force);
-		Mockito.verify(xGroupUserService).searchXGroupUsers(
-				(SearchCriteria) Mockito.anyObject());
-		Mockito.verify(daoManager).getXXGroupUser();
-		Mockito.verify(daoManager).getXXUser();
+		XXAuthSessionDao xXAuthSessionDao= Mockito.mock(XXAuthSessionDao.class);
+		XXUserPermissionDao xXUserPermissionDao= Mockito.mock(XXUserPermissionDao.class);
+		XXPortalUserRoleDao xXPortalUserRoleDao= Mockito.mock(XXPortalUserRoleDao.class);
+		Mockito.when(daoManager.getXXAuthSession()).thenReturn(xXAuthSessionDao);
+		Mockito.when(daoManager.getXXUserPermission()).thenReturn(xXUserPermissionDao);
+		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(xXPortalUserRoleDao);
+		List<XXAuthSession> xXAuthSessions=new ArrayList<XXAuthSession>();
+		List<XXUserPermission> xXUserPermissions=new ArrayList<XXUserPermission>();
+		List<XXPortalUserRole> xXPortalUserRoles=new ArrayList<XXPortalUserRole>();
+		Mockito.when(xXAuthSessionDao.getAuthSessionByUserId(vXPortalUser.getId())).thenReturn(xXAuthSessions);
+		Mockito.when(xXUserPermissionDao.findByUserPermissionId(vXPortalUser.getId())).thenReturn(xXUserPermissions);
+		Mockito.when(xXPortalUserRoleDao.findByUserId(vXPortalUser.getId())).thenReturn(xXPortalUserRoles);
+		//update XXPolicyItemUserPerm
+		XXPolicyDao xXPolicyDao = Mockito.mock(XXPolicyDao.class);
+		List<XXPolicy> xXPolicyList = new ArrayList<XXPolicy>();
+		XXPolicy xXPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xXPolicyDao);
+		Mockito.when(xXPolicyDao.findByUserId(vXUser.getId())).thenReturn(xXPolicyList);
+		Mockito.when(policyService.getPopulatedViewObject(xXPolicy)).thenReturn(rangerPolicy);
+		xUserMgr.deleteXUser(vXUser.getId(), force);
+		Mockito.verify(xGroupUserService).searchXGroupUsers((SearchCriteria) Mockito.anyObject());
 	}
 
 	@Test

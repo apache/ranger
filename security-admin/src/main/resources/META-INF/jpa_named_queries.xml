@@ -667,4 +667,20 @@
                   AND obj.attributeName = :attrName
         </query>
     </named-query>
+	<named-query name="XXAuthSession.getAuthSessionByUserId">
+	        <query>SELECT obj FROM XXAuthSession obj WHERE obj.userId = :userId
+	        </query>
+	</named-query>
+	<named-query name="XXGroupGroup.findByGroupId">
+	        <query>SELECT obj FROM XXGroupGroup obj WHERE obj.groupId = :groupId or obj.parentGroupId = :parentGroupId
+	        </query>
+	</named-query>
+	<named-query name="XXPolicy.findByUserId">
+	        <query>select obj from XXPolicy obj, XXPolicyItem polItem,XXPolicyItemUserPerm polItemUserPerm where
+	         obj.id = polItem.policyId and polItem.id = polItemUserPerm.policyItemId and polItemUserPerm.userId = :userId</query>
+	</named-query>
+	<named-query name="XXPolicy.findByGroupId">
+	        <query>select obj from XXPolicy obj, XXPolicyItem polItem,XXPolicyItemGroupPerm polItemGroupPerm where
+	         obj.id = polItem.policyId and polItem.id = polItemGroupPerm.policyItemId and polItemGroupPerm.groupId = :groupId</query>
+	</named-query>
 </entity-mappings>

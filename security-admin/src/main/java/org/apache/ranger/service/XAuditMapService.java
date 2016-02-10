@@ -72,6 +72,10 @@ public class XAuditMapService extends
 	public XAuditMapService() {
 		searchFields.add(new SearchField("resourceId", "obj.resourceId",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("userId", "obj.userId",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("groupId", "obj.groupId",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 	}
 
 	@Override
