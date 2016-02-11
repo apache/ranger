@@ -60,7 +60,8 @@ public class UserGroupSyncConfig  {
 	public static final String  UGSYNC_MIN_USERID_PROP  = 	"ranger.usersync.unix.minUserId" ;
 
 	public static final String  UGSYNC_MIN_GROUPID_PROP =   "ranger.usersync.unix.minGroupId" ;
-	
+        public static final String  DEFAULT_UGSYNC_MIN_GROUPID =   "0" ;
+        
 	public static final String  UGSYNC_MAX_RECORDS_PER_API_CALL_PROP  = 	"ranger.usersync.policymanager.maxrecordsperapicall" ;
 
 	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"ranger.usersync.policymanager.mockrun" ;
@@ -370,7 +371,13 @@ public class UserGroupSyncConfig  {
 		return prop.getProperty(UGSYNC_MIN_USERID_PROP) ;
 	}
 
-	public String getMinGroupId() { return prop.getProperty(UGSYNC_MIN_GROUPID_PROP) ; }
+	public String getMinGroupId() { 
+                String mgid = prop.getProperty(UGSYNC_MIN_GROUPID_PROP);
+                if (mgid == null) {
+                    mgid = DEFAULT_UGSYNC_MIN_GROUPID;
+                }
+                return mgid;
+        }
 	
 	public String getMaxRecordsPerAPICall() {
 		return prop.getProperty(UGSYNC_MAX_RECORDS_PER_API_CALL_PROP) ;
