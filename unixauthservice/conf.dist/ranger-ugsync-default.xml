@@ -47,11 +47,11 @@
 	</property>
 	<property>
 		<name>ranger.usersync.ldap.username.caseconversion</name>
-		<value>lower</value>
+		<value>none</value>
 	</property>
 	<property>
 		<name>ranger.usersync.ldap.groupname.caseconversion</name>
-		<value>lower</value>
+		<value>none</value>
 	</property>
 	<property>
 		<name>ranger.usersync.logdir</name>
