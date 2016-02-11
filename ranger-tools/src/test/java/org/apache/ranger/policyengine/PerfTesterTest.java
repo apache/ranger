@@ -19,45 +19,24 @@
 
 package org.apache.ranger.policyengine;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 /**
  * Unit test for simple App.
  */
-public class PerfTesterTest
-    extends TestCase
-
-{
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public PerfTesterTest( String testName )
-    {
-        super( testName );
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite()
-    {
-        return new TestSuite( PerfTesterTest.class );
-    }
+public class PerfTesterTest {
 
     /**
      * Rigourous Test :-)
      */
-
+    @Test
     public void testMain() {
 
         String[] args = readCommandLine();
@@ -67,14 +46,14 @@ public class PerfTesterTest
         }
     }
 
-
+    @Test
     public void testArgParsing() {
         String[] args = readCommandLine();
 
         if (args != null) {
             CommandLineParser commandLineParser = new CommandLineParser();
             PerfTestOptions parseResult = commandLineParser.parse(args);
-            assertNotNull(parseResult);
+            Assert.assertNotNull(parseResult);
         }
     }
 

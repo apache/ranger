@@ -20,8 +20,9 @@
 package org.apache.ranger.plugin.errors;
 
 import com.google.common.collect.ImmutableSet;
-import junit.framework.TestCase;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,14 +30,14 @@ import java.util.Set;
 /**
  * Created by alal on 7/30/15.
  */
-public class TestValidationErrorCode extends TestCase {
+public class TestValidationErrorCode {
 
-
+    @Test
     public void testUserMessage() throws Exception {
         ValidationErrorCode errorCode = ValidationErrorCode.SERVICE_VALIDATION_ERR_UNSUPPORTED_ACTION;
         String aParameter = "FOO";
         String expected = errorCode._template.replace("{0}", aParameter);
-        assertEquals(expected, errorCode.getMessage(aParameter));
+        Assert.assertEquals(expected, errorCode.getMessage(aParameter));
     }
 
     /**
@@ -46,6 +47,7 @@ public class TestValidationErrorCode extends TestCase {
      * This check is far from perfect.  It may give false alarms if the message itself contains strings of the form {1}
      * which have been escaped using single quotes.  If that happens we would have to make this test smarter.
      */
+    @Test
     public void testTemplates() {
 
         // we check up to 5 substitution variables.  If there are more than 5 then you probably have a different set of problems
@@ -65,7 +67,7 @@ public class TestValidationErrorCode extends TestCase {
             }
             // check for incorrectly numbers substition variable placeholders
             for (ValidationErrorCode anEnum : mustNot) {
-                assertFalse(anEnum.toString() + ": contains " + token + ". Check for wongly numberd substition variable placeholders.",
+                Assert.assertFalse(anEnum.toString() + ": contains " + token + ". Check for wongly numberd substition variable placeholders.",
                         anEnum._template.contains(token));
             }
         }
@@ -74,12 +76,13 @@ public class TestValidationErrorCode extends TestCase {
     /**
      * Test if the values assigned to the validation error code are unique or not.
      */
+    @Test
     public void testValidationErrorCodesUnique() {
         Set<Integer> errorCodes = new HashSet<>();
         for (ValidationErrorCode anEnum : ValidationErrorCode.values()) {
             int errorCode = anEnum.getErrorCode();
             // errorCode that we see must not have been seen so far.
-            assertFalse("ValidationErrorCode: error code [" + errorCode + "] used multiple times!", errorCodes.contains(errorCode));
+            Assert.assertFalse("ValidationErrorCode: error code [" + errorCode + "] used multiple times!", errorCodes.contains(errorCode));
             errorCodes.add(errorCode);
         }
     }
