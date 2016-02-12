@@ -90,7 +90,7 @@ public class StringUtil implements Serializable {
 			return null;
 		}
 		str = str.trim().toLowerCase();
-		StringBuffer result = new StringBuffer(str.length());
+		StringBuilder result = new StringBuilder(str.length());
 		boolean makeUpper = true;
 		boolean lastCharSpace = true;
 		for (int c = 0; c < str.length(); c++) {

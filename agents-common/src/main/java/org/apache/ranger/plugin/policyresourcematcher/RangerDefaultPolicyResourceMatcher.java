@@ -144,7 +144,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
 		if(matchers == null) {
 			Set<String> policyResourceKeys = policyResources == null ? null : policyResources.keySet();
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			if (CollectionUtils.isNotEmpty(policyResourceKeys)) {
 				for (String policyResourceKeyName : policyResourceKeys) {
 					sb.append(" ").append(policyResourceKeyName).append(" ");

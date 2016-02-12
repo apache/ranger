@@ -158,7 +158,7 @@ public class TagSyncConfig extends Configuration {
 
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 
 		sb.append("DEFAULT_CONFIG_FILE=").append(DEFAULT_CONFIG_FILE).append(", ")
 				.append("CONFIG_FILE=").append(CONFIG_FILE).append("\n\n");

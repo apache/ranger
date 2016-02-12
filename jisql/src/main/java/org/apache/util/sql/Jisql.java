@@ -365,7 +365,7 @@ public class Jisql {
         Statement statement = null;
         ResultSet resultSet = null;
         ResultSetMetaData resultSetMetaData = null;
-        StringBuffer query = null;
+        StringBuilder query = null;
 
         if (inputFileName != null) {
             try {
@@ -390,7 +390,7 @@ public class Jisql {
         
         while (true) {
             int linecount = 1;
-            query = new StringBuffer();
+            query = new StringBuilder();
 
             try {
                 if ((inputFileName == null) && (inputQuery == null))
@@ -417,7 +417,7 @@ public class Jisql {
                     }
 
                     if (line.equals("reset")) {
-                        query = new StringBuffer();
+                        query = new StringBuilder();
                         break;
                     }
                     trimmedLine=line.trim();

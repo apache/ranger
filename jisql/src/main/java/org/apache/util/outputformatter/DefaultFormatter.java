@@ -247,7 +247,7 @@ public class DefaultFormatter implements JisqlFormatter {
 			return s.substring(0, width);
 
 		int fillWidth = width - len;
-		StringBuffer fill = new StringBuffer(fillWidth);
+		StringBuilder fill = new StringBuilder(fillWidth);
 		for (int i = 0; i < fillWidth; ++i)
 			fill.append(spacer);
 		if (leftJustify)
@@ -283,7 +283,7 @@ public class DefaultFormatter implements JisqlFormatter {
 		if (len >= width)
 			width = len;
 
-		StringBuffer fill = new StringBuffer(width);
+		StringBuilder fill = new StringBuilder(width);
 		for (int i = 0; i < width; ++i)
 			fill.append('-');
 
@@ -329,7 +329,7 @@ public class DefaultFormatter implements JisqlFormatter {
         }
 
 		int fillWidth = width - len;
-		StringBuffer fill = new StringBuffer(fillWidth);
+		StringBuilder fill = new StringBuilder(fillWidth);
 		for (int i = 0; i < fillWidth; ++i)
 			fill.append(spacer);
 

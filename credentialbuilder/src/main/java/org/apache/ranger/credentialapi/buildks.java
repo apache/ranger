@@ -360,7 +360,7 @@ public class buildks {
     {
 		String debugOption = System.getProperty("debug") ;
 		if (debugOption != null && "TRUE".equalsIgnoreCase(debugOption)) {
-			StringBuffer tempBuffer=new StringBuffer("");
+			StringBuilder tempBuffer=new StringBuilder("");
 			if(args!=null && args.length>0){
 				for(int index=0;index<args.length;index++){
 					tempBuffer.append(args[index]+" ");

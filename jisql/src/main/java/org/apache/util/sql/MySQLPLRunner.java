@@ -126,13 +126,13 @@ public class MySQLPLRunner {
      */
     private void runScript(Connection conn, Reader reader) throws IOException,
             SQLException {
-        StringBuffer command = null;
+        StringBuilder command = null;
         try {
             LineNumberReader lineReader = new LineNumberReader(reader);
             String line = null;
             while ((line = lineReader.readLine()) != null) {
                 if (command == null) {
-                    command = new StringBuffer();
+                    command = new StringBuilder();
                 }
                 String trimmedLine = line.trim();
                 

@@ -40,9 +40,9 @@ public class KMSMDCFilter implements Filter {
   private static class Data {
     private UserGroupInformation ugi;
     private String method;
-    private StringBuffer url;
+    private String url;
 
-    private Data(UserGroupInformation ugi, String method, StringBuffer url) {
+    private Data(UserGroupInformation ugi, String method, String url) {
       this.ugi = ugi;
       this.method = method;
       this.url = url;
@@ -60,7 +60,7 @@ public class KMSMDCFilter implements Filter {
   }
 
   public static String getURL() {
-    return DATA_TL.get().url.toString();
+    return DATA_TL.get().url;
   }
 
   @Override
@@ -80,7 +80,7 @@ public class KMSMDCFilter implements Filter {
       if (queryString != null) {
         requestURL.append("?").append(queryString);
       }
-      DATA_TL.set(new Data(ugi, method, requestURL));
+      DATA_TL.set(new Data(ugi, method, requestURL.toString()));
       chain.doFilter(request, response);
     } finally {
       DATA_TL.remove();

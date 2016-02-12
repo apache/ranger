@@ -219,7 +219,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
 			return null;
 		}
 		try {
-			StringBuffer query = new StringBuffer(
+			StringBuilder query = new StringBuilder(
 					"SELECT obj FROM XXResource obj WHERE obj.assetId="
 							+ assetId);
 			String whereClause = makeWhereCaluseForResourceType(resourceType);
@@ -235,7 +235,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
 	}
 
 	private String makeWhereCaluseForResourceType(List<Integer> resourceTypes) {
-		StringBuffer whereClause = new StringBuffer();
+		StringBuilder whereClause = new StringBuilder();
 		if (resourceTypes != null && resourceTypes.size() != 0) {
 
 			for (int i = 0; i < resourceTypes.size() - 1; i++) {

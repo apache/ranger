@@ -513,7 +513,7 @@ public class XResourceService extends
 				pathList.add(fileSeparator);
 			}
 			
-			StringBuffer path = new StringBuffer();
+			StringBuilder path = new StringBuilder();
 			for (int i = 1; i < policyPathParts.length - 1; i++) {
 				path.append(fileSeparator + policyPathParts[i]);
 				pathList.add(path.toString());

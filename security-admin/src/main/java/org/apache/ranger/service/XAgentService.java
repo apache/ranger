@@ -105,7 +105,7 @@ public class XAgentService {
 	}
 
 	private String bulidWhereClause(SearchCriteria searchCriteria) {
-		StringBuffer whereClause = new StringBuffer();
+		StringBuilder whereClause = new StringBuilder();
 		Date startDate = (Date) searchCriteria.getParamValue("startDate");
 		Date endDate = (Date) searchCriteria.getParamValue("endDate");
 
