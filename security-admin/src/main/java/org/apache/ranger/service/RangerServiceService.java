@@ -210,7 +210,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 			} else if (action == OPERATION_UPDATE_CONTEXT) {
 				actionString = actionUpdate;
 				String oldValue = null;
-				Field[] mFields = mObj.getClass().getDeclaredFields();
+				Field[] mFields = mObj.getClass().getSuperclass().getDeclaredFields();
 				for (Field mField : mFields) {
 					mField.setAccessible(true);
 					String mFieldName = mField.getName();

@@ -132,8 +132,7 @@ define(function(require){
 		return this.userInRole('ROLE_KEY_ADMIN') ? true : false;
 	};
 	SessionMgr.isUser = function(){
-		var roles = this.getRoleInUserSchool();
-		return  $.inArray('ROLE_USER',roles) != -1  ? true  : false ;
+		return this.userInRole('ROLE_USER') ? true : false;
 	};
 	return SessionMgr;
 });	

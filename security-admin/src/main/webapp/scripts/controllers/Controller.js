@@ -59,30 +59,16 @@ define(function(require) {
 	   userAccessReportAction : function(){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var view				= require('views/reports/UserAccessLayout');
-		   var RangerPolicyList 	= require('collections/RangerPolicyList');
+		   var RangerPolicyList = require('collections/RangerPolicyList');
 		   var VXGroupList		= require('collections/VXGroupList');
 		   var VXUserList		= require('collections/VXUserList');
-		   var policyList 	= new RangerPolicyList();
-		   var that 		= this;
-		   this.groupList 	= new VXGroupList();
-		   this.userList 	= new VXUserList();
-		   that.groupList.fetch({
-					async:false,
-					cache:false
-				}).done(function(){
-				that.userList.fetch({
-					async:false,
-					cache:false
-				}).done(function(){
-					if(App.rContent.currentView)
-						   App.rContent.currentView.close();
-					App.rContent.show(new view({
-						collection : policyList,
-						groupList :that.groupList,
-						userList :that.userList
-					}));
-				});
-			});
+		   if(App.rContent.currentView)
+			   App.rContent.currentView.close();
+		   App.rContent.show(new view({
+			   collection : new RangerPolicyList(),
+			   groupList : new VXGroupList(),
+			   userList : new VXUserList()
+		   }));
 	   },
 	   auditReportAction : function(tab){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Audit.value });
@@ -289,22 +275,18 @@ define(function(require) {
 		   var XAUtil			= require('utils/XAUtils');
 		   var view 			= require('views/policies/RangerPolicyTableLayout');
 		   var RangerService	= require('models/RangerService');
-		   var RangerPolicyList	= require('collections/RangerPolicyList');
+		   var RangerPolicyList 	=  require('collections/RangerPolicyList');
 		   
 		   var rangerService = new RangerService({id : serviceId});
-		   var rangerPolicyList = new RangerPolicyList();
-		   rangerPolicyList.url = XAUtil.getServicePoliciesURL(serviceId);
-		   
+
 		   rangerService.fetch({
 			  cache : false,
 			  async : false
 		   });
-		   rangerPolicyList.fetch({
-			   cache : false,
-		   });
 		   App.rContent.show(new view({
-			   collection : rangerPolicyList,
-			   rangerService : rangerService
+			   rangerService : rangerService,
+			   collection : new RangerPolicyList()
+			   
 		   }));
 	   },
 	   RangerPolicyCreateAction :function(serviceId){
@@ -350,17 +332,10 @@ define(function(require) {
 	   modulePermissionsAction :function(){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Settings.value });
 		   var view 			= require('views/permissions/ModulePermsTableLayout');
-		   var ModulePermission	= require('models/VXModuleDef');
 		   var ModulePermissionList	= require('collections/VXModuleDefList');
 
-		   var modulePermission = new ModulePermission();
-		   var modulePermissionList = new ModulePermissionList();
-
-		   modulePermissionList.fetch({
-			   cache : false,
-		   });
 		   App.rContent.show(new view({
-			   collection : modulePermissionList
+			   collection : new ModulePermissionList()
 		   }));
 
 	   },

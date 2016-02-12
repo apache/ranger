@@ -142,8 +142,12 @@ define(function(require){
 			if(!this.validatePolicyItem(validateObj3)) return;
 			var	validateObj4 = this.form.formValidation(this.form.formInputDenyExceptionList);
 			if(!this.validatePolicyItem(validateObj4)) return;
-			if((!validateObj1.auditLoggin) && !(validateObj1.groupPermSet || validateObj2.groupPermSet 
-										|| validateObj3.groupPermSet || validateObj4.groupPermSet)){
+			
+			var userPerm = (validateObj1.userPerm || validateObj2.userPerm
+					  || validateObj3.userPerm || validateObj4.userPerm);
+			var groupPerm = (validateObj1.groupPermSet || validateObj2.groupPermSet 
+					|| validateObj3.groupPermSet || validateObj4.groupPermSet)
+			if((!validateObj1.auditLoggin) && !(groupPerm || userPerm)){
 				XAUtil.alertPopup({ msg :localization.tt('msg.yourAuditLogginIsOff') });
 				return;
 			}

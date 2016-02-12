@@ -43,7 +43,8 @@ define(function(require) {
 			}
 		},
 		onRender : function(){
-			this.$el.find('li:last a').on('click',function(){ return false; });
+//			this.$el.find('li:last a').on('click',function(){ return false; });
+			this.$el.find('li:last a').addClass('_allowNav');
 		},
 		reRenderBookmarks : function(){
 			this.breadcrumb = this.setLast(this.breadcrumb);

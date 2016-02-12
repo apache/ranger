@@ -102,11 +102,7 @@ public class RangerRestUtil {
 				StringUtil.VALIDATION_NAME, "Invalid first name",
 				MessageEnums.INVALID_INPUT_DATA, null, "firstName"));
 
-		userProfile.setLastName(restErrorUtil.validateStringForUpdate(
-				userProfile.getLastName(), gjUser.getLastName(),
-				StringUtil.VALIDATION_NAME, "Invalid last name",
-				MessageEnums.INVALID_INPUT_DATA, null, "lastName"));
-
+		
 		// firstName
 		if (!stringUtil.isValidName(userProfile.getFirstName())) {
 			logger.info("Invalid first name." + userProfile);
@@ -114,13 +110,7 @@ public class RangerRestUtil {
 					"firstName"));
 		}
 
-		// lastName
-		if (!stringUtil.isValidName(userProfile.getLastName())) {
-			logger.info("Invalid last name." + userProfile);
-			messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null,
-					"lastName"));
-		}
-
+		
 		// create the public screen name
 		userProfile.setPublicScreenName(userProfile.getFirstName() + " "
 				+ userProfile.getLastName());

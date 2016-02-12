@@ -88,11 +88,18 @@ define(function(require){
 		/** all events binding here */
 		bindEvents : function(){
 		},
+		initializeModulePerms : function(){
+		   this.collection.fetch({
+			   cache : false,
+		   });
+
+		},
 		/** on render callback */
 		onRender: function() {
 			//this.initializePlugins();
 			this.addVisualSearch();
 			this.renderTable();
+			this.initializeModulePerms();
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){

@@ -103,6 +103,7 @@ define(function(require){
 //					resourceType : XAEnums.AssetType.ASSET_HDFS.value,
 					assetId : this.assetModel.id
 			};*/
+			
 			this.bindEvents();
 			this.initializeServiceDef();
 //			this.isSysAdmin = SessionMgr.isSystemAdmin();
@@ -124,13 +125,18 @@ define(function(require){
 				async : false
 			})
 		},
+		
+		initializePolicies : function(){
+			this.collection.url = XAUtil.getServicePoliciesURL(this.rangerService.id);
+			this.collection.fetch({
+				cache : false,
+			});
+		},
 		/** on render callback */
 		onRender: function() {
-//			this.initializePlugins();
 			this.addVisualSearch();
 			this.renderTable();
-			
-//			XAUtil.highlightDisabledPolicy(this);
+			this.initializePolicies();
 		},
 
 		/** all post render plugin initialization */
@@ -319,7 +325,7 @@ define(function(require){
 	
 			var searchOpt = ['Policy Name','Group Name','User Name','Status'];//,'Start Date','End Date','Today'];
 			searchOpt = _.union(searchOpt, resourceSearchOpt)
-			var serverAttrName  = [{text : "Policy Name", label :"policyName"},{text : "Group Name", label :"group"},
+			var serverAttrName  = [{text : "Policy Name", label :"policyNamePartial"},{text : "Group Name", label :"group"},
 			                       {text : "User Name", label :"user"}, {text : "Status", label :"isEnabled",'multiple' : true, 'optionsArr' : PolicyStatusValue}];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                 //  {text : 'Today',label :'today'}];

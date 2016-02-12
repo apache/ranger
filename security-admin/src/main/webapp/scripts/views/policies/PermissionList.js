@@ -208,7 +208,7 @@ define(function(require) {
 					results: function (data, page) { 
 						var results = [] , selectedVals = [];
 						//Get selected values of groups/users dropdown
-						selectedVals = that.getSelectdValues($select, typeGroup);
+						selectedVals = that.getSelectedValues($select, typeGroup);
 						if(data.resultSize != "0"){
 							if(typeGroup){
 								results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
@@ -487,11 +487,12 @@ define(function(require) {
 				
 			}
 		},
-		getSelectdValues : function($select, typeGroup){
+		getSelectedValues : function($select, typeGroup){
 			var vals = [],selectedVals = [];
 			var name = typeGroup ? 'group' : 'user';
-			if(!_.isEmpty($select.select2('data')))
-				selectedVals = _.map($select.select2('data'),function(obj){ return obj.text});
+			if(!_.isEmpty($select.select2('data'))){
+				selectedVals = _.map($select.select2('data'),function(obj){ return obj.text; });
+			}
 			vals.push.apply(vals , selectedVals);
 			vals = $.unique(vals);
 			return vals;

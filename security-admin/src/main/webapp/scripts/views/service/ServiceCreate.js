@@ -50,9 +50,9 @@ define(function(require){
 		breadCrumbs :function(){
 			var name  = this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? 'ServiceManager' : 'TagBasedServiceManager'; 
 			if(this.model.isNew()){
-				return [XALinks.get(name), XALinks.get('ServiceCreate', {model:this.model})];
+				return [XALinks.get(name), XALinks.get('ServiceCreate')];
 			} else {
-				return [XALinks.get(name), XALinks.get('ServiceEdit',{model:this.model})];
+				return [XALinks.get(name), XALinks.get('ServiceEdit')];
 			}
 		},        
 

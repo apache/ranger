@@ -44,11 +44,138 @@
 {{/if}}	
 
 {{#if newPolicyItems}}
-	<h5>Users/Groups Permissions :</h5>
+	<h5>Allow PolicyItems :</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right" data-id="diff">
 			<h3>New Value</h3>
 				{{#each newPolicyItems}}
+				<ol class="unstyled data">
+						<li class="change-row">Groups: 
+							{{#if_eq this.groups compare=0}}
+								&lt;empty&gt;	 
+							{{else}}
+								{{this.groups}}  
+							{{/if_eq}}
+						</li>
+					<li class="change-row">Users:
+						{{#if_eq this.users compare=0}}
+								&lt;empty&gt;	 
+						{{else}}
+							{{this.users}}  
+						{{/if_eq}}  
+					</li>
+					<li class="change-row">Permissions:
+						{{#each this.permissions}}
+							{{this}} <span>,</span>
+						{{/each}}
+					</li>
+					{{#if this.conditions}}
+					<li class="change-row">
+						Conditions:
+							{{#each this.conditions}}
+								{{this.type}} : [{{this.values}}]<span>,</span>
+							{{/each}}
+					</li>
+					{{/if}}
+					<li class="change-row">Delegate Admin:{{this.delegateAdmin}}</li>
+				</ol><br/>
+			{{/each}}
+		</div>
+	</div>
+{{/if}}
+
+<!-- Allow Exceptions -->
+
+{{#if newAllowExceptionPolicyItems}}
+	<h5>Allow Exceptions :</h5>
+	<div class="diff diff-perms" >
+		<div class="diff-right" data-id="diff">
+			<h3>New Value</h3>
+				{{#each newAllowExceptionPolicyItems}}
+				<ol class="unstyled data">
+						<li class="change-row">Groups: 
+							{{#if_eq this.groups compare=0}}
+								&lt;empty&gt;	 
+							{{else}}
+								{{this.groups}}  
+							{{/if_eq}}
+						</li>
+					<li class="change-row">Users:
+						{{#if_eq this.users compare=0}}
+								&lt;empty&gt;	 
+						{{else}}
+							{{this.users}}  
+						{{/if_eq}}  
+					</li>
+					<li class="change-row">Permissions:
+						{{#each this.permissions}}
+							{{this}} <span>,</span>
+						{{/each}}
+					</li>
+					{{#if this.conditions}}
+					<li class="change-row">
+						Conditions:
+							{{#each this.conditions}}
+								{{this.type}} : [{{this.values}}]<span>,</span>
+							{{/each}}
+					</li>
+					{{/if}}
+					<li class="change-row">Delegate Admin:{{this.delegateAdmin}}</li>
+				</ol><br/>
+			{{/each}}
+		</div>
+	</div>
+{{/if}}
+
+<!-- Deny PolicyItems -->
+
+{{#if newDenyPolicyItems}}
+	<h5>Deny PolicyItems :</h5>
+	<div class="diff diff-perms" >
+		<div class="diff-right" data-id="diff">
+			<h3>New Value</h3>
+				{{#each newDenyPolicyItems}}
+				<ol class="unstyled data">
+						<li class="change-row">Groups: 
+							{{#if_eq this.groups compare=0}}
+								&lt;empty&gt;	 
+							{{else}}
+								{{this.groups}}  
+							{{/if_eq}}
+						</li>
+					<li class="change-row">Users:
+						{{#if_eq this.users compare=0}}
+								&lt;empty&gt;	 
+						{{else}}
+							{{this.users}}  
+						{{/if_eq}}  
+					</li>
+					<li class="change-row">Permissions:
+						{{#each this.permissions}}
+							{{this}} <span>,</span>
+						{{/each}}
+					</li>
+					{{#if this.conditions}}
+					<li class="change-row">
+						Conditions:
+							{{#each this.conditions}}
+								{{this.type}} : [{{this.values}}]<span>,</span>
+							{{/each}}
+					</li>
+					{{/if}}
+					<li class="change-row">Delegate Admin:{{this.delegateAdmin}}</li>
+				</ol><br/>
+			{{/each}}
+		</div>
+	</div>
+{{/if}}
+<!-- Deny Exception PolicyItems -->
+{{#if oldDenyExceptionPolicyItems}}
+	<h5>Deny Exception PolicyItems:</h5>
+	<div class="diff diff-perms" >
+		<div class="diff-right" data-id="diff">
+			<h3>New Value</h3>
+				{{#each oldDenyExceptionPolicyItems}}
 				<ol class="unstyled data">
 						<li class="change-row">Groups: 
 							{{#if_eq this.groups compare=0}}

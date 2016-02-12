@@ -55,7 +55,9 @@ define(function(require){
         	if(this.templateType == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value){
         		obj = $.extend(obj, {
         			newConnConfig 		: this.newConnConfig,
-        			previousConnConfig 	: this.previousConnConfig
+        			previousConnConfig 	: this.previousConnConfig,
+        			isNewConnConfig		: _.isEmpty(this.newConnConfig) ? false : true,
+   					isPreviousConnConfig: _.isEmpty(this.previousConnConfig) ? false : true
         		});
         	}
         	if(this.templateType == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value){
@@ -196,7 +198,13 @@ define(function(require){
 			if(this.action == 'create' || this.action == 'delete'){
 				this.newConnConfig 		= this.removeUnwantedFromObject(this.newConnConfig);
 				this.previousConnConfig = this.removeUnwantedFromObject(this.previousConnConfig);
+			}else{
+				var tmp = this.newConnConfig, tmp1 = {};
+				_.each(tmp,function(val, name){ tmp1[name] = ""; });
+				_.each(this.previousConnConfig,function(val, name){ tmp1[name]=val; });
+				this.previousConnConfig = tmp1;
 			}
+			
 		},
 		resourceDiffOperation : function(){
 			var that = this, modelColl = [];

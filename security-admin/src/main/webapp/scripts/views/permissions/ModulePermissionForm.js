@@ -120,7 +120,7 @@ define(function(require) {
 			permList.unshift(localization.tt('lbl.allowAccess'));
 			permList.unshift(localization.tt('lbl.selectUser'));
 			permList.unshift(localization.tt('lbl.selectGroup'));
-			permList.push("");
+//			permList.push("");
 			return permList;
 		},
 		getPlugginAttr :function(autocomplete, options){
@@ -164,11 +164,17 @@ define(function(require) {
 						},
 						results: function (data, page) {
 							var results = [];
+							var results = [], selectedVals = [];
+							//Get selected values of groups/users dropdown
+							selectedVals = that.getSelectedValues(options);
 							if(data.resultSize != "0"){
 								if(!_.isUndefined(data.vXGroups)){
 									results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
 								} else if(!_.isUndefined(data.vXUsers)){
 									results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+									if(!_.isEmpty(selectedVals)){
+										results = XAUtil.filterResultByText(results, selectedVals);
+									}
 								}
 							}
 							return { results : results};
@@ -189,10 +195,21 @@ define(function(require) {
 						return result.text;
 					},
 					formatNoMatches : function(term){
-						return "No Matches found";
+						return options.textKey == 'groupName' ?  'No group found.' : 'No user found.'; 
 					}
 				};
 			}
+		},
+		getSelectedValues : function(options){
+			var vals = [],selectedVals = [];
+			var type = options.textKey == 'groupName' ? 'selectGroups' : 'selectUsers';
+			var $select = this.$('[name="'+type+'"]');
+			if(!_.isEmpty($select.select2('data'))){
+				selectedVals = _.map($select.select2('data'),function(obj){ return obj.text; });
+			}
+			vals.push.apply(vals , selectedVals);
+			vals = $.unique(vals);
+			return vals;
 		},
 		beforeSaveModulePermissions : function(){
 			if(this.model.get('module') != ''){

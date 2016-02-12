@@ -85,7 +85,7 @@ define(function(require) {
 				title: 'h.keyEdit'
 			},
 			KmsKeyForService : { 
-				href : 'javascrit:;',
+				href : 'javascript:void(0);',
 				text : 'KMS_TEST1',
 				title: 'KMS_TEST1'
 			},
@@ -115,12 +115,12 @@ define(function(require) {
 				title: 'h.managePolices'
 			},
 			PolicyCreate: { 
-				href : 'javascipt:;',
+				href : 'javascript:void(0);',
 				text: 'h.createPolicy',
 				title: 'h.createPolicy'
 			},
 			PolicyEdit: { 
-				href : 'javascipt:;',
+				href : 'javascript:void(0);',
 				text: 'h.editPolicy',
 				title: 'h.editPolicy'
 			},

@@ -504,7 +504,8 @@ define(function(require){
 								switch (facet) {
 									case 'Role':
 										var roles = XAUtil.hackForVSLabelValuePairs(XAEnums.UserRoles);
-										var label  = SessionMgr.isSystemAdmin() ? XAEnums.UserRoles.ROLE_KEY_ADMIN.label : XAEnums.UserRoles.ROLE_SYS_ADMIN.label;
+										var label  = SessionMgr.isSystemAdmin() || SessionMgr.isUser() ? XAEnums.UserRoles.ROLE_KEY_ADMIN.label
+													: XAEnums.UserRoles.ROLE_SYS_ADMIN.label;
 										callback(_.filter(roles, function(o) { return o.label !== label; }));
 										break;
 									case 'User Source':

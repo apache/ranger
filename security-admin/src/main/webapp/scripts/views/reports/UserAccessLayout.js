@@ -140,7 +140,7 @@ define(function(require) {'use strict';
 			coll.fetch({
 				cache : false,
 				reset: true,
-				async:false,
+//				async:false,
 			}).done(function(){
 				coll.trigger('sync')
 				XAUtil.blockUI('unblock');
