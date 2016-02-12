@@ -82,7 +82,6 @@ define(function(require){
 			
 			_.extend(this, _.pick(options, 'classType','objectName','objectId','objectCreatedDate','action','userName','policyId'));
 			this.bindEvents();
-			//this.initializeDiffOperation();
 			this.initializeServiceDef();
 			this.getTemplateForView();
 			
@@ -260,7 +259,6 @@ define(function(require){
 			}
 			if(this.action == "update"){
 				_.each(resources,function(val, key){ 
-//					console.log(oldResources)
 					if(val != oldResources[key])
 						this.collection.add({'attributeName':key, 'newValue':val.toString(),'previousValue': oldResources[key],type : "Policy Resources"}); 
 				}, this)
@@ -341,8 +339,6 @@ define(function(require){
 					this.newPermList.push({})
 				}
 			}
-			console.log(this.oldPermList)
-			console.log(this.newPermList)
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){

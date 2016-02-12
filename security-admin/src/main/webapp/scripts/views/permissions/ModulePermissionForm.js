@@ -46,9 +46,6 @@ define(function(require) {
 		_viewName : 'ModulePermissionForm',
 		template : require('hbs!tmpl/permissions/ModulePermissionForm_tmpl'),
 		templateHelpers :function(){
-			return {
-
-			};
 		},
 		templateData : function(){
 			return { 'id' : this.model.id, 'permHeaders' : this.getPermHeaders() };
@@ -106,10 +103,6 @@ define(function(require) {
 			var that = this;
 
 			Backbone.Form.prototype.render.call(this, options);
-			if(!this.model.isNew()){
-				//this.setUpSwitches();
-			}
-
 		},
 		setupFieldsforEditModule : function(){
 			var groupsNVList=[],usersNVList =[];
@@ -135,19 +128,18 @@ define(function(require) {
 		getPlugginAttr :function(autocomplete, options){
 			var that = this;
 			if(!autocomplete)
-				return{tags : true,width :'220px',multiple: true,minimumInputLength: 1};
+				return{ tags : true, width :'220px', multiple: true, minimumInputLength: 1 };
 			else {
 				return {
 					closeOnSelect : true,
 					multiple: true,
 					minimumInputLength: 0,
 					tokenSeparators: [",", " "],
-					/*tags : modelDefaultTags,*/
 					initSelection : function (element, callback) {
 						var data = [];
 						_.each(options.permList,function (elem) {
-								data.push({id: elem[options.idKey], text: elem[options.textKey]});
-							});
+							data.push({id: elem[options.idKey], text: elem[options.textKey]});
+						});
 						callback(data);
 					},
 					createSearchChoice: function(term, data) {
@@ -170,16 +162,22 @@ define(function(require) {
 						cache: false,
 						data: function (term, page) {
 							//To be checked
-							return {name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
-//							return {loginId : term};
+							return { name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value };
 						},
 						results: function (data, page) {
 							var results = [];
+							var results = [], selectedVals = [];
+							//Get selected values of groups/users dropdown
+							selectedVals = that.getSelectedValues(options);
 							if(data.resultSize != "0"){
-								if(!_.isUndefined(data.vXGroups))
+								if(!_.isUndefined(data.vXGroups)){
 									results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
-								else if(!_.isUndefined(data.vXUsers))
+								} else if(!_.isUndefined(data.vXUsers)){
 									results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+								}
+								if(!_.isEmpty(selectedVals)){
+									results = XAUtil.filterResultByText(results, selectedVals);
+								}
 							}
 							return { results : results};
 						},
@@ -199,15 +197,22 @@ define(function(require) {
 						return result.text;
 					},
 					formatNoMatches : function(term){
-						switch (term){
-							//case  that.type.DATABASE :return localization.tt("msg.enterAlteastOneCharactere");
-							//case  that.type.TABLE :return localization.tt("msg.enterAlteastOneCharactere");
-							//case  that.type.COLUMN :return localization.tt("msg.enterAlteastOneCharactere");
-							default : return "No Matches found";
-						}
+						return options.textKey == 'groupName' ?  'No group found.' : 'No user found.'; 
 					}
 				};
 			}
+		},
+		
+		getSelectedValues : function(options){
+			var vals = [],selectedVals = [];
+			var type = options.textKey == 'groupName' ? 'selectGroups' : 'selectUsers';
+			var $select = this.$('[name="'+type+'"]');
+			if(!_.isEmpty($select.select2('data'))){
+				selectedVals = _.map($select.select2('data'),function(obj){ return obj.text; });
+			}
+			vals.push.apply(vals , selectedVals);
+			vals = $.unique(vals);
+			return vals;
 		},
 		beforeSaveModulePermissions : function(){
 			if(this.model.get('module') != ''){
@@ -234,7 +239,7 @@ define(function(require) {
 				//Look for equals
 				if(_.isEqual(selectedIdList,modelPerms)) {
 					//No changes in Selected Users
-				}else{
+				} else {
 
 					//look for new values -
 					//loop through each new element and check if it has any non matching ids
@@ -261,7 +266,7 @@ define(function(require) {
 					}
 				}
 
-			}else{
+			} else {
 				//Remove permissions from all objects which earlier had permission
 				_.each(options.permList, function(perm){
 					perm.isAllowed = 0;

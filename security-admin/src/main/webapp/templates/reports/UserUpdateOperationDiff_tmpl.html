@@ -90,7 +90,6 @@
 			<ol class="unstyled data">
 				<li class="change-row">
 					{{#each previousGroupList}}
-						<!-- {{this}} -->
 						{{{highlightUsersForArr ./this ../newGroupList 'old'}}}
 						<span>,</span>
 					{{/each}}
@@ -102,7 +101,6 @@
 			<ol class="unstyled data">
 				<li class="change-row">
 					{{#each newGroupList}}
-						<!-- {{this}} --> 
 						{{{highlightUsersForArr ./this ../previousGroupList 'new'}}}
 						<span>,</span>
 					{{/each}}

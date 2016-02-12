@@ -35,8 +35,8 @@ define(function(require) {
 	var VXUserList			= require('collections/VXUserList');
 	require('bootstrap-editable');
     	
-	var FormInputItem = Backbone.Marionette.ItemView.extend({
-		_msvName : 'FormInputItem',
+	var PermissionItem = Backbone.Marionette.ItemView.extend({
+        _msvName : 'PermissionItem',
 		template : require('hbs!tmpl/policies/PermissionItem'),
 		tagName : 'tr',
 		templateHelpers : function(){
@@ -442,7 +442,7 @@ define(function(require) {
 
 
 	return Backbone.Marionette.CompositeView.extend({
-		_msvName : 'FormInputItemList',
+		_msvName : 'PermissionItemList',
 		template : require('hbs!tmpl/policies/PermissionList'),
 		templateHelpers :function(){
 			return {
@@ -453,7 +453,7 @@ define(function(require) {
 			if(!item){
 				return;
 			}
-			return FormInputItem;
+			return PermissionItem;
 		},
 		itemViewContainer : ".js-formInput",
 		itemViewOptions : function() {
@@ -476,14 +476,11 @@ define(function(require) {
 				this.collection.add(new Backbone.Model());
 		},
 		onRender : function(){
-//			this.toggleAddButton();
 		},
 		addNew : function(){
 			var that =this;
-//			if(this.groupList.length > this.collection.length && (this.userList.length > this.collection.length)){
-				this.collection.add(new Backbone.Model());
-//				this.toggleAddButton();
-//			}
+			this.collection.add(new Backbone.Model());
+
 		},
 		toggleAddButton : function(){
 			var groupNames=[], userNames=[];

@@ -105,7 +105,6 @@ define(function(require) {
 			console.log("initialized a AuditLayout Layout");
 
 			_.extend(this, _.pick(options, 'accessAuditList','tab'));
-		//	this.initializePolling();
 			this.bindEvents();
 			this.currentTab = '#'+this.tab;
 			var date = new Date().toString();
@@ -119,20 +118,13 @@ define(function(require) {
 			//this.listenTo(this.collection, "change:foo", this.render, this);
 		},
 		initializeCollection : function(){
-			
 			this.collection.fetch({
 				reset : true,
 				cache : false
 			});
 		},
-		initializePolling : function(){
-			this.timerId = setInterval(function(){
-//				that.onRefresh(this.accessAuditList);
-				console.log('polling collection..');
-			},XAGlobals.settings.AUDIT_REPORT_POLLING);
-		},
 		initializeServiceDefColl : function() {
-			this.serviceDefList 			= new RangerServiceDefList();
+			this.serviceDefList	= new RangerServiceDefList();
 			this.serviceDefList.fetch({ 
 				cache : false,
 				async:false
@@ -146,15 +138,15 @@ define(function(require) {
 				this.onTabChange();
 				this.ui.tab.find('li[class="active"]').removeClass();
 				this.ui.tab.find('[href="'+this.currentTab+'"]').parent().addClass('active');
-				
-			}else{
+			} else {
 				this.renderBigDataTable();
 				this.addSearchForBigDataTab();
 				this.modifyTableForSubcolumns();
 			}
 		 },
-		 displayDatepicker : function ($el, callback) {
-		    var input = $el.find('.search_facet.is_editing input.search_facet_input');
+		displayDatepicker : function ($el, callback) {
+			var input = $el.find('.search_facet.is_editing input.search_facet_input');
+		    
 		    input.datepicker({
 		    	autoclose : true,
 		    	dateFormat: 'yy-mm-dd'
@@ -168,7 +160,7 @@ define(function(require) {
 		    	input.datepicker("destroy");
 		    });
 		    input.datepicker('show');
-		  },
+		},
 		modifyTableForSubcolumns : function(){
 			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
 					<th class="renderable pid"></th>\
@@ -185,17 +177,17 @@ define(function(require) {
 		},
 		renderDateFields : function(){
 			var that = this;
+
 			this.ui.startDate.datepicker({
 				autoclose : true
-				//language : $.cookie().lang
 			}).on('changeDate', function(ev) {
 				that.ui.endDate.datepicker('setStartDate', ev.date);
 			}).on('keydown',function(){
 				return false;
 			});
+			
 			this.ui.endDate.datepicker({
 				autoclose : true
-				//language : $.cookie().lang
 			}).on('changeDate', function(ev) {
 				that.ui.startDate.datepicker('setEndDate', ev.date);
 			}).on('keydown',function(){
@@ -204,60 +196,60 @@ define(function(require) {
 		},
 		onTabChange : function(e){
 			var that = this, tab;
-			if(!_.isUndefined(e))
-				tab = $(e.currentTarget).attr('href');
-			else
-				tab = this.currentTab;
+			tab = !_.isUndefined(e) ? $(e.currentTarget).attr('href') : this.currentTab;
 			this.$el.parents('body').find('.datepicker').remove();
 			switch (tab) {
-			case "#bigData":
-				this.currentTab = '#bigData';
-				this.ui.visualSearch.show();
-				this.ui.visualSearch.parents('.well').show();
-				this.renderBigDataTable();
-				this.modifyTableForSubcolumns();
-				if(this.accessAuditList.length <= 0){
-					this.accessAuditList.fetch({
-						cache : false
+				case "#bigData":
+					this.currentTab = '#bigData';
+					this.ui.visualSearch.show();
+					this.ui.visualSearch.parents('.well').show();
+					this.renderBigDataTable();
+					this.modifyTableForSubcolumns();
+					if(this.accessAuditList.length <= 0){
+						this.accessAuditList.fetch({
+							cache : false
+						});
+					}
+					this.addSearchForBigDataTab();
+					this.listenTo(this.accessAuditList, "request", that.updateLastRefresh);
+					break;
+				case "#admin":
+					this.currentTab = '#admin';
+					this.trxLogList = new VXTrxLogList();
+					this.renderAdminTable();
+					if(_.isUndefined(App.sessionId)){
+			     	    this.trxLogList.fetch({
+							   cache : false
+						});
+					}
+					this.addSearchForAdminTab();
+					this.listenTo(this.trxLogList, "request", that.updateLastRefresh);
+					break;
+				case "#loginSession":
+					this.currentTab = '#loginSession';
+					this.authSessionList = new VXAuthSession();
+					this.renderLoginSessionTable();
+					//Setting SortBy as id and sortType as desc = 1
+					this.authSessionList.setSorting('id',1); 
+					this.authSessionList.fetch({
+						cache:false,
 					});
-				}
-				this.addSearchForBigDataTab();
-				break;
-			case "#admin":
-				this.currentTab = '#admin';
-				this.trxLogList = new VXTrxLogList();
-				this.renderAdminTable();
-				if(_.isUndefined(App.sessionId)){
-		     	    this.trxLogList.fetch({
-						   cache : false
+					this.addSearchForLoginSessionTab();
+					this.listenTo(this.authSessionList, "request", that.updateLastRefresh)
+					break;
+				case "#agent":
+					this.currentTab = '#agent';
+					this.policyExportAuditList = new VXPolicyExportAuditList();	
+					var params = { priAcctId : 1 };
+					that.renderAgentTable();
+					this.policyExportAuditList.setSorting('createDate',1);
+					this.policyExportAuditList.fetch({
+						cache : false,
+						data :params
 					});
-				}
-				this.addSearchForAdminTab();
-					
-				break;
-			case "#loginSession":
-				this.currentTab = '#loginSession';
-				this.authSessionList = new VXAuthSession();
-				this.renderLoginSessionTable();
-				//Setting SortBy as id and sortType as desc = 1
-				this.authSessionList.setSorting('id',1); 
-				this.authSessionList.fetch({
-					cache:false,
-				});
-				this.addSearchForLoginSessionTab();
-				break;
-			case "#agent":
-				this.currentTab = '#agent';
-				this.policyExportAuditList = new VXPolicyExportAuditList();	
-				var params = { priAcctId : 1 };
-				that.renderAgentTable();
-				this.policyExportAuditList.setSorting('createDate',1);
-				this.policyExportAuditList.fetch({
-					cache : false,
-					data :params
-				});
-				this.addSearchForAgentTab();
-				break;	
+					this.addSearchForAgentTab();
+					this.listenTo(this.policyExportAuditList, "request", that.updateLastRefresh);
+					break;	
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
 			that.ui.lastUpdateTimeLabel.html(lastUpdateTime);
@@ -287,12 +279,12 @@ define(function(require) {
 					valueMatches : function(facet, searchTerm, callback) {
 						var auditList = [];
 						_.each(XAEnums.ClassTypes, function(obj){
-							if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) ||
-									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) ||
-									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) ||
-									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value) ||
-									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value) || 
-									(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
+							if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) 
+									|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) 
+									|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) 
+									|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
+									|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value) 
+									|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
 								auditList.push({label :obj.label, value :obj.value+''});
 						});
 						
@@ -331,7 +323,6 @@ define(function(require) {
 								callback([today]);
 								break;
 				            }
-				            	
 					}
 			      }
 			};
@@ -352,12 +343,12 @@ define(function(require) {
 			
 			var auditList = [],query = '';
 			_.each(XAEnums.ClassTypes, function(obj){
-				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) ||
-						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) ||
-						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) ||
-						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value) ||
-						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value) || 
-						(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
+				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) 
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) 
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) 
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value) 
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)  
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
 					auditList.push({label :obj.label, value :obj.label+''});
 			});
 			if(!_.isUndefined(App.sessionId)){
@@ -563,7 +554,7 @@ define(function(require) {
 								userName :self.model.get('owner'),
 								action : action
 							});
-						}else{
+						} else {
 							var view = new vOperationDiffDetail({
 								collection : fullTrxLogListForTrxId,
 								classType : self.model.get('objectClassType'),
@@ -585,9 +576,6 @@ define(function(require) {
 						modal.$el.addClass('modal-diff').attr('tabindex',-1);
 						modal.$el.find('.cancel').hide();
 					});
-					
-					
-					
 				}
 			});
 			this.ui.tableList.addClass("clickable");
@@ -605,15 +593,14 @@ define(function(require) {
 		getAdminTableColumns : function(){
 			var auditList = [];
 			_.each(XAEnums.ClassTypes, function(obj){
-				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) ||
-					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) ||
-					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) ||
-					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value) ||
-					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value) || 
-					(obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
+				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) 
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value)
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) 
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
 				auditList.push({text :obj.label, id :obj.value});
 			});
-			console.log(auditList);
 			var cols = {
 				operation : {
 					label : localization.tt("lbl.operation"),
@@ -629,7 +616,7 @@ define(function(require) {
 								label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue), html = '';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
 								html = 	'Service '+action+'d '+'<b>'+name+'</b>';
-							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value|| rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value)
+							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value)
 								html = 	'Policy '+action+'d '+'<b>'+name+'</b>';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
 								html = 	'User '+action+'d '+'<b>'+name+'</b>';
@@ -670,7 +657,6 @@ define(function(require) {
 					cell: "String",
 					click : false,
 					drag : false,
-					//sortable:false,
 					editable:false,
                     sortType: 'toggle',
                     direction: 'descending',
@@ -690,14 +676,16 @@ define(function(require) {
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue) {
 							var html = '';
-							if(rawValue =='create')
+							if(rawValue =='create'){
 								html = 	'<label class="label label-success">'+rawValue+'</label>';
-							else if(rawValue == 'update')
+							} else if(rawValue == 'update'){
 								html = 	'<label class="label label-yellow">'+rawValue+'</label>';
-							else if(rawValue == 'delete')
+							}else if(rawValue == 'delete'){
 								html = 	'<label class="label label-important">'+rawValue+'</label>';
-							else
+							} else {
 								html = 	'<label class="label">'+rawValue+'</label>';
+							}
+
 							return html;
 						}
 					})
@@ -791,19 +779,10 @@ define(function(require) {
 								if(rawValue == -1){
 									return '--';
 								}	
-								/*var rangerService = new RangerService();
-								rangerService.urlRoot += '/name/'+model.get('repoName'); 
-								rangerService.fetch({
-								  cache : false,
-								  async : false
-								});*/
-
-//								if (SessionMgr.isKeyAdmin()) {
-									var serviceDef = that.serviceDefList.findWhere({'id' : model.get('repoType')})
-									if(_.isUndefined(serviceDef)){
-										return rawValue;
-									}
-//								}
+								var serviceDef = that.serviceDefList.findWhere({'id' : model.get('repoType')});
+								if(_.isUndefined(serviceDef)){
+									return rawValue;
+								}
 								var href = 'javascript:void(0)';
 								return '<a href="'+href+'" title="'+rawValue+'">'+rawValue+'</a>';
 							}
@@ -831,7 +810,6 @@ define(function(require) {
 						cell: "String",
 						click : false,
 						drag : false,
-					//	sortable:false,
 						editable:false
 					},
 					repoName : {
@@ -875,7 +853,6 @@ define(function(require) {
 						cell: "html",
 						click : false,
 						drag : false,
-			//			sortable:false,
 						editable:false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue) {
@@ -883,10 +860,11 @@ define(function(require) {
 								_.each(_.toArray(XAEnums.AccessResult),function(m){
 									if(parseInt(rawValue) == m.value){
 										label=  m.label;
-										if(m.value == XAEnums.AccessResult.ACCESS_RESULT_ALLOWED.value)
+										if(m.value == XAEnums.AccessResult.ACCESS_RESULT_ALLOWED.value){
 											html = 	'<label class="label label-success">'+label+'</label>';
-										else 
+										} else {
 											html = 	'<label class="label label-important">'+label+'</label>';
+										} 
 									}	
 								});
 								return html;
@@ -944,7 +922,7 @@ define(function(require) {
 				if(obj.value !=  XAEnums.AuthType.AUTH_TYPE_UNKNOWN.value)
 					authTypeList.push({text :obj.label, id :obj.value});
 			});
-			console.log(authStatusList);
+
 			var cols = {
 				id : {
 					label : localization.tt("lbl.sessionId"),
@@ -952,7 +930,6 @@ define(function(require) {
 					href: function(model){
 						return '#!/reports/audit/loginSession/id/'+model.get('id');
 					},
-//					sortable:false,
 					editable:false,
 					sortType: 'toggle',
 					direction: 'descending'
@@ -972,12 +949,13 @@ define(function(require) {
 							_.each(_.toArray(XAEnums.AuthStatus),function(m){
 								if(parseInt(rawValue) == m.value){
 									label=  m.label;
-									if(m.value == 1)
+									if(m.value == 1){
 										html = 	'<label class="label label-success">'+label+'</label>';
-									else if(m.value == 2)
+									} else if(m.value == 2){
 										html = 	'<label class="label label-important">'+label+'</label>';
-									else
+									} else {
 										html = 	'<label class="label">'+label+'</label>';
+									}
 								}	
 							});
 							return html;
@@ -1026,7 +1004,6 @@ define(function(require) {
 				authTime : {
 					label : localization.tt("lbl.loginTime")+ '   ( '+this.timezone+' )',
 					cell: "String",
-				//	sortable:false,
 					editable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
@@ -1097,11 +1074,8 @@ define(function(require) {
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
 								var html = rawValue;
-								if(rawValue > 400)
-									html = '<label class="label btn-danger">'+rawValue+'</label>';
-								else
-									html = '<label class="label btn-success">'+rawValue+'</label>';
-								return html;
+								return (rawValue > 400) ? '<label class="label btn-danger">'+rawValue+'</label>'
+										:	'<label class="label btn-success">'+rawValue+'</label>';
 							}
 						})
 					},
@@ -1129,6 +1103,7 @@ define(function(require) {
 				coll = this.authSessionList;
 				break;
 			case "#agent":
+				//TODO
 				params = { 'priAcctId' : 1 };
 				coll = this.policyExportAuditList;
 				break;	
@@ -1144,25 +1119,21 @@ define(function(require) {
 				}
 				
 			});
-			
-				
 		},
 		onSearch : function(e){
 			this.setCurrentTabCollection();
-			var resourceName= this.ui.resourceName.val();
-			var startDate 	= this.ui.startDate.val();
-			var endDate  	= this.ui.endDate.val();
-			var params = { 'startDate' : startDate , 'endDate' : endDate };
+			var resourceName= this.ui.resourceName.val(),
+				startDate 	= this.ui.startDate.val(),
+				endDate  	= this.ui.endDate.val(),
+				params = { 'startDate' : startDate , 'endDate' : endDate };
 			//After every search we need goto to first page
 			$.extend(this.collection.queryParams,params);
 			//collection.fetch({data: data, reset: true});
 
 			this.collection.state.currentPage = this.collection.state.firstPage;
-			
 			this.collection.fetch({
 				reset : true,
-				cache : false
-				//data : params,
+				cache : false,
 			});
 		},
 		setCurrentTabCollection : function(){
@@ -1188,13 +1159,12 @@ define(function(require) {
 			});
 		},
 
-		/*
-		 * onChangeRepository : function(){ this.onSearch(); },
-		 */
 		/** all post render plugin initialization */
 		initializePlugins : function() {
 		},
-
+		updateLastRefresh : function(){
+			this.ui.lastUpdateTimeLabel.html(Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+		},
 		/** on close */
 		onClose : function() {
 			clearInterval(this.timerId);

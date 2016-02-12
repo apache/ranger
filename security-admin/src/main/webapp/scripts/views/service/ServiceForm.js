@@ -46,11 +46,13 @@ define(function(require){
 		templateData: function(){
 			var serviceDetail="", serviceConfig="";
 			_.each(this.schema, function(obj, name){
-			  if(!_.isUndefined(obj['class']) && obj['class'] == 'serviceConfig') 
-			    serviceConfig += name+",";
-			  else
-			   serviceDetail += name+",";
+			  if(!_.isUndefined(obj['class']) && obj['class'] == 'serviceConfig'){
+				  serviceConfig += name+",";
+			  } else {
+				  serviceDetail += name+",";
+			  }
 			});
+			
 			return {
 				serviceDetail : serviceDetail.slice(0,-1),
 				serviceConfig : serviceConfig.slice(0,-1)
@@ -104,7 +106,7 @@ define(function(require){
 					var configObj = _.findWhere(this.rangerServiceDefModel.get('configs'),{'name' : name });
 					if(!_.isUndefined(configObj) && configObj.type == 'bool'){
 						this.model.set(name, this.getStringFromBoolean(configObj, value))
-					}else{
+					} else {
 						this.model.set(name, value)
 						if(_.isUndefined(configObj)){
 							this.extraConfigColl.add(new Backbone.Model({'name' : name, 'value' : value}))
@@ -116,11 +118,11 @@ define(function(require){
 		setupForm : function() {
 			if(this.model.isNew()){
 				this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_ENABLED.value);
-			}else{
-			//Set isEnabled Status
+			} else {
+				//Set isEnabled Status
 				if(XAEnums.ActiveStatus.STATUS_ENABLED.value == this.model.get('isEnabled')){
 					this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_ENABLED.value);
-				}else{
+				} else {
 					this.fields.isEnabled.editor.setValue(XAEnums.ActiveStatus.STATUS_DISABLED.value);
 				}
 			}	
@@ -154,7 +156,7 @@ define(function(require){
 				if(!_.isNull(obj)){
 					if(obj.type == 'bool'){
 						config[obj.name] = that.getBooleanForConfig(obj, that.model);
-					}else{
+					} else {
 						config[obj.name] = _.isNull(that.model.get(obj.name)) ? "" : that.model.get(obj.name).toString();
 					}
 					if(!_.isNull(obj.name)) {
@@ -170,7 +172,7 @@ define(function(require){
 			//Set isEnabled
 			if(parseInt(this.model.get('isEnabled')) == XAEnums.ActiveStatus.STATUS_ENABLED.value){
 				this.model.set('isEnabled',true);
-			}else{
+			} else {
 				this.model.set('isEnabled',false);
 			}
 			
@@ -190,7 +192,7 @@ define(function(require){
 			var subType = cofigObj.subType.split(':');
 			if(subType[0].indexOf(model.get(cofigObj.name)) >= 0 ){
 				return true;
-			}else{
+			} else {
 				return false;
 			}
 		},
@@ -198,7 +200,7 @@ define(function(require){
 			var subType = configObj.subType.split(':');
 			if(subType[0].toLowerCase().indexOf(value) >= 0 ){
 				return subType[0].substr(0, subType[0].length - 4);
-			}else{
+			} else {
 				return subType[1].substr(0, subType[0].length - 5);
 			}
 		},

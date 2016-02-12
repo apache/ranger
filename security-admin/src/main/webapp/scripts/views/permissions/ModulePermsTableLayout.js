@@ -27,10 +27,10 @@ define(function(require){
 	var XAGlobals 		= require('utils/XAGlobals');
 	var SessionMgr 		= require('mgrs/SessionMgr');
 	var XAUtil			= require('utils/XAUtils');
+	var localization	= require('utils/XALangSupport');
 
 	var XABackgrid		= require('views/common/XABackgrid');
 	var XATableLayout	= require('views/common/XATableLayout');
-	var localization	= require('utils/XALangSupport');
 	var RangerServiceDef	= require('models/RangerServiceDef');
 	var UserPermission 		= require('models/UserPermission');
 	var ModulePermsTableLayoutTmpl = require('hbs!tmpl/permissions/ModulePermsTableLayout_tmpl');
@@ -44,25 +44,22 @@ define(function(require){
 	{
 		_viewName : 'ModulePermsTableLayout',
 
-	template: ModulePermsTableLayoutTmpl,
+		template: ModulePermsTableLayoutTmpl,
 
 		templateHelpers : function(){
-			return {
-				//rangerService:this.rangerService
-			};
 		},
 
-	breadCrumbs : function(){
-		return [XALinks.get('ModulePermissions')];
+		breadCrumbs : function(){
+			return [XALinks.get('ModulePermissions')];
 		},
 
 		/** Layout sub regions */
-	regions: {
+		regions: {
 			'rTableList'	: 'div[data-id="r_table"]',
 		},
 
-	// /** ui selector cache */
-	ui: {
+		/** ui selector cache */
+		ui: {
 			'btnShowMore' : '[data-id="showMore"]',
 			'btnShowLess' : '[data-id="showLess"]',
 			'visualSearch' : '.visual_search'
@@ -77,13 +74,14 @@ define(function(require){
 			return events;
 		},
 
-	/**
+		/**
 		* intialize a new RangerPolicyTableLayout Layout
 		* @constructs
 		*/
 		initialize: function(options) {
 			console.log("initialized a ModulePermsTableLayout Layout");
-			//_.extend(this, _.pick(options));
+			
+			_.extend(this, _.pick(options));
 			this.bindEvents();
 		},
 
@@ -95,9 +93,15 @@ define(function(require){
 			//this.initializePlugins();
 			this.addVisualSearch();
 			this.renderTable();
+			this.initializeModulePerms();
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){
+		},
+		initializeModulePerms : function(){
+			this.collection.fetch({
+			        cache : false,
+			});
 		},
 		renderTable : function(){
 			var that = this;
@@ -148,10 +152,9 @@ define(function(require){
 					label : localization.tt("lbl.users"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							if(!_.isUndefined(rawValue))
-								return XAUtil.showGroupsOrUsers(rawValue, model, 'users');
-							else
-								return '--';
+							return !_.isUndefined(rawValue) ? 
+									XAUtil.showGroupsOrUsers(rawValue, model, 'users')
+									:  '--';
 						}
 					}),
 					editable : false,
@@ -200,12 +203,8 @@ define(function(require){
 		},
 		addVisualSearch : function(){
 			var that = this;
-			//var resourceSearchOpt = _.map(this.collection.models, function(resource){ return XAUtil.capitaliseFirstLetter(resource.module) });
-
 			var searchOpt = ['Module Name','Group Name','User Name'];
-
 			var serverAttrName  = [{text : "Module Name", label :"module"},{text : "Group Name", label :"groupName"},{text : "User Name", label :"userName"}];
-
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForPermissions'),
 				      container : this.ui.visualSearch,
@@ -213,17 +212,7 @@ define(function(require){
 				      callbacks :  {
 					  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
-									/*case 'Module Name':
-										callback(that.getActiveStatusNVList());
-										break;
-									case 'Group Name':
-										callback(XAUtil.enumToSelectLabelValuePairs(XAEnums.AuthType));
-										break;
-									case 'User Name' :
-										setTimeout(function () { XAUtil.displayDatepicker(that.ui.visualSearch, callback); }, 0);
-										break;*/
 								}
-
 							}
 				      }
 				};
@@ -234,6 +223,7 @@ define(function(require){
 				if(obj.label != XAEnums.ActiveStatus.STATUS_DELETED.label)
 					return obj;
 			});
+			
 			return _.map(activeStatusList, function(status) { return { 'label': status.label, 'value': status.label.toLowerCase()}; })
 		},
 		/** on close */

@@ -78,10 +78,7 @@ define(function(require){
 			var $clearButton = this.clearButton();
 			var searchTerms = this.searchBox().val();
 
-	      //  if(e.which === XAGlobals.keys.ENTER_KEY ){
-			if(!e.shiftKey)
-				this.search();
-		//	}
+			if(!e.shiftKey)	this.search();
 			
 			if (searchTerms) {
 				$clearButton.show();
@@ -179,10 +176,7 @@ define(function(require){
 			var $clearButton = this.clearButton();
 			var searchTerms = this.searchBox().val();
 
-	      //  if(e.which === XAGlobals.keys.ENTER_KEY ){
-			if(!e.shiftKey)
-				this.search();
-		//	}
+			if(!e.shiftKey)	this.search();
 			
 			if (searchTerms) {
 				$clearButton.show();
@@ -281,7 +275,6 @@ define(function(require){
 			this.$el.find('select').on('click',function(e){
 				that.search(e.currentTarget.value);
 			});
-			//this.delegateEvents();
 			return this;
 
 		},
@@ -307,15 +300,7 @@ define(function(require){
 			collection.fetch({data: data, reset: true});
 		}
 
-		/*clear: function (e) {
-			if (e) e.preventDefault();
-			this.searchBox().val(null);
-			this.collection.fetch({reset: true});
-		}*/
-
 	});
-
-	
 	
 	var HeaderRow = Backgrid.Row.extend({
 
@@ -390,7 +375,6 @@ define(function(require){
 		}
 
 	});
-
 
 	return XAHeader;
 });

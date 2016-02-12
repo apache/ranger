@@ -165,8 +165,7 @@
         if(typeof pageSize === 'undefined'){
             pageSize = 25;
         }
-        var html = '',
-        fromPage = 0, i = 1;
+        var html = '', fromPage = 0, i = 1;
         var index = parseInt(totalCount/pageSize);
         if(index == 0){
             return html;
@@ -174,7 +173,7 @@
         for (; i <= index; i++) {
             if(i == 1){
                 html += '<li class="active" data-page='+fromPage+'><a href="javascript:;">'+i+'</a></li>';
-            }else{
+            } else {
                 html += '<li data-page='+fromPage+'><a href="javascript:;">'+i+'</a></li>';
             }
             fromPage = pageSize * i; 
@@ -189,7 +188,6 @@
 		if(permsString == "--")
 			return permsString;
 		permArr = permsString.split(',');
-		//return permArr.join(', ');
 		var cl = _.isObject(kclass) ? 'label label-info' : kclass;
 		var tempArr = [];
 		_.each(permArr, function(val){
@@ -299,8 +297,6 @@
 				path = "styles/images/s-avatar.png";
 			}
 		return path;
-			//return path;
-            //return XAUtil.getImgPath(id,size);
 	});
 
 	Handlebars.registerHelper('ifCond', function (v1, operator, v2, options) {
@@ -328,7 +324,6 @@
 				return options.inverse(this);     
 			break;
 		}
-		//return options.inverse(this);
 	});
 	
 	//For Example
@@ -372,13 +367,15 @@
 		if(hightlightValue == 'new'){
 			if(_.isNull(oldValue) || oldValue == '--' || oldValue == "" || _.isUndefined(oldValue)){
 				html = '<span class="add-text">'+newValue+'</span>';
-			}else
+			} else {
 				html = '<span class="">'+newValue+'</span>';
-		}else{
+			}
+		} else {
 			if(_.isNull(newValue) || newValue == '--' || newValue == ""){
 				html = '<span class="delete-text">'+oldValue+'</span>';
-			}else
+			} else {
 				html = '<span class="">'+oldValue+'</span>';
+			}
 		}
 	    return html;
 	});
@@ -387,13 +384,15 @@
 		if(hightlightValue == 'new'){
 			if(_.isNull(oldValue[prop]) || oldValue[prop] == ""){
 				html = '<span class="add-text">'+newValue+'</span>';
-			}else
+			} else {
 				html = '<span class="">'+newValue+'</span>';
-		}else{
+			}
+		} else {
 			if(_.isNull(oldValue[prop]) || oldValue[prop] == ""){
 				html = '<span class="delete-text">'+newValue+'</span>';
-			}else
+			}else{
 				html = '<span class="">'+newValue+'</span>';
+			}
 		}
 	    return html;
 	});
@@ -408,20 +407,19 @@
 			_.each(newValue, function(val) {
 				if($.inArray(val, oldValue) < 0){
 					html += '<span class="add-text">'+_.escape(val)+'</span>';
-				}else{
+				} else {
 					html += '<span>'+_.escape(val)+'</span>';
 				}
 				html+='<span>,</span>';
 			});
-		}else{
+		} else {
 			_.each(oldValue, function(val) {
 				if($.inArray(val, newValue) < 0){
 					html += '<span class="delete-text">'+_.escape(val)+'</span>';
-				}else{
+				} else {
 					html += '<span>'+_.escape(val)+'</span>';
 				}
 				html+='<span>,</span>';
-				
 			});
 		}
 	    return html;
@@ -431,7 +429,7 @@
 		if(hightlightValue == 'new'){
 			if($.inArray(val, arr) < 0)
 				html = '<span class="add-text">'+val+'</span>';
-		}else{
+		} else {
 			if($.inArray(val, arr) < 0)
 				return html = '<span class="delete-text">'+val+'</span>';
 		}
@@ -452,11 +450,11 @@
 					});
 					if(isRemoved)
 						return html = '<span class="delete-text">'+perm[type]+'</span>';
-				}else{
+				} else {
 					return html = '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
-		}else{
+		} else {
 			if(_.isNull(perm[type]) || perm[type] != ""){
 				if(!_.isUndefined(pemList[perm.userName])){
 					var isNewAdd = true;
@@ -466,7 +464,7 @@
 					});
 					if(isNewAdd)
 						return html = '<span class="add-text">'+perm[type]+'</span>';
-				}else{
+				} else {
 					return html = '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
@@ -475,8 +473,9 @@
 	});
 	Handlebars.registerHelper('highlightPermissionsForGroup', function(perm, newValue, pemList, hightlightValue) {
 		var type = 'permType';
-		if(_.isUndefined(perm.permType))
+		if(_.isUndefined(perm.permType)){
 			type = 'ipAddress';
+		}
 		var html = perm[type];
 		if(hightlightValue == 'old'){
 			if(_.isNull(perm[type]) || perm[type] != ""){
@@ -488,11 +487,11 @@
 					});
 					if(isRemoved)
 						return html = '<span class="delete-text">'+perm[type]+'</span>';
-				}else{
+				} else {
 					return html = '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
-		}else{
+		} else {
 			if(_.isNull(perm[type]) || perm[type] != ""){
 				if(!_.isUndefined(pemList[perm.groupName])){
 					var isNewAdd = true;
@@ -502,8 +501,7 @@
 					});
 					if(isNewAdd)
 						return html = '<span class="add-text">'+perm[type]+'</span>';
-				}
-				else{
+				} else {
 					return html = '<span class="add-text">'+perm[type]+'</span>';
 				}
 			}
@@ -511,7 +509,7 @@
 	    return new Handlebars.SafeString(html);
 	});
 	Handlebars.registerHelper('getServices', function(services, serviceDef) {
-		var XAEnums			= require('utils/XAEnums');
+		var XAEnums		= require('utils/XAEnums');
 		var tr = '', serviceOperationDiv = '';
 		var serviceType = serviceDef.get('name');
 		if(!_.isUndefined(services[serviceType])){
@@ -540,10 +538,8 @@
 		var groupModules = _.pluck(vxPortalUser.get('groupPermissions'), 'moduleName');
 		var moduleNames =  _.union(userModules,groupModules);
 		var returnFlag = _.contains(moduleNames, tabName);
-		if (returnFlag)
-			return options.fn(this);
-		else
-			return options.inverse(this);
+		
+		return (returnFlag) ? options.fn(this) : options.inverse(this);
 	});
 
 	return HHelpers;

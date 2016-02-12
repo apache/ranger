@@ -35,9 +35,6 @@ define(function(require){
 		
     	template: LoginSessionDetail_tmpl,
         templateHelpers :function(){
-        	
-        	return {
-        	};
         },
     	/** ui selector cache */
     	ui: {

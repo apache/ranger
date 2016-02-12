@@ -56,8 +56,8 @@ define(function(require){
 				},
 				lastName : {
 					type		: 'Text',
-					title		: localization.tt("lbl.lastName")+' *',
-					validators  : [{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_-]*[a-zA-Z0-9]+$/,message :'Last name should start with alphabets & can have underscore, hyphen, space.'}],
+					title		: localization.tt("lbl.lastName"),
+					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_-]*[a-zA-Z0-9]+$/,message :'Last name should start with alphabets & can have underscore, hyphen, space.'}],
 					editorAttrs : { 'placeholder' : localization.tt("lbl.lastName")}
 				},
 				emailAddress : {

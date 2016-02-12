@@ -28,7 +28,7 @@ define(function(require){
 	var XAUtil				= require('utils/XAUtils');
 	var SessionMgr 			= require('mgrs/SessionMgr');
 	var RangerServiceList 	= require('collections/RangerServiceList');
-	var RangerService 	= require('models/RangerService');
+	var RangerService 		= require('models/RangerService');
 	
 	var ServicemanagerlayoutTmpl = require('hbs!tmpl/common/ServiceManagerLayout_tmpl');
 	return Backbone.Marionette.Layout.extend(
@@ -39,11 +39,10 @@ define(function(require){
     	template: ServicemanagerlayoutTmpl,
 
 		templateHelpers: function(){
-			var groupedServices = this.services.groupBy("type");
 			return {
-				operation : SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin(),
+				operation 	: SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin(),
 				serviceDefs : this.collection.models,
-				services : groupedServices
+				services 	: this.services.groupBy("type")
 			};
 		},
     	breadCrumbs :[XALinks.get('ServiceManager')],

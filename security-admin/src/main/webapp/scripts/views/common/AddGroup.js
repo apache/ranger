@@ -27,7 +27,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var localization	= require('utils/XALangSupport');
 	var VXGroup			= require('models/VXGroup');
-	var AddGroup_tmpl = require('hbs!tmpl/common/AddGroup_tmpl');
+	var AddGroup_tmpl 	= require('hbs!tmpl/common/AddGroup_tmpl');
 	
 	require('bootstrap-editable');
 	var AddGroup = Backbone.Marionette.ItemView.extend(
@@ -61,7 +61,6 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a AddGroup ItemView");
-
 			_.extend(this, _.pick(options));
 			this.bindEvents();
 		},
@@ -94,38 +93,30 @@ define(function(require){
 			    		return;
 			    	}
 			    	that.checkDirtyFieldForGroup(values);
-			    	if(!_.isArray(values))
-			    		values=values.toString().split(',');
+			    	if(!_.isArray(values))	values=values.toString().split(',');
+			    	
 			    	var valArr = [];
-			    	if(!_.isUndefined($(that.el).find('.select2-container-multi')) && $(that.el).find('.select2-container-multi').length > 0){
+			    	if(!_.isUndefined($(that.el).find('.select2-container-multi')) 
+			    			&& $(that.el).find('.select2-container-multi').length > 0){
 			    		values = $(that.el).find('.select2-container-multi').select2('data')
-			    	}else{
+			    	} else {
 			    		var groupNameList = that.model.get('groupNameList');
 			    		values = _.map(that.model.get('groupIdList'),function(id,i){ return {'id': id, 'text': groupNameList[i]};});
 			    	}
+			    	
 			    	valArr = _.map(values,function(val,i){ 
 			    		return "<span class='label label-inverse'>" + val.text + "</span>"  
 			    	},that);
+
 			    	that.groupArr = values;
 			    	that.firstTimeEditGroup = true;
-		    		
 		    		$(this).html(valArr.join(" "));
-		    		/*if(valArr.length > 0){
-		    			that.$('.field-groupIdList').removeClass('error');
-		    			that.ui.errorMsg.hide();
-		    		}else{
-		    			that.$('.field-groupIdList').addClass('error');
-		    			that.ui.errorMsg.show();
-		    		}*/
-			    		
 			    },
 			    success: function(response, newValue) {
-			    	console.log(newValue);
 			    	that.firstTimeEditGroup = false;
-			    	//that.model.set('group',newValue);
-			    	
 			    }
 			});
+
 			this.$('[id^="tags-edit-"]').click(function(e) {
 			    e.stopPropagation();
 			    e.preventDefault();
@@ -140,9 +131,7 @@ define(function(require){
 		    var valuesSoFar = {};
 		    for (var i = 0; i < array.length; ++i) {
 		        var value = array[i];
-		        if (Object.prototype.hasOwnProperty.call(valuesSoFar, value)) {
-		            return true;
-		        }
+		        if (Object.prototype.hasOwnProperty.call(valuesSoFar, value)) { return true; }
 		        valuesSoFar[value] = true;
 		    }
 		    return false;
@@ -162,22 +151,12 @@ define(function(require){
 					var data = [];
 					if(!_.isUndefined(that.groupArr) && that.firstTimeEditGroup){
 						data = that.groupArr;
-					}
-					else
+					} else {
 						data = element.select2('data');
+					}
 					
 					callback(data);
 				},
-				/*createSearchChoice: function(term, data) {
-					if ($(data).filter(function() {
-						return this.text.localeCompare(term) === 0;
-					}).length === 0) {
-						return {
-							id : term,
-							text: term
-						};
-					}
-				},*/
 				ajax: { 
 					url: "service/xusers/groups",
 					dataType: 'json',
@@ -187,20 +166,19 @@ define(function(require){
 					results: function (data, page) { 
 						var results = [],selectedVals = [];
 						groupCnt = data.resultSize
-						if(!_.isEmpty(that.$('.tags').data('editable').input.$input.val()))
+						
+						if(!_.isEmpty(that.$('.tags').data('editable').input.$input.val())) {
 							selectedVals = that.$('.tags').data('editable').input.$input.val().split(',');
-						if(data.resultSize != "0"){
-							//if(data.vXGroups.length > 1){
-								results = data.vXGroups.map(function(m, i){	return {id : (m.id).toString(), text: m.name};	});
-								if(!_.isEmpty(selectedVals))
-									results = XAUtil.filterResultByIds(results, selectedVals);
-				//				console.log(results.length);
-								groupCnt = results.length;
-								return {results : results};
-					//		}
-						//	results = [{id : (data.vXGroups.id)+"", text: data.vXGroups.name}];
-						//	return {results : results};
 						}
+						if(data.resultSize != "0"){
+							results = data.vXGroups.map(function(m, i){	return {id : (m.id).toString(), text: m.name};	});
+							if(!_.isEmpty(selectedVals)) {
+								results = XAUtil.filterResultByIds(results, selectedVals);
+							}
+							groupCnt = results.length;
+							return {results : results};
+						}
+						
 						return {results : results};
 					}
 				},	
@@ -211,20 +189,18 @@ define(function(require){
 					return result.text;
 				},
 				formatNoMatches: function(result){
-					if(groupCnt > 0)
-						return 'Please enter one more character.'
-					else
-						return 'No group found.';
+					return groupCnt > 0 ? 'Please enter one more character.' : 'No group found.';  
 				}
 			};
 		},
 		checkDirtyFieldForGroup : function(changeValues){
 			var groupIdList = [];
-			if(!_.isArray(changeValues))
-				changeValues = [changeValues];
-			changeValues = _.map(changeValues, function(val){return parseInt(val);});
-			if(!_.isUndefined(this.model.get('groupIdList')))
+			if(!_.isArray(changeValues)) changeValues = [changeValues];
+
+			changeValues = _.map(changeValues, function(val){ return parseInt(val); });
+			if(!_.isUndefined(this.model.get('groupIdList'))){
 				groupIdList = this.model.get('groupIdList'); 
+			}
 			XAUtil.checkDirtyField(groupIdList, changeValues, this.$el);
 		},
 		

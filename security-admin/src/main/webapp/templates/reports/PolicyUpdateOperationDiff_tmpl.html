@@ -17,7 +17,6 @@
 <div class="diff-content">
 	<div class="row-fluid">
 		<div class="span6">
-			<!-- <label class="no-margin label-size13-weightbold">Name : {{objectName}}</label> -->
 			<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
 			<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
 			<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
@@ -107,7 +106,6 @@
 				{{#eachProperty newGroupPermList}}
 					<li class="change-row">
 						{{#each value}}
-							<!-- {{permType}}, -->
 							{{{highlightPermissionsForGroup ./this ../property ../../previousGroupPermList 'new'}}}
 							<span>,</span> 
 						{{/each}}
@@ -151,7 +149,6 @@
 				{{#eachProperty newUserPermList}}
 					<li class="change-row">
 						{{#each value}}
-								<!-- {{permType}}, -->
 								{{{highlightPermissionsForUser ./this ../property ../../previousUserPermList 'new'}}}
 								<span>,</span>
 						{{/each}}

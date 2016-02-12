@@ -40,10 +40,8 @@ define(function(require){
 		
     	template: UserCreateTmpl,
     	breadCrumbs :function(){
-    		if(this.model.isNew())
-    			return [XALinks.get('Users'),XALinks.get('UserCreate')];
-    		else
-    			return [XALinks.get('Users'),XALinks.get('UserEdit')];
+    		return this.model.isNew() ? [XALinks.get('Users'),XALinks.get('UserCreate')]
+    					: [XALinks.get('Users'),XALinks.get('UserEdit')];
     	},
         
 		/** Layout sub regions */
@@ -98,7 +96,6 @@ define(function(require){
 			if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
 				this.$('[data-tab="edit-password"]').hide();
 				this.$('[data-tab="edit-basic"]').hide();
-//				this.ui.btnSave.hide();
 			}
 			this.renderForm();
 			this.rForm.$el.dirtyFields();
@@ -140,11 +137,7 @@ define(function(require){
 					this.form.beforeSaveUserDetail();
 				return;
 			}
-			if(this.showBasicFields){
-				this.saveUserDetail();
-			}else{
-				this.savePasswordDetail();
-			}
+			this.showBasicFields ? this.saveUserDetail() : this.savePasswordDetail();
 			
 		},
 		saveUserDetail : function(){
@@ -157,7 +150,7 @@ define(function(require){
 				success: function () {
 					XAUtil.blockUI('unblock');
 					XAUtil.allowNavigation();
-					var msg = that.editUser ? 'User updated successfully' :'User created successfully';
+					var msg = that.editUser ? localization.tt('msg.userUpdatedSucc') : localization.tt('msg.userCreatedSucc');
 					XAUtil.notifySuccess('Success', msg);
 					if(that.editUser){
 						App.appRouter.navigate("#!/users/usertab",{trigger: true});
@@ -167,9 +160,9 @@ define(function(require){
 					
 					var userList = new VXUserList();
 					   
-				   userList.fetch({
+					userList.fetch({
 					   cache:false
-				   }).done(function(){
+					}).done(function(){
 						var newColl = userList;
 						userList.getLastPage({
 							cache : false,
@@ -195,13 +188,14 @@ define(function(require){
 				error : function(model,resp){
 					XAUtil.blockUI('unblock');
 					if(!_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
-						if(resp.responseJSON.msgDesc == "XUser already exists")
+						if(resp.responseJSON.msgDesc == "XUser already exists"){
 							XAUtil.notifyError('Error',"User already exists.");
-						else
+						} else {
 							XAUtil.notifyError('Error',resp.responseJSON.msgDesc);
-					}else
+						}
+					}else {
 						XAUtil.notifyError('Error', "Error occurred while creating/updating user.");
-					
+					}
 				}
 			});
 		},
@@ -219,12 +213,14 @@ define(function(require){
 				error : function(model,resp){
 					XAUtil.blockUI('unblock');
 					if(!_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
-						if(resp.responseJSON.msgDesc == "serverMsg.userMgrNewPassword")
+						if(resp.responseJSON.msgDesc == "serverMsg.userMgrNewPassword"){
 							XAUtil.notifyError('Error','Invalid new password');
-						else
+						} else {
 							XAUtil.notifyError('Error',resp.responseJSON.msgDesc);
-					}else
+						}
+					} else {
 						XAUtil.notifyError('Error', "Error occurred while creating/updating user.");
+					}
 				}
 			});
 		},
@@ -236,8 +232,6 @@ define(function(require){
 		/** on close */
 		onClose: function(){
 		}
-
 	});
-
 	return UserCreate; 
 });

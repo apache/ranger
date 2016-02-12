@@ -107,10 +107,11 @@ define(function(require){
 		/** on render callback */
 		onRender: function() {
 			this.initializePlugins();
-			if(this.tab == 'grouptab')
+			if(this.tab == 'grouptab'){
 				this.renderGroupTab();
-			else
+			} else {
 				this.renderUserTab();
+			}
 			this.addVisualSearch();
 		},
 		onTabChange : function(e){
@@ -120,8 +121,7 @@ define(function(require){
 			if(this.showUsers){				
 				this.renderUserTab();
 				this.addVisualSearch();
-			}
-			else{				
+			} else {				
 				this.renderGroupTab();
 				this.addVisualSearch();
 			}
@@ -469,7 +469,7 @@ define(function(require){
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
 		},
 		addVisualSearch : function(){
-			var coll,placeholder;
+			var coll,placeholder, that = this;
 			var searchOpt = [], serverAttrName = [];
 			if(this.showUsers){
 				placeholder = localization.tt('h.searchForYourUser');	
@@ -501,7 +501,10 @@ define(function(require){
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 									case 'Role':
-										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.UserRoles));
+										var roles = XAUtil.hackForVSLabelValuePairs(XAEnums.UserRoles);
+										var label  = SessionMgr.isSystemAdmin() || SessionMgr.isUser() ? XAEnums.UserRoles.ROLE_KEY_ADMIN.label : XAEnums.UserRoles.ROLE_SYS_ADMIN.label;
+										callback(_.filter(roles, function(o) { return o.label !== label; }));
+//										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.UserRoles));
 										break;
 									case 'User Source':
 										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.UserTypes));
@@ -513,7 +516,7 @@ define(function(require){
 										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.VisibilityStatus));
 										break;
 									case 'User Status':
-										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.ActiveStatus));
+										callback(that.getActiveStatusNVList());
 										break;
 									/*case 'Start Date' :
 										setTimeout(function () { XAUtil.displayDatepicker(that.ui.visualSearch, callback); }, 0);
@@ -531,6 +534,13 @@ define(function(require){
 				      }
 				};
 			XAUtil.addVisualSearch(searchOpt,serverAttrName, coll,pluginAttr);
+		},
+		getActiveStatusNVList : function() {
+	        var activeStatusList = _.filter(XAEnums.ActiveStatus, function(obj){
+    	        if(obj.label != XAEnums.ActiveStatus.STATUS_DELETED.label)
+        	        return obj;
+            });
+			return _.map(activeStatusList, function(status) { return { 'label': status.label, 'value': status.label}; })
 		},
 		onShowMore : function(e){
 			var id = $(e.currentTarget).attr('policy-group-id');

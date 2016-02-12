@@ -31,7 +31,6 @@ define(function(require){
 	var XABackgrid		= require('views/common/XABackgrid');
 	var XATableLayout	= require('views/common/XATableLayout');
 	var localization	= require('utils/XALangSupport');
-	var vFolderInfo = require('views/folders/FolderInfo');
 	var RangerService		= require('models/RangerService');
 	var RangerServiceDef	= require('models/RangerServiceDef');
 	var RangerPolicy 		= require('models/RangerPolicy');
@@ -122,12 +121,18 @@ define(function(require){
 				async : false
 			})
 		},
+		initializePolicies : function(){
+			this.collection.url = XAUtil.getServicePoliciesURL(this.rangerService.id);
+			this.collection.fetch({
+			        cache : false,
+			});
+		},
 		/** on render callback */
 		onRender: function() {
 //			this.initializePlugins();
 			this.addVisualSearch();
 			this.renderTable();
-			
+			this.initializePolicies();
 //			XAUtil.highlightDisabledPolicy(this);
 		},
 
@@ -319,7 +324,7 @@ define(function(require){
 	
 			var searchOpt = ['Policy Name','Group Name','User Name','Status'];//,'Start Date','End Date','Today'];
 			searchOpt = _.union(searchOpt, resourceSearchOpt)
-			var serverAttrName  = [{text : "Policy Name", label :"policyName"},{text : "Group Name", label :"group"},
+			var serverAttrName  = [{text : "Policy Name", label :"policyNamePartial"},{text : "Group Name", label :"group"},
 			                       {text : "User Name", label :"user"}, {text : "Status", label :"isEnabled"}];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                 //  {text : 'Today',label :'today'}];

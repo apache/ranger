@@ -49,7 +49,7 @@ define(function(require) {
 			},this);*/
 		},
 		onRender : function(){
-
+			this.$el.find('li:last a').addClass('_allowNav');
 		},
 		reRenderBookmarks : function(){
 			this.breadcrumb = this.setLast(this.breadcrumb);

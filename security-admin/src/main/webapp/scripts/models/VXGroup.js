@@ -78,18 +78,7 @@ define(function(require){
 				}
 			});	
 		},
-
-		/*links : {
-			detail: {
-				href: 'javascript:void(0)',
-				label : this.toString()
-			},
-			list: {
-				href: 'javascript:void(0)',
-				label : this.toString()
-			},
-		},*/
-		
+	
 		/** This models toString() */
 		toString : function(){
 			return /*this.get('name')*/;

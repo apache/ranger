@@ -81,10 +81,6 @@ define(function(require){
 
 		/** on render callback */
 		onRender: function() {
-		/*	if(!this.model.isNew()){
-				this.$('[data-tab="edit-password"]').hide();
-				this.$('[data-tab="edit-basic"]').hide();
-			}*/
 			if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
 				this.$('[data-tab="edit-password"]').hide();
 				this.$('[data-tab="edit-basic"]').hide();
@@ -128,8 +124,6 @@ define(function(require){
 					XAUtil.notifySuccess('Success', "User profile updated successfully !!");
 					App.appRouter.navigate("#!/policymanager",{trigger: true});
 					Communicator.vent.trigger('ProfileBar:rerender');
-					
-					//console.log("success");
 				},
 				error: function (model, response, options) {
 					if(model.responseJSON != undefined && _.isArray(model.responseJSON.messageList)){
@@ -137,8 +131,7 @@ define(function(require){
 							if (model.responseJSON.msgDesc == "Validation failure"){
 								XAUtil.notifyError('Error', "Please try different name.");
 								return;
-							}
-							else{
+							} else {
 								XAUtil.notifyError('Error', model.responseJSON.msgDesc);
 								return;
 							}
@@ -148,8 +141,9 @@ define(function(require){
 					if ( response && response.responseJSON && response.responseJSON.msgDesc){
 						that.form.fields.name.setError(response.responseJSON.msgDesc);
 						XAUtil.notifyError('Error', response.responseJSON.msgDesc);
-					}else
+					}else {
 						XAUtil.notifyError('Error', 'Error occurred while updating user profile!!');
+					}
 					//console.log("error");
 				}
 			});
@@ -178,18 +172,11 @@ define(function(require){
 					if(localization.tt(msResponse.responseJSON.msgDesc) == "Invalid new password"){
 						that.form.fields.newPassword.setError(localization.tt('validationMessages.newPasswordError'));
 						that.form.fields.reEnterPassword.setError(localization.tt('validationMessages.newPasswordError'));
-					}else if(localization.tt(msResponse.responseJSON.msgDesc) == " You can not use old password. "){
+					} else if((msResponse.responseJSON.msgDesc) == "serverMsg.userMgrOldPassword"){
 						that.form.fields.oldPassword.setError(localization.tt('validationMessages.oldPasswordRepeatError'));
-					}	
-					else{
+					} else {
 						that.form.fields.oldPassword.setError(localization.tt('validationMessages.oldPasswordError'));
-						
 					}
-					//that.form.fields.name.setError(response.responseJSON.msgDesc);
-//					XAUtil.notifyError('Error', response.responseJSON.msgDesc);
-					//that.form.fields.newPassword.setError(msResponse.responseJSON.msgDesc)
-//					that.clearPasswordFields();
-					console.log("error");
 				}
 			});
 		}, 
@@ -199,7 +186,6 @@ define(function(require){
 			this.form.fields.reEnterPassword.setValue('');
 		},
 		onCancel : function(){
-//			App.appRouter.navigate("",{trigger: false});
 			window.history.back();
 		},
 		/** on close */

@@ -1101,7 +1101,7 @@ define(function(require) {
 	};
 	XAUtils.showErrorMsg = function(respMsg){
 		var respArr = respMsg.split(/\([0-9]*\)/);
-		respArr.shift();
+		respArr = respArr.filter(function(str){ return str; });
 		_.each(respArr, function(str){
 			var validationMsg = str.split(','), erroCodeMsg = '';
 			//get code from string 
@@ -1113,7 +1113,8 @@ define(function(require) {
 				}
 			var reason = str.lastIndexOf("reason") != -1 ? (str.substring(str.lastIndexOf("reason")+7, str.indexOf("field[")-3 ))
 					: str;
-			var erroMsg = erroCodeMsg +"<br/>"+XAUtils.capitaliseFirstLetter(reason);
+			erroCodeMsg = erroCodeMsg != "" ? erroCodeMsg +"<br/>" : ""; 
+			var erroMsg = erroCodeMsg +""+ XAUtils.capitaliseFirstLetter(reason);
 			return XAUtils.notifyError('Error', erroMsg);
 		});
 	};

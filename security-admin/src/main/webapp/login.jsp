@@ -38,11 +38,6 @@
 
 		<script type="text/javascript">
 			$(document).ready(function() {
-				/*  $('#signin-container').submit(function() {
-					document.location = 'dashboard.html';
-					return false;
-				}); */ 
-
 				var updateBoxPosition = function() {
 					$('#signin-container').css({
 						'margin-top' : ($(window).height() - $('#signin-container').height()) / 2
@@ -80,22 +75,10 @@
 					</span>
 					<button type="submit" class="btn btn-primary btn-block" id="signIn" tabindex="4" >
 						Sign In
-						<!--<img id="signInLoading" src="images/loading.gif" style="visibility: hidden;" /> -->
 						<i id="signInLoading" class="icon-spinner icon-spin pull-right icon-sign-in"></i>
 					</button>
 				</fieldset>
 			</form>
-			<!-- <div class="social">
-				<p>
-					...or sign in with
-				</p>
-
-				<a href="javascript:void(0);" title="" tabindex="5" class="twitter"> <i class="icon-twitter"></i> </a>
-
-				<a href="javascript:void(0);" title="" tabindex="6" class="facebook"> <i class="icon-facebook"></i> </a>
-
-				<a href="javascript:void(0);" title="" tabindex="7" class="google"> <i class="icon-google-plus"></i> </a>
-			</div> -->
 		</section>
 
 	</body>
