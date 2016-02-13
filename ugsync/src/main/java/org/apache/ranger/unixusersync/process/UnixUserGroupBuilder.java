@@ -404,7 +404,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			LOG.debug("Adding extra groups");
 
 			for (String group : groups) {
-				String command = groupCmd.format(group);
+				String command = String.format(groupCmd, group);
 				String[] cmd = new String[]{"bash", "-c", command + " '" + group + "'"};
 				LOG.debug("Executing: " + Arrays.toString(cmd));
 
