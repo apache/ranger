@@ -126,6 +126,12 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 					return authentication;
 				}
 			}
+			if (rangerAuthenticationMethod.equalsIgnoreCase("PAM")) {
+				authentication = getPamAuthentication(authentication);
+				if(authentication!=null && authentication.isAuthenticated()) {
+					return authentication;
+				}
+			}
 			String encoder="SHA256";
 			try{
 				authentication=getJDBCAuthentication(authentication,encoder);
@@ -292,6 +298,61 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			}
 		}catch (Exception e) {
 			logger.debug("AD Authentication Failed:", e);
+		}
+		return authentication;
+	}
+
+	public Authentication getPamAuthentication(Authentication authentication) {
+		try {
+			String rangerLdapDefaultRole = PropertiesUtil.getProperty(
+					"ranger.ldap.default.role", "ROLE_USER");
+			DefaultJaasAuthenticationProvider jaasAuthenticationProvider = new DefaultJaasAuthenticationProvider();
+			String loginModuleName = "org.apache.ranger.authentication.unix.jaas.PamLoginModule";
+			LoginModuleControlFlag controlFlag = LoginModuleControlFlag.REQUIRED;
+			Map<String, String> options = PropertiesUtil.getPropertiesMap();
+
+			if (!options.containsKey("ranger.pam.service"))
+				options.put("ranger.pam.service", "ranger-admin");
+
+			AppConfigurationEntry appConfigurationEntry = new AppConfigurationEntry(
+					loginModuleName, controlFlag, options);
+			AppConfigurationEntry[] appConfigurationEntries = new AppConfigurationEntry[] { appConfigurationEntry };
+			Map<String, AppConfigurationEntry[]> appConfigurationEntriesOptions = new HashMap<String, AppConfigurationEntry[]>();
+			appConfigurationEntriesOptions.put("SPRINGSECURITY",
+					appConfigurationEntries);
+			Configuration configuration = new InMemoryConfiguration(
+					appConfigurationEntriesOptions);
+			jaasAuthenticationProvider.setConfiguration(configuration);
+			RoleUserAuthorityGranter authorityGranter = new RoleUserAuthorityGranter();
+			RoleUserAuthorityGranter[] authorityGranters = new RoleUserAuthorityGranter[] { authorityGranter };
+			jaasAuthenticationProvider.setAuthorityGranters(authorityGranters);
+			jaasAuthenticationProvider.afterPropertiesSet();
+			String userName = authentication.getName();
+			String userPassword = "";
+			if (authentication.getCredentials() != null) {
+				userPassword = authentication.getCredentials().toString();
+			}
+
+			// getting user authenticated
+			if (userName != null && userPassword != null
+					&& !userName.trim().isEmpty()
+					&& !userPassword.trim().isEmpty()) {
+				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+				grantedAuths.add(new SimpleGrantedAuthority(
+						rangerLdapDefaultRole));
+				final UserDetails principal = new User(userName, userPassword,
+						grantedAuths);
+				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(
+						principal, userPassword, grantedAuths);
+				authentication = jaasAuthenticationProvider
+						.authenticate(finalAuthentication);
+				authentication=getAuthenticationWithGrantedAuthority(authentication);
+				return authentication;
+			} else {
+				return authentication;
+			}
+		} catch (Exception e) {
+			logger.debug("Pam Authentication Failed:", e);
 		}
 		return authentication;
 	}
