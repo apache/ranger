@@ -1893,32 +1893,40 @@ public class ServiceREST {
 	void ensureAdminAccess(String serviceName, Map<String, RangerPolicyResource> resources) {
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
-
-		XXService xService = daoManager.getXXService().findByName(serviceName);
-		XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+		String userName = bizUtil.getCurrentUserLoginId();
 
 		if(!isAdmin && !isKeyAdmin) {
+			boolean isAllowed = false;
+
 			RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
-			String             userName     = bizUtil.getCurrentUserLoginId();
-			Set<String>        userGroups   = userMgr.getGroupsForUser(userName);
 
-			boolean isAllowed = hasAdminAccess(policyEngine, userName, userGroups, resources);
+			if (policyEngine != null) {
+				Set<String> userGroups = userMgr.getGroupsForUser(userName);
 
-			if(!isAllowed) {
+				isAllowed = hasAdminAccess(policyEngine, userName, userGroups, resources);
+			}
+
+			if (!isAllowed) {
 				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,
 						"User '" + userName + "' does not have delegated-admin privilege on given resources", true);
 			}
-		} else if (isAdmin) {
-			if (xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-				throw restErrorUtil.createRESTException(
-						"KMS Policies/Services/Service-Defs are not accessible for logged in user.",
-						MessageEnums.OPER_NO_PERMISSION);
-			}
-		} else if (isKeyAdmin) {
-			if (!xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-				throw restErrorUtil.createRESTException(
-						"Only KMS Policies/Services/Service-Defs are accessible for logged in user.",
-						MessageEnums.OPER_NO_PERMISSION);
+		} else {
+
+			XXService xService = daoManager.getXXService().findByName(serviceName);
+			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+
+			if (isAdmin) {
+				if (xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					throw restErrorUtil.createRESTException(
+							"KMS Policies/Services/Service-Defs are not accessible for user '" + userName + "'.",
+							MessageEnums.OPER_NO_PERMISSION);
+				}
+			} else if (isKeyAdmin) {
+				if (!xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					throw restErrorUtil.createRESTException(
+							"Only KMS Policies/Services/Service-Defs are accessible for user '" + userName + "'.",
+							MessageEnums.OPER_NO_PERMISSION);
+				}
 			}
 		}
 	}

@@ -68,7 +68,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	public PList<RangerServiceDef> getPaginatedServiceDefs(SearchFilter filter) throws Exception {
 		List<RangerServiceDef> resultList = getServiceDefs(filter);
 
-		return new PList<RangerServiceDef>(resultList, 0, resultList.size(),
+		return CollectionUtils.isEmpty(resultList) ? new PList<RangerServiceDef>() : new PList<RangerServiceDef>(resultList, 0, resultList.size(),
 				(long)resultList.size(), resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
@@ -76,7 +76,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	public PList<RangerService> getPaginatedServices(SearchFilter filter) throws Exception {
 		List<RangerService> resultList = getServices(filter);
 
-		return new PList<RangerService>(resultList, 0, resultList.size(), (long)resultList.size(),
+		return CollectionUtils.isEmpty(resultList) ? new PList<RangerService>() : new PList<RangerService>(resultList, 0, resultList.size(), (long)resultList.size(),
 				resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
@@ -84,7 +84,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	public 	PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception {
 		List<RangerPolicy> resultList = getPolicies(filter);
 
-		return new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
+		return CollectionUtils.isEmpty(resultList) ? new PList<RangerPolicy>() : new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
 				resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
@@ -92,7 +92,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	public PList<RangerPolicy> getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
 		List<RangerPolicy> resultList = getServicePolicies(serviceId, filter);
 
-		return new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
+		return CollectionUtils.isEmpty(resultList) ? new PList<RangerPolicy>() : new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
 				resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
@@ -100,7 +100,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	public 	PList<RangerPolicy> getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception {
 		List<RangerPolicy> resultList = getServicePolicies(serviceName, filter);
 
-		return new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
+		return CollectionUtils.isEmpty(resultList) ? new PList<RangerPolicy>() : new PList<RangerPolicy>(resultList, 0, resultList.size(), (long)resultList.size(),
 				resultList.size(), filter.getSortType(), filter.getSortBy());
 	}
 
