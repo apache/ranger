@@ -477,7 +477,7 @@ define(function(require) {
 		_.each(items, function(perm) {
 			groupArr = _.union(groupArr, perm[type])
 		});
-		if (_.isEmpty(items))
+		if (_.isEmpty(items) || _.isEmpty(groupArr))
 			return '--';
 		var newGroupArr = _.map(groupArr, function(name, i) {
 			if (i >= 4) {

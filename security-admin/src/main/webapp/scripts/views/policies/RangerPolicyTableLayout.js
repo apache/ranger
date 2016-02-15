@@ -210,16 +210,13 @@ define(function(require){
 					sortable : false
 				},
 				//Hack for backgrid plugin doesn't allow to have same column name 
-				guid : {
+				users : {
 					reName : 'userName',
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
 					label : localization.tt("lbl.users"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							if(!_.isUndefined(rawValue))
 								return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, false);
-							else 
-								return '--';
 						}
 					}),
 					editable : false,
