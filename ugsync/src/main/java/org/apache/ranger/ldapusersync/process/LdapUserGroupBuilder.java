@@ -19,7 +19,6 @@
 
  package org.apache.ranger.ldapusersync.process;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -186,7 +185,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		env.put(Context.SECURITY_CREDENTIALS, ldapBindPassword);
 		env.put(Context.SECURITY_AUTHENTICATION, ldapAuthenticationMechanism);
 		env.put(Context.REFERRAL, ldapReferral) ;
-
+		if (ldapUrl.startsWith("ldaps") && (config.getSSLTrustStorePath() != null && !config.getSSLTrustStorePath().trim().isEmpty())) {
+			env.put("java.naming.ldap.factory.socket", "org.apache.ranger.ldapusersync.process.CustomSSLSocketFactory");
+		}
+		
 		ldapContext = new InitialLdapContext(env, null);
 
     searchBase = config.getSearchBase();

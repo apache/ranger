@@ -22,6 +22,7 @@
  */
 package org.apache.ranger.common;
 
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +65,13 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	for (Object key : keySet) {
 	    String keyStr = key.toString();
 	    propertiesMap.put(keyStr, props.getProperty(keyStr).trim());
+	}
+	
+	// update system trust store path with custom trust store.
+	if (propertiesMap!=null && propertiesMap.containsKey("ranger.truststore.file")) {
+		System.setProperty("javax.net.ssl.trustStore", propertiesMap.get("ranger.truststore.file"));
+		System.setProperty("javax.net.ssl.trustStorePassword", propertiesMap.get("ranger.truststore.password"));
+		System.setProperty("javax.net.ssl.trustStoreType", KeyStore.getDefaultType());
 	}
 
 	//update credential from keystore
