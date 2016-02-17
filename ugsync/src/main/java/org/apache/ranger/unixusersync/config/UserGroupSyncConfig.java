@@ -863,4 +863,14 @@ public class UserGroupSyncConfig  {
 	public void setProperty(String name, String value) {
 		prop.setProperty(name, value);
 	}
+
+    /* Used only for unit testing */
+    public void setUserSearchBase(String userSearchBase)  throws Throwable {
+	prop.setProperty(LGSYNC_USER_SEARCH_BASE, userSearchBase);
+    }
+    
+    /* Used only for unit testing */
+    public void setGroupSearchBase(String groupSearchBase)  throws Throwable {
+	prop.setProperty(LGSYNC_GROUP_SEARCH_BASE, groupSearchBase);
+    }
 }

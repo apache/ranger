@@ -218,7 +218,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			// Creating BindAuthenticator using Ldap Context Source.
 			BindAuthenticator bindAuthenticator = new BindAuthenticator(
 					ldapContextSource);
-			String[] userDnPatterns = new String[] { rangerLdapUserDNPattern };
+			//String[] userDnPatterns = new String[] { rangerLdapUserDNPattern };
+			String[] userDnPatterns = rangerLdapUserDNPattern.split(";");
 			bindAuthenticator.setUserDnPatterns(userDnPatterns);
 
 			// Creating Ldap authentication provider using BindAuthenticator and
