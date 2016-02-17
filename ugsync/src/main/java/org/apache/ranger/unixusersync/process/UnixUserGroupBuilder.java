@@ -21,9 +21,14 @@ package org.apache.ranger.unixusersync.process;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.log4j.Logger;
@@ -67,7 +72,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private long timeout = 0;
 
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance() ;
-	private Map<String,List<String>>  	user2GroupListMap = new HashMap<String,List<String>>();
+	private Map<String,List<String>> user2GroupListMap = new HashMap<String,List<String>>();
 	private Map<String,List<String>>  	internalUser2GroupListMap = new HashMap<String,List<String>>();
 	private Map<String,String>			groupId2groupNameMap = new HashMap<String,String>() ;
 	private int 						minimumUserId  = 0 ;
@@ -172,77 +177,83 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	
 	private void buildUnixUserList(String command) throws Throwable {
 		BufferedReader reader = null;
+		Map<String, String> userName2uid = new HashMap<String, String>();
 
-		if (!useNss) {
-			File file = new File(UNIX_USER_PASSWORD_FILE);
-			passwordFileModifiedAt = file.lastModified();
-			reader = new BufferedReader(new FileReader(file)) ;
-		} else {
-			Process process = Runtime.getRuntime().exec(
-					new String[]{"bash", "-c", command});
-
-			reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		}
-
-		String line = null;
-		Map<String,String> userName2uid = new HashMap<String,String>();
-
-		while ((line = reader.readLine()) != null) {
-			if (line.trim().isEmpty())
-				continue;
-
-			String[] tokens = line.split(":");
-
-			int len = tokens.length;
-
-			if (len < 2) {
-				continue;
-			}
-
-			String userName = tokens[0];
-			String userId = tokens[2];
-			String groupId = tokens[3];
-
-			int numUserId = -1;
-
-			try {
-				numUserId = Integer.parseInt(userId);
-			} catch (NumberFormatException nfe) {
-				LOG.warn("Unix UserId: [" + userId + "]: can not be parsed as valid int. considering as  -1.", nfe);
-				numUserId = -1;
-			}
-
-			if (numUserId >= minimumUserId) {
-				userName2uid.put(userName, userId);
-				String groupName = groupId2groupNameMap.get(groupId);
-				if (groupName != null) {
-					List<String> groupList = new ArrayList<String>();
-					groupList.add(groupName);
-					// do we already know about this use's membership to other groups?  If so add those, too
-					if (internalUser2GroupListMap.containsKey(userName)) {
-						List<String> map = internalUser2GroupListMap.get(userName);
-
-						// there could be duplicates
-						map.remove(groupName);
-						groupList.addAll(map);
-					}
-					user2GroupListMap.put(userName, groupList);
-				} else {
-					// we are ignoring the possibility that this user was present in /etc/groups.
-					LOG.warn("Group Name could not be found for group id: [" + groupId + "]. Skipping adding user [" + userName + "] with id [" + userId + "].");
-				}
+		try {
+			if (!useNss) {
+				File file = new File(UNIX_USER_PASSWORD_FILE);
+				passwordFileModifiedAt = file.lastModified();
+				FileInputStream fis = new FileInputStream(file);
+				reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
 			} else {
-				LOG.debug("Skipping user [" + userName + "] since its userid [" + userId + "] is less than minuserid limit [" + minimumUserId + "].");
-			}
-		}
+				Process process = Runtime.getRuntime().exec(
+						new String[]{"bash", "-c", command});
 
-		reader.close();
+				reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+			}
+
+			String line = null;
+
+			while ((line = reader.readLine()) != null) {
+				if (line.trim().isEmpty())
+					continue;
+
+				String[] tokens = line.split(":");
+
+				int len = tokens.length;
+
+				if (len < 2) {
+					continue;
+				}
+
+				String userName = tokens[0];
+				String userId = tokens[2];
+				String groupId = tokens[3];
+
+				int numUserId = -1;
+
+				try {
+					numUserId = Integer.parseInt(userId);
+				} catch (NumberFormatException nfe) {
+					LOG.warn("Unix UserId: [" + userId + "]: can not be parsed as valid int. considering as  -1.", nfe);
+					numUserId = -1;
+				}
+
+				if (numUserId >= minimumUserId) {
+					userName2uid.put(userName, userId);
+					String groupName = groupId2groupNameMap.get(groupId);
+					if (groupName != null) {
+						List<String> groupList = new ArrayList<String>();
+						groupList.add(groupName);
+						// do we already know about this use's membership to other groups?  If so add those, too
+						if (internalUser2GroupListMap.containsKey(userName)) {
+							List<String> map = internalUser2GroupListMap.get(userName);
+
+							// there could be duplicates
+							map.remove(groupName);
+							groupList.addAll(map);
+						}
+						user2GroupListMap.put(userName, groupList);
+					} else {
+						// we are ignoring the possibility that this user was present in /etc/groups.
+						LOG.warn("Group Name could not be found for group id: [" + groupId + "]. Skipping adding user [" + userName + "] with id [" + userId + "].");
+					}
+				} else {
+					LOG.debug("Skipping user [" + userName + "] since its userid [" + userId + "] is less than minuserid limit [" + minimumUserId + "].");
+				}
+			}
+		} finally {
+			if (reader != null)
+				reader.close();
+		}
 
 		if (!useNss)
 			return;
 
 		// this does a reverse check as not all users might be listed in getent passwd
 		if (enumerateGroupMembers) {
+			String line = null;
+
 			LOG.debug("Start drill down group members");
 			for (Map.Entry<String, List<String>> entry : internalUser2GroupListMap.entrySet()) {
 				// skip users we already now about
@@ -268,13 +279,16 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				Process process = Runtime.getRuntime().exec(
 						new String[]{"bash", "-c", "id -G " + entry.getKey()});
 
-				reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				line = reader.readLine();
-				reader.close();
+				try {
+					reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+					line = reader.readLine();
+				} finally {
+					reader.close();
+				}
 
 				LOG.debug("id -G returned " + line);
 
-				if (line.trim().isEmpty()) {
+				if (line == null || line.trim().isEmpty()) {
 					LOG.warn("User " + entry.getKey() + " could not be resolved");
 					continue;
 				}
@@ -341,28 +355,32 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 	private void buildUnixGroupList(String allGroupsCmd, String groupCmd, boolean useGid) throws Throwable {
 		LOG.debug("Start enumerating groups");
-		BufferedReader reader;
+		BufferedReader reader = null;
 
-		if (!useNss) {
-			File file = new File(UNIX_GROUP_FILE);
-			groupFileModifiedAt = file.lastModified();
-			reader = new BufferedReader(new FileReader(file)) ;
-		} else {
-			Process process = Runtime.getRuntime().exec(
-					new String[]{"bash", "-c", allGroupsCmd});
-			reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		try {
+			if (!useNss) {
+				File file = new File(UNIX_GROUP_FILE);
+				groupFileModifiedAt = file.lastModified();
+				FileInputStream fis = new FileInputStream(file);
+				reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
+			} else {
+				Process process = Runtime.getRuntime().exec(
+						new String[]{"bash", "-c", allGroupsCmd});
+				reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+			}
+
+			String line = null;
+
+			while ((line = reader.readLine()) != null) {
+				if (line.trim().isEmpty())
+					continue;
+
+				parseMembers(line);
+			}
+		} finally {
+			if (reader != null)
+				reader.close();
 		}
-
-		String line = null;
-
-		while ((line = reader.readLine()) != null) {
-			if (line.trim().isEmpty())
-				continue;
-
-			parseMembers(line);
-		}
-
-		reader.close();
 
 		LOG.debug("End enumerating group");
 
@@ -371,6 +389,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 		if (enumerateGroupMembers) {
 			LOG.debug("Start enumerating group members");
+			String line = null;
 			Map<String,String> copy = new HashMap<String, String>(groupId2groupNameMap);
 
 			for (Map.Entry<String, String> group : copy.entrySet()) {
@@ -386,11 +405,14 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				String[] cmd = new String[]{"bash", "-c", command + " " + group.getKey()};
 				LOG.debug("Executing: " + Arrays.toString(cmd));
 
-				Process process = Runtime.getRuntime().exec(cmd);
-				reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				line = reader.readLine();
-				reader.close();
-
+				try {
+					Process process = Runtime.getRuntime().exec(cmd);
+					reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+					line = reader.readLine();
+				} finally {
+					if (reader != null)
+						reader.close();
+				}
 				LOG.debug("bash -c " + command + " for group " + group + " returned " + line);
 
 				parseMembers(line);
@@ -399,6 +421,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		}
 
 		if (config.getEnumerateGroups() != null) {
+			String line = null;
 			String[] groups = config.getEnumerateGroups().split(",");
 
 			LOG.debug("Adding extra groups");
@@ -408,10 +431,15 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				String[] cmd = new String[]{"bash", "-c", command + " '" + group + "'"};
 				LOG.debug("Executing: " + Arrays.toString(cmd));
 
-				Process process = Runtime.getRuntime().exec(cmd);
-				reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				line = reader.readLine();
-				reader.close();
+				try {
+					Process process = Runtime.getRuntime().exec(cmd);
+					reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+					line = reader.readLine();
+				} finally {
+					if (reader != null)
+						reader.close();
+				}
+
 				LOG.debug("bash -c " + command + " for group " + group + " returned " + line);
 
 				parseMembers(line);
