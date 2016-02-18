@@ -89,6 +89,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -1012,7 +1013,7 @@ public class TestServiceREST {
 		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
 				userGroupsList);
 
-		Mockito.when(restErrorUtil.createRESTException((String)null))
+		Mockito.when(restErrorUtil.createRESTException(Matchers.anyInt(), Matchers.anyString(), Matchers.anyBoolean()))
 				.thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 	
