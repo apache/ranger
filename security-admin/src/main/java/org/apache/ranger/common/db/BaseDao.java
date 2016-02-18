@@ -158,16 +158,9 @@ public abstract class BaseDao<T> {
 			boolean userPrefFilter) {
 		// boolean filterEnabled = false;
 		List<T> rtrnList = null;
-		try {
-			// filterEnabled = enableVisiblityFilters(clazz, userPrefFilter);
+		// filterEnabled = enableVisiblityFilters(clazz, userPrefFilter);
 
-			rtrnList = query.getResultList();
-		} finally {
-			// if (filterEnabled) {
-			// disableVisiblityFilters(clazz);
-			// }
-
-		}
+		rtrnList = query.getResultList();
 
 		return rtrnList;
 	}
@@ -182,14 +175,8 @@ public abstract class BaseDao<T> {
 			Query query, boolean userPrefFilter) {
 		// boolean filterEnabled = false;
 		Long rtrnObj = null;
-		try {
-			// filterEnabled = enableVisiblityFilters(clazz, userPrefFilter);
-			rtrnObj = (Long) query.getSingleResult();
-		} finally {
-			// if (filterEnabled) {
-			// disableVisiblityFilters(clazz);
-			// }
-		}
+		// filterEnabled = enableVisiblityFilters(clazz, userPrefFilter);
+		rtrnObj = (Long) query.getSingleResult();
 
 		return rtrnObj;
 	}

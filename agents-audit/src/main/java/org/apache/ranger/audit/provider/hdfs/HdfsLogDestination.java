@@ -316,7 +316,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 			}
 		} catch(Throwable ex) {
 			mLogger.warn("HdfsLogDestination.openFile() failed", ex);
-		} finally {
+//		} finally {
 			// TODO: unset the property set above to exclude auditing of logfile opening
 			//        System.setProperty(hdfsCurrentFilenameProperty, null);
 		}

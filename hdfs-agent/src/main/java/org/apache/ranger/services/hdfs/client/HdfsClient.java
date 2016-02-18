@@ -125,8 +125,6 @@ public class HdfsClient extends BaseClient {
 				
 				throw hdpException;
 			}
-			finally {
-			}
 		} catch (IOException ioe) {
 			String msgDesc = "listFilesInternal: Unable to get listing of files for directory "
 					+ baseDir + fileMatching 

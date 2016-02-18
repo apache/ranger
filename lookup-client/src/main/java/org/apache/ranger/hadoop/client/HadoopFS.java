@@ -101,8 +101,6 @@ public class HadoopFS extends BaseClient {
 						msgDesc + errMsg, null, null);
 				throw hdpException;
 			}
-			finally {
-			}
 		} catch (IOException ioe) {
 			String msgDesc = "listFilesInternal: Unable to get listing of files for directory "
 					+ baseDir

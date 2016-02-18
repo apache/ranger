@@ -148,7 +148,6 @@ public class KnoxClient {
 			hdpException.generateResponseDataMap(false,
 					BaseClient.getMessage(t), msgDesc + errMsg, null, null);
 			throw hdpException;
-		} finally {
 		}
 		return topologyList;
 	}
@@ -243,8 +242,6 @@ public class KnoxClient {
 			hdpException.generateResponseDataMap(false,
 					BaseClient.getMessage(t), msgDesc + errMsg, null, null);
 			throw hdpException;
-
-		} finally {
 		}
 		return serviceList;
 	}
@@ -259,25 +256,22 @@ public class KnoxClient {
 			System.exit(1);
 		}
 
-		try {
-			knoxClient = new KnoxClient(args[0], args[1], args[2]);
-			List<String> topologyList = knoxClient.getTopologyList("",null);
-			if ((topologyList == null) || topologyList.isEmpty()) {
-				System.out.println("No knox topologies found");
-			} else {
-				for (String topology : topologyList) {
-					System.out.println("Found Topology: " + topology);
-					List<String> serviceList = knoxClient.getServiceList(topology, "",null);
-					if ((serviceList == null) || serviceList.isEmpty()) {
-						System.out.println("No services found for knox topology: " + topology);
-					} else {
-						for (String service : serviceList) {
-							System.out.println("	Found service for topology: " + service +", " + topology);
-						}
+		knoxClient = new KnoxClient(args[0], args[1], args[2]);
+		List<String> topologyList = knoxClient.getTopologyList("",null);
+		if ((topologyList == null) || topologyList.isEmpty()) {
+			System.out.println("No knox topologies found");
+		} else {
+			for (String topology : topologyList) {
+				System.out.println("Found Topology: " + topology);
+				List<String> serviceList = knoxClient.getServiceList(topology, "",null);
+				if ((serviceList == null) || serviceList.isEmpty()) {
+					System.out.println("No services found for knox topology: " + topology);
+				} else {
+					for (String service : serviceList) {
+						System.out.println("	Found service for topology: " + service +", " + topology);
 					}
 				}
 			}
-		} finally {
 		}
 	}
 	

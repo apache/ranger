@@ -84,8 +84,6 @@ public class RangerCredentialProviderTest {
 		} catch (Exception e) {
 			throw e;
 		}
-		finally {
-		}
 		assertEquals(0,ret);
 		System.out.println("(1) Number of active Threads : " + Thread.activeCount() ) ;
 		listThreads() ;
