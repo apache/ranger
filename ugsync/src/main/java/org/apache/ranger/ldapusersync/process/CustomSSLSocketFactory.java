@@ -117,7 +117,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
 			}
     }
 
-    public static SocketFactory getDefault() {
+    public static SSLSocketFactory getDefault() {
         return new CustomSSLSocketFactory();
     }
 

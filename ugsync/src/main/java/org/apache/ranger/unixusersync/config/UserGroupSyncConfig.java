@@ -97,6 +97,9 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
 	
 	private static final String LGSYNC_LDAP_URL = "ranger.usersync.ldap.url";
+
+	private static final String LGSYNC_LDAP_STARTTLS_ENABLED = "ranger.usersync.ldap.starttls";
+	private static final boolean DEFAULT_LGSYNC_LDAP_STARTTLS_ENABLED = false;
 	
 	private static final String LGSYNC_LDAP_BIND_DN = "ranger.usersync.ldap.binddn";
 	
@@ -837,6 +840,17 @@ public class UserGroupSyncConfig  {
 			val = DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER;
 		}
 		return val;
+	}
+
+	public boolean isStartTlsEnabled() {
+		boolean starttlsEnabled;
+		String val = prop.getProperty(LGSYNC_LDAP_STARTTLS_ENABLED);
+		if(val == null || val.trim().isEmpty()) {
+			starttlsEnabled = DEFAULT_LGSYNC_LDAP_STARTTLS_ENABLED;
+		} else {
+			starttlsEnabled  = Boolean.valueOf(val);
+		}
+		return starttlsEnabled;
 	}
 
 	/* Used only for unit testing */

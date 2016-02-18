@@ -42,6 +42,8 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
+import javax.naming.ldap.StartTlsRequest;
+import javax.naming.ldap.StartTlsResponse;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
@@ -88,6 +90,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
   private String groupNameAttribute;
 
 	private LdapContext ldapContext;
+	StartTlsResponse tls;
 
 	private boolean userNameCaseConversionFlag = false ;
 	private boolean groupNameCaseConversionFlag = false ;
@@ -181,15 +184,27 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		env.put(Context.INITIAL_CONTEXT_FACTORY, 
 		    "com.sun.jndi.ldap.LdapCtxFactory");
 		env.put(Context.PROVIDER_URL, ldapUrl);
-		env.put(Context.SECURITY_PRINCIPAL, ldapBindDn);
-		env.put(Context.SECURITY_CREDENTIALS, ldapBindPassword);
-		env.put(Context.SECURITY_AUTHENTICATION, ldapAuthenticationMechanism);
-		env.put(Context.REFERRAL, ldapReferral) ;
 		if (ldapUrl.startsWith("ldaps") && (config.getSSLTrustStorePath() != null && !config.getSSLTrustStorePath().trim().isEmpty())) {
-                       env.put("java.naming.ldap.factory.socket", "org.apache.ranger.ldapusersync.process.CustomSSLSocketFactory");
-               }
+			env.put("java.naming.ldap.factory.socket", "org.apache.ranger.ldapusersync.process.CustomSSLSocketFactory");
+		}	
 		
 		ldapContext = new InitialLdapContext(env, null);
+		if (!ldapUrl.startsWith("ldaps")) {
+			if (config.isStartTlsEnabled()) {
+				tls = (StartTlsResponse) ldapContext.extendedOperation(new StartTlsRequest());
+				if (config.getSSLTrustStorePath() != null && !config.getSSLTrustStorePath().trim().isEmpty()) {
+					tls.negotiate(CustomSSLSocketFactory.getDefault());
+				} else {
+					tls.negotiate();
+				}
+				LOG.info("Starting TLS session...");
+			}
+		}
+		
+		ldapContext.addToEnvironment(Context.SECURITY_PRINCIPAL, ldapBindDn);
+		ldapContext.addToEnvironment(Context.SECURITY_CREDENTIALS, ldapBindPassword);
+		ldapContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, ldapAuthenticationMechanism);
+		ldapContext.addToEnvironment(Context.REFERRAL, ldapReferral) ;
 		
 		searchBase = config.getSearchBase();
 
@@ -285,6 +300,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	}
 	
 	private void closeLdapContext() throws Throwable {
+		if (tls != null) {
+			tls.close();
+		}
+
 		if (ldapContext != null) {
 			ldapContext.close();
 		}
