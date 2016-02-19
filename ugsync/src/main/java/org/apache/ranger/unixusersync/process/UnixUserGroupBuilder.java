@@ -202,7 +202,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 				int len = tokens.length;
 
-				if (len < 2) {
+				if (len < 3) {
+					LOG.warn("Unable to parse: " + line);
 					continue;
 				}
 
