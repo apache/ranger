@@ -98,9 +98,9 @@
             <version>${commons.digester.version}</version>
         </dependency>
         <dependency>
-            <groupId>tomcat</groupId>
-            <artifactId>commons-el</artifactId>
-            <version>${tomcat.commons.el.version}</version>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-jasper-el</artifactId>
+            <version>${tomcat.embed.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-httpclient</groupId>

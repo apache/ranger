@@ -183,8 +183,7 @@
         <sun.jersey.bundle.version>1.4</sun.jersey.bundle.version>
         <sun.jersey.core.version>1.4</sun.jersey.core.version>
         <sun.jersey.spring.version>1.4</sun.jersey.spring.version>
-        <tomcat.commons.el.version>5.5.23</tomcat.commons.el.version>
-        <tomcat.embed.version>7.0.55</tomcat.embed.version>
+        <tomcat.embed.version>7.0.68</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
         <zookeeper.version>3.4.6</zookeeper.version>
         <powermock.version>1.5.6</powermock.version>
