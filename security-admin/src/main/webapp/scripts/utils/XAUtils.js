@@ -468,12 +468,13 @@ define(function(require) {
 	XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showGroups) {
 		var showMoreLess = false, groupArr = [];
 		var type = _.isUndefined(showGroups) ? 'groups' : 'users';
-		if (!_.isArray(rawValue) && !_.isUndefined(rawValue[type]))
-			return '--';
+		if (!_.isArray(rawValue))	return '--';
 		_.each(rawValue, function(perm) {
-			groupArr = _.union(groupArr, perm[type])
+			if(!_.isUndefined(perm[type])){
+				groupArr = _.union(groupArr, perm[type])
+			}	
 		});
-
+		if(_.isEmpty(groupArr))	return '--';
 		var newGroupArr = _.map(groupArr, function(name, i) {
 			if (i >= 4) {
 				return '<span class="label label-info float-left-margin-2" policy-' + type
