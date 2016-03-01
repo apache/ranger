@@ -624,6 +624,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 				return;
 			}
 
+			this.accesses.clear();
+
 			if(accesses != null) {
 				for(RangerPolicyItemAccess access : accesses) {
 					this.accesses.add(access);
@@ -647,6 +649,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			if(this.users == users) {
 				return;
 			}
+
+			this.users.clear();
 
 			if(users != null) {
 				for(String user : users) {
@@ -672,6 +676,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 				return;
 			}
 
+			this.groups.clear();
+
 			if(groups != null) {
 				for(String group : groups) {
 					this.groups.add(group);
@@ -695,6 +701,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			if(this.conditions == conditions) {
 				return;
 			}
+
+			this.conditions.clear();
 
 			if(conditions != null) {
 				for(RangerPolicyItemCondition condition : conditions) {
@@ -979,11 +987,20 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 * @param values the value to set
 		 */
 		public void setValues(List<String> values) {
-			if (values == null) {
+			if (this.values == null) {
 				this.values = new ArrayList<String>();
 			}
-			else {
-				this.values = new ArrayList<String>(values);
+
+			if(this.values == values) {
+				return;
+			}
+
+			this.values.clear();
+
+			if(values != null) {
+				for(String value : values) {
+					this.values.add(value);
+				}
 			}
 		}
 
