@@ -33,6 +33,7 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
+import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -111,6 +112,9 @@ public class TestServiceREST {
 
 	@Mock
 	ServiceDBStore svcStore;
+
+	@Mock
+	TagDBStore tagStore;
 
 	@Mock
 	RangerServiceService svcService;
@@ -912,7 +916,7 @@ public class TestServiceREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		RangerPolicy rangerPolicy = rangerPolicy();
 
-		PList<RangerPolicy> ret  = Mockito.mock(PList.class);
+		PList<RangerPolicy> ret = Mockito.mock(PList.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");

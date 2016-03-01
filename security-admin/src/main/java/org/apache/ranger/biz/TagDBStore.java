@@ -21,8 +21,10 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -38,10 +40,13 @@ import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceResource;
+import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTagAttributeDef;
 import org.apache.ranger.entity.XXServiceResourceElement;
 import org.apache.ranger.entity.XXServiceResourceElementValue;
+import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
@@ -1087,6 +1092,76 @@ public class TagDBStore extends AbstractTagStore {
 				resourceElementValue = daoManager.getXXServiceResourceElementValue().create(resourceElementValue);
 				sortOrder++;
 			}
+		}
+	}
+
+	@Override
+	public void deleteAllTagObjectsForService(String serviceName, boolean isResourcePrivateFlag) throws Exception {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.deleteAllTagObjectsForService(" + serviceName + ")");
+		}
+
+		XXService service = daoManager.getXXService().findByName(serviceName);
+
+		if (service != null) {
+			Long serviceId = service.getId();
+
+			List<XXTagResourceMap> xxTagResourceMaps = daoManager.getXXTagResourceMap().findByServiceId(serviceId);
+
+			if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
+				for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
+					try {
+						daoManager.getXXTagResourceMap().remove(xxTagResourceMap);
+					} catch (Exception e) {
+						LOG.error("Error deleting RangerTagResourceMap with id=" + xxTagResourceMap.getId(), e);
+						throw e;
+					}
+				}
+			}
+
+			List<XXServiceResourceElementValue> xxServiceResourceElementValues = daoManager.getXXServiceResourceElementValue().findByServiceId(serviceId);
+
+			if (CollectionUtils.isNotEmpty(xxServiceResourceElementValues)) {
+				for (XXServiceResourceElementValue xxServiceResourceElementValue : xxServiceResourceElementValues) {
+					try {
+						daoManager.getXXServiceResourceElementValue().remove(xxServiceResourceElementValue);
+					} catch (Exception e) {
+						LOG.error("Error deleting ServiceResourceElementValue with id=" + xxServiceResourceElementValue.getId(), e);
+						throw e;
+					}
+				}
+			}
+
+			List<XXServiceResourceElement> xxServiceResourceElements = daoManager.getXXServiceResourceElement().findByServiceId(serviceId);
+
+			if (CollectionUtils.isNotEmpty(xxServiceResourceElements)) {
+				for (XXServiceResourceElement xxServiceResourceElement : xxServiceResourceElements) {
+					try {
+						daoManager.getXXServiceResourceElement().remove(xxServiceResourceElement);
+					} catch (Exception e) {
+						LOG.error("Error deleting ServiceResourceElement with id=" + xxServiceResourceElement.getId(), e);
+						throw e;
+					}
+				}
+			}
+
+			List<XXServiceResource> xxServiceResources = daoManager.getXXServiceResource().findByServiceId(serviceId);
+
+			if (CollectionUtils.isNotEmpty(xxServiceResources)) {
+				for (XXServiceResource xxServiceResource : xxServiceResources) {
+					try {
+						daoManager.getXXServiceResource().remove(xxServiceResource);
+					} catch (Exception e) {
+						LOG.error("Error deleting RangerServiceResource with id=" + xxServiceResource.getId(), e);
+						throw e;
+					}
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.deleteAllTagObjectsForService(" + serviceName + ")");
 		}
 	}
 }

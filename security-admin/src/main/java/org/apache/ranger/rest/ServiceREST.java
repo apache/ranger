@@ -50,6 +50,7 @@ import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
+import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -153,6 +154,9 @@ public class ServiceREST {
 
 	@Autowired
 	RangerDaoManager daoManager;
+
+	@Autowired
+	TagDBStore tagStore;
 
 	public ServiceREST() {
 	}
@@ -539,6 +543,8 @@ public class ServiceREST {
 			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 
+			tagStore.deleteAllTagObjectsForService(service.getName(), false);
+
 			svcStore.deleteService(id);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -760,7 +766,7 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 
 		try {
-			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.validateConfig(serviceName=" + service.getName() + ")");
 			}
 			ret = serviceMgr.validateConfig(service, svcStore);
@@ -794,7 +800,7 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 
 		try {
-			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.lookupResource(serviceName=" + serviceName + ")");
 			}
 			ret = serviceMgr.lookupResource(serviceName, context, svcStore);
@@ -1141,7 +1147,7 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.updatePolicy(" + policy + ")");
 		}
 
-		RangerPolicy     ret  = null;
+		RangerPolicy ret  = null;
 		RangerPerfTracer perf = null;
 
 		try {
@@ -1318,7 +1324,7 @@ public class ServiceREST {
 		RangerPerfTracer   perf = null;
 
 		try {
-			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicies()");
 			}
 			ret = svcStore.getPolicies(filter);

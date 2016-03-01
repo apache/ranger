@@ -408,8 +408,6 @@ public class ServiceTagsProcessor {
 			LOG.debug("==> ServiceTagsProcessor.replace()");
 		}
 
-		// TODO:
-		// This is an inefficient implementation. Replace by direct database deletes
 		boolean isResourePrivateTag = StringUtils.equals(serviceTags.getTagModel(), ServiceTags.TAGMODEL_RESOURCE_PRIVATE) ? true : false;
 
 		tagStore.deleteAllTagObjectsForService(serviceTags.getServiceName(), isResourePrivateTag);
