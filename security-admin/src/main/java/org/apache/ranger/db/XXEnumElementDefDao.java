@@ -24,7 +24,6 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXEnumElementDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 
 public class XXEnumElementDefDao extends BaseDao<XXEnumElementDef> {
 

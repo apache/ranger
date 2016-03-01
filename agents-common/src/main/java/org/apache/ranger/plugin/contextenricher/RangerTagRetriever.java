@@ -19,15 +19,11 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.ServiceTags;
 
-import java.io.*;
 import java.util.Map;
 
 public abstract class RangerTagRetriever {

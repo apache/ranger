@@ -30,10 +30,8 @@ import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagStore;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

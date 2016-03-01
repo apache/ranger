@@ -22,8 +22,6 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
-import org.apache.ranger.biz.RangerBizUtil;
-import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
 

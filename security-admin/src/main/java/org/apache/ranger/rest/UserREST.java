@@ -46,7 +46,6 @@ import org.apache.ranger.common.annotation.RangerAnnotationRestAPI;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.security.context.RangerAPIList;
-import org.apache.ranger.security.context.RangerPreAuthSecurityHandler;
 import org.apache.ranger.util.RangerRestUtil;
 import org.apache.ranger.view.VXPasswordChange;
 import org.apache.ranger.view.VXPortalUser;

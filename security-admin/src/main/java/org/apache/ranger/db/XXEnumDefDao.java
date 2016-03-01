@@ -24,7 +24,6 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXEnumDef;
-import org.apache.ranger.entity.XXPolicyConditionDef;
 
 public class XXEnumDefDao extends BaseDao<XXEnumDef> {
 

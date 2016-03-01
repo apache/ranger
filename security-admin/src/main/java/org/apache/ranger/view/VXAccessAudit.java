@@ -26,7 +26,6 @@
 
 import java.util.Date;
 
-import javax.persistence.Column;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;

@@ -23,7 +23,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -504,7 +503,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 			createLdapContext();
 		}
 		
-		//Iterator<UserInfo> userInfoIterator = userGroupMap.
+		//java.util.Iterator<UserInfo> userInfoIterator = userGroupMap.
 		for (UserInfo userInfo : userGroupMap.values()) {
 			//UserInfo userInfo = userInfoIterator.next();
 			String userName = userInfo.getUserName();

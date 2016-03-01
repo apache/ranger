@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
-import org.apache.hadoop.crypto.key.kms.server.KMSACLsType.Type;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;

@@ -19,21 +19,13 @@
 
 package org.apache.ranger.common;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.springframework.util.DefaultPropertiesPersister;
 import org.w3c.dom.Document;

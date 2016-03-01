@@ -19,8 +19,6 @@ package org.apache.hadoop.crypto.key;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

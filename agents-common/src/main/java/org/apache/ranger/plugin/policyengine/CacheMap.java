@@ -20,7 +20,6 @@ package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.map.ser.StdSerializers;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

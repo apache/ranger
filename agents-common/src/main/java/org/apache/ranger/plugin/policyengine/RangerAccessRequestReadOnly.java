@@ -19,8 +19,6 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;

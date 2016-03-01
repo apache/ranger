@@ -17,9 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.ldapusersync.process;
-
-import java.util.List;
+package org.apache.ranger.ldapusersync.process;
 
 public class PolicyMgrUserGroupBuilder extends org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder {
 	

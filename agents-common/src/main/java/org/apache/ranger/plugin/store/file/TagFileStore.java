@@ -31,7 +31,6 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
-import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagPredicateUtil;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.SearchFilter;

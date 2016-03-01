@@ -15,7 +15,6 @@
 package org.apache.util.sql;
 
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -721,7 +720,7 @@ public class Jisql {
 
         if ((password == null) && (passwordFileName == null)) {
             password="";
-            //Console console = System.console();
+            //java.io.Console console = System.console();
             //password = new String( console.readPassword("Password (hit enter for no password): ") );
         }
         else if (password == null) {

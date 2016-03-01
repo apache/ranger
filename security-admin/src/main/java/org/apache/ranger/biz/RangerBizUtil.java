@@ -44,7 +44,6 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.common.view.VList;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
@@ -53,16 +52,12 @@ import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
-import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.AbstractBaseResourceService;
-import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.VXDataObject;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
@@ -72,8 +67,6 @@ import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.sun.xml.internal.rngom.xml.sax.XmlBaseHandler;
 
 @Component
 public class RangerBizUtil {

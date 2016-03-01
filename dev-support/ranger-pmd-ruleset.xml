@@ -44,10 +44,8 @@
   </rule>
   <rule ref="rulesets/java/imports.xml" >
 	<exclude name="DontImportJavaLang" />
-	<exclude name="DuplicateImports" />
 	<exclude name="ImportFromSamePackage" />
 	<exclude name="UnnecessaryFullyQualifiedName" />
-	<exclude name="UnusedImports" />
   </rule>
   <rule ref="rulesets/java/braces.xml">
 	<exclude name="ForLoopsMustUseBraces" />

@@ -36,7 +36,6 @@ import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.security.context.RangerAPIList;
-import org.apache.ranger.security.context.RangerPreAuthSecurityHandler;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
 import org.codehaus.jettison.json.JSONException;

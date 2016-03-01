@@ -17,8 +17,6 @@
  */
 package org.apache.solr.common.cloud;
 
-import java.io.IOException;
-
 import org.apache.zookeeper.KeeperException;
 
 /**

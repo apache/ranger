@@ -44,7 +44,6 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.log4j.Logger;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.usergroupsync.UserGroupSync;

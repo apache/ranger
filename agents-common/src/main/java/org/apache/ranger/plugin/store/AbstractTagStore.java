@@ -22,7 +22,6 @@ package org.apache.ranger.plugin.store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.*;
-import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.*;
 

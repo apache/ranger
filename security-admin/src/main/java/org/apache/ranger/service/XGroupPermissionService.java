@@ -22,7 +22,6 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
-import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.view.VXGroupPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;

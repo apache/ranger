@@ -20,9 +20,6 @@
 package org.apache.ranger.security.web.filter;
 
 import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class SSOAuthenticationProperties {
 

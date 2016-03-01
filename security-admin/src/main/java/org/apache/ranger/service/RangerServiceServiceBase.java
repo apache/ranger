@@ -32,7 +32,6 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerServiceList;
 import org.springframework.beans.factory.annotation.Autowired;

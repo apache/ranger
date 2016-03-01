@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.persistence.Query;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;

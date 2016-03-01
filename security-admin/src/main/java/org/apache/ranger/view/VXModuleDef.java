@@ -21,8 +21,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import org.apache.ranger.entity.XXGroupPermission;
-import org.apache.ranger.entity.XXUserPermission;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;

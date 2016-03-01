@@ -19,11 +19,6 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,7 +27,6 @@ import org.apache.ranger.plugin.geo.RangerGeolocationDatabase;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.store.GeolocationStore;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 
 public abstract class RangerAbstractGeolocationProvider extends RangerAbstractContextEnricher {

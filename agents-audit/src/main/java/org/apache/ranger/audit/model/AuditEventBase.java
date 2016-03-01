@@ -21,8 +21,6 @@ package org.apache.ranger.audit.model;
 
 import java.util.Date;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.dao.DaoManager;
 
 public abstract class AuditEventBase {

@@ -27,7 +27,6 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RangerCommonEnums;
-import com.sun.research.ws.wadl.Application;
 
 @Entity
 @Table(name = "x_user_module_perm")

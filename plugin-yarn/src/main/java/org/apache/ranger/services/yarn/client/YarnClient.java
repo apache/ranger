@@ -19,8 +19,6 @@
 
 package org.apache.ranger.services.yarn.client;
 
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.Subject;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
