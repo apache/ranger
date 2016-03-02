@@ -18,10 +18,12 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
 
@@ -81,6 +83,48 @@ public class XXServiceDao extends BaseDao<XXService> {
 		}
 	}
 
+	public void updateServiceForServiceResourceUpdate(Long resourceId, Date updateTime) {
+		if (resourceId == null) {
+			return;
+		}
+
+		try {
+			List<XXService> services = getEntityManager().createNamedQuery("XXService.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
+
+			updateTagVersionAndTagUpdateTime(services, updateTime);
+		} catch (NoResultException e) {
+			return;
+		}
+	}
+
+	public void updateServiceForTagUpdate(Long tagId, Date updateTime) {
+		if (tagId == null) {
+			return;
+		}
+
+		try {
+			List<XXService> services = getEntityManager().createNamedQuery("XXService.findByTagId", tClass).setParameter("tagId", tagId).getResultList();
+
+			updateTagVersionAndTagUpdateTime(services, updateTime);
+		} catch (NoResultException e) {
+			return;
+		}
+	}
+
+	public void updateServiceForTagDefUpdate(Long tagDefId, Date updateTime) {
+		if (tagDefId == null) {
+			return;
+		}
+
+		try {
+			List<XXService> services = getEntityManager().createNamedQuery("XXService.findByTagDefId", tClass).setParameter("tagDefId", tagDefId).getResultList();
+
+			updateTagVersionAndTagUpdateTime(services, updateTime);
+		} catch (NoResultException e) {
+			return;
+		}
+	}
+
 	public void updateSequence() {
 		Long maxId = getMaxIdOfXXService();
 
@@ -89,5 +133,26 @@ public class XXServiceDao extends BaseDao<XXService> {
 		}
 
 		updateSequence("X_SERVICE_SEQ", maxId + 1);
+	}
+
+	private void updateTagVersionAndTagUpdateTime(List<XXService> services, Date updateTime) {
+		if(CollectionUtils.isEmpty(services)) {
+			return;
+		}
+
+		if(updateTime == null) {
+			updateTime = new Date();
+		}
+
+		for(XXService service : services) {
+			Long currentTagVersion = service.getTagVersion();
+
+			if(currentTagVersion == null) {
+				currentTagVersion = new Long(0);
+			}
+
+			service.setTagVersion(currentTagVersion + 1);
+			service.setTagUpdateTime(updateTime);
+		}
 	}
 }

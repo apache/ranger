@@ -55,7 +55,7 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 	public RangerTag postUpdate(XXTag tag) {
 		RangerTag ret = super.postUpdate(tag);
 
-		daoMgr.getXXTag().updateServiceForTagUpdate(tag.getId(), tag.getUpdateTime());
+		daoMgr.getXXService().updateServiceForTagUpdate(tag.getId(), tag.getUpdateTime());
 
 		return ret;
 	}

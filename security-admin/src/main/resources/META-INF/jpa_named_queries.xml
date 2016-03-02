@@ -392,6 +392,30 @@
 		<query>select obj from XXService obj where obj.tagService = :tagServiceId</query>
 	</named-query>
 
+	<named-query name="XXService.findByServiceResourceId">
+		<query>
+			select obj from XXService obj where obj.id in
+			  (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes
+			    where res.id = :resourceId and res.id = tagRes.resourceId)
+		</query>
+	</named-query>
+
+	<named-query name="XXService.findByTagId">
+		<query>
+			select obj from XXService obj where obj.id in
+			  (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag
+			    where res.id = tagRes.resourceId and tagRes.tagId = tag.id and tag.id = :tagId)
+		</query>
+	</named-query>
+
+	<named-query name="XXService.findByTagDefId">
+		<query>
+			select obj from XXService obj where obj.id in
+			(select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag
+			where res.id = tagRes.resourceId and tagRes.tagId = tag.id and tag.type = :tagDefId)
+		</query>
+	</named-query>
+
 	<!-- XXPolicyResource -->
 	<named-query name="XXPolicyResource.findByResDefIdAndPolicyId">
 		<query>select obj from XXPolicyResource obj where 
@@ -772,12 +796,6 @@
 		<query>select obj.name from XXTagDef obj</query>
 	</named-query>
 
-	<named-query name="XXTagDef.updateTagVersionInService">
-		<query>update XXService obj set obj.tagVersion = obj.tagVersion + 1, obj.tagUpdateTime = :tagUpdateTime
-				where obj.id in (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag
-								  where res.id = tagRes.resourceId and tagRes.tagId = tag.id and tag.type = :tagDefId)</query>
-	</named-query>	
-
 	<named-query name="XXTagAttributeDef.findByTagDefId">
 		<query>select obj from XXTagAttributeDef obj where obj.tagDefId = :tagDefId</query>
 	</named-query>
@@ -824,12 +842,6 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXTag.updateTagVersionInService">
-		<query>update XXService obj set obj.tagVersion = obj.tagVersion + 1, obj.tagUpdateTime = :tagUpdateTime
-				where obj.id in (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag
-								  where res.id = tagRes.resourceId and tagRes.tagId = tag.id and tag.id = :tagId)</query>
-	</named-query>	
-	
 	<named-query name="XXTagAttribute.findByTagId">
 		<query>select obj from XXTagAttribute obj where obj.tagId = :tagId</query>
 	</named-query>
@@ -868,12 +880,6 @@
 	<named-query name="XXServiceResource.findByResourceSignature">
 		<query>select obj from XXServiceResource obj where obj.resourceSignature = :resourceSignature</query>
 	</named-query>
-
-	<named-query name="XXServiceResource.updateTagVersionInService">
-		<query>update XXService obj set obj.tagVersion = obj.tagVersion + 1, obj.tagUpdateTime = :tagUpdateTime
-				where obj.id in (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes
-								  where res.id = :resourceId and res.id = tagRes.resourceId)</query>
-	</named-query>	
 
 	<!-- End <== JPA Queries for Tag Based Policies  -->
 	<named-query name="XXTrxLog.getMaxIdOfXXTrxLog">

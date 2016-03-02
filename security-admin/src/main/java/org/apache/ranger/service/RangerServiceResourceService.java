@@ -54,7 +54,7 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
 	public RangerServiceResource postUpdate(XXServiceResource resource) {
 		RangerServiceResource ret = super.postUpdate(resource);
 
-		daoMgr.getXXServiceResource().updateServiceForServiceResourceUpdate(resource.getId(), resource.getUpdateTime());
+		daoMgr.getXXService().updateServiceForServiceResourceUpdate(resource.getId(), resource.getUpdateTime());
 
 		return ret;
 	}

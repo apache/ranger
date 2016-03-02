@@ -83,23 +83,4 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 			return new ArrayList<XXServiceResource>();
 		}
 	}
-
-	public void updateServiceForServiceResourceUpdate(Long resourceId, Date updateTime) {
-		if (resourceId == null) {
-			return;
-		}
-
-		if(updateTime == null) {
-			updateTime = new Date();
-		}
-
-		try {
-			getEntityManager().createNamedQuery("XXServiceResource.updateTagVersionInService", tClass)
-					.setParameter("resourceId", resourceId)
-					.setParameter("tagUpdateTime", updateTime)
-					.executeUpdate();
-		} catch (NoResultException e) {
-			return;
-		}
-	}
 }

@@ -82,25 +82,6 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 		}
 	}
 
-	public void updateServiceForTagDefUpdate(Long tagDefId, Date updateTime) {
-		if (tagDefId == null) {
-			return;
-		}
-
-		if(updateTime == null) {
-			updateTime = new Date();
-		}
-
-		try {
-			getEntityManager().createNamedQuery("XXTagDef.updateTagVersionInService", tClass)
-					.setParameter("tagDefId", tagDefId)
-					.setParameter("tagUpdateTime", updateTime)
-					.executeUpdate();
-		} catch (NoResultException e) {
-			return;
-		}
-	}
-
 	public List<XXTagDef> findByResourceId(Long resourceId) {
 		if (resourceId == null) {
 			return new ArrayList<XXTagDef>();
