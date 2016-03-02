@@ -19,7 +19,6 @@
 
  package org.apache.ranger.authorization.hadoop.utils;
 
-import java.lang.String;
 import java.util.List;
 
 import org.apache.hadoop.security.alias.CredentialProvider;

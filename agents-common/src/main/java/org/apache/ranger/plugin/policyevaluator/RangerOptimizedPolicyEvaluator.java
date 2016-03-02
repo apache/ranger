@@ -30,7 +30,6 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 import java.util.*;
-import java.lang.Math;
 
 public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator {
     private static final Log LOG = LogFactory.getLog(RangerOptimizedPolicyEvaluator.class);

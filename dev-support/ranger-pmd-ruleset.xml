@@ -43,7 +43,6 @@
 	<exclude name="UnusedPrivateMethod" />
   </rule>
   <rule ref="rulesets/java/imports.xml" >
-	<exclude name="DontImportJavaLang" />
 	<exclude name="ImportFromSamePackage" />
 	<exclude name="UnnecessaryFullyQualifiedName" />
   </rule>
