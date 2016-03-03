@@ -21,10 +21,8 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -41,7 +39,6 @@ import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceResource;
-import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTagAttributeDef;
 import org.apache.ranger.entity.XXServiceResourceElement;
