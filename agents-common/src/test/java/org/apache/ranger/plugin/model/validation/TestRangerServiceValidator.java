@@ -196,7 +196,7 @@ public class TestRangerServiceValidator {
 		// if name is not null and it points to a service then it should match the id
 		when(service.getId()).thenReturn(7L);
 		RangerService existingService = mock(RangerService.class);
-		when(existingService.getId()).thenReturn(new Long(7L));
+		when(existingService.getId()).thenReturn(Long.valueOf(7L));
 		when(_store.getService(7L)).thenReturn(existingService);
 		when(_store.getServiceByName("aName")).thenReturn(existingService);
 		assertTrue(_validator.isValid(service, Action.UPDATE, _failures));

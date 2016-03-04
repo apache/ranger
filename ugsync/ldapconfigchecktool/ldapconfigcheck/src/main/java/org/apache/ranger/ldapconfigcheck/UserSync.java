@@ -368,10 +368,10 @@ public class UserSync {
                 Integer ouOccrs = ouOccurences.get(dnValue);
                 if (ouOccrs == null) {
                     //System.out.println("value = 0");
-                    ouOccrs = new Integer(0);
+                    ouOccrs = Integer.valueOf(0);
                 }
                 int val = ouOccrs.intValue();
-                ouOccrs = new Integer(++val);
+                ouOccrs = Integer.valueOf(++val);
                 ouOccurences.put(dnValue, ouOccrs);
                 noOfUsers++;
             }
@@ -737,10 +737,10 @@ public class UserSync {
                 Integer ouOccrs = ouOccurences.get(dnValue);
                 if (ouOccrs == null) {
                     //System.out.println("value = 0");
-                    ouOccrs = new Integer(0);
+                    ouOccrs = Integer.valueOf(0);
                 }
                 int val = ouOccrs.intValue();
-                ouOccrs = new Integer(++val);
+                ouOccrs = Integer.valueOf(++val);
                 ouOccurences.put(dnValue, ouOccrs);
 
                 noOfGroups++;

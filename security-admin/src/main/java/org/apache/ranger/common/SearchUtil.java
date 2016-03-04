@@ -266,7 +266,7 @@ public class SearchUtil {
 					"Invalid value for " + userFriendlyParamName,
 					MessageEnums.INVALID_INPUT_DATA, null, paramName);
 
-			restErrorUtil.validateMinMax(value == null ? new Integer(-1) : value, 0, maxValue,
+			restErrorUtil.validateMinMax(value == null ? Integer.valueOf(-1) : value, 0, maxValue,
 					"Invalid value for " + userFriendlyParamName, null,
 					paramName);
 			valueList.add(value);

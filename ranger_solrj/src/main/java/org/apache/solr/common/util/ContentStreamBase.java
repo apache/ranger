@@ -83,7 +83,7 @@ public abstract class ContentStreamBase implements ContentStream
       
       contentType = conn.getContentType();
       name = url.toExternalForm();
-      size = new Long( conn.getContentLength() );
+      size = Long.valueOf( conn.getContentLength() );
       return conn.getInputStream();
     }
   }
@@ -146,7 +146,7 @@ public abstract class ContentStreamBase implements ContentStream
       
       contentType = null;
       name = null;
-      size = new Long( str.length() );
+      size = Long.valueOf( str.length() );
       sourceInfo = "string";
     }
 
@@ -247,7 +247,7 @@ public abstract class ContentStreamBase implements ContentStream
       
       this.contentType = null;
       name = source;
-      size = new Long(bytes.length);
+      size = Long.valueOf(bytes.length);
       sourceInfo = source;
     }
 

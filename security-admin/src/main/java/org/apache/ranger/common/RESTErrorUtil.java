@@ -145,7 +145,7 @@ public class RESTErrorUtil {
 			if (stringUtil.isEmpty(value)) {
 				return null;
 			} else {
-				return new Integer(value.trim());
+				return Integer.valueOf(value.trim());
 			}
 		} catch (Throwable t) {
 			throw createRESTException(errorMessage, messageEnum, objectId,
@@ -158,9 +158,9 @@ public class RESTErrorUtil {
 			String fieldName) {
 		try {
 			if (stringUtil.isEmpty(value)) {
-				return new Integer(defaultValue);
+				return Integer.valueOf(defaultValue);
 			} else {
-				return new Integer(value.trim());
+				return Integer.valueOf(value.trim());
 			}
 		} catch (Throwable t) {
 			throw createRESTException(errorMessage, messageEnum, objectId,
@@ -172,7 +172,7 @@ public class RESTErrorUtil {
 		if (stringUtil.isEmpty(value)) {
 			return defaultValue;
 		}
-		return new Long(value.trim());
+		return Long.valueOf(value.trim());
 	}
 
 	public Long parseLong(String value, String errorMessage,
@@ -181,7 +181,7 @@ public class RESTErrorUtil {
 			if (stringUtil.isEmpty(value)) {
 				return null;
 			} else {
-				return new Long(value.trim());
+				return Long.valueOf(value.trim());
 			}
 		} catch (Throwable t) {
 			throw createRESTException(errorMessage, messageEnum, objectId,

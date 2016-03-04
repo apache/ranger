@@ -24,7 +24,8 @@
  */
 
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -65,7 +66,7 @@ public class RangerEnumUtil {
     public final static String ENUM_XXAuthSession_AuthType = "XXAuthSession.AuthType";
     public final static String ENUM_XResponse_ResponseStatus = "XResponse.ResponseStatus";
 
-    protected Hashtable<String, VEnum> enumMap = new Hashtable<String, VEnum>();
+    protected Map<String, VEnum> enumMap = new HashMap<String, VEnum>();
     protected List<VEnum> enumList = new ArrayList<VEnum>();
 
     public List<VEnum> getEnums() {

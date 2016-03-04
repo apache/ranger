@@ -83,11 +83,11 @@ public class ServiceUtil {
 	ServiceDBStore svcStore;
 
 	static {
-		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME,  new Integer(RangerCommonEnums.ASSET_HDFS));
-		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HBASE_NAME, new Integer(RangerCommonEnums.ASSET_HBASE));
-		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME,  new Integer(RangerCommonEnums.ASSET_HIVE));
-		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KNOX_NAME,  new Integer(RangerCommonEnums.ASSET_KNOX));
-		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_STORM_NAME, new Integer(RangerCommonEnums.ASSET_STORM));
+		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME,  Integer.valueOf(RangerCommonEnums.ASSET_HDFS));
+		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HBASE_NAME, Integer.valueOf(RangerCommonEnums.ASSET_HBASE));
+		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME,  Integer.valueOf(RangerCommonEnums.ASSET_HIVE));
+		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KNOX_NAME,  Integer.valueOf(RangerCommonEnums.ASSET_KNOX));
+		mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_STORM_NAME, Integer.valueOf(RangerCommonEnums.ASSET_STORM));
 
 		mapAccessTypeToPermType.put("Unknown", 0);
 		mapAccessTypeToPermType.put("Reset", 1);
@@ -875,7 +875,7 @@ public class ServiceUtil {
 					VXPermMap permMap = new VXPermMap();
 	
 					permMap.setPermFor(AppConstants.XA_PERM_FOR_USER);
-					permMap.setPermGroup(new Integer(permGroup).toString());
+					permMap.setPermGroup(Integer.valueOf(permGroup).toString());
 					permMap.setUserName(userName);
 					permMap.setUserId(getUserId(userName));
 					permMap.setPermType(toPermType(access.getType()));
@@ -888,7 +888,7 @@ public class ServiceUtil {
 					VXPermMap permMap = new VXPermMap();
 	
 					permMap.setPermFor(AppConstants.XA_PERM_FOR_USER);
-					permMap.setPermGroup(new Integer(permGroup).toString());
+					permMap.setPermGroup(Integer.valueOf(permGroup).toString());
 					permMap.setUserName(userName);
 					permMap.setUserId(getUserId(userName));
 					permMap.setPermType(toPermType("Admin"));
@@ -908,7 +908,7 @@ public class ServiceUtil {
 					VXPermMap permMap = new VXPermMap();
 	
 					permMap.setPermFor(AppConstants.XA_PERM_FOR_GROUP);
-					permMap.setPermGroup(new Integer(permGroup).toString());
+					permMap.setPermGroup(Integer.valueOf(permGroup).toString());
 					permMap.setGroupName(groupName);
 					permMap.setGroupId(getGroupId(groupName));
 					permMap.setPermType(toPermType(access.getType()));
@@ -921,7 +921,7 @@ public class ServiceUtil {
 					VXPermMap permMap = new VXPermMap();
 	
 					permMap.setPermFor(AppConstants.XA_PERM_FOR_GROUP);
-					permMap.setPermGroup(new Integer(permGroup).toString());
+					permMap.setPermGroup(Integer.valueOf(permGroup).toString());
 					permMap.setGroupName(groupName);
 					permMap.setGroupId(getGroupId(groupName));
 					permMap.setPermType(toPermType("Admin"));

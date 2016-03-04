@@ -36,13 +36,13 @@ public class MapUtil implements Serializable{
 
     public static void init() {
     	policyExportAuditSyncStatusMessageMap=new HashMap<Integer, String>();
-    	policyExportAuditSyncStatusMessageMap.put(new Integer(200), "Policies synced to plugin");
-    	policyExportAuditSyncStatusMessageMap.put(new Integer(202), "Error syncing policies");
-    	policyExportAuditSyncStatusMessageMap.put(new Integer(400), "Error syncing policies");
-    	policyExportAuditSyncStatusMessageMap.put(new Integer(401), "Bad Credentials");
-    	policyExportAuditSyncStatusMessageMap.put(new Integer(403), "Error syncing policies");
-    	policyExportAuditSyncStatusMessageMap.put(new Integer(404), "Error syncing policies");
-    	policyExportAuditSyncStatusMessageMap.put(new Integer(500), "Error syncing policies");
+    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(200), "Policies synced to plugin");
+    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(202), "Error syncing policies");
+    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(400), "Error syncing policies");
+    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(401), "Bad Credentials");
+    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(403), "Error syncing policies");
+    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(404), "Error syncing policies");
+    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(500), "Error syncing policies");
     }
 
     public static String getPolicyExportAuditSyncStatus(int key) {

@@ -273,7 +273,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         }
     }
 
-   static class MergeEnumeration implements Enumeration<URL> {
+   static class MergeEnumeration implements Enumeration<URL> { //NOPMD
 
         Enumeration<URL>  e1 = null;
         Enumeration<URL>  e2 = null;

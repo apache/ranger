@@ -119,7 +119,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				"xXPortalUser.id=xXPortalUserRole.userId and xXPortalUser.loginId = obj.name "));
 
 		
-		createdByUserId = new Long(PropertiesUtil.getIntProperty("ranger.xuser.createdByUserId", 1));
+		createdByUserId = Long.valueOf(PropertiesUtil.getIntProperty("ranger.xuser.createdByUserId", 1));
 
 		hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden","*****");
 

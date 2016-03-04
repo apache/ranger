@@ -64,7 +64,7 @@ public class XXTrxLogDao extends BaseDao<XXTrxLog> {
 		}
 	}
 	public Long getMaxIdOfXXTrxLog(){
-		Long maxXTrxLogID=new Long(0);
+		Long maxXTrxLogID=Long.valueOf(0);
 		try {
 			maxXTrxLogID = (Long) getEntityManager()
 					.createNamedQuery("XXTrxLog.getMaxIdOfXXTrxLog", Long.class)
@@ -73,7 +73,7 @@ public class XXTrxLogDao extends BaseDao<XXTrxLog> {
 			logger.debug(e.getMessage());
 		}finally{
 			if(maxXTrxLogID==null){
-				maxXTrxLogID=new Long(0);
+				maxXTrxLogID=Long.valueOf(0);
 			}
 		}
 		return maxXTrxLogID;

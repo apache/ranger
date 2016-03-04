@@ -58,11 +58,7 @@
 	<exclude name="EmptyWhileStmt" />
   </rule>
   <rule ref="rulesets/java/migrating.xml">
-	<exclude name="IntegerInstantiation" />
-	<exclude name="JUnit4TestShouldUseTestAnnotation" />
-	<exclude name="LongInstantiation" />
-	<exclude name="ReplaceEnumerationWithIterator" />
-	<exclude name="ReplaceHashtableWithMap" />
+        <exclude name="JUnit4TestShouldUseTestAnnotation" />
   </rule>
   <rule ref="rulesets/java/unnecessary.xml">
 	<exclude name="UnnecessaryConversionTemporary" />

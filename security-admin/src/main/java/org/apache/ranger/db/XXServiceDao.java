@@ -148,7 +148,7 @@ public class XXServiceDao extends BaseDao<XXService> {
 			Long currentTagVersion = service.getTagVersion();
 
 			if(currentTagVersion == null) {
-				currentTagVersion = new Long(0);
+				currentTagVersion = Long.valueOf(0);
 			}
 
 			service.setTagVersion(currentTagVersion + 1);

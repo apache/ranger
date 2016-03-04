@@ -85,7 +85,7 @@ public class BinaryRequestWriter extends RequestWriter {
       @Override
       public Long getSize() // size if we know it, otherwise null
       {
-        return new Long(baos.size());
+        return Long.valueOf(baos.size());
       }
 
       @Override

@@ -66,7 +66,7 @@ public class XGroupUserService extends
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("xGroupId", "obj.parentGroupId",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		createdByUserId = new Long(PropertiesUtil.getIntProperty("ranger.xuser.createdByUserId", 1));
+		createdByUserId = Long.valueOf(PropertiesUtil.getIntProperty("ranger.xuser.createdByUserId", 1));
 		
 	}
 

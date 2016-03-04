@@ -295,7 +295,7 @@ public class SolrUtil {
 			return 0;
 		}
 		try {
-			return new Integer(value.toString());
+			return Integer.valueOf(value.toString());
 		} catch (Throwable t) {
 			logger.error("Error converting value to integer. value=" + value, t);
 		}
@@ -313,7 +313,7 @@ public class SolrUtil {
 			return 0;
 		}
 		try {
-			return new Long(value.toString());
+			return Long.valueOf(value.toString());
 		} catch (Throwable t) {
 			logger.error("Error converting value to long. value=" + value, t);
 		}

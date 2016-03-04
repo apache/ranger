@@ -735,7 +735,7 @@ public class ServiceREST {
 			}
 			List<RangerService> services = getServices(request).getServices();
 			
-			ret = new Long(services == null ? 0 : services.size());
+			ret = Long.valueOf(services == null ? 0 : services.size());
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -1366,7 +1366,7 @@ public class ServiceREST {
 
 			policies = applyAdminAccessFilter(policies);
 			
-			ret = new Long(policies == null ? 0 : policies.size());
+			ret = Long.valueOf(policies == null ? 0 : policies.size());
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -1522,7 +1522,7 @@ public class ServiceREST {
 
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 			if(lastKnownVersion == null) {
-				lastKnownVersion = new Long(-1);
+				lastKnownVersion = Long.valueOf(-1);
 			}
 			
 			try {

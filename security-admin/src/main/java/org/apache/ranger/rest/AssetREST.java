@@ -522,7 +522,7 @@ public class AssetREST {
 		boolean           isSecure    = request.isSecure();
 		String            policyCount = request.getParameter("policyCount");
 		String            agentId     = request.getParameter("agentId");
-		Long              lastKnowPolicyVersion = new Long(-1);
+		Long              lastKnowPolicyVersion = Long.valueOf(-1);
 
 		if (ipAddress == null) {  
 			ipAddress = request.getRemoteAddr();

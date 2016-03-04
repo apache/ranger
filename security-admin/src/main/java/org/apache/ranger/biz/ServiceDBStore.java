@@ -252,7 +252,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		
 		// While creating, value of version should be 1.
-		serviceDef.setVersion(new Long(1));
+		serviceDef.setVersion(Long.valueOf(1));
 		
 		if (populateExistingBaseFields) {
 			svcDefServiceWithAssignedId.setPopulateExistingBaseFields(true);
@@ -857,10 +857,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		
 		Long version = serviceDef.getVersion();
 		if(version == null) {
-			version = new Long(1);
+			version = Long.valueOf(1);
 			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
 		} else {
-			version = new Long(version.longValue() + 1);
+			version = Long.valueOf(version.longValue() + 1);
 		}
 		serviceDef.setVersion(version);
 		
@@ -1010,8 +1010,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		// While creating, value of version should be 1.
-		service.setVersion(new Long(1));
-		service.setTagVersion(new Long(1));
+		service.setVersion(Long.valueOf(1));
+		service.setTagVersion(Long.valueOf(1));
 
 		if (populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
@@ -1276,10 +1276,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		Long version = service.getVersion();
 		if(version == null) {
-			version = new Long(1);
+			version = Long.valueOf(1);
 			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
 		} else {
-			version = new Long(version.longValue() + 1);
+			version = Long.valueOf(version.longValue() + 1);
 		}
 		service.setVersion(version);
 
@@ -1416,7 +1416,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicyItem> allowExceptions = policy.getAllowExceptions();
 		List<RangerPolicyItem> denyExceptions  = policy.getDenyExceptions();
 
-		policy.setVersion(new Long(1));
+		policy.setVersion(Long.valueOf(1));
 		updatePolicySignature(policy);
 
 		if(populateExistingBaseFields) {
@@ -1542,10 +1542,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		
 		Long version = policy.getVersion();
 		if(version == null) {
-			version = new Long(1);
+			version = Long.valueOf(1);
 			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
 		} else {
-			version = new Long(version.longValue() + 1);
+			version = Long.valueOf(version.longValue() + 1);
 		}
 		
 		policy.setVersion(version);
