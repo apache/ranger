@@ -283,19 +283,38 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	}
 
 	@Override
-	public boolean isSingleAndExactMatch(RangerAccessResource resource) {
+	public boolean isCompleteMatch(RangerAccessResource resource) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.isSingleAndExactMatch(" + resource + ")");
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isCompleteMatch(" + resource + ")");
 		}
 
 		boolean ret = false;
 
 		if(resourceMatcher != null) {
-			ret = resourceMatcher.isSingleAndExactMatch(resource);
+			ret = resourceMatcher.isCompleteMatch(resource);
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.isSingleAndExactMatch(" + resource + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isCompleteMatch(" + resource + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public boolean isCompleteMatch(Map<String, RangerPolicyResource> resources) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isCompleteMatch(" + resources + ")");
+		}
+
+		boolean ret = false;
+
+		if(resourceMatcher != null) {
+			ret = resourceMatcher.isCompleteMatch(resources);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isCompleteMatch(" + resources + "): " + ret);
 		}
 
 		return ret;

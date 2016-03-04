@@ -66,18 +66,13 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
-import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.PList;
@@ -839,15 +834,14 @@ public class ServiceREST {
 				String               userName   = grantRequest.getGrantor();
 				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
 				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
-				RangerPolicyEngine   policyEngine = getPolicyEngine(serviceName);
-	
-				boolean isAdmin = hasAdminAccess(policyEngine, userName, userGroups, resource);
+
+				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 	
 				if(!isAdmin) {
 					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
 				}
 	
-				RangerPolicy policy = getExactMatchPolicyForResource(policyEngine, resource);
+				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
 
 				if(policy != null) {
 					boolean policyUpdated = false;
@@ -932,18 +926,17 @@ public class ServiceREST {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
 				}
 
-				String               userName     = revokeRequest.getGrantor();
-				Set<String>          userGroups   =  userMgr.getGroupsForUser(userName);
-				RangerAccessResource resource     = new RangerAccessResourceImpl(revokeRequest.getResource());
-				RangerPolicyEngine   policyEngine = getPolicyEngine(serviceName);
+				String               userName   = revokeRequest.getGrantor();
+				Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
+				RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
 
-				boolean isAdmin = hasAdminAccess(policyEngine, userName, userGroups, resource);
+				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 				
 				if(!isAdmin) {
 					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
 				}
 	
-				RangerPolicy policy = getExactMatchPolicyForResource(policyEngine, resource);
+				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
 				
 				if(policy != null) {
 					boolean policyUpdated = false;
@@ -1048,42 +1041,24 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		if (policy != null && StringUtils.isNotBlank(policy.getService())) {
-
 			try {
-				RangerPolicyResourceSignature resourceSignature = new RangerPolicyResourceSignature(policy);
-
-				List<RangerPolicy> existingPolicies = svcStore.getPoliciesByResourceSignature(policy.getService(), resourceSignature.getSignature(), true);
-
-				if (CollectionUtils.isEmpty(existingPolicies)) {
-
-					ret = createPolicy(policy);
-
-				} else if (existingPolicies.size() == 1) {
-
-					// Check if applied policy contains any conditions
-					if (ServiceRESTUtil.containsRangerCondition(policy)) {
-						LOG.error("Applied policy contains condition(s); not supported:" + policy);
-						throw new Exception("Applied policy contains condition(s); not supported:" + policy);
-					}
-					RangerPolicy existingPolicy = existingPolicies.get(0);
-
-					// If existing policy-items contains conditions, then we add/remove specified accesses to
-					// existing policy-items as specified in applied policy, ignoring those conditions.
-					// New policy-items will have no conditions.
-
-					boolean applyResult = ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
-
-					if (applyResult) {
-						ret = updatePolicy(existingPolicy);
-					} else {
-						LOG.error("applyPolicy processing failed");
-						throw new Exception("applyPolicy processing failed");
-					}
-
-				} else {
-					// there should be only one policy for the given resources
-					throw new Exception("Invalid state: multiple policies exists for resource " + policy.getResources());
+				// Check if applied policy contains any conditions
+				if (ServiceRESTUtil.containsRangerCondition(policy)) {
+					LOG.error("Applied policy contains condition(s); not supported:" + policy);
+					throw new Exception("Applied policy contains condition(s); not supported:" + policy);
 				}
+
+				RangerPolicy existingPolicy = getExactMatchPolicyForResource(policy.getService(), policy.getResources());
+
+				if (existingPolicy == null) {
+					ret = createPolicy(policy);
+				} else {
+					ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
+
+					ret = updatePolicy(existingPolicy);
+				}
+			} catch(WebApplicationException excp) {
+				throw excp;
 			} catch (Exception exception) {
 				LOG.error("Failed to apply policy:", exception);
 				throw restErrorUtil.createRESTException(exception.getMessage());
@@ -1544,20 +1519,43 @@ public class ServiceREST {
 		}
 	}
 
-	private RangerPolicy getExactMatchPolicyForResource(RangerPolicyEngine policyEngine, RangerAccessResource resource) throws Exception {
+	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerAccessResource resource) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resource + ")");
 		}
 
-		RangerPolicy ret = policyEngine != null ? policyEngine.getExactMatchPolicy(resource) : null;
+		RangerPolicy       ret          = null;
+		RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
+		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resource) : null;
 
-		if(ret != null) {
+		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
-			ret = svcStore.getPolicy(ret.getId());
+			ret = svcStore.getPolicy(policies.get(0).getId());
 		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resource + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	private RangerPolicy getExactMatchPolicyForResource(String serviceName, Map<String, RangerPolicyResource> resources) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resources + ")");
+		}
+
+		RangerPolicy       ret          = null;
+		RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
+		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resources) : null;
+
+		if(CollectionUtils.isNotEmpty(policies)) {
+			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
+			ret = svcStore.getPolicy(policies.get(0).getId());
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resources + "): " + ret);
 		}
 
 		return ret;
@@ -1683,7 +1681,7 @@ public class ServiceREST {
 						continue;
 					}
 
-					RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
+					RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(serviceName);
 
 					if (policyEngine != null) {
 						if(userGroups == null) {
@@ -1714,12 +1712,12 @@ public class ServiceREST {
 		if(!isAdmin && !isKeyAdmin) {
 			boolean isAllowed = false;
 
-			RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
+			RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(serviceName);
 
 			if (policyEngine != null) {
 				Set<String> userGroups = userMgr.getGroupsForUser(userName);
 
-				isAllowed = hasAdminAccess(policyEngine, userName, userGroups, resources);
+				isAllowed = hasAdminAccess(serviceName, userName, userGroups, resources);
 			}
 
 			if (!isAllowed) {
@@ -1747,8 +1745,10 @@ public class ServiceREST {
 		}
 	}
 
-	private boolean hasAdminAccess(RangerPolicyEngine policyEngine, String userName, Set<String> userGroups, Map<String, RangerPolicyResource> resources) {
+	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, Map<String, RangerPolicyResource> resources) {
 		boolean isAllowed = false;
+
+		RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(serviceName);
 
 		if(policyEngine != null) {
 			isAllowed = policyEngine.isAccessAllowed(resources, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
@@ -1757,8 +1757,10 @@ public class ServiceREST {
 		return isAllowed;
 	}
 
-	private boolean hasAdminAccess(RangerPolicyEngine policyEngine, String userName, Set<String> userGroups, RangerAccessResource resource) {
+	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, RangerAccessResource resource) {
 		boolean isAllowed = false;
+
+		RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(serviceName);
 
 		if(policyEngine != null) {
 			isAllowed = policyEngine.isAccessAllowed(resource, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
@@ -1767,7 +1769,7 @@ public class ServiceREST {
 		return isAllowed;
 	}
 
-	private RangerPolicyEngine getPolicyEngine(String serviceName) {
+	private RangerPolicyEngine getDelegatedAdminPolicyEngine(String serviceName) {
 		if(RangerPolicyEngineCache.getInstance().getPolicyEngineOptions() == null) {
 			RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
 
@@ -1783,6 +1785,24 @@ public class ServiceREST {
 		}
 
 		RangerPolicyEngine ret = RangerPolicyEngineCache.getInstance().getPolicyEngine(serviceName, svcStore);
+
+		return ret;
+	}
+
+	private RangerPolicyEngine getPolicyEngine(String serviceName) throws Exception {
+		RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
+
+		String propertyPrefix = "ranger.admin";
+
+		options.evaluatorType             = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
+		options.cacheAuditResults         = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", false);
+		options.disableContextEnrichers   = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", true);
+		options.disableCustomConditions   = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", true);
+		options.evaluateDelegateAdminOnly = false;
+
+		ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, -1L);
+
+		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options);
 
 		return ret;
 	}

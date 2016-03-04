@@ -36,13 +36,13 @@ public interface RangerPolicyResourceMatcher {
 
 	boolean isMatch(Map<String, RangerPolicyResource> resources);
 
-	boolean isSingleAndExactMatch(RangerAccessResource resource);
+	boolean isCompleteMatch(RangerAccessResource resource);
 
 	boolean isHeadMatch(RangerAccessResource resource);
 
 	boolean isExactHeadMatch(RangerAccessResource resource);
 
-	boolean isExactMatch(Map<String, RangerPolicyResource> resources);
+	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources);
 
 	StringBuilder toString(StringBuilder sb);
 }

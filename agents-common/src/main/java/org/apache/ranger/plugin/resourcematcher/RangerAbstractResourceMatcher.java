@@ -101,9 +101,9 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	}
 
 	@Override
-	public boolean isSingleAndExactMatch(String resource) {
+	public boolean isCompleteMatch(String resource) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractResourceMatcher.isSingleAndExactMatch(" + resource + ")");
+			LOG.debug("==> RangerAbstractResourceMatcher.isCompleteMatch(" + resource + ")");
 		}
 
 		boolean ret = false;
@@ -125,7 +125,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractResourceMatcher.isSingleAndExactMatch(" + resource + "): " + ret);
+			LOG.debug("<== RangerAbstractResourceMatcher.isCompleteMatch(" + resource + "): " + ret);
 		}
 
 		return ret;

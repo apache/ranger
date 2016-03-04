@@ -56,7 +56,9 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 
 	boolean isMatch(RangerAccessResource resource);
 
-	boolean isSingleAndExactMatch(RangerAccessResource resource);
+	boolean isCompleteMatch(RangerAccessResource resource);
+
+	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources);
 
 	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
 

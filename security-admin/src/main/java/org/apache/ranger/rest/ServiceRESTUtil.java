@@ -27,7 +27,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -74,7 +73,9 @@ public class ServiceRESTUtil {
 
 		appliedPolicy.getPolicyItems().add(policyItem);
 
-		policyUpdated = processApplyPolicy(policy, appliedPolicy) || policyUpdated;
+		processApplyPolicy(policy, appliedPolicy);
+
+		policyUpdated = true;
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.processGrantRequest() : " + policyUpdated);
@@ -114,7 +115,9 @@ public class ServiceRESTUtil {
 
 			appliedPolicy.getDenyPolicyItems().add(policyItem);
 
-			policyUpdated = processApplyPolicy(policy, appliedPolicy);
+			processApplyPolicy(policy, appliedPolicy);
+
+			policyUpdated = true;
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -124,31 +127,25 @@ public class ServiceRESTUtil {
 		return policyUpdated;
 	}
 
-	static public boolean processApplyPolicy(RangerPolicy existingPolicy, RangerPolicy appliedPolicy) {
+	static public void processApplyPolicy(RangerPolicy existingPolicy, RangerPolicy appliedPolicy) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.processApplyPolicy()");
 		}
 
-		boolean ret = false;
-
-		ret = processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
-		ret = ret && processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
-		ret = ret && processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
-		ret = ret && processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY_EXCEPTIONS);
+		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
+		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
+		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
+		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY_EXCEPTIONS);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.processApplyPolicy()");
 		}
-
-		return ret;
 	}
 
-	static public boolean processApplyPolicyForItemType(RangerPolicy existingPolicy, RangerPolicy appliedPolicy, POLICYITEM_TYPE policyItemType) {
+	static private void processApplyPolicyForItemType(RangerPolicy existingPolicy, RangerPolicy appliedPolicy, POLICYITEM_TYPE policyItemType) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.processApplyPolicyForItemType()");
 		}
-
-		boolean ret = false;
 
 		List<RangerPolicy.RangerPolicyItem> appliedPolicyItems = null;
 
@@ -166,8 +163,7 @@ public class ServiceRESTUtil {
 				appliedPolicyItems = appliedPolicy.getDenyExceptions();
 				break;
 			default:
-				LOG.warn("Should not have come here..");
-				return false;
+				LOG.warn("processApplyPolicyForItemType(): invalid policyItemType=" + policyItemType);
 		}
 
 		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
@@ -190,14 +186,12 @@ public class ServiceRESTUtil {
 			// Add modified/new policyItems back to existing policy
 			mergeProcessedPolicyItems(existingPolicy, userPolicyItems, groupPolicyItems);
 
-			ret = compactPolicy(existingPolicy);
+			compactPolicy(existingPolicy);
 		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.processApplyPolicyForItemType()");
 		}
-
-		return ret;
 	}
 
 	static private void extractUsersAndGroups(List<RangerPolicy.RangerPolicyItem> policyItems, Set<String> users, Set<String> groups) {
@@ -281,16 +275,15 @@ public class ServiceRESTUtil {
 		}
 	}
 
-	static private RangerPolicy.RangerPolicyItem splitAndGetConsolidatedPolicyItemForUser(List<RangerPolicy.RangerPolicyItem> userPolicyItems, String user) {
+	static private RangerPolicy.RangerPolicyItem splitAndGetConsolidatedPolicyItemForUser(List<RangerPolicy.RangerPolicyItem> policyItems, String user) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.splitAndGetConsolidatedPolicyItemForUser()");
 		}
 
 		RangerPolicy.RangerPolicyItem ret = null;
 
-		if (CollectionUtils.isNotEmpty(userPolicyItems)) {
-
-			for (RangerPolicy.RangerPolicyItem policyItem : userPolicyItems) {
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
 				List<String> users = policyItem.getUsers();
 				if (users.contains(user)) {
 					if (ret == null) {
@@ -302,7 +295,7 @@ public class ServiceRESTUtil {
 					}
 					addAccesses(ret, policyItem.getAccesses());
 
-					// Remove this user/group from existingPolicyItem
+					// Remove this user from existingPolicyItem
 					users.remove(user);
 				}
 			}
@@ -315,16 +308,15 @@ public class ServiceRESTUtil {
 		return ret;
 	}
 
-	static private RangerPolicy.RangerPolicyItem splitAndGetConsolidatedPolicyItemForGroup(List<RangerPolicy.RangerPolicyItem> groupPolicyItems, String group) {
+	static private RangerPolicy.RangerPolicyItem splitAndGetConsolidatedPolicyItemForGroup(List<RangerPolicy.RangerPolicyItem> policyItems, String group) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.splitAndGetConsolidatedPolicyItemForGroup()");
 		}
 
 		RangerPolicy.RangerPolicyItem ret = null;
 
-		if (CollectionUtils.isNotEmpty(groupPolicyItems)) {
-
-			for (RangerPolicy.RangerPolicyItem policyItem : groupPolicyItems) {
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
 				List<String> groups = policyItem.getGroups();
 				if (groups.contains(group)) {
 					if (ret == null) {
@@ -336,7 +328,7 @@ public class ServiceRESTUtil {
 					}
 					addAccesses(ret, policyItem.getAccesses());
 
-					// Remove this user/group from existingPolicyItem
+					// Remove this group from existingPolicyItem
 					groups.remove(group);
 				}
 			}
@@ -541,14 +533,14 @@ public class ServiceRESTUtil {
 			for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
 				String accessType = access.getType();
 
-				int numOfItems = policyItem.getAccesses().size();
+				int numOfAccesses = policyItem.getAccesses().size();
 
-				for (int i = 0; i < numOfItems; i++) {
+				for (int i = 0; i < numOfAccesses; i++) {
 					RangerPolicy.RangerPolicyItemAccess itemAccess = policyItem.getAccesses().get(i);
 
 					if (StringUtils.equals(itemAccess.getType(), accessType)) {
 						policyItem.getAccesses().remove(i);
-						numOfItems--;
+						numOfAccesses--;
 						i--;
 
 						ret = true;
@@ -562,42 +554,11 @@ public class ServiceRESTUtil {
 		return ret;
 	}
 
-	static private boolean compactPolicy(RangerPolicy policy) {
-		boolean ret = true;			// Always true for now
-
-		List<?>[] policyItemsList = new List<?>[] { policy.getPolicyItems(),
-				policy.getDenyPolicyItems(),
-				policy.getAllowExceptions(),
-				policy.getDenyExceptions()
-		};
-
-		for(List<?> policyItemsObj : policyItemsList) {
-			@SuppressWarnings("unchecked")
-			List<RangerPolicy.RangerPolicyItem> policyItems = (List<RangerPolicy.RangerPolicyItem>)policyItemsObj;
-
-			int numOfItems = policyItems.size();
-
-			for(int i = 0; i < numOfItems; i++) {
-				RangerPolicy.RangerPolicyItem policyItem = policyItems.get(i);
-
-				// remove the policy item if 1) there are no users and groups OR 2) if there are no accessTypes and not a delegate-admin
-				if((CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) ||
-						(CollectionUtils.isEmpty(policyItem.getAccesses()) && !policyItem.getDelegateAdmin())) {
-					policyItems.remove(i);
-					numOfItems--;
-					i--;
-
-					ret = true;
-				}
-			}
-		}
-
+	static private void compactPolicy(RangerPolicy policy) {
 		policy.setPolicyItems(mergePolicyItems(policy.getPolicyItems()));
 		policy.setDenyPolicyItems(mergePolicyItems(policy.getDenyPolicyItems()));
 		policy.setAllowExceptions(mergePolicyItems(policy.getAllowExceptions()));
 		policy.setDenyExceptions(mergePolicyItems(policy.getDenyExceptions()));
-
-		return ret;
 	}
 
 	static private List<RangerPolicy.RangerPolicyItem> mergePolicyItems(List<RangerPolicy.RangerPolicyItem> policyItems) {
@@ -607,6 +568,11 @@ public class ServiceRESTUtil {
 			Map<String, RangerPolicy.RangerPolicyItem> matchedPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem>();
 
 			for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
+				if((CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) ||
+				   (CollectionUtils.isEmpty(policyItem.getAccesses()) && !policyItem.getDelegateAdmin())) {
+					continue;
+				}
+
 				if (policyItem.getConditions().size() > 1) {
 					ret.add(policyItem);
 					continue;
@@ -620,19 +586,15 @@ public class ServiceRESTUtil {
 					accesses.add("delegateAdmin");
 				}
 
-				StringBuilder allAccessesString = new StringBuilder();
+				String allAccessesString = accesses.toString();
 
-				for (String access = accesses.first(); access != null; access = accesses.higher(access)) {
-					allAccessesString.append(access);
-				}
-
-				RangerPolicy.RangerPolicyItem matchingPolicyItem = matchedPolicyItems.get(allAccessesString.toString());
+				RangerPolicy.RangerPolicyItem matchingPolicyItem = matchedPolicyItems.get(allAccessesString);
 
 				if (matchingPolicyItem != null) {
 					addDistinctItems(policyItem.getUsers(), matchingPolicyItem.getUsers());
 					addDistinctItems(policyItem.getGroups(), matchingPolicyItem.getGroups());
 				} else {
-					matchedPolicyItems.put(allAccessesString.toString(), policyItem);
+					matchedPolicyItems.put(allAccessesString, policyItem);
 				}
 			}
 
