@@ -105,5 +105,12 @@ public class DateUtil {
 	    	return null;
 	    }	    		
 	}
-
+	public static Date getLocalDateForUTCDate(Date date) {
+		Calendar local  = Calendar.getInstance();
+		int      offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+		GregorianCalendar utc = new GregorianCalendar();
+		utc.setTimeInMillis(date.getTime());
+		utc.add(Calendar.MILLISECOND, offset);
+		return utc.getTime();
+	}
 }

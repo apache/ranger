@@ -41,6 +41,7 @@
 		</properties>
 	</persistence-unit>
 	<persistence-unit name="loggingPU">
+		<mapping-file>META-INF/jpa_named_queries.xml</mapping-file>
         <class>org.apache.ranger.entity.XXAccessAudit</class>
         <shared-cache-mode>NONE</shared-cache-mode>
 

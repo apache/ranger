@@ -923,4 +923,10 @@
 		<query>select obj from XXPolicy obj, XXPolicyItem polItem,XXPolicyItemGroupPerm polItemGroupPerm where 
 		 obj.id = polItem.policyId and polItem.id = polItemGroupPerm.policyItemId and polItemGroupPerm.groupId = :groupId</query>
 	</named-query>
+	<named-query name="XXAccessAudit.getMaxIdOfXXAccessAudit">
+		<query>select max(obj.id) from XXAccessAudit obj</query>
+	</named-query>
+	<named-query name="XXAccessAudit.getByIdRange">
+		<query>select obj from XXAccessAudit obj WHERE obj.id &gt; :idFrom AND obj.id &lt; :idTo</query>
+    </named-query>
 </entity-mappings>

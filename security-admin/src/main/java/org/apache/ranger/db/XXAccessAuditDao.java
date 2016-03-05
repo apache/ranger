@@ -19,13 +19,45 @@
 
  package org.apache.ranger.db;
 
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.NoResultException;
+import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAccessAudit;
 
 public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
-
+	private static Logger logger = Logger.getLogger(XXAccessAuditDao.class);
     public XXAccessAuditDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager, "loggingPU");
     }
+    public Long getMaxIdOfXXAccessAudit(){
+		Long maxXXAccessAuditID=Long.valueOf(0L);
+		try {
+			maxXXAccessAuditID = (Long) getEntityManager()
+					.createNamedQuery("XXAccessAudit.getMaxIdOfXXAccessAudit", Long.class)
+					.getSingleResult();
+		} catch (NoResultException e) {
+			logger.debug(e.getMessage());
+		}finally{
+			if(maxXXAccessAuditID==null){
+				maxXXAccessAuditID=Long.valueOf(0L);
+			}
+		}
+		return maxXXAccessAuditID;
+	}
+	public List<XXAccessAudit> getByIdRange(long idFrom,long idTo){
+		//idFrom and idTo both exclusive
+		List<XXAccessAudit> xXAccessAuditList = new ArrayList<XXAccessAudit>();
+		try {
+			xXAccessAuditList= getEntityManager().createNamedQuery("XXAccessAudit.getByIdRange", tClass)
+				.setParameter("idFrom", idFrom)
+				.setParameter("idTo", idTo)
+				.getResultList();
+		} catch (NoResultException e) {
+			logger.debug(e.getMessage());
+		}
+		return xXAccessAuditList;
+	}
 }
 
