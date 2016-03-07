@@ -450,16 +450,6 @@ class OracleConf(BaseDB):
 	def grant_audit_db_user(self, audit_db_name ,db_user,audit_db_user,db_password,audit_db_password):
 		get_cmd = self.get_jisql_cmd(db_user, db_password)
 		if os_name == "LINUX":
-			query = get_cmd + " -c \; -query 'GRANT CREATE SESSION TO %s;'" % (audit_db_user)
-			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
-		elif os_name == "WINDOWS":
-			query = get_cmd + " -query \"GRANT CREATE SESSION TO %s;\" -c ;" % (audit_db_user)
-			jisql_log(query, db_password)
-			ret = subprocess.call(query)
-		if ret != 0:
-			sys.exit(1)
-		if os_name == "LINUX":
 			query = get_cmd + " -c \; -query 'GRANT SELECT ON %s.XA_ACCESS_AUDIT_SEQ TO %s;'" % (db_user,audit_db_user)
 			jisql_log(query, db_password)
 			ret = subprocess.call(shlex.split(query))
@@ -809,7 +799,31 @@ class PostgresConf(BaseDB):
 			log("[E] Granting insert privileges to Postgres user '" + audit_db_user + "' failed", "error")
 			sys.exit(1)
 
+	def create_language_plpgsql(self,db_user, db_password, db_name):
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if os_name == "LINUX":
+			query = get_cmd + " -query \"SELECT 1 FROM pg_catalog.pg_language WHERE lanname='plpgsql';\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT 1 FROM pg_catalog.pg_language WHERE lanname='plpgsql';\" -c ;"
+		jisql_log(query, db_password)
+		output = check_output(query)
+		if not output.strip('1 |'):
+			if os_name == "LINUX":
+				query = get_cmd + " -query \"CREATE LANGUAGE plpgsql;\""
+				jisql_log(query, db_password)
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"CREATE LANGUAGE plpgsql;\" -c ;"
+				jisql_log(query, db_password)
+				ret = subprocess.call(query)
+			if ret == 0:
+				log("[I] LANGUAGE plpgsql created successfully", "info")
+			else:
+				log("[E] LANGUAGE plpgsql creation failed", "error")
+				sys.exit(1)
+
 	def import_db_patches(self, db_name, db_user, db_password, file_name):
+		self.create_language_plpgsql(db_user, db_password, db_name)
 		name = basename(file_name)
 		if os.path.isfile(file_name):
 			version = name.split('-')[0]
@@ -853,6 +867,7 @@ class PostgresConf(BaseDB):
 
 	def import_auditdb_patches(self, xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, file_name, TABLE_NAME):
 		log("[I] --------- Checking XA_ACCESS_AUDIT table to apply audit db patches --------- ","info")
+		self.create_language_plpgsql(db_user, db_password, audit_db_name)
 		output = self.check_table(audit_db_name, db_user, db_password, TABLE_NAME)
 		if output == True:
 			name = basename(file_name)
