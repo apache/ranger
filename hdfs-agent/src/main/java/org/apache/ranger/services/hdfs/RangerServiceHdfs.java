@@ -54,7 +54,7 @@ public class RangerServiceHdfs extends RangerBaseService {
 		
 		if ( configs != null) {
 			try  {
-				ret = HdfsResourceMgr.testConnection(serviceName, configs);
+				ret = HdfsResourceMgr.connectionTest(serviceName, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceHdfs.validateConfig Error:" + e);
 				throw e;

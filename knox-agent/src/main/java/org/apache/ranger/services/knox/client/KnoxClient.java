@@ -275,7 +275,7 @@ public class KnoxClient {
 		}
 	}
 	
-	public static HashMap<String, Object> testConnection(String serviceName,
+	public static HashMap<String, Object> connectionTest(String serviceName,
 										  		Map<String, String> configs) {
 
 		List<String> strList = new ArrayList<String>();
@@ -293,7 +293,7 @@ public class KnoxClient {
 		}
 		
 		if (connectivityStatus) {
-			String successMsg = "TestConnection Successful";
+			String successMsg = "ConnectionTest Successful";
 			BaseClient.generateResponseDataMap(connectivityStatus, successMsg, successMsg,
 					null, null, responseData);
 		} else {

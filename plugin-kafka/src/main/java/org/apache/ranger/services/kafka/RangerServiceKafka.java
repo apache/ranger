@@ -52,7 +52,7 @@ public class RangerServiceKafka extends RangerBaseService {
 
 		if (configs != null) {
 			try {
-				ret = ServiceKafkaConnectionMgr.testConnection(serviceName, configs);
+				ret = ServiceKafkaConnectionMgr.connectionTest(serviceName, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceKafka.validateConfig Error:" + e);
 				throw e;

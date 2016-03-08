@@ -38,22 +38,22 @@ public class HiveResourceMgr {
 	private static final String  COLUMN	 	  = "column";
 
 	
-	public static HashMap<String, Object> testConnection(String serviceName, Map<String, String> configs) throws Exception {
+	public static HashMap<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
 		HashMap<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HiveResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
+			LOG.debug("==> HiveResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs ) ;
 		}	
 		
 		try {
-			ret = HiveClient.testConnection(serviceName, configs);
+			ret = HiveClient.connectionTest(serviceName, configs);
 		} catch (Exception e) {
-			LOG.error("<== HiveResourceMgr.testConnection Error: " + e) ;
+			LOG.error("<== HiveResourceMgr.connectionTest Error: " + e) ;
 		  throw e;
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HiveResourceMgr.testConnection Result : "+ ret  ) ;
+			LOG.debug("<== HiveResourceMgr.connectionTest Result : "+ ret  ) ;
 		}	
 		
 		return ret;

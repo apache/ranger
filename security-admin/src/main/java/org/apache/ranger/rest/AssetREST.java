@@ -225,9 +225,9 @@ public class AssetREST {
 	@Path("/assets/testConfig")
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.TEST_CONFIG + "\")")
-	public VXResponse testConfig(VXAsset vXAsset) {
+	public VXResponse configTest(VXAsset vXAsset) {
 		if(logger.isDebugEnabled()) {
-			logger.debug("==> AssetREST.testConfig(" + vXAsset + ")");
+			logger.debug("==> AssetREST.configTest(" + vXAsset + ")");
 		}
 
 		RangerService service = serviceUtil.toRangerService(vXAsset);

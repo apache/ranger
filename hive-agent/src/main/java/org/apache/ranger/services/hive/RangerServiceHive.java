@@ -53,7 +53,7 @@ public class RangerServiceHive extends RangerBaseService {
 		}
 		if ( configs != null) {
 			try  {
-				ret = HiveResourceMgr.testConnection(serviceName, configs);
+				ret = HiveResourceMgr.connectionTest(serviceName, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceHive.validateConfig Error:" + e);
 				throw e;

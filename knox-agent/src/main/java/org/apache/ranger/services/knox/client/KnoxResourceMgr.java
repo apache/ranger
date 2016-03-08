@@ -40,9 +40,9 @@ public class KnoxResourceMgr {
 		   LOG.debug("==> KnoxResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
 		}
 		try {
-			ret = KnoxClient.testConnection(serviceName, configs);
+			ret = KnoxClient.connectionTest(serviceName, configs);
 		} catch (Exception e) {
-		  LOG.error("<== KnoxResourceMgr.testConnection Error: " + e) ;
+		  LOG.error("<== KnoxResourceMgr.connectionTest Error: " + e) ;
 		  throw e;
 		}
 		

@@ -35,22 +35,22 @@ public class HdfsResourceMgr {
 	public static final Logger LOG 	= Logger.getLogger(HdfsResourceMgr.class);
 	public static final String PATH	= "path";
 
-	public static HashMap<String, Object> testConnection(String serviceName, Map<String, String> configs) throws Exception {
+	public static HashMap<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
 		HashMap<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HdfsResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
+			LOG.debug("<== HdfsResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs ) ;
 		}	
 		
 		try {
-			ret = HdfsClient.testConnection(serviceName, configs);
+			ret = HdfsClient.connectionTest(serviceName, configs);
 		} catch (Exception e) {
-			LOG.error("<== HdfsResourceMgr.testConnection Error: " + e) ;
+			LOG.error("<== HdfsResourceMgr.connectionTest Error: " + e) ;
 		  throw e;
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HdfsResourceMgr.testConnection Result : "+ ret  ) ;
+			LOG.debug("<== HdfsResourceMgr.connectionTest Result : "+ ret  ) ;
 		}	
 		return ret;
 	}

@@ -542,7 +542,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		}	
 	}
 
-	public static HashMap<String, Object> testConnection(String serviceName,
+	public static HashMap<String, Object> connectionTest(String serviceName,
 			Map<String, String> connectionProperties) {
 
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
@@ -561,7 +561,7 @@ public class HiveClient extends BaseClient implements Closeable {
 			}
 		}
 		if (connectivityStatus) {
-			String successMsg = "TestConnection Successful";
+			String successMsg = "ConnectionTest Successful";
 			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
 					null, null, responseData);
 		} else {

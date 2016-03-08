@@ -45,11 +45,11 @@ public class ServiceKafkaConnectionMgr {
 	 * @param configs
 	 * @return
 	 */
-	public static HashMap<String, Object> testConnection(String serviceName,
+	public static HashMap<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) throws Exception {
 		ServiceKafkaClient serviceKafkaClient = getKafkaClient(serviceName,
 				configs);
-		return serviceKafkaClient.testConnection();
+		return serviceKafkaClient.connectionTest();
 	}
 
 }

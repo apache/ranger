@@ -55,7 +55,7 @@ public class RangerServiceHBase extends RangerBaseService {
 		}
 		if ( configs != null) {
 			try  {
-				ret = HBaseResourceMgr.testConnection(serviceName, configs);
+				ret = HBaseResourceMgr.connectionTest(serviceName, configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceHBase.validateConfig() Error:" + e);
 				throw e;

@@ -38,7 +38,7 @@ public class YarnResourceMgr {
 		}	
 		
 		try {
-			ret = YarnClient.testConnection(serviceName, configs);
+			ret = YarnClient.connectionTest(serviceName, configs);
 		} catch (Exception e) {
 			LOG.error("<== YarnResourceMgr.validateConfig Error: " + e) ;
 		  throw e;

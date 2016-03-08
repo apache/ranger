@@ -190,7 +190,7 @@ public class HdfsClient extends BaseClient {
 		}
 	}
 
-	public static HashMap<String, Object> testConnection(String serviceName,
+	public static HashMap<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) {
 
     HashMap<String, Object> responseData = new HashMap<String, Object>();
@@ -214,7 +214,7 @@ public class HdfsClient extends BaseClient {
     }
 
 		if (connectivityStatus) {
-			String successMsg = "TestConnection Successful";
+			String successMsg = "ConnectionTest Successful";
 			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
 					null, null, responseData);
 		} else {

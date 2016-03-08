@@ -60,14 +60,14 @@ public class ServiceKafkaClient {
 		this.zookeeperConnect = zookeeperConnect;
 	}
 
-	public HashMap<String, Object> testConnection() throws Exception {
+	public HashMap<String, Object> connectionTest() throws Exception {
 		String errMsg = errMessage;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 		try {
 			getTopicList(null);
 			// If it doesn't throw exception, then assume the instance is
 			// reachable
-			String successMsg = "TestConnection Successful";
+			String successMsg = "ConnectionTest Successful";
 			BaseClient.generateResponseDataMap(true, successMsg,
 					successMsg, null, null, responseData);
 		} catch (IOException e) {

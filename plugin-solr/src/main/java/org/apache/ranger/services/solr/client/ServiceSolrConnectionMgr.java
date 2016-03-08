@@ -52,11 +52,11 @@ public class ServiceSolrConnectionMgr {
 	 * @param configs
 	 * @return
 	 */
-	public static HashMap<String, Object> testConnection(String serviceName,
+	public static HashMap<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) throws Exception {
 		ServiceSolrClient serviceSolrClient = getSolrClient(serviceName,
 				configs);
-		return serviceSolrClient.testConnection();
+		return serviceSolrClient.connectionTest();
 	}
 
 }

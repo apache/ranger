@@ -39,7 +39,7 @@ public class StormResourceMgr {
 		}	
 		
 		try {
-			ret = StormClient.testConnection(serviceName, configs);
+			ret = StormClient.connectionTest(serviceName, configs);
 		} catch (Exception e) {
 			LOG.error("<== StormResourceMgr.validateConfig Error: " + e) ;
 		  throw e;

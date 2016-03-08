@@ -53,7 +53,7 @@ public class RangerServiceSolr extends RangerBaseService {
 		}
 		if (configs != null) {
 			try {
-				ret = ServiceSolrConnectionMgr.testConnection(serviceName,
+				ret = ServiceSolrConnectionMgr.connectionTest(serviceName,
 						configs);
 			} catch (Exception e) {
 				LOG.error("<== RangerServiceSolr.validateConfig Error:", e);

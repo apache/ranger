@@ -37,20 +37,20 @@ public class HBaseResourceMgr {
 	private static final String TABLE 		 		    = "table";
 	private static final String COLUMNFAMILY 		    = "column-family";
 		
-	public static HashMap<String, Object> testConnection(String serviceName, Map<String, String> configs) throws Exception {
+	public static HashMap<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
 		HashMap<String, Object> ret = null;
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HBaseResourceMgr.testConnection() ServiceName: "+ serviceName + "Configs" + configs ) ;
+			LOG.debug("<== HBaseResourceMgr.connectionTest() ServiceName: "+ serviceName + "Configs" + configs ) ;
 		}	
 		
 		try {
-			ret = HBaseClient.testConnection(serviceName, configs);
+			ret = HBaseClient.connectionTest(serviceName, configs);
 		} catch (Exception e) {
-			LOG.error("<== HBaseResourceMgr.testConnection() Error: " + e) ;
+			LOG.error("<== HBaseResourceMgr.connectionTest() Error: " + e) ;
 		  throw e;
 		}
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HBaseResourceMgr.testConnection() Result: "+ ret  ) ;
+			LOG.debug("<== HBaseResourceMgr.connectionTest() Result: "+ ret  ) ;
 		}	
 		return ret;
 	}

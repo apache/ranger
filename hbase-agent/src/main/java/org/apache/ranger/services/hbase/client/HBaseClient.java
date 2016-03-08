@@ -90,7 +90,7 @@ public class HBaseClient extends BaseClient {
 		return connectionProp;
 	}
 	
-	public static HashMap<String, Object> testConnection(String dataSource,
+	public static HashMap<String, Object> connectionTest(String dataSource,
 			Map<String, String> configs) {
 
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
@@ -106,7 +106,7 @@ public class HBaseClient extends BaseClient {
 		}
 		
 		if (connectivityStatus) {
-			String successMsg = "TestConnection Successful";
+			String successMsg = "ConnectionTest Successful";
 			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
 					null, null, responseData);
 		} else {
