@@ -43,6 +43,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RangerServiceDef extends RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
+	public static final String OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES = "enableDenyAndExceptionsInPolicies";
+
 	private String                         name             = null;
 	private String                         implClass        = null;
 	private String                         label            = null;

@@ -20,6 +20,9 @@
       {"name":"lock","label":"Lock"},
       {"name":"all","label":"All"}
     ],
+    "options": {
+      "enableDenyAndExceptionsInPolicies":"true"
+    },
     "policyConditions":[
       {
         "itemId":1,

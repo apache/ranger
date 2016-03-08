@@ -6,6 +6,9 @@
     "resources":[
       {"name":"path","type":"path","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Resource Path","description":"HDFS file or directory path"}
     ],
+    "options": {
+      "enableDenyAndExceptionsInPolicies":"true"
+    },
     "accessTypes":[
       {"name":"read","label":"Read"},
       {"name":"write","label":"Write"},
