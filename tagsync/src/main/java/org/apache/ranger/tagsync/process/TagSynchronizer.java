@@ -37,6 +37,7 @@ public class TagSynchronizer {
 	private Properties properties = null;
 
 	private final Object shutdownNotifier = new Object();
+	private volatile boolean isShutdownInProgress = false;
 
 	public static void main(String[] args) {
 
@@ -125,6 +126,8 @@ public class TagSynchronizer {
 			LOG.debug("==> TagSynchronizer.run()");
 		}
 
+		isShutdownInProgress = false;
+
 		try {
 			boolean threadsStarted = tagSink.start();
 
@@ -134,7 +137,9 @@ public class TagSynchronizer {
 
 			if (threadsStarted) {
 				synchronized(shutdownNotifier) {
-					shutdownNotifier.wait();
+					while(! isShutdownInProgress) {
+						shutdownNotifier.wait();
+					}
 				}
 			}
 		} finally {
@@ -157,6 +162,7 @@ public class TagSynchronizer {
 		LOG.info("Received shutdown(), reason=" + reason);
 
 		synchronized(shutdownNotifier) {
+			isShutdownInProgress = true;
 			shutdownNotifier.notifyAll();
 		}
 	}

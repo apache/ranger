@@ -223,7 +223,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 	}
 
-	class UploadWorkItem {
+	static class UploadWorkItem {
 		private ServiceTags serviceTags;
 		private BlockingQueue<ServiceTags> uploadedServiceTags;
 
