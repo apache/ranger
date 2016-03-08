@@ -97,10 +97,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		resourceMatcher.init();
 
 		if(policy != null) {
-			allowEvaluators          = createPolicyItemEvaluators(policy, serviceDef, options, policy.getPolicyItems(), RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW);
-			denyEvaluators           = createPolicyItemEvaluators(policy, serviceDef, options, policy.getDenyPolicyItems(), RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
-			allowExceptionEvaluators = createPolicyItemEvaluators(policy, serviceDef, options, policy.getAllowExceptions(), RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
-			denyExceptionEvaluators  = createPolicyItemEvaluators(policy, serviceDef, options, policy.getDenyExceptions(), RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);
+			allowEvaluators          = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW);
+			denyEvaluators           = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
+			allowExceptionEvaluators = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
+			denyExceptionEvaluators  = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);
 		} else {
 			allowEvaluators          = Collections.<RangerPolicyItemEvaluator>emptyList();
 			denyEvaluators           = Collections.<RangerPolicyItemEvaluator>emptyList();
@@ -528,10 +528,31 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	private List<RangerPolicyItemEvaluator> createPolicyItemEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options, List<RangerPolicyItem> policyItems, int policyItemType) {
-		List<RangerPolicyItemEvaluator> ret = null;
+	private List<RangerPolicyItemEvaluator> createPolicyItemEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options, int policyItemType) {
+		List<RangerPolicyItemEvaluator> ret         = null;
+		List<RangerPolicyItem>          policyItems = null;
 
-		if(CollectionUtils.isNotEmpty(policyItems) && isPolicyItemTypeEnabled(serviceDef, policyItemType)) {
+		if(isPolicyItemTypeEnabled(serviceDef, policyItemType)) {
+			if (policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW) {
+				policyItems = policy.getPolicyItems();
+
+				if (isPolicyItemTypeEnabled(serviceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS)) {
+					policyItems = mergeLists(policyItems, policy.getDenyExceptions());
+				}
+			} else if (policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
+				policyItems = policy.getDenyPolicyItems();
+
+				if (isPolicyItemTypeEnabled(serviceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS)) {
+					policyItems = mergeLists(policyItems, policy.getAllowExceptions());
+				}
+			} else if (policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS) {
+				policyItems = policy.getAllowExceptions();
+			} else if (policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
+				policyItems = policy.getDenyExceptions();
+			}
+		}
+
+		if(CollectionUtils.isNotEmpty(policyItems)) {
 			ret = new ArrayList<RangerPolicyItemEvaluator>();
 
 			int policyItemCounter = 1;
@@ -640,5 +661,21 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         }
 
         return ret;
+	}
+
+	private <T> List<T> mergeLists(List<T> list1, List<T> list2) {
+		List<T> ret = null;
+
+		if(CollectionUtils.isEmpty(list1)) {
+			ret = list2;
+		} else if(CollectionUtils.isEmpty(list2)) {
+			ret = list1;
+		} else {
+			ret = new ArrayList<T>(list1);
+
+			ret.addAll(list2);
+		}
+
+		return ret;
 	}
 }

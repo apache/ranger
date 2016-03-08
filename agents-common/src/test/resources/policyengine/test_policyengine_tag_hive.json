@@ -238,7 +238,7 @@
         "accessType":"select","user":"dataloader","userGroups":[],"requestData":"select ssn from employee.personal;' for dataloader",
         "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2015/08/10\"}}]"}
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
     },
     {"name":"ALLOW 'select ssn from employee.personal;' for user1",
       "request":{
@@ -303,7 +303,7 @@
         "accessType":"","user":"hive","userGroups":[],"requestData":"use default",
         "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     },
     {"name":"DENY 'use default;' for user1",
       "request":{

@@ -233,7 +233,7 @@
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"emp-number"}},
         "accessType":"select","user":"dataloader","userGroups":[],"requestData":"select emp-number from employee.personal;' for dataloader"
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
     },
     {"name":"DENY 'select salary from employee.personal;' for user1 using EXPIRES_ON tag",
       "request":{
@@ -268,14 +268,14 @@
         "resource":{"elements":{"database":"default", "table":"table1", "column":"name"}},
         "accessType":"select","user":"hive","userGroups":[],"requestData":"select name from default.table1;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     },
     {"name":"ALLOW 'desc default.table1;' for hive using PII, PII-FINAL tags",
       "request":{
         "resource":{"elements":{"database":"default", "table":"table1"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"desc default.table1;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     },
     {"name":"DENY 'desc default.table2;' for user1 using PII-FINAL tag",
       "request":{
@@ -296,7 +296,7 @@
         "resource":{"elements":{"database":"default", "table":"table3", "column":"name"}},
         "accessType":"select","user":"hive","userGroups":[],"requestData":"select name from default.table3 for user hive"
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
 
   ]
