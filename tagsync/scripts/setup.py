@@ -199,7 +199,7 @@ def convertInstallPropsToXML(props):
 		else:
 			print "Direct Key not found:%s" % (k)
 
-	ret['ranger.tagsync.sink.impl.class'] = 'org.apache.ranger.sink.policymgr.TagAdminRESTSink'
+	ret['ranger.tagsync.sink.impl.class'] = 'org.apache.ranger.tagsync.sink.tagadmin.TagAdminRESTSink'
 
 	if (TAG_SOURCE_KEY in ret):
 		ret['ranger.tagsync.source.impl.class'] = ret[TAG_SOURCE_KEY]
