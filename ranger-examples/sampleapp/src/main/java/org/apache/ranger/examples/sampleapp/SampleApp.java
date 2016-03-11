@@ -22,6 +22,7 @@ package org.apache.ranger.examples.sampleapp;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -144,7 +145,7 @@ public class SampleApp {
 	}
 
 	private String getInput() {
-		Scanner inputReader = new Scanner(System.in);
+		Scanner inputReader = new Scanner(System.in, StandardCharsets.UTF_8.name());
 
 		System.out.print("command> ");
 		System.out.flush();
