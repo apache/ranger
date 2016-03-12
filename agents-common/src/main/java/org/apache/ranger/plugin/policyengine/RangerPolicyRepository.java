@@ -402,6 +402,7 @@ public class RangerPolicyRepository {
             LOG.debug("==> RangerPolicyRepository.buildPolicyEvaluator(" + policy + "," + serviceDef + ", " + options + ")");
         }
 
+        scrubPolicy(policy);
         RangerPolicyEvaluator ret;
 
         if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED)) {
@@ -459,6 +460,37 @@ public class RangerPolicyRepository {
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.storeAuditEnabledInCache()");
         }
+    }
+
+    /**
+     * Remove nulls from policy resource values
+     * @param policy
+     */
+    boolean scrubPolicy(RangerPolicy policy) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyRepository.scrubPolicy(" + policy + ")");
+        }
+        boolean altered = false;
+        Long policyId = policy.getId();
+        Map<String, RangerPolicy.RangerPolicyResource> resourceMap = policy.getResources();
+        for (Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : resourceMap.entrySet()) {
+            String resourceName = entry.getKey();
+            RangerPolicy.RangerPolicyResource resource = entry.getValue();
+            Iterator<String> iterator = resource.getValues().iterator();
+            while (iterator.hasNext()) {
+                String value = iterator.next();
+                if (value == null) {
+                    LOG.warn("RangerPolicyRepository.scrubPolicyResource: found null resource value for " + resourceName + " in policy " + policyId + "!  Removing...");
+                    iterator.remove();
+                    altered = true;
+                }
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyRepository.scrubPolicy(" + policy + "): " + altered);
+        }
+        return altered;
     }
 
     @Override
