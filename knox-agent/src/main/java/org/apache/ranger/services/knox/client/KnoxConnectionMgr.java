@@ -22,7 +22,6 @@ package org.apache.ranger.services.knox.client;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.services.knox.client.KnoxClient;
 import org.apache.ranger.plugin.model.RangerService;
 
 

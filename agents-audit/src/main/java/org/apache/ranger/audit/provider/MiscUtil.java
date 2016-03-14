@@ -438,7 +438,7 @@ public class MiscUtil {
 		if (subject != null) {
 			logger.info("SUBJECT.PRINCIPALS.size()="
 					+ subject.getPrincipals().size());
-			java.util.Set<Principal> principals = subject.getPrincipals();
+			Set<Principal> principals = subject.getPrincipals();
 			for (Principal principal : principals) {
 				logger.info("SUBJECT.PRINCIPAL.NAME=" + principal.getName());
 			}
@@ -534,7 +534,7 @@ public class MiscUtil {
 					.createRemoteUser(userName);
 			String groups[] = ugi.getGroupNames();
 			if (groups != null && groups.length > 0) {
-				java.util.Set<String> groupsSet = new java.util.HashSet<String>();
+				Set<String> groupsSet = new java.util.HashSet<String>();
 				for (int i = 0; i < groups.length; i++) {
 					groupsSet.add(groups[i]);
 				}

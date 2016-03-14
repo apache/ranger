@@ -42,10 +42,7 @@
 	<exclude name="UnusedPrivateField" />
 	<exclude name="UnusedPrivateMethod" />
   </rule>
-  <rule ref="rulesets/java/imports.xml" >
-	<exclude name="ImportFromSamePackage" />
-	<exclude name="UnnecessaryFullyQualifiedName" />
-  </rule>
+  <rule ref="rulesets/java/imports.xml" />
   <rule ref="rulesets/java/braces.xml">
 	<exclude name="ForLoopsMustUseBraces" />
 	<exclude name="IfElseStmtsMustUseBraces" />

@@ -32,7 +32,6 @@ import javax.security.auth.Subject;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
-import org.apache.ranger.services.yarn.client.YarnClient;
 import org.apache.ranger.services.yarn.client.json.model.YarnSchedulerResponse;
 
 import com.google.gson.Gson;

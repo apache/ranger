@@ -48,7 +48,6 @@ import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;

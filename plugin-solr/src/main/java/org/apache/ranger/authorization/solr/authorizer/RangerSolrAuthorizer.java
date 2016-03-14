@@ -120,8 +120,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			// logger.info("DEFAULT UGI=" +
 			// UserGroupInformation.getLoginUser());
 
-			Configuration config = javax.security.auth.login.Configuration
-					.getConfiguration();
+			Configuration config = Configuration.getConfiguration();
 			MiscUtil.authWithConfig(solrAppName, config);
 			logger.info("POST AUTH UGI=" + UserGroupInformation.getLoginUser());
 		} catch (Throwable t) {

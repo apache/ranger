@@ -214,8 +214,7 @@ public class HDFSAuditDestination extends AuditDestination {
 					currentTime.getTime());
 			Configuration conf = createConfiguration();
 
-			String fullPath = parentFolder
-					+ org.apache.hadoop.fs.Path.SEPARATOR + fileName;
+			String fullPath = parentFolder + Path.SEPARATOR + fileName;
 			String defaultPath = fullPath;
 			URI uri = URI.create(fullPath);
 			FileSystem fileSystem = FileSystem.get(uri, conf);

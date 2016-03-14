@@ -250,7 +250,7 @@ public class AssetMgr extends AssetMgrBase {
 				}
 				if (commonName == null) {
 					policyExportAudit
-							.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+							.setHttpRetCode(HttpServletResponse.SC_BAD_REQUEST);
 					createPolicyAudit(policyExportAudit);
 
 					throw restErrorUtil.createRESTException(
@@ -260,7 +260,7 @@ public class AssetMgr extends AssetMgrBase {
 				}
 			} catch (InvalidNameException e) {
 				policyExportAudit
-						.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+						.setHttpRetCode(HttpServletResponse.SC_BAD_REQUEST);
 				createPolicyAudit(policyExportAudit);
 
 				logger.error("Invalid Common Name.", e);
@@ -282,7 +282,7 @@ public class AssetMgr extends AssetMgrBase {
 			if (cnFromConfig == null
 					|| !commonName.equalsIgnoreCase(cnFromConfig)) {
 				policyExportAudit
-						.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+						.setHttpRetCode(HttpServletResponse.SC_BAD_REQUEST);
 				createPolicyAudit(policyExportAudit);
 
 				throw restErrorUtil.createRESTException(
@@ -299,7 +299,7 @@ public class AssetMgr extends AssetMgrBase {
 			
 			if (policyCount == resourceListSz) {
 				policyExportAudit
-						.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED);
+						.setHttpRetCode(HttpServletResponse.SC_NOT_MODIFIED);
 				createPolicyAudit(policyExportAudit);
 
 				throw restErrorUtil.createRESTException(
@@ -449,7 +449,7 @@ public class AssetMgr extends AssetMgrBase {
                 }
 		} else {
 			policyExportAudit
-					.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+					.setHttpRetCode(HttpServletResponse.SC_BAD_REQUEST);
 			createPolicyAudit(policyExportAudit);
 			throw restErrorUtil.createRESTException(
 					"The operation isn't yet supported for the repository",
@@ -478,7 +478,7 @@ public class AssetMgr extends AssetMgrBase {
 //		}
 
 		policyExportAudit
-				.setHttpRetCode(javax.servlet.http.HttpServletResponse.SC_OK);
+				.setHttpRetCode(HttpServletResponse.SC_OK);
 		createPolicyAudit(policyExportAudit);
 
 		return updatedPolicyStr;

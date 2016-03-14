@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.TimedEventUtil;
-import org.apache.ranger.services.hdfs.client.HdfsClient;
 
 
 public class HdfsConnectionMgr {
