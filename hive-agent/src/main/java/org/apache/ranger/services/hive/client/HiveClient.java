@@ -21,6 +21,7 @@
 
 import java.io.Closeable;
 import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -48,54 +49,62 @@ public class HiveClient extends BaseClient implements Closeable {
 	
 	Connection con = null ;
 	boolean isKerberosAuth=false;
-	
 
-	public HiveClient(String serviceName) {
+	public HiveClient(String serviceName) throws Exception {
 		super(serviceName, null) ;
-		initHive() ;
+			initHive() ;
 	}
-	
-	public HiveClient(String serviceName,Map<String,String> connectionProp) {
+
+	public HiveClient(String serviceName,Map<String,String> connectionProp) throws Exception{
 		super(serviceName,connectionProp) ;
-		initHive() ;
+			initHive() ;
 	}
-	
-	public void initHive() {
+
+	public void initHive() throws Exception {
 		isKerberosAuth = getConfigHolder().isKerberosAuthentication();
 		if (isKerberosAuth) {
 			LOG.info("Secured Mode: JDBC Connection done with preAuthenticated Subject");
-			Subject.doAs(getLoginSubject(), new PrivilegedAction<Object>() {
-				public Object run() {
+				Subject.doAs(getLoginSubject(), new PrivilegedExceptionAction<Void>(){
+				public Void run() throws Exception {
 					initConnection();
 					return null;
-				}
-			}) ;				
+				}});
 		}
 		else {
 			LOG.info("Since Password is NOT provided, Trying to use UnSecure client with username and password");
 			final String userName = getConfigHolder().getUserName() ;
 			final String password = getConfigHolder().getPassword() ;
-			Subject.doAs(getLoginSubject(), new PrivilegedAction<Object>() {
-				public Object run() {
+			    Subject.doAs(getLoginSubject(), new PrivilegedExceptionAction<Void>() {
+				public Void run() throws Exception {
 					initConnection(userName,password);
 					return null;
-				}
-			}) ;	
+				}}) ;
 		}
 	}
 	
-	public List<String> getDatabaseList(String databaseMatching, final List<String> databaseList){
+	public List<String> getDatabaseList(String databaseMatching, final List<String> databaseList) throws HadoopException{
 	 	final String 	   dbMatching = databaseMatching;
 	 	final List<String> dbList	  = databaseList;
 		List<String> dblist = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
 			public List<String>  run() {
-				return getDBList(dbMatching,dbList);
+				List<String> ret = null;
+				try {
+					ret = getDBList(dbMatching,dbList);
+				} catch ( HadoopException he) {
+					LOG.error("<== HiveClient getDatabaseList() :Unable to get the Database List", he);
+					throw he;
+				}
+				return ret;
 			}
 		}) ;
 		return dblist;
 	}
 		
-	private List<String> getDBList(String databaseMatching, List<String>dbList) {
+	private List<String> getDBList(String databaseMatching, List<String>dbList) throws  HadoopException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> HiveClient getDBList databaseMatching : " + databaseMatching + " ExcludedbList :" + dbList) ;
+		}
+
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -108,9 +117,6 @@ public class HiveClient extends BaseClient implements Closeable {
 				sql = sql + " like \"" + databaseMatching  + "\"" ;
 			}
 			try {
-				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HiveClient getDBList databaseMatching : " + databaseMatching + " ExcludedbList :" + dbList) ;
-				}
 				stat =  con.createStatement()  ;
 				rs = stat.executeQuery(sql) ;
 				while (rs.next()) {
@@ -128,7 +134,7 @@ public class HiveClient extends BaseClient implements Closeable {
 				hdpException.generateResponseDataMap(false, getMessage(sqlt),
 						msgDesc + errMsg, null, null);
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HiveClient.getDBList() Error : " + sqlt) ;
+					LOG.debug("<== HiveClient.getDBList() Error : ",  sqlt) ;
 				}
 				throw hdpException;
 			} catch (SQLException sqle) {
@@ -138,7 +144,7 @@ public class HiveClient extends BaseClient implements Closeable {
 				hdpException.generateResponseDataMap(false, getMessage(sqle),
 						msgDesc + errMsg, null, null);
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HiveClient.getDBList() Error : " + sqle) ;
+					LOG.debug("<== HiveClient.getDBList() Error : " , sqle) ;
 				}
 				throw hdpException;
 			} finally {
@@ -147,23 +153,40 @@ public class HiveClient extends BaseClient implements Closeable {
 			}
 			
 		}
+
+		if(LOG.isDebugEnabled()) {
+			  LOG.debug("<== HiveClient.getDBList(): " + ret);
+		}
+
 		return ret ;
 	}
 	
-	public List<String> getTableList(String tableNameMatching, List<String> databaseList, List<String> tblNameList){
+	public List<String> getTableList(String tableNameMatching, List<String> databaseList, List<String> tblNameList) throws HadoopException  {
 		final String 	   tblNameMatching = tableNameMatching;
 		final List<String> dbList  	 	   = databaseList;
 		final List<String> tblList   	   = tblNameList;
-		
+
 		List<String> tableList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
 			public List<String>  run() {
-				return getTblList(tblNameMatching,dbList,tblList);
+				 List<String> ret = null;
+				try {
+					ret = getTblList(tblNameMatching,dbList,tblList);
+				} catch(HadoopException he) {
+					LOG.error("<== HiveClient getTblList() :Unable to get the Table List", he);
+					throw he;
+				}
+				return ret;
 			}
 		}) ;
+
 		return tableList;
 	}
 
-	public List<String> getTblList(String tableNameMatching, List<String> dbList, List<String> tblList) {
+	public List<String> getTblList(String tableNameMatching, List<String> dbList, List<String> tblList) throws HadoopException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> HiveClient getTableList() tableNameMatching : " + tableNameMatching + " ExcludedbList :" + dbList + "ExcludeTableList :" + tblList) ;
+		}
+
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -171,14 +194,10 @@ public class HiveClient extends BaseClient implements Closeable {
 		if (con != null) {
 			Statement stat =  null ;
 			ResultSet rs = null ;
-			
+
 			String sql = null ;
-			
+
 			try {
-				
-				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HiveClient getTblList tableNameMatching: " + tableNameMatching + " dbList :" + dbList + " tblList: " + tblList) ;
-				}
 				if (dbList != null && !dbList.isEmpty()) {
 					for ( String db: dbList) {
 						sql = "use " + db;
@@ -222,7 +241,7 @@ public class HiveClient extends BaseClient implements Closeable {
 				hdpException.generateResponseDataMap(false, getMessage(sqlt),
 						msgDesc + errMsg, null, null);
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HiveClient.getTblList() Error : " + sqlt) ;
+					LOG.debug("<== HiveClient.getTblList() Error : " , sqlt) ;
 				}
 				throw hdpException;
 			} catch (SQLException sqle) {
@@ -232,12 +251,17 @@ public class HiveClient extends BaseClient implements Closeable {
 				hdpException.generateResponseDataMap(false, getMessage(sqle),
 						msgDesc + errMsg, null, null);
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HiveClient.getTblList() Error : " + sqle) ;
+					LOG.debug("<== HiveClient.getTblList() Error : " , sqle) ;
 				}
 				throw hdpException;
 			}
 			
 		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== HiveClient getTableList() " +  ret) ;
+		}
+
 		return ret ;
 	}
 
@@ -251,20 +275,31 @@ public class HiveClient extends BaseClient implements Closeable {
 		return ret ;
 	}
 	
-	public List<String> getColumnList(String columnNameMatching, List<String> dbList, List<String> tblList, List<String> colList) {
+	public List<String> getColumnList(String columnNameMatching, List<String> dbList, List<String> tblList, List<String> colList) throws HadoopException {
 		final String clmNameMatching    = columnNameMatching;
 		final List<String> databaseList = dbList;
 		final List<String> tableList    = tblList;
 		final List<String> clmList 	= colList;
 		List<String> columnList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
 			public List<String>  run() {
-					return getClmList(clmNameMatching,databaseList,tableList,clmList);
+				    List<String> ret = null;
+					try {
+						ret = getClmList(clmNameMatching,databaseList,tableList,clmList);
+					} catch ( HadoopException he) {
+						LOG.error("<== HiveClient getColumnList() :Unable to get the Column List", he);
+						throw he;
+					}
+					return ret;
 				}
 			}) ;
 		return columnList;
 	}
 	
-	public List<String> getClmList(String columnNameMatching,List<String> dbList, List<String> tblList, List<String> colList) {
+	public List<String> getClmList(String columnNameMatching,List<String> dbList, List<String> tblList, List<String> colList) throws HadoopException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== HiveClient.getClmList() columnNameMatching: " + columnNameMatching + " dbList :" + dbList +  " tblList: " + tblList + " colList: " + colList) ;
+		}
+
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -281,11 +316,7 @@ public class HiveClient extends BaseClient implements Closeable {
 			ResultSet rs = null ;
 			
 			String sql = null ;
-			
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("<== HiveClient.getClmList() columnNameMatching: " + columnNameMatching + " dbList :" + dbList +  " tblList: " + tblList + " colList: " + colList) ;
-			}
-			
+
 			if (dbList != null && !dbList.isEmpty() && 
 				tblList != null && !tblList.isEmpty()) {
 				for (String db: dbList) {
@@ -325,7 +356,7 @@ public class HiveClient extends BaseClient implements Closeable {
 								hdpException.generateResponseDataMap(false, getMessage(sqlt),
 										msgDesc + errMsg, null, null);
 								if(LOG.isDebugEnabled()) {
-									LOG.debug("<== HiveClient.getClmList() Error : " + sqlt) ;
+									LOG.debug("<== HiveClient.getClmList() Error : " ,sqlt) ;
 								}
 								throw hdpException;
 							} catch (SQLException sqle) {
@@ -335,7 +366,7 @@ public class HiveClient extends BaseClient implements Closeable {
 								hdpException.generateResponseDataMap(false, getMessage(sqle),
 										msgDesc + errMsg, null, null);
 								if(LOG.isDebugEnabled()) {
-									LOG.debug("<== HiveClient.getClmList() Error : " + sqle) ;
+									LOG.debug("<== HiveClient.getClmList() Error : " ,sqle) ;
 								}
 								throw hdpException;
 							} finally {
@@ -346,6 +377,11 @@ public class HiveClient extends BaseClient implements Closeable {
 				}
 			}
 		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== HiveClient.getClmList() " + ret ) ;
+		}
+
 		return ret ;
 	}
 	
@@ -389,12 +425,17 @@ public class HiveClient extends BaseClient implements Closeable {
 		}
 	}
 
-	private void initConnection() {
-		initConnection(null,null) ;
+	private void initConnection() throws HadoopException{
+	    try {
+          initConnection(null,null) ;
+	    } catch (HadoopException he) {
+          LOG.error("Unable to Connect to Hive", he);
+          throw he;
+	    }
 	}
 
 	
-	private void initConnection(String userName, String password) {
+	private void initConnection(String userName, String password) throws HadoopException  {
 	
 		Properties prop = getConfigHolder().getRangerSection() ;
 		String driverClassName = prop.getProperty("jdbc.driverClassName") ;
@@ -413,6 +454,9 @@ public class HiveClient extends BaseClient implements Closeable {
 				HadoopException hdpException = new HadoopException(msgDesc, e);
 				hdpException.generateResponseDataMap(false, getMessage(e),
 						msgDesc + errMsg, null, null);
+				if ( LOG.isDebugEnabled()) {
+					LOG.debug(msgDesc, hdpException);
+				}
 				throw hdpException;
 			} catch (IllegalAccessException ilae) {
 				String msgDesc = "initConnection: Class or its nullary constructor might not accessible."
@@ -420,6 +464,9 @@ public class HiveClient extends BaseClient implements Closeable {
 				HadoopException hdpException = new HadoopException(msgDesc, ilae);
 				hdpException.generateResponseDataMap(false, getMessage(ilae),
 						msgDesc + errMsg, null, null);
+				if ( LOG.isDebugEnabled()) {
+					LOG.debug(msgDesc, hdpException);
+				}
 				throw hdpException;
 			} catch (InstantiationException ie) {
 				String msgDesc = "initConnection: Class may not have its nullary constructor or "
@@ -428,6 +475,9 @@ public class HiveClient extends BaseClient implements Closeable {
 				HadoopException hdpException = new HadoopException(msgDesc, ie);
 				hdpException.generateResponseDataMap(false, getMessage(ie),
 						msgDesc + errMsg, null, null);
+				if ( LOG.isDebugEnabled()) {
+					LOG.debug(msgDesc, hdpException);
+				}
 				throw hdpException;
 				
 			} catch (ExceptionInInitializerError eie) {
@@ -437,6 +487,9 @@ public class HiveClient extends BaseClient implements Closeable {
 				HadoopException hdpException = new HadoopException(msgDesc, eie);
 				hdpException.generateResponseDataMap(false, getMessage(eie),
 						msgDesc + errMsg, null, null);
+				if ( LOG.isDebugEnabled()) {
+					LOG.debug(msgDesc, hdpException);
+				}
 				throw hdpException;
 			} catch (SecurityException se) {
 				String msgDesc = "initConnection: unable to initiate connection to hive thrift server instance,"
@@ -446,6 +499,9 @@ public class HiveClient extends BaseClient implements Closeable {
 				HadoopException hdpException = new HadoopException(msgDesc, se);
 				hdpException.generateResponseDataMap(false, getMessage(se),
 						msgDesc + errMsg, null, null);
+				if ( LOG.isDebugEnabled()) {
+					LOG.debug(msgDesc, hdpException);
+				}
 				throw hdpException;
 			} catch (Throwable t) {
 				String msgDesc = "initConnection: Unable to connect to Hive Thrift Server instance, "
@@ -453,6 +509,9 @@ public class HiveClient extends BaseClient implements Closeable {
 				HadoopException hdpException = new HadoopException(msgDesc, t);
 				hdpException.generateResponseDataMap(false, getMessage(t),
 						msgDesc + errMsg, null, "jdbc.driverClassName");
+				if ( LOG.isDebugEnabled()) {
+					LOG.debug(msgDesc, hdpException);
+				}
 				throw hdpException;
 			}
 		}
@@ -471,19 +530,28 @@ public class HiveClient extends BaseClient implements Closeable {
 			HadoopException hdpException = new HadoopException(msgDesc, e);
 			hdpException.generateResponseDataMap(false, getMessage(e), msgDesc
 					+ errMsg, null, null);
+			if ( LOG.isDebugEnabled()) {
+				LOG.debug(msgDesc, hdpException);
+			}
 			throw hdpException;
 		} catch (SecurityException se) {
 			String msgDesc = "Unable to connect to Hive Thrift Server instance.";
 			HadoopException hdpException = new HadoopException(msgDesc, se);
 			hdpException.generateResponseDataMap(false, getMessage(se), msgDesc
 					+ errMsg, null, null);
+			if ( LOG.isDebugEnabled()) {
+				LOG.debug(msgDesc, hdpException);
+			}
 			throw hdpException;
 		} catch ( Throwable t) {
 			String msgDesc = "Unable to connect to Hive Thrift Server instance";
 			HadoopException hdpException = new HadoopException(msgDesc, t);
 			hdpException.generateResponseDataMap(false, getMessage(t),
 					msgDesc + errMsg, null, url);
-		     throw hdpException;
+			if ( LOG.isDebugEnabled()) {
+				LOG.debug(msgDesc, hdpException);
+			}
+	        throw hdpException;
 		}
 	}
 
@@ -501,8 +569,13 @@ public class HiveClient extends BaseClient implements Closeable {
 			hc = new HiveClient(args[0]) ;
 			
 			if (args.length == 2) {
-				List<String> dbList = hc.getDatabaseList(args[1],null) ;
-				if (dbList.size() == 0) {
+				List<String> dbList = null;
+				try {
+					dbList = hc.getDatabaseList(args[1],null);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				if (dbList != null && dbList.size() == 0) {
 					System.out.println("No database found with db filter [" + args[1] + "]") ;
 				}
 				else {
@@ -534,6 +607,8 @@ public class HiveClient extends BaseClient implements Closeable {
 				}
 			}
 			
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 		finally {
 			if (hc != null) {
@@ -543,35 +618,38 @@ public class HiveClient extends BaseClient implements Closeable {
 	}
 
 	public static HashMap<String, Object> connectionTest(String serviceName,
-			Map<String, String> connectionProperties) {
-
+			Map<String, String> connectionProperties) throws Exception {
+		HiveClient connectionObj = null;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 		boolean connectivityStatus = false;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check xa_portal.log for more info.";
-
-		HiveClient connectionObj = new HiveClient(serviceName,
-				(HashMap<String, String>) connectionProperties);
-		if (connectionObj != null) {
-		
-			List<String> testResult = connectionObj.getDatabaseList("*",null);
-			if (testResult != null && testResult.size() != 0) {
-				connectivityStatus = true;
+		List<String> testResult = null;
+		try {
+			connectionObj = new HiveClient(serviceName,	connectionProperties);
+			if (connectionObj != null) {
+				testResult = connectionObj.getDatabaseList("*",null);
+				if (testResult != null && testResult.size() != 0) {
+					connectivityStatus = true;
+				}
+				if (connectivityStatus) {
+					String successMsg = "ConnectionTest Successful";
+					generateResponseDataMap(connectivityStatus, successMsg, successMsg,
+						null, null, responseData);
+				} else {
+					String failureMsg = "Unable to retrieve any databases using given parameters.";
+					generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + errMsg,
+						null, null, responseData);
+				}
+			}
+		} catch ( Exception e) {
+			throw e;
+		} finally  {
+			if ( connectionObj != null) {
+				connectionObj.close();
 			}
 		}
-		if (connectivityStatus) {
-			String successMsg = "ConnectionTest Successful";
-			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
-					null, null, responseData);
-		} else {
-			String failureMsg = "Unable to retrieve any databases using given parameters.";
-			generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + errMsg,
-					null, null, responseData);
-		}
-		
-		connectionObj.close();
 		return responseData;
 	}
-	
 }

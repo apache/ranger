@@ -225,14 +225,13 @@ public class YarnClient extends BaseClient {
 	public static HashMap<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) {
 
-		List<String> strList = new ArrayList<String>();
 		String errMsg = errMessage;
 		boolean connectivityStatus = false;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 
 		YarnClient yarnClient = getYarnClient(serviceName,
 				configs);
-		strList = getYarnResource(yarnClient, "",null);
+		List<String> strList = getYarnResource(yarnClient, "",null);
 
 		if (strList != null && strList.size() > 0 ) {
 			if (LOG.isDebugEnabled()) {

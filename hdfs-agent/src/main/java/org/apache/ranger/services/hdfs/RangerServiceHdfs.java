@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -55,8 +56,8 @@ public class RangerServiceHdfs extends RangerBaseService {
 		if ( configs != null) {
 			try  {
 				ret = HdfsResourceMgr.connectionTest(serviceName, configs);
-			} catch (Exception e) {
-				LOG.error("<== RangerServiceHdfs.validateConfig Error:" + e);
+			} catch (HadoopException e) {
+				LOG.error("<== RangerServiceHdfs.validateConfig Error: " + e.getMessage(),e);
 				throw e;
 			}
 		}

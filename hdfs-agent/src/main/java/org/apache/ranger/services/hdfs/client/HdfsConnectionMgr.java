@@ -43,7 +43,7 @@ public class HdfsConnectionMgr {
 	}
 	
 	
-	public HdfsClient getHadoopConnection(final String serviceName, final String serviceType, final Map<String,String> configs) {
+	public HdfsClient getHadoopConnection(final String serviceName, final String serviceType, final Map<String,String> configs) throws Exception{
 		HdfsClient hdfsClient = null;
 		if (serviceType != null) {
 			// get it from the cache
@@ -62,6 +62,7 @@ public class HdfsConnectionMgr {
 						} catch(Exception e){
 							LOG.error("Error establishing connection for HDFS repository : "
 									+ serviceName, e);
+							throw e;
 						}
 						
 					} else {
@@ -78,6 +79,7 @@ public class HdfsConnectionMgr {
 						} catch(Exception e){
 							LOG.error("Error establishing connection for HDFS repository : "
 									+ serviceName + " using configuration : " + configs, e);
+							throw e;
 						}
 					}	
 					HdfsClient oldClient = hdfsConnectionCache.putIfAbsent(serviceName, hdfsClient);
@@ -87,7 +89,14 @@ public class HdfsConnectionMgr {
 					}
 					repoConnectStatusMap.put(serviceName, true);
  				} else {
-					List<String> testConnect = hdfsClient.listFiles("/", "*",null);
+ 					List<String> testConnect = null;
+					try {
+						testConnect = hdfsClient.listFiles("/", "*",null);
+					} catch ( Exception e) {
+						LOG.error("Error establishing connection for HDFS repository : "
+							+ serviceName + " using configuration : " + configs, e);
+						throw e;
+					}
 					if(testConnect == null){
 						hdfsConnectionCache.put(serviceName, hdfsClient);
 						hdfsClient = getHadoopConnection(serviceName,serviceType,configs);

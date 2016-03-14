@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
 
@@ -47,7 +48,7 @@ public class HiveResourceMgr {
 		
 		try {
 			ret = HiveClient.connectionTest(serviceName, configs);
-		} catch (Exception e) {
+		} catch (HadoopException e) {
 			LOG.error("<== HiveResourceMgr.connectionTest Error: " + e) ;
 		  throw e;
 		}
@@ -181,6 +182,7 @@ public class HiveResourceMgr {
 				 }
 			  } catch (Exception e) {
 				LOG.error("Unable to get hive resources.", e);
+				throw e;
 			}
 		}
 

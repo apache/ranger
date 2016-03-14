@@ -36,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.client.HadoopException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -91,14 +92,14 @@ public class TimedExecutor {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(String.format("TimedExecutor: Caught exception[%s] for callable[%s]: detail[%s].  Re-throwing...", e.getClass().getName(), callable, e.getMessage()));
 				}
-				throw e;
+				HadoopException he = generateHadoopException(e);
+				throw he;
 			} catch (TimeoutException e) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(String.format("TimedExecutor: Timed out waiting for callable[%s] to finish.  Cancelling the task.", callable));
 				}
 				boolean interruptRunningTask = true;
 				future.cancel(interruptRunningTask);
-				LOG.debug("TimedExecutor: Re-throwing timeout exception to caller");
 				throw e;
 			}
 		} catch (RejectedExecutionException e) {
@@ -116,6 +117,16 @@ public class TimedExecutor {
 		_executorService.shutdownNow();
 	}
 	
+	private HadoopException generateHadoopException( Exception e) {
+		String msgDesc = "Unable to retrieve any files using given parameters, "
+				+ "You can still save the repository and start creating policies, "
+				+ "but you would not be able to use autocomplete for resource names. "
+				+ "Check xa_portal.log for more info. ";
+		HadoopException hpe = new HadoopException(e.getMessage(), e);
+		hpe.generateResponseDataMap(false, hpe.getMessage(e), msgDesc, null, null);
+		return hpe;
+	}
+
 	static class LocalUncaughtExceptionHandler implements UncaughtExceptionHandler {
 
 		@Override

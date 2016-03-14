@@ -278,7 +278,6 @@ public class KnoxClient {
 	public static HashMap<String, Object> connectionTest(String serviceName,
 										  		Map<String, String> configs) {
 
-		List<String> strList = new ArrayList<String>();
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check xa_portal.log for more info.";
@@ -286,7 +285,7 @@ public class KnoxClient {
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 
 		KnoxClient knoxClient = getKnoxClient(serviceName, configs);
-		strList = getKnoxResources(knoxClient, "", null,null,null);
+		List<String> strList = getKnoxResources(knoxClient, "", null,null,null);
 
 		if (strList != null && (strList.size() != 0)) {
 			connectivityStatus = true;

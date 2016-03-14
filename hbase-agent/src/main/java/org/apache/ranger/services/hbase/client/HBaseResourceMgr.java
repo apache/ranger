@@ -26,6 +26,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
 
@@ -45,7 +46,7 @@ public class HBaseResourceMgr {
 		
 		try {
 			ret = HBaseClient.connectionTest(serviceName, configs);
-		} catch (Exception e) {
+		} catch (HadoopException e) {
 			LOG.error("<== HBaseResourceMgr.connectionTest() Error: " + e) ;
 		  throw e;
 		}

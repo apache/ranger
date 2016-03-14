@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
 
@@ -44,9 +45,9 @@ public class HdfsResourceMgr {
 		
 		try {
 			ret = HdfsClient.connectionTest(serviceName, configs);
-		} catch (Exception e) {
-			LOG.error("<== HdfsResourceMgr.connectionTest Error: " + e) ;
-		  throw e;
+		} catch (HadoopException e) {
+			LOG.error("<== HdfsResourceMgr.testConnection Error: " + e.getMessage(),  e) ;
+			throw e;
 		}
 		
 		if(LOG.isDebugEnabled()) {
@@ -116,7 +117,7 @@ public class HdfsResourceMgr {
 							+ "\n Matching resources : " + resultList);
 					}
 				}
-			} catch (Exception e) {
+			} catch (HadoopException e) {
 				LOG.error("Unable to get hdfs resources.", e);
 				throw e;
 			}
