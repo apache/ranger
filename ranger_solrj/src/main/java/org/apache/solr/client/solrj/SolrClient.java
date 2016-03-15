@@ -383,7 +383,7 @@ public abstract class SolrClient implements Serializable, Closeable {
     if (StringUtils.isEmpty(reqParams.get(CommonParams.QT))) {
       reqParams.set(CommonParams.QT, "/get");
     }
-    reqParams.set("ids", (String[]) ids.toArray());
+    reqParams.set("ids", (String[]) ids.toArray(new String[ids.size()]));
 
     return query(reqParams).getResults();
   }
