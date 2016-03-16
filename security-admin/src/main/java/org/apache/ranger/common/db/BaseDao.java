@@ -271,8 +271,8 @@ public abstract class BaseDao<T> {
 			logger.warn("Required annotation `Table` not found");
 		}
 		String tableName = table.name();
-		String query = "update " + tableName + " set " + tableName + "."+paramName+"=null"
-				+ " where " + tableName + "."+paramName+"=" + oldID;
+		String query = "update " + tableName + " set " + paramName+"=null"
+				+ " where " +paramName+"=" + oldID;
 		int count=getEntityManager().createNativeQuery(query).executeUpdate();
 		if(count>0){
 			logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "=null where " + paramName + "=" + oldID);

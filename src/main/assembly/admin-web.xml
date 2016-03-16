@@ -390,6 +390,7 @@
 			<include>upgrade.sh</include>
 			<include>update_property.py</include>
 			<include>ranger_credential_helper.py</include>
+			<include>deleteUserGroupUtil.py</include>
 		</includes>
 		<fileMode>544</fileMode>
 	</fileSet>

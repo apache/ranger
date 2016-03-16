@@ -724,6 +724,11 @@ public class TestXUserMgr {
 		List<XXGroupGroup> xXGroupGroups = new ArrayList<XXGroupGroup>();
 		Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
 		Mockito.when(xXGroupGroupDao.findByGroupId(userId)).thenReturn(xXGroupGroups);
+		//update XXGroupPermission
+		XXGroupPermissionDao xXGroupPermissionDao= Mockito.mock(XXGroupPermissionDao.class);
+		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(xXGroupPermissionDao);
+		List<XXGroupPermission> xXGroupPermissions=new ArrayList<XXGroupPermission>();
+		Mockito.when(xXGroupPermissionDao.findByGroupId(vXGroup.getId())).thenReturn(xXGroupPermissions);
 		//update XXPolicyItemUserPerm
 		XXPolicyDao xXPolicyDao = Mockito.mock(XXPolicyDao.class);
 		List<XXPolicy> xXPolicyList = new ArrayList<XXPolicy>();

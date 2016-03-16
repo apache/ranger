@@ -570,7 +570,7 @@
 	</named-query>
 
 	<!-- XXUserPermission -->
-	<named-query name="XXGroupPermission.findByGroupPermissionId">
+	<named-query name="XXGroupPermission.findByGroupId">
 		<query>SELECT obj FROM XXGroupPermission obj
 			   WHERE obj.groupId=:groupId
 		 </query>
