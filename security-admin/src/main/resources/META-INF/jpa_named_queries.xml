@@ -365,6 +365,16 @@
 		<query>select obj from XXEnumDef obj where obj.defId = :serviceDefId</query>
 	</named-query>
 
+	<!-- XXDataMaskTypeDef -->
+	<named-query name="XXDataMaskTypeDef.findByServiceDefId">
+		<query>select obj from XXDataMaskTypeDef obj where obj.defId = :serviceDefId</query>
+	</named-query>
+
+	<named-query name="XXDataMaskTypeDef.findByNameAndServiceId">
+		<query>select obj from XXDataMaskTypeDef obj, XXService xSvc where
+			obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
+	</named-query>
+
 	<!-- XXServiceConfigMap -->
 	<named-query name="XXServiceConfigMap.findByServiceId">
 		<query>select obj from XXServiceConfigMap obj where obj.serviceId = :serviceId</query>
@@ -556,6 +566,31 @@
 		          and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
 		        order by item.policyId, obj.policyItemId, obj.order
 		</query>
+	</named-query>
+
+	<!-- XXPolicyItemDataMaskInfo -->
+	<named-query name="XXPolicyItemDataMaskInfo.findByPolicyItemId">
+		<query>select obj from XXPolicyItemDataMaskInfo obj where obj.policyItemId = :polItemId</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemDataMaskInfo.findByPolicyId">
+		<query>select obj from XXPolicyItemDataMaskInfo obj, XXPolicyItem item
+			where obj.policyItemId = item.id
+			and item.policyId = :policyId
+			order by obj.policyItemId
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemDataMaskInfo.findByServiceId">
+		<query>select obj from XXPolicyItemDataMaskInfo obj, XXPolicyItem item
+			where obj.policyItemId = item.id
+			and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+			order by item.policyId, obj.policyItemId
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemDataMaskInfo.findByType">
+		<query>select obj from XXPolicyItemDataMaskInfo obj where obj.type = :type</query>
 	</named-query>
 
 	<!-- XXDataHist -->

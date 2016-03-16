@@ -181,7 +181,7 @@
 		  {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false}
         ]
       },
-      {"id":4,"name":"RESTRICTED_TAG_POLICY_FINAL","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+      {"id":4,"name":"RESTRICTED_TAG_POLICY_FINAL","isEnabled":true,"isAuditEnabled":true,
         "resources":{"tag":{"values":["RESTRICTED-FINAL"],"isRecursive":false}},
         "denyPolicyItems":[
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}

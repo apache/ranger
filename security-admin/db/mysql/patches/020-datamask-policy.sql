@@ -1,0 +1,94 @@
+-- Licensed to the Apache Software Foundation (ASF) under one or more
+-- contributor license agreements.  See the NOTICE file distributed with
+-- this work for additional information regarding copyright ownership.
+-- The ASF licenses this file to You under the Apache License, Version 2.0
+-- (the "License"); you may not use this file except in compliance with
+-- the License.  You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+
+/* add datamasking_supported column in x_access_type_def table if not exist */
+drop procedure if exists add_datamasking_supported_to_x_access_type_def_table;
+delimiter ;;
+ create procedure add_datamasking_supported_to_x_access_type_def_table() begin
+ 
+ if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_access_type_def') then
+	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_access_type_def' and column_name = 'datamasking_supported') then
+		ALTER TABLE `x_access_type_def` ADD `datamasking_supported` tinyint NOT NULL DEFAULT 0;
+ 	end if;
+ end if; 
+end;;
+
+delimiter ;
+call add_datamasking_supported_to_x_access_type_def_table();
+drop procedure if exists add_datamasking_supported_to_x_access_type_def_table;
+
+/* add datamasking_supported column in x_resource_def table if not exist */
+drop procedure if exists add_datamasking_supported_to_x_resource_def_table;
+delimiter ;;
+ create procedure add_datamasking_supported_to_x_resource_def_table() begin
+ 
+ if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_resource_def') then
+	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_resource_def' and column_name = 'datamasking_supported') then
+		ALTER TABLE `x_resource_def` ADD `datamasking_supported` tinyint NOT NULL DEFAULT 0;
+ 	end if;
+ end if; 
+end;;
+
+delimiter ;
+call add_datamasking_supported_to_x_resource_def_table();
+drop procedure if exists add_datamasking_supported_to_x_resource_def_table;
+
+DROP TABLE IF EXISTS `x_datamask_type_def`;
+CREATE TABLE `x_datamask_type_def` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT ,
+`guid` varchar(1024) DEFAULT NULL,
+`create_time` datetime DEFAULT NULL,
+`update_time` datetime DEFAULT NULL,
+`added_by_id` bigint(20) DEFAULT NULL,
+`upd_by_id` bigint(20) DEFAULT NULL,
+`def_id` bigint(20) NOT NULL,    
+`item_id` bigint(20) NOT NULL,    
+`name` varchar(1024) NOT NULL,
+`label` varchar(1024) NOT NULL,
+`description` varchar(1024) DEFAULT NULL,
+`datamask_options` varchar(1024) DEFAULT NULL,
+`rb_key_label` varchar(1024) DEFAULT NULL,
+`rb_key_description` varchar(1024) DEFAULT NULL,
+`sort_order` tinyint(3) DEFAULT '0',
+primary key (`id`),      
+KEY `x_datamask_type_def_added_by_id` (`added_by_id`),
+KEY `x_datamask_type_def_upd_by_id` (`upd_by_id`),
+KEY `x_datamask_type_def_cr_time` (`create_time`),
+KEY `x_datamask_type_def_up_time` (`update_time`),
+CONSTRAINT `x_datamask_type_def_FK_def_id` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`) ,
+CONSTRAINT `x_datamask_type_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_datamask_type_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
+CREATE INDEX x_datamask_type_def_IDX_def_id ON x_datamask_type_def(def_id);
+
+DROP TABLE IF EXISTS `x_policy_item_datamask`;
+CREATE TABLE `x_policy_item_datamask` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT ,
+`guid` varchar(1024) DEFAULT NULL,
+`create_time` datetime DEFAULT NULL,
+`update_time` datetime DEFAULT NULL,
+`added_by_id` bigint(20) DEFAULT NULL,
+`upd_by_id` bigint(20) DEFAULT NULL,
+`policy_item_id` bigint(20) NOT NULL, 
+`type` bigint(20) NOT NULL,
+`condition_expr` varchar(1024) DEFAULT NULL,
+`value_expr` varchar(1024) DEFAULT NULL,
+primary key (id), 
+CONSTRAINT `x_policy_item_datamask_FK_policy_item_id` FOREIGN KEY (`policy_item_id`) REFERENCES `x_policy_item` (`id`) ,
+CONSTRAINT `x_policy_item_datamask_FK_type` FOREIGN KEY (`type`) REFERENCES `x_datamask_type_def` (`id`),
+CONSTRAINT `x_policy_item_datamask_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_policy_item_datamask_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
+CREATE INDEX x_policy_item_datamask_IDX_policy_item_id ON x_policy_item_datamask(policy_item_id);

@@ -575,11 +575,19 @@ public class AppConstants extends RangerCommonEnums {
 	 * Class type of XXTagResourceMap
 	 */
 	public static final int CLASS_TYPE_XA_TAG_RESOURCE_MAP = 1048;
+	/**
+	 * CLASS_TYPE_XA_DATAMASK_DEF is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_DATAMASK_DEF".
+	 */
+	public static final int CLASS_TYPE_XA_DATAMASK_DEF = 1049;
+	/**
+	 * CLASS_TYPE_RANGER_POLICY_ITEM_DATAMASK_INFO is an element of enum ClassTypes. Its value is "CLASS_TYPE_RANGER_POLICY_ITEM_DATAMASK_INFO".
+	 */
+	public static final int CLASS_TYPE_RANGER_POLICY_ITEM_DATAMASK_INFO = 1050;
 
 	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1048;
+	public static final int ClassTypes_MAX = 1050;
 	
 	/***************************************************************
 	 * Enum values for Default SortOrder

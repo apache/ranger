@@ -40,6 +40,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RangerPolicy extends RangerBaseModelObject implements java.io.Serializable {
+	public static final int POLICY_TYPE_ACCESS   = 0;
+	public static final int POLICY_TYPE_DATAMASK = 1;
 
 	// For future use
 	private static final long serialVersionUID = 1L;
@@ -55,6 +57,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private List<RangerPolicyItem>            denyPolicyItems	= null;
 	private List<RangerPolicyItem>            allowExceptions	= null;
 	private List<RangerPolicyItem>            denyExceptions	= null;
+	private List<RangerDataMaskPolicyItem>    dataMaskPolicyItems = null;
 
 
 	/**
@@ -87,6 +90,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setDenyPolicyItems(null);
 		setAllowExceptions(null);
 		setDenyExceptions(null);
+		setDataMaskPolicyItems(null);
 	}
 
 	/**
@@ -106,6 +110,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setDenyPolicyItems(other.getDenyPolicyItems());
 		setAllowExceptions(other.getAllowExceptions());
 		setDenyExceptions(other.getDenyExceptions());
+		setDataMaskPolicyItems(other.getDataMaskPolicyItems());
+
 	}
 
 	/**
@@ -328,6 +334,28 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		if(denyExceptions != null) {
 			for(RangerPolicyItem policyItem : denyExceptions) {
 				this.denyExceptions.add(policyItem);
+			}
+		}
+	}
+
+	public List<RangerDataMaskPolicyItem> getDataMaskPolicyItems() {
+		return dataMaskPolicyItems;
+	}
+
+	public void setDataMaskPolicyItems(List<RangerDataMaskPolicyItem> dataMaskPolicyItems) {
+		if(this.dataMaskPolicyItems == null) {
+			this.dataMaskPolicyItems = new ArrayList<RangerDataMaskPolicyItem>();
+		}
+
+		if(this.dataMaskPolicyItems == dataMaskPolicyItems) {
+			return;
+		}
+
+		this.dataMaskPolicyItems.clear();
+
+		if(dataMaskPolicyItems != null) {
+			for(RangerDataMaskPolicyItem dataMaskPolicyItem : dataMaskPolicyItems) {
+				this.dataMaskPolicyItems.add(dataMaskPolicyItem);
 			}
 		}
 	}
@@ -834,8 +862,95 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			} else if (!users.equals(other.users))
 				return false;
 			return true;
+
 		}
-		
+	}
+
+	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class RangerDataMaskPolicyItem extends RangerPolicyItem implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private RangerPolicyItemDataMaskInfo dataMaskInfo = null;
+
+		public RangerDataMaskPolicyItem() {
+			this(null, null, null, null, null, null);
+		}
+
+		public RangerDataMaskPolicyItem(List<RangerPolicyItemAccess> accesses, RangerPolicyItemDataMaskInfo dataMaskDetail, List<String> users, List<String> groups, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
+			super(accesses, users, groups, conditions, delegateAdmin);
+
+			setDataMaskInfo(dataMaskDetail);
+		}
+
+		/**
+		 * @return the dataMaskInfo
+		 */
+		public RangerPolicyItemDataMaskInfo getDataMaskInfo() {
+			return dataMaskInfo;
+		}
+
+		/**
+		 * @param dataMaskInfo the dataMaskInfo to set
+		 */
+		public void setDataMaskInfo(RangerPolicyItemDataMaskInfo dataMaskInfo) {
+			this.dataMaskInfo = dataMaskInfo;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = super.hashCode();
+			result = prime * result + ((dataMaskInfo == null) ? 0 : dataMaskInfo.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if(! super.equals(obj))
+				return false;
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerDataMaskPolicyItem other = (RangerDataMaskPolicyItem) obj;
+			if (dataMaskInfo == null) {
+				if (other.dataMaskInfo != null)
+					return false;
+			} else if (!dataMaskInfo.equals(other.dataMaskInfo))
+				return false;
+			return true;
+		}
+
+		@Override
+		public String toString( ) {
+			StringBuilder sb = new StringBuilder();
+
+			toString(sb);
+
+			return sb.toString();
+		}
+
+		public StringBuilder toString(StringBuilder sb) {
+			sb.append("RangerDataMaskPolicyItem={");
+
+			super.toString(sb);
+
+			sb.append("dataMaskInfo={");
+			if(dataMaskInfo != null) {
+				dataMaskInfo.toString(sb);
+			}
+			sb.append("} ");
+
+			sb.append("}");
+
+			return sb;
+		}
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
@@ -1060,5 +1175,110 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			return true;
 		}
 		
+	}
+
+	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class RangerPolicyItemDataMaskInfo implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private String dataMaskType  = null;
+		private String conditionExpr = null;
+		private String valueExpr     = null;
+
+		public RangerPolicyItemDataMaskInfo() { }
+
+		public RangerPolicyItemDataMaskInfo(String dataMaskType, String conditionExpr, String valueExpr) {
+			setDataMaskType(dataMaskType);
+			setConditionExpr(conditionExpr);
+			setValueExpr(valueExpr);
+		}
+
+		public String getDataMaskType() {
+			return dataMaskType;
+		}
+
+		public void setDataMaskType(String dataMaskType) {
+			this.dataMaskType = dataMaskType;
+		}
+
+		public String getConditionExpr() {
+			return conditionExpr;
+		}
+
+		public void setConditionExpr(String conditionExpr) {
+			this.conditionExpr = conditionExpr;
+		}
+
+		public String getValueExpr() {
+			return valueExpr;
+		}
+
+		public void setValueExpr(String valueExpr) {
+			this.valueExpr = valueExpr;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = super.hashCode();
+			result = prime * result + ((dataMaskType == null) ? 0 : dataMaskType.hashCode());
+			result = prime * result + ((conditionExpr == null) ? 0 : conditionExpr.hashCode());
+			result = prime * result + ((valueExpr == null) ? 0 : valueExpr.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if(! super.equals(obj))
+				return false;
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerPolicyItemDataMaskInfo other = (RangerPolicyItemDataMaskInfo) obj;
+			if (dataMaskType == null) {
+				if (other.dataMaskType != null)
+					return false;
+			} else if (!dataMaskType.equals(other.dataMaskType))
+				return false;
+			if (conditionExpr == null) {
+				if (other.conditionExpr != null)
+					return false;
+			} else if (!conditionExpr.equals(other.conditionExpr))
+				return false;
+			if (valueExpr == null) {
+				if (other.valueExpr != null)
+					return false;
+			} else if (!valueExpr.equals(other.valueExpr))
+				return false;
+			return true;
+		}
+
+		@Override
+		public String toString( ) {
+			StringBuilder sb = new StringBuilder();
+
+			toString(sb);
+
+			return sb.toString();
+		}
+
+		public StringBuilder toString(StringBuilder sb) {
+			sb.append("RangerPolicyItemDataMaskInfo={");
+
+			sb.append("dataMaskType={").append(dataMaskType).append("} ");
+			sb.append("conditionExpr={").append(conditionExpr).append("} ");
+			sb.append("valueExpr={").append(valueExpr).append("} ");
+
+			sb.append("}");
+
+			return sb;
+		}
 	}
 }

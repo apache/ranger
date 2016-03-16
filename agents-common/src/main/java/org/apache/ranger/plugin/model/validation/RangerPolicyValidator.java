@@ -121,6 +121,8 @@ public class RangerPolicyValidator extends RangerValidator {
 			valid = false;
 		} else {
 			Long id = policy.getId();
+			RangerPolicy existingPolicy = null;
+
 			if (action == Action.UPDATE) { // id is ignored for CREATE
 				if (id == null) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
@@ -131,7 +133,11 @@ public class RangerPolicyValidator extends RangerValidator {
 						.errorCode(error.getErrorCode())
 						.build());
 					valid = false;
-				} else if (getPolicy(id) == null) {
+				}
+
+				existingPolicy = getPolicy(id);
+
+				if (existingPolicy == null) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_POLICY_ID;
 					failures.add(new ValidationFailureDetailsBuilder()
 						.field("id")
@@ -210,6 +216,33 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = false;
 				} else {
 					serviceNameValid = true;
+				}
+			}
+
+			if(existingPolicy != null) {
+				if(! StringUtils.equalsIgnoreCase(existingPolicy.getService(), policy.getService())) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_UPDATE_MOVE_SERVICE_NOT_ALLOWED;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("service name")
+							.isSemanticallyIncorrect()
+							.becauseOf(error.getMessage(policy.getId(), existingPolicy.getService(), policy.getService()))
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
+
+				int existingPolicyType = existingPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : existingPolicy.getPolicyType();
+				int policyType         = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
+
+				if(existingPolicyType != policyType) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_TYPE_CHANGE_NOT_ALLOWED;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("policy type")
+							.isSemanticallyIncorrect()
+							.becauseOf(error.getMessage(policy.getId(), existingPolicyType, policyType))
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
 				}
 			}
 

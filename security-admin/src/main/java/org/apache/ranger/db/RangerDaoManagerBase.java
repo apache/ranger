@@ -186,7 +186,13 @@ public abstract class RangerDaoManagerBase {
 		if (classType == AppConstants.CLASS_TYPE_XA_TAG_RESOURCE_MAP) {
 			return getXXTagResourceMap();
 		}
-		
+		if (classType == AppConstants.CLASS_TYPE_XA_DATAMASK_DEF) {
+			return getXXDataMaskTypeDef();
+		}
+		if (classType == AppConstants.CLASS_TYPE_RANGER_POLICY_ITEM_DATAMASK_INFO) {
+			return getXXPolicyItemDataMaskInfo();
+		}
+
 		logger.error("No DaoManager found for classType=" + classType, new Throwable());
 		return null;
 	}
@@ -339,6 +345,12 @@ public abstract class RangerDaoManagerBase {
 		}
 		if (className.equals("XXTagResourceMap")) {
 			return getXXTagResourceMap();
+		}
+		if (className.equals("XXDataMaskTypeDef")) {
+			return getXXDataMaskTypeDef();
+		}
+		if (className.equals("XXPolicyItemDataMaskInfo")) {
+			return getXXPolicyItemDataMaskInfo();
 		}
 
 		logger.error("No DaoManager found for className=" + className, new Throwable());
@@ -546,6 +558,12 @@ public abstract class RangerDaoManagerBase {
 
 	public XXTagResourceMapDao getXXTagResourceMap() {
 		return new XXTagResourceMapDao(this);
+	}
+
+	public XXDataMaskTypeDefDao getXXDataMaskTypeDef() { return new XXDataMaskTypeDefDao(this); }
+
+	public XXPolicyItemDataMaskInfoDao getXXPolicyItemDataMaskInfo() {
+		return new XXPolicyItemDataMaskInfoDao(this);
 	}
 
 }

@@ -125,7 +125,7 @@ public class RangerPolicyResourceSignature {
 			if (!isPolicyValidForResourceSignatureComputation()) {
 				return "";
 			}
-			int type = 0;
+			int type = RangerPolicy.POLICY_TYPE_ACCESS;
 			if (_policy.getPolicyType() != null) {
 				type = _policy.getPolicyType();
 			}

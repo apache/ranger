@@ -24,23 +24,23 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Cacheable
 @XmlRootElement
-@Table(name = "x_access_type_def")
-public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
+@Table(name = "x_datamask_type_def")
+public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**
-	 * id of the XXAccessTypeDef
+	 * id of the XXDataMaskTypeDef
 	 * <ul>
 	 * </ul>
 	 *
 	 */
 	@Id
-	@SequenceGenerator(name = "x_access_type_def_SEQ", sequenceName = "x_access_type_def_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_access_type_def_SEQ")
+	@SequenceGenerator(name = "x_datamask_type_def_SEQ", sequenceName = "x_datamask_type_def_SEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_datamask_type_def_SEQ")
 	@Column(name = "id")
 	protected Long id;
 
 	/**
-	 * defId of the XXAccessTypeDef
+	 * defId of the XXDataMaskTypeDef
 	 * <ul>
 	 * </ul>
 	 *
@@ -49,7 +49,7 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	protected Long defId;
 
 	/**
-	 * itemId of the XXAccessTypeDef
+	 * itemId of the XXDataMaskTypeDef
 	 * <ul>
 	 * </ul>
 	 *
@@ -58,7 +58,7 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	protected Long itemId;
 
 	/**
-	 * name of the XXAccessTypeDef
+	 * name of the XXDataMaskTypeDef
 	 * <ul>
 	 * </ul>
 	 *
@@ -67,7 +67,7 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	protected String name;
 
 	/**
-	 * label of the XXAccessTypeDef
+	 * label of the XXDataMaskTypeDef
 	 * <ul>
 	 * </ul>
 	 *
@@ -76,7 +76,25 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	protected String label;
 
 	/**
-	 * rbKeyLabel of the XXAccessTypeDef
+	 * description of the XXDataMaskTypeDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "description")
+	protected String description;
+
+	/**
+	 * dataMaskOptions of the XXDataMaskTypeDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "datamask_options")
+	protected String dataMaskOptions;
+
+	/**
+	 * rbKeyLabel of the XXDataMaskTypeDef
 	 * <ul>
 	 * </ul>
 	 *
@@ -85,22 +103,22 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	protected String rbKeyLabel;
 
 	/**
-	 * order of the XXAccessTypeDef
+	 * rbKeyDescription of the XXDataMaskTypeDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "rb_key_description")
+	protected String rbKeyDescription;
+
+	/**
+	 * order of the XXDataMaskTypeDef
 	 * <ul>
 	 * </ul>
 	 *
 	 */
 	@Column(name = "sort_order")
 	protected Integer order;
-
-	/**
-	 * datamaskingSupported of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "datamasking_supported")
-	protected boolean datamaskingSupported;
 
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
@@ -203,6 +221,44 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b> description</b> .
+	 *
+	 * @param description
+	 *            Value to set member attribute <b> description</b>
+	 */
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>description</b>
+	 *
+	 * @return String - value of member attribute <b>description</b> .
+	 */
+	public String getDescription() {
+		return this.description;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> dataMaskOptions</b> .
+	 *
+	 * @param dataMaskOptions
+	 *            Value to set member attribute <b> dataMaskOptions</b>
+	 */
+	public void setDataMaskOptions(String dataMaskOptions) {
+		this.dataMaskOptions = dataMaskOptions;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>dataMaskOptions</b>
+	 *
+	 * @return String - value of member attribute <b>dataMaskOptions</b> .
+	 */
+	public String getDataMaskOptions() {
+		return this.dataMaskOptions;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> rbKeyLabel</b> .
 	 * You cannot set null to the attribute.
 	 * 
@@ -220,6 +276,24 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	 */
 	public String getRbkeylabel() {
 		return this.rbKeyLabel;
+	}
+	/**
+	 * This method sets the value to the member attribute <b> rbKeyDescription</b> .
+	 *
+	 * @param rbKeyDescription
+	 *            Value to set member attribute <b> rbKeyDescription</b>
+	 */
+	public void setRbKeyDescription(String rbKeyDescription) {
+		this.rbKeyDescription = rbKeyDescription;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>rbKeyDescription</b>
+	 *
+	 * @return String - value of member attribute <b>rbKeyDescription</b> .
+	 */
+	public String getRbKeyDescription() {
+		return this.rbKeyDescription;
 	}
 
 	/**
@@ -242,14 +316,6 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 		return this.order;
 	}
 
-	public boolean isDatamaskingSupported() {
-		return datamaskingSupported;
-	}
-
-	public void setDatamaskingSupported(boolean datamaskingSupported) {
-		this.datamaskingSupported = datamaskingSupported;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -269,7 +335,7 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		XXAccessTypeDef other = (XXAccessTypeDef) obj;
+		XXDataMaskTypeDef other = (XXDataMaskTypeDef) obj;
 		if (defId == null) {
 			if (other.defId != null) {
 				return false;
@@ -319,9 +385,6 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 		} else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
 			return false;
 		}
-		if (datamaskingSupported != other.datamaskingSupported) {
-			return false;
-		}
 		return true;
 	}
 
@@ -332,9 +395,9 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	 */
 	@Override
 	public String toString() {
-		return "XXAccessTypeDef [" + super.toString() + " id=" + id
+		return "XXDataMaskTypeDef [" + super.toString() + " id=" + id
 				+ ", defId=" + defId + ", itemId=" + itemId + ", name=" + name + ", label=" + label
-				+ ", rbKeyLabel=" + rbKeyLabel + ", datamaskingSupported=" + datamaskingSupported + ", order=" + order + "]";
+				+ ", rbKeyLabel=" + rbKeyLabel + ", order=" + order + "]";
 	}
 
 }

@@ -229,6 +229,15 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	protected Integer order;
 
 	/**
+	 * datamaskingSupported of the XXResourceDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "datamasking_supported")
+	protected boolean datamaskingSupported;
+
+	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
 	 * 
@@ -644,6 +653,14 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 		return this.order;
 	}
 
+	public boolean isDatamaskingSupported() {
+		return datamaskingSupported;
+	}
+
+	public void setDatamaskingSupported(boolean datamaskingSupported) {
+		this.datamaskingSupported = datamaskingSupported;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -779,6 +796,9 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 		} else if (!type.equals(other.type)) {
 			return false;
 		}
+		if (datamaskingSupported != other.datamaskingSupported) {
+			return false;
+		}
 		return true;
 	}
 
@@ -803,7 +823,9 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 				+ ", rbKeyLabel="+ rbKeyLabel
 				+ ", rbKeyDescription=" + rbKeyDescription
 				+ ", rbKeyValidationMessage=" + rbKeyValidationMessage
-				+ ", order=" + order + "]";
+				+ ", order=" + order
+				+ ", datamaskingSupported=" + datamaskingSupported
+				+ "]";
 	}
 
 }

@@ -19,34 +19,15 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.apache.avro.generic.GenericData;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXAccessTypeDefDao;
-import org.apache.ranger.db.XXContextEnricherDefDao;
-import org.apache.ranger.db.XXEnumDefDao;
-import org.apache.ranger.db.XXEnumElementDefDao;
-import org.apache.ranger.db.XXPolicyConditionDefDao;
-import org.apache.ranger.db.XXPortalUserDao;
-import org.apache.ranger.db.XXResourceDefDao;
-import org.apache.ranger.db.XXServiceConfigDefDao;
+import org.apache.ranger.db.*;
 
-import org.apache.ranger.db.XXServiceDefDao;
-import org.apache.ranger.entity.XXAccessTypeDef;
-import org.apache.ranger.entity.XXContextEnricherDef;
-import org.apache.ranger.entity.XXEnumDef;
-import org.apache.ranger.entity.XXEnumElementDef;
-import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXPolicyConditionDef;
-import org.apache.ranger.entity.XXPolicyItem;
-import org.apache.ranger.entity.XXPolicyItemAccess;
-import org.apache.ranger.entity.XXPolicyItemCondition;
-import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXResourceDef;
-import org.apache.ranger.entity.XXServiceConfigDef;
-import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.*;
 
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -362,6 +343,11 @@ public class TestRangerServiceDefService {
 				xEnumElementDefDao.findByEnumDefId(enumElementDefObj.getId()))
 				.thenReturn(xElementsList);
 
+		XXDataMaskTypeDefDao    xDataMaskTypeDao  = Mockito.mock(XXDataMaskTypeDefDao.class);
+		List<XXDataMaskTypeDef> xDataMaskTypeDefs = new ArrayList<XXDataMaskTypeDef>();
+		Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
+		Mockito.when(xDataMaskTypeDao.findByServiceDefId(serviceDef.getId())).thenReturn(xDataMaskTypeDefs);
+
 		RangerServiceDef dbRangerServiceDef = serviceDefService
 				.populateViewBean(serviceDef);
 		Assert.assertNotNull(dbRangerServiceDef);
@@ -582,6 +568,11 @@ public class TestRangerServiceDefService {
 				xEnumElementDefDao.findByEnumDefId(enumElementDefObj.getId()))
 				.thenReturn(xElementsList);
 
+		XXDataMaskTypeDefDao    xDataMaskTypeDao  = Mockito.mock(XXDataMaskTypeDefDao.class);
+		List<XXDataMaskTypeDef> xDataMaskTypeDefs = new ArrayList<XXDataMaskTypeDef>();
+		Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
+		Mockito.when(xDataMaskTypeDao.findByServiceDefId(serviceDef.getId())).thenReturn(xDataMaskTypeDefs);
+
 		List<RangerServiceDef> dbRangerServiceDef = serviceDefService
 				.getAllServiceDefs();
 		Assert.assertNotNull(dbRangerServiceDef);
@@ -774,6 +765,11 @@ public class TestRangerServiceDefService {
 		Mockito.when(
 				xEnumElementDefDao.findByEnumDefId(enumElementDefObj.getId()))
 				.thenReturn(xElementsList);
+
+		XXDataMaskTypeDefDao    xDataMaskTypeDao  = Mockito.mock(XXDataMaskTypeDefDao.class);
+		List<XXDataMaskTypeDef> xDataMaskTypeDefs = new ArrayList<XXDataMaskTypeDef>();
+		Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
+		Mockito.when(xDataMaskTypeDao.findByServiceDefId(serviceDef.getId())).thenReturn(xDataMaskTypeDefs);
 
 		RangerServiceDef dbRangerServiceDef = serviceDefService
 				.getPopulatedViewObject(serviceDef);

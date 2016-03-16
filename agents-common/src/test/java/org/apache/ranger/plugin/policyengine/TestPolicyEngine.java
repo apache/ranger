@@ -194,6 +194,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_hiveMasking() {
+		String[] resourceFiles = { "/policyengine/test_policyengine_hive_masking.json" };
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
@@ -303,15 +310,28 @@ public class TestPolicyEngine {
 				policyEngine.preProcess(request);
 			}
 
-			RangerAccessResult expected = test.result;
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
-			RangerAccessResult result   = policyEngine.isAccessAllowed(request, auditHandler);
+			if(test.result != null) {
+				RangerAccessResult expected = test.result;
+				RangerAccessResult result   = policyEngine.isAccessAllowed(request, auditHandler);
 
-			assertNotNull("result was null! - " + test.name, result);
-			assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
-			assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
-			assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+				assertNotNull("result was null! - " + test.name, result);
+				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
+				assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
+				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+			}
+
+			if(test.dataMaskResult != null) {
+				RangerDataMaskResult expected = test.dataMaskResult;
+				RangerDataMaskResult result   = policyEngine.evalDataMaskPolicies(request, auditHandler);
+
+				assertNotNull("result was null! - " + test.name, result);
+				assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
+				assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
+				assertEquals("maskedValue mismatched! - " + test.name, expected.getMaskedValue(), result.getMaskedValue());
+				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+			}
 		}
 	}
 
@@ -326,6 +346,7 @@ public class TestPolicyEngine {
 			public String              name;
 			public RangerAccessRequest request;
 			public RangerAccessResult  result;
+			public RangerDataMaskResult dataMaskResult;
 		}
 
 		class TagPolicyInfo {

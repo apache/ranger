@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator> {
@@ -53,6 +54,8 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 	boolean isAuditEnabled();
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
+
+	void evaluate(RangerAccessRequest request, RangerDataMaskResult result);
 
 	boolean isMatch(RangerAccessResource resource);
 

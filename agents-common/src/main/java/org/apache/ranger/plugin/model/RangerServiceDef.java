@@ -58,14 +58,19 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	private List<RangerPolicyConditionDef> policyConditions = null;
 	private List<RangerContextEnricherDef> contextEnrichers = null;
 	private List<RangerEnumDef>            enums            = null;
+	private RangerDataMaskDef              dataMaskDef      = null;
 
 
 	public RangerServiceDef() {
-		this(null, null, null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null, null);
+	}
+
+	public RangerServiceDef(String name, String implClass, String label, String description, Map<String, String> options, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
+		this(name, implClass, label, description, options, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, null);
 	}
 
 	/**
-	 * @param type
+	 * @param name
 	 * @param implClass
 	 * @param label
 	 * @param description
@@ -75,9 +80,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 * @param accessTypes
 	 * @param policyConditions
 	 * @param contextEnrichers
+	 * @param dataMaskDef
 	 * @param enums
 	 */
-	public RangerServiceDef(String name, String implClass, String label, String description, Map<String, String> options, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums) {
+	public RangerServiceDef(String name, String implClass, String label, String description, Map<String, String> options, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums, RangerDataMaskDef dataMaskDef) {
 		super();
 
 		setName(name);
@@ -91,6 +97,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		setPolicyConditions(policyConditions);
 		setContextEnrichers(contextEnrichers);
 		setEnums(enums);
+		setDataMaskDef(dataMaskDef);
 	}
 
 	/**
@@ -108,6 +115,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		setAccessTypes(other.getAccessTypes());
 		setPolicyConditions(other.getPolicyConditions());
 		setEnums(other.getEnums());
+		setDataMaskDef(other.getDataMaskDef());
 	}
 
 	/**
@@ -388,6 +396,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 	}
 
+	public RangerDataMaskDef getDataMaskDef() {
+		return dataMaskDef;
+	}
+
+	public void setDataMaskDef(RangerDataMaskDef dataMaskDef) {
+		this.dataMaskDef = dataMaskDef == null ? new RangerDataMaskDef() : dataMaskDef;
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -474,6 +490,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 					e.toString(sb);
 				}
 			}
+		}
+		sb.append("} ");
+
+		sb.append("dataMaskDef={");
+		if(dataMaskDef != null) {
+			dataMaskDef.toString(sb);
 		}
 		sb.append("} ");
 
@@ -892,14 +914,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
-		 * @return the type
+		 * @return the subType
 		 */
 		public String getSubType() {
 			return subType;
 		}
 
 		/**
-		 * @param type the type to set
+		 * @param subType the subType to set
 		 */
 		public void setSubType(String subType) {
 			this.subType = subType;
@@ -1389,14 +1411,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
-		 * @return the matcher
+		 * @return the matcherOptions
 		 */
 		public Map<String, String> getMatcherOptions() {
 			return matcherOptions;
 		}
 
 		/**
-		 * @param matcher the matcher to set
+		 * @param matcherOptions the matcherOptions to set
 		 */
 		public void setMatcherOptions(Map<String, String> matcherOptions) {
 			this.matcherOptions = matcherOptions == null ? new HashMap<String, String>() : matcherOptions;
@@ -2000,14 +2022,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
-		 * @return the evaluator
+		 * @return the evaluatorOptions
 		 */
 		public Map<String, String> getEvaluatorOptions() {
 			return evaluatorOptions;
 		}
 
 		/**
-		 * @param evaluator the evaluator to set
+		 * @param evaluatorOptions the evaluatorOptions to set
 		 */
 		public void setEvaluatorOptions(Map<String, String> evaluatorOptions) {
 			this.evaluatorOptions = evaluatorOptions == null ? new HashMap<String, String>() : evaluatorOptions;
@@ -2336,14 +2358,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		/**
-		 * @return the evaluator
+		 * @return the enricherOptions
 		 */
 		public Map<String, String> getEnricherOptions() {
 			return enricherOptions;
 		}
 
 		/**
-		 * @param evaluator the evaluator to set
+		 * @param enricherOptions the enricherOptions to set
 		 */
 		public void setEnricherOptions(Map<String, String> enricherOptions) {
 			this.enricherOptions = enricherOptions == null ? new HashMap<String, String>() : enricherOptions;
@@ -2413,6 +2435,405 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 				if (other.name != null)
 					return false;
 			} else if (!name.equals(other.name))
+				return false;
+			return true;
+		}
+	}
+
+
+
+	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class RangerDataMaskDef {
+		private List<RangerDataMaskTypeDef> maskTypes;
+		private List<String>                supportedAccessTypes;
+		private List<String>                supportedResources;
+
+
+		public RangerDataMaskDef() {
+			setMaskTypes(null);
+			setSupportedAccessTypes(null);
+			setSupportedResources(null);
+		}
+
+		public RangerDataMaskDef(List<RangerDataMaskTypeDef> maskTypes, List<String> supportedAccessTypes, List<String> supportedResources) {
+			setMaskTypes(maskTypes);
+			setSupportedAccessTypes(supportedAccessTypes);
+			setSupportedResources(supportedResources);
+		}
+
+		public RangerDataMaskDef(RangerDataMaskDef other) {
+			setMaskTypes(other.getMaskTypes());
+			setSupportedAccessTypes(other.getSupportedAccessTypes());
+			setSupportedResources(other.getSupportedResources());
+		}
+
+		public List<RangerDataMaskTypeDef> getMaskTypes() {
+			return maskTypes;
+		}
+
+		public void setMaskTypes(List<RangerDataMaskTypeDef> maskTypes) {
+			if(this.maskTypes == null) {
+				this.maskTypes = new ArrayList<RangerDataMaskTypeDef>();
+			}
+
+			if(this.maskTypes == maskTypes) {
+				return;
+			}
+
+			this.maskTypes.clear();
+
+			if(maskTypes != null) {
+				for(RangerDataMaskTypeDef maskType : maskTypes) {
+					this.maskTypes.add(maskType);
+				}
+			}
+		}
+
+		public List<String> getSupportedAccessTypes() {
+			return supportedAccessTypes;
+		}
+
+		public void setSupportedAccessTypes(List<String> supportedAccessTypes) {
+			if(this.supportedAccessTypes == null) {
+				this.supportedAccessTypes = new ArrayList<String>();
+			}
+
+			if(this.supportedAccessTypes == supportedAccessTypes) {
+				return;
+			}
+
+			this.supportedAccessTypes.clear();
+
+			if(supportedAccessTypes != null) {
+				for(String accessType : supportedAccessTypes) {
+					this.supportedAccessTypes.add(accessType);
+				}
+			}
+		}
+
+		public List<String> getSupportedResources() {
+			return supportedResources;
+		}
+
+		public void setSupportedResources(List<String> supportedResources) {
+			if(this.supportedResources == null) {
+				this.supportedResources = new ArrayList<String>();
+			}
+
+			if(this.supportedResources == supportedResources) {
+				return;
+			}
+
+			this.supportedResources.clear();
+
+			if(supportedResources != null) {
+				for(String resource : supportedResources) {
+					this.supportedResources.add(resource);
+				}
+			}
+		}
+
+		@Override
+		public String toString( ) {
+			StringBuilder sb = new StringBuilder();
+
+			toString(sb);
+
+			return sb.toString();
+		}
+
+		public StringBuilder toString(StringBuilder sb) {
+			sb.append("RangerDataMaskDef={");
+
+			sb.append("maskTypes={");
+			if(maskTypes != null) {
+				for(RangerDataMaskTypeDef maskType : maskTypes) {
+					if(maskType != null) {
+						sb.append(maskType).append(" ");
+					}
+				}
+			}
+			sb.append("} ");
+
+			sb.append("supportedAccessTypes={");
+			if(supportedAccessTypes != null) {
+				for(String accessType : supportedAccessTypes) {
+					if(accessType != null) {
+						sb.append(accessType).append(" ");
+					}
+				}
+			}
+			sb.append("} ");
+
+			sb.append("supportedResources={");
+			if(supportedResources != null) {
+				for(String resource : supportedResources) {
+					if(resource != null) {
+						sb.append(resource).append(" ");
+					}
+				}
+			}
+			sb.append("} ");
+
+			sb.append("}");
+
+			return sb;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((maskTypes == null) ? 0 : maskTypes.hashCode());
+			result = prime * result + ((supportedAccessTypes == null) ? 0 : supportedAccessTypes.hashCode());
+			result = prime * result + ((supportedResources == null) ? 0 : supportedResources.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerDataMaskDef other = (RangerDataMaskDef) obj;
+			if (maskTypes == null) {
+				if (other.maskTypes != null)
+					return false;
+			} else if (other.maskTypes == null || !maskTypes.equals(other.maskTypes))
+				return false;
+
+			if (supportedAccessTypes == null) {
+				if (other.supportedAccessTypes != null)
+					return false;
+			} else if (!supportedAccessTypes.equals(other.supportedAccessTypes))
+				return false;
+			if (supportedResources == null) {
+				if (other.supportedResources != null)
+					return false;
+			} else if (!supportedResources.equals(other.supportedResources))
+				return false;
+			return true;
+		}
+	}
+
+	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class RangerDataMaskTypeDef implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private Long                itemId           = null;
+		private String              name             = null;
+		private String              label            = null;
+		private String              description      = null;
+		private Map<String, String> dataMaskOptions  = null;
+		private String              rbKeyLabel       = null;
+		private String              rbKeyDescription = null;
+
+
+		public RangerDataMaskTypeDef() {
+			this(null, null, null, null, null, null, null);
+		}
+
+		public RangerDataMaskTypeDef(Long itemId, String name, String label, String description, Map<String, String> dataMaskOptions, String rbKeyLabel, String rbKeyDescription) {
+			setItemId(itemId);
+			setName(name);
+			setLabel(label);
+			setDescription(description);
+			setDataMaskOptions(dataMaskOptions);
+			setRbKeyLabel(rbKeyLabel);
+			setRbKeyDescription(rbKeyDescription);
+		}
+
+		public RangerDataMaskTypeDef(RangerDataMaskTypeDef other) {
+			setItemId(other.getItemId());
+			setName(other.getName());
+			setLabel(other.getLabel());
+			setDescription(other.getDescription());
+			setDataMaskOptions(other.getDataMaskOptions());
+			setRbKeyLabel(other.getRbKeyLabel());
+			setRbKeyDescription(other.getRbKeyDescription());
+		}
+
+		/**
+		 * @return the itemId
+		 */
+		public Long getItemId() {
+			return itemId;
+		}
+
+		/**
+		 * @param itemId the itemId to set
+		 */
+		public void setItemId(Long itemId) {
+			this.itemId = itemId;
+		}
+
+		/**
+		 * @return the name
+		 */
+		public String getName() {
+			return name;
+		}
+
+		/**
+		 * @param name the name to set
+		 */
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		/**
+		 * @return the label
+		 */
+		public String getLabel() {
+			return label;
+		}
+
+		/**
+		 * @param label the label to set
+		 */
+		public void setLabel(String label) {
+			this.label = label;
+		}
+
+		/**
+		 * @return the description
+		 */
+		public String getDescription() {
+			return description;
+		}
+
+		/**
+		 * @param description the description to set
+		 */
+		public void setDescription(String description) {
+			this.description = description;
+		}
+
+		/**
+		 * @return the dataMaskOptions
+		 */
+		public Map<String, String> getDataMaskOptions() {
+			return dataMaskOptions;
+		}
+
+		/**
+		 * @param dataMaskOptions the dataMaskOptions to set
+		 */
+		public void setDataMaskOptions(Map<String, String> dataMaskOptions) {
+			this.dataMaskOptions = dataMaskOptions == null ? new HashMap<String, String>() : dataMaskOptions;
+		}
+
+		/**
+		 * @return the rbKeyLabel
+		 */
+		public String getRbKeyLabel() {
+			return rbKeyLabel;
+		}
+
+		/**
+		 * @param rbKeyLabel the rbKeyLabel to set
+		 */
+		public void setRbKeyLabel(String rbKeyLabel) {
+			this.rbKeyLabel = rbKeyLabel;
+		}
+
+		/**
+		 * @return the rbKeyDescription
+		 */
+		public String getRbKeyDescription() {
+			return rbKeyDescription;
+		}
+
+		/**
+		 * @param rbKeyDescription the rbKeyDescription to set
+		 */
+		public void setRbKeyDescription(String rbKeyDescription) {
+			this.rbKeyDescription = rbKeyDescription;
+		}
+
+		@Override
+		public String toString( ) {
+			StringBuilder sb = new StringBuilder();
+
+			toString(sb);
+
+			return sb.toString();
+		}
+
+		public StringBuilder toString(StringBuilder sb) {
+			sb.append("RangerDataMaskTypeDef={");
+			sb.append("itemId={").append(itemId).append("} ");
+			sb.append("name={").append(name).append("} ");
+			sb.append("label={").append(label).append("} ");
+			sb.append("description={").append(description).append("} ");
+			sb.append("dataMaskOptions={").append(dataMaskOptions).append("} ");
+			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
+			sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
+
+			sb.append("}");
+
+			return sb;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((itemId == null) ? 0 : itemId.hashCode());
+			result = prime * result
+					+ ((dataMaskOptions == null) ? 0 : dataMaskOptions.hashCode());
+			result = prime * result + ((label == null) ? 0 : label.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			result = prime * result
+					+ ((rbKeyLabel == null) ? 0 : rbKeyLabel.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerDataMaskTypeDef other = (RangerDataMaskTypeDef) obj;
+			if (itemId == null) {
+				if (other.itemId != null)
+					return false;
+			} else if (other.itemId == null || !itemId.equals(other.itemId))
+				return false;
+
+			if (dataMaskOptions == null) {
+				if (other.dataMaskOptions != null)
+					return false;
+			} else if (!dataMaskOptions.equals(other.dataMaskOptions))
+				return false;
+			if (label == null) {
+				if (other.label != null)
+					return false;
+			} else if (!label.equals(other.label))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			if (rbKeyLabel == null) {
+				if (other.rbKeyLabel != null)
+					return false;
+			} else if (!rbKeyLabel.equals(other.rbKeyLabel))
 				return false;
 			return true;
 		}

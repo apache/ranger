@@ -28,51 +28,8 @@ import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXAccessTypeDefDao;
-import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
-import org.apache.ranger.db.XXContextEnricherDefDao;
-import org.apache.ranger.db.XXDataHistDao;
-import org.apache.ranger.db.XXEnumDefDao;
-import org.apache.ranger.db.XXEnumElementDefDao;
-import org.apache.ranger.db.XXPolicyConditionDefDao;
-import org.apache.ranger.db.XXPolicyDao;
-import org.apache.ranger.db.XXPolicyItemAccessDao;
-import org.apache.ranger.db.XXPolicyItemConditionDao;
-import org.apache.ranger.db.XXPolicyItemDao;
-import org.apache.ranger.db.XXPolicyItemGroupPermDao;
-import org.apache.ranger.db.XXPolicyItemUserPermDao;
-import org.apache.ranger.db.XXPolicyResourceDao;
-import org.apache.ranger.db.XXPolicyResourceMapDao;
-import org.apache.ranger.db.XXResourceDefDao;
-import org.apache.ranger.db.XXServiceConfigDefDao;
-import org.apache.ranger.db.XXServiceConfigMapDao;
-import org.apache.ranger.db.XXServiceDao;
-import org.apache.ranger.db.XXServiceDefDao;
-import org.apache.ranger.db.XXUserDao;
-import org.apache.ranger.entity.XXAccessTypeDef;
-import org.apache.ranger.entity.XXAccessTypeDefGrants;
-import org.apache.ranger.entity.XXContextEnricherDef;
-import org.apache.ranger.entity.XXDBBase;
-import org.apache.ranger.entity.XXDataHist;
-import org.apache.ranger.entity.XXEnumDef;
-import org.apache.ranger.entity.XXEnumElementDef;
-import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXPolicyConditionDef;
-import org.apache.ranger.entity.XXPolicyItem;
-import org.apache.ranger.entity.XXPolicyItemAccess;
-import org.apache.ranger.entity.XXPolicyItemCondition;
-import org.apache.ranger.entity.XXPolicyItemGroupPerm;
-import org.apache.ranger.entity.XXPolicyItemUserPerm;
-import org.apache.ranger.entity.XXPolicyResource;
-import org.apache.ranger.entity.XXPolicyResourceMap;
-import org.apache.ranger.entity.XXResourceDef;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceConfigDef;
-import org.apache.ranger.entity.XXServiceConfigMap;
-import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
-import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.db.*;
+import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -490,6 +447,7 @@ public class TestServiceDBStore {
 		XXContextEnricherDefDao xContextEnricherDefDao = Mockito
 				.mock(XXContextEnricherDefDao.class);
 		XXEnumDefDao xEnumDefDao = Mockito.mock(XXEnumDefDao.class);
+		XXDataMaskTypeDefDao xDataMaskDefDao = Mockito.mock(XXDataMaskTypeDefDao.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 
 		RangerServiceDef rangerServiceDef = rangerServiceDef();
@@ -596,6 +554,9 @@ public class TestServiceDBStore {
 		Mockito.when(xEnumDefDao.findByServiceDefId(serviceDefId)).thenReturn(
 				enumDefList);
 
+		Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskDefDao);
+		Mockito.when(xDataMaskDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<XXDataMaskTypeDef>());
+
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByServiceDefId(serviceDefId)).thenReturn(null);
 
@@ -629,6 +590,7 @@ public class TestServiceDBStore {
 	@Test
 	public void test13deleteServiceDef() throws Exception {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+		XXDataMaskTypeDefDao xDataMaskDefDao = Mockito.mock(XXDataMaskTypeDefDao.class);
 		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
 				.mock(XXAccessTypeDefDao.class);
 		XXAccessTypeDefGrantsDao xAccessTypeDefGrantsDao = Mockito
@@ -1022,6 +984,9 @@ public class TestServiceDBStore {
 				xServiceConfigMapDao.findByServiceId(rangerService.getId()))
 				.thenReturn(svcConfigMapList);
 
+		Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskDefDao);
+		Mockito.when(xDataMaskDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<XXDataMaskTypeDef>());
+
 		Mockito.when(
 				rangerAuditFields.populateAuditFields(
 						Mockito.isA(XXServiceConfigMap.class),
@@ -1339,6 +1304,7 @@ public class TestServiceDBStore {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
 		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
+		XXPolicyItemDataMaskInfoDao xxPolicyItemDataMaskInfoDao = Mockito.mock(XXPolicyItemDataMaskInfoDao.class);
 		XXPolicyItemConditionDao xPolicyItemConditionDao = Mockito
 				.mock(XXPolicyItemConditionDao.class);
 		XXPolicyItemGroupPermDao xPolicyItemGroupPermDao = Mockito
@@ -1399,6 +1365,8 @@ public class TestServiceDBStore {
 		policyItem.setUpdatedByUserId(Id);
 		policyItem.setUpdateTime(new Date());
 		policyItemList.add(policyItem);
+
+		List<XXPolicyItemDataMaskInfo> policyItemDataMaskInfoList = new ArrayList<XXPolicyItemDataMaskInfo>();
 
 		List<XXPolicyItemCondition> policyItemConditionList = new ArrayList<XXPolicyItemCondition>();
 		XXPolicyItemCondition policyItemCondition = new XXPolicyItemCondition();
@@ -1506,6 +1474,9 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXPolicyItem()).thenReturn(xPolicyItemDao);
 		Mockito.when(xPolicyItemDao.findByPolicyId(policyItem.getId()))
 				.thenReturn(policyItemList);
+
+		Mockito.when(daoManager.getXXPolicyItemDataMaskInfo()).thenReturn(xxPolicyItemDataMaskInfoDao);
+		Mockito.when(xxPolicyItemDataMaskInfoDao.findByPolicyItemId(policyItem.getId())).thenReturn(policyItemDataMaskInfoList);
 
 		Mockito.when(daoManager.getXXPolicyItemCondition()).thenReturn(
 				xPolicyItemConditionDao);
@@ -2171,6 +2142,7 @@ public class TestServiceDBStore {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
 		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
+		XXPolicyItemDataMaskInfoDao xPolicyItemDataMaskInfoDao = Mockito.mock(XXPolicyItemDataMaskInfoDao.class);
 		XXPolicyItemConditionDao xPolicyItemConditionDao = Mockito
 				.mock(XXPolicyItemConditionDao.class);
 		XXPolicyItemGroupPermDao xPolicyItemGroupPermDao = Mockito
@@ -2205,6 +2177,8 @@ public class TestServiceDBStore {
 		policyItem.setUpdatedByUserId(Id);
 		policyItem.setUpdateTime(new Date());
 		policyItemList.add(policyItem);
+
+		List<XXPolicyItemDataMaskInfo> policyItemDataMaskInfo = new ArrayList<XXPolicyItemDataMaskInfo>();
 
 		List<XXPolicyItemCondition> policyItemConditionList = new ArrayList<XXPolicyItemCondition>();
 		XXPolicyItemCondition policyItemCondition = new XXPolicyItemCondition();
@@ -2305,6 +2279,10 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXPolicyItem()).thenReturn(xPolicyItemDao);
 		Mockito.when(xPolicyItemDao.findByPolicyId(policyItem.getId()))
 				.thenReturn(policyItemList);
+
+		Mockito.when(daoManager.getXXPolicyItemDataMaskInfo()).thenReturn(xPolicyItemDataMaskInfoDao);
+		Mockito.when(xPolicyItemDataMaskInfoDao.findByPolicyId(policyItem.getId()))
+				.thenReturn(policyItemDataMaskInfo);
 
 		Mockito.when(daoManager.getXXPolicyItemCondition()).thenReturn(
 				xPolicyItemConditionDao);
