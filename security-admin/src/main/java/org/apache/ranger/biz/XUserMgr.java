@@ -57,6 +57,7 @@ import org.apache.ranger.db.XXAuditMapDao;
 import org.apache.ranger.db.XXAuthSessionDao;
 import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXGroupGroupDao;
+import org.apache.ranger.db.XXGroupPermissionDao;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.db.XXPermMapDao;
 import org.apache.ranger.db.XXPolicyDao;
@@ -1447,6 +1448,9 @@ public class XUserMgr extends XUserMgrBase {
 		searchCriteria.addParam("groupId", id);
 		VXAuditMapList vXAuditMapList = searchXAuditMaps(searchCriteria);
 
+		XXGroupPermissionDao xXGroupPermissionDao=daoManager.getXXGroupPermission();
+		List<XXGroupPermission> xXGroupPermissions=xXGroupPermissionDao.findByGroupId(id);
+
 		XXGroupGroupDao xXGroupGroupDao = daoManager.getXXGroupGroup();
 		List<XXGroupGroup> xXGroupGroups = xXGroupGroupDao.findByGroupId(id);
 
@@ -1525,6 +1529,17 @@ public class XUserMgr extends XUserMgrBase {
 					restErrorUtil.createRESTException(excp.getMessage());
 				}
 			}
+			if(CollectionUtils.isNotEmpty(xXGroupPermissions)){
+				for (XXGroupPermission xXGroupPermission : xXGroupPermissions) {
+					if(xXGroupPermission!=null){
+						XXModuleDef xXModuleDef=daoManager.getXXModuleDef().findByModuleId(xXGroupPermission.getModuleId());
+						if(xXModuleDef!=null){
+							logger.warn("Deleting '" + xXModuleDef.getModule() + "' module permission for group '" + xXGroup.getName() + "'");
+						}
+						xXGroupPermissionDao.remove(xXGroupPermission.getId());
+					}
+				}
+			}
 			//delete XXGroup
 			xXGroupDao.remove(id);
 			//Create XXTrxLog
@@ -1534,19 +1549,22 @@ public class XUserMgr extends XUserMgrBase {
 		} else {
 			boolean hasReferences=false;
 
-			if(vxGroupUserList!=null && vxGroupUserList.getListSize()>0){
+			if(vxGroupUserList.getListSize()>0){
 				hasReferences=true;
 			}
-			if(hasReferences==false && xXPolicyList!=null && xXPolicyList.size()>0){
+			if(hasReferences==false && CollectionUtils.isNotEmpty(xXPolicyList)){
 				hasReferences=true;
 			}
-			if(hasReferences==false && vXPermMapList!=null && vXPermMapList.getListSize()>0){
+			if(hasReferences==false && vXPermMapList.getListSize()>0){
 				hasReferences=true;
 			}
-			if(hasReferences==false && vXAuditMapList!=null && vXAuditMapList.getListSize()>0){
+			if(hasReferences==false && vXAuditMapList.getListSize()>0){
 				hasReferences=true;
 			}
-			if(hasReferences==false && xXGroupGroups!=null && xXGroupGroups.size()>0){
+			if(hasReferences==false && CollectionUtils.isNotEmpty(xXGroupGroups)){
+				hasReferences=true;
+			}
+			if(hasReferences==false && CollectionUtils.isNotEmpty(xXGroupPermissions)){
 				hasReferences=true;
 			}
 
