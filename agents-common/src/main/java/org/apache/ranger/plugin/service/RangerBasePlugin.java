@@ -107,9 +107,14 @@ public class RangerBasePlugin {
 	}
 
 	public void setPolicies(ServicePolicies policies) {
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(policies, policyEngineOptions);
+		// guard against catastrophic failure during policy engine Initialization or
+		try {
+			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(policies, policyEngineOptions);
 
-		this.policyEngine = policyEngine;
+			this.policyEngine = policyEngine;
+		} catch (Exception e) {
+			LOG.error("setPolicies: policy engine initialization failed!  Leaving current policy engine as-is.");
+		}
 	}
 
 	public void cleanup() {
