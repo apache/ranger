@@ -579,8 +579,10 @@ public class HiveClient extends BaseClient implements Closeable {
 					System.out.println("No database found with db filter [" + args[1] + "]") ;
 				}
 				else {
-					for (String str : dbList ) {
-						System.out.println("database: " + str ) ;
+					if (dbList != null && dbList.size() == 0) {
+						for (String str : dbList ) {
+							System.out.println("database: " + str ) ;
+						}
 					}
 				}
 			}
