@@ -37,6 +37,7 @@ import java.util.Properties;
 
 import javax.security.auth.Subject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -575,11 +576,11 @@ public class HiveClient extends BaseClient implements Closeable {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				if (dbList != null && dbList.size() == 0) {
+				if (CollectionUtils.isEmpty(dbList)) {
 					System.out.println("No database found with db filter [" + args[1] + "]") ;
 				}
 				else {
-					if (dbList != null && dbList.size() == 0) {
+					if (CollectionUtils.isNotEmpty(dbList)) {
 						for (String str : dbList ) {
 							System.out.println("database: " + str ) ;
 						}
