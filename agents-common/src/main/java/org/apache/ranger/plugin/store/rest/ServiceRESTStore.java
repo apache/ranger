@@ -596,6 +596,11 @@ public class ServiceRESTStore implements ServiceStore {
 		return ret;
 	}
 
+	@Override
+	public ServicePolicies getServicePolicies(String serviceName) throws Exception {
+		return getServicePoliciesIfUpdated(serviceName, -1L);
+	}
+
 	private WebResource createWebResource(String url) {
 		return createWebResource(url, null);
 	}
@@ -628,5 +633,16 @@ public class ServiceRESTStore implements ServiceStore {
 	@Override
 	public Boolean getPopulateExistingBaseFields() {
 		return populateExistingBaseFields;
+	}
+
+	@Override
+	public Long getServicePolicyVersion(String serviceName) {
+		RangerService service = null;
+		try {
+			service = getServiceByName(serviceName);
+		} catch (Exception exception) {
+			LOG.error("Failed to get service object for service:" + serviceName);
+		}
+		return service != null ? service.getPolicyVersion() : null;
 	}
 }

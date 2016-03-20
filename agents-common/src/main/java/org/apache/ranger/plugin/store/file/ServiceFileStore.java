@@ -758,6 +758,10 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 		return ret;
 	}
 
+	@Override
+	public ServicePolicies getServicePolicies(String serviceName) throws Exception {
+		return getServicePoliciesIfUpdated(serviceName, -1L);
+	}
 
 	private void handleServiceRename(RangerService service, String oldName) throws Exception {
 		List<RangerPolicy> policies = getAllPolicies();
@@ -766,7 +770,6 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 			for(RangerPolicy policy : policies) {
 				if(StringUtils.equalsIgnoreCase(policy.getService(), oldName)) {
 					policy.setService(service.getName());
-	
 					preUpdate(policy);
 	
 					saveToFile(policy, service.getId(), true);
@@ -954,4 +957,16 @@ public class ServiceFileStore extends BaseFileStore implements ServiceStore {
 	public Boolean getPopulateExistingBaseFields() {
 		return populateExistingBaseFields;
 	}
+
+	@Override
+	public Long getServicePolicyVersion(String serviceName) {
+		RangerService service = null;
+		try {
+			service = getServiceByName(serviceName);
+		} catch (Exception exception) {
+			LOG.error("Failed to get service object for service:" + serviceName);
+		}
+		return service != null ? service.getPolicyVersion() : null;
+	}
+
 }
