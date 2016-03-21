@@ -56,12 +56,7 @@
   </rule>
   <rule ref="rulesets/java/migrating.xml" />
   <rule ref="rulesets/java/unnecessary.xml">
-	<exclude name="UnnecessaryConversionTemporary" />
-	<exclude name="UnnecessaryReturn" />
-	<exclude name="UnusedNullCheckInEquals" />
-	<exclude name="UselessOverridingMethod" />
 	<exclude name="UselessParentheses" />
-	<exclude name="UnnecessaryFinalModifier" />
   </rule>
 
 </ruleset>

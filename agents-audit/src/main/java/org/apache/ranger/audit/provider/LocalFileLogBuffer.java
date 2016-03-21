@@ -339,7 +339,7 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 	}
 
 	boolean isCurrentFilename(String filename) {
-		return mBufferFilename != null && filename != null && filename.equals(mBufferFilename);
+		return filename != null && filename.equals(mBufferFilename);
 	}
 
 	@Override

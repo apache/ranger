@@ -46,11 +46,6 @@ public class RangerServiceDefWithAssignedIdService extends RangerServiceDefServi
 
 	}
 
-	@Override
-	protected RangerServiceDef populateViewBean(XXServiceDefWithAssignedId xServiceDef) {
-		return super.populateViewBean(xServiceDef);
-	}
-
 	public RangerServiceDef getPopulatedViewObject(XXServiceDefWithAssignedId xServiceDef) {
 		return this.populateViewBean(xServiceDef);
 	}

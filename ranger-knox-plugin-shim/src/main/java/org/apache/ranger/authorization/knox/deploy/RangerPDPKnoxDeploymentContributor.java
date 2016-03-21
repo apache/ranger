@@ -45,11 +45,6 @@ public class RangerPDPKnoxDeploymentContributor extends ProviderDeploymentContri
   }
 
   @Override
-  public void initializeContribution(DeploymentContext context) {
-    super.initializeContribution(context);
-  }
-
-  @Override
   public void contributeProvider( DeploymentContext context, Provider provider ) {
   }
 

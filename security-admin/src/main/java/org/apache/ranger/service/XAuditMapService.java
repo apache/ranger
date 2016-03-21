@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.RangerDaoManager;
@@ -36,7 +35,6 @@ import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXAuditMap;
-import org.apache.ranger.view.VXAuditMapList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -198,11 +196,6 @@ public class XAuditMapService extends
 			}
 		}
 		return vObj;
-	}
-
-	@Override
-	public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
-		return super.searchXAuditMaps(searchCriteria);
 	}
 
 }

@@ -1419,9 +1419,6 @@ class RangerHBasePlugin extends RangerBasePlugin {
 		super("hbase", appType);
 	}
 
-	public void init() {
-		super.init();
-	}
 }
 
 

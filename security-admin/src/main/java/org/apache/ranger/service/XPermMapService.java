@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.RangerDaoManager;
@@ -38,7 +37,6 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXPermMap;
-import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -115,11 +113,6 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 			}
 		}
 		return map;
-	}
-	
-	@Override
-	public VXPermMapList searchXPermMaps(SearchCriteria searchCriteria) {
-		return super.searchXPermMaps(searchCriteria);
 	}
 	
 	public String getGroupName(Long groupId){

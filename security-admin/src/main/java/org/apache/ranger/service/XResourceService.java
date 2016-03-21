@@ -321,10 +321,6 @@ public class XResourceService extends
 		resource.setAuditList(newAuditMapList);
 		return resource;
 	}
-	@Override
-	public boolean deleteResource(Long id) {	
-		return super.deleteResource(id);		
-	}
 	
 	@Override
 	public VXResource populateViewBean(XXResource xXResource) {
