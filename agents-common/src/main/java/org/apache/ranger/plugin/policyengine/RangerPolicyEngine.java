@@ -55,7 +55,7 @@ public interface RangerPolicyEngine {
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 
-	RangerPolicy getExactMatchPolicy(RangerAccessResource resource);
+	List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource);
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 }

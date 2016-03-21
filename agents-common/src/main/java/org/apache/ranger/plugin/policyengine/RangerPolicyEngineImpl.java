@@ -305,23 +305,24 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public RangerPolicy getExactMatchPolicy(RangerAccessResource resource) {
+	public List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.getExactMatchPolicy(" + resource + ")");
+			LOG.debug("==> RangerPolicyEngineImpl.getExactMatchPolicies(" + resource + ")");
 		}
 
-		RangerPolicy ret = null;
+		List<RangerPolicy> ret = null;
 
 		for(RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
 			if(evaluator.isSingleAndExactMatch(resource)) {
-				ret = evaluator.getPolicy();
-
-				break;
+				if(ret == null) {
+					ret = new ArrayList<RangerPolicy>();
+				}
+				ret.add(evaluator.getPolicy());
 			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.getExactMatchPolicy(" + resource + "): " + ret);
+			LOG.debug("<== RangerPolicyEngineImpl.getExactMatchPolicies(" + resource + "): " + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;
