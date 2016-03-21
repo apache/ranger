@@ -88,6 +88,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_resourceAccessInfo() {
+		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_resource_access_info.json" };
+
+		runTestsFromResourceFiles(conditionsTestResourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
@@ -112,13 +119,24 @@ public class TestPolicyEngine {
 		for(TestData test : testCase.tests) {
 			policyEngine.preProcess(test.request);
 
-			RangerAccessResult expected = test.result;
-			RangerAccessResult result   = policyEngine.isAccessAllowed(test.request, null);
+			if(test.result != null) {
+				RangerAccessResult expected = test.result;
+				RangerAccessResult result = policyEngine.isAccessAllowed(test.request, null);
 
-			assertNotNull("result was null! - " + test.name, result);
-			assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
-			assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
-			assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+				assertNotNull("result was null! - " + test.name, result);
+				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
+				assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
+				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+			}
+
+			if(test.resourceAccessInfo != null) {
+				RangerResourceAccessInfo expected = test.resourceAccessInfo;
+				RangerResourceAccessInfo result   = policyEngine.getResourceAccessInfo(test.request);
+
+				assertNotNull("result was null! - " + test.name, result);
+				assertEquals("allowedUsers mismatched! - " + test.name, expected.getAllowedUsers(), result.getAllowedUsers());
+				assertEquals("allowedGroups mismatched! - " + test.name, expected.getAllowedGroups(), result.getAllowedGroups());
+			}
 		}
 	}
 
@@ -132,6 +150,7 @@ public class TestPolicyEngine {
 			public String              name;
 			public RangerAccessRequest request;
 			public RangerAccessResult  result;
+			public RangerResourceAccessInfo resourceAccessInfo;
 		}
 	}
 	

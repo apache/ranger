@@ -22,11 +22,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 
 public interface RangerPolicyItemEvaluator {
 
@@ -52,4 +50,6 @@ public interface RangerPolicyItemEvaluator {
 	boolean matchAccessType(String accessType);
 
 	boolean matchCustomConditions(RangerAccessRequest request);
+
+	void getResourceAccessInfo(RangerResourceAccessInfo result);
 }

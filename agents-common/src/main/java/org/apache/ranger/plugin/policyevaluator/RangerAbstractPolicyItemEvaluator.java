@@ -21,12 +21,15 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 
 
 public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyItemEvaluator {
@@ -57,5 +60,18 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 
 	protected boolean getConditionsDisabledOption() {
 		return options != null ? options.disableCustomConditions : false;
+	}
+
+	@Override
+	public void getResourceAccessInfo(RangerResourceAccessInfo result) {
+		if(policyItem != null && result != null) {
+			if(CollectionUtils.isNotEmpty(policyItem.getUsers())) {
+				result.getAllowedUsers().addAll(policyItem.getUsers());
+			}
+
+			if(CollectionUtils.isNotEmpty(policyItem.getGroups())) {
+				result.getAllowedGroups().addAll(policyItem.getGroups());
+			}
+		}
 	}
 }

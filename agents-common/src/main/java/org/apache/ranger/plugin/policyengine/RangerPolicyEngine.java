@@ -58,4 +58,6 @@ public interface RangerPolicyEngine {
 	List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource);
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
+
+	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
 }

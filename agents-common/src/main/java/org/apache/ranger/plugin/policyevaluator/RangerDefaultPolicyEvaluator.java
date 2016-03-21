@@ -42,6 +42,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -130,28 +131,17 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
         if (request != null && result != null) {
-            boolean isMatchAttempted     = false;
-            boolean matchResult          = false;
-            boolean isHeadMatchAttempted = false;
-            boolean headMatchResult      = false;
-			final boolean attemptHeadMatch = request.isAccessTypeAny() || request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS;
+            boolean isMatchAttempted = false;
+            boolean matchResult      = false;
 
             if (!result.getIsAuditedDetermined()) {
                 // Need to match request.resource first. If it matches (or head matches), then only more progress can be made
                 if (!isMatchAttempted) {
-                    matchResult = isMatch(request.getResource());
+                    matchResult = isResourceMatch(request);
                     isMatchAttempted = true;
                 }
 
-                // Try head match only if match was not found and ANY access was requested
-                if (!matchResult) {
-                    if (attemptHeadMatch && !isHeadMatchAttempted) {
-                        headMatchResult = matchResourceHead(request.getResource());
-                        isHeadMatchAttempted = true;
-                    }
-                }
-
-                if (matchResult || headMatchResult) {
+                if (matchResult) {
                     // We are done for determining if audit is needed for this policy
                     if (isAuditEnabled()) {
                         result.setIsAudited(true);
@@ -162,24 +152,16 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             if (!result.getIsAccessDetermined()) {
                 // Try Match only if it was not attempted as part of evaluating Audit requirement
                 if (!isMatchAttempted) {
-                    matchResult = isMatch(request.getResource());
+                    matchResult = isResourceMatch(request);
 	                isMatchAttempted = true;
                 }
 
-                // Try Head Match only if no match was found so far AND a head match was not attempted as part of evaluating
-                // Audit requirement
-                if (!matchResult) {
-                    if (attemptHeadMatch && !isHeadMatchAttempted) {
-                        headMatchResult = matchResourceHead(request.getResource());
-	                    isHeadMatchAttempted = true;
-                    }
-				}
-				// Go further to evaluate access only if match or head match was found at this point
-				if (matchResult || headMatchResult) {
-					evaluatePolicyItemsForAccess(request, result);
-				}
-			}
-		}
+                // Go further to evaluate access only if match or head match was found at this point
+                if (matchResult) {
+                    evaluatePolicyItemsForAccess(request, result);
+                }
+            }
+        }
 
 		RangerPerfTracer.log(perf);
 
@@ -280,6 +262,52 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.getResourceAccessInfo(" + request + ", " + result + ")");
+		}
+
+		boolean isResourceMatch = isResourceMatch(request);
+
+		if(isResourceMatch) {
+			if(CollectionUtils.isNotEmpty(policyItemEvaluators)) {
+				for (RangerPolicyItemEvaluator policyItemEvaluator : policyItemEvaluators) {
+					if(policyItemEvaluator.matchAccessType(request.getAccessType()) &&
+					   policyItemEvaluator.matchCustomConditions(request)) {
+						policyItemEvaluator.getResourceAccessInfo(result);
+					}
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.getResourceAccessInfo(" + request + ", " + result + ")");
+		}
+	}
+
+	private boolean isResourceMatch(RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isResourceMatch(" + request + ")");
+		}
+
+		boolean ret = isMatch(request.getResource());
+
+		if(! ret) {
+			final boolean attemptHeadMatch = request.isAccessTypeAny() || request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS;
+
+			if(attemptHeadMatch) {
+				ret = matchResourceHead(request.getResource());
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isResourceMatch(" + request + "): " + ret);
 		}
 
 		return ret;

@@ -353,6 +353,25 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
+	@Override
+	public RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.getResourceAccessInfo(" + request + ")");
+		}
+
+		RangerResourceAccessInfo ret = new RangerResourceAccessInfo(request);
+
+		for(RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
+			evaluator.getResourceAccessInfo(request, ret);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.getResourceAccessInfo(" + request + "): " + ret);
+		}
+
+		return ret;
+	}
+
 	protected RangerAccessResult isAccessAllowedNoAudit(RangerAccessRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + ")");

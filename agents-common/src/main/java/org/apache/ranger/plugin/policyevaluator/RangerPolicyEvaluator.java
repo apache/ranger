@@ -30,6 +30,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+
 
 public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator> {
 	public static final String EVALUATOR_TYPE_AUTO   = "auto";
@@ -57,4 +59,6 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
+
+	void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result);
 }
