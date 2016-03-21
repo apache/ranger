@@ -24,6 +24,8 @@ import java.util.Set;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 
 public interface RangerPolicyItemEvaluator extends Comparable<RangerPolicyItemEvaluator> {
 	public static final int POLICY_ITEM_TYPE_ALLOW            = 0;

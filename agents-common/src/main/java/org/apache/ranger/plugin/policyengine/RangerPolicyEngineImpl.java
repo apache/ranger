@@ -448,6 +448,47 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
+	@Override
+	public RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.getResourceAccessInfo(" + request + ")");
+		}
+
+		RangerResourceAccessInfo ret = new RangerResourceAccessInfo(request);
+
+		List<RangerPolicyEvaluator> tagPolicyEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
+		List<RangerPolicyEvaluator> resPolicyEvaluators = policyRepository.getPolicyEvaluators();
+
+		if (CollectionUtils.isNotEmpty(tagPolicyEvaluators)) {
+			List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+
+			if(CollectionUtils.isNotEmpty(tags)) {
+				for (RangerTag tag : tags) {
+					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
+
+					for (RangerPolicyEvaluator evaluator : tagPolicyEvaluators) {
+						evaluator.getResourceAccessInfo(tagEvalRequest, ret);
+					}
+				}
+			}
+		}
+
+		if(CollectionUtils.isNotEmpty(resPolicyEvaluators)) {
+			for (RangerPolicyEvaluator evaluator : resPolicyEvaluators) {
+				evaluator.getResourceAccessInfo(request, ret);
+			}
+		}
+
+		ret.getAllowedUsers().removeAll(ret.getDeniedUsers());
+		ret.getAllowedGroups().removeAll(ret.getDeniedGroups());
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.getResourceAccessInfo(" + request + "): " + ret);
+		}
+
+		return ret;
+	}
+
 	protected RangerAccessResult isAccessAllowedNoAudit(RangerAccessRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + ")");
@@ -513,7 +554,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ", " + result + ")");
 		}
 
-		List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators();
+		List<RangerPolicyEvaluator> evaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
 
 		if (CollectionUtils.isNotEmpty(evaluators)) {
 			List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());

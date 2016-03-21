@@ -61,8 +61,9 @@ public interface RangerPolicyEngine {
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 
+	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
+
 	boolean preCleanup();
 
 	void cleanup();
-
 }
