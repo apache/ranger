@@ -21,6 +21,7 @@ package org.apache.ranger.common;
 
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +66,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServiceUtil {
 	static final Logger LOG = Logger.getLogger(ServiceUtil.class);
+	private static final String REGEX_PREFIX_STR 	 = "regex:" ;
+	private static final int REGEX_PREFIX_STR_LENGTH = REGEX_PREFIX_STR.length() ;
 
 	static Map<String, Integer> mapServiceTypeToAssetType = new HashMap<String, Integer>();
 	static Map<String, Integer> mapAccessTypeToPermType   = new HashMap<String, Integer>();
@@ -1313,10 +1316,8 @@ public class ServiceUtil {
 	}
 	
    
-   public boolean isValidateHttpsAuthentication( String serviceName, HttpServletRequest request) {
-		  
+	public boolean isValidateHttpsAuthentication( String serviceName, HttpServletRequest request) {		  
 		boolean isValidAuthentication=false;
-//		boolean httpEnabled = PropertiesUtil.getBooleanProperty("http.enabled",true);
 		boolean httpEnabled = PropertiesUtil.getBooleanProperty("ranger.service.http.enabled",true);
 		X509Certificate[] certchain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
 		String ipAddress = request.getHeader("X-FORWARDED-FOR");  
@@ -1324,13 +1325,13 @@ public class ServiceUtil {
 			ipAddress = request.getRemoteAddr();
 		}
 		boolean isSecure = request.isSecure();
-		
+
 		if (serviceName == null || serviceName.isEmpty()) {			
 			LOG.error("ServiceName not provided");
 			throw restErrorUtil.createRESTException("Unauthorized access.",
 					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
 		}
-		
+
 		RangerService service = null;
 		try {
 			service = svcStore.getServiceByName(serviceName);
@@ -1362,50 +1363,140 @@ public class ServiceUtil {
 						+ " unable to get client certificate",
 						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
 			}
-		}		
-		String commonName = null;
-		if (certchain != null) {
-			X509Certificate clientCert = certchain[0];
-			String dn = clientCert.getSubjectX500Principal().getName();
-			try {
-				LdapName ln = new LdapName(dn);
-				for (Rdn rdn : ln.getRdns()) {
-					if (rdn.getType().equalsIgnoreCase("CN")) {
-						commonName = rdn.getValue() + "";
-						break;
-					}
-				}
-				if (commonName == null) {
-					LOG.error("Unauthorized access. CName is null. serviceName=" + serviceName);
-					throw restErrorUtil.createRESTException(
-							"Unauthorized access - Unable to find Common Name from ["
-									+ dn + "]",
-							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-				}
-			} catch (InvalidNameException e) {
-				LOG.error("Invalid Common Name. CName=" + commonName + ", serviceName=" + serviceName, e);
-				throw restErrorUtil.createRESTException(
-						"Unauthorized access - Invalid Common Name",
-						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-			}
-		}		
-		if (commonName != null) {
 
+			// Check if common name is found in service config
 			Map<String, String> configMap = service.getConfigs();
 			String cnFromConfig = configMap.get("commonNameForCertificate");
-			if (cnFromConfig == null
-					|| !commonName.equalsIgnoreCase(cnFromConfig)) {
-				LOG.error("Unauthorized access. expected [" + cnFromConfig + "], found [" 
-					+ commonName + "], serviceName=" + serviceName);
-				throw restErrorUtil.createRESTException(
-						"Unauthorized access. expected [" + cnFromConfig
-								+ "], found [" + commonName + "]",
-						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+			if (cnFromConfig == null || "".equals(cnFromConfig.trim())) {
+				LOG.error("Unauthorized access. No common name for certificate set. Please check your service config");
+				throw restErrorUtil.createRESTException("Unauthorized access. No common name for certificate set. Please check your service config",
+						MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);		
 			}
+
+
+			String cnFromConfigForTest = cnFromConfig ;
+			boolean isRegEx = cnFromConfig.toLowerCase().startsWith(REGEX_PREFIX_STR) ;
+			if (isRegEx) {
+				cnFromConfigForTest = cnFromConfig.substring(REGEX_PREFIX_STR_LENGTH) ;
+			}
+
+			// Perform SAN validation
+			try {
+			    Collection<List<?>> subjectAltNames = certchain[0].getSubjectAlternativeNames();
+				if (subjectAltNames != null) {
+					for (List<?> sanItem : subjectAltNames) {
+						if (sanItem.size() == 2) {
+							Integer sanType = (Integer) sanItem.get(0);
+							String sanValue = (String) sanItem.get(1);
+							if ( (sanType == 2 || sanType == 7) && (matchNames(sanValue, cnFromConfigForTest,isRegEx)) ) {
+								if (LOG.isDebugEnabled()) LOG.debug("Client Cert verification successful, matched SAN:" + sanValue);
+								isValidAuthentication=true;
+								break;
+							}
+						}
+					}
+				}
+			} catch (Throwable e) {
+			    LOG.error("Unauthorized access. Error getting SAN from certificate", e);
+				throw restErrorUtil.createRESTException("Unauthorized access - Error getting SAN from client certificate", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);						
+			}
+
+			// Perform common name validation only if SAN validation did not succeed
+			if (!isValidAuthentication) {
+				String commonName = null;
+				if (certchain != null) {
+					X509Certificate clientCert = certchain[0];
+					String dn = clientCert.getSubjectX500Principal().getName();
+					try {
+						LdapName ln = new LdapName(dn);
+						for (Rdn rdn : ln.getRdns()) {
+							if (rdn.getType().equalsIgnoreCase("CN")) {
+								commonName = rdn.getValue() + "";
+								break;
+							}
+						}
+						if (commonName == null) {
+							LOG.error("Unauthorized access. CName is null. serviceName=" + serviceName);
+							throw restErrorUtil.createRESTException(
+									"Unauthorized access - Unable to find Common Name from ["
+											+ dn + "]",
+											MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+						}
+					} catch (InvalidNameException e) {
+						LOG.error("Invalid Common Name. CName=" + commonName + ", serviceName=" + serviceName, e);
+						throw restErrorUtil.createRESTException(
+								"Unauthorized access - Invalid Common Name",
+								MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+					}
+				}		
+				if (commonName != null) {
+					if (matchNames(commonName, cnFromConfigForTest,isRegEx)) {
+						if (LOG.isDebugEnabled()) LOG.debug("Client Cert verification successful, matched CN " + commonName + " with " + cnFromConfigForTest + ", wildcard match = " + isRegEx);
+						isValidAuthentication=true;
+					}
+
+					if (!isValidAuthentication) {
+						LOG.error("Unauthorized access. expected [" + cnFromConfigForTest + "], found [" 
+								+ commonName + "], serviceName=" + serviceName);
+						throw restErrorUtil.createRESTException(
+								"Unauthorized access. expected [" + cnFromConfigForTest
+								+ "], found [" + commonName + "]",
+								MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+					}
+				}
+			}
+		} else {
+			isValidAuthentication = true;  
 		}
-		isValidAuthentication=true;
 		return isValidAuthentication;
 	}
+   
+   private boolean matchNames(String target, String source, boolean wildcardMatch) {
+       boolean matched = false;
+       if(target != null && source != null) {
+           String names[] = (wildcardMatch ? new String[] { source } : source.split(","));
+           for (String n:names) {
+               
+               if (wildcardMatch) {
+                   if(LOG.isDebugEnabled()) LOG.debug("Wildcard Matching [" + target + "] with [" + n + "]");
+            	   if (wildcardMatch(target,n)) {
+            		   if(LOG.isDebugEnabled()) LOG.debug("Matched target:" + target + " with " + n);
+            		   matched = true;
+            		   break;
+            	   }            	               	   
+               } else {
+                   if(LOG.isDebugEnabled()) LOG.debug("Matching [" + target + "] with [" + n + "]");
+            	   if (target.equalsIgnoreCase(n)) {
+            		   if(LOG.isDebugEnabled()) LOG.debug("Matched target:" + target + " with " + n);
+            		   matched = true;
+            		   break;
+            	   }            	   
+               }
+           }
+       } else {
+    	   if(LOG.isDebugEnabled()) LOG.debug("source=[" + source + "],target=[" + target +"], returning false.");
+       }
+       return matched;
+   }
+   
+   private boolean matchNames(String target, String source) {
+	   return matchNames(target,source,false);
+   }   
+   
+   private boolean wildcardMatch(String target, String source) {
+	   boolean matched = false;
+	   if(target != null && source != null) {
+		   try {
+			   matched = target.matches(source);
+		   } catch (Throwable e) {
+			   LOG.error("Error doing wildcard match..", e);
+		   }
+	   } else {
+    	   if(LOG.isDebugEnabled()) LOG.debug("source=[" + source + "],target=[" + target +"], returning false.");
+       }
+	   return matched;
+   }
+   
 	
 	private Boolean toBooleanReplacePerm(boolean isReplacePermission) {
 		
