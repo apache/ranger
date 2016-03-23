@@ -115,6 +115,7 @@ sso_providerurl=$(get_prop 'sso_providerurl' $PROPFILE)
 sso_publickey=$(get_prop 'sso_publickey' $PROPFILE)
 sso_cookiename=$(get_prop 'sso_cookiename' $PROPFILE)
 sso_query_param_originalurl=$(get_prop 'sso_query_param_originalurl' $PROPFILE)
+RANGER_ADMIN_LOG_DIR=$(eval echo "$(get_prop 'RANGER_ADMIN_LOG_DIR' $PROPFILE)")
 
 DB_HOST="${db_host}"
 
@@ -1012,14 +1013,18 @@ setup_install_files(){
 		fi
 	fi
 
-	if [ ! -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
-	    log "[I] ${XAPOLICYMGR_DIR}/ews/logs folder"
-	    mkdir -p ${XAPOLICYMGR_DIR}/ews/logs
-	fi
-	if [ -d ${XAPOLICYMGR_DIR}/ews/logs ]; then
-          chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs
-          chown -R ${unix_user} ${XAPOLICYMGR_DIR}/ews/logs/*
-	fi
+	if [ -z "${RANGER_ADMIN_LOG_DIR}" ] || [ ${RANGER_ADMIN_LOG_DIR} == ${XAPOLICYMGR_DIR} ]; then 
+                RANGER_ADMIN_LOG_DIR=${XAPOLICYMGR_DIR}/ews/logs;
+        fi              
+        if [ ! -d ${RANGER_ADMIN_LOG_DIR} ]; then
+            log "[I] ${RANGER_ADMIN_LOG_DIR} Ranger Log folder"
+            mkdir -p ${RANGER_ADMIN_LOG_DIR}
+        fi
+        if [ -d ${RANGER_ADMIN_LOG_DIR} ]; then
+            chown -R ${unix_user} ${RANGER_ADMIN_LOG_DIR}
+        fi
+        echo "export RANGER_ADMIN_LOG_DIR=${RANGER_ADMIN_LOG_DIR}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-logdir.sh
+        chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-logdir.sh
 
 	log "[I] Setting up installation files and directory DONE";
 

@@ -47,8 +47,6 @@ if [ "${action}" == "START" ]; then
         	export PATH=$JAVA_HOME/bin:$PATH
 	fi
 
-        logdir=/var/log/ranger/usersync
-
 	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf"
 
     if [ -f $pidf ]; then
@@ -64,6 +62,11 @@ if [ "${action}" == "START" ]; then
 
 	cd ${cdir}
 	umask 0077
+	if [ -z "${logdir}" ]
+	then 
+	    logdir=${cdir}/logs
+	fi
+
 	nohup java -Dproc_rangerusersync -Dlog4j.configuration=file:/etc/ranger/usersync/conf/log4j.xml ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
 	echo $! >  ${pidf}
 	chown ranger ${pidf}

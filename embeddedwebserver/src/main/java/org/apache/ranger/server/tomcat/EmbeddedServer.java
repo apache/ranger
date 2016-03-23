@@ -69,7 +69,13 @@ public class EmbeddedServer {
 	
 	public void start() {
 		Tomcat server = new Tomcat();
-		
+
+		String logDir =  null;
+		logDir = getConfig("logdir");
+		if(logDir == null)
+		{
+			logDir = getConfig("kms.log.dir");
+		}		
 		String hostName = getConfig("ranger.service.host");
 		int serverPort = getIntConfig("ranger.service.http.port", 6181);
 		int sslPort = getIntConfig("ranger.service.https.port", -1);
@@ -120,9 +126,8 @@ public class EmbeddedServer {
 			
 		}
 		updateHttpConnectorAttribConfig(server);
-		File baseDir = new File(".");
 		
-		File logDirectory = new File(baseDir, "logs");
+		File logDirectory = new File(logDir);
 		if (!logDirectory.exists()) {
 			logDirectory.mkdirs();
 		}

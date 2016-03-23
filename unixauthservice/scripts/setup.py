@@ -26,6 +26,7 @@ from time import gmtime, strftime, localtime
 from xml import etree
 import shutil
 import pwd, grp
+globalDict = {}
 
 if (not 'JAVA_HOME' in os.environ):
 	print "ERROR: JAVA_HOME environment variable is not defined. Please define JAVA_HOME before running this script"
@@ -35,7 +36,7 @@ debugLevel = 1
 generateXML = 0
 installPropDirName = '.'
 pidFolderName = '/var/run/ranger'
-logFolderName = '/var/log/ranger'
+#logFolderName = '/var/log/ranger'
 initdDirName = '/etc/init.d'
 
 rangerBaseDirName = '/etc/ranger'
@@ -58,7 +59,7 @@ PROP2ALIASMAP = { 'ranger.usersync.ldap.ldapbindpassword':'ranger.usersync.ldap.
 
 installTemplateDirName = join(installPropDirName,'templates')
 confDistDirName = join(installPropDirName, confDistBaseDirName)
-ugsyncLogFolderName = join(logFolderName, 'usersync')
+#ugsyncLogFolderName = join(logFolderName, 'usersync')
 nativeAuthFolderName = join(installPropDirName, 'native')
 nativeAuthProgramName = join(nativeAuthFolderName, 'credValidator.uexe')
 usersyncBaseDirFullName = join(rangerBaseDirName, usersyncBaseDirName)
@@ -84,6 +85,26 @@ SYNC_SOURCE_LIST = [ SYNC_SOURCE_UNIX, SYNC_SOURCE_LDAP ]
 SYNC_LDAP_BIND_PASSWORD_KEY  = 'ranger.usersync.ldap.ldapbindpassword'
 credUpdateClassName =  'org.apache.ranger.credentialapi.buildks'
 #credUpdateClassName =  'com.hortonworks.credentialapi.buildks'
+ENV_LOGDIR_FILE = 'ranger-usersync-env-logdir.sh'
+
+
+RANGER_USERSYNC_HOME = os.getenv("RANGER_USERSYNC_HOME")
+if RANGER_USERSYNC_HOME is None:
+    RANGER_USERSYNC_HOME = os.getcwd()
+
+def populate_global_dict():
+    global globalDict
+    read_config_file = open(os.path.join(RANGER_USERSYNC_HOME,'install.properties'))
+    for each_line in read_config_file.read().split('\n') :
+        if len(each_line) == 0 : continue
+        if re.search('=', each_line):
+            key , value = each_line.strip().split("=",1)
+            key = key.strip()
+            if 'PASSWORD' in key:
+                jceks_file_path = os.path.join(RANGER_USERSYNC_HOME, 'jceks','ranger_db.jceks')
+                value = ''
+            value = value.strip()
+            globalDict[key] = value
 
 def archiveFile(originalFileName):
     archiveDir = dirname(originalFileName)
@@ -286,8 +307,21 @@ def createJavaKeystoreForSSL(fn,passwd):
 		sys.exit(1)
 	return ret
 
+def write_env_files(log_path):
+        final_path = "{0}/{1}".format(confBaseDirName,ENV_LOGDIR_FILE)
+        if not os.path.isfile(final_path):
+                print "Creating %s file" % ENV_LOGDIR_FILE
+        f = open(final_path, "w")
+        f.write("export logdir={0}".format(log_path))
+        f.close()
 
 def main():
+
+	populate_global_dict()
+	logFolderName = globalDict['logdir']
+	if logFolderName.lower() == "$pwd" or logFolderName == "" :
+                logFolderName = os.path.join(os.getcwd(),"logs")
+	ugsyncLogFolderName = logFolderName
 
 	dirList = [ rangerBaseDirName, usersyncBaseDirName, confFolderName, certFolderName ]
 	for dir in dirList:
@@ -325,6 +359,8 @@ def main():
 	mergeProps.update(modifiedInstallProps)
 
 	localLogFolderName = mergeProps['ranger.usersync.logdir']
+	if localLogFolderName.lower() == "$pwd" or localLogFolderName == "" :
+		localLogFolderName = logFolderName
 	if (not os.path.isdir(localLogFolderName)):
 		if (localLogFolderName != ugsyncLogFolderName):
 			os.symlink(ugsyncLogFolderName, localLogFolderName)
@@ -386,6 +422,7 @@ def main():
 	os.chown(ugsyncLogFolderName,ownerId,groupId)
 	os.chown(pidFolderName,ownerId,groupId)
 	os.chown(rangerBaseDirName,ownerId,groupId)
+	os.chown(usersyncBaseDirFullName,ownerId,groupId)
 
 	initializeInitD(ownerName)
 
@@ -447,5 +484,9 @@ def main():
 		os.chmod(nativeAuthProgramName, 04555)
 	else:
 		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (nativeAuthProgramName, "root", groupName)
+
+	write_env_files(logFolderName);
+        os.chown(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),ownerId,groupId)
+        os.chmod(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),0755)
 
 main()

@@ -47,18 +47,18 @@ if [ "$JAVA_HOME" != "" ]; then
 fi
 
 cd ${XAPOLICYMGR_EWS_DIR}
-if [ ! -d logs ]
+if [ -z "${RANGER_ADMIN_LOG_DIR}" ]
 then
-        mkdir logs
+	RANGER_ADMIN_LOG_DIR=${XAPOLICYMGR_EWS_DIR}/logs
 fi
 
 start() {
-	java -Dproc_rangeradmin ${JAVA_OPTS} -Dlogdir=${XAPOLICYMGR_EWS_DIR}/logs/ -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:$CLASSPATH" org.apache.ranger.server.tomcat.EmbeddedServer > logs/catalina.out 2>&1 &
+	java -Dproc_rangeradmin ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:$CLASSPATH" org.apache.ranger.server.tomcat.EmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1 &
 	echo "Apache Ranger Admin has started."
 }
 
 stop(){
-	java ${JAVA_OPTS} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:$CLASSPATH" org.apache.ranger.server.tomcat.StopEmbeddedServer > logs/catalina.out 2>&1
+	java ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:$CLASSPATH" org.apache.ranger.server.tomcat.StopEmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1
 	echo "Apache Ranger Admin has been stopped."
 
 }

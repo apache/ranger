@@ -83,6 +83,7 @@ sqlserver_core_file=$(get_prop 'sqlserver_core_file' $PROPFILE)
 sqlanywhere_core_file=$(get_prop 'sqlanywhere_core_file' $PROPFILE)
 cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFILE)")
 KMS_BLACKLIST_DECRYPT_EEK=$(get_prop 'KMS_BLACKLIST_DECRYPT_EEK' $PROPFILE)
+RANGER_KMS_LOG_DIR=$(eval echo "$(get_prop 'RANGER_KMS_LOG_DIR' $PROPFILE)")
 
 DB_HOST="${db_host}"
 
@@ -647,13 +648,18 @@ setup_install_files(){
 		fi
 	fi
 
-	if [ ! -d ${KMS_DIR}/ews/logs ]; then
-	    log "[I] ${KMS_DIR}/ews/logs folder"
-	    mkdir -p ${KMS_DIR}/ews/logs
-	fi
-	if [ -d ${KMS_DIR}/ews/logs ]; then
-	    chown -R ${unix_user} ${KMS_DIR}/ews/logs
-	fi
+    	if [ -z "${RANGER_KMS_LOG_DIR}" ] || [ ${RANGER_KMS_LOG_DIR} == ${KMS_DIR} ]; then
+        	RANGER_KMS_LOG_DIR=${KMS_DIR}/ews/logs;
+	fi	
+        if [ ! -d ${RANGER_KMS_LOG_DIR} ]; then
+            log "[I] ${RANGER_KMS_LOG_DIR} Ranger KMS Log folder"
+            mkdir -p ${RANGER_KMS_LOG_DIR}
+        fi
+        if [ -d ${RANGER_KMS_LOG_DIR} ]; then
+            chown -R ${unix_user} ${RANGER_KMS_LOG_DIR}
+        fi
+        echo "export RANGER_KMS_LOG_DIR=${RANGER_KMS_LOG_DIR}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-logdir.sh
+    	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-logdir.sh
 
 	log "[I] Setting up installation files and directory DONE";
 
