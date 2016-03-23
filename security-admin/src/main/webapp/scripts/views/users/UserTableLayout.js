@@ -35,6 +35,8 @@ define(function(require){
 	var XATableLayout	= require('views/common/XATableLayout');
 	var vUserInfo		= require('views/users/UserInfo');
 
+	var VXUser          = require('models/VXUser');
+
 	var UsertablelayoutTmpl = require('hbs!tmpl/users/UserTableLayout_tmpl');
 
 	var UserTableLayout = Backbone.Marionette.Layout.extend(
@@ -63,7 +65,8 @@ define(function(require){
 			visibilityDropdown		: '[data-id="visibilityDropdown"]',
 			activeStatusDropdown		: '[data-id="activeStatusDropdown"]',
 			activeStatusDiv		:'[data-id="activeStatusDiv"]',
-			addNewBtnDiv	: '[data-id="addNewBtnDiv"]'
+			addNewBtnDiv	: '[data-id="addNewBtnDiv"]',
+			deleteUser: '[data-id="deleteUserGroup"]'
     	},
 
 		/** ui events hash */
@@ -75,6 +78,7 @@ define(function(require){
 			events['click ' + this.ui.btnSave]  = 'onSave';
 			events['click ' + this.ui.visibilityDropdown +' li a']  = 'onVisibilityChange';
 			events['click ' + this.ui.activeStatusDropdown +' li a']  = 'onStatusChange';
+			events['click ' + this.ui.deleteUser] = 'onDeleteUser';
 			return events;
 		},
 
@@ -205,7 +209,9 @@ define(function(require){
 			this.renderUserListTable();
 			_.extend(this.collection.queryParams, XAUtil.getUserDataParams())
 			this.collection.fetch({
-				cache:true,
+				//cache:true,
+				reset: true,
+				cache: false
 //				data : XAUtil.getUserDataParams(),
 			}).done(function(){
 				if(!_.isString(that.ui.addNewGroup)){
@@ -225,7 +231,9 @@ define(function(require){
 			this.groupList.selectNone();
 			this.renderGroupListTable();
 			this.groupList.fetch({
-				cache:true
+				//cache:true,
+				reset:true,
+				cache: false
 			}).done(function(){
 				that.ui.addNewUser.hide();
 				that.ui.addNewGroup.show();
@@ -468,6 +476,83 @@ define(function(require){
 				}
 			};
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
+		},
+
+		onUserGroupDeleteSuccess: function(jsonUsers,collection){
+			_.each(jsonUsers.vXStrings,function(ob){
+				var model = _.find(collection.models, function(mo){
+					if(mo.get('name') === ob.value)
+						return mo;
+					});
+				collection.remove(model.get('id'));
+			});
+		},
+
+		onDeleteUser: function(e){
+
+			var that = this;
+			var collection = that.showUsers ? that.collection : that.groupList;
+			var selArr = [];
+			var message = '';
+			_.each(collection.selected,function(obj){
+				selArr.push(obj.get('name'));
+			});
+			var  vXStrings = [];
+			var jsonUsers  = {};
+			for(var i in selArr) {
+				var item = selArr[i];
+				vXStrings.push({
+					"value" : item,
+				});
+			}
+			jsonUsers.vXStrings = vXStrings;
+
+			var total_selected = jsonUsers.vXStrings.length;
+
+			if(total_selected == 1) {
+				message = 'Are you sure you want to delete '+(that.showUsers ? 'user':'group')+' \''+jsonUsers.vXStrings[0].value+'\'?';
+			}
+			else {
+				message = 'Are you sure you want to delete '+total_selected+' '+(that.showUsers ? 'users':'groups')+'?';
+			}
+			if(total_selected > 0){
+				XAUtil.confirmPopup({
+					msg: message,
+					callback: function(){
+						XAUtil.blockUI();
+						if(that.showUsers){
+							var model = new VXUser();
+							model.deleteUsers(jsonUsers,{
+								success: function(response,options){
+									XAUtil.blockUI('unblock');
+									that.onUserGroupDeleteSuccess(jsonUsers,collection);
+									XAUtil.notifySuccess('Success','User deleted successfully!');
+									that.collection.selected = {};
+								},
+								error:function(response,options){
+									XAUtil.blockUI('unblock');
+									XAUtil.notifyError('Error', 'Error deleting User!');
+								}
+							});
+						}
+						else {
+							var model = new VXGroup();
+							model.deleteGroups(jsonUsers,{
+								success: function(response){
+									XAUtil.blockUI('unblock');
+									that.onUserGroupDeleteSuccess(jsonUsers,collection);
+									XAUtil.notifySuccess('Success','Group deleted successfully!');
+									that.groupList.selected  = {};
+								},
+								error:function(response,options){
+									XAUtil.blockUI('unblock');
+									XAUtil.notifyError('Error', 'Error deleting Group!');
+								}
+							});
+						}
+					}
+				});
+			}
 		},
 		addVisualSearch : function(){
 			var that = this;
