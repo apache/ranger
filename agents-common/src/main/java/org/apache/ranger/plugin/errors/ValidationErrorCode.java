@@ -87,8 +87,9 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_POLICY_ITEM_ACCESS_TYPE_DENY(3023, "Currently deny access types are not supported. Access type is set to deny."),
     POLICY_VALIDATION_ERR_INVALID_RESOURCE_NO_COMPATIBLE_HIERARCHY_SINGLE(3024, "Invalid resources specified. {0} policy can specify values for the following resources: {1}"),
     POLICY_VALIDATION_ERR_INVALID_RESOURCE_MISSING_MANDATORY_SINGLE(3025, "Invalid resources specified. {0} policy must specify values for the following resources: {1}"),
-    POLICY_VALIDATION_ERR_POLICY_UPDATE_MOVE_SERVICE_NOT_ALLOWED(3026, "attempt to move policy id={0} from service={1} to service={2} is not allowed"),
-    POLICY_VALIDATION_ERR_POLICY_TYPE_CHANGE_NOT_ALLOWED(3027, "attempt to change type of policy id={0} from type={1} to type={2} is not allowed"),
+    POLICY_VALIDATION_ERR_MISSING_RESOURCE_LIST(3026, "Resource list was empty or contains null. At least one resource must be specified"),
+    POLICY_VALIDATION_ERR_POLICY_UPDATE_MOVE_SERVICE_NOT_ALLOWED(3027, "attempt to move policy id={0} from service={1} to service={2} is not allowed"),
+    POLICY_VALIDATION_ERR_POLICY_TYPE_CHANGE_NOT_ALLOWED(3028, "attempt to change type of policy id={0} from type={1} to type={2} is not allowed"),
     ;
 
 
