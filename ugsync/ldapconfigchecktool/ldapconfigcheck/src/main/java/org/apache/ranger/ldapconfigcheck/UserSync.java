@@ -183,7 +183,7 @@ public class UserSync {
                 userSearchResultEnum = ldapContext.search(userSBase,
                         userSFilter, userSearchControls);
                 while (userSearchResultEnum.hasMore()) {
-                    if (noOfUsers >= 1) {
+                    if (noOfUsers >= 5) {
                         break;
                     }
                     final SearchResult userEntry = userSearchResultEnum.next();
@@ -322,8 +322,13 @@ public class UserSync {
 
             HashMap<String, Integer> ouOccurences = new HashMap<>();
 
-            userSearchResultEnum = ldapContext.search(searchBase,
-                    extendedUserSearchFilter, userSearchControls);
+            if (userSearchBase == null || userSearchBase.isEmpty()) {
+            	userSearchResultEnum = ldapContext.search(searchBase,
+            			extendedUserSearchFilter, userSearchControls);
+            } else {
+            	userSearchResultEnum = ldapContext.search(userSearchBase,
+            			extendedUserSearchFilter, userSearchControls);
+            }
 
             noOfUsers = 0;
             while (userSearchResultEnum.hasMore()) {
@@ -388,7 +393,10 @@ public class UserSync {
                     }
                 }
             }
-            userSearchFilter = userNameAttribute + "=*";
+            
+            if (userSearchFilter == null || userSearchFilter.isEmpty()) {
+            	userSearchFilter = userNameAttribute + "=*";
+            }
 
             if (isOutputNeeded) {
                 installProps.println("SYNC_LDAP_USER_SEARCH_BASE=" + userSearchBase);
@@ -422,7 +430,7 @@ public class UserSync {
         int noOfUsers = 0;
         Attribute userNameAttr = null;
         //String groupName = null;
-        Attribute groupMemberAttr;
+        Attribute groupMemberAttr = null;
         NamingEnumeration<SearchResult> userSearchResultEnum = null;
         SearchControls userSearchControls = new SearchControls();
         userSearchControls.setSearchScope(config.getUserSearchScope());
@@ -433,6 +441,7 @@ public class UserSync {
         if (userGroupMemberName != null) {
             userSearchAttributes.add(userGroupMemberName);
         }
+        
         if (userSearchAttributes.size() > 0) {
             userSearchControls.setReturningAttributes(userSearchAttributes.toArray(
                     new String[userSearchAttributes.size()]));
@@ -507,7 +516,7 @@ public class UserSync {
 
                     Set<String> groups = new HashSet<>();
                     groupMemberAttr = attributes.get(userGroupMemberName);
-
+                    
                     if (groupMemberAttr != null) {
                         NamingEnumeration<?> groupEnum = groupMemberAttr.getAll();
                         while (groupEnum.hasMore()) {
@@ -599,7 +608,7 @@ public class UserSync {
 
         try {
 	    if (groupName == null || groupName.isEmpty()) {
-		groupSearchResultEnum = ldapContext.search(searchBase, null);
+	    	groupSearchResultEnum = ldapContext.search(searchBase, null);
 	    } else {
                 int baseIndex = groupName.indexOf(",");
             	groupBase = groupName.substring(baseIndex + 1);
@@ -694,9 +703,13 @@ public class UserSync {
 
         try {
             HashMap<String, Integer> ouOccurences = new HashMap<>();
-
-            groupSearchResultEnum = ldapContext.search(searchBase, extendedGroupSearchFilter,
+            if (groupSearchBase == null || groupSearchBase.isEmpty()) {
+            	groupSearchResultEnum = ldapContext.search(searchBase, extendedGroupSearchFilter,
                     groupSearchControls);
+            } else {
+            	groupSearchResultEnum = ldapContext.search(groupSearchBase, extendedGroupSearchFilter,
+                        groupSearchControls);
+            }
 
             while (groupSearchResultEnum.hasMore()) {
                 if (noOfGroups >= 20) {
@@ -759,7 +772,9 @@ public class UserSync {
                 }
             }
 
-            groupSearchFilter = groupNameAttrName + "=*";
+            if (groupSearchFilter == null || groupSearchFilter.isEmpty()) {
+            	groupSearchFilter = groupNameAttrName + "=*";
+            }
 
             installProps.println("SYNC_GROUP_SEARCH_BASE=" + groupSearchBase);
             installProps.println("SYNC_LDAP_GROUP_SEARCH_FILTER=" + groupSearchFilter);
