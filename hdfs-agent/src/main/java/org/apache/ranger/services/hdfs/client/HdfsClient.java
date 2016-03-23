@@ -28,6 +28,7 @@ import java.util.*;
 import javax.security.auth.Subject;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -75,31 +76,36 @@ public class HdfsClient extends BaseClient {
 			
 
 			UserGroupInformation.setConfiguration(conf);
-			
+
 			FileSystem fs = null ;
 			try {
 				fs = FileSystem.get(conf) ;
-				
-				FileStatus[] fileStats = fs.listStatus(new Path(baseDir)) ;
-				
+
+				Path basePath = new Path(baseDir);
+				FileStatus[] fileStats = fs.listStatus(basePath) ;
+
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("<== HdfsClient fileStatus : " + fileStats + " PathList :" + pathList) ;
 				}
-				
+
 				if (fileStats != null) {
-					for(FileStatus stat : fileStats) {
-						Path path = stat.getPath() ;
-						String pathComponent = path.getName() ;
-						String prefixedPath = dirPrefix + pathComponent;
-				        if ( pathList != null && pathList.contains(prefixedPath)) {
-				        	continue;
-				        }
-						if (filterRegEx == null) {
-							fileList.add(prefixedPath) ;
-						}
-						else if (FilenameUtils.wildcardMatch(pathComponent, fileMatching)) {
-							fileList.add(prefixedPath) ;
-						}
+					if (fs.exists(basePath) && ArrayUtils.isEmpty(fileStats))  {
+						fileList.add(basePath.toString()) ;
+					} else {
+						for(FileStatus stat : fileStats) {
+								Path path = stat.getPath() ;
+								String pathComponent = path.getName() ;
+								String prefixedPath = dirPrefix + pathComponent;
+						        if ( pathList != null && pathList.contains(prefixedPath)) {
+                                   continue;
+						        }
+								if (filterRegEx == null) {
+									fileList.add(prefixedPath) ;
+								}
+								else if (FilenameUtils.wildcardMatch(pathComponent, fileMatching)) {
+									fileList.add(prefixedPath) ;
+								}
+							}
 					}
 				}
 			} catch (UnknownHostException uhe) {
