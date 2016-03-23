@@ -1997,14 +1997,17 @@ public class ServiceDBStore implements ServiceStore {
 			xPolRes = daoMgr.getXXPolicyResource().create(xPolRes);
 
 			List<String> values = policyRes.getValues();
-			for(int i = 0; i < values.size(); i++) {
-				XXPolicyResourceMap xPolResMap = new XXPolicyResourceMap();
-				xPolResMap = (XXPolicyResourceMap) rangerAuditFields.populateAuditFields(xPolResMap, xPolRes);
-				xPolResMap.setResourceId(xPolRes.getId());
-				xPolResMap.setValue(values.get(i));
-				xPolResMap.setOrder(i);
-
-				xPolResMap = daoMgr.getXXPolicyResourceMap().create(xPolResMap);
+			if(CollectionUtils.isNotEmpty(values)){
+				for(int i = 0; i < values.size(); i++) {
+					if(values.get(i)!=null){
+						XXPolicyResourceMap xPolResMap = new XXPolicyResourceMap();
+						xPolResMap = (XXPolicyResourceMap) rangerAuditFields.populateAuditFields(xPolResMap, xPolRes);
+						xPolResMap.setResourceId(xPolRes.getId());
+						xPolResMap.setValue(values.get(i));
+						xPolResMap.setOrder(i);
+						xPolResMap = daoMgr.getXXPolicyResourceMap().create(xPolResMap);
+					}
+				}
 			}
 		}
 	}

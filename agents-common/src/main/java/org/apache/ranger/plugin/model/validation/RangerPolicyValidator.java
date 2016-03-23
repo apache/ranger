@@ -559,6 +559,28 @@ public class RangerPolicyValidator extends RangerValidator {
 		for (Map.Entry<String, RangerPolicyResource> entry : resourceMap.entrySet()) {
 			String name = entry.getKey();
 			RangerPolicyResource policyResource = entry.getValue();
+			if(policyResource != null && CollectionUtils.isNotEmpty(policyResource.getValues())){
+				Set<String> resources = new HashSet<String>(policyResource.getValues());
+				for (String aValue : resources) {
+					if (StringUtils.isBlank(aValue)) {
+						policyResource.getValues().remove(aValue);
+					}
+				}
+			}
+			if(CollectionUtils.isEmpty(policyResource.getValues())){
+				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_RESOURCE_LIST;
+				if(LOG.isDebugEnabled()) {
+					LOG.debug(String.format("Resource list was empty or contains null: value[%s], resource-name[%s], service-def-name[%s]", policyResource.getValues(), name, serviceDef.getName()));
+				}
+				failures.add(new ValidationFailureDetailsBuilder()
+					.field("resource-values")
+					.subField(name)
+					.isMissing()
+					.becauseOf(error.getMessage(name))
+					.errorCode(error.getErrorCode())
+					.build());
+				valid=false;
+			}
 			if (validationRegExMap.containsKey(name) && policyResource != null && CollectionUtils.isNotEmpty(policyResource.getValues())) {
 				String regEx = validationRegExMap.get(name);
 				for (String aValue : policyResource.getValues()) {

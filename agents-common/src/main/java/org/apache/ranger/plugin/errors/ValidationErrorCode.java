@@ -87,6 +87,7 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_POLICY_ITEM_ACCESS_TYPE_DENY(3023, "Currently deny access types are not supported. Access type is set to deny."),
     POLICY_VALIDATION_ERR_INVALID_RESOURCE_NO_COMPATIBLE_HIERARCHY_SINGLE(3024, "Invalid resources specified. {0} policy can specify values for the following resources: {1}"),
     POLICY_VALIDATION_ERR_INVALID_RESOURCE_MISSING_MANDATORY_SINGLE(3025, "Invalid resources specified. {0} policy must specify values for the following resources: {1}"),
+    POLICY_VALIDATION_ERR_MISSING_RESOURCE_LIST(3026, "Resource list was empty or contains null. At least one resource must be specified"),
     ;
 
 
