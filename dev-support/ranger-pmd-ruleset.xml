@@ -28,7 +28,6 @@
 	<exclude name="AvoidBranchingStatementAsLastInLoop" />
 	<exclude name="AvoidThreadGroup" />
 	<exclude name="AvoidUsingHardCodedIP" />
-	<exclude name="BooleanInstantiation" />
 	<exclude name="ClassCastExceptionWithToArray" />
 	<exclude name="CollapsibleIfStatements" />
 	<exclude name="DoubleCheckedLocking" />

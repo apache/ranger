@@ -571,6 +571,6 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		this.setResourceName(null);		
 		this.setRepositoryType(null);		
 		this.setVersion(null);
-		this.setIsRecursive(new Boolean(null));
+		this.setIsRecursive(Boolean.FALSE);
 	}
 }
