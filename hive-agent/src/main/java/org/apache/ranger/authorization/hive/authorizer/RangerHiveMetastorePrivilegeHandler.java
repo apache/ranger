@@ -363,7 +363,7 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
         }
     }
 
-    public void onInsert(InsertEvent insertEvent) throws org.apache.hadoop.hive.metastore.api.MetaException {
+    public void onInsert(InsertEvent insertEvent) throws MetaException {
         GrantRevokeRequest request = createGrantRevokeRequest(insertEvent.getDb(),
                 insertEvent.getTable(), null);
         RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
