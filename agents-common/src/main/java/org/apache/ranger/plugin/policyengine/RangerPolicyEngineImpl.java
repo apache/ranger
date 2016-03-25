@@ -48,7 +48,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	private final RangerPolicyRepository policyRepository;
 	private final RangerPolicyRepository tagPolicyRepository;
-	
+
 	private List<RangerContextEnricher> allContextEnrichers;
 
 	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
@@ -148,7 +148,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return policyRepository.getPolicyVersion();
 	}
 
-	@Override
+    @Override
 	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
 		return new RangerAccessResult(this.getServiceName(), policyRepository.getServiceDef(), request);
 	}
@@ -386,6 +386,29 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		return ret;
 	}
+
+    @Override
+    public RangerPolicy getExactMatchPolicy(Map<String, RangerPolicyResource> resources) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyEngineImpl.getExactMatchPolicy(" + resources + ")");
+        }
+
+        RangerPolicy ret = null;
+
+        for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
+            if (evaluator.isCompleteMatch(resources)) {
+                ret = evaluator.getPolicy();
+
+                break;
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyEngineImpl.getExactMatchPolicy(" + resources + "): " + ret);
+        }
+
+        return ret;
+    }
 
 	@Override
 	public List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType) {

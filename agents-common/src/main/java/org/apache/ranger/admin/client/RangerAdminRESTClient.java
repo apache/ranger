@@ -138,10 +138,64 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 	}
 
+    @Override
+    public void removeAccess(GrantRevokeRequest request) throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerAdminRESTClient.removeAccess(" + request + ")");
+        }
+
+        WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_REMOVE_ACCESS + serviceName)
+                .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+        ClientResponse response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
+
+        if(response != null && response.getStatus() != 200) {
+            LOG.error("grantAccess() failed: HTTP status=" + response.getStatus());
+
+            if(response.getStatus() == 401) {
+                throw new AccessControlException();
+            }
+
+            throw new Exception("HTTP " + response.getStatus());
+        } else if(response == null) {
+            throw new Exception("unknown error during removeAccess. serviceName="  + serviceName);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerAdminRESTClient.removeAccess(" + request + ")");
+        }
+    }
+
+    @Override
+    public void alterAccess(AlterRequest request) throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerAdminRESTClient.alterAccess(" + request + ")");
+        }
+
+        WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_ALTER_ACCESS + serviceName)
+                .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+        ClientResponse response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
+
+        if(response != null && response.getStatus() != 200) {
+            LOG.error("alterAccess() failed: HTTP status=" + response.getStatus());
+
+            if(response.getStatus() == 401) {
+                throw new AccessControlException();
+            }
+
+            throw new Exception("HTTP " + response.getStatus());
+        } else if(response == null) {
+            throw new Exception("unknown error during grantAccess. serviceName="  + serviceName);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerAdminRESTClient.alterAccess(" + request + ")");
+        }
+    }
+
 	@Override
 	public void revokeAccess(GrantRevokeRequest request) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.revokeAccess(" + request + ")");
+			LOG.debug("==> RangerAdminRESTClient.removeAccess(" + request + ")");
 		}
 
 		WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_REVOKE_ACCESS + serviceName)

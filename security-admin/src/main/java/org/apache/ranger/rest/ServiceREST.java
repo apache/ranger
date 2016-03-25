@@ -19,11 +19,7 @@
 
 package org.apache.ranger.rest;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -77,6 +73,7 @@ import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.util.AlterRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -830,22 +827,12 @@ public class ServiceREST {
 				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.grantAccess(serviceName=" + serviceName + ")");
 				}
-
-				String               userName   = grantRequest.getGrantor();
-				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
-				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
-
-				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 	
-				if(!isAdmin) {
-					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
-				}
-	
-				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+				RangerPolicy policy = getPolicy(serviceName, grantRequest);
 
 				if(policy != null) {
-					boolean policyUpdated = false;
-					policyUpdated = ServiceRESTUtil.processGrantRequest(policy, grantRequest);
+					boolean policyUpdated =
+                            ServiceRESTUtil.processGrantRequest(policy, grantRequest);
 
 					if(policyUpdated) {
 						svcStore.updatePolicy(policy);
@@ -859,19 +846,10 @@ public class ServiceREST {
 					policy.setName("grant-" + System.currentTimeMillis()); // TODO: better policy name
 					policy.setDescription("created by grant");
 					policy.setIsAuditEnabled(grantRequest.getEnableAudit());
-					policy.setCreatedBy(userName);
+					policy.setCreatedBy(grantRequest.getGrantor());
 		
-					Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
-					Set<String>                       resourceNames   = resource.getKeys();
-		
-					if(! CollectionUtils.isEmpty(resourceNames)) {
-						for(String resourceName : resourceNames) {
-							RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
-							policyResource.setIsRecursive(grantRequest.getIsRecursive());
-	
-							policyResources.put(resourceName, policyResource);
-						}
-					}
+					Map<String, RangerPolicyResource> policyResources =
+						buildPolicyResources(grantRequest.getResources());
 					policy.setResources(policyResources);
 
 					RangerPolicyItem policyItem = new RangerPolicyItem();
@@ -908,6 +886,52 @@ public class ServiceREST {
 		return ret;
 	}
 
+    @POST
+    @Path("/services/remove/{serviceName}")
+    @Produces({ "application/json", "application/xml" })
+    public RESTResponse removeAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest grantRequest, @Context HttpServletRequest request) throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> ServiceREST.removeAccess(" + serviceName + ", " + grantRequest + ")");
+        }
+
+        RESTResponse     ret  = new RESTResponse();
+        RangerPerfTracer perf = null;
+
+        if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
+
+            try {
+                if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                    perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.grantAccess(serviceName=" + serviceName + ")");
+                }
+
+                RangerPolicy policy = getPolicy(serviceName, grantRequest);
+
+                if(policy != null) {
+                    svcStore.deletePolicy(policy.getId());
+                } else {
+                    // Do not fail hard: just log a warning
+                    LOG.warn("processRemoveRequest processing failed: matching policy for " + grantRequest + " of " + serviceName + "can not be found");
+                }
+            } catch(WebApplicationException excp) {
+                // Do not fail hard: just log a warning
+                LOG.warn("processRemoveRequest processing failed: matching policy for " + grantRequest + " of " + serviceName + "can not be found");
+            } catch(Throwable excp) {
+                // Do not fail hard: just log a warning
+                LOG.warn("processRemoveRequest processing failed: matching policy for " + grantRequest + " of " + serviceName + "can not be found");
+            } finally {
+                RangerPerfTracer.log(perf);
+            }
+
+            ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== ServiceREST.grantAccess(" + serviceName + ", " + grantRequest + "): " + ret);
+        }
+
+        return ret;
+    }
+
 	@POST
 	@Path("/services/revoke/{serviceName}")
 	@Produces({ "application/json", "application/xml" })
@@ -926,17 +950,7 @@ public class ServiceREST {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
 				}
 
-				String               userName   = revokeRequest.getGrantor();
-				Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
-				RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
-
-				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-				
-				if(!isAdmin) {
-					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
-				}
-	
-				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+				RangerPolicy policy = getPolicy(serviceName, revokeRequest);
 				
 				if(policy != null) {
 					boolean policyUpdated = false;
@@ -966,6 +980,67 @@ public class ServiceREST {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.revokeAccess(" + serviceName + ", " + revokeRequest + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@POST
+	@Path("/services/alter/{serviceName}")
+	@Produces({ "application/json", "application/xml" })
+	public RESTResponse alterAccess(@PathParam("serviceName") String serviceName, AlterRequest alterRequest, @Context HttpServletRequest request) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.alterAccess(" + serviceName + ", " + alterRequest + ")");
+		}
+
+		RESTResponse     ret  = new RESTResponse();
+		RangerPerfTracer perf = null;
+
+		if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
+
+			try {
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
+				}
+
+				RangerPolicy policy = getOldPolicy(serviceName, alterRequest);
+				
+				if(policy != null) {
+					Map<String, List<String>> newResources   = alterRequest.getNewResources();
+					Map<String, RangerPolicyResource> policyResources = new HashMap<>();
+					Set<String>                       resourceNames   = newResources.keySet();
+
+					if(! CollectionUtils.isEmpty(resourceNames)) {
+						for(String resourceName : resourceNames) {
+							RangerPolicyResource policyResource =
+								new RangerPolicyResource(newResources.get(resourceName), false, true);
+							policyResource.setIsRecursive(alterRequest.getIsRecursive());
+
+							policyResources.put(resourceName, policyResource);
+						}
+					}
+					policy.setResources(policyResources);
+					svcStore.updatePolicy(policy);
+				} else {
+					Map<String, List<String>> oldResources = alterRequest.getOldResources();
+					LOG.error("alterAccess(" + serviceName + ", " + alterRequest + ") failed with no matching resource of " + oldResources);
+					throw restErrorUtil.createRESTException("No matching resource for " + oldResources + " exists");
+				}
+			} catch(WebApplicationException excp) {
+				throw excp;
+			} catch(Throwable excp) {
+				LOG.error("revokeAccess(" + serviceName + ", " + alterRequest + ") failed", excp);
+	
+				throw restErrorUtil.createRESTException(excp.getMessage());
+			} finally {
+				RangerPerfTracer.log(perf);
+			}
+	
+			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.revokeAccess(" + serviceName + ", " + alterRequest + "): " + ret);
 		}
 
 		return ret;
@@ -1561,6 +1636,26 @@ public class ServiceREST {
 		return ret;
 	}
 
+	private RangerPolicy getExactMatchPolicyForResources(String serviceName, Map<String, RangerPolicyResource> resources) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resources + ")");
+		}
+
+        RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
+		RangerPolicy ret = policyEngine != null ? policyEngine.getExactMatchPolicy(resources) : null;
+
+		if(ret != null) {
+			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
+			ret = svcStore.getPolicy(ret.getId());
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resources + "): " + ret);
+		}
+
+		return ret;
+	}
+
 	@GET
 	@Path("/policies/eventTime")
 	@Produces({ "application/json", "application/xml" })
@@ -1787,6 +1882,103 @@ public class ServiceREST {
 		RangerPolicyEngine ret = RangerPolicyEngineCache.getInstance().getPolicyEngine(serviceName, svcStore);
 
 		return ret;
+	}
+
+	private Map<String, RangerPolicyResource> buildPolicyResources(Map<String, List<String>> resources) {
+		Map<String, RangerPolicyResource> ret = new HashMap();
+		Iterator<Map.Entry<String, List<String>>> it = resources.entrySet().iterator();
+		while (it.hasNext()) {
+		Map.Entry<String, List<String>> entry = it.next();
+		// In RangerDefaultResourceMatcher.isExactMatch, only values of RangerPolicyResource
+		// are comapred so we are ok to pass null as isExclusve and isRecursive here
+		ret.put(entry.getKey(), new RangerPolicyResource(entry.getValue(), null, null));
+		}
+		return ret;
+	}
+
+	private RangerPolicy getPolicy(String serviceName, GrantRevokeRequest request) throws Exception {
+		String               userName   = request.getGrantor();
+		Set<String>          userGroups = userMgr.getGroupsForUser(userName);
+		Map<String, List<String>> resources = request.getResources();
+		boolean isSingleResource = true;
+		Iterator<Map.Entry<String, List<String>>> it = resources.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, List<String>> entry = it.next();
+			if (entry.getValue() == null || entry.getValue().size() != 1) {
+				isSingleResource = false;
+				break;
+			}
+		}
+		RangerPolicy policy;
+		if (isSingleResource) {
+			HashMap<String, String> singleResources = new HashMap();
+			it = resources.entrySet().iterator();
+             		while (it.hasNext()) {
+				Map.Entry<String, List<String>> entry = it.next();
+				singleResources.put(entry.getKey(), entry.getValue().get(0));
+            		}
+			RangerAccessResource resource = new RangerAccessResourceImpl(singleResources);
+
+			boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+
+			if (!isAdmin) {
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+			}
+
+			policy = getExactMatchPolicyForResource(serviceName, resource);
+		} else {
+			// multiple resources per resource key
+			Map<String, RangerPolicyResource> policyResources = buildPolicyResources(resources);
+			boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, policyResources);
+			if (!isAdmin) {
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+			}
+			policy = getExactMatchPolicyForResources(serviceName, policyResources);
+		}
+		return policy;
+	}
+
+	private RangerPolicy getOldPolicy(String serviceName, AlterRequest request) throws Exception
+	{
+		String               userName   = request.getGrantor();
+		Set<String>          userGroups = userMgr.getGroupsForUser(userName);
+		Map<String, List<String>> oldResources = request.getOldResources();
+		boolean isSingleResource = true;
+		Iterator<Map.Entry<String, List<String>>> it = oldResources.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, List<String>> entry = it.next();
+			if (entry.getValue() == null || entry.getValue().size() != 1) {
+				isSingleResource = false;
+				break;
+			}
+		}
+		RangerPolicy policy;
+		if (isSingleResource) {
+			HashMap<String, String> singleResources = new HashMap();
+			it = oldResources.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry<String, List<String>> entry = it.next();
+				singleResources.put(entry.getKey(), entry.getValue().get(0));
+			}
+			RangerAccessResource resource = new RangerAccessResourceImpl(singleResources);
+
+			boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+
+			if (!isAdmin) {
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+			}
+
+			policy = getExactMatchPolicyForResource(serviceName, resource);
+		} else {
+			// multiple resources per resource key
+			Map<String, RangerPolicyResource> policyResources = buildPolicyResources(oldResources);
+			boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, policyResources);
+			if (!isAdmin) {
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+			}
+			policy = getExactMatchPolicyForResources(serviceName, policyResources);
+		}
+		return policy;
 	}
 
 	private RangerPolicyEngine getPolicyEngine(String serviceName) throws Exception {

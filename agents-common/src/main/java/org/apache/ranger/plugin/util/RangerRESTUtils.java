@@ -39,6 +39,8 @@ public class RangerRESTUtils {
 	public static final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
 	public static final String REST_URL_SERVICE_GRANT_ACCESS              = "/service/plugins/services/grant/";
 	public static final String REST_URL_SERVICE_REVOKE_ACCESS             = "/service/plugins/services/revoke/";
+    public static final String REST_URL_SERVICE_ALTER_ACCESS              = "/service/plugins/services/alter/";
+    public static final String REST_URL_SERVICE_REMOVE_ACCESS              = "/service/plugins/services/remove/";
 
 	public static final String REST_URL_GET_SERVICE_TAGS_IF_UPDATED = "/service/tags/download/";
 	public static final String SERVICE_NAME_PARAM = "serviceName";
@@ -97,6 +99,18 @@ public class RangerRESTUtils {
 		
 		return url;
 	}
+
+    public String getUrlForAlterAccess(String baseUrl, String serviceName) {
+        String url = baseUrl + REST_URL_SERVICE_ALTER_ACCESS + serviceName;
+
+        return url;
+    }
+
+    public String getUrlForRemoveAccess(String baseUrl, String serviceName) {
+        String url = baseUrl + REST_URL_SERVICE_REMOVE_ACCESS + serviceName;
+
+        return url;
+    }
 
     public String getPluginId(String serviceName, String appId) {
         String hostName = null;

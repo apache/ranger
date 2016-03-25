@@ -19,9 +19,7 @@
 
 package org.apache.ranger.plugin.service;
 
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -32,6 +30,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.util.AlterRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -238,6 +237,58 @@ public class RangerBasePlugin {
 		}
 	}
 
+    public void alterAccess(AlterRequest request, RangerAccessResultProcessor resultProcessor)
+            throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerAdminRESTClient.alterAccess(" + request + ")");
+        }
+
+        PolicyRefresher   refresher = this.refresher;
+        RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+        boolean isSuccess = false;
+
+        try {
+            if (admin == null) {
+                throw new Exception("ranger-admin client is null");
+            }
+
+            admin.alterAccess(request);
+            isSuccess = true;
+        } finally {
+            auditAlter(request, isSuccess, resultProcessor);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerAdminRESTClient.revokeAccess(" + request + ")");
+        }
+    }
+
+    public void removeAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerAdminRESTClient.removeAccess(" + request + ")");
+        }
+
+        PolicyRefresher   refresher = this.refresher;
+        RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+        boolean           isSuccess = false;
+
+        try {
+            if(admin == null) {
+                throw new Exception("ranger-admin client is null");
+            }
+
+            admin.removeAccess(request);
+
+            isSuccess = true;
+        } finally {
+            auditGrantRevoke(request, "remove", isSuccess, resultProcessor);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerAdminRESTClient.grantAccess(" + request + ")");
+        }
+    }
+
 	public static RangerAdminClient createAdminClient(String rangerServiceName, String applicationId, String propertyPrefix) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + ")");
@@ -281,32 +332,94 @@ public class RangerBasePlugin {
 	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
 		if(request != null && resultProcessor != null) {
 			RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
-	
-			accessRequest.setResource(new RangerAccessResourceImpl(request.getResource()));
-			accessRequest.setUser(request.getGrantor());
-			accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
-			accessRequest.setAction(action);
-			accessRequest.setClientIPAddress(request.getClientIPAddress());
-			accessRequest.setClientType(request.getClientType());
-			accessRequest.setRequestData(request.getRequestData());
-			accessRequest.setSessionId(request.getSessionId());
 
-			// call isAccessAllowed() to determine if audit is enabled or not
-			RangerAccessResult accessResult = isAccessAllowed(accessRequest, null);
+            Iterator it = request.getResources().entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, List<String>> entry = (Map.Entry) it.next();
+                String key = entry.getKey();
+                List<String> values = entry.getValue();
+                for (String value : values) {
+                    HashMap<String, String> resource = new HashMap();
+                    resource.put(key, value);
+                    accessRequest.setResource(new RangerAccessResourceImpl(resource));
+                    accessRequest.setUser(request.getGrantor());
+                    accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
+                    accessRequest.setAction(action);
+                    accessRequest.setClientIPAddress(request.getClientIPAddress());
+                    accessRequest.setClientType(request.getClientType());
+                    accessRequest.setRequestData(request.getRequestData());
+                    accessRequest.setSessionId(request.getSessionId());
 
-			if(accessResult != null && accessResult.getIsAudited()) {
-				accessRequest.setAccessType(action);
-				accessResult.setIsAllowed(isSuccess);
+                    // call isAccessAllowed() to determine if audit is enabled or not
+                    RangerAccessResult accessResult = isAccessAllowed(accessRequest, null);
 
-				if(! isSuccess) {
-					accessResult.setPolicyId(-1);
-				}
+                    if (accessResult != null && accessResult.getIsAudited()) {
+                        accessRequest.setAccessType(action);
+                        accessResult.setIsAllowed(isSuccess);
 
-				resultProcessor.processResult(accessResult);
-			}
+                        if (!isSuccess) {
+                            accessResult.setPolicyId(-1);
+                        }
+
+                        resultProcessor.processResult(accessResult);
+                    }
+                }
+            }
 		}
 	}
-	
+
+    private void auditAlter(AlterRequest request, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
+        if(request != null && resultProcessor != null) {
+            RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
+            final String action = "alter";
+            Map<String, List<String>> combinedResources = new HashMap(request.getOldResources());
+            Iterator it = request.getNewResources().entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, List<String>> entry = (Map.Entry) it.next();
+                List<String> oldValues = combinedResources.get(entry.getKey());
+                if (oldValues == null)
+                    combinedResources.put(entry.getKey(), entry.getValue());
+                else {
+                    oldValues.addAll(entry.getValue());
+                    combinedResources.put(entry.getKey(), oldValues);
+                }
+            }
+
+            it = combinedResources.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, List<String>> entry = (Map.Entry) it.next();
+                String key = entry.getKey();
+                List<String> values = entry.getValue();
+                for (String value : values) {
+                    HashMap<String, String> resource = new HashMap();
+                    resource.put(key, value);
+                    accessRequest.setResource(new RangerAccessResourceImpl(resource));
+                    accessRequest.setUser(request.getGrantor());
+                    accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
+                    accessRequest.setAction(action);
+                    accessRequest.setClientIPAddress(request.getClientIPAddress());
+                    accessRequest.setClientType(request.getClientType());
+                    accessRequest.setRequestData(request.getRequestData());
+                    accessRequest.setSessionId(request.getSessionId());
+
+                    // call isAccessAllowed() to determine if audit is enabled or not
+                    RangerAccessResult accessResult = isAccessAllowed(accessRequest, null);
+
+                    if (accessResult != null && accessResult.getIsAudited()) {
+                        accessRequest.setAccessType(action);
+                        accessResult.setIsAllowed(isSuccess);
+
+                        if (!isSuccess) {
+                            accessResult.setPolicyId(-1);
+                        }
+
+                        resultProcessor.processResult(accessResult);
+                    }
+                }
+            }
+        }
+    }
+
 	public boolean logErrorMessage(String message) {
 		LogHistory log = logHistoryList.get(message);
 		if (log == null) {

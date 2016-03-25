@@ -42,6 +42,8 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<security:http pattern="/service/plugins/policies/download/*" security="none"/>
 	<security:http pattern="/service/plugins/services/grant/*" security="none"/>
 	<security:http pattern="/service/plugins/services/revoke/*" security="none"/>
+	<security:http pattern="/service/plugins/services/alter/*" security="none"/>
+	<security:http pattern="/service/plugins/services/remove/*" security="none"/>
 	<security:http pattern="/service/tags/download/*" security="none"/>
 
 	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">

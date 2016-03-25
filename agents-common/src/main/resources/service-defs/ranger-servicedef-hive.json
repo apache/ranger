@@ -81,6 +81,25 @@
 			"uiHint":"",
 			"label": "Hive Column",
 			"description": "Hive Column"
+		},
+
+		{
+			"itemId": 5,
+			"name": "index",
+			"type": "string",
+			"level": 30,
+			"parent": "table",
+			"mandatory": false,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Hive Index",
+			"description": "Hive Index"
 		}
 	],
 

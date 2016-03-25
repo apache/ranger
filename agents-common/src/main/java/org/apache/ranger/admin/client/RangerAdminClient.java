@@ -20,6 +20,7 @@
  package org.apache.ranger.admin.client;
 
 
+import org.apache.ranger.plugin.util.AlterRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -35,6 +36,10 @@ public interface RangerAdminClient {
 	void grantAccess(GrantRevokeRequest request) throws Exception;
 
 	void revokeAccess(GrantRevokeRequest request) throws Exception;
+
+    void alterAccess(AlterRequest request) throws Exception;
+
+    void removeAccess(GrantRevokeRequest request) throws Exception;
 
 	ServiceTags getServiceTagsIfUpdated(long lastKnownVersion) throws Exception;
 

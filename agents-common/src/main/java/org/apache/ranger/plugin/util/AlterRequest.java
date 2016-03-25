@@ -37,43 +37,38 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GrantRevokeRequest implements Serializable {
+// Request to alter resources but not privileges
+public class AlterRequest implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private String              grantor                    = null;
-	private Map<String, List<String>> resources            = null;
-	private Set<String>         users                      = null;
-	private Set<String>         groups                     = null;
-	private Set<String>         accessTypes                = null;
-	private Boolean             delegateAdmin              = Boolean.FALSE;
+	private Map<String, List<String>> oldResources         = null;
+	private Map<String, List<String>> newResources         = null;
+    private Boolean             delegateAdmin              = Boolean.FALSE;
 	private Boolean             enableAudit                = Boolean.TRUE;
 	private Boolean             replaceExistingPermissions = Boolean.FALSE;
-	private Boolean             isRecursive                = Boolean.FALSE;
+    private Boolean             isRecursive                = Boolean.FALSE;
 	private String              clientIPAddress            = null;
 	private String              clientType                 = null;
 	private String              requestData                = null;
 	private String              sessionId                  = null;
 
-	public GrantRevokeRequest() {
-		this(null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null);
+
+	public AlterRequest() {
+		this(null, null, null, null, null, null, null, null, null, null);
 	}
 
-	public GrantRevokeRequest(String grantor, Map<String, List<String>> resources, Set<String> users,
-                              Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin,
-                              Boolean enableAudit, Boolean replaceExistingPermissions,
-                              Boolean isRecursive, String clientIPAddress, String clientType,
-                              String requestData, String sessionId,
-                              String resourceUser, String[] resourceGroups, List<String> resourceLocations) {
+	public AlterRequest(String grantor, Map<String, String> oldResource, Map<String, String> newResource,
+                        Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions,
+                        Boolean isRecursive, String clientIPAddress, String clientType,
+                        String requestData) {
 		setGrantor(grantor);
-		setResources(resources);
-		setUsers(users);
-		setGroups(groups);
-		setAccessTypes(accessTypes);
-		setDelegateAdmin(delegateAdmin);
-		setEnableAudit(enableAudit);
+		setOldResource(oldResource);
+		setNewResource(newResource);
+        setDelegateAdmin(delegateAdmin);
+        setEnableAudit(enableAudit);
 		setReplaceExistingPermissions(replaceExistingPermissions);
-		setIsRecursive(isRecursive);
+        setIsRecursive(isRecursive);
 		setClientIPAddress(clientIPAddress);
 		setClientType(clientType);
 		setRequestData(requestData);
@@ -97,83 +92,29 @@ public class GrantRevokeRequest implements Serializable {
 	/**
 	 * @return the resource
 	 */
-	public Map<String, List<String>> getResources() {
-		return resources;
+	public Map<String, List<String>> getOldResources() {
+		return oldResources;
 	}
 
 	/**
-	 * @param resources the resource to set
+	 * @param resource the resource to set
 	 */
-	public void setResources(Map<String, List<String>> resources) {
-		this.resources = resources == null ? new HashMap<String, List<String>>() : resources;
-	}
-
-    public void setResource(Map<String, String> resource) {
-        resources = new HashMap<String, List<String>>();
-        Iterator<Map.Entry<String, String>> it = resource.entrySet().iterator();
-        while (it.hasNext()) {
-            List<String> values = new ArrayList();
-            Map.Entry<String, String> entry = it.next();
-            values.add(entry.getValue());
-            resources.put(entry.getKey(), values);
+	public void setOldResource(Map<String, String> resource) {
+        oldResources = new HashMap();
+        if (resource != null) {
+            Iterator<Map.Entry<String, String>> it = resource.entrySet().iterator();
+            while (it.hasNext()) {
+                List<String> values = new ArrayList();
+                Map.Entry<String, String> entry = it.next();
+                values.add(entry.getValue());
+                oldResources.put(entry.getKey(), values);
+            }
         }
+	}
+
+    public void setOldResources(Map<String, List<String>> resources) {
+        this.oldResources = resources == null ? new HashMap<String, List<String>>() : resources;
     }
-
-	/**
-	 * @return the users
-	 */
-	public Set<String> getUsers() {
-		return users;
-	}
-
-	/**
-	 * @param users the users to set
-	 */
-	public void setUsers(Set<String> users) {
-		this.users = users == null ? new HashSet<String>() : users;
-	}
-
-	/**
-	 * @return the groups
-	 */
-	public Set<String> getGroups() {
-		return groups;
-	}
-
-	/**
-	 * @param groups the groups to set
-	 */
-	public void setGroups(Set<String> groups) {
-		this.groups = groups == null ? new HashSet<String>() : groups;
-	}
-
-	/**
-	 * @return the accessTypes
-	 */
-	public Set<String> getAccessTypes() {
-		return accessTypes;
-	}
-
-	/**
-	 * @param accessTypes the accessTypes to set
-	 */
-	public void setAccessTypes(Set<String> accessTypes) {
-		this.accessTypes = accessTypes == null ? new HashSet<String>() : accessTypes;
-	}
-
-	/**
-	 * @return the delegateAdmin
-	 */
-	public Boolean getDelegateAdmin() {
-		return delegateAdmin;
-	}
-
-	/**
-	 * @param delegateAdmin the delegateAdmin to set
-	 */
-	public void setDelegateAdmin(Boolean delegateAdmin) {
-		this.delegateAdmin = delegateAdmin == null ? Boolean.FALSE : delegateAdmin;
-	}
 
 	/**
 	 * @return the enableAudit
@@ -273,6 +214,35 @@ public class GrantRevokeRequest implements Serializable {
 		this.sessionId = sessionId;
 	}
 
+    public Map<String, List<String>> getNewResources() {
+        return newResources;
+    }
+
+    public void setNewResource(Map<String, String> resource) {
+        newResources = new HashMap<>();
+        if (resource != null) {
+            Iterator<Map.Entry<String, String>> it = resource.entrySet().iterator();
+            while (it.hasNext()) {
+                List<String> values = new ArrayList();
+                Map.Entry<String, String> entry = it.next();
+                values.add(entry.getValue());
+                newResources.put(entry.getKey(), values);
+            }
+        }
+    }
+
+    public void setNewResources(Map<String, List<String>> resources) {
+        this.newResources = resources == null ? new HashMap<String, List<String>>() : resources;
+    }
+
+    public Boolean getDelegateAdmin() {
+        return delegateAdmin;
+    }
+
+    public void setDelegateAdmin(Boolean delegateAdmin) {
+        this.delegateAdmin = delegateAdmin;
+    }
+
     @Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -283,47 +253,25 @@ public class GrantRevokeRequest implements Serializable {
 	}
 
 	public StringBuilder toString(StringBuilder sb) {
-		sb.append("GrantRevokeRequest={");
+		sb.append("AlterRequest={");
 
 		sb.append("grantor={").append(grantor).append("} ");
 
-		sb.append("resource={");
-		if(resources != null) {
-			for(Map.Entry<String, List<String>> e : resources.entrySet()) {
-                Iterator<String> vitor = e.getValue().iterator();
-				sb.append(e.getKey()).append("=").append(vitor.next());
-                while (vitor.hasNext()) {
-                    sb.append(',');
-                    sb.append(vitor.next());
-                }
-                sb.append("; ");
+		sb.append("oldResource={");
+		if(oldResources != null) {
+			for(Map.Entry<String, List<String>> e : oldResources.entrySet()) {
+				sb.append(e.getKey()).append("=").append(e.getValue()).append("; ");
 			}
 		}
 		sb.append("} ");
 
-		sb.append("users={");
-		if(users != null) {
-			for(String user : users) {
-				sb.append(user).append(" ");
-			}
-		}
-		sb.append("} ");
-
-		sb.append("groups={");
-		if(groups != null) {
-			for(String group : groups) {
-				sb.append(group).append(" ");
-			}
-		}
-		sb.append("} ");
-
-		sb.append("accessTypes={");
-		if(accessTypes != null) {
-			for(String accessType : accessTypes) {
-				sb.append(accessType).append(" ");
-			}
-		}
-		sb.append("} ");
+        sb.append("newResource={");
+        if(newResources != null) {
+            for(Map.Entry<String, List<String>> e : newResources.entrySet()) {
+                sb.append(e.getKey()).append("=").append(e.getValue()).append("; ");
+            }
+        }
+        sb.append("} ");
 
 		sb.append("delegateAdmin={").append(delegateAdmin).append("} ");
 		sb.append("enableAudit={").append(enableAudit).append("} ");

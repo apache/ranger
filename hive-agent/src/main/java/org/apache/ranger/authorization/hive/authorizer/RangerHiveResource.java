@@ -29,6 +29,7 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 	public static final String KEY_TABLE    = "table";
 	public static final String KEY_UDF      = "udf";
 	public static final String KEY_COLUMN   = "column";
+    public static final String KEY_INDEX    = "index";
 
 	private HiveObjectType objectType = null;
 

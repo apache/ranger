@@ -176,6 +176,76 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		}
 	}
 
+    @Override
+    public void removeAccess(GrantRevokeRequest request) throws Exception {
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerAdminRESTClient.removeAccess(" + request + ")");
+        }
+
+        String url = _utils.getUrlForRemoveAccess(_baseUrl, _serviceName);
+        Response response = _client.target(url)
+                .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .get();
+        int httpResponseCode = response == null ? -1 : response.getStatus();
+
+        switch(httpResponseCode) {
+            case -1:
+                LOG.warn("Unexpected: Null response from policy server while removing access! Returning null!");
+                throw new Exception("unknown error!");
+            case 200:
+                LOG.debug("grantAccess() suceeded: HTTP status=" + httpResponseCode);
+                break;
+            case 401:
+                throw new AccessControlException();
+            default:
+                String body = response.readEntity(String.class);
+                String message = String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, url);
+                LOG.warn(message);
+                throw new Exception("HTTP status: " + httpResponseCode);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerAdminRESTClient.removeAccess(" + request + ")");
+        }
+    }
+
+    @Override
+    public void alterAccess(AlterRequest request) throws Exception {
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerAdminRESTClient.alterAccess(" + request + ")");
+        }
+
+        String url = _utils.getUrlForAlterAccess(_baseUrl, _serviceName);
+        Response response = _client.target(url)
+                .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .get();
+        int httpResponseCode = response == null ? -1 : response.getStatus();
+
+        switch(httpResponseCode) {
+            case -1:
+                LOG.warn("Unexpected: Null response from policy server while altering access! Returning null!");
+                throw new Exception("unknown error!");
+            case 200:
+                LOG.debug("grantAccess() suceeded: HTTP status=" + httpResponseCode);
+                break;
+            case 401:
+                throw new AccessControlException();
+            default:
+                String body = response.readEntity(String.class);
+                String message = String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, url);
+                LOG.warn(message);
+                throw new Exception("HTTP status: " + httpResponseCode);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerAdminRESTClient.alterAccess(" + request + ")");
+        }
+    }
+
 	@Override
 	public void revokeAccess(GrantRevokeRequest request) throws Exception {
 

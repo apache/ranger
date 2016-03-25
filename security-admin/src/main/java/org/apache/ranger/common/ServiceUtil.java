@@ -1046,7 +1046,11 @@ public class ServiceUtil {
 		if (vXPolicy.getUdfs() != null) {
 			toRangerResourceList(vXPolicy.getUdfs(), "udf", Boolean.FALSE, isRecursive, ret.getResources());
 		}
-		
+
+        if (vXPolicy.getIndices() != null) {
+            toRangerResourceList(vXPolicy.getIndices(), "index", Boolean.FALSE, isRecursive, ret.getResources());
+        }
+
 		if (vXPolicy.getTopologies() != null) {
 			toRangerResourceList(vXPolicy.getTopologies(), "topology", Boolean.FALSE, isRecursive, ret.getResources());
 		}

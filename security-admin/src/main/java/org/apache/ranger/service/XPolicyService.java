@@ -232,6 +232,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXResource.setColumnFamilies(vXPolicy.getColumnFamilies());
 		vXResource.setColumns(vXPolicy.getColumns());
 		vXResource.setUdfs(vXPolicy.getUdfs());
+        vXResource.setIndices(vXPolicy.getIndices());
 		vXResource.setAssetName(vXPolicy.getRepositoryName());
 		
 		int assetType = AppConstants.getEnumFor_AssetType(vXPolicy
@@ -701,6 +702,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		String tables = null;
 		String columns = null;
 		String udfs = null;
+        String indices = null;
 		String columnFamilies = null;
 		String topologies = null;
 		String services = null;
@@ -710,6 +712,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			tables = vXPolicy.getTables();
 			columns = vXPolicy.getColumns();
 			udfs = vXPolicy.getUdfs();
+            indices = vXPolicy.getIndices();
 			columnFamilies = vXPolicy.getColumnFamilies();
 			topologies = vXPolicy.getTopologies();
 			services = vXPolicy.getServices();
@@ -734,6 +737,9 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			if (!stringUtil.isEmpty(udfs)) {
 				resourceType = AppConstants.RESOURCE_UDF;
 			}
+            if (!stringUtil.isEmpty(indices)) {
+                resourceType = AppConstants.RESOURCE_INDEX;
+            }
 		} else if (!stringUtil.isEmpty(tables)) {
 			resourceType = AppConstants.RESOURCE_TABLE;
 			if (!stringUtil.isEmptyOrWildcardAsterisk(columnFamilies)) {

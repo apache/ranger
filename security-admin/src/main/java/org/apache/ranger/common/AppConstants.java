@@ -157,11 +157,14 @@ public class AppConstants extends RangerCommonEnums {
 	 * RESOURCE_SERVICE_NAME is an element of enum ResourceType. Its value is "RESOURCE_SERVICE_NAME".
 	 */
 	public static final int RESOURCE_SERVICE_NAME = 10;
-
+    /**
+     * RESOURCE_INDEX is an element of enum ResourceType.
+     */
+    public static final int RESOURCE_INDEX = 11;
 	/**
 	 * Max value for enum ResourceType_MAX
 	 */
-	public static final int ResourceType_MAX = 10;
+	public static final int ResourceType_MAX = 11;
 
 
 	/***************************************************************

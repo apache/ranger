@@ -111,6 +111,12 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	 * UDFs
 	 */
 	protected String udfs;
+
+    /**
+     * Indices
+     */
+    protected String indices;
+
 	/**
 	 * Asset Name
 	 */
@@ -439,6 +445,23 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	public String getUdfs( ) {
 		return this.udfs;
 	}
+
+    /**
+     * This method sets the value to the member attribute <b>udfs</b>.
+     * You cannot set null to the attribute.
+     * @param indices Value to set member attribute <b>udfs</b>
+     */
+    public void setIndices( String indices ) {
+        this.indices = indices;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>udfs</b>
+     * @return String - value of member attribute <b>udfs</b>.
+     */
+    public String getIndices( ) {
+        return this.indices;
+    }
 
 	/**
 	 * This method sets the value to the member attribute <b>assetName</b>.

@@ -426,6 +426,7 @@ public class XResourceService extends
         if(vObj!=null && mObj!=null){
 		    super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
 		    mObj.setUdfs(vObj.getUdfs());
+            mObj.setIndices(vObj.getIndices());
 			XXPortalUser xXPortalUser= null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
@@ -453,6 +454,7 @@ public class XResourceService extends
         if(mObj!=null && vObj!=null){
             super.mapEntityToViewBean(vObj, mObj);
 		    vObj.setUdfs(mObj.getUdfs());
+            vObj.setIndices(mObj.getIndices());
 		    populateAssetProperties(vObj);
 			XXPortalUser xXPortalUser= null;
 			if(stringUtil.isEmpty(vObj.getOwner())){
@@ -984,7 +986,7 @@ public class XResourceService extends
 				int policyType = vObj.getAssetType();
 				if(policyType == AppConstants.ASSET_HDFS){
 					String[] ignoredAttribs = {"tableType", "columnType", "isEncrypt", "databases", 
-							"tables", "columnFamilies",  "columns", "udfs"};
+							"tables", "columnFamilies",  "columns", "udfs", "index"};
 					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
 						continue;
 					}
@@ -995,13 +997,13 @@ public class XResourceService extends
 					}
 				} else if(policyType == AppConstants.ASSET_HBASE){
 					String[] ignoredAttribs = {"name", "tableType", "columnType", "isRecursive", "databases", 
-							"udfs"};
+							"udfs", "index"};
 					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
 						continue;
 					}
 				} else if(policyType == AppConstants.ASSET_KNOX || policyType == AppConstants.ASSET_STORM){
 					String[] ignoredAttribs = {"name", "tableType", "columnType", "isEncrypt", "databases", 
-							"tables", "columnFamilies",  "columns", "udfs"};
+							"tables", "columnFamilies",  "columns", "udfs", "index"};
 					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
 						continue;
 					}

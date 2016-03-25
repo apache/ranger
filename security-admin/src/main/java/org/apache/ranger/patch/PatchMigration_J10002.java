@@ -357,6 +357,7 @@ public class PatchMigration_J10002 extends BaseLoader {
 			toRangerResourceList(xRes.getTables(), "table", isTableExcludes, Boolean.FALSE, resources);
 			toRangerResourceList(xRes.getColumns(), "column", isColumnExcludes, Boolean.FALSE, resources);
 			toRangerResourceList(xRes.getUdfs(), "udf", Boolean.FALSE, Boolean.FALSE, resources);
+            toRangerResourceList(xRes.getIndices(), "index", Boolean.FALSE, Boolean.FALSE, resources);
 		} else if (StringUtils.equalsIgnoreCase(serviceType, "knox")) {
 			toRangerResourceList(xRes.getTopologies(), "topology", Boolean.FALSE, Boolean.FALSE, resources);
 			toRangerResourceList(xRes.getServices(), "service", Boolean.FALSE, Boolean.FALSE, resources);

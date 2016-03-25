@@ -56,6 +56,7 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
 		mObj.setColumnFamilies( vObj.getColumnFamilies());
 		mObj.setColumns( vObj.getColumns());
 		mObj.setUdfs( vObj.getUdfs());
+        mObj.setIndices(vObj.getIndices());
 		mObj.setResourceStatus( vObj.getResourceStatus());
 		mObj.setTableType( vObj.getTableType());
 		mObj.setColumnType( vObj.getColumnType());
@@ -82,6 +83,7 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
 		vObj.setColumnFamilies( mObj.getColumnFamilies());
 		vObj.setColumns( mObj.getColumns());
 		vObj.setUdfs( mObj.getUdfs());
+        vObj.setIndices( mObj.getIndices());
 		vObj.setResourceStatus( mObj.getResourceStatus());
 		vObj.setTableType( mObj.getTableType());
 		vObj.setColumnType( mObj.getColumnType());

@@ -85,6 +85,10 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 * UDFs
 	 */
 	protected String udfs;
+    /**
+     * Indices
+     */
+    protected String indices;
 	/**
 	 * Table Type
 	 */
@@ -349,6 +353,26 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	public String getUdfs() {
 		return this.udfs;
 	}
+
+    /**
+     * This method sets the value to the member attribute <b>indices</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param indices
+     *            Value to set member attribute <b>udfs</b>
+     */
+    public void setIndices(String indices) {
+        this.indices = indices;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>indeices</b>
+     *
+     * @return String - value of member attribute <b>indices</b>.
+     */
+    public String getIndices() {
+        return this.indices;
+    }
 
 	/**
 	 * Returns the value for the member attribute <b>tableType</b>

@@ -199,6 +199,16 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 	@Column(name="RES_UDFS"   , length=10000)
 	protected String udfs;
 
+    /**
+     * Indices
+     * <ul>
+     * <li>The maximum length for this attribute is <b>10000</b>.
+     * </ul>
+     *
+     */
+    @Column(name="RES_INDICES"   , length=10000)
+    protected String indices;
+
 	/**
 	 * Resource Status
 	 * <ul>
@@ -516,6 +526,23 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 	public String getUdfs( ) {
 		return this.udfs;
 	}
+
+    /**
+     * This method sets the value to the member attribute <b>indices</b>.
+     * You cannot set null to the attribute.
+     * @param indices Value to set member attribute <b>indices</b>
+     */
+    public void setIndices( String indices ) {
+        this.indices = indices;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>indices</b>
+     * @return String - value of member attribute <b>indices</b>.
+     */
+    public String getIndices( ) {
+        return this.indices;
+    }
 
 	/**
 	 * This method sets the value to the member attribute <b>resourceStatus</b>.
