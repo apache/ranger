@@ -490,6 +490,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		xObj.setName(vObj.getName());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setDescription(vObj.getDescription());
+		xObj.setTransformer(vObj.getTransformer());
 		xObj.setDataMaskOptions(mapToJsonString(vObj.getDataMaskOptions()));
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
 		xObj.setRbKeyDescription(vObj.getRbKeyDescription());
@@ -503,6 +504,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		vObj.setName(xObj.getName());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setDescription(xObj.getDescription());
+		vObj.setTransformer(xObj.getTransformer());
 		vObj.setDataMaskOptions(jsonStringToMap(xObj.getDataMaskOptions()));
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setRbKeyDescription(xObj.getRbKeyDescription());

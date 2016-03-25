@@ -35,6 +35,7 @@
      <includes>
 	  <include>org.apache.ranger:ranger-hive-plugin-shim</include>
 	  <include>org.apache.ranger:ranger-plugin-classloader</include>
+	  <include>org.apache.ranger:ranger-hive-utils</include>
      </includes>
     </moduleSet>
     <moduleSet>

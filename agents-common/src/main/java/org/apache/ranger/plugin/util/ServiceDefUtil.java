@@ -24,6 +24,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 
@@ -41,6 +42,25 @@ public class ServiceDefUtil {
             boolean defaultValue = StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
             ret = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, defaultValue);
+        }
+
+        return ret;
+    }
+
+    public static RangerDataMaskTypeDef getDataMaskType(RangerServiceDef serviceDef, String typeName) {
+        RangerDataMaskTypeDef ret = null;
+
+        if(serviceDef != null && serviceDef.getDataMaskDef() != null) {
+            List<RangerDataMaskTypeDef> maskTypes = serviceDef.getDataMaskDef().getMaskTypes();
+
+            if(CollectionUtils.isNotEmpty(maskTypes)) {
+                for(RangerDataMaskTypeDef maskType : maskTypes) {
+                    if(StringUtils.equals(maskType.getName(), typeName)) {
+                        ret = maskType;
+                        break;
+                    }
+                }
+            }
         }
 
         return ret;

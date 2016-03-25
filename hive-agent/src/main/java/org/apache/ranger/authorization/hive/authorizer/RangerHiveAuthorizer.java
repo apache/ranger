@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,8 +55,10 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -68,6 +71,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class) ; 
 
 	private static final char COLUMN_SEP = ',';
+	private static final String MASK_TYPE_NULL     = "NULL";
+	private static final String MASK_TYPE_NONE     = "NONE";
+	private static final String MASK_TYPE_CONSTANT = "CONSTANT";
+	private static final String MASK_UDF_NAME      = "rangerUdfMask";
 
 	private static volatile RangerHivePlugin hivePlugin = null ;
 
@@ -462,22 +469,100 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 	@Override
 	public String getRowFilterExpression(String databaseName, String tableOrViewName) throws SemanticException {
-		return null;
-	}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> getRowFilterExpression(" + databaseName + ", " + tableOrViewName + ")");
+		}
 
-	@Override
-	public boolean needTransform() {
-		return false;
-	}
+		String ret = null;
 
-	@Override
-	public boolean needTransform(String databaseName, String tableOrViewName) {
-		return false;
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== getRowFilterExpression(" + databaseName + ", " + tableOrViewName + "): " + ret);
+		}
+
+		return ret;
 	}
 
 	@Override
 	public String getCellValueTransformer(String databaseName, String tableOrViewName, String columnName) throws SemanticException {
-		return columnName;
+		UserGroupInformation ugi = getCurrentUserGroupInfo();
+
+		if(ugi == null) {
+			throw new SemanticException("user information not available");
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> getCellValueTransformer(" + databaseName + ", " + tableOrViewName + ", " + columnName + ")");
+		}
+
+		String ret = columnName;
+
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+
+		try {
+			HiveAuthzContext        context        = null; // TODO: this should be provided as an argument to this method
+			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
+			String                  user           = ugi.getShortUserName();
+			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
+			HiveObjectType          objectType     = HiveObjectType.COLUMN;
+			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName, columnName);
+			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
+
+			RangerDataMaskResult result = hivePlugin.evalDataMaskPolicies(request, auditHandler);
+
+			if(result != null && result.isMaskEnabled()) {
+				String                maskType    = result.getMaskType();
+				RangerDataMaskTypeDef maskTypeDef = result.getMaskTypeDef();
+				String                transformer = maskTypeDef.getTransformer();
+				String                initParam   = "";
+
+				if(MapUtils.isNotEmpty(maskTypeDef.getDataMaskOptions())) {
+					initParam = maskTypeDef.getDataMaskOptions().get("initParam");
+
+					if(initParam == null) {
+						initParam = "";
+					}
+				}
+
+				if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NONE)) {
+					ret = columnName;
+				} else if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NULL)) {
+					ret = "NULL";
+				} else if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_CONSTANT)) {
+					String maskedValue = result.getMaskedValue();
+
+					ret = maskedValue == null ? "NULL" : maskedValue;
+				} else {
+					ret = MASK_UDF_NAME + "(" + columnName + ", '" + maskType + "', '" + transformer + "', '" + initParam + "')";
+				}
+
+				/*
+				String maskCondition = result.getMaskCondition();
+
+				if(StringUtils.isNotEmpty(maskCondition)) {
+					ret = "if(" + maskCondition + ", " + ret + ", " + columnName + ")";
+				}
+				*/
+			}
+		} finally {
+			auditHandler.flushAudit();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== getCellValueTransformer(" + databaseName + ", " + tableOrViewName + ", " + columnName + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public boolean needTransform() {
+		return true; // TODO: derive from the policies
+	}
+
+	@Override
+	public boolean needTransform(String databaseName, String tableOrViewName) {
+		return true; // TODO: derive from the policies
 	}
 
 	RangerHiveResource createHiveResource(HivePrivilegeObject privilegeObject) {

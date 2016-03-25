@@ -103,6 +103,7 @@
         <module>ranger-yarn-plugin-shim</module>
         <module>ranger-storm-plugin-shim</module>
         <module>ranger-kafka-plugin-shim</module>
+        <module>ranger-hive-utils</module>
         <module>ranger-examples</module>
         <module>ranger-tools</module>
     </modules>

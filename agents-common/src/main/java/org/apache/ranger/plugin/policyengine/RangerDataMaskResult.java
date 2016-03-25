@@ -21,6 +21,8 @@ package org.apache.ranger.plugin.policyengine;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 
 public class RangerDataMaskResult extends RangerAccessResult {
@@ -86,6 +88,16 @@ public class RangerDataMaskResult extends RangerAccessResult {
 
 	public boolean isMaskEnabled() {
 		return StringUtils.isNotEmpty(this.getMaskType());
+	}
+
+	public RangerDataMaskTypeDef getMaskTypeDef() {
+		RangerDataMaskTypeDef ret = null;
+
+		if(StringUtils.isNotEmpty(maskType)) {
+			ret = ServiceDefUtil.getDataMaskType(getServiceDef(), maskType);
+		}
+
+		return ret;
 	}
 
 	@Override

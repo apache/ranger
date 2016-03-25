@@ -262,42 +262,110 @@
 				"name": "MASK",
 				"label": "Mask",
 				"description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'",
-				"dataMaskOptions": { }
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
+				"dataMaskOptions": {
+				}
 			},
 			{
 				"itemId": 2,
 				"name": "SHUFFLE",
 				"label": "Shuffle",
 				"description": "Shuffle the value of the column",
-				"dataMaskOptions": { }
+				"transformer": "org.apache.ranger.authorization.hive.udf.ShuffleTransformer",
+				"dataMaskOptions": {
+				}
 			},
 			{
 				"itemId": 3,
 				"name": "MASK_x_SHOW_LAST_4",
 				"label": "Partial mask: show last 4",
 				"description": "Show last 4 characters; replace rest with 'x'",
-				"dataMaskOptions": { }
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskShowLastNTransformer",
+				"dataMaskOptions": {
+					"initParam": "charCount=4; upper=x; lower=x; digit=x; number=1"
+				}
 			},
 			{
 				"itemId": 4,
 				"name": "MASK_x_SHOW_FIRST_4",
 				"label": "Partial mask: show first 4",
 				"description": "Show first 4 characters; replace rest with 'x'",
-				"dataMaskOptions": { }
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskShowFirstNTransformer",
+				"dataMaskOptions": {
+					"initParam": "charCount=4; upper=x; lower=x; digit=x; number=1"
+				}
+			},
+			{
+				"itemId": 5,
+				"name": "MASK_DATE_DAY",
+				"label": "Date: show only month and year",
+				"description": "Date: show only month and year",
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
+				"dataMaskOptions": {
+					"initParam": "day=1; month=-1; year=-1"
+				}
+			},
+			{
+				"itemId": 6,
+				"name": "MASK_DATE_MONTH",
+				"label": "Date: show only day and year",
+				"description": "Date: show only day and year",
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
+				"dataMaskOptions": {
+					"initParam": "day=-1; month=0; year=-1"
+				}
+			},
+			{
+				"itemId": 7,
+				"name": "MASK_DATE_YEAR",
+				"label": "Date: show only day and month",
+				"description": "Date: show only day and month",
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
+				"dataMaskOptions": {
+					"initParam": "day=-1; month=-1; year=0"
+				}
+			},
+			{
+				"itemId": 8,
+				"name": "MASK_DATE_SHOW_DAY",
+				"label": "Date: show only day",
+				"description": "Date: show only day",
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
+				"dataMaskOptions": {
+					"initParam": "day=-1; month=0; year=0"
+				}
+			},
+			{
+				"itemId": 9,
+				"name": "MASK_DATE_SHOW_MONTH",
+				"label": "Date: show only month",
+				"description": "Date: show only month",
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
+				"dataMaskOptions": {
+					"initParam": "day=1; month=-1; year=0"
+				}
 			},
 			{
 				"itemId": 10,
-				"name": "NULL",
-				"label": "NULL",
-				"description": "Replace with NULL",
-				"dataMaskOptions": { }
+				"name": "MASK_DATE_YEAR",
+				"label": "Date: show only year",
+				"description": "Date: show only year",
+				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
+				"dataMaskOptions": {
+					"initParam": "day=1; month=0; year=-1"
+				}
 			},
 			{
 				"itemId": 11,
+				"name": "NULL",
+				"label": "NULL",
+				"description": "Replace with NULL"
+			},
+			{
+				"itemId": 12,
 				"name": "NONE",
 				"label": "No masking",
-				"description": "No masking",
-				"dataMaskOptions": { }
+				"description": "No masking"
 			}
 		]
 	}
