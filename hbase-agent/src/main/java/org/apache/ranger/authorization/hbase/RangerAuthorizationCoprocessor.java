@@ -1232,8 +1232,8 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 
 	private GrantRevokeRequest createGrantData(AccessControlProtos.GrantRequest request) throws Exception {
-		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.UserPermission up   = request.getUserPermission();
-		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
+		AccessControlProtos.UserPermission up   = request.getUserPermission();
+		AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
 
 		UserPermission      userPerm  = up == null ? null : ProtobufUtil.toUserPermission(up);
 		Permission.Action[] actions   = userPerm == null ? null : userPerm.getActions();
@@ -1334,8 +1334,8 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 
 	private GrantRevokeRequest createRevokeData(AccessControlProtos.RevokeRequest request) throws Exception {
-		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.UserPermission up   = request.getUserPermission();
-		org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
+		AccessControlProtos.UserPermission up   = request.getUserPermission();
+		AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
 
 		UserPermission      userPerm  = up == null ? null : ProtobufUtil.toUserPermission(up);
 		String              userName  = userPerm == null ? null : Bytes.toString(userPerm.getUser());
@@ -1419,9 +1419,6 @@ class RangerHBasePlugin extends RangerBasePlugin {
 		super("hbase", appType);
 	}
 
-	public void init() {
-		super.init();
-	}
 }
 
 

@@ -209,7 +209,7 @@ public class HadoopAuthClassTransformer implements ClassFileTransformer {
 			ClassPool cp = ClassPool.getDefault();
 
 			ret = cp.get(className);
-		} catch (javassist.NotFoundException nfe) {
+		} catch (NotFoundException nfe) {
 			System.err.println("Unable to find Class for [" + className + "]" + nfe);
 			ret = null;
 		}

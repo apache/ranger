@@ -24,7 +24,6 @@ define(function(require){
 	var XABaseModel	= require('models/XABaseModel');
 	var XAGlobals	= require('utils/XAGlobals');
 
-
 	var VXUserBase = XABaseModel.extend(
 	/** @lends VXUserBase.prototype */
 	{
@@ -41,7 +40,18 @@ define(function(require){
 		 */
 		initialize: function() {
 			this.modelName = 'VXUserBase';
-		}
+		},
+
+		deleteUsers : function(userNameValues,options){
+			var url = this.urlRoot + '/delete?forceDelete=true';
+			options = _.extend({
+				data : JSON.stringify(userNameValues),
+				contentType : 'application/json',
+				dataType : 'json',
+			}, options);
+
+			return this.constructor.nonCrudOperation.call(this, url, 'DELETE', options);
+		},
 
 	}, {
 		// static class members

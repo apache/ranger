@@ -32,12 +32,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter;
 
 /**
@@ -53,18 +49,6 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
      * (non-Javadoc)
      *
      * @see org.springframework.security.web.authentication.rememberme.
-     * RememberMeAuthenticationFilter#afterPropertiesSet()
-     */
-    @Override
-    public void afterPropertiesSet() {
-	// TODO Auto-generated method stub
-	super.afterPropertiesSet();
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.springframework.security.web.authentication.rememberme.
      * RememberMeAuthenticationFilter#doFilter(javax.servlet.ServletRequest,
      * javax.servlet.ServletResponse, javax.servlet.FilterChain)
      */
@@ -74,18 +58,6 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
     	HttpServletResponse res = (HttpServletResponse)arg1;
     	res.setHeader("X-Frame-Options", "DENY" );
     	super.doFilter(arg0, res, arg2);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.springframework.security.web.authentication.rememberme.
-     * RememberMeAuthenticationFilter#getRememberMeServices()
-     */
-    @Override
-    public RememberMeServices getRememberMeServices() {
-	// TODO Auto-generated method stub
-	return super.getRememberMeServices();
     }
 
     /*
@@ -123,65 +95,6 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
 		new Throwable());
 	response.setHeader("X-Frame-Options", "DENY" );
 	super.onUnsuccessfulAuthentication(request, response, failed);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.springframework.security.web.authentication.rememberme.
-     * RememberMeAuthenticationFilter
-     * #setApplicationEventPublisher(org.springframework
-     * .context.ApplicationEventPublisher)
-     */
-    @Override
-    public void setApplicationEventPublisher(
-	    ApplicationEventPublisher eventPublisher) {
-	// TODO Auto-generated method stub
-	super.setApplicationEventPublisher(eventPublisher);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.springframework.security.web.authentication.rememberme.
-     * RememberMeAuthenticationFilter
-     * #setAuthenticationManager(org.springframework
-     * .security.authentication.AuthenticationManager)
-     */
-    @Override
-    public void setAuthenticationManager(
-	    AuthenticationManager authenticationManager) {
-	// TODO Auto-generated method stub
-	super.setAuthenticationManager(authenticationManager);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.springframework.security.web.authentication.rememberme.
-     * RememberMeAuthenticationFilter
-     * #setAuthenticationSuccessHandler(org.springframework
-     * .security.web.authentication.AuthenticationSuccessHandler)
-     */
-    @Override
-    public void setAuthenticationSuccessHandler(
-	    AuthenticationSuccessHandler successHandler) {
-	// TODO Auto-generated method stub
-	super.setAuthenticationSuccessHandler(successHandler);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.springframework.security.web.authentication.rememberme.
-     * RememberMeAuthenticationFilter
-     * #setRememberMeServices(org.springframework.security
-     * .web.authentication.RememberMeServices)
-     */
-    @Override
-    public void setRememberMeServices(RememberMeServices rememberMeServices) {
-	// TODO Auto-generated method stub
-	super.setRememberMeServices(rememberMeServices);
     }
 
 }

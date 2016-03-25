@@ -88,11 +88,6 @@ public class TagDBStore extends AbstractTagStore {
 	GUIDUtil guidUtil;
 
 	@Override
-	public void init() throws Exception {
-		super.init();
-	}
-
-	@Override
 	public RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.createTagDef(" + tagDef + ")");

@@ -90,8 +90,8 @@ public class HBaseClient extends BaseClient {
 		return connectionProp;
 	}
 	
-	public static HashMap<String, Object> connectionTest(String dataSource,
-			Map<String, String> configs) {
+	public static HashMap<String, Object> connectionTest (String dataSource,
+			Map<String, String> configs) throws Exception {
 
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 		final String errMsg = " You can still save the repository and start creating "
@@ -102,7 +102,12 @@ public class HBaseClient extends BaseClient {
 		HBaseClient connectionObj = new HBaseClient(dataSource,
 										configs);
 		if (connectionObj != null) {
-			connectivityStatus = connectionObj.getHBaseStatus();
+			try {
+				connectivityStatus = connectionObj.getHBaseStatus();
+			} catch ( HadoopException e) {
+				LOG.error("<== HBaseClient.testConnection(): Unable to retrieve any databases using given parameters", e);
+				throw e;
+			}
 		}
 		
 		if (connectivityStatus) {
@@ -117,7 +122,7 @@ public class HBaseClient extends BaseClient {
 		return responseData;
 	}
 	
-	public boolean getHBaseStatus() {
+	public boolean getHBaseStatus() throws HadoopException{
 		boolean hbaseStatus = false;
 		subj = getLoginSubject();
 		final String errMsg = " You can still save the repository and start creating "
@@ -219,7 +224,11 @@ public class HBaseClient extends BaseClient {
 		}		
 	}
 
-	public List<String> getTableList(final String tableNameMatching, final List<String> existingTableList ) {
+	public List<String> getTableList(final String tableNameMatching, final List<String> existingTableList ) throws HadoopException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> HbaseClient.getTableList()  tableNameMatching " + tableNameMatching + " ExisitingTableList " +  existingTableList);
+		}
+
 		List<String> ret = null ;
 		final String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -310,11 +319,18 @@ public class HBaseClient extends BaseClient {
 					
 				}) ;
 		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== HbaseClient.getTableList() " + ret);
+		}
 		return ret ;
 	}
 	
 	
 	public List<String> getColumnFamilyList(final String columnFamilyMatching, final List<String> tableList,final List<String> existingColumnFamilies) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> HbaseClient.getColumnFamilyList()  columnFamilyMatching " + columnFamilyMatching + " ExisitingTableList " +  tableList + "existingColumnFamilies " + existingColumnFamilies);
+		}
+
 		List<String> ret = null ;
 		final String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -430,6 +446,9 @@ public class HBaseClient extends BaseClient {
 				LOG.error(msgDesc + se) ;
 				throw hdpException;
 			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== HbaseClient.getColumnFamilyList() " + ret);
 		}
 		return ret ;
 	}

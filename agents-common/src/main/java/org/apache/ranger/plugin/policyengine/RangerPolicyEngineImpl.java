@@ -276,6 +276,41 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public RangerDataMaskResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evalDataMaskPolicies(" + request + ")");
+		}
+
+		RangerDataMaskResult ret = new RangerDataMaskResult(getServiceName(), getServiceDef(), request);
+
+		if(request != null) {
+			List<RangerPolicyEvaluator> evaluators = policyRepository.getDataMaskPolicyEvaluators();
+			for (RangerPolicyEvaluator evaluator : evaluators) {
+				evaluator.evaluate(request, ret);
+
+				if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
+					break;
+				}
+			}
+		}
+
+		// no need to audit if filter/mask is not enabled
+		if(! ret.isMaskEnabled()) {
+			ret.setIsAudited(false);
+		}
+
+		if (resultProcessor != null) {
+			resultProcessor.processResult(ret);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evalDataMaskPolicies(" + request + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
 	public boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + resource + ", " + user + ", " + userGroups + ", " + accessType + ")");
@@ -436,6 +471,47 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
+	@Override
+	public RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.getResourceAccessInfo(" + request + ")");
+		}
+
+		RangerResourceAccessInfo ret = new RangerResourceAccessInfo(request);
+
+		List<RangerPolicyEvaluator> tagPolicyEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
+		List<RangerPolicyEvaluator> resPolicyEvaluators = policyRepository.getPolicyEvaluators();
+
+		if (CollectionUtils.isNotEmpty(tagPolicyEvaluators)) {
+			List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+
+			if(CollectionUtils.isNotEmpty(tags)) {
+				for (RangerTag tag : tags) {
+					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
+
+					for (RangerPolicyEvaluator evaluator : tagPolicyEvaluators) {
+						evaluator.getResourceAccessInfo(tagEvalRequest, ret);
+					}
+				}
+			}
+		}
+
+		if(CollectionUtils.isNotEmpty(resPolicyEvaluators)) {
+			for (RangerPolicyEvaluator evaluator : resPolicyEvaluators) {
+				evaluator.getResourceAccessInfo(request, ret);
+			}
+		}
+
+		ret.getAllowedUsers().removeAll(ret.getDeniedUsers());
+		ret.getAllowedGroups().removeAll(ret.getDeniedGroups());
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.getResourceAccessInfo(" + request + "): " + ret);
+		}
+
+		return ret;
+	}
+
 	protected RangerAccessResult isAccessAllowedNoAudit(RangerAccessRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedNoAudit(" + request + ")");
@@ -501,7 +577,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ", " + result + ")");
 		}
 
-		List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators();
+		List<RangerPolicyEvaluator> evaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
 
 		if (CollectionUtils.isNotEmpty(evaluators)) {
 			List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());

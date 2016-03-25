@@ -22,12 +22,13 @@
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.*;
 
 import javax.security.auth.Subject;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -61,7 +62,7 @@ public class HdfsClient extends BaseClient {
 
 	}
 	
-	private List<String> listFilesInternal(String baseDir, String fileMatching, final List<String> pathList) {
+	private List<String> listFilesInternal(String baseDir, String fileMatching, final List<String> pathList) throws  HadoopException {
 		List<String> fileList = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
@@ -75,31 +76,36 @@ public class HdfsClient extends BaseClient {
 			
 
 			UserGroupInformation.setConfiguration(conf);
-			
+
 			FileSystem fs = null ;
 			try {
 				fs = FileSystem.get(conf) ;
-				
-				FileStatus[] fileStats = fs.listStatus(new Path(baseDir)) ;
-				
+
+				Path basePath = new Path(baseDir);
+				FileStatus[] fileStats = fs.listStatus(basePath) ;
+
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("<== HdfsClient fileStatus : " + fileStats + " PathList :" + pathList) ;
 				}
-				
+
 				if (fileStats != null) {
-					for(FileStatus stat : fileStats) {
-						Path path = stat.getPath() ;
-						String pathComponent = path.getName() ;
-						String prefixedPath = dirPrefix + pathComponent;
-				        if ( pathList != null && pathList.contains(prefixedPath)) {
-				        	continue;
-				        }
-						if (filterRegEx == null) {
-							fileList.add(prefixedPath) ;
-						}
-						else if (FilenameUtils.wildcardMatch(pathComponent, fileMatching)) {
-							fileList.add(prefixedPath) ;
-						}
+					if (fs.exists(basePath) && ArrayUtils.isEmpty(fileStats))  {
+						fileList.add(basePath.toString()) ;
+					} else {
+						for(FileStatus stat : fileStats) {
+								Path path = stat.getPath() ;
+								String pathComponent = path.getName() ;
+								String prefixedPath = dirPrefix + pathComponent;
+						        if ( pathList != null && pathList.contains(prefixedPath)) {
+                                   continue;
+						        }
+								if (filterRegEx == null) {
+									fileList.add(prefixedPath) ;
+								}
+								else if (FilenameUtils.wildcardMatch(pathComponent, fileMatching)) {
+									fileList.add(prefixedPath) ;
+								}
+							}
 					}
 				}
 			} catch (UnknownHostException uhe) {
@@ -155,14 +161,13 @@ public class HdfsClient extends BaseClient {
 	}
 
 
-	public List<String> listFiles(final String baseDir, final String fileMatching, final List<String> pathList) {
+	public List<String> listFiles(final String baseDir, final String fileMatching, final List<String> pathList) throws Exception {
 
-		PrivilegedAction<List<String>> action = new PrivilegedAction<List<String>>() {
+		PrivilegedExceptionAction<List<String>> action = new PrivilegedExceptionAction<List<String>>() {
 			@Override
-			public List<String> run() {
+			public List<String> run() throws Exception {
 				return listFilesInternal(baseDir, fileMatching, pathList) ;
 			}
-			
 		};
 		return Subject.doAs(getLoginSubject(),action) ;
 	}
@@ -179,7 +184,12 @@ public class HdfsClient extends BaseClient {
 		String fileNameToMatch = (args.length == 2 ? null : args[2]) ;
 		
 		HdfsClient fs = new HdfsClient(repositoryName, null) ;
-		List<String> fsList = fs.listFiles(baseDir, fileNameToMatch,null) ;
+		List<String> fsList = null;
+		try {
+			fsList = fs.listFiles(baseDir, fileNameToMatch,null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		if (fsList != null && fsList.size() > 0) {
 			for(String s : fsList) {
 				System.out.println(s) ;
@@ -191,8 +201,9 @@ public class HdfsClient extends BaseClient {
 	}
 
 	public static HashMap<String, Object> connectionTest(String serviceName,
-			Map<String, String> configs) {
+			Map<String, String> configs) throws Exception {
 
+	LOG.info("===> HdfsClient.testConnection()" );
     HashMap<String, Object> responseData = new HashMap<String, Object>();
     boolean connectivityStatus = false;
 
@@ -204,29 +215,38 @@ public class HdfsClient extends BaseClient {
     }
 
     if (validateConfigsMsg == null) {
+
 		  HdfsClient connectionObj = new HdfsClient(serviceName, configs);
 		  if (connectionObj != null) {
-		  	List<String> testResult = connectionObj.listFiles("/", null,null);
-			  if (testResult != null && testResult.size() != 0) {
-			  	connectivityStatus = true;
-			  }
-		  }
-    }
+			List<String> testResult = null;
+			try {
+				 testResult = connectionObj.listFiles("/", null,null);
+			} catch (HadoopException e) {
+				LOG.error("<== HdfsClient.testConnection() error " + e.getMessage(),e );
+					throw e;
+			}
 
+			if (testResult != null && testResult.size() != 0) {
+			  	connectivityStatus = true;
+			}
+		}
+    }
+        String testconnMsg = null;
 		if (connectivityStatus) {
-			String successMsg = "ConnectionTest Successful";
-			generateResponseDataMap(connectivityStatus, successMsg, successMsg,
+			testconnMsg = "ConnectionTest Successful";
+			generateResponseDataMap(connectivityStatus, testconnMsg, testconnMsg,
 					null, null, responseData);
 		} else {
-			String failureMsg = "Unable to retrieve any files using given parameters, "
-					+ "You can still save the repository and start creating policies, "
-					+ "but you would not be able to use autocomplete for resource names. "
-					+ "Check xa_portal.log for more info. ";
+			testconnMsg = "Unable to retrieve any files using given parameters, "
+				+ "You can still save the repository and start creating policies, "
+				+ "but you would not be able to use autocomplete for resource names. "
+				+ "Check xa_portal.log for more info. ";
       String additionalMsg = (validateConfigsMsg != null)  ?
-        validateConfigsMsg : failureMsg;
-			generateResponseDataMap(connectivityStatus, failureMsg, additionalMsg,
+        validateConfigsMsg : testconnMsg;
+			generateResponseDataMap(connectivityStatus, testconnMsg, additionalMsg,
 					null, null, responseData);
 		}
+		LOG.info("<== HdfsClient.testConnection(): Status " + testconnMsg );
 		return responseData;
 	}
 

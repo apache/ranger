@@ -80,7 +80,6 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 			if (_topology == null) throw new IllegalStateException("_topology can't be null!");
 			if (_service == null) throw new IllegalStateException("_service can't be null!");
 			if (_user == null) throw new IllegalStateException("_user can't be null!");
-			return;
 		}
 		
 		RangerAccessRequest build() {

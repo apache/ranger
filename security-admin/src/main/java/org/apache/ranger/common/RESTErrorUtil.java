@@ -368,7 +368,7 @@ public class RESTErrorUtil {
 			if (stringUtil.isEmpty(value)) {
 				return null;
 			} else {
-				return new Boolean(value.trim());
+				return Boolean.valueOf(value.trim());
 			}
 		} catch (Throwable t) {
 			throw createRESTException(errorMessage, messageEnum, objectId,

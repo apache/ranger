@@ -63,12 +63,12 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 		return null;
 	}
 
-	public List<XXGroupPermission> findByGroupPermissionId(Long groupId) {
+	public List<XXGroupPermission> findByGroupId(Long groupId) {
 		if (groupId != null) {
 			try {
 				return getEntityManager()
 						.createNamedQuery(
-								"XXGroupPermission.findByGroupPermissionId",
+								"XXGroupPermission.findByGroupId",
 								XXGroupPermission.class)
 						.setParameter("groupId", groupId).getResultList();
 			} catch (NoResultException e) {

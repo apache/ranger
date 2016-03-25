@@ -28,7 +28,6 @@
 	<exclude name="AvoidBranchingStatementAsLastInLoop" />
 	<exclude name="AvoidThreadGroup" />
 	<exclude name="AvoidUsingHardCodedIP" />
-	<exclude name="BooleanInstantiation" />
 	<exclude name="ClassCastExceptionWithToArray" />
 	<exclude name="CollapsibleIfStatements" />
 	<exclude name="DoubleCheckedLocking" />
@@ -42,10 +41,7 @@
 	<exclude name="UnusedPrivateField" />
 	<exclude name="UnusedPrivateMethod" />
   </rule>
-  <rule ref="rulesets/java/imports.xml" >
-	<exclude name="ImportFromSamePackage" />
-	<exclude name="UnnecessaryFullyQualifiedName" />
-  </rule>
+  <rule ref="rulesets/java/imports.xml" />
   <rule ref="rulesets/java/braces.xml">
 	<exclude name="ForLoopsMustUseBraces" />
 	<exclude name="IfElseStmtsMustUseBraces" />
@@ -59,12 +55,7 @@
   </rule>
   <rule ref="rulesets/java/migrating.xml" />
   <rule ref="rulesets/java/unnecessary.xml">
-	<exclude name="UnnecessaryConversionTemporary" />
-	<exclude name="UnnecessaryReturn" />
-	<exclude name="UnusedNullCheckInEquals" />
-	<exclude name="UselessOverridingMethod" />
 	<exclude name="UselessParentheses" />
-	<exclude name="UnnecessaryFinalModifier" />
   </rule>
 
 </ruleset>

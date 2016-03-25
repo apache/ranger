@@ -90,7 +90,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		}
 		xObj.setService(xService.getId());
 		xObj.setName(vObj.getName());
-		xObj.setPolicyType(vObj.getPolicyType());
+		xObj.setPolicyType(vObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : vObj.getPolicyType());
 		xObj.setDescription(vObj.getDescription());
 		xObj.setResourceSignature(vObj.getResourceSignature());
 		xObj.setIsAuditEnabled(vObj.getIsAuditEnabled());
@@ -107,7 +107,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		vObj.setVersion(xObj.getVersion());
 		vObj.setService(xService.getName());
 		vObj.setName(xObj.getName());
-		vObj.setPolicyType(xObj.getPolicyType());
+		vObj.setPolicyType(xObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xObj.getPolicyType());
 		vObj.setDescription(xObj.getDescription());
 		vObj.setResourceSignature(xObj.getResourceSignature());
 		vObj.setIsEnabled(xObj.getIsEnabled());

@@ -179,7 +179,51 @@ public class TestRangerPolicyValidator {
 		_failures.clear(); assertTrue(_validator.isValid(3L, Action.DELETE, _failures));
 		assertTrue(_failures.isEmpty());
 	}
-	
+
+	@Test
+	public final void testIsValid_errorPaths() throws Exception {
+		boolean isAdmin = true;
+
+		// 1. create policy in a non-existing service
+		Action action = Action.CREATE;
+		when(_policy.getService()).thenReturn("non-existing-service-name");
+		when(_store.getServiceByName("non-existing-service-name")).thenReturn(null);
+
+		assertFalse(action.toString(), _validator.isValid(_policy, action, isAdmin, _failures));
+
+		// 2. update a policy to change the service-name
+		RangerPolicy existingPolicy = mock(RangerPolicy.class);
+		when(existingPolicy.getId()).thenReturn(8L);
+		when(existingPolicy.getService()).thenReturn("service-name");
+
+		RangerService service = mock(RangerService.class);
+		when(service.getType()).thenReturn("service-type");
+		when(service.getName()).thenReturn("service-name");
+		when(_store.getServiceByName("service-name")).thenReturn(service);
+
+		RangerService service2 = mock(RangerService.class);
+		when(service2.getType()).thenReturn("service-type");
+		when(service2.getName()).thenReturn("service-name2");
+		when(_store.getServiceByName("service-name2")).thenReturn(service2);
+
+		when(_policy.getService()).thenReturn("service-name2");
+		when(_store.getServiceByName("service-name2")).thenReturn(service2);
+		action = Action.UPDATE;
+
+		assertFalse(action.toString(), _validator.isValid(_policy, action, isAdmin, _failures));
+
+		// 3. update a policy to change the policy-type
+		when(existingPolicy.getId()).thenReturn(8L);
+		when(existingPolicy.getService()).thenReturn("service-name");
+		when(existingPolicy.getPolicyType()).thenReturn(Integer.valueOf(0));
+
+		when(_policy.getId()).thenReturn(8L);
+		when(_policy.getService()).thenReturn("service-name");
+		when(_policy.getPolicyType()).thenReturn(Integer.valueOf(1));
+
+		assertFalse(action.toString(), _validator.isValid(_policy, action, isAdmin, _failures));
+	}
+
 	@Test
 	public final void testIsValid_happyPath() throws Exception {
 		// valid policy has valid non-empty name and service name 
@@ -196,14 +240,15 @@ public class TestRangerPolicyValidator {
 		when(_store.getPolicy(7L)).thenReturn(null);
 		RangerPolicy existingPolicy = mock(RangerPolicy.class);
 		when(existingPolicy.getId()).thenReturn(8L);
+		when(existingPolicy.getService()).thenReturn("service-name");
 		when(_store.getPolicy(8L)).thenReturn(existingPolicy);
 		SearchFilter createFilter = new SearchFilter();
-		createFilter.setParam(SearchFilter.POLICY_NAME, "service-type");
+		createFilter.setParam(SearchFilter.SERVICE_TYPE, "service-type");
 		createFilter.setParam(SearchFilter.POLICY_NAME, "policy-name-1"); // this name would be used for create
 		when(_store.getPolicies(createFilter)).thenReturn(new ArrayList<RangerPolicy>());
 		// a matching policy should not exist for update.
 		SearchFilter updateFilter = new SearchFilter();
-		updateFilter.setParam(SearchFilter.POLICY_NAME, "service-type");
+		updateFilter.setParam(SearchFilter.SERVICE_TYPE, "service-type");
 		updateFilter.setParam(SearchFilter.POLICY_NAME, "policy-name-2"); // this name would be used for update
 		List<RangerPolicy> existingPolicies = new ArrayList<RangerPolicy>();
 		existingPolicies.add(existingPolicy);

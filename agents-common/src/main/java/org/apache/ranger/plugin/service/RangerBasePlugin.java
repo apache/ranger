@@ -105,14 +105,20 @@ public class RangerBasePlugin {
 	}
 
 	public void setPolicies(ServicePolicies policies) {
-		RangerPolicyEngine oldPolicyEngine = this.policyEngine;
 
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
+		// guard against catastrophic failure during policy engine Initialization or
+		try {
+			RangerPolicyEngine oldPolicyEngine = this.policyEngine;
 
-		this.policyEngine = policyEngine;
+			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
 
-		if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
-			LOG.error("preCleanup() failed on the previous policy engine instance !!");
+			this.policyEngine = policyEngine;
+
+			if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
+				LOG.error("preCleanup() failed on the previous policy engine instance !!");
+			}
+		} catch (Exception e) {
+			LOG.error("setPolicies: policy engine initialization failed!  Leaving current policy engine as-is.");
 		}
 	}
 
@@ -170,6 +176,18 @@ public class RangerBasePlugin {
 			policyEngine.preProcess(requests);
 
 			return policyEngine.isAccessAllowed(requests, resultProcessor);
+		}
+
+		return null;
+	}
+
+	public RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			policyEngine.preProcess(request);
+
+			return policyEngine.getResourceAccessInfo(request);
 		}
 
 		return null;

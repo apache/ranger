@@ -77,7 +77,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public void configure(Map<String, ?> configs) {
 		if (rangerPlugin == null) {
 			try {
-				LoginManager loginManager = org.apache.kafka.common.security.kerberos.LoginManager.acquireLoginManager(LoginType.SERVER, configs);
+				LoginManager loginManager = LoginManager.acquireLoginManager(LoginType.SERVER, configs);
 				Subject subject = loginManager.subject();
 				UserGroupInformation ugi = MiscUtil
 						.createUGIFromSubject(subject);

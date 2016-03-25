@@ -292,7 +292,7 @@ public abstract class RangerValidator {
 
 	Set<String> getAccessTypes(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerValidator.getAccessTypes(" + serviceDef + ")");
+			LOG.debug("==> RangerValidator.getSupportedAccessTypes(" + serviceDef + ")");
 		}
 
 		Set<String> accessTypes = new HashSet<String>();
@@ -316,7 +316,7 @@ public abstract class RangerValidator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerValidator.getAccessTypes(" + serviceDef + "): " + accessTypes);
+			LOG.debug("<== RangerValidator.getSupportedAccessTypes(" + serviceDef + "): " + accessTypes);
 		}
 		return accessTypes;
 	}

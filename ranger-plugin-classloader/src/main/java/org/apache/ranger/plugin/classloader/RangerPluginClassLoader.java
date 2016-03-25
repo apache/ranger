@@ -268,7 +268,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         }
 
         @Override
-        public Class<?> findClass(String name) throws ClassNotFoundException {
+        public Class<?> findClass(String name) throws ClassNotFoundException { //NOPMD
            return super.findClass(name);
         }
     }

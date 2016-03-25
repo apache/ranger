@@ -131,7 +131,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				if (userSession != null) {
 
 					Object ssoEnabledObj = request.getAttribute("ssoEnabled");
-					Boolean ssoEnabled = ssoEnabledObj != null ? new Boolean(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+					Boolean ssoEnabled = ssoEnabledObj != null ? Boolean.valueOf(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
 					userSession.setSSOEnabled(ssoEnabled);
 
 					if (userSession.getClientTimeOffsetInMinute() == 0) {

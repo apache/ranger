@@ -19,7 +19,11 @@
 
  package org.apache.ranger.plugin.client;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 
 public class HadoopException extends RuntimeException {
 
@@ -55,6 +59,27 @@ public class HadoopException extends RuntimeException {
 		responseData.put("description", description);
 		responseData.put("objectId", objectId);
 		responseData.put("fieldName", fieldName);
+	}
+
+	public String getMessage(Throwable excp) {
+		List<String> errList = new ArrayList<String>();
+		while (excp != null) {
+			if (!errList.contains(excp.getMessage() + ". \n")) {
+				if (excp.getMessage() != null && !(excp.getMessage().equalsIgnoreCase(""))) {
+					errList.add(excp.getMessage() + ". \n");
+				}
+			}
+			excp = excp.getCause();
+		}
+		return StringUtils.join(errList, "");
+	}
+
+	public HashMap<String,Object> getResponseData() {
+		return responseData;
+	}
+
+	public void setReponseData(HashMap<String,Object> responseData) {
+		this.responseData = responseData;
 	}
 
 }

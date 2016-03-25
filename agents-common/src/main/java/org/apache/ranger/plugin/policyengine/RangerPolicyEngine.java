@@ -49,6 +49,7 @@ public interface RangerPolicyEngine {
 
 	Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor);
 
+	RangerDataMaskResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor);
 
 	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
 
@@ -62,8 +63,9 @@ public interface RangerPolicyEngine {
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 
+	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
+
 	boolean preCleanup();
 
 	void cleanup();
-
 }

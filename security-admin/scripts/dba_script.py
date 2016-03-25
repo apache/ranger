@@ -429,11 +429,11 @@ class OracleConf(BaseDB):
 							log("[I] User " + db_user + " created", "info")
 							log("[I] Granting permission to " + db_user, "info")
 							if os_name == "LINUX":
-								query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'" % (db_user)
+								query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
 								jisql_log(query, db_root_password)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;\" -c ;" % (db_user)
+								query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
 								jisql_log(query, db_root_password)
 								ret = subprocess.call(query)
 							if ret == 0:
@@ -527,27 +527,12 @@ class OracleConf(BaseDB):
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(query)
 			if ret == 0:
-				log("[I] Granting permission to " + db_user, "info")
-				if os_name == "LINUX":
-					query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'" % (db_user)
-					jisql_log(query, db_root_password)
-					ret = subprocess.call(shlex.split(query))
-				elif os_name == "WINDOWS":
-					query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;\" -c ;" % (db_user)
-					jisql_log(query, db_root_password)
-					ret = subprocess.call(query)
-				if ret == 0:
-					log("[I] Granting Oracle user '" + db_user + "' done", "info")
-					return status
-				else:
-					log("[E] Granting Oracle user '" + db_user + "' failed..", "error")
-					sys.exit(1)
+				log("[I] Assigning default tablespace to user '" + db_user + "' done..", "info")
 			else:
 				log("[E] Assigning default tablespace to user '" + db_user + "' failed..", "error")
 				sys.exit(1)
 		else:
 			logFile("alter user %s DEFAULT Tablespace %s;" %(db_user, db_name))
-			logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;" % (db_user))
 
 
 	def create_auditdb(self, audit_db_root_user, db_name ,audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_root_password,dryMode):
@@ -578,45 +563,8 @@ class OracleConf(BaseDB):
 			else:
 				logFile("create tablespace %s datafile '%s.dat' size 10M autoextend on;" %(audit_db_name, audit_db_name))
 
-		if self.verify_tablespace(audit_db_root_user, audit_db_root_password, db_name,dryMode):
+		if (status1 == True):
 			if dryMode == False:
-				log("[I] Tablespace " + db_name + " already exists.","info")
-			status2 = True
-		else:
-			if dryMode == False:
-				log("[I] Tablespace does not exist. Creating tablespace: " + db_name,"info")
-				get_cmd = self.get_jisql_cmd(audit_db_root_user, audit_db_root_password)
-				if os_name == "LINUX":
-					query = get_cmd + " -c \; -query \"create tablespace %s datafile '%s.dat' size 10M autoextend on;\"" %(db_name, db_name)
-					jisql_log(query, audit_db_root_password)
-					ret = subprocess.call(shlex.split(query))
-				elif os_name == "WINDOWS":
-					query = get_cmd + " -query \"create tablespace %s datafile '%s.dat' size 10M autoextend on;\" -c ;" %(db_name, db_name)
-					jisql_log(query, audit_db_root_password)
-					ret = subprocess.call(query)
-				if ret != 0:
-					log("[E] Tablespace creation failed..","error")
-					sys.exit(1)
-				else:
-					log("[I] Creating tablespace "+ db_name + " succeeded", "info")
-					status2 = True
-			else:
-				logFile("create tablespace %s datafile '%s.dat' size 10M autoextend on;" %(db_name, db_name))
-
-		if (status1 == True and status2 == True):
-			if dryMode == False:
-				log("[I] Assign default tablespace " + db_name + " to : " + audit_db_user, "info")
-				# Assign default tablespace db_name
-				get_cmd = self.get_jisql_cmd(audit_db_root_user , audit_db_root_password)
-				if os_name == "LINUX":
-					query = get_cmd +" -c \; -query 'alter user %s DEFAULT Tablespace %s;'" %(audit_db_user, db_name)
-					jisql_log(query, audit_db_root_password)
-					ret1 = subprocess.call(shlex.split(query))
-				elif os_name == "WINDOWS":
-					query = get_cmd +" -query \"alter user %s DEFAULT Tablespace %s;\" -c ;" %(audit_db_user, db_name)
-					jisql_log(query, audit_db_root_password)
-					ret1 = subprocess.call(query)
-
 				log("[I] Assign default tablespace " + audit_db_name + " to : " + audit_db_user, "info")
 				# Assign default tablespace audit_db_name
 				get_cmd = self.get_jisql_cmd(audit_db_root_user , audit_db_root_password)
@@ -629,37 +577,22 @@ class OracleConf(BaseDB):
 					jisql_log(query, audit_db_root_password)
 					ret2 = subprocess.call(query)
 
-				if (ret1 == 0 and ret2 == 0):
-					log("[I] Granting permission to " + db_user, "info")
-					if os_name == "LINUX":
-						query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'" % (db_user)
-						jisql_log(query, audit_db_root_password)
-						ret = subprocess.call(shlex.split(query))
-					elif os_name == "WINDOWS":
-						query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;\" -c ;" % (db_user)
-						jisql_log(query, audit_db_root_password)
-						ret = subprocess.call(query)
-					if ret == 0:
-						return True
-					else:
-						log("[E] Granting Oracle user '" + db_user + "' failed..", "error")
-						sys.exit(1)
+				if (ret2 == 0):
+					log("[I] Assigning default tablespace to user '" + audit_db_user + "' done..", "info")
 				else:
 					return False
 			else:
-				logFile("alter user %s DEFAULT Tablespace %s;" %(audit_db_user, db_name))
 				logFile("alter user %s DEFAULT Tablespace %s;" %(audit_db_user, audit_db_name))
-				logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;" % (db_user))
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, invoke,dryMode):
 		if dryMode == False:
 			get_cmd = self.get_jisql_cmd(root_user ,db_root_password)
 			if os_name == "LINUX":
-				query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'" % (db_user)
+				query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;\" -c ;" % (db_user)
+				query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(query)
 			if ret == 0:
@@ -669,7 +602,7 @@ class OracleConf(BaseDB):
 				log("[E] Granting Oracle user '" + db_user + "' failed..", "error")
 				sys.exit(1)
 		else:
-			logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;" % (db_user))
+			logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;" % (db_user))
 
 	def create_auditdb_user(self, xa_db_host , audit_db_host , db_name ,audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode):
 		if DBA_MODE == "TRUE":
@@ -694,20 +627,6 @@ class OracleConf(BaseDB):
 					if ret == 0:
 						if self.verify_user(audit_db_root_user, db_user, audit_db_root_password,dryMode):
 							log("[I] User " + db_user + " created", "info")
-							log("[I] Granting permission to " + db_user, "info")
-							if os_name == "LINUX":
-								query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;'" % (db_user)
-								jisql_log(query, audit_db_root_password)
-								ret = subprocess.call(shlex.split(query))
-							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;\" -c ;" % (db_user)
-								jisql_log(query, audit_db_root_password)
-								ret = subprocess.call(query)
-							if ret == 0:
-								log("[I] Granting permissions to Oracle user '" + db_user + "' for %s Done" %(self.host), "info")
-							else:
-								log("[E] Granting permissions to Oracle user '" + db_user + "' failed..", "error")
-								sys.exit(1)
 						else:
 							log("[E] Creating Oracle user '" + db_user + "' failed..", "error")
 							sys.exit(1)
@@ -716,7 +635,6 @@ class OracleConf(BaseDB):
 						sys.exit(1)
 				else:
 					logFile("create user %s identified by \"%s\";" %(db_user, db_password))
-					logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s WITH ADMIN OPTION;" % (db_user))
 
 			if self.verify_user(audit_db_root_user, audit_db_user, audit_db_root_password,dryMode):
 				if dryMode == False:
@@ -760,7 +678,7 @@ class OracleConf(BaseDB):
 	def writeDrymodeCmd(self, xa_db_host, audit_db_host, xa_db_root_user, xa_db_root_password, db_user, db_password, db_name, audit_db_root_user, audit_db_root_password, audit_db_user, audit_db_password, audit_db_name):
 		logFile("# Login to ORACLE Server from a ORACLE dba user(i.e 'sys') to execute below sql statements.")
 		logFile('create user %s identified by "%s";'%(db_user, db_password))
-		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO %s WITH ADMIN OPTION;'%(db_user))
+		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO %s;'%(db_user))
 		logFile("create tablespace %s datafile '%s.dat' size 10M autoextend on;" %(db_name, db_name))
 		logFile('alter user %s DEFAULT tablespace %s;'%(db_user, db_name))
 		if not db_user == audit_db_user:
@@ -768,7 +686,6 @@ class OracleConf(BaseDB):
 			logFile('GRANT CREATE SESSION TO %s;' %(audit_db_user))
 			logFile("create tablespace %s datafile '%s.dat' size 10M autoextend on;" %(audit_db_name, audit_db_name))
 			logFile('alter user %s DEFAULT tablespace %s;' %(audit_db_user, audit_db_name))
-		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO %s WITH ADMIN OPTION;'%(db_user))
 
 class PostgresConf(BaseDB):
 	# Constructor

@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
@@ -457,6 +458,26 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			LOG.debug(String.format("<== filterListCmdObjects: count[%d], ret[%s]", count, ret));
 		}
 		return ret;
+	}
+
+	@Override
+	public String getRowFilterExpression(String databaseName, String tableOrViewName) throws SemanticException {
+		return null;
+	}
+
+	@Override
+	public boolean needTransform() {
+		return false;
+	}
+
+	@Override
+	public boolean needTransform(String databaseName, String tableOrViewName) {
+		return false;
+	}
+
+	@Override
+	public String getCellValueTransformer(String databaseName, String tableOrViewName, String columnName) throws SemanticException {
+		return columnName;
 	}
 
 	RangerHiveResource createHiveResource(HivePrivilegeObject privilegeObject) {

@@ -104,11 +104,6 @@ public class XAuditMgr extends XAuditMgrBase {
 	}
 
 	@Override
-	public VXAccessAudit getXAccessAudit(Long id) {
-		return super.getXAccessAudit(id);
-	}
-
-	@Override
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
 		if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
 			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);

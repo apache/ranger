@@ -18,7 +18,6 @@
 package org.apache.ranger.audit.provider;
 
 import java.util.Collection;
-import java.util.Properties;
 
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -26,11 +25,6 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 public abstract class BufferedAuditProvider extends BaseAuditHandler {
 	private LogBuffer<AuditEventBase> mBuffer = null;
 	private LogDestination<AuditEventBase> mDestination = null;
-
-	@Override
-	public void init(Properties props) {
-		super.init(props);
-	}
 
 	@Override
 	public boolean log(AuditEventBase event) {

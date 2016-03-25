@@ -123,7 +123,7 @@ public class ServiceMgr {
 						
 				HashMap<String, Object> respData = new HashMap<String, Object>();
 				if (e instanceof HadoopException) {
-					respData = ((HadoopException) e).responseData;
+					respData = ((HadoopException) e).getResponseData();
 				}
 				ret = generateResponseForTestConn(respData, msg);
 				LOG.error("==> ServiceMgr.validateConfig Error:" + e);

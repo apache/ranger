@@ -30,6 +30,7 @@ public interface RangerPolicyItemEvaluator extends Comparable<RangerPolicyItemEv
 	public static final int POLICY_ITEM_TYPE_DENY             = 1;
 	public static final int POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS = 2;
 	public static final int POLICY_ITEM_TYPE_DENY_EXCEPTIONS  = 3;
+	public static final int POLICY_ITEM_TYPE_DATA_MASKING     = 4;
 
 	void init();
 

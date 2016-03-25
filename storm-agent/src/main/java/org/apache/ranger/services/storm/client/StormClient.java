@@ -300,14 +300,13 @@ public class StormClient {
 	public static HashMap<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) {
 
-		List<String> strList = new ArrayList<String>();
 		String errMsg = errMessage;
 		boolean connectivityStatus = false;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 
 		StormClient stormClient = getStormClient(serviceName,
 				configs);
-		strList = getStormResources(stormClient, "",null);
+		List<String> strList = getStormResources(stormClient, "",null);
 
 		if (strList != null) {
 			connectivityStatus = true;

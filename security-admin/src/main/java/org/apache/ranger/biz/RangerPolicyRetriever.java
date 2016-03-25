@@ -30,25 +30,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXAccessTypeDef;
-import org.apache.ranger.entity.XXGroup;
-import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXPolicyConditionDef;
-import org.apache.ranger.entity.XXPolicyItem;
-import org.apache.ranger.entity.XXPolicyItemAccess;
-import org.apache.ranger.entity.XXPolicyItemCondition;
-import org.apache.ranger.entity.XXPolicyItemGroupPerm;
-import org.apache.ranger.entity.XXPolicyItemUserPerm;
-import org.apache.ranger.entity.XXPolicyResource;
-import org.apache.ranger.entity.XXPolicyResourceMap;
-import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXResourceDef;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -243,6 +231,7 @@ public class RangerPolicyRetriever {
 		final Map<Long, String> accessTypes     = new HashMap<Long, String>();
 		final Map<Long, String> conditions      = new HashMap<Long, String>();
 		final Map<Long, String> resourceDefs    = new HashMap<Long, String>();
+		final Map<Long, String> dataMasks       = new HashMap<Long, String>();
 
 		String getUserName(Long userId) {
 			String ret = null;
@@ -377,6 +366,26 @@ public class RangerPolicyRetriever {
 
 			return ret;
 		}
+
+		String getDataMaskName(Long dataMaskDefId) {
+			String ret = null;
+
+			if(dataMaskDefId != null) {
+				ret = dataMasks.get(dataMaskDefId);
+
+				if(ret == null) {
+					XXDataMaskTypeDef xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getById(dataMaskDefId);
+
+					if(xDataMaskDef != null) {
+						ret = xDataMaskDef.getName();
+
+						resourceDefs.put(dataMaskDefId,  ret);
+					}
+				}
+			}
+
+			return ret;
+		}
 	}
 
 	static List<XXPolicy> asList(XXPolicy policy) {
@@ -399,6 +408,7 @@ public class RangerPolicyRetriever {
 		final ListIterator<XXPolicyItemGroupPerm> iterGroupPerms;
 		final ListIterator<XXPolicyItemAccess>    iterAccesses;
 		final ListIterator<XXPolicyItemCondition> iterConditions;
+		final ListIterator<XXPolicyItemDataMaskInfo> iterDataMaskInfos;
 
 		RetrieverContext(XXService xService) {
 			Long serviceId = xService == null ? null : xService.getId();
@@ -411,6 +421,7 @@ public class RangerPolicyRetriever {
 			List<XXPolicyItemGroupPerm> xGroupPerms   = daoMgr.getXXPolicyItemGroupPerm().findByServiceId(serviceId);
 			List<XXPolicyItemAccess>    xAccesses     = daoMgr.getXXPolicyItemAccess().findByServiceId(serviceId);
 			List<XXPolicyItemCondition> xConditions   = daoMgr.getXXPolicyItemCondition().findByServiceId(serviceId);
+			List<XXPolicyItemDataMaskInfo> xDataMaskInfos = daoMgr.getXXPolicyItemDataMaskInfo().findByServiceId(serviceId);
 
 			this.service          = xService;
 			this.iterPolicy       = xPolicies.listIterator();
@@ -421,6 +432,7 @@ public class RangerPolicyRetriever {
 			this.iterGroupPerms   = xGroupPerms.listIterator();
 			this.iterAccesses     = xAccesses.listIterator();
 			this.iterConditions   = xConditions.listIterator();
+			this.iterDataMaskInfos = xDataMaskInfos.listIterator();
 		}
 
 		RetrieverContext(XXPolicy xPolicy) {
@@ -438,6 +450,7 @@ public class RangerPolicyRetriever {
 			List<XXPolicyItemGroupPerm> xGroupPerms   = daoMgr.getXXPolicyItemGroupPerm().findByPolicyId(policyId);
 			List<XXPolicyItemAccess>    xAccesses     = daoMgr.getXXPolicyItemAccess().findByPolicyId(policyId);
 			List<XXPolicyItemCondition> xConditions   = daoMgr.getXXPolicyItemCondition().findByPolicyId(policyId);
+			List<XXPolicyItemDataMaskInfo> xDataMaskInfos = daoMgr.getXXPolicyItemDataMaskInfo().findByPolicyId(policyId);
 
 			this.service          = xService;
 			this.iterPolicy       = xPolicies.listIterator();
@@ -448,6 +461,7 @@ public class RangerPolicyRetriever {
 			this.iterGroupPerms   = xGroupPerms.listIterator();
 			this.iterAccesses     = xAccesses.listIterator();
 			this.iterConditions   = xConditions.listIterator();
+			this.iterDataMaskInfos = xDataMaskInfos.listIterator();
 		}
 
 		RangerPolicy getNextPolicy() {
@@ -534,7 +548,8 @@ public class RangerPolicyRetriever {
 									|| iterUserPerms.hasNext()
 									|| iterGroupPerms.hasNext()
 									|| iterAccesses.hasNext()
-									|| iterConditions.hasNext();
+									|| iterConditions.hasNext()
+									|| iterDataMaskInfos.hasNext();
 
 			return !moreToProcess;
 		}
@@ -577,9 +592,30 @@ public class RangerPolicyRetriever {
 				XXPolicyItem xPolicyItem = iterPolicyItems.next();
 
 				if(xPolicyItem.getPolicyid().equals(policy.getId())) {
-					RangerPolicyItem policyItem = new RangerPolicyItem();
+					final RangerPolicyItem         policyItem;
+					final RangerDataMaskPolicyItem dataMaskPolicyItem;
 
-					policyItem.setDelegateAdmin(xPolicyItem.getDelegateAdmin());
+					if(xPolicyItem.getItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATA_MASKING) {
+						dataMaskPolicyItem = new RangerDataMaskPolicyItem();
+						policyItem         = dataMaskPolicyItem;
+					} else {
+						dataMaskPolicyItem = null;
+						policyItem         = new RangerPolicyItem();
+					}
+
+
+					while(iterAccesses.hasNext()) {
+						XXPolicyItemAccess xAccess = iterAccesses.next();
+
+						if(xAccess.getPolicyitemid().equals(xPolicyItem.getId())) {
+							policyItem.getAccesses().add(new RangerPolicyItemAccess(lookupCache.getAccessType(xAccess.getType()), xAccess.getIsallowed()));
+						} else {
+							if(iterAccesses.hasPrevious()) {
+								iterAccesses.previous();
+							}
+							break;
+						}
+					}
 
 					while(iterUserPerms.hasNext()) {
 						XXPolicyItemUserPerm xUserPerm = iterUserPerms.next();
@@ -602,19 +638,6 @@ public class RangerPolicyRetriever {
 						} else {
 							if(iterGroupPerms.hasPrevious()) {
 								iterGroupPerms.previous();
-							}
-							break;
-						}
-					}
-
-					while(iterAccesses.hasNext()) {
-						XXPolicyItemAccess xAccess = iterAccesses.next();
-
-						if(xAccess.getPolicyitemid().equals(xPolicyItem.getId())) {
-							policyItem.getAccesses().add(new RangerPolicyItemAccess(lookupCache.getAccessType(xAccess.getType()), xAccess.getIsallowed()));
-						} else {
-							if(iterAccesses.hasPrevious()) {
-								iterAccesses.previous();
 							}
 							break;
 						}
@@ -645,6 +668,24 @@ public class RangerPolicyRetriever {
 						}
 					}
 
+					policyItem.setDelegateAdmin(xPolicyItem.getDelegateAdmin());
+
+					if(dataMaskPolicyItem != null) {
+						while (iterDataMaskInfos.hasNext()) {
+							XXPolicyItemDataMaskInfo xDataMaskInfo = iterDataMaskInfos.next();
+
+							if (xDataMaskInfo.getPolicyitemid().equals(xPolicyItem.getId())) {
+								dataMaskPolicyItem.setDataMaskInfo(new RangerPolicyItemDataMaskInfo(lookupCache.getDataMaskName(xDataMaskInfo.getType()), xDataMaskInfo.getConditionExpr(), xDataMaskInfo.getValueExpr()));
+							} else {
+								if (iterDataMaskInfos.hasPrevious()) {
+									iterDataMaskInfos.previous();
+								}
+								break;
+							}
+						}
+					}
+
+
 					int itemType = xPolicyItem.getItemType() == null ? RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW : xPolicyItem.getItemType();
 
 					if(itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW) {
@@ -655,6 +696,8 @@ public class RangerPolicyRetriever {
 						policy.getAllowExceptions().add(policyItem);
 					} else if(itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
 						policy.getDenyExceptions().add(policyItem);
+					} else if(itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATA_MASKING) {
+						policy.getDataMaskPolicyItems().add(dataMaskPolicyItem);
 					} else { // unknown itemType.. set to default type
 						policy.getPolicyItems().add(policyItem);
 					}

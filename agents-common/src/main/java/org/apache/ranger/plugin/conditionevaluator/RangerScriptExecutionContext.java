@@ -43,7 +43,7 @@ public final class RangerScriptExecutionContext {
 		this.accessRequest = accessRequest;
 	}
 
-	public final String getResource() {
+	public String getResource() {
 		String ret = null;
 		Object val = getRequestContext().get(RangerAccessRequestUtil.KEY_CONTEXT_RESOURCE);
 
@@ -58,11 +58,11 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final Map<String, Object> getRequestContext() {
+	public Map<String, Object> getRequestContext() {
 		return accessRequest.getContext();
 	}
 
-	public final String getRequestContextAttribute(String attributeName) {
+	public String getRequestContextAttribute(String attributeName) {
 		String ret = null;
 
 		if (StringUtils.isNotBlank(attributeName)) {
@@ -76,27 +76,27 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final boolean isAccessTypeAny() { return accessRequest.isAccessTypeAny(); }
+	public boolean isAccessTypeAny() { return accessRequest.isAccessTypeAny(); }
 
-	public final boolean isAccessTypeDelegatedAdmin() { return accessRequest.isAccessTypeDelegatedAdmin(); }
+	public boolean isAccessTypeDelegatedAdmin() { return accessRequest.isAccessTypeDelegatedAdmin(); }
 
-	public final String getUser() { return accessRequest.getUser(); }
+	public String getUser() { return accessRequest.getUser(); }
 
-	public final Set<String> getUserGroups() { return accessRequest.getUserGroups(); }
+	public Set<String> getUserGroups() { return accessRequest.getUserGroups(); }
 
-	public final Date getAccessTime() { return accessRequest.getAccessTime(); }
+	public Date getAccessTime() { return accessRequest.getAccessTime(); }
 
-	public final String getClientIPAddress() { return accessRequest.getClientIPAddress(); }
+	public String getClientIPAddress() { return accessRequest.getClientIPAddress(); }
 
-	public final String getClientType() { return accessRequest.getClientType(); }
+	public String getClientType() { return accessRequest.getClientType(); }
 
-	public final String getAction() { return accessRequest.getAction(); }
+	public String getAction() { return accessRequest.getAction(); }
 
-	public final String getRequestData() { return accessRequest.getRequestData(); }
+	public String getRequestData() { return accessRequest.getRequestData(); }
 
-	public final String getSessionId() { return accessRequest.getSessionId(); }
+	public String getSessionId() { return accessRequest.getSessionId(); }
 
-	public final RangerTag getCurrentTag() {
+	public RangerTag getCurrentTag() {
 		RangerTag ret = null;
 		Object    val = getRequestContext().get(RangerAccessRequestUtil.KEY_CONTEXT_TAG_OBJECT);
 
@@ -110,12 +110,12 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final String getCurrentTagType() {
+	public String getCurrentTagType() {
 		RangerTag tagObject = getCurrentTag();
 		return (tagObject != null) ? tagObject.getType() : null;
 	}
 
-	public final Set<String> getAllTagTypes() {
+	public Set<String> getAllTagTypes() {
 		Set<String>     allTagTypes   = null;
 		List<RangerTag> tagObjectList = getAllTags();
 
@@ -132,7 +132,7 @@ public final class RangerScriptExecutionContext {
 		return allTagTypes;
 	}
 
-	public final Map<String, String> getTagAttributes(final String tagType) {
+	public Map<String, String> getTagAttributes(final String tagType) {
 		Map<String, String> ret = null;
 
 		if (StringUtils.isNotBlank(tagType)) {
@@ -153,7 +153,7 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final Set<String> getAttributeNames(final String tagType) {
+	public Set<String> getAttributeNames(final String tagType) {
 		Set<String>         ret        = null;
 		Map<String, String> attributes = getTagAttributes(tagType);
 
@@ -164,7 +164,7 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final String getAttributeValue(final String tagType, final String attributeName) {
+	public String getAttributeValue(final String tagType, final String attributeName) {
 		String ret = null;
 
 		if (StringUtils.isNotBlank(tagType) || StringUtils.isNotBlank(attributeName)) {
@@ -177,7 +177,7 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final String getAttributeValue(final String attributeName) {
+	public String getAttributeValue(final String attributeName) {
 		String ret = null;
 
 		if (StringUtils.isNotBlank(attributeName)) {
@@ -194,18 +194,18 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final boolean getResult() {
+	public boolean getResult() {
 		return result;
 
 	}
 
-	public final void setResult(final boolean result) {
+	public void setResult(final boolean result) {
 		this.result = result;
 	}
 
 	// Utilities - TODO
 
-	public final Date getAsDate(String value) {
+	public Date getAsDate(String value) {
 		Date ret = null;
 
 		if (StringUtils.isNotBlank(value)) {
@@ -225,13 +225,13 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final Date getTagAttributeAsDate(String tagType, String attributeName) {
+	public Date getTagAttributeAsDate(String tagType, String attributeName) {
 		String attrValue = getAttributeValue(tagType, attributeName);
 
 		return getAsDate(attrValue);
 	}
 
-	public final boolean isAccessedAfter(String tagType, String attributeName) {
+	public boolean isAccessedAfter(String tagType, String attributeName) {
 		boolean ret        = false;
 		Date    accessDate = getAccessTime();
 		Date    expiryDate = getTagAttributeAsDate(tagType, attributeName);
@@ -243,7 +243,7 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final boolean isAccessedAfter(String attributeName) {
+	public boolean isAccessedAfter(String attributeName) {
 		boolean ret        = false;
 		Date    accessDate = getAccessTime();
 		Date    expiryDate = getAsDate(getAttributeValue(attributeName));
@@ -255,7 +255,7 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final boolean isAccessedBefore(String tagType, String attributeName) {
+	public boolean isAccessedBefore(String tagType, String attributeName) {
 		boolean ret        = true;
 		Date    accessDate = getAccessTime();
 		Date    expiryDate = getTagAttributeAsDate(tagType, attributeName);
@@ -267,7 +267,7 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public final boolean isAccessedBefore(String attributeName) {
+	public boolean isAccessedBefore(String attributeName) {
 		boolean ret        = true;
 		Date    accessDate = getAccessTime();
 		Date    expiryDate = getAsDate(getAttributeValue(attributeName));

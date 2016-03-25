@@ -154,8 +154,6 @@ public class SolrException extends RuntimeException {
   }
 
   // public String toString() { return toStr(this); }  // oops, inf loop
-  @Override
-  public String toString() { return super.toString(); }
 
   public static String toStr(Throwable e) {   
     CharArrayWriter cw = new CharArrayWriter();

@@ -32,7 +32,6 @@ import javax.security.auth.Subject;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
-import org.apache.ranger.services.yarn.client.YarnClient;
 import org.apache.ranger.services.yarn.client.json.model.YarnSchedulerResponse;
 
 import com.google.gson.Gson;
@@ -226,14 +225,13 @@ public class YarnClient extends BaseClient {
 	public static HashMap<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) {
 
-		List<String> strList = new ArrayList<String>();
 		String errMsg = errMessage;
 		boolean connectivityStatus = false;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 
 		YarnClient yarnClient = getYarnClient(serviceName,
 				configs);
-		strList = getYarnResource(yarnClient, "",null);
+		List<String> strList = getYarnResource(yarnClient, "",null);
 
 		if (strList != null && strList.size() > 0 ) {
 			if (LOG.isDebugEnabled()) {
