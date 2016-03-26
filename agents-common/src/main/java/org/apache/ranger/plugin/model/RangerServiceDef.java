@@ -2447,7 +2447,9 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerDataMaskDef {
+	public static class RangerDataMaskDef implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
 		private List<RangerDataMaskTypeDef> maskTypes;
 		private List<String>                supportedAccessTypes;
 		private List<String>                supportedResources;
