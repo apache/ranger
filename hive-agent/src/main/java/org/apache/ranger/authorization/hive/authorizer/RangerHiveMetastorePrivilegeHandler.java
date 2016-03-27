@@ -208,6 +208,7 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
 
     @Override
     public void onCreateTable(CreateTableEvent cte) throws MetaException {
+        LOG.info("onCreateTable(cte): " + cte);
         Table table = cte.getTable();
         if (table.getTableType().equals(TableType.INDEX_TABLE.toString())) return;
         GrantRevokeRequest request1 = createGrantRevokeRequest(table.getDbName(),
@@ -224,13 +225,15 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
                 hivePlugin.removeAccess(request1, auditHandler);
             }
         } catch (Exception e) {
-            throw new MetaException(e.getMessage());
+            // Just a warning
+            LOG.warn("Column privilege grant failed.");
         } finally {
             auditHandler.flushAudit();
         }
     }
 
     public void onDropTable(DropTableEvent tableEvent) throws MetaException {
+        LOG.info("onDropTable(tableEvent): " + tableEvent);
         Table table = tableEvent.getTable();
         GrantRevokeRequest request1 = createGrantRevokeRequest(table.getDbName(),
                 table.getTableName(), null);
@@ -246,13 +249,15 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
                 hivePlugin.grantAccess(request1, auditHandler);
             }
         } catch (Exception e) {
-            throw new MetaException(e.getMessage());
+            // Just a warning
+            LOG.warn("Column privilege drop failed.");
         } finally {
             auditHandler.flushAudit();
         }
     }
 
     public void onAlterTable(AlterTableEvent tableEvent) throws MetaException {
+        LOG.info("onAlterTable(tableEvent): " + tableEvent);
         Table newTable = tableEvent.getNewTable();
         String newDbName = newTable.getDbName();
         String newTableName = newTable.getTableName();
@@ -270,7 +275,8 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
                         newDbName, newTableName, "*");
             hivePlugin.alterAccess(request2, auditHandler);
         } catch (Exception e) {
-            throw new MetaException(e.getMessage());
+            // Just a warning
+            LOG.warn("Column/Index privilege alter failed.");
         } finally {
             auditHandler.flushAudit();
         }
@@ -286,27 +292,30 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
     }
 
     public void onCreateDatabase(CreateDatabaseEvent dbEvent) throws MetaException {
+        LOG.info("onCreateDatabase(dbEvent): " + dbEvent);
         GrantRevokeRequest request = createGrantRevokeRequest(dbEvent.getDatabase().getName(),
                 null, null);
         RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
         try {
             hivePlugin.grantAccess(request, auditHandler);
         } catch (Exception e) {
-            throw new MetaException(e.getMessage());
+            // Just a warning
+            LOG.warn("Database creation failed.");
         } finally {
             auditHandler.flushAudit();
         }
     }
 
     public void onDropDatabase(DropDatabaseEvent dbEvent) throws MetaException {
-        List<String> resourceLocations = null;
+        LOG.info("onDropDatabase(dbEvent): " + dbEvent);
         GrantRevokeRequest request = createGrantRevokeRequest(dbEvent.getDatabase().getName(),
                 null, null);
         RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
         try {
             hivePlugin.removeAccess(request, auditHandler);
         } catch (Exception e) {
-            throw new MetaException(e.getMessage());
+            // Just a warning
+            LOG.warn("Database drop failed.");
         } finally {
             auditHandler.flushAudit();
         }
@@ -317,6 +326,7 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
     }
 
     public void onAddIndex(AddIndexEvent indexEvent) throws MetaException {
+        LOG.info("onAddIndex(indexEvent): " + indexEvent);
         Index index = indexEvent.getIndex();
         GrantRevokeRequest request = createGrantRevokeRequest(index.getDbName(),
                 index.getOrigTableName(), index.getIndexName());
@@ -324,13 +334,15 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
         try {
             hivePlugin.grantAccess(request, auditHandler);
         } catch (Exception e) {
-            throw new MetaException(e.getMessage());
+            // Just a warning
+            LOG.warn("Index addition failed.");
         } finally {
             auditHandler.flushAudit();
         }
     }
 
     public void onDropIndex(DropIndexEvent indexEvent) throws MetaException {
+        LOG.info("onDropIndex(indexEvent): " + indexEvent);
         Index index = indexEvent.getIndex();
         if (index != null) {
             GrantRevokeRequest request = createGrantRevokeRequest(index.getDbName(),
@@ -339,7 +351,8 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
             try {
                 hivePlugin.removeAccess(request, auditHandler);
             } catch (Exception e) {
-                throw new MetaException(e.getMessage());
+                // Just a warning
+                LOG.warn("Index drop failed.");
             } finally {
                 auditHandler.flushAudit();
             }
@@ -347,6 +360,7 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
     }
 
     public void onAlterIndex(AlterIndexEvent indexEvent) throws MetaException {
+        LOG.info("onAlterIndex(indexEvent): " + indexEvent);
         Index oldIndex = indexEvent.getOldIndex();
         Index newIndex = indexEvent.getNewIndex();
         AlterRequest request = getHiveAlterRequest(oldIndex.getDbName(), oldIndex.getOrigTableName(),
@@ -357,20 +371,23 @@ public class RangerHiveMetastorePrivilegeHandler extends MetaStoreEventListener 
         try {
             hivePlugin.alterAccess(request, auditHandler);
         } catch (Exception e) {
-            throw new MetaException(e.getMessage());
+            // Just a warning
+            LOG.warn("Index alter failed.");
         } finally {
             auditHandler.flushAudit();
         }
     }
 
     public void onInsert(InsertEvent insertEvent) throws MetaException {
+        LOG.info("onInsert(insertEvent): " + insertEvent);
         GrantRevokeRequest request = createGrantRevokeRequest(insertEvent.getDb(),
                 insertEvent.getTable(), null);
         RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
         try {
             hivePlugin.grantAccess(request, auditHandler);
         } catch (Exception e) {
-            throw new MetaException(e.getMessage());
+            // Just a warning
+            LOG.warn("Insertion failed.");
         } finally {
             auditHandler.flushAudit();
         }
