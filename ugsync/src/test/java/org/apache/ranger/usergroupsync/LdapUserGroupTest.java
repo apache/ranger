@@ -35,6 +35,7 @@ import org.apache.directory.server.protocol.shared.transport.TcpTransport;
 import org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -82,7 +83,9 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		LdapServer ldapServer = new LdapServer(); 
 	    ldapServer.setSaslHost("127.0.0.1");
 	    ldapServer.setSearchBaseDn("DC=ranger,DC=qe,DC=hortonworks,DC=com"); 
-	    ldapServer.setTransports(new TcpTransport("127.0.0.1", 10389)); 
+            String ldapPort = System.getProperty("ldap.port");
+            Assert.assertNotNull("Property 'ldap.port' null", ldapPort);
+	    ldapServer.setTransports(new TcpTransport("127.0.0.1", Integer.parseInt(ldapPort))); 
 	    ldapServer.setDirectoryService(getService());
 	    ldapServer.setMaxSizeLimit( LdapServer.NO_SIZE_LIMIT );
 	    setLdapServer(ldapServer);

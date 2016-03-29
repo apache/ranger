@@ -105,7 +105,7 @@
     
     <property>
       <name>ranger.usersync.ldap.url</name>
-      <value>ldap://127.0.0.1:10389</value>
+      <value>ldap://127.0.0.1:${ldap.port}</value>
     </property>
     
     <property>
