@@ -252,7 +252,6 @@ public class RangerServiceTagsCache {
 		private void pruneUnusedAttributes() {
 			if (serviceTags != null) {
 				serviceTags.setOp(null);
-				serviceTags.setTagModel(null);
 				serviceTags.setTagUpdateTime(null);
 
 				serviceTags.setTagDefinitions(null);

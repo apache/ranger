@@ -57,6 +57,19 @@ public class XXTagAttributeDao extends BaseDao<XXTagAttribute> {
 		}
 	}
 
+	public List<XXTagAttribute> findByServiceIdAndOwner(Long serviceId, Short owner) {
+		if (serviceId == null) {
+			return new ArrayList<XXTagAttribute>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXTagAttribute.findByServiceIdAndOwner", tClass)
+					.setParameter("serviceId", serviceId)
+					.setParameter("owner", owner)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagAttribute>();
+		}
+	}
 	public List<XXTagAttribute> findByResourceId(Long resourceId) {
 		if (resourceId == null) {
 			return new ArrayList<XXTagAttribute>();

@@ -59,13 +59,14 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 		}
 	}
 
-	public XXServiceResource findByResourceSignature(String resourceSignature) {
+	public XXServiceResource findByServiceAndResourceSignature(Long serviceId, String resourceSignature) {
 		if (StringUtils.isBlank(resourceSignature)) {
 			return null;
 		}
 		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.findByResourceSignature", tClass)
-					.setParameter("resourceSignature", resourceSignature).getSingleResult();
+			return getEntityManager().createNamedQuery("XXServiceResource.findByServiceAndResourceSignature", tClass)
+					.setParameter("serviceId", serviceId).setParameter("resourceSignature", resourceSignature)
+					.getSingleResult();
 		} catch (NoResultException e) {
 			return null;
 		}

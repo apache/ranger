@@ -891,6 +891,13 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXTag.findByServiceIdAndOwner">
+		<query>select obj from XXTag obj where obj.owner = :owner and obj.id in
+			(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
+			order by obj.id
+		</query>
+	</named-query>
+
 	<named-query name="XXTagAttribute.findByTagId">
 		<query>select obj from XXTagAttribute obj where obj.tagId = :tagId</query>
 	</named-query>
@@ -898,6 +905,15 @@
 	<named-query name="XXTagAttribute.findByServiceId">
 		<query>select obj from XXTagAttribute obj where obj.tagId in
 			(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
+			order by obj.tagId
+		</query>
+	</named-query>
+
+	<named-query name="XXTagAttribute.findByServiceIdAndOwner">
+		<query>select obj from XXTagAttribute obj where obj.tagId in
+			(select tag.id from XXTag tag where tag.owner = :owner and tag.id in
+				(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
+			)
 			order by obj.tagId
 		</query>
 	</named-query>
@@ -926,8 +942,8 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXServiceResource.findByResourceSignature">
-		<query>select obj from XXServiceResource obj where obj.resourceSignature = :resourceSignature</query>
+	<named-query name="XXServiceResource.findByServiceAndResourceSignature">
+		<query>select obj from XXServiceResource obj where obj.serviceId = :serviceId and obj.resourceSignature = :resourceSignature</query>
 	</named-query>
 
 	<!-- End <== JPA Queries for Tag Based Policies  -->

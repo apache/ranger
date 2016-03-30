@@ -104,31 +104,21 @@ public abstract class AbstractTagStore implements TagStore {
 	}
 
 	@Override
-	public void deleteAllTagObjectsForService(String serviceName, boolean isResourePrivateTag) throws Exception {
+	public void deleteAllTagObjectsForService(String serviceName) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> AbstractTagStore.deleteAllTagObjectsForService(serviceName=" + serviceName + ", isResourcePrivateTag=" + isResourePrivateTag + ")");
+			LOG.debug("==> AbstractTagStore.deleteAllTagObjectsForService(serviceName=" + serviceName + ")");
 		}
 
 		List<RangerServiceResource> serviceResources = getServiceResourcesByService(serviceName);
 
 		if (serviceResources != null) {
 
-			Set<Long> tagsToDelete = new HashSet<Long>();
-
-
 			for (RangerServiceResource serviceResource : serviceResources) {
 				Long resourceId = serviceResource.getId();
 
 				List<RangerTagResourceMap> tagResourceMapsForService = getTagResourceMapsForResourceId(resourceId);
 
-				if (isResourePrivateTag) {
-					for (RangerTagResourceMap tagResourceMap : tagResourceMapsForService) {
-						Long tagId = tagResourceMap.getTagId();
-						RangerTag tag = getTag(tagId);
-						tagsToDelete.add(tag.getId());
-					}
-				}
 				for (RangerTagResourceMap tagResourceMap : tagResourceMapsForService) {
 					deleteTagResourceMap(tagResourceMap.getId());
 				}
@@ -138,13 +128,10 @@ public abstract class AbstractTagStore implements TagStore {
 				deleteServiceResource(serviceResource.getId());
 			}
 
-			for (Long tagId : tagsToDelete) {
-				deleteTag(tagId);
-			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== AbstractTagStore.deleteAllTagObjectsForService(serviceName=" + serviceName + ", isResourcePrivateTag=" + isResourePrivateTag + ")");
+			LOG.debug("<== AbstractTagStore.deleteAllTagObjectsForService(serviceName=" + serviceName + ")");
 		}
 
 	}

@@ -123,4 +123,19 @@ public class XXTagDao extends BaseDao<XXTag> {
 			return new ArrayList<XXTag>();
 		}
 	}
+
+	public List<XXTag> findByServiceIdAndOwner(Long serviceId, Short owner) {
+		if (serviceId == null) {
+			return new ArrayList<XXTag>();
+		}
+
+		try {
+			return getEntityManager().createNamedQuery("XXTag.findByServiceIdAndOwner", tClass)
+					.setParameter("serviceId", serviceId)
+					.setParameter("owner", owner)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTag>();
+		}
+	}
 }

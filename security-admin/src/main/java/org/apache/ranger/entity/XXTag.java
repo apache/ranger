@@ -200,7 +200,7 @@ public class XXTag extends XXDBBase implements Serializable {
 		sb.append("id={").append(id).append("} ");
 		sb.append("guid={").append(guid).append("} ");
 		sb.append("type={").append(type).append("} ");
-		sb.append("owner={").append(owner).append("} ");
+		sb.append("owned_by={").append(owner).append("} ");
 		sb.append(" }");
 
 		return sb;

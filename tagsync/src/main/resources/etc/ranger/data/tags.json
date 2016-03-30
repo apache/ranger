@@ -1,6 +1,5 @@
 {
     "op":"add_or_update",
-    "tagModel": "resource_private",
     "serviceName": "cl1_hive",
     "tagDefinitions": {
       "1": {
@@ -23,7 +22,8 @@
           "expiry_date": "2014/12/31"
         },
         "id": 1,
-        "guid": "tag-1-guid"
+        "guid": "tag-1-guid",
+        "owner":0
       }
     },
     "serviceResources": [

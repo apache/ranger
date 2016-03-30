@@ -41,24 +41,26 @@ public class RangerTag extends RangerBaseModelObject {
 	public static final short OWNER_GLOBAL          = 1;
 
 	private String              type;
-	private Short               owner = OWNER_SERVICERESOURCE;
+    private Short               owner = OWNER_SERVICERESOURCE;
+
 	private Map<String, String> attributes;
 
-	public RangerTag(String guid, String type, Short owner, Map<String, String> attributes) {
+	public RangerTag(String guid, String type, Map<String, String> attributes, Short owner) {
 		super();
 
 		setGuid(guid);
 		setType(type);
 		setOwner(owner);
 		setAttributes(attributes);
+		setOwner(owner);
 	}
 
 	public RangerTag(String type, Map<String, String> attributes) {
-		this(null, type, OWNER_SERVICERESOURCE, attributes);
+		this(null, type, attributes, OWNER_SERVICERESOURCE);
 	}
 
 	public RangerTag() {
-		this(null, null, OWNER_SERVICERESOURCE, null);
+		this(null, null, null, OWNER_SERVICERESOURCE);
 	}
 
 	public String getType() {

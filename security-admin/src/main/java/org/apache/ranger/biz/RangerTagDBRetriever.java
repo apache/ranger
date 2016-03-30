@@ -525,6 +525,7 @@ public class RangerTagDBRetriever {
 
 					ret.setId(xTag.getId());
 					ret.setGuid(xTag.getGuid());
+					ret.setOwner(xTag.getOwner());
 					ret.setCreatedBy(lookupCache.getUserScreenName(xTag.getAddedByUserId()));
 					ret.setUpdatedBy(lookupCache.getUserScreenName(xTag.getUpdatedByUserId()));
 					ret.setCreateTime(xTag.getCreateTime());

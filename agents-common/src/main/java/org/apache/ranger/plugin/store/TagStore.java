@@ -91,7 +91,7 @@ public interface TagStore {
 
     List<RangerServiceResource> getServiceResourcesByService(String serviceName) throws Exception;
 
-    RangerServiceResource getServiceResourceByResourceSignature(String resourceSignature) throws Exception;
+    RangerServiceResource getServiceResourceByServiceAndResourceSignature(String serviceName, String resourceSignature) throws Exception;
 
     List<RangerServiceResource> getServiceResources(SearchFilter filter) throws Exception;
 
@@ -128,5 +128,5 @@ public interface TagStore {
 
     Long getTagVersion(String serviceName);
 
-    void deleteAllTagObjectsForService(String serviceName, boolean isResourePrivateTag) throws Exception;
+    void deleteAllTagObjectsForService(String serviceName) throws Exception;
 }

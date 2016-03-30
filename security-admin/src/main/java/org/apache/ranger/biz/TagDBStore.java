@@ -39,6 +39,7 @@ import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceResource;
+import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTagAttributeDef;
 import org.apache.ranger.entity.XXServiceResourceElement;
@@ -581,15 +582,21 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerServiceResource getServiceResourceByResourceSignature(String resourceSignature) throws Exception {
+	public RangerServiceResource getServiceResourceByServiceAndResourceSignature(String serviceName, String resourceSignature) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.getServiceResourceByResourceSignature(" + resourceSignature + ")");
+			LOG.debug("==> TagDBStore.getServiceResourceByServiceAndResourceSignature(" + serviceName + ", " + resourceSignature + ")");
 		}
 
-		RangerServiceResource ret = rangerServiceResourceService.getByResourceSignature(resourceSignature);
+		RangerServiceResource ret = null;
+
+		XXService service = daoManager.getXXService().findByName(serviceName);
+
+		if (service != null) {
+			ret = rangerServiceResourceService.getByServiceAndResourceSignature(service.getId(), resourceSignature);
+		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.getServiceResourceByResourceSignature(" + resourceSignature + "): " + ret);
+			LOG.debug("<== TagDBStore.getServiceResourceByServiceAndResourceSignature(" + serviceName + ", " + resourceSignature + "): " + ret);
 		}
 
 		return ret;
@@ -648,8 +655,14 @@ public class TagDBStore extends AbstractTagStore {
 		}
 
 		RangerTagResourceMap tagResourceMap = rangerTagResourceMapService.read(id);
+		Long tagId = tagResourceMap.getTagId();
+		RangerTag tag = getTag(tagId);
 
 		rangerTagResourceMapService.delete(tagResourceMap);
+
+		if (tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
+			deleteTag(tagId);
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.deleteTagResourceMap(" + id + ")");
@@ -1088,7 +1101,7 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
-	public void deleteAllTagObjectsForService(String serviceName, boolean isResourcePrivateFlag) throws Exception {
+	public void deleteAllTagObjectsForService(String serviceName) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.deleteAllTagObjectsForService(" + serviceName + ")");
@@ -1099,6 +1112,10 @@ public class TagDBStore extends AbstractTagStore {
 		if (service != null) {
 			Long serviceId = service.getId();
 
+			List<XXTagAttribute> xxTagAttributes = daoManager.getXXTagAttribute().findByServiceIdAndOwner(serviceId, RangerTag.OWNER_SERVICERESOURCE);
+
+			List<XXTag> xxTags = daoManager.getXXTag().findByServiceIdAndOwner(serviceId, RangerTag.OWNER_SERVICERESOURCE);
+
 			List<XXTagResourceMap> xxTagResourceMaps = daoManager.getXXTagResourceMap().findByServiceId(serviceId);
 
 			if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
@@ -1107,6 +1124,28 @@ public class TagDBStore extends AbstractTagStore {
 						daoManager.getXXTagResourceMap().remove(xxTagResourceMap);
 					} catch (Exception e) {
 						LOG.error("Error deleting RangerTagResourceMap with id=" + xxTagResourceMap.getId(), e);
+						throw e;
+					}
+				}
+			}
+
+			if (CollectionUtils.isNotEmpty(xxTagAttributes)) {
+				for (XXTagAttribute xxTagAttribute : xxTagAttributes) {
+					try {
+						daoManager.getXXTagAttribute().remove(xxTagAttribute);
+					} catch (Exception e) {
+						LOG.error("Error deleting RangerTagAttribute with id=" + xxTagAttribute.getId(), e);
+						throw e;
+					}
+				}
+			}
+
+			if (CollectionUtils.isNotEmpty(xxTags)) {
+				for (XXTag xxTag : xxTags) {
+					try {
+						daoManager.getXXTag().remove(xxTag);
+					} catch (Exception e) {
+						LOG.error("Error deleting RangerTag with id=" + xxTag.getId(), e);
 						throw e;
 					}
 				}
@@ -1150,6 +1189,7 @@ public class TagDBStore extends AbstractTagStore {
 					}
 				}
 			}
+
 		}
 
 		if (LOG.isDebugEnabled()) {

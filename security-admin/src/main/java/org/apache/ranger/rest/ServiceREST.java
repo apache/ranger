@@ -539,7 +539,7 @@ public class ServiceREST {
 			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 
-			tagStore.deleteAllTagObjectsForService(service.getName(), false);
+			tagStore.deleteAllTagObjectsForService(service.getName());
 
 			svcStore.deleteService(id);
 		} catch(WebApplicationException excp) {

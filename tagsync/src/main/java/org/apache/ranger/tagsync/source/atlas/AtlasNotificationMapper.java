@@ -201,7 +201,6 @@ public class AtlasNotificationMapper {
 			}
 
 			ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
-			ret.setTagModel(ServiceTags.TAGMODEL_RESOURCE_PRIVATE);
 			ret.setServiceName(serviceName);
 		}
 
@@ -232,7 +231,7 @@ public class AtlasNotificationMapper {
 					LOG.error("Could not get values for trait:" + trait.getTypeName(), exception);
 				}
 
-				ret.add(new RangerTag(trait.getTypeName(), tagAttrs));
+				ret.add(new RangerTag(null, trait.getTypeName(), tagAttrs, RangerTag.OWNER_SERVICERESOURCE));
 			}
 		}
 

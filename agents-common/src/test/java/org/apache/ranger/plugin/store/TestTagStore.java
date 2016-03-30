@@ -309,8 +309,9 @@ public class TestTagStore {
 		validator.preDeleteServiceResource(createdServiceResource.getId());
 		tagStore.deleteServiceResource(createdServiceResource.getId());
 
-		validator.preDeleteTag(createdTag.getId());
-		tagStore.deleteTag(createdTag.getId());
+		// private tags are deleted when TagResourceMap is deleted.. No need for deleting it here
+		//validator.preDeleteTag(createdTag.getId());
+		//tagStore.deleteTag(createdTag.getId());
 
 	}
 }

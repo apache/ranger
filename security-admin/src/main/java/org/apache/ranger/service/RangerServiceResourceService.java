@@ -91,10 +91,10 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
 		return ret;
 	}
 
-	public RangerServiceResource getByResourceSignature(String resourceSignature) {
+	public RangerServiceResource getByServiceAndResourceSignature(Long serviceId, String resourceSignature) {
 		RangerServiceResource ret = null;
 
-		XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByResourceSignature(resourceSignature);
+		XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByServiceAndResourceSignature(serviceId, resourceSignature);
 		
 		if(xxServiceResource != null) {
 			ret = populateViewBean(xxServiceResource);

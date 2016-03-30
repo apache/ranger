@@ -732,15 +732,17 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
-	public RangerServiceResource getServiceResourceByResourceSignature(String resourceSignature) throws Exception {
+	public RangerServiceResource getServiceResourceByServiceAndResourceSignature(String serviceName, String resourceSignature) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagFileStore.getServiceResourceByResourceSignature(" + resourceSignature + ")");
+			LOG.debug("==> TagFileStore.getServiceResourceByServiceAndResourceSignature(" + serviceName + ", " + resourceSignature + ")");
 		}
 
 		RangerServiceResource ret = null;
 
 		if (StringUtils.isNotBlank(resourceSignature)) {
-			SearchFilter filter = new SearchFilter(SearchFilter.TAG_RESOURCE_SIGNATURE, resourceSignature);
+			SearchFilter filter = new SearchFilter();
+			filter.setParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME, serviceName);
+			filter.setParam(SearchFilter.TAG_RESOURCE_SIGNATURE, resourceSignature);
 
 			List<RangerServiceResource> resources = getServiceResources(filter);
 
@@ -748,7 +750,7 @@ public class TagFileStore extends AbstractTagStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagFileStore.getServiceResourceByResourceSignature(" + resourceSignature + "): " + ret);
+			LOG.debug("<== TagFileStore.getServiceResourceByServiceAndResourceSignature(" + serviceName + ", " + resourceSignature + "): " + ret);
 		}
 
 		return ret;
@@ -824,8 +826,13 @@ public class TagFileStore extends AbstractTagStore {
 
 		try {
 			RangerTagResourceMap tagResourceMap = getTagResourceMap(id);
+			Long tagId = tagResourceMap.getTagId();
+			RangerTag tag = getTag(tagId);
 
 			deleteTagResourceMap(tagResourceMap);
+			if (tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
+				deleteTag(tagId);
+			}
 		} catch (Exception excp) {
 			throw new Exception("failed to delete tagResourceMap with ID=" + id, excp);
 		}

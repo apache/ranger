@@ -19,4 +19,5 @@ BEGIN
 	ALTER TABLE [dbo].[x_tag] ADD [owned_by] [smallint] DEFAULT 0 NOT NULL;
 END
 GO
+
 exit

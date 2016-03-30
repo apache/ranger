@@ -778,26 +778,27 @@ public class TagREST {
     }
 
     @GET
-    @Path(TagRESTConstants.RESOURCE_RESOURCE + "signature/{resourceSignature}")
+    @Path(TagRESTConstants.RESOURCE_RESOURCE + "service/{serviceName}/signature/{resourceSignature}")
     @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public RangerServiceResource getServiceResourceByResourceSignature(@PathParam("resourceSignature") String resourceSignature) {
+    public RangerServiceResource getServiceResourceByServiceAndResourceSignature(@PathParam("serviceName") String serviceName,
+                                                                       @PathParam("resourceSignature") String resourceSignature) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getServiceResourceByResourceSignature(" + resourceSignature + ")");
+            LOG.debug("==> TagREST.getServiceResourceByServiceAndResourceSignature(" + serviceName + ", " + resourceSignature + ")");
         }
 
         RangerServiceResource ret = null;
 
         try {
-            ret = tagStore.getServiceResourceByResourceSignature(resourceSignature);
+            ret = tagStore.getServiceResourceByServiceAndResourceSignature(serviceName, resourceSignature);
         } catch(Exception excp) {
-            LOG.error("getServiceResourceByResourceSignature(" + resourceSignature + ") failed", excp);
+            LOG.error("getServiceResourceByServiceAndResourceSignature(" + serviceName + ", " + resourceSignature + ") failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.getServiceResourceByResourceSignature(" + resourceSignature + "): " + ret);
+            LOG.debug("<== TagREST.getServiceResourceByServiceAndResourceSignature(" + serviceName + ", " + resourceSignature + "): " + ret);
         }
 
         return ret;

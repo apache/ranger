@@ -50,11 +50,7 @@ public class ServiceTags implements java.io.Serializable {
 	public static final String OP_DELETE        = "delete";
 	public static final String OP_REPLACE       = "replace";
 
-	public static final String TAGMODEL_SHARED        = "shared";
-	public static final String TAGMODEL_RESOURCE_PRIVATE        = "resource_private";
-
 	private String                      op = OP_ADD_OR_UPDATE;
-	private String                      tagModel = TAGMODEL_SHARED;
 	private String                      serviceName;
 	private Long                        tagVersion;
 	private Date                        tagUpdateTime;
@@ -64,13 +60,12 @@ public class ServiceTags implements java.io.Serializable {
 	private Map<Long, List<Long>>       resourceToTagIds;
 
 	public ServiceTags() {
-		this(OP_ADD_OR_UPDATE, TAGMODEL_SHARED, null, 0L, null, null, null, null, null);
+		this(OP_ADD_OR_UPDATE, null, 0L, null, null, null, null, null);
 	}
 
-	public ServiceTags(String op, String tagModel, String serviceName, Long tagVersion, Date tagUpdateTime, Map<Long, RangerTagDef> tagDefinitions,
+	public ServiceTags(String op, String serviceName, Long tagVersion, Date tagUpdateTime, Map<Long, RangerTagDef> tagDefinitions,
 					   Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources, Map<Long, List<Long>> resourceToTagIds) {
 		setOp(op);
-		setTagModel(tagModel);
 		setServiceName(serviceName);
 		setTagVersion(tagVersion);
 		setTagUpdateTime(tagUpdateTime);
@@ -87,13 +82,6 @@ public class ServiceTags implements java.io.Serializable {
 	}
 
 	/**
-	 * @return the tagModel
-	 */
-	public String getTagModel() {
-		return tagModel;
-	}
-
-	/**
 	 * @return the serviceName
 	 */
 	public String getServiceName() {
@@ -105,14 +93,6 @@ public class ServiceTags implements java.io.Serializable {
 	 */
 	public void setOp(String op) {
 		this.op = op;
-	}
-
-
-	/**
-	 * @param tagModel the tagModel to set
-	 */
-	public void setTagModel(String tagModel) {
-		this.tagModel = tagModel;
 	}
 
 	/**
@@ -194,7 +174,6 @@ public class ServiceTags implements java.io.Serializable {
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("ServiceTags={")
 				.append("op=").append(op).append(", ")
-				.append("tagModel=").append(tagModel).append(", ")
 				.append("serviceName=").append(serviceName).append(", ")
 				.append("tagVersion=").append(tagVersion).append(", ")
 				.append("tagUpdateTime={").append(tagUpdateTime).append("}")

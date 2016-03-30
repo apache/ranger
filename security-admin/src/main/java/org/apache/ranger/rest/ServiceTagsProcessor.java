@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.ServiceTags;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,6 @@ public class ServiceTagsProcessor {
 		if (tagStore != null && serviceTags != null) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("serviceTags:	op=" + serviceTags.getOp());
-				LOG.debug("serviceTags:	tagModel=" + serviceTags.getTagModel());
 			}
 			String op = serviceTags.getOp();
 
@@ -88,10 +88,7 @@ public class ServiceTagsProcessor {
 		}
 
 		Map<Long, RangerTagDef>          tagDefsInStore   = new HashMap<Long, RangerTagDef>();
-		Map<Long, RangerTag>             tagsInStore      = new HashMap<Long, RangerTag>();
 		Map<Long, RangerServiceResource> resourcesInStore = new HashMap<Long, RangerServiceResource>();
-
-		boolean createOrUpdate = true;
 
 		if (MapUtils.isNotEmpty(serviceTags.getTagDefinitions())) {
 			RangerTagDef tagDef = null;
@@ -102,14 +99,12 @@ public class ServiceTagsProcessor {
 
 					RangerTagDef existing = null;
 
-					if(createOrUpdate) {
-						if(StringUtils.isNotEmpty(tagDef.getGuid())) {
-							existing = tagStore.getTagDefByGuid(tagDef.getGuid());
-						}
+					if(StringUtils.isNotEmpty(tagDef.getGuid())) {
+						existing = tagStore.getTagDefByGuid(tagDef.getGuid());
+					}
 
-						if(existing == null && StringUtils.isNotEmpty(tagDef.getName())) {
-							existing = tagStore.getTagDefByName(tagDef.getName());
-						}
+					if(existing == null && StringUtils.isNotEmpty(tagDef.getName())) {
+						existing = tagStore.getTagDefByName(tagDef.getName());
 					}
 
 					RangerTagDef tagDefInStore = null;
@@ -123,48 +118,10 @@ public class ServiceTagsProcessor {
 						tagDefInStore = existing;
 					}
 
-					if(tagDefsInStore != null) {
-						tagDefsInStore.put(entry.getKey(), tagDefInStore);
-					}
+					tagDefsInStore.put(entry.getKey(), tagDefInStore);
 				}
 			} catch (Exception exception) {
 				LOG.error("createTagDef failed, tagDef=" + tagDef, exception);
-				throw exception;
-			}
-		}
-
-		if (MapUtils.isNotEmpty(serviceTags.getTags())) {
-			RangerTag tag = null;
-
-			try {
-				for (Map.Entry<Long, RangerTag> entry : serviceTags.getTags().entrySet()) {
-					tag = entry.getValue();
-
-					RangerTag existing = null;
-
-					if(createOrUpdate) {
-						if(StringUtils.isNotEmpty(tag.getGuid())) {
-							existing = tagStore.getTagByGuid(tag.getGuid());
-						}
-					}
-
-					RangerTag tagInStore = null;
-
-					if(existing == null) {
-						tagInStore = tagStore.createTag(tag);
-					} else {
-						tag.setId(existing.getId());
-						tag.setGuid(existing.getGuid());
-
-						tagInStore = tagStore.updateTag(tag);
-					}
-
-					if(tagsInStore != null) {
-						tagsInStore.put(entry.getKey(), tagInStore);
-					}
-				}
-			} catch (Exception exception) {
-				LOG.error("createTag failed, tag=" + tag, exception);
 				throw exception;
 			}
 		}
@@ -181,24 +138,22 @@ public class ServiceTagsProcessor {
 					String                resourceSignature = null;
 					Long                  resourceId        = resource.getId();
 
-					if(createOrUpdate) {
-						if(StringUtils.isNotEmpty(resource.getGuid())) {
-							existing = tagStore.getServiceResourceByGuid(resource.getGuid());
+					if(StringUtils.isNotEmpty(resource.getGuid())) {
+						existing = tagStore.getServiceResourceByGuid(resource.getGuid());
+					}
+
+					if(existing == null) {
+						if(MapUtils.isNotEmpty(resource.getResourceElements())) {
+							RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
+
+							resourceSignature = serializer.getSignature();
+
+							existing = tagStore.getServiceResourceByServiceAndResourceSignature(resource.getServiceName(), resourceSignature);
 						}
+					}
 
-						if(existing == null) {
-							if(MapUtils.isNotEmpty(resource.getResourceElements())) {
-								RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
-
-								resourceSignature = serializer.getSignature();
-
-								existing = tagStore.getServiceResourceByResourceSignature(resourceSignature);
-							}
-						}
-
-						if(existing != null) {
-							resourceSignature = existing.getResourceSignature();
-						}
+					if(existing != null) {
+						resourceSignature = existing.getResourceSignature();
 					}
 
 					if(StringUtils.isEmpty(resourceSignature)) {
@@ -243,70 +198,141 @@ public class ServiceTagsProcessor {
 				}
 
 				// Get all tags associated with this resourceId
-				List<Long> tagsToDelete = null;
+				List<RangerTag> associatedTags = null;
+
 				try {
-					tagsToDelete = tagStore.getTagIdsForResourceId(resourceInStore.getId());
+					associatedTags = tagStore.getTagsForResourceId(resourceInStore.getId());
 				} catch (Exception exception) {
 					LOG.error("RangerTags cannot be retrieved for resource with guid=" + resourceInStore.getGuid());
 					throw exception;
 				}
 
+				List<RangerTag> tagsToRetain = new ArrayList<RangerTag>();
+
 				List<Long> tagIds = entry.getValue();
 				try {
 					for (Long tagId : tagIds) {
-						RangerTag tagInStore = tagsInStore.get(tagId);
+						RangerTag incomingTag = MapUtils.isNotEmpty(serviceTags.getTags()) ? serviceTags.getTags().get(tagId) : null;
 
-						if (tagInStore == null) {
+						if (incomingTag == null) {
 							LOG.error("Tag (id=" + tagId + ") not found. Skipping addition of this tag for resource (id=" + resourceId + ")");
 							continue;
 						}
 
-						RangerTagResourceMap existing = null;
+						RangerTag matchingTag = findMatchingTag(incomingTag, associatedTags);
+						if (matchingTag == null) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Did not find matching tag for tagId=" + tagId);
+							}
+							// create new tag from incoming tag and associate it with service-resource
+							RangerTag newTag = tagStore.createTag(incomingTag);
 
-						if(createOrUpdate) {
-							existing = tagStore.getTagResourceMapForTagAndResourceId(tagInStore.getId(), resourceInStore.getId());
-						}
-
-						if(existing == null) {
 							RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
 
-							tagResourceMap.setTagId(tagInStore.getId());
+							tagResourceMap.setTagId(newTag.getId());
 							tagResourceMap.setResourceId(resourceInStore.getId());
 
 							tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+
+							associatedTags.add(newTag);
+							tagsToRetain.add(newTag);
+
+							continue;
+
 						}
 
-						if(tagsToDelete != null) {
-							tagsToDelete.remove((Long)tagInStore.getId());
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Found matching tag for tagId=" + tagId + ", matchingTag=" + matchingTag);
 						}
+
+						if (isResourcePrivateTag(incomingTag)) {
+							if (!isResourcePrivateTag(matchingTag)) {
+								// create new tag from incoming tag and associate it with service-resource
+								RangerTag newTag = tagStore.createTag(incomingTag);
+
+								RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
+
+								tagResourceMap.setTagId(newTag.getId());
+								tagResourceMap.setResourceId(resourceInStore.getId());
+
+								tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+
+								associatedTags.add(newTag);
+								tagsToRetain.add(newTag);
+
+							} else {
+								// Keep this tag, but update it with attribute-values from incoming tag
+								tagsToRetain.add(matchingTag);
+
+								if (StringUtils.equals(incomingTag.getGuid(), matchingTag.getGuid())) {
+									// matching tag was found because of Guid match
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Updating existing private tag with id=" + matchingTag.getId());
+									}
+									// update private tag with new values
+									incomingTag.setId(matchingTag.getId());
+									tagStore.updateTag(incomingTag);
+								}
+							}
+						} else { // shared model
+							if (isResourcePrivateTag(matchingTag)) {
+								// create new tag from incoming tag and associate it with service-resource
+								RangerTag newTag = tagStore.createTag(incomingTag);
+
+								RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
+
+								tagResourceMap.setTagId(newTag.getId());
+								tagResourceMap.setResourceId(resourceInStore.getId());
+
+								tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+
+								associatedTags.add(newTag);
+								tagsToRetain.add(newTag);
+
+							} else {
+								// Keep this tag, but update it with attribute-values from incoming tag
+								tagsToRetain.add(matchingTag);
+
+								// Update shared tag with new values
+								incomingTag.setId(matchingTag.getId());
+								tagStore.updateTag(incomingTag);
+
+								// associate with service-resource if not already associated
+								if (findTagInList(matchingTag, associatedTags) == null) {
+									RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
+
+									tagResourceMap.setTagId(matchingTag.getId());
+									tagResourceMap.setResourceId(resourceInStore.getId());
+
+									tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+								}
+
+							}
+						}
+
 					}
 				} catch (Exception exception) {
 					LOG.error("createRangerTagResourceMap failed", exception);
 					throw exception;
 				}
 
-				if (CollectionUtils.isNotEmpty(tagsToDelete)) {
+				if (CollectionUtils.isNotEmpty(associatedTags)) {
 					Long tagId = null;
 
 					try {
-						for(int i = 0; i < tagsToDelete.size(); i++) {
-							tagId = tagsToDelete.get(i);
+						for (RangerTag associatedTag : associatedTags) {
+							if (findTagInList(associatedTag, tagsToRetain) == null) {
 
-							RangerTagResourceMap tagResourceMap = tagStore.getTagResourceMapForTagAndResourceId(tagId, resourceInStore.getId());
+								tagId = associatedTag.getId();
 
-							if(tagResourceMap != null) {
-								tagStore.deleteTagResourceMap(tagResourceMap.getId());
-							}
+								RangerTagResourceMap tagResourceMap = tagStore.getTagResourceMapForTagAndResourceId(tagId, resourceInStore.getId());
 
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Deleted tagResourceMap(tagId=" + tagId + ", resourceId=" + resourceInStore.getId());
-							}
-
-							if (StringUtils.equals(serviceTags.getTagModel(), ServiceTags.TAGMODEL_RESOURCE_PRIVATE)) {
-								tagStore.deleteTag(tagId);
+								if (tagResourceMap != null) {
+									tagStore.deleteTagResourceMap(tagResourceMap.getId());
+								}
 
 								if (LOG.isDebugEnabled()) {
-									LOG.debug("Deleted tag(tagId=" + tagId + ") as tagModel=" + ServiceTags.TAGMODEL_RESOURCE_PRIVATE);
+									LOG.debug("Deleted tagResourceMap(tagId=" + tagId + ", resourceId=" + resourceInStore.getId());
 								}
 							}
 						}
@@ -323,6 +349,84 @@ public class ServiceTagsProcessor {
 		}
 	}
 
+	private RangerTag findTagInList(RangerTag object, List<RangerTag> list) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceTagsProcessor.findTagInList(): object=" + (object == null ? null : object.getId()));
+		}
+		RangerTag ret = null;
+		if (object != null) {
+			for (RangerTag tag : list) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("==> ServiceTagsProcessor.findTagInList(): tag=" + tag.getId());
+				}
+				if (tag.getId().equals(object.getId())) {
+					ret = tag;
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("==> ServiceTagsProcessor.findTagInList(): found tag=" + tag.getId());
+					}
+					break;
+				}
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceTagsProcessor.findTagInList(): ret=" + (ret == null ? null : ret.getId()));
+		}
+		return ret;
+	}
+	private boolean isResourcePrivateTag(RangerTag tag) {
+		return tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE;
+	}
+
+	private RangerTag findMatchingTag(RangerTag incomingTag, List<RangerTag> existingTags) throws Exception {
+
+		RangerTag ret = null;
+
+		if(StringUtils.isNotEmpty(incomingTag.getGuid())) {
+			ret = tagStore.getTagByGuid(incomingTag.getGuid());
+		}
+
+		if (ret == null) {
+
+			if (isResourcePrivateTag(incomingTag)) {
+
+				for (RangerTag existingTag : existingTags) {
+
+					if (StringUtils.equals(incomingTag.getType(), existingTag.getType())) {
+
+						// Check attribute values
+						Map<String, String> incomingTagAttributes = incomingTag.getAttributes();
+						Map<String, String> existingTagAttributes = existingTag.getAttributes();
+
+						if (CollectionUtils.isEqualCollection(incomingTagAttributes.keySet(), existingTagAttributes.keySet())) {
+
+							boolean matched = true;
+
+							for (Map.Entry<String, String> entry : incomingTagAttributes.entrySet()) {
+
+								String key = entry.getKey();
+								String value = entry.getValue();
+
+								if (!StringUtils.equals(value, existingTagAttributes.get(key))) {
+									matched = false;
+									break;
+								}
+
+							}
+							if (matched) {
+								ret = existingTag;
+								break;
+							}
+						}
+
+					}
+				}
+			}
+
+		}
+
+		return ret;
+	}
+
 	private void delete(ServiceTags serviceTags) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceTagsProcessor.delete()");
@@ -332,7 +436,6 @@ public class ServiceTagsProcessor {
 
 		List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
 		if (CollectionUtils.isNotEmpty(serviceResources)) {
-			boolean isResourePrivateTag = StringUtils.equals(serviceTags.getTagModel(), ServiceTags.TAGMODEL_RESOURCE_PRIVATE) ? true : false;
 
 			for (RangerServiceResource serviceResource : serviceResources) {
 				try {
@@ -344,13 +447,7 @@ public class ServiceTagsProcessor {
 
 						if (CollectionUtils.isNotEmpty(tagResourceMaps)) {
 							for (RangerTagResourceMap tagResourceMap : tagResourceMaps) {
-								long tagId = tagResourceMap.getTagId();
-
 								tagStore.deleteTagResourceMap(tagResourceMap.getId());
-
-								if(isResourePrivateTag) {
-									tagStore.deleteTag(tagId);
-								}
 							}
 						}
 
@@ -408,9 +505,7 @@ public class ServiceTagsProcessor {
 			LOG.debug("==> ServiceTagsProcessor.replace()");
 		}
 
-		boolean isResourePrivateTag = StringUtils.equals(serviceTags.getTagModel(), ServiceTags.TAGMODEL_RESOURCE_PRIVATE) ? true : false;
-
-		tagStore.deleteAllTagObjectsForService(serviceTags.getServiceName(), isResourePrivateTag);
+		tagStore.deleteAllTagObjectsForService(serviceTags.getServiceName());
 
 		addOrUpdate(serviceTags);
 
