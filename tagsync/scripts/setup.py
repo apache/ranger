@@ -45,7 +45,7 @@ confDistBaseDirName = 'conf.dist'
 
 outputFileName = 'ranger-tagsync-site.xml'
 installPropFileName = 'install.properties'
-log4jFileName          = 'log4j.xml'
+log4jFileName          = 'log4j.properties'
 install2xmlMapFileName = 'installprop2xml.properties'
 templateFileName = 'ranger-tagsync-template.xml'
 initdProgramName = 'ranger-tagsync'

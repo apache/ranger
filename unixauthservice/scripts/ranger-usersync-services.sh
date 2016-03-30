@@ -67,7 +67,7 @@ if [ "${action}" == "START" ]; then
 	    logdir=${cdir}/logs
 	fi
 
-	nohup java -Dproc_rangerusersync -Dlog4j.configuration=file:/etc/ranger/usersync/conf/log4j.xml ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
+	nohup java -Dproc_rangerusersync -Dlog4j.configuration=file:/etc/ranger/usersync/conf/log4j.properties ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
 	echo $! >  ${pidf}
 	chown ranger ${pidf}
 	sleep 5

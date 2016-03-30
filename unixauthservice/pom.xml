@@ -94,7 +94,7 @@
                 <targetPath>${project.build.outputDirectory}/</targetPath>
                 <directory>conf.dist</directory>
                 <includes>
-                    <include>log4j.xml</include>
+                    <include>log4j.properties</include>
                 </includes>
             </resource>
         </resources>

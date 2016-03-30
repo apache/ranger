@@ -74,7 +74,7 @@ if [ "${action}" == "START" ]; then
 
 	cd ${cdir}
 	umask 0077
-	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  > ${logdir}/tagsync.out 2>&1 &
+	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogdir="${logdir}" -Dlog4j.configuration=file:/etc/ranger/tagsync/conf/log4j.properties -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  > ${logdir}/tagsync.out 2>&1 &
 	echo $! >  ${pidf}
 	chown ranger ${pidf}
 	sleep 5
