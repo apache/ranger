@@ -64,6 +64,7 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 
 		xObj.setGuid(guid);
 		xObj.setType(xTagDef.getId());
+		xObj.setOwner(vObj.getOwner());
 		return xObj;
 	}
 
@@ -79,6 +80,7 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 
 		vObj.setGuid(xObj.getGuid());
 		vObj.setType(xTagDef.getName());
+		vObj.setOwner(xObj.getOwner());
 
 		Map<String, String> attributes = getAttributesForTag(xObj);
 		vObj.setAttributes(attributes);

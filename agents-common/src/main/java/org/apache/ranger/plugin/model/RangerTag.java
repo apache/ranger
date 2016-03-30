@@ -37,23 +37,28 @@ import java.util.Map;
 public class RangerTag extends RangerBaseModelObject {
 	private static final long serialVersionUID = 1L;
 
+	public static final short OWNER_SERVICERESOURCE = 0;
+	public static final short OWNER_GLOBAL          = 1;
+
 	private String              type;
+	private Short               owner = OWNER_SERVICERESOURCE;
 	private Map<String, String> attributes;
 
-	public RangerTag(String guid, String type, Map<String, String> attributes) {
+	public RangerTag(String guid, String type, Short owner, Map<String, String> attributes) {
 		super();
 
 		setGuid(guid);
 		setType(type);
+		setOwner(owner);
 		setAttributes(attributes);
 	}
 
 	public RangerTag(String type, Map<String, String> attributes) {
-		this(null, type, attributes);
+		this(null, type, OWNER_SERVICERESOURCE, attributes);
 	}
 
 	public RangerTag() {
-		this(null, null, null);
+		this(null, null, OWNER_SERVICERESOURCE, null);
 	}
 
 	public String getType() {
@@ -72,6 +77,14 @@ public class RangerTag extends RangerBaseModelObject {
 		this.attributes = attributes == null ? new HashMap<String, String>() : attributes;
 	}
 
+	public Short getOwner() {
+		return this.owner;
+	}
+
+	public void setOwner(Short owner) {
+		this.owner = owner;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -87,6 +100,7 @@ public class RangerTag extends RangerBaseModelObject {
 		super.toString(sb);
 
 		sb.append("type={").append(type).append("} ");
+		sb.append("owner={").append(owner).append("} ");
 
 		sb.append("attributes={");
 		if (attributes != null) {

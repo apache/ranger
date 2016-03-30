@@ -57,6 +57,9 @@ public class XXTag extends XXDBBase implements Serializable {
 	@Column(name = "type")
 	protected Long type;
 
+	@Column(name = "owned_by")
+	protected Short owner;
+
 	@Override
 	public void setId(Long id) {
 		this.id = id;
@@ -112,6 +115,9 @@ public class XXTag extends XXDBBase implements Serializable {
 		this.type = type;
 	}
 
+	public Short getOwner() { return owner; }
+	public void setOwner(Short owner) { this.owner = owner; }
+
 	@Override
 	public int getMyClassType() {
 		return AppConstants.CLASS_TYPE_XA_TAG;
@@ -130,6 +136,7 @@ public class XXTag extends XXDBBase implements Serializable {
 		result = prime * result + ((guid == null) ? 0 : guid.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		result = prime * result + ((owner == null) ? 0 : owner.hashCode());
 		return result;
 	}
 
@@ -167,6 +174,11 @@ public class XXTag extends XXDBBase implements Serializable {
 				return false;
 		} else if (!type.equals(other.type))
 			return false;
+		if (owner == null) {
+			if (other.owner != null)
+				return false;
+		} else if (!owner.equals(other.owner))
+			return false;
 		return true;
 	}
 
@@ -188,6 +200,7 @@ public class XXTag extends XXDBBase implements Serializable {
 		sb.append("id={").append(id).append("} ");
 		sb.append("guid={").append(guid).append("} ");
 		sb.append("type={").append(type).append("} ");
+		sb.append("owner={").append(owner).append("} ");
 		sb.append(" }");
 
 		return sb;
