@@ -43,6 +43,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static final int POLICY_TYPE_ACCESS   = 0;
 	public static final int POLICY_TYPE_DATAMASK = 1;
 
+	public static final int[] POLICY_TYPES = new int[] { POLICY_TYPE_ACCESS, POLICY_TYPE_DATAMASK };
+
 	// For future use
 	private static final long serialVersionUID = 1L;
 

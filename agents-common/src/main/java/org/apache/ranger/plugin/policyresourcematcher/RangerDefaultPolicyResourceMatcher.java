@@ -29,6 +29,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -42,7 +43,8 @@ import com.google.common.collect.Sets;
 public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyResourceMatcher.class);
 
-	protected RangerServiceDef                  serviceDef     = null;
+	protected RangerServiceDef                  serviceDef      = null;
+	protected RangerPolicy                      policy          = null;
 	protected Map<String, RangerPolicyResource> policyResources = null;
 
 	private Map<String, RangerResourceMatcher> matchers = null;
@@ -51,6 +53,13 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 	@Override
 	public void setServiceDef(RangerServiceDef serviceDef) {
 		this.serviceDef = serviceDef;
+	}
+
+	@Override
+	public void setPolicy(RangerPolicy policy) {
+		this.policy = policy;
+
+		setPolicyResources(policy == null ? null : policy.getResources());
 	}
 
 	@Override
@@ -71,7 +80,8 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 			Set<String> policyResourceKeySet = policyResources.keySet();
 
 			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
-			Set<List<RangerResourceDef>> validResourceHierarchies = serviceDefHelper.getResourceHierarchies();
+			int policyType = policy != null && policy.getPolicyType() != null ? policy.getPolicyType() : RangerPolicy.POLICY_TYPE_ACCESS;
+			Set<List<RangerResourceDef>> validResourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType);
 
 			for (List<RangerResourceDef> validResourceHierarchy : validResourceHierarchies) {
 

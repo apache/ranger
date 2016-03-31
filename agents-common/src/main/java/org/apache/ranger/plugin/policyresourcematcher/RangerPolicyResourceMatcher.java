@@ -21,12 +21,15 @@ package org.apache.ranger.plugin.policyresourcematcher;
 
 import java.util.Map;
 
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 
 public interface RangerPolicyResourceMatcher {
 	void setServiceDef(RangerServiceDef serviceDef);
+
+	void setPolicy(RangerPolicy policy);
 
 	void setPolicyResources(Map<String, RangerPolicyResource> policyResources);
 

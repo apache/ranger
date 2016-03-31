@@ -222,5 +222,83 @@
 		"label":"Hive Resources Accessed Together?",
 		"description": "List of Hive resources"
 	  }
-	]
+	],
+
+	"dataMaskDef": {
+		"accessTypes": [
+			{
+				"name": "select"
+			}
+		],
+		"resources": [
+			{
+				"name": "database",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"uiHint":"{ \"singleValue\":true }"
+			},
+			{
+				"name": "table",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"uiHint":"{ \"singleValue\":true }"
+			},
+			{
+				"name": "column",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"uiHint":"{ \"singleValue\":true }"
+			}
+		],
+		"maskTypes": [
+			{
+				"itemId": 1,
+				"name": "MASK",
+				"label": "Mask",
+				"description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'",
+				"dataMaskOptions": { }
+			},
+			{
+				"itemId": 2,
+				"name": "SHUFFLE",
+				"label": "Shuffle",
+				"description": "Shuffle the value of the column",
+				"dataMaskOptions": { }
+			},
+			{
+				"itemId": 3,
+				"name": "MASK_x_SHOW_LAST_4",
+				"label": "Partial mask: show last 4",
+				"description": "Show last 4 characters; replace rest with 'x'",
+				"dataMaskOptions": { }
+			},
+			{
+				"itemId": 4,
+				"name": "MASK_x_SHOW_FIRST_4",
+				"label": "Partial mask: show first 4",
+				"description": "Show first 4 characters; replace rest with 'x'",
+				"dataMaskOptions": { }
+			},
+			{
+				"itemId": 10,
+				"name": "NULL",
+				"label": "NULL",
+				"description": "Replace with NULL",
+				"dataMaskOptions": { }
+			},
+			{
+				"itemId": 11,
+				"name": "NONE",
+				"label": "No masking",
+				"description": "No masking",
+				"dataMaskOptions": { }
+			}
+		]
+	}
 }

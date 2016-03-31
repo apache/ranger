@@ -30,9 +30,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
@@ -97,18 +99,10 @@ public class RangerServiceDefHelper {
 	 *  
 	 * @return
 	 */
-	public Set<List<RangerResourceDef>> getResourceHierarchies() {
-		return _delegate.getResourceHierarchies();
+	public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType) {
+		return _delegate.getResourceHierarchies(policyType);
 	}
-	
-	/**
-	 * Converts service-def resources from list to a map for constant time lookup
-	 * @return
-	 */
-	public Map<String, RangerResourceDef> getResorceMap() {
-		return _delegate.getResourceMap();
-	}
-	
+
 	public Set<String> getMandatoryResourceNames(List<RangerResourceDef> hierarchy) {
 		Set<String> result = new HashSet<String>(hierarchy.size());
 		for (RangerResourceDef resourceDef : hierarchy) {
@@ -144,7 +138,7 @@ public class RangerServiceDefHelper {
 		}
 		return result;
 	}
-	
+
 	public boolean isResourceGraphValid() {
 		return _delegate.isResourceGraphValid();
 	}
@@ -154,30 +148,36 @@ public class RangerServiceDefHelper {
 	 */
 	static class Delegate {
 
-		final Set<List<RangerResourceDef>> _hierarchies;
+		final Map<Integer, Set<List<RangerResourceDef>>> _hierarchies = new HashMap<Integer, Set<List<RangerResourceDef>>>();
 		final Date _serviceDefFreshnessDate;
 		final String _serviceName;
-		final Map<String, RangerResourceDef> _resourceMap;
 		final boolean _valid;
-		
-		public Delegate(RangerServiceDef serviceDef) {
+		final static Set<List<RangerResourceDef>> EMPTY_RESOURCE_HIERARCHY = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
 
+
+		public Delegate(RangerServiceDef serviceDef) {
 			// NOTE: we assume serviceDef, its name and update time are can never by null.
 			_serviceName = serviceDef.getName();
 			_serviceDefFreshnessDate = serviceDef.getUpdateTime();
 
-			// NOTE: we assume resource collection on a service def would never be null
-			List<RangerResourceDef> resourceDefs = serviceDef.getResources();
-			_resourceMap = Collections.unmodifiableMap(getResourcesAsMap(resourceDefs));
-			
-			DirectedGraph graph = createGraph(resourceDefs);
-			_valid = isValid(graph); 
-			if (_valid) {
-				Set<List<String>> hierarchies = getHierarchies(graph);
-				_hierarchies = Collections.unmodifiableSet(convertHierarchies(hierarchies, _resourceMap));
-			} else {
-				_hierarchies = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
+			boolean isValid = true;
+			for(Integer policyType : RangerPolicy.POLICY_TYPES) {
+				List<RangerResourceDef> resources = getResourceDefs(serviceDef, policyType);
+				DirectedGraph graph = createGraph(resources);
+
+				if(graph != null) {
+					if (isValid(graph)) {
+						Set<List<String>> hierarchies = getHierarchies(graph);
+						_hierarchies.put(policyType, Collections.unmodifiableSet(convertHierarchies(hierarchies, getResourcesAsMap(resources))));
+					} else {
+						isValid = false;
+						_hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
+					}
+				} else {
+					_hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
+				}
 			}
+			_valid = isValid;
 			if (LOG.isDebugEnabled()) {
 				String message = String.format("Found [%d] resource hierarchies for service [%s] update-date[%s]: %s", _hierarchies.size(), _serviceName, 
 						_serviceDefFreshnessDate == null ? null : _serviceDefFreshnessDate.toString(), _hierarchies); 
@@ -185,12 +185,18 @@ public class RangerServiceDefHelper {
 			}
 		}
 		
-		public Set<List<RangerResourceDef>> getResourceHierarchies() {
-			return _hierarchies;
-		}
-		
-		public Map<String, RangerResourceDef> getResourceMap() {
-			return _resourceMap;
+		public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType) {
+			if(policyType == null) {
+				policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+			}
+
+			Set<List<RangerResourceDef>> ret = _hierarchies.get(policyType);
+
+			if(ret == null) {
+				ret = EMPTY_RESOURCE_HIERARCHY;
+			}
+
+			return ret;
 		}
 
 		public String getServiceName() {
@@ -211,21 +217,45 @@ public class RangerServiceDefHelper {
 		 * @return
 		 */
 		DirectedGraph createGraph(List<RangerResourceDef> resourceDefs) {
-			DirectedGraph graph = new DirectedGraph();
-			for (RangerResourceDef resourceDef : resourceDefs) {
-				String name = resourceDef.getName();
-				graph.add(name);
-				String parent = resourceDef.getParent();
-				if (StringUtils.isNotEmpty(parent)) {
-					graph.addArc(parent, name);
+			DirectedGraph graph = null;
+
+			if(CollectionUtils.isNotEmpty(resourceDefs)) {
+				graph = new DirectedGraph();
+
+				for (RangerResourceDef resourceDef : resourceDefs) {
+					String name = resourceDef.getName();
+
+					graph.add(name);
+					String parent = resourceDef.getParent();
+					if (StringUtils.isNotEmpty(parent)) {
+						graph.addArc(parent, name);
+					}
 				}
 			}
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Created graph for resources: " + graph);
 			}
 			return graph;
 		}
 
+		List<RangerResourceDef> getResourceDefs(RangerServiceDef serviceDef, Integer policyType) {
+			final List<RangerResourceDef> resourceDefs;
+
+			if(policyType == null || policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
+				resourceDefs = serviceDef.getResources();
+			} else if(policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
+				if(serviceDef.getDataMaskDef() != null) {
+					resourceDefs = serviceDef.getDataMaskDef().getResources();
+				} else {
+					resourceDefs = null;
+				}
+			} else { // unknown policyType; use all resources
+				resourceDefs = serviceDef.getResources();
+			}
+
+			return resourceDefs;
+		}
 		/**
 		 * A valid resource graph is a forest, i.e. a disjoint union of trees.  In our case, given that node can have only one "parent" node, we can detect this validity simply by ensuring that 
 		 * the resource graph has:
@@ -249,7 +279,6 @@ public class RangerServiceDefHelper {
 		/**
 		 * Returns all valid resource hierarchies for the configured resource-defs. Behavior is undefined if it is called on and invalid graph. Use <code>isValid</code> to check validation first.
 		 * 
-		 * @param resourceDefs
 		 * @param graph
 		 * @return
 		 */

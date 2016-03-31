@@ -86,19 +86,19 @@ public class TestRangerPolicyResourceSignature {
 		rangerPolicy = mock(RangerPolicy.class);
 		when(rangerPolicy.getResources()).thenReturn(null);
 		policySerializer = new PolicySerializer(rangerPolicy);
-		assertFalse("policy.getSupportedResources()==null", policySerializer.isPolicyValidForResourceSignatureComputation());
+		assertFalse("policy.getResources()==null", policySerializer.isPolicyValidForResourceSignatureComputation());
 		
 		// empty resources map is ok!
 		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
 		when(rangerPolicy.getResources()).thenReturn(policyResources);
 		policySerializer = new PolicySerializer(rangerPolicy);
-		assertTrue("policy.getSupportedResources().isEmpty()", policySerializer.isPolicyValidForResourceSignatureComputation());
+		assertTrue("policy.getResources().isEmpty()", policySerializer.isPolicyValidForResourceSignatureComputation());
 		
 		// but having a resource map with null key is not ok!
 		RangerPolicyResource aPolicyResource = mock(RangerPolicyResource.class);
 		policyResources.put(null, aPolicyResource);
 		policySerializer = new PolicySerializer(rangerPolicy);
-		assertFalse("policy.getSupportedResources().contains(null)", policySerializer.isPolicyValidForResourceSignatureComputation());
+		assertFalse("policy.getResources().contains(null)", policySerializer.isPolicyValidForResourceSignatureComputation());
 	}
 	
 	@Test

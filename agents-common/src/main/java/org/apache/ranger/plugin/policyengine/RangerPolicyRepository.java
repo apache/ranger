@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.*;
@@ -58,7 +59,7 @@ public class RangerPolicyRepository {
         super();
 
         this.componentServiceName = this.serviceName = servicePolicies.getServiceName();
-        this.componentServiceDef = this.serviceDef = servicePolicies.getServiceDef();
+        this.componentServiceDef = this.serviceDef = ServiceDefUtil.normalize(servicePolicies.getServiceDef());
 
         this.appId = appId;
 
@@ -91,7 +92,7 @@ public class RangerPolicyRepository {
         this.serviceName = tagPolicies.getServiceName();
         this.componentServiceName = componentServiceName;
 
-        this.serviceDef = normalizeAccessTypeDefs(tagPolicies.getServiceDef(), componentServiceDef.getName());
+        this.serviceDef = normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagPolicies.getServiceDef()), componentServiceDef.getName());
         this.componentServiceDef = componentServiceDef;
 
         this.appId = appId;
@@ -203,12 +204,14 @@ public class RangerPolicyRepository {
                 normalizeAndPrunePolicyItems(policy.getDenyPolicyItems(), componentType);
                 normalizeAndPrunePolicyItems(policy.getAllowExceptions(), componentType);
                 normalizeAndPrunePolicyItems(policy.getDenyExceptions(), componentType);
+                normalizeAndPrunePolicyItems(policy.getDataMaskPolicyItems(), componentType);
 
                 if (!policy.getIsAuditEnabled() &&
                     CollectionUtils.isEmpty(policy.getPolicyItems()) &&
                     CollectionUtils.isEmpty(policy.getDenyPolicyItems()) &&
                     CollectionUtils.isEmpty(policy.getAllowExceptions()) &&
-                    CollectionUtils.isEmpty(policy.getDenyExceptions())) {
+                    CollectionUtils.isEmpty(policy.getDenyExceptions()) &&
+                    CollectionUtils.isEmpty(policy.getDataMaskPolicyItems())) {
 
                     if(policiesToPrune == null) {
                         policiesToPrune = new ArrayList<RangerPolicy>();
@@ -226,7 +229,7 @@ public class RangerPolicyRepository {
         return rangerPolicies;
     }
 
-    private List<RangerPolicy.RangerPolicyItem> normalizeAndPrunePolicyItems(List<RangerPolicy.RangerPolicyItem> policyItems, final String componentType) {
+    private List<? extends RangerPolicy.RangerPolicyItem> normalizeAndPrunePolicyItems(List<? extends RangerPolicy.RangerPolicyItem> policyItems, final String componentType) {
         if(CollectionUtils.isNotEmpty(policyItems)) {
             final String                        prefix       = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
             List<RangerPolicy.RangerPolicyItem> itemsToPrune = null;

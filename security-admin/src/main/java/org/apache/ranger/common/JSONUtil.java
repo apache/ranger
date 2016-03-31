@@ -24,6 +24,7 @@ package org.apache.ranger.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ser.StdSerializers;
 import org.codehaus.jackson.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -130,12 +132,12 @@ public class JSONUtil {
 		return jsonString;
 	}
 
-	public String writeObjectAsString(ViewBaseBean vObj) {
+	public String writeObjectAsString(Serializable obj) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		String jsonStr;
 		try {
-			jsonStr = mapper.writeValueAsString(vObj);
+			jsonStr = mapper.writeValueAsString(obj);
 			return jsonStr;
 		} catch (JsonParseException e) {
 			throw restErrorUtil.createRESTException(
@@ -151,5 +153,22 @@ public class JSONUtil {
 					MessageEnums.INVALID_INPUT_DATA);
 		}
 	}
-	
+
+	public <T> T writeJsonToJavaObject(String json, Class<T> tClass) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			return mapper.readValue(json, tClass);
+		} catch (JsonParseException e) {
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		} catch (JsonMappingException e) {
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		} catch (IOException e) {
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+					MessageEnums.INVALID_INPUT_DATA);
+		}
+	}
+
 }

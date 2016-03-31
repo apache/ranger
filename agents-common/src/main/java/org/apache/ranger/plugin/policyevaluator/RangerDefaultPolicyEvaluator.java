@@ -97,7 +97,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		resourceMatcher = new RangerDefaultPolicyResourceMatcher();
 
 		resourceMatcher.setServiceDef(serviceDef);
-		resourceMatcher.setPolicyResources(policy == null ? null : policy.getResources());
+		resourceMatcher.setPolicy(policy);
 		resourceMatcher.init();
 
 		if(policy != null) {
@@ -118,7 +118,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		Collections.sort(denyEvaluators);
 		Collections.sort(allowExceptionEvaluators);
 		Collections.sort(denyExceptionEvaluators);
+
+		/* dataMask policyItems must be evaulated in the order given in the policy; hence no sort
 		Collections.sort(dataMaskEvaluators);
+		*/
 
 		RangerPerfTracer.log(perf);
 
@@ -536,9 +539,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		preprocessPolicyItems(policy.getDenyPolicyItems(), impliedAccessGrants);
 		preprocessPolicyItems(policy.getAllowExceptions(), impliedAccessGrants);
 		preprocessPolicyItems(policy.getDenyExceptions(), impliedAccessGrants);
+		preprocessPolicyItems(policy.getDataMaskPolicyItems(), impliedAccessGrants);
 	}
 
-	private void preprocessPolicyItems(List<RangerPolicyItem> policyItems, Map<String, Collection<String>> impliedAccessGrants) {
+	private void preprocessPolicyItems(List<? extends RangerPolicyItem> policyItems, Map<String, Collection<String>> impliedAccessGrants) {
 		for(RangerPolicyItem policyItem : policyItems) {
 			if(CollectionUtils.isEmpty(policyItem.getAccesses())) {
 				continue;

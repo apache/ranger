@@ -368,7 +368,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		Set<String> policyResources = getPolicyResources(policy);
 
 		RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef);
-		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(); // this can be empty but not null!
+		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(policy.getPolicyType()); // this can be empty but not null!
 		if (hierarchies.isEmpty()) {
 			LOG.warn("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies, possibly due to a old/migrated service def!  Skipping this check!");
 		} else {

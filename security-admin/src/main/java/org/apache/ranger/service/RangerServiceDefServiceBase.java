@@ -17,6 +17,7 @@
 
 package org.apache.ranger.service;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +46,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -156,24 +158,30 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 		if (!stringUtil.isEmpty(xResources)) {
 			for (XXResourceDef xResource : xResources) {
-				if (xResource.isDatamaskingSupported()) {
-					dataMaskDef.getSupportedResources().add(xResource.getName());
+				if (StringUtils.isNotEmpty(xResource.getDataMaskOptions())) {
+					RangerResourceDef dataMaskResource = jsonToObject(xResource.getDataMaskOptions(), RangerResourceDef.class);
+
+					dataMaskDef.getResources().add(dataMaskResource);
 				}
 			}
 		}
 
 		if (!stringUtil.isEmpty(xAccessTypes)) {
 			for (XXAccessTypeDef xAtd : xAccessTypes) {
-				if(xAtd.isDatamaskingSupported()) {
-					dataMaskDef.getSupportedAccessTypes().add(xAtd.getName());
+				if(StringUtils.isNotEmpty(xAtd.getDataMaskOptions())) {
+					RangerAccessTypeDef dataMaskAccessType = jsonToObject(xAtd.getDataMaskOptions(), RangerAccessTypeDef.class);
+
+					dataMaskDef.getAccessTypes().add(dataMaskAccessType);
 				}
 			}
 		}
 		serviceDef.setDataMaskDef(dataMaskDef);
 
+		ServiceDefUtil.normalize(serviceDef);
+
 		return serviceDef;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected XXServiceDefBase mapViewToEntityBean(RangerServiceDef vObj, XXServiceDefBase xObj, int operationContext) {
@@ -537,7 +545,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		retList.setResultSize(onePageList.size());
 		retList.setTotalCount(xxObjList.size());
 	}
-	
+
 	private String mapToJsonString(Map<String, String> map) {
 		String ret = null;
 
@@ -580,6 +588,34 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 					ret.put(name, value);
 				}
+			}
+		}
+
+		return ret;
+	}
+
+	public String objectToJson(Serializable obj) {
+		String ret = null;
+
+		if(obj != null) {
+			try {
+				ret = jsonUtil.writeObjectAsString(obj);
+			} catch(Exception excp) {
+				LOG.warn("objectToJson() failed to convert object to json: " + obj, excp);
+			}
+		}
+
+		return ret;
+	}
+
+	public <T> T jsonToObject(String jsonStr, Class<T> clz) {
+		T ret = null;
+
+		if(StringUtils.isNotEmpty(jsonStr)) {
+			try {
+				ret = jsonUtil.writeJsonToJavaObject(jsonStr, clz);
+			} catch(Exception excp) {
+				LOG.warn("jsonToObject() failed to convert json to object: " + jsonStr, excp);
 			}
 		}
 

@@ -74,6 +74,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         preprocessPolicyItems(policy.getDenyPolicyItems());
         preprocessPolicyItems(policy.getAllowExceptions());
         preprocessPolicyItems(policy.getDenyExceptions());
+        preprocessPolicyItems(policy.getDataMaskPolicyItems());
 
         hasAllPerms = checkIfHasAllPerms();
 
@@ -264,7 +265,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         return ret;
     }
 
-    private void preprocessPolicyItems(List<RangerPolicy.RangerPolicyItem> policyItems) {
+    private void preprocessPolicyItems(List<? extends RangerPolicy.RangerPolicyItem> policyItems) {
         if(CollectionUtils.isNotEmpty(policyItems)) {
 	        for (RangerPolicy.RangerPolicyItem item : policyItems) {
 	            delegateAdmin = delegateAdmin || item.getDelegateAdmin();

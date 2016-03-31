@@ -326,9 +326,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if(dataMaskDef != null) {
-			List<RangerDataMaskTypeDef> dataMaskTypes        = dataMaskDef.getMaskTypes();
-			List<String>                supportedAccessTypes = dataMaskDef.getSupportedAccessTypes();
-			List<String>                supportedResources   = dataMaskDef.getSupportedResources();
+			List<RangerDataMaskTypeDef> dataMaskTypes       = dataMaskDef.getMaskTypes();
+			List<RangerAccessTypeDef>   dataMaskAccessTypes = dataMaskDef.getAccessTypes();
+			List<RangerResourceDef>     dataMaskResources   = dataMaskDef.getResources();
 
 			if(CollectionUtils.isNotEmpty(dataMaskTypes)) {
 				XXDataMaskTypeDefDao xxDataMaskDefDao = daoMgr.getXXDataMaskTypeDef();
@@ -343,14 +343,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 
-			if(CollectionUtils.isNotEmpty(supportedAccessTypes)) {
+			if(CollectionUtils.isNotEmpty(dataMaskAccessTypes)) {
 				List<XXAccessTypeDef> xxAccessTypeDefs = xxATDDao.findByServiceDefId(xServiceDef.getId());
 
-				for(String accessType : supportedAccessTypes) {
+				for(RangerAccessTypeDef accessType : dataMaskAccessTypes) {
 					boolean found = false;
 					for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
-						if(StringUtils.equals(xxAccessTypeDef.getName(), accessType)) {
+						if(StringUtils.equals(xxAccessTypeDef.getName(), accessType.getName())) {
 							found = true;
+
 							break;
 						}
 					}
@@ -362,22 +363,29 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 
 				for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
-					boolean isDatamaskingSupported = supportedAccessTypes.contains(xxAccessTypeDef.getName());
+					String dataMaskOptions = null;
 
-					if(xxAccessTypeDef.isDatamaskingSupported() != isDatamaskingSupported) {
-						xxAccessTypeDef.setDatamaskingSupported(isDatamaskingSupported);
+					for(RangerAccessTypeDef dataMaskAccessType : dataMaskAccessTypes) {
+						if(StringUtils.equals(dataMaskAccessType.getName(), xxAccessTypeDef.getName())) {
+							dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(dataMaskAccessType);
+							break;
+						}
+					}
+
+					if(! StringUtils.equals(dataMaskOptions, xxAccessTypeDef.getDataMaskOptions())) {
+						xxAccessTypeDef.setDataMaskOptions(dataMaskOptions);
 						xxATDDao.update(xxAccessTypeDef);
 					}
 				}
 			}
 
-			if(CollectionUtils.isNotEmpty(supportedResources)) {
+			if(CollectionUtils.isNotEmpty(dataMaskResources)) {
 				List<XXResourceDef> xxResourceDefs = xxResDefDao.findByServiceDefId(xServiceDef.getId());
 
-				for(String resource : supportedResources) {
+				for(RangerResourceDef resource : dataMaskResources) {
 					boolean found = false;
 					for(XXResourceDef xxResourceDef : xxResourceDefs) {
-						if(StringUtils.equals(xxResourceDef.getName(), resource)) {
+						if(StringUtils.equals(xxResourceDef.getName(), resource.getName())) {
 							found = true;
 							break;
 						}
@@ -390,10 +398,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 
 				for(XXResourceDef xxResourceDef : xxResourceDefs) {
-					boolean isDatamaskingSupported = supportedResources.contains(xxResourceDef.getName());
+					String dataMaskOptions = null;
 
-					if(xxResourceDef.isDatamaskingSupported() != isDatamaskingSupported) {
-						xxResourceDef.setDatamaskingSupported(isDatamaskingSupported);
+					for(RangerResourceDef dataMaskResource : dataMaskResources) {
+						if(StringUtils.equals(dataMaskResource.getName(), xxResourceDef.getName())) {
+							dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(dataMaskResource);
+							break;
+						}
+					}
+
+					if(! StringUtils.equals(dataMaskOptions, xxResourceDef.getDataMaskOptions())) {
+						xxResourceDef.setDataMaskOptions(dataMaskOptions);
 						xxResDefDao.update(xxResourceDef);
 					}
 				}
@@ -807,11 +822,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		List<RangerDataMaskTypeDef> dataMasks            = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<RangerDataMaskTypeDef>() : dataMaskDef.getMaskTypes();
-		List<String>                supportedAccessTypes = dataMaskDef == null || dataMaskDef.getSupportedAccessTypes() == null ? new ArrayList<String>() : dataMaskDef.getSupportedAccessTypes();
-		List<String>                supportedResources   = dataMaskDef == null || dataMaskDef.getSupportedResources() == null ? new ArrayList<String>() : dataMaskDef.getSupportedResources();
-		XXDataMaskTypeDefDao        dataMaskTypeDao      = daoMgr.getXXDataMaskTypeDef();
-		List<XXDataMaskTypeDef>     xxDataMaskTypes      = dataMaskTypeDao.findByServiceDefId(serviceDefId);
+		List<RangerDataMaskTypeDef> dataMasks           = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<RangerDataMaskTypeDef>() : dataMaskDef.getMaskTypes();
+		List<RangerAccessTypeDef>   dataMaskAccessTypes = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : dataMaskDef.getAccessTypes();
+		List<RangerResourceDef>     dataMaskResources   = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<RangerResourceDef>() : dataMaskDef.getResources();
+		XXDataMaskTypeDefDao        dataMaskTypeDao     = daoMgr.getXXDataMaskTypeDef();
+		List<XXDataMaskTypeDef>     xxDataMaskTypes     = dataMaskTypeDao.findByServiceDefId(serviceDefId);
 		// create or update dataMasks
 		for (RangerServiceDef.RangerDataMaskTypeDef dataMask : dataMasks) {
 			boolean found = false;
@@ -861,10 +876,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		List<XXAccessTypeDef> xxAccessTypeDefs = xxATDDao.findByServiceDefId(serviceDefId);
 
-		for(String accessType : supportedAccessTypes) {
+		for(RangerAccessTypeDef accessType : dataMaskAccessTypes) {
 			boolean found = false;
 			for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
-				if(StringUtils.equals(xxAccessTypeDef.getName(), accessType)) {
+				if(StringUtils.equals(xxAccessTypeDef.getName(), accessType.getName())) {
 					found = true;
 					break;
 				}
@@ -877,20 +892,27 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
-			boolean isDatamaskingSupported = supportedAccessTypes.contains(xxAccessTypeDef.getName());
+			String dataMaskOptions = null;
 
-			if(xxAccessTypeDef.isDatamaskingSupported() != isDatamaskingSupported) {
-				xxAccessTypeDef.setDatamaskingSupported(isDatamaskingSupported);
+			for(RangerAccessTypeDef dataMaskAccessType : dataMaskAccessTypes) {
+				if(StringUtils.equals(dataMaskAccessType.getName(), xxAccessTypeDef.getName())) {
+					dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(dataMaskAccessType);
+					break;
+				}
+			}
+
+			if(! StringUtils.equals(dataMaskOptions, xxAccessTypeDef.getDataMaskOptions())) {
+				xxAccessTypeDef.setDataMaskOptions(dataMaskOptions);
 				xxATDDao.update(xxAccessTypeDef);
 			}
 		}
 
 		List<XXResourceDef> xxResourceDefs = xxResDefDao.findByServiceDefId(serviceDefId);
 
-		for(String resource : supportedResources) {
+		for(RangerResourceDef resource : dataMaskResources) {
 			boolean found = false;
 			for(XXResourceDef xxResourceDef : xxResourceDefs) {
-				if(StringUtils.equals(xxResourceDef.getName(), resource)) {
+				if(StringUtils.equals(xxResourceDef.getName(), resource.getName())) {
 					found = true;
 					break;
 				}
@@ -903,10 +925,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		for(XXResourceDef xxResourceDef : xxResourceDefs) {
-			boolean isDatamaskingSupported = supportedResources.contains(xxResourceDef.getName());
+			String dataMaskOptions = null;
 
-			if(xxResourceDef.isDatamaskingSupported() != isDatamaskingSupported) {
-				xxResourceDef.setDatamaskingSupported(isDatamaskingSupported);
+			for(RangerResourceDef dataMaskResource : dataMaskResources) {
+				if(StringUtils.equals(dataMaskResource.getName(), xxResourceDef.getName())) {
+					dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(dataMaskResource);
+					break;
+				}
+			}
+
+			if(! StringUtils.equals(dataMaskOptions, xxResourceDef.getDataMaskOptions())) {
+				xxResourceDef.setDataMaskOptions(dataMaskOptions);
 				xxResDefDao.update(xxResourceDef);
 			}
 		}
@@ -2016,7 +2045,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			// we need to create one policy for each resource hierarchy
 			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
 			int i = 1;
-			for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies()) {
+			for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
 				createDefaultPolicy(createdService, vXUser, aHierarchy, i);
 				i++;
 			}

@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper.Delegate;
@@ -79,7 +80,7 @@ public class TestRangerServiceDefHelper {
 		// now assert the behavior
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue(_helper.isResourceGraphValid());
-		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies();
+		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
 		// there should be 
 		List<RangerResourceDef> hierarchy = Lists.newArrayList(Database, UDF);
 		assertTrue(hierarchies.contains(hierarchy));
@@ -136,7 +137,7 @@ public class TestRangerServiceDefHelper {
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue(_helper.isResourceGraphValid());
-		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies();
+		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
 
 		Set<List<String>> expectedHierarchies = new HashSet<List<String>>(); 
 		expectedHierarchies.add(Lists.newArrayList("database", "table-space"));
@@ -177,7 +178,7 @@ public class TestRangerServiceDefHelper {
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue(_helper.isResourceGraphValid());
-		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies();
+		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
 
 		Set<List<String>> expectedHierarchies = new HashSet<List<String>>(); 
 		expectedHierarchies.add(Lists.newArrayList("database"));

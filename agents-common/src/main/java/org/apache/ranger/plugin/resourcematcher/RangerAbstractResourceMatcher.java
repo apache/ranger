@@ -75,16 +75,18 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		policyIsExcludes = policyResource == null ? false : policyResource.getIsExcludes();
 
 		if(policyResource != null && policyResource.getValues() != null) {
-			boolean isWildCardPresent = !optWildCard;
+			boolean isWildCardPresent = false;
 			for(String policyValue : policyResource.getValues()) {
 				if(StringUtils.isEmpty(policyValue)) {
 					continue;
 				}
 
-				if(StringUtils.containsOnly(policyValue, WILDCARD_ASTERISK)) {
-					isMatchAny = true;
-				} else if (!isWildCardPresent && StringUtils.containsAny(policyValue, WILDCARDS)) {
-					isWildCardPresent = true;
+				if(optWildCard) {
+					if (StringUtils.containsOnly(policyValue, WILDCARD_ASTERISK)) {
+						isMatchAny = true;
+					} else if (!isWildCardPresent && StringUtils.containsAny(policyValue, WILDCARDS)) {
+						isWildCardPresent = true;
+					}
 				}
 				policyValues.add(policyValue);
 			}

@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
@@ -496,11 +497,13 @@ public class RangerServiceDefValidator extends RangerValidator {
 			valid = false;
 		}
 		// resource level should be unique within a hierarchy
-		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies();
-		for (List<RangerResourceDef> aHierarchy : hierarchies) {
-			Set<Integer> levels = new HashSet<Integer>(aHierarchy.size());
-			for (RangerResourceDef resourceDef : aHierarchy) {
-				valid = isUnique(resourceDef.getLevel(), levels, "resource level", "resources", failures) && valid;
+		for(int policyType : RangerPolicy.POLICY_TYPES) {
+			Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(policyType);
+			for (List<RangerResourceDef> aHierarchy : hierarchies) {
+				Set<Integer> levels = new HashSet<Integer>(aHierarchy.size());
+				for (RangerResourceDef resourceDef : aHierarchy) {
+					valid = isUnique(resourceDef.getLevel(), levels, "resource level", "resources", failures) && valid;
+				}
 			}
 		}
 

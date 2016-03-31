@@ -1248,6 +1248,28 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
+		public RangerResourceDef(RangerResourceDef other) {
+			setItemId(other.getItemId());
+			setName(other.getName());
+			setType(other.getType());
+			setLevel(other.getLevel());
+			setParent(other.getParent());
+			setMandatory(other.getMandatory());
+			setLookupSupported(other.getLookupSupported());
+			setRecursiveSupported(other.getRecursiveSupported());
+			setExcludesSupported(other.getExcludesSupported());
+			setMatcher(other.getMatcher());
+			setMatcherOptions(other.getMatcherOptions());
+			setValidationRegEx(other.getValidationRegEx());
+			setValidationMessage(other.getValidationMessage());
+			setUiHint(other.getUiHint());
+			setLabel(other.getLabel());
+			setDescription(other.getDescription());
+			setRbKeyLabel(other.getRbKeyLabel());
+			setRbKeyDescription(other.getRbKeyDescription());
+			setRbKeyValidationMessage(other.getRbKeyValidationMessage());
+		}
+
 		public RangerResourceDef(Long itemId, String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, Map<String, String> matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
 			setItemId(itemId);
 			setName(name);
@@ -1421,7 +1443,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		 * @param matcherOptions the matcherOptions to set
 		 */
 		public void setMatcherOptions(Map<String, String> matcherOptions) {
-			this.matcherOptions = matcherOptions == null ? new HashMap<String, String>() : matcherOptions;
+			this.matcherOptions = matcherOptions == null ? new HashMap<String, String>() : new HashMap<String, String>(matcherOptions);
 		}
 
 		/**
@@ -1759,6 +1781,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		public RangerAccessTypeDef(RangerAccessTypeDef other) {
+			this.setItemId(other.getItemId());
 			this.setName(other.getName());
 			this.setLabel(other.getLabel());
 			this.setRbKeyLabel(other.getRbKeyLabel());
@@ -2451,26 +2474,26 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private static final long serialVersionUID = 1L;
 
 		private List<RangerDataMaskTypeDef> maskTypes;
-		private List<String>                supportedAccessTypes;
-		private List<String>                supportedResources;
+		private List<RangerAccessTypeDef>   accessTypes;
+		private List<RangerResourceDef>     resources;
 
 
 		public RangerDataMaskDef() {
 			setMaskTypes(null);
-			setSupportedAccessTypes(null);
-			setSupportedResources(null);
+			setAccessTypes(null);
+			setResources(null);
 		}
 
-		public RangerDataMaskDef(List<RangerDataMaskTypeDef> maskTypes, List<String> supportedAccessTypes, List<String> supportedResources) {
+		public RangerDataMaskDef(List<RangerDataMaskTypeDef> maskTypes, List<RangerAccessTypeDef> accessTypes, List<RangerResourceDef> resources) {
 			setMaskTypes(maskTypes);
-			setSupportedAccessTypes(supportedAccessTypes);
-			setSupportedResources(supportedResources);
+			setAccessTypes(accessTypes);
+			setResources(resources);
 		}
 
 		public RangerDataMaskDef(RangerDataMaskDef other) {
 			setMaskTypes(other.getMaskTypes());
-			setSupportedAccessTypes(other.getSupportedAccessTypes());
-			setSupportedResources(other.getSupportedResources());
+			setAccessTypes(other.getAccessTypes());
+			setResources(other.getResources());
 		}
 
 		public List<RangerDataMaskTypeDef> getMaskTypes() {
@@ -2495,46 +2518,46 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			}
 		}
 
-		public List<String> getSupportedAccessTypes() {
-			return supportedAccessTypes;
+		public List<RangerAccessTypeDef> getAccessTypes() {
+			return accessTypes;
 		}
 
-		public void setSupportedAccessTypes(List<String> supportedAccessTypes) {
-			if(this.supportedAccessTypes == null) {
-				this.supportedAccessTypes = new ArrayList<String>();
+		public void setAccessTypes(List<RangerAccessTypeDef> accessTypes) {
+			if(this.accessTypes == null) {
+				this.accessTypes = new ArrayList<RangerAccessTypeDef>();
 			}
 
-			if(this.supportedAccessTypes == supportedAccessTypes) {
+			if(this.accessTypes == accessTypes) {
 				return;
 			}
 
-			this.supportedAccessTypes.clear();
+			this.accessTypes.clear();
 
-			if(supportedAccessTypes != null) {
-				for(String accessType : supportedAccessTypes) {
-					this.supportedAccessTypes.add(accessType);
+			if(accessTypes != null) {
+				for(RangerAccessTypeDef accessType : accessTypes) {
+					this.accessTypes.add(accessType);
 				}
 			}
 		}
 
-		public List<String> getSupportedResources() {
-			return supportedResources;
+		public List<RangerResourceDef> getResources() {
+			return resources;
 		}
 
-		public void setSupportedResources(List<String> supportedResources) {
-			if(this.supportedResources == null) {
-				this.supportedResources = new ArrayList<String>();
+		public void setResources(List<RangerResourceDef> resources) {
+			if(this.resources == null) {
+				this.resources = new ArrayList<RangerResourceDef>();
 			}
 
-			if(this.supportedResources == supportedResources) {
+			if(this.resources == resources) {
 				return;
 			}
 
-			this.supportedResources.clear();
+			this.resources.clear();
 
-			if(supportedResources != null) {
-				for(String resource : supportedResources) {
-					this.supportedResources.add(resource);
+			if(resources != null) {
+				for(RangerResourceDef resource : resources) {
+					this.resources.add(resource);
 				}
 			}
 		}
@@ -2561,21 +2584,21 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			}
 			sb.append("} ");
 
-			sb.append("supportedAccessTypes={");
-			if(supportedAccessTypes != null) {
-				for(String accessType : supportedAccessTypes) {
+			sb.append("accessTypes={");
+			if(accessTypes != null) {
+				for(RangerAccessTypeDef accessType : accessTypes) {
 					if(accessType != null) {
-						sb.append(accessType).append(" ");
+						accessType.toString(sb).append(" ");
 					}
 				}
 			}
 			sb.append("} ");
 
-			sb.append("supportedResources={");
-			if(supportedResources != null) {
-				for(String resource : supportedResources) {
+			sb.append("resources={");
+			if(resources != null) {
+				for(RangerResourceDef resource : resources) {
 					if(resource != null) {
-						sb.append(resource).append(" ");
+						resource.toString(sb).append(" ");
 					}
 				}
 			}
@@ -2591,8 +2614,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			final int prime = 31;
 			int result = 1;
 			result = prime * result + ((maskTypes == null) ? 0 : maskTypes.hashCode());
-			result = prime * result + ((supportedAccessTypes == null) ? 0 : supportedAccessTypes.hashCode());
-			result = prime * result + ((supportedResources == null) ? 0 : supportedResources.hashCode());
+			result = prime * result + ((accessTypes == null) ? 0 : accessTypes.hashCode());
+			result = prime * result + ((resources == null) ? 0 : resources.hashCode());
 			return result;
 		}
 
@@ -2611,15 +2634,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			} else if (other.maskTypes == null || !maskTypes.equals(other.maskTypes))
 				return false;
 
-			if (supportedAccessTypes == null) {
-				if (other.supportedAccessTypes != null)
+			if (accessTypes == null) {
+				if (other.accessTypes != null)
 					return false;
-			} else if (!supportedAccessTypes.equals(other.supportedAccessTypes))
+			} else if (!accessTypes.equals(other.accessTypes))
 				return false;
-			if (supportedResources == null) {
-				if (other.supportedResources != null)
+			if (resources == null) {
+				if (other.resources != null)
 					return false;
-			} else if (!supportedResources.equals(other.supportedResources))
+			} else if (!resources.equals(other.resources))
 				return false;
 			return true;
 		}

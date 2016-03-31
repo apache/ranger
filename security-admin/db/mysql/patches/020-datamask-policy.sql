@@ -13,37 +13,37 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-/* add datamasking_supported column in x_access_type_def table if not exist */
-drop procedure if exists add_datamasking_supported_to_x_access_type_def_table;
+/* add datamask_options column in x_access_type_def table if not exist */
+drop procedure if exists add_datamask_options_to_x_access_type_def_table;
 delimiter ;;
- create procedure add_datamasking_supported_to_x_access_type_def_table() begin
+ create procedure add_datamask_options_to_x_access_type_def_table() begin
  
  if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_access_type_def') then
-	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_access_type_def' and column_name = 'datamasking_supported') then
-		ALTER TABLE `x_access_type_def` ADD `datamasking_supported` tinyint NOT NULL DEFAULT 0;
+	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_access_type_def' and column_name = 'datamask_options') then
+		ALTER TABLE `x_access_type_def` ADD `datamask_options` varchar(1024) DEFAULT NULL;
  	end if;
  end if; 
 end;;
 
 delimiter ;
-call add_datamasking_supported_to_x_access_type_def_table();
-drop procedure if exists add_datamasking_supported_to_x_access_type_def_table;
+call add_datamask_options_to_x_access_type_def_table();
+drop procedure if exists add_datamask_options_to_x_access_type_def_table;
 
-/* add datamasking_supported column in x_resource_def table if not exist */
-drop procedure if exists add_datamasking_supported_to_x_resource_def_table;
+/* add datamask_options column in x_resource_def table if not exist */
+drop procedure if exists add_datamask_options_to_x_resource_def_table;
 delimiter ;;
- create procedure add_datamasking_supported_to_x_resource_def_table() begin
+ create procedure add_datamask_options_to_x_resource_def_table() begin
  
  if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_resource_def') then
-	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_resource_def' and column_name = 'datamasking_supported') then
-		ALTER TABLE `x_resource_def` ADD `datamasking_supported` tinyint NOT NULL DEFAULT 0;
+	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_resource_def' and column_name = 'datamask_options') then
+		ALTER TABLE `x_resource_def` ADD `datamask_options` varchar(1024) DEFAULT NULL;
  	end if;
  end if; 
 end;;
 
 delimiter ;
-call add_datamasking_supported_to_x_resource_def_table();
-drop procedure if exists add_datamasking_supported_to_x_resource_def_table;
+call add_datamask_options_to_x_resource_def_table();
+drop procedure if exists add_datamask_options_to_x_resource_def_table;
 
 DROP TABLE IF EXISTS `x_datamask_type_def`;
 CREATE TABLE `x_datamask_type_def` (
