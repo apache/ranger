@@ -2474,3 +2474,27 @@ distinguishedName: CN=Group19,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
 sAMAccountName: Group19
 sn: Group19
 #groupType: -2147483644
+
+dn: CN=Group20,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+changetype: add
+objectClass: extensibleObject
+objectClass: top
+objectClass: groupOfNames
+cn: Group20
+member:
+distinguishedName: CN=Group20,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+sAMAccountName: Group20
+sn: Group20
+#groupType: -2147483644
+
+dn: CN=Group21,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+changetype: add
+objectClass: extensibleObject
+objectClass: top
+objectClass: groupOfNames
+cn: Group21
+member:
+distinguishedName: CN=Group21,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+sAMAccountName: Group21
+sn: Group21
+#groupType: -2147483644

@@ -149,6 +149,16 @@ public class UserGroupSyncConfig  {
 
   private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ranger.usersync.group.searchenabled";
   private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = false;
+  
+  private static final String LGSYNC_GROUP_SEARCH_FIRST_ENABLED = "ranger.usersync.group.search.first.enabled";
+  private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_FIRST_ENABLED = false;
+  
+/*This flag (ranger.usersync.user.searchenabled) is used only when group search first is enabled to get username either -
+  	* from the group member attribute of the group or 
+  	* from the additional user search based on the user attribute configuration
+  */
+ private static final String LGSYNC_USER_SEARCH_ENABLED = "ranger.usersync.user.searchenabled";
+ private static final boolean DEFAULT_LGSYNC_USER_SEARCH_ENABLED = false;
 
   private static final String LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = "ranger.usersync.group.usermapsyncenabled";
   private static final boolean DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = false;
@@ -657,6 +667,28 @@ public class UserGroupSyncConfig  {
     }
     return groupSearchEnabled;
   }
+  
+  public boolean isGroupSearchFirstEnabled() {
+	boolean groupSearchFirstEnabled;
+	String val = prop.getProperty(LGSYNC_GROUP_SEARCH_FIRST_ENABLED);
+	if(val == null || val.trim().isEmpty()) {
+	   groupSearchFirstEnabled = DEFAULT_LGSYNC_GROUP_SEARCH_FIRST_ENABLED;
+	} else {
+	   groupSearchFirstEnabled  = Boolean.valueOf(val);
+	}
+	return groupSearchFirstEnabled;
+  }
+  
+  public boolean isUserSearchEnabled() {
+	    boolean userSearchEnabled;
+	    String val = prop.getProperty(LGSYNC_USER_SEARCH_ENABLED);
+	    if(val == null || val.trim().isEmpty()) {
+	       userSearchEnabled = DEFAULT_LGSYNC_USER_SEARCH_ENABLED;
+	    } else {
+	       userSearchEnabled  = Boolean.valueOf(val);
+	    }
+	    return userSearchEnabled;
+	  }
 
   public boolean isGroupUserMapSyncEnabled() {
     boolean groupUserMapSyncEnabled;
@@ -886,5 +918,15 @@ public class UserGroupSyncConfig  {
     /* Used only for unit testing */
     public void setGroupSearchBase(String groupSearchBase)  throws Throwable {
 	prop.setProperty(LGSYNC_GROUP_SEARCH_BASE, groupSearchBase);
+    }
+    
+    /* Used only for unit testing */
+    public void setGroupSearchFirstEnabled(boolean groupSearchFirstEnabled) {
+        prop.setProperty(LGSYNC_GROUP_SEARCH_FIRST_ENABLED, String.valueOf(groupSearchFirstEnabled));
+    }
+    
+    /* Used only for unit testing */
+    public void setUserSearchEnabled(boolean userSearchEnabled) {
+        prop.setProperty(LGSYNC_USER_SEARCH_ENABLED, String.valueOf(userSearchEnabled));
     }
 }

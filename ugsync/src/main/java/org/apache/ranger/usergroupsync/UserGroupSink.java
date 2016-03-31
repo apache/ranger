@@ -25,4 +25,6 @@ public interface UserGroupSink {
 	public void init() throws Throwable;
 
 	public void addOrUpdateUser(String user, List<String> groups);
+	
+	public void addOrUpdateGroup(String group);
 }

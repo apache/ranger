@@ -27,6 +27,7 @@ import org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder;
 
 public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
         private static int totalUsers = 0;
+        //private static int totalGroups = 0;
         private Set<String> allGroups;
 
         @Override
@@ -41,6 +42,12 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
                 totalUsers++;
                 allGroups.addAll(groups);
                 //System.out.println("Username: " + user + " and associated groups: " + groups);
+        }
+        
+        @Override
+        public void addOrUpdateGroup(String group) {
+                //totalGroups++;
+                allGroups.add(group);
         }
 
         public int getTotalUsers() {

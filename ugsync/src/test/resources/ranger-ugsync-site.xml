@@ -64,6 +64,16 @@
     </property>
     
     <property>
+      <name>ranger.usersync.group.search.first.enabled</name>
+      <value>false</value>
+    </property>
+    
+    <property>
+      <name>ranger.usersync.user.searchenabled</name>
+      <value>true</value>
+    </property>
+    
+    <property>
       <name>ranger.usersync.keystore.file</name>
       <value>/usr/hdp/current/ranger-usersync/conf/unixauthservice.jks</value>
     </property>

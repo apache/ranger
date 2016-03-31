@@ -815,5 +815,50 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		return ret;
 	}
 
+
+	@Override
+	public void addOrUpdateGroup(String groupName) {
+		XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
+		
+		if (group == null) {    // Does not exists
+			
+			//* Build the group info object and do the rest call
+ 			if ( ! isMockRun ) {
+ 				group = addGroupInfo(groupName);
+ 				if ( group != null) {
+ 					addGroupToList(group);
+ 				}
+ 			}
+		}
+	}
+	
+	private XGroupInfo addGroupInfo(String groupName){
+		XGroupInfo ret = null;
+		XGroupInfo group = null;
+		
+		LOG.debug("INFO: addPMXAGroup(" + groupName + ")" ) ;
+		if (! isMockRun) {
+			group = addXGroupInfo(groupName) ;
+		}
+		
+		Client c = getClient();
+		
+		WebResource r = c.resource(getURL(PM_ADD_GROUP_URI));
+		
+		Gson gson = new GsonBuilder().create();
+		
+		String jsonString = gson.toJson(group);
+		
+		LOG.debug("Group" + jsonString);
+		
+		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+		
+		LOG.debug("RESPONSE: [" + response + "]") ;
+		
+		ret = gson.fromJson(response, XGroupInfo.class);
+		
+		return ret;	
+	}
+
 	
 }
