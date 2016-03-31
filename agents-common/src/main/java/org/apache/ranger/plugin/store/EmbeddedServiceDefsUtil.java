@@ -60,6 +60,8 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_YARN_NAME  = "yarn";
 	public static final String EMBEDDED_SERVICEDEF_KAFKA_NAME = "kafka";
 	public static final String EMBEDDED_SERVICEDEF_SOLR_NAME  = "solr";
+	public static final String EMBEDDED_SERVICEDEF_NIFI_NAME  = "nifi";
+
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
 	public static final String HDFS_IMPL_CLASS_NAME  = "org.apache.ranger.services.hdfs.RangerServiceHdfs";
@@ -71,6 +73,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String YARN_IMPL_CLASS_NAME  = "org.apache.ranger.services.yarn.RangerServiceYarn";
 	public static final String KAFKA_IMPL_CLASS_NAME = "org.apache.ranger.services.kafka.RangerServiceKafka";
 	public static final String SOLR_IMPL_CLASS_NAME  = "org.apache.ranger.services.solr.RangerServiceSolr";
+	public static final String NIFI_IMPL_CLASS_NAME  = "org.apache.ranger.services.nifi.RangerServiceNiFi";
 
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
@@ -84,6 +87,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef yarnServiceDef  = null;
 	private RangerServiceDef kafkaServiceDef = null;
 	private RangerServiceDef solrServiceDef  = null;
+	private RangerServiceDef nifiServiceDef  = null;
 
 	private RangerServiceDef tagServiceDef = null;
 
@@ -120,6 +124,7 @@ public class EmbeddedServiceDefsUtil {
 			yarnServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_YARN_NAME);
 			kafkaServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KAFKA_NAME);
 			solrServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SOLR_NAME);
+			nifiServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_NAME);
 
 			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 
@@ -166,6 +171,10 @@ public class EmbeddedServiceDefsUtil {
 
 	public long getSolrServiceDefId() {
 		return getId(solrServiceDef);
+	}
+
+	public long getNiFiServiceDefId() {
+		return getId(nifiServiceDef);
 	}
 
 	public long getTagServiceDefId() { return getId(tagServiceDef); }

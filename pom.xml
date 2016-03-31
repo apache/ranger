@@ -87,6 +87,7 @@
         <module>security-admin</module>
         <module>plugin-kafka</module>
         <module>plugin-solr</module>
+	    <module>plugin-nifi</module>
         <module>ugsync</module>
         <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
         <module>unixauthclient</module>

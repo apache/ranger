@@ -296,6 +296,19 @@
        				<include>org.apache.ranger:ranger-solr-plugin</include>
      			</includes>
     		</moduleSet>
+
+      <moduleSet>
+          <binaries>
+              <includeDependencies>true</includeDependencies>
+              <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/nifi</outputDirectory>
+              <unpack>false</unpack>
+              <directoryMode>755</directoryMode>
+              <fileMode>644</fileMode>
+          </binaries>
+          <includes>
+              <include>org.apache.ranger:ranger-nifi-plugin</include>
+          </includes>
+      </moduleSet>
   </moduleSets> 	
 
   <fileSets>
