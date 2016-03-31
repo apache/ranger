@@ -282,7 +282,7 @@ class RangerYarnAccessRequest extends RangerAccessRequestImpl {
 		super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
 		super.setAccessTime(new Date());
 		super.setClientIPAddress(getRemoteIp());
-		super.setAction(accessType);
+		super.setAction(action);
 	}
 	
 	private static String getRemoteIp() {
