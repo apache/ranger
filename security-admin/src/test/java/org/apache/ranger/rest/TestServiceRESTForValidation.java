@@ -214,7 +214,7 @@ public class TestServiceRESTForValidation {
 			_serviceRest.updatePolicy(_policy);
 			verify(_policyValidator).validate(_policy, Action.UPDATE, true);
 
-			_serviceRest.createPolicy(_policy);
+			_serviceRest.createPolicy(_policy,null);
 			verify(_policyValidator).validate(_policy, Action.CREATE, true);
 		} catch (Exception e) {
 			LOG.debug(e);
@@ -245,7 +245,7 @@ public class TestServiceRESTForValidation {
 		
 		doThrow(_exception).when(_policyValidator).validate(_policy, Action.CREATE, true);
 		try {
-			_serviceRest.createPolicy(_policy);
+			_serviceRest.createPolicy(_policy,null);
 			fail("Should have thrown exception!");
 		} catch (WebApplicationException t) {
 			verify(_policyValidator).validate(_policy, Action.CREATE, true);
@@ -288,7 +288,7 @@ public class TestServiceRESTForValidation {
 		
 		doThrow(_exception).when(_store).createPolicy(_policy);
 		try {
-			_serviceRest.createPolicy(_policy);
+			_serviceRest.createPolicy(_policy,null);
 			fail("Should have thrown exception!");
 		} catch (WebApplicationException e) {
 			verify(_policyValidator).validate(_policy, Action.CREATE, true);

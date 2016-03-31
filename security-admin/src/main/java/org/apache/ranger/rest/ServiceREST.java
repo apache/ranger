@@ -105,6 +105,10 @@ public class ServiceREST {
 	private static final Log LOG = LogFactory.getLog(ServiceREST.class);
 	private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("rest.ServiceREST");
 
+	final static public String PARAM_SERVICE_NAME     = "serviceName";
+	final static public String PARAM_POLICY_NAME      = "policyName";
+	final static public String PARAM_UPDATE_IF_EXISTS = "updateIfExists";
+
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
@@ -974,7 +978,7 @@ public class ServiceREST {
 	@POST
 	@Path("/policies")
 	@Produces({ "application/json", "application/xml" })
-	public RangerPolicy createPolicy(RangerPolicy policy) {
+	public RangerPolicy createPolicy(RangerPolicy policy, @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.createPolicy(" + policy + ")");
 		}
@@ -986,29 +990,65 @@ public class ServiceREST {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createPolicy(policyName=" + policy.getName() + ")");
 			}
-			// this needs to happen before validator is called
-			// set name of policy if unspecified
-			if (StringUtils.isBlank(policy.getName())) { // use of isBlank over isEmpty is deliberate as a blank string does not strike us as a particularly useful policy name!
-				String guid = policy.getGuid();
-				if (StringUtils.isBlank(guid)) { // use of isBlank is deliberate. External parties could send the guid in, perhaps to sync between dev/test/prod instances?
-					guid = guidUtil.genGUID();
-					policy.setGuid(guid);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("No GUID supplied on the policy!  Ok, setting GUID to [" + guid + "].");
+
+			if(request != null) {
+				String serviceName    = request.getParameter(PARAM_SERVICE_NAME);
+				String policyName     = request.getParameter(PARAM_POLICY_NAME);
+				String updateIfExists = request.getParameter(PARAM_UPDATE_IF_EXISTS);
+
+				if(StringUtils.isNotEmpty(serviceName)) {
+					policy.setService(serviceName);
+				}
+
+				if(StringUtils.isNotEmpty(policyName)) {
+					policy.setName(policyName);
+				}
+
+				if(Boolean.valueOf(updateIfExists)) {
+					RangerPolicy existingPolicy = null;
+					try {
+						if(StringUtils.isNotEmpty(policy.getGuid())) {
+							existingPolicy = getPolicyByGuid(policy.getGuid());
+						}
+
+						if(existingPolicy == null && StringUtils.isNotEmpty(serviceName) && StringUtils.isNotEmpty(policyName)) {
+							existingPolicy = getPolicyByName(policy.getService(), policy.getName());
+						}
+
+						if(existingPolicy != null) {
+							ret = updatePolicy(policy);
+						}
+					} catch(Exception excp) {
+						LOG.info("ServiceREST.createPolicy(): Failed to find/update exising policy, will attempt to create the policy", excp);
 					}
 				}
-				String name = policy.getService() + "-" + guid;
-				policy.setName(name);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Policy did not have its name set!  Ok, setting name to [" + name + "]");
-				}
 			}
-			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-			validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
 
-			ensureAdminAccess(policy.getService(), policy.getResources());
+			if(ret == null) {
+				// this needs to happen before validator is called
+				// set name of policy if unspecified
+				if (StringUtils.isBlank(policy.getName())) { // use of isBlank over isEmpty is deliberate as a blank string does not strike us as a particularly useful policy name!
+					String guid = policy.getGuid();
+					if (StringUtils.isBlank(guid)) { // use of isBlank is deliberate. External parties could send the guid in, perhaps to sync between dev/test/prod instances?
+						guid = guidUtil.genGUID();
+						policy.setGuid(guid);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("No GUID supplied on the policy!  Ok, setting GUID to [" + guid + "].");
+						}
+					}
+					String name = policy.getService() + "-" + guid;
+					policy.setName(name);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Policy did not have its name set!  Ok, setting name to [" + name + "]");
+					}
+				}
+				RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+				validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
 
-			ret = svcStore.createPolicy(policy);
+				ensureAdminAccess(policy.getService(), policy.getResources());
+
+				ret = svcStore.createPolicy(policy);
+			}
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -1051,7 +1091,7 @@ public class ServiceREST {
 				RangerPolicy existingPolicy = getExactMatchPolicyForResource(policy.getService(), policy.getResources());
 
 				if (existingPolicy == null) {
-					ret = createPolicy(policy);
+					ret = createPolicy(policy, null);
 				} else {
 					ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
 
@@ -1626,6 +1666,49 @@ public class ServiceREST {
 	public RangerPolicy getPolicyForVersionNumber(@PathParam("policyId") Long policyId,
 			@PathParam("versionNo") int versionNo) {
 		return svcStore.getPolicyForVersionNumber(policyId, versionNo);
+	}
+
+
+	private RangerPolicy getPolicyByGuid(String guid) {
+		RangerPolicy ret = null;
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyByGuid(" + guid +")");
+		}
+
+		SearchFilter filter = new SearchFilter();
+		filter.setParam(SearchFilter.GUID, guid);
+		List<RangerPolicy> policies = getPolicies(filter);
+
+		if (CollectionUtils.isNotEmpty(policies)) {
+			ret = policies.get(0);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyByGuid(" + guid + ")" + ret);
+		}
+		return ret;
+	}
+
+	private RangerPolicy getPolicyByName(String serviceName,String policyName) {
+		RangerPolicy ret = null;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")");
+		}
+
+		SearchFilter filter = new SearchFilter();
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+		filter.setParam(SearchFilter.POLICY_NAME, policyName);
+		List<RangerPolicy> policies = getPolicies(filter);
+
+		if (CollectionUtils.isNotEmpty(policies)) {
+			ret = policies.get(0);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")" + ret);
+		}
+		return ret;
 	}
 
 	private List<RangerPolicy> applyAdminAccessFilter(List<RangerPolicy> policies) {

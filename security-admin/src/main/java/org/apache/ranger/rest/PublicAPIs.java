@@ -273,7 +273,7 @@ public class PublicAPIs {
 				logger.debug("RANGERPOLICY: " + policy.toString());
 			}
 		
-			RangerPolicy  createdPolicy = serviceREST.createPolicy(policy);
+			RangerPolicy  createdPolicy = serviceREST.createPolicy(policy,null);
 
 			ret = serviceUtil.toVXPolicy(createdPolicy, service);
 		}

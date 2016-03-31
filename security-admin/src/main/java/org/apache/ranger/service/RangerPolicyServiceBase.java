@@ -56,6 +56,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 				.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.POLICY_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.POLICY_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.GUID, "obj.guid", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.USER, "xUser.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
 				"XXUser xUser, XXPolicyItem xPolItem, XXPolicyItemUserPerm userPerm", "obj.id = xPolItem.policyId "
 						+ "and userPerm.policyItemId = xPolItem.id and xUser.id = userPerm.userId"));

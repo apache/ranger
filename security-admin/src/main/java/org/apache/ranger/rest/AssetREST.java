@@ -334,7 +334,7 @@ public class AssetREST {
 		RangerService service = serviceREST.getService(vXResource.getAssetId());
 		RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXResource, service);
 
-		RangerPolicy createdPolicy = serviceREST.createPolicy(policy);
+		RangerPolicy createdPolicy = serviceREST.createPolicy(policy,null);
 
 		VXResource ret = serviceUtil.toVXResource(createdPolicy, service);
 

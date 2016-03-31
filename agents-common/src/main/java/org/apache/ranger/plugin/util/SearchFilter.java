@@ -50,6 +50,7 @@ public class SearchFilter {
 	public static final String SORT_BY         = "sortBy";
 	public static final String RESOURCE_SIGNATURE = "resourceSignature:";     // search
 	public static final String POLICY_TYPE = "policyType"; // search
+    public static final String GUID		   = "guid"; //search
 
 	public static final String TAG_DEF_ID                = "tagDefId";            // search
 	public static final String TAG_DEF_GUID              = "tagDefGuid";          // search

@@ -757,7 +757,7 @@ public class TestServiceREST {
 		Mockito.when(svcStore.createPolicy((RangerPolicy) Mockito.anyObject()))
 				.thenReturn(rangPolicy);
 
-		RangerPolicy dbRangerPolicy = serviceREST.createPolicy(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceREST.createPolicy(rangerPolicy,null);
 		Assert.assertNotNull(dbRangerPolicy);
 		Mockito.verify(bizUtil, Mockito.times(2)).isAdmin();
 		Mockito.verify(validatorFactory).getPolicyValidator(svcStore);
