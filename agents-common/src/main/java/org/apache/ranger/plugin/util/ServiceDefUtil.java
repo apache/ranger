@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.collections.ArrayStack;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;

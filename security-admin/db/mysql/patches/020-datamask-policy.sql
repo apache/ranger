@@ -58,6 +58,7 @@ CREATE TABLE `x_datamask_type_def` (
 `name` varchar(1024) NOT NULL,
 `label` varchar(1024) NOT NULL,
 `description` varchar(1024) DEFAULT NULL,
+`transformer` varchar(1024) DEFAULT NULL,
 `datamask_options` varchar(1024) DEFAULT NULL,
 `rb_key_label` varchar(1024) DEFAULT NULL,
 `rb_key_description` varchar(1024) DEFAULT NULL,

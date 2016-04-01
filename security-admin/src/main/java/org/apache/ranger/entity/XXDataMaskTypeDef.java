@@ -85,6 +85,15 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
 	protected String description;
 
 	/**
+	 * transformer of the XXDataMaskTypeDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "transformer")
+	protected String transformer;
+
+	/**
 	 * dataMaskOptions of the XXDataMaskTypeDef
 	 * <ul>
 	 * </ul>
@@ -240,6 +249,25 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b> transformer</b> .
+	 *
+	 * @param transformer
+	 *            Value to set member attribute <b> transformer</b>
+	 */
+	public void setTransformer(String transformer) {
+		this.transformer = transformer;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>transformer</b>
+	 *
+	 * @return String - value of member attribute <b>transformer</b> .
+	 */
+	public String getTransformer() {
+		return this.transformer;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> dataMaskOptions</b> .
 	 *
 	 * @param dataMaskOptions
@@ -336,6 +364,13 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
 			return false;
 		}
 		XXDataMaskTypeDef other = (XXDataMaskTypeDef) obj;
+		if (id == null) {
+			if (other.id != null) {
+				return false;
+			}
+		} else if (!id.equals(other.id)) {
+			return false;
+		}
 		if (defId == null) {
 			if (other.defId != null) {
 				return false;
@@ -350,11 +385,11 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
 		} else if (!itemId.equals(other.itemId)) {
 			return false;
 		}
-		if (id == null) {
-			if (other.id != null) {
+		if (name == null) {
+			if (other.name != null) {
 				return false;
 			}
-		} else if (!id.equals(other.id)) {
+		} else if (!name.equals(other.name)) {
 			return false;
 		}
 		if (label == null) {
@@ -364,18 +399,25 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
 		} else if (!label.equals(other.label)) {
 			return false;
 		}
-		if (name == null) {
-			if (other.name != null) {
+		if (description == null) {
+			if (other.description != null) {
 				return false;
 			}
-		} else if (!name.equals(other.name)) {
+		} else if (!description.equals(other.description)) {
 			return false;
 		}
-		if (order == null) {
-			if (other.order != null) {
+		if (transformer == null) {
+			if (other.transformer != null) {
 				return false;
 			}
-		} else if (!order.equals(other.order)) {
+		} else if (!transformer.equals(other.transformer)) {
+			return false;
+		}
+		if (dataMaskOptions == null) {
+			if (other.dataMaskOptions != null) {
+				return false;
+			}
+		} else if (!dataMaskOptions.equals(other.dataMaskOptions)) {
 			return false;
 		}
 		if (rbKeyLabel == null) {
@@ -383,6 +425,20 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
 				return false;
 			}
 		} else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
+			return false;
+		}
+		if (rbKeyDescription == null) {
+			if (other.rbKeyDescription != null) {
+				return false;
+			}
+		} else if (!rbKeyDescription.equals(other.rbKeyDescription)) {
+			return false;
+		}
+		if (order == null) {
+			if (other.order != null) {
+				return false;
+			}
+		} else if (!order.equals(other.order)) {
 			return false;
 		}
 		return true;
@@ -397,7 +453,8 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
 	public String toString() {
 		return "XXDataMaskTypeDef [" + super.toString() + " id=" + id
 				+ ", defId=" + defId + ", itemId=" + itemId + ", name=" + name + ", label=" + label
-				+ ", rbKeyLabel=" + rbKeyLabel + ", order=" + order + "]";
+				+ ", description=" + description + ", transformer=" + transformer + ", dataMaskOptions=" + dataMaskOptions
+				+ ", rbKeyLabel=" + rbKeyLabel + ", rbKeyDescription=" + rbKeyDescription + ", order=" + order + "]";
 	}
 
 }

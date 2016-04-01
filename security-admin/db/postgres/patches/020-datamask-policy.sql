@@ -65,6 +65,7 @@ CREATE TABLE x_datamask_type_def (
   name VARCHAR(1024) NOT NULL,
   label VARCHAR(1024) NOT NULL,
   description VARCHAR(1024) DEFAULT NULL,
+  transformer VARCHAR(1024) DEFAULT NULL,
   datamask_options VARCHAR(1024) DEFAULT NULL,
   rb_key_label VARCHAR(1024) DEFAULT NULL,
   rb_key_description VARCHAR(1024) DEFAULT NULL,

@@ -2660,20 +2660,22 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private String              name             = null;
 		private String              label            = null;
 		private String              description      = null;
+		private String              transformer      = null;
 		private Map<String, String> dataMaskOptions  = null;
 		private String              rbKeyLabel       = null;
 		private String              rbKeyDescription = null;
 
 
 		public RangerDataMaskTypeDef() {
-			this(null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null);
 		}
 
-		public RangerDataMaskTypeDef(Long itemId, String name, String label, String description, Map<String, String> dataMaskOptions, String rbKeyLabel, String rbKeyDescription) {
+		public RangerDataMaskTypeDef(Long itemId, String name, String label, String description, String transformer, Map<String, String> dataMaskOptions, String rbKeyLabel, String rbKeyDescription) {
 			setItemId(itemId);
 			setName(name);
 			setLabel(label);
 			setDescription(description);
+			setTransformer(transformer);
 			setDataMaskOptions(dataMaskOptions);
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
@@ -2684,6 +2686,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setName(other.getName());
 			setLabel(other.getLabel());
 			setDescription(other.getDescription());
+			setTransformer(other.getTransformer());
 			setDataMaskOptions(other.getDataMaskOptions());
 			setRbKeyLabel(other.getRbKeyLabel());
 			setRbKeyDescription(other.getRbKeyDescription());
@@ -2743,6 +2746,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		 */
 		public void setDescription(String description) {
 			this.description = description;
+		}
+
+		/**
+		 * @return the transformer
+		 */
+		public String getTransformer() {
+			return transformer;
+		}
+
+		/**
+		 * @param transformer the transformer to set
+		 */
+		public void setTransformer(String transformer) {
+			this.transformer = transformer;
 		}
 
 		/**
