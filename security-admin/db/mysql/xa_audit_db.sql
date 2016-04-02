@@ -67,7 +67,7 @@ CREATE TABLE `xa_access_audit` (
   KEY `xa_access_audit_cr_time` (`create_time`),
   KEY `xa_access_audit_up_time` (`update_time`),
   KEY `xa_access_audit_event_time` (`event_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+)DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
