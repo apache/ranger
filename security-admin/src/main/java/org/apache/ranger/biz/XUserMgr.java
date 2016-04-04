@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
@@ -140,6 +141,9 @@ public class XUserMgr extends XUserMgrBase {
 
 	@Autowired
 	SessionMgr sessionMgr;
+	
+	@Autowired
+	GUIDUtil guidUtil;
 
 	@Autowired
 	RangerPolicyService policyService;
@@ -1754,5 +1758,59 @@ public class XUserMgr extends XUserMgrBase {
 		if(CollectionUtils.isNotEmpty(itemsToRemove)) {
 			policyItems.removeAll(itemsToRemove);
 		}
+	}
+
+	protected VXUser createServiceConfigUser(String userName){
+	        if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
+                logger.error("User Name: "+userName);
+                throw restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA);
+	        }
+	        VXUser vXUser = null;
+	        VXPortalUser vXPortalUser=null;
+	        XXUser xxUser = daoManager.getXXUser().findByUserName(userName);
+	        XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(userName);
+	        String actualPassword = "";
+	        if(xxUser!=null && xXPortalUser!=null){
+                vXUser = xUserService.populateViewBean(xxUser);
+                return vXUser;
+	        }
+	        if(xxUser==null){
+                vXUser=new VXUser();
+                vXUser.setName(userName);
+                vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+                vXUser.setDescription(vXUser.getName());
+                actualPassword = vXUser.getPassword();
+	        }
+	        if(xXPortalUser==null){
+                vXPortalUser=new VXPortalUser();
+                vXPortalUser.setLoginId(userName);
+                vXPortalUser.setEmailAddress(guidUtil.genGUID());
+                vXPortalUser.setFirstName(vXUser.getFirstName());
+                vXPortalUser.setLastName(vXUser.getLastName());
+                vXPortalUser.setPassword(vXUser.getPassword());
+                vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+                ArrayList<String> roleList = new ArrayList<String>();
+                roleList.add(RangerConstants.ROLE_USER);
+                vXPortalUser.setUserRoleList(roleList);
+                xXPortalUser = userMgr.mapVXPortalUserToXXPortalUser(vXPortalUser);
+                xXPortalUser=userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
+	        }
+	        VXUser createdXUser=null;
+	        if(xxUser==null && vXUser!=null){
+                createdXUser = xUserService.createResource(vXUser);
+	        }
+	        if(createdXUser!=null){
+                logger.info("User created: "+createdXUser.getName());
+                createdXUser.setPassword(actualPassword);
+                List<XXTrxLog> trxLogList = xUserService.getTransactionLog(createdXUser, "create");
+                String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
+                createdXUser.setPassword(hiddenPassword);
+                xaBizUtil.createTrxLog(trxLogList);
+                if(xXPortalUser!=null){
+                        vXPortalUser=userMgr.mapXXPortalUserToVXPortalUserForDefaultAccount(xXPortalUser);
+                        assignPermissionToUser(vXPortalUser, true);
+                }
+	        }
+	        return createdXUser;
 	}
 }

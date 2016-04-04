@@ -1175,7 +1175,7 @@ public class UserMgr {
 		}
 	}
 
-	private VXPortalUser mapXXPortalUserToVXPortalUserForDefaultAccount(
+	protected VXPortalUser mapXXPortalUserToVXPortalUserForDefaultAccount(
 			XXPortalUser user) {
 
 		VXPortalUser userProfile = new VXPortalUser();

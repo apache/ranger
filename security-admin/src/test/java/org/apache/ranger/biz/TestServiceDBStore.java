@@ -1198,7 +1198,7 @@ public class TestServiceDBStore {
 		Mockito.when(xUserDao.findByUserName(userName)).thenReturn(xUser);
 
 		Mockito.when(xUserService.populateViewBean(xUser)).thenReturn(vXUser);
-		Mockito.when(xUserMgr.createXUser(vXUser)).thenReturn(vXUser);
+		Mockito.when(xUserMgr.createServiceConfigUser(userName)).thenReturn(vXUser);
 
 		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
 		Mockito.when(rangerAuditFields.populateAuditFields(xConfMap, xService))
@@ -1304,7 +1304,7 @@ public class TestServiceDBStore {
 		Mockito.when(xUserDao.findByUserName(name)).thenReturn(xUser);
 
 		Mockito.when(xUserService.populateViewBean(xUser)).thenReturn(vXUser);
-		Mockito.when(xUserMgr.createXUser(vXUser)).thenReturn(vXUser);
+		Mockito.when(xUserMgr.createServiceConfigUser(name)).thenReturn(vXUser);
 
 		Mockito.when(
 				(XXServiceConfigMap) rangerAuditFields.populateAuditFields(
