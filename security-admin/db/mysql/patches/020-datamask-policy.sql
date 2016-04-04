@@ -22,6 +22,9 @@ delimiter ;;
 	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_access_type_def' and column_name = 'datamask_options') then
 		ALTER TABLE `x_access_type_def` ADD `datamask_options` varchar(1024) DEFAULT NULL;
  	end if;
+	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_access_type_def' and column_name = 'rowfilter_options') then
+		ALTER TABLE `x_access_type_def` ADD `rowfilter_options` varchar(1024) DEFAULT NULL;
+ 	end if;
  end if; 
 end;;
 
@@ -37,6 +40,9 @@ delimiter ;;
  if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_resource_def') then
 	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_resource_def' and column_name = 'datamask_options') then
 		ALTER TABLE `x_resource_def` ADD `datamask_options` varchar(1024) DEFAULT NULL;
+ 	end if;
+	if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_resource_def' and column_name = 'rowfilter_options') then
+		ALTER TABLE `x_resource_def` ADD `rowfilter_options` varchar(1024) DEFAULT NULL;
  	end if;
  end if; 
 end;;
@@ -93,3 +99,20 @@ CONSTRAINT `x_policy_item_datamask_FK_added_by_id` FOREIGN KEY (`added_by_id`) R
 CONSTRAINT `x_policy_item_datamask_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 );
 CREATE INDEX x_policy_item_datamask_IDX_policy_item_id ON x_policy_item_datamask(policy_item_id);
+
+DROP TABLE IF EXISTS `x_policy_item_rowfilter`;
+CREATE TABLE `x_policy_item_rowfilter` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT ,
+`guid` varchar(1024) DEFAULT NULL,
+`create_time` datetime DEFAULT NULL,
+`update_time` datetime DEFAULT NULL,
+`added_by_id` bigint(20) DEFAULT NULL,
+`upd_by_id` bigint(20) DEFAULT NULL,
+`policy_item_id` bigint(20) NOT NULL, 
+`filter_expr` varchar(1024) DEFAULT NULL,
+primary key (id), 
+CONSTRAINT `x_policy_item_rowfilter_FK_policy_item_id` FOREIGN KEY (`policy_item_id`) REFERENCES `x_policy_item` (`id`) ,
+CONSTRAINT `x_policy_item_rowfilter_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_policy_item_rowfilter_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+);
+CREATE INDEX x_policy_item_rowfilter_IDX_policy_item_id ON x_policy_item_rowfilter(policy_item_id);

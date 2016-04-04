@@ -250,6 +250,12 @@ public class RangerServiceDefHelper {
 				} else {
 					resourceDefs = null;
 				}
+			} else if(policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+				if(serviceDef.getRowFilterDef() != null) {
+					resourceDefs = serviceDef.getRowFilterDef().getResources();
+				} else {
+					resourceDefs = null;
+				}
 			} else { // unknown policyType; use all resources
 				resourceDefs = serviceDef.getResources();
 			}

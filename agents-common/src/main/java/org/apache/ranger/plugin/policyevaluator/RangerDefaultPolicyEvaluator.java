@@ -36,7 +36,10 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -45,6 +48,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -63,7 +67,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	private List<RangerPolicyItemEvaluator> allowExceptionEvaluators = null;
 	private List<RangerPolicyItemEvaluator> denyExceptionEvaluators  = null;
 	private int                             customConditionsCount    = 0;
-	private List<RangerDataMaskPolicyItemEvaluator> dataMaskEvaluators = null;
+	private List<RangerDataMaskPolicyItemEvaluator>  dataMaskEvaluators  = null;
+	private List<RangerRowFilterPolicyItemEvaluator> rowFilterEvaluators = null;
 	private String perfTag;
 
 	@Override
@@ -105,13 +110,15 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			denyEvaluators           = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
 			allowExceptionEvaluators = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
 			denyExceptionEvaluators  = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);
-			dataMaskEvaluators       = createPolicyItemEvaluators(policy, serviceDef, options, policy.getDataMaskPolicyItems());
+			dataMaskEvaluators       = createDataMaskPolicyItemEvaluators(policy, serviceDef, options, policy.getDataMaskPolicyItems());
+			rowFilterEvaluators      = createRowFilterPolicyItemEvaluators(policy, serviceDef, options, policy.getRowFilterPolicyItems());
 		} else {
 			allowEvaluators          = Collections.<RangerPolicyItemEvaluator>emptyList();
 			denyEvaluators           = Collections.<RangerPolicyItemEvaluator>emptyList();
 			allowExceptionEvaluators = Collections.<RangerPolicyItemEvaluator>emptyList();
 			denyExceptionEvaluators  = Collections.<RangerPolicyItemEvaluator>emptyList();
 			dataMaskEvaluators       = Collections.<RangerDataMaskPolicyItemEvaluator>emptyList();
+			rowFilterEvaluators      = Collections.<RangerRowFilterPolicyItemEvaluator>emptyList();
 		}
 
 		Collections.sort(allowEvaluators);
@@ -119,8 +126,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		Collections.sort(allowExceptionEvaluators);
 		Collections.sort(denyExceptionEvaluators);
 
-		/* dataMask policyItems must be evaulated in the order given in the policy; hence no sort
+		/* dataMask, rowFilter policyItems must be evaulated in the order given in the policy; hence no sort
 		Collections.sort(dataMaskEvaluators);
+		Collections.sort(rowFilterEvaluators);
 		*/
 
 		RangerPerfTracer.log(perf);
@@ -206,63 +214,135 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         }
     }
 
-    protected void evaluatePolicyItems(RangerAccessRequest request, RangerAccessResult result, boolean isResourceMatch) {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + isResourceMatch + ")");
-        }
+	@Override
+	public void evaluate(RangerAccessRequest request, RangerDataMaskResult result) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
+		}
 
-        RangerPolicyItemEvaluator matchedPolicyItem = getMatchingPolicyItem(request, denyEvaluators, denyExceptionEvaluators);
+		RangerPerfTracer perf = null;
 
-        if(matchedPolicyItem == null && !result.getIsAllowed()) { // if not denied, evaluate allowItems only if not already allowed
-            matchedPolicyItem = getMatchingPolicyItem(request, allowEvaluators, allowExceptionEvaluators);
-        }
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_REQUEST_LOG, "RangerPolicyEvaluator.evaluate(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + "," + perfTag + ")");
+		}
 
-        if(matchedPolicyItem != null) {
-            RangerPolicy policy = getPolicy();
+		if (request != null && result != null && CollectionUtils.isNotEmpty(dataMaskEvaluators)) {
+			boolean isResourceMatchAttempted     = false;
+			boolean isResourceMatch              = false;
+			boolean isResourceHeadMatch          = false;
+			boolean isResourceHeadMatchAttempted = false;
+			final boolean attemptResourceHeadMatch = request.isAccessTypeAny() || request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS;
 
-            if(matchedPolicyItem.getPolicyItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
-                if(isResourceMatch) {
-                    result.setIsAllowed(false);
-                    result.setPolicyId(policy.getId());
-                    result.setReason(matchedPolicyItem.getComments());
-                }
-            } else {
-                if(! result.getIsAllowed()) { // if access is not yet allowed by another policy
-                    result.setIsAllowed(true);
-                    result.setPolicyId(policy.getId());
-                    result.setReason(matchedPolicyItem.getComments());
-                }
-            }
-        }
+			if (!result.getIsAuditedDetermined()) {
+				if (!isResourceMatchAttempted) {
+					isResourceMatch = isMatch(request.getResource());
+					isResourceMatchAttempted = true;
+				}
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + isResourceMatch + ")");
-        }
-    }
+				if (!isResourceMatch) {
+					if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
+						isResourceHeadMatch = matchResourceHead(request.getResource());
+						isResourceHeadMatchAttempted = true;
+					}
+				}
 
-    protected RangerPolicyItemEvaluator getDeterminingPolicyItem(String user, Set<String> userGroups, String accessType) {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerDefaultPolicyEvaluator.getDeterminingPolicyItem(" + user + ", " + userGroups + ", " + accessType + ")");
-        }
+				if (isResourceMatch || isResourceHeadMatch) {
+					if (isAuditEnabled()) {
+						result.setIsAudited(true);
+					}
+				}
+			}
 
-        RangerPolicyItemEvaluator ret = null;
+			if (!result.getIsAccessDetermined()) {
+				if (!isResourceMatchAttempted) {
+					isResourceMatch = isMatch(request.getResource());
+					isResourceMatchAttempted = true;
+				}
 
-        /*
-         *  1. if a deny matches without hitting any deny-exception, return that
-         *  2. if an allow matches without hitting any allow-exception, return that
-         */
-        ret = getMatchingPolicyItem(user, userGroups, accessType, denyEvaluators, denyExceptionEvaluators);
+				if (!isResourceMatch) {
+					if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
+						isResourceHeadMatch = matchResourceHead(request.getResource());
+						isResourceHeadMatchAttempted = true;
+					}
+				}
 
-        if(ret == null) {
-            ret = getMatchingPolicyItem(user, userGroups, accessType, allowEvaluators, allowExceptionEvaluators);
-        }
+				if (isResourceMatch || isResourceHeadMatch) {
+					evaluatePolicyItems(request, result);
+				}
+			}
+		}
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerDefaultPolicyEvaluator.getDeterminingPolicyItem(" + user + ", " + userGroups + ", " + accessType + "): " + ret);
-        }
+		RangerPerfTracer.log(perf);
 
-        return ret;
-    }
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
+		}
+	}
+
+	@Override
+	public void evaluate(RangerAccessRequest request, RangerRowFilterResult result) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
+		}
+
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_REQUEST_LOG, "RangerPolicyEvaluator.evaluate(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + "," + perfTag + ")");
+		}
+
+		if (request != null && result != null && CollectionUtils.isNotEmpty(rowFilterEvaluators)) {
+			boolean isResourceMatchAttempted     = false;
+			boolean isResourceMatch              = false;
+			boolean isResourceHeadMatch          = false;
+			boolean isResourceHeadMatchAttempted = false;
+			final boolean attemptResourceHeadMatch = request.isAccessTypeAny() || request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS;
+
+			if (!result.getIsAuditedDetermined()) {
+				if (!isResourceMatchAttempted) {
+					isResourceMatch = isMatch(request.getResource());
+					isResourceMatchAttempted = true;
+				}
+
+				if (!isResourceMatch) {
+					if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
+						isResourceHeadMatch = matchResourceHead(request.getResource());
+						isResourceHeadMatchAttempted = true;
+					}
+				}
+
+				if (isResourceMatch || isResourceHeadMatch) {
+					if (isAuditEnabled()) {
+						result.setIsAudited(true);
+					}
+				}
+			}
+
+			if (!result.getIsAccessDetermined()) {
+				if (!isResourceMatchAttempted) {
+					isResourceMatch = isMatch(request.getResource());
+					isResourceMatchAttempted = true;
+				}
+
+				if (!isResourceMatch) {
+					if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
+						isResourceHeadMatch = matchResourceHead(request.getResource());
+						isResourceHeadMatchAttempted = true;
+					}
+				}
+
+				if (isResourceMatch || isResourceHeadMatch) {
+					evaluatePolicyItems(request, result);
+				}
+			}
+		}
+
+		RangerPerfTracer.log(perf);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
+		}
+	}
 
 	@Override
 	public boolean isMatch(RangerAccessResource resource) {
@@ -418,6 +498,112 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
+
+	protected void evaluatePolicyItems(RangerAccessRequest request, RangerAccessResult result, boolean isResourceMatch) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + isResourceMatch + ")");
+		}
+
+		RangerPolicyItemEvaluator matchedPolicyItem = getMatchingPolicyItem(request, denyEvaluators, denyExceptionEvaluators);
+
+		if(matchedPolicyItem == null && !result.getIsAllowed()) { // if not denied, evaluate allowItems only if not already allowed
+			matchedPolicyItem = getMatchingPolicyItem(request, allowEvaluators, allowExceptionEvaluators);
+		}
+
+		if(matchedPolicyItem != null) {
+			RangerPolicy policy = getPolicy();
+
+			if(matchedPolicyItem.getPolicyItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
+				if(isResourceMatch) {
+					result.setIsAllowed(false);
+					result.setPolicyId(policy.getId());
+					result.setReason(matchedPolicyItem.getComments());
+				}
+			} else {
+				if(! result.getIsAllowed()) { // if access is not yet allowed by another policy
+					result.setIsAllowed(true);
+					result.setPolicyId(policy.getId());
+					result.setReason(matchedPolicyItem.getComments());
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + isResourceMatch + ")");
+		}
+	}
+
+	protected void evaluatePolicyItems(RangerAccessRequest request, RangerDataMaskResult result) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ")");
+		}
+
+		RangerDataMaskPolicyItemEvaluator matchedPolicyItem = getMatchingPolicyItem(request, dataMaskEvaluators);
+		RangerPolicyItemDataMaskInfo      dataMaskInfo      = matchedPolicyItem != null ? matchedPolicyItem.getDataMaskInfo() : null;
+
+		if(dataMaskInfo != null) {
+			RangerPolicy policy = getPolicy();
+
+			result.setIsAllowed(true);
+			result.setIsAccessDetermined(true);
+
+			result.setMaskType(dataMaskInfo.getDataMaskType());
+			result.setMaskCondition(dataMaskInfo.getConditionExpr());
+			result.setMaskedValue(dataMaskInfo.getValueExpr());
+			result.setPolicyId(policy.getId());
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + ")");
+		}
+	}
+
+	protected void evaluatePolicyItems(RangerAccessRequest request, RangerRowFilterResult result) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ")");
+		}
+
+		RangerRowFilterPolicyItemEvaluator matchedPolicyItem = getMatchingPolicyItem(request, rowFilterEvaluators);
+		RangerPolicyItemRowFilterInfo      rowFilterInfo     = matchedPolicyItem != null ? matchedPolicyItem.getRowFilterInfo() : null;
+
+		if(rowFilterInfo != null) {
+			RangerPolicy policy = getPolicy();
+
+			result.setIsAllowed(true);
+			result.setIsAccessDetermined(true);
+
+			result.setFilterExpr(rowFilterInfo.getFilterExpr());
+			result.setPolicyId(policy.getId());
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + ")");
+		}
+	}
+
+	protected RangerPolicyItemEvaluator getDeterminingPolicyItem(String user, Set<String> userGroups, String accessType) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.getDeterminingPolicyItem(" + user + ", " + userGroups + ", " + accessType + ")");
+		}
+
+		RangerPolicyItemEvaluator ret = null;
+
+		/*
+		 *  1. if a deny matches without hitting any deny-exception, return that
+		 *  2. if an allow matches without hitting any allow-exception, return that
+		 */
+		ret = getMatchingPolicyItem(user, userGroups, accessType, denyEvaluators, denyExceptionEvaluators);
+
+		if(ret == null) {
+			ret = getMatchingPolicyItem(user, userGroups, accessType, allowEvaluators, allowExceptionEvaluators);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.getDeterminingPolicyItem(" + user + ", " + userGroups + ", " + accessType + "): " + ret);
+		}
+
+		return ret;
+	}
 
 	private void getResourceAccessInfo(RangerAccessRequest request, List<? extends RangerPolicyItemEvaluator> policyItems, Set<String> users, Set<String> groups) {
 		if(LOG.isDebugEnabled()) {
@@ -668,6 +854,58 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
+	private List<RangerDataMaskPolicyItemEvaluator> createDataMaskPolicyItemEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options, List<RangerDataMaskPolicyItem> policyItems) {
+		List<RangerDataMaskPolicyItemEvaluator> ret = null;
+
+		if(CollectionUtils.isNotEmpty(policyItems)) {
+			ret = new ArrayList<RangerDataMaskPolicyItemEvaluator>();
+
+			int policyItemCounter = 1;
+
+			for(RangerDataMaskPolicyItem policyItem : policyItems) {
+				RangerDataMaskPolicyItemEvaluator itemEvaluator = new RangerDefaultDataMaskPolicyItemEvaluator(serviceDef, policy, policyItem, policyItemCounter++, options);
+
+				itemEvaluator.init();
+
+				ret.add(itemEvaluator);
+
+				if(CollectionUtils.isNotEmpty(itemEvaluator.getConditionEvaluators())) {
+					customConditionsCount += itemEvaluator.getConditionEvaluators().size();
+				}
+			}
+		} else {
+			ret = Collections.<RangerDataMaskPolicyItemEvaluator>emptyList();
+		}
+
+		return ret;
+	}
+
+	private List<RangerRowFilterPolicyItemEvaluator> createRowFilterPolicyItemEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options, List<RangerRowFilterPolicyItem> policyItems) {
+		List<RangerRowFilterPolicyItemEvaluator> ret = null;
+
+		if(CollectionUtils.isNotEmpty(policyItems)) {
+			ret = new ArrayList<RangerRowFilterPolicyItemEvaluator>();
+
+			int policyItemCounter = 1;
+
+			for(RangerRowFilterPolicyItem policyItem : policyItems) {
+				RangerRowFilterPolicyItemEvaluator itemEvaluator = new RangerDefaultRowFilterPolicyItemEvaluator(serviceDef, policy, policyItem, policyItemCounter++, options);
+
+				itemEvaluator.init();
+
+				ret.add(itemEvaluator);
+
+				if(CollectionUtils.isNotEmpty(itemEvaluator.getConditionEvaluators())) {
+					customConditionsCount += itemEvaluator.getConditionEvaluators().size();
+				}
+			}
+		} else {
+			ret = Collections.<RangerRowFilterPolicyItemEvaluator>emptyList();
+		}
+
+		return ret;
+	}
+
 	private boolean isPolicyItemTypeEnabled(RangerServiceDef serviceDef, int policyItemType) {
 		boolean ret = true;
 
@@ -680,15 +918,21 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	private RangerPolicyItemEvaluator getMatchingPolicyItem(RangerAccessRequest request, List<? extends RangerPolicyItemEvaluator> evaluators, List<? extends RangerPolicyItemEvaluator> exceptionEvaluators) {
+	protected <T extends RangerPolicyItemEvaluator> T getMatchingPolicyItem(RangerAccessRequest request, List<T> evaluators) {
+		T ret = getMatchingPolicyItem(request, evaluators, null);
+
+		return ret;
+	}
+
+	private <T extends RangerPolicyItemEvaluator> T getMatchingPolicyItem(RangerAccessRequest request, List<T> evaluators, List<T> exceptionEvaluators) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyEvaluator.getMatchingPolicyItem(" + request + ")");
         }
 
-        RangerPolicyItemEvaluator ret = null;
+        T ret = null;
 
         if(CollectionUtils.isNotEmpty(evaluators)) {
-            for (RangerPolicyItemEvaluator evaluator : evaluators) {
+            for (T evaluator : evaluators) {
                 if(evaluator.isMatch(request)) {
                     ret = evaluator;
 
@@ -698,7 +942,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         }
 
         if(ret != null && CollectionUtils.isNotEmpty(exceptionEvaluators)) {
-            for (RangerPolicyItemEvaluator exceptionEvaluator : exceptionEvaluators) {
+            for (T exceptionEvaluator : exceptionEvaluators) {
                 if(exceptionEvaluator.isMatch(request)) {
                     if(LOG.isDebugEnabled()) {
                         LOG.debug("RangerDefaultPolicyEvaluator.getMatchingPolicyItem(" + request + "): found exception policyItem(" + exceptionEvaluator.getPolicyItem() + "); ignoring the matchedPolicyItem(" + ret.getPolicyItem() + ")");
@@ -718,15 +962,15 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         return ret;
     }
 
-	private RangerPolicyItemEvaluator getMatchingPolicyItem(String user, Set<String> userGroups, String accessType, List<RangerPolicyItemEvaluator> evaluators, List<RangerPolicyItemEvaluator> exceptionEvaluators) {
+	private <T extends RangerPolicyItemEvaluator> T getMatchingPolicyItem(String user, Set<String> userGroups, String accessType, List<T> evaluators, List<T> exceptionEvaluators) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyEvaluator.getMatchingPolicyItem(" + user + ", " + userGroups + ", " + accessType + ")");
         }
 
-        RangerPolicyItemEvaluator ret = null;
+        T ret = null;
 
         if(CollectionUtils.isNotEmpty(evaluators)) {
-            for (RangerPolicyItemEvaluator evaluator : evaluators) {
+            for (T evaluator : evaluators) {
                 if(evaluator.matchUserGroup(user, userGroups) && evaluator.matchAccessType(accessType)) {
                     ret = evaluator;
 
@@ -736,7 +980,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         }
 
         if(ret != null && CollectionUtils.isNotEmpty(exceptionEvaluators)) {
-            for (RangerPolicyItemEvaluator exceptionEvaluator : exceptionEvaluators) {
+            for (T exceptionEvaluator : exceptionEvaluators) {
                 if(exceptionEvaluator.matchUserGroup(user, userGroups) && exceptionEvaluator.matchAccessType(accessType)) {
                     if(LOG.isDebugEnabled()) {
                         LOG.debug("RangerDefaultPolicyEvaluator.getMatchingPolicyItem(" + user + ", " + userGroups + ", " + accessType + "): found exception policyItem(" + exceptionEvaluator.getPolicyItem() + "); ignoring the matchedPolicyItem(" + ret.getPolicyItem() + ")");
@@ -767,116 +1011,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			ret = new ArrayList<T>(list1);
 
 			ret.addAll(list2);
-		}
-
-		return ret;
-	}
-
-	@Override
-	public void evaluate(RangerAccessRequest request, RangerDataMaskResult result) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
-		}
-
-		RangerPerfTracer perf = null;
-
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_REQUEST_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_REQUEST_LOG, "RangerPolicyEvaluator.evaluate(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + "," + perfTag + ")");
-		}
-
-		if (request != null && result != null && CollectionUtils.isNotEmpty(dataMaskEvaluators)) {
-			boolean isResourceMatchAttempted = false;
-			boolean isResourceMatch          = false;
-
-			if (!result.getIsAuditedDetermined()) {
-				if (!isResourceMatchAttempted) {
-					isResourceMatch = isMatch(request.getResource());
-					isResourceMatchAttempted = true;
-				}
-
-				if (isResourceMatch) {
-					if (isAuditEnabled()) {
-						result.setIsAudited(true);
-					}
-				}
-			}
-
-			if (!result.getIsAccessDetermined()) {
-				if (!isResourceMatchAttempted) {
-					isResourceMatch = isMatch(request.getResource());
-					isResourceMatchAttempted = true;
-				}
-
-				if (isResourceMatch) {
-					evaluatePolicyItems(request, result);
-				}
-			}
-		}
-
-		RangerPerfTracer.log(perf);
-
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
-        }
-	}
-
-	protected void evaluatePolicyItems(RangerAccessRequest request, RangerDataMaskResult result) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ")");
-		}
-
-		RangerDataMaskPolicyItemEvaluator matchedPolicyItem = getMatchingPolicyItem(request, dataMaskEvaluators);
-
-		if(matchedPolicyItem != null) {
-			RangerPolicy policy = getPolicy();
-
-			result.setIsAllowed(true);
-			result.setIsAccessDetermined(true);
-
-			result.setMaskType(matchedPolicyItem.getMaskType());
-			result.setMaskCondition(matchedPolicyItem.getMaskCondition());
-			result.setMaskedValue(matchedPolicyItem.getMaskedValue());
-			result.setPolicyId(policy.getId());
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + ")");
-		}
-	}
-
-	protected RangerDataMaskPolicyItemEvaluator getMatchingPolicyItem(RangerAccessRequest request, List<RangerDataMaskPolicyItemEvaluator> evaluators) {
-		RangerDataMaskPolicyItemEvaluator ret = null;
-
-		RangerPolicyItemEvaluator policyItem = getMatchingPolicyItem(request, dataMaskEvaluators, null);
-
-		if(policyItem != null) {
-			ret = (RangerDataMaskPolicyItemEvaluator)policyItem;
-		}
-
-		return ret;
-	}
-
-	private List<RangerDataMaskPolicyItemEvaluator> createPolicyItemEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options, List<RangerDataMaskPolicyItem> policyItems) {
-		List<RangerDataMaskPolicyItemEvaluator> ret = null;
-
-		if(CollectionUtils.isNotEmpty(policyItems)) {
-			ret = new ArrayList<RangerDataMaskPolicyItemEvaluator>();
-
-			int policyItemCounter = 1;
-
-			for(RangerDataMaskPolicyItem policyItem : policyItems) {
-				RangerDataMaskPolicyItemEvaluator itemEvaluator = new RangerDefaultDataMaskPolicyItemEvaluator(serviceDef, policy, policyItem, policyItemCounter++, options);
-
-				itemEvaluator.init();
-
-				ret.add(itemEvaluator);
-
-				if(CollectionUtils.isNotEmpty(itemEvaluator.getConditionEvaluators())) {
-					customConditionsCount += itemEvaluator.getConditionEvaluators().size();
-				}
-			}
-		} else {
-			ret = Collections.<RangerDataMaskPolicyItemEvaluator>emptyList();
 		}
 
 		return ret;

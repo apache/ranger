@@ -294,7 +294,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		// no need to audit if filter/mask is not enabled
+		// no need to audit if mask is not enabled
 		if(! ret.isMaskEnabled()) {
 			ret.setIsAudited(false);
 		}
@@ -305,6 +305,41 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.evalDataMaskPolicies(" + request + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public RangerRowFilterResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evalRowFilterPolicies(" + request + ")");
+		}
+
+		RangerRowFilterResult ret = new RangerRowFilterResult(getServiceName(), getServiceDef(), request);
+
+		if(request != null) {
+			List<RangerPolicyEvaluator> evaluators = policyRepository.getRowFilterPolicyEvaluators();
+			for (RangerPolicyEvaluator evaluator : evaluators) {
+				evaluator.evaluate(request, ret);
+
+				if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
+					break;
+				}
+			}
+		}
+
+		// no need to audit if filter is not enabled
+		if(! ret.isRowFilterEnabled()) {
+			ret.setIsAudited(false);
+		}
+
+		if (resultProcessor != null) {
+			resultProcessor.processResult(ret);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evalRowFilterPolicies(" + request + "): " + ret);
 		}
 
 		return ret;

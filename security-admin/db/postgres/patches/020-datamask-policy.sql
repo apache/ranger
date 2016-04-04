@@ -20,10 +20,15 @@ CREATE OR REPLACE FUNCTION add_datamask_options_to_x_access_type_def_table()
 RETURNS void AS $$
 DECLARE
  exists_access_type_def_datamask_options integer := 0;
+ exists_access_type_def_rowfilter_options integer := 0;
 BEGIN
  select count(*) into exists_access_type_def_datamask_options from pg_attribute where attrelid in(select oid from pg_class where relname='x_access_type_def') and attname='datamask_options';
+ select count(*) into exists_access_type_def_rowfilter_options from pg_attribute where attrelid in(select oid from pg_class where relname='x_access_type_def') and attname='rowfilter_options';
  IF exists_access_type_def_datamask_options = 0 THEN
  	ALTER TABLE x_access_type_def ADD COLUMN datamask_options VARCHAR(1024) DEFAULT NULL;
+ END IF;
+ IF exists_access_type_def_rowfilter_options = 0 THEN
+ 	ALTER TABLE x_access_type_def ADD COLUMN rowfilter_options VARCHAR(1024) DEFAULT NULL;
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -33,10 +38,15 @@ CREATE OR REPLACE FUNCTION add_datamask_options_to_x_resource_def_table()
 RETURNS void AS $$
 DECLARE
  exists_resource_def_datamask_options integer := 0;
+ exists_resource_def_rowfilter_options integer := 0;
 BEGIN
  select count(*) into exists_resource_def_datamask_options from pg_attribute where attrelid in(select oid from pg_class where relname='x_resource_def') and attname='datamask_options';
+ select count(*) into exists_resource_def_rowfilter_options from pg_attribute where attrelid in(select oid from pg_class where relname='x_resource_def') and attname='rowfilter_options';
  IF exists_resource_def_datamask_options = 0 THEN
  	ALTER TABLE x_resource_def ADD COLUMN datamask_options VARCHAR(1024) DEFAULT NULL;
+ END IF;
+ IF exists_resource_def_rowfilter_options = 0 THEN
+ 	ALTER TABLE x_resource_def ADD COLUMN rowfilter_options VARCHAR(1024) DEFAULT NULL;
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -96,3 +106,23 @@ CREATE TABLE x_policy_item_datamask (
   CONSTRAINT x_policy_item_datamask_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 CREATE INDEX x_policy_item_datamask_IDX_policy_item_id ON x_policy_item_datamask(policy_item_id);
+
+DROP TABLE IF EXISTS x_policy_item_rowfilter;
+DROP SEQUENCE IF EXISTS x_policy_item_rowfilter_seq;
+
+CREATE SEQUENCE x_policy_item_rowfilter_seq;
+CREATE TABLE x_policy_item_rowfilter (
+  id BIGINT DEFAULT nextval('x_policy_item_rowfilter_seq'::regclass),
+  guid VARCHAR(1024) DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  added_by_id BIGINT DEFAULT NULL,
+  upd_by_id BIGINT DEFAULT NULL,
+  policy_item_id BIGINT NOT NULL, 
+  filter_expr VARCHAR(1024) DEFAULT NULL,
+  primary key (id), 
+  CONSTRAINT x_policy_item_rowfilter_FK_policy_item_id FOREIGN KEY (policy_item_id) REFERENCES x_policy_item (id) ,
+  CONSTRAINT x_policy_item_rowfilter_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+  CONSTRAINT x_policy_item_rowfilter_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+CREATE INDEX x_policy_item_rowfilter_IDX_policy_item_id ON x_policy_item_rowfilter(policy_item_id);

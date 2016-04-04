@@ -24,24 +24,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Cacheable
 @XmlRootElement
-@Table(name = "x_policy_item_datamask")
-public class XXPolicyItemDataMaskInfo extends XXDBBase implements
+@Table(name = "x_policy_item_rowfilter")
+public class XXPolicyItemRowFilterInfo extends XXDBBase implements
 		java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**
-	 * id of the XXPolicyItemDataMaskInfo
+	 * id of the XXPolicyItemRowFilterInfo
 	 * <ul>
 	 * </ul>
 	 *
 	 */
 	@Id
-	@SequenceGenerator(name = "x_policy_item_datamask_SEQ", sequenceName = "x_policy_item_datamask_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_datamask_SEQ")
+	@SequenceGenerator(name = "x_policy_item_rowfilter_SEQ", sequenceName = "x_policy_item_rowfilter_SEQ", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_rowfilter_SEQ")
 	@Column(name = "id")
 	protected Long id;
 
 	/**
-	 * policyItemId of the XXPolicyItemDataMaskInfo
+	 * policyItemId of the XXPolicyItemRowFilterInfo
 	 * <ul>
 	 * </ul>
 	 *
@@ -50,31 +50,13 @@ public class XXPolicyItemDataMaskInfo extends XXDBBase implements
 	protected Long policyItemId;
 
 	/**
-	 * type of the XXPolicyItemDataMaskInfo
+	 * filter_expr of the XXPolicyItemRowFilterInfo
 	 * <ul>
 	 * </ul>
 	 *
 	 */
-	@Column(name = "type")
-	protected Long type;
-
-	/**
-	 * isAllowed of the XXPolicyItemDataMaskInfo
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "condition_expr")
-	protected String conditionExpr;
-
-	/**
-	 * order of the XXPolicyItemDataMaskInfo
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "value_expr")
-	protected String valueExpr;
+	@Column(name = "filter_expr")
+	protected String filterExpr;
 
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
@@ -90,7 +72,7 @@ public class XXPolicyItemDataMaskInfo extends XXDBBase implements
 	/**
 	 * Returns the value for the member attribute <b>id</b>
 	 * 
-	 * @return Date - value of member attribute <b>id</b> .
+	 * @return Long - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
 		return this.id;
@@ -110,70 +92,30 @@ public class XXPolicyItemDataMaskInfo extends XXDBBase implements
 	/**
 	 * Returns the value for the member attribute <b>policyItemId</b>
 	 * 
-	 * @return Date - value of member attribute <b>policyItemId</b> .
+	 * @return Long - value of member attribute <b>policyItemId</b> .
 	 */
 	public Long getPolicyItemId() {
 		return this.policyItemId;
 	}
 
 	/**
-	 * This method sets the value to the member attribute <b> type</b> . You
-	 * cannot set null to the attribute.
-	 * 
-	 * @param type
-	 *            Value to set member attribute <b> type</b>
-	 */
-	public void setType(Long type) {
-		this.type = type;
-	}
-
-	/**
-	 * Returns the value for the member attribute <b>type</b>
-	 * 
-	 * @return Date - value of member attribute <b>type</b> .
-	 */
-	public Long getType() {
-		return this.type;
-	}
-
-	/**
-	 * This method sets the value to the member attribute <b> conditionExpr</b> .
+	 * This method sets the value to the member attribute <b> filterExpr</b> .
 	 * You cannot set null to the attribute.
 	 * 
-	 * @param conditionExpr
-	 *            Value to set member attribute <b> conditionExpr</b>
+	 * @param filterExpr
+	 *            Value to set member attribute <b> filterExpr</b>
 	 */
-	public void setConditionExpr(String conditionExpr) {
-		this.conditionExpr = conditionExpr;
+	public void setFilterExpr(String filterExpr) {
+		this.filterExpr = filterExpr;
 	}
 
 	/**
-	 * Returns the value for the member attribute <b>valueExpr</b>
+	 * Returns the value for the member attribute <b>filterExpr</b>
 	 *
-	 * @return String - value of member attribute <b>valueExpr</b> .
+	 * @return String - value of member attribute <b>filterExpr</b> .
 	 */
-	public String getConditionExpr() {
-		return this.valueExpr;
-	}
-
-	/**
-	 * This method sets the value to the member attribute <b> valueExpr</b> . You
-	 * cannot set null to the attribute.
-	 * 
-	 * @param valueExpr
-	 *            Value to set member attribute <b> valueExpr</b>
-	 */
-	public void setValueExpr(String valueExpr) {
-		this.valueExpr = valueExpr;
-	}
-
-	/**
-	 * Returns the value for the member attribute <b>valueExpr</b>
-	 * 
-	 * @return String - value of member attribute <b>valueExpr</b> .
-	 */
-	public String getValueExpr() {
-		return this.valueExpr;
+	public String getFilterExpr() {
+		return this.filterExpr;
 	}
 
 	/*
@@ -195,7 +137,7 @@ public class XXPolicyItemDataMaskInfo extends XXDBBase implements
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		XXPolicyItemDataMaskInfo other = (XXPolicyItemDataMaskInfo) obj;
+		XXPolicyItemRowFilterInfo other = (XXPolicyItemRowFilterInfo) obj;
 		if (id == null) {
 			if (other.id != null) {
 				return false;
@@ -203,18 +145,11 @@ public class XXPolicyItemDataMaskInfo extends XXDBBase implements
 		} else if (!id.equals(other.id)) {
 			return false;
 		}
-		if (conditionExpr == null) {
-			if (other.conditionExpr != null) {
+		if (filterExpr == null) {
+			if (other.filterExpr != null) {
 				return false;
 			}
-		} else if (!conditionExpr.equals(other.conditionExpr)) {
-			return false;
-		}
-		if (valueExpr == null) {
-			if (other.valueExpr != null) {
-				return false;
-			}
-		} else if (!valueExpr.equals(other.valueExpr)) {
+		} else if (!filterExpr.equals(other.filterExpr)) {
 			return false;
 		}
 		if (policyItemId == null) {
@@ -222,13 +157,6 @@ public class XXPolicyItemDataMaskInfo extends XXDBBase implements
 				return false;
 			}
 		} else if (!policyItemId.equals(other.policyItemId)) {
-			return false;
-		}
-		if (type == null) {
-			if (other.type != null) {
-				return false;
-			}
-		} else if (!type.equals(other.type)) {
 			return false;
 		}
 		return true;
@@ -242,8 +170,7 @@ public class XXPolicyItemDataMaskInfo extends XXDBBase implements
 	@Override
 	public String toString() {
 		return "XXPolicyItemDataMaskInfo [" + super.toString() + " id=" + id
-				+ ", policyItemId=" + policyItemId + ", type=" + type
-				+ ", conditionExpr=" + conditionExpr + ", valueExpr=" + valueExpr + "]";
+				+ ", policyItemId=" + policyItemId + ", filterExpr=" + filterExpr + "]";
 	}
 
 }

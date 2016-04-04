@@ -34,7 +34,9 @@ import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XModuleDefService;
@@ -1522,6 +1524,14 @@ public class XUserMgr extends XUserMgrBase {
 				removeUserGroupReferences(denyExceptions,null,vXGroup.getName());
 				rangerPolicy.setDenyExceptions(denyExceptions);
 
+				List<RangerDataMaskPolicyItem> dataMaskItems = rangerPolicy.getDataMaskPolicyItems();
+				removeUserGroupReferences(dataMaskItems,null,vXGroup.getName());
+				rangerPolicy.setDataMaskPolicyItems(dataMaskItems);
+
+				List<RangerRowFilterPolicyItem> rowFilterItems = rangerPolicy.getRowFilterPolicyItems();
+				removeUserGroupReferences(rowFilterItems,null,vXGroup.getName());
+				rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
+
 				try {
 					svcStore.updatePolicy(rangerPolicy);
 				} catch (Throwable excp) {
@@ -1694,6 +1704,14 @@ public class XUserMgr extends XUserMgrBase {
 				removeUserGroupReferences(denyExceptions,vXUser.getName(),null);
 				rangerPolicy.setDenyExceptions(denyExceptions);
 
+				List<RangerDataMaskPolicyItem> dataMaskItems = rangerPolicy.getDataMaskPolicyItems();
+				removeUserGroupReferences(dataMaskItems,vXUser.getName(),null);
+				rangerPolicy.setDataMaskPolicyItems(dataMaskItems);
+
+				List<RangerRowFilterPolicyItem> rowFilterItems = rangerPolicy.getRowFilterPolicyItems();
+				removeUserGroupReferences(rowFilterItems,vXUser.getName(),null);
+				rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
+
 				try{
 					svcStore.updatePolicy(rangerPolicy);
 				}catch(Throwable excp) {
@@ -1761,9 +1779,9 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	private void removeUserGroupReferences(List<RangerPolicyItem> policyItems, String user, String group) {
-		List<RangerPolicyItem> itemsToRemove = null;
-		for(RangerPolicyItem policyItem : policyItems) {
+	private <T extends RangerPolicyItem> void removeUserGroupReferences(List<T> policyItems, String user, String group) {
+		List<T> itemsToRemove = null;
+		for(T policyItem : policyItems) {
 			if(!StringUtil.isEmpty(user)) {
 				policyItem.getUsers().remove(user);
 			}
@@ -1772,7 +1790,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 			if(policyItem.getUsers().isEmpty() && policyItem.getGroups().isEmpty()) {
 				if(itemsToRemove == null) {
-					itemsToRemove = new ArrayList<RangerPolicyItem>();
+					itemsToRemove = new ArrayList<T>();
 				}
 				itemsToRemove.add(policyItem);
 			}

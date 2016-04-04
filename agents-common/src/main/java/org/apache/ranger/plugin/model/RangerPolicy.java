@@ -40,10 +40,15 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RangerPolicy extends RangerBaseModelObject implements java.io.Serializable {
-	public static final int POLICY_TYPE_ACCESS   = 0;
-	public static final int POLICY_TYPE_DATAMASK = 1;
+	public static final int POLICY_TYPE_ACCESS    = 0;
+	public static final int POLICY_TYPE_DATAMASK  = 1;
+	public static final int POLICY_TYPE_ROWFILTER = 2;
 
-	public static final int[] POLICY_TYPES = new int[] { POLICY_TYPE_ACCESS, POLICY_TYPE_DATAMASK };
+	public static final int[] POLICY_TYPES = new int[] {
+			POLICY_TYPE_ACCESS,
+			POLICY_TYPE_DATAMASK,
+			POLICY_TYPE_ROWFILTER
+	};
 
 	// For future use
 	private static final long serialVersionUID = 1L;
@@ -59,7 +64,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private List<RangerPolicyItem>            denyPolicyItems	= null;
 	private List<RangerPolicyItem>            allowExceptions	= null;
 	private List<RangerPolicyItem>            denyExceptions	= null;
-	private List<RangerDataMaskPolicyItem>    dataMaskPolicyItems = null;
+	private List<RangerDataMaskPolicyItem>    dataMaskPolicyItems  = null;
+	private List<RangerRowFilterPolicyItem>   rowFilterPolicyItems = null;
 
 
 	/**
@@ -93,6 +99,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setAllowExceptions(null);
 		setDenyExceptions(null);
 		setDataMaskPolicyItems(null);
+		setRowFilterPolicyItems(null);
 	}
 
 	/**
@@ -113,7 +120,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setAllowExceptions(other.getAllowExceptions());
 		setDenyExceptions(other.getDenyExceptions());
 		setDataMaskPolicyItems(other.getDataMaskPolicyItems());
-
+		setRowFilterPolicyItems(other.getRowFilterPolicyItems());
 	}
 
 	/**
@@ -362,6 +369,28 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 	}
 
+	public List<RangerRowFilterPolicyItem> getRowFilterPolicyItems() {
+		return rowFilterPolicyItems;
+	}
+
+	public void setRowFilterPolicyItems(List<RangerRowFilterPolicyItem> rowFilterPolicyItems) {
+		if(this.rowFilterPolicyItems == null) {
+			this.rowFilterPolicyItems = new ArrayList<RangerRowFilterPolicyItem>();
+		}
+
+		if(this.rowFilterPolicyItems == rowFilterPolicyItems) {
+			return;
+		}
+
+		this.rowFilterPolicyItems.clear();
+
+		if(rowFilterPolicyItems != null) {
+			for(RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
+				this.rowFilterPolicyItems.add(rowFilterPolicyItem);
+			}
+		}
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -428,6 +457,26 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			for(RangerPolicyItem policyItem : denyExceptions) {
 				if(policyItem != null) {
 					policyItem.toString(sb);
+				}
+			}
+		}
+		sb.append("} ");
+
+		sb.append("dataMaskPolicyItems={");
+		if(dataMaskPolicyItems != null) {
+			for(RangerDataMaskPolicyItem dataMaskPolicyItem : dataMaskPolicyItems) {
+				if(dataMaskPolicyItem != null) {
+					dataMaskPolicyItem.toString(sb);
+				}
+			}
+		}
+		sb.append("} ");
+
+		sb.append("rowFilterPolicyItems={");
+		if(rowFilterPolicyItems != null) {
+			for(RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
+				if(rowFilterPolicyItem != null) {
+					rowFilterPolicyItem.toString(sb);
 				}
 			}
 		}
@@ -899,7 +948,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 * @param dataMaskInfo the dataMaskInfo to set
 		 */
 		public void setDataMaskInfo(RangerPolicyItemDataMaskInfo dataMaskInfo) {
-			this.dataMaskInfo = dataMaskInfo;
+			this.dataMaskInfo = dataMaskInfo == null ? new RangerPolicyItemDataMaskInfo() : dataMaskInfo;
 		}
 
 		@Override
@@ -946,6 +995,93 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			sb.append("dataMaskInfo={");
 			if(dataMaskInfo != null) {
 				dataMaskInfo.toString(sb);
+			}
+			sb.append("} ");
+
+			sb.append("}");
+
+			return sb;
+		}
+	}
+
+	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class RangerRowFilterPolicyItem extends RangerPolicyItem implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private RangerPolicyItemRowFilterInfo rowFilterInfo = null;
+
+		public RangerRowFilterPolicyItem() {
+			this(null, null, null, null, null, null);
+		}
+
+		public RangerRowFilterPolicyItem(RangerPolicyItemRowFilterInfo rowFilterInfo, List<RangerPolicyItemAccess> accesses, List<String> users, List<String> groups, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
+			super(accesses, users, groups, conditions, delegateAdmin);
+
+			setRowFilterInfo(rowFilterInfo);
+		}
+
+		/**
+		 * @return the rowFilterInfo
+		 */
+		public RangerPolicyItemRowFilterInfo getRowFilterInfo() {
+			return rowFilterInfo;
+		}
+
+		/**
+		 * @param rowFilterInfo the rowFilterInfo to set
+		 */
+		public void setRowFilterInfo(RangerPolicyItemRowFilterInfo rowFilterInfo) {
+			this.rowFilterInfo = rowFilterInfo == null ? new RangerPolicyItemRowFilterInfo() : rowFilterInfo;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = super.hashCode();
+			result = prime * result + ((rowFilterInfo == null) ? 0 : rowFilterInfo.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if(! super.equals(obj))
+				return false;
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerRowFilterPolicyItem other = (RangerRowFilterPolicyItem) obj;
+			if (rowFilterInfo == null) {
+				if (other.rowFilterInfo != null)
+					return false;
+			} else if (!rowFilterInfo.equals(other.rowFilterInfo))
+				return false;
+			return true;
+		}
+
+		@Override
+		public String toString( ) {
+			StringBuilder sb = new StringBuilder();
+
+			toString(sb);
+
+			return sb.toString();
+		}
+
+		public StringBuilder toString(StringBuilder sb) {
+			sb.append("RangerRowFilterPolicyItem={");
+
+			super.toString(sb);
+
+			sb.append("rowFilterInfo={");
+			if(rowFilterInfo != null) {
+				rowFilterInfo.toString(sb);
 			}
 			sb.append("} ");
 
@@ -1277,6 +1413,77 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			sb.append("dataMaskType={").append(dataMaskType).append("} ");
 			sb.append("conditionExpr={").append(conditionExpr).append("} ");
 			sb.append("valueExpr={").append(valueExpr).append("} ");
+
+			sb.append("}");
+
+			return sb;
+		}
+	}
+
+	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class RangerPolicyItemRowFilterInfo implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private String filterExpr = null;
+
+		public RangerPolicyItemRowFilterInfo() { }
+
+		public RangerPolicyItemRowFilterInfo(String filterExpr) {
+			setFilterExpr(filterExpr);
+		}
+
+		public String getFilterExpr() {
+			return filterExpr;
+		}
+
+		public void setFilterExpr(String filterExpr) {
+			this.filterExpr = filterExpr;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = super.hashCode();
+			result = prime * result + ((filterExpr == null) ? 0 : filterExpr.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if(! super.equals(obj))
+				return false;
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RangerPolicyItemRowFilterInfo other = (RangerPolicyItemRowFilterInfo) obj;
+			if (filterExpr == null) {
+				if (other.filterExpr != null)
+					return false;
+			} else if (!filterExpr.equals(other.filterExpr))
+				return false;
+			return true;
+		}
+
+		@Override
+		public String toString( ) {
+			StringBuilder sb = new StringBuilder();
+
+			toString(sb);
+
+			return sb.toString();
+		}
+
+		public StringBuilder toString(StringBuilder sb) {
+			sb.append("RangerPolicyItemDataMaskInfo={");
+
+			sb.append("filterExpr={").append(filterExpr).append("} ");
 
 			sb.append("}");
 

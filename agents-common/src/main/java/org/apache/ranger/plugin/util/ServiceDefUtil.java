@@ -68,6 +68,7 @@ public class ServiceDefUtil {
 
     public static RangerServiceDef normalize(RangerServiceDef serviceDef) {
         normalizeDataMaskDef(serviceDef);
+        normalizeRowFilterDef(serviceDef);
 
         return serviceDef;
     }
@@ -115,6 +116,53 @@ public class ServiceDefUtil {
                 }
 
                 serviceDef.getDataMaskDef().setAccessTypes(processedDefs);
+            }
+        }
+    }
+
+    private static void normalizeRowFilterDef(RangerServiceDef serviceDef) {
+        if(serviceDef != null && serviceDef.getRowFilterDef() != null) {
+            List<RangerResourceDef>   rowFilterResources   = serviceDef.getRowFilterDef().getResources();
+            List<RangerAccessTypeDef> rowFilterAccessTypes = serviceDef.getRowFilterDef().getAccessTypes();
+
+            if(CollectionUtils.isNotEmpty(rowFilterResources)) {
+                List<RangerResourceDef> resources     = serviceDef.getResources();
+                List<RangerResourceDef> processedDefs = new ArrayList<RangerResourceDef>(rowFilterResources.size());
+
+                for(RangerResourceDef rowFilterResource : rowFilterResources) {
+                    RangerResourceDef processedDef = rowFilterResource;
+
+                    for(RangerResourceDef resourceDef : resources) {
+                        if(StringUtils.equals(resourceDef.getName(), rowFilterResource.getName())) {
+                            processedDef = ServiceDefUtil.mergeResourceDef(resourceDef, rowFilterResource);
+                            break;
+                        }
+                    }
+
+                    processedDefs.add(processedDef);
+                }
+
+                serviceDef.getRowFilterDef().setResources(processedDefs);
+            }
+
+            if(CollectionUtils.isNotEmpty(rowFilterAccessTypes)) {
+                List<RangerAccessTypeDef> accessTypes   = serviceDef.getAccessTypes();
+                List<RangerAccessTypeDef> processedDefs = new ArrayList<RangerAccessTypeDef>(accessTypes.size());
+
+                for(RangerAccessTypeDef rowFilterAccessType : rowFilterAccessTypes) {
+                    RangerAccessTypeDef processedDef = rowFilterAccessType;
+
+                    for(RangerAccessTypeDef accessType : accessTypes) {
+                        if(StringUtils.equals(accessType.getName(), rowFilterAccessType.getName())) {
+                            processedDef = ServiceDefUtil.mergeAccessTypeDef(accessType, rowFilterAccessType);
+                            break;
+                        }
+                    }
+
+                    processedDefs.add(processedDef);
+                }
+
+                serviceDef.getRowFilterDef().setAccessTypes(processedDefs);
             }
         }
     }

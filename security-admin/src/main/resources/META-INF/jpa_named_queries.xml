@@ -593,6 +593,27 @@
 		<query>select obj from XXPolicyItemDataMaskInfo obj where obj.type = :type</query>
 	</named-query>
 
+	<!-- XXPolicyItemRowFilterInfo -->
+	<named-query name="XXPolicyItemRowFilterInfo.findByPolicyItemId">
+		<query>select obj from XXPolicyItemRowFilterInfo obj where obj.policyItemId = :polItemId</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemRowFilterInfo.findByPolicyId">
+		<query>select obj from XXPolicyItemRowFilterInfo obj, XXPolicyItem item
+			where obj.policyItemId = item.id
+			and item.policyId = :policyId
+			order by obj.policyItemId
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemRowFilterInfo.findByServiceId">
+		<query>select obj from XXPolicyItemRowFilterInfo obj, XXPolicyItem item
+			where obj.policyItemId = item.id
+			and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+			order by item.policyId, obj.policyItemId
+		</query>
+	</named-query>
+
 	<!-- XXDataHist -->
 	<named-query name="XXDataHist.findLatestByObjectClassTypeAndObjectId">
 		<query>select obj from XXDataHist obj where obj.objectId = :objectId 

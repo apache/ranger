@@ -19,25 +19,24 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 
-
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 
-public class RangerDefaultDataMaskPolicyItemEvaluator extends RangerDefaultPolicyItemEvaluator implements RangerDataMaskPolicyItemEvaluator {
-	final private RangerDataMaskPolicyItem dataMaskPolicyItem;
+public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPolicyItemEvaluator implements RangerRowFilterPolicyItemEvaluator {
+	final private RangerRowFilterPolicyItem rowFilterPolicyItem;
 
-	public RangerDefaultDataMaskPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerDataMaskPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
+	public RangerDefaultRowFilterPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerRowFilterPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
 		super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK, policyItemIndex, options);
 
-		dataMaskPolicyItem = policyItem;
+		rowFilterPolicyItem = policyItem;
 	}
 
 	@Override
-	public RangerPolicyItemDataMaskInfo getDataMaskInfo() {
-		return dataMaskPolicyItem == null ? null : dataMaskPolicyItem.getDataMaskInfo();
+	public RangerPolicyItemRowFilterInfo getRowFilterInfo() {
+		return rowFilterPolicyItem == null ? null : rowFilterPolicyItem.getRowFilterInfo();
 	}
 }

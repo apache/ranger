@@ -60,6 +60,15 @@
         {"name":"table","matcherOptions":{"wildCard":false}},
         {"name":"column","matcherOptions":{"wildCard":false}}
       ]
+    },
+    "rowFilterDef": {
+      "accessTypes":[
+        {"name":"select","label":"Select"}
+      ],
+      "resources":[
+        {"name":"database","matcherOptions":{"wildCard":false}},
+        {"name":"table","matcherOptions":{"wildCard":false}}
+      ]
     }
   },
 
@@ -70,7 +79,7 @@
        {"accesses":[{"type":"all","isAllowed":true}],"users":["hive", "user1", "user2"],"groups":["public"],"delegateAdmin":false}
      ]
     },
-    {"id":101,"name":"db=*, table=*, column=ssn: mask ssn column in all tables, databases","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+    {"id":101,"name":"db=employee, table=personal, column=ssn: mask ssn column","isEnabled":true,"isAuditEnabled":true,"policyType":1,
       "resources":{"database":{"values":["employee"]},"table":{"values":["personal"]},"column":{"values":["ssn"]}},
       "dataMaskPolicyItems":[
         {"accesses":[{"type":"select","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false,
@@ -81,7 +90,7 @@
         }
       ]
     },
-    {"id":102,"name":"db=hr, table=*, column=date_of_birth: mask date_of_birth column in all tables in hr database","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+    {"id":102,"name":"db=hr, table=employee, column=date_of_birth: mask date_of_birth column","isEnabled":true,"isAuditEnabled":true,"policyType":1,
       "resources":{"database":{"values":["hr"]},"table":{"values":["employee"]},"column":{"values":["date_of_birth"]}},
       "dataMaskPolicyItems":[
         {"accesses":[{"type":"select","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false,
@@ -89,6 +98,28 @@
         },
         {"accesses":[{"type":"select","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false,
           "dataMaskInfo": {"dataMaskType":"SHUFFLE"}
+        }
+      ]
+    },
+    {"id":201,"name":"db=employee, table=personal","isEnabled":true,"isAuditEnabled":true,"policyType":2,
+      "resources":{"database":{"values":["employee"]},"table":{"values":["personal"]}},
+      "rowFilterPolicyItems":[
+        {"accesses":[{"type":"select","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false,
+          "rowFilterInfo": {"filterExpr":"location='US'"}
+        },
+        {"accesses":[{"type":"select","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false,
+          "rowFilterInfo": {"filterExpr":"location='CA'"}
+        }
+      ]
+    },
+    {"id":202,"name":"db=hr, table=employee","isEnabled":true,"isAuditEnabled":true,"policyType":2,
+      "resources":{"database":{"values":["hr"]},"table":{"values":["employee"]}},
+      "rowFilterPolicyItems":[
+        {"accesses":[{"type":"select","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false,
+          "rowFilterInfo": {"filterExpr":"dept='production'"}
+        },
+        {"accesses":[{"type":"select","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false,
+          "rowFilterInfo": {"filterExpr":"dept='purchase'"}
         }
       ]
     }
@@ -150,6 +181,62 @@
         "accessType":"select","user":"user2","userGroups":[],"requestData":"select date_of_birth from hr2.employee2;' for user2"
       },
       "dataMaskResult":{"maskType":null,"maskCondition":null,"maskValue":null,"policyId":-1}
+    },
+    {"name":"'select ssn from employee.personal;' for user1 - filterExpr=location='US'",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal"}},
+        "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1"
+      },
+      "rowFilterResult":{"filterExpr":"location='US'","policyId":201}
+    },
+    {"name":"'select ssn from employee.personal;' for user2 - filterExpr=location='CA'",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal"}},
+        "accessType":"select","user":"user2","userGroups":[],"requestData":"select ssn from employee.personal;' for user2"
+      },
+      "rowFilterResult":{"filterExpr":"location='CA'","policyId":201}
+    },
+    {"name":"'select ssn from employee.personal;' for user3 - no-filter",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal"}},
+        "accessType":"select","user":"user3","userGroups":[],"requestData":"select ssn from employee.personal;' for user3"
+      },
+      "rowFilterResult":{"filterExpr":null,"policyId":-1}
+    },
+    {"name":"'select name from employee.personal;' for group3 - no-filter",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal"}},
+        "accessType":"select","user":"user5","userGroups":["group3"],"requestData":"select name from employee.personal;' for user5/group3"
+      },
+      "rowFilterResult":{"filterExpr":null,"policyId":-1}
+    },
+    {"name":"'select date_of_birth from hr.employee;' for user1 - filterExpr=dept='production'",
+      "request":{
+        "resource":{"elements":{"database":"hr", "table":"employee"}},
+        "accessType":"select","user":"user1","userGroups":[],"requestData":"select date_of_birth from hr.employee;' for user1"
+      },
+      "rowFilterResult":{"filterExpr":"dept='production'","policyId":202}
+    },
+    {"name":"'select date_of_birth from hr.employee;' for user2 - filterExpr=dept='purchase'",
+      "request":{
+        "resource":{"elements":{"database":"hr", "table":"employee"}},
+        "accessType":"select","user":"user2","userGroups":[],"requestData":"select date_of_birth from hr.employee2;' for user2"
+      },
+      "rowFilterResult":{"filterExpr":"dept='purchase'","policyId":202}
+    },
+    {"name":"'select date_of_birth from hr.employee;' for user3 - no-filter",
+      "request":{
+        "resource":{"elements":{"database":"hr", "table":"employee"}},
+        "accessType":"select","user":"user3","userGroups":[],"requestData":"select date_of_birth from hr.employee;' for user3"
+      },
+      "rowFilterResult":{"filterExpr":null,"policyId":-1}
+    },
+    {"name":"'select date_of_birth from hr2.employee2;' for user2 - no-mask",
+      "request":{
+        "resource":{"elements":{"database":"hr2", "table":"employee2"}},
+        "accessType":"select","user":"user2","userGroups":[],"requestData":"select date_of_birth from hr2.employee2;' for user2"
+      },
+      "rowFilterResult":{"filterExpr":null,"policyId":-1}
     }
   ]
 }

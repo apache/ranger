@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
 import com.google.common.collect.Lists;
+import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 
 public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
@@ -59,14 +60,19 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		RangerAccessResource resource = request.getResource();
 
 		String accessType = null;
-		if(request instanceof RangerHiveAccessRequest) {
-			RangerHiveAccessRequest hiveRequest = (RangerHiveAccessRequest)request;
 
-			accessType = hiveRequest.getHiveAccessType().toString();
-		}
+		if(result instanceof RangerDataMaskResult) {
+			accessType = ((RangerDataMaskResult)result).getMaskType();
+		} else {
+			if (request instanceof RangerHiveAccessRequest) {
+				RangerHiveAccessRequest hiveRequest = (RangerHiveAccessRequest) request;
 
-		if(StringUtils.isEmpty(accessType)) {
-			accessType = request.getAccessType();
+				accessType = hiveRequest.getHiveAccessType().toString();
+			}
+
+			if (StringUtils.isEmpty(accessType)) {
+				accessType = request.getAccessType();
+			}
 		}
 
 		String resourcePath = resource != null ? resource.getAsString() : null;

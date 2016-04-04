@@ -37,7 +37,9 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
@@ -408,7 +410,8 @@ public class RangerPolicyRetriever {
 		final ListIterator<XXPolicyItemGroupPerm> iterGroupPerms;
 		final ListIterator<XXPolicyItemAccess>    iterAccesses;
 		final ListIterator<XXPolicyItemCondition> iterConditions;
-		final ListIterator<XXPolicyItemDataMaskInfo> iterDataMaskInfos;
+		final ListIterator<XXPolicyItemDataMaskInfo>  iterDataMaskInfos;
+		final ListIterator<XXPolicyItemRowFilterInfo> iterRowFilterInfos;
 
 		RetrieverContext(XXService xService) {
 			Long serviceId = xService == null ? null : xService.getId();
@@ -421,7 +424,8 @@ public class RangerPolicyRetriever {
 			List<XXPolicyItemGroupPerm> xGroupPerms   = daoMgr.getXXPolicyItemGroupPerm().findByServiceId(serviceId);
 			List<XXPolicyItemAccess>    xAccesses     = daoMgr.getXXPolicyItemAccess().findByServiceId(serviceId);
 			List<XXPolicyItemCondition> xConditions   = daoMgr.getXXPolicyItemCondition().findByServiceId(serviceId);
-			List<XXPolicyItemDataMaskInfo> xDataMaskInfos = daoMgr.getXXPolicyItemDataMaskInfo().findByServiceId(serviceId);
+			List<XXPolicyItemDataMaskInfo>  xDataMaskInfos  = daoMgr.getXXPolicyItemDataMaskInfo().findByServiceId(serviceId);
+			List<XXPolicyItemRowFilterInfo> xRowFilterInfos = daoMgr.getXXPolicyItemRowFilterInfo().findByServiceId(serviceId);
 
 			this.service          = xService;
 			this.iterPolicy       = xPolicies.listIterator();
@@ -432,7 +436,8 @@ public class RangerPolicyRetriever {
 			this.iterGroupPerms   = xGroupPerms.listIterator();
 			this.iterAccesses     = xAccesses.listIterator();
 			this.iterConditions   = xConditions.listIterator();
-			this.iterDataMaskInfos = xDataMaskInfos.listIterator();
+			this.iterDataMaskInfos  = xDataMaskInfos.listIterator();
+			this.iterRowFilterInfos = xRowFilterInfos.listIterator();
 		}
 
 		RetrieverContext(XXPolicy xPolicy) {
@@ -450,7 +455,8 @@ public class RangerPolicyRetriever {
 			List<XXPolicyItemGroupPerm> xGroupPerms   = daoMgr.getXXPolicyItemGroupPerm().findByPolicyId(policyId);
 			List<XXPolicyItemAccess>    xAccesses     = daoMgr.getXXPolicyItemAccess().findByPolicyId(policyId);
 			List<XXPolicyItemCondition> xConditions   = daoMgr.getXXPolicyItemCondition().findByPolicyId(policyId);
-			List<XXPolicyItemDataMaskInfo> xDataMaskInfos = daoMgr.getXXPolicyItemDataMaskInfo().findByPolicyId(policyId);
+			List<XXPolicyItemDataMaskInfo>  xDataMaskInfos  = daoMgr.getXXPolicyItemDataMaskInfo().findByPolicyId(policyId);
+			List<XXPolicyItemRowFilterInfo> xRowFilterInfos = daoMgr.getXXPolicyItemRowFilterInfo().findByPolicyId(policyId);
 
 			this.service          = xService;
 			this.iterPolicy       = xPolicies.listIterator();
@@ -461,7 +467,8 @@ public class RangerPolicyRetriever {
 			this.iterGroupPerms   = xGroupPerms.listIterator();
 			this.iterAccesses     = xAccesses.listIterator();
 			this.iterConditions   = xConditions.listIterator();
-			this.iterDataMaskInfos = xDataMaskInfos.listIterator();
+			this.iterDataMaskInfos  = xDataMaskInfos.listIterator();
+			this.iterRowFilterInfos = xRowFilterInfos.listIterator();
 		}
 
 		RangerPolicy getNextPolicy() {
@@ -549,7 +556,8 @@ public class RangerPolicyRetriever {
 									|| iterGroupPerms.hasNext()
 									|| iterAccesses.hasNext()
 									|| iterConditions.hasNext()
-									|| iterDataMaskInfos.hasNext();
+									|| iterDataMaskInfos.hasNext()
+									|| iterRowFilterInfos.hasNext();
 
 			return !moreToProcess;
 		}
@@ -592,15 +600,22 @@ public class RangerPolicyRetriever {
 				XXPolicyItem xPolicyItem = iterPolicyItems.next();
 
 				if(xPolicyItem.getPolicyid().equals(policy.getId())) {
-					final RangerPolicyItem         policyItem;
-					final RangerDataMaskPolicyItem dataMaskPolicyItem;
+					final RangerPolicyItem          policyItem;
+					final RangerDataMaskPolicyItem  dataMaskPolicyItem;
+					final RangerRowFilterPolicyItem rowFilterPolicyItem;
 
-					if(xPolicyItem.getItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATA_MASKING) {
-						dataMaskPolicyItem = new RangerDataMaskPolicyItem();
-						policyItem         = dataMaskPolicyItem;
+					if(xPolicyItem.getItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK) {
+						dataMaskPolicyItem  = new RangerDataMaskPolicyItem();
+						rowFilterPolicyItem = null;
+						policyItem          = dataMaskPolicyItem;
+					} else if(xPolicyItem.getItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER) {
+						dataMaskPolicyItem  = null;
+						rowFilterPolicyItem = new RangerRowFilterPolicyItem();
+						policyItem          = rowFilterPolicyItem;
 					} else {
-						dataMaskPolicyItem = null;
-						policyItem         = new RangerPolicyItem();
+						dataMaskPolicyItem  = null;
+						rowFilterPolicyItem = null;
+						policyItem          = new RangerPolicyItem();
 					}
 
 
@@ -674,11 +689,26 @@ public class RangerPolicyRetriever {
 						while (iterDataMaskInfos.hasNext()) {
 							XXPolicyItemDataMaskInfo xDataMaskInfo = iterDataMaskInfos.next();
 
-							if (xDataMaskInfo.getPolicyitemid().equals(xPolicyItem.getId())) {
+							if (xDataMaskInfo.getPolicyItemId().equals(xPolicyItem.getId())) {
 								dataMaskPolicyItem.setDataMaskInfo(new RangerPolicyItemDataMaskInfo(lookupCache.getDataMaskName(xDataMaskInfo.getType()), xDataMaskInfo.getConditionExpr(), xDataMaskInfo.getValueExpr()));
 							} else {
 								if (iterDataMaskInfos.hasPrevious()) {
 									iterDataMaskInfos.previous();
+								}
+								break;
+							}
+						}
+					}
+
+					if(rowFilterPolicyItem != null) {
+						while (iterRowFilterInfos.hasNext()) {
+							XXPolicyItemRowFilterInfo xRowFilterInfo = iterRowFilterInfos.next();
+
+							if (xRowFilterInfo.getPolicyItemId().equals(xPolicyItem.getId())) {
+								rowFilterPolicyItem.setRowFilterInfo(new RangerPolicyItemRowFilterInfo(xRowFilterInfo.getFilterExpr()));
+							} else {
+								if (iterRowFilterInfos.hasPrevious()) {
+									iterRowFilterInfos.previous();
 								}
 								break;
 							}
@@ -696,10 +726,12 @@ public class RangerPolicyRetriever {
 						policy.getAllowExceptions().add(policyItem);
 					} else if(itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
 						policy.getDenyExceptions().add(policyItem);
-					} else if(itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATA_MASKING) {
+					} else if(itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK) {
 						policy.getDataMaskPolicyItems().add(dataMaskPolicyItem);
-					} else { // unknown itemType.. set to default type
-						policy.getPolicyItems().add(policyItem);
+					} else if(itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER) {
+						policy.getRowFilterPolicyItems().add(rowFilterPolicyItem);
+					} else { // unknown itemType
+						LOG.warn("RangerPolicyRetriever.getPolicy(policyId=" + policy.getId() + "): ignoring unknown policyItemType " + itemType);
 					}
 				} else if(xPolicyItem.getPolicyid().compareTo(policy.getId()) > 0) {
 					if(iterPolicyItems.hasPrevious()) {

@@ -194,6 +194,18 @@ public class RangerBasePlugin {
 		return null;
 	}
 
+	public RangerRowFilterResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			policyEngine.preProcess(request);
+
+			return policyEngine.evalRowFilterPolicies(request, resultProcessor);
+		}
+
+		return null;
+	}
+
 	public RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 

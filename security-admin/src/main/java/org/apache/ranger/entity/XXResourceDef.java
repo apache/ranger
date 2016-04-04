@@ -238,6 +238,15 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	protected String dataMaskOptions;
 
 	/**
+	 * rowFilterOptions of the XXAccessTypeDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "rowfilter_options")
+	protected String rowFilterOptions;
+
+	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
 	 * 
@@ -661,6 +670,10 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 		this.dataMaskOptions = dataMaskOptions;
 	}
 
+	public String getRowFilterOptions() { return rowFilterOptions; }
+
+	public void setRowFilterOptions(String rowFilterOptions) { this.rowFilterOptions = rowFilterOptions; }
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -803,6 +816,13 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 		} else if (!dataMaskOptions.equals(other.dataMaskOptions)) {
 			return false;
 		}
+		if (rowFilterOptions == null) {
+			if (other.rowFilterOptions != null) {
+				return false;
+			}
+		} else if (!rowFilterOptions.equals(other.rowFilterOptions)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -829,6 +849,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 				+ ", rbKeyValidationMessage=" + rbKeyValidationMessage
 				+ ", order=" + order
 				+ ", dataMaskOptions=" + dataMaskOptions
+				+ ", rowFilterOptions=" + rowFilterOptions
 				+ "]";
 	}
 

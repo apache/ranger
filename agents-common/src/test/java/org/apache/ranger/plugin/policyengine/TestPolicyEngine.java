@@ -203,7 +203,7 @@ public class TestPolicyEngine {
 
 	@Test
 	public void testPolicyEngine_hiveMasking() {
-		String[] resourceFiles = { "/policyengine/test_policyengine_hive_masking.json" };
+		String[] resourceFiles = {"/policyengine/test_policyengine_hive_mask_filter.json"};
 
 		runTestsFromResourceFiles(resourceFiles);
 	}
@@ -339,6 +339,15 @@ public class TestPolicyEngine {
 				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
 			}
 
+			if(test.rowFilterResult != null) {
+				RangerRowFilterResult expected = test.rowFilterResult;
+				RangerRowFilterResult result   = policyEngine.evalRowFilterPolicies(request, auditHandler);
+
+				assertNotNull("result was null! - " + test.name, result);
+				assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
+				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+			}
+
 			if(test.resourceAccessInfo != null) {
 				RangerResourceAccessInfo expected = new RangerResourceAccessInfo(test.resourceAccessInfo);
 				RangerResourceAccessInfo result   = policyEngine.getResourceAccessInfo(test.request);
@@ -363,7 +372,8 @@ public class TestPolicyEngine {
 			public String              name;
 			public RangerAccessRequest request;
 			public RangerAccessResult  result;
-			public RangerDataMaskResult dataMaskResult;
+			public RangerDataMaskResult  dataMaskResult;
+			public RangerRowFilterResult rowFilterResult;
 			public RangerResourceAccessInfo resourceAccessInfo;
 		}
 

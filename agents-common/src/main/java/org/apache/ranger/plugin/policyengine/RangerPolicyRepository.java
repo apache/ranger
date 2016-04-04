@@ -50,6 +50,7 @@ public class RangerPolicyRepository {
     private List<RangerContextEnricher>       contextEnrichers;
     private List<RangerPolicyEvaluator>       policyEvaluators;
     private List<RangerPolicyEvaluator>       dataMaskPolicyEvaluators;
+    private List<RangerPolicyEvaluator>       rowFilterPolicyEvaluators;
     private final Map<String, Boolean>        accessAuditCache;
 
     private final String                      componentServiceName;
@@ -131,6 +132,10 @@ public class RangerPolicyRepository {
 
     public List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators() {
         return dataMaskPolicyEvaluators;
+    }
+
+    public List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators() {
+        return rowFilterPolicyEvaluators;
     }
 
     private RangerServiceDef normalizeAccessTypeDefs(RangerServiceDef serviceDef, final String componentType) {
@@ -317,7 +322,8 @@ public class RangerPolicyRepository {
     private void init(RangerPolicyEngineOptions options) {
 
         List<RangerPolicyEvaluator> policyEvaluators = new ArrayList<RangerPolicyEvaluator>();
-        List<RangerPolicyEvaluator> dataMaskPolicyEvaluators = new ArrayList<RangerPolicyEvaluator>();
+        List<RangerPolicyEvaluator> dataMaskPolicyEvaluators  = new ArrayList<RangerPolicyEvaluator>();
+        List<RangerPolicyEvaluator> rowFilterPolicyEvaluators = new ArrayList<RangerPolicyEvaluator>();
 
         for (RangerPolicy policy : policies) {
             if (skipBuildingPolicyEvaluator(policy, options)) {
@@ -331,6 +337,8 @@ public class RangerPolicyRepository {
                     policyEvaluators.add(evaluator);
                 } else if(policy.getPolicyType() == RangerPolicy.POLICY_TYPE_DATAMASK) {
                     dataMaskPolicyEvaluators.add(evaluator);
+                } else if(policy.getPolicyType() == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+                    rowFilterPolicyEvaluators.add(evaluator);
                 } else {
                     LOG.warn("RangerPolicyEngine: ignoring policy id=" + policy.getId() + " - invalid policyType '" + policy.getPolicyType() + "'");
                 }
@@ -341,6 +349,9 @@ public class RangerPolicyRepository {
 
         Collections.sort(dataMaskPolicyEvaluators);
         this.dataMaskPolicyEvaluators = Collections.unmodifiableList(dataMaskPolicyEvaluators);
+
+        Collections.sort(rowFilterPolicyEvaluators);
+        this.rowFilterPolicyEvaluators = Collections.unmodifiableList(rowFilterPolicyEvaluators);
 
         List<RangerContextEnricher> contextEnrichers = new ArrayList<RangerContextEnricher>();
         if (CollectionUtils.isNotEmpty(this.policyEvaluators)) {
@@ -370,13 +381,20 @@ public class RangerPolicyRepository {
                 LOG.debug("policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
             }
 
-            LOG.debug("datamasking policy evaluation order: " + this.dataMaskPolicyEvaluators.size() + " policies");
-
+            LOG.debug("dataMask policy evaluation order: " + this.dataMaskPolicyEvaluators.size() + " policies");
             order = 0;
             for(RangerPolicyEvaluator policyEvaluator : this.dataMaskPolicyEvaluators) {
                 RangerPolicy policy = policyEvaluator.getPolicy();
 
-                LOG.debug("datamasking policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
+                LOG.debug("dataMask policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
+            }
+
+            LOG.debug("rowFilter policy evaluation order: " + this.dataMaskPolicyEvaluators.size() + " policies");
+            order = 0;
+            for(RangerPolicyEvaluator policyEvaluator : this.rowFilterPolicyEvaluators) {
+                RangerPolicy policy = policyEvaluator.getPolicy();
+
+                LOG.debug("rowFilter policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
             }
         }
     }

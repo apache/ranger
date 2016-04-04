@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 
 
 public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator> {
@@ -58,6 +59,8 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
 
 	void evaluate(RangerAccessRequest request, RangerDataMaskResult result);
+
+	void evaluate(RangerAccessRequest request, RangerRowFilterResult result);
 
 	boolean isMatch(RangerAccessResource resource);
 

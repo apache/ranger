@@ -44,6 +44,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerRowFilterDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
@@ -144,7 +145,9 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			serviceDef.setEnums(enums);
 		}
 
-		RangerDataMaskDef dataMaskDef = new RangerDataMaskDef();
+		RangerDataMaskDef  dataMaskDef  = new RangerDataMaskDef();
+		RangerRowFilterDef rowFilterDef = new RangerRowFilterDef();
+
 		List<XXDataMaskTypeDef> xDataMaskTypes = daoMgr.getXXDataMaskTypeDef().findByServiceDefId(serviceDefId);
 		if (!stringUtil.isEmpty(xDataMaskTypes)) {
 			List<RangerDataMaskTypeDef> dataMaskTypes = new ArrayList<RangerDataMaskTypeDef>();
@@ -163,6 +166,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 					dataMaskDef.getResources().add(dataMaskResource);
 				}
+
+				if (StringUtils.isNotEmpty(xResource.getRowFilterOptions())) {
+					RangerResourceDef resource = jsonToObject(xResource.getRowFilterOptions(), RangerResourceDef.class);
+
+					rowFilterDef.getResources().add(resource);
+				}
 			}
 		}
 
@@ -173,9 +182,16 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 					dataMaskDef.getAccessTypes().add(dataMaskAccessType);
 				}
+
+				if(StringUtils.isNotEmpty(xAtd.getRowFilterOptions())) {
+					RangerAccessTypeDef accessType = jsonToObject(xAtd.getRowFilterOptions(), RangerAccessTypeDef.class);
+
+					rowFilterDef.getAccessTypes().add(accessType);
+				}
 			}
 		}
 		serviceDef.setDataMaskDef(dataMaskDef);
+		serviceDef.setRowFilterDef(rowFilterDef);
 
 		ServiceDefUtil.normalize(serviceDef);
 

@@ -223,7 +223,6 @@
 		"description": "List of Hive resources"
 	  }
 	],
-
 	"dataMaskDef": {
 		"accessTypes": [
 			{
@@ -347,7 +346,7 @@
 			},
 			{
 				"itemId": 10,
-				"name": "MASK_DATE_YEAR",
+				"name": "MASK_DATE_SHOW_YEAR",
 				"label": "Date: show only year",
 				"description": "Date: show only year",
 				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
@@ -366,6 +365,33 @@
 				"name": "NONE",
 				"label": "No masking",
 				"description": "No masking"
+			}
+		]
+	},
+	"rowFilterDef": {
+		"accessTypes": [
+			{
+				"name": "select"
+			}
+		],
+		"resources": [
+			{
+				"name": "database",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"mandatory": true,
+				"uiHint": "{ \"singleValue\":true }"
+			},
+			{
+				"name": "table",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"mandatory": true,
+				"uiHint": "{ \"singleValue\":true }"
 			}
 		]
 	}

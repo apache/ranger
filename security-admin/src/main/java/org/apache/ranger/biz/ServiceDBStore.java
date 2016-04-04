@@ -34,9 +34,12 @@ import org.apache.ranger.db.*;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
@@ -49,6 +52,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerRowFilterDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
@@ -212,9 +216,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
 		List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers();
 		List<RangerEnumDef> enums = serviceDef.getEnums();
-		RangerDataMaskDef dataMaskDef = serviceDef.getDataMaskDef();
+		RangerDataMaskDef           dataMaskDef          = serviceDef.getDataMaskDef();
+		RangerRowFilterDef          rowFilterDef         = serviceDef.getRowFilterDef();
+		List<RangerDataMaskTypeDef> dataMaskTypes        = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<RangerDataMaskTypeDef>() : dataMaskDef.getMaskTypes();
+		List<RangerAccessTypeDef>   dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : dataMaskDef.getAccessTypes();
+		List<RangerResourceDef>     dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<RangerResourceDef>() : dataMaskDef.getResources();
+		List<RangerAccessTypeDef>   rowFilterAccessTypes = rowFilterDef == null || rowFilterDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : rowFilterDef.getAccessTypes();
+		List<RangerResourceDef>     rowFilterResources   = rowFilterDef == null || rowFilterDef.getResources() == null ? new ArrayList<RangerResourceDef>() : rowFilterDef.getResources();
 
-		
 		// While creating, value of version should be 1.
 		serviceDef.setVersion(Long.valueOf(1));
 		
@@ -325,93 +334,100 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		if(dataMaskDef != null) {
-			List<RangerDataMaskTypeDef> dataMaskTypes       = dataMaskDef.getMaskTypes();
-			List<RangerAccessTypeDef>   dataMaskAccessTypes = dataMaskDef.getAccessTypes();
-			List<RangerResourceDef>     dataMaskResources   = dataMaskDef.getResources();
+		XXDataMaskTypeDefDao xxDataMaskDefDao = daoMgr.getXXDataMaskTypeDef();
+		for (int i = 0; i < dataMaskTypes.size(); i++) {
+			RangerDataMaskTypeDef dataMask = dataMaskTypes.get(i);
 
-			if(CollectionUtils.isNotEmpty(dataMaskTypes)) {
-				XXDataMaskTypeDefDao xxDataMaskDefDao = daoMgr.getXXDataMaskTypeDef();
-				for (int i = 0; i < dataMaskTypes.size(); i++) {
-					RangerDataMaskTypeDef dataMask = dataMaskTypes.get(i);
+			XXDataMaskTypeDef xDataMaskDef = new XXDataMaskTypeDef();
+			xDataMaskDef = serviceDefService.populateRangerDataMaskDefToXX(dataMask, xDataMaskDef, createdSvcDef,
+					RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+			xDataMaskDef.setOrder(i);
+			xDataMaskDef = xxDataMaskDefDao.create(xDataMaskDef);
+		}
 
-					XXDataMaskTypeDef xDataMaskDef = new XXDataMaskTypeDef();
-					xDataMaskDef = serviceDefService.populateRangerDataMaskDefToXX(dataMask, xDataMaskDef, createdSvcDef,
-							RangerServiceDefService.OPERATION_CREATE_CONTEXT);
-					xDataMaskDef.setOrder(i);
-					xDataMaskDef = xxDataMaskDefDao.create(xDataMaskDef);
+		List<XXAccessTypeDef> xxAccessTypeDefs = xxATDDao.findByServiceDefId(createdSvcDef.getId());
+
+		for(RangerAccessTypeDef accessType : dataMaskAccessTypes) {
+			if(! isAccessTypeInList(accessType.getName(), xxAccessTypeDefs)) {
+				throw restErrorUtil.createRESTException("accessType with name: "
+								+ accessType.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
+			}
+		}
+
+		for(RangerAccessTypeDef accessType : rowFilterAccessTypes) {
+			if(! isAccessTypeInList(accessType.getName(), xxAccessTypeDefs)) {
+				throw restErrorUtil.createRESTException("accessType with name: "
+						+ accessType.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
+			}
+		}
+
+		for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
+			String dataMaskOptions  = null;
+			String rowFilterOptions = null;
+
+			for(RangerAccessTypeDef accessTypeDef : dataMaskAccessTypes) {
+				if(StringUtils.equals(accessTypeDef.getName(), xxAccessTypeDef.getName())) {
+					dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(accessTypeDef);
+					break;
 				}
 			}
 
-			if(CollectionUtils.isNotEmpty(dataMaskAccessTypes)) {
-				List<XXAccessTypeDef> xxAccessTypeDefs = xxATDDao.findByServiceDefId(xServiceDef.getId());
-
-				for(RangerAccessTypeDef accessType : dataMaskAccessTypes) {
-					boolean found = false;
-					for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
-						if(StringUtils.equals(xxAccessTypeDef.getName(), accessType.getName())) {
-							found = true;
-
-							break;
-						}
-					}
-
-					if(! found) {
-						throw restErrorUtil.createRESTException("accessType with name: "
-										+ accessType + " does not exists", MessageEnums.DATA_NOT_FOUND);
-					}
-				}
-
-				for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
-					String dataMaskOptions = null;
-
-					for(RangerAccessTypeDef dataMaskAccessType : dataMaskAccessTypes) {
-						if(StringUtils.equals(dataMaskAccessType.getName(), xxAccessTypeDef.getName())) {
-							dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(dataMaskAccessType);
-							break;
-						}
-					}
-
-					if(! StringUtils.equals(dataMaskOptions, xxAccessTypeDef.getDataMaskOptions())) {
-						xxAccessTypeDef.setDataMaskOptions(dataMaskOptions);
-						xxATDDao.update(xxAccessTypeDef);
-					}
+			for(RangerAccessTypeDef accessTypeDef : rowFilterAccessTypes) {
+				if(StringUtils.equals(accessTypeDef.getName(), xxAccessTypeDef.getName())) {
+					rowFilterOptions = svcDefServiceWithAssignedId.objectToJson(accessTypeDef);
+					break;
 				}
 			}
 
-			if(CollectionUtils.isNotEmpty(dataMaskResources)) {
-				List<XXResourceDef> xxResourceDefs = xxResDefDao.findByServiceDefId(xServiceDef.getId());
+			if(!StringUtils.equals(dataMaskOptions, xxAccessTypeDef.getDataMaskOptions()) ||
+			   !StringUtils.equals(rowFilterOptions, xxAccessTypeDef.getRowFilterOptions())) {
+				xxAccessTypeDef.setDataMaskOptions(dataMaskOptions);
+				xxAccessTypeDef.setRowFilterOptions(rowFilterOptions);
 
-				for(RangerResourceDef resource : dataMaskResources) {
-					boolean found = false;
-					for(XXResourceDef xxResourceDef : xxResourceDefs) {
-						if(StringUtils.equals(xxResourceDef.getName(), resource.getName())) {
-							found = true;
-							break;
-						}
-					}
+				xxATDDao.update(xxAccessTypeDef);
+			}
+		}
 
-					if(! found) {
-						throw restErrorUtil.createRESTException("resource with name: "
-								+ resource + " does not exists", MessageEnums.DATA_NOT_FOUND);
-					}
+		List<XXResourceDef> xxResourceDefs = xxResDefDao.findByServiceDefId(createdSvcDef.getId());
+
+		for(RangerResourceDef resource : dataMaskResources) {
+			if(! isResourceInList(resource.getName(), xxResourceDefs)) {
+				throw restErrorUtil.createRESTException("resource with name: "
+						+ resource.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
+			}
+		}
+
+		for(RangerResourceDef resource : rowFilterResources) {
+			if(! isResourceInList(resource.getName(), xxResourceDefs)) {
+				throw restErrorUtil.createRESTException("resource with name: "
+						+ resource.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
+			}
+		}
+
+		for(XXResourceDef xxResourceDef : xxResourceDefs) {
+			String dataMaskOptions  = null;
+			String rowFilterOptions = null;
+
+			for(RangerResourceDef resource : dataMaskResources) {
+				if(StringUtils.equals(resource.getName(), xxResourceDef.getName())) {
+					dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(resource);
+					break;
 				}
+			}
 
-				for(XXResourceDef xxResourceDef : xxResourceDefs) {
-					String dataMaskOptions = null;
-
-					for(RangerResourceDef dataMaskResource : dataMaskResources) {
-						if(StringUtils.equals(dataMaskResource.getName(), xxResourceDef.getName())) {
-							dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(dataMaskResource);
-							break;
-						}
-					}
-
-					if(! StringUtils.equals(dataMaskOptions, xxResourceDef.getDataMaskOptions())) {
-						xxResourceDef.setDataMaskOptions(dataMaskOptions);
-						xxResDefDao.update(xxResourceDef);
-					}
+			for(RangerResourceDef resource : rowFilterResources) {
+				if(StringUtils.equals(resource.getName(), xxResourceDef.getName())) {
+					rowFilterOptions = svcDefServiceWithAssignedId.objectToJson(resource);
+					break;
 				}
+			}
+
+			if(!StringUtils.equals(dataMaskOptions, xxResourceDef.getDataMaskOptions()) ||
+			   !StringUtils.equals(rowFilterOptions, xxResourceDef.getRowFilterOptions())) {
+				xxResourceDef.setDataMaskOptions(dataMaskOptions);
+				xxResourceDef.setRowFilterOptions(rowFilterOptions);
+
+				xxResDefDao.update(xxResourceDef);
 			}
 		}
 
@@ -462,6 +478,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers() != null 	? serviceDef.getContextEnrichers() 	  : new ArrayList<RangerContextEnricherDef>();
 		List<RangerEnumDef> enums 						= serviceDef.getEnums() != null 			? serviceDef.getEnums() 			  : new ArrayList<RangerEnumDef>();
 		RangerDataMaskDef dataMaskDef                   = serviceDef.getDataMaskDef();
+		RangerRowFilterDef rowFilterDef                 = serviceDef.getRowFilterDef();
 
 		serviceDef.setCreateTime(existing.getCreateTime());
 		serviceDef.setGuid(existing.getGuid());
@@ -470,7 +487,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		serviceDef = serviceDefService.update(serviceDef);
 		XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 
-		updateChildObjectsOfServiceDef(createdSvcDef, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, dataMaskDef);
+		updateChildObjectsOfServiceDef(createdSvcDef, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, dataMaskDef, rowFilterDef);
 
 		RangerServiceDef updatedSvcDef = getServiceDef(serviceDefId);
 		dataHistService.createObjectDataHistory(updatedSvcDef, RangerDataHistService.ACTION_UPDATE);
@@ -488,7 +505,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private void updateChildObjectsOfServiceDef(XXServiceDef createdSvcDef, List<RangerServiceConfigDef> configs,
 			List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes,
 			List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers,
-			List<RangerEnumDef> enums, RangerServiceDef.RangerDataMaskDef dataMaskDef) {
+			List<RangerEnumDef> enums, RangerDataMaskDef dataMaskDef, RangerRowFilterDef rowFilterDef) {
 
 		Long serviceDefId = createdSvcDef.getId();
 
@@ -822,13 +839,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		List<RangerDataMaskTypeDef> dataMasks           = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<RangerDataMaskTypeDef>() : dataMaskDef.getMaskTypes();
-		List<RangerAccessTypeDef>   dataMaskAccessTypes = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : dataMaskDef.getAccessTypes();
-		List<RangerResourceDef>     dataMaskResources   = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<RangerResourceDef>() : dataMaskDef.getResources();
-		XXDataMaskTypeDefDao        dataMaskTypeDao     = daoMgr.getXXDataMaskTypeDef();
-		List<XXDataMaskTypeDef>     xxDataMaskTypes     = dataMaskTypeDao.findByServiceDefId(serviceDefId);
+		List<RangerDataMaskTypeDef> dataMasks            = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<RangerDataMaskTypeDef>() : dataMaskDef.getMaskTypes();
+		List<RangerAccessTypeDef>   dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : dataMaskDef.getAccessTypes();
+		List<RangerResourceDef>     dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<RangerResourceDef>() : dataMaskDef.getResources();
+		List<RangerAccessTypeDef>   rowFilterAccessTypes = rowFilterDef == null || rowFilterDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : rowFilterDef.getAccessTypes();
+		List<RangerResourceDef>     rowFilterResources   = rowFilterDef == null || rowFilterDef.getResources() == null ? new ArrayList<RangerResourceDef>() : rowFilterDef.getResources();
+		XXDataMaskTypeDefDao        dataMaskTypeDao      = daoMgr.getXXDataMaskTypeDef();
+		List<XXDataMaskTypeDef>     xxDataMaskTypes      = dataMaskTypeDao.findByServiceDefId(serviceDefId);
+		List<XXAccessTypeDef>       xxAccessTypeDefs     = xxATDDao.findByServiceDefId(serviceDefId);
+		List<XXResourceDef>         xxResourceDefs       = xxResDefDao.findByServiceDefId(serviceDefId);
+
 		// create or update dataMasks
-		for (RangerServiceDef.RangerDataMaskTypeDef dataMask : dataMasks) {
+		for (RangerDataMaskTypeDef dataMask : dataMasks) {
 			boolean found = false;
 			for (XXDataMaskTypeDef xxDataMask : xxDataMaskTypes) {
 				if (xxDataMask.getItemId() != null && xxDataMask.getItemId().equals(dataMask.getItemId())) {
@@ -874,68 +896,82 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		List<XXAccessTypeDef> xxAccessTypeDefs = xxATDDao.findByServiceDefId(serviceDefId);
-
 		for(RangerAccessTypeDef accessType : dataMaskAccessTypes) {
-			boolean found = false;
-			for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
-				if(StringUtils.equals(xxAccessTypeDef.getName(), accessType.getName())) {
-					found = true;
-					break;
-				}
-			}
-
-			if(! found) {
+			if(! isAccessTypeInList(accessType.getName(), xxAccessTypeDefs)) {
 				throw restErrorUtil.createRESTException("accessType with name: "
-						+ accessType + " does not exists", MessageEnums.DATA_NOT_FOUND);
+						+ accessType.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
+			}
+		}
+
+		for(RangerAccessTypeDef accessType : rowFilterAccessTypes) {
+			if(! isAccessTypeInList(accessType.getName(), xxAccessTypeDefs)) {
+				throw restErrorUtil.createRESTException("accessType with name: "
+						+ accessType.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
 			}
 		}
 
 		for(XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
 			String dataMaskOptions = null;
+			String rowFilterOptions = null;
 
-			for(RangerAccessTypeDef dataMaskAccessType : dataMaskAccessTypes) {
-				if(StringUtils.equals(dataMaskAccessType.getName(), xxAccessTypeDef.getName())) {
-					dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(dataMaskAccessType);
+			for(RangerAccessTypeDef accessTypeDef : dataMaskAccessTypes) {
+				if(StringUtils.equals(accessTypeDef.getName(), xxAccessTypeDef.getName())) {
+					dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(accessTypeDef);
 					break;
 				}
 			}
 
-			if(! StringUtils.equals(dataMaskOptions, xxAccessTypeDef.getDataMaskOptions())) {
+			for(RangerAccessTypeDef accessTypeDef : rowFilterAccessTypes) {
+				if(StringUtils.equals(accessTypeDef.getName(), xxAccessTypeDef.getName())) {
+					rowFilterOptions = svcDefServiceWithAssignedId.objectToJson(accessTypeDef);
+					break;
+				}
+			}
+
+			if(!StringUtils.equals(dataMaskOptions, xxAccessTypeDef.getDataMaskOptions()) ||
+			   !StringUtils.equals(rowFilterOptions, xxAccessTypeDef.getRowFilterOptions())) {
 				xxAccessTypeDef.setDataMaskOptions(dataMaskOptions);
+				xxAccessTypeDef.setRowFilterOptions(rowFilterOptions);
 				xxATDDao.update(xxAccessTypeDef);
 			}
 		}
 
-		List<XXResourceDef> xxResourceDefs = xxResDefDao.findByServiceDefId(serviceDefId);
-
 		for(RangerResourceDef resource : dataMaskResources) {
-			boolean found = false;
-			for(XXResourceDef xxResourceDef : xxResourceDefs) {
-				if(StringUtils.equals(xxResourceDef.getName(), resource.getName())) {
-					found = true;
-					break;
-				}
-			}
-
-			if(! found) {
+			if(! isResourceInList(resource.getName(), xxResourceDefs)) {
 				throw restErrorUtil.createRESTException("resource with name: "
-						+ resource + " does not exists", MessageEnums.DATA_NOT_FOUND);
+						+ resource.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
+			}
+		}
+
+		for(RangerResourceDef resource : rowFilterResources) {
+			if(! isResourceInList(resource.getName(), xxResourceDefs)) {
+				throw restErrorUtil.createRESTException("resource with name: "
+						+ resource.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
 			}
 		}
 
 		for(XXResourceDef xxResourceDef : xxResourceDefs) {
-			String dataMaskOptions = null;
+			String dataMaskOptions  = null;
+			String rowFilterOptions = null;
 
-			for(RangerResourceDef dataMaskResource : dataMaskResources) {
-				if(StringUtils.equals(dataMaskResource.getName(), xxResourceDef.getName())) {
-					dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(dataMaskResource);
+			for(RangerResourceDef resource : dataMaskResources) {
+				if(StringUtils.equals(resource.getName(), xxResourceDef.getName())) {
+					dataMaskOptions = svcDefServiceWithAssignedId.objectToJson(resource);
 					break;
 				}
 			}
 
-			if(! StringUtils.equals(dataMaskOptions, xxResourceDef.getDataMaskOptions())) {
+			for(RangerResourceDef resource : rowFilterResources) {
+				if(StringUtils.equals(resource.getName(), xxResourceDef.getName())) {
+					rowFilterOptions = svcDefServiceWithAssignedId.objectToJson(resource);
+					break;
+				}
+			}
+
+			if(!StringUtils.equals(dataMaskOptions, xxResourceDef.getDataMaskOptions()) ||
+			   !StringUtils.equals(rowFilterOptions, xxResourceDef.getRowFilterOptions())) {
 				xxResourceDef.setDataMaskOptions(dataMaskOptions);
+				xxResourceDef.setRowFilterOptions(rowFilterOptions);
 				xxResDefDao.update(xxResourceDef);
 			}
 		}
@@ -1596,6 +1632,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicyItem> allowExceptions = policy.getAllowExceptions();
 		List<RangerPolicyItem> denyExceptions  = policy.getDenyExceptions();
 		List<RangerDataMaskPolicyItem> dataMaskItems  = policy.getDataMaskPolicyItems();
+		List<RangerRowFilterPolicyItem> rowFilterItems = policy.getRowFilterPolicyItems();
 
 		policy.setVersion(Long.valueOf(1));
 		updatePolicySignature(policy);
@@ -1620,7 +1657,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, denyPolicyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
 		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, allowExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
 		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, denyExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);
-		createNewDataMaskPolicyItemsForPolicy(policy, xCreatedPolicy, dataMaskItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATA_MASKING);
+		createNewDataMaskPolicyItemsForPolicy(policy, xCreatedPolicy, dataMaskItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK);
+		createNewRowFilterPolicyItemsForPolicy(policy, xCreatedPolicy, rowFilterItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER);
 		handlePolicyUpdate(service);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
@@ -1674,7 +1712,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicyItem> allowExceptions = policy.getAllowExceptions();
 		List<RangerPolicyItem> denyExceptions  = policy.getDenyExceptions();
 		List<RangerDataMaskPolicyItem> dataMaskPolicyItems = policy.getDataMaskPolicyItems();
-		
+		List<RangerRowFilterPolicyItem> rowFilterItems = policy.getRowFilterPolicyItems();
+
 		policy.setCreateTime(xxExisting.getCreateTime());
 		policy.setGuid(xxExisting.getGuid());
 		policy.setVersion(xxExisting.getVersion());
@@ -1694,7 +1733,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		createNewPolicyItemsForPolicy(policy, newUpdPolicy, denyPolicyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
 		createNewPolicyItemsForPolicy(policy, newUpdPolicy, allowExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
 		createNewPolicyItemsForPolicy(policy, newUpdPolicy, denyExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);
-		createNewDataMaskPolicyItemsForPolicy(policy, newUpdPolicy, dataMaskPolicyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATA_MASKING);
+		createNewDataMaskPolicyItemsForPolicy(policy, newUpdPolicy, dataMaskPolicyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK);
+		createNewRowFilterPolicyItemsForPolicy(policy, newUpdPolicy, rowFilterItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER);
 
 		handlePolicyUpdate(service);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
@@ -2284,7 +2324,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private XXPolicyItem createNewPolicyItemForPolicy(RangerPolicy policy, XXPolicy xPolicy, RangerPolicy.RangerPolicyItem policyItem, XXServiceDef xServiceDef, int itemOrder, int policyItemType) throws Exception {
+	private XXPolicyItem createNewPolicyItemForPolicy(RangerPolicy policy, XXPolicy xPolicy, RangerPolicyItem policyItem, XXServiceDef xServiceDef, int itemOrder, int policyItemType) throws Exception {
 		XXPolicyItem xPolicyItem = new XXPolicyItem();
 
 		xPolicyItem = (XXPolicyItem) rangerAuditFields.populateAuditFields(xPolicyItem, xPolicy);
@@ -2393,7 +2433,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				XXPolicyItem xPolicyItem = createNewPolicyItemForPolicy(policy, xPolicy, policyItem, xServiceDef, itemOrder, policyItemType);
 
-				RangerPolicy.RangerPolicyItemDataMaskInfo dataMaskInfo = policyItem.getDataMaskInfo();
+				RangerPolicyItemDataMaskInfo dataMaskInfo = policyItem.getDataMaskInfo();
 
 				if(dataMaskInfo != null) {
 					XXDataMaskTypeDef dataMaskDef = daoMgr.getXXDataMaskTypeDef().findByNameAndServiceId(dataMaskInfo.getDataMaskType(), xPolicy.getService());
@@ -2404,12 +2444,33 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 					XXPolicyItemDataMaskInfo xxDataMaskInfo = new XXPolicyItemDataMaskInfo();
 
-					xxDataMaskInfo.setPolicyitemid(xPolicyItem.getId());
+					xxDataMaskInfo.setPolicyItemId(xPolicyItem.getId());
 					xxDataMaskInfo.setType(dataMaskDef.getId());
 					xxDataMaskInfo.setConditionExpr(dataMaskInfo.getConditionExpr());
 					xxDataMaskInfo.setValueExpr(dataMaskInfo.getValueExpr());
 
 					xxDataMaskInfo = daoMgr.getXXPolicyItemDataMaskInfo().create(xxDataMaskInfo);
+				}
+			}
+		}
+	}
+
+	private void createNewRowFilterPolicyItemsForPolicy(RangerPolicy policy, XXPolicy xPolicy, List<RangerRowFilterPolicyItem> policyItems, XXServiceDef xServiceDef, int policyItemType) throws Exception {
+		if(CollectionUtils.isNotEmpty(policyItems)) {
+			for (int itemOrder = 0; itemOrder < policyItems.size(); itemOrder++) {
+				RangerRowFilterPolicyItem policyItem = policyItems.get(itemOrder);
+
+				XXPolicyItem xPolicyItem = createNewPolicyItemForPolicy(policy, xPolicy, policyItem, xServiceDef, itemOrder, policyItemType);
+
+				RangerPolicyItemRowFilterInfo dataMaskInfo = policyItem.getRowFilterInfo();
+
+				if(dataMaskInfo != null) {
+					XXPolicyItemRowFilterInfo xxRowFilterInfo = new XXPolicyItemRowFilterInfo();
+
+					xxRowFilterInfo.setPolicyItemId(xPolicyItem.getId());
+					xxRowFilterInfo.setFilterExpr(dataMaskInfo.getFilterExpr());
+
+					xxRowFilterInfo = daoMgr.getXXPolicyItemRowFilterInfo().create(xxRowFilterInfo);
 				}
 			}
 		}
@@ -2489,6 +2550,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 			List<XXPolicyItemDataMaskInfo> dataMaskInfos = polItemDataMaskInfoDao.findByPolicyItemId(polItemId);
 			for(XXPolicyItemDataMaskInfo dataMaskInfo : dataMaskInfos) {
 				polItemDataMaskInfoDao.remove(dataMaskInfo);
+			}
+
+			XXPolicyItemRowFilterInfoDao polItemRowFilterInfoDao = daoMgr.getXXPolicyItemRowFilterInfo();
+			List<XXPolicyItemRowFilterInfo> rowFilterInfos = polItemRowFilterInfoDao.findByPolicyItemId(polItemId);
+			for(XXPolicyItemRowFilterInfo rowFilterInfo : rowFilterInfos) {
+				polItemRowFilterInfoDao.remove(rowFilterInfo);
 			}
 
 			policyItemDao.remove(policyItem);
@@ -2628,4 +2695,23 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
+	private boolean isAccessTypeInList(String accessType, List<XXAccessTypeDef> xAccessTypeDefs) {
+		for(XXAccessTypeDef xxAccessTypeDef : xAccessTypeDefs) {
+			if(StringUtils.equals(xxAccessTypeDef.getName(), accessType)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean isResourceInList(String resource, List<XXResourceDef> xResourceDefs) {
+		for(XXResourceDef xResourceDef : xResourceDefs) {
+			if(StringUtils.equals(xResourceDef.getName(), resource)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

@@ -451,7 +451,9 @@ public class AbstractPredicateUtil {
 					List<?>[] policyItemsList = new List<?>[] { policy.getPolicyItems(),
 																policy.getDenyPolicyItems(),
 																policy.getAllowExceptions(),
-																policy.getDenyExceptions()
+																policy.getDenyExceptions(),
+																policy.getDataMaskPolicyItems(),
+																policy.getRowFilterPolicyItems()
 															  };
 
 					for(List<?> policyItemsObj : policyItemsList) {
@@ -501,7 +503,9 @@ public class AbstractPredicateUtil {
 					List<?>[] policyItemsList = new List<?>[] { policy.getPolicyItems(),
 							policy.getDenyPolicyItems(),
 							policy.getAllowExceptions(),
-							policy.getDenyExceptions()
+							policy.getDenyExceptions(),
+							policy.getDataMaskPolicyItems(),
+							policy.getRowFilterPolicyItems()
 						  };
 
 					for(List<?> policyItemsObj : policyItemsList) {
