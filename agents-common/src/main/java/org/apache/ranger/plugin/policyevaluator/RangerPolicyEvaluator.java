@@ -35,9 +35,9 @@ import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 
 
 public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator> {
-	public static final String EVALUATOR_TYPE_AUTO   = "auto";
-	public static final String EVALUATOR_TYPE_OPTIMIZED = "optimized";
-	public static final String EVALUATOR_TYPE_CACHED    = "cached";
+	String EVALUATOR_TYPE_AUTO   = "auto";
+	String EVALUATOR_TYPE_OPTIMIZED = "optimized";
+	String EVALUATOR_TYPE_CACHED    = "cached";
 
 	void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options);
 

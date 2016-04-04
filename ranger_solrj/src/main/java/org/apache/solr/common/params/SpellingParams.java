@@ -24,13 +24,13 @@ package org.apache.solr.common.params;
  */
 public interface SpellingParams {
 
-  public static final String SPELLCHECK_PREFIX = "spellcheck.";
+  String SPELLCHECK_PREFIX = "spellcheck.";
 
   /**
    * The name of the dictionary to be used for giving the suggestion for a
    * request. The value for this parameter is configured in solrconfig.xml
    */
-  public static final String SPELLCHECK_DICT = SPELLCHECK_PREFIX + "dictionary";
+  String SPELLCHECK_DICT = SPELLCHECK_PREFIX + "dictionary";
 
   /**
    * The count of suggestions to return for each query term not in the index and/or dictionary.
@@ -39,7 +39,7 @@ public interface SpellingParams {
    * returned. If it is more than one then a maximum of given suggestions are
    * returned for each token in the query.
    */
-  public static final String SPELLCHECK_COUNT = SPELLCHECK_PREFIX + "count";
+  String SPELLCHECK_COUNT = SPELLCHECK_PREFIX + "count";
   
   /**
    * The count of suggestions to return for each query term existing in the index and/or dictionary.
@@ -47,7 +47,7 @@ public interface SpellingParams {
    * If this parameter is absent in the request then no suggestions are generated.  This parameter allows
    * for receiving alternative terms to use in context-sensitive spelling corrections.
    */
-  public static final String SPELLCHECK_ALTERNATIVE_TERM_COUNT = SPELLCHECK_PREFIX + "alternativeTermCount";
+  String SPELLCHECK_ALTERNATIVE_TERM_COUNT = SPELLCHECK_PREFIX + "alternativeTermCount";
  
   /**
    * <p>
@@ -64,7 +64,7 @@ public interface SpellingParams {
    * for creating "did-you-mean" suggestions for queries that return a low number of hits.
    * </p>
    */
-  public static final String SPELLCHECK_MAX_RESULTS_FOR_SUGGEST = SPELLCHECK_PREFIX + "maxResultsForSuggest";
+  String SPELLCHECK_MAX_RESULTS_FOR_SUGGEST = SPELLCHECK_PREFIX + "maxResultsForSuggest";
   
   /**
    * When this parameter is set to true and the misspelled word exists in the
@@ -73,7 +73,7 @@ public interface SpellingParams {
    * <p>
    * <b>This is applicable only for dictionaries built from Solr fields.</b>
    */
-  public static final String SPELLCHECK_ONLY_MORE_POPULAR = SPELLCHECK_PREFIX + "onlyMorePopular";
+  String SPELLCHECK_ONLY_MORE_POPULAR = SPELLCHECK_PREFIX + "onlyMorePopular";
  
   /**
    * Whether to use the extended response format, which is more complicated but
@@ -82,7 +82,7 @@ public interface SpellingParams {
    * <p>
    * <b>This is applicable only for dictionaries built from Solr fields.</b>
    */
-  public static final String SPELLCHECK_EXTENDED_RESULTS = SPELLCHECK_PREFIX + "extendedResults";
+  String SPELLCHECK_EXTENDED_RESULTS = SPELLCHECK_PREFIX + "extendedResults";
 
   /**
    * Use the value for this parameter as the query to spell check.
@@ -90,28 +90,28 @@ public interface SpellingParams {
    * This parameter is <b>optional</b>. If absent, then the q parameter is
    * used.
    */
-  public static final String SPELLCHECK_Q = SPELLCHECK_PREFIX + "q";
+  String SPELLCHECK_Q = SPELLCHECK_PREFIX + "q";
 
   /**
    * Whether to build the index or not. Optional and false by default.
    */
-  public static final String SPELLCHECK_BUILD = SPELLCHECK_PREFIX + "build";
+  String SPELLCHECK_BUILD = SPELLCHECK_PREFIX + "build";
 
   /**
    * Whether to reload the index. Optional and false by default.
    */
-  public static final String SPELLCHECK_RELOAD = SPELLCHECK_PREFIX + "reload";
+  String SPELLCHECK_RELOAD = SPELLCHECK_PREFIX + "reload";
 
   /**
    * Take the top suggestion for each token and create a new query from it
    */
-  public static final String SPELLCHECK_COLLATE = SPELLCHECK_PREFIX + "collate";
+  String SPELLCHECK_COLLATE = SPELLCHECK_PREFIX + "collate";
   /**
    * <p>
    * The maximum number of collations to return.  Default=1.  Ignored if "spellcheck.collate" is false.
    * </p>
    */
-  public static final String SPELLCHECK_MAX_COLLATIONS = SPELLCHECK_PREFIX + "maxCollations"; 
+  String SPELLCHECK_MAX_COLLATIONS = SPELLCHECK_PREFIX + "maxCollations"; 
   /**
    * <p>
    * The maximum number of collations to test by querying against the index.   
@@ -120,7 +120,7 @@ public interface SpellingParams {
    * Default=0. Ignored of "spellcheck.collate" is false. 
    * </p>
    */
-  public static final String SPELLCHECK_MAX_COLLATION_TRIES = SPELLCHECK_PREFIX + "maxCollationTries";  
+  String SPELLCHECK_MAX_COLLATION_TRIES = SPELLCHECK_PREFIX + "maxCollationTries";  
   /**
    * <p>
    * The maximum number of word correction combinations to rank and evaluate prior to deciding which collation
@@ -128,7 +128,7 @@ public interface SpellingParams {
    * many misspelled words.  The default is 10,000 combinations. 
    * </p>
    */
-  public static final String SPELLCHECK_MAX_COLLATION_EVALUATIONS = SPELLCHECK_PREFIX + "maxCollationEvaluations";
+  String SPELLCHECK_MAX_COLLATION_EVALUATIONS = SPELLCHECK_PREFIX + "maxCollationEvaluations";
   /**
    * <p>
    * For use with {@link SpellingParams#SPELLCHECK_MAX_COLLATION_TRIES} and 
@@ -144,7 +144,7 @@ public interface SpellingParams {
    * When {@link SpellingParams#SPELLCHECK_COLLATE_EXTENDED_RESULTS} is FALSE, this optimization is always performed.
    * </p>
    */
-  public static final String SPELLCHECK_COLLATE_MAX_COLLECT_DOCS = SPELLCHECK_PREFIX + "collateMaxCollectDocs";
+  String SPELLCHECK_COLLATE_MAX_COLLECT_DOCS = SPELLCHECK_PREFIX + "collateMaxCollectDocs";
   /**
    * <p>
    * Whether to use the Extended Results Format for collations. 
@@ -156,7 +156,7 @@ public interface SpellingParams {
    * then the hit counts returned by this will be estimated.
    * </p>
    */
-  public static final String SPELLCHECK_COLLATE_EXTENDED_RESULTS = SPELLCHECK_PREFIX + "collateExtendedResults";
+  String SPELLCHECK_COLLATE_EXTENDED_RESULTS = SPELLCHECK_PREFIX + "collateExtendedResults";
   
   /**
    * <p>
@@ -165,10 +165,10 @@ public interface SpellingParams {
    * with "mm=100%", then use "spellcheck.collateParam.mm=100%".
    * </p>
    */
-  public static final String SPELLCHECK_COLLATE_PARAM_OVERRIDE = SPELLCHECK_PREFIX + "collateParam.";
+  String SPELLCHECK_COLLATE_PARAM_OVERRIDE = SPELLCHECK_PREFIX + "collateParam.";
   /**
    * Certain spelling implementations may allow for an accuracy setting.
    */
-  public static final String SPELLCHECK_ACCURACY = SPELLCHECK_PREFIX + "accuracy";
+  String SPELLCHECK_ACCURACY = SPELLCHECK_PREFIX + "accuracy";
   
 }

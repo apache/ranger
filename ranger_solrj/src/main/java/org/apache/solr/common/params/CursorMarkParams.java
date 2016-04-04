@@ -29,20 +29,20 @@ public interface CursorMarkParams {
    * first page of results, or a value returned by a previous search via the 
    * {@link #CURSOR_MARK_NEXT} key.
    */
-  public static final String CURSOR_MARK_PARAM = "cursorMark";
+  String CURSOR_MARK_PARAM = "cursorMark";
 
   /**
    * Key used in Solr response to inform the client what the "next" 
    * {@link #CURSOR_MARK_PARAM} value should be to continue pagination
    */
-  public static final String CURSOR_MARK_NEXT = "nextCursorMark";
+  String CURSOR_MARK_NEXT = "nextCursorMark";
 
   /** 
    * Special value for {@link #CURSOR_MARK_PARAM} indicating that cursor functionality 
    * should be used, and a new cursor value should be computed afte the last result,
    * but that currently the "first page" of results is being requested
    */
-  public static final String CURSOR_MARK_START = "*";
+  String CURSOR_MARK_START = "*";
 
 }
 

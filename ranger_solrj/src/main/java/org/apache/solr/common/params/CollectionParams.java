@@ -22,11 +22,9 @@ import java.util.Locale;
 public interface CollectionParams 
 {
   /** What action **/
-  public final static String ACTION = "action";
-  public final static String NAME = "name";
+  String ACTION = "action";
+  String NAME = "name";
   
-
-
   public enum CollectionAction {
     CREATE,
     DELETE,

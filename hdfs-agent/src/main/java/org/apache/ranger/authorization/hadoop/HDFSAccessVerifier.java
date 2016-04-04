@@ -21,7 +21,7 @@ package org.apache.ranger.authorization.hadoop;
 import java.util.Set;
 
 public interface HDFSAccessVerifier {
-	public class AccessContext {
+	class AccessContext {
 		String agentId;
 		int repositoryType;
 		String sessionId;
@@ -30,6 +30,6 @@ public interface HDFSAccessVerifier {
 		String requestData;
 	}
 	
-	public boolean isAccessGranted(String aPathName, String aPathOwnerName, String access, String username, Set<String> groups);
-	public boolean isAuditLogEnabled(String aPathName) ;
+	boolean isAccessGranted(String aPathName, String aPathOwnerName, String access, String username, Set<String> groups);
+	boolean isAuditLogEnabled(String aPathName) ;
 }

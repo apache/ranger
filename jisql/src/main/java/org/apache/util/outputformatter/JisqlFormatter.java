@@ -37,7 +37,7 @@ public interface JisqlFormatter {
      * 
      * @param parser - the OptionParser to use.
      */
-    public void setSupportedOptions( OptionParser parser );
+    void setSupportedOptions( OptionParser parser );
     
     /**
      * Consumes any options that were specified on the command line.
@@ -52,7 +52,7 @@ public interface JisqlFormatter {
      *                   for more information.
      *
      */
-    public void consumeOptions( OptionSet options ) throws Exception;
+    void consumeOptions( OptionSet options ) throws Exception;
 
     /**
      * Called to output a usage message to the command line window.  This
@@ -61,7 +61,7 @@ public interface JisqlFormatter {
      * @param out where to put the usage message.
      *
      */
-    public void usage( PrintStream out );
+    void usage( PrintStream out );
 
     
     /**
@@ -72,7 +72,7 @@ public interface JisqlFormatter {
      * @param metaData the ResultSetMetaData for the output.
      *  
      */
-    public void formatHeader( PrintStream out, ResultSetMetaData metaData ) throws Exception;
+    void formatHeader( PrintStream out, ResultSetMetaData metaData ) throws Exception;
 
     /**
      * Called to output the data.
@@ -82,7 +82,7 @@ public interface JisqlFormatter {
      * @param metaData the ResultSetMetaData for the row.
      *
      */
-    public void formatData( PrintStream out, ResultSet resultSet, ResultSetMetaData metaData ) throws Exception;
+    void formatData( PrintStream out, ResultSet resultSet, ResultSetMetaData metaData ) throws Exception;
 
     /**
      * Outputs a footer for a query.  This is called after all data has been
@@ -92,5 +92,5 @@ public interface JisqlFormatter {
      * @param metaData the ResultSetMetaData for the output.
      * 
      */
-    public void formatFooter( PrintStream out, ResultSetMetaData metaData ) throws Exception;
+    void formatFooter( PrintStream out, ResultSetMetaData metaData ) throws Exception;
 }

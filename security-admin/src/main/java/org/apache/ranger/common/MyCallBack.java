@@ -30,5 +30,5 @@ public interface MyCallBack {
      * @Override
      * @Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
      */
-    public Object process(Object data);
+    Object process(Object data);
 }

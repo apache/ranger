@@ -26,23 +26,23 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 
 
 public interface RangerAccessResource {
-	public static final String RESOURCE_SEP = "/";
+	String RESOURCE_SEP = "/";
 
-	public abstract String getOwnerUser();
+	String getOwnerUser();
 
-	public abstract boolean exists(String name);
+	boolean exists(String name);
 
-	public abstract String getValue(String name);
+	String getValue(String name);
 
-	public RangerServiceDef getServiceDef();
+	RangerServiceDef getServiceDef();
 
-	public Set<String> getKeys();
+	Set<String> getKeys();
 
-	public String getLeafName();
+	String getLeafName();
 
-	public String getAsString();
+	String getAsString();
 
-	public Map<String, String> getAsMap();
+	Map<String, String> getAsMap();
 
-	public RangerAccessResource getReadOnlyCopy();
+	RangerAccessResource getReadOnlyCopy();
 }

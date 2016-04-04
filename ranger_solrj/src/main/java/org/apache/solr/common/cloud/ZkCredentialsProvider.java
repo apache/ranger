@@ -21,7 +21,7 @@ import java.util.Collection;
 
 public interface ZkCredentialsProvider {
   
-  public class ZkCredentials {
+  class ZkCredentials {
     String scheme;
     byte[] auth;
     

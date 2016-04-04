@@ -24,23 +24,23 @@ import java.util.Properties;
 import org.apache.ranger.audit.model.AuditEventBase;
 
 public interface AuditHandler {
-	public boolean log(AuditEventBase event);
-	public boolean log(Collection<AuditEventBase> events);	
+	boolean log(AuditEventBase event);
+	boolean log(Collection<AuditEventBase> events);	
 
-	public boolean logJSON(String event);
-	public boolean logJSON(Collection<String> events);	
+	boolean logJSON(String event);
+	boolean logJSON(Collection<String> events);	
 
-    public void init(Properties prop);
-    public void init(Properties prop, String basePropertyName);
-    public void start();
-    public void stop();
-    public void waitToComplete();
-    public void waitToComplete(long timeout);
+    void init(Properties prop);
+    void init(Properties prop, String basePropertyName);
+    void start();
+    void stop();
+    void waitToComplete();
+    void waitToComplete(long timeout);
 
     /**
      * Name for this provider. Used only during logging. Uniqueness is not guaranteed
      */
-    public String getName();
+    String getName();
 
-    public void    flush();
+    void flush();
 }

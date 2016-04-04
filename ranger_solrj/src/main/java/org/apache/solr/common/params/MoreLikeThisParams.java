@@ -25,32 +25,32 @@ import java.util.Locale;
 public interface MoreLikeThisParams 
 {
   // enable more like this -- this only applies to 'StandardRequestHandler' maybe DismaxRequestHandler
-  public final static String MLT = "mlt";
+  String MLT = "mlt";
   
-  public final static String PREFIX = "mlt.";
+  String PREFIX = "mlt.";
   
-  public final static String SIMILARITY_FIELDS     = PREFIX + "fl";
-  public final static String MIN_TERM_FREQ         = PREFIX + "mintf";
-  public final static String MAX_DOC_FREQ          = PREFIX + "maxdf";
-  public final static String MIN_DOC_FREQ          = PREFIX + "mindf";
-  public final static String MIN_WORD_LEN          = PREFIX + "minwl";
-  public final static String MAX_WORD_LEN          = PREFIX + "maxwl";
-  public final static String MAX_QUERY_TERMS       = PREFIX + "maxqt";
-  public final static String MAX_NUM_TOKENS_PARSED = PREFIX + "maxntp";
-  public final static String BOOST                 = PREFIX + "boost"; // boost or not?
-  public final static String QF                    = PREFIX + "qf"; //boosting applied to mlt fields
+  String SIMILARITY_FIELDS     = PREFIX + "fl";
+  String MIN_TERM_FREQ         = PREFIX + "mintf";
+  String MAX_DOC_FREQ          = PREFIX + "maxdf";
+  String MIN_DOC_FREQ          = PREFIX + "mindf";
+  String MIN_WORD_LEN          = PREFIX + "minwl";
+  String MAX_WORD_LEN          = PREFIX + "maxwl";
+  String MAX_QUERY_TERMS       = PREFIX + "maxqt";
+  String MAX_NUM_TOKENS_PARSED = PREFIX + "maxntp";
+  String BOOST                 = PREFIX + "boost"; // boost or not?
+  String QF                    = PREFIX + "qf"; //boosting applied to mlt fields
 
   // the /mlt request handler uses 'rows'
-  public final static String DOC_COUNT = PREFIX + "count";
+  String DOC_COUNT = PREFIX + "count";
 
   // Do you want to include the original document in the results or not
-  public final static String MATCH_INCLUDE = PREFIX + "match.include";
+  String MATCH_INCLUDE = PREFIX + "match.include";
   
   // If multiple docs are matched in the query, what offset do you want?
-  public final static String MATCH_OFFSET  = PREFIX + "match.offset";
+  String MATCH_OFFSET  = PREFIX + "match.offset";
 
   // Do you want to include the original document in the results or not
-  public final static String INTERESTING_TERMS = PREFIX + "interestingTerms";  // false,details,(list or true)
+  String INTERESTING_TERMS = PREFIX + "interestingTerms";  // false,details,(list or true)
   
   public enum TermStyle {
     NONE,

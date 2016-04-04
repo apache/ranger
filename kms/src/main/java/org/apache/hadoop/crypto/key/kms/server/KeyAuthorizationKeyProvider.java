@@ -61,7 +61,7 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
    * Interface that needs to be implemented by a client of the
    * <code>KeyAuthorizationKeyProvider</code>.
    */
-  public static interface KeyACLs {
+  public interface KeyACLs {
     
     /**
      * This is called by the KeyProvider to check if the given user is
@@ -71,7 +71,7 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
      * @param opType Operation Type 
      * @return true if user has access to the aclName and opType else false
      */
-    public boolean hasAccessToKey(String aclName, UserGroupInformation ugi,
+    boolean hasAccessToKey(String aclName, UserGroupInformation ugi,
         KeyOpType opType);
 
     /**
@@ -80,15 +80,15 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
      * @param opType Operation Type
      * @return true if AclName exists else false 
      */
-    public boolean isACLPresent(String aclName, KeyOpType opType);
+    boolean isACLPresent(String aclName, KeyOpType opType);
 
-	public void startReloader();
+	void startReloader();
 	
-	public void stopReloader();
+	void stopReloader();
 
-	public boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, String clientIp);
+	boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, String clientIp);
 
-	public void assertAccess(KMSACLsType.Type aclType, UserGroupInformation ugi,
+	void assertAccess(KMSACLsType.Type aclType, UserGroupInformation ugi,
 			KMSOp operation, String key, String clientIp) throws AccessControlException;
   }
 

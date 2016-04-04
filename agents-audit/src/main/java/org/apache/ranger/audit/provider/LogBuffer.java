@@ -20,13 +20,13 @@ package org.apache.ranger.audit.provider;
 
 
 public interface LogBuffer<T> {
-	public void start(LogDestination<T> destination);
+	void start(LogDestination<T> destination);
 
-	public void stop();
+	void stop();
 
 	boolean isAvailable();
 
-	public boolean isEmpty();
+	boolean isEmpty();
 
-	public boolean add(T log);
+	boolean add(T log);
 }

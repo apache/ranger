@@ -18,5 +18,5 @@ package org.apache.solr.common.cloud;
  */
 
 public interface BeforeReconnect {
-  public void command();
+  void command();
 }

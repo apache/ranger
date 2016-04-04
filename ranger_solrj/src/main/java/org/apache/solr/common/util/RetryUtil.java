@@ -20,8 +20,8 @@ package org.apache.solr.common.util;
 import java.util.concurrent.TimeUnit;
 
 public class RetryUtil {
-  public static interface RetryCmd {
-    public void execute() throws Throwable;
+  interface RetryCmd {
+    void execute() throws Throwable;
   }
   
   public static void retryOnThrowable(Class clazz, long timeoutms, long intervalms, RetryCmd cmd) throws Throwable {

@@ -245,7 +245,7 @@ public class JavaBinUpdateRequestCodec {
     return params.toNamedList();
   }
 
-  public static interface StreamingUpdateHandler {
-    public void update(SolrInputDocument document, UpdateRequest req, Integer commitWithin, Boolean override);
+  public interface StreamingUpdateHandler {
+    void update(SolrInputDocument document, UpdateRequest req, Integer commitWithin, Boolean override);
   }
 }

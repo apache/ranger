@@ -22,6 +22,6 @@ package org.apache.solr.common.cloud;
  */
 @Deprecated
 public interface ClosableThread {
-  public void close();
-  public boolean isClosed();
+  void close();
+  boolean isClosed();
 }

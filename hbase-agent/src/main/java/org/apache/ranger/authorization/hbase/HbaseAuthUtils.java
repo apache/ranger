@@ -22,10 +22,10 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 
 public interface HbaseAuthUtils {
-	public static final String ACCESS_TYPE_READ   = "read";
-	public static final String ACCESS_TYPE_WRITE  = "write";
-	public static final String ACCESS_TYPE_CREATE = "create";
-	public static final String ACCESS_TYPE_ADMIN  = "admin";
+	String ACCESS_TYPE_READ   = "read";
+	String ACCESS_TYPE_WRITE  = "write";
+	String ACCESS_TYPE_CREATE = "create";
+	String ACCESS_TYPE_ADMIN  = "admin";
 
 	String getAccess(Action action);
 
