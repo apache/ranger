@@ -57,6 +57,8 @@
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
 		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
+					<include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
+					<include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
 		    	</includes>
                 <unpack>false</unpack>
             </dependencySet>
