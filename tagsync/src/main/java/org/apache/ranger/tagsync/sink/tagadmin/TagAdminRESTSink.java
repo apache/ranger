@@ -132,7 +132,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 			LOG.error("Upload of service-tags failed with message " + resp.getMessage());
 
-			if (response == null || response.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+			if (response == null || resp.getHttpStatusCode() != HttpServletResponse.SC_BAD_REQUEST) {
 				// NOT an application error
 				throw new Exception("Upload of service-tags failed with response: " + response);
 			}
