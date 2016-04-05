@@ -48,16 +48,24 @@ define(function(require) {
 				policyConditions: this.policyConditions,
 				isModelNew		: !this.model.has('editMode'),
 				perms			: this.permsIds.length == 14 ? _.union(this.permsIds,[-1]) : this.permsIds,
+			    isMaskingPolicy : XAUtil.isMaskingPolicy(this.rangerPolicyType),
+			    isAccessPolicy 	: XAUtil.isAccessPolicy(this.rangerPolicyType),
+			    isRowFilterPolicy	: XAUtil.isRowFilterPolicy(this.rangerPolicyType),
 			};
 		},
 		ui : {
 			selectGroups	: '[data-js="selectGroups"]',
 			selectUsers		: '[data-js="selectUsers"]',
 			addPerms		: 'a[data-js="permissions"]',
+			maskingType		: 'a[data-js="maskingType"]',
+			rowLeveFilter	: 'a[data-js="rowLeveFilter"]',
 			conditionsTags	: '[class=tags1]',
 			delegatedAdmin	: 'input[data-js="delegatedAdmin"]',
 			addPermissionsSpan : '.add-permissions',
-			addConditionsSpan : '.add-conditions',
+			addConditionsSpan  : '.add-conditions',
+			addMaskingTypeSpan : '.add-masking-type',
+			addRowFilterSpan   : '.add-row-filter',
+			
 		},
 		events : {
 			'click [data-action="delete"]'	: 'evDelete',
@@ -68,7 +76,7 @@ define(function(require) {
 		},
 
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','accessTypes','policyConditions','userList','rangerServiceDefModel'));
+			_.extend(this, _.pick(options, 'groupList','accessTypes','policyConditions','userList','rangerServiceDefModel','rangerPolicyType'));
 			this.setupPermissionsAndConditions();
 			
 		},
@@ -90,9 +98,18 @@ define(function(require) {
 				this.renderPerms();
 			}
 			this.renderPolicyCondtion();
+			if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
+				this.renderMaskingType();
+			}
+			if(XAUtil.isRowFilterPolicy(this.rangerPolicyType)){
+				this.renderRowLevelFilter();
+			}
+			
 		},
 		setupFormForEditMode : function() {
-			this.accessItems = _.map(this.accessTypes, function(perm){ 
+			var permTypes = this.accessTypes;
+			
+			this.accessItems = _.map(permTypes, function(perm){ 
 				if(!_.isUndefined(perm)) return {'type':perm.name, isAllowed : false}
 			});
 			if(this.model.has('editMode') && this.model.get('editMode')){
@@ -117,6 +134,9 @@ define(function(require) {
 				
 				if(!_.isUndefined(this.model.get('delegateAdmin')) && this.model.get('delegateAdmin')){
 					this.ui.delegatedAdmin.attr('checked', 'checked');
+				}
+				if(!_.isUndefined(this.model.get('rowFilterInfo')) && !_.isUndefined(this.model.get('rowFilterInfo').filterExpr)){
+					this.rowFilterExprVal = this.model.get('rowFilterInfo').filterExpr
 				}
 			}
 		},
@@ -579,6 +599,80 @@ define(function(require) {
 				groupIdList = this.model.get('groupId').split(',');
 			XAUtil.checkDirtyField(groupIdList, e.val, $(e.currentTarget));
 		},
+		renderMaskingType :function(){
+			var that = this, maskingTypes = [];
+			this.maskTypeIds =  [];
+			if(!_.isUndefined(this.model.get('dataMaskInfo')) && !_.isUndefined(this.model.get('dataMaskInfo').dataMaskType)){
+				this.maskTypeIds = this.model.get('dataMaskInfo').dataMaskType
+			}
+			
+			if(!_.isUndefined(this.rangerServiceDefModel.get('dataMaskDef')) && !_.isUndefined(this.rangerServiceDefModel.get('dataMaskDef').maskTypes)){
+				maskingTypes = this.rangerServiceDefModel.get('dataMaskDef').maskTypes;
+			}
+			this.maskTypes =  _.map(maskingTypes, function(m){return {text:m.label, value : m.name };});
+			//create x-editable for permissions
+			this.ui.maskingType.editable({
+			    emptytext : 'Select Masking Type',
+				source: this.maskTypes,
+				value : this.maskTypeIds,
+				display: function(value,srcData) {
+					if(_.isNull(value) || _.isEmpty(value)){
+						$(this).empty();
+						that.model.unset('dataMaskInfo');
+						that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addMaskingTypeSpan.attr('title','add');
+						return;
+					}
+					
+					var obj = _.findWhere(srcData, {'value' : value } );
+					// Save form data to model
+					that.model.set('dataMaskInfo', {'dataMaskType': value });
+					
+					$(this).html("<span class='label label-info'>" + obj.text + "</span>");
+					that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addMaskingTypeSpan.attr('title','edit');
+				},
+			}).on('click', function(e) {
+				e.stopPropagation();
+				e.preventDefault();
+//				that.clickOnMaskingType(that);
+			});
+			that.ui.addMaskingTypeSpan.click(function(e) {
+				e.stopPropagation();
+				that.$('a[data-js="maskingType"]').editable('toggle');
+//				that.clickOnMaskingType(that);
+			});
+		},
+		renderRowLevelFilter :function(){
+			var that = this;
+			//create x-editable for permissions
+			this.ui.rowLeveFilter.editable({
+			    emptytext : 'Add Row Filter',
+			    placeholder : 'enter expression',	
+				value : this.rowFilterExprVal,
+				display: function(value,srcData) {
+					if(_.isNull(value) || _.isEmpty(value)){
+						$(this).empty();
+						that.model.unset('rowFilterInfo');
+						that.ui.addRowFilterSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addRowFilterSpan.attr('title','add');
+						return;
+					}	
+					that.model.set('rowFilterInfo', {'filterExpr': value });
+					$(this).html("<span class='label label-info'>" + value + "</span>");
+					that.ui.addRowFilterSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addRowFilterSpan.attr('title','edit');
+				},
+			}).on('click', function(e) {
+				e.stopPropagation();
+				e.preventDefault();
+			});
+			that.ui.addRowFilterSpan.click(function(e) {
+				e.stopPropagation();
+				that.$('a[data-js="rowLeveFilter"]').editable('toggle');
+			});
+			
+		},
 
 	});
 
@@ -601,20 +695,23 @@ define(function(require) {
 		},
 		itemViewContainer : ".js-formInput",
 		itemViewOptions : function() {
+			//set access type by policy type
+			this.setAccessTypeByPolicyType();
 			return {
 				'collection' 	: this.collection,
 				'groupList' 	: this.groupList,
 				'userList' 	: this.userList,
 				'accessTypes'	: this.accessTypes,
 				'policyConditions' : this.rangerServiceDefModel.get('policyConditions'),
-				'rangerServiceDefModel' : this.rangerServiceDefModel
+				'rangerServiceDefModel' : this.rangerServiceDefModel,
+				'rangerPolicyType' : this.rangerPolicyType
 			};
 		},
 		events : {
 			'click [data-action="addGroup"]' : 'addNew'
 		},
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','accessTypes','rangerServiceDefModel','userList', 'headerTitle'));
+			_.extend(this, _.pick(options, 'groupList','accessTypes','rangerServiceDefModel','userList', 'headerTitle','rangerPolicyType'));
 			this.listenTo(this.groupList, 'sync', this.render, this);
 			if(this.collection.length == 0)
 				this.collection.add(new Backbone.Model());
@@ -647,11 +744,22 @@ define(function(require) {
 		getPermHeaders : function(){
 			var permList = [];
 			if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
-				permList.unshift(localization.tt('lbl.delegatedAdmin'));
-				permList.unshift(localization.tt('lbl.permissions'));
+				if(XAUtil.isAccessPolicy(this.rangerPolicyType)){
+					permList.unshift(localization.tt('lbl.delegatedAdmin'));
+				}
+				if(XAUtil.isRowFilterPolicy(this.rangerPolicyType)){
+					permList.unshift(localization.tt('lbl.rowLevelFilter'));
+					permList.unshift(localization.tt('lbl.accessTypes'));
+				}else if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
+					permList.unshift(localization.tt('lbl.selectDataMaskTypes'));
+					permList.unshift(localization.tt('lbl.accessTypes'));
+				}else{
+					permList.unshift(localization.tt('lbl.permissions'));
+				}
 			} else {
 				permList.unshift(localization.tt('lbl.componentPermissions'));
 			}
+			
 			if(!_.isEmpty(this.rangerServiceDefModel.get('policyConditions'))){
 				permList.unshift(localization.tt('h.policyCondition'));
 			}
@@ -660,6 +768,19 @@ define(function(require) {
 			permList.push("");
 			return permList;
 		},
+		setAccessTypeByPolicyType : function(){
+			if(XAUtil.isMaskingPolicy(this.rangerPolicyType) && XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef'))){
+				var dataMaskDef = this.rangerServiceDefModel.get('dataMaskDef');
+				if(!_.isUndefined(dataMaskDef) && !_.isUndefined(dataMaskDef.accessTypes)){
+					this.accessTypes =  _.map(dataMaskDef.accessTypes, function(m){return _.findWhere(this.accessTypes, {'name' : m.name });}, this);
+				}
+			}else if(XAUtil.isRowFilterPolicy(this.rangerPolicyType) && XAUtil.isRenderRowFilter(this.rangerServiceDefModel.get('rowFilterDef'))){
+				var rowFilterDef = this.rangerServiceDefModel.get('rowFilterDef');
+				if(!_.isUndefined(rowFilterDef) && !_.isUndefined(rowFilterDef.accessTypes)){
+					this.accessTypes =  _.map(rowFilterDef.accessTypes, function(m){return _.findWhere(this.accessTypes, {'name' : m.name });}, this);
+				}
+			}
+		}
 	});
 
 });

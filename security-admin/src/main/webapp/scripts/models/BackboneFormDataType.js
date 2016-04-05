@@ -20,13 +20,32 @@
 define(function(require) {
 	'use strict';
 
-	var Backbone = require('backbone');
-	var XAUtils = require('utils/XAUtils');
+	var Backbone 	= require('backbone');
+	var XAUtils 	= require('utils/XAUtils');
+	var XAEnums		= require('utils/XAEnums');
 
 	var FormDataType = Backbone.Model.extend({
 		type : [ 'string', 'boolean', 'int' ],
-		getFormElements : function(configs, enums, attrs, form) {
+		getFormElements : function(configs, enums, attrs, form, isPolicyForm) {
 			//Helpers
+			
+			//Get configs for perticular policy type
+			var getResourceConfigs = function(configs){
+				if(XAUtils.isMaskingPolicy(form.model.get('policyType'))){
+					if(XAUtils.isRenderMasking(form.rangerServiceDefModel.get('dataMaskDef'))){
+						configs = form.rangerServiceDefModel.get('dataMaskDef').resources;
+						configs = _.map(configs, function(obj){ obj.type =  'string'; return obj; });
+						return configs;
+					}
+				}else if(XAUtils.isRowFilterPolicy(form.model.get('policyType'))){
+					if(XAUtils.isRenderRowFilter(form.rangerServiceDefModel.get('rowFilterDef'))){
+						configs = form.rangerServiceDefModel.get('rowFilterDef').resources;
+						configs = _.map(configs, function(obj){ obj.type =  'string'; return obj; });
+						return configs;
+					}
+				}
+				return configs;
+			};
 			var getValidators = function(formObj, v){
 				formObj.validators = [];
 				if (_.has(v, 'mandatory') && v.mandatory && v.type != 'bool') {
@@ -45,55 +64,74 @@ define(function(require) {
 				return form;
 			};
 			
+			//Get configs for perticular policy type
+			configs = getResourceConfigs(configs)
 			
 			var samelevelFieldCreated = [];
 			_.each(configs, function(v, k,config) {
 				if (v != null) {
-					var formObj = {}, fieldName;
+					var formObj = {}, fieldName, supportedResource = [];
 					switch (v.type) {
 						case 'string':
+							if(!isPolicyForm) {
+								formObj.type = 'Text';
+								break;
+							}
 							if($.inArray(v.level, samelevelFieldCreated) >= 0){
 								return;
 							}
-							if(! XAUtils.isSinglevValueInput(v) ){
-								if(v.excludesSupported || v.recursiveSupported || v.lookupSupported ){
-									var resourceOpts = {};
-									formObj.type = 'Resource';
-									formObj['excludeSupport']= v.excludesSupported;
-									formObj['recursiveSupport'] = v.recursiveSupported;
-									formObj.name = v.name;
+							
+							if( isPolicyForm ){
+								var resourceOpts = {};
+								formObj.type = 'Resource';
+								formObj['excludeSupport']= v.excludesSupported;
+								formObj['recursiveSupport'] = v.recursiveSupported;
+								formObj.name = v.name;
 //								formObj.level = v.level;
-									//checkParentHideShow field
-									formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
-									formObj['resourceOpts'] = {'data-placeholder': v.label };
-									
-									if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
-										var opts = { 
-												'type' : v.name,
-												'lookupURL' 		: "service/plugins/services/lookupResource/"+form.rangerService.get('name')
-										};
-										if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
-											opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};
-										}
-										resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
-										formObj['resourceOpts'] = resourceOpts; 
+								//checkParentHideShow field
+								formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
+								formObj['resourceOpts'] = {'data-placeholder': v.label };
+								
+								if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
+									var opts = { 
+											'type' : v.name,
+											'lookupURL' 		: "service/plugins/services/lookupResource/"+form.rangerService.get('name')
+									};
+									if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
+										opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};
 									}
-									//same level resources check 
-									var optionsAttrs = _.filter(config,function(field){ if(field.level == v.level) return field;})
-									if(optionsAttrs.length > 1){
-										var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
-										formObj['sameLevelOpts'] = optionsTitle;
-										samelevelFieldCreated.push(v.level);
-										fieldName = 'sameLevel'+v.level;
-										formObj['title'] = '';
-										formObj['resourcesAtSameLevel'] = true;
-										
-										// formView is used to listen form events
-										formObj['formView'] = form;
-									}
+									//To support single value input
+									if( XAUtils.isSinglevValueInput(v) ){
+										opts['singleValueInput'] = true;
+									}	
+									resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
+									formObj['resourceOpts'] = resourceOpts; 
 								}
-							}else{
-								formObj.type = 'Text';
+								//same level resources check
+								var optionsAttrs = [];
+								if(!_.isUndefined(v.level)){
+									optionsAttrs = _.filter(config,function(field){ if(field.level == v.level) return field;})
+								}
+								//TODO
+								//if policyType is masking then check for supported resources
+//									if( XAUtils.isMaskingPolicy(form.model.get('policyType')) && optionsAttrs.length > 1 ){
+//										var allResourceNames  = _.map(optionsAttrs, function(m){ return m.name});
+//										var rscNames = allResourceNames.splice(allResourceNames.indexOf(v.name), 1);
+//										if(_.intersection(allResourceNames, rscNames) != rscNames){
+//											optionsAttrs = _.filter(optionsAttrs, function(m){ return $.inArray(m.name, allResourceNames) >= 0;})
+//										}
+//									}
+								if(optionsAttrs.length > 1){
+									var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
+									formObj['sameLevelOpts'] = optionsTitle;
+									samelevelFieldCreated.push(v.level);
+									fieldName = 'sameLevel'+v.level;
+									formObj['title'] = '';
+									formObj['resourcesAtSameLevel'] = true;
+									
+									// formView is used to listen form events
+									formObj['formView'] = form;
+								}
 							}
 							break;
 						case 'bool':

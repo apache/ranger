@@ -511,7 +511,8 @@
 	Handlebars.registerHelper('getServices', function(services, serviceDef) {
 		var XAEnums		= require('utils/XAEnums');
 		var tr = '', serviceOperationDiv = '';
-		var serviceType = serviceDef.get('name');
+		var serviceType = serviceDef.get('name'),
+		policyType = XAEnums.RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value;
 		if(!_.isUndefined(services[serviceType])){
 			_.each(services[serviceType],function(serv){
 				serviceName = serv.get('name');
@@ -523,7 +524,7 @@
 					</div>'
 				}
 				tr += '<tr><td><div>\
-						<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
+						<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
 					  </div></td></tr>';
 			});
 		}
@@ -542,6 +543,15 @@
 		
 		return (returnFlag) ? options.fn(this) : options.inverse(this);
 	});
+	Handlebars.registerHelper('isRenderMasking', function() {
+		var XAEnums		= require('utils/XAEnums');
+		return XAUtil.isRenderMasking(XAEnums.RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value);
+	});
+	Handlebars.registerHelper('isRenderRowFilter', function() {
+		var XAEnums		= require('utils/XAEnums');
+		return XAUtil.isRenderRowFilter(XAEnums.RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value);
+	});
+	
 
 	return HHelpers;
 });

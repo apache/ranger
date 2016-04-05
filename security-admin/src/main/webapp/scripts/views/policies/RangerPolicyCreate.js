@@ -93,7 +93,7 @@ define(function(require){
 				template : require('hbs!tmpl/policies/RangerPolicyForm_tmpl'),
 				model : this.model,
 				rangerServiceDefModel : this.rangerServiceDefModel,
-				rangerService : this.rangerService
+				rangerService : this.rangerService,
 			});
 
 			this.editPolicy = this.model.has('id') ? true : false;
@@ -107,7 +107,28 @@ define(function(require){
 			this.rangerServiceDefModel.fetch({
 				cache : false,
 				async : false
-			})
+			});
+//			if(this.rangerServiceDefModel.get('name') == "hive"){
+//				this.rangerServiceDefModel.set("dataMaskDef",{ "accessTypes": [ { "name": "select" } ], 
+//					"resources": [ 
+//					               { "lookupSupported" :true, "name": "database", "matcherOptions": { "wildCard": "false" }, "uiHint":"{ \"singleValue\":true }" }, 
+//					               { "name": "table", "matcherOptions": { "wildCard": "false" }, "uiHint":"{ \"singleValue\":true }" }, 
+//					               { "name": "column", "matcherOptions": { "wildCard": "false" }, "uiHint":"{ \"singleValue\":true }" }
+//					               ],
+//					 "maskTypes": [ { "itemId": 1, "name": "MASK", "label": "Mask", "description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'", "dataMaskOptions": { } }, { "itemId": 2, "name": "SHUFFLE", "label": "Shuffle", "description": "Shuffle the value of the column", "dataMaskOptions": { } }, { "itemId": 3, "name": "MASK_x_SHOW_LAST_4", "label": "Partial mask: show last 4", "description": "Show last 4 characters; replace rest with 'x'", "dataMaskOptions": { } }, { "itemId": 4, "name": "MASK_x_SHOW_FIRST_4", "label": "Partial mask: show first 4", "description": "Show first 4 characters; replace rest with 'x'", "dataMaskOptions": { } }, { "itemId": 10, "name": "NULL", "label": "NULL", "description": "Replace with NULL", "dataMaskOptions": { } } ] });
+//				
+//				this.rangerServiceDefModel.set("rowFilterDef", 
+//						{ 
+//							"accessTypes":[
+//							               {"name":"select","label":"Select"}
+//							               ],
+//							"resources":[
+//							             {"name":"database","matcherOptions":{"wildCard":false}},
+//							             {"name":"table","matcherOptions":{"wildCard":false}}
+//							             ]
+//					    });
+//			}
+			
 		},
 
 		/** all events binding here */
@@ -124,6 +145,9 @@ define(function(require){
 			XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavPolicyForm'),this.rForm.$el);
 		},
 		popupCallBack : function(msg,validateObj){
+			if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
+				msg = msg.replace('permission','access type')
+			}
 			XAUtil.alertPopup({
 				msg :msg,
 			});
@@ -209,12 +233,7 @@ define(function(require){
 					var msg = that.editPolicy ? 'Policy updated successfully' :'Policy created successfully';
 					XAUtil.notifySuccess('Success', msg);
 					XAUtil.allowNavigation();
-					if(that.editPolicy){
-						App.appRouter.navigate("#!/service/"+that.rangerService.id+"/policies",{trigger: true});
-						return;
-					}
-					App.appRouter.navigate("#!/service/"+that.rangerService.id+"/policies",{trigger: true});
-					console.log("success");
+					App.appRouter.navigate("#!/service/"+that.rangerService.id+"/policies/"+ that.model.get('policyType'),{trigger: true});
 				},
 				error : function(model, response, options) {
 					XAUtil.blockUI('unblock');
@@ -229,7 +248,7 @@ define(function(require){
 		},
 		onCancel : function(){
 			XAUtil.allowNavigation();
-			App.appRouter.navigate("#!/service/"+this.rangerService.id+"/policies",{trigger: true});
+			App.appRouter.navigate("#!/service/"+this.rangerService.id+"/policies/"+ this.model.get('policyType'),{trigger: true});
 
 		},
 		onDelete :function(){
@@ -243,7 +262,7 @@ define(function(require){
 							XAUtil.blockUI('unblock');
 							XAUtil.allowNavigation();
 							XAUtil.notifySuccess('Success', localization.tt('msg.policyDeleteMsg'));
-							App.appRouter.navigate("#!/service/"+that.rangerService.id+"/policies",{trigger: true});
+							App.appRouter.navigate("#!/service/"+that.rangerService.id+"/policies/"+ that.model.get('policyType'),{trigger: true});
 						},
 						error: function (model, response, options) {
 							XAUtil.blockUI('unblock');

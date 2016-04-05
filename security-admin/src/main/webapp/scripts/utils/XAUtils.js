@@ -467,7 +467,7 @@ define(function(require) {
 	};
 	XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showGroups) {
 		var showMoreLess = false, groupArr = [], items = [];
-		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions']
+		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions','dataMaskPolicyItems']
 		var type = _.isUndefined(showGroups) ? 'groups' : 'users';
 		_.each(itemList, function(item){
 		    if(!_.isUndefined(model.get(item)) && !_.isEmpty(model.get(item))) {
@@ -583,6 +583,7 @@ define(function(require) {
 	XAUtils.makeCollForGroupPermission = function(model, listName) {
 		var XAEnums = require('utils/XAEnums');
 		var formInputColl = new Backbone.Collection();
+		var that = this;
 		// permMapList = [ {id: 18, groupId : 1, permType :5}, {id: 18, groupId
 		// : 1, permType :4}, {id: 18, groupId : 2, permType :5} ]
 		// [1] => [ {id: 18, groupId : 1, permType :5}, {id: 18, groupId : 1,
@@ -608,6 +609,12 @@ define(function(require) {
 						delegateAdmin : obj.delegateAdmin,
 						editMode : true,
 					});
+					if(that.isMaskingPolicy(model.get('policyType'))){
+						m.set('dataMaskInfo', obj.dataMaskInfo)
+					}
+					if(that.isRowFilterPolicy(model.get('policyType'))){
+						m.set('rowFilterInfo', obj.rowFilterInfo)
+					}
 					formInputColl.add(m);
 
 				});
@@ -1169,6 +1176,24 @@ define(function(require) {
 				singleValue = UIHint.singleValue;
 		}
 		return singleValue;
+	};
+	
+	XAUtils.isMaskingPolicy = function(type){
+		return type == XAEnums.RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ? true : false;
+	};
+	XAUtils.isRenderMasking = function(dataMaskDef){
+		return (!_.isUndefined(dataMaskDef) && !_.isUndefined(dataMaskDef.resources) 
+			&& dataMaskDef.resources.length > 0) ? true : false; 
+	};
+	XAUtils.isAccessPolicy = function(type){
+		return type == XAEnums.RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value ? true : false;
+	};
+	XAUtils.isRowFilterPolicy = function(type){
+		return type == XAEnums.RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value ? true : false;
+	};
+	XAUtils.isRenderRowFilter = function(rowFilterDef){
+		return (!_.isUndefined(rowFilterDef) && !_.isUndefined(rowFilterDef.resources) 
+			&& rowFilterDef.resources.length > 0) ? true : false; 
 	};
 	
 	return XAUtils;

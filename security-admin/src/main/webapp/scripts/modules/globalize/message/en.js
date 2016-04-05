@@ -230,7 +230,10 @@ define(function(require) {
 				serviceName						: 'Service Name',
 				PolicyType_ALLOW				: 'Allow',
 				PolicyType_DENY					: 'Deny',
-				componentPermissions			: 'Component Permissions'
+				componentPermissions			: 'Component Permissions',
+				selectDataMaskTypes				: 'Select Data Mask Types',
+				accessTypes						: 'Access Types',
+				rowLevelFilter					: 'Row Level Filter'
 			},
 			btn : {
 				add							: 'Add',
@@ -307,9 +310,9 @@ define(function(require) {
 				policyDeleteMsg 		  : 'Policy deleted successfully',
 				policyNotAddedMsg		  : 'Policy not added!',
 				addGroupPermission		  : 'Please add permission(s) for the selected Group, else group will not be added.',
-				addGroup		  		  : 'Please select group for the selected permission, else group will not be added.',
+				addGroup		  		  : 'Please select group for the selected permission(s), else group will not be added.',
 				addUserPermission		  : 'Please add permission(s) for the selected User, else User will not be added.',
-				addUser		  		 	  : 'Please select User for the selected permission, else User will not be added.',
+				addUser		  		 	  : 'Please select User for the selected permission(s), else User will not be added.',
 				enterAlteastOneCharactere : 'Enter alteast one character.',
 				permsAlreadyExistForSelectedUser : 'Permission already exists for selected user.',
 				permsAlreadyExistForSelectedGroup : 'Permission already exists for selected group.',

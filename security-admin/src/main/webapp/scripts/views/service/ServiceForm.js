@@ -88,7 +88,7 @@ define(function(require){
 			var attrs = _.pick(_.result(this.rangerServiceDefModel,'schemaBase'), this.getSerivceBaseFieldNames());
 			var that = this;
 			var formDataType = new BackboneFormDataType();
-			return formDataType.getFormElements(this.rangerServiceDefModel.get('configs'),this.rangerServiceDefModel.get('enums'), attrs, this);
+			return formDataType.getFormElements(this.rangerServiceDefModel.get('configs'),this.rangerServiceDefModel.get('enums'), attrs, this, false);
 		},
 
 		/** on render callback */

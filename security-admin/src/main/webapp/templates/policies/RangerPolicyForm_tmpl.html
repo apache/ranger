@@ -12,7 +12,15 @@ KIND, either express or implied. See the License for the specific
 language governing permissions and limitations under the License. --}}
 <form class="form-horizontal">
 	<fieldset>
-		<p class="formHeader">Policy Details :</p>
+		<p class="formHeader">
+			Policy Details : 
+		</p>
+		{{#if policyType}}
+			<div class="control-group field-id">
+				<label class="control-label" for="c1836_id">Policy Type</label>
+				<div class="controls"><label class="label label-ranger" style="margin-top: 5px; margin-left: 9px;">{{policyType}}</label></div>
+			</div>
+		{{/if}}
 		{{#if id}}
 		<div class="control-group field-id">
 			<label class="control-label" for="c1836_id">Policy ID</label>

@@ -270,7 +270,7 @@ define(function(require) {
 		   });
 	   },
 	   
-	   policyManageAction :function(serviceId){
+	   policyManageAction : function(serviceId,policyType){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var XAUtil			= require('utils/XAUtils');
 		   var view 			= require('views/policies/RangerPolicyTableLayout');
@@ -278,18 +278,19 @@ define(function(require) {
 		   var RangerPolicyList 	=  require('collections/RangerPolicyList');
 		   
 		   var rangerService = new RangerService({id : serviceId});
-
+		   var rangerPolicyList = new RangerPolicyList();
+		   rangerPolicyList.queryParams['policyType'] = policyType;
+		   
 		   rangerService.fetch({
 			  cache : false,
 			  async : false
 		   });
 		   App.rContent.show(new view({
 			   rangerService : rangerService,
-			   collection : new RangerPolicyList()
-			   
+			   collection : rangerPolicyList
 		   }));
 	   },
-	   RangerPolicyCreateAction :function(serviceId){
+	   RangerPolicyCreateByTypeAction :function(serviceId, policyType){
     	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 
 		   var view 			= require('views/policies/RangerPolicyCreate');
@@ -301,7 +302,7 @@ define(function(require) {
 				  cache : false,
 		   }).done(function(){
 			   App.rContent.show(new view({
-				   model : new RangerPolicy(),
+				   model : new RangerPolicy({'policyType' : policyType}),
 				   rangerService : rangerService,
 			   }));
 		   });

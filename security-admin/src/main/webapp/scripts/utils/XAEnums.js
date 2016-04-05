@@ -47,6 +47,12 @@ define(function(require) {
 		XA_GROUP:{value:1, label:'Denied', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_DENIED', tt: 'lbl.AccessResult_ACCESS_RESULT_DENIED'}
 	});
 	
+	XAEnums.RangerPolicyType = mergeParams(XAEnums.RangerPolicyType, {
+		RANGER_ACCESS_POLICY_TYPE:{value:0, label:'Access', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_ALLOWED', tt: 'lbl.AccessResult_ACCESS_RESULT_ALLOWED'},
+		RANGER_MASKING_POLICY_TYPE:{value:1, label:'Masking', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_DENIED', tt: 'lbl.AccessResult_ACCESS_RESULT_DENIED'},
+		RANGER_ROW_FILTER_POLICY_TYPE:{value:2, label:'Row Level Filter', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_DENIED', tt: 'lbl.AccessResult_ACCESS_RESULT_DENIED'}
+	});
+	
 	XAEnums.UserRoles = mergeParams(XAEnums.UserRoles, {
 		ROLE_SYS_ADMIN:{value:0, label:'Admin', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_ALLOWED', tt: 'lbl.AccessResult_ACCESS_RESULT_ALLOWED'},
 		ROLE_USER:{value:1, label:'User', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_DENIED', tt: 'lbl.AccessResult_ACCESS_RESULT_DENIED'},

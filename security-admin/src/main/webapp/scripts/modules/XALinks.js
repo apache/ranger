@@ -26,6 +26,7 @@
 define(function(require) {
 	'use strict';
 	var XALinks     = {};
+	var XAEnums		= require('utils/XAEnums');
 	var defaults = {
 		href : 'javascript:void(0)',
 		text : '',
@@ -204,7 +205,7 @@ define(function(require) {
 			ManagePolicies : function(options){
 				var href = "javascript:void(0);";
 				if(_.has(options,'model')){
-					href =  '#!/service/'+options.model.id+"/policies";
+					href =  '#!/service/'+options.model.id+"/policies/"+XAEnums.RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value;
 				}
 				return {
 					href : href,

@@ -21,6 +21,7 @@
 define(function(require){
     'use strict';
 
+    var App				= require('App');
 	var Backbone		= require('backbone');
 	var XAEnums 		= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
@@ -48,14 +49,9 @@ define(function(require){
     	template: RangerPolicyTableLayoutTmpl,
 
 		templateHelpers : function(){
-			/*return {
-				isSysAdmin 	: this.isSysAdmin,
-				assetId 	: this.assetModel.id,
-				assetModel 	: this.assetModel,
-				version 	: XAGlobals.version
-			};*/
 			return {
-				rangerService:this.rangerService
+				rangerService:this.rangerService,
+				rangerPolicyType : this.collection.queryParams['policyType']
 			};
 		},
         
@@ -77,7 +73,9 @@ define(function(require){
 			'btnDeletePolicy' : '[data-name="deletePolicy"]',
 			'btnShowMore' : '[data-id="showMore"]',
 			'btnShowLess' : '[data-id="showLess"]',
-			'visualSearch' : '.visual_search'
+			'visualSearch' : '.visual_search',
+			'policyTypeTab' : 'div[data-id="policyTypeTab"]',
+			'addNewPolicy' : '[data-js="addNewPolicy"]'
 		},
 
 		/** ui events hash */
@@ -86,7 +84,7 @@ define(function(require){
 			events['click ' + this.ui.btnDeletePolicy]  = 'onDelete';
 			events['click ' + this.ui.btnShowMore]  = 'onShowMore';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
-			
+			events['click ' + this.ui.policyTypeTab + ' ul li a']  = 'onTabChange';
 			return events;
 		},
 
@@ -99,23 +97,14 @@ define(function(require){
 
 			_.extend(this, _.pick(options,'rangerService'));
 			
-		/*	this.collection.extraSearchParams = {
-//					resourceType : XAEnums.AssetType.ASSET_HDFS.value,
-					assetId : this.assetModel.id
-			};*/
 			
 			this.bindEvents();
 			this.initializeServiceDef();
-//			this.isSysAdmin = SessionMgr.isSystemAdmin();
 		},
 
 		/** all events binding here */
 		bindEvents : function(){
-			//this.listenTo(this.collection, "remove", this.render, this);
-			/*this.listenTo(this.model, "change:foo", this.modelChanged, this);*/
-			/*this.listenTo(communicator.vent,'someView:someEvent', this.someEventHandler, this)'*/
 			//this.listenTo(this.collection, "sync", this.render, this);
-			//
 		},
 		initializeServiceDef : function(){
 			this.rangerServiceDefModel	= new RangerServiceDef();
@@ -126,14 +115,18 @@ define(function(require){
 			})
 		},
 		
-		initializePolicies : function(){
+		initializePolicies : function(policyType){
 			this.collection.url = XAUtil.getServicePoliciesURL(this.rangerService.id);
+			if(!_.isUndefined(policyType)){
+				this.collection.queryParams['policyType'] = policyType;
+			}
 			this.collection.fetch({
 				cache : false,
 			});
 		},
 		/** on render callback */
 		onRender: function() {
+			this.setTabForPolicyListing();
 			this.addVisualSearch();
 			this.renderTable();
 			this.initializePolicies();
@@ -141,6 +134,16 @@ define(function(require){
 
 		/** all post render plugin initialization */
 		initializePlugins: function(){
+		},
+		setTabForPolicyListing : function(){
+			var policyType = this.collection.queryParams['policyType']
+			if( XAUtil.isMaskingPolicy(policyType) ){
+				this.ui.policyTypeTab.find('ul li').removeClass('active');
+				this.$el.find('li[data-tab="masking"]').addClass('active');
+			}else if( XAUtil.isRowFilterPolicy(policyType) ){
+				this.ui.policyTypeTab.find('ul li').removeClass('active');
+				this.$el.find('li[data-tab="rowLevelFilter"]').addClass('active');
+			}
 		},
 		renderTable : function(){
 			var that = this;
@@ -206,10 +209,10 @@ define(function(require){
 					label : localization.tt("lbl.group"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							if(!_.isUndefined(rawValue))
+							if(!_.isUndefined(rawValue)){
 								return XAUtil.showGroupsOrUsersForPolicy(rawValue, model);
-							else 
-								return '--';
+							}
+							return '--';
 						}
 					}),
 					editable : false,
@@ -229,22 +232,7 @@ define(function(require){
 					sortable : false
 				},
 			};
-			/*_.each(this.rangerServiceDefModel.get('resources'), function(obj){
-				if(!_.isUndefined(obj) && !_.isNull(obj))
-					 cols[obj.name]={
-							cell : "html",
-							label	: XAUtil.capitaliseFirstLetter(obj.name),
-							editable: false,
-							sortable : false,
-							formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-								fromRaw: function (rawValue,model) {
-									rawValue = model.get('resources')
-									return _.isUndefined(rawValue[obj.name]) ? '--' : rawValue[obj.name].values.toString();
-								}
-							})
-						};
 
-			});*/
 			cols['permissions'] = {
 				cell :  "html",
 				label : localization.tt("lbl.action"),
@@ -377,6 +365,25 @@ define(function(require){
 		},
 		getNameOfPolicyTypeNVList : function() {
 			return _.map(XAEnums.PolicyType, function(type) { return { 'label': type.label, 'value': type.label};});
+		},
+		onTabChange : function(e){
+			var that = this, 
+			tab = $(e.currentTarget).attr('href');
+			var href = this.ui.addNewPolicy.attr('href')
+			switch (tab) {
+				case "#access":
+					var val = XAEnums.RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value;
+					App.appRouter.navigate("#!/service/"+this.rangerService.id+"/policies/"+ val,{trigger: true});
+					break;
+				case "#masking":
+					var val = XAEnums.RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value;
+					App.appRouter.navigate("#!/service/"+this.rangerService.id+"/policies/"+ val,{trigger: true});
+					break;
+				case "#rowLevelFilter":
+					var val = XAEnums.RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value;
+					App.appRouter.navigate("#!/service/"+this.rangerService.id+"/policies/"+ val,{trigger: true});
+					break;
+			}
 		},
 		/** on close */
 		onClose: function(){
