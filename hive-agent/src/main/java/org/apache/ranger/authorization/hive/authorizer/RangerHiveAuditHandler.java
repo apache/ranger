@@ -23,17 +23,18 @@ import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
+import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 
 import com.google.common.collect.Lists;
-import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 
 public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
+	public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
 	Collection<AuthzAuditEvent> auditEvents  = null;
 	boolean                     deniedExists = false;
 
@@ -63,6 +64,8 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 		if(result instanceof RangerDataMaskResult) {
 			accessType = ((RangerDataMaskResult)result).getMaskType();
+		} else if(result instanceof RangerRowFilterResult) {
+			accessType = ACCESS_TYPE_ROWFILTER;
 		} else {
 			if (request instanceof RangerHiveAccessRequest) {
 				RangerHiveAccessRequest hiveRequest = (RangerHiveAccessRequest) request;

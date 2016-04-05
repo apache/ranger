@@ -59,6 +59,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
+import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -469,12 +470,37 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 	@Override
 	public String getRowFilterExpression(String databaseName, String tableOrViewName) throws SemanticException {
+		UserGroupInformation ugi = getCurrentUserGroupInfo();
+
+		if(ugi == null) {
+			throw new SemanticException("user information not available");
+		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> getRowFilterExpression(" + databaseName + ", " + tableOrViewName + ")");
 		}
 
 		String ret = null;
 
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+
+		try {
+			HiveAuthzContext        context        = null; // TODO: this should be provided as an argument to this method
+			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
+			String                  user           = ugi.getShortUserName();
+			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
+			HiveObjectType          objectType     = HiveObjectType.TABLE;
+			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName);
+			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
+
+			RangerRowFilterResult result = hivePlugin.evalRowFilterPolicies(request, auditHandler);
+
+			if(result != null && result.isRowFilterEnabled()) {
+				ret = result.getFilterExpr();
+			}
+		} finally {
+			auditHandler.flushAudit();
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== getRowFilterExpression(" + databaseName + ", " + tableOrViewName + "): " + ret);
