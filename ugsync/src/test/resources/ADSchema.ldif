@@ -69,6 +69,39 @@ m-equality: caseIgnoreMatch
 m-syntax: 1.3.6.1.4.1.1466.115.121.1.15
 m-singleValue: TRUE
 
+dn: m-oid=1.6.840.113556.1.4.221, ou=attributetypes, cn=microsoft, ou=schema
+changetype: add
+objectclass: metaAttributeType
+objectclass: metaTop
+objectclass: top
+m-oid: 1.6.840.113556.1.4.221
+m-name: memberuid
+m-equality: caseIgnoreMatch
+m-syntax: 1.3.6.1.4.1.1466.115.121.1.15
+m-singleValue: FALSE
+
+dn: m-oid=1.7.840.113556.1.4.221, ou=attributetypes, cn=microsoft, ou=schema
+changetype: add
+objectclass: metaAttributeType
+objectclass: metaTop
+objectclass: top
+m-oid: 1.7.840.113556.1.4.221
+m-name: gidNumber
+m-equality: caseIgnoreMatch
+m-syntax: 1.3.6.1.4.1.1466.115.121.1.15
+m-singleValue: FALSE
+
+dn: m-oid=1.8.840.113556.1.4.221, ou=attributetypes, cn=microsoft, ou=schema
+changetype: add
+objectclass: metaAttributeType
+objectclass: metaTop
+objectclass: top
+m-oid: 1.8.840.113556.1.4.221
+m-name: uidNumber
+m-equality: caseIgnoreMatch
+m-syntax: 1.3.6.1.4.1.1466.115.121.1.15
+m-singleValue: FALSE
+
 dn: ou=objectclasses, cn=microsoft, ou=schema
 changetype: add
 objectclass: organizationalUnit
@@ -86,6 +119,37 @@ m-supObjectClass: top
 m-typeObjectClass: AUXILIARY
 m-must: sAMAccountName
 
+dn: m-oid=1.3.6.1.1.1.2.2,ou=objectClasses,cn=microsoft,ou=schema
+changetype: add
+m-must: cn
+m-must: gidNumber
+m-oid: 1.3.6.1.1.1.2.2
+m-supobjectclass: top
+objectclass: metaObjectClass
+objectclass: metaTop
+objectclass: top
+m-name: posixGroup
+m-typeobjectclass: STRUCTURAL
+m-may: userPassword
+m-may: memberUid
+m-may: description
+
+dn: m-oid=1.3.6.1.1.1.2.0,ou=objectClasses,cn=microsoft,ou=schema
+changetype: add
+m-must: cn
+m-must: uid
+m-may: uidNumber
+m-must: gidNumber
+m-oid: 1.3.6.1.1.1.2.0
+m-supobjectclass: top
+objectclass: metaObjectClass
+objectclass: metaTop
+objectclass: top
+m-name: posixAccount
+m-typeobjectclass: AUXILIARY
+m-may: userPassword
+m-may: description
+
 dn: CN=Users,DC=ranger,DC=qe,DC=hortonworks,DC=com
 changetype: add
 objectClass: extensibleObject
@@ -96,6 +160,14 @@ description: Default container for upgraded user accounts
 distinguishedName: CN=Users,DC=ranger,DC=qe,DC=hortonworks,DC=com
 sn: Users
 sAMAccountName: Users
+
+dn: OU=people,DC=ranger,DC=qe,DC=hortonworks,DC=com
+changetype: add
+objectClass: extensibleObject
+objectClass: top
+objectClass: organizationalUnit
+ou: people
+distinguishedName: OU=people,DC=ranger,DC=qe,DC=hortonworks,DC=com
 
 dn: OU=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com
 changetype: add
@@ -129,6 +201,13 @@ objectClass: organizationalUnit
 ou: Groups
 distinguishedName: OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
 
+dn: OU=pGroups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+changetype: add
+objectClass: extensibleObject
+objectClass: top
+objectClass: organizationalUnit
+ou: pGroups
+distinguishedName: OU=pGroups,DC=ranger,DC=qe,DC=hortonworks,DC=com
 
 dn: CN=HdpUser1,OU=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com
 changetype: add
@@ -2498,3 +2577,48 @@ distinguishedName: CN=Group21,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
 sAMAccountName: Group21
 sn: Group21
 #groupType: -2147483644
+
+dn: uid=pUser1000,ou=People,DC=ranger,DC=qe,DC=hortonworks,DC=com
+changetype: add
+objectClass: top
+objectClass: organizationalUnit
+objectClass: posixAccount
+#objectClass: shadowAccount
+ou: People
+uid: pUser1000
+cn: pUser1000
+uidNumber: 1000
+gidNumber: 2000
+
+dn: CN=pGroup2000,OU=pGroups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+changetype: add
+objectClass: extensibleObject
+objectClass: top
+objectClass: posixGroup
+cn: pGroup2000
+memberuid: pUser1000
+distinguishedName: CN=pGroup2000,OU=pGroups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+gidNumber: 2000
+sn: pGroup2000
+
+dn: CN=pGroup2001,OU=pGroups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+changetype: add
+objectClass: extensibleObject
+objectClass: top
+objectClass: posixGroup
+cn: pGroup2001
+memberuid: pUser1000
+distinguishedName: CN=pGroup2001,OU=pGroups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+gidNumber: 2001
+sn: pGroup2001
+
+dn: CN=pGroup2002,OU=pGroups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+changetype: add
+objectClass: extensibleObject
+objectClass: top
+objectClass: posixGroup
+cn: pGroup2002
+memberuid: pUser1000
+distinguishedName: CN=pGroup2002,OU=pGroups,DC=ranger,DC=qe,DC=hortonworks,DC=com
+gidNumber: 2002
+sn: pGroup2002

@@ -929,4 +929,19 @@ public class UserGroupSyncConfig  {
     public void setUserSearchEnabled(boolean userSearchEnabled) {
         prop.setProperty(LGSYNC_USER_SEARCH_ENABLED, String.valueOf(userSearchEnabled));
     }
+    
+    /* Used only for unit testing */
+    public void setUserGroupMemberAttributeName(String groupMemberAttrName) {
+        prop.setProperty(LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME, groupMemberAttrName);
+    }
+    
+    /* Used only for unit testing */
+    public void setUserObjectClass(String userObjectClass) {
+        prop.setProperty(LGSYNC_USER_OBJECT_CLASS, userObjectClass);
+    }
+    
+    /* Used only for unit testing */
+    public void setGroupObjectClass(String groupObjectClass) {
+        prop.setProperty(LGSYNC_GROUP_OBJECT_CLASS, groupObjectClass);
+    }
 }

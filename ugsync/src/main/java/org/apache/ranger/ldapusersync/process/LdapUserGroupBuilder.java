@@ -104,8 +104,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
   Mapper userNameRegExInst = null;
   Mapper groupNameRegExInst = null;
   private Map<String, UserInfo> userGroupMap;
-  private Set<String> usersList;
-
+  
 	public static void main(String[] args) throws Throwable {
 		LdapUserGroupBuilder  ugBuilder = new LdapUserGroupBuilder();
 		ugBuilder.init();
@@ -267,14 +266,12 @@ public class LdapUserGroupBuilder implements UserGroupSource {
     }
     extendedAllGroupsSearchFilter = "(&"  + extendedGroupSearchFilter + ")";
     if (!groupSearchFirstEnabled) {
-      extendedGroupSearchFilter =  "(&"  + extendedGroupSearchFilter + "(" + groupMemberAttributeName + "={0})"  + ")";
+      extendedGroupSearchFilter =  "(&"  + extendedGroupSearchFilter + "(|(" + groupMemberAttributeName + "={0})(" + groupMemberAttributeName + "={1})))";
     }
     groupUserMapSyncEnabled = config.isGroupUserMapSyncEnabled();
 
     groupSearchControls = new SearchControls();
     groupSearchControls.setSearchScope(groupSearchScope);
-    //String[] groupSearchAttributes = new String[]{groupNameAttribute};
-    //groupSearchControls.setReturningAttributes(groupSearchAttributes);
     
     Set<String> groupSearchAttributes = new HashSet<String>();
     groupSearchAttributes.add(groupNameAttribute);
@@ -352,6 +349,18 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 					getGroups(sink, userInfo);
 				}
 				List<String> groupList = userInfo.getGroups();
+				if (userNameCaseConversionFlag) {
+					if (userNameLowerCaseFlag) {
+						userName = userName.toLowerCase() ;
+					}
+					else {
+						userName = userName.toUpperCase() ;
+					}
+				}
+
+				if (userNameRegExInst != null) {
+					userName = userNameRegExInst.transform(userName);
+				}
 				try {
 					sink.addOrUpdateUser(userName, groupList);
 				} catch (Throwable t) {
@@ -371,7 +380,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 				LOG.info("User search is disabled and hence using the group member attribute for username.");
 				// Go through the userInfo map and update ranger admin.
 				for (UserInfo userInfo : userGroupMap.values()) {
-					String userName = userInfo.getUserName();
+					String userName = getShortUserName(userInfo.getUserFullName());
+					List<String> groupList = userInfo.getGroups();
 					if (userNameCaseConversionFlag) {
 						if (userNameLowerCaseFlag) {
 							userName = userName.toLowerCase() ;
@@ -384,7 +394,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 					if (userNameRegExInst != null) {
 						userName = userNameRegExInst.transform(userName);
 					}
-					List<String> groupList = userInfo.getGroups();
+					
 					try {
 						sink.addOrUpdateUser(userName, groupList);
 					} catch (Throwable t) {
@@ -402,7 +412,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		NamingEnumeration<SearchResult> userSearchResultEnum = null;
 		NamingEnumeration<SearchResult> groupSearchResultEnum = null;
 		try {
-			//setConfig();
 			createLdapContext();
 			int total;
 			// Activate paged results
@@ -459,19 +468,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 							continue;
 						}
 
-						if (userNameCaseConversionFlag) {
-							if (userNameLowerCaseFlag) {
-								userName = userName.toLowerCase() ;
-							}
-							else {
-								userName = userName.toUpperCase() ;
-							}
-						}
-
-						if (userNameRegExInst != null) {
-							userName = userNameRegExInst.transform(userName);
-						}
-
 						if (!groupSearchFirstEnabled) {
 							userInfo = new UserInfo(userName, userEntry.getNameInNamespace());
 							Set<String> groups = new HashSet<String>();
@@ -502,6 +498,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 							}
 
 							userInfo.addGroups(groups);
+							
 							//populate the userGroupMap with username, userInfo. 
 							//userInfo contains details of user that will be later used for
 							//group search to compute group membership as well as to call sink.addOrUpdateUser()
@@ -538,13 +535,30 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 							// then update user name in the userInfo map with the value from the search result
 							// and update ranger admin.
 							String userFullName = (userEntry.getNameInNamespace()).toLowerCase();
-							LOG.info("Chekcing if the user " + userFullName + " is part of the retrieved groups");
-							if (usersList != null && usersList.contains(userFullName)) {
+							LOG.debug("Chekcing if the user " + userFullName + " is part of the retrieved groups");
+							
+							userInfo = userGroupMap.get(userFullName);
+							if (userInfo == null) {
+								userInfo = userGroupMap.get(userName.toLowerCase());
+							}
+							if (userInfo != null) {
 								counter++;
-								userInfo = userGroupMap.get(userFullName);
 								LOG.info("Updating username for " + userFullName + " with " + userName);
 								userInfo.updateUserName(userName);
 								List<String> groupList = userInfo.getGroups();
+								if (userNameCaseConversionFlag) {
+									if (userNameLowerCaseFlag) {
+										userName = userName.toLowerCase() ;
+									}
+									else {
+										userName = userName.toUpperCase() ;
+									}
+								}
+
+								if (userNameRegExInst != null) {
+									userName = userNameRegExInst.transform(userName);
+								}
+								
 								try {
 									sink.addOrUpdateUser(userName, groupList);
 								} catch (Throwable t) {
@@ -552,7 +566,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 									+ ", for user: " + userName
 									+ ", groups: " + groupList);
 								}
-							}
+							} 
 						}
 
 					}
@@ -600,9 +614,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	
 	private void getGroups(UserGroupSink sink, UserInfo userInfo) throws Throwable {
 		NamingEnumeration<SearchResult> groupSearchResultEnum = null;
-		usersList = new HashSet<String>();
 		try {
-			//setConfig();
 			createLdapContext();
 			int total;
 			// Activate paged results
@@ -622,7 +634,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						}
 						groupSearchResultEnum = ldapContext
 								.search(groupSearchBase[ou], extendedGroupSearchFilter,
-										new Object[]{userInfo.getUserFullName()},
+										new Object[]{userInfo.getUserFullName(), userInfo.getUserName()},
 										groupSearchControls);
 					} else {
 						// If group based search is enabled, then first retrieve all the groups based on the group configuration. 
@@ -630,7 +642,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 								.search(groupSearchBase[ou], extendedAllGroupsSearchFilter,
 										groupSearchControls);
 					}
-					//Set<String> computedGroups = new HashSet<String>();
 					while (groupSearchResultEnum.hasMore()) {
 						final SearchResult groupEntry = groupSearchResultEnum.next();
 						if (groupEntry != null) {
@@ -674,37 +685,20 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 								}
 								NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
 								while (userEnum.hasMore()) {
-									String userFullName = (String) userEnum.next();
-									if (userFullName == null || userFullName.trim().isEmpty()) {
+									String originalUserFullName = (String) userEnum.next();
+									if (originalUserFullName == null || originalUserFullName.trim().isEmpty()) {
 										continue;
 									}
-									userFullName = userFullName.toLowerCase();
+									String userFullName = originalUserFullName.toLowerCase();
 									userCount++;
-									/* If user search is enabled, then the username is updated later 
-									 * based on the user search config (in getUsers() method) else 
-									 * use user's short name as the username and use that in the map. 
-									 */
-									if (userSearchEnabled) {
-										if (!userGroupMap.containsKey(userFullName)) {
-											userInfo = new UserInfo(userFullName, userFullName);
-											userGroupMap.put(userFullName, userInfo);
-										} else {
-											userInfo = userGroupMap.get(userFullName);
-										}
-										LOG.info("Adding " + gName + " to user " + userInfo.getUserFullName());
-										userInfo.addGroup(gName);
-										usersList.add(userFullName);
+									if (!userGroupMap.containsKey(userFullName)) {
+										userInfo = new UserInfo(userFullName, originalUserFullName); // Preserving the original full name for later
+										userGroupMap.put(userFullName, userInfo);
 									} else {
-										String userShortName = getShortUserName(userFullName);
-										if (!userGroupMap.containsKey(userShortName)) {
-											userInfo = new UserInfo(userShortName, userFullName);
-											userGroupMap.put(userShortName, userInfo);
-										} else {
-											userInfo = userGroupMap.get(userShortName);
-										}
-										LOG.debug("Adding " + gName + " to user " + userInfo.getUserName());
-										userInfo.addGroup(gName);
+										userInfo = userGroupMap.get(userFullName);
 									}
+									LOG.info("Adding " + gName + " to user " + userInfo.getUserFullName());
+									userInfo.addGroup(gName);
 								}
 								LOG.info("No. of members in the group " + gName + " = " + userCount);
 							}
