@@ -301,7 +301,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 
 		if(tagServiceDef == null) {
-			LOG.error("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes(" + serviceDef.getName() + "): could not fund TAG ServiceDef.. ");
+			LOG.error("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes(" + serviceDef.getName() + "): could not find TAG ServiceDef.. ");
 
 			return;
 		}
@@ -417,12 +417,12 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		try {
 			tagServiceDef = this.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
 		} catch (Exception e) {
-			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes(" + serviceDefName + "): could not fund TAG ServiceDef.. ", e);
+			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes(" + serviceDefName + "): could not find TAG ServiceDef.. ", e);
 			throw e;
 		}
 
 		if(tagServiceDef == null) {
-			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes(" + serviceDefName + "): could not fund TAG ServiceDef.. ");
+			LOG.error("AbstractServiceStore.updateTagServiceDefForDeletingAccessTypes(" + serviceDefName + "): could not find TAG ServiceDef.. ");
 
 			return;
 		}

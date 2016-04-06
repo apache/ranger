@@ -1256,16 +1256,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 				if (xxUser != null) {
 					vXUser = xUserService.populateViewBean(xxUser);
 				} else {
-					vXUser = new VXUser();
-					vXUser.setName(userName);
-					vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
-
 					UserSessionBase usb = ContextUtil.getCurrentUserSession();
 					if (usb != null && !usb.isUserAdmin()) {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-					vXUser = xUserMgr.createXUser(vXUser);
+					vXUser = xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 
@@ -1426,15 +1422,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 				if (xxUser != null) {
 					vXUser = xUserService.populateViewBean(xxUser);
 				} else {
-					vXUser = new VXUser();
-					vXUser.setName(userName);
-					vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 					UserSessionBase usb = ContextUtil.getCurrentUserSession();
 					if (usb != null && !usb.isUserAdmin()) {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-					vXUser = xUserMgr.createXUser(vXUser);
+					vXUser = xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 
