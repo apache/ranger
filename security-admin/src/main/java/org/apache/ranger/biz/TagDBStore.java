@@ -88,6 +88,7 @@ public class TagDBStore extends AbstractTagStore {
 	@Autowired
 	GUIDUtil guidUtil;
 
+
 	@Override
 	public RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -531,6 +532,24 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	@Override
+	public void deleteServiceResourceByGuid(String guid) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.deleteServiceResourceByGuid(" + guid + ")");
+		}
+
+		RangerServiceResource resource = getServiceResourceByGuid(guid);
+
+		if(resource != null) {
+			deleteResourceForServiceResource(resource.getId());
+			rangerServiceResourceService.delete(resource);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.deleteServiceResourceByGuid(" + guid + ")");
+		}
+	}
+
+	@Override
 	public RangerServiceResource getServiceResource(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.getServiceResource(" + id + ")");
@@ -576,6 +595,27 @@ public class TagDBStore extends AbstractTagStore {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.getServiceResourcesByService(" + serviceName + "): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@Override
+	public List<String> getServiceResourceGuidsByService(String serviceName) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.getServiceResourceGuidsByService(" + serviceName + ")");
+		}
+
+		List<String> ret = null;
+
+		XXService service = daoManager.getXXService().findByName(serviceName);
+
+		if (service != null) {
+			ret = daoManager.getXXServiceResource().findServiceResourceGuidsInServiceId(service.getId());
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.getServiceResourceGuidsByService(" + serviceName + "): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;

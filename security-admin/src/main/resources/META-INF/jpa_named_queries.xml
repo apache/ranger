@@ -967,6 +967,10 @@
 		<query>select obj from XXServiceResource obj where obj.serviceId = :serviceId and obj.resourceSignature = :resourceSignature</query>
 	</named-query>
 
+	<named-query name="XXServiceResource.findServiceResourceGuidsInServiceId">
+		<query>select obj.guid from XXServiceResource obj where obj.serviceId = :serviceId</query>
+	</named-query>
+
 	<!-- End <== JPA Queries for Tag Based Policies  -->
 	<named-query name="XXTrxLog.getMaxIdOfXXTrxLog">
 		<query>select max(obj.id) from XXTrxLog obj</query>

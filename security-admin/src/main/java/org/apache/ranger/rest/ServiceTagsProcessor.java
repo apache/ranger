@@ -165,9 +165,10 @@ public class ServiceTagsProcessor {
 					RangerServiceResource resourceInStore = null;
 
 					if (existing == null) {
-						resource.setResourceSignature(resourceSignature);
 
+						resource.setResourceSignature(resourceSignature);
 						resourceInStore = tagStore.createServiceResource(resource);
+
 					} else if (StringUtils.isEmpty(resource.getServiceName()) || MapUtils.isEmpty(resource.getResourceElements())) {
 						resourceInStore = existing;
 					} else {
@@ -499,15 +500,59 @@ public class ServiceTagsProcessor {
 		}
 	}
 
-	// Delete all tagdef, tag, serviceResource and tagResourceMaps and then add all objects in provided ServiceTagsids
 	private void replace(ServiceTags serviceTags) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceTagsProcessor.replace()");
 		}
 
-		tagStore.deleteAllTagObjectsForService(serviceTags.getServiceName());
+		// Delete those service-resources which are in ranger database but not in provided service-tags
+
+		Map<String, RangerServiceResource> serviceResourcesInServiceTagsMap = new HashMap<String, RangerServiceResource>();
+
+		List<RangerServiceResource> serviceResourcesInServiceTags = serviceTags.getServiceResources();
+
+		for (RangerServiceResource rangerServiceResource : serviceResourcesInServiceTags) {
+			String guid = rangerServiceResource.getGuid();
+
+			if(serviceResourcesInServiceTagsMap.containsKey(guid)) {
+				LOG.warn("duplicate service-resource found: guid=" + guid);
+			}
+
+			serviceResourcesInServiceTagsMap.put(guid, rangerServiceResource);
+		}
+
+		List<String> serviceResourcesInDb = tagStore.getServiceResourceGuidsByService(serviceTags.getServiceName());
+
+		for (String dbServiceResourceGuid : serviceResourcesInDb) {
+
+			if (! serviceResourcesInServiceTagsMap.containsKey(dbServiceResourceGuid)) {
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Deleting serviceResource(guid=" + dbServiceResourceGuid + ") and its tag-associations...");
+				}
+
+				List<RangerTagResourceMap> tagResourceMaps = tagStore.getTagResourceMapsForResourceGuid(dbServiceResourceGuid);
+
+				if (CollectionUtils.isNotEmpty(tagResourceMaps)) {
+					for (RangerTagResourceMap tagResourceMap : tagResourceMaps) {
+						tagStore.deleteTagResourceMap(tagResourceMap.getId());
+					}
+				}
+
+				tagStore.deleteServiceResourceByGuid(dbServiceResourceGuid);
+			}
+
+		}
+
+		// Add/update resources and other tag-model objects provided in service-tags
 
 		addOrUpdate(serviceTags);
+
+		// All private tags at this point are associated with some service-resource and shared
+		// tags cannot be deleted as they belong to some other service. In any case, any tags that
+		// are not associated with service-resource will not be downloaded to plugin.
+
+		// Tag-defs cannot be deleted as there may be a shared tag that it refers to it.
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceTagsProcessor.replace()");

@@ -146,6 +146,12 @@ public class AtlasNotificationMapper {
 			}
 		}
 
+		if (MapUtils.isNotEmpty(ret)) {
+			for (Map.Entry<String, ServiceTags> entry : ret.entrySet()) {
+				ServiceTags serviceTags = entry.getValue();
+				serviceTags.setOp(ServiceTags.OP_REPLACE);
+			}
+		}
 		return ret;
 	}
 

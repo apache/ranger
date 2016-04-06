@@ -83,4 +83,16 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 			return new ArrayList<XXServiceResource>();
 		}
 	}
+
+	public List<String> findServiceResourceGuidsInServiceId(Long serviceId) {
+		if (serviceId == null) {
+			return new ArrayList<String>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXServiceResource.findServiceResourceGuidsInServiceId", String.class)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<String>();
+		}
+	}
 }

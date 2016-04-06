@@ -665,6 +665,26 @@ public class TagFileStore extends AbstractTagStore {
 	}
 
 	@Override
+	public void deleteServiceResourceByGuid(String guid) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagFileStore.deleteServiceResourceByGuid(" + guid + ")");
+		}
+
+		try {
+			RangerServiceResource resource = getServiceResourceByGuid(guid);
+
+			deleteServiceResource(resource);
+		} catch (Exception excp) {
+			throw new Exception("failed to delete service-resource with GUID=" + guid, excp);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagFileStore.deleteServiceResourceByGuid(" + guid + ")");
+		}
+
+	}
+
+	@Override
 	public RangerServiceResource getServiceResource(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagFileStore.getServiceResource(" + id + ")");
@@ -726,6 +746,33 @@ public class TagFileStore extends AbstractTagStore {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagFileStore.getServiceResourcesByService(" + serviceName + "): count=" + (ret == null ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	@Override
+	public List<String> getServiceResourceGuidsByService(String serviceName) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagFileStore.getServiceResourceGuidsByService(" + serviceName + ")");
+		}
+
+		List<String> ret = null;
+
+		if (StringUtils.isNotBlank(serviceName)) {
+			List<RangerServiceResource> serviceResources = this.getServiceResourcesByService(serviceName);
+
+			if(CollectionUtils.isNotEmpty(serviceResources)) {
+				ret = new ArrayList<String>(serviceResources.size());
+
+				for(RangerServiceResource serviceResource : serviceResources) {
+					ret.add(serviceResource.getGuid());
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagFileStore.getServiceResourceGuidsByService(" + serviceName + "): count=" + (ret == null ? 0 : ret.size()));
 		}
 
 		return ret;

@@ -85,11 +85,15 @@ public interface TagStore {
 
     void deleteServiceResource(Long id) throws Exception;
 
+    void deleteServiceResourceByGuid(String guid) throws Exception;
+
     RangerServiceResource getServiceResource(Long id) throws Exception;
 
     RangerServiceResource getServiceResourceByGuid(String guid) throws Exception;
 
     List<RangerServiceResource> getServiceResourcesByService(String serviceName) throws Exception;
+
+    List<String> getServiceResourceGuidsByService(String serviceName) throws Exception;
 
     RangerServiceResource getServiceResourceByServiceAndResourceSignature(String serviceName, String resourceSignature) throws Exception;
 
