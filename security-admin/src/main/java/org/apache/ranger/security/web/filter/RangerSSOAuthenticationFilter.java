@@ -393,7 +393,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		boolean valid = false;
 		try {
 			Date expires = jwtToken.getJWTClaimsSet().getExpirationTime();
-			if (expires != null && new Date().before(expires)) {
+			if (expires == null || new Date().before(expires)) {
 				if(LOG.isDebugEnabled())
 					LOG.debug("SSO token expiration date has been " + "successfully validated");
 				valid = true;
