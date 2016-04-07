@@ -214,14 +214,6 @@
 
 	"policyConditions": 
 	[
-	  {
-		"itemId":1,
-		"name":"resources-accessed-together",
-		"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerHiveResourcesAccessedTogetherCondition",
-		"evaluatorOptions" : {},
-		"label":"Hive Resources Accessed Together?",
-		"description": "List of Hive resources"
-	  }
 	],
 	"dataMaskDef": {
 		"accessTypes": [
