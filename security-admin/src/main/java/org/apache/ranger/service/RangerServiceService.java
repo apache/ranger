@@ -20,6 +20,7 @@ package org.apache.ranger.service;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +33,12 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
+import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,7 +110,6 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 			configs.put(svcConfMap.getConfigkey(), configValue);
 		}
 		vService.setConfigs(configs);
-		
 		return vService;
 	}
 	
@@ -291,4 +293,35 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		return configs;
 	}
 
+	public RangerService postCreate(XXService xObj) {
+		XXServiceVersionInfo serviceVersionInfo = new XXServiceVersionInfo();
+
+		serviceVersionInfo.setServiceId(xObj.getId());
+		serviceVersionInfo.setPolicyVersion(1L);
+		serviceVersionInfo.setTagVersion(1L);
+		Date now = new Date();
+		serviceVersionInfo.setPolicyUpdateTime(now);
+		serviceVersionInfo.setTagUpdateTime(now);
+
+		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
+
+		XXServiceVersionInfo createdServiceVersionInfo = serviceVersionInfoDao.create(serviceVersionInfo);
+
+		return createdServiceVersionInfo != null ? super.postCreate(xObj) : null;
+	}
+
+	protected XXService preDelete(Long id) {
+		XXService ret = super.preDelete(id);
+
+		if (ret != null) {
+			XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
+
+			XXServiceVersionInfo serviceVersionInfo = serviceVersionInfoDao.findByServiceId(id);
+
+			if (serviceVersionInfo != null) {
+				serviceVersionInfoDao.remove(serviceVersionInfo.getId());
+			}
+		}
+		return ret;
+	}
 }

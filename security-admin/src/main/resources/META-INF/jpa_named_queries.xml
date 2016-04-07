@@ -402,25 +402,35 @@
 		<query>select obj from XXService obj where obj.tagService = :tagServiceId</query>
 	</named-query>
 
-	<named-query name="XXService.findByServiceResourceId">
+	<!-- XXServiceVersionInfo -->
+	<named-query name="XXServiceVersionInfo.findByServiceName">
 		<query>
-			select obj from XXService obj where obj.id in
-			  (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes
-			    where res.id = :resourceId and res.id = tagRes.resourceId)
+			select obj from XXServiceVersionInfo obj, XXService service where obj.serviceId = service.id and service.name = :serviceName
 		</query>
 	</named-query>
 
-	<named-query name="XXService.findByTagId">
+	<named-query name="XXServiceVersionInfo.findByServiceId">
+		<query>select obj from XXServiceVersionInfo obj where obj.serviceId = :serviceId</query>
+	</named-query>
+
+	<named-query name="XXServiceVersionInfo.findByServiceResourceId">
 		<query>
-			select obj from XXService obj where obj.id in
-			  (select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag
-			    where res.id = tagRes.resourceId and tagRes.tagId = tag.id and tag.id = :tagId)
+			select obj from XXServiceVersionInfo obj where obj.serviceId in
+			(select res.serviceId from XXServiceResource res where res.id = :resourceId)
 		</query>
 	</named-query>
 
-	<named-query name="XXService.findByTagDefId">
+	<named-query name="XXServiceVersionInfo.findByTagId">
 		<query>
-			select obj from XXService obj where obj.id in
+			select obj from XXServiceVersionInfo obj where obj.serviceId in
+			(select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes
+			where res.id = tagRes.resourceId and tagRes.tagId = :tagId)
+		</query>
+	</named-query>
+
+	<named-query name="XXServiceVersionInfo.findByTagDefId">
+		<query>
+			select obj from XXServiceVersionInfo obj where obj.serviceId in
 			(select res.serviceId from XXServiceResource res, XXTagResourceMap tagRes, XXTag tag
 			where res.id = tagRes.resourceId and tagRes.tagId = tag.id and tag.type = :tagDefId)
 		</query>

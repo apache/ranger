@@ -32,8 +32,10 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDefDao;
+import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -168,6 +170,19 @@ public class TestRangerServiceServiceBase {
 		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
 		RangerService rangerService = rangerService();
 		XXService service = service();
+
+		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+
+		XXServiceVersionInfo serviceVersionInfo = new XXServiceVersionInfo();
+		serviceVersionInfo.setServiceId(service.getId());
+		serviceVersionInfo.setPolicyVersion(service.getPolicyVersion());
+		serviceVersionInfo.setPolicyUpdateTime(service.getPolicyUpdateTime());
+		serviceVersionInfo.setTagVersion(service.getTagVersion());
+		serviceVersionInfo.setPolicyUpdateTime(service.getTagUpdateTime());
+
+		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		Mockito.when(xServiceVersionInfoDao.findByServiceId(service.getId())).thenReturn(
+				serviceVersionInfo);
 
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
 		Mockito.when(xServiceDefDao.getById(service.getType())).thenReturn(

@@ -32,10 +32,12 @@ import org.apache.ranger.db.XXServiceConfigMapDao;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
 
+import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerService;
 
@@ -197,6 +199,19 @@ public class TestRangerServiceService {
 		xServiceDef.setGuid("1427365526516_835_0");
 		xServiceDef.setId(userId);
 
+		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+
+		XXServiceVersionInfo serviceVersionInfo = new XXServiceVersionInfo();
+		serviceVersionInfo.setServiceId(xService.getId());
+		serviceVersionInfo.setPolicyVersion(xService.getPolicyVersion());
+		serviceVersionInfo.setPolicyUpdateTime(xService.getPolicyUpdateTime());
+		serviceVersionInfo.setTagVersion(xService.getTagVersion());
+		serviceVersionInfo.setTagUpdateTime(xService.getTagUpdateTime());
+
+		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		Mockito.when(xServiceVersionInfoDao.findByServiceId(xService.getId())).thenReturn(
+				serviceVersionInfo);
+
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
 		Mockito.when(xPortalUserDao.getById(userId)).thenReturn(tUser);
 
@@ -263,6 +278,19 @@ public class TestRangerServiceService {
 		xServiceDef.setDescription("test");
 		xServiceDef.setGuid("1427365526516_835_0");
 		xServiceDef.setId(userId);
+
+		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+
+		XXServiceVersionInfo serviceVersionInfo = new XXServiceVersionInfo();
+		serviceVersionInfo.setServiceId(xService.getId());
+		serviceVersionInfo.setPolicyVersion(xService.getPolicyVersion());
+		serviceVersionInfo.setPolicyUpdateTime(xService.getPolicyUpdateTime());
+		serviceVersionInfo.setTagVersion(xService.getTagVersion());
+		serviceVersionInfo.setTagUpdateTime(xService.getTagUpdateTime());
+
+		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		Mockito.when(xServiceVersionInfoDao.findByServiceId(xService.getId())).thenReturn(
+				serviceVersionInfo);
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
 		Mockito.when(xPortalUserDao.getById(userId)).thenReturn(tUser);
@@ -336,6 +364,19 @@ public class TestRangerServiceService {
 		xServiceDef.setDescription("test");
 		xServiceDef.setGuid("1427365526516_835_0");
 		xServiceDef.setId(userId);
+
+		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+
+		XXServiceVersionInfo serviceVersionInfo = new XXServiceVersionInfo();
+		serviceVersionInfo.setServiceId(xService.getId());
+		serviceVersionInfo.setPolicyVersion(xService.getPolicyVersion());
+		serviceVersionInfo.setPolicyUpdateTime(xService.getPolicyUpdateTime());
+		serviceVersionInfo.setTagVersion(xService.getTagVersion());
+		serviceVersionInfo.setTagUpdateTime(xService.getTagUpdateTime());
+
+		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		Mockito.when(xServiceVersionInfoDao.findByServiceId(xService.getId())).thenReturn(
+				serviceVersionInfo);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getAll()).thenReturn(xServiceList);

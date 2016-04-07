@@ -31,6 +31,7 @@ import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerServiceList;
@@ -92,10 +93,9 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		xObj.setType(xServiceDef.getId());
 		xObj.setName(vObj.getName());
 		xObj.setTagService(tagServiceId);
-		xObj.setPolicyVersion(vObj.getPolicyVersion());
-		xObj.setTagVersion(vObj.getTagVersion());
-		xObj.setPolicyUpdateTime(vObj.getPolicyUpdateTime());
-		xObj.setTagUpdateTime(vObj.getTagUpdateTime());
+		if (OPERATION_CONTEXT == OPERATION_CREATE_CONTEXT) {
+			xObj.setTagVersion(vObj.getTagVersion());
+		}
 		xObj.setDescription(vObj.getDescription());
 		xObj.setIsEnabled(vObj.getIsEnabled());
 		return xObj;
@@ -112,10 +112,18 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		vObj.setName(xObj.getName());
 		vObj.setDescription(xObj.getDescription());
 		vObj.setTagService(xTagService != null ? xTagService.getName() : null);
-		vObj.setPolicyVersion(xObj.getPolicyVersion());
-		vObj.setTagVersion(xObj.getTagVersion());
-		vObj.setPolicyUpdateTime(xObj.getPolicyUpdateTime());
-		vObj.setTagUpdateTime(xObj.getTagUpdateTime());
+		XXServiceVersionInfo versionInfoObj = daoMgr.getXXServiceVersionInfo().findByServiceId(xObj.getId());
+		if (versionInfoObj != null) {
+			vObj.setPolicyVersion(versionInfoObj.getPolicyVersion());
+			vObj.setTagVersion(versionInfoObj.getTagVersion());
+			vObj.setPolicyUpdateTime(versionInfoObj.getPolicyUpdateTime());
+			vObj.setTagUpdateTime(versionInfoObj.getTagUpdateTime());
+		} else {
+			vObj.setPolicyVersion(xObj.getPolicyVersion());
+			vObj.setTagVersion(xObj.getTagVersion());
+			vObj.setPolicyUpdateTime(xObj.getPolicyUpdateTime());
+			vObj.setTagUpdateTime(xObj.getTagUpdateTime());
+		}
 		vObj.setIsEnabled(xObj.getIsenabled());
 		return vObj;
 	}

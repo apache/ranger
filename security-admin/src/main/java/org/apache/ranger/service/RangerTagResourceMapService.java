@@ -54,7 +54,7 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
 	public RangerTagResourceMap postCreate(XXTagResourceMap tagResMap) {
 		RangerTagResourceMap ret = super.postCreate(tagResMap);
 
-		daoMgr.getXXService().updateServiceForTagUpdate(tagResMap.getTagId(), tagResMap.getUpdateTime());
+		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForServiceResourceUpdate(tagResMap.getResourceId(), tagResMap.getUpdateTime());
 
 		return ret;
 	}
@@ -63,7 +63,7 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
 	public RangerTagResourceMap postUpdate(XXTagResourceMap tagResMap) {
 		RangerTagResourceMap ret = super.postUpdate(tagResMap);
 
-		daoMgr.getXXService().updateServiceForTagUpdate(tagResMap.getTagId(), tagResMap.getUpdateTime());
+		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForServiceResourceUpdate(tagResMap.getResourceId(), tagResMap.getUpdateTime());
 
 		return ret;
 	}
@@ -73,7 +73,7 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
 		XXTagResourceMap tagResMap = super.preDelete(id);
 
 		if (tagResMap != null) {
-			daoMgr.getXXService().updateServiceForServiceResourceUpdate(tagResMap.getResourceId(), null);
+			daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForServiceResourceUpdate(tagResMap.getResourceId(), null);
 		}
 
 		return tagResMap;

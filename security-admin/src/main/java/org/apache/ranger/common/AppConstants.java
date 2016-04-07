@@ -589,9 +589,14 @@ public class AppConstants extends RangerCommonEnums {
 	public static final int CLASS_TYPE_RANGER_POLICY_ITEM_ROWFILTER_INFO = 1051;
 
 	/**
+	 * CLASS_TYPE_XA_SERVICE_VERSION_INFO is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_SERVICE_VERSION_INFO".
+	 */
+	public static final int CLASS_TYPE_XA_SERVICE_VERSION_INFO = 1052;
+
+	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1051;
+	public static final int ClassTypes_MAX = 1052;
 	
 	/***************************************************************
 	 * Enum values for Default SortOrder
@@ -952,6 +957,9 @@ public class AppConstants extends RangerCommonEnums {
 		}
 		if( elementValue == 1033 ) {
 			return "XA Service Def"; //CLASS_TYPE_XA_SERVICE_DEF
+		}
+		if( elementValue == 1052 ) {
+			return "XA Service Version Info"; //CLASS_TYPE_XA_SERVICE_VERSION_INFO
 		}
 		return null;
 	}

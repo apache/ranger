@@ -195,7 +195,9 @@ public abstract class RangerDaoManagerBase {
 		if (classType== AppConstants.CLASS_TYPE_RANGER_POLICY_ITEM_ROWFILTER_INFO) {
 			return getXXPolicyItemRowFilterInfo();
 		}
-
+		if (classType== AppConstants.CLASS_TYPE_XA_SERVICE_VERSION_INFO) {
+			return getXXServiceVersionInfo();
+		}
 		logger.error("No DaoManager found for classType=" + classType, new Throwable());
 		return null;
 	}
@@ -358,7 +360,9 @@ public abstract class RangerDaoManagerBase {
 		if (className.equals("XXPolicyItemRowFilterInfo")) {
 			return getXXPolicyItemRowFilterInfo();
 		}
-
+		if (className.equals("XXServiceVersionInfo")) {
+			return getXXServiceVersionInfo();
+		}
 		logger.error("No DaoManager found for className=" + className, new Throwable());
 		return null;
 	}
@@ -576,5 +580,8 @@ public abstract class RangerDaoManagerBase {
 		return new XXPolicyItemRowFilterInfoDao(this);
 	}
 
+	public XXServiceVersionInfoDao getXXServiceVersionInfo() {
+		return new XXServiceVersionInfoDao(this);
+	}
 }
 

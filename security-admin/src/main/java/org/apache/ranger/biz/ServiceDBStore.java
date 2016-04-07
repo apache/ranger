@@ -1404,10 +1404,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setCreateTime(existing.getCreateTime());
 			service.setGuid(existing.getGuid());
 			service.setVersion(existing.getVersion());
-			service.setPolicyUpdateTime(existing.getPolicyUpdateTime());
-			service.setPolicyVersion(existing.getPolicyVersion());
-			service.setTagVersion(existing.getTagVersion());
-			service.setTagUpdateTime(existing.getTagUpdateTime());
 
 			service = svcService.update(service);
 
@@ -2052,7 +2048,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw new Exception("service does not exist. name=" + serviceName);
 		}
 
-		if (lastKnownVersion == null || serviceDbObj.getPolicyVersion() == null || !lastKnownVersion.equals(serviceDbObj.getPolicyVersion())) {
+		XXServiceVersionInfo serviceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
+
+		if (serviceVersionInfoDbObj == null) {
+			LOG.warn("serviceVersionInfo does not exist. name=" + serviceName);
+		}
+
+		if (lastKnownVersion == null || serviceVersionInfoDbObj == null || serviceVersionInfoDbObj.getPolicyVersion() == null || !lastKnownVersion.equals(serviceVersionInfoDbObj.getPolicyVersion())) {
 			ret = RangerServicePoliciesCache.getInstance().getServicePolicies(serviceName, this);
 		}
 
@@ -2075,9 +2077,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Override
 	public Long getServicePolicyVersion(String serviceName) {
 
-		XXService serviceDbObj = daoMgr.getXXService().findByName(serviceName);
+		XXServiceVersionInfo serviceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
 
-		return serviceDbObj != null ? serviceDbObj.getPolicyVersion() : null;
+		return serviceVersionInfoDbObj != null ? serviceVersionInfoDbObj.getPolicyVersion() : null;
 	}
 
 	@Override
@@ -2092,6 +2094,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		if (serviceDbObj == null) {
 			throw new Exception("service does not exist. name=" + serviceName);
+		}
+
+		XXServiceVersionInfo serviceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
+
+		if (serviceVersionInfoDbObj == null) {
+			LOG.warn("serviceVersionInfo does not exist. name=" + serviceName);
 		}
 
 		RangerServiceDef serviceDef = getServiceDef(serviceDbObj.getType());
@@ -2113,12 +2121,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 						throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
 					}
 
+					XXServiceVersionInfo tagServiceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceId(serviceDbObj.getTagService());
+
+					if (tagServiceVersionInfoDbObj == null) {
+						LOG.warn("serviceVersionInfo does not exist. name=" + tagServiceDbObj.getName());
+					}
 					tagPolicies = new ServicePolicies.TagPolicies();
 
 					tagPolicies.setServiceId(tagServiceDbObj.getId());
 					tagPolicies.setServiceName(tagServiceDbObj.getName());
-					tagPolicies.setPolicyVersion(tagServiceDbObj.getPolicyVersion());
-					tagPolicies.setPolicyUpdateTime(tagServiceDbObj.getPolicyUpdateTime());
+					tagPolicies.setPolicyVersion(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyVersion());
+					tagPolicies.setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
 					tagPolicies.setPolicies(getServicePoliciesFromDb(tagServiceDbObj));
 					tagPolicies.setServiceDef(tagServiceDef);
 				}
@@ -2134,8 +2147,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		ret.setServiceId(serviceDbObj.getId());
 		ret.setServiceName(serviceDbObj.getName());
-		ret.setPolicyVersion(serviceDbObj.getPolicyVersion());
-		ret.setPolicyUpdateTime(serviceDbObj.getPolicyUpdateTime());
+		ret.setPolicyVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyVersion());
+		ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
 		ret.setPolicies(policies);
 		ret.setServiceDef(serviceDef);
 		ret.setTagPolicies(tagPolicies);
@@ -2404,20 +2417,34 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXServiceDao serviceDao = daoMgr.getXXService();
 
 		XXService serviceDbObj = serviceDao.getById(service.getId());
-
 		if(serviceDbObj == null) {
 			LOG.warn("updatePolicyVersion(serviceId=" + service.getId() + "): service not found");
 
 			return;
 		}
 
-		service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
-		service.setPolicyUpdateTime(new Date());
+		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
 
-		serviceDbObj.setPolicyVersion(service.getPolicyVersion());
-		serviceDbObj.setPolicyUpdateTime(service.getPolicyUpdateTime());
+		XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(service.getId());
 
-		serviceDao.update(serviceDbObj);
+		if(serviceVersionInfoDbObj != null) {
+			serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceVersionInfoDbObj.getPolicyVersion()));
+			serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
+
+			serviceVersionInfoDao.update(serviceVersionInfoDbObj);
+
+		} else {
+			LOG.warn("updatePolicyVersion(service=" + serviceDbObj.getName() + "): serviceVersionInfo not found, creating it..");
+
+			serviceVersionInfoDbObj = new XXServiceVersionInfo();
+			serviceVersionInfoDbObj.setServiceId(serviceDbObj.getId());
+			serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceDbObj.getPolicyVersion()));
+			serviceVersionInfoDbObj.setTagVersion(serviceDbObj.getTagVersion());
+			serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
+			serviceVersionInfoDbObj.setTagUpdateTime(serviceDbObj.getTagUpdateTime());
+
+			serviceVersionInfoDao.create(serviceVersionInfoDbObj);
+		}
 
 		// if this is a tag service, update all services that refer to this tag service
 		// so that next policy-download from plugins will get updated tag policies
@@ -2427,10 +2454,25 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			if(CollectionUtils.isNotEmpty(referringServices)) {
 				for(XXService referringService : referringServices) {
-					referringService.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
-					referringService.setPolicyUpdateTime(service.getPolicyUpdateTime());
 
-					serviceDao.update(referringService);
+					serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(referringService.getId());
+					if (serviceVersionInfoDbObj != null) {
+
+						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceVersionInfoDbObj.getPolicyVersion()));
+						serviceVersionInfoDbObj.setPolicyUpdateTime(service.getPolicyUpdateTime());
+
+						serviceVersionInfoDao.update(serviceVersionInfoDbObj);
+					} else {
+						LOG.warn("updatePolicyVersion(service=" + referringService.getName() + "): serviceVersionInfo not found, creating it..");
+						serviceVersionInfoDbObj = new XXServiceVersionInfo();
+						serviceVersionInfoDbObj.setServiceId(referringService.getId());
+						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
+						serviceVersionInfoDbObj.setTagVersion(referringService.getTagVersion());
+						serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
+						serviceVersionInfoDbObj.setTagUpdateTime(referringService.getTagUpdateTime());
+
+						serviceVersionInfoDao.create(serviceVersionInfoDbObj);
+					}
 				}
 			}
 		}
@@ -2766,25 +2808,52 @@ public class ServiceDBStore extends AbstractServiceStore {
 		boolean isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
 		XXServiceDao serviceDao = daoMgr.getXXService();
+		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
 
 		List<XXService> services = serviceDao.findByServiceDefId(serviceDef.getId());
 
 		if(CollectionUtils.isNotEmpty(services)) {
 			for(XXService service : services) {
-				service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
-				service.setPolicyUpdateTime(serviceDef.getUpdateTime());
+				XXServiceVersionInfo serviceVersionInfo = serviceVersionInfoDao.findByServiceId(service.getId());
+				if (serviceVersionInfo != null) {
+					serviceVersionInfo.setPolicyVersion(getNextVersion(serviceVersionInfo.getPolicyVersion()));
+					serviceVersionInfo.setPolicyUpdateTime(serviceDef.getUpdateTime());
 
-				serviceDao.update(service);
+					serviceVersionInfoDao.update(serviceVersionInfo);
+				} else {
+					LOG.warn("updateServicesForServiceDefUpdate(service=" + service.getName() + "): serviceVersionInfo not found, creating it..");
+					serviceVersionInfo = new XXServiceVersionInfo();
+					serviceVersionInfo.setServiceId(service.getId());
+					serviceVersionInfo.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
+					serviceVersionInfo.setTagVersion(service.getTagVersion());
+					serviceVersionInfo.setPolicyUpdateTime(new Date());
+					serviceVersionInfo.setTagUpdateTime(service.getTagUpdateTime());
+
+					serviceVersionInfoDao.create(serviceVersionInfo);
+				}
 
 				if(isTagServiceDef) {
 					List<XXService> referrringServices = serviceDao.findByTagServiceId(service.getId());
 
 					if(CollectionUtils.isNotEmpty(referrringServices)) {
 						for(XXService referringService : referrringServices) {
-							referringService.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
-							referringService.setPolicyUpdateTime(serviceDef.getUpdateTime());
+							serviceVersionInfo = serviceVersionInfoDao.findByServiceId(referringService.getId());
+							if (serviceVersionInfo != null) {
+								serviceVersionInfo.setPolicyVersion(getNextVersion(serviceVersionInfo.getPolicyVersion()));
+								serviceVersionInfo.setPolicyUpdateTime(serviceDef.getUpdateTime());
 
-							serviceDao.update(referringService);
+								serviceVersionInfoDao.update(serviceVersionInfo);
+							} else {
+								LOG.warn("updateServicesForServiceDefUpdate(service=" + referringService.getName() + "): serviceVersionInfo not found, creating it..");
+								serviceVersionInfo = new XXServiceVersionInfo();
+								serviceVersionInfo.setServiceId(referringService.getId());
+								serviceVersionInfo.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
+								serviceVersionInfo.setTagVersion(referringService.getTagVersion());
+								serviceVersionInfo.setPolicyUpdateTime(new Date());
+								serviceVersionInfo.setTagUpdateTime(referringService.getTagUpdateTime());
+
+								serviceVersionInfoDao.create(serviceVersionInfo);
+							}
 						}
 					}
 				}

@@ -39,6 +39,7 @@ import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceResource;
+import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTagAttributeDef;
@@ -909,7 +910,13 @@ public class TagDBStore extends AbstractTagStore {
 			throw new Exception("service does not exist. name=" + serviceName);
 		}
 
-		if (lastKnownVersion == null || xxService.getTagVersion() == null || !lastKnownVersion.equals(xxService.getTagVersion())) {
+		XXServiceVersionInfo serviceVersionInfoDbObj = daoManager.getXXServiceVersionInfo().findByServiceName(serviceName);
+
+		if (serviceVersionInfoDbObj == null) {
+			LOG.warn("serviceVersionInfo does not exist. name=" + serviceName);
+		}
+
+		if (lastKnownVersion == null || serviceVersionInfoDbObj == null || serviceVersionInfoDbObj.getTagVersion() == null || !lastKnownVersion.equals(serviceVersionInfoDbObj.getTagVersion())) {
 			ret = RangerServiceTagsCache.getInstance().getServiceTags(serviceName, this);
 		}
 
@@ -932,9 +939,9 @@ public class TagDBStore extends AbstractTagStore {
 	@Override
 	public Long getTagVersion(String serviceName) {
 
-		XXService serviceDbObj = daoManager.getXXService().findByName(serviceName);
+		XXServiceVersionInfo serviceVersionInfoDbObj = daoManager.getXXServiceVersionInfo().findByServiceName(serviceName);
 
-		return serviceDbObj != null ? serviceDbObj.getTagVersion() : null;
+		return serviceVersionInfoDbObj != null ? serviceVersionInfoDbObj.getTagVersion() : null;
 	}
 
 	@Override
@@ -950,6 +957,12 @@ public class TagDBStore extends AbstractTagStore {
 
 		if (xxService == null) {
 			throw new Exception("service does not exist. name=" + serviceName);
+		}
+
+		XXServiceVersionInfo serviceVersionInfoDbObj = daoManager.getXXServiceVersionInfo().findByServiceName(serviceName);
+
+		if (serviceVersionInfoDbObj == null) {
+			LOG.warn("serviceVersionInfo does not exist for service [" + serviceName + "]");
 		}
 
 		RangerServiceDef serviceDef = svcStore.getServiceDef(xxService.getType());
@@ -992,8 +1005,8 @@ public class TagDBStore extends AbstractTagStore {
 		ret = new ServiceTags();
 
 		ret.setServiceName(xxService.getName());
-		ret.setTagVersion(xxService.getTagVersion());
-		ret.setTagUpdateTime(xxService.getTagUpdateTime());
+		ret.setTagVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getTagVersion());
+		ret.setTagUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getTagUpdateTime());
 		ret.setTagDefinitions(tagDefMap);
 		ret.setTags(tagMap);
 		ret.setServiceResources(resources);

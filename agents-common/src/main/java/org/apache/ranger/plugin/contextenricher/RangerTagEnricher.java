@@ -339,8 +339,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 				if (serviceTags != null) {
 					tagEnricher.setServiceTags(serviceTags);
+					lastKnownVersion = serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion();
 					LOG.info("RangerTagRefresher.populateTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
-					lastKnownVersion = serviceTags.getTagVersion();
 					hasProvidedTagsToReceiver = true;
 				} else {
 					if (LOG.isDebugEnabled()) {
