@@ -814,16 +814,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(isPolicyItemTypeEnabled(serviceDef, policyItemType)) {
 			if (policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW) {
 				policyItems = policy.getPolicyItems();
-
-				if (isPolicyItemTypeEnabled(serviceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS)) {
-					policyItems = mergeLists(policyItems, policy.getDenyExceptions());
-				}
 			} else if (policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
 				policyItems = policy.getDenyPolicyItems();
-
-				if (isPolicyItemTypeEnabled(serviceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS)) {
-					policyItems = mergeLists(policyItems, policy.getAllowExceptions());
-				}
 			} else if (policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS) {
 				policyItems = policy.getAllowExceptions();
 			} else if (policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
@@ -998,21 +990,5 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         }
 
         return ret;
-	}
-
-	private <T> List<T> mergeLists(List<T> list1, List<T> list2) {
-		List<T> ret = null;
-
-		if(CollectionUtils.isEmpty(list1)) {
-			ret = list2;
-		} else if(CollectionUtils.isEmpty(list2)) {
-			ret = list1;
-		} else {
-			ret = new ArrayList<T>(list1);
-
-			ret.addAll(list2);
-		}
-
-		return ret;
 	}
 }
