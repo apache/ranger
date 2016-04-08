@@ -22,9 +22,10 @@ package org.apache.ranger.authorization.hive.authorizer;
 import java.util.Date;
 import java.util.Set;
 
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
+import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.QueryContext;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -42,8 +43,9 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 								   Set<String>             userGroups,
 								   String                  hiveOpTypeName,
 								   HiveAccessType          accessType,
-								   HiveAuthzContext        context,
-								   HiveAuthzSessionContext sessionContext) {
+								   QueryContext            context,
+								   HiveAuthzSessionContext sessionContext,
+								   HiveAuthenticationProvider hiveAuthenticator) {
 		this.setResource(resource);
 		this.setUser(user);
 		this.setUserGroups(userGroups);
@@ -51,10 +53,13 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		this.setAction(hiveOpTypeName);
 		
 		if(context != null) {
-			this.setClientIPAddress(context.getIpAddress());
 			this.setRequestData(context.getCommandString());
 		}
-		
+
+		if(hiveAuthenticator != null) {
+			this.setClientIPAddress(hiveAuthenticator.getUserIpAddress());
+		}
+
 		if(sessionContext != null) {
 			this.setClientType(sessionContext.getClientType() == null ? null : sessionContext.getClientType().toString());
 			this.setSessionId(sessionContext.getSessionString());
@@ -76,13 +81,14 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 			   Set<String>             userGroups,
 			   HiveOperationType       hiveOpType,
 			   HiveAccessType          accessType,
-			   HiveAuthzContext        context,
-			   HiveAuthzSessionContext sessionContext) {
-		this(resource, user, userGroups, hiveOpType.name(), accessType, context, sessionContext);
+			   QueryContext            context,
+			   HiveAuthzSessionContext sessionContext,
+			   HiveAuthenticationProvider hiveAuthenticator) {
+		this(resource, user, userGroups, hiveOpType.name(), accessType, context, sessionContext, hiveAuthenticator);
 	}
 
-	public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> groups, HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
-		this(resource, user, groups, "METADATA OPERATION", HiveAccessType.USE, context, sessionContext);
+	public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> groups, QueryContext context, HiveAuthzSessionContext sessionContext, HiveAuthenticationProvider hiveAuthenticator) {
+		this(resource, user, groups, "METADATA OPERATION", HiveAccessType.USE, context, sessionContext, hiveAuthenticator);
 	}
 
 	public HiveAccessType getHiveAccessType() {
