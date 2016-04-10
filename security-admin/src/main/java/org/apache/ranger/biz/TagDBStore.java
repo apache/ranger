@@ -50,6 +50,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerAuditFields;
@@ -470,6 +471,12 @@ public class TagDBStore extends AbstractTagStore {
 			LOG.debug("==> TagDBStore.createServiceResource(" + resource + ")");
 		}
 
+		if (StringUtils.isEmpty(resource.getResourceSignature())) {
+			RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
+
+			resource.setResourceSignature(serializer.getSignature());
+		}
+
 		RangerServiceResource ret = rangerServiceResourceService.create(resource);
 
 		createResourceForServiceResource(ret.getId(), resource);
@@ -495,14 +502,26 @@ public class TagDBStore extends AbstractTagStore {
 			throw errorUtil.createRESTException("failed to update tag [" + resource.getId() + "], Reason: No resource found with id: [" + resource.getId() + "]", MessageEnums.DATA_NOT_UPDATABLE);
 		}
 
+		if (StringUtils.isEmpty(resource.getResourceSignature())) {
+			RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
+
+			resource.setResourceSignature(serializer.getSignature());
+		}
+
+		boolean serviceResourceElementUpdateNeeded =
+				!StringUtils.equals(existing.getResourceSignature(), resource.getResourceSignature());
+
 		resource.setCreatedBy(existing.getCreatedBy());
 		resource.setCreateTime(existing.getCreateTime());
 		resource.setGuid(existing.getGuid());
 		resource.setVersion(existing.getVersion());
 
 		rangerServiceResourceService.update(resource);
-		deleteResourceForServiceResource(existing.getId());
-		createResourceForServiceResource(existing.getId(), resource);
+
+		if (serviceResourceElementUpdateNeeded) {
+			deleteResourceForServiceResource(existing.getId());
+			createResourceForServiceResource(existing.getId(), resource);
+		}
 
 		RangerServiceResource ret = rangerServiceResourceService.read(existing.getId());
 

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
@@ -33,6 +34,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RangerServiceResourceService extends RangerServiceResourceServiceBase<XXServiceResource, RangerServiceResource> {
+
+	private boolean serviceUpdateNeeded = true;
 
 	public RangerServiceResourceService() {
 		searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
@@ -47,18 +50,25 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
 
 	@Override
 	protected void validateForUpdate(RangerServiceResource vObj, XXServiceResource entityObj) {
-
+		if (StringUtils.equals(entityObj.getGuid(), vObj.getGuid()) &&
+				StringUtils.equals(entityObj.getResourceSignature(), vObj.getResourceSignature())) {
+			serviceUpdateNeeded = false;
+		} else {
+			serviceUpdateNeeded = true;
+		}
 	}
 
 	@Override
 	public RangerServiceResource postUpdate(XXServiceResource resource) {
 		RangerServiceResource ret = super.postUpdate(resource);
 
-		daoMgr.getXXService().updateServiceForServiceResourceUpdate(resource.getId(), resource.getUpdateTime());
+		if (serviceUpdateNeeded) {
+			daoMgr.getXXService().updateServiceForServiceResourceUpdate(resource.getId(), resource.getUpdateTime());
+		}
 
 		return ret;
 	}
-	
+
 	public RangerServiceResource getPopulatedViewObject(XXServiceResource xObj) {
 		return populateViewBean(xObj);
 	}

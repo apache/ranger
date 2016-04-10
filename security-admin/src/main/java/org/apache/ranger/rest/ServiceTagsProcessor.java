@@ -147,26 +147,16 @@ public class ServiceTagsProcessor {
 							RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
 
 							resourceSignature = serializer.getSignature();
+							resource.setResourceSignature(resourceSignature);
 
 							existing = tagStore.getServiceResourceByServiceAndResourceSignature(resource.getServiceName(), resourceSignature);
 						}
-					}
-
-					if(existing != null) {
-						resourceSignature = existing.getResourceSignature();
-					}
-
-					if(StringUtils.isEmpty(resourceSignature)) {
-						RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
-
-						resourceSignature = serializer.getSignature();
 					}
 
 					RangerServiceResource resourceInStore = null;
 
 					if (existing == null) {
 
-						resource.setResourceSignature(resourceSignature);
 						resourceInStore = tagStore.createServiceResource(resource);
 
 					} else if (StringUtils.isEmpty(resource.getServiceName()) || MapUtils.isEmpty(resource.getResourceElements())) {
@@ -174,7 +164,6 @@ public class ServiceTagsProcessor {
 					} else {
 						resource.setId(existing.getId());
 						resource.setGuid(existing.getGuid());
-						resource.setResourceSignature(resourceSignature);
 
 						resourceInStore = tagStore.updateServiceResource(resource);
 					}
