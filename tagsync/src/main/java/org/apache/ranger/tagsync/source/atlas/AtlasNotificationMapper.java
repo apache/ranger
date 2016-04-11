@@ -79,19 +79,21 @@ public class AtlasNotificationMapper {
 
 		EntityNotification.OperationType opType = entityNotification.getOperationType();
 
-		switch (opType) {
-			case ENTITY_CREATE: {
-				LOG.debug("ENTITY_CREATE notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
-				break;
+		if(opType != null) {
+			switch (opType) {
+				case ENTITY_CREATE: {
+					LOG.debug("ENTITY_CREATE notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
+					break;
+				}
+				case ENTITY_UPDATE:
+				case TRAIT_ADD:
+				case TRAIT_DELETE: {
+					ret = true;
+					break;
+				}
+				default:
+					LOG.error(opType + ": unknown notification received - not handled");
 			}
-			case ENTITY_UPDATE:
-			case TRAIT_ADD:
-			case TRAIT_DELETE: {
-				ret = true;
-				break;
-			}
-			default:
-				LOG.error(opType + ": unknown notification received - not handled");
 		}
 
 		return ret;
