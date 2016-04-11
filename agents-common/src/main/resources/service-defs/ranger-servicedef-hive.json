@@ -289,8 +289,8 @@
 			{
 				"itemId": 5,
 				"name": "MASK_DATE_DAY",
-				"label": "Date: show only month and year",
-				"description": "Date: show only month and year",
+				"label": "Date: mask day",
+				"description": "Date: mask day",
 				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
 				"dataMaskOptions": {
 					"initParam": "day=1; month=-1; year=-1"
@@ -299,8 +299,8 @@
 			{
 				"itemId": 6,
 				"name": "MASK_DATE_MONTH",
-				"label": "Date: show only day and year",
-				"description": "Date: show only day and year",
+				"label": "Date: mask month",
+				"description": "Date: mask month",
 				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
 				"dataMaskOptions": {
 					"initParam": "day=-1; month=0; year=-1"
@@ -309,8 +309,8 @@
 			{
 				"itemId": 7,
 				"name": "MASK_DATE_YEAR",
-				"label": "Date: show only day and month",
-				"description": "Date: show only day and month",
+				"label": "Date: mask year",
+				"description": "Date: mask year",
 				"transformer": "org.apache.ranger.authorization.hive.udf.MaskTransformer",
 				"dataMaskOptions": {
 					"initParam": "day=-1; month=-1; year=0"

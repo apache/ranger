@@ -471,15 +471,58 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	}
 
 	@Override
-	public List<HivePrivilegeObject> applyRowFilterAndColumnMasking(QueryContext queryContext, List<HivePrivilegeObject> list) throws SemanticException {
-		List<HivePrivilegeObject> ret = list;
+	public List<HivePrivilegeObject> applyRowFilterAndColumnMasking(QueryContext queryContext, List<HivePrivilegeObject> hiveObjs) throws SemanticException {
+		List<HivePrivilegeObject> ret = new ArrayList<HivePrivilegeObject>();
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> applyRowFilterAndColumnMasking(" + queryContext + ", " + list + ")");
+			LOG.debug("==> applyRowFilterAndColumnMasking(" + queryContext + ", objCount=" + hiveObjs.size() + ")");
+		}
+
+		if(CollectionUtils.isNotEmpty(hiveObjs)) {
+			for (HivePrivilegeObject hiveObj : hiveObjs) {
+				HivePrivilegeObjectType hiveObjType = hiveObj.getType();
+
+				if(hiveObjType == null) {
+					hiveObjType = HivePrivilegeObjectType.TABLE_OR_VIEW;
+				}
+
+				LOG.debug("applyRowFilterAndColumnMasking(hiveObjType=" + hiveObjType + ")");
+
+				if (hiveObjType == HivePrivilegeObjectType.DATABASE || hiveObjType == HivePrivilegeObjectType.TABLE_OR_VIEW) {
+					String database = hiveObj.getDbname();
+					String table    = hiveObj.getObjectName();
+
+					String rowFilterExpr = getRowFilterExpression(database, table);
+
+					if (StringUtils.isNotBlank(rowFilterExpr)) {
+						LOG.debug("rowFilter(database=" + database + ", table=" + table + "): " + rowFilterExpr);
+
+						hiveObj.setRowFilterExpression(rowFilterExpr);
+					}
+
+					if (CollectionUtils.isNotEmpty(hiveObj.getColumns())) {
+						List<String> columnTransformers = new ArrayList<String>();
+
+						for (String column : hiveObj.getColumns()) {
+							String columnTransformer = getCellValueTransformer(database, table, column);
+
+							if(StringUtils.isNotEmpty(columnTransformer)) {
+								LOG.debug("columnTransformer(database=" + database + ", table=" + table + ", column=" + column + "): " + columnTransformer);
+							}
+
+							columnTransformers.add(columnTransformer);
+						}
+
+						hiveObj.setCellValueTransformers(columnTransformers);
+					}
+				}
+
+				ret.add(hiveObj);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== applyRowFilterAndColumnMasking(" + queryContext + ", " + list + "): " + ret);
+			LOG.debug("<== applyRowFilterAndColumnMasking(" + queryContext + ", objCount=" + hiveObjs.size() + "): retCount=" + ret.size());
 		}
 
 		return ret;
