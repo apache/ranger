@@ -486,9 +486,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					hiveObjType = HivePrivilegeObjectType.TABLE_OR_VIEW;
 				}
 
-				LOG.debug("applyRowFilterAndColumnMasking(hiveObjType=" + hiveObjType + ")");
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("applyRowFilterAndColumnMasking(hiveObjType=" + hiveObjType + ")");
+				}
 
-				if (hiveObjType == HivePrivilegeObjectType.DATABASE || hiveObjType == HivePrivilegeObjectType.TABLE_OR_VIEW) {
+				if (hiveObjType == HivePrivilegeObjectType.TABLE_OR_VIEW) {
 					String database = hiveObj.getDbname();
 					String table    = hiveObj.getObjectName();
 
