@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
 
@@ -113,4 +114,18 @@ public class DateUtil {
 		utc.add(Calendar.MILLISECOND, offset);
 		return utc.getTime();
 	}
+
+	public static Date stringToDate(String dateString, String dateFromat){
+		SimpleDateFormat simpleDateFormat = null;
+		Date date = null;
+		if(!StringUtils.isEmpty(dateString) && !StringUtils.isEmpty(dateFromat)){
+			try{
+				simpleDateFormat = new SimpleDateFormat(dateFromat);
+				date = simpleDateFormat.parse(dateString);
+			}catch(Exception ex){
+				return null;
+			}
+		}
+	    return date;
+	  }
 }

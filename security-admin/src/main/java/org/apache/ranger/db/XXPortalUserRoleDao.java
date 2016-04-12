@@ -56,4 +56,18 @@ public class XXPortalUserRoleDao extends BaseDao<XXPortalUserRole> {
 		}
 		return null;
 	}
+	@SuppressWarnings("unchecked")
+	public List<String> findXPortalUserRolebyXPortalUserId(Long userId) {
+		if (userId == null) {
+			return new ArrayList<String>();
+		}
+		try {
+			List<String> returnList = getEntityManager()
+					.createNamedQuery("XXPortalUserRole.findXPortalUserRolebyXPortalUserId")
+					.setParameter("userId", userId).getResultList();
+			return returnList;
+		} catch (NoResultException e) {
+			return new ArrayList<String>();
+		}
+	}
 }

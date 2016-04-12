@@ -1005,4 +1005,12 @@
 	<named-query name="XXAccessAudit.getByIdRange">
 		<query>select obj from XXAccessAudit obj WHERE obj.id &gt; :idFrom AND obj.id &lt; :idTo</query>
     </named-query>
+	<named-query name="XXDataHist.findLatestByObjectClassTypeAndObjectIdAndEventTime">
+		<query>select obj from XXDataHist obj where obj.objectId = :objectId and 
+		obj.objectClassType = :classType and 
+		obj.createTime &lt;= :createTime ORDER BY obj.id DESC</query>
+	</named-query>
+	<named-query name="XXPortalUserRole.findXPortalUserRolebyXPortalUserId">
+		<query>select obj.userRole from XXPortalUserRole obj where obj.userId = :userId</query>
+	</named-query>
 </entity-mappings>
