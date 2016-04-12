@@ -207,9 +207,19 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					continue;
 				}
 
-				String userName = tokens[0];
-				String userId = tokens[2];
-				String groupId = tokens[3];
+				String userName = null ;
+				String userId = null ;
+				String groupId = null ;
+
+				try {
+					userName = tokens[0];
+					userId = tokens[2];
+					groupId = tokens[3];
+				}
+				catch(ArrayIndexOutOfBoundsException aiobe) {
+					LOG.warn("Ignoring line - [" + line + "]: Unable to parse line for getting user information", aiobe) ;
+					continue ;
+				}
 
 				int numUserId = -1;
 
