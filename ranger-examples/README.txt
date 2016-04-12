@@ -39,16 +39,16 @@
    $ cd ranger-examples
    $ mvn clean compile package assembly:assembly
    # Following files created by the build will be required to setup SampleApp:
-     target/ranger-examples-0.6.0-sampleapp.tar.gz
-     target/ranger-examples-0.6.0-sampleapp-plugin.tar.gz
+     target/ranger-examples-<version>-sampleapp.tar.gz
+     target/ranger-examples-<version>-sampleapp-plugin.tar.gz
 
 5. Setup SampleApp
    # Create a empty directory to setup the application
    $ mkdir /tmp/sampleapp
    $ cd /tmp/sampleapp
-   $ tar xvfz ranger-examples-0.6.0-sampleapp.tar.gz
+   $ tar xvfz ranger-examples-<version>-sampleapp.tar.gz
    # add Ranger authorizer bits
-   $ tar xvfz ranger-examples-0.6.0-sampleapp-plugin.tar.gz
+   $ tar xvfz ranger-examples-<version>-sampleapp-plugin.tar.gz
    # Review and update properties in conf/ranger-sampleapp-security.xml, especially the following:
      - ranger.plugin.sampleapp.policy.rest.url
      - ranger.plugin.sampleapp.service.name
