@@ -18,13 +18,11 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
-import javax.persistence.Query;
-
-import org.apache.ranger.biz.RangerBizUtil;
-import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXDataHist;
 
@@ -53,26 +51,17 @@ public class XXDataHistDao extends BaseDao<XXDataHist> {
 		if (eventTime == null || objId == null) {
 			return null;
 		}
+		Date date=DateUtil.stringToDate(eventTime,"yyyy-MM-dd'T'HH:mm:ss'Z'");
+		if(date==null){
+			return null;
+		}
 		try {
-
-			int dbFlavor = RangerBizUtil.getDBFlavor();
-
-			String queryStr = "";
-
-			if (dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
-				queryStr = "select obj.* from x_data_hist obj where obj.obj_class_type = " + classType
-						+ " and obj.obj_id = " + objId
-						+ " and to_date(obj.create_time, 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') <= to_date('" + eventTime
-						+ "', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') ORDER BY obj.id DESC";
-			} else {
-				queryStr = "select obj.* from x_data_hist obj where obj.obj_class_type = " + classType
-						+ " and obj.obj_id = " + objId + " and obj.create_time <= '" + eventTime
-						+ "' ORDER BY obj.id DESC";
-			}
-
-			Query jpaQuery = getEntityManager().createNativeQuery(queryStr, tClass).setMaxResults(1);
-			
-			return (XXDataHist) jpaQuery.getSingleResult();
+			return getEntityManager()
+				.createNamedQuery("XXDataHist.findLatestByObjectClassTypeAndObjectIdAndEventTime", tClass)
+				.setParameter("classType", classType)
+				.setParameter("objectId", objId)
+				.setParameter("createTime", date)
+				.setMaxResults(1).getSingleResult();
 		} catch (NoResultException e) {
 			return null;
 		}

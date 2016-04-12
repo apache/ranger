@@ -101,17 +101,4 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 		}
 
 	}
-	@SuppressWarnings("unchecked")
-	public List<String> findXPortalUserRolebyXPortalUserId(Long userId)
-	{
-		try {
-			return getEntityManager()
-					.createNativeQuery("select user_role from x_portal_user_role where user_id="+userId+"")
-					.getResultList();
-
-		} catch (Exception e) {
-			return null;
-		}
-
-	}
 }
