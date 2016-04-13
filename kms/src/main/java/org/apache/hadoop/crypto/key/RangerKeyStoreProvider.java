@@ -64,6 +64,9 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	private static final String MK_CREDENTIAL_ALIAS = "ranger.ks.masterkey.credential.alias";
 	private static final String DB_CREDENTIAL_ALIAS = "ranger.ks.jpa.jdbc.credential.alias";
 	private static final String DB_PASSWORD = "ranger.ks.jpa.jdbc.password";
+	private static final String HSM_ENABLED = "ranger.ks.hsm.enabled";
+	private static final String HSM_PARTITION_PASSWORD_ALIAS = "ranger.ks.hsm.partition.password.alias";
+	private static final String HSM_PARTITION_PASSWORD = "ranger.ks.hsm.partition.password";
 	
 	private final RangerKeyStore dbStore;
 	private char[] masterKey;
@@ -78,14 +81,25 @@ public class RangerKeyStoreProvider extends KeyProvider{
 		conf = getDBKSConf();
 		getFromJceks(conf,CREDENTIAL_PATH, MK_CREDENTIAL_ALIAS, ENCRYPTION_KEY);
 		getFromJceks(conf,CREDENTIAL_PATH, DB_CREDENTIAL_ALIAS, DB_PASSWORD);
+		getFromJceks(conf,CREDENTIAL_PATH, HSM_PARTITION_PASSWORD_ALIAS, HSM_PARTITION_PASSWORD);
 		RangerKMSDB rangerKMSDB = new RangerKMSDB(conf);
 		daoManager = rangerKMSDB.getDaoManager();
-		RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);		
-		dbStore = new RangerKeyStore(daoManager);		
+		
+		RangerKMSMKI rangerMasterKey = null;
 		String password = conf.get(ENCRYPTION_KEY);
 		if(password == null || password.trim().equals("") || password.trim().equals("_") || password.trim().equals("crypted")){
 			throw new IOException("Master Key Jceks does not exists");
 		}
+		if(conf.get(HSM_ENABLED).equalsIgnoreCase("false")){
+			rangerMasterKey = new RangerMasterKey(daoManager);
+		}else{
+			rangerMasterKey = new RangerHSM(conf);
+			String partitionPasswd = conf.get(HSM_PARTITION_PASSWORD);
+			if(partitionPasswd == null || partitionPasswd.trim().equals("") || partitionPasswd.trim().equals("_") || partitionPasswd.trim().equals("crypted")){
+				throw new IOException("Partition Password doesn't exists");
+			}
+		}
+		dbStore = new RangerKeyStore(daoManager);
 		rangerMasterKey.generateMasterKey(password);		
 		//code to retrieve rangerMasterKey password		
 		masterKey = rangerMasterKey.getMasterKey(password).toCharArray();
