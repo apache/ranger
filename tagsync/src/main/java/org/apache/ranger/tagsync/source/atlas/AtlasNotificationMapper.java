@@ -25,9 +25,9 @@ import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.atlas.typesystem.IStruct;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
@@ -39,6 +39,7 @@ import java.util.*;
 public class AtlasNotificationMapper {
 	private static final Log LOG = LogFactory.getLog(AtlasNotificationMapper.class);
 
+	@SuppressWarnings("unchecked")
 	public static ServiceTags processEntityNotification(EntityNotification entityNotification) {
 
 		ServiceTags ret = null;
@@ -47,13 +48,22 @@ public class AtlasNotificationMapper {
 			try {
 				IReferenceableInstance entity = entityNotification.getEntity();
 
-				if (AtlasResourceMapperUtil.isEntityTypeHandled(entity.getTypeName())) {
-					AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entityNotification.getEntity(), entityNotification.getAllTraits());
-					ret = buildServiceTags(entityWithTraits, null);
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Ranger not interested in Entity Notification for entity-type " + entityNotification.getEntity().getTypeName());
+				if (entity != null) {
+					if (AtlasResourceMapperUtil.isEntityTypeHandled(entity.getTypeName())) {
+						AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entityNotification.getEntity(), entityNotification.getAllTraits());
+						if (entityNotification.getOperationType() == EntityNotification.OperationType.ENTITY_DELETE) {
+							// Special case for ENTITY_DELETE notifications
+							ret = buildServiceTagsForEntityDeleteNotification(entityWithTraits);
+						} else {
+							ret = buildServiceTags(entityWithTraits, null);
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Ranger not interested in Entity Notification for entity-type " + entityNotification.getEntity().getTypeName());
+						}
 					}
+				} else {
+					LOG.error("EntityNotification contains NULL entity");
 				}
 			} catch (Exception exception) {
 				LOG.error("createServiceTags() failed!! ", exception);
@@ -86,6 +96,7 @@ public class AtlasNotificationMapper {
 					break;
 				}
 				case ENTITY_UPDATE:
+				case ENTITY_DELETE:
 				case TRAIT_ADD:
 				case TRAIT_DELETE: {
 					ret = true;
@@ -95,6 +106,30 @@ public class AtlasNotificationMapper {
 					LOG.error(opType + ": unknown notification received - not handled");
 			}
 		}
+
+		return ret;
+	}
+
+	static private ServiceTags buildServiceTagsForEntityDeleteNotification(AtlasEntityWithTraits entityWithTraits) throws Exception {
+		final ServiceTags ret;
+
+		IReferenceableInstance entity = entityWithTraits.getEntity();
+
+		String guid = entity.getId()._getId();
+		if (StringUtils.isNotBlank(guid)) {
+			ret = new ServiceTags();
+			RangerServiceResource serviceResource = new RangerServiceResource();
+			serviceResource.setGuid(guid);
+			ret.getServiceResources().add(serviceResource);
+		} else {
+			ret = buildServiceTags(entityWithTraits, null);
+			// tag-definitions should NOT be deleted as part of service-resource delete
+			ret.setTagDefinitions(MapUtils.EMPTY_MAP);
+			// Ranger deletes tags associated with deleted service-resource
+			ret.setTags(MapUtils.EMPTY_MAP);
+		}
+
+		ret.setOp(ServiceTags.OP_DELETE);
 
 		return ret;
 	}

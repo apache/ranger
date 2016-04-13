@@ -49,7 +49,7 @@ log4jFileName          = 'log4j.properties'
 install2xmlMapFileName = 'installprop2xml.properties'
 templateFileName = 'ranger-tagsync-template.xml'
 initdProgramName = 'ranger-tagsync'
-atlasApplicationPropFileName = 'application.properties'
+atlasApplicationPropFileName = 'atlas-application.properties'
 
 installTemplateDirName = join(installPropDirName,'templates')
 confDistDirName = join(installPropDirName, confDistBaseDirName)

@@ -43,7 +43,7 @@ import java.util.*;
 public class AtlasTagSource extends AbstractTagSource {
 	private static final Log LOG = LogFactory.getLog(AtlasTagSource.class);
 
-	public static final String TAGSYNC_ATLAS_PROPERTIES_FILE_NAME = "application.properties";
+	public static final String TAGSYNC_ATLAS_PROPERTIES_FILE_NAME = "atlas-application.properties";
 
 	public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS = "atlas.kafka.bootstrap.servers";
 	public static final String TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT = "atlas.kafka.zookeeper.connect";

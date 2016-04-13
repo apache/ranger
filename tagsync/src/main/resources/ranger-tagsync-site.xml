@@ -62,10 +62,6 @@
 		<value>60000</value>
 	</property>
 	<property>
-		<name>ranger.tagsync.source.none</name>
-		<value>false</value>
-	</property>
-	<property>
 		<name>ranger.tagsync.atlas.to.ranger.service.mapping</name>
 		<value />
 	</property>

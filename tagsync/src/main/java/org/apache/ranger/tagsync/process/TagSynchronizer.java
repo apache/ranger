@@ -279,7 +279,7 @@ public class TagSynchronizer {
 				className = "org.apache.ranger.tagsync.source.atlas.AtlasTagSource";
 			} else if (tagSourceName.equals("atlasrest")) {
 				className = "org.apache.ranger.tagsync.source.atlasrest.AtlasRESTTagSource";
-			} else if (!tagSourceName.equalsIgnoreCase(TagSource.TAG_SOURCE_NONE)) {
+			} else {
 				LOG.error("tagSource name doesn't have any class associated with it. tagSourceName="
 						+ tagSourceName + ", propertyPrefix=" + propPrefix);
 			}

@@ -428,8 +428,24 @@ public class ServiceTagsProcessor {
 		if (CollectionUtils.isNotEmpty(serviceResources)) {
 
 			for (RangerServiceResource serviceResource : serviceResources) {
+
+				RangerServiceResource objToDelete = null;
+
 				try {
-					RangerServiceResource objToDelete = tagStore.getServiceResourceByGuid(serviceResource.getGuid());
+
+					if (StringUtils.isNotBlank(serviceResource.getGuid())) {
+						objToDelete = tagStore.getServiceResourceByGuid(serviceResource.getGuid());
+					}
+
+					if (objToDelete == null) {
+						if (MapUtils.isNotEmpty(serviceResource.getResourceElements())) {
+							RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(serviceResource);
+
+							String serviceResourceSignature = serializer.getSignature();
+
+							objToDelete = tagStore.getServiceResourceByServiceAndResourceSignature(serviceResource.getServiceName(), serviceResourceSignature);
+						}
+					}
 
 					if (objToDelete != null) {
 
@@ -512,25 +528,27 @@ public class ServiceTagsProcessor {
 
 		List<String> serviceResourcesInDb = tagStore.getServiceResourceGuidsByService(serviceTags.getServiceName());
 
-		for (String dbServiceResourceGuid : serviceResourcesInDb) {
+		if (CollectionUtils.isNotEmpty(serviceResourcesInDb)) {
+			for (String dbServiceResourceGuid : serviceResourcesInDb) {
 
-			if (! serviceResourcesInServiceTagsMap.containsKey(dbServiceResourceGuid)) {
+				if (!serviceResourcesInServiceTagsMap.containsKey(dbServiceResourceGuid)) {
 
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Deleting serviceResource(guid=" + dbServiceResourceGuid + ") and its tag-associations...");
-				}
-
-				List<RangerTagResourceMap> tagResourceMaps = tagStore.getTagResourceMapsForResourceGuid(dbServiceResourceGuid);
-
-				if (CollectionUtils.isNotEmpty(tagResourceMaps)) {
-					for (RangerTagResourceMap tagResourceMap : tagResourceMaps) {
-						tagStore.deleteTagResourceMap(tagResourceMap.getId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Deleting serviceResource(guid=" + dbServiceResourceGuid + ") and its tag-associations...");
 					}
+
+					List<RangerTagResourceMap> tagResourceMaps = tagStore.getTagResourceMapsForResourceGuid(dbServiceResourceGuid);
+
+					if (CollectionUtils.isNotEmpty(tagResourceMaps)) {
+						for (RangerTagResourceMap tagResourceMap : tagResourceMaps) {
+							tagStore.deleteTagResourceMap(tagResourceMap.getId());
+						}
+					}
+
+					tagStore.deleteServiceResourceByGuid(dbServiceResourceGuid);
 				}
 
-				tagStore.deleteServiceResourceByGuid(dbServiceResourceGuid);
 			}
-
 		}
 
 		// Add/update resources and other tag-model objects provided in service-tags
