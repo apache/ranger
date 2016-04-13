@@ -34,7 +34,7 @@
     
     <property>
       <name>ranger.usersync.group.objectclass</name>
-      <value>top</value>
+      <value>groupOfNames</value>
     </property>
     
     <property>
