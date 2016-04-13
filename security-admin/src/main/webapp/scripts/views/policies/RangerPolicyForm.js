@@ -226,8 +226,7 @@ define(function(require){
 				enableDenyAndExceptionsInPolicies = false;
 			//By default hide the PolicyItems for all component except tag component
 			if((!_.isUndefined(serviceDefOptions) && !_.isUndefined(serviceDefOptions.enableDenyAndExceptionsInPolicies))){
-				if( !XAUtil.isAccessPolicy(this.model.get('policyType')) )	return;
-				enableDenyAndExceptionsInPolicies = $.parseJSON(serviceDefOptions.enableDenyAndExceptionsInPolicies);
+				enableDenyAndExceptionsInPolicies = XAUtil.isAccessPolicy(this.model.get('policyType')) && $.parseJSON(serviceDefOptions.enableDenyAndExceptionsInPolicies);
 			} else {
 				if(this.rangerServiceDefModel.get('name') == XAEnums.ServiceType.SERVICE_TAG.label){
 					enableDenyAndExceptionsInPolicies = true;
