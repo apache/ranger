@@ -1177,6 +1177,14 @@ define(function(require) {
 		}
 		return singleValue;
 	};
+	XAUtils.getBaseUrl = function (){
+		if(!window.location.origin){
+			window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
+		}
+		return window.location.origin
+		+ window.location.pathname.substring(window.location.pathname
+				.indexOf('/', 2) + 1, 0);
+	};
 	
 	XAUtils.isMaskingPolicy = function(type){
 		return type == XAEnums.RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ? true : false;

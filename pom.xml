@@ -213,6 +213,7 @@
         <jackson.version>1.9.13</jackson.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <atlas.version>0.6-incubating-SNAPSHOT</atlas.version>
+        <poi.version>3.12</poi.version>
         <distMgmtStagingId>apache.staging.https</distMgmtStagingId>
         <distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
         <distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>

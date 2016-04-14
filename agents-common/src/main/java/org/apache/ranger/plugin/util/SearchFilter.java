@@ -118,6 +118,10 @@ public class SearchFilter {
 
 		params.put(name, value);
 	}
+	public void removeParam(String name) {
+
+		params.remove(name);
+	}
 
 	public Map<String, String> getParamsWithPrefix(String prefix, boolean stripPrefix) {
 		Map<String, String> ret = null;

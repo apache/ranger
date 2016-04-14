@@ -1908,3 +1908,7 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
     margin-top: -2px;
     font-size: 11px;
 }
+.backgrid > tbody > tr > td:nth-child(5) {
+  text-align: left !important;
+  width: 200px
+}

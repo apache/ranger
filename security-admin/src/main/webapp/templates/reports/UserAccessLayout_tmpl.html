@@ -32,12 +32,19 @@
 							</div>
 						</div>
 						<div class="control-group">
-							<label class="control-label">Resource</label>
-							<div class="controls">
-								<input type="text" name="resourceName" data-js="resourceName" class="input-xxlarge">
+							<div class="span4">
+								<label class="control-label" for="component">Component</label>
+								<div class="controls">
+									<input type=text data-id="component" name="componentType">
+								</div>
+						</div>
+						<div class="span4">
+								<label class="control-label" style="width:80px;">Resource</label>
+							 <div class="controls" style="margin-left:90px;">
+								<input type="text" name="resourceName" data-js="resourceName">
 							</div>
 						</div>
-
+					   </div>
 						<div class="control-group search-by">
 							<label class="control-label">Search By</label>
 							<div class="controls" data-js="searchBy">
@@ -73,25 +80,29 @@
 								</button>
 							</div>
 						</div>
-
 					</div>
-
 				</div>
 			</div>
 
 		</div>
 	</div>
-
+	<div class="row-fluid">
+	<a href="javascript:void(0)" data-id="downloadReport">
+	<span>
+		<button type="button" class="btn btn-primary btn-small btn-right" data-js="downloadBtn" title="Download all below policies" name="downloadPolicy">
+								<i class="icon-download-alt"></i>
+										Download
+			</button>
+	</span></a>
+	 </div>
 	<div class="row-fluid">
 		{{#each policyHeaderList}}
-			<h3 class="wrap-header bold reportSearchHeader" data-js="hdfsHeader"> {{capitaliseLetter this.serviceDefName}}
-				<span class="label label-yellow pull-right" data-js="hdfsSearchResult" ></span>
+			<h3 class="wrap-header bold reportSearchHeader" data-js="hdfsHeader" data-compHeader="{{this.serviceDefName}}"> {{capitaliseLetter this.serviceDefName}}
+				<span class="label label-yellow btn-right" data-js="hdfsSearchResult" ></span>
 			</h3>
-			<div class="wrap well position-relative">
+			<div class="wrap well position-relative" data-comp="{{this.serviceDefName}}">
 				<div  data-id="{{this.collName}}" class="hdfs-table showMoreLess"></div>
 			</div>
-		{{/each}}	
-
+		{{/each}}
 	</div>
-
 </div>

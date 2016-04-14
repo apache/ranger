@@ -18,9 +18,13 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
@@ -28,13 +32,16 @@ import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField.SORT_ORDER;
+import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerPolicyList;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends RangerPolicy> extends
 		RangerBaseModelService<T, V> {
@@ -121,12 +128,40 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		List<RangerPolicy> policyList = new ArrayList<RangerPolicy>();
 		RangerPolicyList retList = new RangerPolicyList();
 
+		Comparator<RangerPolicy> comparator = new Comparator<RangerPolicy>() {
+			public int compare(RangerPolicy c1, RangerPolicy c2) {
+				return (int) ((c1.getId()).compareTo(c2.getId()));
+			}
+		};
+
 		List<XXPolicy> xPolList = (List<XXPolicy>) searchResources(searchFilter, searchFields, sortFields, retList);
-		for (XXPolicy xPol : xPolList) {
-			policyList.add(populateViewBean((T) xPol));
+		String userName = searchFilter.getParam("user");
+		if (!StringUtil.isEmpty(userName)) {
+			searchFilter.removeParam("user");
+			Set<String> groupNames = daoMgr.getXXGroupUser().findGroupNamesByUserName(userName);
+			if (!CollectionUtils.isEmpty(groupNames)) {
+				List<XXPolicy> xPolList2 = null;
+				for (String groupName : groupNames) {
+					xPolList2 = new ArrayList<XXPolicy>();
+					searchFilter.setParam("group", groupName);
+					xPolList2 = (List<XXPolicy>) searchResources(searchFilter, searchFields, sortFields, retList);
+					if (!CollectionUtils.isEmpty(xPolList2)) {
+						for (XXPolicy xPol2 : xPolList2) {
+							if(xPol2!=null){
+								policyList.add(populateViewBean((T) xPol2));
+							}
+						}
+					}
+				}
+			}
+		}
+		if (!CollectionUtils.isEmpty(xPolList)) {
+			for (XXPolicy xPol : xPolList) {
+				policyList.add(populateViewBean((T) xPol));
+			}
+			Collections.sort(policyList, comparator);
 		}
 		retList.setPolicies(policyList);
-
 		return retList;
 	}
 }

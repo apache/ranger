@@ -1290,6 +1290,44 @@ public class ServiceREST {
 		return ret;
 	}
 
+	@GET
+	@Path("/policies/downloadExcel")
+	@Produces("application/ms-excel")
+	public void getPoliciesInExcel(@Context HttpServletRequest request,
+			@Context HttpServletResponse response) {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPoliciesInExcel()");
+		}
+		RangerPerfTracer perf = null;
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
+		try {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPoliciesInExcel()");
+			}
+			List<RangerPolicy> policies=new ArrayList<RangerPolicy>();
+			if (filter != null) {
+				filter.setStartIndex(0);
+				filter.setMaxRows(Integer.MAX_VALUE);
+				policies = svcStore.getPoliciesForReports(filter);
+			}
+			svcStore.getPoliciesInExcel(policies, response);
+
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("Error while downloading policy report", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
+
+	}
+
+
 	public List<RangerPolicy> getPolicies(SearchFilter filter) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPolicies(filter)");
