@@ -47,7 +47,8 @@ under the License.
 <body>
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
-	  <item name="News" href="https://cwiki.apache.org/confluence/display/RANGER/News" />
+      <item name="News" href="https://cwiki.apache.org/confluence/display/RANGER/News" />
+      <item name="Download" href="download.html"/>
       <item name="FAQ" href="faq.html"/>
     </menu>
     <menu name="Resources">
@@ -59,12 +60,14 @@ under the License.
     <menu name="Project Information">
         <item name="Project Summary" href="project-summary.html"/>
         <item name="Mailing Lists" href="mail-lists.html"/>
-        <item name ="Team" href="team-list.html"/>
+        <item name="Issue Tracking" href="https://issues.apache.org/jira/browse/RANGER"/>
+        <item name="Team" href="team-list.html"/>
     </menu>
 	<menu name="Releases">
 		<item name="0.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.4.0+Release+Notes" />
 		<item name="0.5.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.5.0+-+Release+Notes" />
 		<item name="0.5.1" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.5.1+-+Release+Notes" />
+		<item name="0.5.2" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.5.2+-+Release+Notes" />
 	</menu>
 </body>
 

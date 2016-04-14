@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<document>
+<body>
+<section name="Download Apache Ranger">
+<subsection name="How to Download">
+<p>
+Use the links below to download a distribution of Apache Ranger from one of our mirrors. 
+It is good practice to verify the integrity of the distribution files. Apache Ranger releases are 
+available under the 
+<a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> - see the 
+LICENSE.txt and NOTICE.txt files contained in each release artifact.
+</p>
+</subsection>
+<subsection name="Current official release (closest mirror site selected automatically)">
+<ul>
+<li>
+<p>
+The current stable release is Apache Ranger 0.5.2:
+</p>
+<p>
+<a href="http://www.apache.org/dyn/closer.lua/incubator/ranger/0.5.2-incubating/apache-ranger-incubating-0.5.2.tar.gz">apache-ranger-incubating-0.5.2.tar.gz</a>
+(<a href="http://www.apache.org/dist/incubator/ranger/0.5.2-incubating/apache-ranger-incubating-0.5.2.tar.gz.asc">PGP</a>)
+(<a href="http://www.apache.org/dist/incubator/ranger/0.5.2-incubating/apache-ranger-incubating-0.5.2.tar.gz.mds">Digests</a>)
+</p>
+</li>
+<li>
+<p>
+The older branch release is Apache Ranger 0.4.0:
+</p>
+<p>
+<a href="http://www.apache.org/dyn/closer.lua/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz">ranger-0.4.0-incubating.tar.gz</a>
+(<a href="http://www.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz.asc">PGP</a>)
+(<a href="http://www.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz.mds">Digests</a>)
+</p>
+</li>
+</ul>
+</subsection>
+<subsection name="Archive of old releases">
+<p>
+Older releases are available in the <a href="http://archive.apache.org/dist/incubator/ranger/">archive</a>.
+</p>
+</subsection>
+</section>
+            
+</body>
+</document>
