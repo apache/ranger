@@ -28,7 +28,7 @@
     <modelVersion>4.0.0</modelVersion>
     
     <groupId>org.incubator.apache.ranger</groupId>
-    <version>0.4</version>
+    <version>0.5.3-SNAPSHOT</version>
     <artifactId>ranger</artifactId>
     <packaging>pom</packaging>
 
@@ -279,10 +279,12 @@
                         <encoding>UTF-8</encoding>
                     </configuration>
                 </plugin>
+				<!--
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>3.3</version>
                 </plugin>
+				-->
                 <plugin>
                     <inherited>true</inherited>
                     <groupId>org.apache.maven.plugins</groupId>
