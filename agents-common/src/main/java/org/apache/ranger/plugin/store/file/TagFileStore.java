@@ -31,6 +31,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagPredicateUtil;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -599,6 +600,12 @@ public class TagFileStore extends AbstractTagStore {
 		try {
 			preCreate(resource);
 
+			if (StringUtils.isEmpty(resource.getResourceSignature())) {
+				RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
+
+				resource.setResourceSignature(serializer.getSignature());
+			}
+
 			resource.setId(nextServiceResourceId);
 
 			ret = fileStoreUtil.saveToFile(resource, new Path(fileStoreUtil.getDataFile(FILE_PREFIX_RESOURCE, nextServiceResourceId++)), false);
@@ -627,6 +634,12 @@ public class TagFileStore extends AbstractTagStore {
 
 		try {
 			preUpdate(resource);
+
+			if (StringUtils.isEmpty(resource.getResourceSignature())) {
+				RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
+
+				resource.setResourceSignature(serializer.getSignature());
+			}
 
 			ret = fileStoreUtil.saveToFile(resource, new Path(fileStoreUtil.getDataFile(FILE_PREFIX_RESOURCE, resource.getId())), true);
 
@@ -873,12 +886,14 @@ public class TagFileStore extends AbstractTagStore {
 
 		try {
 			RangerTagResourceMap tagResourceMap = getTagResourceMap(id);
-			Long tagId = tagResourceMap.getTagId();
-			RangerTag tag = getTag(tagId);
+			if (tagResourceMap != null) {
+				Long tagId = tagResourceMap.getTagId();
+				RangerTag tag = getTag(tagId);
 
-			deleteTagResourceMap(tagResourceMap);
-			if (tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
-				deleteTag(tagId);
+				deleteTagResourceMap(tagResourceMap);
+				if (tag != null && tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
+					deleteTag(tagId);
+				}
 			}
 		} catch (Exception excp) {
 			throw new Exception("failed to delete tagResourceMap with ID=" + id, excp);

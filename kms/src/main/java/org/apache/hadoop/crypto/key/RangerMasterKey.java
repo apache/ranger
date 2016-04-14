@@ -40,7 +40,7 @@ import org.apache.ranger.entity.XXRangerMasterKey;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
-public class RangerMasterKey {
+public class RangerMasterKey implements RangerKMSMKI{
 	
 	static final Logger logger = Logger.getLogger(RangerMasterKey.class);
 	
@@ -65,12 +65,23 @@ public class RangerMasterKey {
 	 * @return Decrypted Master Key
 	 * @throws Throwable 
 	 */
+	@Override
 	public String getMasterKey(String password) throws Throwable{		
 		logger.info("Getting Master Key");
 		byte masterKeyByte[] = getEncryptedMK();
 		if(masterKeyByte != null && masterKeyByte.length > 0){
 			String masterKey = decryptMasterKey(masterKeyByte, password);		
 			return masterKey;
+		}else{
+			throw new Exception("No Master Key Found");
+		}			
+	}
+	
+	public SecretKey getMasterSecretKey(String password) throws Throwable{		
+		logger.info("Getting Master Key");
+		byte masterKeyByte[] = getEncryptedMK();
+		if(masterKeyByte != null && masterKeyByte.length > 0){
+			return decryptMasterKeySK(masterKeyByte, password);		
 		}else{
 			throw new Exception("No Master Key Found");
 		}			
@@ -83,9 +94,21 @@ public class RangerMasterKey {
 	 * 		   false if master key generation was unsuccessful or already master key exists
 	 * @throws Throwable 
 	 */
+	@Override
 	public boolean generateMasterKey(String password) throws Throwable{
 		logger.info("Generating Master Key");
 		String encryptedMasterKey = encryptMasterKey(password);		
+		String savedKey = saveEncryptedMK(encryptedMasterKey, daoManager);
+		if(savedKey != null && !savedKey.trim().equals("")){
+			logger.debug("Master Key Created with id = "+savedKey);
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean generateMKFromHSMMK(String password, byte[] key) throws Throwable{
+		logger.info("Generating Master Key");
+		String encryptedMasterKey = encryptMasterKey(password, key);		
 		String savedKey = saveEncryptedMK(encryptedMasterKey, daoManager);
 		if(savedKey != null && !savedKey.trim().equals("")){
 			logger.debug("Master Key Created with id = "+savedKey);
@@ -100,6 +123,13 @@ public class RangerMasterKey {
 		byte[] masterKeyFromDBDecrypted = decryptKey(masterKey, pbeKeyspec) ;
 		SecretKey masterKeyFromDB = getMasterKeyFromBytes(masterKeyFromDBDecrypted) ;
 		return Base64.encode(masterKeyFromDB.getEncoded());
+	}
+	
+	private SecretKey decryptMasterKeySK(byte masterKey[], String password) throws Throwable {
+		logger.debug("Decrypting Master Key");
+		PBEKeySpec pbeKeyspec = getPBEParameterSpec(password) ;
+		byte[] masterKeyFromDBDecrypted = decryptKey(masterKey, pbeKeyspec) ;
+		return getMasterKeyFromBytes(masterKeyFromDBDecrypted) ;		
 	}
 
 	private byte[] getEncryptedMK() throws Base64DecodingException {
@@ -153,6 +183,14 @@ public class RangerMasterKey {
 			byte[] masterKeyToDB = encryptKey(secretKey.getEncoded(), pbeKeySpec);
 			String masterKey = Base64.encode(masterKeyToDB) ;
 			return masterKey;
+	}
+	
+	private String encryptMasterKey(String password, byte[] secretKey) throws Throwable {
+		logger.debug("Encrypting Master Key");
+		PBEKeySpec pbeKeySpec = getPBEParameterSpec(password);
+		byte[] masterKeyToDB = encryptKey(secretKey, pbeKeySpec);
+		String masterKey = Base64.encode(masterKeyToDB) ;
+		return masterKey;
 	}
 	
 	private Key generateMasterKey() throws NoSuchAlgorithmException{

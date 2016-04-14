@@ -84,6 +84,10 @@ sqlanywhere_core_file=$(get_prop 'sqlanywhere_core_file' $PROPFILE)
 cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFILE)")
 KMS_BLACKLIST_DECRYPT_EEK=$(get_prop 'KMS_BLACKLIST_DECRYPT_EEK' $PROPFILE)
 RANGER_KMS_LOG_DIR=$(eval echo "$(get_prop 'RANGER_KMS_LOG_DIR' $PROPFILE)")
+HSM_TYPE=$(get_prop 'HSM_TYPE' $PROPFILE)
+HSM_ENABLED=$(get_prop 'HSM_ENABLED' $PROPFILE)
+HSM_PARTITION_NAME=$(get_prop 'HSM_PARTITION_NAME' $PROPFILE)
+HSM_PARTITION_PASSWORD=$(get_prop 'HSM_PARTITION_PASSWORD' $PROPFILE)
 
 DB_HOST="${db_host}"
 
@@ -159,7 +163,7 @@ updatePropertyToFile(){
 #$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
 updatePropertyToFilePy(){
     python update_property.py $1 $2 $3
-    check_ret_status $? "Update property failed for: " $1
+    check_ret_status $? "Update property failed for: {'$1'}"
 }
 
 
@@ -207,7 +211,12 @@ init_variables(){
 		DB_FLAVOR="MYSQL"
 	fi
 	log "[I] DB_FLAVOR=${DB_FLAVOR}"
-	password_validation "$KMS_MASTER_KEY_PASSWD" "KMS Master key"
+	########## HSM Config ##########
+	       
+        propertyName=ranger.ks.hsm.enabled
+        HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
+        password_validation "$KMS_MASTER_KEY_PASSWD" "KMS Master key"   
+
 	#getPropertyFromFile 'db_root_user' $PROPFILE db_root_user
 	#getPropertyFromFile 'db_root_password' $PROPFILE db_user
 	#getPropertyFromFile 'db_user' $PROPFILE db_user
@@ -494,6 +503,11 @@ update_properties() {
 	MK_CREDENTIAL_ALIAS="ranger.ks.masterkey.password"
 	DB_CREDENTIAL_ALIAS="ranger.ks.jpa.jdbc.credential.alias"
 
+	HSM_PARTITION_PASSWD="ranger.ks.hsm.partition.password"
+	HSM_PARTITION_PASSWORD_ALIAS="ranger.kms.hsm.partition.password"
+
+        HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
+
 	if [ "${keystore}" != "" ]
 	then
 		mkdir -p `dirname "${keystore}"`
@@ -502,6 +516,21 @@ update_properties() {
 		$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${MK_CREDENTIAL_ALIAS}" -v "${KMS_MASTER_KEY_PASSWD}" -c 1
 		#$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "${DB_CREDENTIAL_ALIAS}" -value "$db_password" -provider jceks://file$keystore
 		#$JAVA_HOME/bin/java -cp "cred/lib/*" org.apache.ranger.credentialapi.buildks create "${MK_CREDENTIAL_ALIAS}" -value "${KMS_MASTER_KEY_PASSWD}" -provider jceks://file$keystore
+
+		if [ "${HSM_ENABLED}" == "TRUE" ]
+                then
+                        password_validation "$HSM_PARTITION_PASSWORD" "HSM Partition Password"
+
+                        $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${HSM_PARTITION_PASSWORD_ALIAS}" -v "${HSM_PARTITION_PASSWORD}" -c 1
+                       
+                        propertyName=ranger.ks.hsm.partition.password.alias
+                        newPropertyValue="${HSM_PARTITION_PASSWORD_ALIAS}"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+                       
+                        propertyName=ranger.ks.hsm.partition.password
+                        newPropertyValue="_"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+                fi
 
 		propertyName=ranger.ks.jpa.jdbc.credential.alias
 		newPropertyValue="${DB_CREDENTIAL_ALIAS}"
@@ -530,6 +559,10 @@ update_properties() {
 		propertyName="${MK_CREDENTIAL_ATTR}"
 		newPropertyValue="${KMS_MASTER_KEY_PASSWD}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName="${HSM_PARTITION_PASSWD}"
+                newPropertyValue="${HSM_PARTITION_PASSWORD}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
 
 	if test -f $keystore; then
@@ -546,13 +579,38 @@ update_properties() {
 		propertyName="${MK_CREDENTIAL_ATTR}"
 		newPropertyValue="${KMS_MASTER_KEY_PASSWD}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName="${HSM_PARTITION_PASSWD}"
+                newPropertyValue="${HSM_PARTITION_PASSWORD}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
 
 	propertyName=hadoop.kms.blacklist.DECRYPT_EEK
         newPropertyValue="${KMS_BLACKLIST_DECRYPT_EEK}"
         updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
-	###########
+	########### HSM CONFIG #################
+       
+       
+        if [ "${HSM_ENABLED}" != "TRUE" ]
+        then
+                propertyName=ranger.ks.hsm.enabled
+                newPropertyValue="false"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+        else
+                propertyName=ranger.ks.hsm.enabled
+                newPropertyValue="true"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.ks.hsm.type
+                newPropertyValue="${HSM_TYPE}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+       
+                propertyName=ranger.ks.hsm.partition.name
+                newPropertyValue="${HSM_PARTITION_NAME}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file         
+        fi
+
 }
 
 #=====================================================================

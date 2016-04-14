@@ -113,4 +113,35 @@
     </description>    
   </property>  
   
+  <!-- HSM Config -->
+  <property>
+  	<name>ranger.ks.hsm.type</name>
+  	<value>LunaProvider</value>
+  	<description></description>
+  </property>
+  
+  <property>
+  	<name>ranger.ks.hsm.enabled</name>
+  	<value>false</value>
+  	<description></description>
+  </property>
+  
+  <property>
+  	<name>ranger.ks.hsm.partition.name</name>
+  	<value>par19</value>
+  	<description></description>
+  </property>
+  
+  <property>
+  	<name>ranger.ks.hsm.partition.password</name>
+  	<value>S@fenet123</value>
+  	<description></description>
+  </property>
+  
+  <property>
+  	<name>ranger.ks.hsm.partition.password.alias</name>
+  	<value>ranger.kms.hsm.partition.password</value>
+  	<description></description>
+  </property>
+  
 </configuration>
