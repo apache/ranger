@@ -510,23 +510,22 @@ then
 	#if [ -d "${PROJ_LIB_DIR}" ]
 	#then
 		dt=`date '+%Y%m%d%H%M%S'`
-		for f in ${PROJ_LIB_DIR}/*.jar
-		do
-			if [ -f "${f}" ]
-			then	
-				bn=`basename $f`
-				if [ -f ${HCOMPONENT_LIB_DIR}/${bn} ]
-				then
-					log "Saving lib file: ${HCOMPONENT_LIB_DIR}/${bn} to ${HCOMPONENT_LIB_DIR}/.${bn}.${dt} ..."
-					mv ${HCOMPONENT_LIB_DIR}/${bn} ${HCOMPONENT_LIB_DIR}/.${bn}.${dt}
-				fi
-				if [ ! -f ${HCOMPONENT_LIB_DIR}/${bn} ]
-				then
-					ln -s ${f} ${HCOMPONENT_LIB_DIR}/${bn}
-				fi
-			fi
-		done
-		
+        for f in ${PROJ_LIB_DIR}/*
+            do
+               if [ -f "${f}" ] || [ -d "${f}" ]
+               then
+                   bn=`basename $f`
+                   if [ -f ${HCOMPONENT_LIB_DIR}/${bn} ] || [  -d ${HCOMPONENT_LIB_DIR}/${bn} ]
+                   then
+                       log "Saving lib file: ${HCOMPONENT_LIB_DIR}/${bn} to ${HCOMPONENT_LIB_DIR}/.${bn}.${dt} ..."
+                       mv ${HCOMPONENT_LIB_DIR}/${bn} ${HCOMPONENT_LIB_DIR}/.${bn}.${dt}
+                   fi
+                   if [ ! -f ${HCOMPONENT_LIB_DIR}/${bn} ] && [ ! -d  ${HCOMPONENT_LIB_DIR}/${bn} ]
+                   then
+                       ln -s ${f} ${HCOMPONENT_LIB_DIR}/${bn}
+                   fi
+                fi
+        done
 		# ADD SQL CONNECTOR JAR TO PLUGIN DEPENDENCY JAR FOLDER
 		dbJar=$(getInstallProperty 'SQL_CONNECTOR_JAR')
 		if [ -f "${dbJar}" ]
