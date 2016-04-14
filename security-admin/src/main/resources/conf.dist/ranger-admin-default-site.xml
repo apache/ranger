@@ -441,4 +441,26 @@
 		<value>true</value>
 		<description></description>
 	</property>
+	<!-- # DB Info for audit_DB -->
+
+	<property>
+		<name>ranger.jpa.audit.jdbc.driver</name>
+		<value>net.sf.log4jdbc.DriverSpy</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.audit.jdbc.url</name>
+		<value>jdbc:log4jdbc:mysql://localhost/rangeraudit</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.audit.jdbc.user</name>
+		<value>rangerlogger</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.jpa.audit.jdbc.password</name>
+		<value>rangerlogger</value>
+		<description></description>
+	</property>
 </configuration>

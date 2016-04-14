@@ -1540,39 +1540,6 @@ def main(argv):
 				log("Enter db user password:","info")
 				db_password = getpass.getpass("Enter db user password:")
 
-	if (quiteMode):
-		audit_db_name = globalDict['audit_db_name']
-	else:
-		if (dryMode):
-			audit_db_name='ranger_audit_db'
-		else:
-			audit_db_name=''
-			while audit_db_name == "":
-				log("Enter audit db name:","info")
-				audit_db_name = raw_input()
-
-	if (quiteMode):
-		audit_db_user = globalDict['audit_db_user']
-	else:
-		if (dryMode):
-			audit_db_user='ranger_logger_user'
-		else:
-			audit_db_user=''
-			while audit_db_user == "":
-				log("Enter audit user name:","info")
-				audit_db_user = raw_input()
-
-	if (quiteMode):
-		audit_db_password = globalDict['audit_db_password']
-	else:
-		if (dryMode):
-			audit_db_password='*****'
-		else:
-			audit_db_password=''
-			while audit_db_password == "":
-				log("Enter audit db user password:","info")
-				audit_db_password = getpass.getpass("Enter audit db user password:")
-
 	audit_db_root_user = xa_db_root_user
 	audit_db_root_password = xa_db_root_password
 
@@ -1666,8 +1633,8 @@ def main(argv):
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,oracle_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "POSTGRES":
-		audit_db_user=audit_db_user.lower()
-		audit_db_name=audit_db_name.lower()
+		#audit_db_user=audit_db_user.lower()
+		#audit_db_name=audit_db_name.lower()
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		audit_sqlObj = PostgresConf(audit_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,postgres_audit_file)
@@ -1691,19 +1658,23 @@ def main(argv):
 		audit_store = None
 
 	if audit_store is None or audit_store == "":
-		audit_store = "db"
+		audit_store = "solr"
 	audit_store=audit_store.lower()
+	if not audit_store =='solr':
+		log("[E] Only 'Solr' audit store is supported from current version!","error")
+		sys.exit(1)
+
 	if not dryMode:
-		log("[I] ---------- Verifing DB root password ---------- ","info")
+		log("[I] ---------- Verifying DB root password ---------- ","info")
 		password_validation(xa_db_root_password,"DBA root");
-		log("[I] ---------- Verifing Ranger Admin db user password ---------- ","info")
+		log("[I] ---------- Verifying Ranger Admin db user password ---------- ","info")
 		password_validation(db_password,"admin");
 	# Methods Begin
 	if DBA_MODE == "TRUE" :
 		if (dryMode==True):
 			log("[I] Logging DBA Script in file:"+str(globalDict["dryModeOutputFile"]),"info")
 			logFile("===============================================\n")
-			xa_sqlObj.writeDrymodeCmd(xa_db_host, audit_db_host, xa_db_root_user, xa_db_root_password, db_user, db_password, db_name, audit_db_root_user, audit_db_root_password, audit_db_user, audit_db_password, audit_db_name)
+			xa_sqlObj.writeDrymodeCmd(xa_db_host, audit_db_host, xa_db_root_user, xa_db_root_password, db_user, db_password, db_name, audit_db_root_user, audit_db_root_password, db_user, db_password, db_name)
 			logFile("===============================================\n")
 		if (dryMode==False):
 			log("[I] ---------- Creating Ranger Admin db user ---------- ","info")
@@ -1714,10 +1685,10 @@ def main(argv):
 			if not XA_DB_FLAVOR == "SQLA":
 				xa_sqlObj.grant_xa_db_user(xa_db_root_user, db_name, db_user, db_password, xa_db_root_password, is_revoke,dryMode)
 			# Ranger Admin DB Host AND Ranger Audit DB Host are Different OR Same
-			if audit_store == "db":
-				log("[I] ---------- Verifing Ranger Audit db user password ---------- ","info")
-				password_validation(audit_db_password,"audit");
-				log("[I] ---------- Verifying/Creating audit user --------- ","info")
-				audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode)
+			#if audit_store == "db":
+				#log("[I] ---------- Verifing Ranger Audit db user password ---------- ","info")
+				#password_validation(audit_db_password,"audit");
+				#log("[I] ---------- Verifying/Creating audit user --------- ","info")
+				#audit_sqlObj.create_auditdb_user(xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode)
 			log("[I] ---------- Ranger Policy Manager DB and User Creation Process Completed..  ---------- ","info")
 main(sys.argv)

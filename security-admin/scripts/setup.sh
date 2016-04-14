@@ -63,9 +63,9 @@ audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
 audit_solr_user=$(get_prop 'audit_solr_user' $PROPFILE)
 audit_solr_password=$(get_prop 'audit_solr_password' $PROPFILE)
 audit_solr_zookeepers=$(get_prop 'audit_solr_zookeepers' $PROPFILE)
-audit_db_name=$(get_prop 'audit_db_name' $PROPFILE)
-audit_db_user=$(get_prop 'audit_db_user' $PROPFILE)
-audit_db_password=$(get_prop 'audit_db_password' $PROPFILE)
+audit_db_name=''
+audit_db_user=''
+audit_db_password=''
 policymgr_external_url=$(get_prop 'policymgr_external_url' $PROPFILE)
 policymgr_http_enabled=$(get_prop 'policymgr_http_enabled' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
@@ -204,6 +204,17 @@ init_variables(){
 		DB_FLAVOR="MYSQL"
 	fi
 	log "[I] DB_FLAVOR=${DB_FLAVOR}"
+	audit_store=`echo $audit_store | tr '[:upper:]' '[:lower:]'`
+	if [ "${audit_store}" == "solr" ] ;then
+		log "[I] Audit source=${DB_FLAVOR}"
+		if [ "${audit_solr_urls}" == "" ] ;then
+			log "[I] Please provide valid URL for 'solr' audit store!"
+			exit 1
+		fi
+	else
+		log "[I] Only 'solr' audit store is supported from current version, found : $audit_store"
+		exit 1
+	fi
 }
 
 check_python_command() {
@@ -355,7 +366,7 @@ update_properties() {
 		then
 			propertyName=ranger.jpa.audit.jdbc.url
 			newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${audit_db_name}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
@@ -372,7 +383,7 @@ update_properties() {
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="net.sf.log4jdbc.DriverSpy"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
 	then
@@ -391,7 +402,7 @@ update_properties() {
 		if [ "${audit_store}" == "db" ]
 		then
 			propertyName=ranger.jpa.audit.jdbc.url
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
@@ -408,7 +419,7 @@ update_properties() {
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="oracle.jdbc.OracleDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
@@ -425,7 +436,7 @@ update_properties() {
 		then
 			propertyName=ranger.jpa.audit.jdbc.url
 			newPropertyValue="jdbc:postgresql://${DB_HOST}/${audit_db_name}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
@@ -442,7 +453,7 @@ update_properties() {
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="org.postgresql.Driver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 
 	if [ "${DB_FLAVOR}" == "MSSQL" ]
@@ -455,7 +466,7 @@ update_properties() {
 		then
 			propertyName=ranger.jpa.audit.jdbc.url
 			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${audit_db_name}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
@@ -472,7 +483,7 @@ update_properties() {
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 
 	if [ "${DB_FLAVOR}" == "SQLA" ]
@@ -485,7 +496,7 @@ update_properties() {
 		then
 			propertyName=ranger.jpa.audit.jdbc.url
 			newPropertyValue="jdbc:sqlanywhere:database=${audit_db_name};host=${DB_HOST}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
@@ -502,7 +513,7 @@ update_properties() {
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="sap.jdbc4.sqlanywhere.IDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 
 	if [ "${audit_store}" == "solr" ]
@@ -532,7 +543,7 @@ update_properties() {
 	then
 		propertyName=ranger.jpa.audit.jdbc.user
 		newPropertyValue="${audit_db_user}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 	##########
 
@@ -594,11 +605,11 @@ update_properties() {
 			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 			propertyName=ranger.jpa.audit.jdbc.password
 		newPropertyValue="_"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	    else
 			propertyName=ranger.jpa.audit.jdbc.password
 		newPropertyValue="${audit_db_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	    fi
 
 	    if test -f $keystore; then
@@ -608,7 +619,7 @@ update_properties() {
 		#echo "$keystore not found. so use clear text password"
 			propertyName=ranger.jpa.audit.jdbc.password
 		newPropertyValue="${audit_db_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	    fi
 	fi
 	if [ "${audit_store}" == "solr" ]

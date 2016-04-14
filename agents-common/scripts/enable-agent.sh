@@ -392,8 +392,10 @@ then
 	#
 	# We need to do the AUDIT JDBC url 
 	#
-
-	db_flavor=`echo $(getInstallProperty 'XAAUDIT.DB.FLAVOUR') | tr '[:lower:]' '[:upper:]'`
+db_flavor=''
+#db_flavor=`echo $(getInstallProperty 'XAAUDIT.DB.FLAVOUR') | tr '[:lower:]' '[:upper:]'`
+if [ "${db_flavor}" != "" ]
+then
     audit_db_hostname=$(getInstallProperty 'XAAUDIT.DB.HOSTNAME')
     audit_db_name=$(getInstallProperty 'XAAUDIT.DB.DATABASE_NAME')
 
@@ -431,6 +433,7 @@ then
         export XAAUDIT_DB_JDBC_URL="jdbc:${db_flavor}://${audit_db_hostname}/${audit_db_name}"
         export XAAUDIT_DB_JDBC_DRIVER="com.unknown.driver.${db_flavor}"
 	fi
+fi
 
 
 	for f in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.cfg
@@ -578,7 +581,7 @@ then
 	
 	auditdbCred=$(getInstallProperty 'XAAUDIT.DB.PASSWORD')
 	
-	create_jceks "${auditCredAlias}"  "${auditdbCred}"  "${CredFile}"
+	#create_jceks "${auditCredAlias}"  "${auditdbCred}"  "${CredFile}"
 	
 	
 	#

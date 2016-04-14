@@ -83,7 +83,7 @@ public class TestPolicyEngine {
 			auditProperties.setProperty("xasecure.audit.log4j.is.async", "false");
 			auditProperties.setProperty("xasecure.audit.log4j.async.max.queue.size", "100000");
 			auditProperties.setProperty("xasecure.audit.log4j.async.max.flush.interval.ms", "30000");
-			auditProperties.setProperty("xasecure.audit.db.is.enabled", "true");
+			auditProperties.setProperty("xasecure.audit.db.is.enabled", "false");
 			auditProperties.setProperty("xasecure.audit.db.is.async", "false");
 			auditProperties.setProperty("xasecure.audit.db.async.max.queue.size", "100000");
 			auditProperties.setProperty("xasecure.audit.db.async.max.flush.interval.ms", "30000");
