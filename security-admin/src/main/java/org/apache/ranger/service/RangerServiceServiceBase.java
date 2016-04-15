@@ -49,6 +49,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 				SEARCH_TYPE.FULL, "XXServiceDef xSvcDef", "obj.type = xSvcDef.id"));
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.type", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.SERVICE_NAME_PARTIAL, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField(SearchFilter.SERVICE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_ID, "obj.tag_service", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));

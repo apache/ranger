@@ -1620,9 +1620,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		RangerServiceList serviceList = svcService.searchRangerServices(filter);
+		if (StringUtils.isEmpty(filter.getParam("serviceNamePartial"))){
 
 		predicateUtil.applyFilter(serviceList.getServices(), filter);
 
+		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getPaginatedServices()");
 		}

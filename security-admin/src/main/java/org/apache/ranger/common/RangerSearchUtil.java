@@ -54,6 +54,7 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.SERVICE_TYPE, request.getParameter(SearchFilter.SERVICE_TYPE));
 		ret.setParam(SearchFilter.SERVICE_TYPE_ID, request.getParameter(SearchFilter.SERVICE_TYPE_ID));
 		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter(SearchFilter.SERVICE_NAME));
+		ret.setParam(SearchFilter.SERVICE_NAME_PARTIAL, request.getParameter(SearchFilter.SERVICE_NAME_PARTIAL));
 		ret.setParam(SearchFilter.SERVICE_ID, request.getParameter(SearchFilter.SERVICE_ID));
 		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter(SearchFilter.POLICY_NAME));
 		ret.setParam(SearchFilter.POLICY_NAME_PARTIAL, request.getParameter(SearchFilter.POLICY_NAME_PARTIAL));

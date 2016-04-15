@@ -64,6 +64,7 @@ public class SearchFilter {
 	public static final String TAG_MAP_ID                = "tagResourceMapId";    // search
 	public static final String TAG_MAP_GUID              = "tagResourceMapGuid";  // search
 
+	public static final String SERVICE_NAME_PARTIAL      = "serviceNamePartial";
 	private Map<String, String> params     = null;
 	private int                 startIndex = 0;
 	private int                 maxRows    = Integer.MAX_VALUE;
