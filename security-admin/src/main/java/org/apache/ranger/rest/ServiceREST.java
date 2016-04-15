@@ -1557,7 +1557,7 @@ public class ServiceREST {
 				httpCode = HttpServletResponse.SC_BAD_REQUEST;
 				logMsg   = excp.getMessage();
 			} finally {
-				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, ret, httpCode, request);
+				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, httpCode, request);
 
 				RangerPerfTracer.log(perf);
 			}
@@ -1575,7 +1575,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, ServicePolicies policies, int httpRespCode, HttpServletRequest request) {
+	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, int httpRespCode, HttpServletRequest request) {
 		try {
 			String ipAddress = request.getHeader("X-FORWARDED-FOR");
 

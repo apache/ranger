@@ -35,7 +35,6 @@
 	<exclude name="OverrideBothEqualsAndHashcode" />
   </rule>
   <rule ref="rulesets/java/unusedcode.xml">
-	<exclude name="UnusedFormalParameter" />
 	<exclude name="UnusedLocalVariable" />
 	<exclude name="UnusedPrivateField" />
 	<exclude name="UnusedPrivateMethod" />

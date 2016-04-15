@@ -232,7 +232,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			}
 
 			if(hiveOpType == HiveOperationType.DFS) {
-				handleDfsCommand(hiveOpType, inputHObjs, outputHObjs, context, sessionContext, user, groups, auditHandler);
+				handleDfsCommand(hiveOpType, inputHObjs, user, auditHandler);
 
 				return;
 			}
@@ -251,7 +251,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						String   path       = hiveObj.getObjectName();
 						FsAction permission = FsAction.READ;
 
-						if(!isURIAccessAllowed(user, groups, permission, path, getHiveConf())) {
+						if(!isURIAccessAllowed(user, permission, path, getHiveConf())) {
 							throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user, permission.name(), path));
 						}
 
@@ -295,7 +295,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						String   path       = hiveObj.getObjectName();
 						FsAction permission = FsAction.WRITE;
 
-		                if(!isURIAccessAllowed(user, groups, permission, path, getHiveConf())) {
+		                if(!isURIAccessAllowed(user, permission, path, getHiveConf())) {
 		    				throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user, permission.name(), path));
 		                }
 
@@ -936,7 +936,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return accessType;
 	}
 
-    private boolean isURIAccessAllowed(String userName, Set<String> groups, FsAction action, String uri, HiveConf conf) {
+    private boolean isURIAccessAllowed(String userName, FsAction action, String uri, HiveConf conf) {
         boolean ret = false;
 
         if(action == FsAction.NONE) {
@@ -964,11 +964,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 	private void handleDfsCommand(HiveOperationType         hiveOpType,
 								  List<HivePrivilegeObject> inputHObjs,
-							      List<HivePrivilegeObject> outputHObjs,
-							      QueryContext              context,
-							      HiveAuthzSessionContext   sessionContext,
 								  String                    user,
-								  Set<String>               groups,
 								  RangerHiveAuditHandler    auditHandler)
 	      throws HiveAuthzPluginException, HiveAccessControlException {
 

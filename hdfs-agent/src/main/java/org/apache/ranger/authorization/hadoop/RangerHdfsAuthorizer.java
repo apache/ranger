@@ -234,7 +234,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						}
 
 						if(nodeToCheck != null) {
-							authzStatus = isAccessAllowed(nodeToCheck, nodeAttribs, FsAction.EXECUTE, user, groups, fsOwner, superGroup, plugin, auditHandler);
+							authzStatus = isAccessAllowed(nodeToCheck, nodeAttribs, FsAction.EXECUTE, user, groups, plugin, auditHandler);
 						}
 					}
 
@@ -250,21 +250,21 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					if(authzStatus == AuthzStatus.ALLOW && ancestorAccess != null && ancestor != null) {
 						INodeAttributes ancestorAttribs = inodeAttrs.length > ancestorIndex ? inodeAttrs[ancestorIndex] : null;
 
-						authzStatus = isAccessAllowed(ancestor, ancestorAttribs, ancestorAccess, user, groups, fsOwner, superGroup, plugin, auditHandler);
+						authzStatus = isAccessAllowed(ancestor, ancestorAttribs, ancestorAccess, user, groups, plugin, auditHandler);
 					}
 
 					// checkParentAccess
 					if(authzStatus == AuthzStatus.ALLOW && parentAccess != null && parent != null) {
 						INodeAttributes parentAttribs = inodeAttrs.length > 1 ? inodeAttrs[inodeAttrs.length - 2] : null;
 
-						authzStatus = isAccessAllowed(parent, parentAttribs, parentAccess, user, groups, fsOwner, superGroup, plugin, auditHandler);
+						authzStatus = isAccessAllowed(parent, parentAttribs, parentAccess, user, groups, plugin, auditHandler);
 					}
 
 					// checkINodeAccess
 					if(authzStatus == AuthzStatus.ALLOW && access != null && inode != null) {
 						INodeAttributes inodeAttribs = inodeAttrs.length > 0 ? inodeAttrs[inodeAttrs.length - 1] : null;
 
-						authzStatus = isAccessAllowed(inode, inodeAttribs, access, user, groups, fsOwner, superGroup, plugin, auditHandler);
+						authzStatus = isAccessAllowed(inode, inodeAttribs, access, user, groups, plugin, auditHandler);
 					}
 
 					// checkSubAccess
@@ -278,7 +278,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 							if (!(cList.isEmpty() && ignoreEmptyDir)) {
 								INodeAttributes dirAttribs = dir.getSnapshotINode(snapshotId);
 
-								authzStatus = isAccessAllowed(dir, dirAttribs, subAccess, user, groups, fsOwner, superGroup, plugin, auditHandler);
+								authzStatus = isAccessAllowed(dir, dirAttribs, subAccess, user, groups, plugin, auditHandler);
 
 								if(authzStatus != AuthzStatus.ALLOW) {
 									break;
@@ -369,7 +369,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 		}
 
-		private AuthzStatus isAccessAllowed(INode inode, INodeAttributes inodeAttribs, FsAction access, String user, Set<String> groups, String fsOwner, String superGroup, RangerHdfsPlugin plugin, RangerHdfsAuditHandler auditHandler) {
+		private AuthzStatus isAccessAllowed(INode inode, INodeAttributes inodeAttribs, FsAction access, String user, Set<String> groups, RangerHdfsPlugin plugin, RangerHdfsAuditHandler auditHandler) {
 			AuthzStatus ret       = null;
 			String      path      = inode != null ? inode.getFullPathName() : null;
 			String      pathOwner = inodeAttribs != null ? inodeAttribs.getUserName() : null;

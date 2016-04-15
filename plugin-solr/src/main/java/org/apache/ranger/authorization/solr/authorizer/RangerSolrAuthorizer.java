@@ -186,7 +186,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 				List<RangerAccessRequestImpl> requestsForCollection = createRequests(
 						userName, userGroups, ip, eventTime, context,
-						collectionRequest, requestData);
+						collectionRequest);
 				rangerRequests.addAll(requestsForCollection);
 			}
 			if (logger.isDebugEnabled()) {
@@ -290,13 +290,11 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	 * @param eventTime
 	 * @param context
 	 * @param collectionRequest
-	 * @param requestData
 	 * @return
 	 */
 	private List<RangerAccessRequestImpl> createRequests(String userName,
 			Set<String> userGroups, String ip, Date eventTime,
-			AuthorizationContext context, CollectionRequest collectionRequest,
-			String requestData) {
+			AuthorizationContext context, CollectionRequest collectionRequest) {
 
 		List<RangerAccessRequestImpl> requests = new ArrayList<RangerAccessRequestImpl>();
 		String accessType = mapToRangerAccessType(context);

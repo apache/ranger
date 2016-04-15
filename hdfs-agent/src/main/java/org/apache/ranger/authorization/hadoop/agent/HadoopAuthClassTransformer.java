@@ -40,7 +40,7 @@ public class HadoopAuthClassTransformer implements ClassFileTransformer {
             byte[] result = transformedClassByteCode;
             if (result == null) {
 
-				byte[] injectedClassCode = injectFSPermissionCheckerHooks(aClassLoader, aClassName, aClassBeingRedefined, aProtectionDomain, aClassFileBuffer);
+				byte[] injectedClassCode = injectFSPermissionCheckerHooks(aClassName);
 
 				if(injectedClassCode != null) {
                     synchronized (HadoopAuthClassTransformer.class) {
@@ -60,7 +60,7 @@ public class HadoopAuthClassTransformer implements ClassFileTransformer {
 		return ret;
 	}
 
-	private static byte[] injectFSPermissionCheckerHooks(ClassLoader aClassLoader, String aClassName, Class<?> aClassBeingRedefined, ProtectionDomain aProtectionDomain, byte[] aClassFileBuffer) throws IllegalClassFormatException {
+	private static byte[] injectFSPermissionCheckerHooks(String aClassName) throws IllegalClassFormatException {
 		byte[] ret = null;
 
 		System.out.println("Injection code is Invoked in JVM [" + Runtime.getRuntime() + "] for class [" + aClassName + "] ....");

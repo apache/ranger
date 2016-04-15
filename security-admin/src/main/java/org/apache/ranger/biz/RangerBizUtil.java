@@ -494,7 +494,7 @@ public class RangerBizUtil {
 			String[] requestResNameList = resourceNames.split(",");
 			for (String resourceName : requestResNameList) {
 				boolean matchFound = matchKnoxPolicy(resourceName,
-						xResourceList, vXResponse, xUserId, permission);
+						xResourceList, xUserId, permission);
 				if (!matchFound) {
 					vXResponse.setMsgDesc("You're not permitted to perform "
 							+ "the action for resource path : " + resourceName);
@@ -508,7 +508,7 @@ public class RangerBizUtil {
 			String[] requestResNameList = resourceNames.split(",");
 			for (String resourceName : requestResNameList) {
 				boolean matchFound = matchStormPolicy(resourceName,
-						xResourceList, vXResponse, xUserId, permission);
+						xResourceList, xUserId, permission);
 				if (!matchFound) {
 					vXResponse.setMsgDesc("You're not permitted to perform "
 							+ "the action for resource path : " + resourceName);
@@ -849,13 +849,12 @@ public class RangerBizUtil {
 	 * 
 	 * @param resourceName
 	 * @param xResourceList
-	 * @param vXResponse
 	 * @param xUserId
 	 * @param permission
 	 * @return
 	 */
 	private boolean matchKnoxPolicy(String resourceName,
-			List<XXResource> xResourceList, VXResponse vXResponse,
+			List<XXResource> xResourceList, 
 			Long xUserId, int permission) {
 
 		String[] splittedResources = stringUtil.split(resourceName,
@@ -937,13 +936,12 @@ public class RangerBizUtil {
 	 * 
 	 * @param resourceName
 	 * @param xResourceList
-	 * @param vXResponse
 	 * @param xUserId
 	 * @param permission
 	 * @return
 	 */
 	private boolean matchStormPolicy(String resourceName,
-			List<XXResource> xResourceList, VXResponse vXResponse,
+			List<XXResource> xResourceList,
 			Long xUserId, int permission) {
 
 		String[] splittedResources = stringUtil.split(resourceName,

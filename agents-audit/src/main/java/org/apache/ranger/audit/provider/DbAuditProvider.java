@@ -104,7 +104,7 @@ public class DbAuditProvider extends AuditDestination {
 		boolean isSuccess = false;
 
 		try {
-			if(preCreate(event)) {
+			if(preCreate()) {
 				DaoManager daoMgr = daoManager;
 
 				if(daoMgr != null) {
@@ -313,7 +313,7 @@ public class DbAuditProvider extends AuditDestination {
 		return ret;
 	}
 	
-	private boolean preCreate(AuditEventBase event) {
+	private boolean preCreate() {
 		boolean ret = true;
 
 		if(!isDbConnected()) {

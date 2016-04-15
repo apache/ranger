@@ -137,7 +137,7 @@ public class KmsKeyMgr {
 				if(!isKerberos){
 					response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 				}else{
-					Subject sub = getSubjectForKerberos(repoName, currentUserLoginId);
+					Subject sub = getSubjectForKerberos(repoName);
 					response = Subject.doAs(sub, new PrivilegedAction<String>() {
 						@Override
 						public String run() {
@@ -232,7 +232,7 @@ public class KmsKeyMgr {
 				if(!isKerberos){
 				 response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);}
 				else{
-					Subject sub = getSubjectForKerberos(provider, currentUserLoginId);
+					Subject sub = getSubjectForKerberos(provider);
 		            response = Subject.doAs(sub, new PrivilegedAction<String>() {
 						@Override
 						public String run() {
@@ -282,7 +282,7 @@ public class KmsKeyMgr {
 				if(!isKerberos){
 					response = r.delete(String.class) ;
 				}else{
-					Subject sub = getSubjectForKerberos(provider, currentUserLoginId);
+					Subject sub = getSubjectForKerberos(provider);
 					response = Subject.doAs(sub, new PrivilegedAction<String>() {
 						@Override
 						public String run() {
@@ -333,7 +333,7 @@ public class KmsKeyMgr {
 				if(!isKerberos){
 					response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
 				}else{
-						Subject sub = getSubjectForKerberos(provider, currentUserLoginId);
+						Subject sub = getSubjectForKerberos(provider);
 						response = Subject.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
@@ -383,7 +383,7 @@ public class KmsKeyMgr {
 				if(!isKerberos){
 					response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 				}else{
-					Subject sub = getSubjectForKerberos(provider, currentUserLoginId);
+					Subject sub = getSubjectForKerberos(provider);
 					response = Subject.doAs(sub, new PrivilegedAction<String>() {
 						@Override
 						public String run() {
@@ -420,7 +420,7 @@ public class KmsKeyMgr {
 		if(!isKerberos){
 			response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 		}else{
-			Subject sub = getSubjectForKerberos(repoName, currentUserLoginId);
+			Subject sub = getSubjectForKerberos(repoName);
 			response = Subject.doAs(sub, new PrivilegedAction<String>() {
 				@Override
 				public String run() {
@@ -523,7 +523,7 @@ public class KmsKeyMgr {
 		return providers;
 	}
 	
-	private Subject getSubjectForKerberos(String provider, String currentUserLoginId) throws Exception{
+	private Subject getSubjectForKerberos(String provider) throws Exception{
 		String userName = getKMSUserName(provider); 
 	    String password = getKMSPassword(provider);
 	    if (KerberosName.getRules() == null) {

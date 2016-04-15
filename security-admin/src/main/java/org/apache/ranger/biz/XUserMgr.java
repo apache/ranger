@@ -1076,11 +1076,6 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXPermMapList searchXPermMaps(SearchCriteria searchCriteria) {
-		VXPermMapList vXPermMapList = super.searchXPermMaps(searchCriteria);
-		return applyDelegatedAdminAccess(vXPermMapList, searchCriteria);
-	}
-
-	private VXPermMapList applyDelegatedAdminAccess(VXPermMapList vXPermMapList, SearchCriteria searchCriteria) {
 
 		VXPermMapList returnList;
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
@@ -1126,11 +1121,6 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
-		VXAuditMapList vXAuditMapList = xAuditMapService.searchXAuditMaps(searchCriteria);
-		return applyDelegatedAdminAccess(vXAuditMapList, searchCriteria);
-	}
-
-	private VXAuditMapList applyDelegatedAdminAccess(VXAuditMapList vXAuditMapList, SearchCriteria searchCriteria) {
 
 		VXAuditMapList returnList;
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();

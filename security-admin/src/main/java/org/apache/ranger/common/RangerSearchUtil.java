@@ -218,11 +218,11 @@ public class RangerSearchUtil extends SearchUtil {
 	}
 	
 	private StringBuilder buildWhereClause(SearchFilter searchCriteria, List<SearchField> searchFields) {
-		return buildWhereClause(searchCriteria, searchFields, false, false);
+		return buildWhereClause(searchCriteria, searchFields, false);
 	}
 
 	private StringBuilder buildWhereClause(SearchFilter searchCriteria,
-			List<SearchField> searchFields, boolean isNativeQuery,
+			List<SearchField> searchFields,
 			boolean excludeWhereKeyword) {
 
 		StringBuilder whereClause = new StringBuilder(excludeWhereKeyword ? "" : "WHERE 1 = 1 ");

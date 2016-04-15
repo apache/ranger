@@ -165,24 +165,8 @@ public abstract class BaseDao<T> {
 		return rtrnList;
 	}
 
-	/**
-	 * @param clazz
-	 * @param query
-	 * @param b
-	 * @return
-	 */
-	private Long executeCountQueryInSecurityContext(Class<T> clazz,
-			Query query, boolean userPrefFilter) {
-		// boolean filterEnabled = false;
-		Long rtrnObj = null;
-		// filterEnabled = enableVisiblityFilters(clazz, userPrefFilter);
-		rtrnObj = (Long) query.getSingleResult();
-
-		return rtrnObj;
-	}
-
-	public Long executeCountQueryInSecurityContext(Class<T> clazz, Query query) {
-		return executeCountQueryInSecurityContext(clazz, query, true);
+	public Long executeCountQueryInSecurityContext(Class<T> clazz, Query query) { //NOPMD
+		return (Long) query.getSingleResult();
 	}
 	
 	public List<T> getAll() {
