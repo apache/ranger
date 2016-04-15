@@ -1592,7 +1592,7 @@ public class XUserMgr extends XUserMgrBase {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Force delete status="+force+" for user="+vXUser.getName());
 		}
-
+		restrictSelfAccountDeletion(vXUser.getName().trim());
 		SearchCriteria searchCriteria = new SearchCriteria();
 		searchCriteria.addParam("xUserId", id);
 		VXGroupUserList vxGroupUserList = searchXGroupUsers(searchCriteria);
@@ -1812,5 +1812,22 @@ public class XUserMgr extends XUserMgrBase {
                 }
 	        }
 	        return createdXUser;
+	}
+	public void restrictSelfAccountDeletion(String loginID) {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session != null) {
+			if (!session.isUserAdmin()) {
+				throw restErrorUtil.create403RESTException("Operation denied. LoggedInUser= "+session.getXXPortalUser().getLoginId() + " isn't permitted to perform the action.");
+			}else{
+				if(!StringUtil.isEmpty(loginID) && loginID.equals(session.getLoginId())){
+					throw restErrorUtil.create403RESTException("Operation denied. LoggedInUser= "+session.getXXPortalUser().getLoginId() + " isn't permitted to delete his own profile.");
+				}
+			}
+		} else {
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setMsgDesc("Bad Credentials");
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
 	}
 }

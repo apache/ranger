@@ -73,6 +73,7 @@ import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
+import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserGroupInfo;
@@ -1001,5 +1002,45 @@ public class XUserREST {
 		VXStringList vXStringList=new VXStringList();
 		vXStringList=xUserMgr.getUserRolesByName(userName);
 		return vXStringList;
+	}
+
+	@DELETE
+	@Path("/secure/users/delete")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteUsersByUserName(@Context HttpServletRequest request,VXStringList userList){
+		String forceDeleteStr = request.getParameter("forceDelete");
+		boolean forceDelete = false;
+		if(StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
+			forceDelete = true;
+		}
+		if(userList!=null && userList.getList()!=null){
+			for(VXString userName:userList.getList()){
+				if(StringUtils.isNotEmpty(userName.getValue())){
+					VXUser vxUser = xUserService.getXUserByUserName(userName.getValue());
+					xUserMgr.deleteXUser(vxUser.getId(), forceDelete);
+				}
+			}
+		}
+	}
+
+	@DELETE
+	@Path("/secure/groups/delete")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteGroupsByGroupName(@Context HttpServletRequest request,VXStringList groupList) {
+		String forceDeleteStr = request.getParameter("forceDelete");
+		boolean forceDelete = false;
+		if(StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
+			forceDelete = true;
+		}
+		if(groupList!=null && groupList.getList()!=null){
+			for(VXString groupName:groupList.getList()){
+				if(StringUtils.isNotEmpty(groupName.getValue())){
+					VXGroup vxGroup = xGroupService.getGroupByGroupName(groupName.getValue());
+					xUserMgr.deleteXGroup(vxGroup.getId(), forceDelete);
+				}
+			}
+		}
 	}
 }

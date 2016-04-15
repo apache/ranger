@@ -87,8 +87,16 @@ define(function(require){
 		 */
 		initialize: function() {
 			this.modelName = 'VXGroupBase';
-		}
-
+		},
+		deleteGroups : function(groupNameValues, options){
+			var url = this.urlRoot  + '/delete?forceDelete=true';
+			options = _.extend({
+				data : JSON.stringify(groupNameValues),
+				contentType : 'application/json',
+				dataType : 'json',
+			}, options);
+		return this.constructor.nonCrudOperation.call(this, url, 'DELETE', options);
+		},
 	}, {
 		// static class members
 	});
