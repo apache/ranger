@@ -34,7 +34,7 @@ public class StringUtil implements Serializable {
 
 	static final public int MIN_PASSWORD_LENGTH = 8;
 
-	static final public String VALIDATION_NAME = "[\\w\\ \\-\\']*";
+	static final public String VALIDATION_NAME = "[\\w\\ \\-\\'\\.]*";
 	static final public String VALIDATION_TEXT = "[a-zA-Z0-9\\ \"!@#$%^&amp;*()-_=+;:'&quot;|~`&lt;&gt;?/{}\\.\\,\\-\\?<>]*";
 	static final public String VALIDATION_LOGINID = "[a-z,A-Z][\\w\\-\\_]*[a-z,A-Z,0-9]";
 

@@ -50,14 +50,14 @@ define(function(require){
 				firstName : {
 					type		: 'Text',
 					title		: localization.tt("lbl.firstName")+' *',
-					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_-]*[a-zA-Z0-9]+$/,message :'First name should start with alphabets & can have underscore, hyphen, space.'}],
+					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_.-]*[a-zA-Z0-9]+$/,message :'First name should start with alphabets & can have number,underscore, hyphen, space, dot.'}],
 					editorAttrs : { 'placeholder' : localization.tt("lbl.firstName")}
 					
 				},
 				lastName : {
 					type		: 'Text',
 					title		: localization.tt("lbl.lastName"),
-					validators  : [{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_-]*[a-zA-Z0-9]+$/,message :'Last name should start with alphabets & can have underscore, hyphen, space.'}],
+					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_.-]*[a-zA-Z0-9]+$/,message :'Last name should start with alphabets & can have number,underscore, hyphen, space, dot.'}],
 					editorAttrs : { 'placeholder' : localization.tt("lbl.lastName")}
 				},
 				emailAddress : {
