@@ -37,9 +37,9 @@
       <version>${calcite.version}</version>
     </dependency>   
     <dependency>
-      <groupId>org.apache.calcite</groupId>
-      <artifactId>calcite-avatica</artifactId>
-      <version>${calcite.version}</version>
+        <groupId>org.apache.calcite.avatica</groupId>
+        <artifactId>avatica</artifactId>
+        <version>${avatica.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-lang</groupId>
