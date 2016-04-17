@@ -190,6 +190,7 @@ CONSTRAINT `x_srvc_res_el_val_FK_res_el_id` FOREIGN KEY (`res_element_id`) REFER
 CONSTRAINT `x_srvc_res_el_val_FK_add_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_srvc_res_el_val_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 );
+INSERT INTO `x_modules_master` VALUES (6,now(),now(),1,1,'Tag Based Policies','');
 -- ---------------------------------------
 -- add column in x_service_def.def_options
 -- ---------------------------------------

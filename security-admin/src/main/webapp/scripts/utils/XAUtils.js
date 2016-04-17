@@ -1076,7 +1076,7 @@ define(function(require) {
 			var denyControllerActions = [], denyModulesObj = [];
 			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
 			//TODO Temporary fix for tag based policies : need to come from server
-			userModuleNames.push('Tag Based Policies')
+//			userModuleNames.push('Tag Based Policies')
 			//add by default permission module to admin user
 			if (SessionMgr.isSystemAdmin()){
 				userModuleNames.push('Permissions')

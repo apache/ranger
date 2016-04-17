@@ -65,7 +65,7 @@ define(function(require){
 	XAGlobals.ListOfModuleActions = {
 			'Access Manager' : { 'Resource Based Policies' : ['serviceManagerAction','serviceCreateAction','serviceEditAction', 'policyManageAction','RangerPolicyCreateAction','RangerPolicyEditAction'],
 								 'Reports' : ['userAccessReportAction'],
-								'Tag Based Policies' : ['serviceManagerAction','serviceCreateAction','serviceEditAction', 'policyManageAction','RangerPolicyCreateAction','RangerPolicyEditAction']},
+								'Tag Based Policies' : ['serviceCreateAction','serviceEditAction', 'policyManageAction','RangerPolicyCreateAction','RangerPolicyEditAction']},
 			'Audit' 		 : ['auditReportAction','loginSessionDetail'],
 			'Encryption'     : {'Key Manager' : ['kmsManagerAction','kmsKeyCreateAction'] },
 			'Settings'		 : {'Users/Groups' : ['userManagerAction','userCreateAction','userEditAction','groupCreateAction','groupEditAction'],

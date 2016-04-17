@@ -534,7 +534,7 @@
 		return str.toUpperCase();
 	});
 	Handlebars.registerHelper('hasAccessToTab', function(tabName,options) {
-		if(tabName == 'Tag Based Policies') return  options.fn(this); 
+//		if(tabName == 'Tag Based Policies') return  options.fn(this);
 		var vxPortalUser = SessionMgr.getUserProfile();
 		var userModules = _.pluck(vxPortalUser.get('userPermList'), 'moduleName');
 		var groupModules = _.pluck(vxPortalUser.get('groupPermissions'), 'moduleName');
