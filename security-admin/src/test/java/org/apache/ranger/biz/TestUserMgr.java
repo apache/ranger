@@ -429,7 +429,7 @@ public class TestUserMgr {
 		Mockito.when(
 				xGroupPermissionDao.findbyVXPortalUserId(userProfile.getId()))
 				.thenReturn(xGroupPermissionList);
-
+		Mockito.when(stringUtil.validateEmail(Mockito.anyString())).thenReturn(true);
 		VXPortalUser dbVXPortalUser = userMgr.createUser(userProfile);
 		Assert.assertNotNull(dbVXPortalUser);
 		Assert.assertEquals(user.getId(), dbVXPortalUser.getId());
@@ -467,7 +467,7 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByParentId(Mockito.anyLong()))
 				.thenReturn(list);
-
+		Mockito.when(stringUtil.validateEmail(Mockito.anyString())).thenReturn(true);
 		VXPortalUser dbVXPortalUser = userMgr
 				.createDefaultAccountUser(userProfile);
 		Assert.assertNotNull(dbVXPortalUser);
