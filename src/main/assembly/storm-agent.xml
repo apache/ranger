@@ -61,9 +61,9 @@
                     <include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
                     <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.storm.version}</include>
                     <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.storm.version}</include>
-                    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponent.httpclient.version}</include>
-                    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponent.httpcore.version}</include>
-                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
+                    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
+                    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
+                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>

@@ -51,7 +51,7 @@
                 <includes>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
-		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
+		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
 		    <include>org.noggit:noggit:jar:${noggit.version}</include>
                 </includes>
             </dependencySet>

@@ -43,9 +43,9 @@
                     <include>commons-collections:commons-collections</include>
 		    <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>com.google.guava:guava:jar:${guava.version}</include>
-		    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponent.httpclient.version}</include>
-		    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponent.httpcore.version}</include>
-		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
+		    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
+		    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
+		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
 		    <include>org.noggit:noggit:jar:${noggit.version}</include>
 		    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                 </includes>
