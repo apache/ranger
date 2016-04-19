@@ -24,6 +24,8 @@ import java.util.Properties;
 
 public interface TagSource {
 
+	String TAG_SOURCE_NONE = "None";
+
 	boolean initialize(Properties properties);
 
 	void setTagSink(TagSink sink);

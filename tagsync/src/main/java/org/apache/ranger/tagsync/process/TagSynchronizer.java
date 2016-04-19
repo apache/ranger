@@ -19,7 +19,6 @@
 
 package org.apache.ranger.tagsync.process;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -103,12 +102,10 @@ public class TagSynchronizer {
 
 				tagSources = initializeTagSources(tagSourceNames, properties);
 
-				if (CollectionUtils.isNotEmpty(tagSources)) {
-					for (TagSource tagSource : tagSources) {
-						tagSource.setTagSink(tagSink);
-					}
-					ret = true;
+				for (TagSource tagSource : tagSources) {
+					tagSource.setTagSink(tagSink);
 				}
+				ret = true;
 			}
 		} else {
 			LOG.error("'ranger.tagsync.source.impl.class' value is not specified or is empty!");
@@ -236,21 +233,23 @@ public class TagSynchronizer {
 					LOG.debug("tagSourceClassName=" + tagSourceClassName);
 				}
 
-				@SuppressWarnings("unchecked")
-				Class<TagSource> tagSourceClass = (Class<TagSource>) Class.forName(tagSourceClassName);
-				TagSource tagSource = tagSourceClass.newInstance();
+				if (!StringUtils.equalsIgnoreCase(tagSourceClassName, TagSource.TAG_SOURCE_NONE)) {
+					@SuppressWarnings("unchecked")
+					Class<TagSource> tagSourceClass = (Class<TagSource>) Class.forName(tagSourceClassName);
+					TagSource tagSource = tagSourceClass.newInstance();
 
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Created instance of " + tagSourceClassName);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Created instance of " + tagSourceClassName);
+					}
+
+					if (!tagSource.initialize(properties)) {
+						LOG.error("Failed to initialize TAG source " + tagSourceClassName);
+
+						ret.clear();
+						break;
+					}
+					ret.add(tagSource);
 				}
-
-				if (!tagSource.initialize(properties)) {
-					LOG.error("Failed to initialize TAG source " + tagSourceClassName);
-
-					ret.clear();
-					break;
-				}
-				ret.add(tagSource);
 			}
 
 		} catch (Throwable t) {
