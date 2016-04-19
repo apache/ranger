@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.authorization.hive.authorizer;
+package org.apache.ranger.authorization.hive.authorizer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,13 +68,12 @@ import com.google.common.collect.Sets;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 
 public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
-	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class) ; 
+	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class) ;
 
 	private static final char COLUMN_SEP = ',';
-	private static final String MASK_TYPE_NULL     = "NULL";
-	private static final String MASK_TYPE_NONE     = "NONE";
-	private static final String MASK_TYPE_CONSTANT = "CONSTANT";
-	private static final String MASK_UDF_NAME      = "rangerUdfMask";
+	public static final String MASK_TYPE_NULL     = "MASK_NULL";
+	public static final String MASK_TYPE_NONE     = "MASK_NONE";
+	public static final String MASK_TYPE_CONSTANT = "CONSTANT";
 
 	private static volatile RangerHivePlugin hivePlugin = null ;
 
@@ -494,10 +492,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					String database = hiveObj.getDbname();
 					String table    = hiveObj.getObjectName();
 
-					String rowFilterExpr = getRowFilterExpression(database, table);
+					String rowFilterExpr = getRowFilterExpression(queryContext, database, table);
 
 					if (StringUtils.isNotBlank(rowFilterExpr)) {
-						LOG.debug("rowFilter(database=" + database + ", table=" + table + "): " + rowFilterExpr);
+						if(LOG.isDebugEnabled()) {
+							LOG.debug("rowFilter(database=" + database + ", table=" + table + "): " + rowFilterExpr);
+						}
 
 						hiveObj.setRowFilterExpression(rowFilterExpr);
 					}
@@ -506,9 +506,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						List<String> columnTransformers = new ArrayList<String>();
 
 						for (String column : hiveObj.getColumns()) {
-							String columnTransformer = getCellValueTransformer(database, table, column);
+							String columnTransformer = getCellValueTransformer(queryContext, database, table, column);
 
-							if(StringUtils.isNotEmpty(columnTransformer)) {
+							if(LOG.isDebugEnabled()) {
 								LOG.debug("columnTransformer(database=" + database + ", table=" + table + ", column=" + column + "): " + columnTransformer);
 							}
 
@@ -535,7 +535,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return true; // TODO: derive from the policies
 	}
 
-	public String getRowFilterExpression(String databaseName, String tableOrViewName) throws SemanticException {
+	private String getRowFilterExpression(QueryContext context, String databaseName, String tableOrViewName) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
@@ -551,7 +551,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
 		try {
-			QueryContext            context        = null; // TODO: this should be provided as an argument to this method
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
 			HiveAuthenticationProvider authenticator = getHiveAuthenticator();
 			String                  user           = ugi.getShortUserName();
@@ -576,7 +575,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	public String getCellValueTransformer(String databaseName, String tableOrViewName, String columnName) throws SemanticException {
+	private String getCellValueTransformer(QueryContext context, String databaseName, String tableOrViewName, String columnName) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
@@ -592,7 +591,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
 		try {
-			QueryContext            context        = null; // TODO: this should be provided as an argument to this method
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
 			HiveAuthenticationProvider authenticator = getHiveAuthenticator();
 			String                  user           = ugi.getShortUserName();
@@ -607,15 +605,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				String                maskType    = result.getMaskType();
 				RangerDataMaskTypeDef maskTypeDef = result.getMaskTypeDef();
 				String                transformer = maskTypeDef.getTransformer();
-				String                initParam   = "";
-
-				if(MapUtils.isNotEmpty(maskTypeDef.getDataMaskOptions())) {
-					initParam = maskTypeDef.getDataMaskOptions().get("initParam");
-
-					if(initParam == null) {
-						initParam = "";
-					}
-				}
 
 				if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NONE)) {
 					ret = columnName;
@@ -625,8 +614,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					String maskedValue = result.getMaskedValue();
 
 					ret = maskedValue == null ? "NULL" : maskedValue;
-				} else {
-					ret = MASK_UDF_NAME + "(" + columnName + ", '" + maskType + "', '" + transformer + "', '" + initParam + "')";
+				} else if(StringUtils.isNotEmpty(transformer)) {
+					ret = transformer.replace("{col}", columnName);
 				}
 
 				/*

@@ -21,163 +21,238 @@ package org.apache.ranger.authorization.hive.udf;
 
 import java.sql.Date;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.common.type.HiveVarchar;
-import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.WritableConstantIntObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.WritableConstantStringObjectInspector;
-import org.apache.hadoop.hive.serde2.io.HiveVarcharWritable;
-import org.apache.hadoop.hive.serde2.io.ShortWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 
 public class RangerUdfMask extends RangerBaseUdf {
-	private static final Log LOG = LogFactory.getLog(RangerUdfMask.class);
-
-	private TransformerAdapter transformerAdapter = null;
-
 	public RangerUdfMask() {
-		LOG.debug("==> RangerUdfMask()");
-
-		LOG.debug("<== RangerUdfMask()");
-	}
-
-	@Override
-	public ObjectInspector initialize(ObjectInspector[] arguments) throws UDFArgumentException {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerUdfMask.initialize(arguments.length=" + arguments.length + ")");
-		}
-
-		ObjectInspector ret = super.initialize(arguments);
-
-		String transformType   = null;
-		String transformerImpl = null;
-		String transformerArgs = null;
-
-		if(arguments.length > 1) { // transformType
-			checkArgPrimitive(arguments, 1);
-
-			if(arguments[1] instanceof WritableConstantStringObjectInspector) {
-				Text value = ((WritableConstantStringObjectInspector)arguments[1]).getWritableConstantValue();
-
-				if(value != null) {
-					transformType = value.toString();
-				}
-			}
-		}
-
-		if(arguments.length > 2) { // transformerImpl
-			checkArgPrimitive(arguments, 2);
-
-			if(arguments[2] instanceof WritableConstantStringObjectInspector) {
-				Text value = ((WritableConstantStringObjectInspector)arguments[2]).getWritableConstantValue();
-
-				if(value != null) {
-					transformerImpl = value.toString();
-				}
-			}
-		}
-
-		if(arguments.length > 3) { // transformerArgs
-			checkArgPrimitive(arguments, 3);
-
-			if(arguments[2] instanceof WritableConstantStringObjectInspector) {
-				Text value = ((WritableConstantStringObjectInspector)arguments[3]).getWritableConstantValue();
-
-				if(value != null) {
-					transformerArgs = value.toString();
-				}
-			}
-		}
-
-		RangerTransformer transformer = RangerTransformerFactory.getTransformer(transformType, transformerImpl, transformerArgs);
-
-		transformerAdapter = TransformerAdapter.getTransformerAdapter(columnType.getPrimitiveCategory(), transformer);
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("getTransformerAdapter(category=" + columnType.getPrimitiveCategory() + ", transformer=" + transformer + "): " + transformerAdapter);
-
-			LOG.debug("<== RangerUdfMask.initialize(arguments.length=" + arguments.length + "): ret=" + ret);
-		}
-
-		return ret;
-	}
-
-	@Override
-	public Object evaluate(DeferredObject[] arguments) throws HiveException {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerUdfMask.evaluate(arguments.length=" + arguments.length + ")");
-		}
-
-		final Object ret;
-
-		if(transformerAdapter != null) {
-			Object columnValue = columnType.getPrimitiveJavaObject(arguments[0].get());
-			
-			ret = transformerAdapter.getTransformedWritable(columnValue);
-		} else {
-			ret = columnType.getPrimitiveWritableObject(arguments[0].get());
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerUdfMask.evaluate(arguments.length=" + arguments.length + "): ret=" + ret);
-		}
-
-		return ret;
-	}
-
-	@Override
-	public String getDisplayString(String[] children) {
-		return getStandardDisplayString("RangerUdfMask", children, ",");
+		super(new MaskTransformer());
 	}
 }
 
-abstract class TransformerAdapter {
-	final RangerTransformer transformer;
+class MaskTransformer extends RangerBaseUdf.RangerTransformer {
+	final static int MASKED_UPPERCASE            = 'X';
+	final static int MASKED_LOWERCASE            = 'x';
+	final static int MASKED_NUMBER               = '1';
+	final static int MASKED_OTHER_CHAR           = -1;
+	final static int MASKED_DAY_COMPONENT_VAL    = 1;
+	final static int MASKED_MONTH_COMPONENT_VAL  = 0;
+	final static int MASKED_YEAR_COMPONENT_VAL   = 0;
+	final static int UNMASKED_DATE_COMPONENT_VAL = -1;
 
-	TransformerAdapter(RangerTransformer transformer) {
-		this.transformer = transformer;
+	int maskedUpperChar   = MASKED_UPPERCASE;
+	int maskedLowerChar   = MASKED_LOWERCASE;
+	int maskedDigitChar   = MASKED_NUMBER;
+	int maskedOtherChar   = MASKED_OTHER_CHAR;
+	int maskedNumber      = MASKED_NUMBER;
+	int maskedDayValue    = MASKED_DAY_COMPONENT_VAL;
+	int maskedMonthValue  = MASKED_MONTH_COMPONENT_VAL;
+	int maskedYearValue   = MASKED_YEAR_COMPONENT_VAL;
+
+	public MaskTransformer() {
 	}
 
-	abstract Object getTransformedWritable(Object value);
+	@Override
+	public void init(ObjectInspector[] arguments, int startIdx) {
+		maskedUpperChar  = getCharArg(arguments, startIdx + 0, MASKED_UPPERCASE);
+		maskedLowerChar  = getCharArg(arguments, startIdx + 1, MASKED_LOWERCASE);
+		maskedDigitChar  = getCharArg(arguments, startIdx + 2, MASKED_NUMBER);
+		maskedOtherChar  = getCharArg(arguments, startIdx + 3, MASKED_OTHER_CHAR);
+		maskedNumber     = getCharArg(arguments, startIdx + 4, MASKED_NUMBER);
+		maskedDayValue   = getIntArg(arguments, startIdx + 5, MASKED_DAY_COMPONENT_VAL);
+		maskedMonthValue = getIntArg(arguments, startIdx + 6, MASKED_MONTH_COMPONENT_VAL);
+		maskedYearValue  = getIntArg(arguments, startIdx + 7, MASKED_YEAR_COMPONENT_VAL);
+	}
 
-	static TransformerAdapter getTransformerAdapter(PrimitiveCategory category, RangerTransformer transformer) {
-		TransformerAdapter ret = null;
+	@Override
+	String transform(String value) {
+		return maskString(value, maskedUpperChar, maskedLowerChar, maskedDigitChar, maskedOtherChar, 0, value.length());
+	}
 
-		if(transformer != null) {
-			switch(category) {
-				case STRING:
-					ret = new StringTransformerAdapter(transformer);
-				break;
+	@Override
+	Short transform(Short value) {
+		String strValue = value.toString();
 
-				case VARCHAR:
-					ret = new VarCharTransformerAdapter(transformer);
-				break;
+		return Short.parseShort(maskNumber(strValue, maskedDigitChar, 0, strValue.length()));
+	}
 
-				case SHORT:
-					ret = new ShortTransformerAdapter(transformer);
-				break;
+	@Override
+	Integer transform(Integer value) {
+		String strValue = value.toString();
 
-				case INT:
-					ret = new IntegerTransformerAdapter(transformer);
-				break;
+		return Integer.parseInt(maskNumber(strValue, maskedDigitChar, 0, strValue.length()));
+	}
 
-				case LONG:
-					ret = new LongTransformerAdapter(transformer);
-				break;
+	@Override
+	Long transform(Long value) {
+		String strValue = value.toString();
 
-				case DATE:
-					ret = new DateTransformerAdapter(transformer);
-				break;
+		return Long.parseLong(maskNumber(strValue, maskedDigitChar, 0, strValue.length()));
+	}
+
+	@Override
+	Date transform(Date value) {
+		return maskDate(value, maskedDayValue, maskedMonthValue, maskedYearValue);
+	}
+
+
+	String maskString(String val, int replaceUpperChar, int replaceLowerChar, int replaceDigitChar, int replaceOtherChar, int startIdx, int endIdx) {
+		StringBuffer strBuf = new StringBuffer(val.length());
+
+		if(startIdx < 0) {
+			startIdx = 0;
+		}
+
+		if(endIdx > val.length()) {
+			endIdx = val.length();
+		}
+
+		for(int i = 0; i < startIdx; i++) {
+			strBuf.appendCodePoint(val.charAt(i));
+		}
+
+		for(int i = startIdx; i < endIdx; i++) {
+			int c = val.charAt(i);
+
+			switch(Character.getType(c)) {
+				case Character.UPPERCASE_LETTER:
+					if(replaceUpperChar != -1) {
+						c = replaceUpperChar;
+					}
+					break;
+
+				case Character.LOWERCASE_LETTER:
+					if(replaceLowerChar != -1) {
+						c = replaceLowerChar;
+					}
+					break;
+
+				case Character.DECIMAL_DIGIT_NUMBER:
+					if(replaceDigitChar != -1) {
+						c = replaceDigitChar;
+					}
+					break;
 
 				default:
-				break;
+					if(replaceOtherChar != -1) {
+						c = replaceOtherChar;
+					}
+					break;
+			}
+
+			strBuf.appendCodePoint(c);
+		}
+
+		for(int i = endIdx; i < val.length(); i++) {
+			strBuf.appendCodePoint(val.charAt(i));
+		}
+
+		return strBuf.toString();
+	}
+
+	String maskNumber(String val, int replaceDigit, int startIdx, int endIdx) {
+		if(replaceDigit != -1) {
+			StringBuffer strBuf = new StringBuffer(val.length());
+
+			if (startIdx < 0) {
+				startIdx = 0;
+			}
+
+			if (endIdx > val.length()) {
+				endIdx = val.length();
+			}
+
+			for (int i = 0; i < startIdx; i++) {
+				strBuf.appendCodePoint(val.charAt(i));
+			}
+
+			for (int i = startIdx; i < endIdx; i++) {
+				int c = val.charAt(i);
+
+				switch (Character.getType(c)) {
+					case Character.DECIMAL_DIGIT_NUMBER:
+						c = replaceDigit;
+					break;
+				}
+
+				strBuf.appendCodePoint(c);
+			}
+
+			for (int i = endIdx; i < val.length(); i++) {
+				strBuf.appendCodePoint(val.charAt(i));
+			}
+
+			return strBuf.toString();
+		}
+
+		return val;
+	}
+
+	Date maskDate(Date value, int maskedDay, int maskedMonth, int maskedYear) {
+		int year  = maskedYear  == UNMASKED_DATE_COMPONENT_VAL ? value.getYear()  : MASKED_YEAR_COMPONENT_VAL;
+		int month = maskedMonth == UNMASKED_DATE_COMPONENT_VAL ? value.getMonth() : MASKED_MONTH_COMPONENT_VAL;
+		int day   = maskedDay   == UNMASKED_DATE_COMPONENT_VAL ? value.getDate()  : MASKED_DAY_COMPONENT_VAL;
+
+		return new Date(year, month, day);
+	}
+
+	String getStringArg(ObjectInspector[] arguments, int index, String defaultValue) {
+		String ret = defaultValue;
+
+		ObjectInspector arg = (arguments != null && arguments.length > index) ? arguments[index] : null;
+
+		if (arg != null) {
+			if (arg instanceof WritableConstantStringObjectInspector) {
+				Text value = ((WritableConstantStringObjectInspector) arg).getWritableConstantValue();
+
+				if (value != null && value.getLength() > 0) {
+					ret = value.toString();
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	int getCharArg(ObjectInspector[] arguments, int index, int defaultValue) {
+		int ret = defaultValue;
+
+		String value = getStringArg(arguments, index, null);
+
+		if (StringUtils.isNotEmpty(value)) {
+			ret = value.charAt(0);
+		}
+
+		return ret;
+	}
+
+	int getIntArg(ObjectInspector[] arguments, int index, int defaultValue) {
+		int ret = defaultValue;
+
+		ObjectInspector arg = (arguments != null && arguments.length > index) ? arguments[index] : null;
+
+		if (arg != null) {
+			if (arg instanceof WritableConstantStringObjectInspector) {
+				Text value = ((WritableConstantStringObjectInspector) arg).getWritableConstantValue();
+
+				if (value != null) {
+					try {
+						ret = Integer.parseInt(value.toString());
+					} catch(NumberFormatException excp) {
+						// ignored; defaultValue will be returned
+					}
+				}
+			} else if(arg instanceof WritableConstantIntObjectInspector) {
+				IntWritable value = ((WritableConstantIntObjectInspector)arg).getWritableConstantValue();
+
+				if(value != null) {
+					ret = value.get();
+				}
 			}
 		}
 
@@ -185,140 +260,3 @@ abstract class TransformerAdapter {
 	}
 }
 
-class StringTransformerAdapter extends TransformerAdapter {
-	final Text writable;
-
-	public StringTransformerAdapter(RangerTransformer transformer) {
-		this(transformer, new Text());
-	}
-
-	public StringTransformerAdapter(RangerTransformer transformer, Text writable) {
-		super(transformer);
-
-		this.writable = writable;
-	}
-
-	@Override
-	public Object getTransformedWritable(Object value) {
-		String transformedValue = transformer.transform((String)value);
-
-		writable.set(transformedValue);
-
-		return writable;
-	}
-}
-
-class VarCharTransformerAdapter extends TransformerAdapter {
-	final HiveVarcharWritable writable;
-
-	public VarCharTransformerAdapter(RangerTransformer transformer) {
-		this(transformer, new HiveVarcharWritable());
-	}
-
-	public VarCharTransformerAdapter(RangerTransformer transformer, HiveVarcharWritable writable) {
-		super(transformer);
-
-		this.writable = writable;
-	}
-
-	@Override
-	public Object getTransformedWritable(Object value) {
-		String transformedValue = transformer.transform(((HiveVarchar)value).getValue());
-
-		writable.set(transformedValue);
-
-		return writable;
-	}
-}
-
-class ShortTransformerAdapter extends TransformerAdapter {
-	final ShortWritable writable;
-
-	public ShortTransformerAdapter(RangerTransformer transformer) {
-		this(transformer, new ShortWritable());
-	}
-
-	public ShortTransformerAdapter(RangerTransformer transformer, ShortWritable writable) {
-		super(transformer);
-
-		this.writable = writable;
-	}
-
-	@Override
-	public Object getTransformedWritable(Object value) {
-		Short transformedValue = transformer.transform((Short)value);
-
-		writable.set(transformedValue);
-
-		return writable;
-	}
-}
-
-class IntegerTransformerAdapter extends TransformerAdapter {
-	final IntWritable writable;
-
-	public IntegerTransformerAdapter(RangerTransformer transformer) {
-		this(transformer, new IntWritable());
-	}
-
-	public IntegerTransformerAdapter(RangerTransformer transformer, IntWritable writable) {
-		super(transformer);
-
-		this.writable = writable;
-	}
-
-	@Override
-	public Object getTransformedWritable(Object value) {
-		Integer transformedValue = transformer.transform((Integer)value);
-
-		writable.set(transformedValue);
-
-		return writable;
-	}
-}
-
-class LongTransformerAdapter extends TransformerAdapter {
-	final LongWritable writable;
-
-	public LongTransformerAdapter(RangerTransformer transformer) {
-		this(transformer, new LongWritable());
-	}
-
-	public LongTransformerAdapter(RangerTransformer transformer, LongWritable writable) {
-		super(transformer);
-
-		this.writable = writable;
-	}
-
-	@Override
-	public Object getTransformedWritable(Object value) {
-		Long transformedValue = transformer.transform((Long)value);
-
-		writable.set(transformedValue);
-
-		return writable;
-	}
-}
-
-class DateTransformerAdapter extends TransformerAdapter {
-	final DateWritable writable;
-
-	public DateTransformerAdapter(RangerTransformer transformer) {
-		this(transformer, new DateWritable());
-	}
-
-	public DateTransformerAdapter(RangerTransformer transformer, DateWritable writable) {
-		super(transformer);
-
-		this.writable = writable;
-	}
-
-	@Override
-	public Object getTransformedWritable(Object value) {
-		Date transformedValue = transformer.transform((Date)value);
-
-		writable.set(transformedValue);
-
-		return writable;
-	}
-}

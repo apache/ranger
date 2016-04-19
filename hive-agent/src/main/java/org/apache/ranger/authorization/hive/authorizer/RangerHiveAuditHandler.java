@@ -41,7 +41,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	public RangerHiveAuditHandler() {
 		super();
 	}
-	
+
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result, String accessType, String resourcePath) {
 		RangerAccessRequest  request      = result.getAccessRequest();
 		RangerAccessResource resource     = request.getResource();
@@ -59,13 +59,22 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result) {
 		RangerAccessRequest  request  = result.getAccessRequest();
 		RangerAccessResource resource = request.getResource();
+		String               resourcePath = resource != null ? resource.getAsString() : null;
 
 		String accessType = null;
 
 		if(result instanceof RangerDataMaskResult) {
 			accessType = ((RangerDataMaskResult)result).getMaskType();
+
+			if(StringUtils.equals(accessType, RangerHiveAuthorizer.MASK_TYPE_NONE)) {
+				return null;
+			}
+
+			return createAuditEvent(result, accessType, resourcePath);
 		} else if(result instanceof RangerRowFilterResult) {
 			accessType = ACCESS_TYPE_ROWFILTER;
+
+			return createAuditEvent(result, accessType, resourcePath);
 		} else {
 			if (request instanceof RangerHiveAccessRequest) {
 				RangerHiveAccessRequest hiveRequest = (RangerHiveAccessRequest) request;
@@ -76,14 +85,12 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			if (StringUtils.isEmpty(accessType)) {
 				accessType = request.getAccessType();
 			}
+
+			return createAuditEvent(result, accessType, resourcePath);
 		}
-
-		String resourcePath = resource != null ? resource.getAsString() : null;
-
-		return createAuditEvent(result, accessType, resourcePath);
 	}
 
-	public List<AuthzAuditEvent> createAuditEvents(Collection<RangerAccessResult> results) {
+	List<AuthzAuditEvent> createAuditEvents(Collection<RangerAccessResult> results) {
 
 		Map<Long, AuthzAuditEvent> auditEvents = new HashMap<Long, AuthzAuditEvent>();
 		Iterator<RangerAccessResult> iterator = results.iterator();
@@ -107,7 +114,10 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 						}
 					} else { // new event as this approval was due to a different policy.
 						AuthzAuditEvent auditEvent = createAuditEvent(result);
-						auditEvents.put(policyId, auditEvent);
+
+						if(auditEvent != null) {
+							auditEvents.put(policyId, auditEvent);
+						}
 					}
 				}
 			}
@@ -121,14 +131,17 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		
 		return result;
 	}
-	
+
 	@Override
 	public void processResult(RangerAccessResult result) {
 		if(! result.getIsAudited()) {
 			return;
 		}
 		AuthzAuditEvent auditEvent = createAuditEvent(result);
-		addAuthzAuditEvent(auditEvent);
+
+		if(auditEvent != null) {
+			addAuthzAuditEvent(auditEvent);
+		}
 	}
 
 	/**
