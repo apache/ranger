@@ -2106,9 +2106,21 @@ def main(argv):
 	xa_access_audit = 'xa_access_audit'
 	x_user = 'x_portal_user'
 
-	#audit_db_name = globalDict['db_name']
-	#audit_db_user = globalDict['db_user']
-	#audit_db_password = globalDict['db_password']
+	audit_db_name=''
+	audit_db_user=''
+	audit_db_password=''
+	audit_store = None
+	if 'audit_store' in globalDict:
+		audit_store = globalDict['audit_store']
+		audit_store=audit_store.lower()
+
+	if audit_store =='db':
+		if 'audit_db_name' in globalDict:
+			audit_db_name = globalDict['audit_db_name']
+		if 'audit_db_user' in globalDict:
+			audit_db_user = globalDict['audit_db_user']
+		if 'audit_db_password' in globalDict:
+			audit_db_password = globalDict['audit_db_password']
 
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
@@ -2171,8 +2183,8 @@ def main(argv):
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME , oracle_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "POSTGRES":
-		#audit_db_user=audit_db_user.lower()
-		#audit_db_name=audit_db_name.lower()
+		audit_db_user=audit_db_user.lower()
+		audit_db_name=audit_db_name.lower()
 		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		audit_sqlObj = PostgresConf(audit_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME , postgres_audit_file)
@@ -2193,17 +2205,6 @@ def main(argv):
 	log("[I] --------- Verifying Ranger DB connection ---------","info")
 	xa_sqlObj.check_connection(db_name, db_user, db_password)
 
-	if 'audit_store' in globalDict:
-		audit_store = globalDict['audit_store']
-	else:
-		audit_store = None
-
-	if audit_store is None or audit_store == "":
-		audit_store = "solr"
-	audit_store=audit_store.lower()
-	if not audit_store =='solr':
-		log("[E] Only 'Solr' audit store is supported from current version!","error")
-		sys.exit(1)
 	if len(argv)==1:
 
 		log("[I] --------- Verifying Ranger DB tables ---------","info")
@@ -2212,10 +2213,10 @@ def main(argv):
 		else:
 			log("[I] --------- Importing Ranger Core DB Schema ---------","info")
 			xa_sqlObj.import_db_file(db_name, db_user, db_password, xa_db_core_file)
-			#if XA_DB_FLAVOR == "ORACLE":
-				#if xa_sqlObj.check_table(db_name, db_user, db_password, xa_access_audit):
-					#if db_user != audit_db_user:
-						#xa_sqlObj.create_synonym(db_name, db_user, db_password,audit_db_user)
+			if XA_DB_FLAVOR == "ORACLE":
+				if xa_sqlObj.check_table(db_name, db_user, db_password, xa_access_audit):
+					if audit_db_user != "" and db_user != audit_db_user:
+						xa_sqlObj.create_synonym(db_name, db_user, db_password,audit_db_user)
 		log("[I] --------- Verifying upgrade history table ---------","info")
 		output = xa_sqlObj.check_table(db_name, db_user, db_password, x_db_version)
 		if output == False:
@@ -2223,11 +2224,11 @@ def main(argv):
 			xa_sqlObj.upgrade_db(db_name, db_user, db_password, xa_db_version_file)
 		log("[I] --------- Applying Ranger DB patches ---------","info")
 		xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
-		#if audit_store == "db":
-			#log("[I] --------- Starting Audit Operation ---------","info")
-			#audit_sqlObj.auditdb_operation(xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_file, xa_access_audit)
-			#log("[I] --------- Applying Audit DB patches ---------","info")
-			#audit_sqlObj.apply_auditdb_patches(xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_patch_file, xa_access_audit)
+		if audit_store == "db" and audit_db_password!='':
+			log("[I] --------- Starting Audit Operation ---------","info")
+			audit_sqlObj.auditdb_operation(xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_file, xa_access_audit)
+			log("[I] --------- Applying Audit DB patches ---------","info")
+			audit_sqlObj.apply_auditdb_patches(xa_sqlObj,xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_patch_file, xa_access_audit)
 
 	if len(argv)>1:
 		for i in range(len(argv)):

@@ -217,15 +217,17 @@ init_variables(){
 	fi
 	log "[I] DB_FLAVOR=${DB_FLAVOR}"
 	audit_store=`echo $audit_store | tr '[:upper:]' '[:lower:]'`
+	log "[I] Audit source=${audit_store}"
 	if [ "${audit_store}" == "solr" ] ;then
-		log "[I] Audit source=${DB_FLAVOR}"
 		if [ "${audit_solr_urls}" == "" ] ;then
 			log "[I] Please provide valid URL for 'solr' audit store!"
 			exit 1
 		fi
-	else
-		log "[I] Only 'solr' audit store is supported from current version, found : $audit_store"
-		exit 1
+	fi
+	if [ "${audit_store}" == "db" ] ;then
+		audit_db_name=$(get_prop 'audit_db_name' $PROPFILE)
+		audit_db_user=$(get_prop 'audit_db_user' $PROPFILE)
+		audit_db_password=$(get_prop 'audit_db_password' $PROPFILE)
 	fi
 }
 
@@ -598,9 +600,12 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 
-	propertyName=ranger.audit.source.type
-        newPropertyValue=${audit_store}
-	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	if [ "${audit_store}" != "" ]
+	then
+		propertyName=ranger.audit.source.type
+		newPropertyValue=${audit_store}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
 
 	propertyName=ranger.externalurl
 	newPropertyValue="${policymgr_external_url}"

@@ -361,7 +361,7 @@ then
 	# We need to do the AUDIT JDBC url 
 	#
 db_flavor=''
-#db_flavor=`echo $(getInstallProperty 'XAAUDIT.DB.FLAVOUR') | tr '[:lower:]' '[:upper:]'`
+db_flavor=`echo $(getInstallProperty 'XAAUDIT.DB.FLAVOUR') | tr '[:lower:]' '[:upper:]'`
 if [ "${db_flavor}" != "" ]
 then
     audit_db_hostname=$(getInstallProperty 'XAAUDIT.DB.HOSTNAME')
@@ -528,7 +528,9 @@ then
 	
 	auditdbCred=$(getInstallProperty 'XAAUDIT.DB.PASSWORD')
 	
-	#create_jceks "${auditCredAlias}"  "${auditdbCred}"  "${CredFile}"
+	if [ "${auditdbCred}" != "" ]; then
+		create_jceks "${auditCredAlias}"  "${auditdbCred}"  "${CredFile}"
+	fi
 	
 	
 	#
